@@ -9,6 +9,17 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
 @keyframes pbF37Spin{to{transform:rotate(360deg)}}
 
 @media(max-width:820px){
+  /* White account and section headers on mobile. */
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader,
+  html body.pbF37UnifiedActive #pbF37ContextTitle,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    background:#fff!important;
+    background-image:none!important;
+  }
+  html body.pbF37UnifiedActive #pbF37Subheader{
+    background:linear-gradient(180deg,#fff 0 42px,#e3f1ff 42px,#eaf5ff 91px)!important;
+  }
   :root{
     --pb-f37-account-h:90px;
     --pb-f37-title-h:42px;

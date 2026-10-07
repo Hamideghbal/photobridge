@@ -327,6 +327,41 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
 
 /* White mobile headers, with the blue fade beginning below the title strip. */
 @media(max-width:820px){
+  /* The legacy v729/v723 rules use a stronger selector and re-show these actions.
+     Hide their whole inline row in composer mode; F40 actions remain outside #root. */
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions>.simplePrintPilotHeader,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotPrimaryAdd,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotHeaderSubmit{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  /* v723 gives the original header slot !important rules with an ID selector.
+     Outrank those rules inside the active composer while leaving the F40 proxy row intact. */
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost,
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost .simplePrintPilotHeader,
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderActions{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
   html body.pbF37UnifiedActive #pbF37PhotographerHeader,
   html body.pbF37UnifiedActive #photographerStoreRoleHeader.pbF37CoreHeader,
   html body.pbF37UnifiedActive #pbF37ContextTitle,

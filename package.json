@@ -22,5 +22,5 @@
     "web-push": "3.6.7",
     "jsqr": "1.4.0"
   },
-  "photobridgeDeployBuild": "v904r100f40-white-mobile-header-2026-10-08"
+  "photobridgeDeployBuild": "v904r100f40-print-duplicate-specificity-fix-2026-10-08"
 }

@@ -268,3 +268,22 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
   html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotPrimaryAdd,
   html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotHeaderSubmit{display:none!important;visibility:hidden!important;pointer-events:none!important}
 }
+
+/* Touch feedback for the shared mobile actions, without changing layout. */
+@media(max-width:820px){
+  #pbF37PrintComposerActions button,
+  #pbF37Tabs button{
+    transition:transform 160ms cubic-bezier(.2,.8,.2,1),filter 160ms ease!important;
+    transform-origin:center!important;
+  }
+  #pbF37PrintComposerActions button:not(:disabled):active,
+  #pbF37Tabs button:not(:disabled):active{
+    transform:scale(.96)!important;filter:brightness(.94)!important;
+  }
+  #pbF37PrintComposerActions button:focus-visible,
+  #pbF37Tabs button:focus-visible{outline:2px solid #315efb!important;outline-offset:3px!important}
+}
+@media(max-width:820px) and (prefers-reduced-motion:reduce){
+  #pbF37PrintComposerActions button,
+  #pbF37Tabs button{transition:none!important;transform:none!important}
+}

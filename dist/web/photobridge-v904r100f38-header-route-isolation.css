@@ -260,3 +260,11 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
   }
   html body.pbF37UnifiedActive>.pb748ModalShade>.pb748Modal{overflow-y:auto!important}
 }
+
+/* Hide the legacy blue in-content action pair, including relocated hosts. */
+@media(max-width:820px){
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions>.simplePrintPilotHeader,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotPrimaryAdd,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotHeaderSubmit{display:none!important;visibility:hidden!important;pointer-events:none!important}
+}

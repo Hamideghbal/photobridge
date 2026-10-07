@@ -165,6 +165,11 @@ const crypto = require("crypto");
         sub: rect(
           document.querySelector("#pbF37Subheader,#storeSectionNavV673"),
         ),
+        title: rect(
+          document.querySelector(
+            "#pbF37ContextTitle,#photographerStoreIdentityBar",
+          ),
+        ),
         scroll: rect(
           document.querySelector(".photographerRolePageScrollArea") ||
             document.querySelector("#storePhotographerWorkspace>.shell"),
@@ -191,6 +196,11 @@ const crypto = require("crypto");
       "Store menu size",
     );
     assert.equal(layout.header.shadow, "none");
+    assert.equal(
+      layout.title.background,
+      layout.header.background,
+      "Title row matches main header",
+    );
     assert.equal(layout.sub.shadow, "none");
     assert.ok(
       layout.scroll.y >= layout.sub.bottom,

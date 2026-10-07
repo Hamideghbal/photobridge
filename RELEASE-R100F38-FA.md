@@ -12,3 +12,21 @@
 - فایل‌های جدید با cache key نسخه R100F38 از `index.html` بارگذاری می‌شوند.
 
 نسخه: `0.17.746`
+
+## اصلاح پس از تست مرورگر
+
+- زمان‌بندی هدر دیگر با هر تغییر DOM از ابتدا عقب نمی‌افتد؛ تغییرات مداوم اسکریپت‌های موبایل نمی‌توانند عنوان یا دکمه‌های بخش قبلی را نگه دارند.
+- cache key اسکریپت اصلاح‌شده به `904r100f38a` تغییر کرد.
+- تست مرورگر در `scripts/test-mobile-header-isolation.cjs` مسیر فروشگاه → چاپ → هوش مصنوعی → گالری → طراحی آلبوم → اینستاگرام → فروشگاه را با Chromium و لمس موبایل بررسی می‌کند: دقیقاً یک هدر متعلق به بخش جاری، عنوان صحیح، نبود دکمه گرد + در انتخاب فایل چاپ و نبود سایه هدر/زیرهدر.
+- تست گالری، به‌روزرسانی زیرهدر هنگام تغییر مداوم DOM را نیز بررسی می‌کند.
+
+اجرای تست فقط روی دیتابیس محلی و دورریختنی onboarding مجاز است؛ حساب، لابراتوار و فروشگاه آزمایشی می‌سازد و maintenance همین دیتابیس را غیرفعال می‌کند. برنامه باید روی پورت 3000 اجرا شده باشد. Playwright و Chromium ابزار تست هستند و به dependencies برنامه اضافه نشده‌اند.
+
+```bash
+source /workspace/photobridge-env/env.sh
+npm run build
+PLAYWRIGHT_MODULE_PATH=/opt/codex/cua_node/lib/node_modules/playwright MOBILE_WIDTH=390 node scripts/test-mobile-header-isolation.cjs
+PLAYWRIGHT_MODULE_PATH=/opt/codex/cua_node/lib/node_modules/playwright MOBILE_WIDTH=375 node scripts/test-mobile-header-isolation.cjs
+```
+
+Build و سناریوی مرورگر با عرض‌های 375 و 390 پیکسل موفق شدند. PR در این بررسی merge نشده است.

@@ -151,7 +151,12 @@
     const mb=$('#pbF37MenuBtn');if(mb){mb.style.setProperty('position','fixed','important');mb.style.setProperty('left',innerWidth<=390?'6px':'10px','important');mb.style.setProperty('right','auto','important');mb.style.setProperty('top','20px','important');mb.style.setProperty('inset-inline-start','auto','important');mb.style.setProperty('inset-inline-end','auto','important')}
     settleBoot();
   }
-  function schedule(ms=40){clearTimeout(renderTimer);renderTimer=setTimeout(render,ms)}
+  // Coalesce DOM updates without postponing a pending route render indefinitely.
+  // Legacy mobile scripts can mutate the root continuously during tab changes.
+  function schedule(ms=40){
+    if(renderTimer){if(ms!==0)return;clearTimeout(renderTimer)}
+    renderTimer=setTimeout(()=>{renderTimer=0;render()},ms);
+  }
   let bootTimer=0;function settleBoot(){if(!document.documentElement.classList.contains('pbR100F37LabEnterBoot'))return;const w=$('.photographerMain.photographerPrintWorkspace'),sc=w?.querySelector(':scope>.photographerRolePageScrollArea');if(!w||!sc||!sc.children.length||chooserVisible()||labName()==='لابراتوار')return;if(bootTimer)return;bootTimer=setTimeout(()=>{bootTimer=0;document.documentElement.classList.remove('pbR100F37LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{};try{const u=new URL(location.href);if(u.searchParams.get('pbEntryDone')==='lab'){u.searchParams.delete('pbEntryDone');history.replaceState(history.state,'',u.pathname+(u.searchParams.size?'?'+u.searchParams.toString():'')+u.hash)}}catch{}},320)}
   async function loadMe(){try{const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){me=await r.json();avatarData=String(me?.user?.photographerAvatarData||'');schedule(0)}}catch{}}
   function start(){

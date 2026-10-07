@@ -1,0 +1,33 @@
+/* PhotoBridge R100F42 — soft centered divider above mobile section titles. */
+@media(max-width:820px){
+  html body #pbF37ContextTitle,
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar,
+  html body #photographerStoreIdentityBar{
+    position:relative!important;
+  }
+
+  html body #pbF37ContextTitle::before,
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar::before,
+  html body #photographerStoreIdentityBar::before{
+    content:""!important;
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    width:min(86vw,520px)!important;
+    height:1px!important;
+    transform:translateX(-50%)!important;
+    pointer-events:none!important;
+    z-index:2!important;
+    background:linear-gradient(
+      90deg,
+      rgba(70,120,175,0) 0%,
+      rgba(70,120,175,.10) 10%,
+      rgba(70,120,175,.28) 28%,
+      rgba(58,108,168,.56) 50%,
+      rgba(70,120,175,.28) 72%,
+      rgba(70,120,175,.10) 90%,
+      rgba(70,120,175,0) 100%
+    )!important;
+    box-shadow:0 1px 4px rgba(77,137,200,.10)!important;
+  }
+}

@@ -327,6 +327,22 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
 
 /* White mobile headers, with the blue fade beginning below the title strip. */
 @media(max-width:820px){
+  /* Store tabs sit on the same open, pale-blue surface as the Lab tab row. */
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
+    background-color:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    outline:0!important;
+    backdrop-filter:none!important;
+  }
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after{
+    background:linear-gradient(180deg,rgba(234,245,255,.7),rgba(234,245,255,0))!important;
+  }
+
   /* The legacy v729/v723 rules use a stronger selector and re-show these actions.
      Hide their whole inline row in composer mode; F40 actions remain outside #root. */
   html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions,
@@ -364,6 +380,7 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
 
   html body.pbF37UnifiedActive #pbF37PhotographerHeader,
   html body.pbF37UnifiedActive #photographerStoreRoleHeader.pbF37CoreHeader,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader,
   html body.pbF37UnifiedActive #pbF37ContextTitle,
   html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader,
   html body.rentalPhotographerMode #storePhotographerWorkspace>#photographerStoreIdentityBar{

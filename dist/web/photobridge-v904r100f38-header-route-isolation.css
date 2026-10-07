@@ -298,3 +298,26 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
   #pbF37PrintComposerActions button,
   #pbF37Tabs button{transition:none!important;transform:none!important}
 }
+
+/* Match the standalone Store surface to the open Lab subheader treatment. */
+@media(max-width:820px){
+  html body.rentalPhotographerMode #photographerStoreRoleHeader{
+    background:#fff!important;background-color:#fff!important;background-image:none!important;
+  }
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
+    background-color:transparent!important;border:0!important;border-radius:0!important;
+    box-shadow:none!important;outline:0!important;backdrop-filter:none!important;
+  }
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after{
+    background:linear-gradient(180deg,rgba(234,245,255,.7),rgba(234,245,255,0))!important;
+  }
+  html body.rentalPhotographerMode #storeSectionNavV673>button{
+    transition:background-color .22s cubic-bezier(.2,.75,.25,1),border-color .22s cubic-bezier(.2,.75,.25,1),color .22s cubic-bezier(.2,.75,.25,1),box-shadow .22s cubic-bezier(.2,.75,.25,1),transform .22s cubic-bezier(.2,.75,.25,1)!important;
+  }
+  html body.rentalPhotographerMode #storeSectionNavV673>button.active{animation:pbF40TabActivate .24s cubic-bezier(.2,.8,.2,1)!important}
+  html body.rentalPhotographerMode #storeSectionNavV673>button:active{transform:scale(.965)!important}
+}
+@media(max-width:820px) and (prefers-reduced-motion:reduce){
+  html body.rentalPhotographerMode #storeSectionNavV673>button{transition:none!important;animation:none!important}
+}

@@ -1,0 +1,12 @@
+/* PhotoBridge R100F13 — remove the remaining separator line/shadow from the photographer print header stack. */
+.photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerPrintModeHeader,
+.photographerMain.photographerPrintWorkspace>.photographerPrintModeHeader,
+.photographerMain.photographerPrintWorkspace .photographerPrintModeNav,
+.photographerMain.photographerPrintWorkspace .photographerLabContextRail,
+.photographerMain.photographerPrintWorkspace .photographerPrintTopLab,
+.photographerMain.photographerPrintWorkspace .photographerSelectedLabControl{
+  border-top:0!important;
+  border-bottom:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+}

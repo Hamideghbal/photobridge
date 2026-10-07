@@ -1,0 +1,133 @@
+/* PhotoBridge R100F23 — compact/lowered Store primary nav + compact Sales controls matched to the Lab-style header. */
+@media(max-width:820px){
+  /* Pull the primary Store row out from under the identity header, inset it, and make it more compact. */
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    top:calc(var(--pb-store-role-header-h,64px) + var(--pb-store-identity-h,42px) + 7px)!important;
+    left:9px!important;
+    right:9px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:46px!important;
+    min-height:46px!important;
+    max-height:46px!important;
+    padding:5px 6px!important;
+    gap:4px!important;
+    align-items:center!important;
+    border:1px solid #e4e9f1!important;
+    border-radius:11px!important;
+    background:#f8fafc!important;
+    background-color:#f8fafc!important;
+    background-image:none!important;
+    box-shadow:0 4px 12px rgba(16,24,40,.055)!important;
+    overflow:hidden!important;
+  }
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button{
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    margin:0!important;
+    padding:0 5px!important;
+    border-radius:8px!important;
+    font-size:10.4px!important;
+    line-height:1.1!important;
+  }
+  /* Content now starts below the lowered + compact row. */
+  html body #storePhotographerWorkspace>.shell{
+    top:calc(var(--pb-store-role-header-h,64px) + var(--pb-store-identity-h,42px) + 59px)!important;
+  }
+
+  /* Sales category / brand / cart: full-width sticky strip, same neutral header surface, shorter controls. */
+  html body #salesPanel .salesFilterDockV809{
+    position:sticky!important;
+    top:0!important;
+    z-index:95!important;
+    margin:-12px -26px 10px!important;
+    padding:6px 10px!important;
+    border:0!important;
+    border-bottom:1px solid #e4e9f1!important;
+    border-radius:0!important;
+    background:#f8fafc!important;
+    background-color:#f8fafc!important;
+    background-image:none!important;
+    box-shadow:0 3px 8px rgba(16,24,40,.045)!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  html body #salesPanel .salesFilterDockV809::before,
+  html body #salesPanel .salesFilterDockV809::after{
+    content:none!important;
+    display:none!important;
+  }
+  html body #saleFilterBarR68.pbR68SaleFilterBar{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  html body #saleFilterBarR68 .pbR68FilterBtn,
+  html body #saleFilterBarR68 #saleCartBtn{
+    width:100%!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    margin:0!important;
+    padding:2px 5px!important;
+    gap:4px!important;
+    border:1px solid #d7deea!important;
+    border-radius:8px!important;
+    background:#fff!important;
+    background-color:#fff!important;
+    background-image:none!important;
+    color:#475467!important;
+    box-shadow:none!important;
+  }
+  html body #saleFilterBarR68 .pbR68FilterBtn small{
+    font-size:8.2px!important;
+    line-height:1!important;
+    color:#667085!important;
+  }
+  html body #saleFilterBarR68 .pbR68FilterBtn b{
+    font-size:10.2px!important;
+    line-height:1.05!important;
+    color:#344054!important;
+  }
+  html body #saleFilterBarR68 #saleCartBtn span{
+    font-size:10.2px!important;
+    line-height:1!important;
+    color:#344054!important;
+  }
+  html body #saleFilterBarR68 #saleCartBtn svg{
+    width:14px!important;
+    height:14px!important;
+    flex-basis:14px!important;
+    color:var(--pb-r100-accent,#1677ff)!important;
+  }
+  html body #saleFilterBarR68 #saleCartBtn em,
+  html body #saleFilterBarR68 #saleCartCount{
+    min-width:17px!important;
+    height:17px!important;
+    padding:0 4px!important;
+    background:#eef4ff!important;
+    color:var(--pb-r100-accent,#1677ff)!important;
+    font-size:7.8px!important;
+  }
+}
+
+@media(max-width:390px){
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    left:7px!important;
+    right:7px!important;
+    padding-inline:5px!important;
+    gap:3px!important;
+  }
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button{
+    font-size:9.5px!important;
+    padding-inline:3px!important;
+  }
+  html body #salesPanel .salesFilterDockV809{padding-inline:7px!important}
+  html body #saleFilterBarR68.pbR68SaleFilterBar{gap:4px!important}
+  html body #saleFilterBarR68 .pbR68FilterBtn b,
+  html body #saleFilterBarR68 #saleCartBtn span{font-size:9.6px!important}
+}

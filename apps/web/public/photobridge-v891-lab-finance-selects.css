@@ -1,0 +1,104 @@
+/* PhotoBridge v891 — Lab finance searchable/RTL selectors */
+:root{--pb891-select-font:Vazirmatn,Tahoma,Arial,sans-serif}
+
+/* Account statement: search now lives inside the photographer selector itself. */
+html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker>.statementCustomerSearchWrap{
+  display:none!important;
+}
+html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker,
+html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelect,
+html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchShell{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  direction:rtl!important;text-align:right!important;font-family:var(--pb891-select-font)!important;
+}
+
+/* Searchable select: the text field and arrow are one visual control. */
+.pbSelect.pbSelectSearchable .pbSelectSearchShell{
+  width:100%;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:stretch;
+  direction:rtl;text-align:right;border:1px solid #d0d5dd;border-radius:11px;background:#fff;
+  overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04);font-family:var(--pb891-select-font);
+}
+.pbSelect.pbSelectSearchable.open .pbSelectSearchShell{
+  border-color:#98a2b3;box-shadow:0 0 0 3px rgba(49,94,251,.08);
+}
+.pbSelect.pbSelectSearchable .pbSelectSearchInput{
+  grid-column:1;grid-row:1;width:100%;min-width:0;min-height:42px;margin:0!important;padding:8px 11px!important;
+  border:0!important;outline:0!important;background:transparent!important;color:#101828!important;
+  direction:rtl!important;text-align:right!important;font:800 12px/1.5 var(--pb891-select-font)!important;
+  box-shadow:none!important;
+}
+.pbSelect.pbSelectSearchable .pbSelectSearchInput::placeholder{color:#475467;opacity:1;font-weight:800}
+.pbSelect.pbSelectSearchable .pbSelectSearchArrow{
+  grid-column:2;grid-row:1;width:42px;min-width:42px;min-height:42px;margin:0!important;padding:0!important;
+  border:0!important;border-right:1px solid #eaecf0!important;border-radius:0!important;background:#f8fafc!important;
+  color:#344054!important;display:grid!important;place-items:center!important;font-family:var(--pb891-select-font)!important;
+}
+.pbSelect.pbSelectSearchable .pbSelectSearchArrow i{font-style:normal;font-size:17px;line-height:1;transform:translateY(-1px)}
+.pbSelect.pbSelectSearchable.disabled .pbSelectSearchShell{opacity:.58;background:#f2f4f7}
+
+/* All finance selectors in the lab use the project font and RTL closed-state layout. */
+html body #root .labRolePageScrollArea .financeWorkspace .pb891FinanceSelect,
+html body #root .labRolePageScrollArea .financeWorkspace .pb891SearchableCustomerSelect,
+html body #root .labRolePageScrollArea .financeWorkspace .pb891SearchableInvoiceSelect,
+.globalModalLayer .financeFormGrid .pbSelect{
+  direction:rtl!important;text-align:right!important;font-family:var(--pb891-select-font)!important;width:100%!important;min-width:0!important;
+}
+html body #root .labRolePageScrollArea .financeWorkspace .pb891FinanceSelect .pbSelectTrigger,
+.globalModalLayer .financeFormGrid .pbSelect .pbSelectTrigger{
+  width:100%!important;min-width:0!important;min-height:42px!important;display:flex!important;align-items:center!important;
+  justify-content:space-between!important;gap:8px!important;direction:rtl!important;text-align:right!important;
+  border:1px solid #d0d5dd!important;border-radius:11px!important;background:#fff!important;color:#101828!important;
+  padding:8px 11px!important;font:800 12px/1.5 var(--pb891-select-font)!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important;
+}
+html body #root .labRolePageScrollArea .financeWorkspace .pb891FinanceSelect .pbSelectTrigger>span,
+.globalModalLayer .financeFormGrid .pbSelect .pbSelectTrigger>span{
+  min-width:0!important;flex:1 1 auto!important;text-align:right!important;direction:rtl!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+html body #root .labRolePageScrollArea .financeWorkspace .pb891FinanceSelect .pbSelectTrigger>i,
+.globalModalLayer .financeFormGrid .pbSelect .pbSelectTrigger>i{font-style:normal!important;flex:none!important;font-size:17px!important;color:#667085!important}
+
+/* Finance modals: no raw/left-aligned controls. */
+.globalModalLayer .financeFormGrid{direction:rtl!important;text-align:right!important;font-family:var(--pb891-select-font)!important}
+.globalModalLayer .financeFormGrid>label{
+  direction:rtl!important;text-align:right!important;font-family:var(--pb891-select-font)!important;font-weight:850!important;color:#344054!important;
+}
+.globalModalLayer .financeFormGrid input,
+.globalModalLayer .financeFormGrid textarea,
+.globalModalLayer .financeFormGrid button{
+  font-family:var(--pb891-select-font)!important;
+}
+.globalModalLayer .financeFormGrid input:not([dir="ltr"]),
+.globalModalLayer .financeFormGrid textarea{direction:rtl!important;text-align:right!important}
+
+/* Portalled finance menus: explicit RTL and project typography. */
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu{
+  direction:rtl!important;text-align:right!important;font-family:var(--pb891-select-font)!important;
+  padding:6px!important;border:1px solid #d0d5dd!important;border-radius:12px!important;background:#fff!important;
+  box-shadow:0 16px 40px rgba(16,24,40,.18)!important;overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button{
+  width:100%!important;min-height:42px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:9px!important;margin:0!important;padding:8px 10px!important;border:0!important;border-radius:9px!important;
+  background:#fff!important;color:#1d2939!important;direction:rtl!important;text-align:right!important;
+  font:800 12px/1.65 var(--pb891-select-font)!important;white-space:normal!important;
+}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button+button{margin-top:2px!important}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button:hover,
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button:focus-visible{background:#f2f4f7!important;outline:none!important}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button.selected{background:#eef4ff!important;color:#1849a9!important;font-weight:950!important}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button>span{display:block!important;min-width:0!important;flex:1 1 auto!important;text-align:right!important;direction:rtl!important;overflow-wrap:anywhere!important}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button>b{flex:none!important;color:#315efb!important;font-size:13px!important}
+body>.pbSelectMenuPortal.pb891FinanceSelectMenu .pbSelectNoResult{
+  padding:12px 10px!important;text-align:center!important;direction:rtl!important;color:#667085!important;
+  font:750 11px/1.7 var(--pb891-select-font)!important;
+}
+
+@media(max-width:820px){
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchInput,
+  .globalModalLayer .financeFormGrid .pbSelectSearchInput{font-size:13px!important;min-height:45px!important}
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchArrow,
+  .globalModalLayer .financeFormGrid .pbSelectSearchArrow{min-height:45px!important;height:45px!important}
+  .globalModalLayer .financeFormGrid>label{font-size:11px!important;line-height:1.7!important;gap:6px!important}
+  body>.pbSelectMenuPortal.pb891FinanceSelectMenu>button{min-height:45px!important;font-size:13px!important;padding:9px 11px!important}
+}

@@ -1,0 +1,29 @@
+/* PhotoBridge v804 — final mobile print control and scroll authority. */
+@media(max-width:820px){
+  .photographerMain.photographerPrintWorkspace .pb804Hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  .photographerMain.photographerPrintWorkspace .pb761PhotoStatuses>button[aria-hidden="true"],
+  .photographerMain.photographerPrintWorkspace .pb761AlbumStageStatuses>button[aria-hidden="true"]{display:none!important}
+
+  html.pb804PrintNormal body #pb783FinanceShortcut.pb804PrimaryInvoice,
+  html.pb804PrintFinance body #pb783FinanceShortcut.pb804PrimaryInvoice{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;align-items:center!important;justify-content:center!important;gap:5px!important
+  }
+  html.pb804PrintComposer body #pb783FinanceShortcut,
+  html.pb804PrintFinance body #pb765-add,
+  html.pb804PrintFinance body #pb765-back,
+  html.pb804PrintFinance body #pb761-mode-actions,
+  html.pb804PrintFinance body .photographerPrintModeBack,
+  html.pb804PrintComposer body #pb765-add,
+  html.pb804PrintComposer body #pb765-back{
+    display:none!important;visibility:hidden!important;pointer-events:none!important
+  }
+  #pb783FinanceShortcut.pb804Back{background:#f5f8ff!important;border-color:#c7d7fe!important;color:#244ea2!important}
+
+  html.pb804ScrollUnlocked,
+  html.pb804ScrollUnlocked body,
+  html.pb804ScrollUnlocked body #root{height:auto!important;min-height:100%!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;touch-action:pan-y!important}
+  html.pb804ScrollUnlocked body #root .photographerMain{position:relative!important;height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;touch-action:pan-y!important}
+  html.pb804ScrollUnlocked body #root .photographerMain>.photographerRolePageScrollArea{
+    position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;overflow:visible!important;overflow-x:hidden!important;overflow-y:visible!important;touch-action:pan-y!important;overscroll-behavior-y:auto!important;-webkit-overflow-scrolling:touch!important;pointer-events:auto!important
+  }
+}

@@ -1,0 +1,24 @@
+/* PhotoBridge v802 — keep the intended floating Invoice/Back control and recover non-print mobile scrolling. */
+@media(max-width:820px){
+  /* The v783 floating control is the primary mobile Invoice control; native finance controls are duplicates. */
+  html.pb802PrintNormal body:has(.photographerMain.photographerPrintWorkspace) #pb783FinanceShortcut.pb802InvoiceShortcut,
+  html.pb802PrintFinance body:has(.photographerMain.photographerPrintWorkspace) #pb783FinanceShortcut.pb802InvoiceShortcut{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+  }
+  html.pb802PrintUpload body #pb783FinanceShortcut{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance,
+  .photographerMain.photographerPrintWorkspace .pb802NativeInvoiceHidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  html.pb802PrintFinance body #pb765-add,
+  html.pb802PrintFinance body .pb802PlusHidden,
+  html.pb802PrintFinance body .pb802BackHidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  #pb783FinanceShortcut.pb802ShortcutBack{background:#f5f8ff!important;border-color:#c7d7fe!important;color:#244ea2!important}
+
+  /* AI, Album Design and Instagram are internal-scroll pages. Remove print geometry/overflow locks after leaving Print. */
+  html.pb802ScrollRecovery body #root .photographerMain>.photographerRolePageScrollArea{
+    position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;box-sizing:border-box!important;
+    flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;overscroll-behavior-y:contain!important;scroll-behavior:auto!important;overflow-anchor:none!important;pointer-events:auto!important;
+  }
+  html.pb802ScrollRecovery body #root .photographerMain{min-height:0!important;overflow:hidden!important}
+}

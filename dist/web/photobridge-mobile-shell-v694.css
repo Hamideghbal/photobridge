@@ -1,0 +1,285 @@
+/* PhotoBridge mobile shell v694 — one white header height + attached blue context strips.
+   Mobile only. No polling/runtime CSS hacks. */
+@media (max-width:820px){
+  :root{--pb694-photo-header-h:72px;--pb694-context-h:42px}
+
+  /* The white photographer header is now one exact physical box everywhere: AI is the reference. */
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    height:var(--pb694-photo-header-h)!important;
+    min-height:var(--pb694-photo-header-h)!important;
+    max-height:var(--pb694-photo-header-h)!important;
+    padding:9px 10px 8px!important;
+    margin-top:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"identity"!important;
+    grid-template-rows:55px!important;
+    row-gap:0!important;
+    align-items:start!important;
+    overflow:visible!important;
+    background:#fff!important;
+    border:0!important;
+    border-bottom:1px solid #dfe5ee!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    height:55px!important;
+    min-height:55px!important;
+    max-height:55px!important;
+    padding-left:228px!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    padding-left:266px!important;
+  }
+
+  /* Invite is beside the bell. The old lower/second row is completely gone. */
+  .photographerMobileAiInviteRow,#pb693GlobalInviteButton{display:none!important}
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderPower,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderPower{
+    margin-left:64px!important;
+  }
+  #pb694HeaderInviteButton{
+    position:fixed!important;
+    z-index:680!important;
+    width:58px!important;
+    min-width:58px!important;
+    max-width:58px!important;
+    height:24px!important;
+    min-height:24px!important;
+    max-height:24px!important;
+    margin:0!important;
+    padding:0 5px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid #d8dee9!important;
+    border-radius:8px!important;
+    background:#fff!important;
+    color:#344054!important;
+    box-shadow:0 1px 3px rgba(16,24,40,.06)!important;
+    font-family:inherit!important;
+    font-size:7.7px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    touch-action:manipulation!important;
+    cursor:pointer!important;
+  }
+  #pb694HeaderInviteButton:active{transform:scale(.96)!important}
+
+  /* When a blue context strip exists it is visually a direct continuation of the white header. */
+  .photographerMain.pb694ContextBarActive>.unifiedRoleHeader.photographerHeaderRefined{
+    border-bottom:0!important;
+  }
+  #pb694PhotographerContextBar{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:var(--pb694-context-h)!important;
+    min-height:var(--pb694-context-h)!important;
+    max-height:var(--pb694-context-h)!important;
+    margin:0!important;
+    padding:5px 8px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    direction:rtl!important;
+    box-sizing:border-box!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;
+    color:#fff!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    z-index:640!important;
+  }
+  #pb694PhotographerContextBar[hidden]{display:none!important}
+  #pb694PhotographerContextBar .pb694ContextTitle{
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    overflow:hidden!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+  }
+  #pb694PhotographerContextBar .pb694ContextTitle b{
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    color:#fff!important;
+    font-size:11.5px!important;
+    font-weight:950!important;
+  }
+  #pb694PhotographerContextBar .pb694ContextActions{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:5px!important;
+    direction:rtl!important;
+  }
+  #pb694PhotographerContextBar button,
+  #pb694PrintBarActions button{
+    appearance:none!important;
+    min-width:34px!important;
+    height:30px!important;
+    min-height:30px!important;
+    margin:0!important;
+    padding:0 8px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    border:1px solid rgba(255,255,255,.30)!important;
+    border-radius:8px!important;
+    background:rgba(255,255,255,.11)!important;
+    color:#fff!important;
+    box-shadow:none!important;
+    font-family:inherit!important;
+    font-size:9px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    touch-action:manipulation!important;
+    box-sizing:border-box!important;
+  }
+  #pb694PhotographerContextBar button:active,#pb694PrintBarActions button:active{transform:scale(.96)!important}
+  #pb694PhotographerContextBar button.active,#pb694PrintBarActions button.active{
+    background:#fff!important;
+    border-color:#fff!important;
+    color:#244fcf!important;
+    box-shadow:0 2px 7px rgba(15,23,42,.12)!important;
+  }
+  #pb694PhotographerContextBar .pb694Square{
+    width:30px!important;min-width:30px!important;max-width:30px!important;padding:0!important;font-size:15px!important;
+  }
+  #pb694PhotographerContextBar .pb694FilterButton svg{
+    width:16px!important;height:16px!important;display:block!important;stroke:currentColor!important;fill:none!important;
+  }
+  #pb694PhotographerContextBar .pb694ModelCount{
+    font-size:8px!important;opacity:.82!important;font-weight:850!important;white-space:nowrap!important;
+  }
+  #pb694PhotographerContextBar .pb694FreeBadge{
+    height:18px!important;padding:0 6px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    border:1px solid rgba(255,255,255,.34)!important;border-radius:999px!important;background:rgba(255,255,255,.13)!important;
+    color:#fff!important;font-size:7.5px!important;font-weight:950!important;line-height:1!important;white-space:nowrap!important;
+  }
+
+  /* Fixed blue bar must reserve real visual clearance; page cards can never start underneath it. */
+  .photographerMain.pb694ContextBarActive>.photographerRolePageScrollArea{
+    padding-top:58px!important;
+    scroll-padding-top:58px!important;
+  }
+
+  /* Old duplicated white controls are represented by the attached blue strip. */
+  .photographerMain.pb694DesignContext .photographerAlbumDesignCatalog .albumDesignModelViewToolbar{
+    position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;
+    margin:0!important;padding:0!important;border:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;
+  }
+  .photographerMain.pb694DesignContext .photographerAlbumDesignCatalog .albumDesignMobileCatalogHeader{display:none!important}
+  .photographerMain.pb694DesignContext .photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle{display:none!important}
+  .photographerMain.pb694AiContext .photographerAiSectionNav{display:none!important}
+  .photographerMain.pb694GalleryContext .clientGalleryListHead>button.primary{display:none!important}
+
+  /* Print: exact white-header height, then blue active-lab strip with no seam. */
+  .photographerMain.photographerPrintWorkspace.pbFixedRoleHeader>.unifiedRoleHeader.photographerPrintModeHeader{
+    height:var(--pb694-photo-header-h)!important;
+    min-height:var(--pb694-photo-header-h)!important;
+    max-height:var(--pb694-photo-header-h)!important;
+    padding:9px 10px 8px!important;
+    margin-bottom:122px!important;
+    border-bottom:0!important;
+    overflow:visible!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    top:calc(100% - 1px)!important;
+    height:115px!important;
+    min-height:115px!important;
+    max-height:115px!important;
+    grid-template-rows:42px 58px!important;
+    gap:7px!important;
+    padding:0 9px 8px!important;
+    background:#f8fafc!important;
+    border-bottom:1px solid #e4e9f1!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab{
+    height:42px!important;min-height:42px!important;max-height:42px!important;
+    padding-right:12px!important;padding-left:178px!important;
+    margin:0 calc(50% - 50vw)!important;
+    direction:rtl!important;justify-content:flex-start!important;text-align:right!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;
+    border:0!important;border-radius:0!important;box-shadow:none!important;color:#fff!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintTopLabStatic,
+  .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect,
+  .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelect,
+  .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger{
+    max-width:100%!important;
+    color:#fff!important;
+    text-align:right!important;
+    justify-content:flex-start!important;
+    background:transparent!important;
+    border-color:rgba(255,255,255,.24)!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger>span{text-align:right!important;color:#fff!important}
+
+  /* The old Archive/Invoice row disappears; the exact same actions are proxied inside the blue strip. */
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeUtilityCluster{visibility:hidden!important;pointer-events:none!important}
+  #pb694PrintBarActions{
+    position:fixed!important;
+    z-index:655!important;
+    width:164px!important;
+    min-width:164px!important;
+    max-width:164px!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px!important;
+    align-items:center!important;
+    pointer-events:auto!important;
+  }
+  #pb694PrintBarActions button{width:100%!important;min-width:0!important;height:100%!important;min-height:28px!important;padding:0 7px!important}
+
+  /* Store: blue identity is flush against the exact same white header. */
+  #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{border-bottom:0!important}
+  #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    top:var(--pb-store-role-header-h,var(--pb694-photo-header-h))!important;
+    height:42px!important;min-height:42px!important;max-height:42px!important;
+    border-top:0!important;box-shadow:none!important;
+    direction:rtl!important;justify-content:flex-start!important;text-align:right!important;padding-inline:12px!important;
+  }
+  #photographerStoreIdentityBar .storeIdentityToggle{direction:rtl!important;justify-content:flex-start!important;text-align:right!important;margin:0!important}
+  #photographerStoreIdentityBar .storeIdentityToggle b{text-align:right!important}
+
+  /* Large design libraries never block navigation merely because cards are off-screen. */
+  .photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard{
+    content-visibility:auto!important;contain:layout paint style!important;contain-intrinsic-size:280px 390px!important;
+  }
+  .photographerAlbumDesignCatalog .albumDesignModelPreview{contain:layout paint!important}
+  html.pb694FastNavigate .photographerAlbumDesignCatalog .albumDesignModelGrid{content-visibility:hidden!important;pointer-events:none!important}
+}
+
+@media (max-width:380px){
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{padding-left:214px!important}
+  .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{padding-left:246px!important}
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderWallet{
+    min-width:64px!important;max-width:82px!important;padding-inline:5px!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab{padding-left:164px!important}
+  #pb694PrintBarActions{width:150px!important}
+}
+
+@media (min-width:821px){
+  #pb694PhotographerContextBar,#pb694HeaderInviteButton,#pb694PrintBarActions{display:none!important}
+}

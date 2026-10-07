@@ -1,0 +1,39 @@
+/* PhotoBridge v828 — keep mobile home contact/footer content at the true end of the page. */
+@media (max-width:760px){
+  body.pbHomePublicRoute{
+    min-height:100dvh!important;
+    display:block!important;
+  }
+  body.pbHomePublicRoute #root{
+    display:block!important;
+    width:100%!important;
+    min-height:0!important;
+    position:relative!important;
+  }
+  body.pbHomePublicRoute #root>.publicHome,
+  body.pbHomePublicRoute #root>.publicHome.publicHomeV17{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    min-height:calc(100dvh - var(--pb-canonical-header-height,72px))!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+  body.pbHomePublicRoute #root>.publicHome>.publicFooter{
+    position:relative!important;
+    inset:auto!important;
+    order:999!important;
+    flex:0 0 auto!important;
+    width:calc(100% - 24px)!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:28px 12px 0!important;
+    padding:18px 0 calc(22px + env(safe-area-inset-bottom))!important;
+    clear:both!important;
+  }
+  /* The React home already owns the full contact/trust footer. Avoid a second footer beneath it on mobile. */
+  body.pbHomePublicRoute #pbCanonicalFooterV624{
+    display:none!important;
+  }
+}

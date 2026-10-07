@@ -1,0 +1,56 @@
+/* PhotoBridge v815 — unify mobile Print top tabs with Store navigation. */
+@media(max-width:820px){
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-template-areas:"lab lab lab" "photo album finance"!important;
+    column-gap:5px!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintTopLab{grid-area:lab!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab{grid-area:photo!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab{grid-area:album!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab{grid-area:finance!important}
+
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;
+    position:relative!important;inset:auto!important;transform:none!important;
+    width:100%!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+    align-self:center!important;margin:0!important;padding:0 5px!important;
+    align-items:center!important;justify-content:center!important;gap:4px!important;
+    border:1px solid #d7deea!important;border-radius:9px!important;
+    background:#fff!important;color:#475467!important;
+    box-shadow:none!important;font:900 9.5px Vazirmatn,Tahoma,sans-serif!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab *,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab *,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab *{color:inherit!important;font-style:normal!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab>span{font-size:14px!important;line-height:1!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab>em{font-size:9.5px!important;font-weight:900!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab.active,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab.active,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb815PrintFinanceTab.active{
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+
+  /* Finance is a real third tab now; suppress all legacy invoice/back shortcuts. */
+  #pb783FinanceShortcut,
+  #pb698PrintBarActions [data-pb698-print="finance"],
+  #pb697PrintBarActions [data-pb697-print="finance"],
+  #pb696PrintBarActions [data-pb696-print="finance"],
+  #pb694PrintBarActions [data-pb694-print="finance"],
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance,
+  html.pb815PrintFinanceActive .photographerMain.photographerPrintWorkspace .photographerPrintModeBack{
+    display:none!important;visibility:hidden!important;pointer-events:none!important;
+  }
+
+  /* Keep the three top Print tabs present while the Finance content is open. */
+  html.pb815PrintFinanceActive body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  html.pb815PrintFinanceActive body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    display:grid!important;visibility:visible!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-template-areas:"lab lab lab" "photo album finance"!important;
+  }
+}

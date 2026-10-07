@@ -1,0 +1,104 @@
+/* PhotoBridge v820 — authoritative centering for the Print Finance laboratory identity. */
+@media(max-width:820px){
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintModeNav>.photographerPrintTopLab,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintModeNav>.photographerPrintTopLab{
+    position:relative!important;
+    direction:rtl!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0 10px!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+    box-shadow:none!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintModeNav>.photographerPrintTopLab::before,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintModeNav>.photographerPrintTopLab::before{
+    content:"لابراتوار"!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 auto!important;
+    margin:0!important;
+    color:inherit!important;
+    opacity:1!important;
+    font:950 12px/1 Vazirmatn,Tahoma,sans-serif!important;
+    white-space:nowrap!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabStatic,
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect,
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelect,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabStatic,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelect{
+    flex:0 1 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:min(72vw,560px)!important;
+    margin:0!important;
+    padding:0!important;
+    direction:rtl!important;
+    text-align:center!important;
+    justify-content:center!important;
+    color:inherit!important;
+    font:950 12px/1.2 Vazirmatn,Tahoma,sans-serif!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabStatic,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabStatic{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-height:32px!important;
+    height:32px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectTrigger,
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectButton,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectTrigger,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectButton{
+    position:relative!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:min(72vw,560px)!important;
+    min-height:32px!important;
+    height:32px!important;
+    margin:0!important;
+    padding:0 28px!important;
+    direction:rtl!important;
+    text-align:center!important;
+    color:inherit!important;
+    font:950 12px/1.2 Vazirmatn,Tahoma,sans-serif!important;
+    box-shadow:none!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectTrigger>span,
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectButton>span,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectTrigger>span,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectButton>span{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    text-align:center!important;
+    font:950 12px/1.2 Vazirmatn,Tahoma,sans-serif!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectTrigger>svg,
+  html.pb817PrintFinance body #root .photographerMain .photographerPrintTopLabSelect .pbSelectButton>svg,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectTrigger>svg,
+  html.pb817PrintFinance body #root .photographerMain.pb817PrintFinanceMain .photographerPrintTopLabSelect .pbSelectButton>svg{
+    position:absolute!important;
+    left:8px!important;
+    right:auto!important;
+  }
+}

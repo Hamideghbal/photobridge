@@ -1,0 +1,148 @@
+/* PhotoBridge v0.17.684 — mobile photographer shell final parity.
+   Internal Instagram mode, exact print identity rhythm, one page scroller,
+   assistant/chat above the bottom dock. */
+@media (max-width:820px){
+  html:has(body.pbAuthenticatedPhotographerPortal),
+  body.pbAuthenticatedPhotographerPortal{
+    width:100%!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+    overflow:hidden!important;overscroll-behavior:none!important;
+  }
+  body.pbAuthenticatedPhotographerPortal{position:fixed!important;inset:0!important;}
+  body.pbAuthenticatedPhotographerPortal #root,
+  body.pbAuthenticatedPhotographerPortal .roleWorkspace:not(.labRoleWorkspace),
+  body.pbAuthenticatedPhotographerPortal .roleWorkspace:not(.labRoleWorkspace)>.workspaceContent,
+  body.pbAuthenticatedPhotographerPortal .photographerMain{
+    width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerMain{display:flex!important;flex-direction:column!important;}
+  body.pbAuthenticatedPhotographerPortal .photographerMain>.unifiedRoleHeader,
+  body.pbAuthenticatedPhotographerPortal .photographerMain>.photographerLabContextRail{
+    flex:0 0 auto!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerMain>.photographerRolePageScrollArea{
+    flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+    overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain!important;overscroll-behavior-x:none!important;
+  }
+
+  /* Print identity uses exactly the same two-line identity + separate date meta geometry as normal photographer tabs. */
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderIdentity{
+    width:100%!important;min-width:0!important;min-height:88px!important;height:88px!important;
+    padding:9px 10px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 190px!important;
+    align-items:start!important;gap:10px!important;box-sizing:border-box!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy{
+    width:100%!important;min-width:0!important;padding-top:1px!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:"title meta" "subtitle meta"!important;column-gap:8px!important;row-gap:1px!important;
+    align-items:center!important;text-align:right!important;direction:rtl!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>h1{
+    grid-area:title!important;margin:0!important;min-width:0!important;max-width:none!important;
+    font-size:16px!important;font-weight:900!important;line-height:1.3!important;letter-spacing:-.2px!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>small{
+    grid-area:subtitle!important;display:block!important;margin:0!important;min-width:0!important;
+    font-size:9.3px!important;font-weight:600!important;line-height:1.35!important;color:#667085!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly{
+    grid-area:meta!important;display:flex!important;align-items:flex-end!important;justify-content:flex-end!important;
+    align-self:end!important;min-width:82px!important;min-height:16px!important;margin:0 0 2px!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly .todayStamp.compact{
+    width:auto!important;max-width:100%!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;
+    display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:4px!important;color:#7b8494!important;white-space:nowrap!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly .todayStamp.compact span{
+    font-size:8.5px!important;font-weight:850!important;line-height:1.2!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly .todayStamp.compact b{
+    display:none!important;
+  }
+
+  /* Keep the mobile assistant and direct chat clear of the persistent app dock. */
+  body.pbAuthenticatedPhotographerPortal .aiAssistantLauncher{
+    display:grid!important;position:fixed!important;right:12px!important;left:auto!important;
+    bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;z-index:5200!important;
+    visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .aiAssistantDock{
+    position:fixed!important;right:10px!important;left:auto!important;
+    bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;width:calc(100vw - 20px)!important;
+    height:min(500px,calc(100dvh - 126px))!important;max-height:calc(100dvh - 126px)!important;z-index:5199!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .roleWorkspace:not(.labRoleWorkspace)>.chatDock.collapsed{
+    position:fixed!important;left:10px!important;right:auto!important;top:auto!important;
+    bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;z-index:5198!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .roleWorkspace:not(.labRoleWorkspace)>.chatDock:not(.collapsed){
+    position:fixed!important;left:8px!important;right:auto!important;top:auto!important;
+    bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;width:min(340px,calc(100vw - 16px))!important;
+    max-width:calc(100vw - 16px)!important;max-height:calc(100dvh - 126px)!important;overflow:hidden!important;z-index:5197!important;
+  }
+}
+@media(max-width:390px){
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderIdentity{
+    grid-template-columns:minmax(0,1fr) 178px!important;gap:7px!important;
+  }
+}
+
+
+/* v0.17.684 — print identity must follow the same vertical reading order as the other mobile tabs. */
+@media (max-width:820px){
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:0!important;
+    text-align:right!important;
+    direction:rtl!important;
+    padding-top:1px!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>h1{
+    order:1!important;
+    width:100%!important;
+    margin:0!important;
+    font-size:16px!important;
+    font-weight:900!important;
+    line-height:1.3!important;
+    letter-spacing:-.2px!important;
+    text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>small{
+    order:2!important;
+    width:100%!important;
+    margin:1px 0 0!important;
+    font-size:9.3px!important;
+    font-weight:600!important;
+    line-height:1.35!important;
+    text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly{
+    order:3!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:15px!important;
+    margin:5px 0 0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    align-self:stretch!important;
+    text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly .todayStamp.compact{
+    width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    text-align:right!important;
+  }
+  body.pbAuthenticatedPhotographerPortal .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly .todayStamp.compact span{
+    font-size:8px!important;
+    font-weight:800!important;
+    line-height:1.2!important;
+  }
+}

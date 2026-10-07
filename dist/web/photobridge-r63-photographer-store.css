@@ -1,0 +1,25 @@
+/* PhotoBridge R63 — photographer store stability + calendar, safe external patch */
+#storeSectionNavV673>button{box-shadow:none!important;transition:background-color .12s ease,color .12s ease,border-color .12s ease!important}
+#storeSectionNavV673>button:not(.active){outline:none!important;box-shadow:none!important}
+#storeSectionNavV673>button.active,#storeSectionNavV673>button[aria-selected="true"]{box-shadow:none!important}
+#photographerStoreRoleHeader,#photographerStoreIdentityBar,#storeSectionNavV673{box-shadow:none!important;filter:none!important}
+#photographerStoreRoleHeader{border-bottom:0!important}
+#photographerStoreIdentityBar{border-top:0!important;border-bottom:0!important;box-shadow:none!important;justify-content:center!important}
+#photographerStoreIdentityBar #storeIdentityActionsV809{position:absolute!important;left:max(9px,calc((100vw - 1120px)/2))!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important;margin:0!important;z-index:5!important;direction:ltr!important}
+#photographerStoreIdentityBar #storeIdentityToggle{max-width:min(62vw,650px)!important;margin-inline:auto!important;padding-inline:10px!important}
+#equipmentPanel .pbR63RentalCalendar{display:grid;gap:10px;margin-bottom:10px}
+#equipmentPanel:not(.pbR63OfficeOpen) #equipmentFlow{display:none!important}
+#equipmentPanel.pbR63OfficeOpen .pbR63RentalCalendar{display:none!important}
+#equipmentPanel.pbR63OfficeOpen .rentalDateRowV809{display:none!important}
+.pbR63CalendarHead{display:grid;grid-template-columns:38px minmax(0,1fr) 38px;align-items:center;gap:8px}
+.pbR63CalendarHead button{height:36px;border:1px solid #e4e7ec;border-radius:10px;background:#fff;color:#475467;font:950 20px/1 Arial;cursor:pointer}
+.pbR63CalendarTitle{text-align:center;display:grid;gap:1px}.pbR63CalendarTitle b{font-size:13px}.pbR63CalendarTitle small{font-size:9px;color:#667085}
+.pbR63Week,.pbR63Days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.pbR63Week span{text-align:center;font:850 9px Vazirmatn;color:#98a2b3;padding:4px 0}
+.pbR63Day{position:relative;min-height:54px;border:1px solid #edf0f4;border-radius:11px;background:#fff;color:#344054;font:850 10px Vazirmatn;cursor:pointer;display:grid;place-items:start end;padding:7px;transition:border-color .12s ease,background .12s ease}
+.pbR63Day:hover:not(:disabled){border-color:#a8b8ff;background:#f8faff}.pbR63Day.today{border-color:#a8b8ff}.pbR63Day.today::after{content:'امروز';position:absolute;left:5px;bottom:4px;font-size:6.8px;color:#315efb;font-weight:900}
+.pbR63Day.inRange{background:#eef2ff;border-color:#c7d2fe}.pbR63Day.edge{background:#315efb;color:#fff;border-color:#315efb}.pbR63Day:disabled{opacity:.34;cursor:not-allowed;background:#f8fafc}.pbR63Day.blank{visibility:hidden;pointer-events:none}
+.pbR63CalendarFoot{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding-top:10px;border-top:1px solid #eef1f5}.pbR63Range{display:grid;gap:2px;min-width:0}.pbR63Range b{font-size:11px}.pbR63Range small{font-size:8.5px;color:#667085;white-space:normal}.pbR63OfficeBtn{min-width:150px;min-height:42px;border:0;border-radius:11px;background:#315efb;color:#fff;font:950 11px Vazirmatn;cursor:pointer}.pbR63OfficeBtn:disabled{opacity:.45;cursor:not-allowed}
+.pbR63OfficeTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;padding:8px 10px;border:1px solid #e4e7ec;border-radius:11px;background:#f8fafc}.pbR63OfficeTop b{font-size:10.5px}.pbR63OfficeTop small{font-size:8.5px;color:#667085}.pbR63BackCalendar{border:1px solid #d0d5dd;background:#fff;color:#475467;border-radius:9px;min-height:34px;padding:0 10px;font:900 9px Vazirmatn;cursor:pointer}
+/* Never expose stock counters to the photographer storefront. */
+#equipmentPanel [data-stock],#equipmentPanel .stockCount,#equipmentPanel .availableStock,#equipmentPanel .inventoryCount{display:none!important}
+@media(max-width:820px){#photographerStoreIdentityBar #storeIdentityActionsV809{left:7px!important}.pbR63Day{min-height:46px;padding:5px;border-radius:9px;font-size:9px}.pbR63Week,.pbR63Days{gap:3px}.pbR63CalendarFoot{grid-template-columns:1fr 118px}.pbR63OfficeBtn{min-width:118px;min-height:40px;font-size:10px}.pbR63Day.today::after{font-size:6px;left:3px;bottom:3px}}

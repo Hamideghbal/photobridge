@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /photographer/signup
+Disallow: /admin
+Disallow: /lab
+Disallow: /photographer/
+Disallow: /invite/
+Disallow: /walkin/
+Disallow: /g/
+Disallow: /a/
+Disallow: /api/
+
+Sitemap: https://photobridge.ir/sitemap.xml

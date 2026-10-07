@@ -1,0 +1,41 @@
+{
+  "id": "/photobridge-pwa",
+  "name": "PhotoBridge",
+  "short_name": "PhotoBridge",
+  "description": "ابزار حرفه‌ای عکاسان؛ چاپ، طراحی، گالری و هوش مصنوعی PhotoBridge",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/photographer",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#0b223e",
+  "theme_color": "#dff2f6",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/photobridge-icon-192-v785.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/photobridge-icon-512-v785.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://photobridge.ir/photobridge.webmanifest?v=786",
+      "id": "https://photobridge.ir/photobridge-pwa"
+    }
+  ],
+  "_legacy_splash_icon": "/photobridge-icon-512-v783.png"
+}

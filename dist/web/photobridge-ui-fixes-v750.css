@@ -1,0 +1,66 @@
+/* PhotoBridge v750 — mobile print/album action parity + persistent album actions. */
+@media (max-width:820px){
+  /* Slightly reduce the two main Print / Album mode tabs. */
+  html body .photographerMain.photographerPrintWorkspace>.photographerPrintModeHeader{margin-bottom:106px!important}
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav{
+    height:106px!important;min-height:106px!important;max-height:106px!important;
+    grid-template-rows:46px 52px!important;row-gap:8px!important
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction{
+    height:52px!important;min-height:52px!important;max-height:52px!important
+  }
+
+  /* Both action pairs use exactly the same dimensions in Print and Album. */
+  html body .photographerMobileOrderLaunch,
+  html body .photographerMobileOrderLaunch.album{
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;align-items:stretch!important;padding:0 8px!important
+  }
+  html body .photographerMobileOrderLaunch .photographerMobileOrderAction,
+  html body .photographerMobileOrderLaunch.album .photographerMobileOrderAction,
+  html body .albumQuickActions>button{
+    height:40px!important;min-height:40px!important;max-height:40px!important;
+    margin:0!important;padding:0 8px!important;box-sizing:border-box!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    text-align:center!important;font-size:11px!important;font-weight:850!important;line-height:1.2!important
+  }
+
+  /* Force the launch pair to begin at the identical Y position when tabs switch. */
+  html body .photographerMain.photographerPrintWorkspace:not(.photographerAlbumCreateWorkspaceMode)>.photographerRolePageScrollArea>.ordersWorkspace{
+    margin-top:12px!important
+  }
+  html body .photographerMain.photographerPrintWorkspace.photographerAlbumWorkspaceMode>.photographerRolePageScrollArea>.photographerAlbumListFlush{
+    padding-top:12px!important
+  }
+  html body .photographerMain.photographerPrintWorkspace.photographerAlbumWorkspaceMode>.photographerRolePageScrollArea>.photographerAlbumListFlush>.ordersWorkspace{
+    margin-top:0!important
+  }
+  html body .photographerMain.photographerPrintWorkspace.photographerAlbumCreateWorkspaceMode>.photographerRolePageScrollArea>.photographerAlbumCreateFlush{
+    padding-top:12px!important
+  }
+
+  /* In Album create/settings, keep the two primary album actions visible at the top. */
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbar{
+    position:sticky!important;top:0!important;z-index:240!important;
+    margin:0 0 8px!important;padding:0 8px 8px!important;
+    border:0!important;border-radius:0!important;box-shadow:none!important;
+    background:#f6f8fc!important
+  }
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbar>.eyebrow{display:none!important}
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbarActions{
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;width:100%!important;align-items:center!important
+  }
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbarActions>.albumQuickActions{
+    grid-column:1 / -1!important;grid-row:1!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;width:100%!important;margin:0!important
+  }
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbarActions>.albumOrderLabSelectPlain,
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbarActions>.albumOrderLabStaticPlain{
+    grid-column:1!important;grid-row:2!important;min-width:0!important
+  }
+  html body .photographerAlbumCreateWorkspaceMode .albumMultiOrderToolbarActions>.albumMultiAddAlbum{
+    grid-column:2!important;grid-row:2!important;min-width:0!important;margin:0!important
+  }
+}

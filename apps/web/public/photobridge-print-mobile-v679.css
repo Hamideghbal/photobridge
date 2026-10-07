@@ -1,0 +1,179 @@
+/* PhotoBridge v0.17.679 — mobile print header controls + contextual guides.
+   Mobile only: keep desktop back behavior intact, use the standard four photographer
+   header controls, keep Archive/Invoice in a smaller second row, and place each
+   guide beside the print/album button it explains. */
+@media (max-width:820px){
+  /* Print header identity row: studio identity on the right, standard utilities on the left. */
+  .photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderIdentity{
+    min-height:78px!important;
+    padding:7px 9px!important;
+    gap:8px!important;
+    align-items:center!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+
+  /* Back is intentionally desktop-only. */
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeBack{
+    display:none!important;
+  }
+
+  /* One compact 4-control row + Archive/Invoice directly below it. */
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeUtilityCluster{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+    width:188px!important;
+    min-width:188px!important;
+    max-width:188px!important;
+    margin:0!important;
+    padding:0!important;
+    display:grid!important;
+    grid-template-columns:34px 32px 32px minmax(78px,1fr)!important;
+    grid-template-rows:32px 25px!important;
+    grid-template-areas:
+      "bell power settings wallet"
+      "archive archive invoice invoice"!important;
+    gap:4px!important;
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    direction:ltr!important;
+    overflow:visible!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileNotificationBell{grid-area:bell!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower{grid-area:power!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings{grid-area:settings!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet{grid-area:wallet!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.archive{grid-area:archive!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance{grid-area:invoice!important;}
+
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileNotificationBell,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    height:32px!important;
+    min-height:32px!important;
+    margin:0!important;
+    border:1px solid #d8dee9!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    color:#475467!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    box-shadow:0 1px 2px #10182808!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileNotificationBell{
+    width:34px!important;min-width:34px!important;padding:0!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings{
+    width:32px!important;min-width:32px!important;padding:0!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower{color:#b42318!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower svg{width:13px!important;height:13px!important;margin:0!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings>span{font-size:15px!important;line-height:1!important;}
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet{
+    width:auto!important;min-width:78px!important;max-width:88px!important;padding:0 7px!important;
+    gap:3px!important;direction:rtl!important;font-size:7.6px!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;
+    border-color:#d9e4ff!important;background:#f7faff!important;color:#24437d!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet b{
+    font-size:7.6px!important;font-weight:950!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings.active,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet.active{
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:25px!important;
+    min-height:25px!important;
+    margin:0!important;
+    padding:0 5px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    border:1px solid #e1e6ef!important;
+    border-radius:8px!important;
+    background:#f8fafc!important;
+    color:#667085!important;
+    box-shadow:none!important;
+    direction:rtl!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction span{
+    display:inline!important;font-size:9px!important;line-height:1!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction em{
+    display:inline!important;margin:0!important;font-style:normal!important;font-size:7.5px!important;font-weight:900!important;line-height:1!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.active{
+    background:#eef3ff!important;border-color:#b8c7ef!important;color:#315efb!important;
+  }
+
+  /* v671 used to inject a second standalone settings gear. Integrated controls own it now. */
+  .photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintSettingsQuickAction,
+  .photographerPrintWorkspace .photographerPrintModeHeader>.pb671PrintSettingsQuickAction{
+    display:none!important;
+  }
+
+  /* Lab row + one single action row: guide, Print, Album, guide. */
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav,
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav.pb569WorkflowGuideNavReady,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerHeaderNav.photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerHeaderNav.photographerPrintModeNav.pb569WorkflowGuideNavReady{
+    grid-template-columns:32px minmax(0,1fr) minmax(0,1fr) 32px!important;
+    grid-template-areas:"lab lab lab lab" "gphoto photo album galbum"!important;
+    grid-template-rows:42px 56px!important;
+    gap:7px 6px!important;
+    padding:0 9px 8px!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav:not(:has(.photographerPrintAlbumTab)){
+    grid-template-areas:"lab lab lab lab" "gphoto photo photo photo"!important;
+  }
+
+  .photographerPrintWorkspace .photographerPrintModeNav>.pb569WorkflowGuideButton{
+    width:100%!important;
+    min-width:0!important;
+    height:56px!important;
+    min-height:56px!important;
+    padding:0 2px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    border-radius:10px!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeNav>.pb569WorkflowGuideButton.print{grid-area:gphoto!important;}
+  .photographerPrintWorkspace .photographerPrintModeNav>.pb569WorkflowGuideButton.album{grid-area:galbum!important;}
+  .photographerPrintWorkspace .pb569WorkflowGuideButton .pb569GuideArrow{
+    display:block!important;width:auto!important;height:auto!important;margin:0!important;font-size:14px!important;line-height:1!important;font-weight:950!important;
+  }
+  .photographerPrintWorkspace .pb569WorkflowGuideButton .pb569GuideLabel{
+    display:block!important;font-size:6.5px!important;font-weight:950!important;line-height:1!important;writing-mode:horizontal-tb!important;
+  }
+}
+
+/* Desktop keeps the long-standing Back control and hides the mobile quartet. */
+@media (min-width:821px){
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileNotificationBell,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderPower,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderSettings,
+  .photographerPrintWorkspace .photographerPrintModeUtilityCluster>.mobileHeaderWallet{display:none!important;}
+}

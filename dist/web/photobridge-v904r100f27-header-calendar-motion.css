@@ -1,0 +1,210 @@
+/* PhotoBridge R100F27 — larger aligned menu, wider identity, lower rental calendar, animated menu/panels. */
+@media(max-width:820px){
+  html body #storePhotographerWorkspace.storePhotographerWorkspace{
+    --pb-store-role-header-h:72px!important;
+    --pb-role-header-h:72px!important;
+  }
+  html body #photographerStoreRoleHeader.photographerHeaderRefined{
+    min-height:72px!important;
+    height:72px!important;
+    padding:7px 9px 7px 66px!important;
+  }
+  html body #photographerStoreRoleHeader .photographerHeaderIdentity{
+    min-height:58px!important;
+    gap:9px!important;
+    overflow:visible!important;
+  }
+  html body #photographerStoreRoleHeader .photographerHeaderIdentity .workspaceIdentityCopy{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:44px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    align-content:center!important;
+    align-items:center!important;
+    column-gap:7px!important;
+    row-gap:1px!important;
+    overflow:visible!important;
+  }
+  html body #photographerStoreRoleHeader .photographerHeaderIdentity .workspaceIdentityCopy>h1{
+    grid-column:1/-1!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    font-size:clamp(11.5px,3.6vw,14px)!important;
+    line-height:1.18!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+  }
+  html body #photographerStoreRoleHeader .photographerHeaderIdentity .workspaceIdentityCopy>small{
+    grid-column:1!important;
+    grid-row:2!important;
+    width:auto!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    font-size:7.8px!important;
+    line-height:1.25!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly{
+    grid-column:2!important;
+    grid-row:2!important;
+    width:auto!important;
+    min-width:max-content!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    justify-content:flex-end!important;
+  }
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact{
+    width:auto!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    gap:3px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    white-space:nowrap!important;
+  }
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact span{
+    font-size:7.6px!important;
+  }
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact b{
+    font-size:7.4px!important;
+  }
+
+  #pbR100F25AvatarBtn{
+    flex:0 0 44px!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+    max-width:44px!important;
+    max-height:44px!important;
+    border-radius:13px!important;
+  }
+  #pbR100F25MenuBtn{
+    left:9px!important;
+    top:15px!important;
+    width:50px!important;
+    min-width:50px!important;
+    max-width:50px!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+    border-radius:12px!important;
+    gap:4px!important;
+    font-size:9.3px!important;
+    transition:transform .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+  }
+  #pbR100F25MenuBtn:active{transform:scale(.96)!important}
+  #pbR100F25MenuBtn[aria-expanded="true"]{
+    background:#f5f8ff!important;
+    border-color:#b9ccff!important;
+    box-shadow:0 5px 14px rgba(49,94,251,.12)!important;
+  }
+  #pbR100F25MenuBtn svg{width:18px!important;height:18px!important}
+
+  /* Keep panel mounted so both opening and closing are animated. */
+  #pbR100F25MenuPanel{
+    display:grid!important;
+    gap:4px!important;
+    top:74px!important;
+    left:8px!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+    transform:translateY(-8px) scale(.975)!important;
+    transform-origin:top left!important;
+    transition:opacity .20s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility 0s linear .22s!important;
+  }
+  #pbR100F25MenuPanel.open{
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    transform:translateY(0) scale(1)!important;
+    transition:opacity .20s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility 0s!important;
+  }
+  #pbR100F25MenuPanel button{
+    transition:background-color .16s ease,transform .16s ease!important;
+  }
+  #pbR100F25MenuPanel button:active{transform:scale(.985)!important}
+  #pbR100F25MenuPanel .pbF25MenuText{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    align-items:center!important;
+    justify-items:start!important;
+    gap:2px!important;
+  }
+  #pbR100F25MenuPanel .pbF25MenuText small{
+    display:block!important;
+    width:100%!important;
+    font-size:7.8px!important;
+    line-height:1.45!important;
+    color:#7c8799!important;
+    text-align:right!important;
+  }
+  #pbR100F25MenuPanel [data-pbf25-target="storeWalletBtn"] .pbF25MenuText small{
+    color:#315efb!important;
+    font-weight:800!important;
+  }
+
+  /* Rental date/calendar block: genuinely lower, including its sticky stop. */
+  html body #equipmentPanel>.box{
+    padding-top:16px!important;
+  }
+  html body #equipmentPanel #equipmentFlow{
+    padding-top:0!important;
+  }
+  html body #equipmentPanel .rentalFilterDockV809{
+    position:sticky!important;
+    top:14px!important;
+    margin-top:24px!important;
+    margin-bottom:9px!important;
+    padding:5px 0 7px!important;
+  }
+
+  /* Smooth internal Store tab switches. */
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button{
+    transition:background-color .20s ease,border-color .20s ease,color .20s ease,box-shadow .20s ease,transform .14s ease!important;
+  }
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button:active{
+    transform:scale(.975)!important;
+  }
+  html body #storePhotographerWorkspace .rentalPanel.mobileActive{
+    animation:pbR100F27PanelIn .28s cubic-bezier(.2,.75,.25,1) both!important;
+  }
+  html body #storePhotographerWorkspace .storeHomeActionV671,
+  html body #storePhotographerWorkspace .storeHomeUtilityV671 button,
+  html body #storePhotographerWorkspace .financeTabsV811 button{
+    transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .14s ease!important;
+  }
+  html body #storePhotographerWorkspace .storeHomeActionV671:active,
+  html body #storePhotographerWorkspace .storeHomeUtilityV671 button:active,
+  html body #storePhotographerWorkspace .financeTabsV811 button:active{
+    transform:scale(.985)!important;
+  }
+}
+@keyframes pbR100F27PanelIn{
+  from{opacity:.25;transform:translateY(9px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  #pbR100F25MenuPanel,#pbR100F25MenuBtn,
+  html body #storePhotographerWorkspace .rentalPanel.mobileActive,
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button{
+    animation:none!important;transition:none!important;
+  }
+}

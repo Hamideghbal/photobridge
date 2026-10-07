@@ -1,0 +1,52 @@
+/* PhotoBridge v904R53 — photographer print-card containment + no empty scrollbar gutter. */
+
+html body #root .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea{
+  scrollbar-gutter:auto!important;
+  scrollbar-width:none!important;
+  overflow-x:hidden!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea::-webkit-scrollbar{
+  width:0!important;height:0!important;display:none!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderGrid.liveOrderGrid,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderCard.liveOrderCard,
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+  width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderCard.liveOrderCard{
+  overflow:hidden!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow > *,
+html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure,
+html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail{
+  min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead b,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead small,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail span{
+  overflow-wrap:anywhere!important;word-break:normal!important;
+}
+@media(min-width:851px){
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+    display:grid!important;
+    grid-template-columns:minmax(145px,.58fr) minmax(190px,.72fr) minmax(0,1.35fr)!important;
+    grid-template-areas:"head facts quick" "detail detail detail"!important;
+    align-items:center!important;gap:8px 12px!important;min-height:0!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow>.customerOrderHead{grid-area:head!important;align-self:center!important;}
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow>.customerOrderFacts{grid-area:facts!important;align-self:center!important;}
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow>.mobileOrderDisclosure{grid-area:detail!important;width:100%!important;margin:4px 0 0!important;}
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow>.customerOrderQuickRail{grid-area:quick!important;align-self:center!important;margin:0!important;padding:0!important;border:0!important;}
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody{width:100%!important;}
+}
+@media(max-width:850px){
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{display:block!important;overflow:hidden!important;}
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead,
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts,
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure,
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail{width:100%!important;max-width:100%!important;}
+}

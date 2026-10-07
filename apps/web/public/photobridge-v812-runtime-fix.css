@@ -1,0 +1,3 @@
+.financeSummary.accountingSummary.pb812FinanceThree{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.financeSummary.accountingSummary.pb812FinanceThree>div{min-width:0!important}
+@media(max-width:700px){.financeSummary.accountingSummary.pb812FinanceThree{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}.financeSummary.accountingSummary.pb812FinanceThree>div{padding:8px 5px!important}.financeSummary.accountingSummary.pb812FinanceThree small{font-size:8px!important;white-space:nowrap}.financeSummary.accountingSummary.pb812FinanceThree b{font-size:10px!important;white-space:nowrap}}

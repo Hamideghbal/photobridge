@@ -1,0 +1,215 @@
+/* PhotoBridge v718 — restore the original action blue and make the mobile context strip taller/readable. */
+@media (max-width:820px){
+  :root{
+    --pb718-header:#dff2f6;
+    --pb718-subbar:#b7dce7;
+    --pb718-subbar-text:#101828;
+    --pb718-action:#315efb;
+    --pb711-context-h:46px;
+    --pb698-context-h:46px;
+  }
+
+  html{background:var(--pb718-header)!important;color-scheme:light!important}
+
+  /* Keep the system/status area and every photographer/store header visually seamless. */
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined,
+  html body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader{
+    background:var(--pb718-header)!important;
+    background-color:var(--pb718-header)!important;
+    border:0!important;
+    outline:0!important;
+  }
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::before,
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::after,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::before,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::after{
+    content:none!important;display:none!important;border:0!important;box-shadow:none!important
+  }
+
+  /* Shared strip under the main header: about 9.5% taller than the previous 42px bar. */
+  html body #pb711PhotographerContextBar,
+  html body #pb698PhotographerContextBar,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab,
+  html body .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab,
+  html body #pb673PhotographerLabIdentityBar,
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+    background:var(--pb718-subbar)!important;
+    background-color:var(--pb718-subbar)!important;
+    color:var(--pb718-subbar-text)!important;
+    border:0!important;
+    border-top:0!important;
+    border-bottom:0!important;
+    outline:0!important;
+    box-shadow:inset 0 9px 13px -13px rgba(33,75,96,.62),0 2px 6px rgba(33,75,96,.09)!important;
+    font-weight:900!important;
+  }
+  html body #pb711PhotographerContextBar,
+  html body #pb698PhotographerContextBar,
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+    height:46px!important;
+    min-height:46px!important;
+    max-height:46px!important;
+    padding-top:6px!important;
+    padding-bottom:6px!important;
+  }
+
+  /* Dark, bold and slightly larger copy inside the context bar. */
+  html body #pb711PhotographerContextBar .pb711ContextTitle>b{
+    color:var(--pb718-subbar-text)!important;
+    font-size:12px!important;
+    font-weight:950!important;
+  }
+  html body #pb711PhotographerContextBar .pb711ContextMeta{
+    height:21px!important;
+    color:var(--pb718-subbar-text)!important;
+    font-size:8.2px!important;
+    font-weight:950!important;
+    border-color:rgba(49,94,251,.20)!important;
+    background:rgba(255,255,255,.44)!important;
+  }
+  html body #pb711PhotographerContextBar .pb711ViewLabel{
+    color:var(--pb718-subbar-text)!important;
+    font-size:7.8px!important;
+    font-weight:950!important;
+  }
+  html body #pb698PhotographerContextBar .pb698ContextTitle b{
+    color:var(--pb718-subbar-text)!important;
+    font-size:12px!important;
+    font-weight:950!important;
+  }
+  html body #pb698PhotographerContextBar .pb698ModelCount{
+    color:var(--pb718-subbar-text)!important;
+    font-size:8.4px!important;
+    font-weight:950!important;
+    opacity:1!important;
+  }
+  html body #pb698PhotographerContextBar .pb698FreeBadge{
+    color:var(--pb718-subbar-text)!important;
+    font-size:8px!important;
+    font-weight:950!important;
+    border-color:rgba(49,94,251,.20)!important;
+    background:rgba(255,255,255,.44)!important;
+  }
+
+  /* Context-bar controls stay legible on the pale strip; selected state uses the original PhotoBridge blue. */
+  html body #pb711PhotographerContextBar button,
+  html body #pb698PhotographerContextBar button,
+  html body #pb698PrintBarActions button{
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    color:var(--pb718-subbar-text)!important;
+    font-size:9.2px!important;
+    font-weight:950!important;
+    border-color:rgba(49,94,251,.24)!important;
+    background:rgba(255,255,255,.42)!important;
+  }
+  html body #pb711PhotographerContextBar .pb711PrimaryAction{font-size:9.6px!important}
+  html body #pb711PhotographerContextBar .pb711AiActions button{font-size:8.8px!important}
+  html body #pb711PhotographerContextBar button.active,
+  html body #pb698PhotographerContextBar button.active,
+  html body #pb698PrintBarActions button.active{
+    border-color:var(--pb718-action)!important;
+    background:rgba(255,255,255,.72)!important;
+    color:#101828!important;
+    box-shadow:0 0 0 1px rgba(49,94,251,.10),0 2px 7px rgba(15,23,42,.10)!important;
+  }
+
+  /* Print/store copy on the same strip follows the same black + bold treatment. */
+  html body .photographerPrintWorkspace .photographerPrintTopLab,
+  html body .photographerPrintWorkspace .photographerPrintTopLab::before,
+  html body .photographerPrintWorkspace .photographerPrintTopLabStatic,
+  html body #photographerStoreIdentityBar .storeIdentityLabel,
+  html body #photographerStoreIdentityBar .storeIdentityToggle,
+  html body #photographerStoreIdentityBar span,
+  html body #photographerStoreIdentityBar b,
+  html body #pb673PhotographerLabIdentityBar,
+  html body #pb673PhotographerLabIdentityBar *{
+    color:var(--pb718-subbar-text)!important;
+    font-weight:900!important;
+  }
+  html body #photographerStoreIdentityBar .storeIdentityLabel,
+  html body #photographerStoreIdentityBar .storeIdentityToggle{
+    font-size:9.3px!important;
+  }
+  html body #photographerStoreIdentityBar .storeIdentityToggle.switchable{
+    background:rgba(255,255,255,.38)!important;
+    border-color:rgba(49,94,251,.20)!important;
+  }
+  html body #photographerStoreIdentityBar .storeIdentityToggle.switchable:hover{
+    background:rgba(255,255,255,.52)!important;
+  }
+
+  /* Keep the soft shadow cast by the main header onto the secondary strip. */
+  html.pb711ContextVisible body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    box-shadow:0 8px 13px -11px rgba(33,75,96,.55)!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{z-index:621!important}
+  html.pb711ContextVisible body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined{z-index:800!important}
+}
+
+/* Very narrow phones: retain the readability bump without forcing overflow. */
+@media (max-width:380px){
+  html body #pb711PhotographerContextBar .pb711ContextTitle>b{font-size:11.1px!important}
+  html body #pb711PhotographerContextBar .pb711ContextMeta{font-size:7.6px!important}
+  html body #pb711PhotographerContextBar button{font-size:8.5px!important;padding-inline:6px!important}
+  html body #pb711PhotographerContextBar .pb711AiActions button{font-size:8px!important;padding-inline:5px!important}
+}
+
+/* PhotoBridge v719 — repair print/album primary actions after the v718 context-bar resize.
+   These CTAs belong to the print workflow rail, not the generic context strip, and must
+   remain visible/clickable on both the print-order and album-order list screens. */
+@media (max-width:820px){
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode){
+    overflow:visible!important;
+    position:relative!important;
+    z-index:35!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextMain{
+    overflow:visible!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions{
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    position:relative!important;
+    z-index:40!important;
+    transform:none!important;
+    margin-top:0!important;
+    margin-bottom:0!important;
+    overflow:visible!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions>.photographerContextAction.primary,
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumNewOrderSlot,
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumNewOrderSlot>.photographerContextAction.primary{
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    position:relative!important;
+    z-index:42!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions>.photographerContextAction.primary,
+  html body .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumNewOrderSlot>.photographerContextAction.primary{
+    min-height:42px!important;
+    height:42px!important;
+    background:#315efb!important;
+    border-color:#315efb!important;
+    color:#fff!important;
+  }
+
+  /* Also keep the actual send CTAs available once the user enters a print/album order. */
+  html body .photographerMain .sendOrderBtn,
+  html body .photographerMain .albumQuotePrimarySend,
+  html body .photographerMain .albumMultiSendButton,
+  html body .photographerMain .simplePrintPilotSubmit{
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+  }
+}

@@ -1,0 +1,360 @@
+/* PhotoBridge v0.17.677 — mobile print header rebuilt in normal document flow.
+   No fake top spacer, no fixed lab strip, no fixed print-tab row. */
+@media (max-width:820px){
+  /* Neutralize the v676 fixed/spacer experiment completely. */
+  .photographerMain.photographerPrintWorkspace.pbFixedRoleHeader,
+  .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace.pbFixedRoleHeader{
+    padding-top:0!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+  }
+
+  /* The injected legacy strip is no longer part of the visible layout. The real
+     lab selector that already exists in React becomes the blue identity row. */
+  #pb676PhotographerLabIdentityBar,
+  #pb674PhotographerLabIdentityBar,
+  #pb673PhotographerLabIdentityBar{
+    display:none!important;
+  }
+
+  /* MAIN HEADER FIRST — exactly like the other photographer pages. */
+  .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerPrintModeHeader,
+  .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace>.unifiedRoleHeader.photographerPrintModeHeader{
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0 calc(50% - 50vw)!important;
+    padding:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"identity" "primary"!important;
+    grid-template-rows:auto auto!important;
+    row-gap:0!important;
+    align-content:start!important;
+    overflow:visible!important;
+    border:0!important;
+    border-bottom:1px solid #dfe5ee!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    z-index:240!important;
+    box-sizing:border-box!important;
+  }
+
+  /* First row: studio identity + date + back/archive/finance. */
+  .photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderIdentity{
+    grid-area:identity!important;
+    position:relative!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:92px!important;
+    margin:0!important;
+    padding:10px 54px 10px 10px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    box-sizing:border-box!important;
+    background:#fff!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>h1{
+    max-width:100%!important;
+    margin:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:14px!important;
+    line-height:1.45!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .workspaceIdentityCopy>small{
+    margin-top:2px!important;
+    font-size:8.5px!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerIdentityDateOnly{
+    margin-top:5px!important;
+  }
+
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeUtilityCluster{
+    position:relative!important;
+    inset:auto!important;
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    min-width:0!important;
+    margin:0!important;
+    transform:none!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeBack,
+  .photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintCommonAction{
+    min-height:42px!important;
+    height:42px!important;
+    margin:0!important;
+  }
+
+  /* Settings belongs to the physical header, not to one of the rows below it. */
+  .photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintSettingsQuickAction{
+    display:flex!important;
+    position:absolute!important;
+    top:11px!important;
+    right:9px!important;
+    left:auto!important;
+    width:38px!important;
+    height:42px!important;
+    margin:0!important;
+    padding:0!important;
+    z-index:7!important;
+    align-items:center!important;
+    justify-content:center!important;
+    transform:none!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintSettingsQuickAction .mobileHeaderSettings{
+    width:38px!important;
+    min-width:38px!important;
+    height:42px!important;
+    min-height:42px!important;
+    margin:0!important;
+  }
+
+  /* SECOND + THIRD ROWS live inside the existing primary nav:
+     blue lab identity first, then two equal print destinations. */
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerHeaderNav.photographerPrintModeNav,
+  .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav,
+  body .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace .photographerPrintModeHeader .photographerHeaderNav.photographerPrintModeNav{
+    grid-area:primary!important;
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0 10px 9px!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-areas:"lab lab" "photo album"!important;
+    grid-template-rows:42px 56px!important;
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    gap:8px!important;
+    overflow:visible!important;
+    background:#f8fafc!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintModeNav:not(:has(.photographerPrintAlbumTab)){
+    grid-template-areas:"lab lab" "photo photo"!important;
+  }
+
+  /* Native lab row — also remains switchable when more than one lab is connected. */
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab,
+  .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab{
+    grid-area:lab!important;
+    position:relative!important;
+    inset:auto!important;
+    width:calc(100% + 20px)!important;
+    min-width:0!important;
+    height:42px!important;
+    min-height:42px!important;
+    margin:0 -10px!important;
+    padding:0 12px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+    overflow:visible!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;
+    color:#fff!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    box-sizing:border-box!important;
+    direction:rtl!important;
+  }
+  .photographerPrintWorkspace .photographerPrintTopLab::before{
+    content:"لابراتوار";
+    flex:0 0 auto!important;
+    font-size:9px!important;
+    font-weight:850!important;
+    opacity:.8!important;
+    color:#fff!important;
+  }
+  .photographerPrintWorkspace .photographerPrintTopLabStatic{
+    max-width:76vw!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:13px!important;
+    line-height:1!important;
+    font-weight:950!important;
+    color:#fff!important;
+  }
+  .photographerPrintWorkspace .photographerPrintTopLabSelect,
+  .photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger{
+    min-width:0!important;
+    max-width:78vw!important;
+  }
+  .photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger{
+    height:32px!important;
+    min-height:32px!important;
+    padding:0 8px!important;
+    border:1px solid rgba(255,255,255,.28)!important;
+    border-radius:8px!important;
+    background:rgba(255,255,255,.10)!important;
+    color:#fff!important;
+    font-size:11px!important;
+    font-weight:950!important;
+    box-shadow:none!important;
+  }
+  .photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger *{color:#fff!important}
+
+  /* Only the two destinations fill the second row. */
+  .photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab{grid-area:photo!important}
+  .photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab{grid-area:album!important}
+  .photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:56px!important;
+    min-height:56px!important;
+    margin:0!important;
+    padding:0 12px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border-radius:12px!important;
+    font-size:13px!important;
+    line-height:1.2!important;
+    font-weight:950!important;
+    white-space:nowrap!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeNav>.pb567WorkflowGuideButton,
+  .photographerPrintWorkspace .photographerPrintModeNav>.pb569WorkflowGuideButton{
+    display:none!important;
+  }
+
+  /* The context row follows the header naturally. The lab name is NOT repeated here. */
+  .photographerMain.photographerPrintWorkspace>.photographerLabContextRail,
+  .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace>.photographerLabContextRail{
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0 calc(50% - 50vw)!important;
+    padding:8px 10px!important;
+    overflow:visible!important;
+    background:#f4f7fb!important;
+    border:0!important;
+    border-bottom:1px solid #e4e9f1!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail .photographerSelectedLabControl{
+    display:none!important;
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode)>.photographerLabContextMain{
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"actions" "status"!important;
+    row-gap:8px!important;
+    overflow:visible!important;
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions{
+    grid-area:actions!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    display:block!important;
+    overflow:visible!important;
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions>.photographerContextAction,
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumNewOrderSlot,
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumNewOrderSlot>.photographerContextAction{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:48px!important;
+    min-height:48px!important;
+    margin:0!important;
+    padding:0 12px!important;
+    border-radius:11px!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerContextStatusesMobile,
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerAlbumHeaderStatusMobile{
+    grid-area:status!important;
+    position:relative!important;
+    margin:0!important;
+  }
+
+  /* Exactly one vertical scroller: the actual page content. */
+  .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    width:100%!important;
+    margin:0!important;
+    padding-top:8px!important;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    scroll-padding-top:8px!important;
+  }
+}

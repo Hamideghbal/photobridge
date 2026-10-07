@@ -1,0 +1,92 @@
+/* PhotoBridge v818 — mobile Print/Finance header and composer actions. */
+@media(max-width:820px){
+  /* Finance laboratory name uses the same centered alignment as Photo/Album. */
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintTopLab{
+    padding-left:10px!important;padding-right:10px!important;justify-content:center!important;text-align:center!important;
+  }
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabStatic,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelect,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectButton{
+    margin-left:auto!important;margin-right:auto!important;justify-content:center!important;text-align:center!important;max-width:calc(100vw - 24px)!important;
+  }
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger>span,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectButton>span{
+    width:100%!important;text-align:center!important;
+  }
+
+  /* The top finance tab is text-only and exactly aligned with Photo/Album. */
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb818PrintFinanceTab,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb817PrintFinanceTab,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb816PrintFinanceTab,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintFinanceTab{
+    height:42px!important;min-height:42px!important;max-height:42px!important;margin:5px 0 0!important;padding:0 4px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;
+    font:900 10.5px/1.15 Vazirmatn,Tahoma,sans-serif!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb818PrintFinanceTab::before,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb818PrintFinanceTab::after,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb817PrintFinanceTab::before,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb817PrintFinanceTab::after{display:none!important;content:none!important}
+
+  /* Smaller, visible help marks with reserved label space. */
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction>.pb569WorkflowGuideButton{
+    width:18px!important;min-width:18px!important;max-width:18px!important;height:18px!important;min-height:18px!important;max-height:18px!important;border-radius:6px!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction>.pb569WorkflowGuideButton .pb569GuideLabel{
+    color:#3157c8!important;font-size:10px!important;line-height:1!important;font-weight:950!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab{padding-right:27px!important;padding-left:7px!important}
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab{padding-left:27px!important;padding-right:7px!important}
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintPhotoTab>.pb569WorkflowGuideButton.print{right:5px!important}
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.photographerPrintAlbumTab>.pb569WorkflowGuideButton.album{left:5px!important}
+
+  /* Composer/upload has three clean rows: lab, main tabs, choose/send actions. */
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeHeader>.photographerPrintModeNav,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    height:152px!important;min-height:152px!important;max-height:152px!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-template-rows:42px 52px 44px!important;
+    grid-template-areas:"lab lab lab" "photo album finance" "actions actions actions"!important;
+    gap:7px 5px!important;overflow:visible!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer.pbFixedRoleHeader>.unifiedRoleHeader.photographerPrintModeHeader{
+    margin-bottom:152px!important;overflow:visible!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions{
+    grid-area:actions!important;display:grid!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;
+    position:relative!important;inset:auto!important;transform:none!important;
+    width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;max-height:44px!important;
+    margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;box-sizing:border-box!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>button{
+    display:flex!important;visibility:visible!important;align-items:center!important;justify-content:center!important;
+    width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;max-height:44px!important;
+    margin:0!important;padding:0 8px!important;border-radius:10px!important;box-sizing:border-box!important;
+    font:900 11px/1.2 Vazirmatn,Tahoma,sans-serif!important;text-align:center!important;white-space:normal!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>.pb765Choose,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>.pb818Choose{
+    color:#3157c8!important;background:#fff!important;border:1px solid #cbd8fa!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>.pb761Send,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>.pb818Send{
+    color:#fff!important;background:#315efb!important;border:1px solid #315efb!important;
+  }
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace.pb818PrintComposer .photographerPrintModeNav>#pb761-mode-actions>button:disabled{
+    color:#98a2b3!important;background:#eef2f6!important;border-color:#d9e0ea!important;opacity:1!important;
+  }
+
+  /* Finance no longer exposes the legacy invoice/back controls. */
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeBack,
+  html.pb818PrintFinance body #root .photographerMain.photographerPrintWorkspace .pb805InvoiceBack,
+  html.pb818PrintFinance body #pb783FinanceShortcut{
+    display:none!important;visibility:hidden!important;pointer-events:none!important;
+  }
+}
+@media(max-width:380px){
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb818PrintFinanceTab,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace .photographerPrintModeNav>.pb817PrintFinanceTab{font-size:9.4px!important}
+}

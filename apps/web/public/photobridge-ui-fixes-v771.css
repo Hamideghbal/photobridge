@@ -1,0 +1,74 @@
+/* Album composer: one wide panoramic preview per spread, using the deployed v655 classes. */
+html body #root .albumFilesCompact .albumFileToolbar{display:none!important}
+html body #root .albumFilesCompact .albumFileQcGrid{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard{
+  display:grid!important;width:100%!important;max-width:none!important;min-width:0!important;
+  grid-template-columns:minmax(0,1fr) 160px 52px!important;
+  grid-template-rows:auto auto!important;
+  grid-template-areas:'preview preview preview' 'identity paper remove'!important;
+  gap:10px!important;align-items:center!important;min-height:0!important;
+  padding:12px!important;background:#fff!important;border:1px solid #e1e8f3!important;
+  border-radius:14px!important;box-shadow:0 3px 14px #16233d0c!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard>img{
+  grid-area:preview!important;grid-column:1/-1!important;grid-row:1!important;
+  display:block!important;width:100%!important;height:clamp(190px,30vw,360px)!important;
+  min-height:190px!important;max-height:360px!important;aspect-ratio:auto!important;
+  object-fit:contain!important;object-position:center!important;
+  background:#f7f9fc!important;border-radius:10px!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard>.albumFileIdentity{
+  grid-area:identity!important;grid-column:1!important;grid-row:2!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard>.albumFilePaperSelect{
+  grid-area:paper!important;grid-column:2!important;grid-row:2!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard>.albumFileRemove{
+  grid-area:remove!important;grid-column:3!important;grid-row:2!important;
+  position:static!important;
+}
+html body #root .albumFilesCompact .albumFileQcCard>i{grid-area:3 / 1 / 4 / -1!important}
+@media(max-width:620px){
+  html body #root .albumFilesCompact .albumFileQcCard{
+    grid-template-columns:minmax(0,1fr) 96px 40px!important;
+    grid-template-rows:auto auto!important;
+    grid-template-areas:'preview preview preview' 'identity paper remove'!important;
+    gap:7px!important;padding:8px!important;
+  }
+  html body #root .albumFilesCompact .albumFileQcCard>img{
+    height:clamp(175px,48vw,250px)!important;min-height:175px!important;max-height:250px!important;
+  }
+}
+/* Keep the PWA install action out of the page as soon as this browser knows the app is installed. */
+html.pb711Installed .mobileHeaderInstall,
+html.pb710Installed .mobileHeaderInstall,
+html.pb771InstallChecking .mobileHeaderInstall,
+html:not(.pb711InstallReady) .mobileHeaderInstall{display:none!important}
+@media(max-width:820px){
+  html{background-color:var(--pb771-top,#dff2f6)!important}
+}
+.adminTabs .pb771AppearanceAdminTab{font-weight:900!important;color:#3157c8!important;
+  border:1px solid #b9cdfb!important;background:#f2f6ff!important}
+#pb771AppearancePanel{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
+  padding:16px;background:#14213aa6;direction:rtl;font:13px Vazirmatn,Tahoma,sans-serif}
+#pb771AppearancePanel .pb771AppearanceCard{width:min(590px,100%);max-height:min(740px,92vh);overflow:auto;
+  padding:22px;background:#fff;color:#172554;border-radius:18px;box-shadow:0 18px 50px #10182845}
+#pb771AppearancePanel header{position:static!important;height:auto!important;display:flex;align-items:start;
+  justify-content:space-between;padding:0 0 14px!important;margin:0 0 16px;background:none!important}
+#pb771AppearancePanel h2{font-size:19px;margin:0 0 5px}#pb771AppearancePanel p{margin:0;color:#64748b}
+#pb771AppearancePanel header button{border:0;background:#f1f5f9;border-radius:9px;padding:5px 12px;font-size:21px}
+#pb771AppearancePanel .pb771AppearancePreview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  border:1px solid #dae4ef;border-radius:10px;overflow:hidden;margin-bottom:19px}
+#pb771AppearancePanel .pb771AppearancePreview span{text-align:center;padding:17px 5px;font-size:11px;font-weight:850}
+#pb771AppearancePanel label{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:12px 0;color:#293d5d;font-weight:750}
+#pb771AppearancePanel input[type=color]{width:90px;height:40px;padding:3px;border:1px solid #c6d2e1;
+  border-radius:8px;cursor:pointer}
+#pb771AppearancePanel .pb771AppearanceStatus{min-height:22px;color:#be123c}
+#pb771AppearancePanel footer{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+#pb771AppearancePanel footer button{border:1px solid #cbd5e1;border-radius:9px;padding:9px 12px;
+  background:#f8fafc;color:#284469;font:inherit;cursor:pointer}
+#pb771AppearancePanel footer [data-save]{background:#315efb;color:#fff;border-color:#315efb;font-weight:900}
+#pb771AppearancePanel footer button:disabled{opacity:.55}

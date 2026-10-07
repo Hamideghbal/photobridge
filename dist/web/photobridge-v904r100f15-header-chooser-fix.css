@@ -1,0 +1,48 @@
+/* PhotoBridge R100F15 — authoritative chooser + header separator cleanup. */
+@media(max-width:820px){
+  /* The round legacy add control must never appear on the Lab chooser. */
+  html body.pbR100F14ChoosingLab #pb762-add,
+  html body.pbR100F14ChoosingLab #pb765-add,
+  html body.pbR100F14ChoosingLab #pb742-print-actions,
+  html body.pbR100F14ChoosingLab #pb737-mobile-print-dock,
+  html body.pbR100F14ChoosingLab #pb761-mode-actions{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+
+  /* v711 has a more specific rule that reintroduced the blue-gray separator under the main header.
+     Match/beat that specificity and remove only the seam between the main header and the lower row. */
+  html body #root .photographerMain.photographerPrintWorkspace>
+  #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader,
+  html body #root .photographerMain.photographerPrintWorkspace>
+  .unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader{
+    border-top:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace>
+  #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader::before,
+  html body #root .photographerMain.photographerPrintWorkspace>
+  #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader::after{
+    border:0!important;box-shadow:none!important;filter:none!important;
+  }
+  html.pb817PrintContext body #root .photographerMain.photographerPrintWorkspace
+  .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav,
+  html.pb818PrintContext body #root .photographerMain.photographerPrintWorkspace
+  .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    border-top:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+
+  /* Same seam rule for the Store stack. */
+  html body #storePhotographerWorkspace>
+  #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>
+  #photographerStoreRoleHeader.photographerHeaderRefined{
+    border-bottom:0!important;box-shadow:none!important;filter:none!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+    border-top:0!important;box-shadow:none!important;filter:none!important;
+  }
+}

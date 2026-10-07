@@ -1,0 +1,518 @@
+/* PhotoBridge v904R55 — authoritative photographer print/album order-card layout.
+   Scope is the photographer's live customer order workspace only. */
+
+html body #root .ordersWorkspace.liveCustomerOrders,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderGrid.liveOrderGrid,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard,
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderMainRow{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+}
+
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderGrid.liveOrderGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-rows:max-content!important;
+  align-items:start!important;
+  align-content:start!important;
+  gap:12px!important;
+  overflow:visible!important;
+}
+
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard{
+  display:block!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  overflow:hidden!important;
+}
+
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderMainRow{
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderMainRow > *,
+html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosure,
+html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureBody,
+html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureBody > *,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderHead,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickActions,
+html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFoot,
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderExtras,
+html body #root .ordersWorkspace.liveCustomerOrders .albumOrderSummary,
+html body #root .ordersWorkspace.liveCustomerOrders .prepayOrderCard,
+html body #root .ordersWorkspace.liveCustomerOrders .prepayPaidConfirmation,
+html body #root .ordersWorkspace.liveCustomerOrders .customerCourierCard,
+html body #root .ordersWorkspace.liveCustomerOrders .customerFixNotice{
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  float:none!important;
+  clear:both!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+}
+
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderHead b,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderHead small,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts b,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts small,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail span,
+html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFoot span{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+}
+
+/* Payment/invoice blocks must consume their own vertical space; older rules tried to place
+   their sections side-by-side and caused the first card in the screenshots to collapse. */
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderExtras{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-rows:max-content!important;
+  gap:9px!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderExtras:empty{display:none!important}
+html body #root .ordersWorkspace.liveCustomerOrders .liveOrderExtras > *{
+  grid-column:1/-1!important;
+  grid-row:auto!important;
+  grid-area:auto!important;
+  align-self:stretch!important;
+  justify-self:stretch!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+html body #root .ordersWorkspace.liveCustomerOrders .prepayPaymentCard{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:none!important;
+  grid-auto-flow:row!important;
+  grid-auto-rows:max-content!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:10px!important;
+  overflow:hidden!important;
+}
+html body #root .ordersWorkspace.liveCustomerOrders .prepayPaymentCard > *{
+  grid-column:1/-1!important;
+  grid-row:auto!important;
+  grid-area:auto!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+html body #root .ordersWorkspace.liveCustomerOrders .prepayBankPanel,
+html body #root .ordersWorkspace.liveCustomerOrders .prepaySecondaryPaymentInfo,
+html body #root .ordersWorkspace.liveCustomerOrders .prepayUploadBox,
+html body #root .ordersWorkspace.liveCustomerOrders .prepayUploadRow{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+html body #root .ordersWorkspace.liveCustomerOrders .albumOrderSummary.compact{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+
+@media (min-width:851px){
+  html body #root .ordersWorkspace.liveCustomerOrders .liveOrderMainRow{
+    display:grid!important;
+    grid-template-columns:minmax(170px,.65fr) minmax(250px,1fr) minmax(220px,.82fr)!important;
+    grid-template-areas:
+      "head facts quick"
+      "details details details"!important;
+    align-items:center!important;
+    gap:10px 16px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderHead{
+    grid-area:head!important;
+    align-self:center!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts{
+    grid-area:facts!important;
+    align-self:center!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:0!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts > span{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    display:grid!important;
+    align-content:center!important;
+    min-width:0!important;
+    min-height:48px!important;
+    padding:3px 10px!important;
+    border-inline-start:1px solid #eef1f5!important;
+    text-align:center!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail.compactOrderActionRail{
+    grid-area:quick!important;
+    align-self:center!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail > span{
+    display:block!important;
+    position:static!important;
+    width:100%!important;
+    margin:0!important;
+    text-align:right!important;
+    font-size:8.5px!important;
+    line-height:1.5!important;
+    color:#667085!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickActions{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    flex-wrap:wrap!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickActions > button{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:32px!important;
+    height:32px!important;
+    max-height:32px!important;
+    margin:0!important;
+    padding:0 11px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosure{
+    grid-area:details!important;
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:10px 0 0!important;
+    border-top:1px solid #eef1f5!important;
+    overflow:visible!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureToggle{
+    display:none!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureBody,
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosure.open > .mobileOrderDisclosureBody{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-auto-rows:max-content!important;
+    align-items:start!important;
+    gap:9px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline{
+    display:grid!important;
+    grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important;
+    grid-auto-rows:minmax(64px,auto)!important;
+    align-items:stretch!important;
+    gap:7px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline > div{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+    min-width:0!important;
+    min-height:64px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:8px 6px!important;
+    border:1px solid #e4e7ec!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline > div::before{display:none!important}
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline .timelineDot{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+    margin:0 auto 2px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline b,
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline small{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFoot{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    flex-wrap:wrap!important;
+    gap:6px 12px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    overflow:visible!important;
+  }
+}
+
+@media (max-width:850px){
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard{
+    padding:10px!important;
+    overflow:hidden!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveOrderMainRow{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"head" "facts" "quick" "details"!important;
+    gap:8px!important;
+    align-items:start!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderHead{
+    grid-area:head!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    width:100%!important;
+    margin:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts{
+    grid-area:facts!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFacts > span{
+    position:static!important;
+    min-width:0!important;
+    min-height:48px!important;
+    display:grid!important;
+    align-content:center!important;
+    justify-items:center!important;
+    padding:5px!important;
+    border:1px solid #eef1f5!important;
+    border-radius:9px!important;
+    background:#fafbfc!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail.compactOrderActionRail{
+    grid-area:quick!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:7px 0 0!important;
+    border-top:1px solid #eef1f5!important;
+    background:transparent!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickRail > span{
+    position:static!important;
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    text-align:right!important;
+    font-size:8.5px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickActions{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderQuickActions > button{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:36px!important;
+    height:36px!important;
+    max-height:36px!important;
+    margin:0!important;
+    padding:0 7px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosure{
+    grid-area:details!important;
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureToggle{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    width:100%!important;
+    min-height:40px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosureBody{
+    display:none!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:8px 0 0!important;
+    overflow:visible!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .mobileOrderDisclosure.open > .mobileOrderDisclosureBody{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-auto-rows:max-content!important;
+    gap:8px!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-rows:minmax(62px,auto)!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline > div{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+    min-width:0!important;
+    min-height:62px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:7px 6px!important;
+    border:1px solid #e4e7ec!important;
+    border-radius:9px!important;
+    background:#fff!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline > div::before{display:none!important}
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline .timelineDot,
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline b,
+  html body #root .ordersWorkspace.liveCustomerOrders .liveTimeline small{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    margin:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .customerOrderFoot{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    flex-wrap:wrap!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .ordersWorkspace.liveCustomerOrders .prepayPaymentHero,
+  html body #root .ordersWorkspace.liveCustomerOrders .prepayBankPanel,
+  html body #root .ordersWorkspace.liveCustomerOrders .prepaySecondaryPaymentInfo,
+  html body #root .ordersWorkspace.liveCustomerOrders .prepayUploadRow{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:7px!important;
+    width:100%!important;
+  }
+}

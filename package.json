@@ -1,6 +1,6 @@
 {
   "name": "photobridge-liara-deploy-lite",
-  "version": "0.17.745",
+  "version": "0.17.746",
   "private": true,
   "type": "module",
   "engines": {
@@ -22,5 +22,5 @@
     "web-push": "3.6.7",
     "jsqr": "1.4.0"
   },
-  "photobridgeDeployBuild": "v904r100f37-store-header-core-stable-print-composer-2026-10-07"
+  "photobridgeDeployBuild": "v904r100f38-mobile-header-route-isolation-print-plus-shadow-2026-10-08"
 }

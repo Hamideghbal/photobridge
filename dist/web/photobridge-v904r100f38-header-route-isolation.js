@@ -48,9 +48,9 @@
   }
   function nativeHeader(){return $('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader')}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
-  function managerName(){const n=String(me?.user?.name||'').trim();return n&&n!==studioName()?`مدیریت ${n}`:'مدیریت عکاسی'}
-  function pdate(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'short',year:'numeric',month:'long',day:'numeric'}).format(new Date())}catch{return ''}}
-  function ptime(){try{return new Intl.DateTimeFormat('fa-IR',{hour:'2-digit',minute:'2-digit'}).format(new Date())}catch{return ''}}
+  function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
+  function pdate(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{timeZone:'Asia/Tehran',weekday:'short',year:'numeric',month:'long',day:'numeric'}).format(new Date())}catch{return ''}}
+  function ptime(){try{return new Intl.DateTimeFormat('fa-IR',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit'}).format(new Date())}catch{return ''}}
   function labName(){for(const s of ['.photographerPrintTopLabStatic','.photographerLockedLabIdentity b','.photographerSelectedLabNameButton b','.photographerMobileSingleLab span','.photographerPrintTopLabSelect .customSelectValue','.photographerPrintTopLabSelect button']){const v=txt($(s));if(v&&v!=='لابراتوار')return v}return 'لابراتوار'}
   function modelCount(){const b=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar>b');if(txt(b))return txt(b);const n=$$('.photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard').length;return n?`${fa(n)} مدل`:''}
   function galleryCount(){const n=$$('.clientGalleryCards>.clientGalleryCard').length;return n?`${fa(n)} پروژه`:''}
@@ -148,7 +148,7 @@
     const sig=`${m}|${info.title}|${info.meta}|`+aa.map(a=>`${a.id}:${a.label}:${a.active?'1':'0'}`).join('|');if(sig!==lastSig){lastSig=sig;tabs.innerHTML=aa.map(a=>`<button type="button" class="${a.active?'active':''}" data-f37-source="${a.id}">${esc(a.label)}</button>`).join('')}
     if(m==='print')fixPrint();else clearPrint();
     // Last-word physical-left lock, independent from RTL/logical properties.
-    const mb=$('#pbF37MenuBtn');if(mb){mb.style.setProperty('position','fixed','important');mb.style.setProperty('left',innerWidth<=390?'6px':'10px','important');mb.style.setProperty('right','auto','important');mb.style.setProperty('top','20px','important');mb.style.setProperty('inset-inline-start','auto','important');mb.style.setProperty('inset-inline-end','auto','important')}
+    const mb=$('#pbF37MenuBtn');if(mb){mb.style.setProperty('position','fixed','important');mb.style.setProperty('inset-inline-start','10px','important');mb.style.setProperty('inset-inline-end','auto','important');mb.style.setProperty('left','10px','important');mb.style.setProperty('right','auto','important');mb.style.setProperty('top','20px','important')}
     settleBoot();
   }
   // Coalesce DOM updates without postponing a pending route render indefinitely.

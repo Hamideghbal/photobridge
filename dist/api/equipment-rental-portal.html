@@ -7126,6 +7126,23 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
  try{window.pb854BookingPaneMarkup=pb854BookingPaneMarkup}catch{}
  const currentRender=pb854RenderBookingStatusPanes;pb854RenderBookingStatusPanes=function(...args){const prior={};for(const kind of ['approved','out']){const r=document.querySelector(`[data-pb843-office-pane="${kind}"] .pb100rManagerDates`);prior[kind]=r&&r.getClientRects().length?r.scrollLeft:null}const out=currentRender.apply(this,args);document.querySelectorAll('.pb100rManagerDayLabel').forEach(el=>el.remove());for(const kind of ['approved','out']){const pane=document.querySelector(`[data-pb843-office-pane="${kind}"]`),rail=pane?.querySelector('.pb100rManagerDates');if(!rail||!rail.getClientRects().length)continue;if(prior[kind]!==null)rail.scrollLeft=prior[kind];else{const active=rail.querySelector('.active');if(active){const r=rail.getBoundingClientRect(),b=active.getBoundingClientRect();rail.scrollBy({left:b.left+b.width/2-(r.left+r.width/2),behavior:'auto'})}}}const approved=document.querySelector('[data-pb843-office-tab="approved"] .pb904r5OfficeTabLabel,[data-pb843-office-tab="approved"] .pb905rOfficeTabLabel,[data-pb843-office-tab="approved"] .pb854TabLabel'),received=document.querySelector('[data-pb843-office-tab="out"] .pb904r5OfficeTabLabel,[data-pb843-office-tab="out"] .pb905rOfficeTabLabel,[data-pb843-office-tab="out"] .pb854TabLabel');if(approved)approved.textContent='تحویل';if(received)received.textContent='دریافت';return out};try{window.pb854RenderBookingStatusPanes=pb854RenderBookingStatusPanes}catch{}
  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-pb100r-date-kind]');if(b){e.preventDefault();e.stopImmediatePropagation();window.pb100rSelectManagerDate(b.dataset.pb100rDateKind,b.dataset.pb100rDay)}},true);
+ const pbR100F63ApplyAuthoritativeHandover=()=>{
+   try{
+     window.__PB_R100F63_HANDOVER_RUNTIME__='active';
+     if(typeof data==='undefined'||!data)return;
+     if(data?.staffMode){
+       document.body.classList.add('pbR100F9StaffMode');
+       if(typeof showApp==='function')showApp();
+       window.pbR100F9RenderStaffPortal?.();
+       return;
+     }
+     if(!document.body.classList.contains('rentalAppReady'))return;
+     if(typeof pb854EnsureBookingStatusTabs==='function')pb854EnsureBookingStatusTabs();
+     window.pb854RenderBookingStatusPanes?.();
+   }catch(e){console.warn('[PhotoBridge R100F63] handover authoritative rerender skipped',e)}
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(pbR100F63ApplyAuthoritativeHandover,0),{once:true});
+ else setTimeout(pbR100F63ApplyAuthoritativeHandover,0);
 })();
 </script></body></html>`);w.document.close()
  }

@@ -79,8 +79,8 @@
     return '';
   }
 
-  // Leaving Print/Lab uses a real document navigation. This prevents the reused React main/header
-  // from carrying Print classes or header state into AI, Gallery, Album, Instagram or Store.
+  // R100F48: clear legacy workspace residue, then let the existing router navigate
+  // without forcing another full document load.
   document.addEventListener('click',e=>{
     if(!onPhotographer()||!(printRoute()||printDomActive()))return;
     const el=e.target?.closest?.('.photographerHomeModeNav>button,.photographerBottomAppNavGrid>button,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn,[data-main-href]');
@@ -89,10 +89,8 @@
     const dest=new URL(raw,location.href);
     const destIsPrint=dest.origin===location.origin&&(new URLSearchParams(dest.search).get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(dest.pathname));
     if(destIsPrint)return;
-    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();
     clearPrintResidue(true);
     clearStoreResidue();
-    location.assign(cleanDestination(dest.href));
   },true);
 
   for(const name of ['pushState','replaceState']){

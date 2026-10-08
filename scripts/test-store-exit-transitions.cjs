@@ -79,35 +79,40 @@ const crypto = require("crypto");
     console.log("PAGEERROR", e.message);
   });
   const assert=require('node:assert/strict');
-  await page.route('**/photobridge-v904r100f41-header-date-name-fit.js*',async route=>{
-    await new Promise(resolve=>setTimeout(resolve,800));await route.continue();
-  });
   await page.addInitScript(()=>{
-    window.__storeExitFrames={covered:0,uncovered:0};
+    window.__storeExitFrames={legacy:0,cover:0,modernAt:null};
     function frame(){
-      try{
-        const p=JSON.parse(sessionStorage.getItem('photobridge:r100f44:tab-transition')||'null');
-        if(p&&['ai','gallery','album','instagram'].includes(p.target)&&location.pathname.startsWith('/photographer')){
-          if(document.documentElement.classList.contains('pbF41TabTransition'))window.__storeExitFrames.covered++;
-          else if(document.querySelector('#root')?.childElementCount)window.__storeExitFrames.uncovered++;
-        }
-      }catch{}
+      if(location.pathname.startsWith('/photographer')){
+        if(document.documentElement.classList.contains('pbF41TabTransition'))window.__storeExitFrames.cover++;
+        const legacy=[...document.querySelectorAll('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined,.photographerMain>.photographerPrintModeHeader,#photographerRoleHeaderV710')].some(e=>{const s=getComputedStyle(e);return e.getBoundingClientRect().height>0&&s.display!=='none'&&s.visibility!=='hidden'});
+        if(legacy)window.__storeExitFrames.legacy++;
+        if(document.querySelector('#pbF37PhotographerHeader')&&window.__storeExitFrames.modernAt===null)window.__storeExitFrames.modernAt=performance.now();
+      }
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   });
   for(const [label,target,title] of [['هوش مصنوعی','ai','هوش مصنوعی'],['گالری','gallery','گالری مشتریان'],['طراحی آلبوم','album','طراحی آلبوم'],['اینستاگرام','instagram','طراحی اینستاگرام']]){
     await page.goto('http://127.0.0.1:3000/equipment-rental/book');
-    await page.waitForTimeout(1800);
+    await page.waitForTimeout(1400);
+    assert.ok(await page.locator('link[rel="modulepreload"][href*="index-UIRefine"]').count(),'Store preloads the main app');
+    const clicked=Date.now();
     await page.locator('.photographerBottomAppNav button,.photographerBottomAppNavGrid button').filter({hasText:new RegExp('^'+label+'$')}).first().click();
-    await page.waitForFunction(()=>document.querySelector('#pbF37PhotographerHeader')&& !document.documentElement.classList.contains('pbF41TabTransition'),{}, {timeout:7000});
+    await page.waitForFunction(t=>document.querySelector('#pbF37ContextText')?.textContent===t, title,{timeout:7000});
+    await page.waitForTimeout(100);
     const state=await page.evaluate(()=>({frames:window.__storeExitFrames,title:document.querySelector('#pbF37ContextText')?.textContent,pending:sessionStorage.getItem('photobridge:r100f44:tab-transition'),mode:window.PBStorePhotographerHeaderCore?.getMode()}));
-    console.log('STORE_EXIT',label,JSON.stringify(state));
+    console.log('STORE_EXIT',label,JSON.stringify({...state,clickToCheckedMs:Date.now()-clicked}));
     assert.equal(state.title,title);assert.equal(state.mode,target);assert.equal(state.pending,null);
-    assert.ok(state.frames.covered>0,'Destination boot was covered during delayed core load');
-    assert.equal(state.frames.uncovered,0,'No uncovered legacy frame before final header');
+    assert.equal(state.frames.cover,0,'No waiting cover or transition spinner');
+    assert.equal(state.frames.legacy,0,'Legacy headers never render');
   }
-  assert.deepEqual(pageErrors,[]);
-  await browser.close();
-  console.log('PASS: Store exits to AI, Gallery, Album and Instagram stay covered through delayed final UI initialization');
+  // Slow the current core deliberately: even then, only current chrome may render.
+  await page.route('**/photobridge-v904r100f41-header-date-name-fit.js*',async route=>{await new Promise(resolve=>setTimeout(resolve,800));await route.continue()});
+  await page.goto('http://127.0.0.1:3000/equipment-rental/book');await page.waitForTimeout(1200);
+  await page.locator('.photographerBottomAppNav button,.photographerBottomAppNavGrid button').filter({hasText:/^هوش مصنوعی$/}).first().click();
+  await page.waitForFunction(()=>document.querySelector('#pbF37ContextText')?.textContent==='هوش مصنوعی');
+  const slow=await page.evaluate(()=>window.__storeExitFrames);
+  assert.equal(slow.cover,0);assert.equal(slow.legacy,0);
+  assert.deepEqual(pageErrors,[]);await browser.close();
+  console.log('PASS: Store exits use current headers without transition covers, including slow-script loading');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -9,10 +9,9 @@
   const txt=n=>String(n?.textContent||'').replace(/\s+/g,' ').trim();
   const fa=n=>Number(n||0).toLocaleString('fa-IR');
   const mobile=()=>matchMedia('(max-width:820px)').matches;
-  let me=null,avatarData='',walletBalance=null,walletLoading=false,unreadNotificationCount=null,notificationSyncing=false,lastNotificationSync=0,renderTimer=0,lastSig='',sourceMap=new Map(),sourceSeq=0,pendingMode='',pendingUntil=0,transitionMode='',transitionStarted=0,transitionTimer=0,transitionFromLabSelect=false;
-  const transitionKey='photobridge:r100f44:tab-transition';
-  function restoreTabTransition(){if(transitionMode)return true;try{const saved=JSON.parse(sessionStorage.getItem(transitionKey)||'null');if(saved&&['store','print','ai','gallery','album','instagram'].includes(saved.target)&&Date.now()-Number(saved.started)<5200){transitionMode=saved.target;transitionStarted=Number(saved.started)||Date.now();transitionFromLabSelect=!!saved.fromLabSelect;return true}sessionStorage.removeItem(transitionKey)}catch{}return false}
-  restoreTabTransition();
+  let me=null,avatarData='',walletBalance=null,walletLoading=false,unreadNotificationCount=null,notificationSyncing=false,lastNotificationSync=0,renderTimer=0,lastSig='',sourceMap=new Map(),sourceSeq=0,pendingMode='',pendingUntil=0;
+  // R100F48: tab navigation has no cover, spinner or artificial wait.
+  try{sessionStorage.removeItem('photobridge:r100f44:tab-transition');document.documentElement.classList.remove('pbF41TabTransition')}catch{}
 
   function visible(el){if(!el||!el.isConnected||el.hidden)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
   function isPortal(){return !!($('.photographerMain')||$('#storePhotographerWorkspace')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
@@ -49,38 +48,7 @@
     if(store&&visible(store)&&!/^\/photographer(?:\/|$)/.test(p))return 'store';
     return 'home';
   }
-  function stopTabTransition(){clearTimeout(transitionTimer);transitionTimer=0;transitionMode='';transitionStarted=0;transitionFromLabSelect=false;document.documentElement.classList.remove('pbF41TabTransition');try{sessionStorage.removeItem(transitionKey)}catch{}}
-  function startTabTransition(target,fromLabSelect=false){
-    if(!mobile()||!['store','print','ai','gallery','album','instagram'].includes(target))return;
-    transitionMode=target;transitionStarted=Date.now();transitionFromLabSelect=fromLabSelect;document.documentElement.classList.add('pbF41TabTransition');try{sessionStorage.setItem(transitionKey,JSON.stringify({target,started:transitionStarted,fromLabSelect}))}catch{}clearTimeout(transitionTimer);
-    transitionTimer=setTimeout(stopTabTransition,5200);
-  }
-  function tabTransitionReady(){
-    const path=location.pathname.replace(/\/+$/,'')||'/',q=new URLSearchParams(location.search);
-    if(transitionMode==='store'){
-      if(!/^\/equipment-rental(?:\/|$)/.test(path))return false;
-      const shell=$('#storePhotographerWorkspace>.shell');return !!shell&&!!$('#app>*',shell);
-    }
-    if(transitionMode==='print'){
-      if(!(q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(path)))return false;
-      const area=$('.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea');return !!area&&area.childElementCount>0&&!!$('#pbF37PhotographerHeader')&&txt($('#pbF37ContextText'))===context('print').title;
-    }
-    if(['ai','gallery','album','instagram'].includes(transitionMode)){
-      if(mode()!==transitionMode)return false;
-      const header=$('#pbF37PhotographerHeader'),area=$('.photographerMain>.photographerRolePageScrollArea');
-      const title=$('#pbF37ContextText');
-      return !!header&&visible(header)&&!!area&&area.childElementCount>0&&txt(title)===context(transitionMode).title;
-    }
-    return false;
-  }
-  function syncTabTransition(){
-    if(!restoreTabTransition())return;
-    if(!transitionTimer)transitionTimer=setTimeout(stopTabTransition,Math.max(0,5200-(Date.now()-transitionStarted)));
-    if(!mobile()||(chooserVisible()&&!transitionFromLabSelect)){stopTabTransition();return}
-    if(Date.now()-transitionStarted<90||!tabTransitionReady())return;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(transitionMode&&tabTransitionReady())stopTabTransition()}));
-  }
-  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){startTabTransition('print',true);schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m){startTabTransition(m);pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
+  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m){pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
   function nativeHeader(){return $('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader')}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
   function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
@@ -174,8 +142,7 @@
   }
 
   function render(){
-    if(!mobile()){stopTabTransition();document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
-    syncTabTransition();
+    if(!mobile()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(!isPortal()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(chooserVisible()){
       document.body.classList.add('pbF37LabChooserVisible');document.body.classList.remove('pbF37UnifiedActive','pbF37StoreMode');lastSig='';sourceMap=new Map();
@@ -200,14 +167,13 @@
   }
   // Coalesce DOM updates without postponing a pending route render indefinitely.
   // Legacy mobile scripts can mutate the root continuously during tab changes.
-  function schedule(ms=40){
-    if(renderTimer){if(ms!==0)return;clearTimeout(renderTimer)}
-    renderTimer=setTimeout(()=>{renderTimer=0;render()},ms);
+  function schedule(){
+    if(renderTimer)return;
+    renderTimer=requestAnimationFrame(()=>{renderTimer=0;render()});
   }
   let bootTimer=0;function settleBoot(){if(!document.documentElement.classList.contains('pbR100F37LabEnterBoot'))return;const w=$('.photographerMain.photographerPrintWorkspace'),sc=w?.querySelector(':scope>.photographerRolePageScrollArea');if(!w||!sc||!sc.children.length||chooserVisible()||labName()==='لابراتوار')return;if(bootTimer)return;bootTimer=setTimeout(()=>{bootTimer=0;document.documentElement.classList.remove('pbR100F37LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{};try{const u=new URL(location.href);if(u.searchParams.get('pbEntryDone')==='lab'){u.searchParams.delete('pbEntryDone');history.replaceState(history.state,'',u.pathname+(u.searchParams.size?'?'+u.searchParams.toString():'')+u.hash)}}catch{}},320)}
   async function loadMe(){try{const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){me=await r.json();avatarData=String(me?.user?.photographerAvatarData||'');schedule(0)}}catch{}}
   function start(){
-    if(transitionMode){document.documentElement.classList.add('pbF41TabTransition');const remaining=Math.max(0,5200-(Date.now()-transitionStarted));transitionTimer=setTimeout(stopTabTransition,remaining)}
     for(const name of ['pushState','replaceState']){const old=history[name];if(typeof old==='function'&&!old.__pbR100F38){const fn=function(...args){const out=old.apply(this,args);pendingMode='';pendingUntil=0;schedule(0);return out};fn.__pbR100F38=true;history[name]=fn}}
     void loadMe();render();
     const root=$('#root')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});

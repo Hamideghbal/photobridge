@@ -7421,7 +7421,7 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="out"] .pb100rOutComp
   });qa('.pb839FilterIndicator',el).forEach(indicator=>style(indicator,{display:'none'}));
  }
  function sync(){
-  frame=0;if(!document.body.classList.contains('rentalAppReady'))return;
+  frame=0;if(!document.body.classList.contains('rentalAppReady')||document.body.classList.contains('pbR100F9StaffMode'))return;
   navigationObserver.disconnect();try{
   const tab=typeof pb837ActiveDesktopTab==='function'?pb837ActiveDesktopTab():'items',mobile=matchMedia('(max-width:850px)').matches,m=metrics[mobile?'mobile':'desktop'];
   // Keep both generations of state classes synchronized; old desktop state must not survive a mobile switch.
@@ -8121,13 +8121,15 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
   function syncStaffNav(){
     staffQueued=false;
     if(!document.body.classList.contains('pbR100F9StaffMode'))return;
-    const nav=q('.pbR100F9StaffNav'),identity=q('#rentalShopIdentityBar'),header=q('header.top');
+    const nav=q('.pbR100F9StaffNav'),header=q('header.top');
     if(!nav)return;
-    const ir=identity?.getBoundingClientRect(),hr=header?.getBoundingClientRect();
-    const bottom=Math.max(ir?.bottom||0,hr?.bottom||0);
-    if(bottom>0)nav.style.setProperty('top',Math.round(bottom)+'px','important');
+    // The store identity/name is already present in the primary account header.
+    // Staff no longer has a second title row below it.
+    const top=Math.max(0,header?.getBoundingClientRect().bottom||84);
+    nav.style.setProperty('top',Math.round(top)+'px','important');
+    document.body.style.setProperty('padding-top',Math.round(top)+'px','important');
     requestAnimationFrame(()=>{
-      const h=Math.ceil(nav.getBoundingClientRect().height||114);
+      const h=Math.ceil(nav.getBoundingClientRect().height||108);
       document.body.style.setProperty('--pb-r100f64-staff-nav-h',h+'px');
     });
   }
@@ -8250,4 +8252,59 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
   [0,100,400,900].forEach(delay=>setTimeout(startup,delay));
 })();
 </script>
+
+<style id="pbR100F70StaffHeaderAndTabs">
+/* Staff only: the shop name already appears inside the main account header. */
+html body.rentalAppReady.pbR100F9StaffMode #rentalShopIdentityBar{
+  display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode{
+  padding-top:84px!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav{
+  top:84px!important;background:#f8fafc!important;
+  border-bottom:1px solid #e4e7ec!important;
+  box-shadow:0 3px 10px rgba(15,23,42,.035)!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:center!important;gap:8px!important;
+  height:56px!important;min-height:56px!important;max-height:56px!important;
+  padding:6px 12px!important;margin:0!important;
+  background:#f8fafc!important;border:0!important;border-bottom:1px solid #e8edf3!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+  padding:0 8px!important;box-sizing:border-box!important;
+  border:1px solid transparent!important;border-radius:10px!important;
+  background:transparent!important;color:#667085!important;box-shadow:none!important;
+  font:850 13px/1.2 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button.active{
+  background:#eaf0ff!important;color:#315efb!important;border-color:#dbe5ff!important;
+  box-shadow:none!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button.active::before,
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button.active::after{
+  display:none!important;content:none!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button:focus-visible{
+  outline:2px solid #315efb!important;outline-offset:1px!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{
+  margin-top:0!important;
+  padding-top:calc(var(--pb-r100f64-staff-nav-h, 108px) + 10px)!important;
+}
+@media(max-width:360px){
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs{
+    gap:5px!important;padding-inline:8px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs > button{
+    font-size:12px!important;
+  }
+}
+</style>
 </body></html>

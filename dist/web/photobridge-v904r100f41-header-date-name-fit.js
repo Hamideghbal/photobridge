@@ -48,7 +48,7 @@
     if(store&&visible(store)&&!/^\/photographer(?:\/|$)/.test(p))return 'store';
     return 'home';
   }
-  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m){pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
+  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m){const leavingStore=/^\/equipment-rental(?:\/|$)/.test(location.pathname)&&m!=='store'&&!!el?.dataset?.mainHref;pendingMode=m;pendingUntil=leavingStore?Infinity:Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');if(leavingStore)render();else schedule(0)}else schedule(70)}
   function nativeHeader(){return $('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader')}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
   function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
@@ -176,12 +176,13 @@
   function start(){
     for(const name of ['pushState','replaceState']){const old=history[name];if(typeof old==='function'&&!old.__pbR100F38){const fn=function(...args){const out=old.apply(this,args);pendingMode='';pendingUntil=0;schedule(0);return out};fn.__pbR100F38=true;history[name]=fn}}
     void loadMe();render();
-    const root=$('#root')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
-    addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',()=>schedule(60),{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});
+    const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
+    addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});
     setInterval(()=>{clockBadge();settleBoot()},15000);
     setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F37LabEnterBoot'))document.documentElement.classList.remove('pbR100F37LabEnterBoot')},5200);
   }
   window.PBStorePhotographerHeaderCore={version:'R100F44',mount:render,refresh:()=>schedule(0),getMode:mode};
-  document.addEventListener('click',handleSectionClick,true);
+  // Update outgoing chrome before older document-level navigation interceptors run.
+  window.addEventListener('click',handleSectionClick,true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

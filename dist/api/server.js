@@ -18339,7 +18339,7 @@ ${inviteUrl}`;
                 throw Object.assign(new Error('lab_suspended_requires_resume'), { status: 409 });
             const nextProvince = b.province === undefined ? String(current.province || '') : String(b.province || '').trim();
             const nextCity = b.city === undefined ? String(current.city || '') : String(b.city || '').trim();
-            if ((nextProvince || nextCity) && !isValidIranLocation(nextProvince, nextCity))
+            if ((b.province !== undefined || b.city !== undefined) && (nextProvince || nextCity) && !isValidIranLocation(nextProvince, nextCity))
                 throw Object.assign(new Error('invalid_location'), { status: 400 });
             const activeUntilValue = b.activeUntil === undefined ? current.active_until : (String(b.activeUntil || '').trim() ? new Date(String(b.activeUntil)) : null);
             const nextDiscountEnabled = b.subscriptionDiscountEnabled === undefined ? Boolean(current.subscription_discount_enabled) : Boolean(b.subscriptionDiscountEnabled);

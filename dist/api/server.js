@@ -14614,6 +14614,28 @@ async function api(req, res, url) {
     if(req.method==='DELETE'&&rentalHandoverStaffRoute?.[1]){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});const id=rentalHandoverStaffRoute[1];const q=await pool.query(`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE id=$1 AND shop_id=$2 AND role='handover_staff' RETURNING id,user_id`,[id,shop.id]);if(!q.rowCount)return sendJson(res,404,{error:'handover_staff_not_found'});await audit(a.userId,undefined,'equipment_rental.handover_staff_remove','equipment_rental_shop',shop.id,{membershipId:id,userId:q.rows[0].user_id}).catch(()=>{});return sendJson(res,200,{ok:true});
     }
+    // Store image uses existing settings storage; no schema changes are required.
+    if (url.pathname === '/api/rental/profile-image' && ['GET', 'PUT'].includes(req.method)) {
+        const shop = req.method === 'GET' && a?.rentalRole === 'handover_staff'
+            ? await equipmentRentalHandoverShop(a, { requireSubscription: false })
+            : await equipmentRentalCurrentShop(a);
+        if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
+        const key = `rental_profile_image:${shop.id}`;
+        if (req.method === 'GET') {
+            const q = await pool.query(`SELECT value FROM platform_settings WHERE key=$1`, [key]);
+            return sendJson(res, 200, { imageData: String(q.rows[0]?.value?.imageData || '') });
+        }
+        const b = await bodyJson(req, 600000), imageData = String(b?.imageData || '').trim();
+        if (!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(imageData))
+            return sendJson(res, 400, { error: 'image_invalid' });
+        if (imageData.length > 500000) return sendJson(res, 413, { error: 'image_too_large' });
+        try {
+            const image = await sharp(Buffer.from(imageData.split(',')[1], 'base64'), { limitInputPixels: 16777216 }).metadata();
+            if (!['jpeg', 'png', 'webp'].includes(image.format) || !image.width || !image.height) throw new Error('invalid_image');
+        } catch { return sendJson(res, 400, { error: 'image_invalid' }); }
+        await pool.query(`INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`, [key, JSON.stringify({ imageData })]);
+        return sendJson(res, 200, { ok: true, imageData });
+    }
     if (req.method === 'GET' && url.pathname === '/api/rental/overview') {
         if(a?.rentalRole==='handover_staff'){
             const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});if(!shop)return sendJson(res,401,{error:'rental_auth_required'});

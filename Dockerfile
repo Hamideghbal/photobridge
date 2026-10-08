@@ -12,7 +12,8 @@ ENV NODE_ENV=production \
 
 # Keep dependency installation in its own cacheable layer.
 COPY package.json .npmrc ./
-RUN npm install --omit=dev --no-audit --no-fund --progress=false --prefer-offline \
+COPY scripts/install-docker-dependencies.mjs ./scripts/install-docker-dependencies.mjs
+RUN node scripts/install-docker-dependencies.mjs \
     && rm -rf /tmp/npm-cache /root/.npm
 
 # Validate the shipped prebuilt dist and deduplicate an identical ONNX Linux binary

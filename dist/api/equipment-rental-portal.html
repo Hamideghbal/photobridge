@@ -7099,6 +7099,12 @@ html body.pbR100F9StaffMode #pbR100F9StaffDates>button>em b{font-size:10px}
 html body.pbR100F9StaffMode .pbR100F9StaffList{overflow-anchor:none}
 .pbR100F9StaffState{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border:1px solid #bbf7d0;border-radius:10px;background:#ecfdf3;color:#15803d;font-size:10px;font-weight:950;white-space:nowrap}
 @media(min-width:851px){body.rentalAppReady.pb899MainBookings #bookings .pb100rManagerDates{top:150px}}
+/* Keep the operator date selector directly below the fixed delivery tabs. */
+html body.pbR100F9StaffMode .pbR100F9StaffHero{display:none!important}
+html body.pbR100F9StaffMode .pbR100F9StaffShell{margin-top:44px!important;padding-top:0!important}
+html body.pbR100F9StaffMode #pbR100F9StaffDates{top:176px!important}
+@media(min-width:851px){html body.pbR100F9StaffMode #pbR100F9StaffDates{position:fixed!important;top:176px!important;left:50%!important;transform:translateX(-50%)!important;width:min(920px,calc(100% - 22px))!important;box-sizing:border-box!important}html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:124px!important}}
+@media(max-width:850px){html body.pbR100F9StaffMode #pbR100F9StaffDates{top:184px!important}}
 </style><script id="pbR100F9ManagerHandoverRuntime">
 (()=>{
  if(typeof pb854BookingRows!=='function'||typeof pb854BookingPaneMarkup!=='function'||typeof pb854RenderBookingStatusPanes!=='function')return;

@@ -11258,7 +11258,7 @@ function serveEquipmentRentalPage(res, fileName, robots = 'noindex, nofollow, no
     const full = path.join(DIST_ROOT, 'api', fileName);
     if (!fs.existsSync(full)) return sendText(res, 503, 'Equipment rental page not found.');
     const html = fs.readFileSync(full, 'utf8');
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store, max-age=0, must-revalidate', 'pragma': 'no-cache', 'expires': '0', 'x-robots-tag': robots, 'x-photobridge-build': 'v904r100f63', 'x-photobridge-deploy-revision': DEPLOY_REVISION });
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store, max-age=0, must-revalidate', 'pragma': 'no-cache', 'expires': '0', 'x-robots-tag': robots, 'x-photobridge-build': 'v904r100f64', 'x-photobridge-deploy-revision': DEPLOY_REVISION });
     res.end(html);
 }
 

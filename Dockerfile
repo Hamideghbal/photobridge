@@ -23,6 +23,8 @@ COPY scripts ./scripts
 # R100: only the desktop overlays are needed to regenerate hot-update UI manifests during image build.
 COPY apps/store-desktop/desktop-overlay.js ./apps/store-desktop/desktop-overlay.js
 COPY apps/lab-desktop/desktop-overlay.js ./apps/lab-desktop/desktop-overlay.js
+# Trim unused operating-system ONNX binaries before the runtime stage copies node_modules.
+RUN node scripts/prune-onnx-platforms.mjs
 # Vendor the tiny pure-JS QR decoder locally so mobile scanning does not depend on BarcodeDetector or an external CDN.
 RUN cp node_modules/jsqr/dist/jsQR.js dist/web/vendor-jsqr-1.4.0.js
 RUN node scripts/liara-fast-build.mjs \

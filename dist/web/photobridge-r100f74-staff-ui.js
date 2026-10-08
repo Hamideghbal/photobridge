@@ -103,7 +103,7 @@
               :'ثبت جبران کسری انجام نشد.';
             throw new Error(error);
           }
-          window.storeNotice?.('جبران کسری با موفقیت ثبت شد.','کسری تحویل');
+          window.storeNotice?.(receipt.extraChargeAmount?'کسری ثبت و مبلغ دیرکرد به فاکتور اضافه شد.':'جبران کسری با موفقیت ثبت شد.','کسری تحویل');
           await window.pbR100F9ReloadStaff?.();
           decorateCards();decorateShortagePane();
         }catch(error){
@@ -144,6 +144,38 @@
         amber.textContent='کسری '+fa(missing)+' عدد';tags.appendChild(amber);
       }
     });
+  }
+
+
+  // Owner's shortage tab uses the same checked receipt and optional late-fee flow.
+  if(typeof window.pbR85ResolveReturnShortage==='function'){
+    window.pbR85ResolveReturnShortage=async function(id,btn){
+      const shortage=(store().returnShortages||[]).find(x=>matches(x.id,id));
+      if(!shortage||shortage.status!=='missing'||shortage.resolved_at){
+        window.storeNotice?.('این کسری دیگر قابل دریافت نیست.','کسری تحویل');return;
+      }
+      const desc=String(shortage.item_title||'تجهیز')+' · '+fa(shortage.missing_qty||0)+' عدد';
+      const receipt=await confirmShortageReceipt(desc);
+      if(!receipt)return;
+      if(btn)btn.disabled=true;
+      try{
+        const response=await fetch('/api/rental/return-shortages/'+encodeURIComponent(String(id)),{
+          method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(receipt)
+        });
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(result.error==='return_shortage_not_found'?
+          'این کسری قبلاً ثبت شده یا قابل دریافت نیست.':
+          result.error==='return_shortage_asset_mismatch'?'کد تجهیزات کسری با سفارش هماهنگ نیست.':
+          'ثبت تحویل کسری یا اصلاح فاکتور انجام نشد.');
+        if(typeof window.load==='function')await window.load({reloadExtra:false});
+        window.pb843SetOfficeTab?.('returnShortages');
+        window.storeNotice?.(receipt.extraChargeAmount?'کسری دریافت و مبلغ دیرکرد در فاکتور ثبت شد.':'تحویل کسری ثبت شد.','کسری تحویل');
+      }catch(error){
+        if(btn)btn.disabled=false;
+        window.storeNotice?.(String(error.message||'ثبت کسری انجام نشد.'),'خطای کسری');
+      }
+    };
   }
 
   const paint=window.pbR100F9PaintStaffList;

@@ -1,6 +1,6 @@
 {
   "name": "photobridge-liara-deploy-lite",
-  "version": "0.17.748",
+  "version": "0.17.750",
   "private": true,
   "type": "module",
   "engines": {
@@ -22,5 +22,5 @@
     "web-push": "3.6.7",
     "jsqr": "1.4.0"
   },
-  "photobridgeDeployBuild": "v904r100f42-faded-header-divider-2026-10-08"
+  "photobridgeDeployBuild": "v904r100f43-unread-menu-badge-2026-10-08"
 }

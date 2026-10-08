@@ -37,8 +37,8 @@
     let meta=qs('meta[name="theme-color"]');
     if(!meta){meta=document.createElement('meta');meta.name='theme-color';meta.content=a.topColor;document.head.appendChild(meta)}
 
-    const header=qs('#photographerStoreRoleHeader');
-    if(header instanceof HTMLElement){header.style.setProperty('background',a.headerColor,'important');header.style.setProperty('background-color',a.headerColor,'important');header.style.setProperty('color',contrast(a.headerColor),'important')}
+    const header=qs('#photographerStoreRoleHeader'),headerColor=matchMedia('(max-width:820px)').matches?'#ffffff':a.headerColor;
+    if(header instanceof HTMLElement){header.style.setProperty('background',headerColor,'important');header.style.setProperty('background-color',headerColor,'important');header.style.setProperty('color',contrast(headerColor),'important')}
 
     /* Brand/store identity row is intentionally neutral, never subbarColor. */
     const identity=qs('#photographerStoreIdentityBar');

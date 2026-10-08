@@ -67,7 +67,7 @@
         const raw=number(feeInput.value),amount=/^\d+$/.test(raw)?Number(raw):NaN;
         if(!Number.isSafeInteger(amount)||amount<0||amount>1000000000000){error.textContent='مبلغ دیرکرد معتبر نیست.';return}
         const note=reasonInput.value.trim();if(amount>0&&!note){error.textContent='دلیل افزایش فاکتور الزامی است.';return}
-        close({lateFeeAmount:amount,lateFeeNote:note});
+        close({receiptConfirmed:true,lateFeeAmount:amount,lateFeeNote:note});
       };
     });
   }
@@ -103,6 +103,12 @@
           if(!response.ok){
             const error=result.error==='return_shortage_asset_mismatch'
               ?'کد یا وضعیت واحدهای کسری با سفارش هماهنگ نیست؛ عملیات ثبت نشد.'
+              :result.error==='return_shortage_receipt_confirmation_required'
+              ?'ابتدا دریافت کسری را تأیید کنید.'
+              :result.error==='invoice_adjustment_note_required'
+              ?'برای مبلغ دیرکرد، دلیل اصلاح فاکتور را وارد کنید.'
+              :result.error==='invalid_invoice_adjustment'
+              ?'مبلغ دیرکرد با فاکتور معتبر نیست.'
               :result.error==='return_shortage_not_found'
               ?'این کسری قبلاً ثبت شده یا دیگر قابل دریافت نیست.'
               :'ثبت جبران کسری انجام نشد.';

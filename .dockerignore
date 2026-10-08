@@ -1,0 +1,6 @@
+.git
+node_modules
+# Generated during the Docker build from the prebuilt web assets.
+dist/web/desktop-ui/
+dist/web/lab-desktop-ui/
+dist/web/vendor-jsqr-1.4.0.js

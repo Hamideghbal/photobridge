@@ -7120,11 +7120,14 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
  const faNum=x=>typeof fa==='function'?fa(x):String(x);
  pb854BookingRows=function(kind){const all=data?.bookings||[];if(kind==='approved')return all.filter(b=>['reserved','payment_pending','picked_up','returned'].includes(String(b.status||'')));if(kind==='out')return all.filter(b=>['picked_up','returned'].includes(String(b.status||'')));return baseRows(kind)};
  try{window.pb854BookingRows=pb854BookingRows}catch{}
- window.pb100rSelectManagerDate=(kind,iso)=>{
-   if(!['approved','out'].includes(kind))return;
-   selected[kind]=iso;
-   // Wait until the rerendered rail is mounted in the fixed host (R100F64).
-   pb854RenderBookingStatusPanes();
+
+ // R100F67 — date reset and centering are shared by clicks and tab entry.
+ window.pb100rTodayISO=()=>today();
+ window.pb100rResetManagerToToday=kind=>{
+   if(kind==='approved'||kind==='out')selected[kind]=today();
+ };
+ window.pb100rCenterManagerDate=(kind,iso,behavior='auto')=>{
+   if(kind!=='approved'&&kind!=='out')return;
    requestAnimationFrame(()=>requestAnimationFrame(()=>{
      const card=document.querySelector(`[data-pb100r-date-kind="${kind}"][data-pb100r-day="${iso}"]`);
      const rail=card?.closest('.pb100rManagerDates');
@@ -7132,11 +7135,17 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
      const r=rail.getBoundingClientRect(),c=card.getBoundingClientRect();
      const desired=rail.scrollLeft+(c.left+c.width/2)-(r.left+r.width/2);
      const max=Math.max(0,rail.scrollWidth-rail.clientWidth);
-     rail.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+     rail.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
    }));
  };
+ window.pb100rSelectManagerDate=(kind,iso)=>{
+   if(kind!=='approved'&&kind!=='out')return;
+   selected[kind]=iso;
+   pb854RenderBookingStatusPanes();
+   window.pb100rCenterManagerDate(kind,iso,'smooth');
+ };
  window.pb100rPrintInvoice=id=>{const w=window.open('','_blank','width=900,height=900');if(!w){window.storeNotice?.('برای چاپ فاکتور، پنجرهٔ جدید مرورگر را مجاز کن.','پنجرهٔ چاپ مسدود شد');return}void(async()=>{try{let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id));if(!inv&&typeof loadAccounting==='function'){await loadAccounting();inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id))}if(!inv){w.close();window.storeNotice?.('برای این آفیش فاکتوری صادر نشده است.','فاکتور پیدا نشد');return}const rows=Array.isArray(inv.items)?inv.items:[],lines=rows.map((x,i)=>`<tr><td>${faNum(i+1)}</td><td>${escape(x.title||x.item_title||'تجهیز')}</td><td>${faNum(x.quantity||1)}</td><td>${faNum(x.rental_days||inv.rental_days||1)}</td><td>${escape(money(x.daily_price||0))}</td><td>${escape(money(x.subtotal||0))}</td></tr>`).join(''),shop=escape(data?.shop?.name||'فروشگاه تجهیزات'),who=escape(inv.photographer_name||'—'),phone=escape(inv.photographer_mobile||'—'),rangeText=`${escape(typeof dateFa==='function'?dateFa(inv.rental_start):inv.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(inv.rental_end):inv.rental_end||'—')}`,invoiceNo=escape(inv.invoice_number||'—');w.document.open();w.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور اجاره ${invoiceNo}</title><style>@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font:12px/1.8 Tahoma,Arial,sans-serif;color:#182230;margin:0}.paper{max-width:190mm;margin:auto}.head{display:flex;justify-content:space-between;border-bottom:2px solid #344054;padding:0 0 12px;margin-bottom:14px}.head h1{font-size:20px;margin:0}.muted{color:#667085}.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:16px}.facts div{padding:6px;border-bottom:1px solid #eaecf0}table{border-collapse:collapse;width:100%;font-size:11px}th,td{border:1px solid #d0d5dd;padding:8px;text-align:right}th{background:#f2f4f7}.totals{width:310px;margin:16px 0 0 auto}.totals div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eaecf0}.grand{font-weight:900;font-size:14px}.sign{display:flex;justify-content:space-between;margin-top:42px;color:#667085}.print{margin:18px 0;padding:9px 18px;border:0;border-radius:8px;background:#315efb;color:white;font-weight:bold}@media print{.print{display:none}}</style></head><body><main class="paper"><header class="head"><div><h1>فاکتور اجاره تجهیزات</h1><span class="muted">شماره فاکتور: ${invoiceNo}</span></div><b>${shop}</b></header><section class="facts"><div>عکاس / مشتری: <b>${who}</b></div><div>شماره تماس: <b dir="ltr">${phone}</b></div><div>بازه آفیش: <b>${rangeText}</b></div><div>تاریخ صدور: <b>${escape(typeof dateFa==='function'?dateFa(inv.issued_at):inv.issued_at||'—')}</b></div></section><table><thead><tr><th>ردیف</th><th>شرح تجهیزات</th><th>تعداد</th><th>روز</th><th>اجاره روزانه</th><th>مبلغ</th></tr></thead><tbody>${lines||`<tr><td>۱</td><td>${escape(inv.item_titles||'اجاره تجهیزات')}</td><td>—</td><td>${faNum(inv.rental_days||1)}</td><td>—</td><td>${escape(money(inv.total_amount||0))}</td></tr>`}</tbody></table><section class="totals"><div><span>مبلغ نهایی</span><b class="grand">${escape(money(inv.total_amount||0))}</b></div><div><span>ودیعه</span><b>${escape(money(inv.deposit_amount||0))}</b></div></section><section class="sign"><span>مهر و امضای فروشگاه</span><span>امضای مشتری / عکاس</span></section><button class="print" onclick="window.print()">چاپ / ذخیره PDF</button></main></body></html>`);w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch{}},500)}catch{w.close();window.storeNotice?.('بازکردن فاکتور انجام نشد.','خطای فاکتور')}})()};
- window.pb854BookingPaneMarkup=function(kind,title){if(!['approved','out'].includes(kind))return baseMarkup(kind,title);const rows=pb854BookingRows(kind),days=[...new Set(rows.flatMap(b=>daysForBooking(b,kind)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)))].sort(),now=today();if(!days.includes(selected[kind]))selected[kind]=days.includes(now)?now:(kind==='approved'?(days.find(x=>x>=now)||days.at(-1)||''):(days.filter(x=>x<=now).at(-1)||days[0]||''));const dateButtons=days.map(d=>{const when=new Date(d+'T12:00:00Z'),weekday=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',timeZone:'Asia/Tehran'}).format(when),date=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(when),count=rows.filter(b=>daysForBooking(b,kind).includes(d)).length;return `<button type="button" data-pb100r-date-kind="${kind}" data-pb100r-day="${d}" data-today="${d===now}" class="${d===selected[kind]?'active':''}" onclick="pb100rSelectManagerDate('${kind}','${d}')"><span class="pb100rManagerDateTop"><small>${weekday}</small>${d===now?'<b>امروز</b>':''}</span><strong>${date}</strong><em><b>${faNum(count)}</b> آفیش</em></button>`}).join('');const visible=rows.filter(b=>daysForBooking(b,kind).includes(selected[kind]));const cards=visible.map(b=>{const id=escape(b.id),picked=b.status==='picked_up',returned=b.status==='returned',pending=b.status==='payment_pending',badge=picked?'<span class="pb100rManagerStatus">✓ تحویل شد</span>':returned?'<span class="pb100rManagerStatus">✓ تحویل و دریافت شد</span>':pending?'<span class="pill paymentPendingPill">منتظر پرداخت</span>':'';let actions='';if(kind==='approved'&&b.status==='reserved')actions=`<button class="mini" onclick="bookingStatus('${id}','picked_up')">ثبت تحویل</button><button class="mini v654Danger" onclick="bookingStatus('${id}','cancelled')">لغو</button>`;else if(kind==='approved'&&pending)actions='<button class="mini" disabled>منتظر پرداخت</button>';else if(kind==='out'&&picked)actions=`<button class="mini pb914ReturnButton ${escape(window.pb921ReturnPhase?.(b)||'')}" onclick="bookingStatus('${id}','returned')">ثبت دریافت</button>`;if(picked||returned)actions+=`<span class="pb100rManagerDocs"><button type="button" class="mini pb100rCommitment" onclick="window.pbR85PrintCommitment?pbR85PrintCommitment('${id}'):pb916PrintCommitment('${id}')">چاپ تعهدنامه</button><button type="button" class="mini pb100rInvoice" onclick="pb100rPrintInvoice('${id}')">فاکتور</button></span>`;const phase=picked&&kind==='out'?window.pb921ReturnPhase?.(b):'';const deadline=picked&&kind==='out'?window.pb921ReturnDeadline?.(b):null,notice=deadline?`<span class="pb914ReturnNotice ${phase==='overdue'?'overdue':phase==='due'?'due':''}">${phase==='overdue'?'موعد برگشت گذشته: ':phase==='due'?'مهلت برگشت امروز: ':'آخرین مهلت برگشت: '}${escape(deadline.label)}</span>`:'';const dateLabel=`${escape(typeof dateFa==='function'?dateFa(b.rental_start):b.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(b.rental_end):b.rental_end||'—')}`;return `<article class="pb854BookingStatusCard pb914BookingCard ${picked||returned?'pb100rManagerDelivered':''}" data-pb915-booking-id="${id}" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش"><div class="pb854BookingIdentity"><div class="pb914NameLine"><b>${escape(b.photographer_name||b.customer_name||'عکاس')}</b>${badge}</div><small class="pb854PhotographerPhone" dir="ltr">${escape(b.photographer_mobile||b.customer_mobile||'')}</small><small class="pb854BookingItems">${escape(b.item_titles||'بدون شرح تجهیزات')}</small><small class="pb914BookingMeta">${escape(statusLabel(b.status))} · ${escape(money(b.total_amount||0))}</small></div><div class="pb914ActionColumn">${notice}<div class="pb914Schedule"><span class="pb914DateRange">${dateLabel}</span></div><div class="actions">${actions}</div></div></article>`}).join('');const dayCaption=selected[kind]?`${kind==='approved'?'تحویل‌های روز':'دریافت‌های روز'} ${escape(typeof dateFa==='function'?dateFa(selected[kind]):selected[kind])}`:'';return `<div class="box"><h2>${kind==='approved'?'تحویل و وضعیت تحویل':'دریافت تجهیزات'}</h2>${days.length?`<div class="pb100rManagerDayLabel" style="font-size:10px;font-weight:850;color:#475467;margin:0 0 5px">${dayCaption}</div><div class="pb100rManagerDates" aria-label="انتخاب روز آفیش">${dateButtons}</div>`:'<div class="pb854BookingEmpty">برای این بخش آفیشی وجود ندارد.</div>'}<div class="pb854BookingStatusList">${visible.length?cards:`<div class="pb854BookingEmpty">برای این روز موردی وجود ندارد.</div>`}</div></div>`};
+ window.pb854BookingPaneMarkup=function(kind,title){if(!['approved','out'].includes(kind))return baseMarkup(kind,title);const rows=pb854BookingRows(kind),now=today(),days=[...new Set([now,...rows.flatMap(b=>daysForBooking(b,kind)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x))])].sort();if(!days.includes(selected[kind]))selected[kind]=now;const dateButtons=days.map(d=>{const when=new Date(d+'T12:00:00Z'),weekday=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',timeZone:'Asia/Tehran'}).format(when),date=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(when),count=rows.filter(b=>daysForBooking(b,kind).includes(d)).length;return `<button type="button" data-pb100r-date-kind="${kind}" data-pb100r-day="${d}" data-today="${d===now}" class="${d===selected[kind]?'active':''}" onclick="pb100rSelectManagerDate('${kind}','${d}')"><span class="pb100rManagerDateTop"><small>${weekday}</small>${d===now?'<b>امروز</b>':''}</span><strong>${date}</strong><em><b>${faNum(count)}</b> آفیش</em></button>`}).join('');const visible=rows.filter(b=>daysForBooking(b,kind).includes(selected[kind]));const cards=visible.map(b=>{const id=escape(b.id),picked=b.status==='picked_up',returned=b.status==='returned',pending=b.status==='payment_pending',badge=picked?'<span class="pb100rManagerStatus">✓ تحویل شد</span>':returned?'<span class="pb100rManagerStatus">✓ تحویل و دریافت شد</span>':pending?'<span class="pill paymentPendingPill">منتظر پرداخت</span>':'';let actions='';if(kind==='approved'&&b.status==='reserved')actions=`<button class="mini" onclick="bookingStatus('${id}','picked_up')">ثبت تحویل</button><button class="mini v654Danger" onclick="bookingStatus('${id}','cancelled')">لغو</button>`;else if(kind==='approved'&&pending)actions='<button class="mini" disabled>منتظر پرداخت</button>';else if(kind==='out'&&picked)actions=`<button class="mini pb914ReturnButton ${escape(window.pb921ReturnPhase?.(b)||'')}" onclick="bookingStatus('${id}','returned')">ثبت دریافت</button>`;if(picked||returned)actions+=`<span class="pb100rManagerDocs"><button type="button" class="mini pb100rCommitment" onclick="window.pbR85PrintCommitment?pbR85PrintCommitment('${id}'):pb916PrintCommitment('${id}')">چاپ تعهدنامه</button><button type="button" class="mini pb100rInvoice" onclick="pb100rPrintInvoice('${id}')">فاکتور</button></span>`;const phase=picked&&kind==='out'?window.pb921ReturnPhase?.(b):'';const deadline=picked&&kind==='out'?window.pb921ReturnDeadline?.(b):null,notice=deadline?`<span class="pb914ReturnNotice ${phase==='overdue'?'overdue':phase==='due'?'due':''}">${phase==='overdue'?'موعد برگشت گذشته: ':phase==='due'?'مهلت برگشت امروز: ':'آخرین مهلت برگشت: '}${escape(deadline.label)}</span>`:'';const dateLabel=`${escape(typeof dateFa==='function'?dateFa(b.rental_start):b.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(b.rental_end):b.rental_end||'—')}`;return `<article class="pb854BookingStatusCard pb914BookingCard ${picked||returned?'pb100rManagerDelivered':''}" data-pb915-booking-id="${id}" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش"><div class="pb854BookingIdentity"><div class="pb914NameLine"><b>${escape(b.photographer_name||b.customer_name||'عکاس')}</b>${badge}</div><small class="pb854PhotographerPhone" dir="ltr">${escape(b.photographer_mobile||b.customer_mobile||'')}</small><small class="pb854BookingItems">${escape(b.item_titles||'بدون شرح تجهیزات')}</small><small class="pb914BookingMeta">${escape(statusLabel(b.status))} · ${escape(money(b.total_amount||0))}</small></div><div class="pb914ActionColumn">${notice}<div class="pb914Schedule"><span class="pb914DateRange">${dateLabel}</span></div><div class="actions">${actions}</div></div></article>`}).join('');const dayCaption=selected[kind]?`${kind==='approved'?'تحویل‌های روز':'دریافت‌های روز'} ${escape(typeof dateFa==='function'?dateFa(selected[kind]):selected[kind])}`:'';return `<div class="box"><h2>${kind==='approved'?'تحویل و وضعیت تحویل':'دریافت تجهیزات'}</h2>${days.length?`<div class="pb100rManagerDayLabel" style="font-size:10px;font-weight:850;color:#475467;margin:0 0 5px">${dayCaption}</div><div class="pb100rManagerDates" aria-label="انتخاب روز آفیش">${dateButtons}</div>`:'<div class="pb854BookingEmpty">برای این بخش آفیشی وجود ندارد.</div>'}<div class="pb854BookingStatusList">${visible.length?cards:`<div class="pb854BookingEmpty">برای این روز موردی وجود ندارد.</div>`}</div></div>`};
  try{window.pb854BookingPaneMarkup=pb854BookingPaneMarkup}catch{}
  const currentRender=pb854RenderBookingStatusPanes;pb854RenderBookingStatusPanes=function(...args){const prior={};for(const kind of ['approved','out']){const r=document.querySelector(`[data-pb843-office-pane="${kind}"] .pb100rManagerDates`);prior[kind]=r&&r.getClientRects().length?r.scrollLeft:null}const out=currentRender.apply(this,args);document.querySelectorAll('.pb100rManagerDayLabel').forEach(el=>el.remove());for(const kind of ['approved','out']){const pane=document.querySelector(`[data-pb843-office-pane="${kind}"]`),rail=pane?.querySelector('.pb100rManagerDates');if(!rail||!rail.getClientRects().length)continue;if(prior[kind]!==null)rail.scrollLeft=prior[kind];else{const active=rail.querySelector('.active');if(active){const r=rail.getBoundingClientRect(),b=active.getBoundingClientRect();rail.scrollBy({left:b.left+b.width/2-(r.left+r.width/2),behavior:'auto'})}}}const approved=document.querySelector('[data-pb843-office-tab="approved"] .pb904r5OfficeTabLabel,[data-pb843-office-tab="approved"] .pb905rOfficeTabLabel,[data-pb843-office-tab="approved"] .pb854TabLabel'),received=document.querySelector('[data-pb843-office-tab="out"] .pb904r5OfficeTabLabel,[data-pb843-office-tab="out"] .pb905rOfficeTabLabel,[data-pb843-office-tab="out"] .pb854TabLabel');if(approved)approved.textContent='تحویل';if(received)received.textContent='دریافت';return out};try{window.pb854RenderBookingStatusPanes=pb854RenderBookingStatusPanes}catch{}
  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-pb100r-date-kind]');if(b){e.preventDefault();e.stopImmediatePropagation();window.pb100rSelectManagerDate(b.dataset.pb100rDateKind,b.dataset.pb100rDay)}},true);
@@ -7240,6 +7249,7 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
       centerActiveOfficeTab(behavior);
     });
   }
+  window.pbR100F67CenterOfficeTab=(behavior='auto')=>scheduleOfficeCenter(behavior);
   document.addEventListener('click',e=>{
     if(e.target.closest?.('#pb848BookingHeaderTabs>[data-pb843-office-tab]'))scheduleOfficeCenter('smooth');
     if(e.target.closest?.('[data-rental-bottom-tab="bookings"],[data-rental-desktop-tab="bookings"],[data-rental-tab="bookings"]'))
@@ -8099,6 +8109,65 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
   mo.observe(document.body,{attributes:true,attributeFilter:['class'],subtree:false});
   setTimeout(()=>{queueManager();queueStaff()},0);
   setTimeout(()=>{queueManager();queueStaff()},500);
+})();
+</script>
+
+<script id="pbR100F67OfficeInitialAndToday">
+(()=>{
+  if(window.__PB_R100F67_OFFICE_INITIAL_TODAY__)return;
+  window.__PB_R100F67_OFFICE_INITIAL_TODAY__=true;
+  const q=(selector,root=document)=>root.querySelector(selector);
+  const office=q('#pb848BookingHeaderTabs');
+  const order=['approved','out','calendar','pending','shortages','returnShortages'];
+  let initiallyCentered=false;
+  function orderOfficeTabs(){
+    if(!office||document.body.classList.contains('pbR100F9StaffMode'))return;
+    const items=[...office.querySelectorAll(':scope > button[data-pb843-office-tab]')];
+    const arranged=[...order.map(key=>items.find(btn=>btn.dataset.pb843OfficeTab===key)).filter(Boolean),
+      ...items.filter(btn=>!order.includes(btn.dataset.pb843OfficeTab))];
+    if(arranged.length===items.length&&arranged.some((btn,i)=>btn!==items[i]))
+      arranged.forEach(btn=>office.appendChild(btn));
+  }
+  function centerDefaultOffice(){
+    if(initiallyCentered||!office?.clientWidth)return;
+    if(!document.body.classList.contains('rentalAppReady')||document.body.classList.contains('pbR100F9StaffMode'))return;
+    if(!q('#bookings')?.classList.contains('active'))return;
+    if(q(':scope > button[data-pb843-office-tab].active',office)?.dataset.pb843OfficeTab!=='calendar')return;
+    orderOfficeTabs();
+    initiallyCentered=true;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(q(':scope > button[data-pb843-office-tab].active',office)?.dataset.pb843OfficeTab==='calendar')
+        window.pbR100F67CenterOfficeTab?.('auto');
+    }));
+  }
+  const ensure=window.pb854EnsureBookingStatusTabs;
+  if(typeof ensure==='function'){
+    const wrapped=function(...args){
+      const out=ensure.apply(this,args);
+      orderOfficeTabs();
+      centerDefaultOffice();
+      return out;
+    };
+    window.pb854EnsureBookingStatusTabs=wrapped;
+    try{pb854EnsureBookingStatusTabs=wrapped}catch{}
+  }
+  const setTab=window.pb843SetOfficeTab;
+  if(typeof setTab==='function'){
+    const wrapped=function(tab,...args){
+      const previous=q(':scope > button[data-pb843-office-tab].active',office)?.dataset.pb843OfficeTab;
+      const entering=(tab==='approved'||tab==='out')&&tab!==previous;
+      if(entering)window.pb100rResetManagerToToday?.(tab);
+      const out=setTab.call(this,tab,...args);
+      if(entering)window.pb100rCenterManagerDate?.(tab,window.pb100rTodayISO?.(),'auto');
+      return out;
+    };
+    window.pb843SetOfficeTab=wrapped;
+    try{pb843SetOfficeTab=wrapped}catch{}
+  }
+  const startup=()=>{orderOfficeTabs();centerDefaultOffice()};
+  document.addEventListener('DOMContentLoaded',startup,{once:true});
+  window.addEventListener('pageshow',startup,{passive:true});
+  [0,100,400,900].forEach(delay=>setTimeout(startup,delay));
 })();
 </script>
 </body></html>

@@ -182,3 +182,65 @@ html body.pbR100F9StaffMode .pbR100F74ResolveBtn{
   font:900 12px/1.45 Vazirmatn,Tahoma,sans-serif;
 }
 html body.pbR100F9StaffMode .pbR100F74ResolveBtn:disabled{opacity:.5;cursor:wait}
+
+
+/* R100F76: move today's marker to the bottom metadata row. Never use white ink. */
+html body.pbR100F9StaffMode #pbR100F9StaffDates>button em{
+  display:flex!important;justify-content:center;align-items:center;gap:5px!important;
+  font-style:normal!important;white-space:nowrap!important;
+}
+html body.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F76TodayBadge{
+  display:inline-flex!important;align-items:center!important;
+  padding:1px 4px!important;border-radius:5px!important;
+  font:900 9px/1.3 Vazirmatn,Tahoma,sans-serif!important;
+  color:#1e40af!important;background:#dbeafe!important;
+  border:1px solid #93c5fd!important;box-shadow:none!important;
+}
+html body.pbR100F9StaffMode #pbR100F9StaffDates>button.active .pbR100F76TodayBadge{
+  color:#1e3a8a!important;background:#bfdbfe!important;border-color:#93c5fd!important;
+}
+html body.rentalAppReady .pb100rManagerDates .pb100rManagerDateTop b{display:none!important}
+html body.rentalAppReady .pb100rManagerDates button em .pbR100F76TodayBadge{
+  display:inline-flex!important;align-items:center!important;margin-inline-start:4px!important;
+  border:1px solid #93c5fd!important;border-radius:5px!important;padding:1px 4px!important;
+  color:#1e40af!important;background:#dbeafe!important;
+  font:900 9px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+}
+html body.rentalAppReady .pb100rManagerDates button.active em .pbR100F76TodayBadge{
+  color:#1e3a8a!important;background:#bfdbfe!important;
+}
+/* Explicit receipt confirmation and optional invoice surcharge. */
+.pbR100F76ShortageBackdrop{
+  position:fixed;inset:0;z-index:2147483612;display:flex;align-items:center;justify-content:center;
+  background:#10182899;padding:14px;direction:rtl;font-family:Vazirmatn,Tahoma,sans-serif;
+}
+.pbR100F76ShortageDialog{
+  box-sizing:border-box;width:min(500px,100%);max-height:90dvh;overflow:auto;
+  display:grid;gap:11px;background:#fff;border-radius:16px;padding:19px;
+  box-shadow:0 25px 85px #10182844;
+}
+.pbR100F76ShortageDialog h2{font-size:17px;margin:0;color:#182230}
+.pbR100F76ShortageDialog p{font-size:12px;line-height:1.7;margin:0;color:#475467}
+.pbR100F76ShortageDialog label{display:grid;gap:5px;font-size:12px;font-weight:750;color:#344054}
+.pbR100F76ShortageDialog input:not([type="checkbox"]),
+.pbR100F76ShortageDialog textarea{
+  font:650 13px Vazirmatn,Tahoma,sans-serif;padding:9px 11px;
+  border:1px solid #d0d5dd;border-radius:9px;min-width:0;box-sizing:border-box;width:100%;
+}
+.pbR100F76ShortageDialog .pbR100F76ReceiptCheck{
+  display:flex;align-items:center;gap:9px;padding:12px;background:#f0fdf4;
+  border:1px solid #86efac;border-radius:11px;
+}
+.pbR100F76ReceiptCheck input{flex:0 0 20px;width:20px;height:20px;accent-color:#16a34a}
+.pbR100F76ShortageDialog .pbR100F76ShortageError{color:#b42318;min-height:14px}
+.pbR100F76ShortageActions{display:flex;gap:9px;justify-content:flex-end}
+.pbR100F76ShortageActions button{
+  border:1px solid #d0d5dd;border-radius:9px;padding:9px 15px;
+  background:#f8fafc;color:#344054;font:800 12px Vazirmatn,Tahoma;cursor:pointer;
+}
+.pbR100F76ShortageActions button.primary{background:#166534;border-color:#166534;color:#fff}
+@media(max-width:650px){
+  .pbR100F76ShortageBackdrop{align-items:flex-end;padding:0}
+  .pbR100F76ShortageDialog{width:100%;max-height:94dvh;border-radius:18px 18px 0 0}
+  .pbR100F76ShortageActions button{flex:1}
+}

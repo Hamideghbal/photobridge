@@ -15326,11 +15326,29 @@ async function api(req, res, url) {
         if(a?.rentalRole==='handover_staff'&&!['picked_up','returned'].includes(status)) return sendJson(res,403,{error:'handover_staff_forbidden'});
         const bookingId = rentalBookingRoute[1];
         if (status === 'picked_up' && !((Array.isArray(b.assetCodes)&&b.assetCodes.length)||(Array.isArray(b.externalSupplyCodes)&&b.externalSupplyCodes.length))) {
+            // Legacy/manual handover must use the exact same server-side asset verification
+            // and assignment path as QR pickup. A free-text serial alone must never
+            // change the booking to picked_up.
             const serialCheck = await pool.query(`SELECT handover_serials FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 LIMIT 1`, [bookingId,shop.id]);
             if (!serialCheck.rowCount) return sendJson(res,404,{error:'rental_booking_not_found'});
             const serialItems = Array.isArray(serialCheck.rows[0]?.handover_serials) ? serialCheck.rows[0].handover_serials : [];
-            if (!serialItems.length || serialItems.some(x=>!Array.isArray(x?.serials)||x.serials.length!==Number(x?.quantity||0)||x.serials.some(v=>!String(v||'').trim())))
+            if (!serialItems.length || serialItems.some(x=>!Array.isArray(x?.serials)||!Number.isSafeInteger(Number(x?.quantity))||
+                Number(x.quantity)<1||x.serials.length!==Number(x.quantity)||x.serials.some(v=>!String(v||'').trim())))
                 return sendJson(res,409,{error:'handover_serials_required'});
+            const manualCodes=[],manualExternal=[],seenManualItems=new Set();
+            for (const item of serialItems) {
+                const itemId=String(item.itemId||''),qty=Number(item.quantity),ext=Number(item.externalSupplyQty||0);
+                if(!/^[0-9a-f-]{36}$/i.test(itemId)||seenManualItems.has(itemId)||
+                    !Number.isSafeInteger(ext)||ext<0||ext>qty)
+                    return sendJson(res,400,{error:'handover_serials_required'});
+                seenManualItems.add(itemId);
+                for(const value of item.serials.slice(0,qty-ext))manualCodes.push(String(value).trim());
+                for(const value of item.serials.slice(qty-ext)){
+                    manualExternal.push({itemId,code:String(value||'').trim().replace(/^تأمین بیرونی$/,'')});
+                }
+            }
+            b.assetCodes=manualCodes;
+            b.externalSupplyCodes=manualExternal;
         }
         if (status === 'reserved') {
             await ensureEquipmentRentalV727Schema();
@@ -15547,6 +15565,8 @@ async function api(req, res, url) {
             return sendJson(res,400,{error:'invalid_invoice_adjustment'});
         if(lateFeeAmount>0&&!lateFeeNote)
             return sendJson(res,400,{error:'invoice_adjustment_note_required'});
+        if(lateFeeAmount>0&&body.receiptConfirmed!==true)
+            return sendJson(res,400,{error:'return_shortage_receipt_confirmation_required'});
         const c=await pool.connect();
         let resolved,invoice=null,photographerId=null;
         try {

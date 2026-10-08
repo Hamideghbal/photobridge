@@ -8631,4 +8631,135 @@ html body.pbR100F9StaffMode #pbR100F71Details .pbR100F71Actions button{font-size
 .pbR100F72ReturnAction:disabled{background:#a3b1ce}
 @media(max-width:520px){.pbR100F72CalendarGrid{gap:3px;padding:6px}.pbR100F72CalendarDay{min-height:43px}}
 </style>
+<script id="pbR100F72StaffFeatures">
+(()=>{
+if(window.__PB_R100F72_STAFF_FEATURES__)return;window.__PB_R100F72_STAFF_FEATURES__=true;
+const q=(s,root=document)=>root?.querySelector?.(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fa=n=>Number(n||0).toLocaleString('fa-IR');
+const today=()=>new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'Asia/Tehran'}).format(new Date());
+const iso=t=>new Date(t).toISOString().slice(0,10),ms=d=>Date.parse(String(d||'').slice(0,10)+'T12:00:00Z');
+const pers=d=>{const a=new Intl.DateTimeFormat('en-US-u-ca-persian',{year:'numeric',month:'numeric',day:'numeric',timeZone:'Asia/Tehran'}).formatToParts(new Date(ms(d)));const get=k=>Number(a.find(v=>v.type===k)?.value||0);return{year:get('year'),month:get('month'),day:get('day')}};
+const monthStart=d=>iso(ms(d)-(pers(d).day-1)*86400000),monthNext=d=>monthStart(iso(ms(monthStart(d))+34*86400000)),monthPrev=d=>monthStart(iso(ms(monthStart(d))-86400000));
+const dayText=d=>new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(new Date(ms(d)));
+const titles={out:'تحویل مشتری',in:'دریافت تجهیزات',shortages:'کسری آفیش',returnShortages:'کسری تحویل',calendar:'آفیش'};
+let active='out',month='',day='',returnBusy=false;
+const originalPaint=window.pbR100F9PaintStaffList,originalPortal=window.pbR100F9RenderStaffPortal;
+if(typeof originalPaint!=='function'||typeof originalPortal!=='function')return;
+function tabs(){
+ const nav=q('.pbR100F9StaffNav'),rail=q('.pbR100F9StaffTabs');if(!nav||!rail)return;
+ nav.classList.toggle('pbR100F72HideDayRail',!['out','in'].includes(active));
+ rail.querySelectorAll('[data-staff-mode]').forEach(b=>{const yes=b.dataset.staffMode===active;b.classList.toggle('active',yes);b.setAttribute('aria-selected',String(yes))});
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{if(document.body.classList.contains('pbR100F9StaffMode'))document.body.style.setProperty('--pb-r100f64-staff-nav-h',Math.ceil(nav.getBoundingClientRect().height||55)+'px')}));
+}
+function center(){
+ const rail=q('.pbR100F9StaffTabs'),b=q('[data-staff-mode="'+active+'"]',rail);if(!rail?.clientWidth||!b)return;
+ const r=rail.getBoundingClientRect(),v=b.getBoundingClientRect(),delta=v.left+v.width/2-(r.left+r.width/2);
+ const max=Math.max(0,rail.scrollWidth-rail.clientWidth),rtl=getComputedStyle(rail).direction==='rtl';
+ rail.scrollTo({left:Math.max(rtl?-max:0,Math.min(rtl?0:max,rail.scrollLeft+delta)),behavior:'smooth'});
+}
+const during=(b,d)=>['reserved','picked_up','returned'].includes(String(b.status))&&String(b.rental_start||'').slice(0,10)<=d&&d<=String(b.rental_end||'').slice(0,10);
+function calendar(){
+ const first=month||monthStart(today()),end=monthNext(first),offset=(new Date(ms(first)).getUTCDay()+1)%7;
+ const count=Math.round((ms(end)-ms(first))/86400000),rows=(typeof data!=='undefined'?data?.bookings:[])||[];
+ const dates=Array.from({length:offset+count},(_,i)=>{
+   if(i<offset)return '<span></span>';const d=iso(ms(first)+(i-offset)*86400000),n=rows.filter(b=>during(b,d)).length;
+   return '<button type="button" class="pbR100F72CalendarDay'+(d===today()?' today':'')+(d===day?' active':'')+'" data-pb-r72-date="'+d+'"><b>'+fa(pers(d).day)+'</b>'+(n?'<small>'+fa(n)+' آفیش</small>':'')+'</button>'
+ }).join('');
+ const selected=rows.filter(b=>during(b,day));
+ const cards=selected.map(b=>'<article class="pbR100F9StaffCard pbR100F71UnifiedCard" role="button" tabindex="0" data-pb915-booking-id="'+esc(b.id)+'"><div class="pbR100F71Identity"><b>'+esc(b.photographer_name||b.customer_name||'عکاس')+'</b><small dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small><small class="pbR100F71Gear">'+esc(window.pb100rOutGearSummary?.(b)||b.item_titles||'تجهیزات')+'</small></div></article>').join('');
+ const title=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(new Date(ms(first)));
+ return '<section class="pbR100F72ExtraPanel"><p class="pbR100F72Note">تقویم آفیش‌ها · فقط مشاهده؛ ثبت آفیش غیرفعال است.</p><div class="pbR100F72CalendarBar"><button type="button" data-pb-r72-month="-1" aria-label="ماه قبل">‹</button><b>'+esc(title)+'</b><button type="button" data-pb-r72-month="1" aria-label="ماه بعد">›</button></div><div class="pbR100F72CalendarGrid">'+['ش','ی','د','س','چ','پ','ج'].map(v=>'<span class="weekday">'+v+'</span>').join('')+dates+'</div><b>'+esc(dayText(day))+'</b>'+(cards||'<div class="pbR100F9StaffEmpty">برای این روز آفیشی نیست.</div>')+'</section>'
+}
+function shortageCards(){
+ const booking=active==='shortages',rows=(typeof data!=='undefined'?(booking?data?.shortages:data?.returnShortages):[])||[];
+ return '<section class="pbR100F72ExtraPanel"><p class="pbR100F72Note">'+(booking?'کسری آفیش':'کسری تحویل')+' · فقط نمایش</p>'+(rows.length?rows.map(x=>{
+ const done=!!x.resolved_at||(booking?x.status==='provided':x.status==='returned_later');
+ const date=booking?String(x.rental_start||'').slice(0,10)+' تا '+String(x.rental_end||'').slice(0,10):x.detected_local||'—';
+ return '<article class="pbR100F72ShortageCard"><b>'+esc(x.photographer_name||x.customer_name||'عکاس')+'</b><small dir="ltr" style="text-align:right">'+esc(x.customer_mobile||'')+'</small><div>'+fa(booking?x.shortage_qty:x.missing_qty)+' عدد '+esc(x.item_title||'تجهیز')+'</div><small>'+esc(date)+'</small><small>'+(done?'تکمیل شده':'در انتظار پیگیری')+'</small></article>';
+ }).join(''):'<div class="pbR100F9StaffEmpty">موردی ثبت نشده است.</div>')+'</section>';
+}
+function extras(){
+ const root=q('#pbR100F9StaffList');tabs();if(!root)return;
+ if(active!=='calendar'){root.innerHTML=shortageCards();return}
+ if(!day)day=today();if(!month)month=monthStart(day);
+ root.innerHTML=calendar();
+ root.querySelectorAll('[data-pb-r72-month]').forEach(b=>b.onclick=()=>{month=Number(b.dataset.pbR72Month)>0?monthNext(month):monthPrev(month);day=month;extras()});
+ root.querySelectorAll('[data-pb-r72-date]').forEach(b=>b.onclick=()=>{day=b.dataset.pbR72Date;extras()});
+}
+function decorate(){
+ const rail=q('.pbR100F9StaffTabs');if(!rail)return;
+ rail.setAttribute('role','tablist');rail.setAttribute('aria-label','بخش‌های متصدی');
+ for(const mode of Object.keys(titles)){
+  if(q('[data-staff-mode="'+mode+'"]',rail))continue;
+  const b=document.createElement('button');b.type='button';b.dataset.staffMode=mode;b.textContent=titles[mode];
+  b.onclick=()=>{active=mode;if(mode==='calendar'){day=today();month=monthStart(day)}extras();requestAnimationFrame(center)};
+  rail.appendChild(b);
+ }
+ rail.querySelectorAll('[data-staff-mode="out"],[data-staff-mode="in"]').forEach(b=>b.addEventListener('click',()=>{active=b.dataset.staffMode;},true));
+ tabs();
+}
+function confirmReturn(id){
+ if(returnBusy)return;
+ const b=(typeof data!=='undefined'?data?.bookings:[])?.find(v=>String(v.id)===String(id));
+ if(!b||b.status!=='picked_up')return;
+ returnBusy=true;const previousOverflow=document.body.style.overflow;
+ const overlay=document.createElement('div');overlay.className='pbR100F72ReturnOverlay';
+ overlay.innerHTML='<section class="pbR100F72ReturnSheet" role="dialog" aria-modal="true"><div class="pbR100F72ReturnHead"><b>دریافت تجهیزات · '+esc(b.photographer_name||b.customer_name||'عکاس')+'</b><button type="button" data-close aria-label="بستن">×</button></div><p class="pbR100F72Note">هر واحد را پس از دریافت فیزیکی با لمس تأیید کنید. اسکن بارکد لازم نیست.</p><div data-list>در حال دریافت تجهیزات…</div><p data-progress class="pbR100F72Note"></p><button type="button" class="pbR100F72ReturnAction" data-submit disabled>ثبت نهایی دریافت</button><small role="alert" data-error></small></section>';
+ document.body.appendChild(overlay);document.body.style.overflow='hidden';
+ let busy=false,items=[],units=[];
+ const list=q('[data-list]',overlay),submit=q('[data-submit]',overlay),status=q('[data-progress]',overlay),error=q('[data-error]',overlay);
+ function close(){if(busy)return;overlay.remove();document.body.style.overflow=previousOverflow;returnBusy=false}
+ q('[data-close]',overlay).onclick=close;overlay.addEventListener('click',evt=>{if(evt.target===overlay)close()});
+ const count=()=>{const n=units.filter(x=>x.yes).length;status.textContent=fa(n)+' از '+fa(units.length)+' واحد تأیید شده';submit.disabled=busy||n===0;submit.textContent='ثبت نهایی دریافت '+fa(n)+' واحد'};
+ (async()=>{
+  try{
+   const detail=await api('/api/rental/bookings/'+encodeURIComponent(id)+'/assets');
+   if(!overlay.isConnected)return;
+   if(detail.status!=='picked_up')throw Error('آفیش دیگر در انتظار دریافت نیست.');
+   items=(detail.items||[]).map(x=>({...x,itemId:String(x.itemId),quantity:Math.max(1,Number(x.quantity||1))}));
+   for(const item of items){
+    const assets=Array.isArray(item.assets)?item.assets.filter(a=>!a.returned_at):[];
+    for(const a of assets)units.push({itemId:item.itemId,title:item.title,code:String(a.system_code||''),caption:String(a.serial_number||a.system_code||''),yes:false});
+    for(let i=0;i<Math.max(0,item.quantity-assets.length);i++)units.push({itemId:item.itemId,title:item.title,code:'',caption:'واحد '+fa(i+1)+' · تأمین بیرونی',yes:false});
+   }
+   if(!units.length){list.textContent='تجهیزی برای دریافت باقی نمانده است.';return}
+   list.innerHTML=units.map((x,i)=>'<div class="pbR100F72ReturnUnit" data-unit="'+i+'"><span><b>'+esc(x.title||'تجهیز')+'</b><small>'+esc(x.caption)+'</small></span><button type="button" data-toggle="'+i+'" aria-pressed="false">تأیید دریافت</button></div>').join('');
+   list.querySelectorAll('[data-toggle]').forEach(button=>button.onclick=()=>{
+    const i=Number(button.dataset.toggle);units[i].yes=!units[i].yes;
+    button.closest('[data-unit]').classList.toggle('done',units[i].yes);button.setAttribute('aria-pressed',String(units[i].yes));
+    button.textContent=units[i].yes?'✓ تأیید شد':'تأیید دریافت';count();
+   });
+   count();
+  }catch(ex){error.textContent=String(ex?.message||'خطا در دریافت اطلاعات');list.textContent='فهرست تجهیزات دریافت نشد.'}
+ })();
+ submit.onclick=async()=>{
+  if(busy||!units.some(x=>x.yes))return;
+  const n=units.filter(x=>x.yes).length;
+  if(n<units.length&&!window.confirm(fa(units.length-n)+' واحد تأیید نشده است و به عنوان کسری ثبت می‌شود. ادامه می‌دهید؟'))return;
+  busy=true;error.textContent='';count();
+  try{
+   const returnItems=items.map(item=>({itemId:item.itemId,returnedQty:units.filter(u=>u.itemId===item.itemId&&u.yes).length}));
+   const assetCodes=units.filter(x=>x.yes&&x.code).map(x=>x.code);
+   await api('/api/rental/bookings/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({status:'returned',staffConfirmedUnits:true,returnItems,assetCodes})});
+   busy=false;close();await window.pbR100F9ReloadStaff?.();
+  }catch(ex){busy=false;error.textContent='ثبت دریافت انجام نشد: '+String(ex?.message||'دوباره تلاش کنید');count()}
+ };
+}
+window.pbR100F72OpenReturn=confirmReturn;
+window.pbR100F9PaintStaffList=function(...args){
+ if(active!=='out'&&active!=='in'){extras();return}
+ let saved;
+ if(active==='in'&&typeof data!=='undefined'&&Array.isArray(data?.bookings)){saved=data.bookings;data.bookings=saved.filter(b=>b.status==='picked_up')}
+ let result;try{result=originalPaint.apply(this,args)}finally{if(saved)data.bookings=saved}
+ if(active==='in')q('#pbR100F9StaffList')?.querySelectorAll('[data-booking]').forEach(button=>{
+  button.onclick=evt=>{evt.preventDefault();evt.stopPropagation();confirmReturn(button.dataset.booking)};
+  button.textContent='بررسی و دریافت';
+ });
+ tabs();return result;
+};
+window.pbR100F9RenderStaffPortal=function(...args){
+ active='out';month='';day='';
+ const result=originalPortal.apply(this,args);decorate();requestAnimationFrame(center);return result;
+};
+})();
+</script>
 </body></html>

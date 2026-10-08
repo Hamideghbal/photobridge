@@ -14640,7 +14640,7 @@ async function api(req, res, url) {
     if (req.method === 'GET' && url.pathname === '/api/rental/overview') {
         if(a?.rentalRole==='handover_staff'){
             const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
-            const bq=await pool.query(`SELECT b.id,b.status,b.rental_start,b.rental_end,b.created_at,b.updated_at,b.handover_serials,b.handover_serials_recorded_at,COALESCE(pp.studio_name,u.name,b.customer_name) photographer_name,COALESCE(u.mobile,b.customer_mobile) photographer_mobile,COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id)||' ×'||bi.quantity::text,'، ' ORDER BY i.title),'') item_titles FROM equipment_rental_bookings b LEFT JOIN users u ON u.id=b.photographer_id LEFT JOIN photographer_profiles pp ON pp.user_id=u.id LEFT JOIN equipment_rental_booking_items bi ON bi.booking_id=b.id LEFT JOIN equipment_rental_items i ON i.id=bi.item_id WHERE b.shop_id=$1 AND b.status IN ('reserved','picked_up','returned') GROUP BY b.id,pp.studio_name,u.name,u.mobile ORDER BY CASE WHEN b.status='reserved' THEN 0 WHEN b.status='picked_up' THEN 1 ELSE 2 END,b.rental_start,b.created_at LIMIT 200`,[shop.id]);
+            const bq=await pool.query(`SELECT b.id,b.status,b.rental_start,b.rental_end,b.created_at,b.updated_at,b.handover_serials,b.handover_serials_recorded_at,COALESCE(pp.studio_name,u.name,b.customer_name) photographer_name,COALESCE(u.mobile,b.customer_mobile) photographer_mobile,COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id)||' ×'||bi.quantity::text,'، ' ORDER BY i.title),'') item_titles,COALESCE(jsonb_agg(jsonb_build_object('itemId',bi.item_id,'title',equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id),'quantity',bi.quantity) ORDER BY i.title) FILTER (WHERE bi.item_id IS NOT NULL),'[]'::jsonb) items FROM equipment_rental_bookings b LEFT JOIN users u ON u.id=b.photographer_id LEFT JOIN photographer_profiles pp ON pp.user_id=u.id LEFT JOIN equipment_rental_booking_items bi ON bi.booking_id=b.id LEFT JOIN equipment_rental_items i ON i.id=bi.item_id WHERE b.shop_id=$1 AND b.status IN ('reserved','picked_up','returned') GROUP BY b.id,pp.studio_name,u.name,u.mobile ORDER BY CASE WHEN b.status='reserved' THEN 0 WHEN b.status='picked_up' THEN 1 ELSE 2 END,b.rental_start,b.created_at LIMIT 200`,[shop.id]);
             // Shop-scoped, read-only shortage summaries for handover staff.
             // Never return the owner overview or its accounting and membership data.
             const [staffShortagesQ,staffReturnShortagesQ]=await Promise.all([
@@ -14654,7 +14654,7 @@ async function api(req, res, url) {
                   LEFT JOIN users u ON u.id=b.photographer_id
                   LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                   WHERE s.shop_id=$1 ORDER BY (s.resolved_at IS NULL) DESC,s.rental_start DESC LIMIT 200`,[shop.id]).catch(()=>({rows:[]})),
-                pool.query(`SELECT rs.id,rs.booking_id,rs.missing_qty,rs.status,rs.resolved_at,rs.detected_at,
+                pool.query(`SELECT rs.id,rs.booking_id,rs.item_id,rs.expected_qty,rs.returned_qty,rs.missing_qty,rs.status,rs.resolved_at,rs.detected_at,
                   equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,
                   COALESCE(pp.studio_name,u.name,b.customer_name) photographer_name,b.customer_mobile
                   FROM equipment_rental_return_shortages rs
@@ -15526,7 +15526,55 @@ async function api(req, res, url) {
         return sendJson(res, 200, { ok:true, status:q.rows[0].status, sms:null, invoice });
     }
     const rentalReturnShortageRoute = url.pathname.match(/^\/api\/rental\/return-shortages\/([0-9a-f-]{36})$/i);
-    if (req.method === 'PATCH' && rentalReturnShortageRoute) { const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentRentalReturnShortageSchema();const id=rentalReturnShortageRoute[1],body=await bodyJson(req).catch(()=>({})),note=String(body.note||'').trim().slice(0,1000);const q=await pool.query(`UPDATE equipment_rental_return_shortages SET status='returned_later',resolved_at=now(),resolved_by=$3,resolution_note=$4,updated_at=now() WHERE id=$1 AND shop_id=$2 AND status='missing' RETURNING *`,[id,shop.id,a.userId,note||null]);if(!q.rowCount)return sendJson(res,404,{error:'return_shortage_not_found'});return sendJson(res,200,{ok:true,shortage:q.rows[0]}); }
+    if (req.method === 'PATCH' && rentalReturnShortageRoute) {
+        // The owner and authorized handover staff can register a late return,
+        // but only against a missing shortage in their own shop and returned booking.
+        const shop=await equipmentRentalHandoverShop(a);
+        if(!shop||shop.deleted_at)return sendJson(res,401,{error:'rental_auth_required'});
+        await ensureEquipmentRentalReturnShortageSchema();
+        const id=rentalReturnShortageRoute[1],body=await bodyJson(req,10_000).catch(()=>({}));
+        const note=String(body.note||'').trim().slice(0,1000);
+        const c=await pool.connect();
+        let resolved;
+        try {
+            await c.query('BEGIN');
+            const locked=await c.query(`SELECT rs.*,b.status booking_status
+                FROM equipment_rental_return_shortages rs
+                JOIN equipment_rental_bookings b ON b.id=rs.booking_id AND b.shop_id=rs.shop_id
+                WHERE rs.id=$1 AND rs.shop_id=$2 AND rs.status='missing'
+                  AND rs.resolved_at IS NULL AND b.status='returned'
+                FOR UPDATE OF rs`,[id,shop.id]);
+            const row=locked.rows[0];
+            if(!row){await c.query('ROLLBACK');return sendJson(res,404,{error:'return_shortage_not_found'});}
+            const codes=Array.isArray(row.missing_asset_codes)?row.missing_asset_codes.map(x=>String(x||'').trim()).filter(Boolean):[];
+            if(codes.length>500||new Set(codes).size!==codes.length){
+                await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_asset_mismatch'});
+            }
+            if(codes.length){
+                const received=await c.query(`UPDATE equipment_rental_booking_assets ba
+                    SET returned_at=COALESCE(ba.returned_at,now())
+                    FROM equipment_rental_assets a
+                    WHERE ba.asset_id=a.id AND ba.shop_id=$1 AND ba.booking_id=$2
+                      AND ba.item_id=$3 AND a.shop_id=$1 AND a.system_code=ANY($4::text[])
+                      AND ba.returned_at IS NULL
+                    RETURNING ba.asset_id`,[shop.id,row.booking_id,row.item_id,codes]);
+                if(received.rowCount!==codes.length){
+                    await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_asset_mismatch'});
+                }
+            }
+            const result=await c.query(`UPDATE equipment_rental_return_shortages
+                SET status='returned_later',resolved_at=now(),resolved_by=$3,
+                    resolution_note=$4,updated_at=now()
+                WHERE id=$1 AND shop_id=$2 AND status='missing'
+                RETURNING *`,[id,shop.id,a.userId,note||null]);
+            if(!result.rowCount){await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_already_resolved'});}
+            resolved=result.rows[0];
+            await c.query('COMMIT');
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{c.release();}
+        await audit(a.userId,undefined,'equipment_rental.return_shortage_resolved','equipment_rental_return_shortage',id,
+            {shopId:shop.id,bookingId:resolved.booking_id,missingQty:Number(resolved.missing_qty||0)}).catch(()=>{});
+        return sendJson(res,200,{ok:true,shortage:resolved});
+    }
     const rentalShortageRoute = url.pathname.match(/^\/api\/rental\/shortages\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && rentalShortageRoute) {
         const shop = await equipmentRentalCurrentShop(a);

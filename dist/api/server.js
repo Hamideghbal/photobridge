@@ -15424,13 +15424,17 @@ async function api(req, res, url) {
             const locked=await pool.query(`SELECT * FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 LIMIT 1`,[bookingId,shop.id]);const row=locked.rows[0];if(!row)return sendJson(res,404,{error:'rental_booking_not_found'});if(row.status!=='reserved')return sendJson(res,409,{error:'invalid_rental_transition'});
             const expected=await pool.query(`SELECT bi.item_id,bi.quantity,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title FROM equipment_rental_booking_items bi LEFT JOIN equipment_rental_items i ON i.id=bi.item_id WHERE bi.booking_id=$1 ORDER BY bi.id`,[bookingId]);
             const shortageQ=await pool.query(`SELECT item_id,COALESCE(SUM(shortage_qty),0)::int qty FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND (COALESCE(status,'pending')='provided' OR resolved_at IS NOT NULL) GROUP BY item_id`,[bookingId,shop.id]);const supplyNeed=new Map(shortageQ.rows.map(x=>[String(x.item_id),Math.max(0,Number(x.qty||0))]));
+            // Only a previously supplied or explicitly missing unit may be declared external.
+            // Shop-owned units must match a registered asset code/serial.
+            const pendingSupplyQ=await pool.query(`SELECT item_id,COALESCE(SUM(shortage_qty),0)::int qty FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND COALESCE(status,'pending')='pending' AND resolved_at IS NULL GROUP BY item_id`,[bookingId,shop.id]);
+            const pendingSupply=new Map(pendingSupplyQ.rows.map(x=>[String(x.item_id),Math.max(0,Number(x.qty||0))]));
             const codes=(Array.isArray(b.assetCodes)?b.assetCodes:[]).map(x=>String(x||'').trim().replace(/^PB-/i,'')).map(x=>x.startsWith('PB|')?(x.split('|')[1]||''):x).filter(Boolean),uniqueCodes=[...new Set(codes)];
             const assets=uniqueCodes.length?await pool.query(`SELECT * FROM equipment_rental_assets WHERE shop_id=$1 AND active=true AND (system_code=ANY($2::text[]) OR serial_number=ANY($2::text[]))`,[shop.id,uniqueCodes]):{rows:[],rowCount:0};if(assets.rowCount!==uniqueCodes.length)return sendJson(res,400,{error:'asset_scan_unknown'});
             const bookingItems=new Set(expected.rows.map(x=>String(x.item_id)));for(const x of assets.rows)if(!bookingItems.has(String(x.item_id)))return sendJson(res,400,{error:'asset_scan_unknown'});
             const got=new Map();for(const x of assets.rows){const k=String(x.item_id);got.set(k,(got.get(k)||0)+1)}
             const externalSupplyInput=Array.isArray(b.externalSupplyCodes)?b.externalSupplyCodes:(Array.isArray(b.suppliedUnits)?b.suppliedUnits:[]);
             const extRows=externalSupplyInput.map(x=>({itemId:String(x?.itemId||''),code:String(x?.code||'').trim().slice(0,180)})).filter(x=>x.itemId),extByItem=new Map();for(const x of extRows){if(!bookingItems.has(x.itemId))return sendJson(res,400,{error:'external_supply_code_invalid'});if(!extByItem.has(x.itemId))extByItem.set(x.itemId,[]);extByItem.get(x.itemId).push(x.code)}
-            for(const x of expected.rows){const k=String(x.item_id),qty=Math.max(1,Number(x.quantity||1)),externalGot=(extByItem.get(k)||[]).length,previouslyProvided=Math.min(qty,Math.max(0,Number(supplyNeed.get(k)||0))),external=externalGot,internalNeed=qty-external,internalGot=got.get(k)||0;if(externalGot<previouslyProvided)return sendJson(res,400,{error:'external_supply_scan_incomplete',itemId:k,expected:previouslyProvided,scanned:externalGot});if(external>qty)return sendJson(res,400,{error:'external_supply_scan_incomplete',itemId:k,expected:qty,scanned:external});if(internalGot!==internalNeed)return sendJson(res,400,{error:'asset_scan_incomplete',itemId:k,expected:internalNeed,scanned:internalGot,externalSupplyQty:external});}
+            for(const x of expected.rows){const k=String(x.item_id),qty=Math.max(1,Number(x.quantity||1)),externalGot=(extByItem.get(k)||[]).length,previouslyProvided=Math.min(qty,Math.max(0,Number(supplyNeed.get(k)||0))),external=externalGot,internalNeed=qty-external,internalGot=got.get(k)||0;if(externalGot<previouslyProvided)return sendJson(res,400,{error:'external_supply_scan_incomplete',itemId:k,expected:previouslyProvided,scanned:externalGot});if(externalGot>Math.min(qty,previouslyProvided+Number(pendingSupply.get(k)||0)))return sendJson(res,400,{error:'external_supply_not_approved',itemId:k});if(external>qty)return sendJson(res,400,{error:'external_supply_scan_incomplete',itemId:k,expected:qty,scanned:external});if(internalGot!==internalNeed)return sendJson(res,400,{error:'asset_scan_incomplete',itemId:k,expected:internalNeed,scanned:internalGot,externalSupplyQty:external});}
             const busy=assets.rows.length?await pool.query(`SELECT a.system_code FROM equipment_rental_booking_assets ba JOIN equipment_rental_bookings bb ON bb.id=ba.booking_id JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.shop_id=$1 AND ba.asset_id=ANY($2::uuid[]) AND ba.returned_at IS NULL AND bb.status='picked_up'`,[shop.id,assets.rows.map(x=>x.id)]):{rows:[],rowCount:0};if(busy.rowCount)return sendJson(res,409,{error:'asset_already_out',codes:busy.rows.map(x=>x.system_code)});
             const handoverItems=expected.rows.map(x=>{const k=String(x.item_id),internal=assets.rows.filter(a=>String(a.item_id)===k).map(a=>String(a.serial_number||a.system_code||'').trim()).filter(Boolean),external=(extByItem.get(k)||[]).map(v=>String(v||'').trim()||'بدون سریال');return {itemId:k,title:String(x.item_title||'تجهیز'),quantity:Math.max(1,Number(x.quantity||1)),serials:[...internal,...external]}});
             const c=await pool.connect();try{await c.query('BEGIN');for(const x of assets.rows)await c.query(`INSERT INTO equipment_rental_booking_assets(id,shop_id,booking_id,item_id,asset_id,handed_out_at) VALUES($1,$2,$3,$4,$5,now()) ON CONFLICT(booking_id,asset_id) DO NOTHING`,[crypto.randomUUID(),shop.id,bookingId,x.item_id,x.id]);for(const x of expected.rows){const itemId=String(x.item_id),externalQty=(extByItem.get(itemId)||[]).length;if(externalQty>0)await c.query(`INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,resolved_at,resolved_by,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'provided',now(),$8,now()) ON CONFLICT(booking_id,item_id) DO UPDATE SET shortage_qty=EXCLUDED.shortage_qty,status='provided',resolved_at=now(),resolved_by=EXCLUDED.resolved_by,updated_at=now()`,[crypto.randomUUID(),shop.id,bookingId,itemId,externalQty,row.rental_start,row.rental_end,a.userId]);else await c.query(`DELETE FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND item_id=$3 AND COALESCE(status,'pending')<>'provided' AND resolved_at IS NULL`,[bookingId,shop.id,itemId])}await c.query(`UPDATE equipment_rental_bookings SET status='picked_up',handover_serials=$3::jsonb,handover_serials_recorded_at=now(),handover_serials_recorded_by=$4,commitment_generated_at=COALESCE(commitment_generated_at,now()),updated_at=now() WHERE id=$1 AND shop_id=$2`,[bookingId,shop.id,JSON.stringify(handoverItems),a.userId]);await c.query('COMMIT')}catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
@@ -15534,11 +15538,17 @@ async function api(req, res, url) {
         await ensureEquipmentRentalReturnShortageSchema();
         const id=rentalReturnShortageRoute[1],body=await bodyJson(req,10_000).catch(()=>({}));
         const note=String(body.note||'').trim().slice(0,1000);
+        const lateFeeRaw=body.lateFeeAmount??0;
+        const lateFeeNote=String(body.lateFeeNote||'').trim().slice(0,1000);
+        if(!Number.isSafeInteger(lateFeeRaw)||lateFeeRaw<0||lateFeeRaw>1000000000000)return sendJson(res,400,{error:'invalid_late_fee_amount'});
+        if(lateFeeRaw>0&&!lateFeeNote)return sendJson(res,400,{error:'late_fee_note_required'});
         const c=await pool.connect();
         let resolved;
         try {
             await c.query('BEGIN');
-            const locked=await c.query(`SELECT rs.*,b.status booking_status
+            const locked=await c.query(`SELECT rs.*,b.status booking_status,
+                    b.total_amount booking_total_amount,b.photographer_id,b.invoice_adjustment_amount,
+                    b.invoice_adjustment_note
                 FROM equipment_rental_return_shortages rs
                 JOIN equipment_rental_bookings b ON b.id=rs.booking_id AND b.shop_id=rs.shop_id
                 WHERE rs.id=$1 AND rs.shop_id=$2 AND rs.status='missing'
@@ -15569,11 +15579,36 @@ async function api(req, res, url) {
                 RETURNING *`,[id,shop.id,a.userId,note||null]);
             if(!result.rowCount){await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_already_resolved'});}
             resolved=result.rows[0];
+            if(lateFeeRaw>0){
+                const total=Number(row.booking_total_amount||0),previousAdjustment=Number(row.invoice_adjustment_amount||0);
+                if(!Number.isSafeInteger(total)||!Number.isSafeInteger(previousAdjustment)||
+                   !Number.isSafeInteger(total+lateFeeRaw)||!Number.isSafeInteger(previousAdjustment+lateFeeRaw)){
+                    await c.query('ROLLBACK');return sendJson(res,400,{error:'late_fee_total_invalid'});
+                }
+                const oldNote=String(row.invoice_adjustment_note||'').trim();
+                const combinedNote=[oldNote,'دیرکرد تحویل کسری: '+lateFeeNote].filter(Boolean).join(' | ').slice(0,1000);
+                await c.query(`UPDATE equipment_rental_bookings SET
+                    total_amount=$3,invoice_adjustment_amount=$4,invoice_adjustment_note=$5,
+                    payment_status=CASE WHEN payment_status='paid' THEN 'not_required' ELSE payment_status END,
+                    updated_at=now() WHERE id=$1 AND shop_id=$2`,
+                    [row.booking_id,shop.id,total+lateFeeRaw,previousAdjustment+lateFeeRaw,combinedNote]);
+                if(row.photographer_id)await c.query(`INSERT INTO equipment_rental_accounting_entries(
+                    shop_id,photographer_id,booking_id,entry_type,direction,amount,description,entry_date,created_by)
+                    VALUES($1,$2,$3,'adjustment_debit','debit',$4,$5,
+                    (now() AT TIME ZONE 'Asia/Tehran')::date,$6)`,
+                    [shop.id,row.photographer_id,row.booking_id,lateFeeRaw,'دیرکرد تحویل کسری: '+lateFeeNote,a.userId]);
+                await equipmentRentalEnsureInvoice(c,row.booking_id,a.userId);
+            }
             await c.query('COMMIT');
         }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{c.release();}
         await audit(a.userId,undefined,'equipment_rental.return_shortage_resolved','equipment_rental_return_shortage',id,
-            {shopId:shop.id,bookingId:resolved.booking_id,missingQty:Number(resolved.missing_qty||0)}).catch(()=>{});
-        return sendJson(res,200,{ok:true,shortage:resolved});
+            {shopId:shop.id,bookingId:resolved.booking_id,missingQty:Number(resolved.missing_qty||0),lateFeeAmount:lateFeeRaw,lateFeeNote:lateFeeRaw>0?lateFeeNote:null}).catch(()=>{});
+        if(lateFeeRaw>0){
+            const customer=await pool.query(`SELECT photographer_id FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2`,[resolved.booking_id,shop.id]);
+            if(customer.rows[0]?.photographer_id)publishCustomerEventEverywhere(String(customer.rows[0].photographer_id),'equipment_rental_status',
+                {bookingId:resolved.booking_id,status:'returned',shopId:shop.id,invoiceChanged:true});
+        }
+        return sendJson(res,200,{ok:true,shortage:resolved,lateFeeAmount:lateFeeRaw});
     }
     const rentalShortageRoute = url.pathname.match(/^\/api\/rental\/shortages\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && rentalShortageRoute) {

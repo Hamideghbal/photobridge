@@ -1,6 +1,6 @@
 {
   "name": "photobridge-liara-deploy-lite",
-  "version": "0.17.750",
+  "version": "0.17.751",
   "private": true,
   "type": "module",
   "engines": {

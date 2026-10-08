@@ -1,0 +1,46 @@
+/* Photographer Windows/desktop: connected order stages and compact text navigation. */
+@media (min-width:821px){
+  .photographerMain .liveOrderGrid .liveTimeline{
+    display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:minmax(0,1fr)!important;
+    gap:0!important;width:100%!important;margin:10px 0!important;padding:0!important;direction:rtl!important
+  }
+  .photographerMain .liveOrderGrid .liveTimeline>div{
+    position:relative!important;display:block!important;grid-column:auto!important;grid-template:none!important;
+    min-height:52px!important;min-width:0!important;padding:27px 3px 0!important;
+    border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;text-align:center!important
+  }
+  .photographerMain .liveOrderGrid .liveTimeline>div::before{
+    content:""!important;display:block!important;position:absolute!important;top:10px!important;right:-50%!important;
+    width:100%!important;height:2px!important;background:#e4e7ec!important;z-index:0!important
+  }
+  .photographerMain .liveOrderGrid .liveTimeline>div:first-child::before{display:none!important}
+  .photographerMain .liveOrderGrid .liveTimeline>div.done::before{background:#84adff!important}
+  .photographerMain .liveOrderGrid .liveTimeline .timelineDot{
+    position:absolute!important;top:1px!important;right:50%!important;transform:translateX(50%)!important;
+    width:19px!important;height:19px!important;display:grid!important;place-items:center!important;z-index:1!important;
+    border-radius:50%!important;border:2px solid #d0d5dd!important;background:#fff!important;box-shadow:none!important
+  }
+  .photographerMain .liveOrderGrid .liveTimeline>div.done .timelineDot{background:#315efb!important;border-color:#315efb!important;color:#fff!important}
+  .photographerMain .liveOrderGrid .liveTimeline>div.current .timelineDot{border-color:#315efb!important}
+  .photographerMain .liveOrderGrid .liveTimeline b{display:block!important;font-size:10px!important;line-height:1.5!important;white-space:normal!important;overflow:visible!important}
+  .photographerMain .liveOrderGrid .liveTimeline small{display:block!important;font-size:8px!important;line-height:1.4!important;margin-top:3px!important}
+  .photographerMain>.photographerHeaderRefined:not(.photographerPrintModeHeader){flex-wrap:wrap!important}
+  .photographerMain .photographerHomeModeNav{
+    display:flex!important;flex:1 1 340px!important;flex-wrap:wrap!important;align-items:center!important;
+    min-width:0!important;width:auto!important;gap:0!important;padding:0 4px!important;margin:0!important;overflow:visible!important
+  }
+  .photographerMain .photographerHomeModeNav>button{
+    position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    flex:0 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:48px!important;
+    margin:0!important;padding:12px 8px!important;border:0!important;border-radius:0!important;background:transparent!important;
+    box-shadow:none!important;color:#475467!important;font-size:11px!important;line-height:1.5!important;white-space:nowrap!important;transform:none!important
+  }
+  .photographerMain .photographerHomeModeNav>button::before{display:none!important}
+  .photographerMain .photographerHomeModeNav>button::after{
+    content:""!important;display:block!important;position:absolute!important;inset:auto 8px 0!important;height:3px!important;
+    width:auto!important;border:0!important;border-radius:3px!important;background:transparent!important;box-shadow:none!important
+  }
+  .photographerMain .photographerHomeModeNav>button:is(.active,:hover,:focus-visible){color:#315efb!important;background:transparent!important}
+  .photographerMain .photographerHomeModeNav>button.active::after{background:#315efb!important}
+  .photographerMain .photographerHeaderTools{flex-shrink:0!important;position:relative!important}
+}

@@ -53,6 +53,10 @@
         e.stopPropagation();
         const id=String(shortage.id||'');
         if(!id||activeResolutions.has(id))return;
+        if(typeof window.pbR85ResolveReturnShortage==='function'){
+          await window.pbR85ResolveReturnShortage(id,btn);
+          return;
+        }
         const desc=String(shortage.item_title||'تجهیز')+' · '+fa(shortage.missing_qty||0)+' عدد';
         if(!window.confirm('آیا تمام کسری «'+desc+'» واقعاً دریافت شده و جبران آن را تأیید می‌کنید؟'))return;
         activeResolutions.add(id);btn.disabled=true;btn.textContent='در حال ثبت…';

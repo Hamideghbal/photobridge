@@ -1,0 +1,152 @@
+/* R100F73 — desktop-only staff navigation; no effect on mobile/owner. */
+@media (min-width:851px) {
+  html body.rentalAppReady.pbR100F9StaffMode {
+    padding-top:166px!important;
+    background:#f8fafc!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top {
+    position:fixed!important;top:0!important;right:0!important;left:0!important;
+    height:110px!important;min-height:110px!important;max-height:110px!important;
+    padding:0 18px!important;z-index:140!important;
+    display:grid!important;grid-template-columns:56px minmax(0,1fr)!important;
+    grid-template-rows:62px 48px!important;align-items:center!important;
+    direction:ltr!important;border:0!important;border-bottom:1px solid #e7eaf0!important;
+    background:#fff!important;box-shadow:none!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top>#pbR100F60AccountIdentity{
+    grid-column:2!important;grid-row:1!important;justify-self:end!important;
+    order:unset!important;flex:none!important;margin:0!important;max-width:calc(100vw - 110px)!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top #rentalMobileMenuBtn{
+    display:grid!important;visibility:visible!important;opacity:1!important;
+    grid-column:1!important;grid-row:1!important;place-self:center start!important;
+    position:relative!important;min-width:42px!important;width:42px!important;height:42px!important;
+    padding:0!important;margin:0!important;border:1px solid #e2e8f0!important;
+    background:#fff!important;color:#344054!important;border-radius:11px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top .pbR100F9StaffTabs{
+    position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+    transform:none!important;grid-column:1/-1!important;grid-row:2!important;
+    width:100%!important;max-width:100%!important;height:46px!important;
+    min-height:46px!important;max-height:46px!important;display:flex!important;
+    flex-flow:row nowrap!important;gap:18px!important;justify-content:flex-start!important;
+    align-items:stretch!important;margin:0!important;padding:0 6px!important;
+    border:0!important;border-radius:0!important;background:#fff!important;
+    box-shadow:none!important;direction:rtl!important;overflow-x:auto!important;
+    overflow-y:hidden!important;scrollbar-width:thin!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top .pbR100F9StaffTabs>button {
+    position:relative!important;flex:0 0 auto!important;min-width:0!important;width:auto!important;
+    height:46px!important;min-height:46px!important;max-height:46px!important;
+    padding:0 5px 4px!important;border:0!important;border-radius:0!important;
+    background:transparent!important;box-shadow:none!important;
+    color:#667085!important;font:850 13px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top .pbR100F9StaffTabs>button.active{
+    color:#315efb!important;background:transparent!important;
+    border:0!important;box-shadow:none!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top .pbR100F9StaffTabs>button.active::after{
+    content:""!important;display:block!important;position:absolute!important;
+    left:0!important;right:0!important;bottom:0!important;height:2px!important;
+    border-radius:2px!important;background:#315efb!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #rentalMobileDrawer {
+    position:fixed!important;top:60px!important;left:18px!important;right:auto!important;
+    width:228px!important;height:auto!important;max-height:220px!important;
+    z-index:160!important;padding:8px!important;border:1px solid #e4e7ec!important;
+    border-radius:12px!important;background:#fff!important;box-shadow:0 18px 38px #1018282b!important;
+    display:none!important;visibility:hidden!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #rentalMobileDrawer.open{
+    display:block!important;visibility:visible!important;
+    opacity:1!important;pointer-events:auto!important;transform:none!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #rentalMobileDrawer .rentalMobileDrawerGrid>*:not(#rentalMobileLogout){
+    display:none!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #rentalMobileLogout{
+    display:block!important;width:100%!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #rentalShopIdentityBar{display:none!important}
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav{
+    position:fixed!important;top:110px!important;left:0!important;right:0!important;
+    transform:none!important;width:100%!important;max-width:none!important;
+    margin:0!important;padding:0 43px!important;height:58px!important;min-height:58px!important;
+    z-index:135!important;background:#f8fafc!important;box-sizing:border-box!important;
+    border:0!important;border-bottom:1px solid #e4e7ec!important;box-shadow:none!important;
+    overflow:visible!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates{
+    position:relative!important;display:flex!important;flex-flow:row nowrap!important;
+    direction:ltr!important;align-items:center!important;gap:7px!important;
+    top:auto!important;left:auto!important;right:auto!important;transform:none!important;
+    padding:4px 5px 5px!important;width:100%!important;height:57px!important;
+    max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;
+    scroll-snap-type:none!important;scrollbar-width:thin!important;
+    scrollbar-color:#a9b7ca #ecf1f7!important;scroll-behavior:smooth!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates::-webkit-scrollbar {
+    display:block!important;height:7px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates::-webkit-scrollbar-thumb{
+    background:#a9b7ca!important;border-radius:9px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates>button{
+    flex:0 0 132px!important;width:132px!important;height:43px!important;
+    min-height:43px!important;max-height:43px!important;padding:2px 5px!important;
+  }
+  html body.pbR100F9StaffMode .pbR100F73ScrollArrow{
+    display:grid!important;place-items:center!important;position:absolute!important;top:7px!important;
+    width:34px!important;height:37px!important;z-index:2!important;border:1px solid #d0d5dd!important;
+    border-radius:9px!important;background:#fff!important;color:#344054!important;
+    cursor:pointer!important;font-size:19px!important;
+  }
+  html body.pbR100F9StaffMode .pbR100F73ScrollArrow[data-direction="previous"]{right:4px!important}
+  html body.pbR100F9StaffMode .pbR100F73ScrollArrow[data-direction="next"]{left:4px!important}
+  html body.rentalAppReady.pbR100F9StaffMode main.shell,
+  html body.rentalAppReady.pbR100F9StaffMode #app,
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{
+    width:calc(100% - 28px)!important;max-width:none!important;min-width:0!important;
+    box-sizing:border-box!important;margin-left:14px!important;margin-right:14px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode main.shell {margin-top:0!important;padding:0!important}
+  html body.rentalAppReady.pbR100F9StaffMode #app{width:100%!important;margin:0!important}
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{
+    padding-top:0!important;margin-top:16px!important;margin-bottom:35px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffList,
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F72ExtraPane{width:100%!important;max-width:none!important}
+}
+@media(max-width:850px) {.pbR100F73ScrollArrow{display:none!important}}
+
+/* Return check list for staff: no QR camera, no automatically checked units. */
+.pbR100F73ReturnBack{
+  position:fixed;inset:0;z-index:2147483610;display:flex;align-items:center;
+  justify-content:center;padding:16px;box-sizing:border-box;background:#10182888;
+  direction:rtl;font-family:Vazirmatn,Tahoma,sans-serif;
+}
+.pbR100F73ReturnDialog{
+  width:min(610px,100%);max-height:min(90dvh,900px);overflow:auto;background:#fff;
+  border-radius:18px;padding:18px;box-sizing:border-box;box-shadow:0 28px 80px #10182845;
+}
+.pbR100F73ReturnHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.pbR100F73ReturnHead h2{font-size:17px;margin:0}
+.pbR100F73ReturnHead p{font-size:12px;color:#667085;line-height:1.9;margin:7px 0 0}
+.pbR100F73ReturnClose{border:1px solid #e4e7ec;border-radius:9px;background:#f8fafc;font-size:20px;min-width:36px;height:36px}
+.pbR100F73ReturnRows{display:grid;gap:8px;margin:14px 0}
+.pbR100F73ReturnRow{display:flex;align-items:center;gap:12px;border:1px solid #e4e7ec;border-radius:11px;padding:12px;cursor:pointer}
+.pbR100F73ReturnRow.checked{border-color:#86efac;background:#f0fdf4}
+.pbR100F73ReturnRow input{width:22px;height:22px;accent-color:#16a34a;flex:0 0 22px}
+.pbR100F73ReturnRow span{display:grid;gap:3px;min-width:0}
+.pbR100F73ReturnRow b{font-size:13px;color:#182230}
+.pbR100F73ReturnRow small{font-size:11px;color:#667085;direction:ltr;text-align:right;unicode-bidi:plaintext}
+.pbR100F73ReturnSummary{border-top:1px solid #eaecf0;padding:12px 0;color:#344054;font-size:12px}
+.pbR100F73ReturnWarning{border:1px solid #fed7aa;background:#fffbeb;border-radius:10px;padding:12px;font-size:12px;line-height:1.8;color:#92400e}
+.pbR100F73ReturnWarning[hidden]{display:none!important}
+.pbR100F73ReturnError{font-size:12px;color:#b42318;padding-top:8px;min-height:16px}
+.pbR100F73ReturnActions{display:flex;gap:9px;justify-content:flex-end;margin-top:14px}
+.pbR100F73ReturnActions button{border:1px solid #d0d5dd;background:#f8fafc;color:#344054;border-radius:10px;padding:10px 16px;font:850 12px Vazirmatn;cursor:pointer}
+.pbR100F73ReturnActions button.primary{border-color:#315efb;background:#315efb;color:#fff}
+.pbR100F73ReturnActions button:disabled{opacity:.55;cursor:wait}
+@media(max-width:650px){.pbR100F73ReturnBack{padding:0;align-items:flex-end}.pbR100F73ReturnDialog{width:100%;border-radius:18px 18px 0 0;max-height:94dvh;padding:15px}.pbR100F73ReturnActions button{flex:1}}

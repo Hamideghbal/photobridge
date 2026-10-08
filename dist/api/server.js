@@ -15459,8 +15459,52 @@ async function api(req, res, url) {
                 const expectedQ=await c.query(`SELECT bi.item_id,bi.quantity FROM equipment_rental_booking_items bi WHERE bi.booking_id=$1`,[bookingId]);
                 const returnedAssetCodes=(Array.isArray(b.assetCodes)?b.assetCodes:[]).map(x=>String(x||'').trim()).map(x=>x.startsWith('PB|')?(x.split('|')[1]||''):x.replace(/^PB-/i,'')).filter(Boolean);
                 let missingAssetCodes=new Map();
-                if(returnedAssetCodes.length){const assigned=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code,a.serial_number FROM equipment_rental_booking_assets ba JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.booking_id=$1`,[bookingId]);const returnedSet=new Set(returnedAssetCodes);for(const code of returnedSet)if(!assigned.rows.some(x=>String(x.system_code)===code||String(x.serial_number||'')===code)){await c.query('ROLLBACK');return sendJson(res,400,{error:'asset_not_in_booking',code});}for(const x of assigned.rows){const back=returnedSet.has(String(x.system_code))||returnedSet.has(String(x.serial_number||''));if(back)await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now()) WHERE booking_id=$1 AND asset_id=$2`,[bookingId,x.asset_id]);else{const k=String(x.item_id);if(!missingAssetCodes.has(k))missingAssetCodes.set(k,[]);missingAssetCodes.get(k).push(String(x.system_code));}}}
-                const submitted=returnedAssetCodes.length?expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Math.max(0,Number(x.quantity||0)-(missingAssetCodes.get(String(x.item_id))||[]).length)})):(Array.isArray(b.returnItems)?b.returnItems:expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Number(x.quantity||0)})));
+                const explicitReturnChecklist=b.returnChecklist===true;
+                if(explicitReturnChecklist){
+                    // An empty assetCodes list can mean all units are missing; never infer full return.
+                    const proposed=Array.isArray(b.returnItems)?b.returnItems:null;
+                    if(!proposed||proposed.length!==expectedQ.rows.length||proposed.length>500||
+                       returnedAssetCodes.length>500||new Set(returnedAssetCodes).size!==returnedAssetCodes.length){
+                        await c.query('ROLLBACK');return sendJson(res,400,{error:'return_checklist_invalid'});
+                    }
+                    const qtyMap=new Map();
+                    for(const item of proposed){
+                        const key=String(item?.itemId||''),qty=item?.returnedQty;
+                        if(!key||qtyMap.has(key)||!Number.isSafeInteger(qty)||qty<0){
+                            await c.query('ROLLBACK');return sendJson(res,400,{error:'return_checklist_invalid'});
+                        }
+                        qtyMap.set(key,qty);
+                    }
+                    const assignedQ=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code
+                      FROM equipment_rental_booking_assets ba
+                      JOIN equipment_rental_assets a ON a.id=ba.asset_id AND a.shop_id=ba.shop_id
+                      WHERE ba.booking_id=$1 AND ba.shop_id=$2 FOR UPDATE OF ba`,[bookingId,shop.id]);
+                    const assigned=assignedQ.rows;
+                    const byCode=new Map(assigned.map(row=>[String(row.system_code),row]));
+                    const returnedSet=new Set(returnedAssetCodes);
+                    if(byCode.size!==assigned.length||returnedAssetCodes.some(code=>!byCode.has(code))){
+                        await c.query('ROLLBACK');return sendJson(res,400,{error:'return_checklist_invalid'});
+                    }
+                    for(const row of expectedQ.rows){
+                        const key=String(row.item_id),qty=Number(row.quantity),got=qtyMap.get(key);
+                        const assetsForItem=assigned.filter(asset=>String(asset.item_id)===key);
+                        const checkedLocal=assetsForItem.filter(asset=>returnedSet.has(String(asset.system_code)));
+                        const externalCount=Math.max(0,qty-assetsForItem.length);
+                        if(!Number.isSafeInteger(qty)||qty<1||assetsForItem.length>qty||
+                           !Number.isSafeInteger(got)||got<checkedLocal.length||
+                           got>checkedLocal.length+externalCount){
+                            await c.query('ROLLBACK');return sendJson(res,400,{error:'return_checklist_invalid',itemId:key});
+                        }
+                        const absent=assetsForItem.filter(asset=>!returnedSet.has(String(asset.system_code)));
+                        if(absent.length)missingAssetCodes.set(key,absent.map(asset=>String(asset.system_code)));
+                    }
+                    for(const asset of assigned){
+                        if(returnedSet.has(String(asset.system_code)))
+                            await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now())
+                              WHERE booking_id=$1 AND shop_id=$2 AND asset_id=$3`,[bookingId,shop.id,asset.asset_id]);
+                    }
+                }else if(returnedAssetCodes.length){const assigned=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code,a.serial_number FROM equipment_rental_booking_assets ba JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.booking_id=$1`,[bookingId]);const returnedSet=new Set(returnedAssetCodes);for(const code of returnedSet)if(!assigned.rows.some(x=>String(x.system_code)===code||String(x.serial_number||'')===code)){await c.query('ROLLBACK');return sendJson(res,400,{error:'asset_not_in_booking',code});}for(const x of assigned.rows){const back=returnedSet.has(String(x.system_code))||returnedSet.has(String(x.serial_number||''));if(back)await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now()) WHERE booking_id=$1 AND asset_id=$2`,[bookingId,x.asset_id]);else{const k=String(x.item_id);if(!missingAssetCodes.has(k))missingAssetCodes.set(k,[]);missingAssetCodes.get(k).push(String(x.system_code));}}}
+                const submitted=explicitReturnChecklist?b.returnItems:(returnedAssetCodes.length?expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Math.max(0,Number(x.quantity||0)-(missingAssetCodes.get(String(x.item_id))||[]).length)})):(Array.isArray(b.returnItems)?b.returnItems:expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Number(x.quantity||0)}))));
                 const returnedMap=new Map(submitted.map(x=>[String(x.itemId||''),Math.max(0,Number(x.returnedQty||0))]));
                 for(const row of expectedQ.rows){const expected=Math.max(1,Number(row.quantity||1)),got=Math.min(expected,Math.max(0,Number(returnedMap.get(String(row.item_id))??expected))),missing=expected-got;if(missing>0){await c.query(`INSERT INTO equipment_rental_return_shortages(id,shop_id,booking_id,item_id,expected_qty,returned_qty,missing_qty,status,missing_asset_codes,detected_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'missing',$8::jsonb,now(),now()) ON CONFLICT(booking_id,item_id) DO UPDATE SET expected_qty=EXCLUDED.expected_qty,returned_qty=EXCLUDED.returned_qty,missing_qty=EXCLUDED.missing_qty,missing_asset_codes=EXCLUDED.missing_asset_codes,status='missing',resolved_at=NULL,resolved_by=NULL,resolution_note=NULL,detected_at=now(),updated_at=now()`,[crypto.randomUUID(),shop.id,bookingId,row.item_id,expected,got,missing,JSON.stringify(missingAssetCodes.get(String(row.item_id))||[])]);}else await c.query(`DELETE FROM equipment_rental_return_shortages WHERE booking_id=$1 AND item_id=$2 AND status='missing'`,[bookingId,row.item_id]);}
                 await c.query(`UPDATE equipment_rental_bookings SET status='returned',returned_at=now(),return_kind=$3,total_amount=$4,payment_status=CASE WHEN $5>0 AND payment_status='paid' THEN 'not_required' ELSE payment_status END,invoice_adjustment_amount=$5,invoice_adjustment_note=$6,updated_at=now() WHERE id=$1 AND shop_id=$2`,[bookingId,shop.id,returnKind,finalAmount,delta,note||null]);

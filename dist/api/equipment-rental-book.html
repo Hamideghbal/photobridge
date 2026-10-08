@@ -481,6 +481,7 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 <link rel="stylesheet" href="/photobridge-v904r100f29-global-header-store-lab.css?v=904r100f29">
 <script defer src="/photobridge-v904r100f29-global-header-store-lab.js?v=904r100f29"></script>
 <link rel="stylesheet" href="/photobridge-v904r100f38-header-route-isolation.css?v=904r100f38m">
+<link rel="stylesheet" href="/photobridge-v904r100f43-store-mobile-header-cleanup.css?v=904r100f43">
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">
@@ -669,6 +670,7 @@ function downloadFinanceStatementExcelV812(){const rows=financeStatementFiltered
 .storeCategoryRowV809 .pb868FilterCount{order:2!important;display:inline-grid!important;place-items:center!important;width:17px!important;height:17px!important;min-width:17px!important;padding:0!important;margin:0!important;border-radius:50%!important;background:#eef1f5!important;color:#667085!important;font:900 7.2px/1 Vazirmatn,Tahoma,Arial,sans-serif!important;opacity:1!important;direction:ltr!important}
 .storeCategoryRowV809 .categoryChip.active .pb868FilterCount{background:#fff!important;color:#315efb!important}
 </style>
+<script defer src="/photobridge-v904r100f43-store-mobile-header-cleanup.js?v=904r100f43"></script>
 </body></html>`;const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`photobridge-statement-${String(shop).replace(/[^\w\u0600-\u06ff-]+/g,'-')}.xls`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 async function downloadFinanceStatementPdfV813(){
   const rows=financeStatementFilteredV812(),from=$('#financeStatementFromV812')?.value||'ابتدای حساب',to=$('#financeStatementToV812')?.value||'امروز',shop=financeData?.shop?.name||'فروشگاه تجهیزات';

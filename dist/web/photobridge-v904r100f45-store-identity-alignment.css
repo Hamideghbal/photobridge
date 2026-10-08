@@ -1,0 +1,45 @@
+/* PhotoBridge R100F45 — keep the Store identity strip directly under its header. */
+@media(max-width:820px){
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+    position:fixed!important;
+    top:var(--pb-store-role-header-h,90px)!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:53px!important;
+    min-height:53px!important;
+    max-height:53px!important;
+    box-sizing:border-box!important;
+    z-index:610!important;
+    overflow:visible!important;
+    background:#fff!important;
+    background-color:#fff!important;
+    background-image:none!important;
+    color:#101828!important;
+    border:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar::before{
+    content:""!important;
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    width:min(86vw,520px)!important;
+    height:1px!important;
+    transform:translateX(-50%)!important;
+    z-index:5!important;
+    pointer-events:none!important;
+    background:linear-gradient(90deg,rgba(70,120,175,0),rgba(70,120,175,.10) 10%,rgba(70,120,175,.28) 28%,rgba(58,108,168,.56) 50%,rgba(70,120,175,.28) 72%,rgba(70,120,175,.10) 90%,rgba(70,120,175,0))!important;
+    box-shadow:0 1px 4px rgba(77,137,200,.10)!important;
+  }
+
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar #storeIdentityToggle{
+    color:#101828!important;
+    max-width:calc(100vw - 100px)!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar #photographerStoreHeaderName{
+    color:#101828!important;
+  }
+}

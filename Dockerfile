@@ -16,6 +16,12 @@ COPY scripts/install-docker-dependencies.mjs ./scripts/install-docker-dependenci
 RUN node scripts/install-docker-dependencies.mjs \
     && rm -rf /tmp/npm-cache /root/.npm
 
+# Explicit application revision barrier:
+# changing DEPLOY_REVISION.txt invalidates all following application-source layers
+# without forcing the expensive dependency-install layer above to rerun.
+COPY DEPLOY_REVISION.txt ./DEPLOY_REVISION.txt
+RUN echo "[PhotoBridge Docker] deploy revision: $(cat DEPLOY_REVISION.txt)"
+
 # Validate the shipped prebuilt dist and deduplicate an identical ONNX Linux binary
 # when that package layout is present.
 COPY dist ./dist
@@ -42,6 +48,7 @@ ENV NODE_ENV=production \
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./package.json
+COPY --from=deps /app/DEPLOY_REVISION.txt ./DEPLOY_REVISION.txt
 # R100: take the validated/generated dist from the dependency stage. This includes
 # fresh Store/Lab desktop hot-update manifests without shipping their duplicate source copies.
 COPY --from=deps /app/dist ./dist

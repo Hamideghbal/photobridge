@@ -8,7 +8,7 @@ html.pbR100F37LabEnterBoot body::after{
 html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
 @keyframes pbF37Spin{to{transform:rotate(360deg)}}
 @media(max-width:820px){
-  html.pbF41TabTransition body::before{content:""!important;position:fixed!important;inset:0 0 78px!important;z-index:2147481495!important;background:rgba(245,248,252,.96)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;pointer-events:none!important}
+  html.pbF41TabTransition body::before{content:""!important;position:fixed!important;inset:0 0 78px!important;z-index:2147481495!important;background:#f5f8fc!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;pointer-events:none!important}
   html.pbF41TabTransition body::after{content:""!important;position:fixed!important;z-index:2147481496!important;left:50%!important;top:48%!important;width:30px!important;height:30px!important;margin:-15px 0 0 -15px!important;border:3px solid #dbe8fb!important;border-top-color:#315efb!important;border-radius:50%!important;animation:pbF37Spin .72s linear infinite!important;pointer-events:none!important}
 }
 

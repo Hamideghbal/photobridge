@@ -15436,6 +15436,17 @@ async function api(req, res, url) {
             const c=await pool.connect();try{await c.query('BEGIN');for(const x of assets.rows)await c.query(`INSERT INTO equipment_rental_booking_assets(id,shop_id,booking_id,item_id,asset_id,handed_out_at) VALUES($1,$2,$3,$4,$5,now()) ON CONFLICT(booking_id,asset_id) DO NOTHING`,[crypto.randomUUID(),shop.id,bookingId,x.item_id,x.id]);for(const x of expected.rows){const itemId=String(x.item_id),externalQty=(extByItem.get(itemId)||[]).length;if(externalQty>0)await c.query(`INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,resolved_at,resolved_by,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'provided',now(),$8,now()) ON CONFLICT(booking_id,item_id) DO UPDATE SET shortage_qty=EXCLUDED.shortage_qty,status='provided',resolved_at=now(),resolved_by=EXCLUDED.resolved_by,updated_at=now()`,[crypto.randomUUID(),shop.id,bookingId,itemId,externalQty,row.rental_start,row.rental_end,a.userId]);else await c.query(`DELETE FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND item_id=$3 AND COALESCE(status,'pending')<>'provided' AND resolved_at IS NULL`,[bookingId,shop.id,itemId])}await c.query(`UPDATE equipment_rental_bookings SET status='picked_up',handover_serials=$3::jsonb,handover_serials_recorded_at=now(),handover_serials_recorded_by=$4,commitment_generated_at=COALESCE(commitment_generated_at,now()),updated_at=now() WHERE id=$1 AND shop_id=$2`,[bookingId,shop.id,JSON.stringify(handoverItems),a.userId]);await c.query('COMMIT')}catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
             const invoice=await equipmentRentalEnsureInvoice(pool,bookingId,a.userId);if(row.photographer_id)publishCustomerEventEverywhere(String(row.photographer_id),'equipment_rental_status',{bookingId,status:'picked_up',shopId:shop.id,invoiceId:invoice?.id||null});return sendJson(res,200,{ok:true,status:'picked_up',invoice,commitmentUrl:`/api/rental/bookings/${bookingId}/commitment`,assetCount:assets.rows.length,externalSupplyCount:extRows.length});
         }
+        if(status==='picked_up'){
+            // The alternate manual handover path is allowed only after the
+            // existing server-validated, required local asset serials have been recorded.
+            const checked=await pool.query(`SELECT handover_serials_recorded_at,handover_serials
+                FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2`,[bookingId,shop.id]);
+            if(!checked.rowCount)return sendJson(res,404,{error:'rental_booking_not_found'});
+            if(!checked.rows[0].handover_serials_recorded_at||
+               !Array.isArray(checked.rows[0].handover_serials)||
+               !checked.rows[0].handover_serials.length)
+                return sendJson(res,400,{error:'handover_serials_required'});
+        }
         if(status==='returned'){
             const adjustment=b.invoiceAdjustment;
             let delta=0,note='';

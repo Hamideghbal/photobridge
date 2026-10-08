@@ -7884,4 +7884,160 @@ window.pbR100F61ChooseProfileImage=()=>{
  input.addEventListener('change',async()=>{const file=input.files?.[0];input.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('عکس JPG، PNG یا WebP انتخاب کن.');return}
  const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const scale=Math.min(1,256/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const imageData=canvas.toDataURL('image/png');const response=await fetch('/api/rental/profile-image',{method:'PUT',credentials:'same-origin',headers:{'content-type':'application/json','x-photobridge-portal':'rental'},body:JSON.stringify({imageData})});if(!response.ok)throw Error('save');const saved=await response.json();window.__pbRentalProfileImage=saved.imageData;window.pbR100F60RenderAccountHeader?.()}catch{alert('ذخیره عکس فروشگاه انجام نشد؛ دوباره تلاش کن.')}finally{URL.revokeObjectURL(url)}})}input.click();
 };
-</script><style id="pbR100F62MenuScrollFinal">html body.rentalAppReady header.top.rentalScrolled #rentalMobileMenuBtn .rentalMobileMenuGlyph i{background:#344054!important;opacity:1!important;filter:none!important}html body.rentalAppReady header.top.rentalScrolled #rentalMobileMenuBtn .rentalMobileMenuClose{color:#344054!important;opacity:1!important;filter:none!important}</style></body></html>
+</script><style id="pbR100F62MenuScrollFinal">html body.rentalAppReady header.top.rentalScrolled #rentalMobileMenuBtn .rentalMobileMenuGlyph i{background:#344054!important;opacity:1!important;filter:none!important}html body.rentalAppReady header.top.rentalScrolled #rentalMobileMenuBtn .rentalMobileMenuClose{color:#344054!important;opacity:1!important;filter:none!important}</style>
+<style id="pbR100F64PinnedDateRailsFinal">
+/* R100F64 — the handover date rail is a real fixed subheader, never a card overlay. */
+#pbR100F64ManagerDateHost{
+  display:none;position:fixed;left:0;right:0;z-index:124;
+  box-sizing:border-box;padding:6px 0 8px;background:#f7f9fc;
+  border-bottom:1px solid #e4e9f1;box-shadow:0 5px 14px rgba(15,23,42,.06);
+}
+html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost{display:block!important}
+html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates{
+  position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
+  transform:none!important;width:min(920px,calc(100% - 22px))!important;max-width:920px!important;
+  height:auto!important;min-height:0!important;margin:0 auto!important;padding:0 6px!important;
+  background:transparent!important;box-sizing:border-box!important;z-index:auto!important;
+}
+html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="approved"]>.box,
+html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="out"]>.box{
+  margin-top:72px!important;
+}
+html body.pbR100F9StaffMode .pbR100F9StaffNav{
+  position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+  width:min(920px,calc(100% - 22px))!important;max-width:920px!important;
+  margin:0!important;padding:0!important;box-sizing:border-box!important;z-index:126!important;
+  background:#f7f9fc!important;border-bottom:1px solid #e4e9f1!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.06)!important;overflow:hidden!important;
+}
+html body.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F9StaffTabs{
+  position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
+  transform:none!important;width:100%!important;max-width:none!important;height:52px!important;
+  margin:0!important;border-radius:0!important;z-index:auto!important;
+}
+html body.pbR100F9StaffMode .pbR100F9StaffNav #pbR100F9StaffDates{
+  position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
+  transform:none!important;width:100%!important;max-width:100%!important;margin:0!important;
+  background:#f7f9fc!important;z-index:auto!important;
+}
+html body.pbR100F9StaffMode .pbR100F9StaffShell{
+  margin-top:14px!important;
+  padding-top:calc(var(--pb-r100f64-staff-nav-h, 114px) + 10px)!important;
+}
+html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-index:1!important}
+@media(max-width:850px){
+  #pbR100F64ManagerDateHost{padding-top:6px;padding-bottom:8px}
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates{
+    width:100%!important;max-width:none!important;padding-inline:6px!important;
+  }
+  html body.pbR100F9StaffMode .pbR100F9StaffNav{width:100%!important;max-width:none!important}
+}
+</style>
+<script id="pbR100F64PinnedDateRailsRuntime">
+(()=>{
+  if(window.__PB_R100F64_PINNED_DATE_RAILS__)return;
+  window.__PB_R100F64_PINNED_DATE_RAILS__='2026-10-08-r100f64';
+  const q=(s,r=document)=>r.querySelector(s);
+  let managerHost=null,managerQueued=false,staffQueued=false;
+
+  function ensureManagerHost(){
+    if(managerHost&&managerHost.isConnected)return managerHost;
+    managerHost=document.getElementById('pbR100F64ManagerDateHost');
+    if(!managerHost){
+      managerHost=document.createElement('div');
+      managerHost.id='pbR100F64ManagerDateHost';
+      managerHost.setAttribute('aria-label','تاریخ آفیش');
+      document.body.appendChild(managerHost);
+    }
+    return managerHost;
+  }
+  function managerKind(){
+    return q('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab||'';
+  }
+  function syncManagerDateRail(){
+    managerQueued=false;
+    const host=ensureManagerHost(),kind=managerKind();
+    const enabled=document.body.classList.contains('rentalAppReady')
+      && !document.body.classList.contains('pbR100F9StaffMode')
+      && q('#bookings')?.classList.contains('active')
+      && (kind==='approved'||kind==='out');
+    if(!enabled){
+      document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      host.replaceChildren();
+      host.style.removeProperty('top');
+      return;
+    }
+    const pane=q('[data-pb843-office-pane="'+kind+'"].active');
+    let rail=pane?.querySelector('.pb100rManagerDates');
+    if(!rail)rail=host.querySelector('.pb100rManagerDates');
+    if(!rail||!rail.querySelector('[data-pb100r-date-kind]')){
+      document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      host.replaceChildren();
+      return;
+    }
+    if(rail.parentElement!==host){
+      host.replaceChildren();
+      host.appendChild(rail);
+    }
+    const tabs=q('#pb848BookingHeaderTabs');
+    const bottom=tabs?.getBoundingClientRect().bottom;
+    if(Number.isFinite(bottom)&&bottom>0)host.style.setProperty('top',Math.round(bottom)+'px','important');
+    document.body.classList.add('pbR100F64ManagerDatesPinned');
+  }
+  function queueManager(){if(managerQueued)return;managerQueued=true;requestAnimationFrame(()=>requestAnimationFrame(syncManagerDateRail))}
+
+  function syncStaffNav(){
+    staffQueued=false;
+    if(!document.body.classList.contains('pbR100F9StaffMode'))return;
+    const nav=q('.pbR100F9StaffNav'),identity=q('#rentalShopIdentityBar'),header=q('header.top');
+    if(!nav)return;
+    const ir=identity?.getBoundingClientRect(),hr=header?.getBoundingClientRect();
+    const bottom=Math.max(ir?.bottom||0,hr?.bottom||0);
+    if(bottom>0)nav.style.setProperty('top',Math.round(bottom)+'px','important');
+    requestAnimationFrame(()=>{
+      const h=Math.ceil(nav.getBoundingClientRect().height||114);
+      document.body.style.setProperty('--pb-r100f64-staff-nav-h',h+'px');
+    });
+  }
+  function queueStaff(){if(staffQueued)return;staffQueued=true;requestAnimationFrame(()=>requestAnimationFrame(syncStaffNav))}
+
+  if(typeof window.pb854RenderBookingStatusPanes==='function'){
+    const base=window.pb854RenderBookingStatusPanes;
+    const wrapped=function(...args){
+      ensureManagerHost().replaceChildren();
+      document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      const out=base.apply(this,args);
+      queueManager();
+      return out;
+    };
+    try{pb854RenderBookingStatusPanes=wrapped}catch{}
+    window.pb854RenderBookingStatusPanes=wrapped;
+  }
+  if(typeof window.pb843SetOfficeTab==='function'){
+    const base=window.pb843SetOfficeTab;
+    const wrapped=function(...args){const out=base.apply(this,args);queueManager();return out};
+    try{pb843SetOfficeTab=wrapped}catch{}
+    window.pb843SetOfficeTab=wrapped;
+  }
+  if(typeof window.pbR100F9PaintStaffList==='function'){
+    const base=window.pbR100F9PaintStaffList;
+    window.pbR100F9PaintStaffList=function(...args){const out=base.apply(this,args);queueStaff();return out};
+  }
+  if(typeof window.pbR100F9RenderStaffPortal==='function'){
+    const base=window.pbR100F9RenderStaffPortal;
+    window.pbR100F9RenderStaffPortal=function(...args){const out=base.apply(this,args);queueStaff();return out};
+  }
+
+  document.addEventListener('click',e=>{
+    if(e.target.closest?.('#pb848BookingHeaderTabs,[data-pb100r-date-kind]'))queueManager();
+    if(e.target.closest?.('.pbR100F9StaffTabs,[data-staff-day]'))queueStaff();
+  },true);
+  window.addEventListener('resize',()=>{queueManager();queueStaff()},{passive:true});
+  window.addEventListener('pageshow',()=>{queueManager();queueStaff()},{passive:true});
+  const mo=new MutationObserver(()=>{queueManager();queueStaff()});
+  mo.observe(document.body,{attributes:true,attributeFilter:['class'],subtree:false});
+  setTimeout(()=>{queueManager();queueStaff()},0);
+  setTimeout(()=>{queueManager();queueStaff()},500);
+})();
+</script>
+</body></html>

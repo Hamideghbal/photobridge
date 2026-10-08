@@ -79,6 +79,22 @@ const crypto = require("crypto");
     console.log("PAGEERROR", e.message);
   });
   const assert=require('node:assert/strict');
+  let expectedOutgoingTitle='';const outgoingSnapshots=[];
+  await page.exposeFunction('recordStoreExit',state=>outgoingSnapshots.push({...state,expected:expectedOutgoingTitle}));
+  async function observeDeparture(){
+    await page.evaluate(()=>{
+      window.addEventListener('click',e=>{
+        const el=e.target.closest('[data-main-href]');
+        if(!el||!el.dataset.mainHref.startsWith('/photographer/'))return;
+        // Observe after the production capture handler, before the native document navigation.
+        // Delay only navigation in this test to expose source-page frames during a slow departure.
+        e.preventDefault();e.stopImmediatePropagation();
+        const snapshot=()=>({title:document.querySelector('#pbF37ContextText')?.textContent,header:!!document.querySelector('#pbF37PhotographerHeader'),storeVisible:[...document.querySelectorAll('#photographerStoreRoleHeader,#photographerStoreIdentityBar,#storeSectionNavV673')].some(n=>n.getBoundingClientRect().height>0),cover:document.documentElement.classList.contains('pbF41TabTransition')});
+        window.recordStoreExit(snapshot());
+        setTimeout(()=>{window.recordStoreExit(snapshot());location.assign(el.dataset.mainHref)},350);
+      },true);
+    });
+  }
   await page.addInitScript(()=>{
     window.__storeExitFrames={legacy:0,cover:0,modernAt:null};
     function frame(){
@@ -96,8 +112,11 @@ const crypto = require("crypto");
     await page.goto('http://127.0.0.1:3000/equipment-rental/book');
     await page.waitForTimeout(1400);
     assert.ok(await page.locator('link[rel="modulepreload"][href*="index-UIRefine"]').count(),'Store preloads the main app');
+    await observeDeparture();
+    expectedOutgoingTitle=title;
     const clicked=Date.now();
     await page.locator('.photographerBottomAppNav button,.photographerBottomAppNavGrid button').filter({hasText:new RegExp('^'+label+'$')}).first().click();
+    await page.waitForURL(url=>url.pathname.startsWith('/photographer/'));
     await page.waitForFunction(t=>document.querySelector('#pbF37ContextText')?.textContent===t, title,{timeout:7000});
     await page.waitForTimeout(100);
     const state=await page.evaluate(()=>({frames:window.__storeExitFrames,title:document.querySelector('#pbF37ContextText')?.textContent,pending:sessionStorage.getItem('photobridge:r100f44:tab-transition'),mode:window.PBStorePhotographerHeaderCore?.getMode()}));
@@ -105,14 +124,27 @@ const crypto = require("crypto");
     assert.equal(state.title,title);assert.equal(state.mode,target);assert.equal(state.pending,null);
     assert.equal(state.frames.cover,0,'No waiting cover or transition spinner');
     assert.equal(state.frames.legacy,0,'Legacy headers never render');
+    await page.goBack();
+    await page.waitForURL(url=>url.pathname.startsWith('/equipment-rental'));
+    await page.waitForFunction(()=>window.PBStorePhotographerHeaderCore?.getMode()==='store'&&document.querySelector('#photographerStoreRoleHeader')?.getBoundingClientRect().height===90&&!document.querySelector('#pbF37PhotographerHeader'));
+
   }
   // Slow the current core deliberately: even then, only current chrome may render.
   await page.route('**/photobridge-v904r100f41-header-date-name-fit.js*',async route=>{await new Promise(resolve=>setTimeout(resolve,800));await route.continue()});
   await page.goto('http://127.0.0.1:3000/equipment-rental/book');await page.waitForTimeout(1200);
+  await observeDeparture();
+  expectedOutgoingTitle='هوش مصنوعی';
   await page.locator('.photographerBottomAppNav button,.photographerBottomAppNavGrid button').filter({hasText:/^هوش مصنوعی$/}).first().click();
+  await page.waitForURL(url=>url.pathname.startsWith('/photographer/'));
   await page.waitForFunction(()=>document.querySelector('#pbF37ContextText')?.textContent==='هوش مصنوعی');
   const slow=await page.evaluate(()=>window.__storeExitFrames);
   assert.equal(slow.cover,0);assert.equal(slow.legacy,0);
+  assert.equal(outgoingSnapshots.length,10);
+  for(const snapshot of outgoingSnapshots){
+    assert.equal(snapshot.title,snapshot.expected,'Destination header is already displayed in source Store document');
+    assert.equal(snapshot.header,true);assert.equal(snapshot.storeVisible,false);assert.equal(snapshot.cover,false);
+  }
+  console.log('PASS: outgoing Store headers replaced synchronously and remain replaced during delayed departure');
   assert.deepEqual(pageErrors,[]);await browser.close();
   console.log('PASS: Store exits use current headers without transition covers, including slow-script loading');
 })().catch(e=>{console.error(e);process.exit(1)});

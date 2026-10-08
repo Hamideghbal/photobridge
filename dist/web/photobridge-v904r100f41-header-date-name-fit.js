@@ -144,7 +144,7 @@
   function render(){
     if(!mobile()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(!isPortal()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
-    if(chooserVisible()){
+    if(chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1'){
       document.body.classList.add('pbF37LabChooserVisible');document.body.classList.remove('pbF37UnifiedActive','pbF37StoreMode');lastSig='';sourceMap=new Map();
       $('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();$('#pbF37PrintComposerActions')?.remove();return;
     }

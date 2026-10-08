@@ -78,6 +78,22 @@ const crypto = require("crypto");
     pageErrors.push(e.message);
     console.log("PAGEERROR", e.message);
   });
+  await page.addInitScript(() => {
+    if (new URLSearchParams(location.search).get("pbLabChooser") !== "1") return;
+    window.__labChooserHeaderFrames = [];
+    const sample = () => {
+      const header = document.querySelector("#pbF37PhotographerHeader");
+      if (header && getComputedStyle(header).display !== "none" && getComputedStyle(header).visibility !== "hidden")
+        window.__labChooserHeaderFrames.push(header.innerText || "");
+      if (!document.querySelector("#pbR99LabChooser")) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  await page.route("**/photographer/orders/flow*", async route => {
+    if (route.request().isNavigationRequest() && new URL(page.url()).pathname.startsWith("/equipment-rental"))
+      await new Promise(resolve => setTimeout(resolve, 350));
+    await route.continue();
+  });
   await page.goto("http://127.0.0.1:3000/photographer");
   await page.waitForTimeout(3000);
   for (const [i, label] of [
@@ -101,6 +117,10 @@ const crypto = require("crypto");
         .first()
         .click();
     await page.waitForTimeout(2200);
+    if (label === "چاپ" && (await page.locator("#pbR99LabChooser").count())) {
+      const earlyHeaders = await page.evaluate(() => window.__labChooserHeaderFrames || []);
+      if (earlyHeaders.length) throw new Error(`Lab header rendered before chooser: ${earlyHeaders.join(" ")}`);
+    }
     if (
       label === "چاپ" &&
       (await page.locator("#pbR99LabChooser [data-select]").count())
@@ -358,6 +378,12 @@ const crypto = require("crypto");
       });
     }
   }
+  await page.goto("http://127.0.0.1:3000/photographer/orders/flow?workspace=print&pbLabChooser=1");
+  await page.waitForSelector("#pbR99LabChooser", { timeout: 10000 });
+  const chooserHeaders = await page.evaluate(() => window.__labChooserHeaderFrames || []);
+  require("node:assert/strict").deepEqual(chooserHeaders, [], "Lab header stays hidden until and while lab selection is shown");
+  const chooserVisibleHeader = await page.locator("#pbF37PhotographerHeader").evaluate(el => getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none").catch(() => false);
+  require("node:assert/strict").equal(chooserVisibleHeader, false, "Lab header hidden on chooser surface");
   await browser.close();
   require("node:assert/strict").deepEqual(
     pageErrors,

@@ -115,6 +115,9 @@
   html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{
     padding-top:0!important;margin-top:16px!important;margin-bottom:35px!important;
   }
+  html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffNav{
+    display:none!important;
+  }
   html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffList,
   html body.rentalAppReady.pbR100F9StaffMode .pbR100F72ExtraPane{width:100%!important;max-width:none!important}
 }

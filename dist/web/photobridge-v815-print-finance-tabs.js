@@ -18,8 +18,8 @@
       tab=document.createElement('button');
       tab.type='button';
       tab.className='rolePrimaryAction pb815PrintFinanceTab';
-      tab.setAttribute('aria-label','مالی و فاکتور');
-      tab.textContent='مالی و فاکتور';
+      tab.setAttribute('aria-label','مالی');
+      tab.textContent='مالی';
       tab.addEventListener('click',ev=>{
         ev.preventDefault();ev.stopPropagation();
         const current=workspace();if(!current||isFinance(current))return;
@@ -35,9 +35,9 @@
       nav.appendChild(tab);
     }else if(tab.parentElement!==nav)nav.appendChild(tab);
     tab.classList.add('pb815PrintFinanceTab');
-    tab.textContent='مالی و فاکتور';
-    tab.setAttribute('aria-label','مالی و فاکتور');
-    tab.setAttribute('title','مالی و فاکتور');
+    tab.textContent='مالی';
+    tab.setAttribute('aria-label','مالی');
+    tab.setAttribute('title','مالی');
     return tab;
   }
   function sync(){

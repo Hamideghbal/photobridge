@@ -25,9 +25,9 @@
     }
     for(const extra of all.slice(1))extra.remove();
     tab.classList.add('rolePrimaryAction','pb815PrintFinanceTab','pb816PrintFinanceTab','pb817PrintFinanceTab','pb818PrintFinanceTab','photographerPrintFinanceTab');
-    tab.textContent='مالی و فاکتور';
-    tab.setAttribute('aria-label','مالی و فاکتور');
-    tab.setAttribute('title','مالی و فاکتور');
+    tab.textContent='مالی';
+    tab.setAttribute('aria-label','مالی');
+    tab.setAttribute('title','مالی');
     const album=qs(':scope>.photographerPrintAlbumTab',nav),photo=qs(':scope>.photographerPrintPhotoTab',nav);
     if(album&&album.nextElementSibling!==tab)album.insertAdjacentElement('afterend',tab);
     else if(!album&&photo&&photo.nextElementSibling!==tab)photo.insertAdjacentElement('afterend',tab);

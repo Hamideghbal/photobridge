@@ -51,8 +51,8 @@
     tab.classList.add('pb815PrintFinanceTab');
     // Keep pb816 class if it already exists so older selectors cannot create a duplicate.
     if(!tab.classList.contains('photographerPrintFinanceTab'))tab.classList.add('pb816PrintFinanceTab');
-    tab.textContent='مالی و فاکتور';
-    tab.setAttribute('aria-label','مالی و فاکتور');tab.setAttribute('title','مالی و فاکتور');
+    tab.textContent='مالی';
+    tab.setAttribute('aria-label','مالی');tab.setAttribute('title','مالی');
     const album=qs(':scope>.photographerPrintAlbumTab',nav),photo=qs(':scope>.photographerPrintPhotoTab',nav);
     if(album){if(album.nextElementSibling!==tab)album.insertAdjacentElement('afterend',tab)}
     else if(photo){if(photo.nextElementSibling!==tab)photo.insertAdjacentElement('afterend',tab)}

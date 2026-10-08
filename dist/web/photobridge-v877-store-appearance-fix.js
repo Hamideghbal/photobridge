@@ -51,7 +51,7 @@
     for(const row of qsa('.storeBrandRow,.brandFilters,[id*="BrandFilters"],[id*="brandFilters"]'))if(row instanceof HTMLElement){row.style.setProperty('background','#ffffff','important');row.style.setProperty('background-color','#ffffff','important');row.style.setProperty('color','#263445','important')}
 
     const clearSelected=el=>{if(!(el instanceof HTMLElement))return;el.style.removeProperty('background');el.style.removeProperty('background-color');el.style.removeProperty('color')};
-    const setSelected=el=>{if(!(el instanceof HTMLElement))return;el.style.setProperty('background',a.selectedColor,'important');el.style.setProperty('background-color',a.selectedColor,'important');el.style.setProperty('color',contrast(a.selectedColor),'important')};
+    const setSelected=el=>{if(!(el instanceof HTMLElement))return;const finance=el.matches('#financePanel .financeTabsV813>button.active');const color=finance?'#315efb':a.selectedColor;el.style.setProperty('background',color,'important');el.style.setProperty('background-color',color,'important');el.style.setProperty('color',finance?'#fff':contrast(color),'important')};
     /* Selected-color is an ephemeral state, not a permanent inline paint.
        Clear every candidate first so a previously selected store tab cannot
        keep the admin-selected background after its .active class moves. */

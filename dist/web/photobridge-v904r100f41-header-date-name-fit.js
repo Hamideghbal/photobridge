@@ -72,7 +72,7 @@
     sourceMap=new Map();sourceSeq=0;const out=[];
     if(m==='print'){
       const photo=$('.photographerPrintModeNav .photographerPrintPhotoTab'),album=$('.photographerPrintModeNav .photographerPrintAlbumTab'),finance=$('.photographerPrintCommonAction.finance');
-      if(photo)out.push(src(photo,'چاپ عکس'));if(album)out.push(src(album,'صحافی آلبوم'));if(finance)out.push(src(finance,'مالی و فاکتور'));
+      if(photo)out.push(src(photo,'چاپ عکس'));if(album)out.push(src(album,'صحافی آلبوم'));if(finance)out.push(src(finance,'مالی'));
     }else if(m==='ai'){
       const a=$$('.photographerAiSectionNav>button').slice(0,2);if(a[0])out.push(src(a[0],'روتوش صورت AI'));if(a[1])out.push(src(a[1],'سایر ابزارهای AI'));
     }else if(m==='gallery'){

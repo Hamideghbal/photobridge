@@ -1877,7 +1877,7 @@ window.pb906AcknowledgeExternalCancellation=pb906AcknowledgeExternalCancellation
 function pb854BookingPaneMarkup(kind,title){const rows=pb854BookingRows(kind);return `<div class="box"><h2>${title}</h2><div class="pb854BookingStatusList">${rows.length?rows.map(b=>{const actions=b.status==='pending_approval'?`<button class="mini" onclick="bookingStatus('${b.id}','reserved')">تأیید</button><button class="mini v654Danger" onclick="bookingStatus('${b.id}','rejected')">رد</button>`:b.status==='payment_pending'?`<button class="mini" disabled>منتظر پرداخت</button><button class="mini v654Danger" onclick="bookingStatus('${b.id}','cancelled')">لغو</button>`:b.status==='reserved'?`<button class="mini" onclick="bookingStatus('${b.id}','picked_up')">تحویل تجهیزات</button><button class="mini v654Danger" onclick="bookingStatus('${b.id}','cancelled')">لغو</button>`:b.status==='picked_up'?`<button class="mini" onclick="bookingStatus('${b.id}','returned')">ثبت برگشت</button>`:'';return `<article class="pb854BookingStatusCard"><div><b>${esc(b.photographer_name||b.customer_name||'عکاس')}</b><small dir="ltr">${esc(b.photographer_mobile||b.customer_mobile||'')}</small><small class="pb854BookingItems">${esc(b.item_titles||'بدون شرح تجهیزات')}</small></div><div><small>${dateFa(b.rental_start)} تا ${dateFa(b.rental_end)}</small><small>${statusLabel(b.status)} · ${money(b.total_amount)}</small></div><div class="actions">${actions}</div></article>`}).join(''):`<div class="pb854BookingEmpty">موردی در این بخش وجود ندارد.</div>`}</div></div>`}
 function pb854RenderBookingStatusPanes(){for(const [kind,title] of [['pending','درخواست‌های آفیش منتظر تأیید'],['approved','آفیش‌های تأییدشده و فعال'],['out','تجهیزات تحویل‌شده و بیرون فروشگاه']]){const pane=document.querySelector(`[data-pb843-office-pane="${kind}"]`);if(pane)pane.innerHTML=pb854BookingPaneMarkup(kind,title);const count=document.querySelector(`[data-pb843-office-tab="${kind}"] .pb854TabCount`);if(count)count.textContent=fa(pb854BookingRows(kind).length)}const shortagePane=document.querySelector('[data-pb843-office-pane="shortages"]');if(shortagePane)shortagePane.innerHTML=pb905rShortagePaneMarkup();const shortageCount=document.querySelector('[data-pb843-office-tab="shortages"] .pb854TabCount');if(shortageCount)shortageCount.textContent=fa(pb905rShortageRows().filter(x=>(String(x.status||'pending')!=='provided'&&!x.resolved_at)||(x.booking_cancelled_at&&!x.external_cancellation_acknowledged_at)).length)}
 function pb854EnsureBookingStatusTabs(){const section=$('#bookings'),tabs=$('#pb848BookingHeaderTabs');if(!section||!tabs)return;for(const [kind,label] of [['pending','درخواست‌ها'],['approved','تأییدشده‌ها'],['out','تجهیزات بیرون'],['shortages','کسری آفیش']]){if(tabs.querySelector(`[data-pb843-office-tab="${kind}"]`))continue;const b=document.createElement('button');b.type='button';b.dataset.pb843OfficeTab=kind;b.innerHTML=`<span class="pb905rOfficeTabLabel">${label}</span><span class="pb854TabCount">۰</span>`;b.addEventListener('click',e=>{e.preventDefault();pb843SetOfficeTab(kind)});tabs.appendChild(b);const pane=document.createElement('div');pane.className='pb843BookingPane pb854BookingStatusPane';pane.dataset.pb843OfficePane=kind;section.appendChild(pane)}pb854RenderBookingStatusPanes()}
-const pb854BaseSetOfficeTab=pb843SetOfficeTab;pb843SetOfficeTab=function(tab){const valid=['manual','calendar','pending','approved','out','shortages'];pb843OfficeTab=valid.includes(tab)?tab:'manual';let activeBtn=null;$$('[data-pb843-office-tab]').forEach(b=>{const active=b.dataset.pb843OfficeTab===pb843OfficeTab;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');if(active)activeBtn=b});$$('[data-pb843-office-pane]').forEach(p=>p.classList.toggle('active',p.dataset.pb843OfficePane===pb843OfficeTab));if(matchMedia('(max-width:850px)').matches&&activeBtn)requestAnimationFrame(()=>{const rail=q('#pb848BookingHeaderTabs'),r=rail?.getBoundingClientRect(),b=activeBtn.getBoundingClientRect();if(r&&b){const delta=b.left+b.width/2-(r.left+r.width/2),rtl=getComputedStyle(rail).direction==='rtl';rail.scrollBy({left:delta*(rtl?-1:1),behavior:'smooth'})}});if(pb843OfficeTab==='calendar')requestAnimationFrame(()=>requestAnimationFrame(()=>pb843RenderCalendar()));if(['pending','approved','out','shortages'].includes(pb843OfficeTab))pb854RenderBookingStatusPanes()};
+const pb854BaseSetOfficeTab=pb843SetOfficeTab;pb843SetOfficeTab=function(tab){const valid=['manual','calendar','pending','approved','out','shortages'];pb843OfficeTab=valid.includes(tab)?tab:'manual';let activeBtn=null;$$('[data-pb843-office-tab]').forEach(b=>{const active=b.dataset.pb843OfficeTab===pb843OfficeTab;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');if(active)activeBtn=b});$$('[data-pb843-office-pane]').forEach(p=>p.classList.toggle('active',p.dataset.pb843OfficePane===pb843OfficeTab));/* Centering is performed once by pb925OfficeInvoiceRuntimeR52 after the tab changes. */if(pb843OfficeTab==='calendar')requestAnimationFrame(()=>requestAnimationFrame(()=>pb843RenderCalendar()));if(['pending','approved','out','shortages'].includes(pb843OfficeTab))pb854RenderBookingStatusPanes()};
 const pb854BaseRenderBookings=renderBookings;renderBookings=function(){pb854BaseRenderBookings();pb843RenderCalendar();pb854EnsureBookingStatusTabs();pb854RenderBookingStatusPanes()};
 const pb854BaseShowApp=showApp;showApp=function(){pb854BaseShowApp();setTimeout(()=>{pb854EnsureBookingStatusTabs();pb854RenderBookingStatusPanes()},0)};
 
@@ -7120,7 +7120,21 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
  const faNum=x=>typeof fa==='function'?fa(x):String(x);
  pb854BookingRows=function(kind){const all=data?.bookings||[];if(kind==='approved')return all.filter(b=>['reserved','payment_pending','picked_up','returned'].includes(String(b.status||'')));if(kind==='out')return all.filter(b=>['picked_up','returned'].includes(String(b.status||'')));return baseRows(kind)};
  try{window.pb854BookingRows=pb854BookingRows}catch{}
- window.pb100rSelectManagerDate=(kind,iso)=>{if(!['approved','out'].includes(kind))return;const previousRail=document.querySelector(`[data-pb100r-date-kind="${kind}"]`)?.closest('.pb100rManagerDates'),previousScroll=previousRail?.scrollLeft||0;selected[kind]=iso;pb854RenderBookingStatusPanes();const rail=document.querySelector(`[data-pb100r-date-kind="${kind}"]`)?.closest('.pb100rManagerDates');if(rail)rail.scrollLeft=previousScroll;requestAnimationFrame(()=>{const card=document.querySelector(`[data-pb100r-date-kind="${kind}"][data-pb100r-day="${iso}"]`);const activeRail=card?.closest('.pb100rManagerDates');if(!card||!activeRail)return;const target=card.getBoundingClientRect(),bounds=activeRail.getBoundingClientRect();activeRail.scrollBy({left:target.left+target.width/2-(bounds.left+bounds.width/2),behavior:'smooth'})})};
+ window.pb100rSelectManagerDate=(kind,iso)=>{
+   if(!['approved','out'].includes(kind))return;
+   selected[kind]=iso;
+   // Wait until the rerendered rail is mounted in the fixed host (R100F64).
+   pb854RenderBookingStatusPanes();
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{
+     const card=document.querySelector(`[data-pb100r-date-kind="${kind}"][data-pb100r-day="${iso}"]`);
+     const rail=card?.closest('.pb100rManagerDates');
+     if(!rail||!card||!rail.getClientRects().length)return;
+     const r=rail.getBoundingClientRect(),c=card.getBoundingClientRect();
+     const desired=rail.scrollLeft+(c.left+c.width/2)-(r.left+r.width/2);
+     const max=Math.max(0,rail.scrollWidth-rail.clientWidth);
+     rail.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+   }));
+ };
  window.pb100rPrintInvoice=id=>{const w=window.open('','_blank','width=900,height=900');if(!w){window.storeNotice?.('برای چاپ فاکتور، پنجرهٔ جدید مرورگر را مجاز کن.','پنجرهٔ چاپ مسدود شد');return}void(async()=>{try{let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id));if(!inv&&typeof loadAccounting==='function'){await loadAccounting();inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id))}if(!inv){w.close();window.storeNotice?.('برای این آفیش فاکتوری صادر نشده است.','فاکتور پیدا نشد');return}const rows=Array.isArray(inv.items)?inv.items:[],lines=rows.map((x,i)=>`<tr><td>${faNum(i+1)}</td><td>${escape(x.title||x.item_title||'تجهیز')}</td><td>${faNum(x.quantity||1)}</td><td>${faNum(x.rental_days||inv.rental_days||1)}</td><td>${escape(money(x.daily_price||0))}</td><td>${escape(money(x.subtotal||0))}</td></tr>`).join(''),shop=escape(data?.shop?.name||'فروشگاه تجهیزات'),who=escape(inv.photographer_name||'—'),phone=escape(inv.photographer_mobile||'—'),rangeText=`${escape(typeof dateFa==='function'?dateFa(inv.rental_start):inv.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(inv.rental_end):inv.rental_end||'—')}`,invoiceNo=escape(inv.invoice_number||'—');w.document.open();w.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور اجاره ${invoiceNo}</title><style>@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font:12px/1.8 Tahoma,Arial,sans-serif;color:#182230;margin:0}.paper{max-width:190mm;margin:auto}.head{display:flex;justify-content:space-between;border-bottom:2px solid #344054;padding:0 0 12px;margin-bottom:14px}.head h1{font-size:20px;margin:0}.muted{color:#667085}.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:16px}.facts div{padding:6px;border-bottom:1px solid #eaecf0}table{border-collapse:collapse;width:100%;font-size:11px}th,td{border:1px solid #d0d5dd;padding:8px;text-align:right}th{background:#f2f4f7}.totals{width:310px;margin:16px 0 0 auto}.totals div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eaecf0}.grand{font-weight:900;font-size:14px}.sign{display:flex;justify-content:space-between;margin-top:42px;color:#667085}.print{margin:18px 0;padding:9px 18px;border:0;border-radius:8px;background:#315efb;color:white;font-weight:bold}@media print{.print{display:none}}</style></head><body><main class="paper"><header class="head"><div><h1>فاکتور اجاره تجهیزات</h1><span class="muted">شماره فاکتور: ${invoiceNo}</span></div><b>${shop}</b></header><section class="facts"><div>عکاس / مشتری: <b>${who}</b></div><div>شماره تماس: <b dir="ltr">${phone}</b></div><div>بازه آفیش: <b>${rangeText}</b></div><div>تاریخ صدور: <b>${escape(typeof dateFa==='function'?dateFa(inv.issued_at):inv.issued_at||'—')}</b></div></section><table><thead><tr><th>ردیف</th><th>شرح تجهیزات</th><th>تعداد</th><th>روز</th><th>اجاره روزانه</th><th>مبلغ</th></tr></thead><tbody>${lines||`<tr><td>۱</td><td>${escape(inv.item_titles||'اجاره تجهیزات')}</td><td>—</td><td>${faNum(inv.rental_days||1)}</td><td>—</td><td>${escape(money(inv.total_amount||0))}</td></tr>`}</tbody></table><section class="totals"><div><span>مبلغ نهایی</span><b class="grand">${escape(money(inv.total_amount||0))}</b></div><div><span>ودیعه</span><b>${escape(money(inv.deposit_amount||0))}</b></div></section><section class="sign"><span>مهر و امضای فروشگاه</span><span>امضای مشتری / عکاس</span></section><button class="print" onclick="window.print()">چاپ / ذخیره PDF</button></main></body></html>`);w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch{}},500)}catch{w.close();window.storeNotice?.('بازکردن فاکتور انجام نشد.','خطای فاکتور')}})()};
  window.pb854BookingPaneMarkup=function(kind,title){if(!['approved','out'].includes(kind))return baseMarkup(kind,title);const rows=pb854BookingRows(kind),days=[...new Set(rows.flatMap(b=>daysForBooking(b,kind)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)))].sort(),now=today();if(!days.includes(selected[kind]))selected[kind]=days.includes(now)?now:(kind==='approved'?(days.find(x=>x>=now)||days.at(-1)||''):(days.filter(x=>x<=now).at(-1)||days[0]||''));const dateButtons=days.map(d=>{const when=new Date(d+'T12:00:00Z'),weekday=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',timeZone:'Asia/Tehran'}).format(when),date=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(when),count=rows.filter(b=>daysForBooking(b,kind).includes(d)).length;return `<button type="button" data-pb100r-date-kind="${kind}" data-pb100r-day="${d}" data-today="${d===now}" class="${d===selected[kind]?'active':''}" onclick="pb100rSelectManagerDate('${kind}','${d}')"><span class="pb100rManagerDateTop"><small>${weekday}</small>${d===now?'<b>امروز</b>':''}</span><strong>${date}</strong><em><b>${faNum(count)}</b> آفیش</em></button>`}).join('');const visible=rows.filter(b=>daysForBooking(b,kind).includes(selected[kind]));const cards=visible.map(b=>{const id=escape(b.id),picked=b.status==='picked_up',returned=b.status==='returned',pending=b.status==='payment_pending',badge=picked?'<span class="pb100rManagerStatus">✓ تحویل شد</span>':returned?'<span class="pb100rManagerStatus">✓ تحویل و دریافت شد</span>':pending?'<span class="pill paymentPendingPill">منتظر پرداخت</span>':'';let actions='';if(kind==='approved'&&b.status==='reserved')actions=`<button class="mini" onclick="bookingStatus('${id}','picked_up')">ثبت تحویل</button><button class="mini v654Danger" onclick="bookingStatus('${id}','cancelled')">لغو</button>`;else if(kind==='approved'&&pending)actions='<button class="mini" disabled>منتظر پرداخت</button>';else if(kind==='out'&&picked)actions=`<button class="mini pb914ReturnButton ${escape(window.pb921ReturnPhase?.(b)||'')}" onclick="bookingStatus('${id}','returned')">ثبت دریافت</button>`;if(picked||returned)actions+=`<span class="pb100rManagerDocs"><button type="button" class="mini pb100rCommitment" onclick="window.pbR85PrintCommitment?pbR85PrintCommitment('${id}'):pb916PrintCommitment('${id}')">چاپ تعهدنامه</button><button type="button" class="mini pb100rInvoice" onclick="pb100rPrintInvoice('${id}')">فاکتور</button></span>`;const phase=picked&&kind==='out'?window.pb921ReturnPhase?.(b):'';const deadline=picked&&kind==='out'?window.pb921ReturnDeadline?.(b):null,notice=deadline?`<span class="pb914ReturnNotice ${phase==='overdue'?'overdue':phase==='due'?'due':''}">${phase==='overdue'?'موعد برگشت گذشته: ':phase==='due'?'مهلت برگشت امروز: ':'آخرین مهلت برگشت: '}${escape(deadline.label)}</span>`:'';const dateLabel=`${escape(typeof dateFa==='function'?dateFa(b.rental_start):b.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(b.rental_end):b.rental_end||'—')}`;return `<article class="pb854BookingStatusCard pb914BookingCard ${picked||returned?'pb100rManagerDelivered':''}" data-pb915-booking-id="${id}" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش"><div class="pb854BookingIdentity"><div class="pb914NameLine"><b>${escape(b.photographer_name||b.customer_name||'عکاس')}</b>${badge}</div><small class="pb854PhotographerPhone" dir="ltr">${escape(b.photographer_mobile||b.customer_mobile||'')}</small><small class="pb854BookingItems">${escape(b.item_titles||'بدون شرح تجهیزات')}</small><small class="pb914BookingMeta">${escape(statusLabel(b.status))} · ${escape(money(b.total_amount||0))}</small></div><div class="pb914ActionColumn">${notice}<div class="pb914Schedule"><span class="pb914DateRange">${dateLabel}</span></div><div class="actions">${actions}</div></div></article>`}).join('');const dayCaption=selected[kind]?`${kind==='approved'?'تحویل‌های روز':'دریافت‌های روز'} ${escape(typeof dateFa==='function'?dateFa(selected[kind]):selected[kind])}`:'';return `<div class="box"><h2>${kind==='approved'?'تحویل و وضعیت تحویل':'دریافت تجهیزات'}</h2>${days.length?`<div class="pb100rManagerDayLabel" style="font-size:10px;font-weight:850;color:#475467;margin:0 0 5px">${dayCaption}</div><div class="pb100rManagerDates" aria-label="انتخاب روز آفیش">${dateButtons}</div>`:'<div class="pb854BookingEmpty">برای این بخش آفیشی وجود ندارد.</div>'}<div class="pb854BookingStatusList">${visible.length?cards:`<div class="pb854BookingEmpty">برای این روز موردی وجود ندارد.</div>`}</div></div>`};
  try{window.pb854BookingPaneMarkup=pb854BookingPaneMarkup}catch{}
@@ -7201,29 +7215,42 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
 <script id="pb925OfficeInvoiceRuntimeR52">
 (()=>{
   const q=s=>document.querySelector(s);
+  let officeCenterFrame=0;
   function centerOfficeTab(btn,behavior='smooth'){
     if(!btn||!matchMedia('(max-width:850px)').matches)return;
     const rail=q('#pb848BookingHeaderTabs');
-    if(!rail||!rail.contains(btn))return;
-    try{const rb=rail.getBoundingClientRect(),bb=btn.getBoundingClientRect(),delta=bb.left+bb.width/2-(rb.left+rb.width/2),rtl=getComputedStyle(rail).direction==='rtl';rail.scrollBy({left:delta*(rtl?-1:1),behavior})}
-    catch{}
+    if(!rail||!rail.contains(btn)||!rail.clientWidth)return;
+    const rb=rail.getBoundingClientRect(),bb=btn.getBoundingClientRect();
+    const delta=(bb.left+bb.width/2)-(rb.left+rb.width/2);
+    // A visual delta is already signed correctly for Chrome's negative RTL scrollLeft.
+    const range=Math.max(0,rail.scrollWidth-rail.clientWidth);
+    const rtl=getComputedStyle(rail).direction==='rtl';
+    const target=Math.max(rtl?-range:0,Math.min(rtl?0:range,rail.scrollLeft+delta));
+    if(Math.abs(target-rail.scrollLeft)>0.75)
+      rail.scrollTo({left:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
   }
   function centerActiveOfficeTab(behavior='auto'){
     centerOfficeTab(q('#pb848BookingHeaderTabs>[data-pb843-office-tab].active'),behavior);
   }
+  // Click and pb843SetOfficeTab both fire: coalesce into one scroll after layout.
+  function scheduleOfficeCenter(behavior='smooth'){
+    if(officeCenterFrame)cancelAnimationFrame(officeCenterFrame);
+    officeCenterFrame=requestAnimationFrame(()=>{
+      officeCenterFrame=0;
+      centerActiveOfficeTab(behavior);
+    });
+  }
   document.addEventListener('click',e=>{
-    const btn=e.target.closest?.('#pb848BookingHeaderTabs>[data-pb843-office-tab]');
-    if(btn)requestAnimationFrame(()=>centerOfficeTab(btn,'smooth'));
-    if(e.target.closest?.('[data-rental-bottom-tab="bookings"],[data-rental-desktop-tab="bookings"],[data-rental-tab="bookings"]')){
-      setTimeout(()=>centerActiveOfficeTab('auto'),40);
-    }
+    if(e.target.closest?.('#pb848BookingHeaderTabs>[data-pb843-office-tab]'))scheduleOfficeCenter('smooth');
+    if(e.target.closest?.('[data-rental-bottom-tab="bookings"],[data-rental-desktop-tab="bookings"],[data-rental-tab="bookings"]'))
+      setTimeout(()=>scheduleOfficeCenter('auto'),40);
   },true);
 
   const originalSet=window.pb843SetOfficeTab;
   if(typeof originalSet==='function'&&!originalSet.pb925Centered){
     const wrapped=function(tab,...args){
       const out=originalSet.call(this,tab,...args);
-      requestAnimationFrame(()=>centerActiveOfficeTab('smooth'));
+      scheduleOfficeCenter('smooth');
       return out;
     };
     wrapped.pb925Centered=true;
@@ -7312,12 +7339,12 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
  function style(el,props){if(!el)return;for(const [key,value] of Object.entries(props)){const v=String(value);if(el.style.getPropertyValue(key)!==v||el.style.getPropertyPriority(key)!=='important')el.style.setProperty(key,v,'important')}}
  function visible(el,on,display='flex'){if(!el)return;el.classList.toggle('hidden',!on);el.hidden=!on;el.setAttribute('aria-hidden',on?'false':'true');style(el,{display:on?display:'none',visibility:on?'visible':'hidden','pointer-events':on?'auto':'none',opacity:1})}
  function row(el,on,{product=false,brand=false,fill=false}={}){
-  if(!el)return;const mobile=matchMedia('(max-width:850px)').matches,m=metrics[mobile?'mobile':'desktop'],height=product?m.productRow:m.row,size=product?m.productFont:m.font;
+  if(!el)return;const mobile=matchMedia('(max-width:850px)').matches,m=metrics[mobile?'mobile':'desktop'],officeMobile=mobile&&el.id==='pb848BookingHeaderTabs',height=officeMobile?50:(product?m.productRow:m.row),size=officeMobile?13.4:(product?m.productFont:m.font);
   visible(el,on);el.classList.add('pb917Row');
-  style(el,{position:'relative',top:'auto',left:'auto',right:'auto',transform:'none',display:on?'flex':'none','flex-direction':'row','flex-wrap':'nowrap','align-items':'center','align-content':'center','justify-content':'flex-start',direction:'rtl',width:'100%','min-width':0,'max-width':'100%',height:height+'px','min-height':height+'px','max-height':height+'px',margin:0,padding:'0 2px',gap:'5px','box-sizing':'border-box','overflow-x':fill?'hidden':'auto','overflow-y':'hidden','touch-action':'pan-x','overscroll-behavior-x':'contain','scrollbar-width':'thin','border':0,'box-shadow':'none',background:'transparent'});
+  style(el,{position:'relative',top:'auto',left:'auto',right:'auto',transform:'none',display:on?'flex':'none','flex-direction':'row','flex-wrap':'nowrap','align-items':'center','align-content':'center','justify-content':'flex-start',direction:'rtl',width:'100%','min-width':0,'max-width':'100%',height:height+'px','min-height':height+'px','max-height':height+'px',margin:0,padding:officeMobile?'0 max(8px,calc(50% - 68px))':'0 2px',gap:'5px','box-sizing':'border-box','overflow-x':fill?'hidden':'auto','overflow-y':'hidden','touch-action':'pan-x','overscroll-behavior-x':'contain','scrollbar-width':officeMobile?'none':'thin','scroll-snap-type':officeMobile?'x proximity':'none','scroll-padding-inline':officeMobile?'calc(50% - 68px)':'0px','border':0,'box-shadow':'none',background:'transparent'});
   qa('button',el).forEach(b=>{
    b.classList.add('pb917Tab','pb912UnifiedTab');const active=b.classList.contains('active');
-   style(b,{position:'relative',display:'inline-flex','align-items':'center','justify-content':'center',isolation:'isolate',flex:fill?'1 1 0':'0 0 auto',width:'auto','min-width':fill?'0':product?'max-content':'96px','max-width':'none',height:(height-8)+'px','min-height':(height-8)+'px','max-height':(height-8)+'px',margin:0,padding:fill?'0 5px':'0 11px','box-sizing':'border-box','font-family':fontFamily,'font-size':size+'px','font-weight':850,'font-style':'normal','line-height':'1.2','letter-spacing':'normal','text-transform':'none','white-space':'nowrap',gap:'5px',border:0,'border-radius':'8px','box-shadow':'none',outline:0,background:active?'#eaf0ff':'transparent',color:active?(brand?'#7187ad':'#315efb'):(brand?'#8a94a6':'#667085'),transform:'none',overflow:'visible',transition:matchMedia('(prefers-reduced-motion:reduce)').matches?'none':'background-color 160ms ease, color 160ms ease',animation:'none'});
+   style(b,{position:'relative',display:'inline-flex','align-items':'center','justify-content':'center',isolation:'isolate',flex:fill?'1 1 0':'0 0 auto',width:'auto','min-width':fill?'0':officeMobile?'136px':product?'max-content':'96px','max-width':'none',height:(height-8)+'px','min-height':(height-8)+'px','max-height':(height-8)+'px',margin:0,padding:fill?'0 5px':'0 11px','box-sizing':'border-box','font-family':fontFamily,'font-size':size+'px','font-weight':850,'font-style':'normal','line-height':'1.2','letter-spacing':'normal','text-transform':'none','white-space':'nowrap',gap:'5px',border:0,'border-radius':'8px','box-shadow':'none',outline:0,background:active?'#eaf0ff':'transparent',color:active?(brand?'#7187ad':'#315efb'):(brand?'#8a94a6':'#667085'),transform:'none',overflow:'visible',transition:matchMedia('(prefers-reduced-motion:reduce)').matches?'none':'background-color 160ms ease, color 160ms ease',animation:'none'});
    qa(':scope > span:not(.pb854TabCount):not(.pb868FilterCount)',b).forEach(label=>style(label,{'font-family':'inherit','font-size':'inherit','font-weight':'inherit','font-style':'inherit','line-height':'inherit',color:'inherit',margin:0,padding:0,'letter-spacing':'inherit',transition:'none',animation:'none'}));
    qa('.pb854TabCount,.pb868FilterCount',b).forEach(count=>style(count,{display:'inline-flex','align-items':'center','justify-content':'center',flex:'0 0 auto',position:'static',transform:'none',width:'auto','min-width':'18px',height:'18px','min-height':'18px','max-height':'18px',padding:'0 4px',margin:0,'font-family':fontFamily,'font-size':mobile?'9px':'8px','font-weight':850,'line-height':1,color:active?'#536b9d':'#8a94a6',background:active?'#dde7fb':'#f2f4f7',border:0,'border-radius':'999px',overflow:'visible'}));
   });qa('.pb839FilterIndicator',el).forEach(indicator=>style(indicator,{display:'none'}));
@@ -7346,7 +7373,7 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{margin-top:0!important;overflow-a
   row(office,tab==='bookings');row(photographers,tab==='photographers',{fill:mobile});visible(finance,tab==='accounting');style(finance,{position:'static',height:m.row+'px','min-height':m.row+'px','max-height':m.row+'px',width:'100%','min-width':0,margin:0,padding:0,overflow:'hidden'});row(financeRow,tab==='accounting',{fill:mobile});
   const anchors=mobile?[q('.top'),q('#rentalShopIdentityBar')]:[q('.top'),q('#rentalDesktopPrimaryNav')];
   const base=Math.max(...anchors.filter(el=>el&&getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect().bottom),mobile?60:110);
-  const show=hasProducts||context,h=show?(context?m.row:m.productRow*filterRows)+8:0;
+  const show=hasProducts||context,officeRow=mobile&&tab==='bookings'?50:m.row,h=show?(context?officeRow:m.productRow*filterRows)+8:0;
   host.classList.toggle('active',show);host.classList.toggle('pb848ContextActive',context);visible(host,show,'block');
   style(host,{position:'fixed',top:base+'px',left:0,right:0,bottom:'auto',width:'auto','min-width':0,'max-width':'none',height:h+'px','min-height':h+'px','max-height':h+'px',padding:show?(mobile?'4px 8px':'4px max(18px,calc((100vw - 1320px)/2))'):0,margin:0,'box-sizing':'border-box',overflow:'hidden',transform:'none','z-index':140});
   style(document.body,{'padding-top':(base+h)+'px'});
@@ -7896,7 +7923,8 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost{display:block!im
 html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates{
   position:static!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
   transform:none!important;width:min(920px,calc(100% - 22px))!important;max-width:920px!important;
-  height:auto!important;min-height:0!important;margin:0 auto!important;padding:0 6px!important;
+  height:auto!important;min-height:0!important;margin:0 auto!important;
+  padding:0 max(6px,calc(50% - 74px))!important;
   background:transparent!important;box-sizing:border-box!important;z-index:auto!important;
   /* The rail is portaled to body, outside #bookings: restore the old rail's
      horizontal layout and clipping here instead of relying on #bookings CSS. */
@@ -7949,9 +7977,21 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
 @media(max-width:850px){
   #pbR100F64ManagerDateHost{padding-top:6px;padding-bottom:8px}
   html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates{
-    width:100%!important;max-width:none!important;padding-inline:6px!important;
+    width:100%!important;max-width:none!important;
+    padding-inline:max(6px,calc(50% - 74px))!important;
   }
   html body.pbR100F9StaffMode .pbR100F9StaffNav{width:100%!important;max-width:none!important}
+}
+</style>
+<style id="pbR100F66OfficeRailPolish">
+/* R51 later re-enabled the mobile Office scrollbar; leave swiping available. */
+@media(max-width:850px){
+  html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs{
+    scrollbar-width:none!important;-ms-overflow-style:none!important;
+  }
+  html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs::-webkit-scrollbar{
+    display:none!important;width:0!important;height:0!important;background:transparent!important;
+  }
 }
 </style>
 <script id="pbR100F64PinnedDateRailsRuntime">

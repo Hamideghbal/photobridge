@@ -60,8 +60,12 @@
       try{
         await api('/api/rental/return-shortages/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
         close();
-        await load({reloadExtra:false});
-        window.pb843SetOfficeTab?.('returnShortages');
+        if(document.body.classList.contains('pbR100F9StaffMode')){
+          await window.pbR100F9ReloadStaff?.();
+        }else{
+          await load({reloadExtra:false});
+          window.pb843SetOfficeTab?.('returnShortages');
+        }
         notify(hasFee?'تحویل کسری و افزایش فاکتور ثبت شد.':'تحویل کسری ثبت شد.','تکمیل شد');
       }catch(ex){
         sending=false;form.querySelector('[type=submit]').disabled=false;if(btn)btn.disabled=false;

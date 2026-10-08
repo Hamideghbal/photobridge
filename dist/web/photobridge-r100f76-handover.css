@@ -23,6 +23,52 @@ html body .pbR100F9StaffDateTop,html body .pb100rManagerDateTop{gap:0!important}
 .pbR100F76Buttons{display:flex;justify-content:flex-end;gap:8px}.pbR100F76Buttons button{border:0;border-radius:9px;padding:9px 14px;font:800 12px Vazirmatn,Tahoma,sans-serif;background:#eef2f7;color:#344054}.pbR100F76Buttons button[type=submit]{background:#315efb;color:#fff}
 @media(max-width:700px){.pbR100F76ShortageBack{align-items:end;padding:0}.pbR100F76ShortageDialog{width:100%;border-radius:18px 18px 0 0;padding:14px 15px max(15px,env(safe-area-inset-bottom));max-height:90dvh}}
 
+/* R100F78: split the manager handover workspace on desktop; mobile stays unchanged. */
+@media(min-width:851px){
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost{
+    top:var(--pb-r100f64-manager-top,150px)!important;left:auto!important;right:20px!important;
+    width:calc((100vw - 54px)/2)!important;height:calc(100dvh - var(--pb-r100f64-manager-top,150px) - 20px)!important;
+    min-height:260px!important;max-height:none!important;padding:8px!important;overflow:hidden!important;
+    border:1px solid #e2e8f0!important;border-radius:14px!important;background:#f8fafc!important;box-shadow:none!important;
+  }
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates{
+    display:flex!important;flex:1 1 auto!important;flex-flow:column nowrap!important;align-items:stretch!important;
+    width:100%!important;height:100%!important;max-width:none!important;min-width:0!important;min-height:0!important;
+    margin:0!important;padding:4px!important;gap:7px!important;box-sizing:border-box!important;
+    direction:rtl!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+    touch-action:pan-y!important;scroll-snap-type:y proximity!important;scroll-padding:4px!important;
+    scroll-behavior:smooth!important;scrollbar-width:thin!important;scrollbar-color:#98a9c0 #e8edf5!important;
+  }
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates::-webkit-scrollbar{display:block!important;width:8px!important;height:auto!important}
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates::-webkit-scrollbar-thumb{background:#98a9c0!important;border-radius:8px!important}
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button{
+    flex:0 0 66px!important;width:100%!important;max-width:none!important;height:66px!important;min-height:66px!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:1fr 1fr!important;
+    grid-template-areas:"weekday count" "date count"!important;align-content:center!important;align-items:center!important;
+    justify-content:stretch!important;gap:1px 10px!important;padding:8px 12px!important;text-align:right!important;
+    border:1px solid #dbe4ff!important;border-radius:11px!important;background:#fff!important;scroll-snap-align:start!important;
+  }
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDateTop{grid-area:weekday!important;justify-content:flex-start!important}
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button>strong{grid-area:date!important;justify-self:start!important}
+  html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button>em{grid-area:count!important;flex:initial!important;justify-self:end!important;white-space:nowrap!important}
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="approved"],
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="out"]{
+    position:fixed!important;top:var(--pb-r100f64-manager-top,150px)!important;bottom:20px!important;left:20px!important;right:auto!important;
+    width:calc((100vw - 54px)/2)!important;height:auto!important;max-height:none!important;margin:0!important;padding:0!important;
+    overflow:hidden!important;z-index:122!important;box-sizing:border-box!important;
+  }
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="approved"]>.box,
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="out"]>.box{
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;height:100%!important;
+    max-height:none!important;margin:0!important;padding:12px!important;overflow:hidden!important;box-sizing:border-box!important;
+  }
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="approved"] .pb854BookingStatusList,
+  html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="out"] .pb854BookingStatusList{
+    flex:1 1 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;align-content:start!important;
+    overscroll-behavior:contain!important;scrollbar-width:thin!important;scrollbar-color:#98a9c0 #e8edf5!important;
+  }
+}
+
 /* R100F77: desktop handover workspace uses a right date calendar and left booking list. */
 @media (min-width:851px){
   html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{

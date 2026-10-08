@@ -90,7 +90,7 @@ const crypto = require("crypto");
     requestAnimationFrame(sample);
   });
   await page.route("**/photographer/orders/flow*", async route => {
-    if (route.request().isNavigationRequest() && new URL(page.url()).pathname.startsWith("/equipment-rental"))
+    if (route.request().isNavigationRequest() && (new URL(page.url()).pathname.startsWith("/equipment-rental") || new URL(page.url()).pathname === "/photographer/gallery"))
       await new Promise(resolve => setTimeout(resolve, 350));
     await route.continue();
   });
@@ -377,6 +377,34 @@ const crypto = require("crypto");
         path: outputDir + "/photobridge-print-composer.png",
       });
     }
+  }
+  await page.goto("http://127.0.0.1:3000/photographer/gallery");
+  await page.waitForFunction(() => document.querySelector("#pbF37ContextText")?.textContent === "گالری مشتریان");
+  const labDepartureFrames = [];
+  await page.exposeFunction("recordLabDeparture", state => labDepartureFrames.push(state));
+  await page.evaluate(() => {
+    window.addEventListener("click", event => {
+      const button = event.target.closest(".photographerBottomAppNav button,.photographerBottomAppNavGrid button");
+      if (!button || !/چاپ/.test(button.innerText || button.getAttribute("aria-label") || "")) return;
+      const sample = () => {
+        const rect = selector => { const el = document.querySelector(selector); if (!el) return null; const r = el.getBoundingClientRect(); return { top: r.top, height: r.height, bottom: r.bottom }; };
+        window.recordLabDeparture({ title: document.querySelector("#pbF37ContextText")?.textContent, header: rect("#pbF37PhotographerHeader"), sub: rect("#pbF37Subheader"), content: rect(".photographerMain>.photographerRolePageScrollArea"), printMode: document.body.classList.contains("pbF37PrintMode"), path: location.pathname });
+        if (location.pathname === "/photographer/gallery" && window.__labDepartureSamples++ < 24) requestAnimationFrame(sample);
+      };
+      window.__labDepartureSamples = 0;
+      requestAnimationFrame(sample);
+    }, true);
+  });
+  await page.locator(".photographerBottomAppNav button,.photographerBottomAppNavGrid button").filter({ hasText: /^چاپ$/ }).first().click();
+  await page.waitForURL(url => url.pathname.startsWith("/photographer/orders/") || url.pathname.startsWith("/photographer/upload"), { timeout: 10000 });
+  require("node:assert/strict").ok(labDepartureFrames.length >= 8, `Expected slow-departure source frames, got ${labDepartureFrames.length}`);
+  const originalFrame = labDepartureFrames[0];
+  for (const frame of labDepartureFrames) {
+    require("node:assert/strict").equal(frame.title, "گالری مشتریان", "Source title stays visible while leaving for Lab");
+    require("node:assert/strict").deepEqual(frame.header, originalFrame.header, "Source header stays in place until navigation");
+    require("node:assert/strict").deepEqual(frame.sub, originalFrame.sub, "Source subheader stays in place until navigation");
+    require("node:assert/strict").deepEqual(frame.content, originalFrame.content, "Source content stays in place until navigation");
+    require("node:assert/strict").equal(frame.printMode, false, "Print mode is not applied to the source tab");
   }
   await page.goto("http://127.0.0.1:3000/photographer/orders/flow?workspace=print&pbLabChooser=1");
   await page.waitForSelector("#pbR99LabChooser", { timeout: 10000 });

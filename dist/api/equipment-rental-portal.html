@@ -7943,7 +7943,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
   overflow-x:auto!important;overflow-y:hidden!important;
   overscroll-behavior-inline:contain!important;touch-action:pan-x!important;
   scroll-snap-type:x mandatory!important;scroll-padding-inline:calc(50% - 74px)!important;
-  scroll-behavior:smooth!important;scrollbar-width:none!important;
+  scroll-behavior:smooth!important;scrollbar-width:none!important;overflow-anchor:none!important;
 }
 html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates::-webkit-scrollbar{display:none!important}
 html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button{
@@ -8075,9 +8075,28 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
   if(typeof window.pb854RenderBookingStatusPanes==='function'){
     const base=window.pb854RenderBookingStatusPanes;
     const wrapped=function(...args){
-      ensureManagerHost().replaceChildren();
-      document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      const host=ensureManagerHost();
+      const mountedRail=host.querySelector('.pb100rManagerDates');
+      const mountedKind=mountedRail?.querySelector('[data-pb100r-date-kind]')?.dataset.pb100rDateKind;
+      const savedScroll=mountedRail?.scrollLeft??0;
       const out=base.apply(this,args);
+      const kind=managerKind();
+      const stillShowing=document.body.classList.contains('rentalAppReady')
+        && !document.body.classList.contains('pbR100F9StaffMode')
+        && q('#bookings')?.classList.contains('active')
+        && (kind==='approved'||kind==='out');
+      const rebuilt=stillShowing?q('[data-pb843-office-pane="'+kind+'"].active .pb100rManagerDates'):null;
+      if(stillShowing&&mountedRail&&mountedKind===kind&&rebuilt){
+        // R100F68: preserve the mounted scrolling element when only its cards
+        // and date selection change. Recreating it resets the viewport to today.
+        mountedRail.replaceChildren(...rebuilt.childNodes);
+        rebuilt.remove();
+        mountedRail.scrollLeft=savedScroll;
+      }else{
+        // Switching between handover tabs still gets a fresh rail (today).
+        host.replaceChildren();
+        document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      }
       queueManager();
       return out;
     };

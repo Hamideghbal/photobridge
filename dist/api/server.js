@@ -15419,7 +15419,8 @@ async function api(req, res, url) {
             if (beforeRow?.photographer_id) publishCustomerEventEverywhere(String(beforeRow.photographer_id), 'equipment_rental_status', { bookingId, status:'cancelled', shopId:shop.id, shopName:String(shop.name||'فروشگاه تجهیزات') });
             return sendJson(res,200,{ok:true,status:'cancelled',sms,refunded:String(beforeRow?.payment_status||'')==='paid',providedShortages,removedPendingShortages});
         }
-        if(status==='picked_up' && ((Array.isArray(b.assetCodes)&&b.assetCodes.length)||(Array.isArray(b.externalSupplyCodes)&&b.externalSupplyCodes.length))){
+        if(status==='picked_up'){
+            if(!Array.isArray(b.assetCodes))return sendJson(res,400,{error:'asset_scan_incomplete',message:'asset_codes_required'});
             await ensureEquipmentRentalAssetTrackingSchema();
             const locked=await pool.query(`SELECT * FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 LIMIT 1`,[bookingId,shop.id]);const row=locked.rows[0];if(!row)return sendJson(res,404,{error:'rental_booking_not_found'});if(row.status!=='reserved')return sendJson(res,409,{error:'invalid_rental_transition'});
             const expected=await pool.query(`SELECT bi.item_id,bi.quantity,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title FROM equipment_rental_booking_items bi LEFT JOIN equipment_rental_items i ON i.id=bi.item_id WHERE bi.booking_id=$1 ORDER BY bi.id`,[bookingId]);

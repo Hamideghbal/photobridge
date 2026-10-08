@@ -7898,6 +7898,27 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
   transform:none!important;width:min(920px,calc(100% - 22px))!important;max-width:920px!important;
   height:auto!important;min-height:0!important;margin:0 auto!important;padding:0 6px!important;
   background:transparent!important;box-sizing:border-box!important;z-index:auto!important;
+  /* The rail is portaled to body, outside #bookings: restore the old rail's
+     horizontal layout and clipping here instead of relying on #bookings CSS. */
+  display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+  direction:ltr!important;gap:6px!important;min-width:0!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  overscroll-behavior-inline:contain!important;touch-action:pan-x!important;
+  scroll-snap-type:x mandatory!important;scroll-padding-inline:calc(50% - 74px)!important;
+  scroll-behavior:smooth!important;scrollbar-width:none!important;
+}
+html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates::-webkit-scrollbar{display:none!important}
+html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button{
+  flex:0 0 148px!important;width:148px!important;max-width:148px!important;
+  height:48px!important;min-height:48px!important;box-sizing:border-box!important;
+  display:flex!important;direction:rtl!important;flex-wrap:wrap!important;
+  align-content:center!important;align-items:center!important;justify-content:center!important;
+  column-gap:5px!important;row-gap:1px!important;padding:3px 7px!important;
+  border:1px solid #dbe4ff;border-radius:13px!important;background:#fff;color:#344054;
+  font:850 10px/1.15 Vazirmatn!important;cursor:pointer!important;scroll-snap-align:center!important;
+}
+html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.active{
+  border-color:#315efb!important;background:#315efb!important;box-shadow:0 5px 14px #315efb35!important;
 }
 html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="approved"]>.box,
 html body.pbR100F64ManagerDatesPinned #bookings .pb843BookingPane.active[data-pb843-office-pane="out"]>.box{

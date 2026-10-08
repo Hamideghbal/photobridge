@@ -18,11 +18,12 @@
       if(!b||b.status!=='returned')return;
       card.classList.add('pbR100F74ReceivedOrder');
       const status=q('.pbR100F9StaffState',card);
-      if(status)status.textContent='دریافت شده';
+      const deliveryTab=q('.pbR100F9StaffTabs [data-staff-mode="out"].active');
+      if(status)status.textContent=deliveryTab?'تحویل شده':'دریافت شده';
       const missing=pendingFor(b.id),count=missing.reduce((n,x)=>n+Number(x.missing_qty||0),0);
       if(!count)return;
       card.classList.add('pbR100F74HasMissing');
-      if(status)status.textContent='کسری تحویل · '+fa(count)+' عدد';
+      if(status&&!deliveryTab)status.textContent='کسری تحویل · '+fa(count)+' عدد';
       const identity=q('.pbR100F71Identity',card)||card;
       let box=q('.pbR100F74MissingBox',identity);
       if(!box){box=document.createElement('div');box.className='pbR100F74MissingBox';identity.appendChild(box)}
@@ -52,6 +53,10 @@
         e.stopPropagation();
         const id=String(shortage.id||'');
         if(!id||activeResolutions.has(id))return;
+        if(typeof window.pbR85ResolveReturnShortage==='function'){
+          await window.pbR85ResolveReturnShortage(id,btn);
+          return;
+        }
         const desc=String(shortage.item_title||'تجهیز')+' · '+fa(shortage.missing_qty||0)+' عدد';
         if(!window.confirm('آیا تمام کسری «'+desc+'» واقعاً دریافت شده و جبران آن را تأیید می‌کنید؟'))return;
         activeResolutions.add(id);btn.disabled=true;btn.textContent='در حال ثبت…';
@@ -102,7 +107,7 @@
       tags.replaceChildren();
       if(received>0){
         const green=document.createElement('span');green.className='pbR100F74Received';
-        green.textContent='دریافت شد'+(quantity>1?' · '+fa(received)+' عدد':'');
+        green.textContent=(q('.pbR100F9StaffTabs [data-staff-mode="out"].active')?'تحویل شد':'دریافت شد')+(quantity>1?' · '+fa(received)+' عدد':'');
         tags.appendChild(green);
       }
       if(missing>0){

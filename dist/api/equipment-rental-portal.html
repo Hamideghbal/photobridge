@@ -7151,9 +7151,10 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="out"] .pb100rOutComp
      const rail=card?.closest('.pb100rManagerDates');
      if(!rail||!card||!rail.getClientRects().length)return;
      const r=rail.getBoundingClientRect(),c=card.getBoundingClientRect();
-     const desired=rail.scrollLeft+(c.left+c.width/2)-(r.left+r.width/2);
-     const max=Math.max(0,rail.scrollWidth-rail.clientWidth);
-     rail.scrollTo({left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
+     const vertical=matchMedia('(min-width:851px)').matches;
+     const desired=vertical?rail.scrollTop+(c.top+c.height/2)-(r.top+r.height/2):rail.scrollLeft+(c.left+c.width/2)-(r.left+r.width/2);
+     const max=vertical?Math.max(0,rail.scrollHeight-rail.clientHeight):Math.max(0,rail.scrollWidth-rail.clientWidth);
+     rail.scrollTo(vertical?{top:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior}:{left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
    }));
  };
  window.pb100rSelectManagerDate=(kind,iso)=>{
@@ -8113,7 +8114,7 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
     }
     const tabs=q('#pb848BookingHeaderTabs');
     const bottom=tabs?.getBoundingClientRect().bottom;
-    if(Number.isFinite(bottom)&&bottom>0)host.style.setProperty('top',Math.round(bottom)+'px','important');
+    if(Number.isFinite(bottom)&&bottom>0){host.style.setProperty('top',Math.round(bottom)+'px','important');document.body.style.setProperty('--pb-r100f64-manager-top',Math.round(bottom)+'px')}
     document.body.classList.add('pbR100F64ManagerDatesPinned');
   }
   function queueManager(){if(managerQueued)return;managerQueued=true;requestAnimationFrame(()=>requestAnimationFrame(syncManagerDateRail))}
@@ -8141,7 +8142,8 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
       const host=ensureManagerHost();
       const mountedRail=host.querySelector('.pb100rManagerDates');
       const mountedKind=mountedRail?.querySelector('[data-pb100r-date-kind]')?.dataset.pb100rDateKind;
-      const savedScroll=mountedRail?.scrollLeft??0;
+      const vertical=matchMedia('(min-width:851px)').matches;
+      const savedScroll=mountedRail?(vertical?mountedRail.scrollTop:mountedRail.scrollLeft):0;
       const out=base.apply(this,args);
       const kind=managerKind();
       const stillShowing=document.body.classList.contains('rentalAppReady')
@@ -8154,7 +8156,7 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
         // and date selection change. Recreating it resets the viewport to today.
         mountedRail.replaceChildren(...rebuilt.childNodes);
         rebuilt.remove();
-        mountedRail.scrollLeft=savedScroll;
+        if(vertical)mountedRail.scrollTop=savedScroll;else mountedRail.scrollLeft=savedScroll;
       }else{
         // Switching between handover tabs still gets a fresh rail (today).
         host.replaceChildren();
@@ -8549,6 +8551,6 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
 <script src="/photobridge-r100f73-staff-desktop-return.js?v=r100f73"></script>
 <link rel="stylesheet" href="/photobridge-r100f74-staff-ui.css?v=r100f75">
 <script src="/photobridge-r100f74-staff-ui.js?v=r100f75"></script>
-<link rel="stylesheet" href="/photobridge-r100f76-handover.css?v=r100f76">
+<link rel="stylesheet" href="/photobridge-r100f76-handover.css?v=r100f78">
 <script src="/photobridge-r100f76-handover.js?v=r100f76"></script>
 </body></html>

@@ -6,9 +6,9 @@
     left:0!important;
     right:0!important;
     width:100%!important;
-    height:53px!important;
-    min-height:53px!important;
-    max-height:53px!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
     box-sizing:border-box!important;
     z-index:610!important;
     overflow:visible!important;
@@ -42,4 +42,14 @@
   html body #storePhotographerWorkspace>#photographerStoreIdentityBar #photographerStoreHeaderName{
     color:#101828!important;
   }
+}
+
+/* R100F46 — match the 42px context row and expose the neutral page surface. */
+@media(max-width:820px){
+  html body #storePhotographerWorkspace{--pb-store-identity-h:42px!important;background:#f5f7fb!important;background-image:none!important}
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar #storeIdentityToggle{top:50%!important;transform:translate(-50%,-50%)!important}
+  html body.rentalPhotographerMode:not(.pbR96ChoosingStore) #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{top:calc(var(--pb-store-role-header-h,90px) + 49px)!important;background:transparent!important;background-image:none!important;backdrop-filter:none!important}
+  html body.rentalPhotographerMode:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{top:calc(var(--pb-store-role-header-h,90px) + 91px)!important;background:#f5f7fb!important;background-image:none!important}
+  html body #storePhotographerWorkspace>#storeSectionNavV673::before,
+  html body #storePhotographerWorkspace>#storeSectionNavV673::after{content:none!important;display:none!important}
 }

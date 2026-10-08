@@ -15326,11 +15326,39 @@ async function api(req, res, url) {
         if(a?.rentalRole==='handover_staff'&&!['picked_up','returned'].includes(status)) return sendJson(res,403,{error:'handover_staff_forbidden'});
         const bookingId = rentalBookingRoute[1];
         if (status === 'picked_up' && !((Array.isArray(b.assetCodes)&&b.assetCodes.length)||(Array.isArray(b.externalSupplyCodes)&&b.externalSupplyCodes.length))) {
+            // Legacy manual handover is permitted only when every owned-unit serial
+            // resolves to a real, active asset of this shop and booking item.
+            // Route the verified serials through the same asset assignment code as QR.
+            await ensureEquipmentRentalAssetTrackingSchema();
             const serialCheck = await pool.query(`SELECT handover_serials FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 LIMIT 1`, [bookingId,shop.id]);
             if (!serialCheck.rowCount) return sendJson(res,404,{error:'rental_booking_not_found'});
             const serialItems = Array.isArray(serialCheck.rows[0]?.handover_serials) ? serialCheck.rows[0].handover_serials : [];
-            if (!serialItems.length || serialItems.some(x=>!Array.isArray(x?.serials)||x.serials.length!==Number(x?.quantity||0)||x.serials.some(v=>!String(v||'').trim())))
+            const required=await pool.query(`SELECT item_id,quantity FROM equipment_rental_booking_items WHERE booking_id=$1`,[bookingId]);
+            if(!serialItems.length||serialItems.length!==required.rowCount)
                 return sendJson(res,409,{error:'handover_serials_required'});
+            const submitted=new Map(serialItems.map(x=>[String(x?.itemId||''),x]));
+            if(submitted.size!==required.rowCount)return sendJson(res,400,{error:'handover_serial_invalid'});
+            const active=await pool.query(`SELECT id,item_id,system_code,serial_number FROM equipment_rental_assets WHERE shop_id=$1 AND active=true AND item_id=ANY($2::uuid[])`,
+                [shop.id,required.rows.map(x=>x.item_id)]);
+            const usedIds=new Set(),assetCodes=[],externalSupplyCodes=[];
+            for(const row of required.rows){
+                const key=String(row.item_id),entry=submitted.get(key),quantity=Number(row.quantity);
+                if(!entry||!Number.isSafeInteger(quantity)||quantity<1||!Array.isArray(entry.serials)||
+                   entry.serials.length!==quantity)return sendJson(res,400,{error:'handover_serial_invalid',itemId:key});
+                const externalQty=Number(entry.externalSupplyQty||0);
+                if(!Number.isSafeInteger(externalQty)||externalQty<0||externalQty>quantity)
+                    return sendJson(res,400,{error:'handover_serial_invalid',itemId:key});
+                for(const value of entry.serials.slice(0,quantity-externalQty)){
+                    const code=String(value||'').trim();
+                    const asset=active.rows.find(x=>String(x.item_id)===key&&
+                        (String(x.system_code)===code||(x.serial_number&&String(x.serial_number)===code)));
+                    if(!asset||usedIds.has(String(asset.id)))return sendJson(res,400,{error:'handover_serial_invalid',itemId:key});
+                    usedIds.add(String(asset.id));assetCodes.push(String(asset.system_code));
+                }
+                for(const code of entry.serials.slice(quantity-externalQty))
+                    externalSupplyCodes.push({itemId:key,code:String(code||'').trim().slice(0,180)});
+            }
+            b.assetCodes=assetCodes;b.externalSupplyCodes=externalSupplyCodes;
         }
         if (status === 'reserved') {
             await ensureEquipmentRentalV727Schema();

@@ -12,6 +12,12 @@ These instructions apply to Codex tasks in this repository.
 - After merge, verify that the merged commit is present on `main`.
 - Liara Auto Deploy is connected to `main`; do not run a manual production deploy unless explicitly requested.
 
+## Liara deploy revision
+- Any task that changes production-delivered files or runtime behavior must also update `DEPLOY_REVISION.txt` in the same branch before the final commit. This includes changes under `dist/`, `apps/web/public/`, production `scripts/`, `migrations/`, `Dockerfile`, or other files copied into the production image.
+- Use a new unique readable token each time (for example `2026-10-08-r100f55-short-description`). Never reuse an older token.
+- This file is an intentional Docker cache barrier: changing it must happen before PR creation so Liara reevaluates the application-source layers instead of reusing a stale `COPY dist ./dist` layer.
+- Do not bump `DEPLOY_REVISION.txt` for documentation-only changes that cannot affect the deployed application.
+
 ## Merge conflicts
 - If the branch is behind or conflicts with `main`, update the branch from current `main`, resolve conflicts while preserving current production behavior and the requested fix, then rerun build/tests before merging.
 - Never drop newer `main` changes just to make the branch mergeable.

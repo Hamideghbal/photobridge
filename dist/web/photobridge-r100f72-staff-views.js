@@ -9,7 +9,7 @@
   const today=()=>new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'Asia/Tehran'}).format(new Date());
   const dateFa=x=>{if(!x)return '—';try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(new Date(iso(x)+'T12:00:00Z'))}catch{return iso(x)}};
   let view='out',monthAnchor=today();
-  const extraViews=[['officeCalendar','آفیش'],['officeShortages','کسری آفیش'],['returnShortages','کسری تحویل']];
+  const extraViews=[['returnShortages','کسری تحویل']];
   const bookingData=()=>typeof data!=='undefined'?(data||{}):(window.data||{});
   function updateHeight(){
     requestAnimationFrame(()=>{

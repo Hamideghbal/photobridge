@@ -156,3 +156,78 @@
 .pbR100F73ReturnActions button.primary{border-color:#315efb;background:#315efb;color:#fff}
 .pbR100F73ReturnActions button:disabled{opacity:.55;cursor:wait}
 @media(max-width:650px){.pbR100F73ReturnBack{padding:0;align-items:flex-end}.pbR100F73ReturnDialog{width:100%;border-radius:18px 18px 0 0;max-height:94dvh;padding:15px}.pbR100F73ReturnActions button{flex:1}}
+
+/* R100F74 — staff-only Windows header/date alignment, actual scrollbar, dark menu glyph. */
+@media(min-width:851px){
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav{
+    height:72px!important;min-height:72px!important;max-height:72px!important;
+    padding:0 45px!important;display:flex!important;align-items:center!important;
+    background:#f8fafc!important;overflow:visible!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffDayLabel{display:none!important}
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates{
+    box-sizing:border-box!important;height:71px!important;min-height:71px!important;
+    max-height:71px!important;align-self:center!important;
+    padding:8px max(8px,calc(50% - 66px)) 10px!important;
+    scroll-padding-inline:calc(50% - 66px)!important;
+    direction:ltr!important;scroll-behavior:smooth!important;
+    overscroll-behavior-inline:contain!important;
+    scroll-snap-type:none!important;
+    scrollbar-width:auto!important;scrollbar-color:#94a3b8 #e4eaf3!important;
+    overflow-x:auto!important;overflow-y:hidden!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates::-webkit-scrollbar{
+    display:block!important;height:9px!important;background:#e4eaf3!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates::-webkit-scrollbar-thumb{
+    background:#94a3b8!important;border:2px solid #e4eaf3!important;border-radius:99px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates>button{
+    scroll-snap-align:none!important;flex:0 0 132px!important;height:44px!important;
+    min-height:44px!important;max-height:44px!important;transition:background-color .15s ease!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F73ScrollArrow{top:18px!important}
+  html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell{
+    padding-top:76px!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffShell{
+    padding-top:0!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top #rentalMobileMenuBtn .rentalMobileMenuGlyph{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    flex-direction:column!important;gap:4px!important;width:24px!important;height:22px!important;
+    visibility:visible!important;opacity:1!important;
+  }
+  html body.rentalAppReady.pbR100F9StaffMode header.top #rentalMobileMenuBtn .rentalMobileMenuGlyph i{
+    display:block!important;width:21px!important;height:2px!important;
+    min-width:21px!important;min-height:2px!important;margin:0!important;
+    padding:0!important;position:static!important;border-radius:2px!important;
+    background:#344054!important;background-color:#344054!important;
+    opacity:1!important;visibility:visible!important;filter:none!important;box-shadow:none!important;
+  }
+}
+/* Green completed-receipt badge on staff cards, neutral for other statuses. */
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F71UnifiedCard
+ .pbR100F9StaffState.pbR100F74Received{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  background:#dcfce7!important;border:1px solid #86efac!important;
+  color:#166534!important;box-shadow:none!important;
+  border-radius:9px!important;padding:8px 12px!important;font-weight:900!important;
+}
+/* Per-unit received check marks and explicit missing status in staff booking details. */
+html body.pbR100F9StaffMode #pbR100F71Details .pbR100F74ItemStates{
+  display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:8px;
+}
+html body.pbR100F9StaffMode #pbR100F71Details .pbR100F74ItemStates>em{
+  display:inline-flex;align-items:center;gap:3px;font:850 11px/1.5 Vazirmatn,Tahoma,sans-serif;
+  font-style:normal;border-radius:8px;padding:3px 7px;
+}
+html body.pbR100F9StaffMode #pbR100F71Details .pbR100F74ItemStates>.received{
+  background:#dcfce7;color:#166534;border:1px solid #86efac;
+}
+html body.pbR100F9StaffMode #pbR100F71Details .pbR100F74ItemStates>.missing{
+  background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;
+}
+html body.pbR100F9StaffMode #pbR100F71Details .pbR100F74ItemStates>.pending{
+  background:#f2f4f7;color:#475467;border:1px solid #d0d5dd;
+}

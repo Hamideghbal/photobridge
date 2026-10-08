@@ -239,6 +239,28 @@ const crypto = require("crypto");
     );
     if (label === "فروشگاه") {
       assert.equal(state.headers[0].id, "photographerStoreRoleHeader");
+      const chrome = await page.evaluate(() => {
+        const bar = document.querySelector('#photographerStoreIdentityBar');
+        const title = document.querySelector('#storeIdentityToggle');
+        const nav = document.querySelector('#storeSectionNavV673');
+        const area = document.querySelector('#storePhotographerWorkspace>.shell');
+        const r = bar.getBoundingClientRect(), t = title.getBoundingClientRect();
+        return {height:r.height, top:r.top, centerDelta:Math.abs(t.top+t.height/2-r.top-r.height/2),
+          barBackground:getComputedStyle(bar).backgroundColor,
+          navBackground:getComputedStyle(nav).backgroundColor,
+          navImage:getComputedStyle(nav).backgroundImage,
+          contentImage:getComputedStyle(area).backgroundImage,
+          contentBackground:getComputedStyle(area).backgroundColor};
+      });
+      console.log('STORE_SURFACE', JSON.stringify(chrome));
+      assert.equal(chrome.height, 42, 'Store context title matches the other 42px context titles');
+      assert.equal(chrome.top, layout.header.bottom);
+      assert.ok(chrome.centerDelta < 1, 'Store title is vertically centered');
+      assert.equal(chrome.barBackground, 'rgb(255, 255, 255)');
+      assert.equal(chrome.navBackground, 'rgba(0, 0, 0, 0)');
+      assert.equal(chrome.navImage, 'none');
+      assert.equal(chrome.contentImage, 'none');
+      assert.equal(chrome.contentBackground, 'rgb(245, 247, 251)');
     } else {
       assert.equal(state.headers[0].id, "pbF37PhotographerHeader");
       assert.equal(

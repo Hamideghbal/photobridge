@@ -9,8 +9,8 @@
     const h=document.querySelector('#photographerStoreRoleHeader');
     const top=Math.ceil(h?.getBoundingClientRect().height||90);
     for(const [name,value] of Object.entries({
-      position:'fixed',top:`${top}px`,left:'0px',right:'0px',width:'100%',height:'53px',
-      'min-height':'53px','max-height':'53px',background:'#fff','background-color':'#fff',
+      position:'fixed',top:`${top}px`,left:'0px',right:'0px',width:'100%',height:'42px',
+      'min-height':'42px','max-height':'42px',background:'#fff','background-color':'#fff',
       'background-image':'none',color:'#101828',border:'0px', 'box-shadow':'none',filter:'none',
     }))if(b.style.getPropertyValue(name)!==value||b.style.getPropertyPriority(name)!=='important')b.style.setProperty(name,value,'important');
     const toggle=b.querySelector('#storeIdentityToggle');

@@ -14,9 +14,9 @@ for(const [path,css] of patch.htmlInserts){
  let s=fs.readFileSync(path,'utf8');
  const marker=path.includes('portal')?'pbR100F91OfficeMobile':'pbR100F91ShopperMobile';
  if(s.includes(marker)){console.log('Already patched: '+path);continue}
- const count=s.split('</body>').length-1;
- if(count!==1)throw new Error('Expected one body closing tag for '+path+', got '+count);
- s=s.replace('</body>',css+'\n</body>');fs.writeFileSync(path,s);
+ const pos=s.lastIndexOf('</body>');
+ if(pos<0)throw new Error('Missing closing body tag for '+path);
+ s=s.slice(0,pos)+css+'\n'+s.slice(pos);fs.writeFileSync(path,s);
  console.log('Patched mobile UI '+path);
 }
 fs.writeFileSync('DEPLOY_REVISION.txt',patch.revision);

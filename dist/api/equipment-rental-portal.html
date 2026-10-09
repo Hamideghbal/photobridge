@@ -5126,10 +5126,9 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
 
   }
   function placeBatchBar(){
-    const bar=q('#pb892CalendarBatchBar'),box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),toolbar=box?.querySelector('.pb843CalendarToolbar');
-    if(!bar||!box||!toolbar)return;
-    const target=toolbar.parentElement||box;
-    if(bar.parentElement!==target)toolbar.insertAdjacentElement('afterend',bar);
+    const bar=q('#pb892CalendarBatchBar'),box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),panel=box?.querySelector('.pb904r2DayPanel');
+    if(!bar||!box||!panel)return;
+    if(bar.parentElement!==panel)panel.insertBefore(bar,panel.firstChild);
   }
   async function openBookingInvoice(bookingId){
     let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId));
@@ -5397,8 +5396,8 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
    const box=q('#bookings .pb843BookingCalendarBox'),pane=q('#bookings .pb904r2CalendarPane');
    const toolbar=box?.querySelector(':scope > .pb843CalendarToolbar')||box?.querySelector('.pb843CalendarToolbar');
    if(box&&pane&&toolbar&&toolbar.parentNode!==pane)pane.insertBefore(toolbar,pane.firstChild);
-   const bar=q('#pb892CalendarBatchBar');
-   if(pane&&toolbar?.parentNode===pane&&bar&&bar.parentNode!==pane)toolbar.insertAdjacentElement('afterend',bar);
+   const bar=q('#pb892CalendarBatchBar'),panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
+   if(panel&&bar&&bar.parentNode!==panel)panel.insertBefore(bar,panel.firstChild);
  }
  function sync(){placeCalendarToolbar()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{sync();setTimeout(sync,80);setTimeout(sync,500)},{once:true});else{sync();setTimeout(sync,80);setTimeout(sync,500)}
@@ -8830,11 +8829,11 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
 <script id="pb1011FollowupLayoutRuntime">
 (()=>{
  const placeAction=()=>{
-  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
+  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),panel=split?.querySelector('.pb904r2DayPanel'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
   if(matchMedia('(min-width:851px)').matches&&pane&&toolbar){
    const week=pane.querySelector(':scope > .pb843CalendarWeek');
    if(toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
-   if(bar&&bar.parentElement!==pane)toolbar.insertAdjacentElement('afterend',bar);
+   if(panel&&bar&&bar.parentElement!==panel)panel.insertBefore(bar,panel.firstChild);
   }else if(box&&split&&bar&&bar.previousElementSibling!==split)split.insertAdjacentElement('afterend',bar);
  };
  const cleanOfficeHint=()=>{
@@ -9009,17 +9008,64 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
   queued=false;
   if(!matchMedia('(min-width:851px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
   const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
+  const panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
   const box=pane?.closest('.pb843BookingCalendarBox');
   const toolbar=box?.querySelector(':scope > .pb843CalendarToolbar')||box?.querySelector('.pb843CalendarToolbar');
   const week=pane?.querySelector(':scope > .pb843CalendarWeek');
   const bar=q('#pb892CalendarBatchBar');
   if(pane&&toolbar&&toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
-  if(pane&&toolbar&&bar&&bar.parentElement!==pane)toolbar.insertAdjacentElement('afterend',bar);
+  if(panel&&bar&&bar.parentElement!==panel)panel.insertBefore(bar,panel.firstChild);
  }
  function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
  document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
  window.addEventListener('resize',queue,{passive:true});
  const observer=new MutationObserver(queue);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+ [0,100,350,700].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
+
+<style id="pbR100F93CalendarLayoutRepair">
+@media(min-width:851px){
+ /* Status panes occupy the complete Office workspace; an older transition rule left them at half width. */
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings>.pb843BookingPane.active[data-pb843-office-pane="approved"],
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings>.pb843BookingPane.active[data-pb843-office-pane="out"]{
+  position:static!important;inset:auto!important;transform:none!important;
+  width:100%!important;max-width:none!important;height:auto!important;
+ }
+ /* Delivery and return use two equal, full-height panes. */
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91OfficeBox>.pbR100F91OfficeSplit{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ /* Keep the Office action in the information pane so calendar cells retain their full height. */
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane{
+  grid-template-rows:auto auto minmax(0,1fr)!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarToolbar{grid-row:1!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarWeek{grid-row:2!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarGrid{grid-row:3!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel{
+  display:flex!important;flex-direction:column!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel>#pb892CalendarBatchBar{
+  order:-3!important;flex:0 0 auto!important;width:100%!important;margin:0 0 7px!important;
+ }
+}
+</style>
+
+<script id="pbR100F93CalendarLayoutRuntime">
+(()=>{
+ const q=s=>document.querySelector(s);let queued=false;
+ function place(){
+  queued=false;
+  if(!matchMedia('(min-width:851px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
+  const panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
+  const bar=q('#pb892CalendarBatchBar');
+  if(panel&&bar&&bar.parentElement!==panel)panel.insertBefore(bar,panel.firstChild);
+ }
+ function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
+ document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
+ window.addEventListener('resize',queue,{passive:true});
+ new MutationObserver(queue).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
  [0,100,350,700].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>

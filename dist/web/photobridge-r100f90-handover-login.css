@@ -1,0 +1,194 @@
+/* PhotoBridge R100F90: Compact full-month calendars in staff and manager Windows handover panes. */
+@media (min-width:851px){
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive){
+   overflow-x:hidden!important;overflow-y:hidden!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive) .pbR100F9StaffShell{
+   display:grid!important;grid-template-columns:minmax(340px,37%) minmax(0,1fr)!important;
+   grid-template-areas:"calendar list"!important;direction:rtl!important;
+   width:calc(100% - 28px)!important;max-width:1320px!important;
+   height:calc(100dvh - 148px)!important;min-height:290px!important;
+   max-height:calc(100dvh - 148px)!important;overflow:hidden!important;
+   gap:12px!important;align-items:stretch!important;
+   margin:4px auto 0!important;padding:0!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive) .pbR100F9StaffShell>.pbR100F9StaffNav{
+   grid-area:calendar!important;position:static!important;inset:auto!important;top:auto!important;
+   left:auto!important;right:auto!important;transform:none!important;
+   box-sizing:border-box!important;width:100%!important;max-width:none!important;
+   height:100%!important;min-height:0!important;max-height:100%!important;
+   margin:0!important;padding:10px!important;overflow:hidden!important;
+   background:#f8fafc!important;border:1px solid #e4e7ec!important;
+   border-radius:12px!important;box-shadow:none!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive) .pbR100F9StaffShell>.pbR100F9StaffList{
+   grid-area:list!important;display:grid!important;align-content:start!important;
+   gap:8px!important;min-width:0!important;width:100%!important;max-height:100%!important;
+   overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 2px 6px!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffNav .pbR100F73ScrollArrow{
+   display:none!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive) #pbR100F9StaffDates.pbR100F89MonthRail{
+   display:block!important;position:static!important;width:100%!important;max-width:none!important;
+   height:auto!important;min-height:0!important;max-height:100%!important;
+   padding:2px 0!important;margin:0!important;overflow:hidden!important;
+   background:transparent!important;box-shadow:none!important;
+ }
+ /* Remove the old date-rail reservation below the header; cards must start beside the calendar. */
+ html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell>.pbR100F9StaffHero{display:none!important}
+ html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffShell>.pbR100F9StaffDayLabel{display:none!important}
+
+ html body.rentalAppReady.pbR100F90ManagerParity #pbR100F64ManagerDateHost{
+   display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pb843BookingPane.active>.box.pbR100F90ManagerLayout{
+   display:grid!important;grid-template-columns:minmax(340px,37%) minmax(0,1fr)!important;
+   grid-template-areas:"calendar list"!important;gap:12px!important;direction:rtl!important;
+   align-items:stretch!important;box-sizing:border-box!important;
+   width:100%!important;max-width:none!important;
+   height:calc(100dvh - var(--pb-r100f64-manager-top,174px) - 14px)!important;
+   min-height:290px!important;max-height:calc(100dvh - var(--pb-r100f64-manager-top,174px) - 14px)!important;
+   margin:0!important;padding:0!important;border:0!important;
+   background:transparent!important;overflow:hidden!important;box-shadow:none!important;
+ }
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pbR100F90ManagerLayout>h2,
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pbR100F90ManagerLayout>.pb100rManagerDayLabel,
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pbR100F90ManagerLayout>.pb100rManagerDates{
+   display:none!important;
+ }
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pbR100F90ManagerLayout>.pbR100F90ManagerList{
+   grid-area:list!important;display:grid!important;align-content:start!important;gap:8px!important;
+   min-width:0!important;width:100%!important;max-height:100%!important;
+   overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 2px 6px!important;
+ }
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pbR100F90ManagerLayout>.pbR100F90ManagerCalendar{
+   grid-area:calendar!important;box-sizing:border-box!important;display:block!important;
+   height:100%!important;min-height:0!important;margin:0!important;padding:12px 10px!important;
+   border:1px solid #e4e7ec!important;border-radius:12px!important;
+   background:#f8fafc!important;overflow:hidden!important;
+ }
+ /* The same dimensions, fonts and active-day colors for both roles. */
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89CalendarHeading,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89CalendarHeading{
+   display:grid!important;grid-template-columns:36px minmax(0,1fr) 36px!important;
+   gap:5px!important;align-items:center!important;margin:0 0 7px!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89CalendarHeading strong,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89CalendarHeading strong{
+   font:900 14px/1.4 Vazirmatn,Tahoma,sans-serif!important;color:#182230!important;text-align:center!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89CalendarHeading button,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89CalendarHeading button{
+   display:grid!important;place-items:center!important;flex:none!important;
+   width:34px!important;max-width:34px!important;min-width:34px!important;
+   height:32px!important;min-height:32px!important;max-height:32px!important;
+   margin:0!important;padding:0!important;border:1px solid #d0d5dd!important;
+   border-radius:8px!important;background:#fff!important;color:#344054!important;
+   box-shadow:none!important;font:900 20px/1 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89CalendarGrid,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89CalendarGrid{
+   display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+   gap:3px!important;width:100%!important;min-width:0!important;padding:0!important;direction:rtl!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89Weekday,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89Weekday{
+   min-height:18px!important;line-height:18px!important;font-size:9px!important;
+   color:#667085!important;text-align:center!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell{
+   display:flex!important;flex:initial!important;flex-direction:column!important;
+   align-items:center!important;justify-content:center!important;gap:2px!important;
+   width:100%!important;max-width:none!important;min-width:0!important;
+   height:clamp(34px,6.1dvh,46px)!important;min-height:clamp(34px,6.1dvh,46px)!important;
+   max-height:clamp(34px,6.1dvh,46px)!important;
+   box-sizing:border-box!important;margin:0!important;padding:2px 1px!important;
+   border:1px solid #dce3ed!important;border-radius:7px!important;
+   background:#fff!important;color:#344054!important;box-shadow:none!important;
+   text-align:center!important;scroll-snap-align:none!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell b,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell b{
+   display:block!important;flex:none!important;font:900 13px/1.15 Vazirmatn,Tahoma,sans-serif!important;color:inherit!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell small,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell small{
+   display:block!important;flex:none!important;margin:0!important;
+   font:700 8px/1.2 Vazirmatn,Tahoma,sans-serif!important;color:inherit!important;white-space:nowrap!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell.other,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell.other{
+   background:#f8fafc!important;color:#94a3b8!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell.today:not(.active),
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell.today:not(.active){
+   background:#eff6ff!important;border-color:#93c5fd!important;color:#1d4ed8!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates button.pbR100F89Cell.active,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar button.pbR100F89Cell.active{
+   background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode #pbR100F9StaffDates .pbR100F89CalendarHelp,
+ html body.rentalAppReady.pbR100F90ManagerParity .pbR100F90ManagerCalendar .pbR100F89CalendarHelp{
+   margin:8px 0 0!important;font:650 9px/1.45 Vazirmatn,Tahoma,sans-serif!important;color:#667085!important;text-align:center!important;
+ }
+}
+@media(min-width:851px) and (max-width:1050px){
+ html body.rentalAppReady.pbR100F9StaffMode:not(.pbR100F72ExtraActive) .pbR100F9StaffShell,
+ html body.rentalAppReady.pbR100F90ManagerParity #bookings .pb843BookingPane.active>.box.pbR100F90ManagerLayout{
+   grid-template-columns:minmax(315px,41%) minmax(0,1fr)!important;
+ }
+}
+/* Rental login: size is correct BEFORE the delayed login decorator runs.
+   Applies identically to managers and staff, while retaining hidden/recovery states. */
+@media(max-width:850px){
+ html body:not(.rentalAppReady) #loginView.rentalLoginOverlay{
+   box-sizing:border-box!important;position:fixed!important;inset:0!important;
+   width:100%!important;max-width:none!important;height:100dvh!important;
+   min-height:100dvh!important;max-height:100dvh!important;
+   margin:0!important;padding:6px 10px max(6px,env(safe-area-inset-bottom))!important;
+   display:flex!important;justify-content:center!important;align-items:center!important;
+   overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+   background:radial-gradient(circle at top right,#eef2ff 0,#f8fafc 42%,#fff 100%)!important;
+ }
+ html body #loginView.rentalLoginOverlay.hidden{display:none!important}
+ html body #loginView.rentalLoginOverlay>.authShell{
+   display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;
+   width:min(460px,100%)!important;max-width:460px!important;min-height:0!important;height:auto!important;
+   margin:auto!important;padding:0!important;box-sizing:border-box!important;
+ }
+ html body #loginView.rentalLoginOverlay>.authShell>.pbR100F28AuthBrand,
+ html body #loginView.rentalLoginOverlay>.authShell>.pbR100F28AuthHero{display:none!important}
+ html body #loginView.rentalLoginOverlay form.unifiedLoginCard{
+   width:100%!important;max-width:100%!important;min-height:0!important;
+   margin:0!important;padding:12px 15px!important;gap:6px!important;border-radius:13px!important;
+   box-sizing:border-box!important;box-shadow:0 9px 26px rgba(15,23,42,.07)!important;
+ }
+ html body #loginView.rentalLoginOverlay form.hidden{display:none!important}
+ html body #loginView.rentalLoginOverlay form .unifiedLoginBrand{
+   display:flex!important;align-items:center!important;justify-content:center!important;
+   gap:8px!important;margin:0 0 8px!important;width:100%!important;
+ }
+ html body #loginView.rentalLoginOverlay form .unifiedLoginBrand img{
+   width:34px!important;height:34px!important;object-fit:contain!important;
+ }
+ html body #loginView.rentalLoginOverlay form .authTitle{margin:0 0 5px!important}
+ html body #loginView.rentalLoginOverlay form .authTitle h1{
+   font-size:17px!important;line-height:1.4!important;margin:0 0 3px!important;
+ }
+ html body #loginView.rentalLoginOverlay form .authTitle p{
+   font-size:9px!important;line-height:1.5!important;margin:0!important;
+ }
+ html body #loginView.rentalLoginOverlay form .field{margin:0!important}
+ html body #loginView.rentalLoginOverlay form input{
+   min-height:38px!important;height:38px!important;
+ }
+ html body #loginView.rentalLoginOverlay form button.primary{
+   min-height:40px!important;height:40px!important;
+ }
+ html body #loginView.rentalLoginOverlay form .authFooterLinks{
+   margin:5px 0 0!important;gap:6px!important;line-height:1.45!important;
+ }
+}

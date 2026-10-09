@@ -1,1 +1,1 @@
-2026-10-09-r1043-manager-calendar-fast-selection
+2026-10-09-r1044-calendar-stable-click

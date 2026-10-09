@@ -10296,7 +10296,7 @@ async function equipmentRentalShopOverview(shopId) {
     await ensureEquipmentRentalAssetTrackingSchema();
     const [shopQ, itemsQ, bookingsQ, membersQ, plansQ, renewalsQ, collaborationQ, saleItemsQ, saleOrdersQ, shortagesQ, returnShortagesQ] = await Promise.all([
         pool.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [shopId]),
-        pool.query(`SELECT * FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL ORDER BY active DESC,created_at DESC`, [shopId]),
+        pool.query(`SELECT * FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY active DESC,created_at DESC`, [shopId]),
         pool.query(`SELECT b.*,to_char(b.rental_start,'YYYY-MM-DD') rental_start,to_char(b.rental_end,'YYYY-MM-DD') rental_end,(b.rental_end-b.rental_start+1)::int rental_days,
           COALESCE(sum(bi.quantity),0)::int item_count,
           COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) || ' ×' || bi.quantity::text,'، ' ORDER BY i.title),'') item_titles,
@@ -10321,7 +10321,7 @@ async function equipmentRentalShopOverview(shopId) {
         pool.query(`SELECT r.id,r.photographer_id,r.status,r.requested_at,r.updated_at,COALESCE(pp.studio_name,u.name) name,u.mobile
           FROM equipment_rental_collaboration_requests r JOIN users u ON u.id=r.photographer_id LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
           WHERE r.shop_id=$1 ORDER BY CASE WHEN r.status='pending' THEN 0 ELSE 1 END,r.requested_at DESC LIMIT 100`, [shopId]),
-        pool.query(`SELECT i.*,COALESCE(NULLIF(btrim(i.brand),''),b.name) brand FROM equipment_sale_items i LEFT JOIN equipment_global_products p ON p.id=i.catalog_product_id LEFT JOIN equipment_global_brands b ON b.id=p.brand_id WHERE i.shop_id=$1 AND i.deleted_at IS NULL ORDER BY i.active DESC,i.created_at DESC`, [shopId]),
+        pool.query(`SELECT i.*,COALESCE(NULLIF(btrim(i.brand),''),b.name) brand FROM equipment_sale_items i LEFT JOIN equipment_global_products p ON p.id=i.catalog_product_id LEFT JOIN equipment_global_brands b ON b.id=p.brand_id WHERE i.shop_id=$1 AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY i.active DESC,i.created_at DESC`, [shopId]),
         pool.query(`SELECT o.*,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,COALESCE(pp.studio_name,u.name,o.buyer_name) buyer_display_name,COALESCE(u.mobile,o.buyer_mobile) buyer_display_mobile
           FROM equipment_sale_orders o JOIN equipment_sale_items i ON i.id=o.sale_item_id
           LEFT JOIN users u ON u.id=o.buyer_user_id LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
@@ -16092,14 +16092,14 @@ ${inviteUrl}`;
         if (!equipmentRentalShopSubscriptionActive(shop)) return sendJson(res, 404, { error: 'rental_shop_unavailable' });
         await ensureEquipmentRentalV656Schema();
         await ensureEquipmentGlobalCatalogV827Schema();
-        const q = await pool.query(`SELECT i.id,i.shop_id,i.category,i.title,i.brand,i.model,i.daily_price,i.deposit_amount,i.stock_total,i.description,i.image_object_key,i.image_name,i.image_content_type,i.image_bytes,i.catalog_product_id,i.gallery_images,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_rental_items i LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL ORDER BY COALESCE(c.sort_order,9999),i.title`, [shopId]);
+        const q = await pool.query(`SELECT i.id,i.shop_id,i.category,i.title,i.brand,i.model,i.daily_price,i.deposit_amount,i.stock_total,i.description,i.image_object_key,i.image_name,i.image_content_type,i.image_bytes,i.catalog_product_id,i.gallery_images,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_rental_items i LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY COALESCE(c.sort_order,9999),i.title`, [shopId]);
         const items = q.rows.map(equipmentItemPublic);
         return sendJson(res, 200, { shop: { id: shop.id, name: shop.name, province: shop.province, city: shop.city, address: shop.address, depositPolicy: shop.deposit_policy }, items });
     }
     if (req.method === 'GET' && url.pathname === '/api/customer/equipment-rental/sale-items') {
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});
         await ensureEquipmentRentalV663Schema();await ensureEquipmentGlobalCatalogV827Schema();const shopId=String(url.searchParams.get('shopId')||'');if(!/^[0-9a-f-]{36}$/i.test(shopId))return sendJson(res,400,{error:'invalid_shop'});if(!(await equipmentRentalPhotographerCanAccessShop(pool,a.userId,shopId,'sale')))return sendJson(res,403,{error:'rental_shop_scope_forbidden'});
-        const [q,sq]=await Promise.all([pool.query(`SELECT i.*,s.name shop_name,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND i.stock_total>0 AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY COALESCE(c.sort_order,9999),i.title`,[shopId]),pool.query(`SELECT id,name,sales_wallet_checkout_enabled FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId])]);
+        const [q,sq]=await Promise.all([pool.query(`SELECT i.*,s.name shop_name,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND i.stock_total>0 AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY COALESCE(c.sort_order,9999),i.title`,[shopId]),pool.query(`SELECT id,name,sales_wallet_checkout_enabled FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId])]);
         return sendJson(res,200,{items:q.rows.map(equipmentItemPublic),shop:{id:shopId,name:sq.rows[0]?.name||null,walletCheckoutEnabled:Boolean(sq.rows[0]?.sales_wallet_checkout_enabled)}});
     }
     if (req.method === 'GET' && url.pathname === '/api/customer/equipment-rental/sale-orders') {
@@ -18137,8 +18137,8 @@ ${inviteUrl}`;
         await ensureActivationWorkflowRuntimeSchema();
         const shop=await equipmentRentalCurrentShop(a); if(!shop) return sendJson(res,401,{error:'rental_auth_required'});
         const counts=await pool.query(`SELECT
-          (SELECT count(*)::int FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND daily_price>0) rental_priced,
-          (SELECT count(*)::int FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND sale_price>0) sale_priced`,[shop.id]).catch(()=>({rows:[{rental_priced:0,sale_priced:0}]}));
+          (SELECT count(*)::int FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND daily_price>0 AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%')) rental_priced,
+          (SELECT count(*)::int FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND sale_price>0 AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%')) sale_priced`,[shop.id]).catch(()=>({rows:[{rental_priced:0,sale_priced:0}]}));
         return sendJson(res,200,{activation:{id:shop.id,name:shop.name,active:shop.active,activation_status:shop.activation_status,activation_ever_approved:Boolean(shop.activation_ever_approved),activation_requested_at:shop.activation_requested_at,activation_reviewed_at:shop.activation_reviewed_at,activation_review_note:shop.activation_review_note,location_ready:shop.location_lat!=null&&shop.location_lng!=null,...counts.rows[0]}});
     }
     if (req.method === 'POST' && url.pathname === '/api/rental/activation-request') {
@@ -18147,8 +18147,8 @@ ${inviteUrl}`;
         if (shop.activation_ever_approved || shop.activation_status==='approved' || shop.active_from) return sendJson(res,409,{error:'already_activated_once'});
         if(shop.location_lat==null||shop.location_lng==null) return sendJson(res,409,{error:'activation_location_required'});
         const readyQ=await pool.query(`SELECT
-          (SELECT count(*)::int FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND daily_price>0) rental_priced,
-          (SELECT count(*)::int FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND sale_price>0) sale_priced`,[shop.id]);
+          (SELECT count(*)::int FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND daily_price>0 AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%')) rental_priced,
+          (SELECT count(*)::int FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL AND active=true AND sale_price>0 AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%')) sale_priced`,[shop.id]);
         const readyRow=readyQ.rows[0]||{};
         if(Number(readyRow.rental_priced||0)+Number(readyRow.sale_priced||0)<1) return sendJson(res,409,{error:'activation_pricing_required'});
         const q=await pool.query(`UPDATE equipment_rental_shops SET active=false,activation_status='requested',activation_requested_at=now(),activation_reviewed_at=NULL,activation_reviewed_by=NULL,activation_review_note=NULL,updated_at=now() WHERE id=$1 AND COALESCE(activation_ever_approved,false)=false RETURNING id,name,activation_status,activation_requested_at`,[shop.id]);

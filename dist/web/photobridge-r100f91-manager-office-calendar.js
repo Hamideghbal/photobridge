@@ -24,8 +24,10 @@
    const st=state[kind];
    if(!st||!valid(day))return;
    st.selected=day;st.month=day;
-   window.pb100rSelectManagerDate?.(kind,day);
+   const result=window.pb100rSelectManagerDate?.(kind,day);
+   paint();
    schedule();
+   return result;
  }
  window.pbR100F91SelectDay=selectDay;
  const matches=(b,kind,d)=>{

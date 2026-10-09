@@ -8677,7 +8677,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
 <link rel="stylesheet" href="/photobridge-r100f89-auth-fit.css?v=r100f89">
 <script src="/photobridge-r100f89-staff-desktop-calendar.js?v=r100f89"></script>
 <!-- R100F90: compact desktop handover parity + stable mobile rental login. -->
-<script src="/photobridge-r100f91-manager-office-calendar.js?v=r100f91-r1036"></script>
+<script src="/photobridge-r100f91-manager-office-calendar.js?v=r100f91-r1038"></script>
 
 <style id="pb1010StoreHandoverCalendarLayout">
 @media(min-width:851px){
@@ -9673,6 +9673,25 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  position:absolute!important;left:10px!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important;
  width:28px!important;height:28px!important;border-radius:8px!important;
  background:#fef0c7!important;color:#b54708!important;font-size:20px!important;
+}
+</style>
+
+<style id="pbR1038OfficeCalendarActionCleanup">
+/* Keep the manager Office calendar full width and leave one compact registration action. */
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarSplit{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel,
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){
+  width:146px!important;min-width:146px!important;max-width:146px!important;
+  height:35px!important;min-height:35px!important;max-height:35px!important;
+  padding:0 10px!important;border-radius:8px!important;
+  font:900 11.5px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;
+ }
 }
 </style>
 </body></html>

@@ -16,6 +16,7 @@
     q('#pbR100F9StaffList')?.querySelectorAll('.pbR100F9StaffCard[data-pb915-booking-id]').forEach(card=>{
       const b=bookings.find(x=>matches(x.id,card.dataset.pb915BookingId));
       if(!b||b.status!=='returned')return;
+      if(card.classList.contains('pbR100F86SharedCard'))return;
       card.classList.add('pbR100F74ReceivedOrder');
       const status=q('.pbR100F9StaffState',card);
       const deliveryTab=q('.pbR100F9StaffTabs [data-staff-mode="out"].active');
@@ -23,7 +24,7 @@
       const missing=pendingFor(b.id),count=missing.reduce((n,x)=>n+Number(x.missing_qty||0),0);
       if(!count)return;
       card.classList.add('pbR100F74HasMissing');
-      if(status&&!deliveryTab)status.textContent='کسری تحویل · '+fa(count)+' عدد';
+      if(status&&!deliveryTab)status.textContent='✓ دریافت شده';
       const identity=q('.pbR100F71Identity',card)||card;
       let box=q('.pbR100F74MissingBox',identity);
       if(!box){box=document.createElement('div');box.className='pbR100F74MissingBox';identity.appendChild(box)}

@@ -11,17 +11,18 @@
       notify('این کسری قبلاً دریافت شده یا دیگر قابل ثبت نیست.','کسری دریافت');return;
     }
     const booking=(store().bookings||[]).find(x=>String(x.id)===String(row.booking_id));
-    const owner=!store().staffMode;
+    // Manager and authorized handover staff may both record a late fee.
     const back=document.createElement('div');
     back.className='pbR100F76ShortageBack';
     back.innerHTML='<form class="pbR100F76ShortageDialog" role="dialog" aria-modal="true">'+
       '<h2>دریافت کسری</h2><p>تمام '+esc(row.missing_qty||0)+' واحد کسری «'+esc(row.item_title||'تجهیز')+'» برگشته است؟</p>'+
       '<label class="pbR100F76Confirm"><input name="confirmed" type="checkbox">بازگشت تمام واحدهای این کسری را تأیید می‌کنم.</label>'+
       '<label>توضیح تحویل (اختیاری)<textarea name="note" rows="2" maxlength="1000" placeholder="وضعیت تجهیزات یا زمان تحویل"></textarea></label>'+
-      (owner?'<label class="pbR100F76Confirm"><input name="addFee" type="checkbox">افزودن هزینه دیرکرد به فاکتور</label>'+
+      ('<label class="pbR100F76Confirm"><input name="addFee" type="checkbox">افزودن هزینه دیرکرد به فاکتور</label>'+
         '<div class="pbR100F76FeeFields" hidden><label>مبلغ افزایشی (تومان)<input name="fee" type="number" min="1" max="1000000000000" step="1" inputmode="numeric"></label>'+
         '<label>دلیل اصلاح فاکتور<textarea name="feeReason" maxlength="1000" rows="2" placeholder="مثلاً بازگشت با تأخیر"></textarea></label>'+
-        '<small class="pbR100F76InvoiceTotal"></small></div>':'')+
+        '<small class="pbR100F76InvoiceTotal"></small></div>')+
+      '<label class="pbR100F76Confirm"><input name="printInvoice" type="checkbox">نمایش فاکتور پس از ثبت دریافت</label>'+
       '<p class="pbR100F76Error" role="alert" aria-live="polite"></p>'+
       '<div class="pbR100F76Buttons"><button type="button" data-cancel>انصراف</button><button type="submit">ثبت دریافت کسری</button></div></form>';
     document.body.appendChild(back);
@@ -59,6 +60,7 @@
       sending=true;form.querySelector('[type=submit]').disabled=true;if(btn)btn.disabled=true;
       try{
         await api('/api/rental/return-shortages/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+        const offerInvoice=!!form.elements.printInvoice?.checked;
         close();
         if(document.body.classList.contains('pbR100F9StaffMode')){
           await window.pbR100F9ReloadStaff?.();
@@ -67,10 +69,11 @@
           window.pb843SetOfficeTab?.('returnShortages');
         }
         notify(hasFee?'دریافت کسری و افزایش فاکتور ثبت شد.':'دریافت کسری ثبت شد.','تکمیل شد');
+        if(offerInvoice&&booking?.id)window.pbR100F86OfferInvoice?.(booking.id);
       }catch(ex){
         sending=false;form.querySelector('[type=submit]').disabled=false;if(btn)btn.disabled=false;
         const msg={return_shortage_asset_mismatch:'کد یا وضعیت واحدهای کسری با سفارش تطبیق ندارد.',
-          invoice_adjustment_not_allowed:'اصلاح مالی فقط برای مدیر فروشگاه مجاز است.',
+          invoice_adjustment_not_allowed:'مجوز اصلاح مالی این حساب تأیید نشد.',
           return_shortage_not_found:'این کسری قبلاً ثبت شده یا دیگر قابل دریافت نیست.',
           invoice_adjustment_negative_total:'مبلغ اصلاح معتبر نیست.'};
         error.textContent=msg[ex?.error]||'ثبت دریافت کسری انجام نشد. دوباره تلاش کن.';

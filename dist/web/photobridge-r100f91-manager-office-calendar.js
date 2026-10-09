@@ -56,7 +56,7 @@
      const count=items.length?'<em class="pb904r2DayCount has">'+fa(items.length)+'</em>':'';
      const aria=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(d);
      out+='<button type="button" class="pb843CalendarDay'+(day===today()?' today':'')+(day===selected?' pbR100F91SelectedDay':'')+
-       '" data-pb91-day="'+day+'" aria-pressed="'+(day===selected)+'" aria-label="'+escape(aria)+'، '+fa(items.length)+' آفیش">'+
+       '" data-pb91-kind="'+kind+'" data-pb91-day="'+day+'" aria-pressed="'+(day===selected)+'" aria-label="'+escape(aria)+'، '+fa(items.length)+' آفیش" onclick="window.pbR100F91SelectDay?.(\''+kind+'\',\''+day+'\')">'+
        '<strong>'+fa(p.day)+'</strong>'+count+'<span class="pb843CalendarEvents">'+names+more+'</span></button>';
    }
    return out+'</div>';

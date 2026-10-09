@@ -9582,9 +9582,38 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
 (()=>{
  if(window.__PB_R1033_OFFICE_HEADER_ACTION__)return;
  window.__PB_R1033_OFFICE_HEADER_ACTION__=true;
- /* Registration stays in the established Office flow. The former secondary
-    header action was removed because it compressed the desktop calendar. */
- document.querySelector('#pbR1033OfficeHeaderAction')?.remove();
+ const q=s=>document.querySelector(s);
+ let queued=false;
+ const desktop=()=>window.matchMedia('(min-width:851px)').matches;
+ function ensure(){
+  const host=q('#rentalHeaderFilterHost');
+  if(!host)return null;
+  let btn=q('#pbR1033OfficeHeaderAction');
+  if(!btn){
+   btn=document.createElement('button');
+   btn.id='pbR1033OfficeHeaderAction';btn.type='button';btn.textContent='ثبت آفیش';btn.hidden=true;
+   btn.addEventListener('click',()=>{
+    let original=q('#pb892CalendarContinue');
+    if(!original){try{window.pb843RenderCalendar?.()}catch{} original=q('#pb892CalendarContinue')}
+    if(original){original.click();return}
+    window.storeNotice?.('تقویم آفیش آماده نیست. لطفاً دوباره بخش آفیش را باز کنید.','ثبت آفیش');
+   });
+   host.appendChild(btn);
+  }
+  return btn;
+ }
+ function sync(){
+  const btn=ensure();if(!btn)return;
+  const active=desktop()&&document.body.classList.contains('rentalAppReady')
+   &&document.body.classList.contains('pb899MainBookings')&&!document.body.classList.contains('pbR100F9StaffMode')
+   &&!!q('#bookings [data-pb843-office-pane="calendar"].active');
+  btn.toggleAttribute('hidden',!active);
+ }
+ function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;sync()})}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
+ window.addEventListener('resize',queue,{passive:true});document.addEventListener('click',queue,true);
+ new MutationObserver(queue).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+ [50,200,650].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>
 <style id="pbR1035ManagerCalendarControls">
@@ -9593,7 +9622,7 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{
   display:none!important;visibility:hidden!important;pointer-events:none!important;
  }
- #pbR1033OfficeHeaderAction{display:none!important}
+ #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){display:inline-flex!important}
 }
 </style>
 <script id="pbR1035ManagerCalendarSelectionRuntime">
@@ -9605,7 +9634,7 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
   const dayButton=event.target.closest?.('[data-pb91-day],[data-pb1010-day]');
   if(!dayButton)return;
   const pane=dayButton.closest('[data-pb843-office-pane]');
-  const kind=pane?.dataset.pb843OfficePane||document.querySelector('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab;
+  const kind=dayButton.dataset.pb91Kind||pane?.dataset.pb843OfficePane||document.querySelector('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab;
   if(kind!=='approved'&&kind!=='out')return;
   const day=dayButton.dataset.pb91Day||dayButton.dataset.pb1010Day;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(String(day||'')))return;
@@ -9628,6 +9657,11 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
   grid-template-columns:repeat(7,minmax(0,1fr))!important;
   grid-template-rows:repeat(6,minmax(0,1fr))!important;
   grid-auto-rows:minmax(0,1fr)!important;gap:3px!important;height:100%!important;min-height:0!important;
+ }
+ html body.rentalAppReady #bookings .pbR100F91CalendarPane,
+ html body.rentalAppReady #bookings .pbR100F91CalendarPane>.pb843CalendarGrid,
+ html body.rentalAppReady #bookings .pbR100F91CalendarPane [data-pb91-day]{
+  position:relative!important;z-index:3!important;pointer-events:auto!important;touch-action:manipulation!important;
  }
 }
 #pb920CalendarNotice{

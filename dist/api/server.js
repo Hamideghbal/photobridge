@@ -16316,6 +16316,23 @@ ${inviteUrl}`;
         await ensureActivationWorkflowRuntimeSchema();
         const b = await bodyJson(req, 200_000), current = (await pool.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [adminRentalShop[1]])).rows[0];
         if (!current) return sendJson(res, 404, { error: 'rental_shop_not_found' });
+        // Status-only toggles must not rewrite profile, subscription or other store fields.
+        if (Object.keys(b).length === 1 && typeof b.active === 'boolean') {
+            if (b.active && current.suspended) return sendJson(res, 409, { error:'rental_shop_suspended_requires_resume', message:'ابتدا تعلیق فروشگاه را رفع کنید.' });
+            try {
+                await pool.query(`UPDATE equipment_rental_shops SET active=$2,
+                    activation_status=CASE WHEN $2 THEN 'approved' ELSE activation_status END,
+                    activation_ever_approved=CASE WHEN $2 THEN true ELSE activation_ever_approved END,
+                    activation_reviewed_at=CASE WHEN $2 THEN now() ELSE activation_reviewed_at END,
+                    activation_reviewed_by=CASE WHEN $2 THEN $3::uuid ELSE activation_reviewed_by END,
+                    updated_at=now() WHERE id=$1`, [current.id,b.active,a.userId]);
+                await audit(a.userId,undefined,'platform_admin.equipment_rental_shop_activation_toggle','equipment_rental_shop',current.id,{active:b.active}).catch(()=>{});
+                return sendJson(res, 200, { ok:true, active:b.active });
+            } catch (e) {
+                console.error('[admin-rental-shop:activation-toggle]',{code:String(e?.code||''),message:String(e?.message||''),shopId:current.id});
+                return sendJson(res, 500, { error:'rental_shop_activation_failed', diagnosticCode:String(e?.code||'')||undefined });
+            }
+        }
         const discountPercent = b.subscriptionDiscountPercent === undefined ? Number(current.subscription_discount_percent || 0) : entityDiscountPercent(b.subscriptionDiscountPercent);
         if (discountPercent === null) return sendJson(res, 400, { error: 'subscription_discount_percent_out_of_range', message:'تخفیف اشتراک باید بین صفر تا ۲۰ درصد باشد.' });
         const next = {

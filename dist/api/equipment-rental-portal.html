@@ -5128,7 +5128,7 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
   function placeBatchBar(){
     const bar=q('#pb892CalendarBatchBar'),box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),panel=box?.querySelector('.pb904r2DayPanel');
     if(!bar||!box||!panel)return;
-    if(bar.parentElement!==panel)panel.insertBefore(bar,panel.firstChild);
+    if(bar.parentElement!==panel)panel.appendChild(bar);
   }
   async function openBookingInvoice(bookingId){
     let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId));
@@ -5397,7 +5397,7 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
    const toolbar=box?.querySelector(':scope > .pb843CalendarToolbar')||box?.querySelector('.pb843CalendarToolbar');
    if(box&&pane&&toolbar&&toolbar.parentNode!==pane)pane.insertBefore(toolbar,pane.firstChild);
    const bar=q('#pb892CalendarBatchBar'),panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
-   if(panel&&bar&&bar.parentNode!==panel)panel.insertBefore(bar,panel.firstChild);
+   if(panel&&bar&&bar.parentNode!==panel)panel.appendChild(bar);
  }
  function sync(){placeCalendarToolbar()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{sync();setTimeout(sync,80);setTimeout(sync,500)},{once:true});else{sync();setTimeout(sync,80);setTimeout(sync,500)}
@@ -8829,12 +8829,14 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
 <script id="pb1011FollowupLayoutRuntime">
 (()=>{
  const placeAction=()=>{
-  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
+  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),panel=split?.querySelector('.pb904r2DayPanel'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
   if(matchMedia('(min-width:851px)').matches&&pane&&toolbar){
    const week=pane.querySelector(':scope > .pb843CalendarWeek');
    if(toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
   }
-  if(pane&&bar){const grid=pane.querySelector(':scope > .pb843CalendarGrid');if(bar.parentElement!==pane||bar.previousElementSibling!==grid)pane.insertBefore(bar,grid?.nextSibling||null)}
+  if(matchMedia('(min-width:851px)').matches){
+   if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
+  }else if(pane&&bar){const grid=pane.querySelector(':scope > .pb843CalendarGrid');if(bar.parentElement!==pane||bar.previousElementSibling!==grid)pane.insertBefore(bar,grid?.nextSibling||null)}
   else if(box&&split&&bar&&bar.previousElementSibling!==split)split.insertAdjacentElement('afterend',bar);
  };
  const cleanOfficeHint=()=>{
@@ -9016,7 +9018,7 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
   const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
   const bar=q('#pb892CalendarBatchBar');
   if(pane&&toolbar&&toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
-  if(pane&&bar&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
+  if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
  }
  function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
  document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
@@ -9061,9 +9063,9 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
   queued=false;
   if(!matchMedia('(min-width:851px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
   const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
-  const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
+  const panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
   const bar=q('#pb892CalendarBatchBar');
-  if(pane&&bar&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
+  if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
  }
  function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
  document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
@@ -9496,4 +9498,45 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  document.addEventListener('click',e=>{if(e.target.closest?.('#rentalHeaderFilterHost'))requestAnimationFrame(sync)},true);
 })();
 </script>
+<style id="pbR1030OfficeCalendarGeometryParity">
+/* Keep the Office month grid the same size and at the same coordinates as delivery/receive. */
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarSplit{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane{
+  display:grid!important;grid-template-rows:auto auto minmax(0,1fr)!important;align-content:stretch!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarToolbar{grid-row:1!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarWeek{grid-row:2!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>.pb843CalendarGrid{
+  grid-row:3!important;height:100%!important;min-height:0!important;grid-template-rows:repeat(6,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(0,1fr)!important;gap:3px!important;overflow:hidden!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel{
+  display:flex!important;flex-direction:column!important;min-height:0!important;max-height:none!important;overflow:hidden!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanelHead{flex:0 0 auto!important}
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanelBody{
+  flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel>#pb892CalendarBatchBar{
+  position:static!important;inset:auto!important;transform:none!important;order:1!important;flex:0 0 34px!important;
+  width:100%!important;height:34px!important;min-height:34px!important;max-height:34px!important;
+  margin:6px 0 0!important;padding:2px 5px!important;display:grid!important;
+  grid-template-columns:112px minmax(0,1fr)!important;grid-template-rows:30px!important;gap:6px!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayPanel>#pb892CalendarBatchBar #pb892CalendarContinue{
+  grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  height:28px!important;min-height:28px!important;max-height:28px!important;padding:0 6px!important;
+  font:900 8.5px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;white-space:nowrap!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayPanel>#pb892CalendarBatchBar #pb892CalendarCount{
+  grid-column:2!important;grid-row:1!important;display:block!important;min-width:0!important;min-height:0!important;
+  max-height:22px!important;margin:0!important;padding:0 3px!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  white-space:nowrap!important;line-height:22px!important;font-size:8px!important;text-align:right!important;
+ }
+}
+</style>
 </body></html>

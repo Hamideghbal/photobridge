@@ -1,1 +1,1 @@
-2026-10-09-r1029-calendar-cell-parity-compact-action
+2026-10-09-r1030-office-calendar-grid-geometry-parity

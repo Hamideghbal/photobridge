@@ -11,7 +11,7 @@
       notify('این کسری قبلاً دریافت شده یا دیگر قابل ثبت نیست.','کسری دریافت');return;
     }
     const booking=(store().bookings||[]).find(x=>String(x.id)===String(row.booking_id));
-    // Manager and authorized handover staff may both record a late fee.
+    // Authorized handover staff and managers both have an optional fee choice.
     const back=document.createElement('div');
     back.className='pbR100F76ShortageBack';
     back.innerHTML='<form class="pbR100F76ShortageDialog" role="dialog" aria-modal="true">'+

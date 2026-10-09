@@ -15529,7 +15529,7 @@ async function api(req, res, url) {
         if (before.rows[0]?.photographer_id) publishCustomerEventEverywhere(String(before.rows[0].photographer_id), 'equipment_rental_status', { bookingId, status:q.rows[0].status, shopId:shop.id, shopName:String(shop.name||'فروشگاه تجهیزات'), invoiceId:invoice?.id||null, invoiceNumber:invoice?.invoice_number||null });
         return sendJson(res, 200, { ok:true, status:q.rows[0].status, sms:null, invoice });
     }
-    // Shop-scoped invoice read for manager / authorized handover staff.
+    // Read-only, shop-scoped invoice for the handover workflow (not the full ledger).
     const handoverInvoiceRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/handover-invoice$/i);
     if(req.method==='GET'&&handoverInvoiceRoute){
         const shop=await equipmentRentalHandoverShop(a);

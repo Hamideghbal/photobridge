@@ -182,8 +182,11 @@ html body.pbR100F9StaffMode .pbR100F74ResolveBtn{
 }
 html body.pbR100F9StaffMode .pbR100F74ResolveBtn:disabled{opacity:.5;cursor:wait}
 
-/* R100F86: red shortage detail but green receipt status. */
-html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing,html body.rentalAppReady.pbR100F9StaffMode .pbR100F71UnifiedCard.pbR100F74HasMissing{background:#fff!important;border-color:#e2e8f0!important}
-html body.pbR100F9StaffMode .pbR100F74MissingBox,html body.pbR100F9StaffMode .pbR100F74MissingBox strong{color:#b42318!important}
-html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing .pbR100F9StaffState,html body.rentalAppReady.pbR100F9StaffMode .pbR100F71UnifiedCard.pbR100F74HasMissing .pbR100F9StaffState{color:#166534!important;background:#dcfce7!important;border-color:#86efac!important}
-html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing .pbR100F9StaffState::before{content:'✓'!important;background:transparent!important;color:#166534!important}
+/* R100F86: received status stays green even with outstanding equipment. */
+html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing,
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F71UnifiedCard.pbR100F74HasMissing{background:#fff!important;border-color:#e2e8f0!important}
+html body.pbR100F9StaffMode .pbR100F74MissingBox{color:#b42318!important;border-top:1px solid #fecaca!important}
+html body.pbR100F9StaffMode .pbR100F74MissingBox strong{color:#b42318!important}
+html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing .pbR100F9StaffState,
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F71UnifiedCard.pbR100F74HasMissing .pbR100F9StaffState{color:#166534!important;background:#dcfce7!important;border-color:#86efac!important}
+html body.pbR100F9StaffMode .pbR100F9StaffCard.pbR100F74HasMissing .pbR100F9StaffState::before{content:"✓"!important;background:transparent!important;color:#166534!important}

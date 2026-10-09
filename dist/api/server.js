@@ -14657,7 +14657,7 @@ async function api(req, res, url) {
                   LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                   LEFT JOIN users resolver ON resolver.id=s.resolved_by
                   WHERE s.shop_id=$1 ORDER BY (s.resolved_at IS NULL) DESC,s.rental_start DESC LIMIT 200`,[shop.id]).catch(()=>({rows:[]})),
-                pool.query(`SELECT rs.id,rs.booking_id,rs.item_id,rs.expected_qty,rs.returned_qty,rs.missing_qty,rs.status,rs.resolved_at,rs.detected_at,
+                pool.query(`SELECT rs.id,rs.booking_id,rs.item_id,rs.expected_qty,rs.returned_qty,rs.missing_qty,rs.missing_asset_codes,rs.status,rs.resolved_at,rs.detected_at,
                   equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,
                   COALESCE(pp.studio_name,u.name,b.customer_name) photographer_name,b.customer_mobile
                   FROM equipment_rental_return_shortages rs
@@ -15569,7 +15569,7 @@ async function api(req, res, url) {
             if(!feeNote)return sendJson(res,400,{error:'invoice_adjustment_note_required'});
         }
         const c=await pool.connect();
-        let resolved,feeInvoice=null;
+        let resolved,feeInvoice=null,selectedQty=0,complete=false;
         try {
             await c.query('BEGIN');
             const locked=await c.query(`SELECT rs.*,b.status booking_status,b.total_amount booking_total,b.photographer_id booking_photographer_id,b.invoice_adjustment_amount booking_adjustment_amount,b.invoice_adjustment_note booking_adjustment_note
@@ -15580,27 +15580,57 @@ async function api(req, res, url) {
                 FOR UPDATE OF rs,b`,[id,shop.id]);
             const row=locked.rows[0];
             if(!row){await c.query('ROLLBACK');return sendJson(res,404,{error:'return_shortage_not_found'});}
+            // Partial item receipts retain an open shortage until every unit is back.
+            // Calls from older clients without returnedQty still resolve the full remainder.
+            const pending=Number(row.missing_qty||0);
+            const explicitQty=Object.prototype.hasOwnProperty.call(body,'returnedQty');
+            selectedQty=explicitQty?Number(body.returnedQty):pending;
             const codes=Array.isArray(row.missing_asset_codes)?row.missing_asset_codes.map(x=>String(x||'').trim()).filter(Boolean):[];
-            if(codes.length>500||new Set(codes).size!==codes.length){
+            if(!Number.isSafeInteger(pending)||pending<1||!Number.isSafeInteger(selectedQty)||selectedQty<1||selectedQty>pending){
+                await c.query('ROLLBACK');return sendJson(res,400,{error:'invalid_returned_qty'});
+            }
+            if(codes.length>500||codes.length>pending||new Set(codes).size!==codes.length){
                 await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_asset_mismatch'});
             }
-            if(codes.length){
+            const selectedCodes=explicitQty
+                ?(Array.isArray(body.returnedAssetCodes)?body.returnedAssetCodes.map(x=>String(x||'').trim()):[])
+                :codes;
+            const selectedSet=new Set(selectedCodes);
+            if(selectedCodes.length>codes.length||selectedSet.size!==selectedCodes.length||
+               selectedCodes.some(code=>!codes.includes(code))||
+               selectedCodes.length>selectedQty||
+               selectedQty-selectedCodes.length>pending-codes.length){
+                await c.query('ROLLBACK');return sendJson(res,400,{error:'invalid_returned_asset_codes'});
+            }
+            if(selectedCodes.length){
                 const received=await c.query(`UPDATE equipment_rental_booking_assets ba
                     SET returned_at=COALESCE(ba.returned_at,now())
                     FROM equipment_rental_assets a
                     WHERE ba.asset_id=a.id AND ba.shop_id=$1 AND ba.booking_id=$2
                       AND ba.item_id=$3 AND a.shop_id=$1 AND a.system_code=ANY($4::text[])
                       AND ba.returned_at IS NULL
-                    RETURNING ba.asset_id`,[shop.id,row.booking_id,row.item_id,codes]);
-                if(received.rowCount!==codes.length){
+                    RETURNING ba.asset_id`,[shop.id,row.booking_id,row.item_id,selectedCodes]);
+                if(received.rowCount!==selectedCodes.length){
                     await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_asset_mismatch'});
                 }
             }
+            const remainingCodes=codes.filter(code=>!selectedSet.has(code));
+            complete=selectedQty===pending;
+            // missing_qty has a database CHECK (>0). On a resolved row it retains
+            // the final tranche; status/resolved_at indicate that nothing is pending.
+            // On an open row missing_qty always means the remaining quantity.
             const result=await c.query(`UPDATE equipment_rental_return_shortages
-                SET status='returned_later',resolved_at=now(),resolved_by=$3,
-                    resolution_note=$4,updated_at=now()
-                WHERE id=$1 AND shop_id=$2 AND status='missing'
-                RETURNING *`,[id,shop.id,a.userId,note||null]);
+                SET missing_qty=CASE WHEN $5::boolean THEN missing_qty ELSE missing_qty-$3::integer END,
+                    returned_qty=returned_qty+$3::integer,
+                    missing_asset_codes=$6::jsonb,
+                    status=CASE WHEN $5::boolean THEN 'returned_later' ELSE 'missing' END,
+                    resolved_at=CASE WHEN $5::boolean THEN now() ELSE NULL END,
+                    resolved_by=CASE WHEN $5::boolean THEN $4::uuid ELSE NULL END,
+                    resolution_note=COALESCE(NULLIF($7::text,''),resolution_note),
+                    updated_at=now()
+                WHERE id=$1 AND shop_id=$2 AND status='missing' AND resolved_at IS NULL
+                  AND missing_qty>=$3::integer
+                RETURNING *`,[id,shop.id,selectedQty,a.userId,complete,JSON.stringify(remainingCodes),note]);
             if(!result.rowCount){await c.query('ROLLBACK');return sendJson(res,409,{error:'return_shortage_already_resolved'});}
             resolved=result.rows[0];
             if(fee){
@@ -15617,8 +15647,8 @@ async function api(req, res, url) {
             await c.query('COMMIT');
         }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{c.release();}
         await audit(a.userId,undefined,'equipment_rental.return_shortage_resolved','equipment_rental_return_shortage',id,
-            {shopId:shop.id,bookingId:resolved.booking_id,missingQty:Number(resolved.missing_qty||0),fee,feeNote:feeNote||null}).catch(()=>{});
-        return sendJson(res,200,{ok:true,shortage:resolved,invoice:feeInvoice,adjustmentAmount:fee});
+            {shopId:shop.id,bookingId:resolved.booking_id,receivedQty:selectedQty,remainingQty:complete?0:Number(resolved.missing_qty||0),complete,fee,feeNote:feeNote||null}).catch(()=>{});
+        return sendJson(res,200,{ok:true,shortage:resolved,receivedQty:selectedQty,remainingQty:complete?0:Number(resolved.missing_qty||0),complete,invoice:feeInvoice,adjustmentAmount:fee});
     }
     const rentalShortageRoute = url.pathname.match(/^\/api\/rental\/shortages\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && rentalShortageRoute) {

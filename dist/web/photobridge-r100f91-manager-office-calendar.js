@@ -55,6 +55,9 @@
    const first=firstOf(anchor),key=parts(first),offset=(first.getUTCDay()+1)%7,rows=bookings();
    let length=0;
    while(length<32){const p=parts(shift(first,length));if(p.year!==key.year||p.month!==key.month)break;length++}
+   const firstDay=iso(first),lastDay=iso(shift(first,length-1)),eventsByDay=new Map();
+   const addEvent=(day,b)=>{if(!eventsByDay.has(day))eventsByDay.set(day,[]);eventsByDay.get(day).push(b)};
+   for(const b of rows){const status=String(b.status||''),start=String(b.rental_start||'').slice(0,10),end=String(b.rental_end||'').slice(0,10);if(kind==='approved'){if(!['reserved','payment_pending','picked_up','returned'].includes(status))continue;if(status==='picked_up'&&valid(start)&&valid(end)&&end>=start){let day=start>firstDay?start:firstDay;const through=end<lastDay?end:lastDay;while(day<=through){addEvent(day,b);day=iso(shift(noon(day),1))}}else if(start>=firstDay&&start<=lastDay)addEvent(start,b)}else if(['picked_up','returned'].includes(status)&&end>=firstDay&&end<=lastDay)addEvent(end,b)}
    const title=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(first);
    let out='<div class="pb843CalendarToolbar">'+
      '<button type="button" class="pb843CalendarNav" data-pb91-month="-1" aria-label="ماه قبل">›</button>'+
@@ -64,7 +67,7 @@
      '<div class="pb843CalendarGrid">';
    for(let n=0;n<offset;n++)out+='<button type="button" class="pb843CalendarDay blank" tabindex="-1" aria-hidden="true"></button>';
    for(let n=0;n<length;n++){
-     const d=shift(first,n),day=iso(d),p=parts(d),items=rows.filter(b=>matches(b,kind,day));
+     const d=shift(first,n),day=iso(d),p=parts(d),items=eventsByDay.get(day)||[];
      const names=items.slice(0,2).map(b=>'<span class="pb843CalendarEvent">'+escape(b.photographer_name||b.customer_name||b.customer_mobile||'عکاس')+'</span>').join('');
      const more=items.length>2?'<span class="pb843CalendarMore">+ '+fa(items.length-2)+' دیگر</span>':'';
      const count=items.length?'<em class="pb904r2DayCount has">'+fa(items.length)+'</em>':'';

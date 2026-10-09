@@ -12398,7 +12398,7 @@ async function api(req, res, url) {
         const labName = String(lq.rows[0]?.name || '');
         const message = `PhotoBridge\nلابراتوار «${labName || 'PhotoBridge'}» شما را برای همکاری دعوت کرده است.\nابتدا راهنمای ویدیویی را ببینید:\n${PUBLIC_GUIDE_URL}\nلینک عضویت یا اتصال حساب:\n${shortLink.url}`;
         try {
-            const out = await sendSms({ mobile, message, purpose: 'lab_photographer_permanent_invite', eventKey: 'photographer_invite', labId: scope.labId, chargeLabId: scope.labId, serviceKey: 'sms_customer_notification', metadata: { photographerInviteId: inv.id, permanent: true, sentBy: a.userId, shortToken: shortLink.token, previousDebt: shortLink.previousDebt } });
+            const out = await sendSms({ mobile, message, purpose: 'lab_photographer_permanent_invite', eventKey: 'photographer_invite', labId: scope.labId, metadata: { photographerInviteId: inv.id, permanent: true, sentBy: a.userId, shortToken: shortLink.token, previousDebt: shortLink.previousDebt } });
             await pool.query(`UPDATE photographer_invite_sms_links SET last_sent_at=now() WHERE token=$1`, [shortLink.token]).catch(() => { });
             await audit(a.userId, scope.labId, 'photographer_invite.sms_send', 'photographer_invite', String(inv.id), { mobile, permanent: true, chargedAmount: out?.chargedAmount || 0, shortToken: shortLink.token, previousDebt: shortLink.previousDebt }).catch(() => { });
             return sendJson(res, 200, { ok: true, invite: photographerInvitePublicView(inv), previousDebt: shortLink.previousDebt, sms: { sent: true, chargedAmount: out?.chargedAmount || 0, walletBalance: out?.walletBalance } });
@@ -14623,7 +14623,7 @@ async function api(req, res, url) {
           if(conflicting){await c.query('ROLLBACK');return sendJson(res,409,{error:'staff_already_assigned'})}
           await c.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'handover_staff',true,now()) ON CONFLICT(shop_id,user_id,role) DO UPDATE SET active=true,updated_at=now()`,[shop.id,userId]);await c.query('COMMIT');
         }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e}finally{c.release()}
-        let smsSent=false;if(created&&temporaryPassword){try{await sendSms({mobile,message:`PhotoBridge: دسترسی پرسنل تحویل فروشگاه «${String(shop.name||'تجهیزات')}» فعال شد. رمز ورود موقت: ${temporaryPassword}`,purpose:'rental_handover_staff_invite',eventKey:'handover_staff_invite',chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',referenceId:userId,metadata:{shopId:shop.id}});smsSent=true}catch{}}
+        let smsSent=false;if(created&&temporaryPassword){try{await sendSms({mobile,message:`PhotoBridge: دسترسی پرسنل تحویل فروشگاه «${String(shop.name||'تجهیزات')}» فعال شد. رمز ورود موقت: ${temporaryPassword}`,purpose:'rental_handover_staff_invite',eventKey:'handover_staff_invite',referenceId:userId,metadata:{shopId:shop.id}});smsSent=true}catch{}}
         await audit(a.userId,undefined,'equipment_rental.handover_staff_add','equipment_rental_shop',shop.id,{userId,mobile,created,smsSent}).catch(()=>{});
         return sendJson(res,201,{ok:true,userId,mobile,name,created,smsSent,platformAdmin:isPlatformAdmin,temporaryPassword:created?temporaryPassword:null});
     }
@@ -15916,7 +15916,7 @@ ${inviteUrl}`:`PhotoBridge
 لینک عضویت یا اتصال حساب:
 ${inviteUrl}`;
         try {
-            const out=await sendSms({mobile,message,purpose:context==='office'?'rental_manual_office':'rental_photographer_invite',eventKey:context==='office'?'booking_status':'photographer_invite',userId:a.userId,chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',referenceId:context==='office'?bookingId:inv.id,metadata:{rentalShopId:shop.id,photographerInviteId:inv.id,bookingId:context==='office'?bookingId:null,manualOffice:context==='office'}});
+            const out=await sendSms({mobile,message,purpose:context==='office'?'rental_manual_office':'rental_photographer_invite',eventKey:context==='office'?'booking_status':'photographer_invite',userId:a.userId,referenceId:context==='office'?bookingId:inv.id,metadata:{rentalShopId:shop.id,photographerInviteId:inv.id,bookingId:context==='office'?bookingId:null,manualOffice:context==='office'}});
             await pool.query(`UPDATE photographer_invites SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb,updated_at=now() WHERE id=$1`,[inv.id,JSON.stringify({lastSmsStatus:'sent',lastSmsSentAt:new Date().toISOString(),lastSmsReference:out?.reference||null})]).catch(()=>{});
             const full=await photographerInviteByCode(inv.code);
             return sendJson(res,200,{ok:true,preRegistered:context==='office'?false:Boolean(inviteIdentity?.preRegistered),requiresConfirmation:context==='office',invite:photographerInvitePublicView(full),sms:{sent:true,reference:out?.reference||null}});
@@ -16316,6 +16316,20 @@ ${inviteUrl}`;
         await ensureActivationWorkflowRuntimeSchema();
         const b = await bodyJson(req, 200_000), current = (await pool.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [adminRentalShop[1]])).rows[0];
         if (!current) return sendJson(res, 404, { error: 'rental_shop_not_found' });
+        // Discount-only update: do not touch store activation, profile or suspension.
+        if (Object.keys(b).length === 1 && Object.prototype.hasOwnProperty.call(b, 'subscriptionDiscountPercent')) {
+            const percent = entityDiscountPercent(b.subscriptionDiscountPercent);
+            if (percent === null) return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+            try {
+                const q=await pool.query("UPDATE equipment_rental_shops SET subscription_discount_percent=$2::numeric,subscription_discount_amount=0,updated_at=now() WHERE id=$1 AND deleted_at IS NULL RETURNING subscription_discount_percent",[current.id,percent]);
+                if (!q.rowCount) return sendJson(res,404,{error:'rental_shop_not_found'});
+                await audit(a.userId,undefined,'platform_admin.shop_subscription_discount','equipment_rental_shop',current.id,{percent}).catch(()=>{});
+                return sendJson(res,200,{ok:true,subscription_discount_percent:Number(q.rows[0].subscription_discount_percent)});
+            }catch(e){
+                console.error('[admin-store-discount-save]',{shopId:current.id,code:String(e?.code||''),message:String(e?.message||'')});
+                return sendJson(res,500,{error:'subscription_discount_save_failed',diagnosticCode:String(e?.code||'')||undefined});
+            }
+        }
         // Status-only toggles must not rewrite profile, subscription or other store fields.
         if (Object.keys(b).length === 1 && typeof b.active === 'boolean') {
             if (b.active && current.suspended) return sendJson(res, 409, { error:'rental_shop_suspended_requires_resume', message:'ابتدا تعلیق فروشگاه را رفع کنید.' });
@@ -18573,6 +18587,21 @@ ${inviteUrl}`;
         if (!requireRole(a, 'platform_admin'))
             return sendJson(res, 403, { error: 'forbidden' });
         const b = await bodyJson(req);
+        // Discount-only update: no changes to lab identity, activation or suspension.
+        const discountKeys=Object.keys(b);
+        if (Object.prototype.hasOwnProperty.call(b,'subscriptionDiscountPercent') && discountKeys.every(k=>['subscriptionDiscountPercent','subscriptionDiscountEnabled','subscriptionDiscountAmount'].includes(k))) {
+            const percent=entityDiscountPercent(b.subscriptionDiscountPercent);
+            if(percent===null)return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+            try{
+                const q=await pool.query("UPDATE labs SET subscription_discount_percent=$2::numeric,subscription_discount_enabled=($2::numeric > 0),subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent,subscription_discount_enabled",[adminLab[1],percent]);
+                if(!q.rowCount)return sendJson(res,404,{error:'lab_not_found'});
+                await audit(a.userId,adminLab[1],'platform_admin.lab_subscription_discount','lab',adminLab[1],{percent}).catch(()=>{});
+                return sendJson(res,200,{ok:true,subscription_discount_percent:Number(q.rows[0].subscription_discount_percent),subscription_discount_enabled:q.rows[0].subscription_discount_enabled});
+            }catch(e){
+                console.error('[admin-lab-discount-save]',{labId:adminLab[1],code:String(e?.code||''),message:String(e?.message||'')});
+                return sendJson(res,500,{error:'subscription_discount_save_failed',diagnosticCode:String(e?.code||'')||undefined});
+            }
+        }
         const c = await pool.connect();
         let updatedLab = null, updatedAdmin = null;
         try {

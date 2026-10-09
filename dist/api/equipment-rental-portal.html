@@ -2371,10 +2371,16 @@ body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,body.saleItemMo
       el.classList.toggle('hidden',!on);
       if(on){el.style.removeProperty('display');el.removeAttribute('aria-hidden')}else el.setAttribute('aria-hidden','true');
     });
+    const product=tab==='items'||tab==='sales';
+    const snapshot=typeof data==='undefined'?null:data;
+    const stock=tab==='sales'?(snapshot?.saleItems||[]):(snapshot?.items||[]);
+    const category=q(tab==='sales'?'#saleItemsCategoryFilters':'#itemsCategoryFilters');
+    const enabled=tab==='sales'?snapshot?.shop?.sale_enabled!==false:snapshot?.shop?.rental_enabled!==false;
+    const available=product&&enabled&&stock.length>0&&Boolean(category?.querySelector('.categoryChip'));
     host.classList.toggle('pb848ContextActive',context);
-    host.classList.toggle('active',context||tab==='items'||tab==='sales');
+    host.classList.toggle('active',context||available);
     document.body.classList.toggle('pb848HasContextSubnav',context);
-    document.body.classList.toggle('pb837HasHeaderFilters',tab==='items'||tab==='sales');
+    document.body.classList.toggle('pb837HasHeaderFilters',available);
     document.body.classList.toggle('pb862FinanceActive',tab==='accounting');
   }
   const old=window.selectRentalTab;
@@ -9829,6 +9835,110 @@ html body #saleItemEditorBox.pb861EditorVisible .pb829ManagedPicker {
    menu.style.setProperty('overflow-y','auto','important');
   });
  });
+})();
+</script>
+
+<style id="pb1051SalesFieldSpacingAndEmptyHeader">
+/* The sale dialog keeps R1050's height but gives its form the usable space. */
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important
+}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible>.pb905ModalHeader,
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible>.v654EditNotice{flex:0 0 auto!important}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm.pb830EquipmentForm{
+ flex:1 0 auto!important;display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ grid-auto-rows:max-content!important;align-content:space-evenly!important;align-items:start!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ row-gap:clamp(12px,2.2vh,22px)!important;column-gap:12px!important;
+ margin:0!important;padding:6px 2px 12px!important
+}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830PickerThird{grid-column:span 2!important}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.field.pb826Third{grid-column:span 3!important}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830DescriptionField,
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830ImageField{grid-column:1/-1!important}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.field{
+ display:flex!important;flex-direction:column!important;gap:7px!important;
+ min-width:0!important;margin:0!important;font-size:11px!important;line-height:1.55!important
+}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.field input:not([type="hidden"]):not([type="file"]),
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.field .pb829ManagedToggle{
+ height:44px!important;min-height:44px!important;max-height:none!important;font-size:11px!important;padding:9px 11px!important
+}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm .pb827ImagePicker{
+ height:auto!important;min-height:clamp(92px,14vh,145px)!important;max-height:none!important;
+ padding:12px!important;box-sizing:border-box!important
+}
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible>.pb1012EquipmentFooter{
+ flex:0 0 auto!important;position:sticky!important;bottom:0!important
+}
+/* No inventory: no second-header surface, and no vertical gap reserved for it. */
+html body.rentalAppReady #rentalHeaderFilterHost.pb1051EmptyProductSubheader,
+html body.rentalAppReady #rentalHeaderFilterHost.active.pb1051EmptyProductSubheader{
+ display:none!important;visibility:hidden!important;pointer-events:none!important;
+ height:0!important;min-height:0!important;max-height:0!important;
+ margin:0!important;padding:0!important;border:0!important;box-shadow:none!important
+}
+@media(min-width:851px){
+ html body.rentalAppReady.pb1051EmptyProductSubheader:not(.pb848HasContextSubnav){padding-top:110px!important}
+}
+@media(max-width:850px){
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm.pb830EquipmentForm{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:12px 8px!important;align-content:space-around!important
+ }
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830PickerThird{grid-column:span 3!important}
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830ModelField,
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830DescriptionField,
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.pb830ImageField{grid-column:1/-1!important}
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm>.field{font-size:10.5px!important;gap:5px!important}
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm .pb827ImagePicker{min-height:84px!important;max-height:none!important}
+ html body.rentalAppReady.pb1051EmptyProductSubheader:not(.pb848HasContextSubnav){padding-top:var(--pb849-fixed,148px)!important}
+}
+@media(max-height:650px){
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm.pb830EquipmentForm{align-content:start!important;row-gap:8px!important}
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible #saleItemForm .pb827ImagePicker{min-height:70px!important}
+}
+</style>
+<script id="pb1051EmptyProductSubheaderRuntime">
+(()=>{
+ const host=document.getElementById('rentalHeaderFilterHost');
+ if(!host)return;
+ let queued=false;
+ function reconcile(){
+  if(!document.body.classList.contains('rentalAppReady'))return;
+  const tab=document.querySelector('#app>.panel.active')?.id||
+    document.querySelector('#rentalDesktopPrimaryNav [data-rental-desktop-tab].active')?.dataset.rentalDesktopTab;
+  const product=tab==='items'||tab==='sales';
+  const snapshot=typeof data==='undefined'?null:data;
+  const rows=tab==='sales'?snapshot?.saleItems:snapshot?.items;
+  const shell=document.getElementById(tab==='sales'?'salesFilterShell':'itemsFilterShell');
+  const enabled=tab==='sales'?snapshot?.shop?.sale_enabled!==false:snapshot?.shop?.rental_enabled!==false;
+  const empty=product&&(!enabled||!Array.isArray(rows)||rows.length===0||!shell?.querySelector('.categoryChip'));
+  host.classList.toggle('pb1051EmptyProductSubheader',empty);
+  document.body.classList.toggle('pb1051EmptyProductSubheader',empty);
+  if(empty){
+   host.classList.remove('active','pb848ContextActive');
+   document.body.classList.remove('pb837HasHeaderFilters','pb904r26SingleFilter');
+  }
+ }
+ function schedule(){
+  if(queued)return;
+  queued=true;requestAnimationFrame(()=>{queued=false;reconcile()});
+ }
+ const previous=window.selectRentalTab;
+ if(typeof previous==='function')window.selectRentalTab=function(...args){
+  const result=previous.apply(this,args);schedule();return result;
+ };
+ new MutationObserver(schedule).observe(host,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+ for(const id of ['itemsList','saleItemsList']){
+  const el=document.getElementById(id);
+  if(el)new MutationObserver(schedule).observe(el,{childList:true});
+ }
+ document.addEventListener('click',event=>{
+  if(event.target.closest?.('[data-rental-desktop-tab],[data-rental-tab],[data-rental-bottom-tab]'))schedule();
+ },true);
+ document.addEventListener('DOMContentLoaded',schedule,{once:true});
+ window.addEventListener('resize',schedule,{passive:true});
+ schedule();
 })();
 </script>
 </body></html>

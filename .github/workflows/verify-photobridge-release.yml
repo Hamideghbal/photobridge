@@ -1,0 +1,34 @@
+name: Verify PhotoBridge release
+
+on:
+  push:
+    branches:
+      - feature/admin-entity-subscription-discounts-counts-20261010
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-verification:
+    name: Build and verify deploy payload
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Check changed JavaScript syntax
+        run: |
+          node --check dist/api/server.js
+          node --check dist/web/photobridge-v904r19-admin-stores.js
+          node --check dist/web/photobridge-r100f90-entity-discount-activation.js
+      - name: Run production build
+        run: npm run build
+      - name: Verify complete deployment payload
+        run: npm run verify:full

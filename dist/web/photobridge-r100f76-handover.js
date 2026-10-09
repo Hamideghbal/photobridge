@@ -78,3 +78,98 @@
     };
   };
 })();
+
+
+/* R100F85 — finance and office controls for owner mobile. Independent of handover staff. */
+(()=>{
+  if(window.__pbR100F85OwnerFinance)return;window.__pbR100F85OwnerFinance=true;
+  const q=(s,r=document)=>r.querySelector(s);
+  const date=v=>{try{return typeof dateFa==='function'?dateFa(v):String(v||'—').slice(0,10)}catch{return String(v||'—').slice(0,10)}};
+  const moneyText=v=>{try{return typeof money==='function'?money(v):String(v||0)}catch{return String(v||0)}};
+  const append=(root,tag,cls,value)=>{const el=document.createElement(tag);el.className=cls;el.textContent=String(value??'—');root.appendChild(el)};
+  const owner=()=>document.body.classList.contains('rentalAppReady')&&!document.body.classList.contains('pbR100F9StaffMode');
+  function decorateInvoices(){
+    if(!owner())return;
+    const invoices=typeof accountingData!=='undefined'?(accountingData?.invoices||[]):[];
+    for(const card of document.querySelectorAll('#accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow[data-pb897-invoice-view]')){
+      if(q('.pbR100F85Primary',card))continue;
+      const x=invoices.find(r=>String(r.id)===String(card.dataset.pb897InvoiceView));if(!x)continue;
+      const left=document.createElement('section');left.className='pbR100F85Primary';
+      append(left,'small','label','شماره فاکتور');
+      append(left,'b','number',x.invoice_number||'—');
+      append(left,'small','date','تاریخ: '+date(x.issued_at));
+      append(left,'strong','total','مبلغ: '+moneyText(x.total_amount));
+      append(left,'small','name','آتلیه / عکاس: '+(x.photographer_name||'—'));
+      const right=document.createElement('section');right.className='pbR100F85Details';
+      append(right,'b','title','جزئیات آفیش');
+      append(right,'small','range','بازه: '+(x.rental_start?date(x.rental_start)+(x.rental_end&&x.rental_end!==x.rental_start?' تا '+date(x.rental_end):''):'—'));
+      append(right,'p','gear',q('.pb855InvoiceEquipmentSummary',card)?.textContent||x.item_titles||'تجهیزات سفارش');
+      append(right,'small','deposit','ودیعه: '+moneyText(x.deposit_amount));
+      append(right,'small','state',x.payment_status==='paid'?'پرداخت‌شده':'ثبت‌شده');
+      const actions=q('.pb890AccountingAction',card);
+      card.insertBefore(left,actions||null);card.insertBefore(right,actions||null);
+    }
+  }
+  const invoicesBase=window.pb855RenderAdminInvoices||(typeof pb855RenderAdminInvoices==='function'?pb855RenderAdminInvoices:null);
+  if(typeof invoicesBase==='function'){
+    const wrapped=function(...args){const out=invoicesBase.apply(this,args);decorateInvoices();return out};
+    window.pb855RenderAdminInvoices=wrapped;
+    try{pb855RenderAdminInvoices=wrapped}catch{}
+  }
+  // Duplicate render calls made by tab selection, resize, or scrolling reuse completed ledger content.
+  const ledgerBase=window.pb842RenderAccountingLedger;
+  let lastKey='',lastCache=null,pendingKey='',pending=null;
+  if(typeof ledgerBase==='function')window.pb842RenderAccountingLedger=function(...args){
+    const select=q('#accountingLedgerPhotographer');
+    const uid=String(select?.value||'');
+    const from=String(q('#pb856AccountingFrom')?.value||''),to=String(q('#pb856AccountingTo')?.value||'');
+    const key=uid+'|'+from+'|'+to;
+    const cache=window.pb869LedgerRowsCache;
+    const complete=Boolean(q('#accountingLedgerEntries .pb922Paper,#accountingLedgerEntries table.accountingTable'));
+    if(uid&&complete&&cache&&cache===lastCache&&key===lastKey)return Promise.resolve(cache);
+    if(uid&&pending&&key===pendingKey)return pending;
+    pendingKey=key;
+    pending=Promise.resolve(ledgerBase.apply(this,args)).then(out=>{
+      lastKey=key;lastCache=window.pb869LedgerRowsCache;
+      return out;
+    }).finally(()=>{if(pendingKey===key){pending=null;pendingKey=''}});
+    return pending;
+  };
+  // Allow pressing the calendar action without dates and display a clear explanation.
+  let dateButton=null,dateObserver=null;
+  const selected=()=>Boolean(document.querySelector('#pb843CalendarGrid .pb892SelectedDay'));
+  function mountDateButton(){
+    const btn=q('#pb892CalendarContinue');if(!btn||btn===dateButton)return;
+    dateObserver?.disconnect();dateButton=btn;
+    const unlock=()=>{
+      if(btn.disabled)btn.disabled=false;
+      const noDate=!selected();btn.setAttribute('aria-disabled',String(noDate));
+      btn.title=noDate?'ابتدا یک تاریخ از تقویم انتخاب کن.':'ثبت آفیش برای تاریخ انتخابی';
+    };
+    dateObserver=new MutationObserver(unlock);
+    dateObserver.observe(btn,{attributes:true,attributeFilter:['disabled']});
+    btn.addEventListener('click',event=>{
+      if(selected())return;
+      event.preventDefault();event.stopImmediatePropagation();
+      if(typeof window.pb920CalendarNotice==='function')window.pb920CalendarNotice('ابتدا تاریخ آفیش را از تقویم انتخاب کن.');
+      else if(typeof window.storeNotice==='function')window.storeNotice('ابتدا تاریخ آفیش را از تقویم انتخاب کن.','انتخاب تاریخ');
+      else alert('ابتدا تاریخ آفیش را از تقویم انتخاب کن.');
+    },true);
+    unlock();
+  }
+  mountDateButton();
+  if(!dateButton&&document.body){
+    const watch=new MutationObserver(()=>{mountDateButton();if(dateButton)watch.disconnect()});
+    watch.observe(document.body,{childList:true,subtree:true});
+  }
+  document.addEventListener('click',event=>{
+    if(event.target.closest?.('[data-pb842-tab="invoices"]'))requestAnimationFrame(decorateInvoices);
+    if(event.target.closest?.('#pb843CalendarGrid [data-pb843-cal-day]'))requestAnimationFrame(()=>{mountDateButton();if(dateButton){dateButton.disabled=false;dateButton.setAttribute('aria-disabled',String(!selected()))}});
+    if(event.target.closest?.('#pb892CalendarContinue'))requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const focused=document.activeElement;
+      if(q('#pb892ManualBackdrop.open')&&focused?.closest?.('#pb892ManualBackdrop')&&focused.matches?.('input,textarea'))focused.blur();
+    }));
+  },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{mountDateButton();decorateInvoices()},{once:true});
+  else decorateInvoices();
+})();

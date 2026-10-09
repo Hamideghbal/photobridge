@@ -1820,7 +1820,7 @@ let pb843OfficeTab='calendar',pb843CalendarYear=null,pb843CalendarMonth=null,pb9
 function pb843SetupBookingsTabs(){
   const section=$('#bookings'),tabs=$('#pb848BookingHeaderTabs');if(!section||!tabs||section.dataset.pb843Ready)return;section.dataset.pb843Ready='1';
   const manual=document.createElement('div');manual.className='pb843BookingPane';manual.dataset.pb843OfficePane='manual';
-  const calendar=document.createElement('div');calendar.className='pb843BookingPane active';calendar.dataset.pb843OfficePane='calendar';calendar.innerHTML='<div class="box pb843BookingCalendarBox"><div class="pb843CalendarToolbar"><button type="button" class="pb843CalendarNav" data-pb843-cal-nav="prev">›</button><div><b id="pb843CalendarTitle">آفیش</b><small>روی هر روز بزن؛ جزئیات آفیش‌های همان روز نمایش داده می‌شود</small></div><button type="button" class="pb843CalendarNav" data-pb843-cal-nav="next">‹</button></div><div class="pb904r2CalendarSplit"><div class="pb904r2CalendarPane"><div class="pb843CalendarWeek">'+jalaliWeekdays.map(x=>'<span>'+x+'</span>').join('')+'</div><div id="pb843CalendarGrid" class="pb843CalendarGrid"></div></div><aside id="pb904r2DayPanel" class="pb904r2DayPanel" aria-live="polite"><div class="pb904r2DayPanelHead"><b id="pb904r2DayPanelTitle">آفیش‌های روز</b><small id="pb904r2DayPanelCount">یک تاریخ را انتخاب کن</small></div><div id="pb904r2DayPanelBody" class="pb904r2DayPanelBody"><div class="empty">روی یک روز از تقویم بزن.</div></div></aside></div></div>';
+  const calendar=document.createElement('div');calendar.className='pb843BookingPane active';calendar.dataset.pb843OfficePane='calendar';calendar.innerHTML='<div class="box pb843BookingCalendarBox"><div class="pb843CalendarToolbar"><button type="button" class="pb843CalendarNav" data-pb843-cal-nav="prev">›</button><div><b id="pb843CalendarTitle">آفیش</b></div><button type="button" class="pb843CalendarNav" data-pb843-cal-nav="next">‹</button></div><div class="pb904r2CalendarSplit"><div class="pb904r2CalendarPane"><div class="pb843CalendarWeek">'+jalaliWeekdays.map(x=>'<span>'+x+'</span>').join('')+'</div><div id="pb843CalendarGrid" class="pb843CalendarGrid"></div></div><aside id="pb904r2DayPanel" class="pb904r2DayPanel" aria-live="polite"><div class="pb904r2DayPanelHead"><b id="pb904r2DayPanelTitle">آفیش‌های روز</b><small id="pb904r2DayPanelCount">یک تاریخ را انتخاب کن</small></div><div id="pb904r2DayPanelBody" class="pb904r2DayPanelBody"><div class="empty">روی یک روز از تقویم بزن.</div></div></aside></div></div>';
   const movable=[...section.children].filter(x=>x!==manual&&x!==calendar);movable.forEach(x=>manual.appendChild(x));section.append(manual,calendar);
   tabs.querySelectorAll('[data-pb843-office-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();pb843SetOfficeTab(btn.dataset.pb843OfficeTab)}));
   calendar.querySelector('[data-pb843-cal-nav="prev"]').addEventListener('click',()=>pb843MoveCalendar(-1));calendar.querySelector('[data-pb843-cal-nav="next"]').addEventListener('click',()=>pb843MoveCalendar(1));
@@ -2098,7 +2098,7 @@ const pb855OpenRental=openRentalItemModal;openRentalItemModal=function(reset=tru
 @media(max-width:850px){#accounting,#accounting .pb856FinanceShell,#accounting [data-pb842-pane]{min-width:0!important;max-width:100%!important;width:100%!important;overflow-x:hidden!important;box-sizing:border-box!important}#accounting .tableWrap,#accounting .tableScroll{width:100%!important;max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}#accounting table{min-width:640px!important;width:max-content!important}#accounting .pb856LedgerControls,#accounting .pb855InvoiceFilters{grid-template-columns:minmax(0,1fr)!important}.pb861ReachBuilder{grid-column:1/-1}.pb861ReachPicker{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pb861ReachPicker button{width:100%}.pb861PhotographerTools{align-items:stretch;flex-direction:column}.pb861PhotographerSearch{width:100%}.pb861PhotographerRow{grid-template-columns:minmax(0,1fr) auto;gap:7px}.pb861PhotographerCell,.pb861PhotographerAccount{grid-column:1/-1}.pb861PhotographerActions{grid-column:1/-1;justify-content:stretch}.pb861PhotographerActions .mini{flex:1}.pb861WalletTopupAction{grid-template-columns:1fr}.pb861WalletTopupAction button{width:100%}}
 /* v861 · modal safety: never show a dark backdrop without a visible editor */
 body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:fixed!important;z-index:2147483001!important;background:#fff!important;right:50%!important;transform:translateX(50%)!important;top:72px!important;width:min(940px,calc(100vw - 24px))!important;max-height:calc(100dvh - 92px)!important;overflow:auto!important;box-shadow:0 30px 90px rgba(15,23,42,.32)!important}.pb861EditorVisible form{display:grid!important;visibility:visible!important;opacity:1!important}.pb861EditorVisible .pb831ModalHeader{display:flex!important}
-@media(max-width:850px){body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{top:calc(var(--pb826-vvtop,0px) + 6px)!important;width:calc(100vw - 12px)!important;max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;padding:12px!important;border-radius:14px!important}}
+@media(max-width:850px){body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{top:calc(var(--pb826-vvtop,0px) + 6px)!important;width:calc(100vw - 12px)!important;height:calc(var(--pb826-vvh,100dvh) - 12px)!important;max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;padding:12px!important;border-radius:14px!important}}
 </style>
 <script id="pb861StoreWalletReachPhotographerModalRuntime">
 (()=>{
@@ -8712,10 +8712,10 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  const makeCalendar=(rows,selected,datesFor)=>{
   const y=pb843CalendarYear,m=pb843CalendarMonth,g=toGregorian(y,m,1),first=String(g.gy).padStart(4,'0')+'-'+String(g.gm).padStart(2,'0')+'-'+String(g.gd).padStart(2,'0'),offset=(new Date(first+'T12:00:00Z').getUTCDay()+1)%7,days=jalaliMonthLength(y,m),now=today(),counts=new Map();
   for(const b of rows)for(const d of datesFor(b))counts.set(d,(counts.get(d)||0)+1);
-  let cells='';for(let n=0;n<offset;n++)cells+='<button class="pb1010CalDay blank" type="button" tabindex="-1"></button>';
-  for(let d=1;d<=days;d++){const iso=isoFor(y,m,d),count=counts.get(iso)||0;cells+='<button class="pb1010CalDay'+(iso===selected?' active':'')+(iso===now?' today':'')+'" type="button" data-pb1010-day="'+iso+'" aria-label="'+digits(d)+' · '+fmt(count)+' آفیش">'+digits(d)+(count?'<span class="pb1010CalCount">'+fmt(count)+'</span>':'')+'</button>'}
+  let cells='';for(let n=0;n<offset;n++)cells+='<button class="pb1010CalDay pb843CalendarDay blank" type="button" tabindex="-1"></button>';
+  for(let d=1;d<=days;d++){const iso=isoFor(y,m,d),count=counts.get(iso)||0;cells+='<button class="pb1010CalDay pb843CalendarDay'+(iso===selected?' active':'')+(iso===now?' today':'')+'" type="button" data-pb1010-day="'+iso+'" aria-label="'+digits(d)+' · '+fmt(count)+' آفیش">'+digits(d)+(count?'<span class="pb1010CalCount">'+fmt(count)+'</span>':'')+'</button>'}
   const wk=weekdays(),monthName=months()[m-1]||'';
-  return '<div class="pb1010CalToolbar"><button type="button" data-pb1010-month="-1" aria-label="ماه قبل">›</button><b>'+monthName+' '+digits(y)+'</b><button type="button" data-pb1010-month="1" aria-label="ماه بعد">‹</button></div><div class="pb1010CalWeek">'+wk.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="pb1010CalGrid">'+cells+'</div>';
+  return '<div class="pb1010CalToolbar pb843CalendarToolbar"><button class="pb843CalendarNav" type="button" data-pb1010-month="-1" aria-label="ماه قبل">›</button><div><b>'+monthName+' '+digits(y)+'</b></div><button class="pb843CalendarNav" type="button" data-pb1010-month="1" aria-label="ماه بعد">‹</button></div><div class="pb1010CalWeek pb843CalendarWeek">'+wk.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="pb1010CalGrid pb843CalendarGrid">'+cells+'</div>';
  };
  const bindCalendar=(host,rows,selected,datesFor,onPick,onRefresh)=>{
   host.innerHTML=makeCalendar(rows,selected,datesFor);
@@ -8758,4 +8758,73 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  const init=()=>{if(document.body.classList.contains('pbR100F9StaffMode'))window.pbR100F9PaintStaffList?.();else window.pb854RenderBookingStatusPanes?.()};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else setTimeout(init,0);
 })();
-</script></body></html>
+</script>
+<style id="pb1011FollowupLayout">
+/* Larger equipment editors keep action buttons in view while forms remain scrollable. */
+body.rentalItemModalOpen #rentalItemEditorBox,body.saleItemModalOpen #saleItemEditorBox{
+  top:12px!important;right:50%!important;left:auto!important;bottom:auto!important;transform:translateX(50%)!important;
+  width:min(1120px,calc(100vw - 24px))!important;max-width:none!important;height:min(92dvh,900px)!important;
+  max-height:calc(var(--pb826-vvh,100dvh) - 24px)!important;overflow:auto!important;
+  overscroll-behavior:contain!important;padding:18px 20px!important;scrollbar-gutter:stable;
+}
+body.rentalItemModalOpen #rentalItemEditorBox{height:min(92dvh,900px)!important}
+body.rentalItemModalOpen #rentalItemEditorBox .pb831ModalHeader,
+body.saleItemModalOpen #saleItemEditorBox .pb831SaleModalHeader{
+  position:relative!important;display:flex!important;justify-content:center!important;align-items:center!important;
+  min-height:48px!important;margin:0 0 12px!important;padding:8px 50px!important;border-radius:12px!important;
+}
+body.rentalItemModalOpen #rentalItemEditorBox .pb831ModalHeaderCopy,
+body.saleItemModalOpen #saleItemEditorBox .pb831ModalHeaderCopy{
+  position:absolute!important;left:48px!important;right:48px!important;top:50%!important;transform:translateY(-50%)!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;
+}
+body.rentalItemModalOpen #rentalItemEditorBox .pb831ModalHeaderCopy h2,
+body.saleItemModalOpen #saleItemEditorBox .pb831ModalHeaderCopy h2{text-align:center!important}
+body.rentalItemModalOpen #rentalItemEditorBox .formActionButtons,
+body.saleItemModalOpen #saleItemEditorBox .formActionButtons{
+  position:sticky!important;bottom:-18px!important;z-index:8!important;margin:10px -20px -18px!important;
+  padding:10px 20px!important;background:rgba(255,255,255,.97)!important;border-top:1px solid #e4e7ec!important;
+  box-shadow:0 -5px 14px rgba(16,24,40,.06)!important;
+}
+body.rentalItemModalOpen #rentalItemEditorBox .pb829ManagedMenu,
+body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh,480px)!important}
+.pb1010CalDay.active{border-color:#315efb!important;background:#eef2ff!important;color:#1849a9!important;box-shadow:inset 0 0 0 1px #315efb!important}
+.pb1010CalDay.active .pb1010CalCount{background:#dfe7ff!important;color:#2448c9!important}
+.pb1010CalToolbar.pb843CalendarToolbar{margin-bottom:10px!important}
+.pb1010CalWeek.pb843CalendarWeek{gap:5px!important}
+.pb1010CalGrid.pb843CalendarGrid{gap:5px!important}
+.pb1010CalDay.pb843CalendarDay{min-height:56px!important;padding:5px!important;border-radius:11px!important}
+.pb1010CalDay .pb1010CalCount{min-width:24px!important;height:20px!important;padding:0 6px!important;bottom:4px!important;font:900 9px/20px Vazirmatn!important}
+#pb843CalendarTitle+small{display:none!important}
+#pb892CalendarBatchBar{margin-top:10px!important}
+@media(max-width:850px){
+ body.rentalItemModalOpen #rentalItemEditorBox,body.saleItemModalOpen #saleItemEditorBox{
+   top:6px!important;right:50%!important;width:calc(100vw - 12px)!important;
+   max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;padding:12px!important
+ }
+ body.rentalItemModalOpen #rentalItemEditorBox .pb831ModalHeader,
+ body.saleItemModalOpen #saleItemEditorBox .pb831SaleModalHeader{min-height:42px!important;margin-bottom:9px!important;padding:7px 42px!important}
+ body.rentalItemModalOpen #rentalItemEditorBox .formActionButtons,
+ body.saleItemModalOpen #saleItemEditorBox .formActionButtons{bottom:-12px!important;margin:8px -12px -12px!important;padding:8px 12px!important}
+ .pb1010CalDay.pb843CalendarDay{min-height:40px!important}
+}
+</style>
+<script id="pb1011FollowupLayoutRuntime">
+(()=>{
+ const placeAction=()=>{
+  const box=document.querySelector('.pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),bar=document.getElementById('pb892CalendarBatchBar');
+  if(box&&split&&bar&&bar.previousElementSibling!==split)split.insertAdjacentElement('afterend',bar);
+ };
+ const cleanOfficeHint=()=>{
+  const title=document.getElementById('pb843CalendarTitle');
+  const hint=title?.parentElement?.querySelector('small');
+  if(hint)hint.remove();
+ };
+ const refresh=()=>{placeAction();cleanOfficeHint()};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refresh,{once:true});
+ else refresh();
+ new MutationObserver(refresh).observe(document.documentElement,{childList:true,subtree:true});
+ setTimeout(refresh,200);setTimeout(refresh,1000);
+})();
+</script>
+</body></html>

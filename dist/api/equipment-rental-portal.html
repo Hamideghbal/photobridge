@@ -9284,4 +9284,78 @@ html body.rentalAppReady .top,html body.rentalAppReady #rentalHeaderFilterHost{z
  window.addEventListener('resize',queue,{passive:true});[0,120,500].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>
+
+<style id="pbR100F97HeaderMotionAndHandoverActions">
+@media(max-width:850px){
+ html body.rentalAppReady::before{
+  height:78px!important;background:linear-gradient(180deg,rgba(49,94,251,.075) 0%,rgba(49,94,251,.026) 44%,rgba(49,94,251,0) 100%)!important;
+ }
+}
+@media(min-width:851px){
+ /* Pull the primary underline closer to its label. */
+ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR100F96MovingIndicator{bottom:9px!important}
+ html body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab].active::after{bottom:9px!important}
+ /* Animated underline shared by every second and third header row. */
+ html body.rentalAppReady .pbR100F97IndicatorHost{position:relative!important}
+ html body.rentalAppReady .pbR100F97SubIndicator{
+  display:block!important;position:absolute!important;left:0!important;bottom:1px!important;height:2px!important;
+  border-radius:999px!important;background:#315efb!important;pointer-events:none!important;z-index:8!important;opacity:0;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+}
+/* Delivery actions are easier to scan as two distinct rows. */
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pbR100F86ActionButtons,
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pb914ActionColumn>.actions{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:7px!important;width:100%!important;min-width:0!important;
+}
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pbR100F86ActionButtons>button,
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pb914ActionColumn>.actions>button{
+ width:100%!important;min-width:0!important;margin:0!important;justify-content:center!important;
+}
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pbR100F86Operation.secondary,
+html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pb914ActionColumn>.actions>.v654Danger{
+ border:1px solid #fecaca!important;background:#fff5f5!important;color:#b42318!important;box-shadow:none!important;
+}
+</style>
+
+<script id="pbR100F97HeaderMotionRuntime">
+(()=>{
+ const q=(s,r=document)=>r.querySelector(s);let frame=0;
+ const visible=el=>el&&getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().height>0;
+ function syncGlowStart(){
+  if(!matchMedia('(max-width:850px)').matches)return;
+  const candidates=[q('.top'),q('#rentalHeaderFilterHost.active'),q('#pbR100F64ManagerDateHost'),q('.pbR100F9StaffNav')].filter(visible);
+  const bottom=Math.max(0,...candidates.map(el=>el.getBoundingClientRect().bottom));
+  const value=Math.round(bottom)+'px';
+  if(bottom&&document.body.style.getPropertyValue('--pb-r100f94-chrome-bottom')!==value)document.body.style.setProperty('--pb-r100f94-chrome-bottom',value);
+ }
+ function move(row,active){
+  if(!row||!active||!visible(row)||!visible(active))return;
+  row.classList.add('pbR100F97IndicatorHost');
+  let indicator=q(':scope>.pbR100F97SubIndicator',row);
+  if(!indicator){indicator=document.createElement('span');indicator.className='pbR100F97SubIndicator';indicator.setAttribute('aria-hidden','true');row.appendChild(indicator)}
+  const rr=row.getBoundingClientRect(),ar=active.getBoundingClientRect();
+  const width=Math.max(18,ar.width-12)+'px',transform='translateX('+(ar.left-rr.left+6+row.scrollLeft)+'px)';
+  if(indicator.style.width!==width)indicator.style.width=width;
+  if(indicator.style.transform!==transform)indicator.style.transform=transform;
+  if(indicator.style.opacity!=='1')indicator.style.opacity='1';
+ }
+ function syncIndicators(){
+  if(!matchMedia('(min-width:851px)').matches)return;
+  const specs=[
+   ['#pb848BookingHeaderTabs','[data-pb843-office-tab].active'],
+   ['#pb856FinanceHeaderContext .pb856FinanceTabs','[data-pb842-tab].active'],
+   ['[data-pb848-context-tab="photographers"]','[data-pb842-tab].active'],
+   ['#itemsCategoryFilters','.categoryChip.active'],['#saleItemsCategoryFilters','.categoryChip.active'],
+   ['#itemsBrandFilters','.pb831BrandChip.active'],['#saleItemsBrandFilters','.pb831BrandChip.active']
+  ];
+  specs.forEach(([rowSel,activeSel])=>{const row=q(rowSel);move(row,q(activeSel,row))});
+ }
+ function sync(){frame=0;syncGlowStart();syncIndicators()}
+ function queue(){if(!frame)frame=requestAnimationFrame(sync)}
+ document.addEventListener('click',queue,true);window.addEventListener('resize',queue,{passive:true});
+ new MutationObserver(queue).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+ [0,100,400,850].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
 </body></html>

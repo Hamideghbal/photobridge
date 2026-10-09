@@ -8698,6 +8698,9 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
   body.rentalAppReady.pb899MainBookings #bookings .pb843CalendarDay{min-height:40px!important}
   .pb1010HandoverSplit,.pb1010StaffShell.pb1010StaffSplit{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
   .pb1010HandoverCalendarPane,.pb1010HandoverDetails,.pb1010StaffCalendarPane,.pb1010StaffDetails{width:100%!important;min-height:0!important;max-height:none!important;padding:8px!important}
+  .pb1010HandoverSplit,.pb1010StaffShell.pb1010StaffSplit{display:block!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+  .pb1010HandoverCalendarPane{display:none!important}
+  .pb1010HandoverDetails,.pb1010StaffDetails{width:100%!important;max-height:none!important;padding:0!important}
   .pb1010CalDay{min-height:39px!important}
   body.saleItemModalOpen #saleItemEditorBox{top:50%!important;right:50%!important;left:auto!important;bottom:auto!important;transform:translate(50%,-50%)!important;width:calc(100vw - 12px)!important;max-width:none!important;max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;height:auto!important;overflow:hidden!important;padding:8px!important}
   body.saleItemModalOpen #saleItemEditorBox .pb831SaleModalHeader{margin:0 0 6px!important;padding:5px 38px 5px 7px!important}
@@ -8710,6 +8713,7 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
 <script id="pb1010UnifiedHandoverCalendars">
 (()=>{
  const today=()=>window.pb100rTodayISO?.()||window.pbR17TehranIsoDate?.()||new Date().toISOString().slice(0,10);
+ const isDesktop=()=>matchMedia('(min-width:851px)').matches;
  const fmt=x=>typeof fa==='function'?fa(x):String(x);
  const digits=x=>typeof faDigits==='function'?faDigits(x):String(x);
  const isoFor=(y,m,d)=>typeof pb843IsoForJalali==='function'?pb843IsoForJalali(y,m,d):'';
@@ -8736,7 +8740,7 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  const baseMarkup=window.pb854BookingPaneMarkup,managerSelected={approved:today(),out:today()};
  if(typeof baseMarkup==='function'){
   window.pb854BookingPaneMarkup=function(kind,title){
-   if(kind!=='approved'&&kind!=='out')return baseMarkup(kind,title);
+   if(!isDesktop()||(kind!=='approved'&&kind!=='out'))return baseMarkup(kind,title);
    const chosen=managerSelected[kind]||today(),rows=(window.pb854BookingRows?.(kind)||[]).filter(b=>managerDates(b,kind).includes(chosen));
    const cards=rows.length?rows.map(b=>{const actions=b.status==='pending_approval'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'reserved\')">تأیید</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'rejected\')">رد</button>':b.status==='payment_pending'?'<button class="mini" disabled>منتظر پرداخت</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'cancelled\')">لغو</button>':b.status==='reserved'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'picked_up\')">تحویل تجهیزات</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'cancelled\')">لغو</button>':b.status==='picked_up'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'returned\')">ثبت برگشت</button>':'';return '<article class="pb854BookingStatusCard"><div><b>'+esc(b.photographer_name||b.customer_name||'عکاس')+'</b><small dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small><small class="pb854BookingItems">'+esc(b.item_titles||'بدون شرح تجهیزات')+'</small></div><div><small>'+dateFa(b.rental_start)+' تا '+dateFa(b.rental_end)+'</small><small>'+statusLabel(b.status)+' · '+money(b.total_amount)+'</small></div><div class="actions">'+actions+'</div></article>'}).join(''):'<div class="pb854BookingEmpty">برای این روز آفیشی ثبت نشده است.</div>';
    const list='<div class="pb854BookingStatusList">'+cards+'</div>';
@@ -8757,6 +8761,13 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  const repaintStaffCalendar=()=>{
   const shell=document.querySelector('.pbR100F9StaffShell'),nav=document.querySelector('.pbR100F9StaffNav'),host=document.getElementById('pbR100F9StaffDates'),list=document.getElementById('pbR100F9StaffList');
   if(!shell||!nav||!host||!list)return;
+  if(!isDesktop()){
+   shell.classList.remove('pb1010StaffSplit');nav.classList.remove('pb1010StaffCalendarPane');list.classList.remove('pb1010StaffDetails');
+   host.classList.remove('pbR100F89MonthRail');
+   if(host.querySelector('.pb1010CalGrid,.pbR100F89CalendarGrid'))baseStaffPaint?.();
+   document.getElementById('pbR100F9StaffDayLabel')?.style.removeProperty('display');
+   return;
+  }
   shell.classList.add('pb1010StaffSplit');nav.classList.add('pb1010StaffCalendarPane');list.classList.add('pb1010StaffDetails');
   const mode=document.querySelector('.pbR100F9StaffTabs [data-staff-mode].active')?.dataset.staffMode||'out',rows=(data?.bookings||[]).filter(b=>mode==='out'?['reserved','picked_up','returned'].includes(String(b.status||'')):['picked_up','returned'].includes(String(b.status||'')));
   staffSelected=window.pbR100F89ActiveStaffDay||staffSelected||today();
@@ -8768,6 +8779,8 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  const baseStaffDay=window.pbR100F89PickStaffDay;
  if(typeof baseStaffDay==='function')window.pbR100F89PickStaffDay=function(day){staffSelected=day;return baseStaffDay(day)};
  const init=()=>{if(document.body.classList.contains('pbR100F9StaffMode'))window.pbR100F9PaintStaffList?.();else window.pb854RenderBookingStatusPanes?.()};
+ const viewport=matchMedia('(min-width:851px)'),refreshViewport=()=>{if(document.body.classList.contains('pbR100F9StaffMode'))window.pbR100F9PaintStaffList?.();else window.pb854RenderBookingStatusPanes?.()};
+ if(viewport.addEventListener)viewport.addEventListener('change',refreshViewport);else viewport.addListener?.(refreshViewport);
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else setTimeout(init,0);
 })();
 </script>

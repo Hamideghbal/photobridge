@@ -16,6 +16,19 @@ jobs:
     name: Build and verify deploy payload
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: photobridge_test
+          POSTGRES_DB: photobridge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d photobridge_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,3 +45,25 @@ jobs:
         run: npm run build
       - name: Verify complete deployment payload
         run: npm run verify:full
+      - name: Smoke-test store discount migration in PostgreSQL 16
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { Client } from 'pg';
+          const db = new Client({host:'127.0.0.1',port:5432,user:'postgres',password:'photobridge_test',database:'photobridge_test'});
+          await db.connect();
+          try {
+            await db.query('CREATE TABLE equipment_rental_shops(id integer PRIMARY KEY)');
+            await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
+            await db.query('INSERT INTO equipment_rental_shops(id) VALUES(1)');
+            const first = await db.query('SELECT subscription_discount_percent FROM equipment_rental_shops WHERE id=1');
+            if (Number(first.rows[0].subscription_discount_percent) !== 0) throw new Error('Incorrect default discount');
+            await db.query('UPDATE equipment_rental_shops SET subscription_discount_percent=20 WHERE id=1');
+            let rejected = false;
+            try { await db.query('UPDATE equipment_rental_shops SET subscription_discount_percent=20.01 WHERE id=1'); }
+            catch (error) { rejected = error.code === '23514'; }
+            if (!rejected) throw new Error('Out-of-range discount should fail');
+            await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
+            console.log('Store discount migration passed: default, 20% limit and idempotence.');
+          } finally { await db.end(); }
+          NODE

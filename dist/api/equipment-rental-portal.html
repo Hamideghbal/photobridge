@@ -3920,7 +3920,7 @@ body.rentalAppReady [data-pb848-context-tab="photographers"] button.active:after
   /* Multi-date manual office booking from the office calendar. */
   const selectedDates=new Set();let manualDates=[];let filling=false;let manualHome=null,manualBox=null;
   function ensureBatchBar(){const box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox');if(!box||q('#pb892CalendarBatchBar'))return;const bar=document.createElement('div');bar.id='pb892CalendarBatchBar';bar.className='pb892CalendarBatchBar pb904r23CalendarActionBar';bar.innerHTML='<span class="pb892CalendarBatchCount" id="pb892CalendarCount">تاریخی انتخاب نشده</span><button type="button" class="primary" id="pb892CalendarContinue">ثبت آفیش</button>';const grid=box.querySelector('.pb843CalendarGrid');grid?.insertAdjacentElement('afterend',bar);q('#pb892CalendarContinue').onclick=openManualFromCalendar;updateBatchBar()}
-  function updateBatchBar(){const count=selectedDates.size,el=q('#pb892CalendarCount');if(el)el.textContent=count?`${fa(count)} روز پیوسته برای یک آفیش انتخاب شده`:'روزهای پیوستهٔ موردنظر را از تقویم انتخاب کن';const btn=q('#pb892CalendarContinue');if(btn){btn.disabled=false;btn.setAttribute('aria-disabled',count?'false':'true');btn.dataset.needsDate=count?'0':'1';btn.textContent='ثبت آفیش'}}
+  function updateBatchBar(){const count=selectedDates.size,el=q('#pb892CalendarCount');if(el)el.textContent=count?`${fa(count)} روز انتخاب‌شده`:'تاریخ را از تقویم انتخاب کن';const btn=q('#pb892CalendarContinue');if(btn){btn.disabled=false;btn.setAttribute('aria-disabled',count?'false':'true');btn.dataset.needsDate=count?'0':'1';btn.textContent='ثبت آفیش'}}
   function decorateCalendar(){ensureBatchBar();const today=pb904r4TodayIso();qa('#pb843CalendarGrid [data-pb843-cal-day]').forEach(b=>{const iso=String(b.dataset.pb843CalDay||''),past=iso<today,chosen=selectedDates.has(iso);b.classList.toggle('pb892SelectedDay',chosen);b.classList.toggle('pb904r4PastOfficeDay',past);b.setAttribute('aria-disabled',past?'true':'false');let mark=b.querySelector('.pb904r23DayCheck');if(!mark){mark=document.createElement('span');mark.className='pb904r23DayCheck';mark.setAttribute('role','checkbox');mark.setAttribute('aria-label','انتخاب این روز برای آفیش');b.appendChild(mark)}mark.classList.toggle('checked',chosen);mark.classList.toggle('disabled',past);mark.setAttribute('aria-checked',chosen?'true':'false');mark.setAttribute('aria-disabled',past?'true':'false')});updateBatchBar()}
   const pb904r4TodayIso=()=>pbR17TehranIsoDate();
   function toggleDate(iso){iso=String(iso||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(iso))return;if(iso<pb904r4TodayIso()){pb920CalendarNotice('تاریخ گذشته قابل انتخاب برای آفیش نیست. امروز یا روزهای آینده را انتخاب کن.');return}const sorted=[...selectedDates].sort();const adjacent=(a,b)=>Math.abs(Date.parse(a+'T00:00:00Z')-Date.parse(b+'T00:00:00Z'))===86400000;if(selectedDates.has(iso)){const rest=sorted.filter(x=>x!==iso);for(let i=1;i<rest.length;i++)if(!adjacent(rest[i-1],rest[i])){pb920CalendarNotice('روز میانی را نمی‌توان حذف کرد؛ روزهای هر آفیش باید پشت سر هم باشند. برای روزهای با فاصله، پس از ثبت آفیش فعلی یک آفیش جدید بساز.');return}selectedDates.delete(iso)}else{if(sorted.length&&!sorted.some(x=>adjacent(x,iso))){pb920CalendarNotice('در هر آفیش فقط روزهای پشت سر هم قابل انتخاب‌اند. ابتدا آفیش فعلی را ثبت کن؛ سپس برای روزهای با فاصله، یک آفیش جدید باز کن.');return}selectedDates.add(iso)}message('#bookingMsg','');decorateCalendar()}
@@ -9446,6 +9446,26 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
 html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarCount{grid-column:2!important;grid-row:1!important;text-align:right!important}
 @media(max-width:850px){
  html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+}
+/* A compact one-line action leaves room for the same roomy date cells as handover. */
+html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar{
+ grid-template-columns:112px minmax(0,1fr)!important;grid-template-rows:34px!important;
+ min-height:34px!important;height:34px!important;max-height:34px!important;padding:2px 5px!important;gap:6px!important;
+}
+html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarContinue{
+ width:100%!important;min-width:0!important;max-width:100%!important;height:28px!important;min-height:28px!important;max-height:28px!important;
+ padding:0 6px!important;border-radius:7px!important;font:900 8.5px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;white-space:nowrap!important;
+}
+html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarCount{
+ display:block!important;min-width:0!important;min-height:0!important;max-height:22px!important;margin:0!important;padding:0 3px!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;line-height:22px!important;font-size:8px!important;text-align:right!important;
+}
+@media(max-width:850px){
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar{
+  grid-template-columns:100px minmax(0,1fr)!important;grid-template-rows:32px!important;min-height:32px!important;height:32px!important;max-height:32px!important;
+  margin-top:6px!important;padding:2px 4px!important;gap:5px!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarContinue{height:26px!important;min-height:26px!important;max-height:26px!important;font-size:8px!important}
 }
 @media(prefers-reduced-motion:no-preference){
  html body.rentalAppReady #rentalHeaderFilterHost .pb842SubTabs button,

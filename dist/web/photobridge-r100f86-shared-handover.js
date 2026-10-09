@@ -19,7 +19,25 @@
    const missingText=missing.map(x=>fa(x.missing_qty)+' عدد '+String(x.item_title||'تجهیز')).join('، ');
    const badgeText=mode==='out'?(done||picked?'✓ تحویل شده':''):(done?'✓ دریافت شده':'');
    // Printable owner documents are in the details dialog, not on mobile cards.
-   const controls=String(action||'').replace(/<span class="pb100rManagerDocs">[\s\S]*?<\/span>/g,'').trim();
+   // Both roles use this exact button markup; only the action permission differs.
+   const manager=!!config.manager;
+   const button=(text,status,secondary=false)=>{
+     const id=esc(b.id),permission=manager?
+       'onclick="bookingStatus(&#39;'+id+'&#39;,&#39;'+esc(status)+'&#39;)"':
+       'data-booking="'+id+'"';
+     return '<button type="button" class="pbR100F86Operation'+(secondary?' secondary':'')+'" '+permission+'>'+esc(text)+'</button>';
+   };
+   const actions=[];
+   if(mode==='out'&&b.status==='reserved'){
+     actions.push(button('ثبت تحویل تجهیزات','picked_up'));
+     // Owner retains cancellation, without reintroducing the old card layout.
+     if(manager)actions.push(button('لغو آفیش','cancelled',true));
+   }else if(mode==='in'&&picked){
+     actions.push(button('ثبت دریافت تجهیزات','returned'));
+   }else if(mode==='out'&&b.status==='payment_pending'){
+     actions.push('<span class="pbR100F86Pending">منتظر پرداخت</span>');
+   }
+   const controls=actions.join('');
    const badge=badgeText&&!controls.includes('pbR100F9StaffState')?
       '<span class="pbR100F9StaffState pbR100F86State">'+esc(badgeText)+'</span>':'';
    return '<article class="pbR100F9StaffCard pbR100F71UnifiedCard pbR100F86SharedCard" data-pb915-booking-id="'+esc(b.id)+'" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش">'+
@@ -62,12 +80,14 @@
      }).join(''):'<div class="pbR100F72Empty">موردی ثبت نشده است.</div>')+'</div></section>';
  };
  // All three panes use the same shortage markup/handler; only existing role permissions differ.
- window.pbR85ReturnShortagePane=window.pbR100F86ShortageCards;
+ const originalManagerShortagePane=window.pbR85ReturnShortagePane;
+ window.pbR85ReturnShortagePane=()=>window.matchMedia('(max-width:850px)').matches?window.pbR100F86ShortageCards():originalManagerShortagePane?.();
  document.addEventListener('click',e=>{
    const b=e.target.closest?.('[data-pbr86-resolve]');
    if(b){e.preventDefault();e.stopPropagation();window.pbR85ResolveReturnShortage?.(b.dataset.pbr86Resolve,b);return}
  },true);
  function syncTabs(){
+   if(!window.matchMedia('(max-width:850px)').matches)return;
    const staff=document.body.classList.contains('pbR100F9StaffMode');
    document.querySelectorAll('.pbR100F9StaffTabs [data-staff-mode]').forEach(b=>{
      if(!modeNames[b.dataset.staffMode])return;

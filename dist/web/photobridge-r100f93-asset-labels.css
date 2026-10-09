@@ -1,0 +1,26 @@
+/* R100F93 – compact physical asset QR labels, option controls in both print dialogs. */
+.pbR100F93LabelOptions{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ gap:9px!important;margin:13px 0 6px!important;padding:11px 12px!important;
+ border:1px solid #dbe4f0!important;border-radius:11px!important;background:#f8fafc!important;
+}
+.pbR100F93LabelOptions>label{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;font:800 11.5px/1.6 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important}
+.pbR100F93LabelOptions select,.pbR100F93LabelOptions input[type=tel]{
+ flex:1 1 auto!important;min-width:0!important;max-width:310px!important;
+ min-height:37px!important;padding:5px 9px!important;direction:rtl!important;
+ font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;color:#182230!important;
+ background:#fff!important;border:1px solid #cbd5e1!important;border-radius:8px!important;
+}
+.pbR100F93LabelOptions input[type=tel]{direction:ltr!important;text-align:left!important;font-size:12px!important}
+.pbR100F93LabelOptions .pbR100F93Details{font-size:10.5px!important;align-items:flex-start!important}
+.pbR100F93LabelOptions input[type=checkbox]{flex:0 0 17px!important;width:17px!important;height:17px!important;margin-top:2px!important;accent-color:#315efb!important}
+.pbR85AssetCard .pbR85AssetQr{width:92px!important;height:92px!important;border-radius:7px!important}
+.pbR85AssetCard .pbR85AssetCode{font-size:13px!important;letter-spacing:.4px!important}
+.pbR85AssetCard .pbR85AssetName{font-size:11px!important;min-height:0!important}
+@media(max-width:700px){
+ .pbR85AssetCard .pbR85AssetQr{width:79px!important;height:79px!important}
+ .pbR100F93LabelOptions{margin:10px 0 4px!important;padding:9px!important}
+ .pbR100F93LabelOptions>label{flex-wrap:wrap!important}
+ .pbR100F93LabelOptions select{width:100%!important;max-width:100%!important}
+ .pbR100F93LabelOptions .pbR100F93Details{flex-wrap:nowrap!important}
+}

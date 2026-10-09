@@ -9530,73 +9530,83 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  }
 }
 </style>
-<style id="pbR1031OfficeActionBelowCalendar">
+<style id="pbR1033OfficeHeaderActionVisible">
+/* Desktop manager Office action: reserve no space in the fixed-height calendar grid.
+   The actual booking action remains wired to #pb892CalendarContinue for all date and form logic. */
 @media(min-width:851px){
- html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar{
-  position:fixed!important;z-index:160!important;left:var(--pb-r1031-office-action-left,0px)!important;right:auto!important;
-  top:var(--pb-r1031-office-action-top,0px)!important;bottom:auto!important;transform:none!important;
-  width:var(--pb-r1031-office-action-width,0px)!important;min-width:0!important;max-width:none!important;
-  height:48px!important;min-height:48px!important;max-height:48px!important;margin:0!important;padding:3px 6px!important;
-  display:grid!important;grid-template-columns:174px minmax(0,1fr)!important;grid-template-rows:40px!important;gap:8px!important;
-  box-sizing:border-box!important;overflow:hidden!important;border:1px solid #e4e7ec!important;border-top:0!important;
-  border-radius:0 0 7px 7px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 2px 4px rgba(16,24,40,.06)!important;
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings #pb892CalendarBatchBar{
+  display:none!important;
  }
- html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarContinue{
-  grid-column:1!important;grid-row:1!important;width:100%!important;height:40px!important;min-height:40px!important;max-height:40px!important;
-  padding:0 12px!important;border-radius:8px!important;font:900 12px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;white-space:nowrap!important;
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost.pb848ContextActive{
+  overflow:visible!important;
  }
- html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarCount{
-  grid-column:2!important;grid-row:1!important;display:block!important;min-width:0!important;min-height:0!important;max-height:40px!important;
-  margin:0!important;padding:0 3px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
-  line-height:40px!important;font-size:10px!important;text-align:right!important;
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){
+  position:absolute!important;left:max(12px,calc((100vw - 1320px)/2))!important;right:auto!important;
+  top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:164px!important;min-width:164px!important;max-width:164px!important;
+  height:40px!important;min-height:40px!important;max-height:40px!important;
+  padding:0 12px!important;margin:0!important;
+  border:1px solid #315efb!important;border-radius:9px!important;background:#315efb!important;color:#fff!important;
+  box-shadow:0 2px 7px rgba(49,94,251,.16)!important;
+  font:900 12.5px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;
+  white-space:nowrap!important;cursor:pointer!important;z-index:310!important;opacity:1!important;visibility:visible!important;
+  pointer-events:auto!important;box-sizing:border-box!important;
  }
- /* When the full-height desktop calendar leaves no room below it,
-    place ONLY the action on the left of the fixed top header. */
- html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar.pbR1032OfficeInHeader{
-  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:42px!important;
-  width:var(--pb-r1031-office-action-width,156px)!important;
-  height:42px!important;min-height:42px!important;max-height:42px!important;
-  margin:0!important;padding:0!important;gap:0!important;
-  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]):focus-visible{
+  outline:3px solid #93c5fd!important;outline-offset:2px!important;
  }
- html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar.pbR1032OfficeInHeader #pb892CalendarCount{display:none!important}
 }
+#pbR1033OfficeHeaderAction[hidden]{display:none!important}
+@media(max-width:850px){#pbR1033OfficeHeaderAction{display:none!important}}
 </style>
-<script id="pbR1031OfficeActionPositionRuntime">
+<script id="pbR1033OfficeHeaderActionRuntime">
 (()=>{
- const q=s=>document.querySelector(s);let queued=false,observer=null,resizeObserver=null;
- function sync(){
-  const bar=q('#pb892CalendarBatchBar');
-  if(!bar)return;
-  if(!matchMedia('(min-width:851px)').matches){
-   bar.classList.remove('pbR1032OfficeInHeader');
-   ['--pb-r1031-office-action-left','--pb-r1031-office-action-top','--pb-r1031-office-action-width'].forEach(k=>bar.style.removeProperty(k));
-   bar.style.removeProperty('visibility');return;
+ if(window.__PB_R1033_OFFICE_HEADER_ACTION__)return;
+ window.__PB_R1033_OFFICE_HEADER_ACTION__=true;
+ const q=s=>document.querySelector(s);
+ let queued=false;
+ const desktop=()=>window.matchMedia('(min-width:851px)').matches;
+ function ensure(){
+  const host=q('#rentalHeaderFilterHost');
+  if(!host)return null;
+  let btn=q('#pbR1033OfficeHeaderAction');
+  if(!btn){
+   btn=document.createElement('button');
+   btn.id='pbR1033OfficeHeaderAction';btn.type='button';
+   btn.textContent='ثبت آفیش';btn.setAttribute('hidden','');
+   btn.addEventListener('click',()=>{
+    let original=q('#pb892CalendarContinue');
+    if(!original){
+     try{window.pb843RenderCalendar?.()}catch{}
+     original=q('#pb892CalendarContinue');
+    }
+    if(original){original.click();return}
+    if(typeof storeNotice==='function')storeNotice('تقویم آفیش آماده نیست. لطفاً دوباره بخش آفیش را باز کنید.','ثبت آفیش');
+   });
+   host.appendChild(btn);
   }
-  const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
-  const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
-  if(!pane||!grid){bar.style.setProperty('visibility','hidden');return}
-  const r=grid.getBoundingClientRect();
-  if(r.width<1||r.height<1){bar.style.setProperty('visibility','hidden');return}
-  const header=q('.top'),nav=q('#rentalDesktopPrimaryNav');
-  const h=header?.getBoundingClientRect(),n=nav?.getBoundingClientRect();
-  const useHeader=window.innerHeight-r.bottom<54&&h&&n&&n.left-h.left>=136;
-  bar.classList.toggle('pbR1032OfficeInHeader',!!useHeader);
-  const width=useHeader?Math.min(174,Math.max(124,Math.floor(n.left-h.left-20))):r.width;
-  const left=useHeader?Math.max(h.left+8,n.left-width-10):r.left;
-  const top=useHeader?h.top+Math.max(0,(h.height-42)/2):r.bottom+1;
-  bar.style.setProperty('--pb-r1031-office-action-left',`${Math.round(left)}px`);
-  bar.style.setProperty('--pb-r1031-office-action-top',`${Math.round(top)}px`);
-  bar.style.setProperty('--pb-r1031-office-action-width',`${Math.round(width)}px`);
-  bar.style.removeProperty('visibility');
-  if(resizeObserver){resizeObserver.disconnect();resizeObserver.observe(grid);resizeObserver.observe(pane)}
+  return btn;
  }
- function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(()=>{queued=false;sync()}))}
- function boot(){if(!observer){observer=new MutationObserver(queue);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}if(!resizeObserver)resizeObserver=new ResizeObserver(queue);sync()}
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
- window.addEventListener('resize',queue,{passive:true});window.addEventListener('scroll',queue,{passive:true,capture:true});
- document.addEventListener('click',e=>{if(e.target.closest?.('[data-pb843-office-tab],[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"]'))queue()},true);
- [80,350,900].forEach(ms=>setTimeout(queue,ms));
+ function sync(){
+  const btn=ensure();if(!btn)return;
+  const active=desktop()&&document.body.classList.contains('rentalAppReady')
+    &&document.body.classList.contains('pb899MainBookings')
+    &&!document.body.classList.contains('pbR100F9StaffMode')
+    &&!!q('#bookings [data-pb843-office-pane="calendar"].active');
+  btn.toggleAttribute('hidden',!active);
+ }
+ function queue(){
+  if(queued)return;
+  queued=true;
+  requestAnimationFrame(()=>{queued=false;sync()});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});
+ else sync();
+ window.addEventListener('resize',queue,{passive:true});
+ document.addEventListener('click',queue,true);
+ new MutationObserver(queue).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+ [50,200,650].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>
 </body></html>

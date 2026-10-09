@@ -1,1 +1,1 @@
-2026-10-09-r1037-calendar-actions-and-date-clicks
+2026-10-09-r1038-office-calendar-action-cleanup

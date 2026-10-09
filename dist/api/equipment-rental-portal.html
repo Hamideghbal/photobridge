@@ -9534,13 +9534,13 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
 /* Desktop manager Office action: reserve no space in the fixed-height calendar grid.
    The actual booking action remains wired to #pb892CalendarContinue for all date and form logic. */
 @media(min-width:851px){
- html body.rentalAppReady.pb899MainBookings #bookings #pb892CalendarBatchBar{
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings #pb892CalendarBatchBar{
   display:none!important;
  }
- html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost.pb848ContextActive{
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost.pb848ContextActive{
   overflow:visible!important;
  }
- html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){
   position:absolute!important;left:max(12px,calc((100vw - 1320px)/2))!important;right:auto!important;
   top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;
   display:inline-flex!important;align-items:center!important;justify-content:center!important;
@@ -9553,7 +9553,7 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
   white-space:nowrap!important;cursor:pointer!important;z-index:310!important;opacity:1!important;visibility:visible!important;
   pointer-events:auto!important;box-sizing:border-box!important;
  }
- html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]):focus-visible{
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]):focus-visible{
   outline:3px solid #93c5fd!important;outline-offset:2px!important;
  }
 }
@@ -9592,6 +9592,7 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
   const btn=ensure();if(!btn)return;
   const active=desktop()&&document.body.classList.contains('rentalAppReady')
     &&document.body.classList.contains('pb899MainBookings')
+    &&!document.body.classList.contains('pbR100F9StaffMode')
     &&!!q('#bookings [data-pb843-office-pane="calendar"].active');
   btn.toggleAttribute('hidden',!active);
  }

@@ -99,10 +99,10 @@
     w.document.open();w.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>رسید تأیید کسری آفیش</title><style>body{font:15px/2 Tahoma,Arial,sans-serif;color:#182230;margin:32px}.paper{max-width:760px;margin:auto;border:1px solid #d0d5dd;border-radius:16px;padding:28px}.head{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid #315efb;padding-bottom:14px}.head h1{font-size:21px;margin:0}.muted{color:#667085}.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}.facts div{padding:12px;border:1px solid #e4e7ec;border-radius:10px}.note{padding:14px;background:#f8fafc;border-radius:10px}.sign{display:flex;justify-content:space-between;margin-top:42px;color:#475467}.print{margin:18px 0;padding:10px 18px;border:0;border-radius:8px;background:#315efb;color:white;font-weight:bold}@media print{body{margin:0}.paper{border:0}.print{display:none}}</style></head><body><main class="paper"><header class="head"><h1>رسید تأیید تأمین کسری آفیش</h1><b>${shop}</b></header><section class="facts"><div>عکاس / مشتری: <b>${name}</b></div><div>تجهیز: <b>${item}</b></div><div>تعداد کسری تأمین‌شده: <b>${qty} عدد</b></div><div>تاریخ آفیش: <b>${day}</b></div><div>تأییدکننده: <b>${actor}</b></div><div>تاریخ ثبت تأیید: <b>${confirmed}</b></div></section><p class="note"><b>توضیحات ثبت‌شده:</b> ${note}</p><footer class="sign"><span>امضای فروشگاه</span><span>امضای تحویل‌گیرنده</span></footer><button class="print" onclick="window.print()">چاپ / ذخیره PDF</button></main></body></html>`);w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch{}},250);
   }
   function render(){
-    const root=document.getElementById('pbR100F9StaffList');if(!root||!staffMode())return;
+    const root=document.getElementById('pbR100F72ExtraPane');if(!root||!staffMode())return;
     root.querySelector('[data-staff-shortages-v80]')?.remove();
     const tab=document.querySelector('.pbR100F9StaffTabs [data-staff-mode].active')?.dataset.staffMode;
-    if(tab!=='out')return;
+    if(tab!=='officeShortages'||root.hidden)return;
     const date=document.querySelector('#pbR100F9StaffDates [data-staff-day].active')?.dataset.staffDay;
     if(!date)return;
     const rows=(Array.isArray(current().shortages)?current().shortages:[]).filter(x=>String(x.rental_start||'').slice(0,10)===date);
@@ -112,7 +112,7 @@
       const id=escapeHtml(row.id),done=String(row.status||'pending')==='provided'||Boolean(row.resolved_at),cancelled=Boolean(row.booking_cancelled_at),ack=Boolean(row.external_cancellation_acknowledged_at);
       return `<article class="pbR100F80ShortageCard ${done?'done':''}" data-shortage-id="${id}"><div class="pbR100F80ShortageInfo"><b>${escapeHtml(row.photographer_name||'عکاس')}</b><small>${escapeHtml(row.item_title||'تجهیز')} · ${number(row.shortage_qty||0)} عدد کسری</small>${cancelled?`<small>${escapeHtml(row.cancellation_note||'آفیش لغو شده است.')}</small>`:''}${done?`<small>تأیید ثبت‌شده${row.resolved_by_name?' توسط '+escapeHtml(row.resolved_by_name):''}${row.resolved_at?' · '+escapeHtml(typeof window.dateFa==='function'?window.dateFa(row.resolved_at):row.resolved_at):''}</small>${row.resolution_note?`<small>توضیح: ${escapeHtml(row.resolution_note)}</small>`:''}`:''}</div><div class="pbR100F80ShortageActions">${cancelled?done?(ack?'<span class="pbR100F80DoneLabel">✓ پیگیری لغو ثبت شد</span>':'<button type="button" data-shortage-cancel-ack>تأمین بیرونی لغو شد</button>'):'<span>آفیش لغو شده؛ تأمین بیرونی ثبت نشده است.</span>':done?'<span class="pbR100F80DoneLabel">✓ تأمین تأیید شد</span>':'<label class="pbR100F80Note"><span>توضیح تأیید (اختیاری)</span><input type="text" maxlength="1000" placeholder="مثلاً تأمین از همکار"></label><button type="button" data-shortage-confirm>تأیید تأمین کسری</button>'}${done?'<button type="button" class="secondary" data-shortage-print>چاپ رسید تأیید</button>':''}</div></article>`;
     }).join('');
-    root.prepend(box);
+    root.replaceChildren(box);
     box.addEventListener('click',async event=>{
       const btn=event.target.closest('button');if(!btn)return;
       const card=btn.closest('[data-shortage-id]'),row=rows.find(x=>String(x.id)===String(card?.dataset.shortageId));if(!row)return;

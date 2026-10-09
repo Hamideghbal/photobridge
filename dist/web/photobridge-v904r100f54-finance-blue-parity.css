@@ -49,3 +49,49 @@
 #accounting .pb856PaymentsList small{font-size:11px!important;line-height:1.65!important}
 #accounting .pb856PaymentForm label{font-size:12px!important;line-height:1.65!important}
 #accounting .pb856PaymentForm input,#accounting .pb856PaymentForm select,#accounting .pb856PaymentForm button{font-size:12px!important}
+
+/* R100F81: make the store manager finance workspace comfortable to read. */
+html body #accounting .pb856FinanceShell,
+html body #accounting .pb856FinanceShell p,
+html body #accounting .pb856FinanceShell label,
+html body #accounting .pb856FinanceShell summary{font-size:14px!important;line-height:1.8!important}
+html body #accounting .pb856FinanceTabs button{font-size:14px!important;line-height:1.6!important}
+html body #accounting .pb856FinancePanel h2,
+html body #accounting .pb856FinancePanel h3{font-size:17px!important;line-height:1.6!important}
+html body #accounting .pb856FinanceSummary .stat small,
+html body #accounting .pb856FinancePanel .accountingSummary .stat small{font-size:12.5px!important;line-height:1.7!important}
+html body #accounting .pb856FinanceSummary .stat b,
+html body #accounting .pb856FinancePanel .accountingSummary .stat b{font-size:15px!important;line-height:1.6!important}
+html body #accounting .pb855FinanceInvoiceRow{font-size:14px!important;line-height:1.75!important}
+html body #accounting .pb855FinanceInvoiceRow small{font-size:12.5px!important;line-height:1.7!important}
+html body #accounting .pb855FinanceInvoiceRow b{font-size:15px!important;line-height:1.7!important}
+html body #accounting .pb855FinanceInvoiceRow .pb855InvoiceStatus,
+html body #accounting .pb855FinanceInvoiceRow .pb890AccountingBadge{font-size:12px!important;line-height:1.6!important}
+html body #accounting .pb890InvoiceRange label{font-size:13px!important;line-height:1.7!important}
+html body #accounting .pb890InvoiceRange input,
+html body #accounting .pb890InvoiceRange button{font-size:13px!important}
+html body #accounting .pb890AccountingAction{position:relative!important;z-index:2!important;pointer-events:auto!important}
+html body #accounting .pb890AccountingAction button{position:relative!important;z-index:3!important;pointer-events:auto!important;font-size:13px!important;line-height:1.6!important;min-height:40px!important}
+html body #accounting .pb856FinancePanel .accountingTable th{font-size:13px!important;line-height:1.7!important}
+html body #accounting .pb856FinancePanel .accountingTable td{font-size:14px!important;line-height:1.8!important}
+html body #accounting .pb856FinancePanel .accountingTable td small{font-size:12.5px!important;line-height:1.7!important}
+html body #accounting .pb856StatementMeta,
+html body #accounting .pb856Balances summary,
+html body #accounting .pb856PaymentsList,
+html body #accounting .pb856PaymentForm label{font-size:13px!important;line-height:1.8!important}
+html body #accounting .pb856PaymentForm input,
+html body #accounting .pb856PaymentForm select,
+html body #accounting .pb856PaymentForm button,
+html body #accounting .pb856ExportActions button{font-size:13px!important;line-height:1.6!important}
+html body #accounting .pb856PaymentForm small,
+html body #accounting .pb856PaymentsList small{font-size:12px!important;line-height:1.7!important}
+@media(max-width:700px){
+  html body #accounting .pb856FinanceTabs button{font-size:13px!important}
+  html body #accounting .pb856FinanceSummary .stat small{font-size:11px!important}
+  html body #accounting .pb856FinanceSummary .stat b{font-size:13px!important}
+  html body #accounting .pb855FinanceInvoiceRow{font-size:13px!important}
+  html body #accounting .pb855FinanceInvoiceRow b{font-size:14px!important}
+  html body #accounting .pb855FinanceInvoiceRow small{font-size:12px!important}
+  html body #accounting .pb856FinancePanel .accountingTable td{font-size:13px!important}
+  html body #accounting .pb856FinancePanel .accountingTable td::before{font-size:11px!important}
+}

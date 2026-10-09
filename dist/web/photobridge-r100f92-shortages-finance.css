@@ -1,0 +1,217 @@
+/* PhotoBridge R100F92: isolate staff shortage pane and tidy manager accounting.
+   Layout-only changes are scoped to the staff shortage view and accounting panel. */
+
+/* Never render delivery calendar/cards behind shortage entries. */
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive #pbR100F9StaffDates,
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffList,
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffHero,
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffDayLabel {
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive #pbR100F72ExtraPane{
+  display:block!important;visibility:visible!important;position:relative!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  margin:0!important;box-sizing:border-box!important;
+}
+html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive #pbR100F72ExtraPane[hidden]{
+  display:none!important;
+}
+@media(min-width:851px){
+ html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive{
+   overflow-x:hidden!important;overflow-y:hidden!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffShell{
+   display:block!important;grid-template-columns:none!important;
+   width:calc(100% - 28px)!important;max-width:1320px!important;
+   height:calc(100dvh - 150px)!important;max-height:calc(100dvh - 150px)!important;
+   min-height:0!important;margin:4px auto 0!important;padding:0!important;
+   overflow:hidden!important;box-sizing:border-box!important;
+ }
+ /* On desktop the staff tab buttons are in the top header, not this old date-nav. */
+ html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive .pbR100F9StaffShell>.pbR100F9StaffNav{
+   display:none!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive #pbR100F72ExtraPane{
+   height:100%!important;max-height:100%!important;min-height:0!important;
+   padding:0 2px 12px!important;overflow-x:hidden!important;overflow-y:auto!important;
+   overscroll-behavior:contain!important;
+ }
+ html body.rentalAppReady.pbR100F9StaffMode.pbR100F72ExtraActive #pbR100F72ExtraPane>.pbR100F72Panel{
+   width:100%!important;box-sizing:border-box!important;
+ }
+}
+.pbR100F92QuantityFields{
+ display:grid!important;gap:9px!important;padding:10px!important;
+ border:1px solid #e2e8f0!important;border-radius:11px!important;
+ background:#f8fafc!important;
+}
+.pbR100F92Tracked{margin:0!important;padding:8px!important;min-width:0!important;
+ border:1px solid #d0d5dd!important;border-radius:9px!important;display:grid!important;gap:7px!important}
+.pbR100F92Tracked legend{font-size:12px!important;font-weight:900!important;padding:0 5px!important}
+.pbR100F76ShortageDialog .pbR100F92TrackedRow{
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ justify-content:flex-start!important;gap:10px!important;padding:7px 8px!important;
+ border-radius:8px!important;background:#fff!important;
+}
+.pbR100F92Quantity{display:grid!important;grid-template-columns:minmax(0,1fr) 100px!important;gap:10px!important;
+ align-items:center!important;font-weight:800!important}
+.pbR100F76ShortageDialog .pbR100F92Quantity input[type=number]{
+ display:block!important;min-height:38px!important;width:100%!important;
+ border:1px solid #cbd5e1!important;border-radius:8px!important;
+ font:850 14px Vazirmatn,Tahoma,sans-serif!important;box-sizing:border-box!important;
+ text-align:center!important;background:#fff!important;
+}
+.pbR100F92QuantitySummary{font:850 11.5px/1.7 Vazirmatn,Tahoma,sans-serif!important;
+ color:#3153a5!important}
+
+/* Manager: invoices become legible two-row information cards. No financial behavior changes. */
+html body.rentalAppReady #accounting #pb855FinanceInvoices.pb855FinanceInvoiceRows{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:11px!important;
+ min-width:0!important;width:100%!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(165px,.9fr)!important;
+ grid-template-areas:"person period amount" "number deposit actions"!important;
+ gap:12px 18px!important;align-items:center!important;direction:rtl!important;
+ padding:14px 16px!important;margin:0!important;min-width:0!important;width:100%!important;
+ background:#fff!important;border:1px solid #e1e6ef!important;border-radius:13px!important;
+ box-shadow:0 2px 7px rgba(16,24,40,.035)!important;box-sizing:border-box!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ gap:3px!important;text-align:right!important;min-width:0!important;
+ border:0!important;margin:0!important;padding:0!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(1){grid-area:number!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(2){grid-area:person!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(3){grid-area:period!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(4){grid-area:deposit!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(5){grid-area:amount!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(6){
+ grid-area:actions!important;display:flex!important;flex-flow:row wrap!important;
+ justify-content:flex-end!important;align-items:center!important;gap:6px!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow small{
+ color:#667085!important;font:750 10.5px/1.55 Vazirmatn,Tahoma,sans-serif!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow b{
+ color:#182230!important;font:900 13px/1.55 Vazirmatn,Tahoma,sans-serif!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(5)>b{
+ font-size:16px!important;color:#123e7c!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb890AccountingAction button{
+ min-height:34px!important;width:auto!important;min-width:0!important;
+ border-radius:8px!important;padding:6px 9px!important;
+ font:850 10.5px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855InvoiceEquipmentSummary{
+ display:block!important;max-width:100%!important;line-height:1.6!important;
+}
+/* Receipts and account adjustments are separated into a clear form and readable entries. */
+html body.rentalAppReady #accounting .pb856PaymentForm{
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ gap:12px!important;align-items:end!important;width:100%!important;
+ box-sizing:border-box!important;margin:0 0 15px!important;
+ padding:15px!important;border:1px solid #e1e6ef!important;border-radius:13px!important;
+ background:#f9fbff!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentForm>.field{
+ grid-column:auto!important;min-width:0!important;margin:0!important;gap:5px!important;
+ font:800 11.5px/1.6 Vazirmatn,Tahoma,sans-serif!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentForm>.field.span3{
+ grid-column:1/4!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentForm .formActionCell{
+ grid-column:4!important;display:flex!important;align-items:end!important;
+ margin:0!important;padding:0!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentForm .formActionCell button{
+ width:100%!important;min-height:41px!important;border-radius:9px!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentForm select,
+html body.rentalAppReady #accounting .pb856PaymentForm input{
+ min-height:40px!important;height:40px!important;width:100%!important;
+ box-sizing:border-box!important;font-size:12px!important;border-radius:9px!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentsList{
+ display:block!important;width:100%!important;padding:14px!important;
+ background:#fff!important;border:1px solid #e1e6ef!important;border-radius:13px!important;
+ box-sizing:border-box!important;
+}
+html body.rentalAppReady #accounting .pb856PaymentsList h3{
+ font:900 15px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ color:#182230!important;margin:0 0 12px!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .tableWrap{
+ overflow:visible!important;width:100%!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable{
+ width:100%!important;display:block!important;min-width:0!important;
+ border:0!important;border-collapse:separate!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable thead{display:none!important}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable tbody{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:9px!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable tr{
+ display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,1.5fr) minmax(120px,.9fr)!important;
+ grid-template-areas:"person note amount" "date type amount"!important;
+ gap:8px 14px!important;align-items:center!important;padding:12px 14px!important;
+ background:#fdfefe!important;border:1px solid #e6eaf1!important;border-radius:11px!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td{
+ display:block!important;min-width:0!important;text-align:right!important;
+ border:0!important;padding:0!important;font:750 12px/1.6 Vazirmatn,Tahoma,sans-serif!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(1){grid-area:date!important}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(2){grid-area:person!important;font-weight:900!important}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(3){grid-area:note!important}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(4){grid-area:type!important}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(5){
+ grid-area:amount!important;justify-self:end!important;text-align:left!important;
+ font:950 14px/1.5 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(1)::before,
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(3)::before,
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(4)::before{
+ display:block!important;font:700 9.5px/1.3 Vazirmatn,Tahoma,sans-serif!important;
+ color:#98a2b3!important;
+}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(1)::before{content:"تاریخ"}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(3)::before{content:"شرح"}
+html body.rentalAppReady #accounting #accountingEntries .accountingTable td:nth-child(4)::before{content:"نوع ثبت"}
+@media(max-width:850px){
+ html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   grid-template-areas:"person amount" "period period" "number deposit" "actions actions"!important;
+   gap:9px 12px!important;padding:12px!important;
+ }
+ html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(3),
+ html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:nth-child(4){
+   display:flex!important;
+ }
+ html body.rentalAppReady #accounting .pb856PaymentForm{
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:11px!important;gap:10px!important;
+ }
+ html body.rentalAppReady #accounting .pb856PaymentForm>.field.span3{grid-column:1/-1!important}
+ html body.rentalAppReady #accounting .pb856PaymentForm .formActionCell{grid-column:1/-1!important}
+ html body.rentalAppReady #accounting #accountingEntries .accountingTable tr{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   grid-template-areas:"person amount" "note note" "date type"!important;
+   gap:9px 10px!important;padding:11px!important;
+ }
+}
+
+/* Keep the existing green cue for an invoice already entered in external accounting. */
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow.pb890AccountingRecorded{
+  background:#f5fcf7!important;border-color:#badfc4!important;
+}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow:focus-within{
+  outline:2px solid #aac2fa!important;outline-offset:2px!important;
+}

@@ -15,8 +15,9 @@
     const back=document.createElement('div');
     back.className='pbR100F76ShortageBack';
     back.innerHTML='<form class="pbR100F76ShortageDialog" role="dialog" aria-modal="true">'+
-      '<h2>دریافت کسری</h2><p>تمام '+esc(row.missing_qty||0)+' واحد کسری «'+esc(row.item_title||'تجهیز')+'» برگشته است؟</p>'+
-      '<label class="pbR100F76Confirm"><input name="confirmed" type="checkbox">بازگشت تمام واحدهای این کسری را تأیید می‌کنم.</label>'+
+      '<h2>دریافت کسری</h2><p>از '+esc(row.missing_qty||0)+' واحد کسری «'+esc(row.item_title||'تجهیز')+'»، فقط مواردی را که واقعاً تحویل گرفته‌اید ثبت کنید.</p>'+
+      '<div class="pbR100F92QuantityFields" data-pb92-quantity-fields></div>'+
+      '<label class="pbR100F76Confirm"><input name="confirmed" type="checkbox">دریافت تعداد انتخاب‌شده را تأیید می‌کنم.</label>'+
       '<label>توضیح تحویل (اختیاری)<textarea name="note" rows="2" maxlength="1000" placeholder="وضعیت تجهیزات یا زمان تحویل"></textarea></label>'+
       ('<label class="pbR100F76Confirm"><input name="addFee" type="checkbox">افزودن هزینه دیرکرد به فاکتور</label>'+
         '<div class="pbR100F76FeeFields" hidden><label>مبلغ افزایشی (تومان)<input name="fee" type="text" inputmode="numeric" autocomplete="off" dir="ltr" placeholder="0" aria-label="مبلغ افزایشی به تومان"></label>'+
@@ -53,6 +54,30 @@
       }
       refreshFee();
     });
+    // Tracked assets are selected by code; non-tracked items use a quantity field.
+    const missingQty=Math.max(0,Number(row.missing_qty||0));
+    const assignedCodes=Array.isArray(row.missing_asset_codes)?row.missing_asset_codes.map(x=>String(x||'').trim()).filter(Boolean):[];
+    const externalQty=Math.max(0,missingQty-assignedCodes.length);
+    const qtyFields=back.querySelector('[data-pb92-quantity-fields]');
+    if(qtyFields){
+      qtyFields.innerHTML=(assignedCodes.length?'<fieldset class="pbR100F92Tracked"><legend>انتخاب تجهیز تحویل‌شده</legend>'+
+        assignedCodes.map(code=>'<label class="pbR100F92TrackedRow"><input type="checkbox" name="receivedAsset" value="'+esc(code)+'"><span>کد تجهیز: <b dir="ltr">'+esc(code)+'</b></span></label>').join('')+'</fieldset>':'')+
+        (externalQty?'<label class="pbR100F92Quantity">تعداد دریافتی بدون کد'+
+        '<input name="returnedQty" type="number" min="0" max="'+externalQty+'" step="1" value="'+(assignedCodes.length?0:Math.min(1,externalQty))+'" inputmode="numeric"></label>':'')+
+        '<small class="pbR100F92QuantitySummary" data-pb92-qty-summary></small>';
+    }
+    const selectedCodes=()=>[...back.querySelectorAll('input[name="receivedAsset"]:checked')].map(x=>x.value);
+    const externalSelected=()=>externalQty?Number(form.elements.returnedQty?.value):0;
+    const selectedQty=()=>selectedCodes().length+externalSelected();
+    const refreshQuantity=()=>{
+      const count=selectedQty(),summary=back.querySelector('[data-pb92-qty-summary]');
+      if(summary)summary.textContent=Number.isSafeInteger(count)&&count>=0&&count<=missingQty?
+        'دریافت این مرحله: '+count.toLocaleString('fa-IR')+' عدد · باقی‌مانده: '+(missingQty-count).toLocaleString('fa-IR')+' عدد':
+        'تعداد انتخاب‌شده معتبر نیست.';
+    };
+    qtyFields?.addEventListener('input',refreshQuantity);
+    qtyFields?.addEventListener('change',refreshQuantity);
+    refreshQuantity();
     const refreshFee=()=>{
       const active=!!form.elements.addFee?.checked,fields=back.querySelector('.pbR100F76FeeFields');
       if(fields)fields.hidden=!active;
@@ -67,13 +92,15 @@
     form.onsubmit=async e=>{
       e.preventDefault();if(sending)return;
       error.textContent='';
-      if(!form.elements.confirmed.checked){error.textContent='بازگشت تمام واحدهای کسری را تأیید کن.';return}
+      if(!form.elements.confirmed.checked){error.textContent='دریافت موارد انتخاب‌شده را تأیید کن.';return}
+      const returnQty=selectedQty();
+      if(!Number.isSafeInteger(returnQty)||returnQty<1||returnQty>missingQty||!Number.isSafeInteger(externalSelected())||externalSelected()<0||externalSelected()>externalQty){error.textContent='حداقل یک قلم را با تعداد معتبر انتخاب کن.';return}
       const hasFee=!!form.elements.addFee?.checked;
       const amount=feeAmount(),reason=String(form.elements.feeReason?.value||'').trim();
       if(hasFee&&(!Number.isSafeInteger(amount)||amount<1||amount>1000000000000||!reason)){
         error.textContent='مبلغ معتبر و دلیل اصلاح فاکتور را وارد کن.';return;
       }
-      const payload={note:String(form.elements.note?.value||'').trim()};
+      const payload={note:String(form.elements.note?.value||'').trim(),returnedQty:returnQty,returnedAssetCodes:selectedCodes()};
       if(hasFee)payload.invoiceAdjustment={amount,note:reason};
       sending=true;form.querySelector('[type=submit]').disabled=true;if(btn)btn.disabled=true;
       try{
@@ -86,11 +113,13 @@
           await load({reloadExtra:false});
           window.pb843SetOfficeTab?.('returnShortages');
         }
-        notify(hasFee?'دریافت کسری و افزایش فاکتور ثبت شد.':'دریافت کسری ثبت شد.','تکمیل شد');
+        notify(hasFee?'دریافت '+returnQty.toLocaleString('fa-IR')+' واحد و افزایش فاکتور ثبت شد.':'دریافت '+returnQty.toLocaleString('fa-IR')+' واحد ثبت شد؛ بقیه کسری باز می‌ماند.','تکمیل شد');
         if(offerInvoice&&booking?.id)window.pbR100F86OfferInvoice?.(booking.id);
       }catch(ex){
         sending=false;form.querySelector('[type=submit]').disabled=false;if(btn)btn.disabled=false;
         const msg={return_shortage_asset_mismatch:'کد یا وضعیت واحدهای کسری با سفارش تطبیق ندارد.',
+          invalid_returned_qty:'تعداد انتخاب‌شده صحیح نیست یا از کسری باقی‌مانده بیشتر است.',
+          invalid_returned_asset_codes:'کد تجهیزات دریافت‌شده صحیح نیست یا انتخاب نشده است.',
           invoice_adjustment_not_allowed:'مجوز اصلاح مالی این حساب تأیید نشد.',
           return_shortage_not_found:'این کسری قبلاً ثبت شده یا دیگر قابل دریافت نیست.',
           invoice_adjustment_negative_total:'مبلغ اصلاح معتبر نیست.'};

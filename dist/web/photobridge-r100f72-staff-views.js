@@ -136,7 +136,8 @@
   const render=window.pbR100F9RenderStaffPortal;
   if(typeof render==='function'){
     window.pbR100F9RenderStaffPortal=function(...args){
-      view='out';monthAnchor=today();
+      // Keep the selected shortage pane through data refreshes; do not restore Delivery.
+      if(!['out','in','returnShortages'].includes(view))view='out';
       const result=render.apply(this,args);
       ensureUI();renderExtra();
       return result;

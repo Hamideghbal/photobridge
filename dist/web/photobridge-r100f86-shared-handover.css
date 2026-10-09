@@ -1,0 +1,129 @@
+/* R100F86 – Shared handover UI: one mobile design for owner and authorized handover operator. */
+@media(max-width:850px){
+ html body.rentalAppReady .pbR100F86SharedCard{
+   display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+   gap:8px!important;align-items:start!important;box-sizing:border-box!important;
+   width:100%!important;min-width:0!important;
+   border:1px solid #e2e8f0!important;border-radius:12px!important;
+   background:#fff!important;box-shadow:none!important;padding:10px 12px!important;
+   margin:0!important;cursor:pointer!important;direction:rtl!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Identity{
+   display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+   min-width:0!important;gap:3px!important;text-align:right!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pb914NameLine{display:flex!important;align-items:center!important;gap:5px!important}
+ html body.rentalAppReady .pbR100F86SharedCard .pb914NameLine>b{
+   font:900 14px/1.6 Vazirmatn,Tahoma,sans-serif!important;color:#182230!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pb854PhotographerPhone{
+   display:block!important;font:700 12px/1.55 Vazirmatn,Tahoma,sans-serif!important;
+   direction:ltr!important;unicode-bidi:isolate!important;text-align:left!important;color:#475467!important;
+   align-self:flex-start!important;position:static!important;margin:0!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F71Gear{
+   display:block!important;font:800 12px/1.6 Vazirmatn,Tahoma,sans-serif!important;
+   color:#344054!important;margin:4px 0 0!important;white-space:normal!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F71Range{
+   display:block!important;font:700 11px/1.6 Vazirmatn,Tahoma,sans-serif!important;
+   color:#667085!important;white-space:normal!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions{
+   display:flex!important;flex-direction:column!important;align-items:flex-end!important;
+   justify-content:flex-start!important;gap:7px!important;min-width:0!important;
+   width:auto!important;margin:0!important;padding:0!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions>.actions{
+   display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button{
+   min-height:35px!important;max-width:150px!important;white-space:normal!important;
+   border-radius:9px!important;padding:6px 10px!important;
+   font:850 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86State,
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F9StaffState{
+   display:inline-flex!important;align-items:center!important;justify-content:center!important;
+   min-height:34px!important;border:1px solid #86efac!important;border-radius:9px!important;
+   padding:6px 10px!important;background:#dcfce7!important;color:#166534!important;
+   font:900 12px/1.5 Vazirmatn,Tahoma,sans-serif!important;box-shadow:none!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86MissingNote{
+   margin-top:7px!important;padding:7px 0 0!important;border-top:1px solid #fecaca!important;
+   width:100%!important;color:#b42318!important;font:850 11px/1.7 Vazirmatn,Tahoma,sans-serif!important;
+   overflow-wrap:anywhere!important;
+ }
+ html body.rentalAppReady .pbR100F86SharedCard .pb100rManagerDocs{display:none!important}
+ html body.rentalAppReady .pbR100F86SharedCard .pb914ReturnNotice{font-size:10px!important}
+ html body.rentalAppReady .pbR100F86SharedCard:focus-visible{outline:2px solid #315efb!important;outline-offset:2px!important}
+ /* Exactly the same date-button geometry and typography on both routes. */
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day{
+   flex:0 0 128px!important;width:128px!important;max-width:128px!important;
+   min-width:128px!important;height:46px!important;min-height:46px!important;max-height:46px!important;
+   display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important;
+   gap:1px!important;align-content:center!important;justify-content:center!important;
+   border:1px solid #dbe4ff!important;border-radius:9px!important;background:#fff!important;
+   color:#344054!important;padding:3px 5px!important;box-shadow:none!important;
+   font:850 10px/1.25 Vazirmatn,Tahoma,sans-serif!important;text-align:center!important;
+   direction:rtl!important;scroll-snap-align:center!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day .pbR100F86DayTop,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day .pbR100F86DayTop{
+   display:flex!important;justify-content:center!important;align-items:center!important;min-height:0!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day .pbR100F86DayTop small,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day .pbR100F86DayTop small{
+   font:800 9px/1.2 Vazirmatn,Tahoma,sans-serif!important;color:inherit!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day strong,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day strong{
+   font:900 11px/1.25 Vazirmatn,Tahoma,sans-serif!important;color:inherit!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day em,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day em{
+   display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;
+   padding:0!important;margin:0!important;min-height:0!important;background:transparent!important;border:0!important;
+   border-radius:0!important;color:inherit!important;box-shadow:none!important;
+   font:800 9px/1.15 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day.active,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day.active{
+   background:#eaf0ff!important;border-color:#b9caff!important;color:#2649a5!important;
+   box-shadow:none!important;
+ }
+ html body.pbR100F9StaffMode #pbR100F9StaffDates>button.pbR100F86Day.active *,
+ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDates>button.pbR100F86Day.active *{color:#2649a5!important}
+ /* Shared three button treatments. Existing unrelated manager office tabs remain reachable. */
+ html body.rentalAppReady .pbR100F86ModeTab,
+ html body.rentalAppReady #pb848BookingHeaderTabs>button.pbR100F86ModeTab,
+ html body.rentalAppReady .pbR100F9StaffTabs>button.pbR100F86ModeTab{
+   display:flex!important;justify-content:center!important;align-items:center!important;
+   min-height:40px!important;height:40px!important;border-radius:9px!important;
+   padding:0 8px!important;font:850 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+   border:1px solid #d0d5dd!important;background:#fff!important;color:#344054!important;
+   box-shadow:none!important;white-space:nowrap!important;
+ }
+ html body.rentalAppReady .pbR100F86ModeTab.active,
+ html body.rentalAppReady #pb848BookingHeaderTabs>button.pbR100F86ModeTab.active,
+ html body.rentalAppReady .pbR100F9StaffTabs>button.pbR100F86ModeTab.active{
+   background:#315efb!important;color:#fff!important;border-color:#315efb!important;box-shadow:none!important;
+ }
+ /* Same shortage cards, whether nested in the staff pane or manager office pane. */
+ html body.rentalAppReady .pbR100F86Shortages{background:#fff!important;border-radius:12px!important;padding:10px!important}
+ html body.rentalAppReady .pbR100F86Shortages .pbR100F72Entries{display:grid!important;gap:8px!important}
+ html body.rentalAppReady .pbR100F86ShortageEntry{
+   background:#fff!important;border:1px solid #e4e7ec!important;border-radius:11px!important;
+   padding:11px!important;display:grid!important;gap:4px!important;
+   font:750 12px/1.7 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html body.rentalAppReady .pbR100F86ShortageEntry>b{font-size:14px!important}
+ html body.rentalAppReady .pbR100F86ShortageEntry>strong.pending{color:#b42318!important}
+ html body.rentalAppReady .pbR100F86ShortageEntry>strong.resolved{color:#15803d!important}
+ html body.rentalAppReady .pbR100F86ShortageEntry .pbR100F74ResolveBtn{
+   min-height:40px!important;justify-self:start!important;border-radius:9px!important;
+   font:900 12px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ }
+}
+html body.pbR100F9StaffMode #pbR100F60AccountIdentity .pbAccountAvatar:disabled{opacity:1!important}

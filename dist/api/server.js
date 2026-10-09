@@ -15529,6 +15529,29 @@ async function api(req, res, url) {
         if (before.rows[0]?.photographer_id) publishCustomerEventEverywhere(String(before.rows[0].photographer_id), 'equipment_rental_status', { bookingId, status:q.rows[0].status, shopId:shop.id, shopName:String(shop.name||'فروشگاه تجهیزات'), invoiceId:invoice?.id||null, invoiceNumber:invoice?.invoice_number||null });
         return sendJson(res, 200, { ok:true, status:q.rows[0].status, sms:null, invoice });
     }
+    // Shop-scoped invoice read for manager / authorized handover staff.
+    const handoverInvoiceRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/handover-invoice$/i);
+    if(req.method==='GET'&&handoverInvoiceRoute){
+        const shop=await equipmentRentalHandoverShop(a);
+        if(!shop||shop.deleted_at)return sendJson(res,401,{error:'rental_auth_required'});
+        await ensureEquipmentRentalV628Schema();
+        const qr=await pool.query(`SELECT inv.invoice_number,inv.issued_at,inv.total_amount,inv.deposit_amount,
+          to_char(b.rental_start,'YYYY-MM-DD') rental_start,to_char(b.rental_end,'YYYY-MM-DD') rental_end,
+          b.invoice_adjustment_amount,b.invoice_adjustment_note,b.payment_status,
+          COALESCE(pp.studio_name,u.name,b.customer_name,'عکاس') photographer_name,
+          COALESCE(u.mobile,b.customer_mobile,'') photographer_mobile,
+          COALESCE((SELECT jsonb_agg(jsonb_build_object('title',equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id),'quantity',bi.quantity,'rental_days',bi.rental_days,'daily_price',bi.daily_price,'subtotal',bi.subtotal) ORDER BY bi.id)
+           FROM equipment_rental_booking_items bi LEFT JOIN equipment_rental_items i ON i.id=bi.item_id
+           WHERE bi.booking_id=b.id),'[]'::jsonb) items
+          FROM equipment_rental_bookings b
+          JOIN equipment_rental_invoices inv ON inv.booking_id=b.id AND inv.shop_id=b.shop_id
+          LEFT JOIN users u ON u.id=b.photographer_id
+          LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+          WHERE b.id=$1 AND b.shop_id=$2 AND b.status IN ('picked_up','returned')
+          LIMIT 1`,[handoverInvoiceRoute[1],shop.id]);
+        if(!qr.rowCount)return sendJson(res,404,{error:'rental_invoice_not_found'});
+        return sendJson(res,200,{invoice:qr.rows[0],shopName:String(shop.name||'فروشگاه تجهیزات')});
+    }
     const rentalReturnShortageRoute = url.pathname.match(/^\/api\/rental\/return-shortages\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && rentalReturnShortageRoute) {
         // The owner and authorized handover staff can register a late return,
@@ -15540,7 +15563,7 @@ async function api(req, res, url) {
         const note=String(body.note||'').trim().slice(0,1000);
         const adjustment=body.invoiceAdjustment;let fee=0,feeNote='';
         if(adjustment!=null){
-            if(a.rentalRole!=='shop_admin')return sendJson(res,403,{error:'invoice_adjustment_not_allowed'});
+            if(!['shop_admin','handover_staff'].includes(a.rentalRole))return sendJson(res,403,{error:'invoice_adjustment_not_allowed'});
             if(typeof adjustment!=='object'||!Number.isSafeInteger(adjustment.amount)||adjustment.amount<1||adjustment.amount>1000000000000)return sendJson(res,400,{error:'invalid_invoice_adjustment'});
             fee=adjustment.amount;feeNote=String(adjustment.note||'').trim().slice(0,1000);
             if(!feeNote)return sendJson(res,400,{error:'invoice_adjustment_note_required'});

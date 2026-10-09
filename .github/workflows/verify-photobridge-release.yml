@@ -41,7 +41,8 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { Client } from 'pg';
+          import pg from 'pg';
+          const { Client } = pg;
           const db = new Client({host:'127.0.0.1',port:5432,user:'postgres',password:'photobridge_test',database:'photobridge_test'});
           await db.connect();
           try {

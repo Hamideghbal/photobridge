@@ -16,19 +16,6 @@ jobs:
     name: Build and verify deploy payload
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: photobridge_test
-          POSTGRES_DB: photobridge_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d photobridge_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,7 +32,12 @@ jobs:
         run: npm run build
       - name: Verify complete deployment payload
         run: npm run verify:full
-      - name: Smoke-test store discount migration in PostgreSQL 16
+      - name: Prepare runner PostgreSQL for migration smoke test
+        run: |
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'photobridge_test'"
+          sudo -u postgres createdb photobridge_test
+      - name: Smoke-test store discount migration in PostgreSQL
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';

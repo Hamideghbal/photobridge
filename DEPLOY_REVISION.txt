@@ -1,1 +1,1 @@
-2026-10-09-r1046-visible-selected-date-checks
+2026-10-09-r1047-new-store-equipment-defaults

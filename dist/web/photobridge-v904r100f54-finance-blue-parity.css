@@ -15,3 +15,37 @@
   #financePanel .financeSectionHeadingV813,
   html.pb817PrintFinance body #root .photographerMain.photographerPrintWorkspace .financeWorkspace>.financeTopline{display:none!important}
 }
+
+/* R100F80: readable finance rows across store and lab accounting workspaces. */
+.financeWorkspace .accountingInvoiceRows .invoiceRow{font-size:13px!important;line-height:1.65!important}
+.financeWorkspace .accountingInvoiceRows .invoiceRow small{font-size:11.5px!important;line-height:1.65!important}
+.financeWorkspace .accountingInvoiceRows .invoiceRow b{font-size:13.5px!important;line-height:1.65!important}
+.financeWorkspace .accountingInvoiceRows .invoiceRow button,.financeWorkspace .invoiceDownloadMini{font-size:11.5px!important;line-height:1.5!important}
+.financeWorkspace .financeRecordRows>div{font-size:13px!important;line-height:1.7!important}
+.financeWorkspace .financeRecordRows b,.financeWorkspace .financeRecordRows strong{font-size:14px!important;line-height:1.6!important}
+.financeWorkspace .financeRecordRows small{font-size:11.5px!important;line-height:1.65!important}
+.financeWorkspace .ledgerTxnHead b{font-size:13.5px!important;line-height:1.6!important}
+.financeWorkspace .ledgerTxnHead small{font-size:11.5px!important;line-height:1.65!important}
+.financeWorkspace .ledgerEntries>div{font-size:12.5px!important;line-height:1.65!important}
+.financeWorkspace .statementTable th{font-size:11.5px!important;line-height:1.6!important}
+.financeWorkspace .statementTable td{font-size:12.5px!important;line-height:1.7!important}
+.financeWorkspace .statementTable td small{font-size:11px!important;line-height:1.6!important}
+.financeWorkspace .receivableCustomerRow b,.financeWorkspace .receivableCustomerRow strong{font-size:13.5px!important;line-height:1.6!important}
+.financeWorkspace .receivableCustomerRow small{font-size:11.5px!important;line-height:1.6!important}
+.financeWorkspace .financeListCard,.financeWorkspace .ledgerCard{font-size:13px!important}
+
+/* The store's separate rental-accounting screen uses its legacy panel markup. */
+#accounting .pb855FinanceInvoiceRow{font-size:13px!important;line-height:1.7!important}
+#accounting .pb855FinanceInvoiceRow small{font-size:11.5px!important;line-height:1.7!important}
+#accounting .pb855FinanceInvoiceRow b{font-size:13.5px!important;line-height:1.65!important}
+#accounting .pb855FinanceInvoiceRow .pb855InvoiceStatus{font-size:10.5px!important}
+#accounting .pb856FinancePanel .accountingTable th{font-size:11px!important;line-height:1.6!important}
+#accounting .pb856FinancePanel .accountingTable td{font-size:12px!important;line-height:1.7!important}
+#accounting .pb856FinancePanel .accountingTable td small{font-size:10.5px!important;line-height:1.6!important}
+#accounting .pb856StatementMeta{font-size:11.5px!important;line-height:1.7!important}
+#accounting .pb856FinanceSummary .stat small{font-size:10px!important;line-height:1.6!important}
+#accounting .pb856FinanceSummary .stat b{font-size:12px!important;line-height:1.6!important}
+#accounting .pb856PaymentsList{font-size:12px!important;line-height:1.7!important}
+#accounting .pb856PaymentsList small{font-size:11px!important;line-height:1.65!important}
+#accounting .pb856PaymentForm label{font-size:12px!important;line-height:1.65!important}
+#accounting .pb856PaymentForm input,#accounting .pb856PaymentForm select,#accounting .pb856PaymentForm button{font-size:12px!important}

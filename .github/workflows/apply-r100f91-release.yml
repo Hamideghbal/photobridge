@@ -1,0 +1,40 @@
+name: Apply and verify R100F91 fixes
+on:
+  push:
+    branches:
+      - fix/discount-save-free-invites-mobile-order-20261010
+permissions:
+  contents: write
+jobs:
+  apply-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply bounded release patch
+        run: node scripts/r100f91-apply-release-fix.mjs
+      - name: Check affected JavaScript
+        run: |
+          node --check dist/api/server.js
+          node --check dist/web/photobridge-v904r19-admin-stores.js
+          node --check dist/web/photobridge-r100f90-entity-discount-activation.js
+      - name: Install dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Full verification
+        run: npm run verify:full
+      - name: Commit and push verified source edits
+        run: |
+          git config user.name "photobridge-ci"
+          git config user.email "95973336+Hamideghbal@users.noreply.github.com"
+          git add dist/api/server.js dist/api/equipment-rental-portal.html dist/api/equipment-rental-book.html DEPLOY_REVISION.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: persist discounts, waive invite SMS charges, expose mobile order actions"
+            git push origin HEAD:fix/discount-save-free-invites-mobile-order-20261010
+          fi

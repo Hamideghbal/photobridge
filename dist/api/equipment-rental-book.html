@@ -815,5 +815,17 @@ boot();document.addEventListener('visibilitychange',()=>{if(!document.hidden)ref
 </style>
 <script defer src="/photobridge-v877-store-appearance-fix.js?v=904r100f54&release=904r100f54"></script>
 <script defer src="/photobridge-v904r100f21-sale-cart-notice.js?v=904r100f21"></script>
+
+<!-- R100F91: Mobile checkout stays above the bottom navigation. -->
+<style id="pbR100F91ShopperMobile">
+@media(max-width:820px){
+#saleCartBackdrop:not([hidden]){z-index:2147481000!important}
+#saleCartDrawer{z-index:2147481001!important;bottom:0!important;box-sizing:border-box!important;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 6px)!important;height:min(89dvh,760px)!important;overflow:hidden!important;grid-template-rows:auto minmax(0,1fr) auto!important}
+#saleCartDrawer .saleCartLines{min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+#saleCartDrawer .saleCartFooter{position:relative!important;z-index:2!important;flex-shrink:0!important;padding:10px 14px max(15px,env(safe-area-inset-bottom,0px))!important;background:#fff!important}
+#saleCartDrawer #saleCartCheckout{display:block!important;position:relative!important;z-index:3!important;min-height:44px!important;width:100%!important;margin:0!important}
+}
+</style>
+
 </body>
 </html>

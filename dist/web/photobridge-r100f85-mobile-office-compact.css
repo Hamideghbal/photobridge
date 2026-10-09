@@ -1,0 +1,47 @@
+/* R100F85: compact mobile owner manual office; no desktop/staff changes. */
+@media(max-width:700px){
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop .pb892ManualDialog{
+    padding-bottom:6px!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pb892ManualBody{
+    padding-bottom:0!important;margin-bottom:0!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #bookingForm{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;
+    margin-bottom:0!important;min-height:0!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #bookingForm>.actions{
+    padding-bottom:0!important;margin-bottom:0!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #bookingForm #bookingMsg:empty,
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #bookingForm #bookingQuote:empty{
+    display:none!important;min-height:0!important;margin:0!important;padding:0!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR78OfficeExtras,
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq{
+    padding:5px!important;gap:3px!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR78OfficeExtras .settingsChecks,
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq .settingsChecks{
+    display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:3px!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR78OfficeExtras .settingsChecks label,
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq .settingsChecks label{
+    grid-column:auto!important;min-width:0!important;min-height:29px!important;
+    padding:3px 4px!important;gap:3px!important;font-size:8.4px!important;
+    line-height:1.25!important;white-space:normal!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR78OfficeExtras .settingsChecks input[type=checkbox],
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq .settingsChecks input[type=checkbox]{
+    width:13px!important;height:13px!important;min-width:13px!important;flex:0 0 13px!important;
+  }
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq>strong{
+    font-size:9px!important;
+  }
+}
+@media(max-width:350px){
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR78OfficeExtras .settingsChecks label,
+  html body.rentalAppReady:not(.pbR100F9StaffMode) #pb892ManualBackdrop #pbR100F84PendingOfficeReq .settingsChecks label{
+    font-size:7.7px!important;padding:2px!important;
+  }
+}

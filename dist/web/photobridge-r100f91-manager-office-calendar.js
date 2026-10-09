@@ -30,6 +30,15 @@
    return result;
  }
  window.pbR100F91SelectDay=selectDay;
+ document.addEventListener('click',event=>{
+   const button=event.target.closest?.('[data-pb91-day],[data-pb1010-day],[data-pb100r-date-kind]');
+   if(!button)return;
+   const kind=button.dataset.pb91Kind||button.dataset.pb100rDateKind||button.closest('[data-pb843-office-pane]')?.dataset.pb843OfficePane||mode();
+   const day=button.dataset.pb91Day||button.dataset.pb1010Day||button.dataset.pb100rDay;
+   if((kind!=='approved'&&kind!=='out')||!valid(day))return;
+   event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+   selectDay(kind,day);
+ },true);
  const matches=(b,kind,d)=>{
    const status=String(b.status||''),start=String(b.rental_start||'').slice(0,10),end=String(b.rental_end||'').slice(0,10);
    if(kind==='approved'){

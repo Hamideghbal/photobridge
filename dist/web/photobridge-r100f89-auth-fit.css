@@ -1,0 +1,126 @@
+/* R100F89: viewport-fitting login for photographer, lab and rental shop.
+   Only auth routes are affected; no authenticated dashboard gets a scrolling lock. */
+html body.pbR100F28PortalLogin:not(.rentalAppReady){
+ margin:0!important;padding:0!important;min-height:100dvh!important;
+}
+html body.pbR100F28PortalLogin #loginView.rentalLoginOverlay,
+html body.pbR100F28PortalLogin .authBg,
+html body.pbR100F28PortalLogin .unifiedLoginPage{
+ box-sizing:border-box!important;inset:0!important;
+ min-height:100dvh!important;height:100dvh!important;max-height:100dvh!important;
+ width:100%!important;max-width:none!important;
+ margin:0!important;padding:12px 12px max(12px,env(safe-area-inset-bottom))!important;
+ display:flex!important;justify-content:center!important;align-items:center!important;
+ overflow-x:hidden!important;overflow-y:auto!important;
+ overscroll-behavior:contain!important;
+}
+html body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ gap:0!important;width:min(460px,100%)!important;max-width:460px!important;
+ min-height:0!important;height:auto!important;margin:auto!important;
+ padding:0!important;box-sizing:border-box!important;
+}
+/* The 94px decorative brand gap and intro hero were pushing the form below the fold.
+   Keep the branding inside the actual login card and remove the redundant area. */
+html body.pbR100F28PortalLogin .authShell>.pbR100F28AuthBrand,
+html body.pbR100F28PortalLogin .authShell>.pbR100F28AuthHero{
+ display:none!important;
+}
+html body.pbR100F28PortalLogin .unifiedLoginBrand{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100%!important;margin:0 0 8px!important;gap:8px!important;
+}
+html body.pbR100F28PortalLogin .unifiedLoginBrand .unifiedLoginLogo{
+ width:40px!important;height:40px!important;object-fit:contain!important;
+}
+html body.pbR100F28PortalLogin form.unifiedLoginCard,
+html body.pbR100F28PortalLogin form.rentalUnifiedLogin,
+html body.pbR100F28PortalLogin form.labLogin{
+ width:100%!important;max-width:none!important;
+ min-height:0!important;margin:0!important;padding:16px 20px!important;
+ border-radius:16px!important;box-sizing:border-box!important;
+ box-shadow:0 9px 26px rgba(15,23,42,.07)!important;
+ gap:9px!important;
+}
+html body.pbR100F28PortalLogin form .authTitle{margin:0 0 5px!important}
+html body.pbR100F28PortalLogin form .authTitle h1{
+ font-size:19px!important;line-height:1.4!important;margin:0 0 3px!important;
+}
+html body.pbR100F28PortalLogin form .authTitle p{
+ font-size:10px!important;line-height:1.5!important;margin:0!important;
+}
+html body.pbR100F28PortalLogin form .field{margin:0!important}
+html body.pbR100F28PortalLogin form input{height:42px!important;min-height:42px!important}
+html body.pbR100F28PortalLogin form button.primary{height:44px!important;min-height:44px!important}
+html body.pbR100F28PortalLogin form .authFooterLinks{
+ margin:5px 0 0!important;gap:6px!important;line-height:1.45!important;
+}
+/* Photographer + lab login is React-powered; scoped selectors avoid changing workspace pages. */
+html body:has(#root .unifiedLoginPage) {
+ padding:0!important;margin:0!important;min-height:100dvh!important;
+}
+html body #root:has(.unifiedLoginPage){min-height:100dvh!important;padding:0!important;margin:0!important}
+html body #root .unifiedLoginPage{
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;
+ justify-content:center!important;min-height:100dvh!important;height:100dvh!important;
+ max-height:100dvh!important;width:100%!important;padding:12px!important;
+ margin:0!important;overflow-x:hidden!important;overflow-y:auto!important;
+}
+html body #root .unifiedLoginPage .unifiedLoginShell{
+ width:min(460px,100%)!important;max-width:460px!important;
+ min-height:0!important;height:auto!important;margin:auto!important;
+ padding:0!important;display:flex!important;flex-direction:column!important;gap:0!important;
+ align-items:stretch!important;box-sizing:border-box!important;
+}
+html body #root .unifiedLoginPage .unifiedLoginShell>.pbR100F28AuthBrand,
+html body #root .unifiedLoginPage .unifiedLoginShell>.pbR100F28AuthHero{display:none!important}
+html body #root .unifiedLoginPage form.unifiedLoginCard{
+ width:100%!important;max-width:100%!important;margin:0!important;
+ padding:17px 20px!important;box-sizing:border-box!important;
+ min-height:0!important;border-radius:16px!important;
+ gap:9px!important;box-shadow:0 9px 26px rgba(15,23,42,.07)!important;
+}
+html body #root .unifiedLoginPage form .authTitle{margin:0 0 5px!important}
+html body #root .unifiedLoginPage form .authTitle h1{font-size:19px!important;line-height:1.4!important;margin:0 0 3px!important}
+html body #root .unifiedLoginPage form .authTitle p{font-size:10px!important;line-height:1.5!important;margin:0!important}
+html body #root .unifiedLoginPage form input{height:42px!important;min-height:42px!important}
+html body #root .unifiedLoginPage form button.primary{height:44px!important;min-height:44px!important}
+html body #root .unifiedLoginPage form .unifiedLoginBrand{
+ margin:0 0 8px!important;align-items:center!important;justify-content:center!important;
+}
+html body #root .unifiedLoginPage form .authFooterLinks{margin:5px 0 0!important;gap:6px!important}
+/* On short mobile screens compress decorations rather than hide required inputs. */
+@media(max-width:600px), (max-height:720px){
+ html body.pbR100F28PortalLogin #loginView.rentalLoginOverlay,
+ html body.pbR100F28PortalLogin .authBg,
+ html body #root .unifiedLoginPage{
+   padding:6px 10px max(6px,env(safe-area-inset-bottom))!important;
+ }
+ html body.pbR100F28PortalLogin form.unifiedLoginCard,
+ html body.pbR100F28PortalLogin form.rentalUnifiedLogin,
+ html body.pbR100F28PortalLogin form.labLogin,
+ html body #root .unifiedLoginPage form.unifiedLoginCard{
+   padding:12px 15px!important;border-radius:13px!important;gap:6px!important;
+ }
+ html body.pbR100F28PortalLogin form .authTitle h1,
+ html body #root .unifiedLoginPage form .authTitle h1{font-size:17px!important}
+ html body.pbR100F28PortalLogin form .authTitle p,
+ html body #root .unifiedLoginPage form .authTitle p{font-size:9px!important}
+ html body.pbR100F28PortalLogin form input,
+ html body #root .unifiedLoginPage form input{min-height:38px!important;height:38px!important}
+ html body.pbR100F28PortalLogin form button.primary,
+ html body #root .unifiedLoginPage form button.primary{min-height:40px!important;height:40px!important}
+ html body.pbR100F28PortalLogin .unifiedLoginBrand .unifiedLoginLogo{width:34px!important;height:34px!important}
+}
+/* Password recovery is also a login subpage; never inherit dashboard padding. */
+html body #root>.center.authBg:has(.passwordResetCard){
+ min-height:100dvh!important;height:100dvh!important;
+ margin:0!important;padding:12px!important;box-sizing:border-box!important;
+ overflow-y:auto!important;align-items:center!important;justify-content:center!important;
+}
+html body #root .passwordResetCard{margin:auto!important;max-width:460px!important;padding:16px!important}
+
+/* Explicitly respect hidden login panels during authentication transitions. */
+html body.pbR100F28PortalLogin #loginView.hidden,
+html body.pbR100F28PortalLogin .authBg.hidden,
+html body.pbR100F28PortalLogin form.hidden{display:none!important}

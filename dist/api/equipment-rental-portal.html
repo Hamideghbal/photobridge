@@ -9770,4 +9770,65 @@ html body #saleItemEditorBox>.pb1012EquipmentFooter>.btn.hidden{display:none!imp
  }
 }
 </style>
+
+<style id="pb1050SalesRentalModalHeight">
+/* Rental and sale editors have identical usable height and scroll without clipping preset menus. */
+html body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible {
+ position:fixed!important;top:50%!important;right:50%!important;left:auto!important;bottom:auto!important;
+ transform:translate(50%,-50%)!important;box-sizing:border-box!important;
+ width:min(1120px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;
+ height:min(92dvh,900px)!important;min-height:0!important;max-height:calc(100dvh - 24px)!important;
+ overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+ scrollbar-gutter:auto!important;-webkit-overflow-scrolling:touch!important;
+ scroll-padding-block:52px 82px!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible .pb829ManagedMenu,
+html body #saleItemEditorBox.pb861EditorVisible .pb829ManagedMenu {
+ z-index:5400!important;overflow-x:hidden!important;overflow-y:auto!important;
+ overscroll-behavior:contain!important;min-height:0!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible .pb829ManagedPicker,
+html body #saleItemEditorBox.pb861EditorVisible .pb829ManagedPicker {
+ overflow:visible!important;
+}
+@media(max-width:850px) {
+ html body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible {
+  top:calc(var(--pb826-vvtop,0px) + 6px)!important;right:6px!important;left:6px!important;bottom:auto!important;
+  transform:none!important;width:auto!important;max-width:none!important;
+  height:calc(var(--pb826-vvh,100dvh) - 12px)!important;
+  min-height:0!important;max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;
+ }
+}
+</style>
+<script id="pb1050ManagedMenuPlacement">
+/* Flip long category/brand/model menus upward near a dialog's bottom edge. */
+(()=>{
+ document.addEventListener('click',(event)=>{
+  const toggle=event.target.closest?.('#rentalItemEditorBox [data-managed-toggle],#saleItemEditorBox [data-managed-toggle]');
+  if(!toggle)return;
+  requestAnimationFrame(()=>{
+   const picker=toggle.closest('.pb829ManagedPicker'),menu=picker?.querySelector('[data-managed-menu]');
+   const box=toggle.closest('#rentalItemEditorBox,#saleItemEditorBox');
+   if(!box||!menu||menu.classList.contains('hidden'))return;
+   const viewport=window.visualViewport;
+   const top=viewport?.offsetTop||0;
+   const bottom=top+(viewport?.height||window.innerHeight);
+   const toggleBounds=toggle.getBoundingClientRect();
+   const boxBounds=box.getBoundingClientRect();
+   const below=Math.max(0,Math.min(bottom,boxBounds.bottom)-toggleBounds.bottom-18);
+   const above=Math.max(0,toggleBounds.top-Math.max(top,boxBounds.top)-18);
+   const flip=below<220&&above>below;
+   const room=flip?above:below;
+   menu.style.setProperty('top',flip?'auto':'calc(100% + 4px)','important');
+   menu.style.setProperty('bottom',flip?'calc(100% + 4px)':'auto','important');
+   menu.style.setProperty('max-height',Math.max(100,Math.min(440,room,((viewport?.height||window.innerHeight)*.58)))+'px','important');
+   menu.style.setProperty('overflow-y','auto','important');
+  });
+ });
+})();
+</script>
 </body></html>

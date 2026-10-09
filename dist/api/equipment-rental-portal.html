@@ -9130,4 +9130,85 @@ html body.rentalAppReady .shell,html body.rentalAppReady #app{position:relative;
  [0,100,400,900].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>
+
+<style id="pbR100F95ProductModalAndMotion">
+/* Faded divider between category and brand rows. */
+html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) .pb831BrandFilters{
+ position:relative!important;border-top:0!important;padding-top:5px!important;
+}
+html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) .pb831BrandFilters::before{
+ content:"";position:absolute;top:0;left:10px;right:10px;height:1px;pointer-events:none;
+ background:linear-gradient(90deg,transparent 0%,rgba(152,162,179,.32) 12%,rgba(152,162,179,.32) 88%,transparent 100%);
+}
+/* Product editors size to their content and keep every control inside the dialog. */
+html body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,
+html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{
+ height:auto!important;min-height:0!important;max-height:calc(100dvh - 24px)!important;
+ overflow:visible!important;scrollbar-gutter:auto!important;padding:12px 14px!important;box-sizing:border-box!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible>.pb831ModalHeader,
+html body #saleItemEditorBox.pb861EditorVisible>.pb831ModalHeader{
+ position:relative!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;margin:0 0 7px!important;padding:3px 0 6px!important;
+ box-sizing:border-box!important;transform:none!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible>.pb831ModalHeader .pb831ModalHeaderCopy,
+html body #saleItemEditorBox.pb861EditorVisible>.pb831ModalHeader .pb831ModalHeaderCopy{
+ flex:1 1 auto!important;min-width:0!important;text-align:right!important;align-items:flex-start!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible>.pb831ModalHeader .rentalItemModalClose,
+html body #saleItemEditorBox.pb861EditorVisible>.pb831ModalHeader .rentalItemModalClose{
+ position:static!important;inset:auto!important;transform:none!important;flex:0 0 32px!important;
+ width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;margin:0!important;padding:0!important;
+ display:grid!important;place-items:center!important;line-height:1!important;cursor:pointer!important;pointer-events:auto!important;
+}
+html body #rentalItemEditorBox.pb861EditorVisible>form,
+html body #saleItemEditorBox.pb861EditorVisible>form{
+ width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important;
+}
+@media(max-width:850px){
+ html body.rentalItemModalOpen #rentalItemEditorBox.pb861EditorVisible,
+ html body.saleItemModalOpen #saleItemEditorBox.pb861EditorVisible{
+  top:calc(var(--pb826-vvtop,0px) + 6px)!important;right:6px!important;left:6px!important;transform:none!important;
+  width:auto!important;max-width:none!important;max-height:calc(var(--pb826-vvh,100dvh) - 12px)!important;
+  padding:10px!important;border-radius:14px!important;overflow:hidden!important;scrollbar-gutter:auto!important;
+ }
+ html body #rentalItemEditorBox.pb861EditorVisible>.pb831ModalHeader,
+ html body #saleItemEditorBox.pb861EditorVisible>.pb831ModalHeader{margin-bottom:5px!important;padding-bottom:4px!important}
+ html body #rentalItemEditorBox.pb861EditorVisible>.pb831ModalHeader .rentalItemModalClose,
+ html body #saleItemEditorBox.pb861EditorVisible>.pb831ModalHeader .rentalItemModalClose{
+  flex-basis:30px!important;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;
+ }
+}
+@media(max-width:850px) and (max-height:720px){
+ html body #rentalItemEditorBox.pb861EditorVisible .pb830EquipmentForm,
+ html body #saleItemEditorBox.pb861EditorVisible .pb830EquipmentForm{gap:3px 5px!important}
+ html body #rentalItemEditorBox.pb861EditorVisible .field,
+ html body #saleItemEditorBox.pb861EditorVisible .field{margin:1px 0!important;gap:2px!important;font-size:8px!important}
+ html body #rentalItemEditorBox.pb861EditorVisible .field input,
+ html body #saleItemEditorBox.pb861EditorVisible .field input,
+ html body #rentalItemEditorBox.pb861EditorVisible .pb829ManagedToggle,
+ html body #saleItemEditorBox.pb861EditorVisible .pb829ManagedToggle{height:32px!important;min-height:32px!important;padding-block:4px!important}
+ html body #rentalItemEditorBox.pb861EditorVisible .pb827ImagePicker,
+ html body #saleItemEditorBox.pb861EditorVisible .pb827ImagePicker{min-height:38px!important;max-height:50px!important}
+}
+@media(prefers-reduced-motion:no-preference){
+ html body.rentalAppReady button,html body.rentalAppReady a,html body.rentalAppReady [role="button"]{
+  transition:transform .13s ease,filter .13s ease,box-shadow .13s ease!important;transform-origin:center!important;
+ }
+ html body.rentalAppReady .pbR100F95Pressed{animation:pbR100F95Press .2s ease-out!important}
+ @keyframes pbR100F95Press{0%{transform:scale(1)}42%{transform:scale(.94);filter:brightness(.97)}100%{transform:scale(1)}}
+}
+</style>
+
+<script id="pbR100F95ClickMotionRuntime">
+(()=>{
+ document.addEventListener('pointerdown',e=>{
+  const target=e.target.closest?.('button,a,[role="button"],.categoryChip,.pb831BrandChip');
+  if(!target||target.matches(':disabled,[aria-disabled="true"]'))return;
+  target.classList.remove('pbR100F95Pressed');void target.offsetWidth;target.classList.add('pbR100F95Pressed');
+  setTimeout(()=>target.classList.remove('pbR100F95Pressed'),230);
+ },{passive:true,capture:true});
+})();
+</script>
 </body></html>

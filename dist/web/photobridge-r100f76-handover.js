@@ -19,7 +19,7 @@
       '<label class="pbR100F76Confirm"><input name="confirmed" type="checkbox">بازگشت تمام واحدهای این کسری را تأیید می‌کنم.</label>'+
       '<label>توضیح تحویل (اختیاری)<textarea name="note" rows="2" maxlength="1000" placeholder="وضعیت تجهیزات یا زمان تحویل"></textarea></label>'+
       ('<label class="pbR100F76Confirm"><input name="addFee" type="checkbox">افزودن هزینه دیرکرد به فاکتور</label>'+
-        '<div class="pbR100F76FeeFields" hidden><label>مبلغ افزایشی (تومان)<input name="fee" type="number" min="1" max="1000000000000" step="1" inputmode="numeric"></label>'+
+        '<div class="pbR100F76FeeFields" hidden><label>مبلغ افزایشی (تومان)<input name="fee" type="text" inputmode="numeric" autocomplete="off" dir="ltr" placeholder="0" aria-label="مبلغ افزایشی به تومان"></label>'+
         '<label>دلیل اصلاح فاکتور<textarea name="feeReason" maxlength="1000" rows="2" placeholder="مثلاً بازگشت با تأخیر"></textarea></label>'+
         '<small class="pbR100F76InvoiceTotal"></small></div>')+
       '<label class="pbR100F76Confirm"><input name="printInvoice" type="checkbox">نمایش فاکتور پس از ثبت دریافت</label>'+
@@ -35,23 +35,41 @@
     document.addEventListener('keydown',onKey);
     back.querySelector('[data-cancel]').onclick=()=>{if(!sending)close()};
     back.onclick=e=>{if(e.target===back&&!sending)close()};
+    const normalizeDigits=value=>String(value??'').replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776))
+      .replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));
+    const cleanFee=value=>normalizeDigits(value).replace(/[^0-9]/g,'').replace(/^0+(?=\d)/,'');
+    const feeAmount=()=>Number(cleanFee(form.elements.fee?.value||''));
+    const feeInput=form.elements.fee;
+    if(feeInput)feeInput.addEventListener('input',()=>{
+      const original=String(feeInput.value||''),caret=feeInput.selectionStart??original.length;
+      const countBefore=cleanFee(original.slice(0,caret)).length;
+      const digits=cleanFee(original).slice(0,13);
+      const formatted=digits.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      if(feeInput.value!==formatted){
+        feeInput.value=formatted;
+        let index=0,passed=0;
+        for(;index<formatted.length&&passed<countBefore;index++)if(/[0-9]/.test(formatted[index]))passed++;
+        feeInput.setSelectionRange(index,index);
+      }
+      refreshFee();
+    });
     const refreshFee=()=>{
       const active=!!form.elements.addFee?.checked,fields=back.querySelector('.pbR100F76FeeFields');
       if(fields)fields.hidden=!active;
-      const current=Number(booking?.total_amount||0),amount=active?Number(form.elements.fee?.value||0):0,total=back.querySelector('.pbR100F76InvoiceTotal');
+      const current=Number(booking?.total_amount||0),amount=active?feeAmount():0,total=back.querySelector('.pbR100F76InvoiceTotal');
       if(total)total.textContent=booking&&Number.isSafeInteger(current+amount)&&current+amount>=0?
         'مبلغ فاکتور پس از اصلاح: '+(typeof money==='function'?money(current+amount):String(current+amount)+' تومان'):
         'مبلغ افزایشی پس از ثبت به فاکتور اصلی اضافه خواهد شد.';
     };
     form.elements.addFee?.addEventListener('change',refreshFee);
-    form.elements.fee?.addEventListener('input',refreshFee);
+    // Fee input refreshes after its live thousands-separator formatter.
     refreshFee();
     form.onsubmit=async e=>{
       e.preventDefault();if(sending)return;
       error.textContent='';
       if(!form.elements.confirmed.checked){error.textContent='بازگشت تمام واحدهای کسری را تأیید کن.';return}
       const hasFee=!!form.elements.addFee?.checked;
-      const amount=Number(form.elements.fee?.value),reason=String(form.elements.feeReason?.value||'').trim();
+      const amount=feeAmount(),reason=String(form.elements.feeReason?.value||'').trim();
       if(hasFee&&(!Number.isSafeInteger(amount)||amount<1||amount>1000000000000||!reason)){
         error.textContent='مبلغ معتبر و دلیل اصلاح فاکتور را وارد کن.';return;
       }

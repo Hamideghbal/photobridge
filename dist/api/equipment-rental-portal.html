@@ -2688,7 +2688,17 @@ body.rentalAppReady [data-pb848-context-tab="photographers"] button.active:after
     }catch(e){if(request===activeLedgerRequest){activeLedgerRequest=null;activeLedgerRequestKey=''}if(my!==token)return;window.pb869LedgerRowsCache=null;delete list.dataset.pb869LedgerKey;summary.innerHTML='';list.innerHTML='<div class="pb842LedgerEmpty">دریافت ریز حساب انجام نشد. دوباره تلاش کن.</div>';if(meta)meta.textContent=''}
   }
   window.pb842RenderAccountingLedger=loadFullLedger;
-  const oldLoad=loadAccounting;loadAccounting=async function(){await oldLoad();if(q('#accounting [data-pb842-pane="ledger"]')?.classList.contains('active'))await loadFullLedger()};
+  const ledgerEntriesStamp=state=>JSON.stringify((state?.entries||[]).map(x=>[x.id,x.amount,x.updated_at,x.description,x.entry_type]));
+  const oldLoad=loadAccounting;loadAccounting=async function(){
+    const before=ledgerEntriesStamp(accountingData);
+    await oldLoad();
+    // Refresh the ledger only when underlying accounting entries actually changed.
+    if(before!==ledgerEntriesStamp(accountingData)){
+      window.pb869LedgerRowsCache=null;
+      const el=q('#accountingLedgerEntries');if(el)delete el.dataset.pb869LedgerKey;
+    }
+    if(q('#accounting [data-pb842-pane="ledger"]')?.classList.contains('active'))await loadFullLedger();
+  };
   document.addEventListener('change',e=>{if(['accountingLedgerPhotographer','pb856AccountingFrom','pb856AccountingTo'].includes(e.target?.id))void loadFullLedger()},true);
   document.addEventListener('click',e=>{if(e.target.closest?.('#pb856FinanceHeaderContext [data-pb842-tab="ledger"]'))setTimeout(()=>void loadFullLedger(),0)},true);
 })();

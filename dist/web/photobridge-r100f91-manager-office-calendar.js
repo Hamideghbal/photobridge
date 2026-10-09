@@ -24,12 +24,15 @@
    const st=state[kind];
    if(!st||!valid(day))return;
    st.selected=day;st.month=day;
-   const result=window.pb100rSelectManagerDate?.(kind,day);
+   let result;
+   try{result=window.pb100rSelectManagerDate?.(kind,day)}catch(error){console.error('[PhotoBridge] date selection fallback',error)}
    paint();
    schedule();
-   return result;
+   return result===undefined?true:result;
  }
  window.pbR100F91SelectDay=selectDay;
+ const pending=window.__PB_R100F91PendingSelection;
+ if(pending){delete window.__PB_R100F91PendingSelection;selectDay(pending.kind,pending.day)}
  document.addEventListener('click',event=>{
    const button=event.target.closest?.('[data-pb91-day],[data-pb1010-day],[data-pb100r-date-kind]');
    if(!button)return;

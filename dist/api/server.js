@@ -10241,7 +10241,7 @@ async function equipmentRentalOverview() {
 }
 
 function equipmentRentalShopSubscriptionActive(shop) {
-    if (!shop || !shop.active || shop.suspended) return false;
+    if (!shop || !shop.active || shop.suspended || shop.activation_status !== 'approved') return false;
     const now = Date.now();
     if (shop.active_from && now < new Date(shop.active_from).getTime()) return false;
     if (shop.active_until && now > new Date(shop.active_until).getTime()) return false;

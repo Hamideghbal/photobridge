@@ -9,7 +9,7 @@
   const today=()=>new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'Asia/Tehran'}).format(new Date());
   const dateFa=x=>{if(!x)return '—';try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(new Date(iso(x)+'T12:00:00Z'))}catch{return iso(x)}};
   let view='out',monthAnchor=today();
-  const extraViews=[['officeShortages','کسری آفیش'],['returnShortages','کسری دریافت']];
+  const extraViews=[['returnShortages','کسری دریافت']];
   const bookingData=()=>typeof data!=='undefined'?(data||{}):(window.data||{});
   function updateHeight(){
     requestAnimationFrame(()=>{
@@ -33,7 +33,7 @@
         const button=event.target.closest('[data-staff-mode]');
         if(!button||!tabs.contains(button))return;
         view=button.dataset.staffMode;
-        if(view==='officeCalendar'||view==='officeShortages'||view==='returnShortages'){
+        if(view==='returnShortages'){
           renderExtra();
         }else{
           document.body.classList.remove('pbR100F72ExtraActive');
@@ -90,24 +90,23 @@
     html+='</div></section>';
     return html;
   }
-  function shortageCards(kind){
-    const d=bookingData(),office=kind==='officeShortages';
-    const records=office?d.shortages:d.returnShortages;
-    const title=office?'کسری آفیش':'کسری تحویل';
+  function shortageCards(){
+    const records=bookingData().returnShortages;
+    const title='کسری دریافت';
     if(!Array.isArray(records))return '<section class="pbR100F72Panel"><h2>'+title+
       '</h2><div class="pbR100F72Empty">فهرست کسری‌ها هنوز دریافت نشده است.</div></section>';
     const rows=[...records].sort((a,b)=>Number(Boolean(a.resolved_at))-Number(Boolean(b.resolved_at)));
     return '<section class="pbR100F72Panel"><h2>'+title+'</h2><div class="pbR100F72Entries">'+
       (rows.length?rows.map(x=>{
-        const done=office?(x.status==='provided'||!!x.resolved_at):(x.status==='returned_later'||!!x.resolved_at);
+        const done=x.status==='returned_later'||!!x.resolved_at;
         const name=x.photographer_name||x.customer_name||'عکاس';
-        const quantity=office?x.shortage_qty:x.missing_qty;
-        const range=office?dateFa(x.rental_start)+' تا '+dateFa(x.rental_end):dateFa(x.detected_at);
+        const quantity=x.missing_qty;
+        const range=dateFa(x.detected_at);
         return '<article class="pbR100F72Entry"><b>'+esc(name)+'</b>'+
           '<small dir="ltr" style="text-align:right">'+esc(x.customer_mobile||x.photographer_mobile||'')+'</small>'+
           '<div>'+esc(x.item_title||'تجهیز')+'</div><small>'+esc(range)+'</small>'+
           '<strong class="'+(done?'resolved':'pending')+'">'+
-          (done?'رفع شده':'کسری '+fa(quantity)+' عدد')+'</strong></article>';
+          (done?'دریافت شده':'کسری '+fa(quantity)+' عدد')+'</strong></article>';
       }).join(''):'<div class="pbR100F72Empty">موردی ثبت نشده است.</div>')+
       '</div></section>';
   }
@@ -123,7 +122,7 @@
       b.setAttribute('aria-current',b.dataset.staffMode===view?'page':'false');
     }
     if(!extra){updateHeight();return}
-    pane.innerHTML=view==='officeCalendar'?calendar():shortageCards(view);
+    pane.innerHTML=shortageCards();
     pane.querySelectorAll('[data-r72-month]').forEach(b=>b.addEventListener('click',()=>{
       let first=new Date(iso(monthAnchor)+'T12:00:00Z');
       let safe=0;while(parts(first).day!==1&&safe++<32)first=shift(first,-1);

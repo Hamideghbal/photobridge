@@ -1,8 +1,7 @@
 /* R100F74: only handover staff; keep manager screens unchanged. */
 
 /* Three destinations, equal width on mobile; do not display removed Office tabs. */
-html body.pbR100F9StaffMode .pbR100F9StaffTabs [data-staff-mode="officeCalendar"],
-html body.pbR100F9StaffMode .pbR100F9StaffTabs [data-staff-mode="officeShortages"]{
+html body.pbR100F9StaffMode .pbR100F9StaffTabs [data-staff-mode="officeCalendar"]{
   display:none!important;
 }
 

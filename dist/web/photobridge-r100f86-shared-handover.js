@@ -11,24 +11,39 @@
  const summary=b=>{if(typeof window.pb100rOutGearSummary==='function')return window.pb100rOutGearSummary(b);return b.item_titles||'تجهیزات آفیش'};
  const range=b=>{if(typeof window.pbR100F71BookingRange==='function')return window.pbR100F71BookingRange(b);return date(b.rental_start)+' تا '+date(b.rental_end)};
  const modeNames={out:'تحویل',in:'دریافت',returnShortages:'کسری دریافت'};
- window.pbR100F86Card=(b,mode,action,state,config={})=>{
-   const isStaff=!!config.staff,done=b.status==='returned',delivered=b.status==='picked_up',who=b.photographer_name||b.customer_name||'عکاس';
-   const missing=mode==='in'&&done?shortages(b.id):[];
-   const missText=missing.map(x=>fa(x.missing_qty)+' عدد '+String(x.item_title||'تجهیز')).join('، ');
-   const badge=(done||delivered)?'<span class="pbR100F9StaffState pbR100F86State">'+(mode==='in'&&done?'✓ دریافت شده':'✓ تحویل شده')+'</span>':'';
-   const classes=isStaff?'pbR100F9StaffCard pbR100F71UnifiedCard':'pb854BookingStatusCard pb914BookingCard pbR100F71UnifiedCard';
-   return '<article class="'+classes+' pbR100F86SharedCard" data-pb915-booking-id="'+esc(b.id)+'" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش">'+
-     '<div class="pbR100F71Identity pb854BookingIdentity pbR100F86Identity">'+
-     '<div class="pb914NameLine"><b>'+esc(who)+'</b>'+(config.badge||'')+'</div>'+
-     '<small class="pb854PhotographerPhone" dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small>'+
-     '<small class="pbR100F71Gear pb854BookingItems">'+esc(summary(b))+'</small>'+
-     '<small class="pbR100F71Range pb914DateRange">'+esc(range(b))+'</small>'+
-     (missing.length?'<div class="pbR100F86MissingNote">کسری دریافت: '+esc(missText)+'</div>':'')+
-     '</div><div class="pbR100F71StaffAction pb914ActionColumn pbR100F86Actions">'+
-     (config.notice||'')+
-     (action||'')+
-     (badge&&!(action||'').includes('pbR100F9StaffState')?badge:'')+
-     '</div></article>';
+ // All mobile handover cards (operator AND manager) use identical markup.
+ // Keep role-based operations, but never reintroduce old manager card wrappers.
+ window.pbR100F86Card=(b,mode,legacyAction,state,config={})=>{
+   const manager=!!config.manager,returned=b.status==='returned',picked=b.status==='picked_up',who=b.photographer_name||b.customer_name||'عکاس';
+   const missing=mode==='in'&&returned?shortages(b.id):[];
+   const missingText=missing.map(x=>fa(x.missing_qty)+' عدد '+String(x.item_title||'تجهیز')).join('، ');
+   const label=mode==='in'?(returned?'✓ دریافت شده':''):(picked||returned?'✓ تحویل شده':'');
+   const button=(text,status,secondary=false)=>{
+     const id=esc(b.id),attrs=manager?
+       'onclick="bookingStatus(&#39;'+id+'&#39;,&#39;'+esc(status)+'&#39;)"':
+       'data-booking="'+id+'"';
+     return '<button type="button" class="pbR100F86Operation'+(secondary?' secondary':'')+'" '+attrs+'>'+esc(text)+'</button>';
+   };
+   const controls=[];
+   if(mode==='out'&&b.status==='reserved'){
+     controls.push(button('ثبت تحویل تجهیزات','picked_up'));
+     if(manager)controls.push(button('لغو آفیش','cancelled',true));
+   }else if(mode==='in'&&picked){
+     controls.push(button('ثبت دریافت تجهیزات','returned'));
+   }else if(mode==='out'&&b.status==='payment_pending'){
+     controls.push('<span class="pbR100F86PaymentPending">منتظر پرداخت</span>');
+   }
+   if(label)controls.push('<span class="pbR100F9StaffState pbR100F86State">'+label+'</span>');
+   const actions=controls.length?'<div class="pbR100F86ActionItems actions">'+controls.join('')+'</div>':'';
+   return '<article class="pbR100F9StaffCard pbR100F71UnifiedCard pbR100F86SharedCard"'+
+     ' data-pb915-booking-id="'+esc(b.id)+'" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش">'+
+     '<div class="pbR100F71Identity pbR100F86Identity">'+
+     '<b>'+esc(who)+'</b>'+
+     '<small class="pbR100F86Phone" dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small>'+
+     '<small class="pbR100F71Gear">'+esc(summary(b))+'</small>'+
+     '<small class="pbR100F71Range">'+esc(range(b))+'</small>'+
+     (missing.length?'<div class="pbR100F86MissingNote">کسری دریافت: '+esc(missingText)+'</div>':'')+
+     '</div><div class="pbR100F71StaffAction pbR100F86Actions">'+actions+'</div></article>';
  };
  window.pbR100F86DateButton=({d,count,selected,today,managerKind,staff})=>{
    const when=new Date(d+'T12:00:00Z');

@@ -9211,4 +9211,77 @@ html body #saleItemEditorBox.pb861EditorVisible>form{
  },{passive:true,capture:true});
 })();
 </script>
+
+<style id="pbR100F96MobileGlowAndNavigationMotion">
+/* Keep the blue depth visible above the opaque mobile content surface. */
+html body.rentalAppReady::before{z-index:139!important}
+html body.rentalAppReady .top,html body.rentalAppReady #rentalHeaderFilterHost{z-index:140!important}
+@media(max-width:850px){
+ html body.rentalAppReady::before{
+  height:86px!important;background:linear-gradient(180deg,rgba(49,94,251,.14) 0%,rgba(49,94,251,.055) 42%,rgba(49,94,251,0) 100%)!important;
+ }
+}
+@media(min-width:851px){
+ /* Both product-filter rows share the same vertical rhythm. */
+ html body.rentalAppReady #rentalHeaderFilterHost #itemsFilterShell.pb837FilterActive,
+ html body.rentalAppReady #rentalHeaderFilterHost #salesFilterShell.pb837FilterActive{
+  grid-template-rows:40px 40px!important;align-items:center!important;
+ }
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) #itemsCategoryFilters,
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) #saleItemsCategoryFilters,
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) .pb831BrandFilters{
+  display:flex!important;align-items:center!important;align-content:center!important;justify-content:center!important;
+  height:40px!important;min-height:40px!important;max-height:40px!important;padding:4px 3px!important;margin:0!important;
+  box-sizing:border-box!important;
+ }
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) #itemsCategoryFilters .categoryChip,
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) #saleItemsCategoryFilters .categoryChip,
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive) .pb831BrandFilters .pb831BrandChip{
+  align-self:center!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ }
+ html body.rentalAppReady .panel.active{animation:pbR100F96PanelIn .24s cubic-bezier(.2,.8,.2,1)}
+ html body.rentalAppReady .pbR100F96MovingIndicator{
+  display:block!important;position:absolute!important;left:0!important;bottom:2px!important;height:2px!important;
+  border-radius:999px!important;background:#315efb!important;pointer-events:none!important;z-index:4!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+ @keyframes pbR100F96PanelIn{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+}
+</style>
+
+<script id="pbR100F96NavigationMotionRuntime">
+(()=>{
+ const q=(s,r=document)=>r.querySelector(s);let frame=0;
+ function movingIndicator(){
+  if(!matchMedia('(min-width:851px)').matches)return;
+  const nav=q('#rentalDesktopPrimaryNav'),active=q('[data-rental-desktop-tab].active',nav);
+  if(!nav||!active)return;
+  let indicator=q('.pbR100F96MovingIndicator',nav);
+  if(!indicator){indicator=document.createElement('span');indicator.className='pbR100F96MovingIndicator';nav.prepend(indicator)}
+  const nr=nav.getBoundingClientRect(),ar=active.getBoundingClientRect();
+  indicator.style.width=Math.max(18,ar.width-14)+'px';
+  indicator.style.transform='translateX('+(ar.left-nr.left+7+nav.scrollLeft)+'px)';indicator.style.opacity='1';
+ }
+ function sync(){frame=0;movingIndicator()}
+ function queue(){if(!frame)frame=requestAnimationFrame(sync)}
+ function keepSelectedTabVisible(rail,button){
+  if(!rail||!button||!matchMedia('(max-width:850px)').matches)return;
+  const pageY=window.scrollY;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   button.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'nearest',inline:'center'});
+   if(Math.abs(window.scrollY-pageY)>1)window.scrollTo({top:pageY,left:window.scrollX,behavior:'instant'});
+  }));
+ }
+ document.addEventListener('click',e=>{
+  const office=e.target.closest?.('#pb848BookingHeaderTabs>[data-pb843-office-tab]');
+  const staff=e.target.closest?.('.pbR100F9StaffTabs>[data-staff-mode]');
+  if(office)keepSelectedTabVisible(office.parentElement,office);
+  if(staff)keepSelectedTabVisible(staff.parentElement,staff);
+  if(e.target.closest?.('button,a,[role="button"],.categoryChip,.pb831BrandChip'))queue();
+ },true);
+ new MutationObserver(queue).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+ window.addEventListener('resize',queue,{passive:true});[0,120,500].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
 </body></html>

@@ -8713,7 +8713,7 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
   const y=pb843CalendarYear,m=pb843CalendarMonth,g=toGregorian(y,m,1),first=String(g.gy).padStart(4,'0')+'-'+String(g.gm).padStart(2,'0')+'-'+String(g.gd).padStart(2,'0'),offset=(new Date(first+'T12:00:00Z').getUTCDay()+1)%7,days=jalaliMonthLength(y,m),now=today(),counts=new Map();
   for(const b of rows)for(const d of datesFor(b))counts.set(d,(counts.get(d)||0)+1);
   let cells='';for(let n=0;n<offset;n++)cells+='<button class="pb1010CalDay pb843CalendarDay blank" type="button" tabindex="-1"></button>';
-  for(let d=1;d<=days;d++){const iso=isoFor(y,m,d),count=counts.get(iso)||0;cells+='<button class="pb1010CalDay pb843CalendarDay'+(iso===selected?' active':'')+(iso===now?' today':'')+'" type="button" data-pb1010-day="'+iso+'" aria-label="'+digits(d)+' · '+fmt(count)+' آفیش">'+digits(d)+(count?'<span class="pb1010CalCount">'+fmt(count)+'</span>':'')+'</button>'}
+  for(let d=1;d<=days;d++){const iso=isoFor(y,m,d),dayRows=rows.filter(b=>datesFor(b).includes(iso)),count=dayRows.length,names=dayRows.slice(0,2).map(b=>'<span class="pb843CalendarEvent">'+(typeof esc==='function'?esc(b.photographer_name||b.customer_name||b.customer_mobile||'عکاس'):'عکاس')+'</span>').join(''),more=count>2?'<span class="pb843CalendarMore">+ '+fmt(count-2)+' دیگر</span>':'',selectedClass=iso===selected?' pb904r2SelectedDay':'',todayClass=iso===now?' today':'';cells+='<button class="pb1010CalDay pb843CalendarDay'+selectedClass+todayClass+'" type="button" data-pb1010-day="'+iso+'" aria-label="'+digits(d)+' · '+fmt(count)+' آفیش"><strong>'+digits(d)+'</strong>'+(count?'<em class="pb904r2DayCount has">'+fmt(count)+'</em>':'')+'<span class="pb843CalendarEvents">'+names+more+'</span></button>'}
   const wk=weekdays(),monthName=months()[m-1]||'';
   return '<div class="pb1010CalToolbar pb843CalendarToolbar"><button class="pb843CalendarNav" type="button" data-pb1010-month="-1" aria-label="ماه قبل">›</button><div><b>'+monthName+' '+digits(y)+'</b></div><button class="pb843CalendarNav" type="button" data-pb1010-month="1" aria-label="ماه بعد">‹</button></div><div class="pb1010CalWeek pb843CalendarWeek">'+wk.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="pb1010CalGrid pb843CalendarGrid">'+cells+'</div>';
  };
@@ -8726,9 +8726,10 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
  if(typeof baseMarkup==='function'){
   window.pb854BookingPaneMarkup=function(kind,title){
    if(kind!=='approved'&&kind!=='out')return baseMarkup(kind,title);
-   const old=baseMarkup(kind,title),start=old.lastIndexOf('<div class="pb854BookingStatusList">'),end=old.lastIndexOf('</div></div>'),tail=start>=0?old.slice(start):'',list=tail.replace(/<\/div><\/div>$/,'</div>');
-   const chosen=managerSelected[kind]||today();
-   return '<div class="box pb1010HandoverBox"><h2>'+title+'</h2><div class="pb1010HandoverSplit"><div class="pb1010HandoverCalendarPane" data-pb1010-manager-cal="'+kind+'"></div><aside class="pb1010HandoverDetails"><h3>'+(kind==='approved'?'تحویل‌های روز':'دریافت‌های روز')+' '+(typeof dateFa==='function'?dateFa(chosen):chosen)+'</h3>'+list+'</aside></div></div>';
+   const chosen=managerSelected[kind]||today(),rows=(window.pb854BookingRows?.(kind)||[]).filter(b=>managerDates(b,kind).includes(chosen));
+   const cards=rows.length?rows.map(b=>{const actions=b.status==='pending_approval'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'reserved\')">تأیید</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'rejected\')">رد</button>':b.status==='payment_pending'?'<button class="mini" disabled>منتظر پرداخت</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'cancelled\')">لغو</button>':b.status==='reserved'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'picked_up\')">تحویل تجهیزات</button><button class="mini v654Danger" onclick="bookingStatus(\''+b.id+'\',\'cancelled\')">لغو</button>':b.status==='picked_up'?'<button class="mini" onclick="bookingStatus(\''+b.id+'\',\'returned\')">ثبت برگشت</button>':'';return '<article class="pb854BookingStatusCard"><div><b>'+esc(b.photographer_name||b.customer_name||'عکاس')+'</b><small dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small><small class="pb854BookingItems">'+esc(b.item_titles||'بدون شرح تجهیزات')+'</small></div><div><small>'+dateFa(b.rental_start)+' تا '+dateFa(b.rental_end)+'</small><small>'+statusLabel(b.status)+' · '+money(b.total_amount)+'</small></div><div class="actions">'+actions+'</div></article>'}).join(''):'<div class="pb854BookingEmpty">برای این روز آفیشی ثبت نشده است.</div>';
+   const list='<div class="pb854BookingStatusList">'+cards+'</div>';
+   return '<div class="box pb1010HandoverBox"><h2>'+title+'</h2><div class="pb1010HandoverSplit"><div class="pb1010HandoverCalendarPane" data-pb1010-manager-cal="'+kind+'"></div><aside class="pb1010HandoverDetails"><h3>'+(kind==='approved'?'تحویل‌های روز':'دریافت‌های روز')+' '+(typeof dateFa==='function'?dateFa(chosen):chosen)+' <small>· '+fa(rows.length)+' آفیش</small></h3>'+list+'</aside></div></div>';
   };
   try{pb854BookingPaneMarkup=window.pb854BookingPaneMarkup}catch{}
  }
@@ -8750,7 +8751,7 @@ body.saleItemModalOpen #saleItemEditorBox .pb827ImagePicker{min-height:42px!impo
   staffSelected=window.pbR100F89ActiveStaffDay||staffSelected||today();
   const label=document.getElementById('pbR100F9StaffDayLabel');if(label){label.textContent=(mode==='out'?'تحویل‌های روز ':'دریافت‌های روز ')+(typeof dateFa==='function'?dateFa(staffSelected):staffSelected);label.style.display='block'}
   const heading=list.querySelector('h3');if(heading)heading.textContent=label?.textContent||'آفیش‌های روز';
-  bindCalendar(host,rows,staffSelected,b=>staffDates(b,mode),day=>{staffSelected=day;window.pbR100F89PickStaffDay?.(day)},()=>window.pbR100F9PaintStaffList?.());
+  bindCalendar(host,rows,staffSelected,b=>staffDates(b,mode),day=>{staffSelected=day;const railDay=document.querySelector('#pbR100F9StaffDates [data-staff-day="'+day+'"]');if(railDay)railDay.click();else{window.pbR100F89ActiveStaffDay=day;window.pbR100F9PaintStaffList?.()}},()=>window.pbR100F9PaintStaffList?.());
  };
  if(typeof baseStaffPaint==='function')window.pbR100F9PaintStaffList=function(...args){const out=baseStaffPaint.apply(this,args);repaintStaffCalendar();return out};
  const baseStaffDay=window.pbR100F89PickStaffDay;
@@ -8827,4 +8828,52 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
  setTimeout(refresh,200);setTimeout(refresh,1000);
 })();
 </script>
+
+<style id="pb1012DesktopHeaderAndCalendarParity">
+@media(min-width:851px){
+ :root{--pb864-main:36px!important;--pb864-base:100px!important}
+ body.rentalAppReady{padding-top:100px!important}
+ body.rentalAppReady .rentalDesktopPrimaryNav{top:64px!important;height:36px!important;min-height:36px!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav .rentalDesktopTabIndicator{display:none!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="items"],
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="sales"],
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="bookings"]{
+   position:fixed!important;top:0!important;width:88px!important;min-width:88px!important;height:64px!important;min-height:64px!important;
+   z-index:130!important;padding:0 8px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+   background:transparent!important;color:#475467!important;font:850 11px Vazirmatn,Tahoma,Arial,sans-serif!important;
+   box-shadow:none!important;border:0!important;border-radius:0!important;transform:none!important
+ }
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="items"]{left:calc(50% - 132px)!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="sales"]{left:calc(50% - 44px)!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="bookings"]{left:calc(50% + 44px)!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="items"]:hover,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="sales"]:hover,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="bookings"]:hover{color:#315efb!important;background:transparent!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="items"].active,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="sales"].active,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="bookings"].active{
+   color:#315efb!important;background:transparent!important;font-weight:950!important
+ }
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="items"].active:after,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="sales"].active:after,
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab="bookings"].active:after{
+   content:""!important;position:absolute!important;left:12px!important;right:12px!important;bottom:1px!important;height:2px!important;
+   border-radius:0!important;background:#315efb!important
+ }
+ body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab]:not([data-rental-desktop-tab="items"]):not([data-rental-desktop-tab="sales"]):not([data-rental-desktop-tab="bookings"]){height:36px!important;min-height:36px!important;padding:0 11px!important;font-size:9px!important}
+ body.rentalAppReady #rentalDesktopPrimaryNav .rentalDesktopAddItemAction{height:28px!important;min-height:28px!important}
+ html body.rentalAppReady .rentalHeaderFilterHost.active:not(.pb848ContextActive){top:100px!important}
+ html body.rentalAppReady .pb835StickyFilters{top:100px!important}
+ body.rentalAppReady .dashboardCards{top:100px!important}
+ .pb1010CalDay.pb843CalendarDay{min-height:56px!important;padding:5px!important;border:1px solid #e4e7ec!important;border-radius:11px!important;background:#fff!important;color:#344054!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;text-align:right!important;overflow:hidden!important}
+ .pb1010CalDay.pb843CalendarDay.today{border-color:#98a2b3!important;box-shadow:inset 0 0 0 1px #d0d5dd!important}
+ .pb1010CalDay.pb843CalendarDay.pb904r2SelectedDay{border-color:#315efb!important;background:#eef2ff!important;box-shadow:inset 0 0 0 1px #315efb!important;color:#1849a9!important}
+ .pb1010CalDay.pb843CalendarDay>strong{font-size:10px!important;color:#475467!important;align-self:flex-start!important}
+ .pb1010CalDay.pb843CalendarDay .pb843CalendarEvents{display:grid!important;gap:3px!important;margin-top:5px!important}
+ .pb1010CalDay.pb843CalendarDay .pb843CalendarEvent{display:block!important;padding:3px 5px!important;border-radius:6px!important;background:#f2f4f7!important;color:#344054!important;font-size:7.7px!important;font-weight:780!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ .pb1010CalDay.pb843CalendarDay .pb843CalendarMore{color:#667085!important;font-size:7.5px!important;padding-top:2px!important}
+ .pb1010CalDay.pb843CalendarDay .pb904r2DayCount{position:absolute!important;inset:auto 50% 9px auto!important;transform:translateX(50%)!important;min-width:30px!important;height:30px!important;padding:0 7px!important;border-radius:999px!important;display:grid!important;place-items:center!important;background:#eef2ff!important;color:#315efb!important;font:950 13px/1 Vazirmatn,Tahoma,Arial,sans-serif!important;box-sizing:border-box!important}
+}
+@media(max-width:850px){.pb1010CalDay.pb843CalendarDay{min-height:40px!important}}
+</style>
 </body></html>

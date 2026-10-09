@@ -9407,4 +9407,20 @@ html body.rentalAppReady .pb904r2CalendarPane,html body.rentalAppReady .pb904r2D
  const observer=new MutationObserver(clean);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<style id="pbR100F99ThirdHeaderClearance">
+/* Keep rental and sales content clear of the category/brand header stack. */
+html body.rentalAppReady.pb899MainItems #items,
+html body.rentalAppReady.pb899MainSales #sales{
+ margin-top:14px!important;
+ padding-top:0!important;
+}
+/* The staff card is an opaque surface above the page background glow. */
+html body.rentalAppReady #settings>#pbR100F9StaffSettings{
+ position:relative!important;
+ z-index:1!important;
+ isolation:isolate!important;
+ background:#fff!important;
+}
+</style>
 </body></html>

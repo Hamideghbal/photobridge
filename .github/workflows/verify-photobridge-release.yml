@@ -1,0 +1,62 @@
+name: Verify PhotoBridge release
+
+on:
+  push:
+    branches:
+      - feature/admin-entity-subscription-discounts-counts-20261010
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-verification:
+    name: Build and verify deploy payload
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Check changed JavaScript syntax
+        run: |
+          node --check dist/api/server.js
+          node --check dist/web/photobridge-v904r19-admin-stores.js
+          node --check dist/web/photobridge-r100f90-entity-discount-activation.js
+      - name: Run production build
+        run: npm run build
+      - name: Verify complete deployment payload
+        run: npm run verify:full
+      - name: Prepare runner PostgreSQL for migration smoke test
+        run: |
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'photobridge_test'"
+          sudo -u postgres createdb photobridge_test
+      - name: Smoke-test store discount migration in PostgreSQL
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import pg from 'pg';
+          const { Client } = pg;
+          const db = new Client({host:'127.0.0.1',port:5432,user:'postgres',password:'photobridge_test',database:'photobridge_test'});
+          await db.connect();
+          try {
+            await db.query('CREATE TABLE equipment_rental_shops(id integer PRIMARY KEY)');
+            await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
+            await db.query('INSERT INTO equipment_rental_shops(id) VALUES(1)');
+            const first = await db.query('SELECT subscription_discount_percent FROM equipment_rental_shops WHERE id=1');
+            if (Number(first.rows[0].subscription_discount_percent) !== 0) throw new Error('Incorrect default discount');
+            await db.query('UPDATE equipment_rental_shops SET subscription_discount_percent=20 WHERE id=1');
+            let rejected = false;
+            try { await db.query('UPDATE equipment_rental_shops SET subscription_discount_percent=20.01 WHERE id=1'); }
+            catch (error) { rejected = error.code === '23514'; }
+            if (!rejected) throw new Error('Out-of-range discount should fail');
+            await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
+            console.log('Store discount migration passed: default, 20% limit and idempotence.');
+          } finally { await db.end(); }
+          NODE

@@ -9069,4 +9069,65 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
  [0,100,350,700].forEach(ms=>setTimeout(queue,ms));
 })();
 </script>
+
+<style id="pbR100F94HeaderActionsAndDepth">
+/* A short, fading separator replaces the full-width hard edge. */
+html body.rentalAppReady .top{border-bottom:0!important;box-shadow:none!important;overflow:visible!important}
+html body.rentalAppReady .top::after{
+ content:"";position:absolute;left:18px;right:18px;bottom:0;height:1px;pointer-events:none;
+ background:linear-gradient(90deg,transparent 0%,rgba(152,162,179,.34) 12%,rgba(152,162,179,.34) 88%,transparent 100%);
+}
+/* The blue tint begins below whichever header row is currently visible. */
+html body.rentalAppReady::before{
+ content:"";position:fixed;z-index:0;top:var(--pb-r100f94-chrome-bottom,72px);left:0;right:0;height:92px;
+ pointer-events:none;background:linear-gradient(180deg,rgba(49,94,251,.105) 0%,rgba(49,94,251,.045) 38%,rgba(49,94,251,0) 100%);
+}
+html body.rentalAppReady .shell,html body.rentalAppReady #app{position:relative;z-index:1}
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings #bookings{padding-top:9px!important}
+ html body.rentalAppReady .top>#rentalDesktopAddItemAction:not(.hidden):not([hidden]){
+  display:inline-flex!important;position:fixed!important;z-index:151!important;top:18px!important;left:190px!important;
+  width:124px!important;min-width:124px!important;max-width:124px!important;height:36px!important;min-height:36px!important;
+  margin:0!important;padding:0 8px!important;align-items:center!important;justify-content:center!important;
+  border:1px solid #b9c9ff!important;border-radius:10px!important;background:#f5f8ff!important;color:#315efb!important;
+  box-shadow:0 3px 10px rgba(49,94,251,.10)!important;font:900 9px/1.3 Vazirmatn,Tahoma,Arial,sans-serif!important;
+  white-space:nowrap!important;
+ }
+ html body.rentalAppReady .top>#rentalDesktopAddItemAction:not(.hidden):not([hidden]):hover{
+  background:#eaf0ff!important;border-color:#8da5ff!important;color:#244fc9!important;
+ }
+}
+@media(min-width:851px) and (max-width:1100px){
+ html body.rentalAppReady .top>#rentalDesktopAddItemAction:not(.hidden):not([hidden]){
+  top:auto!important;left:auto!important;right:18px!important;bottom:18px!important;width:142px!important;max-width:142px!important;
+  height:42px!important;min-height:42px!important;background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  box-shadow:0 8px 22px rgba(49,94,251,.23)!important;
+ }
+}
+@media(max-width:850px){
+ html body.rentalAppReady .top::after{left:12px;right:12px}
+ html body.rentalAppReady::before{height:76px}
+}
+</style>
+
+<script id="pbR100F94HeaderDepthRuntime">
+(()=>{
+ let frame=0;
+ const header=document.querySelector('.top'),add=document.getElementById('rentalDesktopAddItemAction');
+ if(header&&add&&add.parentElement!==header)header.appendChild(add);
+ function sync(){
+  frame=0;
+  const header=document.querySelector('body.rentalAppReady .top');
+  const sub=document.querySelector('body.rentalAppReady #rentalHeaderFilterHost.active');
+  const visible=el=>el&&getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().height>0;
+  const bottom=Math.max(visible(header)?header.getBoundingClientRect().bottom:0,visible(sub)?sub.getBoundingClientRect().bottom:0);
+  const value=Math.round(bottom)+'px';
+  if(bottom>0&&document.body.style.getPropertyValue('--pb-r100f94-chrome-bottom')!==value)document.body.style.setProperty('--pb-r100f94-chrome-bottom',value);
+ }
+ function queue(){if(!frame)frame=requestAnimationFrame(sync)}
+ new MutationObserver(queue).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+ document.addEventListener('click',queue,true);window.addEventListener('resize',queue,{passive:true});
+ [0,100,400,900].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
 </body></html>

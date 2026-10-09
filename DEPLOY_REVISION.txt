@@ -1,1 +1,1 @@
-2026-10-09-r1048-equipment-modal-header-layout
+2026-10-09-r1049-equipment-modal-footer-layout

@@ -1,5 +1,5 @@
 /* R100F84 — store owner / manual office modal on phones. */
-html body #pbR100F84PendingOfficeReq[hidden]{display:none!important}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq[hidden]{display:none!important}
 html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq{
   display:grid!important;grid-column:1/-1!important;gap:5px!important;min-width:0!important;
   padding:7px!important;border:1px solid #dbe4f0!important;border-radius:10px!important;

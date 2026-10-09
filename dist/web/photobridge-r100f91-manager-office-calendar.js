@@ -16,6 +16,8 @@
  const fa=n=>Number(n||0).toLocaleString('fa-IR');
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const state={approved:{selected:'',month:''},out:{selected:'',month:''}};
+ const calendarMarkup=new WeakMap();
+ let frame=0,observerSet=false;
  const pane=kind=>q('#bookings [data-pb843-office-pane="'+kind+'"].active');
  const mode=()=>q('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab||'';
  const ready=()=>desktop()&&document.body.classList.contains('rentalAppReady')&&!document.body.classList.contains('pbR100F9StaffMode')&&q('#bookings')?.classList.contains('active');
@@ -26,14 +28,13 @@
    st.selected=day;st.month=day;
    let result;
    try{result=window.pb100rSelectManagerDate?.(kind,day)}catch(error){console.error('[PhotoBridge] date selection fallback',error)}
+   if(frame){cancelAnimationFrame(frame);frame=0}
    paint();
-   schedule();
    return result===undefined?true:result;
  }
  window.pbR100F91SelectDay=selectDay;
- const pending=window.__PB_R100F91PendingSelection;
- if(pending){delete window.__PB_R100F91PendingSelection;selectDay(pending.kind,pending.day)}
  document.addEventListener('click',event=>{
+   if(document.body.classList.contains('pbR100F9StaffMode'))return;
    const button=event.target.closest?.('[data-pb91-day],[data-pb1010-day],[data-pb100r-date-kind]');
    if(!button)return;
    const kind=button.dataset.pb91Kind||button.dataset.pb100rDateKind||button.closest('[data-pb843-office-pane]')?.dataset.pb843OfficePane||mode();
@@ -78,7 +79,6 @@
    }
    return out+'</div>';
  }
- let frame=0,observerSet=false;
  function fit(element){
    if(!element||!element.getClientRects().length)return;
    const top=element.getBoundingClientRect().top;
@@ -88,7 +88,6 @@
      element.style.setProperty('--pb-r100f91-fit-height',height+'px');
  }
  function paint(){
-   frame=0;
    const on=ready(),kind=mode(),handover=on&&(kind==='approved'||kind==='out'),office=on&&kind==='calendar';
    document.body.classList.toggle('pbR100F91ManagerOffice',handover);
    document.body.classList.toggle('pbR100F91OfficeViewport',handover||office);
@@ -135,8 +134,16 @@
    const dayTitle=q('.pbR100F91DayTitle',panel),dayCount=q('.pbR100F91DayCount',panel);
    if(dayTitle&&dayTitle.textContent!==title)dayTitle.textContent=title;
    if(dayCount&&dayCount.textContent!==counter)dayCount.textContent=counter;
-   const html=monthMarkup(kind,st.month,st.selected);
-   if(cal.innerHTML!==html)cal.innerHTML=html;
+   // Compare generated markup with itself, not the browser's normalized serialization.
+   // Keep day buttons mounted when only selection changes so pointer/focus targets survive.
+   const html=monthMarkup(kind,st.month,'');
+   if(calendarMarkup.get(cal)!==html){cal.innerHTML=html;calendarMarkup.set(cal,html)}
+   cal.querySelectorAll('[data-pb91-day]').forEach(button=>{
+     const selected=button.dataset.pb91Day===st.selected;
+     button.classList.toggle('pbR100F91SelectedDay',selected);
+     const pressed=String(selected);
+     if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);
+   });
    if(!cal.dataset.pbR100F91Events){
      cal.dataset.pbR100F91Events='1';
      cal.addEventListener('click',e=>{
@@ -158,7 +165,7 @@
    }
    fit(box);
  }
- function schedule(){if(!frame)frame=requestAnimationFrame(paint)}
+ function schedule(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;paint()})}
  const oldSelect=window.pb100rSelectManagerDate;
  if(typeof oldSelect==='function'){
    window.pb100rSelectManagerDate=function(kind,day,...rest){
@@ -199,4 +206,7 @@
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{attach();schedule()},{once:true});
  else{attach();schedule()}
+ // Replay only after every binding, render dependency and event handler is initialized.
+ const pending=window.__PB_R100F91PendingSelection;
+ if(pending){delete window.__PB_R100F91PendingSelection;selectDay(pending.kind,pending.day)}
 })();

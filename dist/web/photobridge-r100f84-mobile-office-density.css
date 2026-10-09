@@ -85,3 +85,27 @@ html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settings
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* R100F85 — mobile owner invoice fields and uncluttered receipt cards. */
+@media(max-width:850px){
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;align-items:start!important;padding:9px!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb855FinanceInvoiceRow>div:not(.pb890AccountingAction){display:none!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Primary,
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Details{display:flex!important;flex-direction:column!important;gap:5px!important;grid-column:auto!important;min-width:0!important;width:100%!important;box-sizing:border-box!important;padding:8px!important;background:#f8fafc!important;border-radius:9px!important;text-align:right!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Details{background:#eff6ff!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Primary>*,
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Details>*{white-space:normal!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;font-size:10px!important;line-height:1.7!important;margin:0!important;text-align:right!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Primary>.number{font-size:14px!important;font-weight:900!important;color:#1e40af!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Primary>.total{font-size:12px!important;font-weight:900!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Details>.title{font-size:11px!important;font-weight:900!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pbR100F85Details>.gear{max-height:5em!important;overflow:hidden!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb890AccountingAction{grid-column:1/-1!important;width:100%!important;display:flex!important;gap:6px!important;justify-content:stretch!important;justify-self:stretch!important}
+html body.rentalAppReady #accounting #pb855FinanceInvoices .pb890AccountingAction button{flex:1 1 0!important;min-width:0!important;max-width:100%!important;width:auto!important;white-space:normal!important}
+html body.rentalAppReady #accounting [data-pb842-pane="payments"] table.accountingTable tr{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px 8px!important}
+html body.rentalAppReady #accounting [data-pb842-pane="payments"] table.accountingTable td{display:block!important;grid-column:auto!important;width:auto!important;padding:2px 0!important;text-align:right!important;font-size:11px!important;line-height:1.7!important}
+html body.rentalAppReady #accounting [data-pb842-pane="payments"] table.accountingTable td::before{content:none!important;display:none!important}
+html body.rentalAppReady #accounting [data-pb842-pane="payments"] table.accountingTable td:nth-child(3){grid-column:1/-1!important;color:#475467!important}
+html body.rentalAppReady #accounting [data-pb842-pane="payments"] table.accountingTable td:nth-child(5){font-weight:900!important}
+}
+@media(min-width:851px){.pbR100F85Primary,.pbR100F85Details{display:none!important}}

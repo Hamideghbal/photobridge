@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/admin-entity-subscription-discounts-counts-20261010
+      - fix/discount-save-free-invite-sms-mobile-office-20261010
   pull_request:
     branches:
       - main
@@ -32,6 +33,8 @@ jobs:
         run: npm run build
       - name: Verify complete deployment payload
         run: npm run verify:full
+      - name: Verify targeted admin, SMS and mobile regressions
+        run: node scripts/verify-r100f111-fixes.mjs
       - name: Prepare runner PostgreSQL for migration smoke test
         run: |
           sudo systemctl start postgresql
@@ -46,7 +49,7 @@ jobs:
           const db = new Client({host:'127.0.0.1',port:5432,user:'postgres',password:'photobridge_test',database:'photobridge_test'});
           await db.connect();
           try {
-            await db.query('CREATE TABLE equipment_rental_shops(id integer PRIMARY KEY)');
+            await db.query('CREATE TABLE equipment_rental_shops(id integer PRIMARY KEY,subscription_discount_amount integer NOT NULL DEFAULT 50,updated_at timestamptz DEFAULT now())');
             await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
             await db.query('INSERT INTO equipment_rental_shops(id) VALUES(1)');
             const first = await db.query('SELECT subscription_discount_percent FROM equipment_rental_shops WHERE id=1');
@@ -57,6 +60,16 @@ jobs:
             catch (error) { rejected = error.code === '23514'; }
             if (!rejected) throw new Error('Out-of-range discount should fail');
             await db.query(fs.readFileSync('migrations/174_admin_entity_subscription_discount_percent.sql', 'utf8'));
-            console.log('Store discount migration passed: default, 20% limit and idempotence.');
+            const store = await db.query('UPDATE equipment_rental_shops SET subscription_discount_percent=$2,subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent',[1,12.5]);
+            if (Number(store.rows[0].subscription_discount_percent)!==12.5) throw new Error('Store discount write was not persisted');
+            const storeRead = await db.query('SELECT subscription_discount_percent,subscription_discount_amount FROM equipment_rental_shops WHERE id=1');
+            if (Number(storeRead.rows[0].subscription_discount_percent)!==12.5 || Number(storeRead.rows[0].subscription_discount_amount)!==0) throw new Error('Store discount persistence readback failed');
+            await db.query('CREATE TABLE labs(id integer PRIMARY KEY,subscription_discount_percent numeric(5,2) NOT NULL DEFAULT 0,subscription_discount_enabled boolean NOT NULL DEFAULT false,subscription_discount_amount integer NOT NULL DEFAULT 50,updated_at timestamptz DEFAULT now())');
+            await db.query('INSERT INTO labs(id) VALUES(1)');
+            const lab=await db.query('UPDATE labs SET subscription_discount_percent=$2,subscription_discount_enabled=($2::numeric>0),subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent',[1,17.5]);
+            if (Number(lab.rows[0].subscription_discount_percent)!==17.5) throw new Error('Lab discount update failed');
+            const labRead=await db.query('SELECT subscription_discount_percent,subscription_discount_enabled,subscription_discount_amount FROM labs WHERE id=1');
+            if (Number(labRead.rows[0].subscription_discount_percent)!==17.5||labRead.rows[0].subscription_discount_enabled!==true||Number(labRead.rows[0].subscription_discount_amount)!==0) throw new Error('Lab discount persistence readback failed');
+            console.log('Store/lab discount writes, readback, migration limit and idempotence passed.');
           } finally { await db.end(); }
           NODE

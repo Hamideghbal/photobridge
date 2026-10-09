@@ -20,6 +20,14 @@
  const mode=()=>q('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab||'';
  const ready=()=>desktop()&&document.body.classList.contains('rentalAppReady')&&!document.body.classList.contains('pbR100F9StaffMode')&&q('#bookings')?.classList.contains('active');
  const bookings=()=>typeof data!=='undefined'?(data?.bookings||[]):(window.data?.bookings||[]);
+ function selectDay(kind,day){
+   const st=state[kind];
+   if(!st||!valid(day))return;
+   st.selected=day;st.month=day;
+   window.pb100rSelectManagerDate?.(kind,day);
+   schedule();
+ }
+ window.pbR100F91SelectDay=selectDay;
  const matches=(b,kind,d)=>{
    const status=String(b.status||''),start=String(b.rental_start||'').slice(0,10),end=String(b.rental_end||'').slice(0,10);
    if(kind==='approved'){
@@ -126,10 +134,8 @@
        if(chosen){
          const activeKind=mode(),currentState=state[activeKind];
          if(!currentState)return;
-         currentState.selected=chosen.dataset.pb91Day;
-         currentState.month=currentState.selected;
-         window.pb100rSelectManagerDate?.(activeKind,currentState.selected);
-         schedule();
+         e.preventDefault();e.stopPropagation();
+         selectDay(activeKind,chosen.dataset.pb91Day);
        }
      });
    }

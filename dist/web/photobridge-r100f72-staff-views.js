@@ -91,7 +91,7 @@
     return html;
   }
   function shortageCards(){
-    if(typeof window.pbR100F86ShortageCards==='function')return window.pbR100F86ShortageCards();
+    if(typeof window.pbR100F86ShortageCards==='function'&&matchMedia('(max-width:850px)').matches)return window.pbR100F86ShortageCards();
     const records=bookingData().returnShortages;
     const title='کسری دریافت';
     if(!Array.isArray(records))return '<section class="pbR100F72Panel"><h2>'+title+

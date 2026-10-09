@@ -53,17 +53,21 @@
          '<small>'+esc(date(x.detected_at))+'</small>'+
          '<strong class="'+(done?'resolved':'pending')+'">'+(done?'✓ دریافت شده':'کسری '+fa(x.missing_qty)+' عدد')+'</strong>'+
          (x.resolution_note?'<small>توضیح: '+esc(x.resolution_note)+'</small>':'')+
-         (done?'':'<button type="button" class="pbR100F74ResolveBtn" data-r74-return-shortage="'+esc(x.id)+'" data-pbr86-resolve="'+esc(x.id)+'">دریافت کسری</button>')+
+         (done?(x.booking_id?'<button type="button" class="pbR100F86InvoiceAgain" data-pbr86-invoice="'+esc(x.booking_id)+'">فاکتور</button>':''):'<button type="button" class="pbR100F74ResolveBtn" data-r74-return-shortage="'+esc(x.id)+'" data-pbr86-resolve="'+esc(x.id)+'">دریافت کسری</button>')+
          '</article>';
      }).join(''):'<div class="pbR100F72Empty">موردی ثبت نشده است.</div>')+'</div></section>';
  };
  // All three panes use the same shortage markup/handler; only existing role permissions differ.
- window.pbR85ReturnShortagePane=window.pbR100F86ShortageCards;
+ const desktopShortagePane=window.pbR85ReturnShortagePane;
+ window.pbR85ReturnShortagePane=()=>window.matchMedia('(max-width:850px)').matches?window.pbR100F86ShortageCards():desktopShortagePane?.();
  document.addEventListener('click',e=>{
    const b=e.target.closest?.('[data-pbr86-resolve]');
    if(b){e.preventDefault();e.stopPropagation();window.pbR85ResolveReturnShortage?.(b.dataset.pbr86Resolve,b);return}
+   const invoice=e.target.closest?.('[data-pbr86-invoice]');
+   if(invoice){e.preventDefault();e.stopPropagation();window.pbR100F86OfferInvoice?.(invoice.dataset.pbr86Invoice);return}
  },true);
  function syncTabs(){
+   if(!window.matchMedia('(max-width:850px)').matches)return;
    const staff=document.body.classList.contains('pbR100F9StaffMode');
    document.querySelectorAll('.pbR100F9StaffTabs [data-staff-mode]').forEach(b=>{
      if(!modeNames[b.dataset.staffMode])return;

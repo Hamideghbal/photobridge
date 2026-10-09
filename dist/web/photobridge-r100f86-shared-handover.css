@@ -127,3 +127,12 @@
  }
 }
 html body.pbR100F9StaffMode #pbR100F60AccountIdentity .pbAccountAvatar:disabled{opacity:1!important}
+
+@media(max-width:850px){
+ html body.rentalAppReady .pbR100F86InvoiceAgain{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-height:36px!important;margin-top:8px!important;padding:7px 14px!important;
+  background:#eff4ff!important;color:#2649a5!important;border:1px solid #c7d7fe!important;
+  border-radius:9px!important;font:850 12px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ }
+}

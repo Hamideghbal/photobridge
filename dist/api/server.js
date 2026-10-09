@@ -5266,8 +5266,11 @@ async function sendSms(args) {
     const adapter = SMS_PROVIDER_ADAPTERS[cfg.provider];
     if (!adapter)
         throw new Error('sms_provider_unsupported');
+    // Invitations are a free onboarding service for both shops and labs.
+    // All operational/birthday/customer SMS retain their normal wallet billing.
+    const freeInvitationSms = new Set(['rental_photographer_invite','rental_manual_office','lab_photographer_permanent_invite','lab_invitation']).has(String(args.purpose||''));
     let charge = null;
-    if (args.chargeRentalShopId && args.serviceKey) {
+    if (!freeInvitationSms && args.chargeRentalShopId && args.serviceKey) {
         try {
             charge = await reserveEquipmentRentalSmsCharge({ shopId: args.chargeRentalShopId, serviceKey: args.serviceKey, purpose: args.purpose, note: `هزینه ${args.purpose}`, referenceId: args.referenceId || null, createdBy: args.userId || null, metadata: { purpose: args.purpose, eventKey: args.eventKey, mobile, ...(args.metadata || {}) } });
         }
@@ -5276,7 +5279,7 @@ async function sendSms(args) {
             throw e;
         }
     }
-    else if (args.chargeLabId && args.serviceKey) {
+    else if (!freeInvitationSms && args.chargeLabId && args.serviceKey) {
         try {
             charge = await reserveServiceWalletCharge({ labId: args.chargeLabId, serviceKey: args.serviceKey, note: `هزینه ${args.purpose}`, referenceType: 'sms', metadata: { purpose: args.purpose, eventKey: args.eventKey, mobile } });
         }
@@ -16310,6 +16313,18 @@ ${inviteUrl}`;
         await audit(a.userId, undefined, 'platform_admin.equipment_rental_shop_create', 'equipment_rental_shop', id, { name, slug }).catch(() => {});
         return sendJson(res, 201, { ok: true, id, slug });
     }
+    // Dedicated, narrow administrator discount endpoint: never rewrite unrelated shop/activation data.
+    const adminRentalShopDiscount = url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})\/subscription-discount$/i);
+    if (req.method === 'PATCH' && adminRentalShopDiscount) {
+        if (!requireRole(a, 'platform_admin')) return sendJson(res,403,{error:'forbidden'});
+        const b=await bodyJson(req, 20_000);
+        const percent=Object.prototype.hasOwnProperty.call(b,'subscriptionDiscountPercent') ? entityDiscountPercent(b.subscriptionDiscountPercent) : null;
+        if (percent === null) return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+        const q=await pool.query(`UPDATE equipment_rental_shops SET subscription_discount_percent=$2,subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent`,[adminRentalShopDiscount[1],percent]);
+        if (!q.rowCount) return sendJson(res,404,{error:'rental_shop_not_found'});
+        await audit(a.userId,undefined,'platform_admin.rental_subscription_discount','equipment_rental_shop',adminRentalShopDiscount[1],{percent}).catch(()=>{});
+        return sendJson(res,200,{ok:true,subscriptionDiscountPercent:Number(q.rows[0].subscription_discount_percent)});
+    }
     const adminRentalShop = url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && adminRentalShop) {
         if (!requireRole(a, 'platform_admin')) return sendJson(res, 403, { error: 'forbidden' });
@@ -18567,6 +18582,18 @@ ${inviteUrl}`;
             return sendJson(res, 400, { error: 'message_required' });
         const q = await pool.query(`INSERT INTO platform_chat_messages(lab_id,sender_id,message) VALUES($1,$2,$3) RETURNING *`, [adminChat[1], a.userId, message]);
         return sendJson(res, 201, { message: q.rows[0] });
+    }
+    // Discount-only updates must not touch lab status, location, administrator, or login sessions.
+    const adminLabDiscount = url.pathname.match(/^\/api\/admin\/labs\/([0-9a-f-]+)\/subscription-discount$/);
+    if (req.method === 'PATCH' && adminLabDiscount) {
+        if (!requireRole(a,'platform_admin')) return sendJson(res,403,{error:'forbidden'});
+        const b=await bodyJson(req,20_000);
+        const percent=Object.prototype.hasOwnProperty.call(b,'subscriptionDiscountPercent') ? entityDiscountPercent(b.subscriptionDiscountPercent) : null;
+        if (percent === null) return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+        const q=await pool.query(`UPDATE labs SET subscription_discount_percent=$2,subscription_discount_enabled=($2::numeric>0),subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent`,[adminLabDiscount[1],percent]);
+        if (!q.rowCount) return sendJson(res,404,{error:'lab_not_found'});
+        await audit(a.userId,adminLabDiscount[1],'platform_admin.lab_subscription_discount','lab',adminLabDiscount[1],{percent}).catch(()=>{});
+        return sendJson(res,200,{ok:true,subscriptionDiscountPercent:Number(q.rows[0].subscription_discount_percent)});
     }
     const adminLab = url.pathname.match(/^\/api\/admin\/labs\/([0-9a-f-]+)$/);
     if (adminLab && req.method === 'PATCH') {

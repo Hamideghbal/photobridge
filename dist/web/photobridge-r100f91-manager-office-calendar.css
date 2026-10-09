@@ -75,6 +75,57 @@
    overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;
    overscroll-behavior:contain!important;
  }
+
+ /* Explicit Office geometry for manager handover even if the legacy Office body marker changes. */
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane{
+   box-sizing:border-box!important;border:1px solid #e4e7ec!important;
+   border-radius:12px!important;background:#fff!important;padding:7px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91DayPanel{
+   box-sizing:border-box!important;border:1px solid #e4e7ec!important;
+   border-radius:12px!important;background:#fafbfc!important;padding:8px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarToolbar{
+   display:grid!important;grid-row:1!important;width:100%!important;
+   grid-template-columns:36px minmax(0,1fr) 36px!important;
+   gap:6px!important;align-items:center!important;margin:0 0 5px!important;padding:0!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarToolbar>div{
+   justify-self:stretch!important;text-align:center!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarToolbar b{
+   display:block!important;text-align:center!important;color:#344054!important;
+   font:900 14px/1.25 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarToolbar small{
+   display:block!important;text-align:center!important;color:#98a2b3!important;
+   font:750 8px/1.25 Vazirmatn,Tahoma,sans-serif!important;margin-top:1px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane .pb843CalendarNav{
+   width:34px!important;min-width:34px!important;height:31px!important;min-height:31px!important;
+   padding:0!important;background:#fff!important;border:1px solid #d0d5dd!important;
+   border-radius:9px!important;color:#475467!important;font-size:20px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarWeek{
+   display:grid!important;grid-row:2!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+   gap:3px!important;margin:0 0 3px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarWeek span{
+   font:850 8.5px/1.2 Vazirmatn,Tahoma,sans-serif!important;
+   text-align:center!important;color:#667085!important;padding:2px!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane>.pb843CalendarGrid{
+   grid-row:3!important;display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+   gap:3px!important;direction:rtl!important;width:100%!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane .pb843CalendarDay{
+   box-sizing:border-box!important;border:1px solid #e4e7ec!important;
+   border-radius:8px!important;background:#fff!important;padding:2px!important;overflow:hidden!important;
+   min-width:0!important;
+ }
+ html body.rentalAppReady.pbR100F91ManagerOffice #bookings .pbR100F91CalendarPane .pb843CalendarDay.pbR100F91SelectedDay{
+   background:#eaf0ff!important;
+ }
  @media(max-height:680px){
    html body.rentalAppReady.pbR100F91OfficeViewport #bookings .pb843CalendarToolbar small{display:none!important}
    html body.rentalAppReady.pbR100F91OfficeViewport #bookings .pb843CalendarWeek{margin-bottom:2px!important}

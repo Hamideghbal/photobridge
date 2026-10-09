@@ -3924,7 +3924,7 @@ body.rentalAppReady [data-pb848-context-tab="photographers"] button.active:after
   function decorateCalendar(){ensureBatchBar();const today=pb904r4TodayIso();qa('#pb843CalendarGrid [data-pb843-cal-day]').forEach(b=>{const iso=String(b.dataset.pb843CalDay||''),past=iso<today,chosen=selectedDates.has(iso);b.classList.toggle('pb892SelectedDay',chosen);b.classList.toggle('pb904r4PastOfficeDay',past);b.setAttribute('aria-disabled',past?'true':'false');let mark=b.querySelector('.pb904r23DayCheck');if(!mark){mark=document.createElement('span');mark.className='pb904r23DayCheck';mark.setAttribute('role','checkbox');mark.setAttribute('aria-label','انتخاب این روز برای آفیش');b.appendChild(mark)}mark.classList.toggle('checked',chosen);mark.classList.toggle('disabled',past);mark.setAttribute('aria-checked',chosen?'true':'false');mark.setAttribute('aria-disabled',past?'true':'false')});updateBatchBar()}
   const pb904r4TodayIso=()=>pbR17TehranIsoDate();
   function toggleDate(iso){iso=String(iso||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(iso))return;if(iso<pb904r4TodayIso()){pb920CalendarNotice('تاریخ گذشته قابل انتخاب برای آفیش نیست. امروز یا روزهای آینده را انتخاب کن.');return}const sorted=[...selectedDates].sort();const adjacent=(a,b)=>Math.abs(Date.parse(a+'T00:00:00Z')-Date.parse(b+'T00:00:00Z'))===86400000;if(selectedDates.has(iso)){const rest=sorted.filter(x=>x!==iso);for(let i=1;i<rest.length;i++)if(!adjacent(rest[i-1],rest[i])){pb920CalendarNotice('روز میانی را نمی‌توان حذف کرد؛ روزهای هر آفیش باید پشت سر هم باشند. برای روزهای با فاصله، پس از ثبت آفیش فعلی یک آفیش جدید بساز.');return}selectedDates.delete(iso)}else{if(sorted.length&&!sorted.some(x=>adjacent(x,iso))){pb920CalendarNotice('در هر آفیش فقط روزهای پشت سر هم قابل انتخاب‌اند. ابتدا آفیش فعلی را ثبت کن؛ سپس برای روزهای با فاصله، یک آفیش جدید باز کن.');return}selectedDates.add(iso)}message('#bookingMsg','');decorateCalendar()}
-  function attachGridCapture(){const grid=q('#pb843CalendarGrid');if(!grid||grid.dataset.pb904r23Capture)return;grid.dataset.pb904r23Capture='1';grid.addEventListener('click',e=>{const b=e.target.closest?.('[data-pb843-cal-day]');if(!b||b.classList.contains('blank'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();toggleDate(b.dataset.pb843CalDay)},true)}
+  function attachGridCapture(){const grid=q('#pb843CalendarGrid');if(!grid||grid.dataset.pb904r23Capture)return;grid.dataset.pb904r23Capture='1';grid.addEventListener('click',e=>{const b=e.target.closest?.('[data-pb843-cal-day]');if(!b||b.classList.contains('blank'))return;const day=b.dataset.pb843CalDay;if(matchMedia('(min-width:851px)').matches)window.pb904r2RenderDayPanel?.(day);e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();toggleDate(day)},true)}
   const baseCalendar=window.pb843RenderCalendar;
   if(typeof baseCalendar==='function')window.pb843RenderCalendar=pb843RenderCalendar=function(){baseCalendar();ensureBatchBar();attachGridCapture();decorateCalendar()};
   function ensureManualModal(){let back=q('#pb892ManualBackdrop');if(back)return back;back=document.createElement('div');back.id='pb892ManualBackdrop';back.className='pb892ManualBackdrop';back.innerHTML='<div class="pb892ManualDialog" role="dialog" aria-modal="true"><div class="pb892ManualDialogHead"><b>ثبت آفیش</b><button type="button" id="pb892ManualClose" aria-label="بستن">×</button></div><div id="pb892ManualBody"></div></div>';document.body.appendChild(back);q('#pb892ManualClose').onclick=closeManualModal;back.addEventListener('click',e=>{if(e.target===back)closeManualModal()});return back}
@@ -9625,6 +9625,38 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  document.addEventListener('click',queue,true);
  new MutationObserver(queue).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
  [50,200,650].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
+<style id="pbR1035ManagerCalendarControls">
+@media(min-width:851px){
+ /* The header action is the only desktop Office creation control. */
+ #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html body.rentalAppReady #rentalHeaderFilterHost #pbR1033OfficeHeaderAction:not([hidden]){
+  width:136px!important;min-width:136px!important;max-width:136px!important;
+  height:34px!important;min-height:34px!important;max-height:34px!important;
+  padding:0 9px!important;border-radius:8px!important;
+  font:900 10.5px/1.15 Vazirmatn,Tahoma,Arial,sans-serif!important;
+ }
+}
+</style>
+<script id="pbR1035ManagerCalendarSelectionRuntime">
+(()=>{
+ if(window.__PB_R1035_MANAGER_CALENDAR_SELECTION__)return;
+ window.__PB_R1035_MANAGER_CALENDAR_SELECTION__=true;
+ document.addEventListener('click',event=>{
+  if(!matchMedia('(min-width:851px)').matches||document.body.classList.contains('pbR100F9StaffMode'))return;
+  const dayButton=event.target.closest?.('[data-pb91-day],[data-pb1010-day]');
+  if(!dayButton)return;
+  const pane=dayButton.closest('[data-pb843-office-pane]');
+  const kind=pane?.dataset.pb843OfficePane||document.querySelector('#pb848BookingHeaderTabs [data-pb843-office-tab].active')?.dataset.pb843OfficeTab;
+  if(kind!=='approved'&&kind!=='out')return;
+  const day=dayButton.dataset.pb91Day||dayButton.dataset.pb1010Day;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(day||'')))return;
+  event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+  window.pb100rSelectManagerDate?.(kind,day);
+ },true);
 })();
 </script>
 </body></html>

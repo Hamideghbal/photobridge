@@ -9320,8 +9320,8 @@ async function ensureEquipmentGlobalCatalogV827Schema(){
     await pool.query(`CREATE TABLE IF NOT EXISTS equipment_global_products (id uuid PRIMARY KEY DEFAULT gen_random_uuid(),category_id uuid NOT NULL REFERENCES equipment_global_categories(id) ON DELETE RESTRICT,brand_id uuid REFERENCES equipment_global_brands(id) ON DELETE SET NULL,title text NOT NULL,model text,description text,specs jsonb NOT NULL DEFAULT '{}'::jsonb,image_urls jsonb NOT NULL DEFAULT '[]'::jsonb,source_url text,sort_order integer NOT NULL DEFAULT 0,active boolean NOT NULL DEFAULT true,deleted_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now())`);
     await pool.query(`ALTER TABLE equipment_rental_items ADD COLUMN IF NOT EXISTS catalog_product_id uuid REFERENCES equipment_global_products(id) ON DELETE SET NULL, ADD COLUMN IF NOT EXISTS gallery_images jsonb NOT NULL DEFAULT '[]'::jsonb`);
     await pool.query(`ALTER TABLE equipment_sale_items ADD COLUMN IF NOT EXISTS catalog_product_id uuid REFERENCES equipment_global_products(id) ON DELETE SET NULL, ADD COLUMN IF NOT EXISTS gallery_images jsonb NOT NULL DEFAULT '[]'::jsonb`);
-    await pool.query(`INSERT INTO equipment_global_categories(code,name,sort_order,active) VALUES ('camera','دوربین',10,true),('lens','لنز',20,true),('photo_gear','تجهیزات عکاسی',30,true),('video_gear','تجهیزات فیلم‌برداری',40,true) ON CONFLICT(code) DO UPDATE SET name=EXCLUDED.name,sort_order=EXCLUDED.sort_order,active=true,deleted_at=NULL,updated_at=now()`);
-    await pool.query(`INSERT INTO equipment_global_brands(name,sort_order,active) VALUES ('Sony',10,true),('Canon',20,true),('Nikon',30,true) ON CONFLICT(name) DO UPDATE SET sort_order=EXCLUDED.sort_order,active=true,deleted_at=NULL,updated_at=now()`);
+    await pool.query(`INSERT INTO equipment_global_categories(code,name,sort_order,active) VALUES ('camera','دوربین',10,true),('lens','لنز',20,true),('photo_gear','تجهیزات عکاسی',30,true),('video_gear','تجهیزات فیلم‌برداری',40,true) ON CONFLICT(code) DO NOTHING`);
+    await pool.query(`INSERT INTO equipment_global_brands(name,sort_order,active) VALUES ('Sony',10,true),('Canon',20,true),('Nikon',30,true) ON CONFLICT(name) DO NOTHING`);
     await pool.query(`INSERT INTO equipment_catalog_categories(shop_id,code,name,sort_order) SELECT s.id,v.code,v.name,v.sort_order FROM equipment_rental_shops s CROSS JOIN (VALUES ('camera','دوربین',10),('lens','لنز',20),('photo_gear','تجهیزات عکاسی',30),('video_gear','تجهیزات فیلم‌برداری',40)) AS v(code,name,sort_order) ON CONFLICT(shop_id,code) DO NOTHING`);
   })().catch(e=>{equipmentGlobalCatalogV827SchemaPromise=null;throw e});
   return equipmentGlobalCatalogV827SchemaPromise;
@@ -9741,8 +9741,17 @@ async function syncEquipmentRentalV830CentralModelsForShop(shopId){
         SET category_code=EXCLUDED.category_code,brand_name=EXCLUDED.brand_name,name=EXCLUDED.name,sort_order=EXCLUDED.sort_order,updated_at=now()
         WHERE equipment_store_models.customized=false AND equipment_store_models.deleted_at IS NULL`,[shopId]);
 }
+async function equipmentRentalSeedDefaultsForShop(shopId) {
+    await pool.query(`INSERT INTO equipment_catalog_categories(shop_id,code,name,sort_order)
+      VALUES ($1,'camera','دوربین',10),($1,'lens','لنز',20),($1,'photo_gear','تجهیزات عکاسی',30),($1,'video_gear','تجهیزات فیلم‌برداری',40)
+      ON CONFLICT(shop_id,code) DO NOTHING`, [shopId]);
+    await pool.query(`INSERT INTO equipment_store_brands(shop_id,name,sort_order)
+      SELECT $1,v.name,v.sort_order FROM (VALUES ('Sony',10),('Canon',20),('Nikon',30)) AS v(name,sort_order)
+      WHERE NOT EXISTS (SELECT 1 FROM equipment_store_brands b WHERE b.shop_id=$1 AND lower(b.name)=lower(v.name))`, [shopId]);
+}
 async function equipmentRentalCatalogSnapshot(shopId) {
     await ensureEquipmentRentalV830ModelSchema();
+    await equipmentRentalSeedDefaultsForShop(shopId);
     await syncEquipmentRentalV830CentralModelsForShop(shopId);
     const [cq,mq,bq,smq,global] = await Promise.all([
         pool.query(`SELECT id,code,name,sort_order,deleted_at,created_at,updated_at FROM equipment_catalog_categories WHERE shop_id=$1 ORDER BY (deleted_at IS NOT NULL),sort_order,name`, [shopId]),

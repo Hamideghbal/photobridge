@@ -9679,6 +9679,9 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
 <style id="pbR1038OfficeCalendarActionCleanup">
 /* Keep the manager Office calendar full width and leave one compact registration action. */
 @media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarSplit{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
  html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel,
  html body.rentalAppReady.pb899MainBookings:not(.pbR100F9StaffMode) #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{
   display:none!important;visibility:hidden!important;pointer-events:none!important;

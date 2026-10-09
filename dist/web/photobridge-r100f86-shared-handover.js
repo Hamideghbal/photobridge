@@ -11,24 +11,28 @@
  const summary=b=>{if(typeof window.pb100rOutGearSummary==='function')return window.pb100rOutGearSummary(b);return b.item_titles||'تجهیزات آفیش'};
  const range=b=>{if(typeof window.pbR100F71BookingRange==='function')return window.pbR100F71BookingRange(b);return date(b.rental_start)+' تا '+date(b.rental_end)};
  const modeNames={out:'تحویل',in:'دریافت',returnShortages:'کسری دریافت'};
+ // Both roles render exactly the same card classes, order and markup.
+ // pb914BookingCard was triggering legacy owner-only mobile stacking rules.
  window.pbR100F86Card=(b,mode,action,state,config={})=>{
-   const isStaff=!!config.staff,done=b.status==='returned',delivered=b.status==='picked_up',who=b.photographer_name||b.customer_name||'عکاس';
+   const done=b.status==='returned',picked=b.status==='picked_up',who=b.photographer_name||b.customer_name||'عکاس';
    const missing=mode==='in'&&done?shortages(b.id):[];
-   const missText=missing.map(x=>fa(x.missing_qty)+' عدد '+String(x.item_title||'تجهیز')).join('، ');
-   const badge=(done||delivered)?'<span class="pbR100F9StaffState pbR100F86State">'+(mode==='in'&&done?'✓ دریافت شده':'✓ تحویل شده')+'</span>':'';
-   const classes=isStaff?'pbR100F9StaffCard pbR100F71UnifiedCard':'pb854BookingStatusCard pb914BookingCard pbR100F71UnifiedCard';
-   return '<article class="'+classes+' pbR100F86SharedCard" data-pb915-booking-id="'+esc(b.id)+'" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش">'+
-     '<div class="pbR100F71Identity pb854BookingIdentity pbR100F86Identity">'+
-     '<div class="pb914NameLine"><b>'+esc(who)+'</b>'+(config.badge||'')+'</div>'+
+   const missingText=missing.map(x=>fa(x.missing_qty)+' عدد '+String(x.item_title||'تجهیز')).join('، ');
+   const badgeText=mode==='out'?(done||picked?'✓ تحویل شده':''):(done?'✓ دریافت شده':'');
+   // Printable owner documents are in the details dialog, not on mobile cards.
+   const controls=String(action||'').replace(/<span class="pb100rManagerDocs">[\s\S]*?<\/span>/g,'').trim();
+   const badge=badgeText&&!controls.includes('pbR100F9StaffState')?
+      '<span class="pbR100F9StaffState pbR100F86State">'+esc(badgeText)+'</span>':'';
+   return '<article class="pbR100F9StaffCard pbR100F71UnifiedCard pbR100F86SharedCard" data-pb915-booking-id="'+esc(b.id)+'" role="button" tabindex="0" aria-label="نمایش جزئیات آفیش">'+
+     '<div class="pbR100F71Identity pbR100F86Identity">'+
+     '<b>'+esc(who)+'</b>'+(config.badge||'')+
      '<small class="pb854PhotographerPhone" dir="ltr">'+esc(b.photographer_mobile||b.customer_mobile||'')+'</small>'+
-     '<small class="pbR100F71Gear pb854BookingItems">'+esc(summary(b))+'</small>'+
-     '<small class="pbR100F71Range pb914DateRange">'+esc(range(b))+'</small>'+
-     (missing.length?'<div class="pbR100F86MissingNote">کسری دریافت: '+esc(missText)+'</div>':'')+
-     '</div><div class="pbR100F71StaffAction pb914ActionColumn pbR100F86Actions">'+
-     (config.notice||'')+
-     (action||'')+
-     (badge&&!(action||'').includes('pbR100F9StaffState')?badge:'')+
-     '</div></article>';
+     '<small class="pbR100F71Gear">'+esc(summary(b))+'</small>'+
+     '<small class="pbR100F71Range">'+esc(range(b))+'</small>'+
+     '</div><div class="pbR100F71StaffAction pbR100F86Actions">'+
+     (controls?'<div class="pbR100F86ActionButtons">'+controls+'</div>':'')+badge+'</div>'+
+     (missing.length?'<div class="pbR100F86MissingNote">کسری دریافت: '+esc(missingText)+'</div>':'')+
+     (config.notice?'<div class="pbR100F86DeadlineNote">'+config.notice+'</div>':'')+
+     '</article>';
  };
  window.pbR100F86DateButton=({d,count,selected,today,managerKind,staff})=>{
    const when=new Date(d+'T12:00:00Z');
@@ -72,9 +76,11 @@
    });
    const tabs=document.querySelector('#pb848BookingHeaderTabs');
    if(tabs&&!staff){
-     const delivery=tabs.querySelector('[data-pb843-office-tab="out"]');
+     const handover=tabs.querySelector('[data-pb843-office-tab="approved"]');
+     const receiving=tabs.querySelector('[data-pb843-office-tab="out"]');
      const shortage=tabs.querySelector('[data-pb843-office-tab="returnShortages"]');
-     if(delivery&&shortage&&delivery.nextElementSibling!==shortage)delivery.insertAdjacentElement('afterend',shortage);
+     if(handover&&receiving&&handover.nextElementSibling!==receiving)handover.insertAdjacentElement('afterend',receiving);
+     if(receiving&&shortage&&receiving.nextElementSibling!==shortage)receiving.insertAdjacentElement('afterend',shortage);
      for(const [mode,key] of [['out','approved'],['in','out'],['returnShortages','returnShortages']]){
        const b=tabs.querySelector('[data-pb843-office-tab="'+key+'"]');
        if(!b)continue;

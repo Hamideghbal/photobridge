@@ -7651,7 +7651,10 @@ async function ensurePrintReadyJpeg(row) {
 function clampDiscount(value) { const n = Number(value || 0); return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : 0; }
 function moneyAmount(value) { const n = Number(value || 0); return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0; }
 function planAmountFromBase(monthlyPrice, months, discountPercent) { const monthly = moneyAmount(monthlyPrice), m = Math.max(1, Math.round(Number(months || 1))), pct = clampDiscount(discountPercent); const gross = moneyAmount(monthly * m); return { grossAmount: gross, planDiscountPercent: pct, planAmount: moneyAmount(gross * (100 - pct) / 100) }; }
-function applySpecialDiscount(planAmount, enabled, discountAmount) { const plan = moneyAmount(planAmount), special = enabled ? Math.min(plan, moneyAmount(discountAmount)) : 0; return { planAmount: plan, specialDiscountAmount: special, amount: Math.max(0, plan - special) }; }
+// Percent discounts are applied to the plan's net price; legacy fixed discounts remain supported.
+function entityDiscountPercent(value) { const n = Number(value ?? 0); return Number.isFinite(n) && n >= 0 && n <= 20 ? Math.round(n * 100) / 100 : null; }
+function applySpecialDiscount(planAmount, enabled, discountAmount, discountPercent = 0) { const plan = moneyAmount(planAmount), pct = entityDiscountPercent(discountPercent) ?? 0, special = enabled ? Math.min(plan, pct > 0 ? moneyAmount(plan * pct / 100) : moneyAmount(discountAmount)) : 0; return { planAmount: plan, specialDiscountAmount: special, discountPercent: pct, amount: Math.max(0, plan - special) }; }
+function rentalShopActionBlocked(shop) { if (!shop) return { error: 'rental_auth_required', message:'دسترسی به فروشگاه امکان‌پذیر نیست.' }; if (shop.suspended) return { error:'rental_shop_suspended', message:String(shop.suspension_reason || 'فروشگاه توسط ادمین سایت تعلیق شده است.') }; if (shop.activation_status !== 'approved' || !shop.activation_ever_approved) return { error:'rental_shop_not_activated', message:'فعال‌سازی این فروشگاه هنوز توسط ادمین سایت فوتوبریج تأیید نشده است. تا زمان تأیید، ثبت آفیش و ارسال پیامک و دعوت‌نامه مجاز نیست.' }; if (!shop.active) return { error:'rental_shop_inactive', message:'فروشگاه توسط ادمین سایت غیرفعال شده است.' }; return { error:'subscription_inactive', message:'اعتبار اشتراک فروشگاه پایان یافته است. برای ادامه فعالیت، اشتراک را تمدید کنید.' }; }
 async function getSubscriptionPricing() {
     const q = await pool.query(`SELECT value FROM platform_settings WHERE key='subscription_pricing' LIMIT 1`);
     const value = q.rows[0]?.value || {};
@@ -10211,7 +10214,10 @@ async function equipmentRentalOverview() {
     await ensureActivationWorkflowRuntimeSchema();
     const [shopsQ, itemsQ, bookingsQ, summaryQ] = await Promise.all([
         pool.query(`SELECT s.*,
-          (SELECT count(*)::int FROM equipment_rental_items i WHERE i.shop_id=s.id AND i.deleted_at IS NULL) item_count,
+          (SELECT count(*)::int FROM equipment_rental_items i WHERE i.shop_id=s.id AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')) rental_item_count,
+          (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.deleted_at IS NULL AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_item_count,
+          ((SELECT count(*) FROM equipment_rental_items i WHERE i.shop_id=s.id AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')) +
+           (SELECT count(*) FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.deleted_at IS NULL AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')))::int item_count,
           (SELECT count(*)::int FROM equipment_rental_bookings b WHERE b.shop_id=s.id AND b.status IN ('payment_pending','reserved','picked_up')) open_booking_count,
           COALESCE((SELECT w.balance FROM equipment_sale_wallets w WHERE w.shop_id=s.id),0)::bigint sales_wallet_balance,
           COALESCE((SELECT w.balance FROM equipment_rental_sms_wallets w WHERE w.shop_id=s.id),0)::bigint sms_wallet_balance
@@ -10345,7 +10351,7 @@ async function equipmentRentalShopOverview(shopId) {
     const inviteHistoryQ = await pool.query(`SELECT i.id,i.code,i.target_mobile,i.active,i.uses,i.max_uses,i.expires_at,i.created_at,i.updated_at,i.metadata,COALESCE(u.photographer_enabled,false) photographer_enabled,EXISTS(SELECT 1 FROM photographer_invite_redemptions rr WHERE rr.invite_id=i.id) accepted,COALESCE(pp.studio_name,u.name,i.metadata->>'targetName','عکاس') target_name,CASE WHEN COALESCE(i.metadata->>'createdFrom','')='rental_manual_office' THEN 'office' ELSE 'invite' END source FROM photographer_invites i LEFT JOIN LATERAL (SELECT ux.id,ux.name,ux.mobile,ux.photographer_enabled FROM users ux WHERE right(regexp_replace(coalesce(ux.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace(coalesce(i.target_mobile,''),'[^0-9]','','g'),10) ORDER BY ux.photographer_enabled DESC,ux.created_at LIMIT 1) u ON true LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE i.issuer_type='rental' AND i.issuer_rental_shop_id=$1 AND i.target_mobile IS NOT NULL ORDER BY i.created_at DESC LIMIT 100`, [shopId]).catch(()=>({rows:[]}));
     const photographerRows=membersQ.rows.map(x=>({...x,business_license_image_url:x.business_license_image_object_key?issueStoredPreviewUrl(String(x.business_license_image_object_key),String(x.business_license_image_name||'case-file-image'),String(x.business_license_image_content_type||'image/jpeg')):null}));
     const assetQ=await pool.query(`SELECT a.*,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,ba.booking_id current_booking_id,ba.handed_out_at FROM equipment_rental_assets a JOIN equipment_rental_items i ON i.id=a.item_id LEFT JOIN LATERAL (SELECT x.booking_id,x.handed_out_at FROM equipment_rental_booking_assets x JOIN equipment_rental_bookings b ON b.id=x.booking_id WHERE x.asset_id=a.id AND x.returned_at IS NULL AND b.status='picked_up' ORDER BY x.handed_out_at DESC LIMIT 1) ba ON true WHERE a.shop_id=$1 ORDER BY i.created_at DESC,a.system_code`,[shopId]).catch(()=>({rows:[]}));
-    return { shop, items, assets:assetQ.rows, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows, renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
+    return { shop, items, assets:assetQ.rows, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows.map(p => { const d = applySpecialDiscount(p.price, true, shop?.subscription_discount_amount, shop?.subscription_discount_percent); return { ...p, base_price: Number(p.price || 0), price: d.amount, special_discount_percent: d.discountPercent, special_discount_amount: d.specialDiscountAmount }; }), renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
 }
 async function equipmentRentalFindPhotographerByMobile(db, mobileValue) {
     const mobile = normalizeMobile(String(mobileValue || ''));
@@ -15188,16 +15194,18 @@ async function api(req, res, url) {
         const c=await pool.connect();try{await c.query('BEGIN');const oq=await c.query(`SELECT * FROM equipment_sale_orders WHERE id=$1 AND shop_id=$2 FOR UPDATE`,[rentalSaleOrderRoute[1],shop.id]);const order=oq.rows[0];if(!order){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_order_not_found'});}const prev=String(order.status||'');if(prev==='completed'||prev==='cancelled'){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_order_closed'});}const allowed=(prev==='pending'&&['confirmed','cancelled'].includes(next))||(prev==='confirmed'&&['completed','cancelled'].includes(next));if(!allowed){await c.query('ROLLBACK');return sendJson(res,409,{error:'invalid_sale_order_transition'});}if(next==='confirmed'&&prev==='pending'){const iq=await c.query(`SELECT stock_total,active FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL FOR UPDATE`,[order.sale_item_id,shop.id]);const item=iq.rows[0];if(!item||!item.active||Number(item.stock_total||0)<Number(order.quantity||0)){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient'});}await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total-$2,active=CASE WHEN stock_total-$2<=0 THEN false ELSE active END,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);}if(next==='cancelled'&&prev==='confirmed'){await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total+$2,active=true,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);if(String(order.payment_status||'')==='paid')await equipmentSaleRefundPaidOrder(c,order);}const uq=await c.query(`UPDATE equipment_sale_orders SET status=$3,payment_status=CASE WHEN $3='cancelled' AND payment_status='paid' THEN 'refunded' ELSE payment_status END,refunded_at=CASE WHEN $3='cancelled' AND payment_status='paid' THEN now() ELSE refunded_at END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[order.id,shop.id,next]);await c.query('COMMIT');await audit(a.userId,undefined,'equipment_sale.order_status','equipment_sale_order',order.id,{shopId:shop.id,previousStatus:prev,status:next,paymentStatus:uq.rows[0]?.payment_status||null}).catch(()=>{});if(order.buyer_user_id)publishCustomerEventEverywhere(String(order.buyer_user_id),'equipment_sale_status',{orderId:order.id,status:next,shopId:shop.id,shopName:String(shop.name||'فروشگاه تجهیزات'),paymentStatus:uq.rows[0]?.payment_status||null});return sendJson(res,200,{ok:true,order:uq.rows[0]});}catch(e){await c.query('ROLLBACK').catch(()=>{});if(String(e?.message||'')==='sale_wallet_insufficient_for_refund')return sendJson(res,409,{error:'sale_wallet_insufficient_for_refund',balance:e.balance,required:e.required});throw e;}finally{c.release();}
     }
     if (req.method === 'POST' && url.pathname === '/api/rental/availability') {
-        const shop = await equipmentRentalCurrentShop(a, { requireSubscription: true });
-        if (!shop) return sendJson(res, 403, { error: 'subscription_inactive' });
+        const shop = await equipmentRentalCurrentShop(a);
+        if (!shop) return sendJson(res, 401, { error:'rental_auth_required' });
+        if (!equipmentRentalShopSubscriptionActive(shop)) return sendJson(res, 403, rentalShopActionBlocked(shop));
         const b = await bodyJson(req, 200_000); b.shopId = shop.id;
         let out = await equipmentRentalAvailability(pool, b);
         if(!out.error && /^[0-9a-f-]{36}$/i.test(String(b.photographerId||''))) out=await equipmentRentalApplyDiscount(pool,out,String(b.photographerId));
         return sendJson(res, out.error ? 400 : 200, out);
     }
     if (req.method === 'POST' && url.pathname === '/api/rental/bookings') {
-        const shop = await equipmentRentalCurrentShop(a, { requireSubscription: true });
-        if (!shop) return sendJson(res, 403, { error: 'subscription_inactive' });
+        const shop = await equipmentRentalCurrentShop(a);
+        if (!shop) return sendJson(res, 401, { error:'rental_auth_required' });
+        if (!equipmentRentalShopSubscriptionActive(shop)) return sendJson(res, 403, rentalShopActionBlocked(shop));
         const b = await bodyJson(req, 300_000), items = equipmentRentalItemsInput(b.items), startDate = equipmentRentalDate(b.startDate), endDate = equipmentRentalDate(b.endDate);
         const manualOfficeInvite = b.manualOfficeInvite === true;
         const clientOrderId=String(b.clientOrderId||'');
@@ -15775,7 +15783,7 @@ async function api(req, res, url) {
         const pq = await pool.query(`SELECT id,name,months,price FROM equipment_rental_subscription_plans WHERE id=$1 AND active=true AND months IN (1,3,6) LIMIT 1`, [planId]);
         if (!pq.rowCount) return sendJson(res, 404, { error: 'subscription_plan_not_found' });
         const plan = pq.rows[0];
-        const amount = Math.max(0, Number(plan.price || 0) - Number(shop.subscription_discount_amount || 0));
+        const amount = applySpecialDiscount(plan.price, true, shop.subscription_discount_amount, shop.subscription_discount_percent).amount;
         if (amount <= 0) return sendJson(res, 400, { error: 'payment_amount_invalid' });
         const pending = await pool.query(`SELECT 1 FROM equipment_rental_subscription_renewals WHERE shop_id=$1 AND status='payment_pending' LIMIT 1`, [shop.id]);
         if (pending.rowCount) return sendJson(res, 409, { error: 'renewal_payment_pending' });
@@ -15808,7 +15816,7 @@ async function api(req, res, url) {
         if (!pq.rowCount) return sendJson(res, 404, { error: 'subscription_plan_not_found' });
         const plan = pq.rows[0], pending = await pool.query(`SELECT 1 FROM equipment_rental_subscription_renewals WHERE shop_id=$1 AND status='pending' LIMIT 1`, [shop.id]);
         if (pending.rowCount) return sendJson(res, 409, { error: 'renewal_pending' });
-        const id = crypto.randomUUID(), amount = Math.max(0, Number(plan.price || 0) - Number(shop.subscription_discount_amount || 0));
+        const id = crypto.randomUUID(), amount = applySpecialDiscount(plan.price, true, shop.subscription_discount_amount, shop.subscription_discount_percent).amount;
         await pool.query(`INSERT INTO equipment_rental_subscription_renewals(id,shop_id,plan_id,months,amount,status,submitted_by,submitted_at,previous_active_until) VALUES($1,$2,$3,$4,$5,'pending',$6,now(),$7)`, [id, shop.id, plan.id, plan.months, amount, a.userId, shop.active_until]);
         await audit(a.userId, undefined, 'equipment_rental.subscription_request', 'equipment_rental_subscription_renewal', id, { shopId: shop.id, months: plan.months, amount }).catch(() => {});
         return sendJson(res, 201, { ok: true, id, amount, months: Number(plan.months) });
@@ -15819,7 +15827,7 @@ async function api(req, res, url) {
     if (req.method === 'POST' && url.pathname === '/api/rental/photographer-invites') {
         const shop = await equipmentRentalCurrentShop(a);
         if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
-        if (!shop.active || shop.suspended) return sendJson(res, 409, { error: shop.suspended ? 'rental_shop_suspended' : 'rental_shop_not_activated', message: shop.suspended ? String(shop.suspension_reason || 'این فروشگاه تعلیق شده است.') : 'برای ارسال دعوت‌نامه، فروشگاه باید ابتدا توسط ادمین PhotoBridge فعال شود.' });
+        if (!equipmentRentalShopSubscriptionActive(shop)) return sendJson(res, 409, rentalShopActionBlocked(shop));
         let inv = null;
         const loadOrCreatePermanentRentalInvite = async () => {
             let found = (await pool.query(`SELECT * FROM photographer_invites WHERE issuer_type='rental' AND issuer_rental_shop_id=$1 AND active=true AND target_mobile IS NULL AND (expires_at IS NULL OR expires_at>now()) ORDER BY created_at DESC LIMIT 1`, [shop.id])).rows[0] || null;
@@ -15847,7 +15855,7 @@ async function api(req, res, url) {
     if (req.method === 'POST' && url.pathname === '/api/rental/photographer-invites/send-sms') {
         const shop = await equipmentRentalCurrentShop(a);
         if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
-        if (!shop.active || shop.suspended) return sendJson(res, 409, { error: shop.suspended ? 'rental_shop_suspended' : 'rental_shop_not_activated', message: shop.suspended ? String(shop.suspension_reason || 'این فروشگاه تعلیق شده است.') : 'برای ارسال دعوت‌نامه، فروشگاه باید ابتدا توسط ادمین PhotoBridge فعال شود.' });
+        if (!equipmentRentalShopSubscriptionActive(shop)) return sendJson(res, 409, rentalShopActionBlocked(shop));
         const b = await bodyJson(req), mobile = normalizeMobile(String(b.mobile||'')), previousDebt = equipmentRentalMoney(b.previousDebt), context = String(b.context||'invite') === 'office' ? 'office' : 'invite', bookingId = String(b.bookingId||''), targetName=String(b.name||'').trim().slice(0,140);
         const requestedRequiredFields=(b.requiredFields&&typeof b.requiredFields==='object')?equipmentRentalNormalizeRequiredFields(b.requiredFields):null;
         let requiredFields=requestedRequiredFields||equipmentRentalMembershipRequiredFields(shop);
@@ -16305,8 +16313,11 @@ ${inviteUrl}`;
     const adminRentalShop = url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && adminRentalShop) {
         if (!requireRole(a, 'platform_admin')) return sendJson(res, 403, { error: 'forbidden' });
+        await ensureActivationWorkflowRuntimeSchema();
         const b = await bodyJson(req, 200_000), current = (await pool.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [adminRentalShop[1]])).rows[0];
         if (!current) return sendJson(res, 404, { error: 'rental_shop_not_found' });
+        const discountPercent = b.subscriptionDiscountPercent === undefined ? Number(current.subscription_discount_percent || 0) : entityDiscountPercent(b.subscriptionDiscountPercent);
+        if (discountPercent === null) return sendJson(res, 400, { error: 'subscription_discount_percent_out_of_range', message:'تخفیف اشتراک باید بین صفر تا ۲۰ درصد باشد.' });
         const next = {
             name: b.name === undefined ? current.name : String(b.name || '').trim(),
             province: b.province === undefined ? current.province : String(b.province || '').trim() || null,
@@ -16324,7 +16335,7 @@ ${inviteUrl}`;
         };
         if (!next.name) return sendJson(res, 400, { error: 'shop_name_required' });
         if (b.active === true && Boolean(current.suspended) && b.suspended !== false) return sendJson(res, 409, { error: 'rental_shop_suspended_requires_resume', message: 'ابتدا تعلیق فروشگاه را رفع کنید؛ سپس در یک مرحله جدا آن را فعال کنید.' });
-        await pool.query(`UPDATE equipment_rental_shops SET name=$2,province=$3,city=$4,address=$5,phone=$6,manager_name=$7,manager_mobile=$8,description=$9,deposit_policy=$10,active=$11,suspended=$12,suspension_reason=CASE WHEN $12 THEN $13 ELSE NULL END,suspended_at=CASE WHEN $12 THEN COALESCE(suspended_at,now()) ELSE NULL END,suspended_by=CASE WHEN $12 THEN $14 ELSE NULL END,activation_status=CASE WHEN $11 THEN 'approved' ELSE activation_status END,activation_ever_approved=CASE WHEN $11 THEN true ELSE activation_ever_approved END,activation_reviewed_at=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE activation_reviewed_at END,activation_reviewed_by=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN $14 ELSE activation_reviewed_by END,active_from=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE active_from END,active_until=CASE WHEN $11 AND active_until IS NULL THEN now()+interval '30 days' ELSE active_until END,activation_review_note=CASE WHEN $11 THEN NULL ELSE $15 END,updated_at=now() WHERE id=$1`, [adminRentalShop[1], next.name, next.province, next.city, next.address, next.phone, next.managerName, next.managerMobile, next.description, next.depositPolicy, next.active, next.suspended, next.suspensionReason, a.userId, next.activationReviewNote]);
+        await pool.query(`UPDATE equipment_rental_shops SET name=$2,province=$3,city=$4,address=$5,phone=$6,manager_name=$7,manager_mobile=$8,description=$9,deposit_policy=$10,subscription_discount_percent=$16,active=$11,suspended=$12,suspension_reason=CASE WHEN $12 THEN $13 ELSE NULL END,suspended_at=CASE WHEN $12 THEN COALESCE(suspended_at,now()) ELSE NULL END,suspended_by=CASE WHEN $12 THEN $14 ELSE NULL END,activation_status=CASE WHEN $11 THEN 'approved' ELSE activation_status END,activation_ever_approved=CASE WHEN $11 THEN true ELSE activation_ever_approved END,activation_reviewed_at=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE activation_reviewed_at END,activation_reviewed_by=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN $14 ELSE activation_reviewed_by END,active_from=CASE WHEN $11 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE active_from END,active_until=CASE WHEN $11 AND active_until IS NULL THEN now()+interval '30 days' ELSE active_until END,activation_review_note=CASE WHEN $11 THEN NULL ELSE $15 END,updated_at=now() WHERE id=$1`, [adminRentalShop[1], next.name, next.province, next.city, next.address, next.phone, next.managerName, next.managerMobile, next.description, next.depositPolicy, next.active, next.suspended, next.suspensionReason, a.userId, next.activationReviewNote, discountPercent]);
         if (next.suspended) await pool.query(`DELETE FROM sessions WHERE user_id IN (SELECT user_id FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND active=true) AND user_id<>$2`, [adminRentalShop[1], a.userId]).catch(()=>{});
         await audit(a.userId, undefined, 'platform_admin.equipment_rental_shop_update', 'equipment_rental_shop', adminRentalShop[1], { active: next.active, suspended: next.suspended }).catch(() => {});
         return sendJson(res, 200, { ok: true });
@@ -18568,8 +18579,10 @@ ${inviteUrl}`;
             const activeUntilValue = b.activeUntil === undefined ? current.active_until : (String(b.activeUntil || '').trim() ? new Date(String(b.activeUntil)) : null);
             const nextDiscountEnabled = b.subscriptionDiscountEnabled === undefined ? Boolean(current.subscription_discount_enabled) : Boolean(b.subscriptionDiscountEnabled);
             const nextDiscountAmount = b.subscriptionDiscountAmount === undefined ? moneyAmount(current.subscription_discount_amount) : moneyAmount(b.subscriptionDiscountAmount);
+            const nextDiscountPercent = b.subscriptionDiscountPercent === undefined ? Number(current.subscription_discount_percent || 0) : entityDiscountPercent(b.subscriptionDiscountPercent);
+            if (nextDiscountPercent === null) throw Object.assign(new Error('subscription_discount_percent_out_of_range'), { status: 400 });
             const nextSmsAllowed = b.smsCustomerNotificationsAllowed === undefined ? Boolean(current.sms_customer_notifications_allowed) : Boolean(b.smsCustomerNotificationsAllowed);
-            const q = await c.query(`UPDATE labs SET name=$2,active=$3,suspended=$4,suspension_reason=CASE WHEN $4 THEN $5 ELSE NULL END,suspended_at=CASE WHEN $4 THEN COALESCE(suspended_at,now()) ELSE NULL END,suspended_by=CASE WHEN $4 THEN $11::uuid ELSE NULL END,active_until=CASE WHEN $3 AND $6::timestamptz IS NULL AND COALESCE(activation_status,'approved')<>'approved' THEN now()+interval '30 days' ELSE $6::timestamptz END,province=$7,city=$8,subscription_discount_enabled=$9,subscription_discount_percent=0,subscription_discount_amount=$10,sms_customer_notifications_allowed=$12,activation_status=CASE WHEN $3 THEN 'approved' ELSE activation_status END,activation_reviewed_at=CASE WHEN $3 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE activation_reviewed_at END,activation_reviewed_by=CASE WHEN $3 AND COALESCE(activation_status,'approved')<>'approved' THEN $11::uuid ELSE activation_reviewed_by END,updated_at=now() WHERE id=$1 RETURNING *`, [adminLab[1], nextName, nextActive, nextSuspended, nextSuspensionReason, activeUntilValue, nextProvince || null, nextCity || null, nextDiscountEnabled, nextDiscountAmount, a.userId, nextSmsAllowed]);
+            const q = await c.query(`UPDATE labs SET name=$2,active=$3,suspended=$4,suspension_reason=CASE WHEN $4 THEN $5 ELSE NULL END,suspended_at=CASE WHEN $4 THEN COALESCE(suspended_at,now()) ELSE NULL END,suspended_by=CASE WHEN $4 THEN $11::uuid ELSE NULL END,active_until=CASE WHEN $3 AND $6::timestamptz IS NULL AND COALESCE(activation_status,'approved')<>'approved' THEN now()+interval '30 days' ELSE $6::timestamptz END,province=$7,city=$8,subscription_discount_enabled=$9,subscription_discount_percent=$13,subscription_discount_amount=$10,sms_customer_notifications_allowed=$12,activation_status=CASE WHEN $3 THEN 'approved' ELSE activation_status END,activation_reviewed_at=CASE WHEN $3 AND COALESCE(activation_status,'approved')<>'approved' THEN now() ELSE activation_reviewed_at END,activation_reviewed_by=CASE WHEN $3 AND COALESCE(activation_status,'approved')<>'approved' THEN $11::uuid ELSE activation_reviewed_by END,updated_at=now() WHERE id=$1 RETURNING *`, [adminLab[1], nextName, nextActive, nextSuspended, nextSuspensionReason, activeUntilValue, nextProvince || null, nextCity || null, nextDiscountEnabled, nextDiscountAmount, a.userId, nextSmsAllowed, nextDiscountPercent]);
             updatedLab = q.rows[0];
             const wantsAdminUpdate = b.adminName !== undefined || b.adminMobile !== undefined || String(b.adminPassword || '') !== '';
             if (wantsAdminUpdate) {
@@ -19690,7 +19703,7 @@ ${inviteUrl}`;
         }
         if (req.method === 'GET' && url.pathname === '/api/lab/subscription') {
             const [lab, plans, renewals] = await Promise.all([
-                pool.query(`SELECT id,name,active,active_from,active_until,subscription_discount_enabled,subscription_discount_amount FROM labs WHERE id=$1`, [labId]),
+                pool.query(`SELECT id,name,active,active_from,active_until,subscription_discount_enabled,subscription_discount_amount,subscription_discount_percent FROM labs WHERE id=$1`, [labId]),
                 pool.query(`SELECT id,name,months,price,discount_percent,active FROM subscription_plans WHERE active=true AND months IN (1,3,6,12) ORDER BY sort_order,months`),
                 pool.query(`SELECT r.*,p.name plan_name FROM subscription_renewals r LEFT JOIN subscription_plans p ON p.id=r.plan_id WHERE r.lab_id=$1 AND r.status<>'uploading' ORDER BY r.created_at DESC LIMIT 100`, [labId])
             ]);
@@ -19698,7 +19711,7 @@ ${inviteUrl}`;
             const discountEnabled = Boolean(labRow?.subscription_discount_enabled);
             const specialDiscountAmount = moneyAmount(labRow?.subscription_discount_amount);
             const pricing = await getSubscriptionPricing();
-            const pricedPlans = plans.rows.map((p) => { const publicCalc = planAmountFromBase(pricing.monthlyPrice, p.months, p.discount_percent); const planAmount = moneyAmount(p.price) || publicCalc.planAmount; const special = applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount); return { ...p, list_price: publicCalc.grossAmount, plan_price: planAmount, price: special.amount, plan_discount_percent: clampDiscount(p.discount_percent), special_discount_amount: special.specialDiscountAmount }; });
+            const pricedPlans = plans.rows.map((p) => { const publicCalc = planAmountFromBase(pricing.monthlyPrice, p.months, p.discount_percent); const planAmount = moneyAmount(p.price) || publicCalc.planAmount; const special = applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount, labRow?.subscription_discount_percent); return { ...p, list_price: publicCalc.grossAmount, plan_price: planAmount, price: special.amount, plan_discount_percent: clampDiscount(p.discount_percent), special_discount_amount: special.specialDiscountAmount, special_discount_percent: special.discountPercent }; });
             return sendJson(res, 200, { lab: labRow, plans: pricedPlans, renewals: renewals.rows, pricing, uploadAvailable, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER, callbackUrl: ZIBAL_CALLBACK_URL } });
         }
         if (req.method === 'POST' && url.pathname === '/api/lab/subscription/zibal/request') {
@@ -19706,7 +19719,7 @@ ${inviteUrl}`;
                 return sendJson(res, 503, { error: 'zibal_not_configured' });
             const b = await bodyJson(req);
             const planId = String(b.planId || '');
-            const pq = await pool.query(`SELECT p.id,p.name,p.months,p.price,p.discount_percent,l.name lab_name,l.subscription_discount_enabled,l.subscription_discount_amount,u.mobile
+            const pq = await pool.query(`SELECT p.id,p.name,p.months,p.price,p.discount_percent,l.name lab_name,l.subscription_discount_enabled,l.subscription_discount_amount,l.subscription_discount_percent,u.mobile
         FROM subscription_plans p JOIN labs l ON l.id=$2 JOIN users u ON u.id=$3
         WHERE p.id=$1 AND p.active=true`, [planId, labId, a.userId]);
             if (!pq.rowCount)
@@ -19715,7 +19728,7 @@ ${inviteUrl}`;
             const pricing = await getSubscriptionPricing();
             const publicCalc = planAmountFromBase(pricing.monthlyPrice, plan.months, plan.discount_percent);
             const planAmount = moneyAmount(plan.price) || publicCalc.planAmount;
-            const special = applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount);
+            const special = applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount, plan.subscription_discount_percent);
             const priced = { listAmount: publicCalc.grossAmount, planAmount, specialDiscountAmount: special.specialDiscountAmount, discountPercent: clampDiscount(plan.discount_percent), amount: special.amount };
             if (priced.amount <= 0)
                 return sendJson(res, 400, { error: 'payment_amount_invalid' });
@@ -19772,14 +19785,14 @@ ${inviteUrl}`;
                 return sendJson(res, 413, { error: 'receipt_too_large' });
             if (!['application/pdf', 'image/jpeg', 'image/png', 'image/webp'].includes(contentType))
                 return sendJson(res, 400, { error: 'receipt_type_not_allowed' });
-            const pq = await pool.query(`SELECT p.id,p.name,p.months,p.price,p.discount_percent,l.subscription_discount_enabled,l.subscription_discount_amount FROM subscription_plans p JOIN labs l ON l.id=$2 WHERE p.id=$1 AND p.active=true`, [planId, labId]);
+            const pq = await pool.query(`SELECT p.id,p.name,p.months,p.price,p.discount_percent,l.subscription_discount_enabled,l.subscription_discount_amount,l.subscription_discount_percent FROM subscription_plans p JOIN labs l ON l.id=$2 WHERE p.id=$1 AND p.active=true`, [planId, labId]);
             if (!pq.rowCount)
                 return sendJson(res, 400, { error: 'invalid_plan' });
             const plan = pq.rows[0];
             const pricing = await getSubscriptionPricing();
             const publicCalc = planAmountFromBase(pricing.monthlyPrice, plan.months, plan.discount_percent);
             const planAmount = moneyAmount(plan.price) || publicCalc.planAmount;
-            const special = applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount);
+            const special = applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount, plan.subscription_discount_percent);
             const priced = { listAmount: publicCalc.grossAmount, planAmount, specialDiscountAmount: special.specialDiscountAmount, discountPercent: clampDiscount(plan.discount_percent), amount: special.amount };
             const id = crypto.randomUUID(), baseKey = `labs/${labId}/subscription-receipts/${id}-${name}`, key = storageConfigured ? storageKey(baseKey) : localStorageObjectKey(baseKey);
             const uploadUrl = storageConfigured ? await storagePresign('upload', key) : `/api/lab/subscription/renewals/${id}/local-upload`;

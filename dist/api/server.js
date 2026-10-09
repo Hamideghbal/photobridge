@@ -10180,7 +10180,7 @@ async function equipmentRentalAvailability(db, args) {
           AND NOT EXISTS (SELECT 1 FROM equipment_rental_accounting_entries rev WHERE rev.booking_id=b.id AND rev.entry_type='booking_reversal')
           AND NOT (b.rental_end < $3::date OR b.rental_start > $4::date)),0)::int reserved_qty
       FROM equipment_rental_items i JOIN equipment_rental_shops s ON s.id=i.shop_id
-      WHERE i.shop_id=$1 AND i.id=ANY($2::uuid[])`, [shopId, ids, startDate, endDate, excludeBookingId]);
+      WHERE i.shop_id=$1 AND i.id=ANY($2::uuid[]) AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')`, [shopId, ids, startDate, endDate, excludeBookingId]);
     const byId = new Map(q.rows.map(r => [String(r.id), r]));
     const rows = [];
     let totalAmount = 0, depositAmount = 0, available = true;
@@ -15925,9 +15925,9 @@ ${inviteUrl}`;
         const invitedShopSet = new Set(scopedShopIds.map(String));
         const viewer=(await pool.query('SELECT province,city FROM photographer_profiles WHERE user_id=$1 LIMIT 1',[a.userId])).rows[0]||{};
         const q = await pool.query(`SELECT s.id,s.name,s.slug,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
-          count(i.id) FILTER (WHERE i.active=true AND i.deleted_at IS NULL)::int active_items,COALESCE(min(i.daily_price) FILTER (WHERE i.active=true AND i.deleted_at IS NULL),0)::bigint min_daily_price,
-          (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0) sale_items,
-          (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0) min_sale_price,
+          count(i.id) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%'))::int active_items,COALESCE(min(i.daily_price) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')),0)::bigint min_daily_price,
+          (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_items,
+          (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) min_sale_price,
           EXISTS(SELECT 1 FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' AND m.active=true) connected,
           (SELECT r.status FROM equipment_rental_collaboration_requests r WHERE r.shop_id=s.id AND r.photographer_id=$1 LIMIT 1) collaboration_status,
           (SELECT m.collateral_requirement FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) collateral_requirement,
@@ -16113,7 +16113,7 @@ ${inviteUrl}`;
         const c=await pool.connect();
         try{
             await c.query('BEGIN');
-            const iq=await c.query(`SELECT i.*,s.active shop_active,COALESCE(s.suspended,false) shop_suspended,s.active_from,s.active_until,s.sales_wallet_checkout_enabled,s.sale_enabled,s.sale_reach,s.province,s.city,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,s.sale_birthday_days_before,s.sale_birthday_days_after FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id WHERE i.id=$1 AND i.active=true AND i.deleted_at IS NULL FOR UPDATE OF i`,[itemId]);
+            const iq=await c.query(`SELECT i.*,s.active shop_active,COALESCE(s.suspended,false) shop_suspended,s.active_from,s.active_until,s.sales_wallet_checkout_enabled,s.sale_enabled,s.sale_reach,s.province,s.city,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,s.sale_birthday_days_before,s.sale_birthday_days_after FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id WHERE i.id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') FOR UPDATE OF i`,[itemId]);
             const item=iq.rows[0];
             if(!item||!item.shop_active||item.shop_suspended||!equipmentRentalShopSubscriptionActive({active:true,suspended:item.shop_suspended,active_from:item.active_from,active_until:item.active_until})){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_item_unavailable'});}
             if(!(await equipmentRentalPhotographerCanAccessShop(c,a.userId,item.shop_id,'sale'))){await c.query('ROLLBACK');return sendJson(res,403,{error:'rental_shop_scope_forbidden'});}
@@ -16149,7 +16149,7 @@ ${inviteUrl}`;
             const sq=await c.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 FOR UPDATE`,[shopId]),shop=sq.rows[0];
             if(!equipmentRentalShopSubscriptionActive(shop)||shop.sale_enabled===false){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_shop_unavailable'});}
             const ids=cart.map(x=>x.itemId).sort();
-            const iq=await c.query(`SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND id=ANY($2::uuid[]) AND active=true AND deleted_at IS NULL ORDER BY id FOR UPDATE`,[shopId,ids]);
+            const iq=await c.query(`SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND id=ANY($2::uuid[]) AND active=true AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY id FOR UPDATE`,[shopId,ids]);
             if(iq.rowCount!==ids.length){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_cart_changed'});}
             const byId=new Map(iq.rows.map(x=>[String(x.id),x]));let total=0;const lines=[];
             for(const row of cart){const item=byId.get(row.itemId);if(!item||Number(item.stock_total||0)<row.quantity){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient',itemId:row.itemId});}const price=await equipmentSalePrice(c,shop,a.userId,Number(item.sale_price||0)*row.quantity);total+=price.totalAmount;lines.push({item,quantity:row.quantity,lineTotal:price.totalAmount,price});}

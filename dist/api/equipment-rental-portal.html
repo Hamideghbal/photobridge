@@ -5126,9 +5126,10 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
 
   }
   function placeBatchBar(){
-    const bar=q('#pb892CalendarBatchBar'),box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),panel=box?.querySelector('.pb904r2DayPanel');
+    if(!matchMedia('(min-width:851px)').matches)return;
+    const bar=q('#pb892CalendarBatchBar'),box=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),panel=box?.querySelector('.pb904r2DayPanel'),pane=box?.querySelector('.pb904r2CalendarPane'),grid=pane?.querySelector(':scope > .pb843CalendarGrid');
     if(!bar||!box||!panel)return;
-    if(bar.parentElement!==panel)panel.appendChild(bar);
+    if(pane&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
   }
   async function openBookingInvoice(bookingId){
     let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId));
@@ -5396,8 +5397,8 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
    const box=q('#bookings .pb843BookingCalendarBox'),pane=q('#bookings .pb904r2CalendarPane');
    const toolbar=box?.querySelector(':scope > .pb843CalendarToolbar')||box?.querySelector('.pb843CalendarToolbar');
    if(box&&pane&&toolbar&&toolbar.parentNode!==pane)pane.insertBefore(toolbar,pane.firstChild);
-   const bar=q('#pb892CalendarBatchBar'),panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
-   if(panel&&bar&&bar.parentNode!==panel)panel.appendChild(bar);
+   const bar=q('#pb892CalendarBatchBar'),grid=pane?.querySelector(':scope > .pb843CalendarGrid');
+   if(pane&&bar&&(bar.parentNode!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
  }
  function sync(){placeCalendarToolbar()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{sync();setTimeout(sync,80);setTimeout(sync,500)},{once:true});else{sync();setTimeout(sync,80);setTimeout(sync,500)}
@@ -8829,14 +8830,12 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
 <script id="pb1011FollowupLayoutRuntime">
 (()=>{
  const placeAction=()=>{
-  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),panel=split?.querySelector('.pb904r2DayPanel'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
+  const box=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox'),split=box?.querySelector('.pb904r2CalendarSplit'),pane=split?.querySelector('.pb904r2CalendarPane'),toolbar=box?.querySelector('.pb843CalendarToolbar'),bar=document.getElementById('pb892CalendarBatchBar');
   if(matchMedia('(min-width:851px)').matches&&pane&&toolbar){
    const week=pane.querySelector(':scope > .pb843CalendarWeek');
    if(toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
   }
-  if(matchMedia('(min-width:851px)').matches){
-   if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
-  }else if(pane&&bar){const grid=pane.querySelector(':scope > .pb843CalendarGrid');if(bar.parentElement!==pane||bar.previousElementSibling!==grid)pane.insertBefore(bar,grid?.nextSibling||null)}
+  if(pane&&bar){const grid=pane.querySelector(':scope > .pb843CalendarGrid');if(bar.parentElement!==pane||bar.previousElementSibling!==grid)pane.insertBefore(bar,grid?.nextSibling||null)}
   else if(box&&split&&bar&&bar.previousElementSibling!==split)split.insertAdjacentElement('afterend',bar);
  };
  const cleanOfficeHint=()=>{
@@ -9011,14 +9010,13 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
   queued=false;
   if(!matchMedia('(min-width:851px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
   const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
-  const panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
   const box=pane?.closest('.pb843BookingCalendarBox');
   const toolbar=box?.querySelector(':scope > .pb843CalendarToolbar')||box?.querySelector('.pb843CalendarToolbar');
   const week=pane?.querySelector(':scope > .pb843CalendarWeek');
   const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
   const bar=q('#pb892CalendarBatchBar');
   if(pane&&toolbar&&toolbar.parentElement!==pane)pane.insertBefore(toolbar,week||pane.firstChild);
-  if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
+  if(pane&&bar&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
  }
  function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
  document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
@@ -9063,9 +9061,9 @@ body.saleItemModalOpen #saleItemEditorBox .pb829ManagedMenu{max-height:min(52dvh
   queued=false;
   if(!matchMedia('(min-width:851px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
   const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
-  const panel=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2DayPanel');
+  const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
   const bar=q('#pb892CalendarBatchBar');
-  if(panel&&bar&&bar.parentElement!==panel)panel.appendChild(bar);
+  if(pane&&bar&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))pane.insertBefore(bar,grid?.nextSibling||null);
  }
  function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
  document.addEventListener('click',e=>{if(e.target.closest?.('#pb848BookingHeaderTabs,[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"],[data-pb843-office-tab="calendar"]'))queue()},true);
@@ -9539,4 +9537,55 @@ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="ca
  }
 }
 </style>
+<style id="pbR1031OfficeActionBelowCalendar">
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar{
+  position:fixed!important;z-index:160!important;left:var(--pb-r1031-office-action-left,0px)!important;right:auto!important;
+  top:var(--pb-r1031-office-action-top,0px)!important;bottom:auto!important;transform:none!important;
+  width:var(--pb-r1031-office-action-width,0px)!important;min-width:0!important;max-width:none!important;
+  height:22px!important;min-height:22px!important;max-height:22px!important;margin:0!important;padding:1px 3px!important;
+  display:grid!important;grid-template-columns:112px minmax(0,1fr)!important;grid-template-rows:18px!important;gap:4px!important;
+  box-sizing:border-box!important;overflow:hidden!important;border:1px solid #e4e7ec!important;border-top:0!important;
+  border-radius:0 0 7px 7px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 2px 4px rgba(16,24,40,.06)!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarContinue{
+  grid-column:1!important;grid-row:1!important;width:100%!important;height:18px!important;min-height:18px!important;max-height:18px!important;
+  padding:0 5px!important;font:900 8.5px/1 Vazirmatn,Tahoma,Arial,sans-serif!important;white-space:nowrap!important;
+ }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane>#pb892CalendarBatchBar #pb892CalendarCount{
+  grid-column:2!important;grid-row:1!important;display:block!important;min-width:0!important;min-height:0!important;max-height:18px!important;
+  margin:0!important;padding:0 3px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  line-height:18px!important;font-size:8px!important;text-align:right!important;
+ }
+}
+</style>
+<script id="pbR1031OfficeActionPositionRuntime">
+(()=>{
+ const q=s=>document.querySelector(s);let queued=false,observer=null,resizeObserver=null;
+ function sync(){
+  const bar=q('#pb892CalendarBatchBar');
+  if(!bar)return;
+  if(!matchMedia('(min-width:851px)').matches){
+   ['--pb-r1031-office-action-left','--pb-r1031-office-action-top','--pb-r1031-office-action-width'].forEach(k=>bar.style.removeProperty(k));
+   bar.style.removeProperty('visibility');return;
+  }
+  const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
+  const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
+  if(!pane||!grid){bar.style.setProperty('visibility','hidden');return}
+  const r=grid.getBoundingClientRect();
+  if(r.width<1||r.height<1){bar.style.setProperty('visibility','hidden');return}
+  bar.style.setProperty('--pb-r1031-office-action-left',`${Math.round(r.left)}px`);
+  bar.style.setProperty('--pb-r1031-office-action-top',`${Math.round(r.bottom+1)}px`);
+  bar.style.setProperty('--pb-r1031-office-action-width',`${Math.round(r.width)}px`);
+  bar.style.removeProperty('visibility');
+  if(resizeObserver){resizeObserver.disconnect();resizeObserver.observe(grid);resizeObserver.observe(pane)}
+ }
+ function queue(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(()=>{queued=false;sync()}))}
+ function boot(){if(!observer){observer=new MutationObserver(queue);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}if(!resizeObserver)resizeObserver=new ResizeObserver(queue);sync()}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+ window.addEventListener('resize',queue,{passive:true});window.addEventListener('scroll',queue,{passive:true,capture:true});
+ document.addEventListener('click',e=>{if(e.target.closest?.('[data-pb843-office-tab],[data-rental-desktop-tab="bookings"],[data-rental-bottom-tab="bookings"]'))queue()},true);
+ [80,350,900].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
 </body></html>

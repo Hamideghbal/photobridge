@@ -9341,7 +9341,7 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pb914Act
   if(indicator.style.opacity!=='1')indicator.style.opacity='1';
  }
  function syncIndicators(){
-  if(!matchMedia('(min-width:851px)').matches)return;
+  if(document.documentElement.dataset.pbR100F98NoSubLines==='1'||!matchMedia('(min-width:851px)').matches)return;
   const specs=[
    ['#pb848BookingHeaderTabs','[data-pb843-office-tab].active'],
    ['#pb856FinanceHeaderContext .pb856FinanceTabs','[data-pb842-tab].active'],
@@ -9356,6 +9356,55 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="approved"] .pb914Act
  document.addEventListener('click',queue,true);window.addEventListener('resize',queue,{passive:true});
  new MutationObserver(queue).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
  [0,100,400,850].forEach(ms=>setTimeout(queue,ms));
+})();
+</script>
+
+<style id="pbR100F98HeaderSpacingAndLayers">
+/* One primary underline only: keep the moving indicator and remove legacy lines. */
+@media(min-width:851px){
+ html body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab],
+ html body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab].active{
+  border-bottom-color:transparent!important;
+ }
+ html body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab]::after,
+ html body.rentalAppReady #rentalDesktopPrimaryNav button[data-rental-desktop-tab].active::after{display:none!important;content:none!important}
+ /* Secondary and product-filter headers animate their buttons, without an underline. */
+ html body.rentalAppReady .pbR100F97SubIndicator{display:none!important;opacity:0!important}
+ html body.rentalAppReady #rentalHeaderFilterHost button,
+ html body.rentalAppReady #rentalHeaderFilterHost .categoryChip{
+  transition:color .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .14s ease!important;
+ }
+ /* Equal content starts for sections attached directly to the main header. */
+ html body.rentalAppReady.pb899MainSms #sms,
+ html body.rentalAppReady.pb899MainSubscription #subscription,
+ html body.rentalAppReady.pb899MainSettings #settings{margin-top:10px!important;padding-top:0!important}
+ /* Equal content starts for all sections with one subheader. */
+ html body.rentalAppReady.pb899MainAccounting #accounting,
+ html body.rentalAppReady.pb899MainPhotographers #photographers{margin-top:10px!important;padding-top:0!important}
+ html body.rentalAppReady.pb899MainBookings #bookings{padding-top:13px!important}
+ /* Rental and sales start equally below their category/brand header stack. */
+ html body.rentalAppReady.pb899MainItems #items,
+ html body.rentalAppReady.pb899MainSales #sales{margin-top:-10px!important;padding-top:0!important}
+}
+/* The blue fade belongs to the page background and never paints over cards/dialogs. */
+html body.rentalAppReady::before{z-index:0!important}
+html body.rentalAppReady .shell,html body.rentalAppReady #app,html body.rentalAppReady .panel{background:transparent!important}
+html body.rentalAppReady .box,html body.rentalAppReady .stat,
+html body.rentalAppReady .pbR100F71UnifiedCard,html body.rentalAppReady .pbR100F72Panel,
+html body.rentalAppReady .pb904r2CalendarPane,html body.rentalAppReady .pb904r2DayPanel{
+ position:relative;z-index:1;background-color:#fff!important;
+}
+</style>
+
+<script id="pbR100F98HeaderCleanupRuntime">
+(()=>{
+ document.documentElement.dataset.pbR100F98NoSubLines='1';
+ const clean=()=>{
+  document.querySelectorAll('.pbR100F97SubIndicator').forEach(x=>x.remove());
+  document.querySelectorAll('#rentalDesktopPrimaryNav [data-rental-desktop-tab]').forEach(x=>x.style.setProperty('border-bottom','2px solid transparent','important'));
+ };
+ clean();
+ const observer=new MutationObserver(clean);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
 </body></html>

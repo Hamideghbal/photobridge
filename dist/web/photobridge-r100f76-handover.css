@@ -1,19 +1,4 @@
 /* PhotoBridge R100F76: Today contrast and shortage receipt dialog. */
-html body.pbR100F9StaffMode .pbR100F80ShortagePanel{display:grid;gap:8px;padding:11px;border:1px solid #fde68a;border-radius:13px;background:#fffbeb}
-html body.pbR100F9StaffMode .pbR100F80ShortagePanel>header{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#713f12;font-size:13px}
-html body.pbR100F9StaffMode .pbR100F80ShortagePanel>header small{font-size:11px;color:#92400e}
-html body.pbR100F9StaffMode .pbR100F80ShortageCard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border:1px solid #f3d28c;border-radius:11px;background:#fff}
-html body.pbR100F9StaffMode .pbR100F80ShortageCard.done{border-color:#bbf7d0;background:#f0fdf4}
-html body.pbR100F9StaffMode .pbR100F80ShortageInfo b{display:block;font-size:13px;line-height:1.6}
-html body.pbR100F9StaffMode .pbR100F80ShortageInfo small{display:block;margin-top:3px;color:#475467;font-size:11px;line-height:1.7}
-html body.pbR100F9StaffMode .pbR100F80ShortageActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;min-width:190px}
-html body.pbR100F9StaffMode .pbR100F80ShortageActions>button{min-height:36px;padding:6px 10px;border:0;border-radius:9px;background:#315efb;color:#fff;font:850 11px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
-html body.pbR100F9StaffMode .pbR100F80ShortageActions>button.secondary{border:1px solid #bbf7d0;background:#fff;color:#15803d}
-html body.pbR100F9StaffMode .pbR100F80ShortageActions>button:disabled{opacity:.55;cursor:wait}
-html body.pbR100F9StaffMode .pbR100F80ShortageActions .pbR100F80DoneLabel{color:#15803d;font-size:12px;font-weight:900}
-html body.pbR100F9StaffMode .pbR100F80Note{display:grid;gap:3px;min-width:190px;color:#667085;font-size:10px}
-html body.pbR100F9StaffMode .pbR100F80Note input{height:34px;border:1px solid #d0d5dd;border-radius:8px;padding:0 8px;font:11px Vazirmatn,Tahoma,sans-serif}
-@media(max-width:600px){html body.pbR100F9StaffMode .pbR100F80ShortageCard{grid-template-columns:1fr}html body.pbR100F9StaffMode .pbR100F80ShortageActions{justify-content:stretch;min-width:0}html body.pbR100F9StaffMode .pbR100F80Note,html body.pbR100F9StaffMode .pbR100F80ShortageActions>button{width:100%}}
 html body .pbR100F76TodayBadge{
  display:inline-flex!important;align-items:center!important;justify-content:center!important;
  margin-inline-start:5px!important;padding:1px 5px!important;border-radius:6px!important;

@@ -95,3 +95,24 @@ html body #accounting .pb856PaymentsList small{font-size:12px!important;line-hei
   html body #accounting .pb856FinancePanel .accountingTable td{font-size:13px!important}
   html body #accounting .pb856FinancePanel .accountingTable td::before{font-size:11px!important}
 }
+
+/* R100F82: compact equipment summaries and spacious, readable store finance rows. */
+html body #accounting .pb856PaneHead>.pb892Picker{width:min(360px,48vw)!important;min-width:220px!important;flex:0 1 360px!important}
+html body #accounting .pb855FinanceInvoiceRow{align-items:start!important;grid-auto-rows:auto!important;min-height:0!important}
+html body #accounting .pb855FinanceInvoiceRow>div{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;white-space:normal!important}
+html body #accounting .pb855FinanceInvoiceRow>div>b,
+html body #accounting .pb855FinanceInvoiceRow>div>small{display:block!important;max-width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:normal!important}
+html body #accounting .pb855FinanceInvoiceRow .pb855InvoiceEquipmentSummary{margin-top:4px!important;color:#475467!important;font-size:13.5px!important;line-height:1.8!important;font-weight:800!important}
+html body #accounting .pb890AccountingAction{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;min-width:0!important;max-width:100%!important}
+html body #accounting .pb890AccountingAction button{white-space:normal!important;max-width:100%!important;overflow-wrap:anywhere!important}
+html body #accounting .pb856PaymentsList h3{font-size:18px!important;line-height:1.65!important}
+html body #accounting .pb856PaymentsList .accountingTable th{font-size:13.5px!important;line-height:1.7!important}
+html body #accounting .pb856PaymentsList .accountingTable td{font-size:14.5px!important;line-height:1.85!important;overflow-wrap:anywhere!important;white-space:normal!important}
+html body #accounting .pb856PaymentsList .accountingTable td small{font-size:13px!important;line-height:1.75!important}
+@media(max-width:850px){
+  html body #accounting .pb856PaneHead>.pb892Picker{width:100%!important;min-width:0!important;max-width:100%!important;flex:1 1 auto!important}
+  html body #accounting .pb855FinanceInvoiceRow{align-items:start!important;min-height:0!important;grid-auto-rows:auto!important;row-gap:10px!important}
+  html body #accounting .pb855FinanceInvoiceRow .pb855InvoiceEquipmentSummary{font-size:13px!important;line-height:1.8!important}
+  html body #accounting .pb856PaymentsList .accountingTable td{font-size:14px!important;line-height:1.85!important}
+  html body #accounting .pb856PaymentsList .accountingTable td::before{font-size:12px!important}
+}

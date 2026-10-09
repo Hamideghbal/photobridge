@@ -48,7 +48,7 @@
       if(entry.querySelector('[data-r74-return-shortage]'))continue;
       const btn=document.createElement('button');
       btn.type='button';btn.className='pbR100F74ResolveBtn';btn.dataset.r74ReturnShortage=String(shortage.id);
-      btn.textContent='ثبت تحویل کسری';
+      btn.textContent='ثبت دریافت کسری';
       btn.addEventListener('click',async e=>{
         e.stopPropagation();
         const id=String(shortage.id||'');
@@ -79,7 +79,7 @@
           decorateCards();decorateShortagePane();
         }catch(error){
           window.storeNotice?.(String(error.message||'خطای ثبت جبران'),'خطای کسری');
-          btn.disabled=false;btn.textContent='ثبت تحویل کسری';
+          btn.disabled=false;btn.textContent='ثبت دریافت کسری';
         }finally{activeResolutions.delete(id)}
       });
       entry.appendChild(btn);

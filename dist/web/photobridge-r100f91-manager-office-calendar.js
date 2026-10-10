@@ -340,6 +340,8 @@
        saveFile('PhotoBridge-Invoice-'+safeId(id)+'.html',html);
      });
      toolbar.insertBefore(save,toolbar.querySelector('[data-pb922-close]'));
+     const cleanup=new MutationObserver(()=>{if(modal.hidden){save.remove();cleanup.disconnect()}});
+     cleanup.observe(modal,{attributes:true,attributeFilter:['hidden']});
    }
  }
  async function commitment(id){
@@ -355,7 +357,7 @@
    const frame=document.createElement('iframe');frame.className='pbR1052DocFrame';frame.title='پیش‌نمایش تعهدنامه';frame.srcdoc=markup;
    dialog.append(bar,frame);back.append(dialog);document.body.append(back);
    const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
-   const close=()=>{back.remove();document.body.style.overflow=previousOverflow};
+   const close=()=>{document.removeEventListener('keydown',onKey);back.remove();document.body.style.overflow=previousOverflow};
    bar.querySelector('[data-close]').onclick=close;
    back.addEventListener('click',e=>{if(e.target===back)close()});
    bar.querySelector('[data-print]').onclick=()=>{try{frame.contentWindow?.focus();frame.contentWindow?.print()}catch{showError('چاپ تعهدنامه در مرورگر در دسترس نیست.')}};

@@ -1,0 +1,53 @@
+name: Build Windows desktop candidate
+
+on:
+  pull_request:
+    paths:
+      - "desktop-sources/**"
+      - ".github/workflows/build-windows-desktop-candidate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  store-windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore native app sources and preserve up-to-date overlays
+        shell: pwsh
+        run: |
+          Copy-Item apps/store-desktop/desktop-overlay.js "$env:RUNNER_TEMP/store-overlay.js"
+          Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
+          Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -DestinationPath . -Force
+          Copy-Item "$env:RUNNER_TEMP/store-overlay.js" apps/store-desktop/desktop-overlay.js -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
+      - name: Verify saved source archive checksum
+        shell: pwsh
+        run: |
+          $hash=(Get-FileHash desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '49788a4b7db76696742a9ebdfc054b71029993c76677fcf5da95d94085f2dad0') { throw "Unexpected Windows source checksum" }
+      - name: Prepare current site UI payload
+        run: |
+          npm install --omit=dev --no-audit --no-fund
+          npm run build
+      - name: Test and package native store app
+        shell: pwsh
+        run: |
+          Push-Location apps/store-desktop
+          npm ci --no-audit --no-fund
+          npm test
+          npm run dist:unsigned
+          Pop-Location
+      - name: Publish unsigned test setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: photobridge-store-r1089-windows-test-installer
+          path: apps/store-desktop/release/*Setup*.exe
+          if-no-files-found: error
+          retention-days: 14

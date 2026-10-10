@@ -238,11 +238,34 @@
     if(!isExisting())return null;
     const b=signupActionButton(form);
     if(!b)return null;
-    // Existing-account invite cards are rendered with type="button" in some
-    // React paths, even though the form's submit handler owns the OTP request.
-    // Make the primary action a real submit so the same handler works for both
-    // lab and rental invitations.
-    b.type='submit';
+    // Existing-account invite cards are rendered with a button whose React
+    // click action is unreliable after the legacy signup controls are hidden.
+    // Keep this as a button and explicitly submit its owning form so React's
+    // normal submit handler starts the SMS verification flow.
+    b.type='button';
+    if(b.dataset.pbR100F68SubmitBridge!=='1'){
+      b.dataset.pbR100F68SubmitBridge='1';
+      b.addEventListener('click',event=>{
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const req=required(),missing=[];
+        if(req.nationalId&&!String(state.values.nationalId||'').trim())missing.push('کد ملی');
+        if(req.birthCertificateNo&&!String(state.values.birthCertificateNo||'').trim())missing.push('شماره شناسنامه');
+        if(req.businessLicenseNo&&!String(state.values.businessLicenseNo||'').trim())missing.push('شماره جواز / پرونده');
+        if(req.businessLicenseImage&&!state.values.businessLicenseImage&&!state.ctx?.membershipProfile?.businessLicenseImage)missing.push('تصویر جواز / پرونده');
+        if(missing.length){
+          const box=document.getElementById('pbR94InviteRequired');
+          let status=box?.querySelector('.pbR100F68SubmitStatus');
+          if(box&&!status){status=document.createElement('small');status.className='pbR100F68SubmitStatus';status.setAttribute('role','alert');box.append(status)}
+          if(status)status.textContent=`لطفاً این موارد را تکمیل کنید: ${missing.join('، ')}`;
+          return;
+        }
+        const status=document.querySelector('#pbR94InviteRequired .pbR100F68SubmitStatus');
+        if(status)status.textContent='';
+        if(typeof form.requestSubmit==='function')form.requestSubmit();
+        else form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+      },true);
+    }
     const text=String(b.textContent||'').trim();
     if(!/کد|در حال/.test(text))b.textContent='تأیید اطلاعات و اتصال به فروشگاه';
     b.classList.remove('pbR94BaseHidden','pbR100F3LegacyInviteTail');

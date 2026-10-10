@@ -50,6 +50,15 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    await choose(0,'owned');await open(2);assert.equal(await option(2,'external').isEnabled(),true);await option(2,'external').click();
    for(const index of [1,2])await page.locator('[data-slot="'+index+'"] [data-supplied-toggle]').check();await page.locator('[data-slot="0"] [data-slot-input]').fill('CAM-1');await page.locator('[data-slot="0"] [data-slot-add]').click();await page.waitForFunction(()=>!document.querySelector('[data-done]').disabled);await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===3);
    const mixed=await page.evaluate(()=>calls[2].body);assert.deepEqual(mixed.assetCodes,['CAM-1']);assert.deepEqual(mixed.externalSupplyCodes.map(x=>x.shortageId).sort(),['second','source']);
+   await page.locator('[data-pb922-close]').click();
+   await page.evaluate(()=>{window.pb923ReturnDialog=async()=>({});window.data.bookings[0].status='picked_up';window.fetch=async()=>({ok:true,json:async()=>({items:[{itemId:'camera',title:'Camera',quantity:1,externalSupplyQty:1,suppliedCodes:['old supply code'],assets:[]}]})});void bookingStatus('b','returned')});
+   await page.waitForSelector('[data-slot="0"]');
+   const received=page.locator('[data-supplied-toggle]');
+   assert.equal(await received.isChecked(),false);assert.equal(await received.isEnabled(),true);
+   await received.check();assert.equal(await received.isChecked(),true);
+   await received.uncheck();assert.equal(await received.isChecked(),false);
+   await received.check();await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===4);
+   assert.equal((await page.evaluate(()=>calls[3].body.externalSupplyCodes)).length,1);
    await page.close();
   }
  }finally{await browser.close()}

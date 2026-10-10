@@ -6396,7 +6396,7 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
         if (!inv || !photographerInviteUsable(inv, mobile))
             throw Object.assign(new Error(inv?.target_mobile ? 'invite_mobile_mismatch' : 'invite_invalid'), { status: 400 });
         if (inv.issuer_type === 'rental') {
-            const rentalShopQ = await c.query(`SELECT id,active,active_from,active_until FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [inv.issuer_rental_shop_id]);
+            const rentalShopQ = await c.query(`SELECT id,active,active_from,active_until,activation_status,suspended FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL LIMIT 1`, [inv.issuer_rental_shop_id]);
             const rentalShop = rentalShopQ.rows[0] || null;
             if (!equipmentRentalShopSubscriptionActive(rentalShop))
                 throw Object.assign(new Error('invite_rental_shop_unavailable'), { status: 409 });

@@ -27,28 +27,39 @@ test('mobile and desktop retouch entry offers existing-account login without qui
 test('verified rental invitation upgrades the same retouch identity, password and profile while retaining orders',async()=>{
  const db=new PGlite(),user='00000000-0000-0000-0000-000000000001',shop='00000000-0000-0000-0000-000000000002',lab='00000000-0000-0000-0000-000000000003';
  try{
-  await db.exec(`CREATE TABLE users(id uuid PRIMARY KEY,name text,mobile text UNIQUE,password_hash text,platform_role text,active boolean,photographer_enabled boolean DEFAULT false,public_retouch_enabled boolean,force_password_change boolean DEFAULT false,mobile_verified_at timestamp,location_lat double precision,location_lng double precision,location_address text,location_updated_at timestamp,updated_at timestamp,created_at timestamp DEFAULT now(),account_deleted_at timestamp,photographer_joined_at timestamp,photographer_active_lab_id uuid,photographer_origin_invite_type text);
+  await db.exec(`CREATE TABLE users(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text,mobile text UNIQUE,password_hash text,platform_role text,active boolean,photographer_enabled boolean DEFAULT false,public_retouch_enabled boolean,force_password_change boolean DEFAULT false,mobile_verified_at timestamp,location_lat double precision,location_lng double precision,location_address text,location_updated_at timestamp,updated_at timestamp,created_at timestamp DEFAULT now(),account_deleted_at timestamp,photographer_joined_at timestamp,photographer_active_lab_id uuid,photographer_origin_invite_type text);
    CREATE TABLE photographer_profiles(user_id uuid PRIMARY KEY REFERENCES users(id),studio_name text,password_hash text,province text,city text,location_lat double precision,location_lng double precision,location_address text,created_at timestamp DEFAULT now(),updated_at timestamp,birth_jalali text);
    CREATE TABLE public_ai_orders(id text PRIMARY KEY,user_id uuid REFERENCES users(id) ON DELETE RESTRICT);
    CREATE TABLE lab_memberships(lab_id uuid,user_id uuid,role text,active boolean,UNIQUE(lab_id,user_id));
    CREATE TABLE photographer_invite_redemptions(user_id uuid);
-   CREATE TABLE equipment_rental_shops(id uuid PRIMARY KEY,active boolean,active_from timestamp,active_until timestamp);
+   CREATE TABLE equipment_rental_shops(id uuid PRIMARY KEY,active boolean,active_from timestamp,active_until timestamp,activation_status text DEFAULT 'approved',suspended boolean DEFAULT false,deleted_at timestamp);
    CREATE TABLE equipment_rental_shop_memberships(shop_id uuid,user_id uuid,role text,active boolean,updated_at timestamp,opening_debt bigint,birth_jalali text,national_id text,birth_certificate_no text,business_license_no text,business_license_image_object_key text,business_license_image_name text,business_license_image_content_type text,business_license_image_bytes bigint,UNIQUE(shop_id,user_id,role));
    CREATE TABLE equipment_rental_accounting_entries(shop_id uuid,photographer_id uuid,entry_type text);
    CREATE TABLE signup_mobile_verifications(id text PRIMARY KEY,kind text,mobile text,payload jsonb,password_hash text,status text,expires_at timestamp,attempts integer DEFAULT 0,code_hash text,verified_at timestamp,used_at timestamp);
    INSERT INTO users(id,name,mobile,password_hash,platform_role,active,public_retouch_enabled) VALUES('${user}','کاربر روتوش 0001','09120000001','old-hash','user',true,true);
-   INSERT INTO public_ai_orders VALUES('retained-order','${user}');INSERT INTO equipment_rental_shops VALUES('${shop}',true,NULL,NULL);
+   INSERT INTO public_ai_orders VALUES('retained-order','${user}');INSERT INTO equipment_rental_shops(id,active,active_from,active_until) VALUES('${shop}',true,NULL,NULL);
    INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active) VALUES('${shop}','${user}','photographer',true);`);
   const hash=(id,code)=>crypto.createHash('sha256').update(id+':'+code).digest('hex');
   const payload={inviteCode:'TEST',name:'آتلیه جدید',province:'تهران',city:'تهران',locationLat:35,locationLng:51,locationAddress:'نشانی',birthJalali:'1370/01/01',nationalId:'0012345678'};
   await db.query("INSERT INTO signup_mobile_verifications VALUES('challenge','photographer','09120000001',$1,'new-hash','pending',now()+interval '1 hour',0,$2,NULL,NULL)",[payload,hash('challenge','123456')]);
-  const ctx=vm.createContext({pool:{connect:async()=>({query:(...args)=>db.query(...args),release(){}})},normalizeMobile:x=>x,normalizePhotographerInviteCode:x=>x,photographerInviteByCode:async()=>({id:'invite',issuer_type:'rental',issuer_rental_shop_id:shop,metadata:{}}),photographerInviteUsable:()=>true,equipmentRentalShopSubscriptionActive:()=>true,isValidIranLocation:()=>true,ensureStandalonePhotographerLab:async()=>({id:lab}),ensureEquipmentRentalV620Schema:async()=>{},equipmentRentalMoney:x=>Number(x||0),recordPhotographerInviteRedemptionPostCommit:async()=>{},provisionPhotographerOptionalServices:async()=>{},safeEqualText:(a,b)=>a===b,otpCodeHash:hash});
+  const ctx=vm.createContext({pool:{connect:async()=>({query:(...args)=>db.query(...args),release(){}})},normalizeMobile:x=>x,normalizePhotographerInviteCode:x=>x,photographerInviteByCode:async()=>({id:'invite',issuer_type:'rental',issuer_rental_shop_id:shop,metadata:{}}),photographerInviteUsable:()=>true,isValidIranLocation:()=>true,ensureStandalonePhotographerLab:async()=>({id:lab}),ensureEquipmentRentalV620Schema:async()=>{},equipmentRentalMoney:x=>Number(x||0),recordPhotographerInviteRedemptionPostCommit:async()=>{},provisionPhotographerOptionalServices:async()=>{},safeEqualText:(a,b)=>a===b,otpCodeHash:hash});
+  vm.runInContext(slice('function equipmentRentalShopSubscriptionActive(','async function equipmentRentalCurrentShop('),ctx);
   vm.runInContext(slice('async function photographerProfileByUserId(','async function provisionPhotographerOptionalServices('),ctx);
   vm.runInContext(slice('async function equipmentRentalEnsurePhotographerLink(','async function equipmentRentalEnsurePhotographerPreRegistration('),ctx);
   vm.runInContext(slice('async function lockAndVerifySignupChallenge(','async function resolvePasswordResetUser('),ctx);
   assert.equal((await ctx.photographerIdentityByMobile(db,'09120000001')).existingPhotographer,false,'store preregistration and retouch account are not photographer membership');
   await assert.rejects(ctx.completePublicPhotographerSignupVerification('challenge','000000',0),/invalid_otp/);
   let row=(await db.query('SELECT * FROM users WHERE id=$1',[user])).rows[0];assert.equal(row.password_hash,'old-hash');assert.equal(row.public_retouch_enabled,true);assert.equal((await db.query('SELECT * FROM photographer_profiles')).rows.length,0);
+  // Use the real availability predicate: omitting activation_status from the
+  // signup SELECT reproduced the Production rejection for every approved shop.
+  const resetShop=()=>db.query("UPDATE equipment_rental_shops SET active=true,activation_status='approved',suspended=false,active_from=NULL,active_until=NULL,deleted_at=NULL WHERE id=$1",[shop]);
+  for(const unavailable of ["active=false","activation_status='requested'","suspended=true","active_until=now()-interval '1 day'","active_from=now()+interval '1 day'","deleted_at=now()"]){
+   await resetShop();await db.query('UPDATE equipment_rental_shops SET '+unavailable+' WHERE id=$1',[shop]);
+   await assert.rejects(ctx.completePublicPhotographerSignupVerification('challenge','123456',0),/invite_rental_shop_unavailable/);
+   assert.equal((await db.query("SELECT status FROM signup_mobile_verifications WHERE id='challenge'")).rows[0].status,'pending','rejected shop must not consume the OTP');
+   assert.equal((await db.query('SELECT count(*) FROM photographer_profiles')).rows[0].count,0,'rejected shop must not partially create an account');
+  }
+  await resetShop();
   const result=await ctx.completePublicPhotographerSignupVerification('challenge','123456',0);assert.equal(result.userId,user);assert.equal(result.reusedExisting,true);
   row=(await db.query('SELECT * FROM users WHERE id=$1',[user])).rows[0];assert.equal(row.name,'آتلیه جدید');assert.equal(row.password_hash,'new-hash');assert.equal(row.public_retouch_enabled,false);assert.equal(row.photographer_enabled,true);
   const profile=(await db.query('SELECT * FROM photographer_profiles WHERE user_id=$1',[user])).rows[0];assert.equal(profile.studio_name,'آتلیه جدید');assert.equal(profile.password_hash,'new-hash');assert.equal(profile.birth_jalali,'1370/01/01');
@@ -57,5 +68,12 @@ test('verified rental invitation upgrades the same retouch identity, password an
   await assert.rejects(ctx.completePublicPhotographerSignupVerification('challenge','123456',0),/otp_expired/);
   for(const identity of [{...row,existingPhotographer:true},{...row,existingPhotographer:false,platform_role:'platform_admin',public_retouch_enabled:true,name:'کاربر روتوش 0001'}])assert.equal(await ctx.upgradeLegacyRetouchPhotographer(db,identity,{name:'Wrong',passwordHash:'wrong-hash'}),false);
   assert.equal((await db.query('SELECT password_hash FROM users')).rows[0].password_hash,'new-hash');
+  await db.query("INSERT INTO signup_mobile_verifications VALUES('new-challenge','photographer','09120000002',$1,'fresh-hash','pending',now()+interval '1 hour',0,$2,NULL,NULL)",[payload,hash('new-challenge','654321')]);
+  const fresh=await ctx.completePublicPhotographerSignupVerification('new-challenge','654321',0);assert.notEqual(fresh.userId,user);assert.equal(fresh.reusedExisting,false);
+  const freshUser=(await db.query('SELECT * FROM users WHERE id=$1',[fresh.userId])).rows[0];assert.equal(freshUser.photographer_enabled,true);assert.equal(freshUser.password_hash,'fresh-hash');
+  assert.equal((await db.query('SELECT studio_name FROM photographer_profiles WHERE user_id=$1',[fresh.userId])).rows[0].studio_name,'آتلیه جدید');
+  assert.equal((await db.query('SELECT count(*) FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND active=true',[shop,fresh.userId])).rows[0].count,1);
+  assert.equal((await db.query("SELECT status FROM signup_mobile_verifications WHERE id='new-challenge'")).rows[0].status,'used');
+
  }finally{await db.close()}
 });

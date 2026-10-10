@@ -20,7 +20,7 @@
       card.classList.add('pbR100F74ReceivedOrder');
       const status=q('.pbR100F9StaffState',card);
       const deliveryTab=q('.pbR100F9StaffTabs [data-staff-mode="out"].active');
-      if(status)status.textContent=deliveryTab?'تحویل شده':'دریافت شده';
+      if(status)status.textContent='✓ دریافت شده';
       const missing=pendingFor(b.id),count=missing.reduce((n,x)=>n+Number(x.missing_qty||0),0);
       if(!count)return;
       card.classList.add('pbR100F74HasMissing');
@@ -108,7 +108,7 @@
       tags.replaceChildren();
       if(received>0){
         const green=document.createElement('span');green.className='pbR100F74Received';
-        green.textContent=(q('.pbR100F9StaffTabs [data-staff-mode="out"].active')?'تحویل شد':'دریافت شد')+(quantity>1?' · '+fa(received)+' عدد':'');
+        green.textContent='دریافت شد'+(quantity>1?' · '+fa(received)+' عدد':'');
         tags.appendChild(green);
       }
       if(missing>0){

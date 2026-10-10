@@ -15,8 +15,7 @@ test('R1087 ships exactly one receiver after production build',()=>{
 
 async function simulate({mobile=false,native=true}={}){
  const state={status:'reserved',printed:0,requests:[],frames:[],timer:[],store:new Map()};
- const delays=[];
- const setTimeoutFake=(fn,ms)=>{if(ms<=2000)delays.push(fn);return ms};
+ const setTimeoutFake=(fn,ms)=>{if(ms<=2000)queueMicrotask(fn);return ms};
  const storage={getItem:k=>state.store.has(k)?state.store.get(k):null,setItem:(k,v)=>state.store.set(k,String(v))};
  const header={children:[],contains:el=>header.children.includes(el),appendChild:el=>{header.children.push(el);return el}};
  function elem(kind){
@@ -47,7 +46,7 @@ async function simulate({mobile=false,native=true}={}){
   queueMicrotask,console
  });
  vm.runInContext(source,ctx);
- async function check(){await ctx.window.pbR1087AutoPrint?.checkNow();for(const fn of delays.splice(0))fn();await new Promise(r=>setImmediate(r))}
+ async function check(){await ctx.window.pbR1087AutoPrint?.checkNow();await new Promise(r=>setImmediate(r))}
  return{state,ctx,check};
 }
 test('phone is never a printer and never polls',async()=>{

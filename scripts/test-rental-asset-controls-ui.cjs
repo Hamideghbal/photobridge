@@ -30,7 +30,7 @@ test('unit QR actions replace group actions and update stock on mobile and deskt
   if(viewport.width<851)await page.locator('[data-prev]').click();
   await free.locator('[data-unit-toggle]').click();await page.waitForFunction(()=>document.querySelector('[data-asset-id=free] [data-unit-toggle]')?.textContent==='فعال‌سازی این واحد');assert.equal(writes[0].body.active,false);
   await free.locator('[data-unit-toggle]').click();await page.waitForFunction(()=>document.querySelector('[data-asset-id=free] [data-unit-toggle]')?.textContent==='غیرفعال‌سازی این واحد');assert.equal(writes[1].body.active,true);
-  await page.evaluate(()=>{pb920Confirm=async()=>true});await free.locator('[data-unit-delete]').click();await page.waitForFunction(()=>!document.querySelector('[data-asset-id=free]'));assert.equal(writes[2].method,'DELETE');assert.equal(await page.evaluate(()=>data.items[0].stock_total),1);
+  await free.locator('[data-unit-delete]').click();await page.locator('#pb920ConfirmNo').click();assert.equal(writes.length,2);assert(await page.locator('.pbR1084AssetLabels').isVisible());await free.locator('[data-unit-delete]').click();await page.locator('#pb920ConfirmYes').click();await page.waitForFunction(()=>!document.querySelector('[data-asset-id=free]'));assert.equal(writes[2].method,'DELETE');assert.equal(await page.evaluate(()=>data.items[0].stock_total),1);
   await page.locator('.pbR85ScanBack [data-close]').click();
   assets.push(...Array.from({length:7},(_,n)=>({id:'extra-'+n,item_id:'camera',system_code:'CAM-'+(n+3),active:true})));
   await page.evaluate(()=>pbR85AssetLabels('camera'));

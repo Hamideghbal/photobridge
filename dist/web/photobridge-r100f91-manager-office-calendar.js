@@ -232,7 +232,7 @@
    const s=String(b?.status||'');
    if(s==='reserved')return [['picked_up','تحویل تجهیزات به مشتری'],['cancelled','حذف آفیش']];
    if(s==='picked_up')return [['returned',window.pbR1080ReceiveLabel?.(b,selectedIso||window.pb904r2SelectedDay||q('#pb843CalendarGrid .pb904r2SelectedDay')?.dataset.pb843CalDay)||'دریافت تجهیزات از مشتری'],['invoice','فاکتور'],['commitment','تعهدنامه']];
-   if(s==='returned')return [['invoice','فاکتور'],['commitment','تعهدنامه']];
+   if(s==='returned')return [['invoice','فاکتور']];
    return [];
  };
  const docStyles=document.createElement('style');

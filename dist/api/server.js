@@ -10268,8 +10268,8 @@ async function equipmentRentalSupplyPool(db,shopId,booking,{lock=false}={}) {
 }
 function equipmentRentalRequiredExternalQuantity(booking,itemId,quantity,sources) {
     const start=equipmentRentalDate(booking?.rental_start),end=equipmentRentalDate(booking?.rental_end);
-    if(!start||start!==end)return 0;
-    const available=sources.filter(s=>s.itemId===String(itemId)&&s.supplied).reduce((n,s)=>n+Math.max(0,Number(s.availableQuantity)||0),0);
+    if(!start||!end||end<start)return 0;
+    const available=sources.filter(s=>s.itemId===String(itemId)&&s.supplied&&s.startDate<=start&&s.endDate>=end).reduce((n,s)=>n+Math.max(0,Number(s.availableQuantity)||0),0);
     return Math.min(Math.max(0,Number(quantity)||0),available);
 }
 async function equipmentRentalCommitHandover(db,{shopId,bookingId,actorId,assetCodes,externalSupplyCodes}) {

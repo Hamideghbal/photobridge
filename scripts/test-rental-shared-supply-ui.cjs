@@ -15,7 +15,7 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
     window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:{items:[{itemId:'camera',title:'Camera',quantity:1,externalSupplyQty:0,pendingSupplyQty:0,assets:[],supplyOptions:[{id:'source',itemId:'camera',bookingId:'a',plannedCustomer:'Planned A',availableQuantity:1,supplied:false,startDate:'2030-10-12',endDate:'2030-10-12'}]}]}});
     window.api=async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return {ok:true,invoice:{id:'invoice-'+url.split('/').pop(),invoice_number:'42',photographer_name:'Receiving Customer',rental_start:'2030-10-12',rental_end:'2030-10-12',total_amount:100,items:[{title:'Camera',quantity:1,rental_days:1,daily_price:100,subtotal:100}]}}};`});
    for(const id of ['pbR85AssetScanStyles','pb922FormalFinanceStyle'])await page.addStyleTag({content:html.match(new RegExp('<style id="'+id+'">([\\s\\S]*?)</style>'))[1]});
-   await page.addScriptTag({content:finance});await page.addScriptTag({content:runtime});
+   await page.addScriptTag({content:finance});await page.addScriptTag({content:runtime});await page.addScriptTag({path:path.join(root,'dist/web/photobridge-r100f73-staff-desktop-return.js')});
    await page.addScriptTag({path:path.join(root,'dist/web/photobridge-r1058-handover-holders.js')});
    assert.equal(await page.locator('.pbR1058Holders').count(),0);await page.evaluate(()=>renderItems());assert.equal(await page.locator('.pbR1058Holders').count(),0);
    const mobile=viewport.width<=700;
@@ -52,13 +52,13 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    const mixed=await page.evaluate(()=>calls[2].body);assert.deepEqual(mixed.assetCodes,['CAM-1']);assert.deepEqual(mixed.externalSupplyCodes.map(x=>x.shortageId).sort(),['second','source']);
    await page.locator('[data-pb922-close]').click();
    await page.evaluate(()=>{window.pb923ReturnDialog=async()=>({});window.data.bookings[0].status='picked_up';window.fetch=async()=>({ok:true,json:async()=>({items:[{itemId:'camera',title:'Camera',quantity:1,externalSupplyQty:1,suppliedCodes:['old supply code'],assets:[]}]})});void bookingStatus('b','returned')});
-   await page.waitForSelector('[data-slot="0"]');
-   const received=page.locator('[data-supplied-toggle]');
+   await page.waitForSelector('.pbR100F73ReturnRow');
+   const received=page.locator('[data-check]');
    assert.equal(await received.isChecked(),false);assert.equal(await received.isEnabled(),true);
    await received.check();assert.equal(await received.isChecked(),true);
    await received.uncheck();assert.equal(await received.isChecked(),false);
-   await received.check();await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===4);
-   assert.equal((await page.evaluate(()=>calls[3].body.externalSupplyCodes)).length,1);
+   await received.check();await page.evaluate(()=>{window.confirm=()=>true});await page.locator('[data-submit]').click();await page.waitForFunction(()=>calls.length===4);
+   assert.deepEqual(await page.evaluate(()=>calls[3].body),{status:'returned',returnChecklist:true,returnItems:[{itemId:'camera',returnedQty:1}],assetCodes:[]});
    await page.evaluate(()=>{document.querySelector('[data-pb922-close]')?.click();window.data.bookings[0].status='reserved';window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:{items:[{itemId:'camera',title:'Camera',quantity:2,requiredExternalQty:1,supplyOptions:[{id:'ready',bookingId:'a',availableQuantity:1,supplied:true}]}]}});void bookingStatus('b','picked_up')});
    await page.waitForSelector('[data-slot="1"]');
    assert.equal(await page.locator('[data-slot="0"] [data-supplied-toggle]').isChecked(),false);

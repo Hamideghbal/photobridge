@@ -14,6 +14,19 @@
   if(requests&&office&&requests.nextElementSibling!==office)office.before(requests);
   const bottom=q('#rentalMobileBottomNav');
   if(bottom){const n=[...bottom.querySelectorAll(':scope > button')].filter(b=>!b.hidden&&b.dataset.pbChannelOff!=='true'&&getComputedStyle(b).display!=='none').length;const columns=String(Math.max(1,n));if(bottom.style.getPropertyValue('--pb-office-nav-count')!==columns)bottom.style.setProperty('--pb-office-nav-count',columns)}
+  // Reuse the operator's real tab buttons and handlers at the bottom on mobile.
+  if(document.body.classList.contains('pbR100F9StaffMode')){
+   const staffTabs=q('.pbR100F9StaffTabs'),shell=q('.pbR100F9StaffShell');
+   if(staffTabs&&shell){
+    let nav=q('#pbR1079OperatorNav');
+    if(mobile()){
+     if(!nav){nav=document.createElement('nav');nav.id='pbR1079OperatorNav';nav.setAttribute('aria-label','بخش‌های متصدی فروشگاه');shell.append(nav)}
+     if(staffTabs.parentElement!==nav)nav.append(staffTabs);
+    }else if(nav){q('.pbR100F9StaffNav')?.prepend(staffTabs);nav.remove()}
+    if(!staffTabs.dataset.pbR1079Animated){staffTabs.dataset.pbR1079Animated='1';staffTabs.addEventListener('click',event=>{if(!event.target.closest('[data-staff-mode]')||matchMedia('(prefers-reduced-motion:reduce)').matches)return;requestAnimationFrame(()=>{const pane=document.body.classList.contains('pbR100F72ExtraActive')?q('#pbR100F72ExtraPane'):q('#pbR100F9StaffList');pane?.animate([{opacity:.4,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'})})})}
+    const height=Math.ceil(q('.pbR100F9StaffNav')?.getBoundingClientRect().height||0)+'px';if(document.body.style.getPropertyValue('--pb-r100f64-staff-nav-h')!==height)document.body.style.setProperty('--pb-r100f64-staff-nav-h',height);
+   }
+  }
   if(!mobile()){lastSignature='';return}
   if(document.body.classList.contains('pbR100F9StaffMode'))return;
   const pane=q('#bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox');if(!pane)return;

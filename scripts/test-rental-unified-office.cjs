@@ -16,12 +16,23 @@ test('requests precede Office, mobile day strip stays readable and registration 
   await page.addStyleTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.css')});
   await page.addScriptTag({content:`window.data={shop:{name:'Test Shop'},staffMode:true,bookings:[{id:'reserved',status:'reserved',rental_start:'2030-10-12',rental_end:'2030-10-14'},{id:'out',status:'picked_up',rental_start:'2030-10-12',rental_end:'2030-10-14'},{id:'returned',status:'returned',rental_start:'2030-10-12',rental_end:'2030-10-14'}]};window.actions=[];window.api=async()=>data;window.bookingStatus=async(id,status)=>actions.push([id,status]);`});
   await page.addScriptTag({content:staff});
+  await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f72-staff-views.js')});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f86-shared-handover.js')});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f74-staff-ui.js')});
   await page.evaluate(()=>{pbR100F9RenderStaffPortal();pbR100F89PickStaffDay('2030-10-12')});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
   await page.evaluate(()=>{const tabs=document.querySelector('.pbR100F9StaffTabs');const stale=document.createElement('button');stale.dataset.staffMode='in';stale.textContent='دریافت';tabs.append(stale);pbR1073PaintMobileOffice()});
-  assert.deepEqual(await page.locator('.pbR100F9StaffTabs button').allTextContents(),['آفیش']);
+  assert.deepEqual(await page.locator('.pbR100F9StaffTabs button').allTextContents(),['آفیش','کسری دریافت']);
+  if(viewport.width<851){
+   assert.equal(await page.locator('#pbR1079OperatorNav .pbR100F9StaffTabs').count(),1);
+   const bar=await page.locator('#pbR1079OperatorNav').boundingBox();assert(Math.abs(bar.y+bar.height-viewport.height)<2);
+   await page.locator('[data-staff-mode=returnShortages]').click();await page.waitForSelector('#pbR100F72ExtraPane:not([hidden])');
+   assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('pbR100F72ExtraActive')),true);
+   await page.locator('[data-staff-mode=out]').click();await page.evaluate(()=>pbR100F89PickStaffDay('2030-10-12'));assert.equal(await page.locator('#pbR100F72ExtraPane').isVisible(),false);
+  }
+  await page.evaluate(()=>{const stale=document.createElement('button');stale.className='pbOfficeExtendButton';document.getElementById('pbR100F9StaffList').append(stale)});
+  await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1059-office-extension.js')});
+  await page.waitForFunction(()=>!document.querySelector('.pbOfficeExtendButton'));
   assert.equal(await page.locator('[data-booking="reserved"]').textContent(),'ثبت تحویل تجهیزات');
   assert.equal(await page.locator('[data-booking="out"]').textContent(),'ثبت دریافت تجهیزات');
   await page.locator('[data-booking="reserved"]').dispatchEvent('click');await page.waitForFunction(()=>actions.length===1);

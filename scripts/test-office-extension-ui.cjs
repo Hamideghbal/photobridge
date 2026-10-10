@@ -33,13 +33,27 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
    await page.waitForFunction(()=>data?.shop&&document.body.classList.contains('rentalAppReady'));
    await page.evaluate(()=>{selectRentalTab('bookings',{push:false,reloadExtra:false});pb854EnsureBookingStatusTabs();pb843SetOfficeTab('calendar')});
    await page.waitForFunction(()=>document.querySelector('[data-pb843-office-tab="returnShortages"]'));
+   // Drawer uses live overview values and removes destinations duplicated below.
+   await page.evaluate(()=>{data.salesWallet={balance:125000};data.subscription={active:true,activeUntil:'2030-10-12'};openRentalMobileMenu()});
+   assert.equal(await page.locator('#rentalMobileDrawer [data-rental-tab]').count(),4);
+   assert.equal(await page.locator('#rentalMobileDrawer a').count(),0);
+   assert.match(await page.locator('#pbR1078DrawerSummary').textContent(),/۱۲۵٬۰۰۰/);
+   assert.equal(await page.locator('#rentalMobileDrawer').evaluate(el=>el.lastElementChild.lastElementChild.id),'rentalMobileLogout');
+   if(viewport.width<851){
+    await page.waitForFunction(()=>getComputedStyle(document.getElementById('rentalMobileDrawer')).opacity==='1');
+    const drawer=await page.locator('#rentalMobileDrawer').evaluate(el=>({height:el.getBoundingClientRect().height,transition:getComputedStyle(el).transitionDuration,inert:el.inert}));
+    assert(drawer.height<=viewport.height*.6+1);assert.notEqual(drawer.transition,'0s');assert.equal(drawer.inert,false);
+   }
+   await page.evaluate(()=>closeRentalMobileMenu());assert.equal(await page.locator('#rentalMobileDrawer').evaluate(el=>el.inert),true);
    if(viewport.width<851){
     const rail=await page.locator('#pb848BookingHeaderTabs').evaluate(el=>({fits:el.scrollWidth<=el.clientWidth,buttons:[...el.querySelectorAll('button')].filter(b=>getComputedStyle(b).display!=='none').map(b=>({key:b.dataset.pb843OfficeTab,y:b.getBoundingClientRect().y,width:b.getBoundingClientRect().width,fit:b.scrollWidth<=b.clientWidth}))}));
     assert.equal(rail.fits,true,JSON.stringify(rail));assert.deepEqual(rail.buttons.map(b=>b.key),['pending','calendar','shortages','returnShortages']);assert(rail.buttons.every(b=>b.y===rail.buttons[0].y&&b.width>0&&b.fit),JSON.stringify(rail));
     const dates=await page.evaluate(()=>{const first=pbR17TehranIsoDate();return[first,pbR17AddIsoDays(first,1)]});
     await page.locator('#pbR1073Register').click();
+    assert.equal(await page.locator('[data-register-day="'+dates[0]+'"] small').textContent(),'امروز');
     for(const day of dates)await page.locator('[data-register-day="'+day+'"]').click();
     await page.locator('[data-register-next]').click();await page.waitForSelector('#pb892ManualBackdrop.open');
+    assert.equal(await page.locator('#checkAvailability').isVisible(),false);
     const range=await page.evaluate(()=>{const form=document.getElementById('bookingForm');return[jalaliInputToIso(form.elements.startDate.value),jalaliInputToIso(form.elements.endDate.value)]});assert.deepEqual(range,dates);
     await page.locator('#pb892ManualClose').click();
     for(const entry of ['pbR1033OfficeHeaderAction','pb892CalendarContinue']){

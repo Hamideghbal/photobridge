@@ -43,7 +43,7 @@
   const draw=()=>{
    const p=window.jalaliPartsFromIso(month),iso=d=>window.jalaliInputToIso(`${p.year}/${p.month}/${d}`),first=iso(1),length=window.jalaliMonthLength(p.year,p.month),offset=(new Date(first+'T12:00:00Z').getUTCDay()+1)%7;
    let cells='<span></span>'.repeat(offset);
-   for(let n=1;n<=length;n++){const day=iso(n);cells+='<button type="button" data-register-day="'+day+'" aria-pressed="'+picked.has(day)+'" '+(day<today()?'disabled':'')+'>'+Number(n).toLocaleString('fa-IR')+'</button>'}
+   for(let n=1;n<=length;n++){const day=iso(n);cells+='<button type="button" data-register-day="'+day+'" aria-pressed="'+picked.has(day)+'" '+(day<today()?'disabled':'')+'>'+Number(n).toLocaleString('fa-IR')+(day===today()?'<small>امروز</small>':'')+'</button>'}
    back.querySelector('[data-register-calendar]').innerHTML='<div class="pbR1076Month"><button type="button" data-register-month="-1" aria-label="ماه قبل">›</button><b>'+new Intl.DateTimeFormat('fa-IR-u-ca-persian',{month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(new Date(first+'T12:00:00Z'))+'</b><button type="button" data-register-month="1" aria-label="ماه بعد">‹</button></div><div class="pbR1076Days">'+['ش','ی','د','س','چ','پ','ج'].map(d=>'<span>'+d+'</span>').join('')+cells+'</div>';
    back.querySelectorAll('[data-register-day]').forEach(button=>button.onclick=()=>{const day=button.dataset.registerDay;if(picked.has(day))picked.delete(day);else picked.add(day);back.querySelector('[role=alert]').textContent='';draw()});
    back.querySelectorAll('[data-register-month]').forEach(button=>button.onclick=()=>{month=Number(button.dataset.registerMonth)>0?add(iso(length),1):add(first,-1);draw()});

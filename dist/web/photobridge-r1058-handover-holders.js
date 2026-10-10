@@ -19,6 +19,11 @@
  .pbR1068SourcePanel [data-source-close]{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border:0;border-radius:10px;background:#f2f4f7;color:#475467;font:24px/1 Tahoma;cursor:pointer}
  .pbR1068SourcePicker.mobile .pbR1063SourceOptions{gap:8px}.pbR1068SourcePicker.mobile .pbR1063SourceOptions button{min-height:56px;border:1px solid #e4e9f3;padding:12px 14px}.pbR1068SourcePicker.mobile .pbR1063SourceOptions button[aria-selected=true]{border-color:#315efb}
  @media(max-width:700px){.pbR1068SourceTrigger,.pbR1063SourceOptions button{font-size:17px}}
+ .pbR1069SourceChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .pbR1069SourceChoices button{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;border:1px solid #d5dded;border-radius:12px;background:#fff;color:#344054;font:500 16px/1.8 PhotoBridgeHandover,Vazirmatn,Tahoma,sans-serif;text-align:right;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}.pbR1069SourceChoices b{font:inherit}
+ .pbR1069SourceChoices button[aria-checked=true]{border-color:#315efb;background:#eef3ff;color:#244edb}.pbR1069SourceChoices button:disabled{opacity:.45;cursor:not-allowed}.pbR1069SourceChoices button:active:not(:disabled){transform:scale(.98)}.pbR1069SourceChoices button:focus-visible{outline:2px solid #315efb;outline-offset:2px}
+ .pbR1069SourceMark{display:grid;place-items:center;flex-shrink:0;box-sizing:border-box;width:21px;height:21px;border:2px solid #c4cddd;border-radius:50%;color:#fff;font:14px/1 Tahoma}.pbR1069SourceChoices [aria-checked=true] .pbR1069SourceMark{background:#315efb;border-color:#315efb}.pbR1069SourceChoices [aria-checked=true] .pbR1069SourceMark::after{content:'✓'}
+ @media(prefers-reduced-motion:reduce){.pbR1069SourceChoices button{transition:none}}
  @keyframes pbR1068SourceEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.pbR1068SourcePanel{animation:none}.pbR1068SourceTrigger,.pbR1063SourceOptions button{transition:none}}`;
  document.head.append(style);
  function paint(){

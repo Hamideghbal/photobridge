@@ -35,6 +35,8 @@ jobs:
         run: |
           node --check dist/web/photobridge-r1087-commitment-autoprint.js
           node --test scripts/test-r1087-commitment-autoprint.cjs
+      - name: Check candidate download settings JavaScript
+        run: node --check dist/web/photobridge-store-desktop-install-r60.js
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

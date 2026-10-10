@@ -7244,17 +7244,18 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="out"] .pb100rOutComp
      const rail=card?.closest('.pb100rManagerDates');
      if(!rail||!card||!rail.getClientRects().length)return;
      const r=rail.getBoundingClientRect(),c=card.getBoundingClientRect();
-     const vertical=matchMedia('(min-width:851px)').matches;
-     const desired=vertical?rail.scrollTop+(c.top+c.height/2)-(r.top+r.height/2):rail.scrollLeft+(c.left+c.width/2)-(r.left+r.width/2);
-     const max=vertical?Math.max(0,rail.scrollHeight-rail.clientHeight):Math.max(0,rail.scrollWidth-rail.clientWidth);
-     rail.scrollTo(vertical?{top:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior}:{left:Math.max(0,Math.min(max,desired)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
+     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,move=reduced?'instant':behavior;
+     /* scrollBy uses the visual delta and therefore works in both RTL scrollLeft
+        implementations (negative and reverse), unlike clamping scrollLeft to 0. */
+     if(matchMedia('(min-width:851px)').matches)rail.scrollBy({top:c.top+c.height/2-(r.top+r.height/2),behavior:move});
+     else rail.scrollBy({left:c.left+c.width/2-(r.left+r.width/2),behavior:move});
    }));
  };
  window.pb100rSelectManagerDate=(kind,iso)=>{
    if(kind!=='approved'&&kind!=='out')return;
    selected[kind]=iso;
    pb854RenderBookingStatusPanes(kind);
-   window.pb100rCenterManagerDate(kind,iso,'instant');
+   window.pb100rCenterManagerDate(kind,iso,'smooth');
  };
  window.pb100rPrintInvoice=id=>{const w=window.open('','_blank','width=900,height=900');if(!w){window.storeNotice?.('برای چاپ فاکتور، پنجرهٔ جدید مرورگر را مجاز کن.','پنجرهٔ چاپ مسدود شد');return}void(async()=>{try{let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id));if(!inv&&typeof loadAccounting==='function'){await loadAccounting();inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(id))}if(!inv){w.close();window.storeNotice?.('برای این آفیش فاکتوری صادر نشده است.','فاکتور پیدا نشد');return}const rows=Array.isArray(inv.items)?inv.items:[],lines=rows.map((x,i)=>`<tr><td>${faNum(i+1)}</td><td>${escape(x.title||x.item_title||'تجهیز')}</td><td>${faNum(x.quantity||1)}</td><td>${faNum(x.rental_days||inv.rental_days||1)}</td><td>${escape(money(x.daily_price||0))}</td><td>${escape(money(x.subtotal||0))}</td></tr>`).join(''),shop=escape(data?.shop?.name||'فروشگاه تجهیزات'),who=escape(inv.photographer_name||'—'),phone=escape(inv.photographer_mobile||'—'),rangeText=`${escape(typeof dateFa==='function'?dateFa(inv.rental_start):inv.rental_start||'—')} تا ${escape(typeof dateFa==='function'?dateFa(inv.rental_end):inv.rental_end||'—')}`,invoiceNo=escape(inv.invoice_number||'—');w.document.open();w.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور اجاره ${invoiceNo}</title><style>@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font:12px/1.8 Tahoma,Arial,sans-serif;color:#182230;margin:0}.paper{max-width:190mm;margin:auto}.head{display:flex;justify-content:space-between;border-bottom:2px solid #344054;padding:0 0 12px;margin-bottom:14px}.head h1{font-size:20px;margin:0}.muted{color:#667085}.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:16px}.facts div{padding:6px;border-bottom:1px solid #eaecf0}table{border-collapse:collapse;width:100%;font-size:11px}th,td{border:1px solid #d0d5dd;padding:8px;text-align:right}th{background:#f2f4f7}.totals{width:310px;margin:16px 0 0 auto}.totals div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eaecf0}.grand{font-weight:900;font-size:14px}.sign{display:flex;justify-content:space-between;margin-top:42px;color:#667085}.print{margin:18px 0;padding:9px 18px;border:0;border-radius:8px;background:#315efb;color:white;font-weight:bold}@media print{.print{display:none}}</style></head><body><main class="paper"><header class="head"><div><h1>فاکتور اجاره تجهیزات</h1><span class="muted">شماره فاکتور: ${invoiceNo}</span></div><b>${shop}</b></header><section class="facts"><div>عکاس / مشتری: <b>${who}</b></div><div>شماره تماس: <b dir="ltr">${phone}</b></div><div>بازه آفیش: <b>${rangeText}</b></div><div>تاریخ صدور: <b>${escape(typeof dateFa==='function'?dateFa(inv.issued_at):inv.issued_at||'—')}</b></div></section><table><thead><tr><th>ردیف</th><th>شرح تجهیزات</th><th>تعداد</th><th>روز</th><th>اجاره روزانه</th><th>مبلغ</th></tr></thead><tbody>${lines||`<tr><td>۱</td><td>${escape(inv.item_titles||'اجاره تجهیزات')}</td><td>—</td><td>${faNum(inv.rental_days||1)}</td><td>—</td><td>${escape(money(inv.total_amount||0))}</td></tr>`}</tbody></table><section class="totals"><div><span>مبلغ نهایی</span><b class="grand">${escape(money(inv.total_amount||0))}</b></div><div><span>ودیعه</span><b>${escape(money(inv.deposit_amount||0))}</b></div></section><section class="sign"><span>مهر و امضای فروشگاه</span><span>امضای مشتری / عکاس</span></section><button class="print" onclick="window.print()">چاپ / ذخیره PDF</button></main></body></html>`);w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch{}},500)}catch{w.close();window.storeNotice?.('بازکردن فاکتور انجام نشد.','خطای فاکتور')}})()};
 
@@ -9960,16 +9961,38 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
 .pbR1038DiscountBadge{display:inline-flex;align-items:center;min-height:24px;padding:2px 8px;border:1px solid #abefc6;border-radius:999px;background:#ecfdf3;color:#067647;font-size:10px;font-weight:900}
 @media(max-width:850px){
  html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{
-  position:sticky!important;left:auto!important;right:auto!important;bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+  position:static!important;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;
   z-index:80!important;display:grid!important;visibility:visible!important;pointer-events:auto!important;
-  width:calc(100% - 16px)!important;max-width:none!important;margin:8px auto!important;padding:6px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;margin:8px 0 0!important;padding:6px!important;box-sizing:border-box!important;
   background:#fff!important;border:1px solid #d0d5dd!important;border-radius:12px!important;box-shadow:0 8px 24px rgba(15,23,42,.13)!important;
  }
+ html body.rentalAppReady.pb899MainBookings #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane{min-width:0!important;max-width:100%!important;overflow-x:hidden!important}
+ html body.rentalAppReady.pb899MainBookings #bookings .pb100rManagerDates{scroll-behavior:smooth!important;scrollbar-width:thin!important;scrollbar-color:#98a2b3 #eef2f6!important}
+ html body.rentalAppReady.pb899MainBookings #bookings .pb100rManagerDates::-webkit-scrollbar{height:5px!important}
+ html body.rentalAppReady.pb899MainBookings #bookings .pb100rManagerDates::-webkit-scrollbar-thumb{background:#98a2b3!important;border-radius:999px!important}
  html body.rentalAppReady.pb899MainBookings #bookings #pb892CalendarBatchBar #pb892CalendarContinue{
   display:flex!important;visibility:visible!important;pointer-events:auto!important;position:relative!important;z-index:2!important;
   min-height:44px!important;background:#315efb!important;color:#fff!important;
  }
 }
 </style>
+<script id="pbR1039MobileOfficeActionPlacement">
+(()=>{
+ let queued=false;
+ function place(){
+  queued=false;
+  if(!matchMedia('(max-width:850px)').matches||!document.body.classList.contains('pb899MainBookings'))return;
+  const pane=document.querySelector('#bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarPane');
+  const grid=pane?.querySelector(':scope > .pb843CalendarGrid');
+  const bar=document.getElementById('pb892CalendarBatchBar');
+  if(pane&&grid&&bar&&(bar.parentElement!==pane||bar.previousElementSibling!==grid))grid.insertAdjacentElement('afterend',bar);
+ }
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>requestAnimationFrame(place))}
+ document.addEventListener('click',event=>{if(event.target.closest?.('[data-rental-bottom-tab="bookings"],[data-rental-tab="bookings"],[data-pb843-office-tab="calendar"]'))schedule()},true);
+ window.addEventListener('resize',schedule,{passive:true});
+ new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+ [0,100,350].forEach(ms=>setTimeout(schedule,ms));
+})();
+</script>
 
 </body></html>

@@ -9,10 +9,10 @@ const end=source.indexOf('    const publicPhotographerInvite =',start);
 assert(start>=0&&end>start,'production context handler must exist');
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 const handler=new AsyncFunction('req','res','url','pool','normalizePhotographerInviteCode','normalizeMobile','photographerInviteUsable','photographerInviteMobileBindingValid','equipmentRentalInviteRequiredFields','photographerInvitePublicView','sendJson','console',source.slice(start,end));
-async function run({existing=true,failAt=0}={}){
+async function run({existing=true,failAt=0,retouch=false}={}){
   let queries=0;
   const invite={issuer_type:'rental',issuer_rental_shop_id:'shop',resolved_rental_shop_name:'Store',resolved_rental_shop_required_fields:{nationalId:true}};
-  const member={id:'member',mobile:'09120000001',name:'Studio',photographer_enabled:existing,active:true,photographer_profile_user_id:existing?'member':null};
+  const member={id:'member',mobile:'09120000001',name:retouch?'کاربر روتوش 0001':'Studio',public_retouch_enabled:retouch,photographer_enabled:existing,active:true,photographer_profile_user_id:existing?'member':null};
   const pool={async query({text}){
     queries++;
     if(queries===failAt)throw new Error('fixture database timeout');
@@ -53,3 +53,5 @@ test('public invite response cannot reset the authoritative account classificati
   assert.equal(result.status,200);
   assert.equal(result.body.signupContext,null);
 });
+
+test('legacy retouch identity is not an existing photographer',async()=>{const result=await run({existing:false,retouch:true});assert.equal(result.status,200);assert.equal(result.body.existingAccount,null)});

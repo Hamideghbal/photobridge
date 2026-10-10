@@ -5301,56 +5301,6 @@ async function sendSms(args) {
 }
 function normalizePublicEmail(value) { return String(value || '').trim().toLowerCase().slice(0, 254); }
 function validPublicEmail(value) { const email = normalizePublicEmail(value); return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
-function generatePublicRetouchPassword() {
-    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const bytes = crypto.randomBytes(10);
-    return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
-}
-async function ensurePublicRetouchAccount(mobile) {
-    const normalized = normalizeMobile(String(mobile || ''));
-    if (!/^09\d{9}$/.test(normalized))
-        throw new Error('invalid_mobile');
-    const c = await pool.connect();
-    let created = false, user = null, password = '';
-    try {
-        await c.query('BEGIN');
-        await c.query('SELECT pg_advisory_xact_lock(hashtext($1)::bigint)', [`public-retouch-account:${normalized}`]);
-        const q = await c.query(`SELECT id,name,mobile,platform_role,active,public_retouch_enabled FROM users WHERE mobile IS NOT NULL AND platform_role<>'platform_admin' AND right(regexp_replace(coalesce(mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) ORDER BY created_at LIMIT 2`, [normalized]);
-        if (q.rowCount > 1) {
-            await c.query('ROLLBACK');
-            throw new Error('mobile_ambiguous');
-        }
-        if (q.rowCount) {
-            user = q.rows[0];
-            if (!user.active) {
-                await c.query('ROLLBACK');
-                throw new Error('account_inactive');
-            }
-            await c.query(`UPDATE users SET public_retouch_enabled=true,public_retouch_joined_at=COALESCE(public_retouch_joined_at,now()),updated_at=now() WHERE id=$1`, [user.id]);
-            await c.query('COMMIT');
-            return { userId: String(user.id), created: false, mobile: normalized, existingAccount: true };
-        }
-        const sms = await resolvedSMSSettings().catch(() => null);
-        if (!sms?.configured) {
-            await c.query('ROLLBACK');
-            throw new Error('sms_not_configured');
-        }
-        password = generatePublicRetouchPassword();
-        const id = crypto.randomUUID();
-        const name = `کاربر روتوش ${normalized.slice(-4)}`;
-        const iq = await c.query(`INSERT INTO users(id,name,email,mobile,password_hash,platform_role,active,public_retouch_enabled,public_retouch_joined_at,mobile_verified_at) VALUES($1,$2,NULL,$3,$4,'user',true,true,now(),now()) RETURNING id,name,mobile`, [id, name, normalized, passwordHash(password)]);
-        user = iq.rows[0];
-        await sendSms({ mobile: normalized, message: `PhotoBridge: حساب روتوش شما ساخته شد.\nشماره ورود: ${normalized}\nرمز ورود: ${password}\nسفارش‌های من: ${PUBLIC_APP_URL}/retouch-account\nرمز را نگه دارید؛ برای مشاهده سفارش‌های قبلی از آن استفاده می‌کنید.`, purpose: 'public_retouch_account_created', eventKey: 'public_retouch_account_created', metadata: { publicRetouchAccount: true } });
-        await c.query('COMMIT');
-        created = true;
-        return { userId: String(user.id), created, mobile: normalized, existingAccount: false };
-    }
-    catch (e) {
-        await c.query('ROLLBACK').catch(() => { });
-        throw e;
-    }
-    finally { c.release(); }
-}
 function publicAiDeliveryPreset(value) { const v = String(value || 'original').toLowerCase(); return v === 'web_1024' || v === 'enhanced_2k' ? v : 'original'; }
 function publicAiDeliveryLabel(preset) { return preset === 'web_1024' ? 'خروجی استاندارد 1024px' : preset === 'enhanced_2k' ? 'خروجی ارتقایافته تا 2K' : 'ابعاد و رزولوشن اصلی'; }
 async function ensurePublicAiDeliveryObject(row) {
@@ -6428,6 +6378,14 @@ async function lockAndVerifySignupChallenge(c, kind, id, code) {
     return row;
 }
 function photographerSignupRetryableDbError(e) { return ['23505', '23502', '23514', '42703', '42P01', '40001', '40P01'].includes(String(e?.code || '')); }
+async function upgradeLegacyRetouchPhotographer(db,existing,{name,passwordHash:hash}) {
+    if(!existing||existing.existingPhotographer||!existing.public_retouch_enabled||existing.platform_role!=='user'||!/^کاربر روتوش \d{4}$/.test(String(existing.name||'')))return false;
+    // Called only inside the successful, locked photographer OTP transaction.
+    if(!String(name||'').trim()||!String(hash||'').trim())throw Object.assign(new Error('signup_payload_invalid'),{status:400});
+    const result=await db.query(`UPDATE users SET name=$2,password_hash=$3,public_retouch_enabled=false,force_password_change=false,updated_at=now()
+      WHERE id=$1 AND platform_role='user' AND COALESCE(photographer_enabled,false)=false AND public_retouch_enabled=true RETURNING id`,[existing.id,String(name).trim().slice(0,140),String(hash)]);
+    return Boolean(result.rowCount);
+}
 async function completePublicPhotographerSignupVerification(challengeId, code, welcomeCredit) {
     const c = await pool.connect();
     let postCommit = null;
@@ -6477,7 +6435,7 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
         if (existing) {
             userId = String(existing.id);
             reusedExisting = true;
-            // Reuse the underlying mobile identity only. Public-retouch/admin name and password stay untouched.
+            // Reuse the mobile identity; legacy retouch-only credentials are upgraded below after OTP verification.
             await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=COALESCE($2::double precision,location_lat),location_lng=COALESCE($3::double precision,location_lng),location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=CASE WHEN $2::double precision IS NOT NULL THEN now() ELSE location_updated_at END,updated_at=now() WHERE id=$1`, [userId, lat, lng, locationAddress || '']);
         }
         else {
@@ -6495,6 +6453,7 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
             locationAddress
         });
         resolvedName = String(profile?.studio_name || name || 'عکاسی');
+        await upgradeLegacyRetouchPhotographer(c,existing,{name:resolvedName,passwordHash:challenge.password_hash});
         {
             const birthJalali=String(p.birthJalali||'').trim();
             if(!existingPhotographer&&!/^(13|14)\d{2}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/.test(birthJalali))throw Object.assign(new Error('signup_payload_invalid'),{status:400});
@@ -10022,6 +9981,9 @@ async function equipmentRentalHandoverInvoice(db,shopId,bookingId) {
     return result.rows[0]||null;
 }
 
+function equipmentRentalCustomerLabel(name,mobile) {
+    return /^کاربر روتوش \d{4}$/.test(String(name||''))&&mobile?String(mobile):name;
+}
 async function equipmentRentalAccountingOverview(shopId) {
     await ensureEquipmentRentalV628Schema();
     await ensureExternalAccountingMarksSchema();
@@ -10061,6 +10023,8 @@ async function equipmentRentalAccountingOverview(shopId) {
     ]);
     const x = summaryQ.rows[0] || {};
     const markedInvoices = await externalAccountingAttachMarks(pool, 'rental', shopId, invoicesQ.rows);
+    for(const row of [...entriesQ.rows,...markedInvoices])row.photographer_name=equipmentRentalCustomerLabel(row.photographer_name,row.photographer_mobile);
+    for(const row of balancesQ.rows)row.name=equipmentRentalCustomerLabel(row.name,row.mobile);
     return { summary: { debitTotal: Number(x.debit_total || 0), creditTotal: Number(x.credit_total || 0), balance: Number(x.balance || 0) }, balances: balancesQ.rows, entries: entriesQ.rows, invoices: markedInvoices };
 }
 
@@ -10502,6 +10466,8 @@ async function equipmentRentalShopOverview(shopId) {
       name:Boolean(x.pre_registered)&&String(x.mobile||'').trim()?String(x.mobile):x.name,
       business_license_image_url:x.business_license_image_object_key?issueStoredPreviewUrl(String(x.business_license_image_object_key),String(x.business_license_image_name||'case-file-image'),String(x.business_license_image_content_type||'image/jpeg')):null
     }));
+    for(const row of bookingsQ.rows)row.photographer_name=equipmentRentalCustomerLabel(row.photographer_name,row.photographer_mobile||row.customer_mobile);
+    for(const row of photographerRows)row.name=equipmentRentalCustomerLabel(row.name,row.mobile);
     const assets=await equipmentRentalAssetsSnapshot(pool,shopId);
     const supply=await equipmentRentalSupplyPool(pool,shopId,null);
     return { shop, items, assets, externalSupplyHolders:supply.holders, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows.map(p => { const d = applySpecialDiscount(p.price, true, shop?.subscription_discount_amount, shop?.subscription_discount_percent); return { ...p, base_price: Number(p.price || 0), price: d.amount, special_discount_percent: d.discountPercent, special_discount_amount: d.specialDiscountAmount }; }), renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
@@ -10541,7 +10507,7 @@ async function equipmentRentalEnsurePhotographerPreRegistration(db, shopId, mobi
     // for existing and new accounts alike.  The invite still controls whether
     // the photographer has completed their confirmation.
     await equipmentRentalEnsurePhotographerLink(db, shopId, identity.id);
-    return { id:String(identity.id), name:String(identity.photographer_name || identity.name || displayName || 'عکاس'), mobile:normalizeMobile(String(identity.mobile || mobile)), photographer_enabled:Boolean(identity.photographer_enabled), preRegistered:!Boolean(identity.photographer_enabled), created };
+    return { id:String(identity.id), name:String(identity.photographer_name || (!identity.existingPhotographer&&identity.public_retouch_enabled?displayName||mobile:identity.name) || displayName || 'عکاس'), mobile:normalizeMobile(String(identity.mobile || mobile)), photographer_enabled:Boolean(identity.photographer_enabled), preRegistered:!Boolean(identity.photographer_enabled), created };
 }
 async function equipmentRentalSetOpeningDebt(db, shopId, userId, amount, createdBy, description = 'بدهی اولیه پیش‌ثبت‌نام') {
     if (!shopId || !userId) return 0;
@@ -12097,44 +12063,9 @@ async function api(req, res, url) {
         await audit(a.userId, undefined, enabled ? 'platform_admin.maintenance_enabled' : 'platform_admin.maintenance_disabled', 'platform_setting', MAINTENANCE_MODE_SETTING_KEY, { enabled }).catch(() => { });
         return sendJson(res, 200, { ok: true, settings: { enabled: next.enabled, message: next.message, enabledAt: next.enabledAt, disabledAt: next.disabledAt, updatedAt: next.updatedAt } });
     }
-    // v0.17.587 — quick public-retouch membership: user chooses password, mobile
-    // is verified once by SMS OTP, then normal mobile/password login is reused.
-    if (req.method === 'POST' && url.pathname === '/api/public/retouch-account/register/start') {
-        const b = await bodyJson(req), mobile = normalizeMobile(String(b.mobile || '')), password = String(b.password || ''), confirmPassword = String(b.confirmPassword || b.password || '');
-        if (!/^09\d{9}$/.test(mobile)) return sendJson(res, 400, { error: 'invalid_mobile' });
-        if (password.length < 8) return sendJson(res, 400, { error: 'password_too_short' });
-        if (password !== confirmPassword) return sendJson(res, 400, { error: 'password_mismatch' });
-        try {
-            const challenge = await createSignupMobileChallenge('public_retouch', mobile, { source: 'public_ai', quickAccount: true }, password, req, false);
-            return sendJson(res, 201, { ok: true, ...challenge });
-        }
-        catch (e) {
-            const code = String(e?.message || 'public_retouch_signup_failed');
-            return sendJson(res, Number(e?.status || (code === 'duplicate_mobile' ? 409 : 400)), { error: code });
-        }
-    }
-    if (req.method === 'POST' && url.pathname === '/api/public/retouch-account/register/verify') {
-        const b = await bodyJson(req), challengeId = String(b.challengeId || ''), code = String(b.code || '').replace(/\D/g, '').slice(0, 6), c = await pool.connect();
-        let user = null;
-        try {
-            await c.query('BEGIN');
-            const challenge = await lockAndVerifySignupChallenge(c, 'public_retouch', challengeId, code), mobile = normalizeMobile(String(challenge.mobile || ''));
-            await c.query('LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE');
-            const mq = await c.query(`SELECT id,name,mobile,active,platform_role FROM users WHERE mobile IS NOT NULL AND right(regexp_replace(coalesce(mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) ORDER BY created_at LIMIT 2`, [mobile]);
-            if (mq.rowCount) throw Object.assign(new Error('duplicate_mobile'), { status: 409 });
-            const id = crypto.randomUUID(), name = `کاربر روتوش ${mobile.slice(-4)}`;
-            const iq = await c.query(`INSERT INTO users(id,name,email,mobile,password_hash,platform_role,active,public_retouch_enabled,public_retouch_joined_at,mobile_verified_at) VALUES($1,$2,NULL,$3,$4,'user',true,true,now(),now()) RETURNING id,name,mobile,platform_role`, [id, name, mobile, String(challenge.password_hash || '')]);
-            user = iq.rows[0];
-            await c.query(`UPDATE signup_mobile_verifications SET status='used',used_at=now() WHERE id=$1`, [challengeId]);
-            await c.query('COMMIT');
-            await createSession(user.id, res, 'default');
-            return sendJson(res, 201, { ok: true, me: { user: { userId: user.id, name: user.name, mobile: user.mobile, platformRole: user.platform_role } } });
-        }
-        catch (e) {
-            await c.query('ROLLBACK').catch(() => { });
-            return sendJson(res, Number(e?.status || 400), { error: String(e?.message || 'public_retouch_verify_failed') });
-        }
-        finally { c.release(); }
+    // Retouch no longer creates a separate mobile identity, including old OTP links.
+    if (req.method === 'POST' && ['/api/public/retouch-account/register/start','/api/public/retouch-account/register/verify'].includes(url.pathname)) {
+        return sendJson(res,410,{error:'public_retouch_signup_disabled',display:'ساخت حساب جداگانه روتوش حذف شده است؛ با حساب PhotoBridge وارد شوید.'});
     }
     // v0.17.590: retouch-account has its own login endpoint.  It deliberately
     // writes the DEFAULT portal session even for the platform admin test account,
@@ -12171,8 +12102,6 @@ async function api(req, res, url) {
         else if (credentialMatches.length === 1) user = credentialMatches[0];
         else return sendJson(res, 409, { error: 'mobile_ambiguous' });
         await createSession(user.id, res, 'default');
-        if (user.platform_role !== 'platform_admin')
-            await pool.query(`UPDATE users SET public_retouch_enabled=true,public_retouch_joined_at=COALESCE(public_retouch_joined_at,now()),updated_at=now() WHERE id=$1`, [user.id]).catch(() => { });
         return sendJson(res, 200, { ok: true, me: { user: { userId:user.id,name:user.name,mobile:user.mobile||undefined,platformRole:user.platform_role,mustChangePassword:Boolean(user.force_password_change) } } });
     }
     if (req.method === 'GET' && url.pathname === '/api/public/retouch-account/orders') {
@@ -13033,7 +12962,6 @@ async function api(req, res, url) {
             const rq = await pool.query(`SELECT count(*)::int count FROM public_ai_orders WHERE user_id=$1 AND created_at>now()-interval '10 minutes'`, [a.userId]);
             if (Number(rq.rows[0]?.count || 0) >= 8)
                 return sendJson(res, 429, { error: 'public_retouch_prepare_rate_limited' });
-            await pool.query(`UPDATE users SET public_retouch_enabled=true,public_retouch_joined_at=COALESCE(public_retouch_joined_at,now()),updated_at=now() WHERE id=$1`, [a.userId]).catch(() => { });
             account = { userId: a.userId, created: false, mobile: sessionMobile, existingAccount: true };
         }
         let raw = String(b.imageBase64 || '');

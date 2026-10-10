@@ -91,7 +91,7 @@
    const staff=document.body.classList.contains('pbR100F9StaffMode');
    document.querySelectorAll('.pbR100F9StaffTabs [data-staff-mode]').forEach(b=>{
      if(!modeNames[b.dataset.staffMode])return;
-     b.textContent=modeNames[b.dataset.staffMode];
+     b.textContent=b.dataset.staffMode==='out'?'آفیش':modeNames[b.dataset.staffMode];
      b.classList.add('pbR100F86ModeTab');
    });
    const tabs=document.querySelector('#pb848BookingHeaderTabs');

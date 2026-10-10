@@ -20,7 +20,7 @@ test('existing and new invite forms, delayed invite response, OTP and Persian ca
   const base=`http://127.0.0.1:${server.address().port}`;
   const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   try{
-    for(const scenario of [{existing:true,delay:900,birth:'1370/01/01',national:'0012345678'},{existing:true,delay:0,birth:'',national:'0012345678'},{existing:true,delay:900,birth:'1370/01/01',national:''},{existing:false,delay:900,birth:''}]){
+    for(const scenario of [{existing:true,delay:900,birth:'1370/01/01',national:'0012345678',verifyError:'invite_rental_shop_unavailable'},{existing:true,delay:0,birth:'',national:'0012345678'},{existing:true,delay:900,birth:'1370/01/01',national:''},{existing:false,delay:900,birth:''}]){
       const context=await browser.newContext({viewport:{width:390,height:844}});
       const page=await context.newPage(),sent=[],errors=[];
       page.on('pageerror',err=>errors.push(err.message));
@@ -35,7 +35,7 @@ test('existing and new invite forms, delayed invite response, OTP and Persian ca
         else if(url.pathname==='/api/public/photographer-signup'){
           sent.push(route.request().postDataJSON());body={challengeId:'test-challenge',mobile:invite.targetMobile,existingAccount:scenario.existing,verificationRequired:true};
         }else if(url.pathname==='/api/public/photographer-signup/verify'){
-          sent.push(route.request().postDataJSON());body={ok:true};
+          sent.push(route.request().postDataJSON());if(scenario.verifyError){await route.fulfill({status:409,json:{error:scenario.verifyError}});return}body={ok:true};
         }else if(url.pathname==='/api/me'){await route.fulfill({status:401,json:{error:'unauthorized'}});return}
         await route.fulfill({json:body});
       });
@@ -70,6 +70,7 @@ test('existing and new invite forms, delayed invite response, OTP and Persian ca
         const verified=await verification;
         assert.equal(verified.postDataJSON().challengeId,'test-challenge');
         assert.equal(verified.postDataJSON().code,'123456');
+        if(scenario.verifyError){await page.getByText('فروشگاه صادرکننده دعوتنامه در حال حاضر فعال نیست. برای بررسی وضعیت فروشگاه با مدیر آن تماس بگیر.',{exact:true}).waitFor();assert.equal(await otp.isVisible(),true)}
       }else{
         assert.equal(await passwords.count(),2,'new invitee needs signup credentials');
         assert.equal(await page.locator('.photographerSignupLocationPicker:visible').count(),1,'new signup retains map/address');

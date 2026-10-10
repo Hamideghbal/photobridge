@@ -10270,7 +10270,7 @@ async function equipmentRentalSupplyPool(db,shopId,booking,{lock=false}={}) {
     }
     const start=equipmentRentalDate(booking?.rental_start),end=equipmentRentalDate(booking?.rental_end);
     return {holders,sources:sources.rows.map(s=>{
-      const supplied=s.status==='provided'||Boolean(s.resolved_at),own=String(s.booking_id)===String(booking?.id);
+      const supplied=s.status==='provided'||Boolean(s.resolved_at);
       let capacity=Number(s.shortage_qty||0),covers=true;
       if(booking){
         covers=s.rental_start<=start&&s.rental_end>=end;
@@ -10280,7 +10280,8 @@ async function equipmentRentalSupplyPool(db,shopId,booking,{lock=false}={}) {
           covers=covers&&capacity>0;
         }
       }
-      const eligible=!s.booking_cancelled_at&&!['cancelled','rejected'].includes(s.booking_status)&&(supplied||own)&&covers;
+      // Pending supply can be confirmed at handover for any matching booking.
+      const eligible=!s.booking_cancelled_at&&!['cancelled','rejected'].includes(s.booking_status)&&(supplied||s.status==='pending'||!s.status)&&covers;
       return {id:String(s.id),itemId:String(s.item_id),bookingId:String(s.booking_id),plannedCustomer:s.planned_customer,startDate:s.rental_start,endDate:s.rental_end,supplied,availableQuantity:eligible?Math.max(0,capacity-(used.get(String(s.id))||0)):0};
     })};
 }

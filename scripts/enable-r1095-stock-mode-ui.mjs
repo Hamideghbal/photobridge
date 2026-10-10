@@ -13,4 +13,11 @@ for(const [file,url] of [
  }
  if(src.split(tag).length!==2)throw Error('[R1095] duplicate or missing script: '+file);
 }
+const book='dist/api/equipment-rental-book.html';
+let customer=fs.readFileSync(book,'utf8');
+const note='تا آن زمان این درخواست از موجودی فروشگاه کم نمی‌کند.';
+if(customer.includes(note)){
+ customer=customer.replace(note,'این درخواست تا اعلام نتیجه توسط فروشگاه هنوز تأیید نهایی نشده است.');
+ fs.writeFileSync(book,customer,'utf8');
+}
 console.log('[R1095] store and customer stock-mode controls attached');

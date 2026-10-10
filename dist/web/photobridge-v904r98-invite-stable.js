@@ -20,7 +20,7 @@
     input.dispatchEvent(new Event('change',{bubbles:true}));
   }
   const normalizeReq=r=>({
-    birthDate:false,
+    birthDate:r?.birthDate===true||r?.requiredBirthDate===true,
     nationalId:r?.nationalId===true||r?.requiredNationalId===true||r?.national_id===true,
     birthCertificateNo:r?.birthCertificateNo===true||r?.requiredBirthCertificateNo===true||r?.birth_certificate_no===true,
     businessLicenseNo:r?.businessLicenseNo===true||r?.requiredBusinessLicenseNo===true||r?.business_license_no===true||r?.caseNumber===true,
@@ -66,7 +66,7 @@
     for(const k of ['birthJalali','nationalId','birthCertificateNo','businessLicenseNo']) if(!state.values[k]&&p[k]) state.values[k]=String(p[k]);
     if(!state.values.businessLicenseImage&&p.businessLicenseImage) state.values.businessLicenseImage=p.businessLicenseImage;
   }
-  const required=()=>normalizeReq(state.ctx?.membershipRequiredFields||{});
+  const required=()=>({...normalizeReq(state.ctx?.membershipRequiredFields||{}),birthDate:isExisting()&&!hasProfileValue('birthJalali')});
   const isRental=()=>state.ctx?.invite?.issuerType==='rental'||state.ctx?.invite?.issuer_type==='rental'||Object.values(required()).some(Boolean);
   const isExisting=()=>Boolean(state.ctx?.existingAccount?.exists||state.ctx?.existingAccount);
   const hasProfileValue=k=>Boolean(String((state.ctx?.membershipProfile||{})[k]||'').trim());
@@ -119,7 +119,7 @@
     const close=()=>{back.remove();pop.remove()};back.onclick=close;
     const selectedParts=()=>digits(state.values.birthJalali||input.value||'').match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
     const choose=d=>{const v=`${yy}/${String(mm).padStart(2,'0')}/${String(d).padStart(2,'0')}`;state.values.birthJalali=v;setInputValue(input,v);close()};
-    const move=delta=>{let m=mm+delta,y=yy;if(m<1){m=12;y--}if(m>12){m=1;y++}if(y>today.year||(y===today.year&&m>today.month)){y=today.year;m=today.month}if(y<1250){y=1250;m=1}yy=y;mm=m;draw()};
+    const move=delta=>{let m=mm+delta,y=yy;if(m<1){m=12;y--}if(m>12){m=1;y++}if(y>today.year||y<1250)return;yy=y;mm=m;draw()};
     const position=()=>{if(innerWidth<=560)return;const r=input.getBoundingClientRect(),w=Math.min(330,innerWidth-24),h=Math.min(pop.offsetHeight||390,innerHeight-24);pop.style.left=Math.max(12,Math.min(innerWidth-w-12,r.right-w))+'px';pop.style.right='auto';pop.style.top=Math.max(12,Math.min(innerHeight-h-12,r.bottom+6))+'px';pop.style.bottom='auto'};
     const draw=()=>{
       const max=jalaliMonthLength(yy,mm);let firstDow=6;
@@ -133,11 +133,12 @@
         dayHtml+=`<button type="button" class="jalaliDay${isToday?' today':''}${isSelected?' selected':''}" data-jalali-day="${d}" ${future?'disabled':''}>${fa(d)}</button>`;
       }
       const years=[];for(let y=today.year;y>=1250;y--)years.push(`<button type="button" class="pbR100F9YearOption${y===yy?' selected':''}" data-jalali-year="${y}">${fa(y)}</button>`);
-      pop.innerHTML=`<div class="jalaliCalendarHead"><button type="button" data-jalali-nav="prev" aria-label="ماه قبل">‹</button><div class="jalaliCalendarTitle pbR100F9BirthTitle"><b>${jalaliMonths[mm-1]}</b><button type="button" class="pbR100F9YearButton" data-jalali-year-open aria-label="انتخاب سال">${fa(yy)} <span aria-hidden="true">⌄</span></button></div><button type="button" data-jalali-nav="next" aria-label="ماه بعد">›</button></div><div class="pbR100F9YearPanel" data-jalali-year-panel hidden><div class="pbR100F9YearGrid">${years.join('')}</div></div><div class="jalaliWeekdays">${jalaliWeekdays.map(x=>`<span>${x}</span>`).join('')}</div><div class="jalaliDays">${dayHtml}</div><div class="jalaliCalendarFooter"><button type="button" data-jalali-clear>پاک کردن</button><button type="button" class="todayBtn" data-jalali-today>امروز</button></div>`;
+      pop.innerHTML=`<div class="jalaliCalendarHead"><button type="button" data-jalali-nav="prev" aria-label="ماه قبل">‹</button><div class="jalaliCalendarTitle pbR100F9BirthTitle"><select data-jalali-month aria-label="انتخاب ماه" style="max-width:100%;min-height:30px;background:white;border:1px solid #d0d5dd;border-radius:8px;font:inherit">${jalaliMonths.map((name,index)=>`<option value="${index+1}" ${index+1===mm?'selected':''}>${name}</option>`).join('')}</select><button type="button" class="pbR100F9YearButton" data-jalali-year-open aria-label="انتخاب سال">${fa(yy)} <span aria-hidden="true">⌄</span></button></div><button type="button" data-jalali-nav="next" aria-label="ماه بعد">›</button></div><div class="pbR100F9YearPanel" data-jalali-year-panel hidden><div class="pbR100F9YearGrid">${years.join('')}</div></div><div class="jalaliWeekdays">${jalaliWeekdays.map(x=>`<span>${x}</span>`).join('')}</div><div class="jalaliDays">${dayHtml}</div><div class="jalaliCalendarFooter"><button type="button" data-jalali-clear>پاک کردن</button><button type="button" class="todayBtn" data-jalali-today>امروز</button></div>`;
+      pop.querySelector('[data-jalali-month]').onchange=e=>{mm=Number(e.target.value);draw()};
       pop.querySelector('[data-jalali-nav="prev"]').onclick=()=>move(-1);
       pop.querySelector('[data-jalali-nav="next"]').onclick=()=>move(1);
       const yearBtn=pop.querySelector('[data-jalali-year-open]'),yearPanel=pop.querySelector('[data-jalali-year-panel]');
-      if(yearBtn&&yearPanel){yearBtn.onclick=()=>{yearPanel.hidden=!yearPanel.hidden;yearBtn.classList.toggle('open',!yearPanel.hidden);if(!yearPanel.hidden)requestAnimationFrame(()=>yearPanel.querySelector('.pbR100F9YearOption.selected')?.scrollIntoView({block:'center'}))};yearPanel.querySelectorAll('[data-jalali-year]').forEach(b=>b.onclick=()=>{yy=Number(b.dataset.jalaliYear)||yy;if(yy===today.year&&mm>today.month)mm=today.month;draw()})}
+      if(yearBtn&&yearPanel){yearBtn.onclick=()=>{yearPanel.hidden=!yearPanel.hidden;yearBtn.classList.toggle('open',!yearPanel.hidden);if(!yearPanel.hidden)requestAnimationFrame(()=>yearPanel.querySelector('.pbR100F9YearOption.selected')?.scrollIntoView({block:'center'}))};yearPanel.querySelectorAll('[data-jalali-year]').forEach(b=>b.onclick=()=>{yy=Number(b.dataset.jalaliYear)||yy;draw()})}
       pop.querySelectorAll('[data-jalali-day]:not([disabled])').forEach(b=>b.onclick=()=>choose(Number(b.dataset.jalaliDay)));
       pop.querySelector('[data-jalali-clear]').onclick=()=>{state.values.birthJalali='';setInputValue(input,'');close()};
       pop.querySelector('[data-jalali-today]').onclick=()=>{yy=today.year;mm=today.month;choose(today.day)};
@@ -195,12 +196,12 @@
   function requiredBox(form){
     let box=document.getElementById('pbR94InviteRequired');
     if(!isRental()){if(box)box.classList.add('pbR94BaseHidden');return}
-    const req=required();const hasExtras=Boolean(req.nationalId||req.birthCertificateNo||req.businessLicenseNo||req.businessLicenseImage);if(!hasExtras){if(box)box.classList.add('pbR94BaseHidden');return}
+    const allReq=required(),req=Object.fromEntries(Object.entries(allReq).map(([key,value])=>[key,value&&(!isExisting()||!hasProfileValue(key==='birthDate'?'birthJalali':key))]));const hasExtras=Object.values(req).some(Boolean);if(!hasExtras){if(box)box.classList.add('pbR94BaseHidden');return}
     const p=state.ctx?.membershipProfile||{},sig=JSON.stringify({req,existing:isExisting(),birth:p.birthJalali||'',national:p.nationalId||'',certificate:p.birthCertificateNo||'',license:p.businessLicenseNo||'',image:Boolean(p.businessLicenseImage)});
     if(box&&box.dataset.sig===sig){placeRequiredBox(form,box);return}
     if(!box){box=document.createElement('section');box.id='pbR94InviteRequired';box.className='pbR94Required'}
     box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=String(state.ctx?.invite?.issuerRentalShopName||state.ctx?.invite?.issuerName||'فروشگاه').trim()||'فروشگاه';box.replaceChildren();const title=document.createElement('b');title.textContent=`اطلاعات درخواستی فروشگاه ${shopName}`;box.append(title);
-    if(req.nationalId)box.append(textField('کد ملی','nationalId',{numeric:true}));if(req.birthCertificateNo)box.append(textField('شماره شناسنامه','birthCertificateNo',{numeric:true}));if(req.businessLicenseNo)box.append(textField('شماره جواز / پرونده','businessLicenseNo'));if(req.businessLicenseImage)box.append(imageField());
+    if(req.birthDate&&isExisting())box.append(birthField());if(req.nationalId)box.append(textField('کد ملی','nationalId',{numeric:true}));if(req.birthCertificateNo)box.append(textField('شماره شناسنامه','birthCertificateNo',{numeric:true}));if(req.businessLicenseNo)box.append(textField('شماره جواز / پرونده','businessLicenseNo'));if(req.businessLicenseImage)box.append(imageField());
     placeRequiredBox(form,box);
   }
   function formTopChild(form,node){
@@ -276,6 +277,7 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         const req=required(),missing=[];
+        if(req.birthDate&&!String(state.values.birthJalali||'').trim())missing.push('تاریخ تولد');
         if(req.nationalId&&!String(state.values.nationalId||'').trim())missing.push('کد ملی');
         if(req.birthCertificateNo&&!String(state.values.birthCertificateNo||'').trim())missing.push('شماره شناسنامه');
         if(req.businessLicenseNo&&!String(state.values.businessLicenseNo||'').trim())missing.push('شماره جواز / پرونده');
@@ -308,7 +310,7 @@
     // this avoids the scroll-lock/performance regression of the old invite observer.
     formObserver.observe(form,{childList:true});
   }
-  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;watchExistingForm(form);decorateRentalIntro();upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
+  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
   function schedule(){if(state.raf)return;state.raf=requestAnimationFrame(render)}
   let settleTimers=[];function scheduleSeries(){schedule();settleTimers.forEach(clearTimeout);settleTimers=[80,220,600,1400,3000,6000,10000].map(ms=>setTimeout(schedule,ms))}
   async function bootstrap(){if(state.loading||state.contextReady)return;state.loading=true;let accepted=false;try{
@@ -322,7 +324,7 @@
   window.fetch=async function(input,init={}){
     const raw=typeof input==='string'?input:(input?.url||'');let url;try{url=new URL(raw,location.origin)}catch{return nativeFetch(input,init)}const method=String(init?.method||'GET').toUpperCase();
     if(url.origin===location.origin&&url.pathname==='/api/public/photographer-signup'&&method==='POST'&&typeof init.body==='string'){
-      try{const b=JSON.parse(init.body),req=required();if(!isExisting()&&state.values.birthJalali)b.birthJalali=state.values.birthJalali;if(req.nationalId)b.nationalId=state.values.nationalId||'';if(req.birthCertificateNo)b.birthCertificateNo=state.values.birthCertificateNo||'';if(req.businessLicenseNo)b.businessLicenseNo=state.values.businessLicenseNo||'';if(req.businessLicenseImage&&state.values.businessLicenseImage&&!state.ctx?.membershipProfile?.businessLicenseImage)b.businessLicenseImage=state.values.businessLicenseImage;if(isExisting()){b.name='';b.province='';b.city='';b.locationLat=null;b.locationLng=null;b.locationAddress='';b.password='';b.confirmPassword=''}init={...init,body:JSON.stringify(b)}}catch{}
+      try{const b=JSON.parse(init.body),req=required();if(state.values.birthJalali)b.birthJalali=state.values.birthJalali;if(req.nationalId)b.nationalId=state.values.nationalId||'';if(req.birthCertificateNo)b.birthCertificateNo=state.values.birthCertificateNo||'';if(req.businessLicenseNo)b.businessLicenseNo=state.values.businessLicenseNo||'';if(req.businessLicenseImage&&state.values.businessLicenseImage&&!state.ctx?.membershipProfile?.businessLicenseImage)b.businessLicenseImage=state.values.businessLicenseImage;if(isExisting()){b.name='';b.province='';b.city='';b.locationLat=null;b.locationLng=null;b.locationAddress='';b.password='';b.confirmPassword=''}init={...init,body:JSON.stringify(b)}}catch{}
     }
     const res=await nativeFetch(input,init);
     if(url.origin===location.origin&&url.pathname.includes('/api/public/photographer-signup/context')&&res.ok)res.clone().json().then(acceptSignupContext).catch(()=>{});

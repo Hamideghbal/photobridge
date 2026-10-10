@@ -11984,7 +11984,7 @@ async function api(req, res, url) {
                       WHERE u.account_deleted_at IS NULL AND u.mobile = ANY($1::text[])
                       ORDER BY u.photographer_enabled DESC,(pp.user_id IS NOT NULL) DESC,u.active DESC,u.created_at ASC LIMIT 8`,
                 values:[variants],query_timeout:1600
-            }).catch(()=>({rows:[]}));
+            });
             // Legacy rows sometimes contain spaces/dashes. Keep a very short bounded fallback only when exact variants miss.
             if (!uq.rows.length) {
                 uq = await pool.query({
@@ -11997,7 +11997,7 @@ async function api(req, res, url) {
                           WHERE u.account_deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=$1
                           ORDER BY u.photographer_enabled DESC,(pp.user_id IS NOT NULL) DESC,u.active DESC,u.created_at ASC LIMIT 8`,
                     values:[last10],query_timeout:900
-                }).catch(()=>({rows:[]}));
+                });
             }
             // R94: an exact-format admin/public row must not hide an older photographer profile
             // that uses +98/0098/spaces for the same mobile. Prefer real photographer_profiles.
@@ -12011,7 +12011,7 @@ async function api(req, res, url) {
                       WHERE u.account_deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=$1
                       ORDER BY (nullif(btrim(pp.studio_name),'') IS NOT NULL) DESC,(nullif(btrim(pp.province),'') IS NOT NULL) DESC,u.photographer_enabled DESC,u.active DESC,u.created_at ASC LIMIT 8`,
                 values:[last10],query_timeout:1100
-            }).catch(()=>({rows:[]}));
+            });
             const mergedRows=[...(profileQ.rows||[]),...(uq.rows||[])],seenIds=new Set(),rows=[];
             for(const r of mergedRows){const id=String(r.id||'');if(!id||seenIds.has(id))continue;seenIds.add(id);rows.push(r)}
             // A store-side pre-registration alone is not a PhotoBridge
@@ -12083,7 +12083,7 @@ async function api(req, res, url) {
                     const mp = await pool.query({text:`SELECT m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no,m.business_license_image_object_key,m.business_license_image_name,m.business_license_image_content_type,m.business_license_image_bytes,pp.birth_jalali profile_birth_jalali,pp.business_license_no profile_business_license_no
                       FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                       LEFT JOIN equipment_rental_shop_memberships m ON m.shop_id=$1 AND m.user_id=u.id AND m.role='photographer'
-                      WHERE u.id=$2 LIMIT 1`,values:[inv.issuer_rental_shop_id,existing.id],query_timeout:1100}).catch(()=>({rows:[]}));
+                      WHERE u.id=$2 LIMIT 1`,values:[inv.issuer_rental_shop_id,existing.id],query_timeout:1100});
                     const row=mp.rows[0]||{};
                     membershipProfile={name:String(resolvedExistingIdentity?.name||existing.photographer_name||existing.name||'عکاسی'),mobile:String(resolvedExistingIdentity?.mobile||existing.mobile||mobile),province:String(resolvedExistingIdentity?.province||existing.photographer_province||''),city:String(resolvedExistingIdentity?.city||existing.photographer_city||''),locationAddress:String(resolvedExistingIdentity?.locationAddress||existing.photographer_location_address||''),birthJalali:String(row.birth_jalali||row.profile_birth_jalali||''),nationalId:String(row.national_id||''),birthCertificateNo:String(row.birth_certificate_no||''),businessLicenseNo:String(row.business_license_no||row.profile_business_license_no||''),businessLicenseImage:row.business_license_image_object_key?{objectKey:row.business_license_image_object_key,name:row.business_license_image_name||'',contentType:row.business_license_image_content_type||'',bytes:Number(row.business_license_image_bytes||0)}:null};
                 }
@@ -12101,13 +12101,11 @@ async function api(req, res, url) {
             if (!inv || !photographerInviteUsable(inv))
                 return sendJson(res, 404, { error: 'invite_invalid' });
             const publicInvite=photographerInvitePublicView(inv);
-            let signupContext=null;
-            if(inv.issuer_type==='rental'&&inv.issuer_rental_shop_id){
-                const sq=await pool.query({text:`SELECT membership_required_fields,name FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,values:[inv.issuer_rental_shop_id],query_timeout:2500}).catch(()=>({rows:[]}));
-                const required=equipmentRentalInviteRequiredFields(inv,sq.rows[0]||{});
-                signupContext={invite:{...publicInvite,issuerRentalShopName:publicInvite.issuerRentalShopName||sq.rows[0]?.name||null,issuerName:publicInvite.issuerName||sq.rows[0]?.name||null},mobile:normalizeMobile(String(inv.target_mobile||'')),membershipRequiredFields:required,membershipProfile:null,existingAccount:null};
-            }
-            return sendJson(res, 200, { invite: publicInvite, signupContext });
+            // This endpoint has not looked up the recipient account. Sending
+            // existingAccount:null here races the authoritative /context
+            // response and resets React to the new-account form.
+            // Only /context may supply signupContext/account classification.
+            return sendJson(res, 200, { invite: publicInvite, signupContext: null });
         }
         catch (e) {
             console.error('[public-photographer-invite:read-failed]', { code: String(e?.code || ''), message: String(e?.message || '') });

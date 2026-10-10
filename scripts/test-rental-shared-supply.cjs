@@ -32,8 +32,12 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
    INSERT INTO equipment_rental_booking_items VALUES('${uuid(20)}','${a}','${item}',1),('${uuid(21)}','${b}','${item}',1),('${uuid(22)}','${c}','${item}',1);
    INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,resolved_at) VALUES('${supply}','${shop}','${a}','${item}',1,'2030-10-12','2030-10-12','provided',now());
    INSERT INTO equipment_rental_assets VALUES('${asset}','${shop}','${item}',true,'CAM-1','serial');`);
+  await db.exec(`ALTER TABLE equipment_rental_bookings ADD COLUMN payment_status text,ADD COLUMN gross_amount bigint,ADD COLUMN discount_amount bigint,ADD COLUMN discount_percent integer,ADD COLUMN invoice_adjustment_amount bigint,ADD COLUMN invoice_adjustment_note text,ADD COLUMN return_kind text,ADD COLUMN returned_at timestamp;
+   ALTER TABLE equipment_rental_booking_items ADD COLUMN rental_days integer DEFAULT 1,ADD COLUMN daily_price bigint DEFAULT 100,ADD COLUMN subtotal bigint DEFAULT 100;
+   CREATE TABLE equipment_rental_invoices(id uuid PRIMARY KEY,invoice_number text,booking_id uuid,shop_id uuid,photographer_id uuid,total_amount bigint,deposit_amount bigint,issued_at timestamp);`);
   const ctx=vm.createContext({crypto,Map,Set,Date,JSON,Number,String,Math,equipmentRentalDate:v=>v instanceof Date?v.toISOString().slice(0,10):v?String(v).slice(0,10):null});
   vm.runInContext(source.slice(source.indexOf('async function equipmentRentalAttachShortageDates('),source.indexOf('async function equipmentRentalOverview(')),ctx);
+  vm.runInContext(source.slice(source.indexOf('async function equipmentRentalHandoverInvoice('),source.indexOf('async function equipmentRentalAccountingOverview(')),ctx);
   const booking=id=>db.query('SELECT * FROM equipment_rental_bookings WHERE id=$1',[id]).then(r=>r.rows[0]);
   let pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(b));assert.equal(pool.sources[0].availableQuantity,1);
   pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(c));assert.equal(pool.sources[0].availableQuantity,0);
@@ -48,6 +52,9 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
   assert.equal((await hand(b,[],[{itemId:item,shortageId:supply,code:'any identifier'}])).externalSupplyCount,1);
   assert.equal((await db.query('SELECT status FROM equipment_rental_booking_shortages WHERE id=$1',[supply])).rows[0].status,'provided');
   assert.equal((await hand(a,['CAM-1'],[])).assetCount,1);
+  await db.query("INSERT INTO equipment_rental_invoices VALUES($1,'42',$2,$3,NULL,100,0,now())",[uuid(90),b,shop]);
+  const invoice=await ctx.equipmentRentalHandoverInvoice(db,shop,b);assert.equal(invoice.photographer_name,'Customer B');assert.equal(invoice.invoice_number,'42');assert.equal(invoice.items[0].title,'Camera');assert.equal(invoice.items[0].quantity,1);assert.equal(Number(invoice.items[0].subtotal),100);assert.equal(invoice.rental_start,'2030-10-12');
+  assert.equal(await ctx.equipmentRentalHandoverInvoice(db,otherShop,b),null);
   pool=await ctx.equipmentRentalSupplyPool(db,shop,null);assert.equal(pool.holders[0].customerName,'Customer B');assert.equal(pool.holders[0].code,'any identifier');assert.equal(pool.sources[0].availableQuantity,0);
   const owned=await ctx.equipmentRentalAssetsSnapshot(db,shop);assert.equal(owned[0].customer_name,'Customer A');assert.equal(owned[0].current_booking_id,a);
   await db.query("UPDATE equipment_rental_bookings SET rental_end='2030-10-12' WHERE id=$1",[c]);

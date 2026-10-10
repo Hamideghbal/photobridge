@@ -115,6 +115,9 @@ for (const file of ['dist/api/equipment-rental-book.html', 'dist/api/equipment-r
   assert(fs.existsSync(file), `Required deployment payload missing: ${file}`);
 }
 const docker = fs.readFileSync('Dockerfile', 'utf8');
-assert(docker.includes('RUN node scripts/prune-onnx-platforms.mjs'), 'Docker native-runtime pruning missing');
-assert(docker.includes('COPY --from=deps /app/node_modules ./node_modules'), 'Runtime must copy verified dependencies');
+const depsStage = docker.split('FROM deps AS app-build')[0];
+assert(depsStage.includes('node scripts/prune-onnx-platforms.mjs'), 'Native runtime must be prepared in the cached dependency stage');
+assert(!depsStage.includes('COPY dist') && !depsStage.includes('COPY DEPLOY_REVISION'), 'Application changes must not invalidate dependency preparation');
+assert(docker.includes('FROM deps AS runtime'), 'Runtime must inherit verified dependency layers');
+assert(docker.includes('COPY --from=app-build /app/dist ./dist'), 'Runtime must ship validated application assets');
 console.log(`[PhotoBridge Deploy] ${pkg.photobridgeDeployBuild}: ${assets.size} mounted assets, JavaScript syntax, runtime routes and deployment payload verified.`);

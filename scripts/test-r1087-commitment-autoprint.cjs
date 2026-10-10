@@ -1,0 +1,75 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync('dist/web/photobridge-r1087-commitment-autoprint.js','utf8');
+const html=fs.readFileSync('dist/api/equipment-rental-portal.html','utf8');
+
+test('R1087 ships exactly one receiver after production build',()=>{
+ const tag='<script defer src="/photobridge-r1087-commitment-autoprint.js?v=r1087"></script>';
+ assert.equal(html.split(tag).length-1,1);
+ assert(source.includes('/api/rental/overview'));
+ assert(source.includes('/api/rental/bookings/'));
+ assert(source.includes("handover_serials_recorded_at"));
+});
+
+async function simulate({mobile=false,native=true}={}){
+ const state={status:'reserved',printed:0,requests:[],frames:[],timer:[],store:new Map()};
+ const delays=[];
+ const setTimeoutFake=(fn,ms)=>{if(ms<=2000)delays.push(fn);return ms};
+ const storage={getItem:k=>state.store.has(k)?state.store.get(k):null,setItem:(k,v)=>state.store.set(k,String(v))};
+ const header={children:[],contains:el=>header.children.includes(el),appendChild:el=>{header.children.push(el);return el}};
+ function elem(kind){
+  const el={tagName:kind,style:{cssText:''},dataset:{},addEventListener(){},remove(){},setAttribute(){},hidden:false,children:[],textContent:''};
+  if(kind==='iframe'){
+   el.contentWindow={addEventListener(){},focus(){},print(){state.printed++}};
+   state.frames.push(el);
+  }
+  return el;
+ }
+ const body={classList:{contains:()=>true},appendChild:el=>{
+  queueMicrotask(()=>el.onload?.());return el;
+ }};
+ const document={readyState:'complete',body,createElement:elem,querySelector:()=>header};
+ const fetch=async url=>{
+  state.requests.push(String(url));
+  if(String(url).endsWith('/overview'))return{ok:true,json:async()=>({
+   shop:{id:'shop-1'},bookings:[{id:'booking-1',status:state.status,handover_serials_recorded_at:state.status==='picked_up'?'2026-10-10T20:00:00Z':null,photographer_name:'Customer'}]
+  })};
+  if(String(url).endsWith('/commitment'))return{ok:true,text:async()=>'<html><body><p>Customer</p><p>Serial: SER123</p></body></html>'};
+  return{ok:false,status:404};
+ };
+ const ctx=vm.createContext({
+  window:{console,__PB_DESKTOP_FETCH__:native?()=>{}:undefined,addEventListener(){}},
+  matchMedia:()=>({matches:mobile}),navigator:{userAgent:mobile?'Android':'Desktop'},
+  localStorage:storage,document,fetch,Date,JSON,Math,Promise,
+  setInterval:fn=>state.timer.push(fn),setTimeout:setTimeoutFake,clearTimeout(){},
+  queueMicrotask,console
+ });
+ vm.runInContext(source,ctx);
+ async function check(){await ctx.window.pbR1087AutoPrint?.checkNow();for(const fn of delays.splice(0))fn();await new Promise(r=>setImmediate(r))}
+ return{state,ctx,check};
+}
+test('phone is never a printer and never polls',async()=>{
+ const s=await simulate({mobile:true});
+ assert.equal(s.ctx.window.pbR1087AutoPrint,undefined);
+ assert.equal(s.state.requests.length,0);
+});
+test('desktop prints only a new confirmed handover, once, with the real serial document',async()=>{
+ const s=await simulate();
+ await s.check();
+ assert.equal(s.state.printed,0);
+ s.state.status='picked_up';
+ await s.check();
+ assert.equal(s.state.printed,1);
+ assert.match(s.state.frames[0].srcdoc,/SER123/);
+ await s.check();
+ assert.equal(s.state.printed,1);
+ assert.equal(s.ctx.window.pbR1087AutoPrint.enabled(),true);
+});
+test('plain website does not silently opt into printing',async()=>{
+ const s=await simulate({native:false});
+ await s.check();
+ assert.equal(s.state.requests.length,0);
+ assert.equal(s.ctx.window.pbR1087AutoPrint.enabled(),false);
+});

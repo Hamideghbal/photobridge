@@ -72,3 +72,24 @@ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActi
  #pbR1076Registration [data-register-day] small{font-size:9px;line-height:1;color:inherit}
 }
 @media(prefers-reduced-motion:reduce){html body.rentalAppReady #rentalMobileDrawer{transition:none!important}}
+
+/* R1079: operator Office and return shortages share a bottom navigation. */
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffTabs>button[data-staff-mode="returnShortages"]{display:flex!important}
+html body.pbR100F9StaffMode .pbOfficeExtendButton{display:none!important}
+@media(max-width:850px){
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav{position:fixed;bottom:0;left:0;right:0;z-index:2147482400;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e4e7ec;box-sizing:border-box}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;margin:0!important;padding:0!important;gap:8px!important;background:transparent!important;overflow:hidden!important}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;height:48px!important;border-radius:12px!important;border:0!important;background:#f5f7ff!important;color:#475467!important;font:700 14px Vazirmatn,Tahoma!important;transition:background .18s,color .18s,transform .18s}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button.active{background:#315efb!important;color:#fff!important}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button:active{transform:scale(.97)}
+ html body.pbR100F9StaffMode .pbR100F9StaffShell{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))!important}
+}
+@media(prefers-reduced-motion:reduce){#pbR1079OperatorNav button{transition:none!important}}
+/* Mobile final registration row: notes and submit share the same size. */
+@media(max-width:850px){
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:center!important;gap:8px!important}
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.field,
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.actions{width:100%!important;min-width:0!important;padding:0!important;margin:0!important;box-shadow:none!important;filter:none!important;background:transparent!important}
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter input[name="notes"],
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter>.actions>button:not(#checkAvailability){height:44px!important;min-height:44px!important;max-height:44px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;border-radius:9px!important;padding:0 8px!important;font:600 13px/1.4 Vazirmatn,Tahoma!important;box-shadow:none!important;filter:none!important;margin:0!important}
+}

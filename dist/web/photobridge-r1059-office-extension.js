@@ -149,6 +149,7 @@
  const cardSelector='[data-office-booking-id],[data-pb915-booking-id],[data-pb904r5-booking-id]';
  const cardId=card=>card.dataset.officeBookingId||card.dataset.pb915BookingId||card.dataset.pb904r5BookingId;
  function mount(){
+   if(document.body.classList.contains('pbR100F9StaffMode')){document.querySelectorAll('.pbOfficeExtendButton').forEach(button=>button.remove());return;}
    document.querySelectorAll(cardSelector).forEach(card=>{
      if(card.closest('#pbOfficeExtension'))return;
      // Desktop day cards and their action toolbar are siblings in the same group.

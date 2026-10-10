@@ -22,7 +22,7 @@ function update(itemsData){
   const cb=card.querySelector('input.pick'),qty=card.querySelector('input.qty');if(!cb||!qty)continue;
   const row=map.get(cb.value),free=dated&&row?Math.max(0,Math.floor(Number(row.available||0))):0;
   const blocked=!dated||!row||row.valid===false||free===0;
-  if(blocked&&cb.checked){cb.checked=false;anyShort=true}
+  if(dated&&row&&blocked&&cb.checked){cb.checked=false;anyShort=true}
   cb.disabled=blocked;
   qty.disabled=blocked;qty.max=String(Math.max(1,free));
   if(free>0&&Number(qty.value)>free){qty.value=String(free);anyShort=true}

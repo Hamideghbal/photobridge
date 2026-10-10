@@ -10183,12 +10183,13 @@ async function equipmentRentalAvailability(db, args) {
     if (!rentalDays || rentalDays > 180) return { error: 'invalid_rental_dates' };
     const ids = wanted.map(x => x.itemId);
     const q = await db.query(`SELECT i.id,i.shop_id,i.title,i.category,i.brand,i.model,i.daily_price,i.deposit_amount,i.stock_total,i.active,i.deleted_at,s.name shop_name,s.active shop_active,
-      COALESCE((SELECT sum(bi.quantity)::int FROM equipment_rental_booking_items bi
+      (SELECT jsonb_agg(jsonb_build_object('date',to_char(d.day,'YYYY-MM-DD'),'reserved',COALESCE((SELECT sum(bi.quantity)::int FROM equipment_rental_booking_items bi
         JOIN equipment_rental_bookings b ON b.id=bi.booking_id
         WHERE bi.item_id=i.id AND b.status IN ('payment_pending','reserved','picked_up')
           AND ($5::uuid IS NULL OR b.id<>$5::uuid)
           AND NOT EXISTS (SELECT 1 FROM equipment_rental_accounting_entries rev WHERE rev.booking_id=b.id AND rev.entry_type='booking_reversal')
-          AND NOT (b.rental_end < $3::date OR b.rental_start > $4::date)),0)::int reserved_qty
+          AND b.rental_start<=d.day::date AND b.rental_end>=d.day::date),0)) ORDER BY d.day)
+        FROM generate_series($3::date::timestamp,$4::date::timestamp,interval '1 day') AS d(day)) reserved_days
       FROM equipment_rental_items i JOIN equipment_rental_shops s ON s.id=i.shop_id
       WHERE i.shop_id=$1 AND i.id=ANY($2::uuid[]) AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')`, [shopId, ids, startDate, endDate, excludeBookingId]);
     const byId = new Map(q.rows.map(r => [String(r.id), r]));
@@ -10200,21 +10201,41 @@ async function equipmentRentalAvailability(db, args) {
             rows.push({ itemId:w.itemId, title:'تجهیز حذف‌شده یا ناشناخته', requested:w.quantity, available:0, stockTotal:0, reserved:0, valid:false, reason:'not_found', shortage:w.quantity });
             available = false; continue;
         }
-        const base={ itemId:String(r.id), title:r.title || 'تجهیز', category:r.category||null, brand:r.brand||null, model:r.model||null, requested:w.quantity, stockTotal:Number(r.stock_total||0), reserved:Number(r.reserved_qty||0) };
+        const dailyAvailability=(r.reserved_days||[]).map(d=>{const reserved=Number(d.reserved||0),available=Math.max(0,Number(r.stock_total||0)-reserved);return {date:d.date,reserved,available,shortage:Math.max(0,w.quantity-available)}});
+        const base={ itemId:String(r.id), title:r.title || 'تجهیز', category:r.category||null, brand:r.brand||null, model:r.model||null, requested:w.quantity, stockTotal:Number(r.stock_total||0), reserved:Math.max(0,...dailyAvailability.map(d=>d.reserved)) };
         if (r.deleted_at) { rows.push({ ...base, available:0, valid:false, reason:'deleted', shortage:w.quantity }); available=false; continue; }
         if (!r.active) { rows.push({ ...base, available:0, valid:false, reason:'inactive', shortage:w.quantity }); available=false; continue; }
         if (!r.shop_active) { rows.push({ ...base, available:0, valid:false, reason:'shop_inactive', shortage:w.quantity }); available=false; continue; }
-        const free = Math.max(0, Number(r.stock_total || 0) - Number(r.reserved_qty || 0));
+        const free = Math.max(0, Number(r.stock_total || 0) - base.reserved);
         const subtotal = Math.max(0, Number(r.daily_price || 0)) * w.quantity * rentalDays;
         const deposit = Math.max(0, Number(r.deposit_amount || 0)) * w.quantity;
         const shortage=Math.max(0,w.quantity-free),reason=shortage>0?(free<=0?'out_of_stock':'insufficient_quantity'):null;
         if (shortage>0) available = false;
         totalAmount += subtotal; depositAmount += deposit;
-        rows.push({ ...base, available:free, dailyPrice:Number(r.daily_price||0), depositAmount:Number(r.deposit_amount||0), subtotal, valid:true, reason, shortage });
+        rows.push({ ...base, available:free, dailyAvailability, dailyPrice:Number(r.daily_price||0), depositAmount:Number(r.deposit_amount||0), subtotal, valid:true, reason, shortage });
     }
     if (rows.length !== wanted.length) available = false;
     const unavailableItems=rows.filter(x=>!x.valid || Number(x.available||0)<Number(x.requested||0));
     return { available, shopId, startDate, endDate, rentalDays, totalAmount, depositAmount, items:rows, unavailableItems };
+}
+// Keep the exact day/quantity snapshot in the existing transactional event log.
+// One shortage row per booking/item remains compatible with supply and handover.
+async function equipmentRentalSaveDailyShortage(db,{shopId,bookingId,row,actorId=null}) {
+    const days=(row.dailyAvailability||[]).filter(d=>d.shortage>0).map(d=>({date:d.date,quantity:d.shortage}));
+    if(!days.length)return;
+    const saved=await db.query(`INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,updated_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,'pending',now())
+      ON CONFLICT(booking_id,item_id) DO UPDATE SET shortage_qty=EXCLUDED.shortage_qty,rental_start=EXCLUDED.rental_start,rental_end=EXCLUDED.rental_end,status='pending',resolved_at=NULL,resolved_by=NULL,updated_at=now() RETURNING id`,
+      [crypto.randomUUID(),shopId,bookingId,row.itemId,Math.max(...days.map(d=>d.quantity)),days[0].date,days[days.length-1].date]);
+    await db.query(`INSERT INTO audit_log(actor_id,action,entity_type,entity_id,data) VALUES($1,'equipment_rental.shortage_dates','equipment_rental_booking_shortage',$2,$3::jsonb)`,
+      [actorId,saved.rows[0].id,JSON.stringify({shopId,bookingId,itemId:row.itemId,days})]);
+}
+async function equipmentRentalAttachShortageDates(db,rows) {
+    if(!rows.length)return;
+    const snapshots=await db.query(`SELECT DISTINCT ON (entity_id) entity_id,data->'days' days FROM audit_log
+      WHERE action='equipment_rental.shortage_dates' AND entity_type='equipment_rental_booking_shortage' AND entity_id=ANY($1::text[]) ORDER BY entity_id,id DESC`,[rows.map(row=>String(row.id))]);
+    const byId=new Map(snapshots.rows.map(row=>[row.entity_id,row.days]));
+    for(const row of rows)row.shortage_days=byId.get(String(row.id))||null;
 }
 async function equipmentRentalOverview() {
     await ensureEquipmentRentalV727Schema();
@@ -10356,6 +10377,7 @@ async function equipmentRentalShopOverview(shopId) {
     const saleItems = saleItemsQ.rows.map(equipmentItemPublic);
     const [catalog, salesWallet, walletCfg] = await Promise.all([equipmentRentalCatalogSnapshot(shopId), equipmentSaleWalletSnapshot(shopId), serviceWalletSettings()]);
     const inviteHistoryQ = await pool.query(`SELECT i.id,i.code,i.target_mobile,i.active,i.uses,i.max_uses,i.expires_at,i.created_at,i.updated_at,i.metadata,COALESCE(u.photographer_enabled,false) photographer_enabled,EXISTS(SELECT 1 FROM photographer_invite_redemptions rr WHERE rr.invite_id=i.id) accepted,COALESCE(pp.studio_name,u.name,i.metadata->>'targetName','عکاس') target_name,CASE WHEN COALESCE(i.metadata->>'createdFrom','')='rental_manual_office' THEN 'office' ELSE 'invite' END source FROM photographer_invites i LEFT JOIN LATERAL (SELECT ux.id,ux.name,ux.mobile,ux.photographer_enabled FROM users ux WHERE right(regexp_replace(coalesce(ux.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace(coalesce(i.target_mobile,''),'[^0-9]','','g'),10) ORDER BY ux.photographer_enabled DESC,ux.created_at LIMIT 1) u ON true LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE i.issuer_type='rental' AND i.issuer_rental_shop_id=$1 AND i.target_mobile IS NOT NULL ORDER BY i.created_at DESC LIMIT 100`, [shopId]).catch(()=>({rows:[]}));
+    await equipmentRentalAttachShortageDates(pool,shortagesQ.rows);
     const photographerRows=membersQ.rows.map(x=>({
       ...x,
       // Before activation, mobile is the only reliable identifier.  Show it
@@ -10495,10 +10517,7 @@ async function equipmentRentalCreateBooking(db, { shopId, photographerId = null,
     }
     if (allowShortage) {
         for (const row of (availability.items || []).filter((x) => Number(x.shortage || 0) > 0)) {
-            await db.query(`INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,updated_at)
-              VALUES($1,$2,$3,$4,$5,$6,$7,'pending',now())
-              ON CONFLICT(booking_id,item_id) DO UPDATE SET shortage_qty=EXCLUDED.shortage_qty,rental_start=EXCLUDED.rental_start,rental_end=EXCLUDED.rental_end,status='pending',resolved_at=NULL,resolved_by=NULL,updated_at=now()`,
-              [crypto.randomUUID(), shopId, id, row.itemId, Number(row.shortage || 0), startDate, endDate]);
+            await equipmentRentalSaveDailyShortage(db,{shopId,bookingId:id,row,actorId:createdBy});
         }
     }
     if (status === 'reserved' && photographerId) {
@@ -14708,6 +14727,7 @@ async function api(req, res, url) {
                   LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                   WHERE rs.shop_id=$1 ORDER BY (rs.resolved_at IS NULL) DESC,rs.detected_at DESC LIMIT 200`,[shop.id]).catch(()=>({rows:[]}))
             ]);
+            await equipmentRentalAttachShortageDates(pool,staffShortagesQ.rows);
             return sendJson(res,200,{staffMode:true,staffRole:'handover_staff',platformAdmin:a?.platformRole==='platform_admin',shop:{id:shop.id,name:shop.name,active:shop.active,active_until:shop.active_until},bookings:bq.rows,items:[],saleItems:[],saleOrders:[],photographers:[],collaborationRequests:[],catalog:{categories:[],models:[]},shortages:staffShortagesQ.rows,returnShortages:staffReturnShortagesQ.rows,subscription:{active:true,activeUntil:shop.active_until,plans:[],renewals:[]}});
         }
         const shop = await equipmentRentalCurrentShop(a);
@@ -15405,10 +15425,7 @@ async function api(req, res, url) {
                     if (availability.error || (availability.items||[]).some(x=>x.valid===false)) { await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'equipment_unavailable', availability }); }
                     const shortageRows=(availability.items||[]).filter(x=>Number(x.shortage||0)>0);
                     for(const row of shortageRows){
-                        await c.query(`INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,updated_at)
-                          VALUES($1,$2,$3,$4,$5,$6,$7,'pending',now())
-                          ON CONFLICT(booking_id,item_id) DO UPDATE SET shortage_qty=EXCLUDED.shortage_qty,rental_start=EXCLUDED.rental_start,rental_end=EXCLUDED.rental_end,status='pending',resolved_at=NULL,resolved_by=NULL,updated_at=now()`,
-                          [crypto.randomUUID(),shop.id,bookingId,row.itemId,Number(row.shortage||0),equipmentRentalDate(current.rental_start),equipmentRentalDate(current.rental_end)]);
+                        await equipmentRentalSaveDailyShortage(c,{shopId:shop.id,bookingId,row,actorId:a.userId});
                     }
                     const prepaid=String(current.settlement_mode||'ledger')==='prepaid';nextStatus=prepaid?'payment_pending':'reserved';
                     const uq = await c.query(`UPDATE equipment_rental_bookings SET status=$4,payment_status=CASE WHEN $4='payment_pending' THEN 'awaiting_payment' ELSE 'not_required' END,approved_at=COALESCE(approved_at,now()),approved_by=COALESCE(approved_by,$3),rental_alert_acknowledged_at=COALESCE(rental_alert_acknowledged_at,now()),rental_alert_acknowledged_by=COALESCE(rental_alert_acknowledged_by,$3),updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`, [bookingId, shop.id, a.userId,nextStatus]);

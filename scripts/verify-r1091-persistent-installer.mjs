@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const file='PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe';
+const out=path.join(root,'dist','web','downloads','store-desktop',file);
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'dist','installer-source','store-r1089','manifest.json'),'utf8'));
+const stat=fs.statSync(out);
+assert.equal(stat.size,manifest.size,'EXE must be complete, not a stub');
+const sha=crypto.createHash('sha256');
+for await(const chunk of fs.createReadStream(out))sha.update(chunk);
+assert.equal(sha.digest('hex'),manifest.sha256,'EXE matches the Windows CI setup');
+const js=fs.readFileSync(path.join(root,'dist','web','photobridge-store-desktop-install-r60.js'),'utf8');
+assert(js.includes('/downloads/store-desktop/'+file),'the store settings must use first-party downloads');
+assert(!js.includes('actions/runs/38084340638/artifacts'),'temporary GitHub artifact link must not be exposed');
+const docker=fs.readFileSync(path.join(root,'.dockerignore'),'utf8');
+assert(docker.includes('!dist/**'),'all versioned installer chunks must enter the Docker build');
+console.log('PASS: durable installer',stat.size,'bytes, served from',file,'across image rebuilds');

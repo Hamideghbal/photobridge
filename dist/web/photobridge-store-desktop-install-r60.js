@@ -1,18 +1,18 @@
 (()=>{
  if(location.hostname==='127.0.0.1')return;
  let busy=false;
- const candidateUrl='https://github.com/Hamideghbal/photobridge/actions/runs/38084340638/artifacts/11681820634';
+ const candidateUrl='/downloads/store-desktop/PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe';
  function candidate(target){
   if(document.getElementById('pbStoreDesktopCandidate'))return;
   const box=document.createElement('section');box.id='pbStoreDesktopCandidate';box.className='panel';
   box.style.cssText='display:block;box-sizing:border-box;max-width:100%;margin:14px 0;padding:16px;border:1px solid #d0d5dd;border-radius:12px;direction:rtl;overflow-wrap:anywhere';
   const title=document.createElement('h3');title.textContent='نسخه آزمایشی برنامه ویندوز فروشگاه · ۱.۰.۳ (R1089)';
   const text=document.createElement('p');
-  text.textContent='این نسخه با رابط فعلی سایت بسته‌بندی شده و اصلاحات چاپ مستقیم تعهدنامه و جداسازی حساب‌ها را دارد. نصاب آزمایشی و بدون امضای دیجیتال است؛ قبل از جایگزینی نسخه فعلی، از داده‌های برنامه نسخه پشتیبان داشته باشید.';
+  text.textContent='این نصاب دارای رابط فروشگاه در زمان ساخت و اصلاحات چاپ تعهدنامه و تفکیک حساب‌های فروشگاه است. حجم تقریبی ۱۲۸ مگابایت؛ دانلود از خود سرور انجام می‌شود. نسخه آزمایشی و بدون امضای دیجیتال است.';
   text.style.cssText='font-size:12px;line-height:1.9;color:#667085';
-  const link=document.createElement('a');link.className='btn secondary';link.textContent='دریافت نصاب آزمایشی ویندوز (GitHub)';
-  link.href=candidateUrl;link.target='_blank';link.rel='noopener noreferrer';
-  const note=document.createElement('small');note.textContent='در گیت‌هاب وارد حساب خود شوید، فایل Artifacts را دریافت و از ZIP خارج کنید. اعتبار لینک تا ۲ آبان ۱۴۰۵ است. این نسخه هنوز جایگزین دانلود رسمی نشده است.';
+  const link=document.createElement('a');link.className='btn secondary';link.textContent='دانلود مستقیم برنامه ویندوز ۱.۰.۳ از فوتوبریج';
+  link.href=candidateUrl;link.setAttribute('download','PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe');
+  const note=document.createElement('small');note.textContent='دانلود مستقیم از سرور فوتوبریج، بدون نیاز به گیت‌هاب. این فایل در بسته انتشار نگهداری می‌شود و با دیپلوی بعدی حذف نخواهد شد. نسخه آزمایشی و بدون امضای دیجیتال است؛ قبل از نصب از اطلاعات محلی نسخه پشتیبان تهیه کنید.';
   note.style.cssText='display:block;margin-top:9px;font-size:11px;line-height:1.9;color:#667085';
   box.append(title,text,link,note);target.appendChild(box);
  }

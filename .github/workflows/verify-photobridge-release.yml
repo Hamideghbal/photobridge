@@ -37,6 +37,11 @@ jobs:
           node --test scripts/test-r1087-commitment-autoprint.cjs
       - name: Check candidate download settings JavaScript
         run: node --check dist/web/photobridge-store-desktop-install-r60.js
+      - name: Verify first-party persistent Windows installer
+        run: |
+          node --check scripts/reassemble-r1091-store-installer.mjs
+          node --check dist/web/photobridge-store-desktop-install-r60.js
+          node scripts/verify-r1091-persistent-installer.mjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

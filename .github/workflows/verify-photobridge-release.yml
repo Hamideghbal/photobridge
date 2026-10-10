@@ -31,6 +31,10 @@ jobs:
           node --check dist/web/photobridge-r100f90-entity-discount-activation.js
       - name: Run production build
         run: npm run build
+      - name: Verify cross-device automatic commitment print receiver
+        run: |
+          node --check dist/web/photobridge-r1087-commitment-autoprint.js
+          node --test scripts/test-r1087-commitment-autoprint.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

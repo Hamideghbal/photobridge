@@ -12010,9 +12010,12 @@ async function api(req, res, url) {
             }).catch(()=>({rows:[]}));
             const mergedRows=[...(profileQ.rows||[]),...(uq.rows||[])],seenIds=new Set(),rows=[];
             for(const r of mergedRows){const id=String(r.id||'');if(!id||seenIds.has(id))continue;seenIds.add(id);rows.push(r)}
-            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+            // A store-side pre-registration alone is not a PhotoBridge
+            // photographer account.  Keep the full signup form (address,
+            // map location and birth date) for that mobile until activation.
+            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
             const existing = photographerRows[0] || rows.find(r=>r.active) || null;
-            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists) ? existing : null;
+            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists) ? existing : null;
             // R96: identity fields can be split across legacy rows that share one mobile.
             // Prefer the selected photographer row, but fill blank studio/province/city/address
             // from any other matching photographer profile instead of showing empty cards.
@@ -12138,10 +12141,10 @@ async function api(req, res, url) {
                 query_timeout: 2500
             }).catch(() => ({ rows: [] }));
             if (exactIdentity.rows.length) {
-                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
                 const activeRows = exactIdentity.rows.filter(r => Boolean(r.active));
                 existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists), duplicateMobileResolved: exactIdentity.rows.length > 1 };
+                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: exactIdentity.rows.length > 1 };
             }
             if (!existing) {
                 const fallback = await pool.query({
@@ -12157,10 +12160,10 @@ async function api(req, res, url) {
                     query_timeout: 1800
                 }).catch(() => ({ rows: [] }));
                 if (fallback.rows.length) {
-                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
                     const activeRows = fallback.rows.filter(r => Boolean(r.active));
                     existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists), duplicateMobileResolved: fallback.rows.length > 1 };
+                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: fallback.rows.length > 1 };
                 }
             }
             const existingPhotographer = existing?.existingPhotographer ? existing : null;

@@ -1468,7 +1468,8 @@ function showApp(){window.__PB_RENTAL_PORTAL_AUTH_READY__=true;$('#loginView').c
 async function load(opts={}){
   try{data=await api('/api/rental/overview')}catch(e){window.__PB_RENTAL_PORTAL_AUTH_READY__=false;if(e.status===401){showLogin();return false}console.error('[PhotoBridge rental] overview load failed',e);showLogin();message('#loginMsg','دریافت اطلاعات پنل از سرور انجام نشد. دوباره تلاش کنید.');return false}
   if(data?.staffMode){document.body.classList.add('pbR100F9StaffMode');showApp();pbR100F9RenderStaffPortal();return true}else document.body.classList.remove('pbR100F9StaffMode');
-  try{await pbLoadReachLocations()}catch(e){console.warn('[PhotoBridge rental] reach locations skipped',e)}
+  // Load optional province/city catalogue after opening the portal, without blocking mobile entry.
+  try{void pbLoadReachLocations().catch(e=>console.warn('[PhotoBridge rental] reach locations skipped',e))}catch(e){console.warn('[PhotoBridge rental] reach locations skipped',e)}
   showApp();
   try{render()}catch(e){console.error('[PhotoBridge rental] render failed',e)}
   try{pbR100F9InitStaffSettings()}catch(e){console.warn('[PhotoBridge rental] handover staff settings skipped',e)}
@@ -1812,7 +1813,7 @@ $('#smsTopupBtn').addEventListener('click',async()=>{message('#smsTopupMsg','');
 $('#accountingForm').addEventListener('submit',async e=>{e.preventDefault();message('#accountingMsg','');const f=e.currentTarget,amount=moneyRaw(f.amount.value);let entryDate='';if(f.entryDate.value){entryDate=jalaliInputToIso(f.entryDate.value);if(!entryDate)return message('#accountingMsg','تاریخ حسابداری را از تقویم شمسی انتخاب کن.')}try{await api('/api/rental/accounting/entries',{method:'POST',body:JSON.stringify({photographerId:f.photographerId.value,kind:f.kind.value,amount,entryDate,note:f.note.value})});message('#accountingMsg','سند حسابداری ثبت شد.',true);f.amount.value='';f.note.value='';await loadAccounting();await load()}catch(x){message('#accountingMsg',x.error==='accounting_photographer_required'?'عکاس را انتخاب کن.':x.error==='accounting_amount_required'?'مبلغ را وارد کن.':'ثبت سند حسابداری انجام نشد.')}});
 $('#rentalActivationRequestBtn')?.addEventListener('click',async()=>{const box=$('#rentalActivationBox'),btn=$('#rentalActivationRequestBtn');message('#rentalActivationMsg','');if(box?.dataset.activationReady!=='1'){const missing=box?.dataset.activationMissing||'اطلاعات و قیمت‌های فروشگاه';message('#rentalActivationMsg','قبل از ارسال درخواست، '+missing+' را تکمیل کنید.');return}btn.disabled=true;const old=btn.textContent;btn.textContent='در حال ارسال…';try{await api('/api/rental/activation-request',{method:'POST',body:'{}'});message('#rentalActivationMsg','درخواست فعال‌سازی با موفقیت ارسال شد.',true);await load({reloadExtra:false})}catch(x){const code=String(x?.error||'');message('#rentalActivationMsg',(code==='already_activated'||code==='already_activated_once')?'این فروشگاه قبلاً تأیید شده است؛ غیرفعال‌کردن توسط ادمین نیاز به درخواست فعال‌سازی مجدد ندارد.':code==='activation_location_required'?'ابتدا لوکیشن دقیق فروشگاه را در تنظیمات ثبت کنید.':code==='activation_pricing_required'?'حداقل یک کالای فعال با قیمت اجاره یا فروش ثبت کنید.':code==='rental_auth_required'?'نشست ورود فروشگاه پایان یافته؛ یک‌بار دوباره وارد شوید.':'ارسال درخواست فعال‌سازی انجام نشد. لطفاً اطلاعات فروشگاه و قیمت کالا را بررسی کنید.')}finally{btn.disabled=false;if(!btn.hidden)btn.textContent=old}});
 $('#shopForm').addEventListener('submit',async e=>{e.preventDefault();message('#shopMsg','');const f=e.currentTarget;if(f.elements.locationLat?.value&&!String(f.elements.locationAddress?.value||'').trim())f.elements.locationAddress.value=String(f.elements.address?.value||'').trim();const body=Object.fromEntries(new FormData(f));body.salesWalletCheckoutEnabled=Boolean(f.elements.salesWalletCheckoutEnabled?.checked);body.birthdayDiscountEnabled=Boolean(f.elements.birthdayDiscountEnabled?.checked);body.birthdayDiscountPercent=Number(f.elements.birthdayDiscountPercent?.value||0);body.birthdayDiscountDaysBefore=Number(f.elements.birthdayDiscountDaysBefore?.value||0);body.birthdayDiscountDaysAfter=Number(f.elements.birthdayDiscountDaysAfter?.value||0);body.birthdaySmsEnabled=Boolean(f.elements.birthdaySmsEnabled?.checked);body.rentalEnabled=Boolean(f.elements.rentalEnabled?.checked);body.saleEnabled=Boolean(f.elements.saleEnabled?.checked);for(const channel of ['rental','sale']){const key=channel+'Reach';body[key]={mode:f.elements[key+'Mode'].value,provinces:[...f.elements[key+'Provinces'].selectedOptions].map(o=>o.value),cities:[...f.elements[key+'Cities'].selectedOptions].map(o=>o.value)}}body.saleBirthdayDiscountEnabled=Boolean(f.elements.saleBirthdayDiscountEnabled?.checked);body.saleBirthdayDiscountPercent=Number(f.elements.saleBirthdayDiscountPercent?.value||0);body.saleBirthdayDaysBefore=Number(f.elements.saleBirthdayDaysBefore?.value||0);body.saleBirthdayDaysAfter=Number(f.elements.saleBirthdayDaysAfter?.value||0);body.saleBirthdaySmsEnabled=Boolean(f.elements.saleBirthdaySmsEnabled?.checked);try{await api('/api/rental/shop',{method:'PATCH',body:JSON.stringify(body)});message('#shopMsg','مشخصات و لوکیشن ذخیره شد.',true);await load({reloadExtra:false});selectRentalTab('settings',{push:false})}catch(x){message('#shopMsg',x.error==='invalid_map_location'?'لوکیشن انتخاب‌شده معتبر نیست.':'ذخیره مشخصات انجام نشد.')}});
-(async()=>{setBookingPhotographerMode('existing');let me=null;try{me=await api('/api/auth/me',{headers:{'x-photobridge-portal':'rental'}})}catch(e){me=null}if(!me?.user||!me?.rentalShop){showLogin();return}window.__pbRentalAccount=me;try{window.__pbRentalProfileImage=(await api('/api/rental/profile-image')).imageData||''}catch{}await load();const q=new URLSearchParams(location.search),wp=q.get('walletPayment'),walletKind=q.get('walletKind');if(wp&&walletKind==='sms'){selectRentalTab('sms');await loadSmsSettings();message('#smsTopupMsg',wp==='success'?'شارژ پنل پیامکی با موفقیت انجام شد.':wp==='failed'?'پرداخت ناموفق بود؛ اعتبار تغییر نکرد.':'نتیجه پرداخت قابل تأیید نبود. ',wp==='success');q.delete('walletPayment');q.delete('walletKind');const qs=q.toString();history.replaceState({},'',location.pathname+(qs?'?'+qs:'')+location.hash)}})();
+(async()=>{setBookingPhotographerMode('existing');let me=null;try{me=await api('/api/auth/me',{headers:{'x-photobridge-portal':'rental'}})}catch(e){me=null}if(!me?.user||!me?.rentalShop){showLogin();return}window.__pbRentalAccount=me;const portalLoaded=await load();if(portalLoaded)void api('/api/rental/profile-image').then(out=>{window.__pbRentalProfileImage=out?.imageData||'';window.pbR100F60RenderAccountHeader?.()}).catch(()=>{});const q=new URLSearchParams(location.search),wp=q.get('walletPayment'),walletKind=q.get('walletKind');if(wp&&walletKind==='sms'){selectRentalTab('sms');await loadSmsSettings();message('#smsTopupMsg',wp==='success'?'شارژ پنل پیامکی با موفقیت انجام شد.':wp==='failed'?'پرداخت ناموفق بود؛ اعتبار تغییر نکرد.':'نتیجه پرداخت قابل تأیید نبود. ',wp==='success');q.delete('walletPayment');q.delete('walletKind');const qs=q.toString();history.replaceState({},'',location.pathname+(qs?'?'+qs:'')+location.hash)}})();
 </script><script defer="" src="/photobridge-maintenance-watch-v636.js?v=636"></script><script>
 (function(){
   let pb845SubtabRenderToken=0;
@@ -4181,7 +4182,10 @@ html,body{max-width:100%;overflow-x:hidden}
     const cal=q('[data-pb843-office-tab="calendar"]',tabs);if(cal){
       // Preserve possible count span if added later; only normalize the label once.
       const count=cal.querySelector('.pb854TabCount');cal.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.remove()});
-      if(!cal.querySelector('.pb898OfficeLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
+      // The mobile rail owns its text through .pb905rOfficeTabLabel. Never insert a
+      // second legacy label: the mobile MutationObserver would remove it, then
+      // this observer would re-add it forever and stall low-end Android devices.
+      if(!cal.querySelector('.pb898OfficeLabel, .pb905rOfficeTabLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
     }
     const pane=q('#bookings>[data-pb843-office-pane="manual"]');if(pane)pane.setAttribute('aria-hidden','true');
     const title=q('#pb843CalendarTitle');if(title&&/تقویم\s*آفیش/.test(title.textContent||''))title.textContent='آفیش';
@@ -4848,6 +4852,10 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
     const tabs=q('#pb848BookingHeaderTabs');if(!tabs)return;
     qa('[data-pb843-office-tab]',tabs).forEach(btn=>{
       const key=btn.dataset.pb843OfficeTab;const wanted=officeLabels[key];if(!wanted)return;
+      // The newer mobile rail owns this label. Do not replace it from the
+      // legacy rail observer: competing observers would rebuild it endlessly.
+      const mobileLabel=btn.querySelector('.pb905rOfficeTabLabel');
+      if(matchMedia('(max-width:850px)').matches&&mobileLabel?.textContent===wanted)return;
       const count=q('.pb854TabCount',btn);
       const labels=qa('.pb898OfficeLabel,.pb900OfficeTabLabel,.pb903OfficeTabLabel',btn);
       const current=labels.find(x=>x.classList.contains('pb903OfficeTabLabel'));
@@ -8748,7 +8756,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
 <link rel="stylesheet" href="/photobridge-r100f89-auth-fit.css?v=r100f89">
 <script src="/photobridge-r100f89-staff-desktop-calendar.js?v=r100f89"></script>
 <!-- R100F90: compact desktop handover parity + stable mobile rental login. -->
-<script src="/photobridge-r100f91-manager-office-calendar.js?v=r100f91-r1045"></script>
+<script src="/photobridge-r100f91-manager-office-calendar.js?v=r1053-inline-office-pdf-mobile-login"></script>
 
 <style id="pb1010StoreHandoverCalendarLayout">
 @media(min-width:851px){
@@ -10092,7 +10100,11 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
       if(count)button.append(count);
     }
   }
-  const schedule=()=>requestAnimationFrame(normalize);
+  // Batch rapid rail mutations into one frame; legacy modules may update the
+  // counts together, and rebuilding the same labels repeatedly is expensive
+  // for lower-end mobile browsers.
+  let pendingFrame=0;
+  const schedule=()=>{if(pendingFrame)return;pendingFrame=requestAnimationFrame(()=>{pendingFrame=0;normalize()})};
   normalize();
   const rail=document.getElementById('pb848BookingHeaderTabs');
   if(rail)new MutationObserver(schedule).observe(rail,{childList:true,subtree:true});
@@ -10133,6 +10145,72 @@ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display
  new MutationObserver(sync).observe(nav,{childList:true});
  window.pbR1050SyncHeaderChannels=sync;
  sync();document.addEventListener('DOMContentLoaded',sync,{once:true});
+})();
+</script>
+
+<style id="pbR1053MobileLoginUsability">
+@media(max-width:850px){
+ html body:not(.rentalAppReady) #loginView.rentalLoginOverlay{height:100dvh!important;max-height:100dvh!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;align-items:center!important;box-sizing:border-box!important}
+ html body:not(.rentalAppReady) #loginView .unifiedLoginShell{max-width:100%!important;min-width:0!important}
+ html body:not(.rentalAppReady) #loginView .unifiedLoginCard{max-height:calc(100dvh - 32px)!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+ html body:not(.rentalAppReady) #loginView input{font-size:16px!important}
+}
+</style>
+
+<!-- R1054: isolate the mobile rental-login form from the app's other fixed/stacked panels. -->
+<style id="pbR1054RentalMobileAuthTouchStyles">
+@media(max-width:850px){
+  html body:not(.rentalAppReady) #loginView:not(.hidden){
+    position:fixed!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+    z-index:2147483647!important;display:flex!important;flex-direction:column!important;
+    align-items:center!important;justify-content:center!important;
+    width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;min-height:0!important;
+    margin:0!important;padding:12px!important;box-sizing:border-box!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    pointer-events:auto!important;touch-action:pan-y!important;
+    -webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden)>.authShell{
+    position:relative!important;z-index:1!important;width:min(430px,100%)!important;
+    min-width:0!important;max-width:100%!important;margin:auto!important;
+    pointer-events:auto!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) .unifiedLoginCard:not(.hidden){
+    position:relative!important;z-index:2!important;pointer-events:auto!important;
+    width:100%!important;max-width:100%!important;min-height:0!important;
+    max-height:none!important;overflow:visible!important;
+    margin:0!important;box-sizing:border-box!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) input,
+  html body:not(.rentalAppReady) #loginView:not(.hidden) button,
+  html body:not(.rentalAppReady) #loginView:not(.hidden) a{
+    pointer-events:auto!important;touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) input{
+    position:relative!important;z-index:3!important;
+    display:block!important;opacity:1!important;visibility:visible!important;
+    -webkit-user-select:text!important;user-select:text!important;
+    font-size:16px!important;min-height:44px!important;
+  }
+}
+</style>
+<script id="pbR1054RentalMobileAuthTouchRuntime">
+(()=>{
+  'use strict';
+  if(window.__PB_R1054_RENTAL_LOGIN_TOUCH__)return;
+  window.__PB_R1054_RENTAL_LOGIN_TOUCH__=true;
+  // The login modal was a fixed-position child of the large, layered application
+  // workspace. Portal it to the document root so mobile hit-testing and keyboard
+  // focus cannot be captured by a sibling workspace or ancestor stacking context.
+  const mount=()=>{
+    const login=document.getElementById('loginView');
+    if(!login||!document.body)return;
+    if(login.parentElement!==document.body)document.body.appendChild(login);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
+  else mount();
+  window.addEventListener('pageshow',mount,{passive:true});
 })();
 </script>
 </body></html>

@@ -3,6 +3,7 @@ name: Verify PhotoBridge release
 on:
   push:
     branches:
+      - main
       - feature/admin-entity-subscription-discounts-counts-20261010
   pull_request:
     branches:

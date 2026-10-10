@@ -95,16 +95,38 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
    await page.evaluate(()=>{const host=document.createElement('div');host.id='sharedActionFixture';host.innerHTML=pbR100F86Card(data.bookings.find(b=>b.id==='state-1'),'in','','',{manager:true});document.body.append(host)});
    await page.waitForSelector('#sharedActionFixture .pbOfficeExtendButton');
    const stacked=await page.locator('#sharedActionFixture .pbR100F86ActionButtons>button').evaluateAll(bs=>bs.map(b=>({label:b.textContent,rect:b.getBoundingClientRect().toJSON()})));
-   assert.deepEqual(stacked.map(b=>b.label),['ثبت دریافت تجهیزات','تمدید آفیش']);assert(stacked[1].rect.y>=stacked[0].rect.bottom+4);assert.equal(stacked[0].rect.x,stacked[1].rect.x);assert.equal(stacked[0].rect.width,stacked[1].rect.width);if(viewport.width<851){assert.equal(stacked[0].rect.height,44);assert.equal(stacked[1].rect.height,44);}
+   assert.deepEqual(stacked.map(b=>b.label),['دریافت تجهیزات از مشتری','تمدید آفیش']);assert(stacked[1].rect.y>=stacked[0].rect.bottom+4);assert.equal(stacked[0].rect.x,stacked[1].rect.x);assert.equal(stacked[0].rect.width,stacked[1].rect.width);if(viewport.width<851){assert.equal(stacked[0].rect.height,44);assert.equal(stacked[1].rect.height,44);}
 
    assert.equal(await page.locator('#state-2 .pbOfficeExtendButton,#state-3 .pbOfficeExtendButton').count(),0);
    if(viewport.width<851){
     await page.evaluate(()=>{const host=document.createElement('div');host.id='sharedEditFixture';host.innerHTML=pbR100F86Card(data.bookings.find(b=>b.id==='state-0'),'out','','',{manager:true});document.body.append(host)});
     await page.waitForSelector('#sharedEditFixture .pbOfficeExtendButton');
     const editActions=await page.locator('#sharedEditFixture .pbR100F86ActionButtons>button').evaluateAll(bs=>bs.map(b=>({label:b.textContent,rect:b.getBoundingClientRect().toJSON()})));
-    assert.deepEqual(editActions.map(b=>b.label),['ثبت تحویل تجهیزات','لغو آفیش','ویرایش آفیش']);
+    assert.deepEqual(editActions.map(b=>b.label),['تحویل تجهیزات به مشتری','لغو آفیش','ویرایش آفیش']);
     assert(editActions.every(b=>b.rect.height===44&&b.rect.width===editActions[0].rect.width));assert(editActions[2].rect.y>=editActions[1].rect.bottom+4);
    }
+   // Both desktop day actions and mobile shared cards distinguish early receiving.
+   await page.evaluate(()=>{data.bookings.find(b=>b.id==='state-1').rental_end='2030-10-15';window.pbR1080StableOfficeRows(data.bookings)});
+   overviewBookings=await page.evaluate(()=>data.bookings);
+   if(viewport.width>850){
+    await page.evaluate(()=>window.pb904r2RenderDayPanel('2030-10-14'));
+    await page.waitForFunction(()=>document.querySelector('#pb904r2DayPanelBody [data-office-action=returned]')?.textContent==='دریافت زودهنگام تجهیزات');
+    await page.evaluate(()=>window.pb904r2RenderDayPanel('2030-10-15'));
+    await page.waitForFunction(()=>document.querySelector('#pb904r2DayPanelBody [data-office-action=returned]')?.textContent==='دریافت تجهیزات از مشتری');
+    await page.evaluate(()=>window.pb904r2RenderDayPanel('2030-10-13'));
+    const before=await page.locator('#pb904r2DayPanelBody .pbR1052DayActions').evaluateAll(rows=>rows.map(r=>r.dataset.officeBookingId));
+    await page.evaluate(()=>{data.bookings.find(b=>b.id==='state-1').status='returned';data.bookings.reverse();window.pb904r2RenderDayPanel('2030-10-13')});
+    await page.waitForFunction(()=>document.querySelectorAll('#pb904r2DayPanelBody .pbR1052DayActions').length===3);
+    assert.deepEqual(await page.locator('#pb904r2DayPanelBody .pbR1052DayActions').evaluateAll(rows=>rows.map(r=>r.dataset.officeBookingId)),before);
+    await page.evaluate(()=>{data.bookings.find(b=>b.id==='state-1').status='picked_up'});
+   }else{
+    const labels=await page.evaluate(()=>{const b=data.bookings.find(b=>b.id==='state-1');return ['2030-10-13','2030-10-14','2030-10-15'].map(day=>{const box=document.createElement('div');box.innerHTML=pbR100F86Card(b,'in','','',{manager:true,day});return box.querySelector('.receiving').textContent})});
+    assert.deepEqual(labels,['دریافت زودهنگام تجهیزات','دریافت زودهنگام تجهیزات','دریافت تجهیزات از مشتری']);
+    const before=await page.evaluate(()=>pbR1080StableOfficeRows(data.bookings).map(b=>b.id));
+    await page.evaluate(()=>{data.bookings.find(b=>b.id==='state-1').status='returned';data.bookings.reverse()});
+    assert.deepEqual(await page.evaluate(()=>pbR1080StableOfficeRows(data.bookings).map(b=>b.id)),before);
+   }
+   overviewBookings=await page.evaluate(()=>data.bookings);
    await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="lens"]').waitFor();
    assert.equal(await page.locator('[data-edit-item="camera"]').count(),0);assert.equal(await page.locator('[name=equipmentSearch]').count(),0);
    const startBox=await page.locator('#pbOfficeExtension input[name=startDate]').boundingBox(),endBox=await page.locator('#pbOfficeExtension input[name=endDate]').boundingBox();assert.equal(startBox.y,endBox.y);assert(startBox.x!==endBox.x);

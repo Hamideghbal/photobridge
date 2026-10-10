@@ -21,6 +21,7 @@ test('requests precede Office, mobile day strip stays readable and registration 
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f74-staff-ui.js')});
   await page.evaluate(()=>{pbR100F9RenderStaffPortal();pbR100F89PickStaffDay('2030-10-12')});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
+  await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f89-staff-desktop-calendar.js')});
   await page.evaluate(()=>{const tabs=document.querySelector('.pbR100F9StaffTabs');const stale=document.createElement('button');stale.dataset.staffMode='in';stale.textContent='دریافت';tabs.append(stale);pbR1073PaintMobileOffice()});
   assert.deepEqual(await page.locator('.pbR100F9StaffTabs button').allTextContents(),['آفیش','کسری دریافت']);
   if(viewport.width<851){
@@ -33,8 +34,8 @@ test('requests precede Office, mobile day strip stays readable and registration 
   await page.evaluate(()=>{const stale=document.createElement('button');stale.className='pbOfficeExtendButton';document.getElementById('pbR100F9StaffList').append(stale)});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1059-office-extension.js')});
   await page.waitForFunction(()=>!document.querySelector('.pbOfficeExtendButton'));
-  assert.equal(await page.locator('[data-booking="reserved"]').textContent(),'ثبت تحویل تجهیزات');
-  assert.equal(await page.locator('[data-booking="out"]').textContent(),'ثبت دریافت تجهیزات');
+  assert.equal(await page.locator('[data-booking="reserved"]').textContent(),'تحویل تجهیزات به مشتری');
+  assert.equal(await page.locator('[data-booking="out"]').textContent(),'دریافت زودهنگام تجهیزات');
   await page.locator('[data-booking="reserved"]').dispatchEvent('click');await page.waitForFunction(()=>actions.length===1);
   await page.locator('[data-booking="out"]').dispatchEvent('click');await page.waitForFunction(()=>actions.length===2);
   assert.deepEqual(await page.evaluate(()=>actions),[['reserved','picked_up'],['out','returned']]);
@@ -48,6 +49,14 @@ test('requests precede Office, mobile day strip stays readable and registration 
   assert.equal(await page.locator('[data-pb915-booking-id="returned"]').count(),1);
   assert.match(await page.locator('[data-pb915-booking-id="returned"] .pbR100F9StaffState').textContent(),/دریافت شده/);
   assert.equal(await page.locator('[data-booking="out"]').count(),1);
+  assert.equal(await page.locator('[data-booking="out"]').textContent(),'دریافت تجهیزات از مشتری');
+  const colors=await page.evaluate(()=>[...document.querySelectorAll('[data-booking="reserved"],[data-booking="out"]')].map(b=>getComputedStyle(b).backgroundColor));assert.equal(colors.length,2);assert.notEqual(colors[0],colors[1]);
+  const priorOrder=await page.locator('#pbR100F9StaffList>[data-pb915-booking-id]').evaluateAll(cards=>cards.map(c=>c.dataset.pb915BookingId));
+  await page.evaluate(()=>{data.bookings.find(b=>b.id==='out').status='returned';data.bookings.reverse();pbR100F9PaintStaffList()});
+  assert.deepEqual(await page.locator('#pbR100F9StaffList>[data-pb915-booking-id]').evaluateAll(cards=>cards.map(c=>c.dataset.pb915BookingId)),priorOrder);
+  if(viewport.width>850)assert.equal(await page.locator('[data-pb89-day="2030-10-13"] small').textContent(),'۳ آفیش');
+  assert.equal(await page.evaluate(()=>pbR100F89ActiveStaffDay),'2030-10-14');assert.match(await page.locator('[data-pb915-booking-id="out"] .pbR100F9StaffState').textContent(),/دریافت شده/);
+
   await page.setContent(`<head>${styles}</head><body class="rentalAppReady pb899MainBookings"><section id="bookings" class="active"><div id="rentalHeaderFilterHost"><div id="pb848BookingHeaderTabs">${['calendar','approved','out'].map(k=>`<button data-pb843-office-tab="${k}">${k}</button>`).join('')}</div></div><div id="calendarHost"></div></section></body>`);
   await page.addScriptTag({content:`const jalaliWeekdays=['ش','ی','د','س','چ','پ','ج'];${initialCalendar};document.getElementById('calendarHost').append(calendar);`});
   assert.equal(await page.locator('[data-pb843-office-tab="calendar"]').evaluate(x=>getComputedStyle(x).display==='none'),false);
@@ -91,7 +100,7 @@ test('requests precede Office, mobile day strip stays readable and registration 
    await page.locator('[data-office-day="2030-10-13"]').click();
    assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="first"]').count(),0);
    assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="second"]').count(),1);
-   assert.match(await page.locator('#pbR1073OfficeRows').textContent(),/ثبت دریافت تجهیزات/);
+   assert.match(await page.locator('#pbR1073OfficeRows').textContent(),/دریافت زودهنگام تجهیزات/);
    await page.evaluate(()=>pbR1073PaintMobileOffice());assert.equal(await page.locator('[data-office-day="2030-10-13"]').getAttribute('class').then(x=>x.includes('active')),true);
    await page.locator('#pbR1073Register').click();await page.waitForSelector('#pbR1076Registration');
    await page.locator('[data-register-day="2030-10-12"]').click();

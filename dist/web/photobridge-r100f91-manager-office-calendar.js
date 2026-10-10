@@ -230,8 +230,8 @@
  const htmlEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const controls=b=>{
    const s=String(b?.status||'');
-   if(s==='reserved')return [['picked_up','تحویل به مشتری'],['cancelled','حذف آفیش']];
-   if(s==='picked_up')return [['returned','دریافت تجهیزات از مشتری'],['invoice','فاکتور'],['commitment','تعهدنامه']];
+   if(s==='reserved')return [['picked_up','تحویل تجهیزات به مشتری'],['cancelled','حذف آفیش']];
+   if(s==='picked_up')return [['returned',window.pbR1080ReceiveLabel?.(b,selectedIso||window.pb904r2SelectedDay||q('#pb843CalendarGrid .pb904r2SelectedDay')?.dataset.pb843CalDay)||'دریافت تجهیزات از مشتری'],['invoice','فاکتور'],['commitment','تعهدنامه']];
    if(s==='returned')return [['invoice','فاکتور'],['commitment','تعهدنامه']];
    return [];
  };
@@ -296,7 +296,7 @@
      for(const wrap of desk.querySelectorAll('.pbR1052DayGroup')){
        const card=wrap.querySelector('[data-pb904r5-booking-id]'),b=card&&statusRow(card.dataset.pb904r5BookingId),existing=wrap.querySelector('.pbR1052DayActions');
        if(!b)continue;
-       const signature=controls(b).map(x=>x[0]).join('|');
+       const signature=controls(b).map(x=>x.join(':')).join('|');
        if(existing?.dataset.actionsSignature!==signature){const actions=makeActions(b);actions.dataset.actionsSignature=signature;existing?.replaceWith(actions);if(!existing)wrap.append(actions)}
      }
    }
@@ -306,7 +306,7 @@
      const rows=rowsForDay(day),cards=[...mobile.querySelectorAll(':scope > .pb843BookingDetailCard')];
      cards.forEach((card,i)=>{
        const b=rows[i];if(!b)return;
-       const signature=String(b.id)+'|'+controls(b).map(x=>x[0]).join('|');
+       const signature=String(b.id)+'|'+controls(b).map(x=>x.join(':')).join('|');
        if(card.dataset.pbR1052Actions===signature)return;
        card.querySelector('.pbR1052DayActions')?.remove();
        card.classList.add('pbR1053CalendarCard');card.append(makeActions(b));card.dataset.pbR1052Actions=signature;

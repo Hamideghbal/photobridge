@@ -17,7 +17,7 @@
     if(mode==='out'){
       if(!['reserved','picked_up','returned'].includes(String(b.status||'')))return false;
       const start=String(b.rental_start||'').slice(0,10),end=String(b.rental_end||'').slice(0,10);
-      return b.status==='picked_up'&&valid(start)&&valid(end)&&end>=start?start<=day&&end>=day:start===day;
+      return valid(start)&&valid(end)&&end>=start?start<=day&&end>=day:start===day;
     }
     return ['picked_up','returned'].includes(String(b.status||''))&&String(b.rental_end||'').slice(0,10)===day;
   };

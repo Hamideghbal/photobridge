@@ -93,3 +93,7 @@ html body.pbR100F9StaffMode .pbOfficeExtendButton{display:none!important}
  html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter input[name="notes"],
  html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter>.actions>button:not(#checkAvailability){height:44px!important;min-height:44px!important;max-height:44px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;border-radius:9px!important;padding:0 8px!important;font:600 13px/1.4 Vazirmatn,Tahoma!important;box-shadow:none!important;filter:none!important;margin:0!important}
 }
+
+/* R1080: delivery and receiving remain visibly different for both roles. */
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.delivering,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Deliver{background:#315efb!important;color:#fff!important;border-color:#315efb!important}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.receiving,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Receive{background:#087f5b!important;color:#fff!important;border-color:#087f5b!important}

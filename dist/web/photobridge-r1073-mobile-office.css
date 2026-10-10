@@ -85,3 +85,11 @@ html body.pbR100F9StaffMode .pbOfficeExtendButton{display:none!important}
  html body.pbR100F9StaffMode .pbR100F9StaffShell{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))!important}
 }
 @media(prefers-reduced-motion:reduce){#pbR1079OperatorNav button{transition:none!important}}
+/* Mobile final registration row: notes and submit share the same size. */
+@media(max-width:850px){
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:center!important;gap:8px!important}
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.field,
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.actions{width:100%!important;min-width:0!important;padding:0!important;margin:0!important;box-shadow:none!important;filter:none!important;background:transparent!important}
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter input[name="notes"],
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter>.actions>button:not(#checkAvailability){height:44px!important;min-height:44px!important;max-height:44px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;border-radius:9px!important;padding:0 8px!important;font:600 13px/1.4 Vazirmatn,Tahoma!important;box-shadow:none!important;filter:none!important;margin:0!important}
+}

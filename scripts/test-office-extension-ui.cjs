@@ -54,6 +54,9 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
     for(const day of dates)await page.locator('[data-register-day="'+day+'"]').click();
     await page.locator('[data-register-next]').click();await page.waitForSelector('#pb892ManualBackdrop.open');
     assert.equal(await page.locator('#checkAvailability').isVisible(),false);
+    await page.waitForSelector('#pb892ManualBackdrop #bookingForm .pb920BookingFooter');
+    const footer=await page.locator('#bookingForm .pb920BookingFooter').evaluate(el=>{const note=el.querySelector('input[name=notes]'),button=el.querySelector('.actions>button:not(#checkAvailability)'),n=note.getBoundingClientRect(),b=button.getBoundingClientRect();return{noteHeight:n.height,buttonHeight:b.height,widthDifference:Math.abs(n.width-b.width),topDifference:Math.abs(n.top-b.top),shadow:getComputedStyle(button).boxShadow}});
+    assert.equal(footer.noteHeight,44);assert.equal(footer.buttonHeight,44);assert(footer.widthDifference<2,JSON.stringify(footer));assert(footer.topDifference<2,JSON.stringify(footer));assert.equal(footer.shadow,'none');
     const range=await page.evaluate(()=>{const form=document.getElementById('bookingForm');return[jalaliInputToIso(form.elements.startDate.value),jalaliInputToIso(form.elements.endDate.value)]});assert.deepEqual(range,dates);
     await page.locator('#pb892ManualClose').click();
     for(const entry of ['pbR1033OfficeHeaderAction','pb892CalendarContinue']){

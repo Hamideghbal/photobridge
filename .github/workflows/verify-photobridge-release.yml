@@ -67,6 +67,12 @@ jobs:
         run: |
           node --check dist/api/storeDesktopSync.js
           node --test scripts/test-r1093-desktop-inventory-filter.cjs
+      - name: Verify customer stock modes and incoming order shortages
+        run: |
+          node --check dist/api/server.js
+          node --check dist/web/photobridge-r1095-customer-stock.js
+          node --check dist/web/photobridge-r1095-owner-stock.js
+          node --test scripts/test-r1095-customer-stock-modes.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

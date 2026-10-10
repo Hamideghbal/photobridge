@@ -17,6 +17,10 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
       if(route.request().method()==='POST'){writes.push(JSON.parse(route.request().postData()));body={ok:true,id:'new-booking'}}
       else {const days=Math.round((Date.parse(u.searchParams.get('endDate'))-Date.parse('2030-10-13'))/86400000)+1;body={items:[{itemId:'camera',title:'Camera',requested:1,subtotal:100*days,extendable:true},{itemId:'lens',title:'Lens',requested:1,subtotal:200*days,extendable:days===1,extensionReason:days===1?null:'equipment_unavailable'}]}}
      }
+     if(u.pathname.endsWith('/edit')){
+      if(route.request().method()==='PUT'){writes.push(JSON.parse(route.request().postData()));body={ok:true}}
+      else body={revision:'draft-revision',startDate:'2030-10-13',endDate:'2030-10-13',items:[{itemId:'lens',quantity:1}],catalog:[{id:'camera',title:'Camera'},{id:'lens',title:'Lens'}]};
+     }
      return route.fulfill({json:body});
     }
     if(u.pathname==='/rental/test')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'dist/api/equipment-rental-portal.html'),'utf8')});
@@ -36,6 +40,20 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
    await page.locator('[data-ext-item="camera"]').check();await page.locator('.extSubmit').click();await page.waitForFunction(()=>window.lastExtensionInvoice==='new-booking');
    assert.equal(writes.length,1);assert.deepEqual(writes[0].itemIds,['camera']);assert.equal(writes[0].endDate,'2030-10-15');assert.match(writes[0].requestId,/^[0-9a-f-]{36}$/);
    assert.equal(await page.locator('#pbOfficeExtension').count(),0);assert.equal(await page.evaluate(()=>document.body.style.overflow),'');
+   await page.evaluate(()=>{
+    data.bookings=['reserved','picked_up','returned','cancelled'].map((status,i)=>({id:'state-'+i,customer_name:'Customer',status,rental_start:'2030-10-13',rental_end:'2030-10-13',handover_serials:[{itemId:'camera'}]}));
+    for(const b of data.bookings){const card=document.createElement('article');card.id=b.id;if(b.status==='picked_up'){card.className='pbR1052DayGroup';card.innerHTML='<div data-pb904r5-booking-id="'+b.id+'"></div><div class="pbR1052DayActions" data-office-booking-id="'+b.id+'"></div>'}else{card.dataset.pb915BookingId=b.id;card.innerHTML='<div data-pb904r5-booking-id="'+b.id+'"><div class="actions" data-office-booking-id="'+b.id+'"></div></div>'}document.body.append(card)}
+   });
+   await page.waitForFunction(()=>document.querySelector('#state-0 .pbOfficeExtendButton'));
+   assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').textContent(),'ویرایش آفیش');
+   assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').textContent(),'تمدید آفیش');
+   assert.equal(await page.locator('#state-2 .pbOfficeExtendButton,#state-3 .pbOfficeExtendButton').count(),0);
+   await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="camera"]').waitFor();
+   await page.locator('#pbOfficeExtension input[name=startDate]').click();await page.locator('#jalaliCalendarPopover.open [data-jalali-day="24"]').click();
+   const chosenStart=await page.evaluate(()=>jalaliInputToIso(document.querySelector('#pbOfficeExtension input[name=startDate]').value));
+   await page.evaluate(start=>{document.querySelector('#pbOfficeExtension input[name=endDate]').value=isoToJalaliInput(start)},chosenStart);
+   await page.locator('[data-edit-item="lens"]').fill('0');await page.locator('[data-edit-item="camera"]').fill('2');await page.locator('#pbOfficeExtension [type=submit]').click();
+   await page.waitForFunction(()=>!document.getElementById('pbOfficeExtension'));assert.equal(writes.length,2);assert.equal(writes[1].revision,'draft-revision');assert.deepEqual(writes[1].items,[{itemId:'camera',quantity:2}]);assert.equal(writes[1].startDate,chosenStart);assert.equal(writes[1].endDate,chosenStart);
    assert.deepEqual(errors,[]);await page.close();
   }
  }finally{await browser.close()}

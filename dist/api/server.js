@@ -10433,6 +10433,7 @@ async function equipmentRentalShopOverview(shopId) {
         pool.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`, [shopId]),
         pool.query(`SELECT * FROM equipment_rental_items WHERE shop_id=$1 AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY active DESC,created_at DESC`, [shopId]),
         pool.query(`SELECT b.*,to_char(b.rental_start,'YYYY-MM-DD') rental_start,to_char(b.rental_end,'YYYY-MM-DD') rental_end,(b.rental_end-b.rental_start+1)::int rental_days,
+          EXISTS(SELECT 1 FROM equipment_rental_invoices inv WHERE inv.booking_id=b.id) has_invoice,
           COALESCE(sum(bi.quantity),0)::int item_count,
           COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) || ' ×' || bi.quantity::text,'، ' ORDER BY i.title),'') item_titles,
           COALESCE(jsonb_agg(jsonb_build_object('itemId',bi.item_id,'title',equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id),'category',i.category,'brand',i.brand,'model',i.model,'quantity',bi.quantity,'rental_days',bi.rental_days,'daily_price',bi.daily_price,'subtotal',bi.subtotal) ORDER BY i.title) FILTER (WHERE bi.id IS NOT NULL),'[]'::jsonb) items,
@@ -10629,6 +10630,45 @@ async function equipmentRentalCreateBooking(db, { shopId, photographerId = null,
     return { ok: true, id, status, bookingCode: id.slice(0, 8).toUpperCase(), totalAmount: availability.totalAmount, grossAmount:availability.grossAmount ?? availability.totalAmount, discountPercent:availability.discountPercent||0, discountAmount:availability.discountAmount||0, discountReason:availability.discountReason||null, settlementMode:terms.settlementMode||'ledger', paymentStatus, depositAmount: availability.depositAmount, availability };
 }
 
+async function equipmentRentalEditDraft(db,shopId,bookingId) {
+    const booking=(await db.query(`SELECT b.*,EXISTS(SELECT 1 FROM equipment_rental_invoices inv WHERE inv.booking_id=b.id) has_invoice,
+      EXISTS(SELECT 1 FROM equipment_rental_accounting_entries e WHERE e.booking_id=b.id AND e.entry_type='payment' AND e.amount>0) has_payment
+      FROM equipment_rental_bookings b WHERE b.id=$1 AND b.shop_id=$2`,[bookingId,shopId])).rows[0];
+    if(!booking)return {error:'rental_booking_not_found'};
+    if(!['reserved','pending_approval','payment_pending'].includes(booking.status)||booking.has_invoice||booking.has_payment||booking.payment_status==='paid')return {error:'booking_not_editable'};
+    const items=(await db.query('SELECT item_id,quantity FROM equipment_rental_booking_items WHERE booking_id=$1 ORDER BY item_id',[bookingId])).rows;
+    const revision=crypto.createHash('sha256').update(JSON.stringify([booking.status,booking.payment_status,booking.rental_start,booking.rental_end,booking.total_amount,booking.updated_at,items])).digest('hex');
+    return {booking,items,revision};
+}
+async function equipmentRentalEditBooking(db,{shopId,bookingId,actorId,startDate,endDate,items,revision,allowShortage=false}) {
+    await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`equipment-rental:${shopId}`]);
+    await db.query('SELECT id FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 FOR UPDATE',[bookingId,shopId]);
+    const draft=await equipmentRentalEditDraft(db,shopId,bookingId);
+    if(draft.error)return draft;
+    if(!revision||revision!==draft.revision)return {error:'booking_changed_retry'};
+    // Do not silently cancel external purchases or supplies held by another customer.
+    const provided=await db.query("SELECT id FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND (status='provided' OR resolved_at IS NOT NULL) FOR UPDATE",[bookingId,shopId]);
+    if(provided.rowCount)return {error:'booking_supplied_edit_requires_review'};
+    let availability=await equipmentRentalAvailability(db,{shopId,startDate,endDate,items,excludeBookingId:bookingId});
+    if(availability.error)return availability;
+    if(availability.items.some(x=>!x.valid))return {error:'invalid_rental_items'};
+    if(!availability.available&&!allowShortage)return {error:'equipment_unavailable',availability};
+    availability=await equipmentRentalApplyDiscount(db,availability,draft.booking.photographer_id);
+    await db.query(`UPDATE equipment_rental_bookings SET rental_start=$3,rental_end=$4,total_amount=$5,gross_amount=$6,discount_percent=$7,discount_amount=$8,discount_reason=$9,deposit_amount=$10,updated_at=now()
+      WHERE id=$1 AND shop_id=$2`,[bookingId,shopId,equipmentRentalDate(startDate),equipmentRentalDate(endDate),availability.totalAmount,availability.grossAmount??availability.totalAmount,availability.discountPercent||0,availability.discountAmount||0,availability.discountReason||null,availability.depositAmount]);
+    await db.query('DELETE FROM equipment_rental_booking_items WHERE booking_id=$1',[bookingId]);
+    for(const row of availability.items)await db.query('INSERT INTO equipment_rental_booking_items(id,booking_id,item_id,quantity,rental_days,daily_price,deposit_amount,subtotal) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[crypto.randomUUID(),bookingId,row.itemId,row.requested,availability.rentalDays,row.dailyPrice,row.depositAmount,row.subtotal]);
+    await db.query("DELETE FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND status='pending' AND resolved_at IS NULL",[bookingId,shopId]);
+    for(const row of availability.items.filter(x=>x.shortage>0))await equipmentRentalSaveDailyShortage(db,{shopId,bookingId,row,actorId});
+    // Any previous serial preparation belongs to the old equipment selection.
+    await db.query("UPDATE equipment_rental_bookings SET handover_serials='[]'::jsonb,handover_serials_recorded_at=NULL,handover_serials_recorded_by=NULL WHERE id=$1 AND shop_id=$2",[bookingId,shopId]);
+    if(draft.booking.status==='reserved'&&draft.booking.photographer_id){
+      await db.query("UPDATE equipment_rental_accounting_entries SET amount=$2,entry_date=$3 WHERE booking_id=$1 AND entry_type='booking_charge'",[bookingId,availability.totalAmount,equipmentRentalDate(startDate)]);
+      await equipmentRentalRecordBookingCharge(db,bookingId,actorId);
+    }
+    await db.query("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,data) VALUES($1,'equipment_rental.booking_edit','equipment_rental_booking',$2,$3::jsonb)",[actorId,bookingId,JSON.stringify({shopId,previousStart:equipmentRentalDate(draft.booking.rental_start),previousEnd:equipmentRentalDate(draft.booking.rental_end),previousItems:draft.items,startDate:equipmentRentalDate(startDate),endDate:equipmentRentalDate(endDate),items:availability.items.map(x=>({itemId:x.itemId,quantity:x.requested})),totalAmount:availability.totalAmount})]);
+    return {ok:true,id:bookingId,availability};
+}
 function equipmentRentalNextDay(day) {
     const iso=equipmentRentalDate(day);
     return iso ? new Date(Date.parse(iso+'T12:00:00Z')+86400000).toISOString().slice(0,10) : null;
@@ -15517,6 +15557,25 @@ async function api(req, res, url) {
         return sendJson(res,200,{ok:true,items:q.rows[0]?.handover_serials||normalized,recordedAt:q.rows[0]?.handover_serials_recorded_at||null});
     }
 
+    const rentalEditRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/edit$/i);
+    if(rentalEditRoute&&['GET','PUT'].includes(req.method)){
+        const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});
+        if(!shop||shop.deleted_at)return sendJson(res,401,{error:'rental_auth_required'});
+        await ensureEquipmentRentalV727Schema();await ensureEquipmentRentalV628Schema();
+        const bookingId=rentalEditRoute[1];
+        if(req.method==='GET'){
+          const draft=await equipmentRentalEditDraft(pool,shop.id,bookingId);
+          if(draft.error)return sendJson(res,409,draft);
+          const catalog=(await pool.query(`SELECT id,equipment_rental_display_name(category,brand,model,title,shop_id) title FROM equipment_rental_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY title`,[shop.id])).rows;
+          return sendJson(res,200,{revision:draft.revision,startDate:equipmentRentalDate(draft.booking.rental_start),endDate:equipmentRentalDate(draft.booking.rental_end),items:draft.items.map(x=>({itemId:String(x.item_id),quantity:Number(x.quantity)})),catalog});
+        }
+        const body=await bodyJson(req,50000),c=await pool.connect();let result;
+        try{
+          await c.query('BEGIN');result=await equipmentRentalEditBooking(c,{shopId:shop.id,bookingId,actorId:a.userId,startDate:body.startDate,endDate:body.endDate,items:body.items,revision:body.revision,allowShortage:body.allowShortage===true});
+          await c.query(result.error?'ROLLBACK':'COMMIT');
+        }catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
+        return sendJson(res,result.error?409:200,result);
+    }
     const rentalExtensionRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/extension$/i);
     if(rentalExtensionRoute&&['GET','POST'].includes(req.method)){
         const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});

@@ -10,6 +10,10 @@
  const shortages=id=>(store().returnShortages||[]).filter(s=>String(s.booking_id)===String(id)&&s.status==='missing'&&!s.resolved_at&&Number(s.missing_qty)>0);
  const summary=b=>{if(typeof window.pb100rOutGearSummary==='function')return window.pb100rOutGearSummary(b);return b.item_titles||'تجهیزات آفیش'};
  const range=b=>{if(typeof window.pbR100F71BookingRange==='function')return window.pbR100F71BookingRange(b);return date(b.rental_start)+' تا '+date(b.rental_end)};
+ // Remember list positions independently of status-sorted overview responses.
+ const order=new Map();
+ window.pbR1080StableOfficeRows=rows=>{for(const b of [...(store().bookings||[]),...rows]){const id=String(b.id);if(!order.has(id))order.set(id,order.size)}return [...rows].sort((a,b)=>order.get(String(a.id))-order.get(String(b.id)))};
+ window.pbR1080ReceiveLabel=(b,day)=>{const selected=iso(day),end=iso(b.rental_end);return /^\d{4}-\d{2}-\d{2}$/.test(selected)&&selected<end?'دریافت زودهنگام تجهیزات':'دریافت تجهیزات از مشتری'};
  const modeNames={out:'تحویل',in:'دریافت',returnShortages:'کسری دریافت'};
  // Both roles render exactly the same card classes, order and markup.
  // pb914BookingCard was triggering legacy owner-only mobile stacking rules.
@@ -25,15 +29,15 @@
      const id=esc(b.id),permission=manager?
        'onclick="bookingStatus(&#39;'+id+'&#39;,&#39;'+esc(status)+'&#39;)"':
        'data-booking="'+id+'"';
-     return '<button type="button" class="pbR100F86Operation'+(secondary?' secondary':'')+'" '+permission+'>'+esc(text)+'</button>';
+     return '<button type="button" class="pbR100F86Operation'+(secondary?' secondary':status==='returned'?' receiving':' delivering')+'" '+permission+'>'+esc(text)+'</button>';
    };
    const actions=[];
    if(mode==='out'&&b.status==='reserved'){
-     actions.push(button('ثبت تحویل تجهیزات','picked_up'));
+     actions.push(button('تحویل تجهیزات به مشتری','picked_up'));
      // Owner retains cancellation, without reintroducing the old card layout.
      if(manager)actions.push(button('لغو آفیش','cancelled',true));
    }else if(mode==='in'&&picked){
-     actions.push(button('ثبت دریافت تجهیزات','returned'));
+     actions.push(button(window.pbR1080ReceiveLabel(b,config.day),'returned'));
    }else if(mode==='out'&&b.status==='payment_pending'){
      actions.push('<span class="pbR100F86Pending">منتظر پرداخت</span>');
    }

@@ -103,3 +103,6 @@ jobs:
             console.log('Store discount migration passed: default, 20% limit and idempotence.');
           } finally { await db.end(); }
           NODE
+
+      - name: Smoke-test strict customer stock migration in PostgreSQL
+        run: node scripts/test-r1095-stock-migration-smoke.mjs

@@ -10079,7 +10079,11 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
       if(count)button.append(count);
     }
   }
-  const schedule=()=>requestAnimationFrame(normalize);
+  // Batch rapid rail mutations into one frame; legacy modules may update the
+  // counts together, and rebuilding the same labels repeatedly is expensive
+  // for lower-end mobile browsers.
+  let pendingFrame=0;
+  const schedule=()=>{if(pendingFrame)return;pendingFrame=requestAnimationFrame(()=>{pendingFrame=0;normalize()})};
   normalize();
   const rail=document.getElementById('pb848BookingHeaderTabs');
   if(rail)new MutationObserver(schedule).observe(rail,{childList:true,subtree:true});

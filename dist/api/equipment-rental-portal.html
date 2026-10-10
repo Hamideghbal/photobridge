@@ -4852,6 +4852,10 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
     const tabs=q('#pb848BookingHeaderTabs');if(!tabs)return;
     qa('[data-pb843-office-tab]',tabs).forEach(btn=>{
       const key=btn.dataset.pb843OfficeTab;const wanted=officeLabels[key];if(!wanted)return;
+      // The newer mobile rail owns this label. Do not replace it from the
+      // legacy rail observer: competing observers would rebuild it endlessly.
+      const mobileLabel=btn.querySelector('.pb905rOfficeTabLabel');
+      if(matchMedia('(max-width:850px)').matches&&mobileLabel?.textContent===wanted)return;
       const count=q('.pb854TabCount',btn);
       const labels=qa('.pb898OfficeLabel,.pb900OfficeTabLabel,.pb903OfficeTabLabel',btn);
       const current=labels.find(x=>x.classList.contains('pb903OfficeTabLabel'));

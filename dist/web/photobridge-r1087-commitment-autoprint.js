@@ -16,7 +16,7 @@
  const native=!!window.__PB_DESKTOP_FETCH__||!!window.__PB_DESKTOP_OVERLAY_101__;
  let enabled=get(optKey)==='1'||(get(optKey)===null&&native);
  const ensureNativeDefault=()=>{if(!enabled&&get(optKey)===null&&(window.__PB_DESKTOP_FETCH__||window.__PB_DESKTOP_OVERLAY_101__))enabled=true};
- let active=false,receiving=false,currentShop='',lastError='',lastName='',lastId='',button=null,pending=[],lastOverview=null;
+ let active=false,receiving=false,currentShop='',lastError='',lastName='',lastId='',button=null,settingsCard=null,pending=[],lastOverview=null;
  let pendingPrint=false,printed=0,initializing=false;
  const parse=s=>{try{return JSON.parse(s)}catch{return null}};
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -43,17 +43,27 @@
  }
  function mount(){
   ensureNativeDefault();
-  const header=document.querySelector('header.top')||document.querySelector('#rentalHeader')||document.querySelector('header');
-  if(!header||!document.body.classList.contains('rentalAppReady')){if(button)button.hidden=true;return}
-  if(!button){
-   button=document.createElement('button');button.type='button';button.id='pbR1087AutoPrint';button.style.cssText='display:inline-flex;align-items:center;justify-content:center;min-height:28px;max-width:190px;white-space:nowrap;padding:4px 9px;border:1px solid #d0d5dd;border-radius:8px;font:600 11px/1.4 Vazirmatn,Tahoma,sans-serif;cursor:pointer;direction:rtl;vertical-align:middle;margin-inline:8px;box-shadow:none;';
+  const settings=document.getElementById('settings');
+  if(!settings||!document.body.classList.contains('rentalAppReady'))return;
+  if(!settingsCard){
+   settingsCard=document.createElement('section');
+   settingsCard.id='pbR1088AutoPrintSettings';
+   settingsCard.className='panel';
+   settingsCard.style.cssText='display:block;box-sizing:border-box;width:100%;max-width:100%;margin:16px 0;padding:16px;border:1px solid #e4e7ec;border-radius:12px;direction:rtl;clear:both;position:relative';
+   const title=document.createElement('h3');title.textContent='چاپ تعهدنامه هنگام تحویل تجهیزات';
+   title.style.cssText='font-size:14px;margin:0 0 8px;font-weight:800';
+   const detail=document.createElement('p');detail.textContent='اگر تحویل از موبایل ثبت شود، برنامه بازِ فروشگاه روی این کامپیوتر تعهدنامه را دریافت می‌کند. برای چاپ مستقیم بدون پنجره تأیید، برنامه ویندوز باید چاپ بومی را پشتیبانی کند.';
+   detail.style.cssText='font-size:12px;color:#667085;line-height:1.9;margin:0 0 12px';
+   button=document.createElement('button');button.type='button';button.id='pbR1087AutoPrint';
+   button.style.cssText='min-height:35px;padding:7px 13px;border:1px solid #d0d5dd;border-radius:9px;font:700 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer;direction:rtl;box-shadow:none;';
    button.addEventListener('click',()=>{
     enabled=!enabled;put(optKey,enabled?'1':'0');lastError='';paint();
     if(enabled)void check();
    });
+   settingsCard.append(title,detail,button);
   }
-  if(!header.contains(button))header.appendChild(button);
-  button.hidden=false;paint();
+  if(!settings.contains(settingsCard))settings.appendChild(settingsCard);
+  paint();
  }
  function notice(text){
   lastError=text;paint();window.console?.warn?.('[PhotoBridge automatic commitment printing]',text);
@@ -67,6 +77,17 @@
     if(!res.ok)throw new Error('HTTP '+res.status);
     const html=await res.text();
     if(!html||!/<!doctype|<html/i.test(html))throw new Error('پاسخ تعهدنامه معتبر نیست');
+    // Only a trusted native desktop printing bridge can dispatch a silent job
+    // to the Windows print spooler. Browser print() does not guarantee that.
+    if(typeof window.__PB_DESKTOP_PRINT__==='function'){
+     pendingPrint=true;paint();
+     try{
+      const response=await window.__PB_DESKTOP_PRINT__({kind:'rental-commitment',bookingId:String(b.id),html});
+      if(!response||response.ok!==true)throw Error(String(response?.error||'native_print_failed'));
+      const ledger=persisted();ledger[ident]=new Date().toISOString();writeLedger(ledger);
+      pendingPrint=false;paint();resolve(true);return;
+     }catch(e){pendingPrint=false;notice('چاپگر ویندوز فرمان را نپذیرفت: '+String(e?.message||e));resolve(false);return}
+    }
     const frame=document.createElement('iframe');frame.title='تعهدنامه '+String(b.photographer_name||b.customer_name||b.id);
     frame.setAttribute('aria-hidden','true');
     frame.style.cssText='position:fixed;top:0;left:-10000px;width:794px;height:1123px;border:0;opacity:0;pointer-events:none;';

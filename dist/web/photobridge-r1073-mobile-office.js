@@ -8,6 +8,8 @@
  function center(rail,button,smooth){if(!button)return;const r=rail.getBoundingClientRect(),b=button.getBoundingClientRect();rail.scrollTo({left:Math.max(0,Math.min(rail.scrollWidth-rail.clientWidth,rail.scrollLeft+b.left+b.width/2-r.left-r.width/2)),behavior:smooth?'smooth':'auto'})}
  function paint(){
   frame=0;
+  // Legacy status renderers must never restore separate handover navigation.
+  document.querySelectorAll('#pb848BookingHeaderTabs [data-pb843-office-tab="approved"],#pb848BookingHeaderTabs [data-pb843-office-tab="out"],.pbR100F9StaffTabs [data-staff-mode="in"]').forEach(button=>button.remove());
   const bottom=q('#rentalMobileBottomNav');
   if(bottom){const n=[...bottom.querySelectorAll(':scope > button')].filter(b=>!b.hidden&&b.dataset.pbChannelOff!=='true'&&getComputedStyle(b).display!=='none').length;const columns=String(Math.max(1,n));if(bottom.style.getPropertyValue('--pb-office-nav-count')!==columns)bottom.style.setProperty('--pb-office-nav-count',columns)}
   if(!mobile()){lastSignature='';return}

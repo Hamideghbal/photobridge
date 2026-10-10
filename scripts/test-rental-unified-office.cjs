@@ -3,6 +3,7 @@ const {chromium}=require('playwright');
 const html=fs.readFileSync(path.join(__dirname,'../dist/api/equipment-rental-portal.html'),'utf8');
 const styles=[...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)].map(x=>x[0]).join('');
 const staff=html.match(/<script id="pbR100F9StaffScript">([\s\S]*?)<\/script>/)[1];
+const ensureTabs=html.split('\n').find(x=>x.startsWith('function pb854EnsureBookingStatusTabs()'));
 const initialCalendar=html.split('\n').find(x=>x.includes("calendar.innerHTML='<div class=\"box pb843BookingCalendarBox"));
 test('one Office tab, explicit pickup/return actions and compact mobile calendar',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
@@ -15,6 +16,8 @@ test('one Office tab, explicit pickup/return actions and compact mobile calendar
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f86-shared-handover.js')});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f74-staff-ui.js')});
   await page.evaluate(()=>{pbR100F9RenderStaffPortal();pbR100F89PickStaffDay('2030-10-12')});
+  await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
+  await page.evaluate(()=>{const tabs=document.querySelector('.pbR100F9StaffTabs');const stale=document.createElement('button');stale.dataset.staffMode='in';stale.textContent='دریافت';tabs.append(stale);pbR1073PaintMobileOffice()});
   assert.deepEqual(await page.locator('.pbR100F9StaffTabs button').allTextContents(),['آفیش']);
   assert.equal(await page.locator('[data-booking="reserved"]').textContent(),'ثبت تحویل تجهیزات');
   assert.equal(await page.locator('[data-booking="out"]').textContent(),'ثبت دریافت تجهیزات');
@@ -44,6 +47,14 @@ test('one Office tab, explicit pickup/return actions and compact mobile calendar
   await page.evaluate(()=>{const nav=document.createElement('nav');nav.id='rentalMobileBottomNav';nav.className='rentalMobileBottomNav';nav.innerHTML='<button data-rental-bottom-tab="items">اجاره تجهیزات</button><button data-rental-bottom-tab="sales" hidden data-pb-channel-off="true">فروش تجهیزات</button><button data-rental-bottom-tab="bookings">آفیش</button><button data-rental-bottom-tab="photographers">عکاس</button><button data-rental-bottom-tab="accounting">حسابداری</button>';document.body.append(nav)});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
   await page.evaluate(()=>pbR1073PaintMobileOffice());
+  await page.addScriptTag({content:`window.$=s=>document.querySelector(s);window.pb854RenderBookingStatusPanes=()=>{};${ensureTabs}`});
+  // Exercise the actual legacy renderer repeatedly, not just CSS visibility.
+  await page.evaluate(()=>{for(let i=0;i<3;i++){pb854EnsureBookingStatusTabs();pbR1073PaintMobileOffice()}});
+  for(const key of ['approved','out']){
+   assert.equal(await page.locator('[data-pb843-office-tab="'+key+'"]').count(),0);
+   assert.equal(await page.locator('[data-pb843-office-pane="'+key+'"]').count(),1);
+  }
+  assert.equal(await page.locator('[data-pb843-office-tab="calendar"]').count(),1);
   if(viewport.width<851){
    assert.equal(await page.locator('.pb904r2CalendarSplit').evaluate(x=>getComputedStyle(x).display),'none');
    const widths=await page.locator('#rentalMobileBottomNav>button:not([hidden]):not([data-rental-bottom-tab="photographers"])').evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().width));

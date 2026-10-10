@@ -7652,7 +7652,7 @@ function clampDiscount(value) { const n = Number(value || 0); return Number.isFi
 function moneyAmount(value) { const n = Number(value || 0); return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0; }
 function planAmountFromBase(monthlyPrice, months, discountPercent) { const monthly = moneyAmount(monthlyPrice), m = Math.max(1, Math.round(Number(months || 1))), pct = clampDiscount(discountPercent); const gross = moneyAmount(monthly * m); return { grossAmount: gross, planDiscountPercent: pct, planAmount: moneyAmount(gross * (100 - pct) / 100) }; }
 // Percent discounts are applied to the plan's net price; legacy fixed discounts remain supported.
-function entityDiscountPercent(value) { const n = Number(value ?? 0); return Number.isFinite(n) && n >= 0 && n <= 20 ? Math.round(n * 100) / 100 : null; }
+function entityDiscountPercent(value) { const n = Number(value ?? 0); return Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n * 100) / 100 : null; }
 function applySpecialDiscount(planAmount, enabled, discountAmount, discountPercent = 0) { const plan = moneyAmount(planAmount), pct = entityDiscountPercent(discountPercent) ?? 0, special = enabled ? Math.min(plan, pct > 0 ? moneyAmount(plan * pct / 100) : moneyAmount(discountAmount)) : 0; return { planAmount: plan, specialDiscountAmount: special, discountPercent: pct, amount: Math.max(0, plan - special) }; }
 function rentalShopActionBlocked(shop) { if (!shop) return { error: 'rental_auth_required', message:'دسترسی به فروشگاه امکان‌پذیر نیست.' }; if (shop.suspended) return { error:'rental_shop_suspended', message:String(shop.suspension_reason || 'فروشگاه توسط ادمین سایت تعلیق شده است.') }; if (shop.activation_status !== 'approved' || !shop.activation_ever_approved) return { error:'rental_shop_not_activated', message:'فعال‌سازی این فروشگاه هنوز توسط ادمین سایت فوتوبریج تأیید نشده است. تا زمان تأیید، ثبت آفیش و ارسال پیامک و دعوت‌نامه مجاز نیست.' }; if (!shop.active) return { error:'rental_shop_inactive', message:'فروشگاه توسط ادمین سایت غیرفعال شده است.' }; return { error:'subscription_inactive', message:'اعتبار اشتراک فروشگاه پایان یافته است. برای ادامه فعالیت، اشتراک را تمدید کنید.' }; }
 async function getSubscriptionPricing() {
@@ -16319,7 +16319,7 @@ ${inviteUrl}`;
         // Discount-only update: do not touch store activation, profile or suspension.
         if (Object.keys(b).length === 1 && Object.prototype.hasOwnProperty.call(b, 'subscriptionDiscountPercent')) {
             const percent = entityDiscountPercent(b.subscriptionDiscountPercent);
-            if (percent === null) return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+            if (percent === null) return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۱۰۰ باشد.'});
             try {
                 const q=await pool.query("UPDATE equipment_rental_shops SET subscription_discount_percent=$2::numeric,subscription_discount_amount=0,updated_at=now() WHERE id=$1 AND deleted_at IS NULL RETURNING subscription_discount_percent",[current.id,percent]);
                 if (!q.rowCount) return sendJson(res,404,{error:'rental_shop_not_found'});
@@ -16348,7 +16348,7 @@ ${inviteUrl}`;
             }
         }
         const discountPercent = b.subscriptionDiscountPercent === undefined ? Number(current.subscription_discount_percent || 0) : entityDiscountPercent(b.subscriptionDiscountPercent);
-        if (discountPercent === null) return sendJson(res, 400, { error: 'subscription_discount_percent_out_of_range', message:'تخفیف اشتراک باید بین صفر تا ۲۰ درصد باشد.' });
+        if (discountPercent === null) return sendJson(res, 400, { error: 'subscription_discount_percent_out_of_range', message:'تخفیف اشتراک باید بین صفر تا ۱۰۰ درصد باشد.' });
         const next = {
             name: b.name === undefined ? current.name : String(b.name || '').trim(),
             province: b.province === undefined ? current.province : String(b.province || '').trim() || null,
@@ -18591,7 +18591,7 @@ ${inviteUrl}`;
         const discountKeys=Object.keys(b);
         if (Object.prototype.hasOwnProperty.call(b,'subscriptionDiscountPercent') && discountKeys.every(k=>['subscriptionDiscountPercent','subscriptionDiscountEnabled','subscriptionDiscountAmount'].includes(k))) {
             const percent=entityDiscountPercent(b.subscriptionDiscountPercent);
-            if(percent===null)return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۲۰ باشد.'});
+            if(percent===null)return sendJson(res,400,{error:'subscription_discount_percent_out_of_range',message:'درصد تخفیف باید بین صفر تا ۱۰۰ باشد.'});
             try{
                 const q=await pool.query("UPDATE labs SET subscription_discount_percent=$2::numeric,subscription_discount_enabled=($2::numeric > 0),subscription_discount_amount=0,updated_at=now() WHERE id=$1 RETURNING subscription_discount_percent,subscription_discount_enabled",[adminLab[1],percent]);
                 if(!q.rowCount)return sendJson(res,404,{error:'lab_not_found'});

@@ -123,8 +123,9 @@
        picker.querySelector('[data-picker-close]').onclick=closePicker;picker.querySelector('[data-picker-close]').focus();pickerPage=0;
        picker.querySelector('[data-picker-prev]').onclick=()=>{if(pickerPage>0){pickerPage--;void paintPicker()}};picker.querySelector('[data-picker-next]').onclick=()=>{if((pickerPage+1)*60<draft.catalog.length){pickerPage++;void paintPicker()}};void paintPicker();
      };
-     for(const name of ['startDate','endDate']){form.elements[name].onclick=()=>window.openJalaliCalendar(form.elements[name]);form.elements[name].onchange=()=>{scheduleRefresh();if(picker)void paintPicker()}}
-     renderItems();void refresh();
+     function chooseDates(){if(st.busy)return;const current=dates(),days=[];for(let day=current.startDate;day&&day<=current.endDate;day=shift(day,1))days.push(day);form.hidden=true;window.pbR1075BeginOfficeRegistration({title:'ویرایش روزهای آفیش',nextLabel:'ادامه ویرایش تجهیزات',initialDays:days,onCancel:()=>{if(active===st)close()},onContinue:days=>{if(active!==st)return;form.elements.startDate.value=window.isoToJalaliInput(days[0]);form.elements.endDate.value=window.isoToJalaliInput(days.at(-1));form.hidden=false;renderItems();void refresh();form.querySelector('[data-edit-add]').focus({preventScroll:true})}});}
+     for(const name of ['startDate','endDate'])form.elements[name].onclick=chooseDates;
+     renderItems();chooseDates();
      form.onsubmit=async e=>{
        e.preventDefault();if(st.busy)return;
        const items=[...qty].map(([itemId,quantity])=>({itemId,quantity}));

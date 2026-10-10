@@ -142,11 +142,11 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
     assert.deepEqual(await page.evaluate(()=>pbR1080StableOfficeRows(data.bookings).map(b=>b.id)),before);
    }
    overviewBookings=await page.evaluate(()=>data.bookings);
-   await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="lens"]').waitFor();
+   await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('#pbR1076Registration').waitFor();assert.equal(await page.locator('[data-register-day="2030-10-13"]').getAttribute('aria-pressed'),'true');await page.locator('[data-register-day="2030-10-14"]').click();await page.locator('[data-register-day="2030-10-15"]').click();await page.locator('[data-register-next]').click();await page.locator('[data-edit-item="lens"]').waitFor();
    assert.equal(await page.locator('[data-edit-item="camera"]').count(),0);assert.equal(await page.locator('[name=equipmentSearch]').count(),0);
    const startBox=await page.locator('#pbOfficeExtension input[name=startDate]').boundingBox(),endBox=await page.locator('#pbOfficeExtension input[name=endDate]').boundingBox();assert.equal(startBox.y,endBox.y);assert(startBox.x!==endBox.x);
    await page.locator('[data-edit-row="lens"] [data-edit-step="1"]').click();assert.equal(await page.locator('[data-edit-item="lens"]').inputValue(),'2');await page.locator('[data-edit-row="lens"] [data-edit-step="-1"]').click();assert.equal(await page.locator('[data-edit-item="lens"]').inputValue(),'1');
-   await page.locator('#pbOfficeExtension input[name=startDate]').click();await page.locator('#jalaliCalendarPopover.open [data-jalali-day="24"]').click();
+   await page.locator('#pbOfficeExtension input[name=startDate]').click();assert.equal(await page.locator('[data-register-day][aria-pressed=true]').count(),3);await page.locator('[data-register-clear]').click();await page.locator('[data-register-day="2030-10-16"]').click();await page.locator('[data-register-next]').click();
    const chosenStart=await page.evaluate(()=>jalaliInputToIso(document.querySelector('#pbOfficeExtension input[name=startDate]').value));
    await page.evaluate(start=>{document.querySelector('#pbOfficeExtension input[name=endDate]').value=isoToJalaliInput(start)},chosenStart);
    await page.locator('[data-edit-row="lens"] [data-edit-remove]').click();assert.equal(await page.locator('[data-edit-item="lens"]').count(),0);

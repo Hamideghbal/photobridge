@@ -44,15 +44,15 @@
   const register=q('#pbR1073Register',host);register.onclick=beginRegistration;
   if(!oldRail)center(rail,q('[data-office-day="'+selected+'"]',rail),false);
  }
- function beginRegistration(){
+ function beginRegistration(options={}){
   q('#pbR1076Registration')?.querySelector('[data-register-close]')?.click();
   const back=document.createElement('div');back.id='pbR1076Registration';
   back.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="pbR1076RegistrationTitle"><header><b id="pbR1076RegistrationTitle">انتخاب روزهای آفیش</b><button type="button" data-register-close aria-label="بستن">×</button></header><p>روزهای پیوسته موردنظر را انتخاب کنید.</p><div data-register-calendar></div><p role="alert"></p><footer><span data-register-count></span><button type="button" data-register-clear>پاک کردن</button><button type="button" data-register-next disabled>ادامه ثبت آفیش</button></footer></section>';
-  const picked=new Set(),overflow=document.body.style.overflow,focus=document.activeElement;let month=today();
+  const picked=new Set(options.initialDays||[]),overflow=document.body.style.overflow,focus=document.activeElement;let month=options.initialDays?.[0]||today(),continued=false;
   const add=(day,n)=>new Date(Date.parse(day+'T12:00:00Z')+n*86400000).toISOString().slice(0,10);
-  const close=()=>{back.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',escapeKey);focus?.focus({preventScroll:true})};
-  const escapeKey=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
-  back.querySelector('[data-register-close]').onclick=close;back.onclick=e=>{if(e.target===back)close()};document.addEventListener('keydown',escapeKey);
+  const close=()=>{back.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',escapeKey,true);if(!continued)options.onCancel?.();focus?.focus({preventScroll:true})};
+  const escapeKey=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}};
+  back.querySelector('[data-register-close]').onclick=close;back.onclick=e=>{if(e.target===back)close()};document.addEventListener('keydown',escapeKey,true);
   const draw=()=>{
    const p=window.jalaliPartsFromIso(month),iso=d=>window.jalaliInputToIso(`${p.year}/${p.month}/${d}`),first=iso(1),length=window.jalaliMonthLength(p.year,p.month),offset=(new Date(first+'T12:00:00Z').getUTCDay()+1)%7;
    let cells='<span></span>'.repeat(offset);
@@ -63,8 +63,8 @@
    back.querySelector('[data-register-count]').textContent=Number(picked.size).toLocaleString('fa-IR')+' روز انتخاب شده';back.querySelector('[data-register-next]').disabled=!picked.size;
   };
   back.querySelector('[data-register-clear]').onclick=()=>{picked.clear();draw()};
-  back.querySelector('[data-register-next]').onclick=()=>{const days=[...picked].sort();if(!days.length)return;if(days.some((d,i)=>i>0&&d!==add(days[i-1],1))){back.querySelector('[role=alert]').textContent='روزهای آفیش باید پشت سر هم باشند؛ روزهای بین تاریخ‌های انتخاب‌شده را هم انتخاب کنید.';return}close();window.pbR1076RegisterOfficeDays?.(days)};
-  document.body.append(back);document.body.style.overflow='hidden';draw();back.querySelector('[data-register-close]').focus({preventScroll:true});
+  back.querySelector('[data-register-next]').onclick=()=>{const days=[...picked].sort();if(!days.length)return;if(days.some((d,i)=>i>0&&d!==add(days[i-1],1))){back.querySelector('[role=alert]').textContent='روزهای آفیش باید پشت سر هم باشند؛ روزهای بین تاریخ‌های انتخاب‌شده را هم انتخاب کنید.';return}continued=true;close();if(options.onContinue)options.onContinue(days);else window.pbR1076RegisterOfficeDays?.(days)};
+  if(options.title)back.querySelector('#pbR1076RegistrationTitle').textContent=options.title;if(options.nextLabel)back.querySelector('[data-register-next]').textContent=options.nextLabel;document.body.append(back);document.body.style.overflow='hidden';draw();back.querySelector('[data-register-close]').focus({preventScroll:true});
  }
  window.pbR1075BeginOfficeRegistration=beginRegistration;
  // Route every mobile registration entry to the same multi-day picker.

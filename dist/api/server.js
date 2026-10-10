@@ -7129,6 +7129,10 @@ function labEventNotificationCopy(event, data) {
     return null;
 }
 function customerEventNotificationCopy(event, data) {
+    if (event === 'equipment_collaboration_review')
+        return data?.status === 'approved'
+            ? { title: 'درخواست همکاری پذیرفته شد', message: `فروشگاه «${data?.shopName || 'فروشگاه تجهیزات'}» درخواست همکاری شما را پذیرفت. برای نهایی‌کردن ارتباط، اطلاعات درخواستی و کد تأیید پیامکی را تکمیل کنید.` }
+            : { title: 'درخواست همکاری رد شد', message: `درخواست همکاری شما با فروشگاه «${data?.shopName || 'فروشگاه تجهیزات'}» رد شد.` };
     if (event === 'collaboration_review')
         return data?.status === 'approved' ? { title: 'همکاری تأیید شد', message: `همکاری شما با ${data?.labName || 'لابراتوار'} تأیید شد.` } : { title: 'نتیجه درخواست همکاری', message: `درخواست همکاری شما با ${data?.labName || 'لابراتوار'} تأیید نشد.` };
     if (event === 'lab_membership_removed')
@@ -7213,6 +7217,7 @@ function webPushTargetUrl(kind, event, data) {
     if (event === 'equipment_rental_request' || event === 'equipment_rental_request_cancelled') return '/rental/bookings';
     if (event === 'equipment_sale_order_new') return '/rental/sales';
     if (event === 'equipment_collaboration_request') return '/rental/photographers';
+    if (event === 'equipment_collaboration_review') return '/equipment-rental/book';
     if (event === 'equipment_rental_status' || event === 'equipment_sale_status') return '/equipment-rental/book';
     if (event === 'client_gallery_finalized') return '/photographer/gallery';
     if ((event === 'invoice_ready' || event === 'invoice_pricing_ready') && data?.invoiceId) return `/photographer/finance/invoices?workspace=print&invoice=${encodeURIComponent(String(data.invoiceId))}`;
@@ -15812,11 +15817,15 @@ async function api(req, res, url) {
             requestRow = q.rows[0];
             await c.query('COMMIT');
             await audit(a.userId, undefined, `equipment_rental.collaboration_${status}`, 'equipment_rental_collaboration_request', requestRow.id, { shopId:shop.id, photographerId:requestRow.photographer_id, inviteId:inviteRow?.id||null, requiredFields }).catch(()=>{});
-            if (status !== 'approved') return sendJson(res, 200, { ok:true, request:requestRow });
+            if (status !== 'approved') {
+                publishCustomerEventEverywhere(String(requestRow.photographer_id), 'equipment_collaboration_review', {requestId:requestRow.id,status,shopId:shop.id,shopName:String(shop.name||'فروشگاه تجهیزات')});
+                return sendJson(res, 200, { ok:true, request:requestRow });
+            }
             const mb=photographerInviteMobileBinding(String(inviteRow.code),photographerMobile),inviteUrl=`${PUBLIC_APP_URL}/photographer/signup?invite=${encodeURIComponent(String(inviteRow.code))}&mobile=${encodeURIComponent(photographerMobile)}&mb=${encodeURIComponent(mb)}`;
             try {
                 const out=await sendSms({mobile:photographerMobile,message:`PhotoBridge\nفروشگاه تجهیزات «${String(shop.name||'فروشگاه')}» درخواست همکاری شما را پذیرفت.\nبرای نهایی‌کردن اتصال، لینک را باز کنید، اطلاعات درخواستی فروشگاه را تکمیل کنید و کد تأیید پیامکی را وارد کنید:\n${inviteUrl}`,purpose:'rental_photographer_invite',eventKey:'photographer_invite',userId:a.userId,referenceId:inviteRow.id,metadata:{rentalShopId:shop.id,photographerInviteId:inviteRow.id,collaborationRequestId:requestRow.id}});
                 await pool.query(`UPDATE photographer_invites SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb,updated_at=now() WHERE id=$1`,[inviteRow.id,JSON.stringify({lastSmsStatus:'sent',lastSmsSentAt:new Date().toISOString(),lastSmsReference:out?.reference||null})]).catch(()=>{});
+                publishCustomerEventEverywhere(String(requestRow.photographer_id), 'equipment_collaboration_review', {requestId:requestRow.id,status,shopId:shop.id,shopName:String(shop.name||'فروشگاه تجهیزات'),connectionPending:true});
                 return sendJson(res,200,{ok:true,request:requestRow,connectionPending:true,sms:{sent:true,reference:out?.reference||null}});
             } catch(e) {
                 const code=String(e?.message||'sms_send_failed');

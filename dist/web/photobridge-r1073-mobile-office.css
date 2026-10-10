@@ -1,5 +1,5 @@
 /* Office navigation: manager requests and calendar; operator calendar. */
-html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab]:not([data-pb843-office-tab="calendar"]):not([data-pb843-office-tab="pending"]),
+html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab]:not([data-pb843-office-tab="calendar"]):not([data-pb843-office-tab="pending"]):not([data-pb843-office-tab="returnShortages"]):not([data-pb843-office-tab="shortages"]),
 html body.rentalAppReady .pbR100F9StaffTabs>button:not([data-staff-mode="out"]){display:none!important}
 #pbR1073MobileOffice{display:none}
 @media(max-width:850px){
@@ -31,3 +31,23 @@ html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-o
  #pbR1073OfficeRail::-webkit-scrollbar,#pbR100F9StaffDates::-webkit-scrollbar{display:none!important;height:0!important}
  html body.rentalAppReady #pbR1073OfficeRail>button.active *,html body.rentalAppReady #pbR100F9StaffDates>button.pbR100F86Day.active *{color:#fff!important}
 }
+/* R1076: all mobile Office options fit without horizontal scrolling. */
+html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab="returnShortages"],html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab="shortages"]{display:flex!important}
+html body.rentalAppReady .pbR1076CardActions{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;min-width:0}
+html body.rentalAppReady .pbR1076CardActions>button{width:100%!important;box-sizing:border-box!important;margin:0!important;white-space:normal!important}
+@media(max-width:850px){
+ html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:4px!important;padding-inline:4px!important;overflow:hidden!important}
+ html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab]{flex:1 1 0!important;width:0!important;min-width:0!important;padding:0 3px!important;gap:2px!important;font-size:11px!important}
+ html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs .pb854TabCount{position:static!important;min-width:14px!important;width:auto!important;font-size:9px!important;flex:0 0 auto!important}
+}
+#pbR1076Registration{position:fixed;inset:0;z-index:2147483400;background:#0f172a80;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;direction:rtl}
+#pbR1076Registration>section{width:min(420px,100%);max-height:calc(100dvh - 24px);overflow:auto;padding:14px;border-radius:16px;background:#fff;box-sizing:border-box;font:500 14px/1.7 Vazirmatn,Tahoma}
+#pbR1076Registration header,#pbR1076Registration footer,.pbR1076Month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#pbR1076Registration header b{font-size:16px}#pbR1076Registration p{margin:8px 0;font-size:13px}#pbR1076Registration [role=alert]{color:#b42318}
+#pbR1076Registration button{font:inherit;cursor:pointer;min-height:40px;border:1px solid #dbe4ff;border-radius:8px;background:#f6f8ff;color:#344054;padding:4px 8px;box-sizing:border-box}
+#pbR1076Registration button:disabled{opacity:.35;cursor:default}.pbR1076Month button{width:40px}
+.pbR1076Days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;margin:8px 0}.pbR1076Days button{padding:0!important}
+#pbR1076Registration [aria-pressed=true],#pbR1076Registration [data-register-next]{background:#315efb;color:#fff;border-color:#315efb}
+#pbR1076Registration footer{flex-wrap:wrap}#pbR1076Registration [data-register-count]{font-size:12px;width:100%}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActions{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;gap:8px!important}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActions>button{width:100%!important;max-width:none!important;min-width:0!important;align-self:stretch!important;margin:0!important}

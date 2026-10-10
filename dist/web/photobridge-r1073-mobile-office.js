@@ -32,11 +32,26 @@
   if(!oldRail)center(rail,q('[data-office-day="'+selected+'"]',rail),false);
  }
  function beginRegistration(){
-  if(typeof window.openJalaliCalendar!=='function')return;
-  q('#pbR1075RegistrationDate')?.remove();
-  const input=document.createElement('input');input.id='pbR1075RegistrationDate';input.readOnly=true;input.hidden=true;input.value='';document.body.append(input);
-  input.addEventListener('change',()=>{const day=window.jalaliInputToIso(input.value);if(!valid(day))return;if(day<today()){window.storeNotice?.('برای ثبت آفیش تاریخ امروز یا آینده را انتخاب کنید.','انتخاب تاریخ');return}window.pbR1073RegisterOfficeDay?.(day);input.remove()});
-  window.openJalaliCalendar(input);
+  q('#pbR1076Registration')?.querySelector('[data-register-close]')?.click();
+  const back=document.createElement('div');back.id='pbR1076Registration';
+  back.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="pbR1076RegistrationTitle"><header><b id="pbR1076RegistrationTitle">انتخاب روزهای آفیش</b><button type="button" data-register-close aria-label="بستن">×</button></header><p>روزهای پیوسته موردنظر را انتخاب کنید.</p><div data-register-calendar></div><p role="alert"></p><footer><span data-register-count></span><button type="button" data-register-clear>پاک کردن</button><button type="button" data-register-next disabled>ادامه ثبت آفیش</button></footer></section>';
+  const picked=new Set(),overflow=document.body.style.overflow,focus=document.activeElement;let month=today();
+  const add=(day,n)=>new Date(Date.parse(day+'T12:00:00Z')+n*86400000).toISOString().slice(0,10);
+  const close=()=>{back.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',escapeKey);focus?.focus({preventScroll:true})};
+  const escapeKey=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
+  back.querySelector('[data-register-close]').onclick=close;back.onclick=e=>{if(e.target===back)close()};document.addEventListener('keydown',escapeKey);
+  const draw=()=>{
+   const p=window.jalaliPartsFromIso(month),iso=d=>window.jalaliInputToIso(`${p.year}/${p.month}/${d}`),first=iso(1),length=window.jalaliMonthLength(p.year,p.month),offset=(new Date(first+'T12:00:00Z').getUTCDay()+1)%7;
+   let cells='<span></span>'.repeat(offset);
+   for(let n=1;n<=length;n++){const day=iso(n);cells+='<button type="button" data-register-day="'+day+'" aria-pressed="'+picked.has(day)+'" '+(day<today()?'disabled':'')+'>'+Number(n).toLocaleString('fa-IR')+'</button>'}
+   back.querySelector('[data-register-calendar]').innerHTML='<div class="pbR1076Month"><button type="button" data-register-month="-1" aria-label="ماه قبل">›</button><b>'+new Intl.DateTimeFormat('fa-IR-u-ca-persian',{month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(new Date(first+'T12:00:00Z'))+'</b><button type="button" data-register-month="1" aria-label="ماه بعد">‹</button></div><div class="pbR1076Days">'+['ش','ی','د','س','چ','پ','ج'].map(d=>'<span>'+d+'</span>').join('')+cells+'</div>';
+   back.querySelectorAll('[data-register-day]').forEach(button=>button.onclick=()=>{const day=button.dataset.registerDay;if(picked.has(day))picked.delete(day);else picked.add(day);back.querySelector('[role=alert]').textContent='';draw()});
+   back.querySelectorAll('[data-register-month]').forEach(button=>button.onclick=()=>{month=Number(button.dataset.registerMonth)>0?add(iso(length),1):add(first,-1);draw()});
+   back.querySelector('[data-register-count]').textContent=Number(picked.size).toLocaleString('fa-IR')+' روز انتخاب شده';back.querySelector('[data-register-next]').disabled=!picked.size;
+  };
+  back.querySelector('[data-register-clear]').onclick=()=>{picked.clear();draw()};
+  back.querySelector('[data-register-next]').onclick=()=>{const days=[...picked].sort();if(!days.length)return;if(days.some((d,i)=>i>0&&d!==add(days[i-1],1))){back.querySelector('[role=alert]').textContent='روزهای آفیش باید پشت سر هم باشند؛ روزهای بین تاریخ‌های انتخاب‌شده را هم انتخاب کنید.';return}close();window.pbR1076RegisterOfficeDays?.(days)};
+  document.body.append(back);document.body.style.overflow='hidden';draw();back.querySelector('[data-register-close]').focus({preventScroll:true});
  }
  window.pbR1075BeginOfficeRegistration=beginRegistration;
  const original=window.pb843RenderCalendar;if(typeof original==='function'){const wrapped=function(...args){const out=original.apply(this,args);schedule();return out};window.pb843RenderCalendar=wrapped;try{pb843RenderCalendar=wrapped}catch{}}

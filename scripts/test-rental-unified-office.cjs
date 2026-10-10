@@ -47,7 +47,7 @@ test('requests precede Office, mobile day strip stays readable and registration 
   }
   await page.addStyleTag({path:path.join(__dirname,'../dist/web/photobridge-r100f86-shared-handover.css')});
   await page.addStyleTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.css')});
-  await page.addScriptTag({content:`window.data={bookings:[{id:'first',status:'reserved',rental_start:'2030-10-12',rental_end:'2030-10-12',photographer_name:'First'},{id:'second',status:'picked_up',rental_start:'2030-10-13',rental_end:'2030-10-14',photographer_name:'Second'}]};window.pbR17TehranIsoDate=()=> '2030-10-12';window.registered=[];window.pbR1073RegisterOfficeDay=d=>registered.push(d);`});
+  await page.addScriptTag({content:`window.data={bookings:[{id:'first',status:'reserved',rental_start:'2030-10-12',rental_end:'2030-10-12',photographer_name:'First'},{id:'second',status:'picked_up',rental_start:'2030-10-13',rental_end:'2030-10-14',photographer_name:'Second'}]};window.pbR17TehranIsoDate=()=> '2030-10-12';window.registered=[];window.pbR1076RegisterOfficeDays=ds=>registered.push(ds);`});
   await page.evaluate(()=>{const nav=document.createElement('nav');nav.id='rentalMobileBottomNav';nav.className='rentalMobileBottomNav';nav.innerHTML='<button data-rental-bottom-tab="items">اجاره تجهیزات</button><button data-rental-bottom-tab="sales" hidden data-pb-channel-off="true">فروش تجهیزات</button><button data-rental-bottom-tab="bookings">آفیش</button><button data-rental-bottom-tab="photographers">عکاس</button><button data-rental-bottom-tab="accounting">حسابداری</button>';document.body.append(nav)});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
   await page.evaluate(()=>pbR1073PaintMobileOffice());
@@ -59,7 +59,8 @@ test('requests precede Office, mobile day strip stays readable and registration 
    assert.equal(await page.locator('[data-pb843-office-pane="'+key+'"]').count(),1);
   }
   assert.equal(await page.locator('[data-pb843-office-tab="calendar"]').count(),1);
-  assert.deepEqual(await page.locator('#pb848BookingHeaderTabs>button').evaluateAll(bs=>bs.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.dataset.pb843OfficeTab)),['pending','calendar']);
+  await page.evaluate(()=>{const tab=document.createElement('button');tab.dataset.pb843OfficeTab='returnShortages';tab.textContent='کسری دریافت';document.getElementById('pb848BookingHeaderTabs').append(tab);pbR1073PaintMobileOffice()});
+  assert.deepEqual(await page.locator('#pb848BookingHeaderTabs>button').evaluateAll(bs=>bs.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.dataset.pb843OfficeTab)),['pending','calendar','shortages','returnShortages']);
   if(viewport.width<851){
    assert.equal(await page.locator('.pb904r2CalendarSplit').evaluate(x=>getComputedStyle(x).display),'none');
    const widths=await page.locator('#rentalMobileBottomNav>button:not([hidden]):not([data-rental-bottom-tab="photographers"])').evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().width));
@@ -67,23 +68,39 @@ test('requests precede Office, mobile day strip stays readable and registration 
    const nav=await page.locator('#rentalMobileBottomNav').evaluate(el=>({width:el.getBoundingClientRect().width,padding:parseFloat(getComputedStyle(el).paddingLeft)+parseFloat(getComputedStyle(el).paddingRight),gap:parseFloat(getComputedStyle(el).columnGap)||0,display:getComputedStyle(el).display}));
    assert(Math.abs(widths.reduce((a,b)=>a+b,0)+nav.padding+2*nav.gap-nav.width)<3,JSON.stringify({widths,nav}));
    assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="first"]').count(),1);
-   await page.addScriptTag({content:`(()=>{let jalaliPickerInput=null,jalaliPickerYear=null,jalaliPickerMonth=null;${pickerHelpers};const fa=x=>String(x);${picker};pbR17TehranIsoDate=window.pbR17TehranIsoDate;window.openJalaliCalendar=openJalaliCalendar;window.jalaliInputToIso=jalaliInputToIso;window.isoToJalaliInput=isoToJalaliInput;window.pickRegistrationDay=chooseJalaliDay;window.dateParts=jalaliPartsFromIso;})();`});
+   await page.addScriptTag({content:`(()=>{let jalaliPickerInput=null,jalaliPickerYear=null,jalaliPickerMonth=null;${pickerHelpers};const fa=x=>String(x);${picker};pbR17TehranIsoDate=window.pbR17TehranIsoDate;window.openJalaliCalendar=openJalaliCalendar;window.jalaliInputToIso=jalaliInputToIso;window.isoToJalaliInput=isoToJalaliInput;window.pickRegistrationDay=chooseJalaliDay;window.dateParts=jalaliPartsFromIso;window.jalaliPartsFromIso=jalaliPartsFromIso;window.jalaliMonthLength=jalaliMonthLength;})();`});
    assert.equal(await page.locator('#pb848BookingHeaderTabs').evaluate(el=>getComputedStyle(el).overflowX),'hidden');
    assert.equal(await page.locator('#pbR1073OfficeRail').evaluate(el=>getComputedStyle(el).scrollbarWidth),'none');
    assert.equal(await page.locator('#pbR1073OfficeRail button.active strong').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');
    await page.locator('#pbR1073Register').click();
-   await page.waitForSelector('#jalaliCalendarPopover.open');assert.deepEqual(await page.evaluate(()=>registered),[]);
-   await page.locator('#jalaliCalendarPopover [data-jalali-clear]').click();assert.deepEqual(await page.evaluate(()=>registered),[]);
+   await page.waitForSelector('#pbR1076Registration');assert.deepEqual(await page.evaluate(()=>registered),[]);
+   assert.equal(await page.locator('[data-register-next]').isDisabled(),true);
+   await page.locator('[data-register-close]').click();assert.deepEqual(await page.evaluate(()=>registered),[]);
 
    await page.locator('[data-office-day="2030-10-13"]').click();
    assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="first"]').count(),0);
    assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="second"]').count(),1);
    assert.match(await page.locator('#pbR1073OfficeRows').textContent(),/ثبت دریافت تجهیزات/);
    await page.evaluate(()=>pbR1073PaintMobileOffice());assert.equal(await page.locator('[data-office-day="2030-10-13"]').getAttribute('class').then(x=>x.includes('active')),true);
-   await page.locator('#pbR1073Register').click();await page.waitForSelector('#jalaliCalendarPopover.open');
-   const chosen=await page.evaluate(()=>{const p=dateParts('2030-10-14');return p.day});
-   await page.locator('#jalaliCalendarPopover [data-jalali-day="'+chosen+'"]').click();
-   assert.deepEqual(await page.evaluate(()=>registered),['2030-10-14']);
+   await page.locator('#pbR1073Register').click();await page.waitForSelector('#pbR1076Registration');
+   await page.locator('[data-register-day="2030-10-12"]').click();
+   await page.locator('[data-register-day="2030-10-14"]').click();
+   assert.equal(await page.locator('[data-register-day="2030-10-12"]').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('[data-register-day="2030-10-14"]').getAttribute('aria-pressed'),'true');
+   await page.locator('[data-register-next]').click();assert.deepEqual(await page.evaluate(()=>registered),[]);
+   assert.match(await page.locator('#pbR1076Registration [role=alert]').textContent(),/پشت سر هم/);
+   await page.locator('[data-register-day="2030-10-13"]').click();
+   await page.locator('[data-register-next]').click();
+   assert.deepEqual(await page.evaluate(()=>registered),[['2030-10-12','2030-10-13','2030-10-14']]);
+   assert.equal(await page.locator('#pbR1076Registration').count(),0);
+   await page.locator('#pbR1073Register').click();
+   const boundary=await page.evaluate(()=>{const p=jalaliPartsFromIso('2030-10-12'),last=jalaliInputToIso(`${p.year}/${p.month}/${jalaliMonthLength(p.year,p.month)}`);return[last,new Date(Date.parse(last+'T12:00:00Z')+86400000).toISOString().slice(0,10)]});
+   await page.locator('[data-register-day="'+boundary[0]+'"]').click();await page.locator('[data-register-month="1"]').click();
+   await page.locator('[data-register-day="'+boundary[1]+'"]').click();await page.locator('[data-register-month="-1"]').click();
+   assert.equal(await page.locator('[data-register-day="'+boundary[0]+'"]').getAttribute('aria-pressed'),'true');
+   await page.locator('[data-register-next]').click();assert.deepEqual(await page.evaluate(()=>registered[1]),boundary);
+
+   const tabFit=await page.locator('#pb848BookingHeaderTabs').evaluate(el=>el.scrollWidth<=el.clientWidth);assert.equal(tabFit,true);
    assert.equal(await page.locator('[data-office-day="2030-10-13"]').getAttribute('class').then(x=>x.includes('active')),true);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
 

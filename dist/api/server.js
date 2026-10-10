@@ -10313,7 +10313,7 @@ async function equipmentRentalShopOverview(shopId) {
         pool.query(`SELECT b.*,to_char(b.rental_start,'YYYY-MM-DD') rental_start,to_char(b.rental_end,'YYYY-MM-DD') rental_end,(b.rental_end-b.rental_start+1)::int rental_days,
           COALESCE(sum(bi.quantity),0)::int item_count,
           COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) || ' ×' || bi.quantity::text,'، ' ORDER BY i.title),'') item_titles,
-          COALESCE(jsonb_agg(jsonb_build_object('itemId',bi.item_id,'title',equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id),'category',i.category,'brand',i.brand,'model',i.model,'quantity',bi.quantity) ORDER BY i.title) FILTER (WHERE bi.id IS NOT NULL),'[]'::jsonb) items,
+          COALESCE(jsonb_agg(jsonb_build_object('itemId',bi.item_id,'title',equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id),'category',i.category,'brand',i.brand,'model',i.model,'quantity',bi.quantity,'rental_days',bi.rental_days,'daily_price',bi.daily_price,'subtotal',bi.subtotal) ORDER BY i.title) FILTER (WHERE bi.id IS NOT NULL),'[]'::jsonb) items,
           COALESCE(pp.studio_name,u.name) photographer_name,u.mobile photographer_mobile,
           m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no
           FROM equipment_rental_bookings b

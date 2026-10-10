@@ -5107,12 +5107,12 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayPanelHead small{font-size:8.5px!important;line-height:1.35!important;margin-top:1px!important}
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayPanelBody{gap:6px!important;padding-left:1px!important}
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayBooking{
-    position:relative!important;display:block!important;width:100%!important;min-width:0!important;padding:8px 9px 22px!important;
+    position:relative!important;display:block!important;width:100%!important;min-width:0!important;padding:8px 9px!important;
     border-radius:10px!important;cursor:pointer!important;appearance:none!important;text-align:right!important;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
   }
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayBooking:hover{border-color:#a5b4fc!important;background:#f8faff!important}
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayBooking:after{
-    content:'مشاهده فاکتور';position:absolute;left:8px;bottom:5px;color:#315efb;font:900 8px/1 Vazirmatn,Tahoma,Arial,sans-serif;
+    content:none;
   }
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayBooking b{font-size:10px!important;line-height:1.4!important}
   body.rentalAppReady.pb899MainBookings #bookings .pb904r2DayBooking small{font-size:8px!important;line-height:1.45!important;margin-top:1px!important}
@@ -5151,13 +5151,17 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
   }
   async function openBookingInvoice(bookingId){
     let inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId));
-    if(!inv&&typeof loadAccounting==='function'){try{await loadAccounting()}catch{}inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId))}
+    if(!inv&&typeof loadAccounting==='function'){
+      try{await loadAccounting()}catch{storeNotice?.('بررسی فاکتور انجام نشد؛ لطفاً دوباره تلاش کنید.','آفیش');return}
+      inv=(accountingData?.invoices||[]).find(x=>String(x.booking_id||'')===String(bookingId));
+    }
     if(inv){
-      const proxy=document.createElement('span');proxy.dataset.pb897InvoiceView=String(inv.id);proxy.style.display='none';document.body.appendChild(proxy);proxy.click();proxy.remove();return;
+      window.pb922OpenInvoice?.(String(inv.id));return;
     }
     const b=(data?.bookings||[]).find(x=>String(x.id)===String(bookingId));
-    if(typeof storeNotice==='function')storeNotice(b?'برای این آفیش هنوز فاکتور صادر نشده است.':'اطلاعات این آفیش پیدا نشد.','مشاهده فاکتور');
-    else alert(b?'برای این آفیش هنوز فاکتور صادر نشده است.':'اطلاعات این آفیش پیدا نشد.');
+    if(b){window.pbR100F71OpenBookingDetails?.(bookingId,{proforma:true});return}
+    if(typeof storeNotice==='function')storeNotice('اطلاعات این آفیش پیدا نشد.','آفیش');
+    else alert('اطلاعات این آفیش پیدا نشد.');
   }
   const oldDayRenderer=window.pb904r2RenderDayPanel||((typeof pb904r2RenderDayPanel==='function')?pb904r2RenderDayPanel:null);
   const renderDay=function(iso){
@@ -8564,7 +8568,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
      const found=all.find(v=>String(v.id||'')===x.id);
      const title=x.title||[found?.category,found?.brand,found?.model||found?.title].filter(Boolean).join(' ')||'تجهیز';
      const saved=(b.handover_serials||[]).find(v=>String(v.itemId||v.item_id||'')===x.id);
-     return {id:x.id,title,qty:Math.max(1,Number(num(x.qty))||1),serials:Array.isArray(saved?.serials)?saved.serials.filter(Boolean):[]};
+     return {id:x.id,title,qty:Math.max(1,Number(num(x.qty))||1),source:x.source,serials:Array.isArray(saved?.serials)?saved.serials.filter(Boolean):[]};
    });
  }
  let modal,priorFocus,previousOverflow;
@@ -8586,7 +8590,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
    const bookings=(typeof data!=='undefined'?data?.bookings:null)||window.data?.bookings||[];
    return bookings.find(b=>String(b.id)===String(id));
  };
- function open(id){
+ function open(id,{proforma=false}={}){
    const b=findBooking(id);if(!b)return;
    const m=getModal(),staff=document.body.classList.contains('pbR100F9StaffMode')||!!(typeof data!=='undefined'&&data?.staffMode);
    const rows=itemsOf(b),canPrint=['picked_up','returned'].includes(String(b.status||''))&&!staff;
@@ -8602,7 +8606,16 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
        info.push(fact('ودیعه',money(b.deposit_amount||0)));
      }
    }
-   q('#pbR100F71Title',m).textContent='جزئیات آفیش · '+(b.photographer_name||b.customer_name||'عکاس');
+   if(proforma&&!staff){
+     if(typeof statusLabel==='function')info.push(fact('وضعیت آفیش',statusLabel(b.status)));
+     if(typeof money==='function'){
+       if(b.gross_amount!=null)info.push(fact('مبلغ قبل از تخفیف',money(b.gross_amount)));
+       if(b.discount_amount!=null)info.push(fact('تخفیف',money(b.discount_amount)));
+     }
+     if(b.notes)info.push(fact('توضیحات آفیش',b.notes));
+     if(b.collateral_note)info.push(fact('توضیحات ضمانت',b.collateral_note));
+   }
+   q('#pbR100F71Title',m).textContent=(proforma?'پیش‌فاکتور · ':'جزئیات آفیش · ')+(b.photographer_name||b.customer_name||'عکاس');
    // Display the real return-shortage totals only on completed staff returns.
    // Neither a view nor a check badge changes inventory/booking state.
    const isStaffReturn=staff&&String(b.status||'')==='returned';
@@ -8621,7 +8634,13 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
          (returned?Array.from({length:Math.min(returned,24)},()=>'<em class="received">✓ دریافت شد</em>').join('')+(returned>24?'<em class="received">+'+faN(returned-24)+'</em>':''):'')+
          (miss?'<em class="missing">'+faN(miss)+' کسری تحویل</em>':'')
        ))+'</span>':'';
-     return '<li><span>'+esc(x.title)+chips+
+     const price=proforma&&!staff&&typeof money==='function'&&x.source?.subtotal!=null
+       ?'<small style="display:block">'+esc([
+         x.source.daily_price!=null?'اجاره روزانه: '+money(x.source.daily_price):'',
+         x.source.rental_days!=null?faN(x.source.rental_days)+' روز':'',
+         'مبلغ این ردیف: '+money(x.source.subtotal)
+       ].filter(Boolean).join(' · '))+'</small>':'';
+     return '<li><span>'+esc(x.title)+chips+price+
        (x.serials.length?'<small style="display:block;color:#667085;direction:ltr;text-align:left">SN: '+esc(x.serials.join(' · '))+'</small>':'')+
        '</span><b>'+faN(x.qty)+' عدد</b></li>';
    }).join('')+'</ul>':'<p>جزئیات تجهیزات ثبت نشده است.</p>';
@@ -8629,7 +8648,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
    if(canPrint&&(typeof window.pbR85PrintCommitment==='function'||typeof window.pb916PrintCommitment==='function'))actions.push('<button type="button" data-pb-r71-print>چاپ تعهدنامه</button>');
    if(canPrint&&typeof window.pb100rPrintInvoice==='function')actions.push('<button type="button" data-pb-r71-invoice>فاکتور</button>');
    actions.push('<button type="button" data-pb-r71-close>بستن</button>');
-   q('.pbR100F71Body',m).innerHTML='<div class="pbR100F71Facts">'+info.join('')+'</div><div><strong style="font-size:12px;color:#344054">فهرست کامل تجهیزات</strong>'+list+'</div><div class="pbR100F71Actions">'+actions.join('')+'</div>';
+   q('.pbR100F71Body',m).innerHTML=(proforma?'<p role="note">این پیش‌فاکتور بر اساس اطلاعات فعلی آفیش است؛ هنوز فاکتور نهایی صادر نشده است.</p>':'')+'<div class="pbR100F71Facts">'+info.join('')+'</div><div><strong style="font-size:12px;color:#344054">فهرست کامل تجهیزات</strong>'+list+'</div><div class="pbR100F71Actions">'+actions.join('')+'</div>';
    q('[data-pb-r71-print]',m)?.addEventListener('click',()=>{(window.pbR85PrintCommitment||window.pb916PrintCommitment)?.(id)});
    q('[data-pb-r71-invoice]',m)?.addEventListener('click',()=>window.pb100rPrintInvoice?.(id));
    priorFocus=document.activeElement;previousOverflow=document.body.style.overflow;

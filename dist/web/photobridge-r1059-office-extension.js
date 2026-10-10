@@ -25,7 +25,7 @@
  @media(max-width:850px){#pbOfficeExtension .extSplit{grid-template-columns:1fr;gap:12px}#pbOfficeExtension .extDialog{padding:14px}#pbOfficeExtension .extFoot{flex-wrap:wrap}}
  `;document.head.append(style);
  let active=null;
- function close(){if(!active)return;const st=active;active=null;st.version++;st.modal.remove();document.body.style.overflow=st.overflow;st.focus?.focus()}
+ function close(){if(!active)return;const st=active;active=null;st.version++;window.closeJalaliCalendar?.();st.modal.remove();document.body.classList.remove('pbOfficeEditOpen');document.body.style.overflow=st.overflow;st.focus?.focus()}
  function calendar(st){
    const host=st.modal.querySelector('.extCalendar'),p=window.jalaliPartsFromIso(st.month);if(!p)return;
    const iso=d=>window.pb843IsoForJalali(p.year,p.month,d)||window.jalaliInputToIso(`${p.year}/${p.month}/${d}`);
@@ -68,19 +68,60 @@
    };
    await preview(st);
  };
+ window.pbRentalOpenBookingEdit=async id=>{
+   const b=find(id);if(!b)return;
+   close();document.querySelector('#pbR100F71Details.open [data-pb-r71-close]')?.click();
+   const modal=document.createElement('div');modal.id='pbOfficeExtension';modal.innerHTML='<section class="extDialog" role="dialog" aria-modal="true" aria-labelledby="pbEditTitle"><div class="extHead"><b id="pbEditTitle">ویرایش آفیش</b><button type="button" data-ext-close aria-label="بستن">×</button></div><div class="editBody">در حال دریافت آفیش…</div><p role="alert"></p></section>';
+   const st={id,modal,version:0,overflow:document.body.style.overflow,focus:document.activeElement,busy:false};active=st;document.body.append(modal);document.body.style.overflow='hidden';document.body.classList.add('pbOfficeEditOpen');modal.querySelector('[data-ext-close]').onclick=close;
+   try{
+     const draft=await request('/api/rental/bookings/'+id+'/edit');if(active!==st)return;
+     const qty=new Map(draft.items.map(x=>[x.itemId,x.quantity]));
+     modal.querySelector('.editBody').innerHTML=`<p>تاریخ و تجهیزات آفیش بدون فاکتور را ویرایش کنید.</p><form class="editForm"><div class="extSplit"><label>تاریخ شروع<input name="startDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.startDate))}"></label><label>تاریخ پایان<input name="endDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.endDate))}"></label></div><label>جستجوی تجهیزات<input name="equipmentSearch" type="search" placeholder="نام تجهیز"></label><div class="editItems">${draft.catalog.map(x=>`<label class="extItem" data-edit-title="${esc(x.title)}"><span>${esc(x.title)}</span><input type="number" aria-label="تعداد ${esc(x.title)}" data-edit-item="${esc(x.id)}" min="0" max="99" step="1" value="${qty.get(x.id)||0}"></label>`).join('')}</div><button type="submit" class="extSubmit">ذخیره تغییرات</button></form>`;
+     const form=modal.querySelector('form');
+     for(const name of ['startDate','endDate'])form.elements[name].onclick=()=>window.openJalaliCalendar(form.elements[name]);
+     form.elements.equipmentSearch.oninput=()=>form.querySelectorAll('[data-edit-title]').forEach(row=>row.hidden=!row.dataset.editTitle.includes(form.elements.equipmentSearch.value.trim()));
+     form.onsubmit=async e=>{
+       e.preventDefault();if(st.busy)return;
+       const items=[...form.querySelectorAll('[data-edit-item]')].filter(x=>Number(x.value)>0).map(x=>({itemId:x.dataset.editItem,quantity:Number(x.value)}));
+       if(!items.length){modal.querySelector('[role=alert]').textContent='حداقل یک تجهیز انتخاب کنید.';return;}
+       const payload={revision:draft.revision,startDate:window.jalaliInputToIso(form.elements.startDate.value),endDate:window.jalaliInputToIso(form.elements.endDate.value),items};
+       st.busy=true;form.querySelector('[type=submit]').disabled=true;
+       try{
+         const save=()=>request('/api/rental/bookings/'+id+'/edit',{method:'PUT',body:JSON.stringify(payload)});
+         try{await save()}catch(error){
+           if(error.error!=='equipment_unavailable'||!confirm('برخی تجهیزات در روزهای انتخاب‌شده موجود نیستند. تغییرات با ثبت کسری برای تأمین ذخیره شود؟'))throw error;
+           payload.allowShortage=true;await save();
+         }
+         if(active===st)close();if(typeof load==='function')await load();
+       }
+       catch(error){if(active===st){modal.querySelector('[role=alert]').textContent=({booking_not_editable:'این آفیش تحویل شده یا فاکتور دارد و قابل ویرایش نیست.',booking_changed_retry:'آفیش تغییر کرده است؛ پنجره را ببندید و دوباره باز کنید.',booking_supplied_edit_requires_review:'این آفیش تجهیزات تأمین‌شده دارد؛ ابتدا وضعیت تأمین را بررسی کنید.',past_rental_date:'تاریخ گذشته قابل انتخاب نیست.'})[error.error]||'ویرایش انجام نشد؛ تاریخ و تجهیزات را بررسی کنید.'}}
+       finally{st.busy=false;if(active===st)form.querySelector('[type=submit]').disabled=false}
+     };
+   }catch(error){if(active===st)modal.querySelector('[role=alert]').textContent='این آفیش قابل ویرایش نیست یا دریافت اطلاعات انجام نشد.'}
+ };
+ style.textContent+='\n.pbOfficeEditOpen #jalaliCalendarPopover{z-index:2147483201!important}.pbOfficeEditOpen #jalaliCalendarBackdrop{z-index:2147483200!important}#pbOfficeExtension .editForm input{font:inherit;box-sizing:border-box;max-width:100%;padding:10px;border:1px solid #d9e2f5;border-radius:8px}#pbOfficeExtension .editForm label>input:not([type=number]){display:block;width:100%}#pbOfficeExtension .editItems{margin:12px 0;max-height:40dvh;overflow:auto}#pbOfficeExtension .editItems .extItem{justify-content:space-between;align-items:center}#pbOfficeExtension .editItems input[type=number]{width:80px;height:42px}#pbOfficeExtension .editItems [hidden]{display:none}';
+ const cardSelector='[data-office-booking-id],[data-pb915-booking-id],[data-pb904r5-booking-id]';
+ const cardId=card=>card.dataset.officeBookingId||card.dataset.pb915BookingId||card.dataset.pb904r5BookingId;
  function mount(){
-   document.querySelectorAll('[data-office-booking-id],[data-pb915-booking-id],[data-pb904r5-booking-id]').forEach(card=>{
-     if(card.closest('#pbOfficeExtension')||card.querySelector('[data-office-booking-id]'))return;
+   document.querySelectorAll(cardSelector).forEach(card=>{
+     if(card.closest('#pbOfficeExtension'))return;
+     // Desktop day cards and their action toolbar are siblings in the same group.
+     const group=card.closest('.pbR1052DayGroup'),toolbar=group?.querySelector('[data-office-booking-id]');
+     if(toolbar&&cardId(toolbar)===cardId(card)&&card!==toolbar)return;
+     const parent=card.parentElement?.closest(cardSelector);if(parent&&cardId(parent)===cardId(card))return;
      const id=card.dataset.officeBookingId||card.dataset.pb915BookingId||card.dataset.pb904r5BookingId,b=find(id);if(!b)return;
-     let button=card.querySelector(':scope > .pbOfficeExtendButton');
-     if(!button){button=document.createElement('button');button.type='button';button.className='pbOfficeExtendButton';button.dataset.extensionBookingId=id;button.textContent='تمدید آفیش';card.append(button)}
-     const enabled=b.status==='picked_up'&&(b.handover_serials||[]).some(x=>!x.extendedToBookingId);
-     if(button.disabled===enabled)button.disabled=!enabled;
-     const title=enabled?'تمدید تجهیزات تحویل‌شده':'تمدید پس از تحویل تجهیزات در دسترس است';if(button.title!==title)button.title=title;
+     const extend=b.status==='picked_up'&&(b.handover_serials||[]).some(x=>!x.extendedToBookingId),edit=['reserved','pending_approval','payment_pending'].includes(b.status)&&!b.has_invoice&&!b.invoice_id&&b.payment_status!=='paid';
+     const buttons=[...card.querySelectorAll('.pbOfficeExtendButton')];let button=buttons.shift();buttons.forEach(x=>x.remove());
+     if(!extend&&!edit){button?.remove();return;}
+     if(!button){button=document.createElement('button');button.type='button';button.className='pbOfficeExtendButton';(card.querySelector('.pbR1052DayActions,.actions')||card).append(button)}
+     if(button.disabled)button.disabled=false;
+     const label=extend?'تمدید آفیش':'ویرایش آفیش';if(button.textContent!==label)button.textContent=label;
+     if(button.dataset.bookingAction!==(extend?'extend':'edit'))button.dataset.bookingAction=extend?'extend':'edit';
+     if(button.dataset.extensionBookingId!==id)button.dataset.extensionBookingId=id;
    });
  }
  let frame=0;const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;mount()})};
- document.addEventListener('click',e=>{const b=e.target.closest?.('[data-extension-booking-id]');if(b&&!b.disabled){e.preventDefault();e.stopImmediatePropagation();void window.pbRentalOpenExtension(b.dataset.extensionBookingId)}},true);
+ document.addEventListener('click',e=>{const b=e.target.closest?.('[data-extension-booking-id]');if(b&&!b.disabled){e.preventDefault();e.stopImmediatePropagation();void (b.dataset.bookingAction==='edit'?window.pbRentalOpenBookingEdit:window.pbRentalOpenExtension)(b.dataset.extensionBookingId)}},true);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&active){e.preventDefault();close()}});
  new MutationObserver(records=>{if(records.some(r=>!r.target.closest?.('#pbOfficeExtension')))schedule()}).observe(document.body,{childList:true,subtree:true});schedule();
 })();

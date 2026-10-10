@@ -30,6 +30,7 @@ test('shop directory tells the customer which selection policy applies',()=>{
  assert.match(c,/selectedShopRecord/);
  assert.match(c,/card\.querySelector\('input\.pick'\)/);
  assert.match(c,/qty\.max=String\(Math\.max\(1,free\)\)/);
+ assert.match(c,/dated&&row&&blocked&&cb\.checked/,'temporary availability refresh must not erase selected items');
  assert.match(c,/async function checkFinal/);
  assert.match(c,/e\.stopImmediatePropagation\(\)/);
  assert.match(c,/\/api\/customer\/equipment-rental\/availability/);

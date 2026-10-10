@@ -10647,8 +10647,8 @@ async function equipmentRentalEditBooking(db,{shopId,bookingId,actorId,startDate
     if(draft.error)return draft;
     if(!revision||revision!==draft.revision)return {error:'booking_changed_retry'};
     // Do not silently cancel external purchases or supplies held by another customer.
-    const provided=await db.query("SELECT id FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND (status='provided' OR resolved_at IS NOT NULL) FOR UPDATE",[bookingId,shopId]);
-    if(provided.rowCount)return {error:'booking_supplied_edit_requires_review'};
+    const supply=await db.query('SELECT id,status,resolved_at FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 FOR UPDATE',[bookingId,shopId]);
+    if(supply.rows.some(x=>x.status==='provided'||x.resolved_at))return {error:'booking_supplied_edit_requires_review'};
     let availability=await equipmentRentalAvailability(db,{shopId,startDate,endDate,items,excludeBookingId:bookingId});
     if(availability.error)return availability;
     if(availability.items.some(x=>!x.valid))return {error:'invalid_rental_items'};

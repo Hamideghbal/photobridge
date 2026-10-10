@@ -4182,12 +4182,15 @@ html,body{max-width:100%;overflow-x:hidden}
     const cal=q('[data-pb843-office-tab="calendar"]',tabs);if(cal){
       // Preserve possible count span if added later; only normalize the label once.
       const count=cal.querySelector('.pb854TabCount');cal.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.remove()});
-      if(!cal.querySelector('.pb898OfficeLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
+      // The mobile rail owns its text through .pb905rOfficeTabLabel. Never insert a
+      // second legacy label: the mobile MutationObserver would remove it, then
+      // this observer would re-add it forever and stall low-end Android devices.
+      if(!cal.querySelector('.pb898OfficeLabel, .pb905rOfficeTabLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
     }
     const pane=q('#bookings>[data-pb843-office-pane="manual"]');if(pane)pane.setAttribute('aria-hidden','true');
     const title=q('#pb843CalendarTitle');if(title&&/تقویم\s*آفیش/.test(title.textContent||''))title.textContent='آفیش';
-    const cont=q('#pb892CalendarContinue');if(cont)cont.textContent='ادامه ثبت آفیش';
-    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active'))select.textContent='انتخاب تاریخ‌ها';
+    const cont=q('#pb892CalendarContinue');if(cont&&cont.textContent!=='ادامه ثبت آفیش')cont.textContent='ادامه ثبت آفیش';
+    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active')&&select.textContent!=='انتخاب تاریخ‌ها')select.textContent='انتخاب تاریخ‌ها';
   }
   const oldSet=typeof window.pb843SetOfficeTab==='function'?window.pb843SetOfficeTab:null;
   if(oldSet){

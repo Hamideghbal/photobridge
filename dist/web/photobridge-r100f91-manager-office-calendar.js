@@ -239,7 +239,7 @@
  docStyles.id='pbR1052DayActionStyles';
  docStyles.textContent=[
    '#pb904r2DayPanelBody .pbR1052DayGroup{display:flex;direction:rtl;align-items:center;justify-content:space-between;gap:7px;width:100%;min-width:0;padding:8px 9px;box-sizing:border-box;border:1px solid #e4e7ec;border-radius:10px;background:#fff}',
-   '#pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{flex:1 1 auto!important;width:auto!important;min-width:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;box-sizing:border-box!important}',
+   'html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{flex:1 1 auto!important;width:auto!important;min-width:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;box-sizing:border-box!important}',
    '#pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{flex:0 1 auto;min-width:0;margin:0;justify-content:flex-end}',
    '#pb904r2DayPanelBody .pbR1052DayGroup+.pbR1052DayGroup{margin-top:0}',
    '.pbR1052DayActions{display:flex;flex-direction:row;flex-wrap:wrap;gap:5px;align-items:center;justify-content:flex-end;direction:rtl}',

@@ -33,7 +33,7 @@
   }
   function clearIfNeeded(){
     if(target())return;
-    document.body.classList.remove('pbR100F28PortalLogin','pbR100F28LabLogin','pbR100F28RentalLogin');
+    for(const name of ['pbR100F28PortalLogin','pbR100F28LabLogin','pbR100F28RentalLogin'])if(document.body.classList.contains(name))document.body.classList.remove(name);
   }
   let queued=false;
   function sync(){queued=false;const t=target();if(t)decorate(t);else clearIfNeeded()}

@@ -1217,7 +1217,7 @@ body.pbR100F9StaffMode #rentalDesktopPrimaryNav,body.pbR100F9StaffMode #rentalHe
 .pbR100F9StaffDates{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;scroll-padding-inline:calc(50% - 68px);padding:6px max(0px,calc((100% - 136px)/2)) 12px;margin:0 0 4px;scrollbar-width:none;touch-action:pan-x}.pbR100F9StaffDates::-webkit-scrollbar{display:none}.pbR100F9StaffDates button{flex:0 0 136px;width:136px;min-height:82px;box-sizing:border-box;display:grid;grid-template-rows:auto auto auto;align-content:center;gap:5px;padding:8px 10px;border:1px solid #dbe4ff;border-radius:14px;background:#fff;color:#344054;font:850 11px Vazirmatn;cursor:pointer;scroll-snap-align:center;text-align:center}.pbR100F9StaffDateTop{display:flex;align-items:center;justify-content:center;gap:6px;min-height:18px}.pbR100F9StaffDateTop small{font-size:10px;font-weight:850;color:#475467}.pbR100F9StaffDateTop b{padding:2px 7px;border-radius:999px;background:#fff0d9;color:#a14b00;font-size:9px;font-weight:950}.pbR100F9StaffDates button>strong{font-size:14px;line-height:1.4;font-weight:950;color:#101828}.pbR100F9StaffDates button>em{justify-self:center;display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eff3ff;color:#315efb;font-size:10px;font-style:normal;font-weight:850}.pbR100F9StaffDates button>em b{font-size:12px;font-weight:950}.pbR100F9StaffDates button.active{border-color:#315efb;background:#315efb;box-shadow:0 5px 14px #315efb35}.pbR100F9StaffDates button.active .pbR100F9StaffDateTop small,.pbR100F9StaffDates button.active>strong{color:#fff}.pbR100F9StaffDates button.active .pbR100F9StaffDateTop b{background:#fff;color:#2448c9}.pbR100F9StaffDates button.active>em{background:#fff;color:#2448c9}.pbR100F9StaffDates button[data-today="true"]:not(.active){border-color:#8da6ff}.pbR100F9StaffDayLabel{font-size:10px;font-weight:850;color:#475467;margin:0 0 7px}.pbR100F9StaffMode #pb862MobileAddFab{display:none!important}
 </style>
 <link rel="stylesheet" href="/photobridge-v904r100f28-header-calendar-login.css?v=904r100f28">
-<script defer src="/photobridge-v904r100f28-portal-entry.js?v=904r100f28"></script>
+<script defer src="/photobridge-v904r100f28-portal-entry.js?v=r1051"></script>
 <style id="pbR100F59ManagerStaffChrome">
 /* Staff destinations stay fixed; the existing role-limited operations are unchanged. */
 html body.pbR100F9StaffMode .pbR100F9StaffTabs{position:fixed!important;top:108px!important;left:50%!important;transform:translateX(-50%)!important;width:min(920px,calc(100% - 22px))!important;height:52px!important;box-sizing:border-box!important;z-index:125!important;margin:0!important;background:#fff!important;border-radius:0!important;gap:0!important;border-bottom:1px solid #e8edf5!important}
@@ -4189,8 +4189,8 @@ html,body{max-width:100%;overflow-x:hidden}
     }
     const pane=q('#bookings>[data-pb843-office-pane="manual"]');if(pane)pane.setAttribute('aria-hidden','true');
     const title=q('#pb843CalendarTitle');if(title&&/تقویم\s*آفیش/.test(title.textContent||''))title.textContent='آفیش';
-    const cont=q('#pb892CalendarContinue');if(cont&&cont.textContent!=='ادامه ثبت آفیش')cont.textContent='ادامه ثبت آفیش';
-    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active')&&select.textContent!=='انتخاب تاریخ‌ها')select.textContent='انتخاب تاریخ‌ها';
+    const cont=q('#pb892CalendarContinue');if(cont&&cont.textContent!=='ثبت آفیش')cont.textContent='ثبت آفیش';
+    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active')&&select.textContent!=='انتخاب چند روز')select.textContent='انتخاب چند روز';
   }
   const oldSet=typeof window.pb843SetOfficeTab==='function'?window.pb843SetOfficeTab:null;
   if(oldSet){
@@ -4687,10 +4687,10 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
   function normalizeOfficeActions(){
     const bar=q('#pb892CalendarBatchBar'); if(!bar)return;
     const select=q('#pb892CalendarSelectMode',bar), clear=q('#pb892CalendarClear',bar), cont=q('#pb892CalendarContinue',bar);
-    if(select&&!select.classList.contains('active'))select.textContent='انتخاب چند روز';
-    if(clear)clear.textContent='پاک کردن';
-    if(cont)cont.textContent='ثبت آفیش';
-    [select,clear,cont].forEach(btn=>{if(!btn)return;btn.removeAttribute('style');btn.style.setProperty('transform','none','important');btn.style.setProperty('translate','none','important')});
+    if(select&&!select.classList.contains('active')&&select.textContent!=='انتخاب چند روز')select.textContent='انتخاب چند روز';
+    if(clear&&clear.textContent!=='پاک کردن')clear.textContent='پاک کردن';
+    if(cont&&cont.textContent!=='ثبت آفیش')cont.textContent='ثبت آفیش';
+    [select,clear,cont].forEach(btn=>{if(!btn)return;for(const property of ['transform','translate'])if(btn.style.getPropertyValue(property)!=='none'||btn.style.getPropertyPriority(property)!=='important')btn.style.setProperty(property,'none','important')});
   }
   function normalizeOfficeBadges(){
     q('#pb848BookingHeaderTabs')?.querySelectorAll('[data-pb843-office-tab] .pb854TabCount').forEach(b=>{
@@ -4862,7 +4862,7 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
       const directText=Array.from(btn.childNodes).filter(n=>n.nodeType===Node.TEXT_NODE&&String(n.textContent||'').trim());
       if(current&&current.textContent===wanted&&labels.length===1&&directText.length===0)return;
       Array.from(btn.childNodes).forEach(n=>{if(n!==count)n.remove()});
-      const sp=document.createElement('span');sp.className='pb903OfficeTabLabel pb900OfficeTabLabel pb898OfficeLabel';sp.textContent=wanted;
+      const sp=document.createElement('span');sp.className='pb903OfficeTabLabel pb900OfficeTabLabel pb898OfficeLabel pb904r5OfficeTabLabel pb905rOfficeTabLabel';sp.textContent=wanted;
       btn.insertBefore(sp,count||null);
     });
   }
@@ -6788,10 +6788,11 @@ html body.rentalAppReady #rentalHeaderFilterHost .pb912UnifiedSelection{display:
  const rows=['#pb848BookingHeaderTabs','[data-pb848-context-tab="photographers"]','#pb856FinanceHeaderContext .pb856FinanceTabs','#itemsCategoryFilters','#saleItemsCategoryFilters','#itemsBrandFilters','#saleItemsBrandFilters'];
  const tabs=['#pb848BookingHeaderTabs>[data-pb843-office-tab]','[data-pb848-context-tab="photographers"]>button','#pb856FinanceHeaderContext .pb856FinanceTabs>button','#itemsCategoryFilters>.categoryChip','#saleItemsCategoryFilters>.categoryChip','.pb831BrandFilters>.pb831BrandChip'];
  const run=()=>{
-  for(const selector of rows)root.querySelectorAll(selector).forEach(el=>el.classList.add('pb912UnifiedScrollRow'));
-  for(const selector of tabs)root.querySelectorAll(selector).forEach(el=>el.classList.add('pb912UnifiedTab'));
-  root.querySelectorAll('.pb854TabCount,.pb868FilterCount').forEach(el=>el.classList.add('pb912UnifiedCount'));
-  root.querySelectorAll('.pb839CategoryIndicator,.pb839BrandIndicator').forEach(el=>el.classList.add('pb912UnifiedSelection'));
+  const add=(el,name)=>{if(!el.classList.contains(name))el.classList.add(name)};
+  for(const selector of rows)root.querySelectorAll(selector).forEach(el=>add(el,'pb912UnifiedScrollRow'));
+  for(const selector of tabs)root.querySelectorAll(selector).forEach(el=>add(el,'pb912UnifiedTab'));
+  root.querySelectorAll('.pb854TabCount,.pb868FilterCount').forEach(el=>add(el,'pb912UnifiedCount'));
+  root.querySelectorAll('.pb839CategoryIndicator,.pb839BrandIndicator').forEach(el=>add(el,'pb912UnifiedSelection'));
  };
  run();new MutationObserver(run).observe(root,{childList:true,subtree:true});
 })();
@@ -7528,13 +7529,13 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="out"] .pb100rOutComp
  const navigationObserver=new MutationObserver(schedule);
  const observeNavigation=()=>navigationObserver.observe(host,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
  function style(el,props){if(!el)return;for(const [key,value] of Object.entries(props)){const v=String(value);if(el.style.getPropertyValue(key)!==v||el.style.getPropertyPriority(key)!=='important')el.style.setProperty(key,v,'important')}}
- function visible(el,on,display='flex'){if(!el)return;el.classList.toggle('hidden',!on);el.hidden=!on;el.setAttribute('aria-hidden',on?'false':'true');style(el,{display:on?display:'none',visibility:on?'visible':'hidden','pointer-events':on?'auto':'none',opacity:1})}
+ function visible(el,on,display='flex'){if(!el)return;el.classList.toggle('hidden',!on);if(el.hidden!==!on)el.hidden=!on;if(el.getAttribute('aria-hidden')!==(on?'false':'true'))el.setAttribute('aria-hidden',on?'false':'true');style(el,{display:on?display:'none',visibility:on?'visible':'hidden','pointer-events':on?'auto':'none',opacity:1})}
  function row(el,on,{product=false,brand=false,fill=false}={}){
   if(!el)return;const mobile=matchMedia('(max-width:850px)').matches,m=metrics[mobile?'mobile':'desktop'],officeMobile=mobile&&el.id==='pb848BookingHeaderTabs',height=officeMobile?50:(product?m.productRow:m.row),size=officeMobile?13.4:(product?m.productFont:m.font);
-  visible(el,on);el.classList.add('pb917Row');
+  visible(el,on);if(!el.classList.contains('pb917Row'))el.classList.add('pb917Row');
   style(el,{position:'relative',top:'auto',left:'auto',right:'auto',transform:'none',display:on?'flex':'none','flex-direction':'row','flex-wrap':'nowrap','align-items':'center','align-content':'center','justify-content':'flex-start',direction:'rtl',width:'100%','min-width':0,'max-width':'100%',height:height+'px','min-height':height+'px','max-height':height+'px',margin:0,padding:officeMobile?'0 max(8px,calc(50% - 68px))':'0 2px',gap:'5px','box-sizing':'border-box','overflow-x':fill?'hidden':'auto','overflow-y':'hidden','touch-action':'pan-x','overscroll-behavior-x':'contain','scrollbar-width':officeMobile?'none':'thin','scroll-snap-type':officeMobile?'x proximity':'none','scroll-padding-inline':officeMobile?'calc(50% - 68px)':'0px','border':0,'box-shadow':'none',background:'transparent'});
   qa('button',el).forEach(b=>{
-   b.classList.add('pb917Tab','pb912UnifiedTab');const active=b.classList.contains('active');
+   for(const name of ['pb917Tab','pb912UnifiedTab'])if(!b.classList.contains(name))b.classList.add(name);const active=b.classList.contains('active');
    style(b,{position:'relative',display:'inline-flex','align-items':'center','justify-content':'center',isolation:'isolate',flex:fill?'1 1 0':'0 0 auto',width:'auto','min-width':fill?'0':officeMobile?'136px':product?'max-content':'96px','max-width':'none',height:(height-8)+'px','min-height':(height-8)+'px','max-height':(height-8)+'px',margin:0,padding:fill?'0 5px':'0 11px','box-sizing':'border-box','font-family':fontFamily,'font-size':size+'px','font-weight':850,'font-style':'normal','line-height':'1.2','letter-spacing':'normal','text-transform':'none','white-space':'nowrap',gap:'5px',border:0,'border-radius':'8px','box-shadow':'none',outline:0,background:active?'#eaf0ff':'transparent',color:active?(brand?'#7187ad':'#315efb'):(brand?'#8a94a6':'#667085'),transform:'none',overflow:'visible',transition:matchMedia('(prefers-reduced-motion:reduce)').matches?'none':'background-color 160ms ease, color 160ms ease',animation:'none'});
    qa(':scope > span:not(.pb854TabCount):not(.pb868FilterCount)',b).forEach(label=>style(label,{'font-family':'inherit','font-size':'inherit','font-weight':'inherit','font-style':'inherit','line-height':'inherit',color:'inherit',margin:0,padding:0,'letter-spacing':'inherit',transition:'none',animation:'none'}));
    qa('.pb854TabCount,.pb868FilterCount',b).forEach(count=>style(count,{display:'inline-flex','align-items':'center','justify-content':'center',flex:'0 0 auto',position:'static',transform:'none',width:'auto','min-width':'18px',height:'18px','min-height':'18px','max-height':'18px',padding:'0 4px',margin:0,'font-family':fontFamily,'font-size':mobile?'9px':'8px','font-weight':850,'line-height':1,color:active?'#536b9d':'#8a94a6',background:active?'#dde7fb':'#f2f4f7',border:0,'border-radius':'999px',overflow:'visible'}));
@@ -8213,9 +8214,9 @@ html body.pbR100F9StaffMode .pbR100F9StaffList{position:relative!important;z-ind
       && q('#bookings')?.classList.contains('active')
       && (kind==='approved'||kind==='out');
     if(!enabled){
-      document.body.classList.remove('pbR100F64ManagerDatesPinned');
-      host.replaceChildren();
-      host.style.removeProperty('top');
+      if(document.body.classList.contains('pbR100F64ManagerDatesPinned'))document.body.classList.remove('pbR100F64ManagerDatesPinned');
+      if(host.childNodes.length)host.replaceChildren();
+      if(host.style.getPropertyValue('top'))host.style.removeProperty('top');
       return;
     }
     const pane=q('[data-pb843-office-pane="'+kind+'"].active');
@@ -8540,7 +8541,16 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
 #pbR100F71Details .pbR100F71Actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}
 #pbR100F71Details .pbR100F71Actions button{min-height:36px;padding:6px 12px;border-radius:9px;
   border:1px solid #d0d5dd;background:#f8fafc;color:#344054;font:850 10px Vazirmatn,Tahoma,sans-serif}
+#pbR100F71Details.proforma .pbR100F71Head{padding:9px 12px}
+#pbR100F71Details.proforma .pbR100F71Body{padding:10px 12px;gap:8px}
+#pbR100F71Details.proforma .pbR100F71Body>p{margin:0;font-size:10px;line-height:1.5;color:#667085}
+#pbR100F71Details.proforma .pbR100F71Facts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#pbR100F71Details.proforma .pbR100F71Fact{padding:6px 7px}
+#pbR100F71Details.proforma .pbR100F71Fact small{font-size:9px;margin-bottom:2px}
+#pbR100F71Details.proforma .pbR100F71Fact b{font-size:10px;line-height:1.5}
+#pbR100F71Details [data-pb-r71-cancel]{background:#fff1f2;border-color:#fecdca;color:#b42318}
 @media(max-width:440px){#pbR100F71Details .pbR100F71Facts{grid-template-columns:1fr 1fr}
+#pbR100F71Details.proforma .pbR100F71Facts{grid-template-columns:1fr 1fr}
 #pbR100F71Details .pbR100F71Body{padding:12px}}
 </style>
 
@@ -8601,6 +8611,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
  function open(id,{proforma=false}={}){
    const b=findBooking(id);if(!b)return;
    const m=getModal(),staff=document.body.classList.contains('pbR100F9StaffMode')||!!(typeof data!=='undefined'&&data?.staffMode);
+   m.classList.toggle('proforma',proforma);
    const rows=itemsOf(b),canPrint=['picked_up','returned'].includes(String(b.status||''))&&!staff;
    const info=[
      fact('شماره همراه',b.photographer_mobile||b.customer_mobile||'—'),
@@ -8608,6 +8619,8 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
      fact('تاریخ تحویل',fDate(b.rental_start)),
      fact('تاریخ دریافت',fDate(b.rental_end))
    ];
+   // The full range already contains both dates; avoid three copies in the quote summary.
+   if(proforma)info.splice(2,2);
    if(!staff){
      if(typeof money==='function'){
        info.push(fact('مبلغ آفیش',money(b.total_amount||0)));
@@ -8653,12 +8666,19 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
        '</span><b>'+faN(x.qty)+' عدد</b></li>';
    }).join('')+'</ul>':'<p>جزئیات تجهیزات ثبت نشده است.</p>';
    const actions=[];
+   if(proforma&&!staff&&['pending_approval','payment_pending','reserved'].includes(String(b.status||''))&&typeof bookingStatus==='function')actions.push('<button type="button" data-pb-r71-cancel>حذف آفیش</button>');
    if(canPrint&&(typeof window.pbR85PrintCommitment==='function'||typeof window.pb916PrintCommitment==='function'))actions.push('<button type="button" data-pb-r71-print>چاپ تعهدنامه</button>');
    if(canPrint&&typeof window.pb100rPrintInvoice==='function')actions.push('<button type="button" data-pb-r71-invoice>فاکتور</button>');
    actions.push('<button type="button" data-pb-r71-close>بستن</button>');
    q('.pbR100F71Body',m).innerHTML=(proforma?'<p role="note">این پیش‌فاکتور بر اساس اطلاعات فعلی آفیش است؛ هنوز فاکتور نهایی صادر نشده است.</p>':'')+'<div class="pbR100F71Facts">'+info.join('')+'</div><div><strong style="font-size:12px;color:#344054">فهرست کامل تجهیزات</strong>'+list+'</div><div class="pbR100F71Actions">'+actions.join('')+'</div>';
    q('[data-pb-r71-print]',m)?.addEventListener('click',()=>{(window.pbR85PrintCommitment||window.pb916PrintCommitment)?.(id)});
    q('[data-pb-r71-invoice]',m)?.addEventListener('click',()=>window.pb100rPrintInvoice?.(id));
+   q('[data-pb-r71-cancel]',m)?.addEventListener('click',async event=>{
+     const button=event.currentTarget;if(button.disabled)return;
+     const current=findBooking(id);if(!current||!['pending_approval','payment_pending','reserved'].includes(String(current.status||'')))return;
+     button.disabled=true;
+     try{await bookingStatus(id,'cancelled');if(findBooking(id)?.status==='cancelled')close()}finally{button.disabled=false}
+   });
    priorFocus=document.activeElement;previousOverflow=document.body.style.overflow;
    m.classList.add('open');document.body.style.overflow='hidden';q('.pbR100F71Close',m)?.focus();
  }
@@ -10063,18 +10083,19 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
 (()=>{
   if(window.__PB_R100F67_MOBILE_OFFICE_RAIL__)return;
   window.__PB_R100F67_MOBILE_OFFICE_RAIL__=true;
-  const labels={calendar:'آفیش',pending:'درخواست‌ها',approved:'تحویل',out:'دریافت',shortages:'کسری آفیش'};
+  const labels={calendar:'آفیش',pending:'درخواست‌ها',approved:'تحویل',out:'دریافت',shortages:'کسری آفیش',returnShortages:'کسری دریافت'};
   function normalize(){
     if(!matchMedia('(max-width:850px)').matches)return;
     const rail=document.getElementById('pb848BookingHeaderTabs');if(!rail)return;
     for(const button of rail.querySelectorAll('[data-pb843-office-tab]')){
       const kind=button.dataset.pb843OfficeTab;if(kind==='manual'){button.remove();continue}
+      if(!labels[kind])continue;
       const count=button.querySelector('.pb854TabCount');
       const current=button.querySelector('.pb905rOfficeTabLabel');
       const expectedChildren=1+(count?1:0);
       if(current?.textContent===labels[kind]&&button.children.length===expectedChildren&&(!count||count.parentElement===button))continue;
       button.replaceChildren();
-      const label=document.createElement('span');label.className='pb905rOfficeTabLabel';label.textContent=labels[kind]||'آفیش';
+      const label=document.createElement('span');label.className='pb898OfficeLabel pb900OfficeTabLabel pb903OfficeTabLabel pb904r5OfficeTabLabel pb905rOfficeTabLabel';label.textContent=labels[kind]||'آفیش';
       button.append(label);
       if(count)button.append(count);
     }

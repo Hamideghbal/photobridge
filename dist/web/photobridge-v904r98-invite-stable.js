@@ -89,20 +89,14 @@
       form.classList.add('pbR94ExistingActive');
     }else form.classList.remove('pbR94ExistingActive');
   }
-  function identityBox(form){
-    let box=document.getElementById('pbR94ExistingIdentity');
-    if(!isExisting()){if(box)box.classList.add('pbR94BaseHidden');return}
-    const a=state.ctx.existingAccount||{},p=state.ctx.membershipProfile||{};
-    const baseValue=(names)=>{for(const n of names){const el=form.querySelector(`[name="${n}"]`);const v=String(el?.value||'').trim();if(v)return v}return''};
-    const name=String(a.studioName||a.name||p.name||baseValue(['name','studioName'])||'').trim()||'—';
-    const mob=String(a.mobile||p.mobile||state.ctx?.mobile||mobile||baseValue(['mobile'])||'').trim()||'—';
-    const pickLocation=(names)=>{for(const n of names){const el=form.querySelector(`[name="${n}"]`);if(!el)continue;const v=String(el.value||'').trim();if(v)return v;const opt=el.selectedOptions?.[0];const txt=String(opt?.textContent||'').trim();if(txt&&!/انتخاب|استان|شهر/.test(txt))return txt}return''};
-    const province=String(a.province||p.province||pickLocation(['province','photographerProvince'])||baseValue(['province'])||'').trim()||'—';
-    const city=String(a.city||p.city||pickLocation(['city','photographerCity'])||baseValue(['city'])||'').trim()||'—';
-    if(!box){box=document.createElement('section');box.id='pbR94ExistingIdentity';box.className='pbR94Identity';form.before(box)}
-    box.classList.remove('pbR94BaseHidden');
-    const sig=JSON.stringify([name,mob,province,city]); if(box.dataset.sig===sig)return;box.dataset.sig=sig;
-    box.innerHTML=`<b>اطلاعات حساب فعلی PhotoBridge</b><div><span>نام عکاسی / آتلیه</span><strong>${esc(name)}</strong></div><div><span>شماره موبایل</span><strong dir="ltr">${esc(mob)}</strong></div><div><span>استان</span><strong>${esc(province)}</strong></div><div><span>شهر</span><strong>${esc(city)}</strong></div>`;
+  function identityBox(){
+    const box=document.getElementById('pbR94ExistingIdentity');
+    // An already registered photographer must not be asked to review or fill
+    // any of the account profile again.  The account summary used to be a
+    // third card on this page and made it look as though the saved profile was
+    // another required step.  Keep the invite page limited to this shop's
+    // requested fields and the SMS confirmation.
+    if(box)box.remove();
   }
   const jDiv=(a,b)=>~~(a/b),jMod=(a,b)=>a-~~(a/b)*b;
   function jalCal(jy,withoutLeap=false){const breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];let bl=breaks.length,gy=jy+621,leapJ=-14,jp=breaks[0],jm=0,jump=0,leap=0,leapG=0,march=0,n=0,i=0;if(jy<jp||jy>=breaks[bl-1])throw new Error('invalid_jalali_year');for(i=1;i<bl;i++){jm=breaks[i];jump=jm-jp;if(jy<jm)break;leapJ+=jDiv(jump,33)*8+jDiv(jMod(jump,33),4);jp=jm}n=jy-jp;leapJ+=jDiv(n,33)*8+jDiv(jMod(n,33)+3,4);if(jMod(jump,33)===4&&jump-n===4)leapJ++;leapG=jDiv(gy,4)-jDiv((jDiv(gy,100)+1)*3,4)-150;march=20+leapJ-leapG;if(withoutLeap)return{gy,march};if(jump-n<6)n=n-jump+jDiv(jump+4,33)*33;leap=jMod(jMod(n+1,33)-1,4);if(leap===-1)leap=4;return{leap,gy,march}}
@@ -225,6 +219,15 @@
   }
   function cleanupExistingLegacyForm(form,button){
     if(!isExisting())return;
+    // Earlier invite overlays can append their own profile/required-fields
+    // cards next to the React form.  They duplicate data already stored on
+    // the photographer account.  Remove them globally, but preserve the one
+    // canonical R98 card containing only fields requested by this shop.
+    const legacyCards='.pbR74Identity,.pbR74InviteFields,.pbR75Identity,.pbR75InviteFields,.pbR76Identity,.pbR76InviteFields,.pbR89Identity,.pbR89InviteFields,.pbR90Identity,.pbR90InviteFields,.pbR91Identity,.pbR91InviteFields,.inviteExistingAccountCompact';
+    document.querySelectorAll(legacyCards).forEach(x=>{
+      x.querySelectorAll?.('input,select,textarea,button').forEach(control=>{if('required' in control)control.required=false});
+      x.classList.add('pbR94BaseHidden');
+    });
     // R100F4: React may still render the complete new-account form even though
     // the public context has already identified an existing photographer. Remove
     // those specific legacy controls by meaning, regardless of their DOM nesting.

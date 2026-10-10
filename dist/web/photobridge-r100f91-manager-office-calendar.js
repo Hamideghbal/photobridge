@@ -248,8 +248,8 @@
    '.pbR1052DayActions>button[data-office-action="returned"]{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}',
    '.pbR1052DayActions>button[data-office-action="cancelled"]{background:#fff7f7;color:#b42318;border-color:#fecaca}',
    '.pbR1052DayActions>button:disabled{opacity:.5;cursor:wait}',
-   '#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 7px;align-items:center}',
-   '#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions)>b,#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions)>small{grid-column:1;min-width:0;margin:0}',
+   '#pb843BookingDetailBody .pb843BookingDetailCard.pbR1053CalendarCard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 7px;align-items:center}',
+   '#pb843BookingDetailBody .pb843BookingDetailCard.pbR1053CalendarCard>b,#pb843BookingDetailBody .pb843BookingDetailCard.pbR1053CalendarCard>small{grid-column:1;min-width:0;margin:0}',
    '#pb843BookingDetailBody .pbR1052DayActions{grid-column:2;grid-row:1/span 5;max-width:min(52vw,260px);align-self:center;margin:0}',
    '.pbR1052DocBackdrop{position:fixed;inset:0;z-index:2147483000;background:#101828ab;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}',
    '.pbR1052DocDialog{display:flex;flex-direction:column;width:min(920px,100%);height:min(94dvh,1000px);min-height:0;background:white;border-radius:14px;overflow:hidden;direction:rtl}',
@@ -309,7 +309,7 @@
        const signature=String(b.id)+'|'+controls(b).map(x=>x[0]).join('|');
        if(card.dataset.pbR1052Actions===signature)return;
        card.querySelector('.pbR1052DayActions')?.remove();
-       card.append(makeActions(b));card.dataset.pbR1052Actions=signature;
+       card.classList.add('pbR1053CalendarCard');card.append(makeActions(b));card.dataset.pbR1052Actions=signature;
      });
    }
  }

@@ -172,7 +172,7 @@
    // Native desktop reads the authoritative shop-scoped handover feed from
    // the server. The local overview is a stale SQLite snapshot, not a print queue.
    const nativeDesktop=typeof window.__PB_DESKTOP_PRINT__==='function';
-   const response=await fetch(nativeDesktop?'/api/rental/desktop/print-handovers':'/api/rental/overview',{credentials:'include',cache:'no-store'});
+   const response=await fetch(nativeDesktop?'/api/rental/print-handovers':'/api/rental/overview',{credentials:'include',cache:'no-store'});
    if(!response.ok){if(nativeDesktop)notice('دریافت تحویل‌های جدید از سرور ناموفق بود: HTTP '+response.status);return}
    const overview=await response.json();
    const shopId=String(overview?.shop?.id||overview?.shopId||'');

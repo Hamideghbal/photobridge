@@ -10080,4 +10080,38 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
 })();
 </script>
 
+<style id="pbR1050HeaderChannelsStyle">
+html body.rentalAppReady #rentalDesktopPrimaryNav [data-pb-channel-off="true"]{display:none!important}
+html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display:block;width:1px;height:22px;margin:0 5px;background:#d0d5dd;flex:0 0 1px;align-self:center;pointer-events:none}
+</style>
+<script id="pbR1050HeaderChannels">
+(()=>{
+ const nav=document.getElementById('rentalDesktopPrimaryNav');if(!nav)return;
+ function sync(){
+   const shop=(typeof data!=='undefined'?data?.shop:null)||window.data?.shop;
+   if(!shop)return;
+   const primary=['bookings','sales','items'].map(key=>nav.querySelector('[data-rental-desktop-tab="'+key+'"]'));
+   for(const [key,enabled] of [['sales',shop.sale_enabled!==false],['items',shop.rental_enabled!==false]]){
+     const button=nav.querySelector('[data-rental-desktop-tab="'+key+'"]');if(!button)continue;
+     const off=String(!enabled);if(button.dataset.pbChannelOff!==off)button.dataset.pbChannelOff=off;
+   }
+   let visible=0;
+   for(const button of primary){
+     if(!button)continue;
+     let divider=nav.querySelector('[data-pb-channel-divider="'+button.dataset.rentalDesktopTab+'"]');
+     const needsDivider=button.dataset.pbChannelOff!=='true'&&visible>0;
+     if(needsDivider&&!divider){divider=document.createElement('span');divider.className='pbR1050ChannelDivider';divider.dataset.pbChannelDivider=button.dataset.rentalDesktopTab;divider.setAttribute('aria-hidden','true');nav.insertBefore(divider,button)}
+     else if(!needsDivider&&divider)divider.remove();
+     if(button.dataset.pbChannelOff!=='true')visible++;
+   }
+ }
+ for(const name of ['fillShop','load']){
+   const original=window[name];if(typeof original!=='function')continue;
+   window[name]=function(...args){const result=original.apply(this,args);if(result&&typeof result.then==='function')return result.then(value=>{sync();return value});sync();return result};
+ }
+ new MutationObserver(sync).observe(nav,{childList:true});
+ window.pbR1050SyncHeaderChannels=sync;
+ sync();document.addEventListener('DOMContentLoaded',sync,{once:true});
+})();
+</script>
 </body></html>

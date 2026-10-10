@@ -5,14 +5,14 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  try{
   for(const viewport of [{width:320,height:740},{width:390,height:844},{width:1366,height:768}]){
-   const page=await browser.newPage({viewport,serviceWorkers:'block'}),writes=[],errors=[];
+   const page=await browser.newPage({viewport,serviceWorkers:'block'}),writes=[],errors=[];let overviewBookings=[];
    page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/*',async route=>{
     const u=new URL(route.request().url());
     if(u.pathname.startsWith('/api/')){
      let body={};
      if(u.pathname==='/api/auth/me')body={user:{id:'manager',name:'Manager'},rentalShop:{id:'shop',name:'Seven'}};
-     if(u.pathname==='/api/rental/overview')body={shop:{id:'shop',name:'Seven',rental_enabled:true,sale_enabled:true,active:true,activation_status:'approved'},items:[],saleItems:[],bookings:[],photographers:[],plans:[],renewals:[],collaborationRequests:[],saleOrders:[],shortages:[],returnShortages:[],stats:{},subscription:{}};
+     if(u.pathname==='/api/rental/overview')body={shop:{id:'shop',name:'Seven',rental_enabled:true,sale_enabled:true,active:true,activation_status:'approved'},items:[],saleItems:[],bookings:overviewBookings,photographers:[],plans:[],renewals:[],collaborationRequests:[],saleOrders:[],shortages:[],returnShortages:[],stats:{},subscription:{}};
      if(u.pathname.endsWith('/extension')){
       if(route.request().method()==='POST'){writes.push(JSON.parse(route.request().postData()));body={ok:true,id:'new-booking'}}
       else {const days=Math.round((Date.parse(u.searchParams.get('endDate'))-Date.parse('2030-10-13'))/86400000)+1;body={items:[{itemId:'camera',title:'Camera',requested:1,subtotal:100*days,extendable:true},{itemId:'lens',title:'Lens',requested:1,subtotal:200*days,extendable:days===1,extensionReason:days===1?null:'equipment_unavailable'}]}}
@@ -42,12 +42,23 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
     await page.locator('[data-register-next]').click();await page.waitForSelector('#pb892ManualBackdrop.open');
     const range=await page.evaluate(()=>{const form=document.getElementById('bookingForm');return[jalaliInputToIso(form.elements.startDate.value),jalaliInputToIso(form.elements.endDate.value)]});assert.deepEqual(range,dates);
     await page.locator('#pb892ManualClose').click();
+    for(const entry of ['pbR1033OfficeHeaderAction','pb892CalendarContinue']){
+     await page.locator('#'+entry).dispatchEvent('click');await page.waitForSelector('#pbR1076Registration');
+     assert.equal(await page.locator('#jalaliCalendarPopover.open').count(),0);
+     for(const day of dates)await page.locator('[data-register-day="'+day+'"]').click();
+     for(const day of dates)assert.equal(await page.locator('[data-register-day="'+day+'"]').getAttribute('aria-pressed'),'true');
+     await page.locator('[data-register-next]').click();await page.waitForSelector('#pb892ManualBackdrop.open');
+     const legacyRange=await page.evaluate(()=>{const form=document.getElementById('bookingForm');return[jalaliInputToIso(form.elements.startDate.value),jalaliInputToIso(form.elements.endDate.value)]});assert.deepEqual(legacyRange,dates);
+     await page.locator('#pb892ManualClose').click();
+    }
+
 
    }
 
-   await page.evaluate(()=>{data.bookings=[{id:'booking',customer_name:'Customer',status:'picked_up',rental_end:'2030-10-12',handover_serials:[{itemId:'camera'},{itemId:'lens'}]}];window.pb100rPrintInvoice=id=>window.lastExtensionInvoice=id;const card=document.createElement('div');card.dataset.officeBookingId='booking';card.id='extensionFixture';document.body.append(card)});
+   overviewBookings=[{id:'booking',customer_name:'Customer',status:'picked_up',rental_end:'2030-10-12',handover_serials:[{itemId:'camera'},{itemId:'lens'}]}];
+   await page.evaluate(bookings=>{data.bookings=bookings;window.pb100rPrintInvoice=id=>window.lastExtensionInvoice=id;const card=document.createElement('div');card.dataset.officeBookingId='booking';card.id='extensionFixture';document.body.append(card)},overviewBookings);
    await page.locator('#extensionFixture .pbOfficeExtendButton').click();
-   await page.waitForTimeout(500);assert.equal(await page.locator('[data-ext-item="camera"]').count(),1,JSON.stringify({errors,html:await page.locator('#pbOfficeExtension').innerHTML().catch(()=> 'missing')}));assert.equal(await page.locator('[data-ext-day="2030-10-12"]').isDisabled(),true);
+   await page.waitForSelector('[data-ext-item="camera"]');assert.equal(await page.locator('[data-ext-item="camera"]').count(),1,JSON.stringify({errors,html:await page.locator('#pbOfficeExtension').innerHTML().catch(()=> 'missing'),state:await page.evaluate(()=>({bookings:data.bookings,notices:[...document.querySelectorAll('[role=dialog]')].map(x=>x.textContent.slice(0,180))}))}));assert.equal(await page.locator('[data-ext-day="2030-10-12"]').isDisabled(),true);
    await page.locator('[data-ext-day="2030-10-15"]').click();await page.waitForFunction(()=>document.querySelector('[data-ext-item="lens"]')?.disabled===true);
    for(const day of ['2030-10-13','2030-10-14','2030-10-15'])assert.equal(await page.locator(`[data-ext-day="${day}"]`).getAttribute('aria-pressed'),'true');
    assert.equal(await page.locator('.extItem.blocked').count(),1);assert.equal(await page.locator('.extSubmit').isDisabled(),true);
@@ -60,15 +71,23 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
     data.bookings=['reserved','picked_up','returned','cancelled'].map((status,i)=>({id:'state-'+i,customer_name:'Customer',status,rental_start:'2030-10-13',rental_end:'2030-10-13',handover_serials:[{itemId:'camera'}]}));
     for(const b of data.bookings){const card=document.createElement('article');card.id=b.id;if(b.status==='picked_up'){card.className='pbR1052DayGroup';card.innerHTML='<div data-pb904r5-booking-id="'+b.id+'"></div><div class="pbR1052DayActions" data-office-booking-id="'+b.id+'"></div>'}else{card.dataset.pb915BookingId=b.id;card.innerHTML='<div data-pb904r5-booking-id="'+b.id+'"><div class="actions" data-office-booking-id="'+b.id+'"></div></div>'}document.body.append(card)}
    });
+   overviewBookings=await page.evaluate(()=>data.bookings);
    await page.waitForFunction(()=>document.querySelector('#state-0 .pbOfficeExtendButton'));
    assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').textContent(),'ویرایش آفیش');
    assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').textContent(),'تمدید آفیش');
    await page.evaluate(()=>{const host=document.createElement('div');host.id='sharedActionFixture';host.innerHTML=pbR100F86Card(data.bookings.find(b=>b.id==='state-1'),'in','','',{manager:true});document.body.append(host)});
    await page.waitForSelector('#sharedActionFixture .pbOfficeExtendButton');
    const stacked=await page.locator('#sharedActionFixture .pbR100F86ActionButtons>button').evaluateAll(bs=>bs.map(b=>({label:b.textContent,rect:b.getBoundingClientRect().toJSON()})));
-   assert.deepEqual(stacked.map(b=>b.label),['ثبت دریافت تجهیزات','تمدید آفیش']);assert(stacked[1].rect.y>=stacked[0].rect.bottom+4);assert.equal(stacked[0].rect.x,stacked[1].rect.x);assert.equal(stacked[0].rect.width,stacked[1].rect.width);
+   assert.deepEqual(stacked.map(b=>b.label),['ثبت دریافت تجهیزات','تمدید آفیش']);assert(stacked[1].rect.y>=stacked[0].rect.bottom+4);assert.equal(stacked[0].rect.x,stacked[1].rect.x);assert.equal(stacked[0].rect.width,stacked[1].rect.width);if(viewport.width<851){assert.equal(stacked[0].rect.height,44);assert.equal(stacked[1].rect.height,44);}
 
    assert.equal(await page.locator('#state-2 .pbOfficeExtendButton,#state-3 .pbOfficeExtendButton').count(),0);
+   if(viewport.width<851){
+    await page.evaluate(()=>{const host=document.createElement('div');host.id='sharedEditFixture';host.innerHTML=pbR100F86Card(data.bookings.find(b=>b.id==='state-0'),'out','','',{manager:true});document.body.append(host)});
+    await page.waitForSelector('#sharedEditFixture .pbOfficeExtendButton');
+    const editActions=await page.locator('#sharedEditFixture .pbR100F86ActionButtons>button').evaluateAll(bs=>bs.map(b=>({label:b.textContent,rect:b.getBoundingClientRect().toJSON()})));
+    assert.deepEqual(editActions.map(b=>b.label),['ثبت تحویل تجهیزات','لغو آفیش','ویرایش آفیش']);
+    assert(editActions.every(b=>b.rect.height===44&&b.rect.width===editActions[0].rect.width));assert(editActions[2].rect.y>=editActions[1].rect.bottom+4);
+   }
    await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="lens"]').waitFor();
    assert.equal(await page.locator('[data-edit-item="camera"]').count(),0);assert.equal(await page.locator('[name=equipmentSearch]').count(),0);
    const startBox=await page.locator('#pbOfficeExtension input[name=startDate]').boundingBox(),endBox=await page.locator('#pbOfficeExtension input[name=endDate]').boundingBox();assert.equal(startBox.y,endBox.y);assert(startBox.x!==endBox.x);

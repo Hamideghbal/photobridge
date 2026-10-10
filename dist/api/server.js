@@ -15753,20 +15753,48 @@ async function api(req, res, url) {
         const shop = await equipmentRentalCurrentShop(a);
         if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
         await ensureEquipmentRentalV628Schema();
-        const b = await bodyJson(req, 50_000), status = String(b.status || '');
+        const b = await bodyJson(req, 50_000), status = String(b.status || ''), requiredFields = status === 'approved' ? equipmentRentalNormalizeRequiredFields(b.requiredFields) : null;
         if (!['approved','rejected'].includes(status)) return sendJson(res, 400, { error: 'invalid_collaboration_status' });
         const c = await pool.connect();
+        let requestRow = null, inviteRow = null, photographerMobile = '', photographerName = '';
         try {
             await c.query('BEGIN');
-            const q = await c.query(`UPDATE equipment_rental_collaboration_requests
-              SET status=$3,reviewed_at=now(),reviewed_by=$4,updated_at=now()
-              WHERE id=$1 AND shop_id=$2 AND status='pending'
-              RETURNING *`, [rentalCollaborationRoute[1], shop.id, status, a.userId]);
-            if (!q.rowCount) { await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'collaboration_request_not_pending' }); }
-            if (status === 'approved') await equipmentRentalEnsurePhotographerLink(c, shop.id, q.rows[0].photographer_id);
+            const current = await c.query(`SELECT r.*,u.mobile,COALESCE(pp.studio_name,u.name,'عکاس') photographer_name
+              FROM equipment_rental_collaboration_requests r JOIN users u ON u.id=r.photographer_id
+              LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+              WHERE r.id=$1 AND r.shop_id=$2 AND r.status='pending' FOR UPDATE OF r`, [rentalCollaborationRoute[1], shop.id]);
+            if (!current.rowCount) { await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'collaboration_request_not_pending' }); }
+            requestRow = current.rows[0]; photographerMobile = normalizeMobile(String(requestRow.mobile || '')); photographerName = String(requestRow.photographer_name || 'عکاس');
+            if (status === 'approved') {
+                if (!/^09\d{9}$/.test(photographerMobile)) { await c.query('ROLLBACK'); return sendJson(res, 400, { error:'invalid_sms_mobile' }); }
+                inviteRow = (await c.query(`SELECT i.* FROM photographer_invites i WHERE i.issuer_type='rental' AND i.issuer_rental_shop_id=$1 AND i.target_mobile=$2 AND i.active=true AND (i.expires_at IS NULL OR i.expires_at>now()) AND (i.max_uses IS NULL OR i.uses<i.max_uses) AND NOT EXISTS(SELECT 1 FROM photographer_invite_redemptions rr WHERE rr.invite_id=i.id) AND COALESCE(i.metadata->>'createdFrom','')<>'rental_manual_office' ORDER BY i.created_at DESC LIMIT 1`, [shop.id, photographerMobile])).rows[0] || null;
+                if (!inviteRow) {
+                    for (let attempt=0; attempt<6 && !inviteRow; attempt++) {
+                        try {
+                            inviteRow=(await c.query(`INSERT INTO photographer_invites(code,issuer_user_id,issuer_type,issuer_lab_id,issuer_rental_shop_id,max_uses,uses,expires_at,active,campaign,channel,target_mobile,metadata) VALUES($1,$2,'rental',NULL,$3,1,0,now()+interval '30 days',true,'rental_collaboration_approval',$4,$5,$6::jsonb) RETURNING *`, [newPhotographerInviteCode(),a.userId,shop.id,`rental:${shop.id}:collaboration`,photographerMobile,JSON.stringify({createdFrom:'rental_collaboration_approval',targeted:true,lockedMobile:true,targetName:photographerName,requiredFields,collaborationRequestId:requestRow.id})])).rows[0] || null;
+                        } catch (e) { if (String(e?.code||'')==='23505') continue; throw e; }
+                    }
+                }
+                if (!inviteRow) throw new Error('collaboration_invite_create_failed');
+                await c.query(`UPDATE photographer_invites SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb,updated_at=now() WHERE id=$1`, [inviteRow.id, JSON.stringify({createdFrom:'rental_collaboration_approval',targeted:true,lockedMobile:true,targetName:photographerName,requiredFields,collaborationRequestId:requestRow.id})]);
+            }
+            const q = await c.query(`UPDATE equipment_rental_collaboration_requests SET status=$3,reviewed_at=now(),reviewed_by=$4,updated_at=now() WHERE id=$1 AND shop_id=$2 AND status='pending' RETURNING *`, [rentalCollaborationRoute[1], shop.id, status, a.userId]);
+            requestRow = q.rows[0];
             await c.query('COMMIT');
-            await audit(a.userId, undefined, `equipment_rental.collaboration_${status}`, 'equipment_rental_collaboration_request', q.rows[0].id, { shopId:shop.id, photographerId:q.rows[0].photographer_id }).catch(()=>{});
-            return sendJson(res, 200, { ok:true, request:q.rows[0] });
+            await audit(a.userId, undefined, `equipment_rental.collaboration_${status}`, 'equipment_rental_collaboration_request', requestRow.id, { shopId:shop.id, photographerId:requestRow.photographer_id, inviteId:inviteRow?.id||null, requiredFields }).catch(()=>{});
+            if (status !== 'approved') return sendJson(res, 200, { ok:true, request:requestRow });
+            const mb=photographerInviteMobileBinding(String(inviteRow.code),photographerMobile),inviteUrl=`${PUBLIC_APP_URL}/photographer/signup?invite=${encodeURIComponent(String(inviteRow.code))}&mobile=${encodeURIComponent(photographerMobile)}&mb=${encodeURIComponent(mb)}`;
+            try {
+                const out=await sendSms({mobile:photographerMobile,message:`PhotoBridge\nفروشگاه تجهیزات «${String(shop.name||'فروشگاه')}» درخواست همکاری شما را پذیرفت.\nبرای نهایی‌کردن اتصال، لینک را باز کنید، اطلاعات درخواستی فروشگاه را تکمیل کنید و کد تأیید پیامکی را وارد کنید:\n${inviteUrl}`,purpose:'rental_photographer_invite',eventKey:'photographer_invite',userId:a.userId,referenceId:inviteRow.id,metadata:{rentalShopId:shop.id,photographerInviteId:inviteRow.id,collaborationRequestId:requestRow.id}});
+                await pool.query(`UPDATE photographer_invites SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb,updated_at=now() WHERE id=$1`,[inviteRow.id,JSON.stringify({lastSmsStatus:'sent',lastSmsSentAt:new Date().toISOString(),lastSmsReference:out?.reference||null})]).catch(()=>{});
+                return sendJson(res,200,{ok:true,request:requestRow,connectionPending:true,sms:{sent:true,reference:out?.reference||null}});
+            } catch(e) {
+                const code=String(e?.message||'sms_send_failed');
+                await pool.query(`UPDATE equipment_rental_collaboration_requests SET status='pending',reviewed_at=NULL,reviewed_by=NULL,updated_at=now() WHERE id=$1 AND shop_id=$2 AND status='approved'`,[requestRow.id,shop.id]).catch(()=>{});
+                await pool.query(`UPDATE photographer_invites SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb,updated_at=now() WHERE id=$1`,[inviteRow.id,JSON.stringify({lastSmsStatus:'failed',lastSmsError:code})]).catch(()=>{});
+                const statusCode=code==='service_wallet_insufficient'?402:code==='service_disabled'||code==='sms_notifications_disabled'?409:code==='sms_not_configured'?503:502;
+                return sendJson(res,statusCode,{error:code,connectionPending:true});
+            }
         } catch (e) { await c.query('ROLLBACK').catch(()=>{}); throw e; } finally { c.release(); }
     }
     if (req.method === 'GET' && url.pathname === '/api/rental/subscription') {
@@ -15937,7 +15965,10 @@ ${inviteUrl}`;
           (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_items,
           (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) min_sale_price,
           EXISTS(SELECT 1 FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' AND m.active=true) connected,
-          (SELECT r.status FROM equipment_rental_collaboration_requests r WHERE r.shop_id=s.id AND r.photographer_id=$1 LIMIT 1) collaboration_status,
+          (SELECT CASE WHEN r.status='approved'
+            AND NOT EXISTS(SELECT 1 FROM equipment_rental_shop_memberships cm WHERE cm.shop_id=s.id AND cm.user_id=$1 AND cm.role='photographer' AND cm.active=true)
+            AND EXISTS(SELECT 1 FROM photographer_invites ci WHERE ci.issuer_type='rental' AND ci.issuer_rental_shop_id=s.id AND ci.target_mobile=(SELECT u.mobile FROM users u WHERE u.id=$1) AND ci.active=true AND (ci.expires_at IS NULL OR ci.expires_at>now()) AND (ci.max_uses IS NULL OR ci.uses<ci.max_uses) AND NOT EXISTS(SELECT 1 FROM photographer_invite_redemptions cr WHERE cr.invite_id=ci.id) AND COALESCE(ci.metadata->>'createdFrom','')='rental_collaboration_approval')
+            THEN 'pending' ELSE r.status END FROM equipment_rental_collaboration_requests r WHERE r.shop_id=s.id AND r.photographer_id=$1 LIMIT 1) collaboration_status,
           (SELECT m.collateral_requirement FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) collateral_requirement,
           (SELECT m.collateral_note FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) collateral_note,
           (SELECT m.settlement_mode FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) settlement_mode,

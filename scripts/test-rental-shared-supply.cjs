@@ -45,6 +45,21 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
    await db.exec('BEGIN');const result=await ctx.equipmentRentalCommitHandover(db,{shopId:shop,bookingId:id,actorId:null,assetCodes:owned,externalSupplyCodes:external});
    await db.exec(result.error?'ROLLBACK':'COMMIT');return result;
   };
+  // A ready one-day supply is compulsory for either one-day customer, even
+  // when it was originally planned for the other customer.
+  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(c),item,1,pool.sources),0,'multi-day bookings do not require one-day supply');
+  const ready=await ctx.equipmentRentalSupplyPool(db,shop,await booking(b));
+  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(b),item,1,ready.sources),1);
+  assert.equal((await hand(b,['CAM-1'],[])).error,'single_day_external_supply_required');
+  assert.equal((await hand(a,['CAM-1'],[])).error,'single_day_external_supply_required');
+  assert.equal((await booking(a)).status,'reserved');
+  assert.equal((await db.query('SELECT * FROM equipment_rental_booking_assets')).rows.length,0);
+  await db.query("INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status) VALUES($1,$2,$3,$4,1,'2030-10-12','2030-10-12','pending')",[uuid(77),shop,a,item]);
+  assert.equal((await hand(b,[],[{itemId:item,shortageId:uuid(77),code:''}])).error,'single_day_external_supply_required','pending supply cannot bypass ready supply priority');
+  await db.query('DELETE FROM equipment_rental_booking_shortages WHERE id=$1',[uuid(77)]);
+  // The owned unit remains available to the multi-day booking.
+  await db.exec('BEGIN');const multi=await ctx.equipmentRentalCommitHandover(db,{shopId:shop,bookingId:c,actorId:null,assetCodes:['CAM-1'],externalSupplyCodes:[]});assert.equal(multi.assetCount,1);await db.exec('ROLLBACK');
+  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(b),item,3,[{itemId:item,supplied:true,availableQuantity:2},{itemId:item,supplied:false,availableQuantity:10},{itemId:'other',supplied:true,availableQuantity:9}]),2,'pending supply and unrelated items do not count');
   assert.equal((await hand(c,[],[{itemId:item,shortageId:supply,code:'free text'}])).error,'external_supply_unavailable');
   // The source was planned for A; B receives it, then A takes the owned camera.
   await db.query("UPDATE equipment_rental_booking_shortages SET status='pending',resolved_at=NULL WHERE id=$1",[supply]);

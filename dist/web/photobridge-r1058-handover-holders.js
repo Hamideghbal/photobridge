@@ -26,21 +26,6 @@
  @media(prefers-reduced-motion:reduce){.pbR1069SourceChoices button{transition:none}}
  @keyframes pbR1068SourceEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.pbR1068SourcePanel{animation:none}.pbR1068SourceTrigger,.pbR1063SourceOptions button{transition:none}}`;
  document.head.append(style);
- function paint(){
-   if(typeof data==='undefined')return;
-   document.querySelectorAll('#itemsList .rentalItemCard').forEach(card=>{
-     const id=card.querySelector('[onclick^="editItem("]')?.getAttribute('onclick')?.match(/editItem\('([^']+)'/)?.[1];
-     if(!id)return;
-     const owned=(data.assets||[]).filter(a=>String(a.item_id)===id&&a.current_booking_id);
-     const external=(data.externalSupplyHolders||[]).filter(a=>String(a.itemId)===id);
-     const rows=[...owned.map(a=>`تجهیز فروشگاه ${a.system_code||''}: ${a.customer_name||a.customer_mobile||'مشتری'}`),...external.map(a=>`تأمین بیرونی${a.code?' ('+a.code+')':''}: ${a.customerName||a.customerMobile||'مشتری'}${a.returnMissing?' · کسری دریافت':''}`)];
-     let box=card.querySelector('.pbR1058Holders');
-     if(!rows.length){box?.remove();return}
-     if(!box){box=document.createElement('div');box.className='pbR1058Holders';card.append(box)}
-     const text='تحویل ثبت‌شده به مشتری:\n'+rows.join('\n');if(box.textContent!==text)box.textContent=text;
-   });
- }
- const previous=renderItems;
- renderItems=window.renderItems=function(){const result=previous.apply(this,arguments);paint();return result};
- paint();
+ // Possession remains tracked by the API; item cards intentionally omit customer details.
+ document.querySelectorAll('.pbR1058Holders,.pbR1058AssetHolder').forEach(el=>el.remove());
 })();

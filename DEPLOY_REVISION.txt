@@ -1,1 +1,1 @@
-2026-10-10-r1088-print-settings-desktop-native-bridge
+2026-10-10-r1090-windows-candidate-settings-download

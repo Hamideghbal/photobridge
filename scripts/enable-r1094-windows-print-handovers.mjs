@@ -8,7 +8,7 @@ if(!src.includes(marker)){
  if(src.split(anchor).length!==2)throw Error('R1094 commitment route changed');
  const endpoint=[
   marker,
-  "if(req.method==='GET'&&url.pathname==='/api/rental/desktop/print-handovers'){",
+  "if(req.method==='GET'&&url.pathname==='/api/rental/print-handovers'){",
   " const shop=await equipmentRentalCurrentShop(a);",
   " if(!shop)return sendJson(res,401,{error:'rental_auth_required'});",
   " await ensureEquipmentRentalAssetTrackingSchema();",

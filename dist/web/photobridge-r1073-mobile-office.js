@@ -54,6 +54,9 @@
   document.body.append(back);document.body.style.overflow='hidden';draw();back.querySelector('[data-register-close]').focus({preventScroll:true});
  }
  window.pbR1075BeginOfficeRegistration=beginRegistration;
+ // Route every mobile registration entry to the same multi-day picker.
+ document.addEventListener('click',event=>{if(!mobile()||document.body.classList.contains('pbR100F9StaffMode'))return;const button=event.target.closest?.('#pbR1073Register,#pbR1033OfficeHeaderAction,#pb892CalendarContinue,[data-pb843-office-tab="manual"]');if(!button||button.disabled)return;event.preventDefault();event.stopImmediatePropagation();beginRegistration()},true);
+
  const original=window.pb843RenderCalendar;if(typeof original==='function'){const wrapped=function(...args){const out=original.apply(this,args);schedule();return out};window.pb843RenderCalendar=wrapped;try{pb843RenderCalendar=wrapped}catch{}}
  function schedule(){if(!frame)frame=requestAnimationFrame(paint)}
  new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','data-pb-channel-off']});

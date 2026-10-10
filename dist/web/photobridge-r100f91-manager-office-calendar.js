@@ -317,10 +317,10 @@
  async function invoice(id){
    let inv=null;
    try{
-     inv=(typeof accountingData!=='undefined'?accountingData?.invoices:[]||[]).find(x=>String(x.booking_id||'')===String(id));
+     inv=(typeof accountingData!=='undefined'&&Array.isArray(accountingData?.invoices)?accountingData.invoices:[]).find(x=>String(x.booking_id||'')===String(id));
      if(!inv&&typeof loadAccounting==='function'){
        await loadAccounting();
-       inv=(typeof accountingData!=='undefined'?accountingData?.invoices:[]||[]).find(x=>String(x.booking_id||'')===String(id));
+       inv=(typeof accountingData!=='undefined'&&Array.isArray(accountingData?.invoices)?accountingData.invoices:[]).find(x=>String(x.booking_id||'')===String(id));
      }
    }catch{showError('دریافت اطلاعات فاکتور انجام نشد.');return}
    if(!inv){showError('فاکتور این آفیش هنوز صادر نشده است.');return}

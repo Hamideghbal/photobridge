@@ -63,14 +63,15 @@
     }
     if(existing){
       form.querySelectorAll('.iranLocationFields,.photographerSignupLocationPicker,.inviteExistingAccountCompact,.pbR91Identity,.pbR91InviteFields').forEach(x=>x.classList.add('pbR94BaseHidden'));
-      form.querySelectorAll('.pbR91Identity,.pbR91InviteFields').forEach(x=>x.remove());
+      form.querySelectorAll('.pbR91Identity,.pbR91InviteFields').forEach(x=>x.classList.add('pbR94BaseHidden'));
       // These belong to the legacy third section shown in the screenshot.
       for(const el of form.querySelectorAll(':scope > .alert.success,:scope > .inviteCheckingHint,:scope > .authSwitchLink')) el.classList.add('pbR94BaseHidden');
       form.classList.add('pbR94ExistingActive');
     }else form.classList.remove('pbR94ExistingActive');
   }
   function identityBox(form){
-    if(!isExisting()){form.querySelector('#pbR94ExistingIdentity')?.remove();return}
+    let box=document.getElementById('pbR94ExistingIdentity');
+    if(!isExisting()){if(box)box.classList.add('pbR94BaseHidden');return}
     const a=state.ctx.existingAccount||{},p=state.ctx.membershipProfile||{};
     const baseValue=(names)=>{for(const n of names){const el=form.querySelector(`[name="${n}"]`);const v=String(el?.value||'').trim();if(v)return v}return''};
     const name=String(a.studioName||a.name||p.name||baseValue(['name','studioName'])||'').trim()||'—';
@@ -78,8 +79,8 @@
     const pickLocation=(names)=>{for(const n of names){const el=form.querySelector(`[name="${n}"]`);if(!el)continue;const v=String(el.value||'').trim();if(v)return v;const opt=el.selectedOptions?.[0];const txt=String(opt?.textContent||'').trim();if(txt&&!/انتخاب|استان|شهر/.test(txt))return txt}return''};
     const province=String(a.province||p.province||pickLocation(['province','photographerProvince'])||baseValue(['province'])||'').trim()||'—';
     const city=String(a.city||p.city||pickLocation(['city','photographerCity'])||baseValue(['city'])||'').trim()||'—';
-    let box=form.querySelector('#pbR94ExistingIdentity');
-    if(!box){box=document.createElement('section');box.id='pbR94ExistingIdentity';box.className='pbR94Identity';const h=form.firstElementChild;h?.after(box)}
+    if(!box){box=document.createElement('section');box.id='pbR94ExistingIdentity';box.className='pbR94Identity';form.before(box)}
+    box.classList.remove('pbR94BaseHidden');
     const sig=JSON.stringify([name,mob,province,city]); if(box.dataset.sig===sig)return;box.dataset.sig=sig;
     box.innerHTML=`<b>اطلاعات حساب فعلی PhotoBridge</b><div><span>نام عکاسی / آتلیه</span><strong>${esc(name)}</strong></div><div><span>شماره موبایل</span><strong dir="ltr">${esc(mob)}</strong></div><div><span>استان</span><strong>${esc(province)}</strong></div><div><span>شهر</span><strong>${esc(city)}</strong></div>`;
   }
@@ -169,16 +170,18 @@
     return direct.find(el=>el.type==='submit')||direct.find(el=>el.classList.contains('primary'))||null;
   }
   function placeRequiredBox(form,box){
-    const btn=signupActionButton(form);
-    if(btn){if(box.parentElement!==form||box.nextElementSibling!==btn)form.insertBefore(box,btn)}
-    else if(box.parentElement!==form)form.append(box);
+    // Keep injected invite details outside React's managed form subtree. Values
+    // are copied into the signup request by the fetch adapter below.
+    if(box.parentElement!==form.parentElement||box.nextElementSibling!==form)form.before(box);
   }
   function requiredBox(form){
-    if(!isRental()){form.querySelector('#pbR94InviteRequired')?.remove();return}
-    const req=required();const hasExtras=Boolean(req.nationalId||req.birthCertificateNo||req.businessLicenseNo||req.businessLicenseImage);if(!hasExtras){form.querySelector('#pbR94InviteRequired')?.remove();return}
-    const p=state.ctx?.membershipProfile||{},sig=JSON.stringify({req,existing:isExisting(),birth:p.birthJalali||'',national:p.nationalId||'',certificate:p.birthCertificateNo||'',license:p.businessLicenseNo||'',image:Boolean(p.businessLicenseImage)});let box=form.querySelector('#pbR94InviteRequired');
+    let box=document.getElementById('pbR94InviteRequired');
+    if(!isRental()){if(box)box.classList.add('pbR94BaseHidden');return}
+    const req=required();const hasExtras=Boolean(req.nationalId||req.birthCertificateNo||req.businessLicenseNo||req.businessLicenseImage);if(!hasExtras){if(box)box.classList.add('pbR94BaseHidden');return}
+    const p=state.ctx?.membershipProfile||{},sig=JSON.stringify({req,existing:isExisting(),birth:p.birthJalali||'',national:p.nationalId||'',certificate:p.birthCertificateNo||'',license:p.businessLicenseNo||'',image:Boolean(p.businessLicenseImage)});
     if(box&&box.dataset.sig===sig){placeRequiredBox(form,box);return}
-    if(box)box.remove();box=document.createElement('section');box.id='pbR94InviteRequired';box.className='pbR94Required';box.dataset.sig=sig;const shopName=String(state.ctx?.invite?.issuerRentalShopName||state.ctx?.invite?.issuerName||'فروشگاه').trim()||'فروشگاه';box.innerHTML=`<b>اطلاعات درخواستی فروشگاه ${esc(shopName)}</b>`;
+    if(!box){box=document.createElement('section');box.id='pbR94InviteRequired';box.className='pbR94Required'}
+    box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=String(state.ctx?.invite?.issuerRentalShopName||state.ctx?.invite?.issuerName||'فروشگاه').trim()||'فروشگاه';box.replaceChildren();const title=document.createElement('b');title.textContent=`اطلاعات درخواستی فروشگاه ${shopName}`;box.append(title);
     if(req.nationalId)box.append(textField('کد ملی','nationalId',{numeric:true}));if(req.birthCertificateNo)box.append(textField('شماره شناسنامه','birthCertificateNo',{numeric:true}));if(req.businessLicenseNo)box.append(textField('شماره جواز / پرونده','businessLicenseNo'));if(req.businessLicenseImage)box.append(imageField());
     placeRequiredBox(form,box);
   }
@@ -192,7 +195,9 @@
     const el=formTopChild(form,node);
     if(!el||el===form||el.id==='pbR94ExistingIdentity'||el.id==='pbR94InviteRequired')return;
     el.querySelectorAll?.('input,select,textarea,button').forEach(x=>{if('required' in x)x.required=false});
-    el.remove();
+    // Keep React-owned nodes in place. Removing them behind React's back makes
+    // its next form render fail with NotFoundError and drops the submit action.
+    el.classList.add('pbR94BaseHidden');
   }
   function cleanupExistingLegacyForm(form,button){
     if(!isExisting())return;
@@ -231,14 +236,17 @@
   }
   function tweakButton(form){
     if(!isExisting())return null;
-    const b=[...form.querySelectorAll('button.primary,button[type="submit"]')].find(x=>!x.closest('#pbR94InviteRequired'));
+    const b=signupActionButton(form);
     if(!b)return null;
+    // Existing-account invite cards are rendered with type="button" in some
+    // React paths, even though the form's submit handler owns the OTP request.
+    // Make the primary action a real submit so the same handler works for both
+    // lab and rental invitations.
+    b.type='submit';
     const text=String(b.textContent||'').trim();
     if(!/کد|در حال/.test(text))b.textContent='تأیید اطلاعات و اتصال به فروشگاه';
     b.classList.remove('pbR94BaseHidden','pbR100F3LegacyInviteTail');
     b.removeAttribute('aria-hidden'); if('inert' in b)b.inert=false; b.tabIndex=0;
-    const anchor=form.querySelector('#pbR94InviteRequired')||form.querySelector('#pbR94ExistingIdentity');
-    if(anchor&&anchor.nextElementSibling!==b)anchor.after(b);
     return b;
   }
   let observedForm=null,formObserver=null;
@@ -268,6 +276,7 @@
     return res;
   };
   const css=document.createElement('style');css.id='pbR96InviteStyle';css.textContent=`.pbR94BaseHidden{display:none!important}.pbR94Identity,.pbR94Required{margin:12px 0;padding:13px;border:1px solid #dbe4f0;border-radius:16px;background:#f8fbff;display:grid;gap:9px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden}.pbR94Identity>b,.pbR94Required>b{font-size:14px;color:#172033}.pbR94Identity{grid-template-columns:1fr 1fr}.pbR94Identity>b{grid-column:1/-1}.pbR94Identity>div{display:grid;gap:4px;border:1px solid #e2e8f0;border-radius:11px;padding:9px;background:#fff}.pbR94Identity span,.pbR94Required>small,.pbR94ReqField small{font-size:10px;color:#667085}.pbR94Identity strong{font-size:13px;color:#344054}.pbR94ReqField{display:grid!important;gap:6px!important;font-size:12px!important;font-weight:800!important;min-width:0!important;max-width:100%!important}.pbR94ReqField input{width:100%!important;box-sizing:border-box!important;min-height:44px!important;border:1px solid #d0d5dd!important;border-radius:11px!important;background:#fff!important;padding:9px 11px!important;font:700 13px Vazirmatn,Tahoma,Arial!important}.pbR94ReqField input.locked{background:#f2f4f7!important;color:#475467!important}.pbR95BirthInput:not(.locked){cursor:pointer!important}.pbR94ExistingFile{border:1px solid #a6e1c7;background:#ecfdf3;color:#027a48;border-radius:11px;padding:10px;font-size:11px}.pbR94UploadState{font-size:10px!important}.pbR94UploadState.ok{color:#027a48!important}.pbR95FileInput{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.pbR95FilePicker{min-height:76px;border:1px dashed #b9c8e8;border-radius:13px;background:linear-gradient(135deg,#f8fbff,#f5f7ff);display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;transition:.18s ease}.pbR95FilePicker:hover{border-color:#7d9cff;background:#f1f5ff;box-shadow:0 5px 16px rgba(49,94,251,.08)}.pbR95FileIcon{width:42px;height:42px;border-radius:11px;background:#fff;border:1px solid #dbe5ff;color:#315efb;display:grid;place-items:center;font-size:23px;flex:0 0 auto}.pbR95FilePicker>span:nth-child(2){display:grid;gap:2px;min-width:0;flex:1}.pbR95FilePicker b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pbR95FilePicker small{font-size:9px!important;color:#667085!important}.pbR95FilePicker em{font-style:normal;font-size:9px;color:#315efb;background:#fff;border:1px solid #dbe5ff;border-radius:9px;padding:7px 9px;white-space:nowrap}.jalaliCalendarBackdrop{position:fixed;inset:0;z-index:2147482998;background:rgba(15,23,42,.16);opacity:0;pointer-events:none;transition:opacity .18s ease}.jalaliCalendarBackdrop.open{opacity:1;pointer-events:auto}.jalaliCalendarPopover{position:fixed;z-index:2147482999;width:min(330px,calc(100vw - 24px));border:1px solid #e4e7ec;border-radius:16px;background:#fff;box-shadow:0 24px 64px rgba(15,23,42,.22);padding:11px;direction:rtl}.jalaliCalendarHead{display:grid;grid-template-columns:38px 1fr 38px;gap:6px;align-items:center;margin-bottom:8px}.jalaliCalendarHead>button{height:36px;border:1px solid #e4e7ec;border-radius:10px;background:#f8fafc;color:#475467;font:900 18px Vazirmatn;cursor:pointer}.jalaliCalendarTitle{text-align:center}.pbR100F9BirthTitle{display:grid;justify-items:center;gap:1px}.pbR100F9YearButton{border:0!important;background:transparent!important;height:auto!important;min-height:20px!important;padding:0 8px!important;border-radius:7px!important;color:#667085!important;font:850 9px Vazirmatn,Tahoma,Arial!important;cursor:pointer!important}.pbR100F9YearButton:hover,.pbR100F9YearButton.open{background:#eef2ff!important;color:#315efb!important}.pbR100F9YearButton span{font-size:9px}.pbR100F9YearPanel{max-height:182px;overflow:auto;margin:-2px 0 9px;padding:7px;border:1px solid #e4e7ec;border-radius:11px;background:#f8fafc;scrollbar-width:thin}.pbR100F9YearPanel[hidden]{display:none!important}.pbR100F9YearGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.pbR100F9YearOption{min-height:31px;border:1px solid transparent;border-radius:8px;background:#fff;color:#475467;font:800 9px Vazirmatn,Tahoma,Arial;cursor:pointer}.pbR100F9YearOption:hover{border-color:#c7d2fe;color:#315efb}.pbR100F9YearOption.selected{background:#315efb;color:#fff;border-color:#315efb}.pbR96BirthCalendarTitle{display:grid!important;grid-template-rows:auto auto!important;gap:0!important;align-items:center}.pbR96BirthCalendarTitle select{appearance:none;-webkit-appearance:none;width:100%;height:auto;border:0!important;background:transparent!important;text-align:center;text-align-last:center;padding:0!important;margin:0!important;color:#344054;cursor:pointer;font-family:Vazirmatn,Tahoma,Arial!important}.pbR96BirthCalendarTitle [data-month]{font-size:12px!important;font-weight:900!important;line-height:18px}.pbR96BirthCalendarTitle [data-year]{font-size:8.5px!important;font-weight:800!important;color:#98a2b3!important;line-height:14px}.jalaliWeekdays,.jalaliDays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.jalaliWeekdays span{text-align:center;font-size:8px;color:#98a2b3;font-weight:800;padding:3px 0}.jalaliDay{aspect-ratio:1;border:0;border-radius:9px;background:transparent;color:#344054;font:800 9.5px Vazirmatn;cursor:pointer}.jalaliDay:hover{background:#eef2ff;color:#315efb}.jalaliDay.today{box-shadow:inset 0 0 0 1px #a8b8ff;color:#315efb}.jalaliDay.selected{background:#315efb!important;color:#fff!important;box-shadow:none}.jalaliDay.blank{visibility:hidden;pointer-events:none}.jalaliDay:disabled{opacity:.28;cursor:not-allowed;pointer-events:none}.jalaliCalendarFooter{display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid #f0f2f5}.jalaliCalendarFooter button{flex:1;min-height:36px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;color:#475467;font:850 9px Vazirmatn;cursor:pointer}.jalaliCalendarFooter .todayBtn{border-color:#c7d2fe;background:#eef2ff;color:#315efb}.photographerSignupForm.pbR94ExistingActive{overflow:visible!important}.pbBirthProjectBackdrop{position:fixed;inset:0;z-index:2147482998;background:rgba(15,23,42,.18)}.pbBirthProjectCalendar{position:fixed!important;z-index:2147482999!important;width:min(310px,calc(100vw - 24px))!important;padding:10px!important;direction:rtl!important;margin:0!important}.pbBirthProjectCalendar .pbBirthProjectMonthYear{display:grid;grid-template-columns:1.15fr .85fr;gap:5px;align-items:center}.pbBirthProjectCalendar .pbBirthProjectMonthYear select{width:100%;height:30px;border:1px solid #e4e7ec;border-radius:9px;background:#fff;color:#344054;font:800 9px Vazirmatn,Tahoma,Arial;padding:0 5px;text-align:center}.pbBirthProjectCalendar .calendarGrid button.today{border-color:#93c5fd;background:#eff6ff}.pbBirthProjectCalendar .calendarGrid button.today b{color:#1d4ed8}.pbBirthProjectCalendar .calendarGrid button.selected.today b{color:#fff}@media(max-width:600px){.pbBirthProjectCalendar{left:12px!important;right:12px!important;top:auto!important;bottom:12px!important;width:auto!important;max-height:calc(100dvh - 24px)!important;overflow:auto!important}.pbBirthProjectBackdrop{background:rgba(15,23,42,.30)}}html.pbR98InviteScroll,html.pbR98InviteScroll body{height:auto!important;min-height:100%!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:auto!important}html.pbR98InviteScroll body{position:static!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important}html.pbR98InviteScroll body #root{height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;position:static!important;touch-action:pan-y!important}html.pbR98InviteScroll body #root .photographerSignupPage{height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;position:relative!important;inset:auto!important;touch-action:pan-y!important;padding-bottom:max(36px,env(safe-area-inset-bottom))!important}html.pbR98InviteScroll body #root .photographerSignupShell,html.pbR98InviteScroll body #root .photographerSignupForm{height:auto!important;min-height:0!important;min-width:0!important;max-width:100%!important;max-height:none!important;overflow:visible!important;position:relative!important;touch-action:pan-y!important}.pbR94Required>*{min-width:0;max-width:100%;overflow-wrap:anywhere}html.pbR98InviteScroll body.pbR98InviteScrollBody{overflow-y:auto!important}@media(max-width:600px){.photographerSignupShell,.photographerSignupForm{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}.photographerSignupForm>#pbR94InviteRequired,.photographerSignupForm>#pbR94ExistingIdentity{grid-column:1/-1!important;justify-self:stretch!important;align-self:stretch!important}.pbR94Required,.pbR94Identity{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;box-sizing:border-box!important}.pbR94Required>b,.pbR94Identity>b{max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important}.pbR94ReqField,.pbR95FilePicker{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}.pbR94ReqField input{min-width:0!important;max-width:100%!important}.pbR94Identity{grid-template-columns:1fr}.pbR94Identity>b{grid-column:1}.pbR95FilePicker em{display:none}.jalaliCalendarPopover{left:12px!important;right:12px!important;top:auto!important;bottom:12px!important;width:auto!important}.jalaliCalendarBackdrop{background:rgba(15,23,42,.30)}}`;document.head.append(css);
+  const layoutFix=document.createElement('style');layoutFix.textContent='.pbR94Required,.pbR94Identity{grid-column:1/-1!important;justify-self:stretch!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}';document.head.append(layoutFix);
   const refreshFromForm=e=>{const t=e?.target;if(t&&t.closest?.('.photographerSignupForm'))schedule()};
   document.addEventListener('input',refreshFromForm,{passive:true});document.addEventListener('change',refreshFromForm,{passive:true});
   addEventListener('pageshow',()=>{enableInviteScroll();bootstrap();scheduleSeries()},{passive:true});

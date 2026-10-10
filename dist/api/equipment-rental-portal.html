@@ -9994,5 +9994,58 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
  [0,100,350].forEach(ms=>setTimeout(schedule,ms));
 })();
 </script>
+<style id="pbR100F67MobileOfficeRailFix">
+@media(max-width:850px){
+  html body.rentalAppReady.pb899MainBookings{overflow-x:hidden!important}
+  html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs{
+    display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+    width:100%!important;min-width:0!important;max-width:100%!important;height:52px!important;min-height:52px!important;max-height:52px!important;
+    margin:0!important;padding:4px 8px!important;gap:7px!important;box-sizing:border-box!important;
+    overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;
+    touch-action:pan-x!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;scroll-snap-type:x proximity!important;
+  }
+  html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab]{
+    position:relative!important;display:flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;
+    width:auto!important;min-width:108px!important;max-width:none!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+    margin:0!important;padding:0 11px!important;white-space:nowrap!important;scroll-snap-align:center!important;box-sizing:border-box!important;
+  }
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab] .pb905rOfficeTabLabel,
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab] .pb904r5OfficeTabLabel,
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab] .pb903OfficeTabLabel,
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab] .pb900OfficeTabLabel,
+  html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab] .pb898OfficeLabel{
+    display:inline-block!important;flex:0 0 auto!important;width:auto!important;max-width:none!important;margin:0!important;padding:0!important;white-space:nowrap!important;line-height:1!important;
+  }
+}
+</style>
+<script id="pbR100F67MobileOfficeRailRuntime">
+(()=>{
+  if(window.__PB_R100F67_MOBILE_OFFICE_RAIL__)return;
+  window.__PB_R100F67_MOBILE_OFFICE_RAIL__=true;
+  const labels={calendar:'آفیش',pending:'درخواست‌ها',approved:'تحویل',out:'دریافت',shortages:'کسری آفیش'};
+  function normalize(){
+    if(!matchMedia('(max-width:850px)').matches)return;
+    const rail=document.getElementById('pb848BookingHeaderTabs');if(!rail)return;
+    for(const button of rail.querySelectorAll('[data-pb843-office-tab]')){
+      const kind=button.dataset.pb843OfficeTab;if(kind==='manual'){button.remove();continue}
+      const count=button.querySelector('.pb854TabCount');
+      const current=button.querySelector('.pb905rOfficeTabLabel');
+      const expectedChildren=1+(count?1:0);
+      if(current?.textContent===labels[kind]&&button.children.length===expectedChildren&&(!count||count.parentElement===button))continue;
+      button.replaceChildren();
+      const label=document.createElement('span');label.className='pb905rOfficeTabLabel';label.textContent=labels[kind]||'آفیش';
+      button.append(label);
+      if(count)button.append(count);
+    }
+  }
+  const schedule=()=>requestAnimationFrame(normalize);
+  normalize();
+  const rail=document.getElementById('pb848BookingHeaderTabs');
+  if(rail)new MutationObserver(schedule).observe(rail,{childList:true,subtree:true});
+  window.addEventListener('resize',schedule,{passive:true});
+  setTimeout(normalize,100);setTimeout(normalize,500);setTimeout(normalize,1200);
+})();
+</script>
 
 </body></html>

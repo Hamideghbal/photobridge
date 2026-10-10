@@ -32,7 +32,8 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
    INSERT INTO equipment_rental_booking_items VALUES('${uuid(20)}','${a}','${item}',1),('${uuid(21)}','${b}','${item}',1),('${uuid(22)}','${c}','${item}',1);
    INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,resolved_at) VALUES('${supply}','${shop}','${a}','${item}',1,'2030-10-12','2030-10-12','provided',now());
    INSERT INTO equipment_rental_assets VALUES('${asset}','${shop}','${item}',true,'CAM-1','serial');`);
-  await db.exec(`ALTER TABLE equipment_rental_bookings ADD COLUMN payment_status text,ADD COLUMN gross_amount bigint,ADD COLUMN discount_amount bigint,ADD COLUMN discount_percent integer,ADD COLUMN invoice_adjustment_amount bigint,ADD COLUMN invoice_adjustment_note text,ADD COLUMN return_kind text,ADD COLUMN returned_at timestamp;
+  await db.exec(`ALTER TABLE equipment_rental_assets ADD COLUMN deleted_at timestamptz;
+   ALTER TABLE equipment_rental_bookings ADD COLUMN payment_status text,ADD COLUMN gross_amount bigint,ADD COLUMN discount_amount bigint,ADD COLUMN discount_percent integer,ADD COLUMN invoice_adjustment_amount bigint,ADD COLUMN invoice_adjustment_note text,ADD COLUMN return_kind text,ADD COLUMN returned_at timestamp;
    ALTER TABLE equipment_rental_booking_items ADD COLUMN rental_days integer DEFAULT 1,ADD COLUMN daily_price bigint DEFAULT 100,ADD COLUMN subtotal bigint DEFAULT 100;
    CREATE TABLE equipment_rental_invoices(id uuid PRIMARY KEY,invoice_number text,booking_id uuid,shop_id uuid,photographer_id uuid,total_amount bigint,deposit_amount bigint,issued_at timestamp);`);
   const ctx=vm.createContext({crypto,Map,Set,Date,JSON,Number,String,Math,equipmentRentalDate:v=>v instanceof Date?v.toISOString().slice(0,10):v?String(v).slice(0,10):null});

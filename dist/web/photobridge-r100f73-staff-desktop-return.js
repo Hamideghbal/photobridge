@@ -182,6 +182,7 @@
       init();
     });
   }
+  window.pbR1084ReturnChecklist=showChecklist;
   if(typeof previousBookingStatus==='function'){
     window.bookingStatus=async function(id,status,...rest){
       if(!isStaff()||status!=='returned')return previousBookingStatus.call(this,id,status,...rest);

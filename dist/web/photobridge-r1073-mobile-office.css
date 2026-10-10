@@ -106,3 +106,39 @@ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86
  html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:center!important;flex:none!important;width:100%!important;min-width:0!important;gap:5px!important}
  html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions>button{flex:0 0 auto!important;width:100%!important;min-width:0!important;margin:0!important;min-height:32px!important;padding:4px 6px!important;font:700 11px/1.5 Vazirmatn,Tahoma!important;white-space:normal!important}
 }
+
+/* R1084: compact, readable store personnel and invitation credit explanation. */
+html body.rentalAppReady #pbR100F9StaffRows{display:grid!important;gap:8px!important}
+html body.rentalAppReady #pbR100F9StaffRows .pbR100F9StaffRow{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important;padding:12px!important;margin:0!important;width:100%!important;min-width:0!important;background:#fff!important;border:1px solid #e4e7ec!important;border-radius:12px!important}
+html body.rentalAppReady #pbR100F9StaffRows .pbR100F9StaffRow>div{display:grid!important;gap:4px!important;min-width:0!important;text-align:right!important}
+html body.rentalAppReady #pbR100F9StaffRows b{font-size:14px!important;line-height:1.6!important;overflow-wrap:break-word!important}
+html body.rentalAppReady #pbR100F9StaffRows small{display:block!important;font-size:13px!important;line-height:1.5!important;text-align:right!important;white-space:nowrap!important}
+html body.rentalAppReady #pbR100F9StaffRows button{width:auto!important;min-height:36px!important;padding:6px 9px!important;font:700 12px/1.5 Vazirmatn,Tahoma!important;white-space:nowrap!important;align-self:center!important}
+html body.rentalAppReady .pbR1084InviteCopy{display:block;min-width:0;white-space:normal}
+html body.rentalAppReady #smsInviteCreditHint{display:block!important;margin-top:4px!important;font-size:12px!important;line-height:1.7!important;color:#335c8e!important;white-space:normal!important}
+/* R1084: paged QR labels keep all unit actions in a compact, non-scrolling dialog. */
+html body .pbR1084AssetLabels{padding:10px!important;overflow:hidden!important;align-items:center!important}
+html body .pbR1084AssetLabels .pbR85ScanCard{width:min(940px,100%)!important;max-height:calc(100dvh - 20px)!important;padding:12px!important;overflow:hidden!important}
+html body .pbR1084AssetLabels .pbR85ScanHead{gap:8px!important;margin:0!important}
+html body .pbR1084AssetLabels .pbR85ScanHead>div{min-width:0}
+html body .pbR1084AssetLabels h2{font-size:15px!important;margin:0!important;line-height:1.5!important}
+html body .pbR1084AssetLabels .pbR85ScanHead p{font-size:11px!important;margin:4px 0!important;line-height:1.5!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html body .pbR1084AssetLabels .pbR85AssetGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin:8px 0!important}
+html body .pbR1084AssetLabels .pbR85AssetCard{padding:8px!important;box-shadow:none!important;min-width:0!important}
+html body .pbR1084AssetLabels .pbR85AssetName{font-size:11px!important;line-height:1.5!important;min-height:0!important}
+html body .pbR1084AssetLabels .pbR85AssetCode{font-size:14px!important;letter-spacing:1px!important}
+html body .pbR1084AssetLabels .pbR85AssetSerial{font-size:11px!important;margin:3px 0 6px!important;overflow-wrap:anywhere}
+html body .pbR1084AssetLabels .pbR85AssetButtons{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
+html body .pbR1084AssetLabels .pbR85Btn{font-size:11px!important;line-height:1.5!important;min-height:32px!important;height:auto!important;padding:5px 8px!important;box-shadow:none!important;width:auto!important}
+html body .pbR1084AssetLabels .pbR1082UnitActions{grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:6px!important}
+html body .pbR1084AssetLabels .pbR1082UnitActions span{grid-column:1/-1;font-size:11px!important}
+html body .pbR1084AssetLabels .pbR1082UnitReason,html body .pbR1084AssetLabels .pbR1058AssetHolder{font-size:11px!important;line-height:1.5!important;margin-top:4px!important}
+html body .pbR1084AssetLabels .pbR1084AssetPager{display:flex;align-items:center;justify-content:center;gap:12px;font-size:12px}
+html body .pbR1084AssetLabels .pbR85Actions{margin-top:8px!important;justify-content:center!important}
+@media(max-width:850px){html body .pbR1084AssetLabels .pbR85ScanCard{width:min(420px,100%)!important}html body .pbR1084AssetLabels .pbR85AssetGrid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-height:550px){html body .pbR1084AssetLabels .pbR85AssetCard{display:grid!important;grid-template-columns:76px minmax(0,1fr)!important;gap:3px 8px!important;align-items:center!important}html body .pbR1084AssetLabels .pbR85AssetQr{grid-column:1;grid-row:1/5;width:64px!important;height:64px!important;margin:auto!important}html body .pbR1084AssetLabels .pbR85AssetName,html body .pbR1084AssetLabels .pbR85AssetCode,html body .pbR1084AssetLabels .pbR85AssetSerial{grid-column:2!important}html body .pbR1084AssetLabels .pbR85AssetButtons,html body .pbR1084AssetLabels .pbR1082UnitActions,html body .pbR1084AssetLabels .pbR1082UnitReason,html body .pbR1084AssetLabels .pbR1058AssetHolder{grid-column:1/-1!important}}
+/* Fixed-height selected photographer; the full name remains in the selection menu. */
+html body #accountingForm .pb892Picker{min-width:0!important;max-width:100%!important}
+html body #accountingForm .pb892PickerButton{min-width:0!important;overflow:hidden!important;height:44px!important}
+html body #accountingForm .pb892PickerButton>span{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+@media(max-height:550px){html body .pbR1084AssetLabels .pbR85ScanCard{padding:8px!important}html body .pbR1084AssetLabels .pbR85AssetCard{padding:5px!important;row-gap:0!important}html body .pbR1084AssetLabels .pbR85AssetCode{margin:0!important;line-height:1.4!important}html body .pbR1084AssetLabels .pbR85AssetSerial{min-height:0!important;margin:0!important}html body .pbR1084AssetLabels .pbR85Btn{min-height:28px!important;padding:3px 6px!important}html body .pbR1084AssetLabels .pbR85Actions{margin:4px 0 0!important;gap:0!important}html body .pbR1084AssetLabels .pbR1082UnitActions{margin-top:2px!important;gap:2px 6px!important}html body .pbR1084AssetLabels .pbR85AssetButtons{margin:2px 0!important}html body .pbR1084AssetLabels .pbR85AssetGrid{margin:4px 0!important}}

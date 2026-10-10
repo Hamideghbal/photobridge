@@ -6,8 +6,9 @@ for(const [file,url] of [
 ]){
  let src=fs.readFileSync(file,'utf8'),tag='<script defer src="'+url+'"></script>';
  if(!src.includes(tag)){
-  if(src.split('</body>').length!==2)throw Error('[R1095] missing closing body: '+file);
-  src=src.replace('</body>',tag+'\n</body>');
+  const at=src.lastIndexOf('</body>');
+  if(at<0)throw Error('[R1095] missing closing body: '+file);
+  src=src.slice(0,at)+tag+'\n'+src.slice(at);
   fs.writeFileSync(file,src,'utf8');
  }
  if(src.split(tag).length!==2)throw Error('[R1095] duplicate or missing script: '+file);

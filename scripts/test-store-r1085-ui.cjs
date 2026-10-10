@@ -21,6 +21,7 @@ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['-
  assert(await page.locator('[data-pb842-pane=debtors]').isVisible());assert.match(await page.locator('[data-pb842-pane=debtors] tbody tr').first().textContent(),/High/);assert.equal(await page.locator('[data-settlement-sms]').count(),2);
  await page.evaluate(()=>{pb920Confirm=async()=>false});await page.locator('[data-settlement-sms=high]').click();assert.equal(calls.filter(x=>x.photographerId).length,0);
  await page.evaluate(()=>{pb920Confirm=async()=>true});await page.locator('[data-settlement-sms=high]').click();await page.waitForFunction(()=>document.querySelector('[data-debt-msg]').textContent.includes('ارسال شد'));assert.equal(calls.find(x=>x.photographerId).photographerId,'high');
+ if(viewport.width>=851){await page.evaluate(()=>{selectRentalTab('bookings',{reloadExtra:false});pb904r2RenderDayPanel('2026-10-10')});await page.waitForSelector('#pb904r2DayPanelBody [data-office-booking-id=returned]',{state:'attached'});assert.equal(await page.locator('#pb904r2DayPanelBody [data-office-booking-id=returned] [data-office-action=commitment]').count(),0);assert.equal(await page.locator('#pb904r2DayPanelBody [data-office-booking-id=returned] [data-office-action=invoice]').count(),1);}
  await page.evaluate(()=>pbR100F71OpenBookingDetails('returned'));assert.equal(await page.locator('[data-pb-r71-print]').count(),0);assert.equal(await page.locator('[data-pb-r71-invoice]').count(),1);
  await page.close();
 }}finally{await browser.close()}});

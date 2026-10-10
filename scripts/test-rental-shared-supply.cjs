@@ -60,7 +60,7 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
   await db.query('DELETE FROM equipment_rental_booking_shortages WHERE id=$1',[uuid(77)]);
   // The owned unit remains available to the multi-day booking.
   await db.exec('BEGIN');const multi=await ctx.equipmentRentalCommitHandover(db,{shopId:shop,bookingId:c,actorId:null,assetCodes:['CAM-1'],externalSupplyCodes:[]});assert.equal(multi.assetCount,1);await db.exec('ROLLBACK');
-  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(b),item,3,[{itemId:item,supplied:true,availableQuantity:2},{itemId:item,supplied:false,availableQuantity:10},{itemId:'other',supplied:true,availableQuantity:9}]),2,'pending supply and unrelated items do not count');
+  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(b),item,3,[{itemId:item,supplied:true,availableQuantity:2,startDate:'2030-10-12',endDate:'2030-10-12'},{itemId:item,supplied:false,availableQuantity:10},{itemId:'other',supplied:true,availableQuantity:9}]),2,'pending supply and unrelated items do not count');
   assert.equal((await hand(c,[],[{itemId:item,shortageId:supply,code:'free text'}])).error,'external_supply_unavailable');
   // The source was planned for A; B receives it, then A takes the owned camera.
   await db.query("UPDATE equipment_rental_booking_shortages SET status='pending',resolved_at=NULL WHERE id=$1",[supply]);
@@ -86,5 +86,20 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
   pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(c));assert.equal(pool.sources[0].availableQuantity,1);
   // Rollback leaves neither possession nor status changes behind.
   await db.exec('BEGIN');const rolled=await ctx.equipmentRentalCommitHandover(db,{shopId:shop,bookingId:c,actorId:null,assetCodes:[],externalSupplyCodes:[{itemId:item,shortageId:supply,code:''}]});assert.equal(rolled.externalSupplyCount,1);await db.exec('ROLLBACK');assert.equal((await booking(c)).status,'reserved');
+  // Two-day ready supply covers a two-day booking, but never a longer booking.
+  await db.query("UPDATE equipment_rental_booking_shortages SET rental_end='2030-10-13' WHERE id=$1",[supply]);
+  await db.query("UPDATE equipment_rental_bookings SET rental_end='2030-10-13' WHERE id=$1",[c]);
+  await db.query("UPDATE equipment_rental_booking_assets SET returned_at=now() WHERE booking_id=$1",[a]);
+  const next=uuid(99),longer=uuid(98);
+  await db.query("INSERT INTO equipment_rental_bookings(id,shop_id,status,rental_start,rental_end,customer_name) VALUES($1,$2,'reserved','2030-10-12','2030-10-13','Next'),($3,$2,'reserved','2030-10-12','2030-10-14','Longer')",[next,shop,longer]);
+  await db.query('INSERT INTO equipment_rental_booking_items VALUES($1,$2,$3,1,2,100,200),($4,$5,$3,1,3,100,300)',[uuid(100),next,item,uuid(101),longer]);
+  pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(longer));assert.equal(pool.sources[0].availableQuantity,0);
+  assert.equal(ctx.equipmentRentalRequiredExternalQuantity(await booking(longer),item,1,pool.sources),0);
+  pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(c));assert.equal(pool.sources[0].availableQuantity,1);
+  assert.equal((await hand(c,['CAM-1'],[])).error,'single_day_external_supply_required');
+  assert.equal((await booking(c)).status,'reserved');
+  assert.equal((await hand(c,[],[{itemId:item,shortageId:supply,code:''}])).externalSupplyCount,1);
+  pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(next));assert.equal(pool.sources[0].availableQuantity,0);
+  assert.equal((await hand(next,['CAM-1'],[])).assetCount,1,'owned inventory unlocks after matching external units are exhausted');
  }finally{await db.close()}
 });

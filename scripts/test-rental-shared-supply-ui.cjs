@@ -62,7 +62,7 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    await page.evaluate(()=>{document.querySelector('[data-pb922-close]')?.click();window.data.bookings[0].status='reserved';window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:{items:[{itemId:'camera',title:'Camera',quantity:2,requiredExternalQty:1,supplyOptions:[{id:'ready',bookingId:'a',availableQuantity:1,supplied:true}]}]}});void bookingStatus('b','picked_up')});
    await page.waitForSelector('[data-slot="1"]');
    assert.equal(await page.locator('[data-slot="0"] [data-supplied-toggle]').isChecked(),false);
-   assert.match(await page.locator('.pbR1072SupplyPriority').textContent(),/آفیش یک‌روزه/);
+   assert.match(await page.locator('.pbR1072SupplyPriority').textContent(),/تمام روزهای این آفیش/);
    await open(0);assert.equal(await option(0,'owned').isDisabled(),true);
    if(mobile){await page.keyboard.press('Escape')}else assert.equal(await option(0,'external').getAttribute('aria-checked'),'true');
    assert.equal(await page.locator('[data-slot="0"] [data-slot-add]').textContent(),'ثبت متن');

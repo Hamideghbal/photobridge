@@ -76,13 +76,58 @@
    try{
      const draft=await request('/api/rental/bookings/'+id+'/edit');if(active!==st)return;
      const qty=new Map(draft.items.map(x=>[x.itemId,x.quantity]));
-     modal.querySelector('.editBody').innerHTML=`<p>تاریخ و تجهیزات آفیش بدون فاکتور را ویرایش کنید.</p><form class="editForm"><div class="extSplit"><label>تاریخ شروع<input name="startDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.startDate))}"></label><label>تاریخ پایان<input name="endDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.endDate))}"></label></div><label>جستجوی تجهیزات<input name="equipmentSearch" type="search" placeholder="نام تجهیز"></label><div class="editItems">${draft.catalog.map(x=>`<label class="extItem" data-edit-title="${esc(x.title)}"><span>${esc(x.title)}</span><input type="number" aria-label="تعداد ${esc(x.title)}" data-edit-item="${esc(x.id)}" min="0" max="99" step="1" value="${qty.get(x.id)||0}"></label>`).join('')}</div><button type="submit" class="extSubmit">ذخیره تغییرات</button></form>`;
+     modal.querySelector('.editBody').innerHTML=`<form class="editForm"><div class="editDates"><label>تاریخ شروع<input name="startDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.startDate))}"></label><label>تاریخ پایان<input name="endDate" inputmode="none" readonly value="${esc(window.isoToJalaliInput(draft.endDate))}"></label></div><div class="editItems"></div><div class="extFoot"><button type="button" data-edit-add>افزودن تجهیز به آفیش</button><button type="submit" class="extSubmit">ذخیره تغییرات</button></div></form>`;
      const form=modal.querySelector('form');
-     for(const name of ['startDate','endDate'])form.elements[name].onclick=()=>window.openJalaliCalendar(form.elements[name]);
-     form.elements.equipmentSearch.oninput=()=>form.querySelectorAll('[data-edit-title]').forEach(row=>row.hidden=!row.dataset.editTitle.includes(form.elements.equipmentSearch.value.trim()));
+     const titles=new Map(draft.catalog.map(x=>[x.id,x.title]));
+     for(const x of b.items||[])if(!titles.has(x.itemId))titles.set(x.itemId,x.title);
+     let inventory=new Map(),inventoryVersion=0,picker=null,pickerVersion=0,pickerPage=0,pickerBusy=false,refreshTimer=0;
+     const dates=()=>({startDate:window.jalaliInputToIso(form.elements.startDate.value),endDate:window.jalaliInputToIso(form.elements.endDate.value)});
+     const check=items=>request('/api/rental/bookings/'+id+'/edit/availability',{method:'POST',body:JSON.stringify({...dates(),items})});
+     const description=row=>!row?'در حال بررسی موجودی…':!row.valid?'این تجهیز قابل انتخاب نیست.':row.shortage>0?('کسری '+fa(row.shortage)+' عدد در این بازه'+(window.pbRentalDailyAvailabilityText?' · '+window.pbRentalDailyAvailabilityText(row.dailyAvailability,row.requested):'')):'موجود در تمام روزهای انتخاب‌شده';
+     function paintAvailability(){form.querySelectorAll('[data-edit-row]').forEach(row=>{const item=inventory.get(row.dataset.editRow);row.classList.toggle('blocked',Boolean(item&&(!item.valid||item.shortage>0)));row.querySelector('.editStock').textContent=description(item)})}
+     async function refresh(){
+       const version=++inventoryVersion,items=[...qty].map(([itemId,quantity])=>({itemId,quantity}));inventory.clear();paintAvailability();
+       if(!items.length)return;
+       try{const result=await check(items);if(active!==st||version!==inventoryVersion)return;inventory=new Map(result.items.map(x=>[x.itemId,x]));paintAvailability()}
+       catch(error){if(active===st&&version===inventoryVersion){form.querySelectorAll('.editStock').forEach(x=>x.textContent='بررسی موجودی انجام نشد؛ تاریخ‌ها را بررسی کنید.')}}
+     }
+     function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>{if(active===st)void refresh()},120)}
+     function renderItems(){
+       form.querySelector('.editItems').innerHTML=qty.size?[...qty].map(([itemId,quantity])=>`<div class="extItem" data-edit-row="${esc(itemId)}"><div class="editItemName"><b>${esc(titles.get(itemId)||'تجهیز ثبت‌شده')}</b><small class="editStock"></small></div><div class="editQuantity"><button type="button" data-edit-step="-1" aria-label="کاهش تعداد ${esc(titles.get(itemId)||'تجهیز')}" ${quantity<=1?'disabled':''}>−</button><input type="number" aria-label="تعداد ${esc(titles.get(itemId)||'تجهیز')}" data-edit-item="${esc(itemId)}" min="1" max="99" step="1" value="${quantity}" required><button type="button" data-edit-step="1" aria-label="افزایش تعداد ${esc(titles.get(itemId)||'تجهیز')}" ${quantity>=99?'disabled':''}>+</button></div><button type="button" data-edit-remove aria-label="حذف ${esc(titles.get(itemId)||'تجهیز')}">حذف</button></div>`).join(''):'<p>تجهیزی انتخاب نشده است؛ از «افزودن تجهیز» استفاده کنید.</p>';
+       form.querySelectorAll('[data-edit-row]').forEach(row=>{
+         const input=row.querySelector('[data-edit-item]'),itemId=input.dataset.editItem;
+         const update=()=>{const value=Number(input.value);if(!Number.isInteger(value)||value<1||value>99)return;qty.set(itemId,value);row.querySelector('[data-edit-step="-1"]').disabled=value<=1;row.querySelector('[data-edit-step="1"]').disabled=value>=99;scheduleRefresh()};
+         input.onchange=update;
+         row.querySelectorAll('[data-edit-step]').forEach(button=>button.onclick=()=>{if(st.busy)return;input.value=String(Math.max(1,Math.min(99,(qty.get(itemId)||1)+Number(button.dataset.editStep))));update()});
+         row.querySelector('[data-edit-remove]').onclick=()=>{if(st.busy)return;qty.delete(itemId);renderItems();scheduleRefresh()};
+       });paintAvailability();
+     }
+     const closePicker=()=>{if(!picker)return false;pickerVersion++;picker.remove();picker=null;form.querySelector('[data-edit-add]').focus();return true};st.closePicker=closePicker;
+     async function paintPicker(){
+       if(!picker)return;const view=picker,version=++pickerVersion,rows=draft.catalog.slice(pickerPage*60,(pickerPage+1)*60);pickerBusy=true;
+       view.querySelector('.editPickerList').textContent='در حال بررسی موجودی تاریخ‌های انتخاب‌شده…';
+       view.querySelector('.editPickerRange').textContent=date(dates().startDate)+' تا '+date(dates().endDate);
+       try{
+         const result=rows.length?await check(rows.map(x=>({itemId:x.id,quantity:Math.min(99,(qty.get(x.id)||0)+1)}))):{items:[]};
+         if(active!==st||picker!==view||version!==pickerVersion)return;
+         const stock=new Map(result.items.map(x=>[x.itemId,x]));
+         view.querySelector('.editPickerList').innerHTML=rows.length?rows.map(x=>{const row=stock.get(x.id),count=qty.get(x.id)||0;return `<article class="extItem ${row&&(!row.valid||row.shortage>0)?'blocked':''}"><div class="editItemName"><b>${esc(x.title)}</b><small>${esc(description(row))}</small>${count?'<small>در آفیش: '+fa(count)+' عدد</small>':''}</div><button type="button" data-picker-item="${esc(x.id)}" ${!row?.valid||count>=99?'disabled':''}>${row?.shortage>0?'افزودن با کسری':'افزودن'}</button></article>`}).join(''):'<p>تجهیزی برای افزودن وجود ندارد.</p>';
+         view.querySelectorAll('[data-picker-item]').forEach(button=>button.onclick=()=>{if(pickerBusy||st.busy)return;const key=button.dataset.pickerItem;qty.set(key,Math.min(99,(qty.get(key)||0)+1));renderItems();scheduleRefresh();void paintPicker()});
+         view.querySelector('[data-picker-prev]').disabled=pickerPage===0;view.querySelector('[data-picker-next]').disabled=(pickerPage+1)*60>=draft.catalog.length;
+       }catch(error){if(active===st&&picker===view&&version===pickerVersion)view.querySelector('.editPickerList').textContent='موجودی دریافت نشد؛ تاریخ شروع و پایان را بررسی کنید.'}
+       if(picker===view&&version===pickerVersion)pickerBusy=false;
+     }
+     form.querySelector('[data-edit-add]').onclick=()=>{
+       if(st.busy||picker)return;if(!dates().startDate||!dates().endDate||dates().startDate>dates().endDate){modal.querySelector('[role=alert]').textContent='تاریخ شروع و پایان را درست انتخاب کنید.';return;}
+       picker=document.createElement('div');picker.className='editPicker';picker.innerHTML='<section class="extDialog" role="dialog" aria-modal="true" aria-label="افزودن تجهیزات"><div class="extHead"><b>افزودن تجهیزات به آفیش</b><button type="button" data-picker-close>بازگشت به ویرایش</button></div><p class="editPickerRange"></p><div class="editPickerList"></div><div class="extFoot"><button type="button" data-picker-prev>قبلی</button><button type="button" data-picker-next>بعدی</button></div></section>';modal.append(picker);
+       picker.querySelector('[data-picker-close]').onclick=closePicker;picker.querySelector('[data-picker-close]').focus();pickerPage=0;
+       picker.querySelector('[data-picker-prev]').onclick=()=>{if(pickerPage>0){pickerPage--;void paintPicker()}};picker.querySelector('[data-picker-next]').onclick=()=>{if((pickerPage+1)*60<draft.catalog.length){pickerPage++;void paintPicker()}};void paintPicker();
+     };
+     for(const name of ['startDate','endDate']){form.elements[name].onclick=()=>window.openJalaliCalendar(form.elements[name]);form.elements[name].onchange=()=>{scheduleRefresh();if(picker)void paintPicker()}}
+     renderItems();void refresh();
      form.onsubmit=async e=>{
        e.preventDefault();if(st.busy)return;
-       const items=[...form.querySelectorAll('[data-edit-item]')].filter(x=>Number(x.value)>0).map(x=>({itemId:x.dataset.editItem,quantity:Number(x.value)}));
+       const items=[...qty].map(([itemId,quantity])=>({itemId,quantity}));
        if(!items.length){modal.querySelector('[role=alert]').textContent='حداقل یک تجهیز انتخاب کنید.';return;}
        const payload={revision:draft.revision,startDate:window.jalaliInputToIso(form.elements.startDate.value),endDate:window.jalaliInputToIso(form.elements.endDate.value),items};
        st.busy=true;form.querySelector('[type=submit]').disabled=true;
@@ -100,6 +145,7 @@
    }catch(error){if(active===st)modal.querySelector('[role=alert]').textContent='این آفیش قابل ویرایش نیست یا دریافت اطلاعات انجام نشد.'}
  };
  style.textContent+='\n.pbOfficeEditOpen #jalaliCalendarPopover{z-index:2147483201!important}.pbOfficeEditOpen #jalaliCalendarBackdrop{z-index:2147483200!important}#pbOfficeExtension .editForm input{font:inherit;box-sizing:border-box;max-width:100%;padding:10px;border:1px solid #d9e2f5;border-radius:8px}#pbOfficeExtension .editForm label>input:not([type=number]){display:block;width:100%}#pbOfficeExtension .editItems{margin:12px 0;max-height:40dvh;overflow:auto}#pbOfficeExtension .editItems .extItem{justify-content:space-between;align-items:center}#pbOfficeExtension .editItems input[type=number]{width:80px;height:42px}#pbOfficeExtension .editItems [hidden]{display:none}';
+ style.textContent+='\n#pbOfficeExtension .editDates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:14px 0}#pbOfficeExtension .editDates label{min-width:0;font-size:14px}#pbOfficeExtension .editDates input{font-size:16px;cursor:pointer}#pbOfficeExtension .editItemName{min-width:0;flex:1;overflow-wrap:anywhere}#pbOfficeExtension .editItemName small{white-space:pre-line}#pbOfficeExtension .editQuantity{display:flex;gap:6px;align-items:center;direction:ltr}#pbOfficeExtension .editQuantity button{min-width:44px;min-height:44px;font-size:20px;padding:4px}#pbOfficeExtension .editQuantity input[type=number]{width:60px;text-align:center}#pbOfficeExtension [data-edit-remove]{color:#b42318;background:#fff4f3;min-height:44px}#pbOfficeExtension .editPicker{position:fixed;inset:0;z-index:2147483150;display:grid;place-items:center;padding:12px;background:#10182899}#pbOfficeExtension .editPickerList{max-height:60dvh;overflow:auto;padding:2px}#pbOfficeExtension .editPicker .extItem{align-items:center}#pbOfficeExtension [data-picker-item]{min-height:44px;flex-shrink:0}@media(max-width:560px){#pbOfficeExtension .editItems .extItem{display:grid;grid-template-columns:minmax(0,1fr) auto}#pbOfficeExtension .editItems .editItemName{grid-column:1/-1}#pbOfficeExtension .editDates input{padding:9px 4px}#pbOfficeExtension .editPicker .extItem{font-size:14px}}';
  const cardSelector='[data-office-booking-id],[data-pb915-booking-id],[data-pb904r5-booking-id]';
  const cardId=card=>card.dataset.officeBookingId||card.dataset.pb915BookingId||card.dataset.pb904r5BookingId;
  function mount(){
@@ -122,6 +168,6 @@
  }
  let frame=0;const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;mount()})};
  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-extension-booking-id]');if(b&&!b.disabled){e.preventDefault();e.stopImmediatePropagation();void (b.dataset.bookingAction==='edit'?window.pbRentalOpenBookingEdit:window.pbRentalOpenExtension)(b.dataset.extensionBookingId)}},true);
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&active){e.preventDefault();close()}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&active){e.preventDefault();if(!active.closePicker?.())close()}});
  new MutationObserver(records=>{if(records.some(r=>!r.target.closest?.('#pbOfficeExtension')))schedule()}).observe(document.body,{childList:true,subtree:true});schedule();
 })();

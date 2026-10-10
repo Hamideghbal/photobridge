@@ -21,6 +21,7 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
       if(route.request().method()==='PUT'){writes.push(JSON.parse(route.request().postData()));body={ok:true}}
       else body={revision:'draft-revision',startDate:'2030-10-13',endDate:'2030-10-13',items:[{itemId:'lens',quantity:1}],catalog:[{id:'camera',title:'Camera'},{id:'lens',title:'Lens'}]};
      }
+     if(u.pathname.endsWith('/edit/availability')){const input=JSON.parse(route.request().postData());body={items:input.items.map(x=>({itemId:x.itemId,title:x.itemId,requested:x.quantity,valid:true,available:x.itemId==='camera'?0:10,shortage:x.itemId==='camera'?x.quantity:0,dailyAvailability:[{date:input.startDate,available:x.itemId==='camera'?0:10,shortage:x.itemId==='camera'?x.quantity:0}]}))}}
      return route.fulfill({json:body});
     }
     if(u.pathname==='/rental/test')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'dist/api/equipment-rental-portal.html'),'utf8')});
@@ -48,11 +49,17 @@ test('mobile/desktop extension calendar selects a chain and blocks unavailable e
    assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-0 .pbOfficeExtendButton').textContent(),'ویرایش آفیش');
    assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').count(),1);assert.equal(await page.locator('#state-1 .pbOfficeExtendButton').textContent(),'تمدید آفیش');
    assert.equal(await page.locator('#state-2 .pbOfficeExtendButton,#state-3 .pbOfficeExtendButton').count(),0);
-   await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="camera"]').waitFor();
+   await page.locator('#state-0 .pbOfficeExtendButton').click();await page.locator('[data-edit-item="lens"]').waitFor();
+   assert.equal(await page.locator('[data-edit-item="camera"]').count(),0);assert.equal(await page.locator('[name=equipmentSearch]').count(),0);
+   const startBox=await page.locator('#pbOfficeExtension input[name=startDate]').boundingBox(),endBox=await page.locator('#pbOfficeExtension input[name=endDate]').boundingBox();assert.equal(startBox.y,endBox.y);assert(startBox.x!==endBox.x);
+   await page.locator('[data-edit-row="lens"] [data-edit-step="1"]').click();assert.equal(await page.locator('[data-edit-item="lens"]').inputValue(),'2');await page.locator('[data-edit-row="lens"] [data-edit-step="-1"]').click();assert.equal(await page.locator('[data-edit-item="lens"]').inputValue(),'1');
    await page.locator('#pbOfficeExtension input[name=startDate]').click();await page.locator('#jalaliCalendarPopover.open [data-jalali-day="24"]').click();
    const chosenStart=await page.evaluate(()=>jalaliInputToIso(document.querySelector('#pbOfficeExtension input[name=startDate]').value));
    await page.evaluate(start=>{document.querySelector('#pbOfficeExtension input[name=endDate]').value=isoToJalaliInput(start)},chosenStart);
-   await page.locator('[data-edit-item="lens"]').fill('0');await page.locator('[data-edit-item="camera"]').fill('2');await page.locator('#pbOfficeExtension [type=submit]').click();
+   await page.locator('[data-edit-row="lens"] [data-edit-remove]').click();assert.equal(await page.locator('[data-edit-item="lens"]').count(),0);
+   await page.locator('[data-edit-add]').click();await page.locator('[data-picker-item="camera"]').waitFor();
+   assert.match(await page.locator('.editPicker .blocked').textContent(),/کسری/);await page.locator('[data-picker-item="camera"]').click();
+   await page.locator('[data-picker-close]').click();await page.locator('[data-edit-row="camera"] [data-edit-step="1"]').click();assert.equal(await page.locator('[data-edit-item="camera"]').inputValue(),'2');await page.locator('#pbOfficeExtension [type=submit]').click();
    await page.waitForFunction(()=>!document.getElementById('pbOfficeExtension'));assert.equal(writes.length,2);assert.equal(writes[1].revision,'draft-revision');assert.deepEqual(writes[1].items,[{itemId:'camera',quantity:2}]);assert.equal(writes[1].startDate,chosenStart);assert.equal(writes[1].endDate,chosenStart);
    assert.deepEqual(errors,[]);await page.close();
   }

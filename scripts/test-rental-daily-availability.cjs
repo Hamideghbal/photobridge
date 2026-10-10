@@ -46,6 +46,13 @@ test('real PostgreSQL: per-day availability and transactional exact shortage sna
   out=await ctx.equipmentRentalAvailability(db,args);assert.equal(out.available,true);
   await db.query("UPDATE equipment_rental_bookings SET status='cancelled'");
   out=await ctx.equipmentRentalAvailability(db,args);assert.equal(out.items[0].reserved,0);
+  // A newly created reservation immediately reduces that day's remaining units.
+  await db.query("INSERT INTO equipment_rental_bookings(id,rental_start,rental_end,status) VALUES($1,'2030-10-13','2030-10-14','reserved')",[newBooking]);
+  await db.query('INSERT INTO equipment_rental_booking_items VALUES($1,$2,1)',[newBooking,item]);
+  out=await ctx.equipmentRentalAvailability(db,args);
+  assert.deepEqual(JSON.parse(JSON.stringify(out.items[0].dailyAvailability)).map(d=>[d.date,d.available]),[['2030-10-12',2],['2030-10-13',1],['2030-10-14',1]]);
+  await db.query("UPDATE equipment_rental_bookings SET status='cancelled' WHERE id=$1",[newBooking]);
+  out=await ctx.equipmentRentalAvailability(db,args);assert.equal(out.items[0].available,2);
   const unknown=await ctx.equipmentRentalAvailability(db,{...args,items:[{itemId:newBooking,quantity:1}]});assert.equal(unknown.items[0].valid,false);
   const invalid=await ctx.equipmentRentalAvailability(db,{...args,endDate:'2031-10-14'});assert.equal(invalid.error,'invalid_rental_dates');
  }finally{await db.close()}

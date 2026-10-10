@@ -7,7 +7,7 @@
  window.pbRentalDailyAvailabilityText=(days,quantity=1)=>{
    if(!Array.isArray(days)||!days.length)return '';
    const missing=days.filter(d=>Number(d.available)<quantity),available=days.filter(d=>Number(d.available)>=quantity);
-   return [missing.length?'ناموجود / کسری: '+missing.map(d=>date(d.date)+' (کسری '+number(quantity-Number(d.available))+' عدد)').join('، '):'',available.length?'موجود: '+available.map(d=>date(d.date)).join('، '):''].filter(Boolean).join('\n');
+   return [missing.length?'ناموجود / کسری: '+missing.map(d=>date(d.date)+' (کسری '+number(quantity-Number(d.available))+' عدد)').join('، '):'',available.length?'موجود: '+available.map(d=>date(d.date)+' (باقی‌مانده '+number(d.available)+' عدد)').join('، '):''].filter(Boolean).join('\n');
  };
  window.pbRentalShortageDatesText=row=>Array.isArray(row.shortage_days)&&row.shortage_days.length
    ?'روزهای نیاز به تأمین: '+row.shortage_days.map(d=>date(d.date)+' · '+number(d.quantity)+' عدد').join('، '):'';

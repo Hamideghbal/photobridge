@@ -9999,10 +9999,12 @@ async function equipmentRentalAccountingOverview(shopId) {
         pool.query(`SELECT u.id user_id,COALESCE(pp.studio_name,u.name) name,u.mobile,
           COALESCE(sum(CASE WHEN e.direction='debit' THEN e.amount ELSE -e.amount END),0)::bigint balance,
           COALESCE(sum(CASE WHEN e.entry_type='payment' THEN e.amount ELSE 0 END),0)::bigint paid_total,
-          max(e.created_at) last_entry_at
+          COALESCE(sum(CASE WHEN e.direction='debit' THEN e.amount ELSE 0 END),0)::bigint debit_total,
+          max(e.entry_date) FILTER (WHERE e.entry_type='payment') last_payment_at,max(e.created_at) last_entry_at
           FROM equipment_rental_shop_memberships m JOIN users u ON u.id=m.user_id
           LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
           LEFT JOIN equipment_rental_accounting_entries e ON e.shop_id=m.shop_id AND e.photographer_id=u.id
+            AND NOT (e.booking_id IS NOT NULL AND e.entry_type IN ('booking_charge','booking_reversal') AND EXISTS (SELECT 1 FROM equipment_rental_bookings cb WHERE cb.id=e.booking_id AND cb.status IN ('pending_approval','rejected','cancelled')))
           WHERE m.shop_id=$1 AND m.role='photographer' AND m.active=true
           GROUP BY u.id,pp.studio_name,u.name,u.mobile ORDER BY balance DESC,COALESCE(pp.studio_name,u.name)`, [shopId]),
         pool.query(`SELECT e.*,COALESCE(pp.studio_name,u.name) photographer_name,u.mobile photographer_mobile
@@ -15037,6 +15039,22 @@ async function api(req, res, url) {
         await audit(a.userId, undefined, 'equipment_rental.accounting_entry', 'equipment_rental_accounting_entry', id, { shopId: shop.id, photographerId, kind, amount }).catch(() => {});
         return sendJson(res, 201, { ok: true, id });
     }
+    if (req.method === 'POST' && url.pathname === '/api/rental/accounting/settlement-sms') {
+        const shop=await equipmentRentalCurrentShop(a);
+        if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+        const b=await bodyJson(req,20_000),photographerId=String(b.photographerId||'');
+        const overview=await equipmentRentalAccountingOverview(shop.id),debtor=(overview.balances||[]).find(x=>String(x.user_id)===photographerId&&Number(x.balance)>0);
+        if(!debtor)return sendJson(res,404,{error:'accounting_debtor_not_found'});
+        const mobile=normalizeMobile(String(debtor.mobile||''));
+        if(!/^09\d{9}$/.test(mobile))return sendJson(res,400,{error:'invalid_sms_mobile'});
+        if(!await equipmentRentalSmsAutoAllowed(shop.id,'manual'))return sendJson(res,409,{error:'sms_notifications_disabled'});
+        const message=`PhotoBridge\n${debtor.name||'عکاس گرامی'}، مانده بدهی شما به «${shop.name||'فروشگاه تجهیزات'}» ${Number(debtor.balance).toLocaleString('fa-IR')} تومان است. لطفاً برای تسویه حساب با فروشگاه هماهنگ کنید.`;
+        try{
+            const out=await sendSms({mobile,message,purpose:'rental_settlement_reminder',eventKey:'manual',userId:a.userId,chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',referenceId:photographerId,metadata:{rentalShopId:shop.id,photographerId}});
+            await audit(a.userId,undefined,'equipment_rental.settlement_sms','user',photographerId,{shopId:shop.id,chargedAmount:out?.chargedAmount||0}).catch(()=>{});
+            return sendJson(res,201,{ok:true,chargedAmount:out?.chargedAmount||0});
+        }catch(e){const code=String(e?.message||'sms_send_failed');return sendJson(res,code==='service_wallet_insufficient'?402:code==='sms_not_configured'?503:502,{error:code,balance:e?.balance,required:e?.required});}
+    }
     if (req.method === 'GET' && url.pathname === '/api/rental/sms-settings') {
         const shop = await equipmentRentalCurrentShop(a);
         if (!shop) return sendJson(res, 401, { error:'rental_auth_required' });
@@ -15358,6 +15376,8 @@ async function api(req, res, url) {
         if (!current) return sendJson(res, 404, { error: 'rental_item_not_found' });
         const b = await bodyJson(req, 200_000);
         if(Object.prototype.hasOwnProperty.call(b,'active'))return sendJson(res,409,{error:'asset_status_requires_unit_selection'});
+        const identity={category:current.category,brand:current.brand||'',model:current.model||current.title||'',catalogProductId:current.catalog_product_id||''};
+        if(Object.entries(identity).some(([key,value])=>b[key]!==undefined&&String(b[key]??'').trim()!==String(value).trim()))return sendJson(res,409,{error:'equipment_identity_locked'});
         const model = b.model === undefined ? String(current.model || current.title || '').trim() : String(b.model || '').trim();
         const title = model;
         if (!model) return sendJson(res, 400, { error: 'item_model_required' });
@@ -16381,7 +16401,9 @@ ${inviteUrl}`;
                   AND EXISTS (SELECT 1 FROM equipment_rental_bookings cb WHERE cb.id=e.booking_id AND cb.status IN ('pending_approval','rejected','cancelled')))
               ORDER BY e.entry_date DESC,e.created_at DESC LIMIT 200`, [shopId,a.userId]),
             pool.query(`SELECT inv.id,inv.invoice_number,inv.booking_id,inv.total_amount,inv.deposit_amount,inv.issued_at,
-              b.rental_start,b.rental_end,b.status,b.payment_status,b.invoice_adjustment_amount,b.invoice_adjustment_note,b.return_kind,(b.rental_end-b.rental_start+1)::int rental_days,
+              b.rental_start,b.rental_end,b.status,b.payment_status,b.gross_amount,b.discount_amount,b.invoice_adjustment_amount,b.invoice_adjustment_note,b.return_kind,(b.rental_end-b.rental_start+1)::int rental_days,
+              COALESCE((SELECT pp.studio_name FROM photographer_profiles pp WHERE pp.user_id=b.photographer_id),(SELECT u.name FROM users u WHERE u.id=b.photographer_id),b.customer_name) photographer_name,b.customer_mobile photographer_mobile,
+              COALESCE((SELECT jsonb_agg(jsonb_build_object('title',equipment_rental_display_name(it.category,it.brand,it.model,it.title,it.shop_id),'category',it.category,'brand',it.brand,'model',it.model,'quantity',li.quantity,'rental_days',li.rental_days,'daily_price',li.daily_price,'subtotal',li.subtotal) ORDER BY it.title,li.id) FROM equipment_rental_booking_items li LEFT JOIN equipment_rental_items it ON it.id=li.item_id WHERE li.booking_id=b.id),'[]'::jsonb) items,
               COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) || ' ×' || bi.quantity::text,'، ' ORDER BY i.title),'') item_titles
               FROM equipment_rental_invoices inv JOIN equipment_rental_bookings b ON b.id=inv.booking_id
               LEFT JOIN equipment_rental_booking_items bi ON bi.booking_id=b.id LEFT JOIN equipment_rental_items i ON i.id=bi.item_id

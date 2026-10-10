@@ -1,0 +1,39 @@
+name: Stage Windows installer for permanent first-party download
+
+on:
+  push:
+    branches:
+      - fix/r1091-persistent-store-installer-on-photobridge
+    paths:
+      - .github/workflows/stage-r1091-installer.yml
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  stage-verified-binary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout persistent release branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/r1091-persistent-store-installer-on-photobridge
+          persist-credentials: true
+      - name: Fetch verified Windows setup produced by CI
+        uses: actions/download-artifact@v4
+        with:
+          name: photobridge-store-r1089-windows-test-installer
+          run-id: 38084340638
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/store-installer
+      - name: Split and validate original executable
+        run: python3 scripts/stage-r1091-installer.py "$RUNNER_TEMP/store-installer/PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe" dist/installer-source/store-r1089
+      - name: Commit retained binary chunks to the release branch
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -f dist/installer-source/store-r1089/
+          git commit -m "release: retain verified R1089 Windows installer bytes for every future deploy"
+          git push origin HEAD:fix/r1091-persistent-store-installer-on-photobridge

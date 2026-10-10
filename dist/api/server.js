@@ -10263,6 +10263,12 @@ async function equipmentRentalSupplyPool(db,shopId,booking,{lock=false}={}) {
       return {id:String(s.id),itemId:String(s.item_id),bookingId:String(s.booking_id),plannedCustomer:s.planned_customer,startDate:s.rental_start,endDate:s.rental_end,supplied,availableQuantity:eligible?Math.max(0,capacity-(used.get(String(s.id))||0)):0};
     })};
 }
+function equipmentRentalRequiredExternalQuantity(booking,itemId,quantity,sources) {
+    const start=equipmentRentalDate(booking?.rental_start),end=equipmentRentalDate(booking?.rental_end);
+    if(!start||start!==end)return 0;
+    const available=sources.filter(s=>s.itemId===String(itemId)&&s.supplied).reduce((n,s)=>n+Math.max(0,Number(s.availableQuantity)||0),0);
+    return Math.min(Math.max(0,Number(quantity)||0),available);
+}
 async function equipmentRentalCommitHandover(db,{shopId,bookingId,actorId,assetCodes,externalSupplyCodes}) {
     await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`equipment-rental:${shopId}`]);
     const result=await db.query('SELECT * FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 FOR UPDATE',[bookingId,shopId]);
@@ -10289,6 +10295,9 @@ async function equipmentRentalCommitHandover(db,{shopId,bookingId,actorId,assetC
     }
     for(const row of expected.rows){
       const key=String(row.item_id),qty=Number(row.quantity),ext=external.filter(x=>x.itemId===key).length,owned=assets.rows.filter(x=>String(x.item_id)===key).length;
+      const required=equipmentRentalRequiredExternalQuantity(booking,key,qty,pool.sources);
+      const ready=external.filter(x=>x.itemId===key&&sourceById.get(x.shortageId)?.supplied).length;
+      if(ready<required)return fail('single_day_external_supply_required',{itemId:key,required,selected:ready});
       if(ext>qty||owned!==qty-ext)return fail('asset_scan_incomplete',{itemId:key,expected:qty-ext,scanned:owned});
     }
     const busy=assets.rows.length?await db.query(`SELECT a.system_code FROM equipment_rental_booking_assets ba JOIN equipment_rental_bookings b ON b.id=ba.booking_id JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.shop_id=$1 AND ba.asset_id=ANY($2::uuid[]) AND ba.returned_at IS NULL AND b.status IN ('picked_up','returned')`,[shopId,assets.rows.map(x=>x.id)]):{rows:[]};
@@ -15563,7 +15572,7 @@ async function api(req, res, url) {
         return sendJson(res,200,{bookingId,status:String(booking.status||''),items:equipmentRentalOperationalItems(iq.rows,booking).map(x=>{
           const recorded=(booking.handover_serials||[]).find(row=>String(row.itemId)===String(x.item_id)),assets=byItem.get(String(x.item_id))||[];
           const handed=['picked_up','returned'].includes(booking.status),external=handed?Number(recorded?.externalSupplyQty??Math.max(0,Number(x.quantity)-assets.length)):Number(x.external_supply_qty||0);
-          return {itemId:String(x.item_id),title:String(x.item_title||'تجهیز'),quantity:Number(x.quantity||0),externalSupplyQty:external,pendingSupplyQty:handed?0:Number(x.pending_supply_qty||0),assets,supplyOptions:supply.sources.filter(row=>row.itemId===String(x.item_id)&&row.availableQuantity>0)};
+          return {itemId:String(x.item_id),title:String(x.item_title||'تجهیز'),quantity:Number(x.quantity||0),externalSupplyQty:external,pendingSupplyQty:handed?0:Number(x.pending_supply_qty||0),assets,requiredExternalQty:handed?0:equipmentRentalRequiredExternalQuantity(booking,x.item_id,x.quantity,supply.sources),supplyOptions:supply.sources.filter(row=>row.itemId===String(x.item_id)&&row.availableQuantity>0)};
         })});
     }
     if(req.method==='GET' && url.pathname==='/api/rental/assets/by-code') {

@@ -228,11 +228,6 @@
  const showError=message=>{if(typeof window.storeNotice==='function')window.storeNotice(message,'آفیش');else alert(message)};
  const safeId=id=>encodeURIComponent(String(id||''));
  const htmlEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const saveFile=(name,html)=>{
-   const blob=new Blob(['\ufeff',html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-   a.href=url;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),5000);
- };
  const controls=b=>{
    const s=String(b?.status||'');
    if(s==='reserved')return [['picked_up','تحویل به مشتری'],['cancelled','حذف آفیش']];
@@ -243,23 +238,41 @@
  const docStyles=document.createElement('style');
  docStyles.id='pbR1052DayActionStyles';
  docStyles.textContent=[
-   '#pb904r2DayPanelBody .pbR1052DayGroup{display:block;width:100%;min-width:0;box-sizing:border-box}',
-   '#pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{width:100%!important;box-sizing:border-box!important}',
-   '#pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{margin-top:4px}',
+   '#pb904r2DayPanelBody .pbR1052DayGroup{display:flex;direction:rtl;align-items:center;justify-content:space-between;gap:7px;width:100%;min-width:0;padding:8px 9px;box-sizing:border-box;border:1px solid #e4e7ec;border-radius:10px;background:#fff}',
+   '#pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{flex:1 1 auto!important;width:auto!important;min-width:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;box-sizing:border-box!important}',
+   '#pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{flex:0 1 auto;min-width:0;margin:0;justify-content:flex-end}',
    '#pb904r2DayPanelBody .pbR1052DayGroup+.pbR1052DayGroup{margin-top:0}',
-   '.pbR1052DayActions{display:flex;flex-wrap:wrap;gap:5px;align-items:center;direction:rtl}',
+   '.pbR1052DayActions{display:flex;flex-direction:row;flex-wrap:wrap;gap:5px;align-items:center;justify-content:flex-end;direction:rtl}',
    '.pbR1052DayActions>button{min-height:29px;padding:4px 8px;max-width:100%;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#344054;font:800 10px/1.5 Vazirmatn,Tahoma,sans-serif;cursor:pointer}',
    '.pbR1052DayActions>button[data-office-action="picked_up"]{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}',
    '.pbR1052DayActions>button[data-office-action="returned"]{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}',
    '.pbR1052DayActions>button[data-office-action="cancelled"]{background:#fff7f7;color:#b42318;border-color:#fecaca}',
    '.pbR1052DayActions>button:disabled{opacity:.5;cursor:wait}',
-   '#pb843BookingDetailBody .pbR1052DayActions{margin-top:8px}',
+   '#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 7px;align-items:center}',
+   '#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions)>b,#pb843BookingDetailBody .pb843BookingDetailCard:has(>.pbR1052DayActions)>small{grid-column:1;min-width:0;margin:0}',
+   '#pb843BookingDetailBody .pbR1052DayActions{grid-column:2;grid-row:1/span 5;max-width:min(52vw,260px);align-self:center;margin:0}',
    '.pbR1052DocBackdrop{position:fixed;inset:0;z-index:2147483000;background:#101828ab;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}',
    '.pbR1052DocDialog{display:flex;flex-direction:column;width:min(920px,100%);height:min(94dvh,1000px);min-height:0;background:white;border-radius:14px;overflow:hidden;direction:rtl}',
    '.pbR1052DocBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid #eaecf0}',
-   '.pbR1052DocBar>div{display:flex;gap:7px;flex-wrap:wrap}',
+   '.pbR1052DocBar>div{display:flex;gap:12px;flex-wrap:wrap;align-items:center}',
    '.pbR1052DocBar button{border:1px solid #d0d5dd;border-radius:8px;padding:7px 12px;background:#fff;font:800 11px Vazirmatn,Tahoma;cursor:pointer}',
    '.pbR1052DocFrame{width:100%;flex:1;min-height:0;border:0;background:#fff}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922InvoiceToolbar>div{display:flex;gap:12px;align-items:center;flex-wrap:wrap}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922InvoiceDialog{width:min(920px,calc(100vw - 20px));max-height:calc(100dvh - 20px);min-height:0}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922InvoiceContent{padding:6px!important;overflow:hidden!important;overscroll-behavior:none!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper{border:0!important;padding:9px!important;line-height:1.45!important;font-size:10px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Head{gap:8px!important;padding-bottom:5px!important;margin-bottom:6px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper h1{font-size:15px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper h2{font-size:12px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Facts{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3px 9px!important;margin-bottom:5px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922TableScroll{overflow:visible!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper table{min-width:0!important;table-layout:fixed!important;font-size:9px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper th,#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper td{padding:3px!important;overflow-wrap:anywhere}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Totals{margin-top:6px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Totals div{padding:2px 0!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Sign{margin-top:9px!important;padding-top:6px!important}',
+   '#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper .pb922Footer{margin-top:5px!important;padding-top:4px!important}',
+   '@media(max-width:850px){#pb922InvoiceModal.pbR1053CalendarInvoice .pb922InvoiceToolbar{padding:8px!important}#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper{padding:5px!important;font-size:9px!important}#pb922InvoiceModal.pbR1053CalendarInvoice .pb922Paper table{font-size:8px!important}}',
    '@media(max-width:850px){.pbR1052DayActions>button{font-size:10px;min-height:32px}.pbR1052DocDialog{height:94dvh}}'
  ].join('\n');
  document.head.appendChild(docStyles);
@@ -326,23 +339,22 @@
    if(!inv){showError('فاکتور این آفیش هنوز صادر نشده است.');return}
    if(typeof window.pb922OpenInvoice!=='function'){showError('نمایش فاکتور در دسترس نیست.');return}
    window.pb922OpenInvoice(String(inv.id));
-   const modal=q('#pb922InvoiceModal'),toolbar=modal?.querySelector('.pb922InvoiceToolbar>div');
-   if(!toolbar)return;
-   // The existing Print / Save PDF button remains unchanged.
-   let save=toolbar.querySelector('[data-pb-r1052-save-invoice]');
-   if(!save){
-     save=document.createElement('button');save.type='button';save.dataset.pbR1052SaveInvoice='1';save.textContent='ذخیره فایل';
-     save.addEventListener('click',()=>{
-       const body=modal.querySelector('.pb922InvoiceContent')?.innerHTML||'';
-       const style=q('#pb922FormalFinanceStyle')?.textContent||'';
-       if(!body)return showError('نسخه فاکتور برای ذخیره آماده نیست.');
-       const html='<!doctype html><html dir="rtl" lang="fa"><head><meta charset="utf-8"><title>فاکتور آفیش</title><style>'+style+'</style></head><body>'+body+'</body></html>';
-       saveFile('PhotoBridge-Invoice-'+safeId(id)+'.html',html);
-     });
-     toolbar.insertBefore(save,toolbar.querySelector('[data-pb922-close]'));
-     const cleanup=new MutationObserver(()=>{if(modal.hidden){save.remove();cleanup.disconnect()}});
-     cleanup.observe(modal,{attributes:true,attributeFilter:['hidden']});
-   }
+   const modal=q('#pb922InvoiceModal'),paper=modal?.querySelector('.pb922Paper'),content=modal?.querySelector('.pb922InvoiceContent'),bar=modal?.querySelector('.pb922InvoiceToolbar');
+   if(!modal||!paper||!content||!bar)return;
+   modal.classList.add('pbR1053CalendarInvoice');
+   const fit=()=>{
+     if(modal.hidden)return;
+     paper.style.zoom='1';
+     const fullHeight=paper.scrollHeight+12,available=Math.max(100,window.innerHeight-36-bar.offsetHeight);
+     const scale=Math.min(1,available/Math.max(1,fullHeight));
+     paper.style.zoom=String(scale);
+   };
+   requestAnimationFrame(()=>requestAnimationFrame(fit));
+   const cleanup=new MutationObserver(()=>{
+     if(modal.hidden){cleanup.disconnect();window.removeEventListener('resize',fit);paper.style.removeProperty('zoom');modal.classList.remove('pbR1053CalendarInvoice')}
+   });
+   cleanup.observe(modal,{attributes:true,attributeFilter:['hidden']});
+   window.addEventListener('resize',fit,{passive:true});
  }
  async function commitment(id){
    let markup;
@@ -353,7 +365,7 @@
    }catch{showError('دریافت تعهدنامه انجام نشد.');return}
    const back=document.createElement('div');back.className='pbR1052DocBackdrop';
    const dialog=document.createElement('section');dialog.className='pbR1052DocDialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');
-   const bar=document.createElement('header');bar.className='pbR1052DocBar';bar.innerHTML='<b>تعهدنامه تجهیزات</b><div><button type="button" data-print>چاپ / ذخیره PDF</button><button type="button" data-save>ذخیره فایل</button><button type="button" data-close>بستن</button></div>';
+   const bar=document.createElement('header');bar.className='pbR1052DocBar';bar.innerHTML='<b>تعهدنامه تجهیزات</b><div><button type="button" data-print>چاپ / ذخیره PDF</button><button type="button" data-close>بستن</button></div>';
    const frame=document.createElement('iframe');frame.className='pbR1052DocFrame';frame.title='پیش‌نمایش تعهدنامه';frame.srcdoc=markup;
    dialog.append(bar,frame);back.append(dialog);document.body.append(back);
    const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
@@ -361,7 +373,6 @@
    bar.querySelector('[data-close]').onclick=close;
    back.addEventListener('click',e=>{if(e.target===back)close()});
    bar.querySelector('[data-print]').onclick=()=>{try{frame.contentWindow?.focus();frame.contentWindow?.print()}catch{showError('چاپ تعهدنامه در مرورگر در دسترس نیست.')}};
-   bar.querySelector('[data-save]').onclick=()=>saveFile('PhotoBridge-Commitment-'+safeId(id)+'.html',markup);
    const onKey=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',onKey);close()}};
    document.addEventListener('keydown',onKey);
  }

@@ -89,6 +89,7 @@ function start(){
  if(host)new MutationObserver(schedule).observe(host,{childList:true,subtree:false});
  void update();
  setInterval(schedule,17000);
+ setInterval(mountSettings,1400);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

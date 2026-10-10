@@ -1,6 +1,23 @@
-.git
-node_modules
-# Generated during the Docker build from the prebuilt web assets.
+# Only the production payload enters the build context. COPY . ./ preserves paths.
+**
+!package.json
+!.npmrc
+!DEPLOY_REVISION.txt
+!dist/
+!dist/**
+!migrations/
+!migrations/**
+!scripts/
+!scripts/**
+!apps/
+!apps/web/
+!apps/web/public/
+!apps/web/public/**
+!apps/store-desktop/
+!apps/store-desktop/desktop-overlay.js
+!apps/lab-desktop/
+!apps/lab-desktop/desktop-overlay.js
+# Regenerate desktop UI copies and jsQR from verified inputs during image build.
 dist/web/desktop-ui/
 dist/web/lab-desktop-ui/
 dist/web/vendor-jsqr-1.4.0.js

@@ -71,6 +71,7 @@ console.log('[PhotoBridge Liara Fast Build] R100 prebuilt dist accepted; mobile 
 
 await import('./enable-r1087-commitment-autoprint.mjs');
 await import('./remove-r1092-legacy-windows-alert-panel.mjs');
+await import('./fix-r1093-inventory-visibility.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

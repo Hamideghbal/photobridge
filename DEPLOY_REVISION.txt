@@ -1,1 +1,1 @@
-2026-10-11-r1092-store-windows-zip-direct-clean-settings
+2026-10-11-r1093-win-offline-demo-deleted-inventory-visibility

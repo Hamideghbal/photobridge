@@ -61,6 +61,10 @@ jobs:
               assert digest.hexdigest() == spec['sha256']
           print('ZIP is readable with standard unzip and its EXE matches the trusted SHA256')
           PY
+      - name: Verify desktop inventory filtering
+        run: |
+          node --check dist/api/storeDesktopSync.js
+          node --test scripts/test-r1093-desktop-inventory-filter.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

@@ -13,7 +13,16 @@ export function createStoreDesktopSync(d){
    // One repeatable-read snapshot, including all history, never the portal's limited lists.
    const operationIds=String(url.searchParams.get('operations')||'').split(',').filter(x=>UUID.test(x)).slice(0,100);const meta=await d.overview(shop.id),c=await pool.connect();
    try{await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const entities={};
-    for(const [name,table]of Object.entries(TABLES))entities[name]=(await c.query(`SELECT * FROM ${table} WHERE shop_id=$1 ORDER BY id`,[shop.id])).rows;
+    for(const [name,table]of Object.entries(TABLES)){
+     // Keep inactive inventory editable, but never restore deleted items or historical
+     // SOFIA-DEMO rows to a desktop snapshot. The main rental overview already applies
+     // these filters; Windows must see the very same store inventory.
+     const inventory=name==='items'||name==='saleItems';
+     const sql=inventory
+      ? `SELECT * FROM ${table} WHERE shop_id=$1 AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY id`
+      : `SELECT * FROM ${table} WHERE shop_id=$1 ORDER BY id`;
+     entities[name]=(await c.query(sql,[shop.id])).rows;
+    }
     entities.bookingItems=(await c.query('SELECT i.* FROM equipment_rental_booking_items i JOIN equipment_rental_bookings b ON b.id=i.booking_id WHERE b.shop_id=$1 ORDER BY i.id',[shop.id])).rows;
     entities.photographers=(await c.query(`SELECT u.id,u.id user_id,COALESCE(p.studio_name,u.name) name,u.mobile,m.active,m.settlement_mode,m.permanent_discount_percent FROM equipment_rental_shop_memberships m JOIN users u ON u.id=m.user_id LEFT JOIN photographer_profiles p ON p.user_id=u.id WHERE m.shop_id=$1 AND m.role='photographer'`,[shop.id])).rows;
     entities.accountingMarks=(await c.query("SELECT document_id,recorded,recorded_at FROM external_accounting_marks WHERE owner_type='rental' AND owner_id=$1 AND document_type='invoice'",[shop.id])).rows;

@@ -10008,6 +10008,20 @@ async function externalAccountingAttachMarks(db, ownerType, ownerId, documents) 
     });
 }
 
+async function equipmentRentalHandoverInvoice(db,shopId,bookingId) {
+    const result=await db.query(`SELECT inv.id,inv.invoice_number,inv.booking_id,inv.total_amount,inv.deposit_amount,inv.issued_at,
+          to_char(b.rental_start,'YYYY-MM-DD') rental_start,to_char(b.rental_end,'YYYY-MM-DD') rental_end,b.status,b.payment_status,b.gross_amount,b.discount_amount,b.discount_percent,b.invoice_adjustment_amount,b.invoice_adjustment_note,b.return_kind,b.returned_at,(b.rental_end-b.rental_start+1)::int rental_days,
+          COALESCE(pp.studio_name,u.name,b.customer_name) photographer_name,COALESCE(u.mobile,b.customer_mobile) photographer_mobile,
+          COALESCE(string_agg(equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) || ' ×' || bi.quantity::text,'، ' ORDER BY i.title),'') item_titles,
+          COALESCE((SELECT jsonb_agg(jsonb_build_object('item_id',li.item_id,'title',equipment_rental_display_name(it.category,it.brand,it.model,it.title,it.shop_id),'category',it.category,'brand',it.brand,'model',it.model,'quantity',li.quantity,'rental_days',li.rental_days,'daily_price',li.daily_price,'subtotal',li.subtotal) ORDER BY it.title,li.id) FROM equipment_rental_booking_items li LEFT JOIN equipment_rental_items it ON it.id=li.item_id WHERE li.booking_id=b.id),'[]'::jsonb) items
+          FROM equipment_rental_invoices inv JOIN equipment_rental_bookings b ON b.id=inv.booking_id
+          LEFT JOIN users u ON u.id=inv.photographer_id LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+          LEFT JOIN equipment_rental_booking_items bi ON bi.booking_id=b.id LEFT JOIN equipment_rental_items i ON i.id=bi.item_id
+          WHERE inv.shop_id=$1 AND inv.booking_id=$2 AND b.status IN ('picked_up','returned')
+          GROUP BY inv.id,b.id,pp.studio_name,u.name,u.mobile`,[shopId,bookingId]);
+    return result.rows[0]||null;
+}
+
 async function equipmentRentalAccountingOverview(shopId) {
     await ensureEquipmentRentalV628Schema();
     await ensureExternalAccountingMarksSchema();
@@ -15784,7 +15798,8 @@ async function api(req, res, url) {
                 await c.query('BEGIN');
                 handed=await equipmentRentalCommitHandover(c,{shopId:shop.id,bookingId,actorId:a.userId,assetCodes:b.assetCodes,externalSupplyCodes:external});
                 if(handed.error){await c.query('ROLLBACK');return sendJson(res,409,handed);}
-                invoice=await equipmentRentalEnsureInvoice(c,bookingId,a.userId);
+                await equipmentRentalEnsureInvoice(c,bookingId,a.userId);
+                invoice=await equipmentRentalHandoverInvoice(c,shop.id,bookingId);
                 await c.query('COMMIT');
             }catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
             if(handed.booking.photographer_id)publishCustomerEventEverywhere(String(handed.booking.photographer_id),'equipment_rental_status',{bookingId,status:'picked_up',shopId:shop.id,invoiceId:invoice?.id||null});

@@ -13,8 +13,8 @@ test('R1087 ships exactly one receiver after production build',()=>{
  assert(source.includes("handover_serials_recorded_at"));
 });
 
-async function simulate({mobile=false,native=true,nativePrinter=false}={}){
- const state={status:'reserved',printed:0,requests:[],frames:[],timer:[],nativeJobs:[],store:new Map()};
+async function simulate({mobile=false,native=true,nativePrinter=false,initialStatus='reserved',initialHandoverTime=null,syncFails=false}={}){
+ const state={status:initialStatus,handoverTime:initialHandoverTime,printed:0,requests:[],frames:[],timer:[],nativeJobs:[],store:new Map()};
  const setTimeoutFake=(fn,ms)=>{if(ms<=2000)queueMicrotask(fn);return ms};
  const storage={getItem:k=>state.store.has(k)?state.store.get(k):null,setItem:(k,v)=>state.store.set(k,String(v))};
  const header={children:[],contains:el=>header.children.includes(el),appendChild:el=>{header.children.push(el);return el}};
@@ -33,6 +33,8 @@ async function simulate({mobile=false,native=true,nativePrinter=false}={}){
  const document={readyState:'complete',body,createElement:elem,querySelector:()=>header,getElementById:id=>id==='settings'?settings:null};
  const fetch=async url=>{
   state.requests.push(String(url));
+  if(String(url).endsWith('/desktop/sync'))return syncFails?{ok:false,status:503,json:async()=>({error:'offline'})}:{ok:true,json:async()=>({ok:true,pulled:true})};
+  if(String(url).endsWith('/print-handovers'))return{ok:true,json:async()=>({shopId:'shop-1',bookings:state.status==='picked_up'?[{id:'booking-1',status:state.status,handover_serials_recorded_at:state.handoverTime||'2026-10-10T20:00:00Z',customer_name:'Customer'}]:[]})};
   if(String(url).endsWith('/overview'))return{ok:true,json:async()=>({
    shop:{id:'shop-1'},bookings:[{id:'booking-1',status:state.status,handover_serials_recorded_at:state.status==='picked_up'?'2026-10-10T20:00:00Z':null,photographer_name:'Customer'}]
   })};
@@ -87,7 +89,27 @@ test('native desktop print bridge receives rendered commitment HTML and avoids b
  await s.check();
  assert.equal(s.state.nativeJobs.length,1);
  assert.equal(s.state.nativeJobs[0].kind,'rental-commitment');
- assert.match(s.state.nativeJobs[0].html,/SER123/);
+ assert.equal(s.state.nativeJobs[0].bookingId,'booking-1');
+ assert(!s.state.requests.some(url=>url.endsWith('/commitment')),'native bridge must never fetch printable HTML through localhost JSON proxy');
+ assert(s.state.requests.some(url=>url.endsWith('/desktop/sync')),'mobile handover must first reach Windows SQLite');
+ assert(s.state.requests.some(url=>url.endsWith('/print-handovers')),'native app must use fresh server print feed');
  assert.equal(s.state.frames.length,0);
  await s.check();assert.equal(s.state.nativeJobs.length,1);
+});
+
+test('a handover confirmed just before desktop startup is not swallowed by initial baseline',async()=>{
+ const s=await simulate({nativePrinter:true,initialStatus:'picked_up',initialHandoverTime:new Date().toISOString()});
+ await s.check();
+ assert.equal(s.state.nativeJobs.length,1);
+ await s.check();assert.equal(s.state.nativeJobs.length,1,'never duplicate a printed handover');
+});
+
+test('native errors do not acknowledge print jobs, so a later retry can print them',async()=>{
+ const s=await simulate({nativePrinter:true,syncFails:true});
+ await s.check();s.state.status='picked_up';await s.check();
+ assert.equal(s.state.nativeJobs.length,0);
+ assert.equal(s.ctx.window.pbR1087AutoPrint.pending(),0);
+ // Local ledger must not acknowledge a job that was never sent to native.
+ const ledger=[...s.state.store.entries()].find(([key])=>key.includes('printed:'))?.[1]||'{}';
+ assert(!Object.keys(JSON.parse(ledger)).some(k=>k.startsWith('booking-1|')));
 });

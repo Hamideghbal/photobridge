@@ -69,6 +69,7 @@ deduplicateOnnxRuntime();
 
 console.log('[PhotoBridge Liara Fast Build] R100 prebuilt dist accepted; mobile blue chrome + lean desktop UI regeneration.');
 
+await import('./enable-r1094-windows-print-handovers.mjs');
 await import('./enable-r1087-commitment-autoprint.mjs');
 await import('./remove-r1092-legacy-windows-alert-panel.mjs');
 await import('./fix-r1093-inventory-visibility.mjs');

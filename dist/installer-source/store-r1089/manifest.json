@@ -1,0 +1,13 @@
+{
+  "name": "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe",
+  "size": 128338966,
+  "sha256": "6623b4c6679862038976619657d4f6a1daa2263517183a13ed7f20456c076005",
+  "parts": [
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part01",
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part02",
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part03",
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part04",
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part05",
+    "PhotoBridge-Store-R1089-Setup-1.0.3-x64.exe.part06"
+  ]
+}

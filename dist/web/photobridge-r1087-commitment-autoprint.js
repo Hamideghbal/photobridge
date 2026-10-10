@@ -82,7 +82,8 @@
       // Pull the latest mobile handover first: local SQLite may be up to 30s
       // behind the server and the native printer verifies confirmed status.
       const syncResponse=await fetch('/desktop/sync',{method:'POST',credentials:'include',cache:'no-store'});
-      if(!syncResponse.ok){const e=await syncResponse.json().catch(()=>({}));throw Error(String(e?.error||'desktop_sync_unavailable'))}
+      const syncResult=await syncResponse.json().catch(()=>({}));
+      if(!syncResponse.ok&&syncResult.pulled!==true)throw Error(String(syncResult.error||'desktop_sync_unavailable'));
       const response=await window.__PB_DESKTOP_PRINT__({kind:'rental-commitment',bookingId:String(b.id)});
       if(!response||response.ok!==true)throw Error(String(response?.message||response?.error||'native_print_failed'));
       const ledger=persisted();ledger[ident]=new Date().toISOString();writeLedger(ledger);

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { deduplicateOnnxRuntime } from './deduplicate-onnx-runtime.mjs';
 
 if (process.platform !== 'linux') {
   throw new Error(`Liara runtime pruning requires Linux, received ${process.platform}`);
@@ -40,3 +41,6 @@ for (const platform of fs.readdirSync(packageRoot)) {
 }
 const after = bytes(packageRoot);
 console.log(`[PhotoBridge Docker] ONNX Runtime kept ${process.platform}/${process.arch}; removed ${((before - after) / 1024 / 1024).toFixed(1)} MB of unused platform binaries.`);
+
+// Finish native preparation before Docker commits the dependency layer.
+deduplicateOnnxRuntime();

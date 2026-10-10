@@ -3,6 +3,7 @@
  if(window.__PB_DESKTOP_OVERLAY_101__)return;window.__PB_DESKTOP_OVERLAY_101__=true;
  const style=document.createElement('style');style.textContent=`
  body:not(.rentalAppReady) #rentalHeaderFilterHost{display:none!important}
+ body.pbDesktopAccountUnverified #items,body.pbDesktopAccountUnverified #sales,body.pbDesktopAccountUnverified #bookings,body.pbDesktopAccountUnverified #accounting,body.pbDesktopAccountUnverified #photographers{visibility:hidden!important;pointer-events:none!important}
  #desktopState{position:absolute;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(230px,32vw,450px);max-width:calc(100% - 570px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px 8px;color:#475467;direction:rtl;font:11px/1.5 Vazirmatn,Tahoma,sans-serif;z-index:8;background:transparent;border:0;box-shadow:none;padding:0}
  #desktopState[hidden]{display:none!important}#desktopState button{all:unset;cursor:pointer;font:inherit;color:#315efb;white-space:nowrap}#desktopState button:focus-visible{outline:2px solid #315efb;outline-offset:3px;border-radius:3px}#desktopState button:disabled{opacity:.55;cursor:wait}#desktopState button[hidden]{display:none}
  #desktopState>span:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#98a2b3;margin-inline-end:5px}#desktopState[data-state=online]>span:before{background:#12b76a}#desktopState[data-state=error]>span:before{background:#f04438}#desktopState[data-state=pending]>span:before{background:#f79009}#desktopSyncDetail{flex-basis:100%;font-size:9px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#667085}
@@ -12,11 +13,31 @@
  const bar=document.createElement('div');bar.id='desktopState';bar.hidden=true;bar.innerHTML='<span role="status" aria-live="polite"></span><button type="button" id="desktopSyncAction">↻ همگام‌سازی</button><button type="button" hidden>نیازمند بررسی</button><button type="button" hidden>ورود مجدد</button><small id="desktopSyncDetail"></small>';
  (document.querySelector('header.top')||document.body).append(bar);
  const panel=document.createElement('section');panel.id='desktopConflicts';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','بررسی همگام‌سازی');document.body.append(panel);let state=null,manual=false,reading=false,lastRevision=null,refreshPending=false,painting=false,logoutBusy=false;
+ let authGeneration=0,authorizedShopId='',identityError='',lastAuthSignature='',validatedAt=0;
+ function eraseVisibleStore(){
+  document.body.classList.add('pbDesktopAccountUnverified');
+  if(typeof data!=='undefined')data=null;
+  if(typeof accountingData!=='undefined')accountingData=null;
+  if(typeof smsData!=='undefined')smsData=null;
+  panel.hidden=true;
+ }
+ function resetAccount(){authGeneration++;authorizedShopId='';validatedAt=0;refreshPending=false;lastRevision=null;eraseVisibleStore()}
+ const currentShop=x=>String(x?.shopId||x?.shop?.id||x?.rentalShop?.id||x?.account?.shopId||'').trim();
+ async function authenticatedShop(snapshot){
+  const local=currentShop(snapshot);
+  let remote='';
+  try{const r=await fetch('/api/auth/me',{cache:'no-store'});if(r.ok){const j=await r.json();remote=currentShop(j)}}catch{}
+  if(local&&remote&&local!==remote)throw Error('حساب فعال ویندوز با نشست فروشگاه همخوانی ندارد.');
+  if(!local&&!remote)throw Error('شناسه فروشگاه واردشده تأیید نشد. برای جلوگیری از نمایش اطلاعات حساب دیگر، دسترسی به داده‌ها موقتاً بسته شد.');
+  return local||remote;
+ }
+ document.addEventListener('submit',e=>{if(e.target?.matches?.('#loginForm'))resetAccount()},true);
  const messages={internet_offline:'اینترنت قطع است',login_required:'برای اتصال به سرور دوباره وارد شوید',server_desktop_update_required:'نسخهٔ سرور با همگام‌سازی برنامه سازگار نیست',invalid_server_response:'پاسخ سرور معتبر نیست',snapshot_account_mismatch:'حساب سرور با حساب این برنامه یکسان نیست',operation_id_reused:'شناسهٔ عملیات نیازمند بررسی است',server_error:'سرور با خطا پاسخ داد'};
  const time=value=>{try{return new Intl.DateTimeFormat('fa-IR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value))}catch{return'—'}};
  function paint(){if(!state)return;bar.hidden=!state.signedIn||!document.body.classList.contains('rentalAppReady');bar.dataset.state='online';let label='متصل به سرور',detail=state.lastSync?'آخرین دریافت: '+time(state.lastSync):'هنوز اطلاعات سرور دریافت نشده است';
   if(state.syncing||manual){bar.dataset.state='pending';label=state.phase==='download'?'دریافت اطلاعات از سرور…':'ارسال تغییرات به سرور…';detail='تغییرات محلی در صف: '+Number(state.pending||0).toLocaleString('fa-IR')}
   else if(navigator.onLine===false||state.error==='internet_offline'){bar.dataset.state='error';label='اینترنت قطع است';detail='اطلاعات محلی محفوظ است؛ پس از اتصال همگام‌سازی انجام می‌شود'}
+  else if(identityError){bar.dataset.state='error';label='تطبیق حساب فروشگاه ناموفق بود';detail=identityError}
   else if(state.error){bar.dataset.state='error';label=messages[state.error]||(state.online?'ارسال تغییرات کامل نشد':'سرور در دسترس نیست');detail=state.report?.pulled?'اطلاعات سرور دریافت شد؛ تغییرات ارسال‌نشده محفوظ‌اند':'اطلاعات محلی محفوظ است؛ برای تلاش دوباره «همگام‌سازی» را بزنید'}
   else if(state.conflicts?.length){bar.dataset.state='pending';label='همگام‌سازی نیازمند بررسی';detail=state.conflicts.length.toLocaleString('fa-IR')+' اختلاف با اطلاعات سرور؛ تغییرات محلی محفوظ است'}
   else if(!state.online){bar.dataset.state='pending';label='در حال بررسی ارتباط با سرور';}
@@ -25,10 +46,57 @@
   if(refreshPending)detail+=' · نمایش پس از بستن فرم';bar.children[0].textContent=label;bar.children[4].textContent=detail;bar.title=label+' — '+detail;bar.children[1].disabled=manual||state.syncing;bar.children[2].hidden=!state.conflicts?.length;bar.children[2].textContent=(state.conflicts?.length||0).toLocaleString('fa-IR')+' مورد نیازمند بررسی';bar.children[3].hidden=state.error!=='login_required';
  }
  function formOpen(){if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName))return true;return [...document.querySelectorAll('[role="dialog"],[id*="Modal"],[id*="modal"]')].some(el=>el!==panel&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')}
- async function refreshPage(){if(!refreshPending||painting||!state?.signedIn||!document.body.classList.contains('rentalAppReady')||formOpen())return;painting=true;try{const r=await fetch('/api/rental/overview');if(!r.ok)return;const next=await r.json();if(typeof data!=='undefined'&&typeof render==='function'){data=next;render();if(typeof rentalTabFromPath==='function'&&rentalTabFromPath()==='accounting'&&typeof loadAccounting==='function')await loadAccounting()}refreshPending=false;}catch{}finally{painting=false;paint()}}
- async function refresh(){if(reading)return;reading=true;try{const r=await fetch('/desktop/status',{cache:'no-store'});if(!r.ok)throw Error();state=await r.json();if(state.signedIn&&state.revision!==lastRevision){if(state.revision>0||lastRevision!==null)refreshPending=true;lastRevision=state.revision}paint();await refreshPage()}catch{bar.hidden=false;bar.dataset.state='error';bar.children[0].textContent='ارتباط با پایگاه محلی قطع شد';bar.children[4].textContent='برنامه را دوباره باز کنید'}finally{reading=false}}
+ async function refreshPage(){
+  if(!refreshPending||painting||!state?.signedIn||!document.body.classList.contains('rentalAppReady')||formOpen())return;
+  painting=true;const generation=authGeneration;
+  try{
+   const shopId=await authenticatedShop(state);
+   if(generation!==authGeneration||!state?.signedIn)return;
+   if(authorizedShopId&&authorizedShopId!==shopId){resetAccount();identityError='حساب تغییر کرده است؛ اطلاعات حساب قبلی بسته شد.';refreshPending=true;return}
+   const r=await fetch('/api/rental/overview',{cache:'no-store'});if(!r.ok)throw Error('دریافت اطلاعات حساب فعلی انجام نشد.');
+   const next=await r.json();
+   if(generation!==authGeneration||!state?.signedIn)return;
+   if(currentShop(next)!==shopId)throw Error('اطلاعات ذخیره‌شده به فروشگاه واردشده تعلق ندارد.');
+   authorizedShopId=shopId;validatedAt=Date.now();identityError='';
+   if(typeof data!=='undefined'&&typeof render==='function'){
+    data=next;render();
+    if(typeof rentalTabFromPath==='function'&&rentalTabFromPath()==='accounting'&&typeof loadAccounting==='function')await loadAccounting();
+   }
+   document.body.classList.remove('pbDesktopAccountUnverified');refreshPending=false;
+  }catch(e){if(generation===authGeneration){eraseVisibleStore();identityError=String(e?.message||e);refreshPending=true}}
+  finally{painting=false;paint()}
+ }
+ async function refresh(){
+  if(reading)return;reading=true;
+  try{
+   const r=await fetch('/desktop/status',{cache:'no-store'});if(!r.ok)throw Error();
+   const next=await r.json();
+   const sig=next.signedIn?String(next.userId||next.user?.id||'')+'|'+currentShop(next):'';
+   if(!next.signedIn){if(state?.signedIn||authorizedShopId)resetAccount();lastAuthSignature='';state=next;paint();return}
+   if(!state?.signedIn||lastAuthSignature&&lastAuthSignature!==sig){resetAccount();refreshPending=true}
+   lastAuthSignature=sig;state=next;
+   if(state.revision!==lastRevision){refreshPending=true;lastRevision=state.revision}
+   if(!authorizedShopId)refreshPending=true;
+   paint();await refreshPage();
+  }catch{eraseVisibleStore();bar.hidden=false;bar.dataset.state='error';bar.children[0].textContent='ارتباط با پایگاه محلی قطع شد';bar.children[4].textContent='اطلاعات قبلی تا اتصال دوباره نمایش داده نمی‌شوند'}finally{reading=false}
+ }
  async function synchronize(){if(manual)return;manual=true;paint();try{const r=await fetch('/desktop/sync',{method:'POST'});const report=await r.json();if(report.pulled)refreshPending=true;}catch{if(state)state.error=navigator.onLine===false?'internet_offline':'local_connection_failed'}finally{manual=false;await refresh();await refreshPage();paint()}}
- async function logout(){if(logoutBusy)return;logoutBusy=true;try{const r=await fetch('/api/auth/logout',{method:'POST'});const out=await r.json();if(!r.ok)throw Error(out.message||'خروج انجام نشد؛ دوباره تلاش کنید.');panel.hidden=true;refreshPending=false;bar.hidden=true;history.replaceState({},'','/equipment-rental/portal');if(typeof showLogin==='function')showLogin();document.querySelector('#rentalHeaderFilterHost')?.style.setProperty('display','none','important');if(typeof data!=='undefined')data=null;if(typeof accountingData!=='undefined')accountingData=null;if(typeof smsData!=='undefined')smsData=null;document.querySelector('#loginForm input[type="password"]')?.setAttribute('value','');const password=document.querySelector('#loginForm input[type="password"]');if(password)password.value='';if(typeof message==='function')message('#loginMsg',out.pendingSaved?'از حساب خارج شدید. '+out.pendingSaved.toLocaleString('fa-IR')+' عملیات ارسال‌نشده محفوظ است؛ برای ارسال با همین حساب وارد شوید.':'از حساب خارج شدید.',true);state=null;}catch(e){window.storeNotice?.(e.message,'خروج از حساب')}finally{logoutBusy=false}}
+ async function logout(){
+  if(logoutBusy)return;logoutBusy=true;
+  // Blank the sensitive UI immediately; do not discard offline changes.
+  resetAccount();identityError='';bar.hidden=true;
+  try{
+   const r=await fetch('/api/auth/logout',{method:'POST'});const out=await r.json();if(!r.ok)throw Error(out.message||'خروج انجام نشد؛ دوباره تلاش کنید.');
+   state=null;lastAuthSignature='';
+   if(typeof showLogin==='function')showLogin();
+   document.querySelector('#rentalHeaderFilterHost')?.style.setProperty('display','none','important');
+   const password=document.querySelector('#loginForm input[type="password"]');if(password)password.value='';
+   if(typeof message==='function')message('#loginMsg',out.pendingSaved?'از حساب خارج شدید. '+Number(out.pendingSaved).toLocaleString('fa-IR')+' عملیات ارسال‌نشده برای همین حساب محفوظ است.':'از حساب خارج شدید.',true);
+   // Full navigation removes late network callbacks and stale single-page view caches.
+   location.replace('/equipment-rental/portal');
+  }catch(e){identityError='خروج کامل تأیید نشد؛ برای ادامه برنامه را دوباره باز کنید.';window.storeNotice?.(e.message,'خروج از حساب');paint()}
+  finally{logoutBusy=false}
+ }
  window.rentalLogout=logout;document.addEventListener('click',e=>{if(e.target.closest?.('#logout,#rentalMobileLogout')){e.preventDefault();e.stopImmediatePropagation();void logout()}},true);
  bar.children[1].onclick=synchronize;bar.children[3].onclick=()=>{window.showLogin?.();bar.hidden=true};
 bar.children[2].onclick=()=>{panel.replaceChildren();const close=document.createElement('button');close.textContent='بستن';close.onclick=()=>panel.hidden=true;panel.append(close);for(const x of state.conflicts){const h=document.createElement('h3');h.textContent='عملیات محلی نیازمند بررسی است';const text=document.createElement('p');text.textContent='اطلاعات محلی حفظ شده است. علت: '+({record_changed_on_server:'این رکورد روی سرور یا موبایل تغییر کرده است.',booking_price_changed:'مبلغ آفیش با قیمت فعلی سرور یکسان نیست.',invalid_rental_transition:'وضعیت آفیش روی سرور تغییر کرده است.'}[x.error.error]||x.error.error);const pre=document.createElement('pre');pre.textContent=JSON.stringify(x.operation,null,2);const save=document.createElement('button');save.textContent='دانلود نسخه عملیات';save.onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(x,null,2)],{type:'application/json'}));a.href=url;a.download='PhotoBridge-conflict-'+x.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};const discard=document.createElement('button');discard.textContent='پذیرش اطلاعات سرور';discard.onclick=async()=>{if(!await window.pb920Confirm('این عملیات و تغییرات محلی وابسته به آن کنار گذاشته شوند و اطلاعات سرور پذیرفته شود؟ نسخهٔ عملیات در تاریخچهٔ محلی باقی می‌ماند.'))return;const r=await fetch('/desktop/discard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,cascade:true})});if(r.ok){panel.hidden=true;location.reload()}else window.storeNotice?.('عملیات وابسته دارد؛ ابتدا آن‌ها را بررسی کن.','همگام‌سازی')};const retry=document.createElement('button');retry.textContent=x.error.error==='booking_price_changed'?'پذیرش مبلغ سرور: '+x.error.serverTotal+' تومان':'اعمال تغییر محلی روی نسخه سرور';retry.hidden=!['booking_price_changed','record_changed_on_server'].includes(x.error.error);retry.onclick=async()=>{if(!await window.pb920Confirm(retry.textContent+'؟ این تصمیم ثبت خواهد شد.'))return;const r=await fetch('/desktop/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});if(r.ok){panel.hidden=true;location.reload()}};panel.append(h,text,pre,save,retry,discard)}panel.hidden=false}; window.addEventListener('online',()=>void synchronize());window.addEventListener('offline',()=>{if(state){state.error='internet_offline';paint()}});document.addEventListener('focusout',()=>setTimeout(()=>void refreshPage(),0));refresh();setInterval(refresh,1500);

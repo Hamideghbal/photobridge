@@ -4182,12 +4182,15 @@ html,body{max-width:100%;overflow-x:hidden}
     const cal=q('[data-pb843-office-tab="calendar"]',tabs);if(cal){
       // Preserve possible count span if added later; only normalize the label once.
       const count=cal.querySelector('.pb854TabCount');cal.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.remove()});
-      if(!cal.querySelector('.pb898OfficeLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
+      // The mobile rail owns its text through .pb905rOfficeTabLabel. Never insert a
+      // second legacy label: the mobile MutationObserver would remove it, then
+      // this observer would re-add it forever and stall low-end Android devices.
+      if(!cal.querySelector('.pb898OfficeLabel, .pb905rOfficeTabLabel')){const sp=document.createElement('span');sp.className='pb898OfficeLabel';sp.textContent='آفیش';cal.insertBefore(sp,count||cal.firstChild)}
     }
     const pane=q('#bookings>[data-pb843-office-pane="manual"]');if(pane)pane.setAttribute('aria-hidden','true');
     const title=q('#pb843CalendarTitle');if(title&&/تقویم\s*آفیش/.test(title.textContent||''))title.textContent='آفیش';
-    const cont=q('#pb892CalendarContinue');if(cont)cont.textContent='ادامه ثبت آفیش';
-    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active'))select.textContent='انتخاب تاریخ‌ها';
+    const cont=q('#pb892CalendarContinue');if(cont&&cont.textContent!=='ادامه ثبت آفیش')cont.textContent='ادامه ثبت آفیش';
+    const select=q('#pb892CalendarSelectMode');if(select&&!select.classList.contains('active')&&select.textContent!=='انتخاب تاریخ‌ها')select.textContent='انتخاب تاریخ‌ها';
   }
   const oldSet=typeof window.pb843SetOfficeTab==='function'?window.pb843SetOfficeTab:null;
   if(oldSet){
@@ -4849,6 +4852,10 @@ body.saleItemModalOpen #rentalItemModalBackdrop{
     const tabs=q('#pb848BookingHeaderTabs');if(!tabs)return;
     qa('[data-pb843-office-tab]',tabs).forEach(btn=>{
       const key=btn.dataset.pb843OfficeTab;const wanted=officeLabels[key];if(!wanted)return;
+      // The newer mobile rail owns this label. Do not replace it from the
+      // legacy rail observer: competing observers would rebuild it endlessly.
+      const mobileLabel=btn.querySelector('.pb905rOfficeTabLabel');
+      if(matchMedia('(max-width:850px)').matches&&mobileLabel?.textContent===wanted)return;
       const count=q('.pb854TabCount',btn);
       const labels=qa('.pb898OfficeLabel,.pb900OfficeTabLabel,.pb903OfficeTabLabel',btn);
       const current=labels.find(x=>x.classList.contains('pb903OfficeTabLabel'));
@@ -10072,7 +10079,11 @@ html body #pb892ManualBackdrop.open #bookingForm .actions .btn{display:block!imp
       if(count)button.append(count);
     }
   }
-  const schedule=()=>requestAnimationFrame(normalize);
+  // Batch rapid rail mutations into one frame; legacy modules may update the
+  // counts together, and rebuilding the same labels repeatedly is expensive
+  // for lower-end mobile browsers.
+  let pendingFrame=0;
+  const schedule=()=>{if(pendingFrame)return;pendingFrame=requestAnimationFrame(()=>{pendingFrame=0;normalize()})};
   normalize();
   const rail=document.getElementById('pb848BookingHeaderTabs');
   if(rail)new MutationObserver(schedule).observe(rail,{childList:true,subtree:true});

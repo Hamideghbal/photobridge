@@ -5581,14 +5581,15 @@ async function photographerIdentityByMobile(db, mobileValue) {
     const q = await db.query(`SELECT u.id,u.name,u.mobile,u.password_hash,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,u.location_lat,u.location_lng,u.location_address,u.account_deleted_at,
       pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.password_hash photographer_password_hash,pp.province photographer_province,pp.city photographer_city,pp.location_lat photographer_location_lat,pp.location_lng photographer_location_lng,pp.location_address photographer_location_address,
       EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+      EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
       FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
       WHERE u.mobile IS NOT NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10)
         AND u.account_deleted_at IS NULL
       ORDER BY u.photographer_enabled DESC,(pp.studio_name IS NOT NULL) DESC,(u.platform_role='platform_admin') DESC,u.public_retouch_enabled DESC,u.created_at ASC LIMIT 8`, [mobile]);
     if (!q.rowCount)
         return null;
-    const photographerRows = q.rows.filter((r) => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+    const photographerRows = q.rows.filter((r) => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
     // A mobile can legitimately belong to an old public/admin identity and an enabled
     // photographer identity after account upgrades. Invitation links must reuse the
     // canonical photographer instead of failing the public context with mobile_ambiguous.
@@ -11977,7 +11978,8 @@ async function api(req, res, url) {
                 text:`SELECT u.id,u.name,u.mobile,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,
                       pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.province photographer_province,pp.city photographer_city,pp.location_address photographer_location_address,
                       EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+                      EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
                       FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                       WHERE u.account_deleted_at IS NULL AND u.mobile = ANY($1::text[])
                       ORDER BY u.photographer_enabled DESC,(pp.user_id IS NOT NULL) DESC,u.active DESC,u.created_at ASC LIMIT 8`,
@@ -11989,7 +11991,8 @@ async function api(req, res, url) {
                     text:`SELECT u.id,u.name,u.mobile,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,
                           pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.province photographer_province,pp.city photographer_city,pp.location_address photographer_location_address,
                           EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-                          EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+                          EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+                          EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
                           FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                           WHERE u.account_deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=$1
                           ORDER BY u.photographer_enabled DESC,(pp.user_id IS NOT NULL) DESC,u.active DESC,u.created_at ASC LIMIT 8`,
@@ -12002,7 +12005,8 @@ async function api(req, res, url) {
                 text:`SELECT u.id,u.name,u.mobile,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,
                       pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.province photographer_province,pp.city photographer_city,pp.location_address photographer_location_address,
                       EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+                      EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
                       FROM users u JOIN photographer_profiles pp ON pp.user_id=u.id
                       WHERE u.account_deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=$1
                       ORDER BY (nullif(btrim(pp.studio_name),'') IS NOT NULL) DESC,(nullif(btrim(pp.province),'') IS NOT NULL) DESC,u.photographer_enabled DESC,u.active DESC,u.created_at ASC LIMIT 8`,
@@ -12013,9 +12017,9 @@ async function api(req, res, url) {
             // A store-side pre-registration alone is not a PhotoBridge
             // photographer account.  Keep the full signup form (address,
             // map location and birth date) for that mobile until activation.
-            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
+            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
             const existing = photographerRows[0] || rows.find(r=>r.active) || null;
-            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists) ? existing : null;
+            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed) ? existing : null;
             // R96: identity fields can be split across legacy rows that share one mobile.
             // Prefer the selected photographer row, but fill blank studio/province/city/address
             // from any other matching photographer profile instead of showing empty cards.
@@ -12133,7 +12137,8 @@ async function api(req, res, url) {
                 text: `SELECT u.id,u.name,u.mobile,u.password_hash,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,u.location_lat,u.location_lng,u.location_address,u.account_deleted_at,
                   pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.password_hash photographer_password_hash,pp.province photographer_province,pp.city photographer_city,pp.location_lat photographer_location_lat,pp.location_lng photographer_location_lng,pp.location_address photographer_location_address,
                   EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-                  EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+                  EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+                  EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
                   FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                   WHERE u.mobile=$1 AND u.account_deleted_at IS NULL
                   ORDER BY u.photographer_enabled DESC,(pp.studio_name IS NOT NULL) DESC,(u.platform_role='platform_admin') DESC,u.created_at ASC LIMIT 8`,
@@ -12141,17 +12146,18 @@ async function api(req, res, url) {
                 query_timeout: 2500
             }).catch(() => ({ rows: [] }));
             if (exactIdentity.rows.length) {
-                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
+                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
                 const activeRows = exactIdentity.rows.filter(r => Boolean(r.active));
                 existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: exactIdentity.rows.length > 1 };
+                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed), duplicateMobileResolved: exactIdentity.rows.length > 1 };
             }
             if (!existing) {
                 const fallback = await pool.query({
                     text: `SELECT u.id,u.name,u.mobile,u.password_hash,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,u.location_lat,u.location_lng,u.location_address,u.account_deleted_at,
                       pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.password_hash photographer_password_hash,pp.province photographer_province,pp.city photographer_city,pp.location_lat photographer_location_lat,pp.location_lng photographer_location_lng,pp.location_address photographer_location_address,
                       EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
-                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists
+                      EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
+                      EXISTS(SELECT 1 FROM photographer_invite_redemptions pir WHERE pir.user_id=u.id) photographer_invite_redeemed
                       FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                       WHERE u.mobile IS NOT NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10)
                         AND u.account_deleted_at IS NULL
@@ -12160,10 +12166,10 @@ async function api(req, res, url) {
                     query_timeout: 1800
                 }).catch(() => ({ rows: [] }));
                 if (fallback.rows.length) {
-                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
+                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
                     const activeRows = fallback.rows.filter(r => Boolean(r.active));
                     existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: fallback.rows.length > 1 };
+                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed), duplicateMobileResolved: fallback.rows.length > 1 };
                 }
             }
             const existingPhotographer = existing?.existingPhotographer ? existing : null;

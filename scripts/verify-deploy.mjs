@@ -99,11 +99,12 @@ for (const route of ['/api/health', '/api/lab/desktop-ui-manifest', '/api/lab/de
   assert(server.includes(route), `Deployment route missing: ${route}`);
 }
 const inviteUi = fs.readFileSync('dist/web/photobridge-v904r98-invite-stable.js', 'utf8');
-assert(html.includes('/photobridge-v904r98-invite-stable.js?v=904r1043'), 'Rental invite UI must use the current cache-busted release');
+assert(html.includes('/photobridge-v904r98-invite-stable.js?v=904r1044'), 'Rental invite UI must use the current cache-busted release');
 assert(html.includes('pbInviteContextRetry') && !html.includes('remove(\'pbR100F7InviteBootPending\'),6500'), 'Invite registration must stay gated until account lookup completes');
 for (const marker of ['contextReady:false', 'state.contextReady=true', 'acceptSignupContext(data)', 'showContextRetry()', 'addEventListener(\'click\'', 'birthJalali']) {
   assert(inviteUi.includes(marker), `Rental invite registration guard missing: ${marker}`);
 }
+assert(inviteUi.includes('const legacyCards=') && inviteUi.includes('if(box)box.remove();'), 'Existing account invite must not show duplicate stored-profile cards');
 assert(server.includes('photographer_rental_membership_exists') && server.includes("rm.role='photographer'"), 'Existing rental photographer memberships must resolve to existing accounts');
 for (const file of ['dist/api/equipment-rental-book.html', 'dist/api/equipment-rental-portal.html',
   'migrations/151_equipment_complete_camera_photo_bank_v837.sql', 'scripts/ensure-sofia-demo.sql']) {

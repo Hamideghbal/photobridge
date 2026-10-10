@@ -10350,7 +10350,13 @@ async function equipmentRentalShopOverview(shopId) {
     const saleItems = saleItemsQ.rows.map(equipmentItemPublic);
     const [catalog, salesWallet, walletCfg] = await Promise.all([equipmentRentalCatalogSnapshot(shopId), equipmentSaleWalletSnapshot(shopId), serviceWalletSettings()]);
     const inviteHistoryQ = await pool.query(`SELECT i.id,i.code,i.target_mobile,i.active,i.uses,i.max_uses,i.expires_at,i.created_at,i.updated_at,i.metadata,COALESCE(u.photographer_enabled,false) photographer_enabled,EXISTS(SELECT 1 FROM photographer_invite_redemptions rr WHERE rr.invite_id=i.id) accepted,COALESCE(pp.studio_name,u.name,i.metadata->>'targetName','عکاس') target_name,CASE WHEN COALESCE(i.metadata->>'createdFrom','')='rental_manual_office' THEN 'office' ELSE 'invite' END source FROM photographer_invites i LEFT JOIN LATERAL (SELECT ux.id,ux.name,ux.mobile,ux.photographer_enabled FROM users ux WHERE right(regexp_replace(coalesce(ux.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace(coalesce(i.target_mobile,''),'[^0-9]','','g'),10) ORDER BY ux.photographer_enabled DESC,ux.created_at LIMIT 1) u ON true LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE i.issuer_type='rental' AND i.issuer_rental_shop_id=$1 AND i.target_mobile IS NOT NULL ORDER BY i.created_at DESC LIMIT 100`, [shopId]).catch(()=>({rows:[]}));
-    const photographerRows=membersQ.rows.map(x=>({...x,business_license_image_url:x.business_license_image_object_key?issueStoredPreviewUrl(String(x.business_license_image_object_key),String(x.business_license_image_name||'case-file-image'),String(x.business_license_image_content_type||'image/jpeg')):null}));
+    const photographerRows=membersQ.rows.map(x=>({
+      ...x,
+      // Before activation, mobile is the only reliable identifier.  Show it
+      // everywhere in the shop instead of a generated placeholder name.
+      name:Boolean(x.pre_registered)&&String(x.mobile||'').trim()?String(x.mobile):x.name,
+      business_license_image_url:x.business_license_image_object_key?issueStoredPreviewUrl(String(x.business_license_image_object_key),String(x.business_license_image_name||'case-file-image'),String(x.business_license_image_content_type||'image/jpeg')):null
+    }));
     const assetQ=await pool.query(`SELECT a.*,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,ba.booking_id current_booking_id,ba.handed_out_at FROM equipment_rental_assets a JOIN equipment_rental_items i ON i.id=a.item_id LEFT JOIN LATERAL (SELECT x.booking_id,x.handed_out_at FROM equipment_rental_booking_assets x JOIN equipment_rental_bookings b ON b.id=x.booking_id WHERE x.asset_id=a.id AND x.returned_at IS NULL AND b.status='picked_up' ORDER BY x.handed_out_at DESC LIMIT 1) ba ON true WHERE a.shop_id=$1 ORDER BY i.created_at DESC,a.system_code`,[shopId]).catch(()=>({rows:[]}));
     return { shop, items, assets:assetQ.rows, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows.map(p => { const d = applySpecialDiscount(p.price, true, shop?.subscription_discount_amount, shop?.subscription_discount_percent); return { ...p, base_price: Number(p.price || 0), price: d.amount, special_discount_percent: d.discountPercent, special_discount_amount: d.specialDiscountAmount }; }), renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
 }
@@ -10385,8 +10391,10 @@ async function equipmentRentalEnsurePhotographerPreRegistration(db, shopId, mobi
         }
     }
     if (!identity) return null;
-    const activePhotographer = Boolean(identity.existingPhotographer || identity.photographer_enabled);
-    if (!activePhotographer) await equipmentRentalEnsurePhotographerLink(db, shopId, identity.id);
+    // A targeted rental invite must be visible to the issuing shop immediately,
+    // for existing and new accounts alike.  The invite still controls whether
+    // the photographer has completed their confirmation.
+    await equipmentRentalEnsurePhotographerLink(db, shopId, identity.id);
     return { id:String(identity.id), name:String(identity.photographer_name || identity.name || displayName || 'عکاس'), mobile:normalizeMobile(String(identity.mobile || mobile)), photographer_enabled:Boolean(identity.photographer_enabled), preRegistered:!Boolean(identity.photographer_enabled), created };
 }
 async function equipmentRentalSetOpeningDebt(db, shopId, userId, amount, createdBy, description = 'بدهی اولیه پیش‌ثبت‌نام') {
@@ -12002,9 +12010,12 @@ async function api(req, res, url) {
             }).catch(()=>({rows:[]}));
             const mergedRows=[...(profileQ.rows||[]),...(uq.rows||[])],seenIds=new Set(),rows=[];
             for(const r of mergedRows){const id=String(r.id||'');if(!id||seenIds.has(id))continue;seenIds.add(id);rows.push(r)}
-            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+            // A store-side pre-registration alone is not a PhotoBridge
+            // photographer account.  Keep the full signup form (address,
+            // map location and birth date) for that mobile until activation.
+            const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
             const existing = photographerRows[0] || rows.find(r=>r.active) || null;
-            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists) ? existing : null;
+            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists) ? existing : null;
             // R96: identity fields can be split across legacy rows that share one mobile.
             // Prefer the selected photographer row, but fill blank studio/province/city/address
             // from any other matching photographer profile instead of showing empty cards.
@@ -12130,10 +12141,10 @@ async function api(req, res, url) {
                 query_timeout: 2500
             }).catch(() => ({ rows: [] }));
             if (exactIdentity.rows.length) {
-                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+                const photographerRows = exactIdentity.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
                 const activeRows = exactIdentity.rows.filter(r => Boolean(r.active));
                 existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists), duplicateMobileResolved: exactIdentity.rows.length > 1 };
+                if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: exactIdentity.rows.length > 1 };
             }
             if (!existing) {
                 const fallback = await pool.query({
@@ -12149,10 +12160,10 @@ async function api(req, res, url) {
                     query_timeout: 1800
                 }).catch(() => ({ rows: [] }));
                 if (fallback.rows.length) {
-                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_rental_membership_exists));
+                    const photographerRows = fallback.rows.filter(r => Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists));
                     const activeRows = fallback.rows.filter(r => Boolean(r.active));
                     existing = photographerRows[0] || activeRows.find(r => r.platform_role === 'platform_admin') || activeRows.find(r => Boolean(r.public_retouch_enabled)) || activeRows[0] || null;
-                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_rental_membership_exists), duplicateMobileResolved: fallback.rows.length > 1 };
+                    if (existing) existing = { ...existing, existingPhotographer: Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists), duplicateMobileResolved: fallback.rows.length > 1 };
                 }
             }
             const existingPhotographer = existing?.existingPhotographer ? existing : null;
@@ -15226,7 +15237,7 @@ async function api(req, res, url) {
             if (!photographer) return sendJson(res,404,{error:'linked_photographer_not_found'});
         } else if (b.photographerMobile && !manualOfficeInvite) photographer = await equipmentRentalFindPhotographerByMobile(pool, b.photographerMobile);
         const inviteIdentityHint = manualOfficeInvite && b.photographerMobile ? await photographerIdentityByMobile(pool, b.photographerMobile).catch(()=>null) : null;
-        const customerName = String(b.customerName || photographer?.name || inviteIdentityHint?.photographer_name || inviteIdentityHint?.name || (manualOfficeInvite ? 'در انتظار تأیید عکاس' : '')).trim();
+        let customerName = String(b.customerName || photographer?.name || inviteIdentityHint?.photographer_name || inviteIdentityHint?.name || (manualOfficeInvite ? 'در انتظار تأیید عکاس' : '')).trim();
         const customerMobile = normalizeMobile(String(b.customerMobile || photographer?.mobile || b.photographerMobile || '')) || null;
         if (!customerName) return sendJson(res, 400, { error: 'customer_name_required' });
         if (b.photographerMobile && !/^09\d{9}$/.test(normalizeMobile(String(b.photographerMobile || '')))) return sendJson(res,400,{error:'invalid_mobile'});
@@ -15234,11 +15245,20 @@ async function api(req, res, url) {
         const c = await pool.connect();
         try {
             await c.query('BEGIN');
-            if (!manualOfficeInvite && !photographer && b.photographerMobile) {
+            // Entering a mobile while creating an آفیش is a pre-registration.
+            // Link it before the booking is stored so the shop can find its
+            // booking, invoices and ledger even before SMS confirmation.
+            if (!photographer && b.photographerMobile) {
                 const prereg = await equipmentRentalEnsurePhotographerPreRegistration(c, shop.id, b.photographerMobile, customerName);
-                if (prereg) { photographer = prereg; photographerPreRegistered = Boolean(prereg.preRegistered); preRegistrationCreated = Boolean(prereg.created); }
+                if (prereg) {
+                    photographer = prereg;
+                    photographerPreRegistered = Boolean(prereg.preRegistered);
+                    preRegistrationCreated = Boolean(prereg.created);
+                    if (prereg.preRegistered) customerName=String(prereg.mobile||customerName);
+                    else if (!customerName || customerName==='در انتظار تأیید عکاس') customerName=String(prereg.name||customerName);
+                }
             }
-            if (!manualOfficeInvite && photographer?.id && b.photographerMobile && b.initialDebt !== undefined) await equipmentRentalSetOpeningDebt(c, shop.id, photographer.id, b.initialDebt, a.userId, 'بدهی اولیه پیش‌ثبت‌نام آفیش دستی');
+            if (photographer?.id && b.photographerMobile && b.initialDebt !== undefined) await equipmentRentalSetOpeningDebt(c, shop.id, photographer.id, b.initialDebt, a.userId, 'بدهی اولیه پیش‌ثبت‌نام آفیش دستی');
             if(clientOrderId){
                 await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',[shop.id,clientOrderId]);
                 const prior=await c.query(`SELECT b.id,b.status,b.total_amount FROM equipment_rental_desktop_orders d JOIN equipment_rental_bookings b ON b.id=d.booking_id WHERE d.shop_id=$1 AND d.client_id=$2`,[shop.id,clientOrderId]);

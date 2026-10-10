@@ -106,6 +106,10 @@ for (const marker of ['contextReady:false', 'state.contextReady=true', 'acceptSi
 }
 assert(inviteUi.includes('const legacyCards=') && inviteUi.includes('if(box)box.remove();'), 'Existing account invite must not show duplicate stored-profile cards');
 assert(server.includes('photographer_rental_membership_exists') && server.includes("rm.role='photographer'"), 'Existing rental photographer memberships must resolve to existing accounts');
+for (const marker of ['Entering a mobile while creating an آفیش is a pre-registration.', 'await equipmentRentalEnsurePhotographerLink(db, shopId, identity.id);', 'name:Boolean(x.pre_registered)&&String(x.mobile||\'\').trim()?String(x.mobile):x.name']) {
+  assert(server.includes(marker), `Rental office pre-registration missing: ${marker}`);
+}
+assert(server.includes('A store-side pre-registration alone is not a PhotoBridge') && server.includes("const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists) ? existing : null;"), 'Pre-registered invitees must retain the full signup profile form');
 for (const file of ['dist/api/equipment-rental-book.html', 'dist/api/equipment-rental-portal.html',
   'migrations/151_equipment_complete_camera_photo_bank_v837.sql', 'scripts/ensure-sofia-demo.sql']) {
   assert(fs.existsSync(file), `Required deployment payload missing: ${file}`);

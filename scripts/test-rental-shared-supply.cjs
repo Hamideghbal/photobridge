@@ -43,7 +43,10 @@ test('PostgreSQL: swap shared external/owned units, preserve holders and reject 
   };
   assert.equal((await hand(c,[],[{itemId:item,shortageId:supply,code:'free text'}])).error,'external_supply_unavailable');
   // The source was planned for A; B receives it, then A takes the owned camera.
+  await db.query("UPDATE equipment_rental_booking_shortages SET status='pending',resolved_at=NULL WHERE id=$1",[supply]);
+  pool=await ctx.equipmentRentalSupplyPool(db,shop,await booking(b));assert.equal(pool.sources[0].availableQuantity,1);assert.equal(pool.sources[0].supplied,false);
   assert.equal((await hand(b,[],[{itemId:item,shortageId:supply,code:'any identifier'}])).externalSupplyCount,1);
+  assert.equal((await db.query('SELECT status FROM equipment_rental_booking_shortages WHERE id=$1',[supply])).rows[0].status,'provided');
   assert.equal((await hand(a,['CAM-1'],[])).assetCount,1);
   pool=await ctx.equipmentRentalSupplyPool(db,shop,null);assert.equal(pool.holders[0].customerName,'Customer B');assert.equal(pool.holders[0].code,'any identifier');assert.equal(pool.sources[0].availableQuantity,0);
   const owned=await ctx.equipmentRentalAssetsSnapshot(db,shop);assert.equal(owned[0].customer_name,'Customer A');assert.equal(owned[0].current_booking_id,a);

@@ -9,13 +9,14 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    const page=await browser.newPage({viewport});
    await page.setContent('<div id="itemsList"><article class="rentalItemCard"><button onclick="editItem(\'camera\')">Edit</button></article></div>');
    await page.addScriptTag({content:`window.calls=[];window.data={bookings:[{id:'b',status:'reserved'},{id:'a',status:'reserved'}],assets:[{item_id:'camera',current_booking_id:'a',system_code:'CAM-1',customer_name:'Actual A'}],externalSupplyHolders:[{itemId:'camera',bookingId:'b',customerName:'Actual B',code:'supplier note'}]};window.fa=String;window.dateFa=String;window.renderItems=()=>{};window.esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));window.load=async()=>{};window.storeNotice=()=>{};window.bookingStatus=()=>{};
-    window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:{items:[{itemId:'camera',title:'Camera',quantity:1,externalSupplyQty:0,pendingSupplyQty:0,assets:[],supplyOptions:[{id:'source',itemId:'camera',bookingId:'a',plannedCustomer:'Planned A',availableQuantity:1,supplied:true,startDate:'2030-10-12',endDate:'2030-10-12'}]}]}});
+    window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:{items:[{itemId:'camera',title:'Camera',quantity:1,externalSupplyQty:0,pendingSupplyQty:0,assets:[],supplyOptions:[{id:'source',itemId:'camera',bookingId:'a',plannedCustomer:'Planned A',availableQuantity:1,supplied:false,startDate:'2030-10-12',endDate:'2030-10-12'}]}]}});
     window.api=async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return {ok:true}};`});
    await page.addScriptTag({content:runtime});
    await page.addScriptTag({path:path.join(root,'dist/web/photobridge-r1058-handover-holders.js')});
    assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual A/);assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual B/);assert.doesNotMatch(await page.locator('.pbR1058Holders').textContent(),/Planned A/);
    await page.evaluate(()=>{void bookingStatus('b','picked_up')});
-   await page.waitForSelector('[data-slot-source]');await page.locator('[data-slot-source]').selectOption('source');
+   await page.waitForSelector('[data-slot-source]');assert.match(await page.locator('[data-slot-source]').textContent(),/نیازمند تأیید تأمین/);await page.locator('[data-slot-source]').selectOption('source');
+   assert.equal(await page.locator('[data-done]').isDisabled(),true);
    await page.locator('[data-supplied-toggle]').check();await page.locator('[data-slot-input]').fill('arbitrary identifier');
    await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===1);
    const external=await page.evaluate(()=>calls[0].body);assert.deepEqual(external.assetCodes,[]);assert.deepEqual(external.externalSupplyCodes,[{itemId:'camera',code:'arbitrary identifier',shortageId:'source'}]);

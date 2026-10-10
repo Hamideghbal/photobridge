@@ -97,3 +97,12 @@ html body.pbR100F9StaffMode .pbOfficeExtendButton{display:none!important}
 /* R1080: delivery and receiving remain visibly different for both roles. */
 html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.delivering,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Deliver{background:#315efb!important;color:#fff!important;border-color:#315efb!important}
 html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.receiving,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Receive{background:#087f5b!important;color:#fff!important;border-color:#087f5b!important}
+
+/* R1081: desktop day-card text owns a full row; actions never squeeze it. */
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;overflow:hidden!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{flex:none!important;width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:break-word!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking small{font-size:12px!important;line-height:1.7!important;overflow-wrap:break-word!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;justify-content:flex-start!important;flex:none!important;width:100%!important;min-width:0!important;gap:6px!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions>button{flex:0 1 auto!important;width:auto!important;min-width:0!important;margin:0!important;min-height:36px!important;padding:6px 10px!important;font:700 12px/1.5 Vazirmatn,Tahoma!important;white-space:normal!important}
+}

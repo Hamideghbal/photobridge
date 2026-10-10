@@ -10185,7 +10185,9 @@ async function equipmentRentalAvailability(db, args) {
     const q = await db.query(`SELECT i.id,i.shop_id,i.title,i.category,i.brand,i.model,i.daily_price,i.deposit_amount,i.stock_total,i.active,i.deleted_at,s.name shop_name,s.active shop_active,
       (SELECT jsonb_agg(jsonb_build_object('date',to_char(d.day,'YYYY-MM-DD'),'reserved',COALESCE((SELECT sum(bi.quantity)::int FROM equipment_rental_booking_items bi
         JOIN equipment_rental_bookings b ON b.id=bi.booking_id
-        WHERE bi.item_id=i.id AND b.status IN ('payment_pending','reserved','picked_up')
+        WHERE bi.item_id=i.id AND (b.status IN ('payment_pending','reserved','picked_up') OR
+          (b.status='returned' AND EXISTS(SELECT 1 FROM jsonb_array_elements(COALESCE(b.handover_serials,'[]'::jsonb)) h
+            WHERE h->>'itemId'=bi.item_id::text AND h->>'extendedToBookingId' IS NOT NULL)))
           AND ($5::uuid IS NULL OR b.id<>$5::uuid)
           AND NOT EXISTS (SELECT 1 FROM equipment_rental_accounting_entries rev WHERE rev.booking_id=b.id AND rev.entry_type='booking_reversal')
           AND b.rental_start<=d.day::date AND b.rental_end>=d.day::date),0)) ORDER BY d.day)
@@ -10625,6 +10627,85 @@ async function equipmentRentalCreateBooking(db, { shopId, photographerId = null,
         await equipmentRentalEnsurePhotographerLink(db, shopId, photographerId);
     }
     return { ok: true, id, status, bookingCode: id.slice(0, 8).toUpperCase(), totalAmount: availability.totalAmount, grossAmount:availability.grossAmount ?? availability.totalAmount, discountPercent:availability.discountPercent||0, discountAmount:availability.discountAmount||0, discountReason:availability.discountReason||null, settlementMode:terms.settlementMode||'ledger', paymentStatus, depositAmount: availability.depositAmount, availability };
+}
+
+function equipmentRentalNextDay(day) {
+    const iso=equipmentRentalDate(day);
+    return iso ? new Date(Date.parse(iso+'T12:00:00Z')+86400000).toISOString().slice(0,10) : null;
+}
+function equipmentRentalOperationalItems(rows,booking) {
+    const transferred=new Set((booking.handover_serials||[]).filter(x=>x.extendedToBookingId).map(x=>String(x.itemId)));
+    return rows.filter(x=>!transferred.has(String(x.item_id)));
+}
+async function equipmentRentalExtensionPreview(db,{shopId,bookingId,endDate}) {
+    const booking=(await db.query('SELECT * FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2',[bookingId,shopId])).rows[0];
+    if(!booking)return {error:'rental_booking_not_found'};
+    if(booking.status!=='picked_up')return {error:'extension_requires_handover'};
+    const startDate=equipmentRentalNextDay(booking.rental_end),end=equipmentRentalDate(endDate);
+    if(!end||end<startDate||equipmentRentalDays(startDate,end)>180)return {error:'invalid_extension_dates'};
+    const iq=await db.query('SELECT item_id,quantity FROM equipment_rental_booking_items WHERE booking_id=$1 ORDER BY id',[bookingId]);
+    const current=equipmentRentalOperationalItems(iq.rows,booking);
+    if(!current.length)return {error:'booking_already_extended'};
+    const availability=await equipmentRentalAvailability(db,{shopId,startDate,endDate:end,items:current.map(x=>({itemId:String(x.item_id),quantity:Number(x.quantity)}))});
+    if(availability.error)return availability;
+    const assets=(await db.query('SELECT * FROM equipment_rental_booking_assets WHERE booking_id=$1 AND shop_id=$2 AND returned_at IS NULL',[bookingId,shopId])).rows;
+    const sourceIds=[...new Set((booking.handover_serials||[]).flatMap(x=>(x.externalSupplySources||[]).map(s=>s.shortageId)))];
+    const sources=sourceIds.length?(await db.query('SELECT * FROM equipment_rental_booking_shortages WHERE shop_id=$1 AND id=ANY($2::uuid[])',[shopId,sourceIds])).rows:[];
+    await equipmentRentalAttachShortageDates(db,sources);
+    const items=availability.items.map(row=>{
+      const held=(booking.handover_serials||[]).find(x=>String(x.itemId)===row.itemId)||{};
+      const owned=assets.filter(x=>String(x.item_id)===row.itemId).length,external=held.externalSupplySources||[];
+      let reason=null;
+      if(owned+external.length!==row.requested)reason='extension_untracked_equipment';
+      else if(!row.valid||row.available<owned)reason='equipment_unavailable';
+      else for(const unit of external){
+        const source=sources.find(s=>String(s.id)===String(unit.shortageId));
+        if(!source||source.booking_cancelled_at||!(source.status==='provided'||source.resolved_at)||equipmentRentalDate(source.rental_start)>startDate||equipmentRentalDate(source.rental_end)<end){reason='extension_supply_dates_unavailable';break;}
+        if(Array.isArray(source.shortage_days)&&source.shortage_days.length){
+          const dates=new Set(source.shortage_days.filter(d=>Number(d.quantity)>=external.filter(s=>s.shortageId===unit.shortageId).length).map(d=>d.date));
+          for(let day=startDate;day<=end;day=equipmentRentalNextDay(day))if(!dates.has(day)){reason='extension_supply_dates_unavailable';break;}
+        }
+      }
+      return {...row,extendable:!reason,extensionReason:reason,ownedQuantity:owned,externalQuantity:external.length};
+    });
+    return {booking,startDate,endDate:end,rentalDays:availability.rentalDays,items};
+}
+async function equipmentRentalExtendBooking(db,{shopId,bookingId,actorId,endDate,itemIds,requestId}) {
+    if(!/^[0-9a-f-]{36}$/i.test(String(requestId||''))||!Array.isArray(itemIds)||!itemIds.length||itemIds.length>500||new Set(itemIds).size!==itemIds.length)return {error:'invalid_extension_request'};
+    await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`equipment-rental:${shopId}`]);
+    const locked=await db.query('SELECT id FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 FOR UPDATE',[bookingId,shopId]);
+    if(!locked.rowCount)return {error:'rental_booking_not_found'};
+    const previous=await db.query("SELECT data FROM audit_log WHERE action='equipment_rental.extension' AND entity_id=$1 AND data->>'requestId'=$2 AND data->>'shopId'=$3 ORDER BY id DESC LIMIT 1",[bookingId,requestId,shopId]);
+    if(previous.rowCount){
+      const saved=previous.rows[0].data;
+      if(saved.endDate!==equipmentRentalDate(endDate)||JSON.stringify([...saved.itemIds].sort())!==JSON.stringify([...itemIds].sort()))return {error:'extension_request_reused'};
+      return saved.result;
+    }
+    const preview=await equipmentRentalExtensionPreview(db,{shopId,bookingId,endDate});
+    if(preview.error)return preview;
+    const selected=preview.items.filter(x=>itemIds.includes(x.itemId));
+    if(selected.length!==itemIds.length||selected.some(x=>!x.extendable))return {error:'extension_equipment_unavailable',items:preview.items};
+    const old=preview.booking;
+    const created=await equipmentRentalCreateBooking(db,{shopId,photographerId:old.photographer_id,customerName:old.customer_name,customerMobile:old.customer_mobile,startDate:preview.startDate,endDate:preview.endDate,items:selected.map(x=>({itemId:x.itemId,quantity:x.requested})),notes:`تمدید آفیش ${bookingId.slice(0,8).toUpperCase()}`,createdBy:actorId,allowShortage:true});
+    if(created.error)return created;
+    const handover=selected.map(row=>(old.handover_serials||[]).find(x=>String(x.itemId)===row.itemId));
+    if(handover.some(x=>!x))return {error:'extension_untracked_equipment'};
+    // Keep the original assignment as history; only the extension owns open possession.
+    await db.query(`INSERT INTO equipment_rental_booking_assets(id,shop_id,booking_id,item_id,asset_id,handed_out_at)
+      SELECT gen_random_uuid(),shop_id,$3,item_id,asset_id,handed_out_at FROM equipment_rental_booking_assets
+      WHERE booking_id=$1 AND shop_id=$2 AND item_id=ANY($4::uuid[]) AND returned_at IS NULL`,[bookingId,shopId,created.id,itemIds]);
+    await db.query('UPDATE equipment_rental_booking_assets SET returned_at=now() WHERE booking_id=$1 AND shop_id=$2 AND item_id=ANY($3::uuid[]) AND returned_at IS NULL',[bookingId,shopId,itemIds]);
+    await db.query("DELETE FROM equipment_rental_booking_shortages WHERE booking_id=$1 AND shop_id=$2 AND status='pending' AND resolved_at IS NULL",[created.id,shopId]);
+    await db.query("UPDATE equipment_rental_bookings SET status='picked_up',deposit_amount=0,handover_serials=$3::jsonb,handover_serials_recorded_at=now(),handover_serials_recorded_by=$4,commitment_generated_at=now(),updated_at=now() WHERE id=$1 AND shop_id=$2",[created.id,shopId,JSON.stringify(handover),actorId]);
+    await db.query('UPDATE equipment_rental_booking_items SET deposit_amount=0 WHERE booking_id=$1',[created.id]);
+    const original=(old.handover_serials||[]).map(x=>itemIds.includes(String(x.itemId))?{...x,extendedToBookingId:created.id,externalSupplyQty:0,externalSupplySources:[]}:x);
+    const allTransferred=equipmentRentalOperationalItems(preview.items.map(x=>({item_id:x.itemId})),{handover_serials:original}).length===0;
+    await db.query("UPDATE equipment_rental_bookings SET handover_serials=$3::jsonb,status=CASE WHEN $4 THEN 'returned' ELSE status END,updated_at=now() WHERE id=$1 AND shop_id=$2",[bookingId,shopId,JSON.stringify(original),allTransferred]);
+    const invoice=await equipmentRentalEnsureInvoice(db,created.id,actorId);
+    if(!invoice)throw new Error('extension_invoice_not_created');
+    const result={ok:true,id:created.id,startDate:preview.startDate,endDate:preview.endDate,totalAmount:created.totalAmount,invoice};
+    await db.query("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,data) VALUES($1,'equipment_rental.extension','equipment_rental_booking',$2,$3::jsonb)",[actorId,bookingId,JSON.stringify({shopId,requestId,endDate:preview.endDate,itemIds,result})]);
+    return result;
 }
 
 function safeFileName(name) { return name.replace(/[^\p{L}\p{N}._ -]+/gu, '_').slice(0, 140) || 'file'; }
@@ -15420,6 +15501,7 @@ async function api(req, res, url) {
         const normalized = [];
         for (const row of cq.rows) {
             const itemId=String(row.item_id),qty=Math.max(1,Number(row.quantity||1)),saved=(row.handover_serials||[]).find(x=>String(x.itemId)===itemId),externalQty=Math.min(qty,Math.max(0,Number(currentStatus==='picked_up'?saved?.externalSupplyQty??row.external_supply_qty:row.external_supply_qty))),internalQty=qty-externalQty,src=inputMap.get(itemId)||{};
+            if(saved?.extendedToBookingId){normalized.push(saved);continue;}
             const internalSerials=(Array.isArray(src.serials)?src.serials:[]).map(x=>String(x||'').trim().slice(0,180));
             if(internalSerials.length!==internalQty || internalSerials.some(x=>!x)) return sendJson(res,400,{error:'handover_serials_required',itemId,title:String(row.title||'تجهیز'),quantity:internalQty});
             const externalCodes=(Array.isArray(src.externalCodes)?src.externalCodes:[]).map(x=>String(x||'').trim().slice(0,180));
@@ -15429,11 +15511,34 @@ async function api(req, res, url) {
             const externalSerials=externalCodes.slice(0,externalQty).map(v=>v||'تأمین بیرونی');
             normalized.push({...saved,itemId,title:String(row.title||src.title||'تجهیز'),quantity:qty,serials:[...internalSerials,...externalSerials],externalSupplyQty:externalQty,...(Array.isArray(saved?.externalSupplySources)?{externalSupplySources:saved.externalSupplySources.map((source,index)=>({...source,code:externalCodes[index]||''}))}:{})});
         }
-        const q=await pool.query(`UPDATE equipment_rental_bookings SET handover_serials=$3::jsonb,handover_serials_recorded_at=now(),handover_serials_recorded_by=$4,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING handover_serials,handover_serials_recorded_at`,[bookingId,shop.id,JSON.stringify(normalized),a.userId]);
+        const q=await pool.query(`UPDATE equipment_rental_bookings SET handover_serials=$3::jsonb,handover_serials_recorded_at=now(),handover_serials_recorded_by=$4,updated_at=now() WHERE id=$1 AND shop_id=$2 AND handover_serials IS NOT DISTINCT FROM $5::jsonb AND status=$6 RETURNING handover_serials,handover_serials_recorded_at`,[bookingId,shop.id,JSON.stringify(normalized),a.userId,JSON.stringify(cq.rows[0].handover_serials),currentStatus]);
+        if(!q.rowCount)return sendJson(res,409,{error:'booking_changed_retry'});
         await audit(a.userId,undefined,'equipment_rental.handover_serials','equipment_rental_booking',bookingId,{shopId:shop.id,itemCount:normalized.length,serialCount:normalized.reduce((n,x)=>n+x.serials.length,0)}).catch(()=>{});
         return sendJson(res,200,{ok:true,items:q.rows[0]?.handover_serials||normalized,recordedAt:q.rows[0]?.handover_serials_recorded_at||null});
     }
 
+    const rentalExtensionRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/extension$/i);
+    if(rentalExtensionRoute&&['GET','POST'].includes(req.method)){
+        const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});
+        if(!shop||shop.deleted_at)return sendJson(res,401,{error:'rental_auth_required'});
+        await ensureEquipmentRentalV727Schema();
+        await ensureEquipmentRentalV628Schema();
+        await ensureEquipmentRentalAssetTrackingSchema();
+        const bookingId=rentalExtensionRoute[1];
+        if(req.method==='GET'){
+            const preview=await equipmentRentalExtensionPreview(pool,{shopId:shop.id,bookingId,endDate:url.searchParams.get('endDate')});
+            if(preview.error)return sendJson(res,409,preview);
+            return sendJson(res,200,{startDate:preview.startDate,endDate:preview.endDate,rentalDays:preview.rentalDays,items:preview.items});
+        }
+        const body=await bodyJson(req,50000),c=await pool.connect();
+        let result;
+        try{
+            await c.query('BEGIN');
+            result=await equipmentRentalExtendBooking(c,{shopId:shop.id,bookingId,actorId:a.userId,endDate:body.endDate,itemIds:body.itemIds,requestId:body.requestId});
+            await c.query(result.error?'ROLLBACK':'COMMIT');
+        }catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
+        return sendJson(res,result.error?409:200,result);
+    }
     const rentalBookingAssetsRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/assets$/i);
     if(req.method==='GET'&&rentalBookingAssetsRoute){
         const shop=await equipmentRentalHandoverShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentRentalAssetTrackingSchema();
@@ -15443,7 +15548,7 @@ async function api(req, res, url) {
         const aq=await pool.query(`SELECT ba.item_id,ba.asset_id,ba.returned_at,a.system_code,a.serial_number,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title FROM equipment_rental_booking_assets ba JOIN equipment_rental_assets a ON a.id=ba.asset_id JOIN equipment_rental_items i ON i.id=ba.item_id WHERE ba.booking_id=$1 ORDER BY item_title,a.system_code`,[bookingId]);
         const byItem=new Map();for(const x of aq.rows){const k=String(x.item_id);if(!byItem.has(k))byItem.set(k,[]);byItem.get(k).push(x)}
         const booking=bq.rows[0],supply=booking.status==='reserved'?await equipmentRentalSupplyPool(pool,shop.id,booking):{sources:[]};
-        return sendJson(res,200,{bookingId,status:String(booking.status||''),items:iq.rows.map(x=>{
+        return sendJson(res,200,{bookingId,status:String(booking.status||''),items:equipmentRentalOperationalItems(iq.rows,booking).map(x=>{
           const recorded=(booking.handover_serials||[]).find(row=>String(row.itemId)===String(x.item_id)),assets=byItem.get(String(x.item_id))||[];
           const handed=['picked_up','returned'].includes(booking.status),external=handed?Number(recorded?.externalSupplyQty??Math.max(0,Number(x.quantity)-assets.length)):Number(x.external_supply_qty||0);
           return {itemId:String(x.item_id),title:String(x.item_title||'تجهیز'),quantity:Number(x.quantity||0),externalSupplyQty:external,pendingSupplyQty:handed?0:Number(x.pending_supply_qty||0),assets,supplyOptions:supply.sources.filter(row=>row.itemId===String(x.item_id)&&row.availableQuantity>0)};
@@ -15578,6 +15683,7 @@ async function api(req, res, url) {
                 await c.query('BEGIN');
                 const bq=await c.query(`SELECT * FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 FOR UPDATE`,[bookingId,shop.id]); beforeRow=bq.rows[0];
                 if(!beforeRow){await c.query('ROLLBACK');return sendJson(res,404,{error:'rental_booking_not_found'});}
+                if((beforeRow.handover_serials||[]).some(x=>x.extendedToBookingId)){await c.query('ROLLBACK');return sendJson(res,409,{error:'extended_booking_not_cancellable'});}
                 if(!allowedTransitions.includes(String(beforeRow.status))){await c.query('ROLLBACK');return sendJson(res,409,{error:'invalid_rental_transition'});}
                 const shortageQ=await c.query(`SELECT s.id,s.shortage_qty,s.status,s.resolved_at,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title
                   FROM equipment_rental_booking_shortages s LEFT JOIN equipment_rental_items i ON i.id=s.item_id
@@ -15635,6 +15741,7 @@ async function api(req, res, url) {
                 await equipmentRentalRecordBookingCharge(c,bookingId,a.userId);
                 await ensureEquipmentRentalReturnShortageSchema(c); await ensureEquipmentRentalAssetTrackingSchema(c);
                 const expectedQ=await c.query(`SELECT bi.item_id,bi.quantity FROM equipment_rental_booking_items bi WHERE bi.booking_id=$1`,[bookingId]);
+                expectedQ.rows=equipmentRentalOperationalItems(expectedQ.rows,beforeRow);
                 const returnedAssetCodes=(Array.isArray(b.assetCodes)?b.assetCodes:[]).map(x=>String(x||'').trim()).map(x=>x.startsWith('PB|')?(x.split('|')[1]||''):x.replace(/^PB-/i,'')).filter(Boolean);
                 let missingAssetCodes=new Map();
                 const explicitReturnChecklist=b.returnChecklist===true;
@@ -15656,7 +15763,7 @@ async function api(req, res, url) {
                     const assignedQ=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code
                       FROM equipment_rental_booking_assets ba
                       JOIN equipment_rental_assets a ON a.id=ba.asset_id AND a.shop_id=ba.shop_id
-                      WHERE ba.booking_id=$1 AND ba.shop_id=$2 FOR UPDATE OF ba`,[bookingId,shop.id]);
+                      WHERE ba.booking_id=$1 AND ba.shop_id=$2 AND ba.item_id=ANY($3::uuid[]) FOR UPDATE OF ba`,[bookingId,shop.id,expectedQ.rows.map(x=>x.item_id)]);
                     const assigned=assignedQ.rows;
                     const byCode=new Map(assigned.map(row=>[String(row.system_code),row]));
                     const returnedSet=new Set(returnedAssetCodes);
@@ -15681,7 +15788,7 @@ async function api(req, res, url) {
                             await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now())
                               WHERE booking_id=$1 AND shop_id=$2 AND asset_id=$3`,[bookingId,shop.id,asset.asset_id]);
                     }
-                }else if(returnedAssetCodes.length){const assigned=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code,a.serial_number FROM equipment_rental_booking_assets ba JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.booking_id=$1`,[bookingId]);const returnedSet=new Set(returnedAssetCodes);for(const code of returnedSet)if(!assigned.rows.some(x=>String(x.system_code)===code||String(x.serial_number||'')===code)){await c.query('ROLLBACK');return sendJson(res,400,{error:'asset_not_in_booking',code});}for(const x of assigned.rows){const back=returnedSet.has(String(x.system_code))||returnedSet.has(String(x.serial_number||''));if(back)await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now()) WHERE booking_id=$1 AND asset_id=$2`,[bookingId,x.asset_id]);else{const k=String(x.item_id);if(!missingAssetCodes.has(k))missingAssetCodes.set(k,[]);missingAssetCodes.get(k).push(String(x.system_code));}}}
+                }else if(returnedAssetCodes.length){const assigned=await c.query(`SELECT ba.asset_id,ba.item_id,a.system_code,a.serial_number FROM equipment_rental_booking_assets ba JOIN equipment_rental_assets a ON a.id=ba.asset_id WHERE ba.booking_id=$1 AND ba.item_id=ANY($2::uuid[])`,[bookingId,expectedQ.rows.map(x=>x.item_id)]);const returnedSet=new Set(returnedAssetCodes);for(const code of returnedSet)if(!assigned.rows.some(x=>String(x.system_code)===code||String(x.serial_number||'')===code)){await c.query('ROLLBACK');return sendJson(res,400,{error:'asset_not_in_booking',code});}for(const x of assigned.rows){const back=returnedSet.has(String(x.system_code))||returnedSet.has(String(x.serial_number||''));if(back)await c.query(`UPDATE equipment_rental_booking_assets SET returned_at=COALESCE(returned_at,now()) WHERE booking_id=$1 AND asset_id=$2`,[bookingId,x.asset_id]);else{const k=String(x.item_id);if(!missingAssetCodes.has(k))missingAssetCodes.set(k,[]);missingAssetCodes.get(k).push(String(x.system_code));}}}
                 const submitted=explicitReturnChecklist?b.returnItems:(returnedAssetCodes.length?expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Math.max(0,Number(x.quantity||0)-(missingAssetCodes.get(String(x.item_id))||[]).length)})):(Array.isArray(b.returnItems)?b.returnItems:expectedQ.rows.map(x=>({itemId:x.item_id,returnedQty:Number(x.quantity||0)}))));
                 const returnedMap=new Map(submitted.map(x=>[String(x.itemId||''),Math.max(0,Number(x.returnedQty||0))]));
                 for(const row of expectedQ.rows){const expected=Math.max(1,Number(row.quantity||1)),got=Math.min(expected,Math.max(0,Number(returnedMap.get(String(row.item_id))??expected))),missing=expected-got;if(missing>0){await c.query(`INSERT INTO equipment_rental_return_shortages(id,shop_id,booking_id,item_id,expected_qty,returned_qty,missing_qty,status,missing_asset_codes,detected_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,'missing',$8::jsonb,now(),now()) ON CONFLICT(booking_id,item_id) DO UPDATE SET expected_qty=EXCLUDED.expected_qty,returned_qty=EXCLUDED.returned_qty,missing_qty=EXCLUDED.missing_qty,missing_asset_codes=EXCLUDED.missing_asset_codes,status='missing',resolved_at=NULL,resolved_by=NULL,resolution_note=NULL,detected_at=now(),updated_at=now()`,[crypto.randomUUID(),shop.id,bookingId,row.item_id,expected,got,missing,JSON.stringify(missingAssetCodes.get(String(row.item_id))||[])]);}else await c.query(`DELETE FROM equipment_rental_return_shortages WHERE booking_id=$1 AND item_id=$2 AND status='missing'`,[bookingId,row.item_id]);}

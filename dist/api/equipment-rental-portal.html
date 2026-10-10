@@ -8677,6 +8677,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
        '</span><b>'+faN(x.qty)+' عدد</b></li>';
    }).join('')+'</ul>':'<p>جزئیات تجهیزات ثبت نشده است.</p>';
    const actions=[];
+   if(String(b.status||'')==='picked_up')actions.push('<button type="button" data-pb-r71-extend>تمدید آفیش</button>');
    if(proforma&&!staff&&['pending_approval','payment_pending','reserved'].includes(String(b.status||''))&&typeof bookingStatus==='function')actions.push('<button type="button" data-pb-r71-cancel>حذف آفیش</button>');
    if(canPrint&&(typeof window.pbR85PrintCommitment==='function'||typeof window.pb916PrintCommitment==='function'))actions.push('<button type="button" data-pb-r71-print>چاپ تعهدنامه</button>');
    if(canPrint&&typeof window.pb100rPrintInvoice==='function')actions.push('<button type="button" data-pb-r71-invoice>فاکتور</button>');
@@ -8684,6 +8685,7 @@ html body.pbR100F64ManagerDatesPinned #pbR100F64ManagerDateHost .pb100rManagerDa
    q('.pbR100F71Body',m).innerHTML=(proforma?'<p role="note">این پیش‌فاکتور بر اساس اطلاعات فعلی آفیش است؛ هنوز فاکتور نهایی صادر نشده است.</p>':'')+'<div class="pbR100F71Facts">'+info.join('')+'</div><div><strong style="font-size:12px;color:#344054">فهرست کامل تجهیزات</strong>'+list+'</div><div class="pbR100F71Actions">'+actions.join('')+'</div>';
    q('[data-pb-r71-print]',m)?.addEventListener('click',()=>{(window.pbR85PrintCommitment||window.pb916PrintCommitment)?.(id)});
    q('[data-pb-r71-invoice]',m)?.addEventListener('click',()=>window.pb100rPrintInvoice?.(id));
+   q('[data-pb-r71-extend]',m)?.addEventListener('click',()=>window.pbRentalOpenExtension?.(id));
    q('[data-pb-r71-cancel]',m)?.addEventListener('click',async event=>{
      const button=event.currentTarget;if(button.disabled)return;
      const current=findBooking(id);if(!current||!['pending_approval','payment_pending','reserved'].includes(String(current.status||'')))return;
@@ -10226,4 +10228,5 @@ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display
 </script>
 <script defer src="/photobridge-r1057-daily-rental-availability.js?v=r1057"></script>
 <script defer src="/photobridge-r1058-handover-holders.js?v=r1058"></script>
+<script defer src="/photobridge-r1059-office-extension.js?v=r1059"></script>
 </body></html>

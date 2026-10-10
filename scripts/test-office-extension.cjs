@@ -1,0 +1,80 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const {PGlite}=require(process.env.PHOTOBRIDGE_TEST_PGLITE_MODULE||'@electric-sql/pglite');
+const source=fs.readFileSync(path.join(__dirname,'../dist/api/server.js'),'utf8');
+const uuid=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
+const shop=uuid(1),camera=uuid(2),lens=uuid(3),old=uuid(4),other=uuid(5),photographer=uuid(6);
+const slice=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
+test('PostgreSQL: contiguous subset extension, immutable old invoice, transfer, retry and rollback',async()=>{
+ const db=new PGlite();
+ try{
+  await db.exec(`CREATE TABLE equipment_rental_shops(id uuid PRIMARY KEY,name text,active boolean,rental_enabled boolean);
+   CREATE TABLE equipment_rental_items(id uuid PRIMARY KEY,shop_id uuid,title text,category text,brand text,model text,daily_price integer,deposit_amount integer,stock_total integer,active boolean,deleted_at timestamp,sku text);
+   CREATE TABLE equipment_rental_bookings(id uuid PRIMARY KEY,shop_id uuid,photographer_id uuid,customer_name text,customer_mobile text,rental_start date,rental_end date,status text,total_amount bigint,gross_amount bigint,discount_percent numeric,discount_amount bigint,discount_reason text,settlement_mode text,payment_status text,deposit_amount bigint,notes text,created_by uuid,handover_serials jsonb DEFAULT '[]',handover_serials_recorded_at timestamp,handover_serials_recorded_by uuid,commitment_generated_at timestamp,updated_at timestamp);
+   CREATE TABLE equipment_rental_booking_items(id uuid,booking_id uuid,item_id uuid,quantity integer,rental_days integer,daily_price bigint,deposit_amount bigint,subtotal bigint);
+   CREATE TABLE equipment_rental_accounting_entries(shop_id uuid,photographer_id uuid,booking_id uuid,entry_type text,direction text,amount bigint,description text,entry_date date,created_by uuid,UNIQUE(booking_id,entry_type));
+   CREATE TABLE equipment_rental_booking_shortages(id uuid PRIMARY KEY,shop_id uuid,booking_id uuid,item_id uuid,shortage_qty integer,rental_start date,rental_end date,status text,resolved_at timestamp,resolved_by uuid,booking_cancelled_at timestamp,updated_at timestamp,UNIQUE(booking_id,item_id));
+   CREATE TABLE equipment_rental_booking_assets(id uuid PRIMARY KEY,shop_id uuid,booking_id uuid,item_id uuid,asset_id uuid,handed_out_at timestamp,returned_at timestamp,UNIQUE(booking_id,asset_id));
+   CREATE TABLE equipment_rental_assets(id uuid PRIMARY KEY,shop_id uuid,system_code text,serial_number text);
+   CREATE TABLE equipment_rental_return_shortages(id uuid PRIMARY KEY,shop_id uuid,booking_id uuid,item_id uuid,expected_qty integer,returned_qty integer,missing_qty integer,status text,missing_asset_codes jsonb,detected_at timestamp,updated_at timestamp,resolved_at timestamp,resolved_by uuid,resolution_note text,UNIQUE(booking_id,item_id));
+   ALTER TABLE equipment_rental_bookings ADD COLUMN returned_at timestamp, ADD COLUMN return_kind text, ADD COLUMN invoice_adjustment_amount bigint, ADD COLUMN invoice_adjustment_note text;
+   CREATE TABLE audit_log(id bigserial PRIMARY KEY,actor_id uuid,action text,entity_type text,entity_id text,data jsonb);
+   CREATE SEQUENCE equipment_rental_invoice_number_seq;
+   CREATE TABLE equipment_rental_invoices(id uuid DEFAULT gen_random_uuid(),invoice_number text,booking_id uuid UNIQUE,shop_id uuid,photographer_id uuid,total_amount bigint,deposit_amount bigint,issued_at timestamp,created_by uuid);
+   INSERT INTO equipment_rental_shops VALUES('${shop}','Seven',true,true);
+   INSERT INTO equipment_rental_items VALUES('${camera}','${shop}','Camera',null,null,null,100,50,1,true,null,null),('${lens}','${shop}','Lens',null,null,null,200,60,1,true,null,null);
+   INSERT INTO equipment_rental_bookings(id,shop_id,photographer_id,customer_name,rental_start,rental_end,status,total_amount,deposit_amount) VALUES('${old}','${shop}','${photographer}','Customer','2030-10-10','2030-10-12','picked_up',900,110),('${other}','${shop}',null,'Other','2030-10-14','2030-10-14','reserved',200,0);
+   INSERT INTO equipment_rental_booking_items VALUES('${uuid(10)}','${old}','${camera}',1,3,100,50,300),('${uuid(11)}','${old}','${lens}',1,3,200,60,600),('${uuid(12)}','${other}','${lens}',1,1,200,0,200);
+   INSERT INTO equipment_rental_booking_assets VALUES('${uuid(20)}','${shop}','${old}','${camera}','${uuid(30)}',now(),null),('${uuid(21)}','${shop}','${old}','${lens}','${uuid(31)}',now(),null);`);
+  await db.query("INSERT INTO equipment_rental_assets VALUES($1,$2,'CAM','serial'),($3,$2,'LENS','lens serial')",[uuid(30),shop,uuid(31)]);
+  await db.query('UPDATE equipment_rental_bookings SET handover_serials=$2::jsonb WHERE id=$1',[old,JSON.stringify([camera,lens].map(itemId=>({itemId,quantity:1,serials:['serial'],externalSupplyQty:0,externalSupplySources:[]})))]);
+  const ctx=vm.createContext({crypto,console,Map,Set,Date,Math,Number,JSON,ensureEquipmentRentalV727Schema:async()=>{},ensureEquipmentRentalV628Schema:async()=>{},ensureEquipmentRentalV620Schema:async()=>{},equipmentRentalTodayTehran:()=> '2030-10-10',equipmentRentalDate:v=>v instanceof Date?v.toISOString().slice(0,10):v?String(v).slice(0,10):null,equipmentRentalDays:(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/86400000)+1,equipmentRentalShopSubscriptionActive:()=>true,equipmentRentalApplyDiscount:async(_,v)=>({...v,grossAmount:v.totalAmount,totalAmount:v.totalAmount*.9,discountPercent:10,discountAmount:v.totalAmount*.1}),equipmentRentalMembershipTerms:async()=>({settlementMode:'ledger'}),equipmentRentalEnsurePhotographerLink:async()=>{}});
+  vm.runInContext(slice('function equipmentRentalItemsInput(','async function equipmentRentalOverview(')+slice('async function equipmentRentalCreateBooking(','function safeFileName(')+slice('async function equipmentRentalEnsureInvoice(','function equipmentRentalMoney(')+slice('async function equipmentRentalRecordBookingCharge(','async function equipmentRentalRecordBookingReversal('),ctx);
+  await ctx.equipmentRentalEnsureInvoice(db,old);
+  const oldInvoice=(await db.query('SELECT * FROM equipment_rental_invoices WHERE booking_id=$1',[old])).rows[0];
+  const preview=days=>ctx.equipmentRentalExtensionPreview(db,{shopId:shop,bookingId:old,endDate:days});
+  let p=await preview('2030-10-13');assert.equal(p.startDate,'2030-10-13');assert(p.items.every(x=>x.extendable));
+  p=await preview('2030-10-15');assert.equal(p.items.find(x=>x.itemId===lens).extendable,false);assert.equal(p.items.find(x=>x.itemId===camera).extendable,true);
+  assert.equal((await preview('2030-10-12')).error,'invalid_extension_dates');assert.equal((await preview('2031-10-15')).error,'invalid_extension_dates');
+  const args={shopId:shop,bookingId:old,actorId:null,endDate:'2030-10-15',itemIds:[camera],requestId:uuid(50)};
+  const extend=async params=>{await db.exec('BEGIN');try{const r=await ctx.equipmentRentalExtendBooking(db,params);await db.exec(r.error?'ROLLBACK':'COMMIT');return r}catch(e){await db.exec('ROLLBACK');throw e}};
+  assert.equal((await extend({...args,itemIds:[lens]})).error,'extension_equipment_unavailable');
+  // Invoice failure rolls back the new booking, assignments and original metadata.
+  const invoiceFn=ctx.equipmentRentalEnsureInvoice;ctx.equipmentRentalEnsureInvoice=async()=>{throw new Error('invoice failure')};
+  await assert.rejects(extend(args),/invoice failure/);ctx.equipmentRentalEnsureInvoice=invoiceFn;
+  assert.equal((await db.query('SELECT count(*)::int n FROM equipment_rental_bookings')).rows[0].n,2);
+  assert.equal((await db.query('SELECT count(*)::int n FROM equipment_rental_booking_assets WHERE returned_at IS NULL')).rows[0].n,2);
+  const result=await extend(args);assert.equal(result.ok,true);assert.equal(result.totalAmount,270);assert.equal(result.invoice.deposit_amount,0);
+  assert.deepEqual(JSON.parse(JSON.stringify(await extend(args))),JSON.parse(JSON.stringify(result)));
+  assert.equal((await extend({...args,endDate:'2030-10-16'})).error,'extension_request_reused');
+  assert.equal((await extend({...args,requestId:uuid(51)})).error,'extension_equipment_unavailable');
+  const book=(await db.query('SELECT * FROM equipment_rental_bookings WHERE id=$1',[result.id])).rows[0];assert.equal(ctx.equipmentRentalDate(book.rental_start),'2030-10-13');assert.equal(ctx.equipmentRentalDate(book.rental_end),'2030-10-15');assert.equal(book.status,'picked_up');
+  const original=(await db.query('SELECT * FROM equipment_rental_bookings WHERE id=$1',[old])).rows[0];assert.equal(original.status,'picked_up');assert.equal(ctx.equipmentRentalDate(original.rental_end),'2030-10-12');assert.equal(original.total_amount,900);
+  assert.deepEqual((await db.query('SELECT * FROM equipment_rental_invoices WHERE booking_id=$1',[old])).rows[0],oldInvoice);
+  assert.deepEqual(ctx.equipmentRentalOperationalItems([{item_id:camera},{item_id:lens}],original).map(x=>x.item_id),[lens]);
+  assert.deepEqual((await db.query('SELECT booking_id,item_id FROM equipment_rental_booking_assets WHERE returned_at IS NULL ORDER BY item_id')).rows,[{booking_id:result.id,item_id:camera},{booking_id:old,item_id:lens}]);
+  assert.equal((await db.query('SELECT amount FROM equipment_rental_accounting_entries WHERE booking_id=$1',[result.id])).rows[0].amount,270);
+  // Execute the actual return handler: the original receives ONLY its remaining lens.
+  Object.assign(ctx,{b:{returnChecklist:true,assetCodes:['LENS'],returnItems:[{itemId:lens,returnedQty:1}]},bookingId:old,shop:{id:shop},a:{userId:null},pool:{connect:async()=>({query:db.query.bind(db),release(){}})},ensureEquipmentRentalReturnShortageSchema:async()=>{},ensureEquipmentRentalAssetTrackingSchema:async()=>{},audit:async()=>{},publishCustomerEventEverywhere(){},res:{},sendJson:(_,code,body)=>({code,body})});
+  const returnStart=source.indexOf("        if(status==='returned'){");
+  const returned=await vm.runInContext('(async()=>{'+source.slice(returnStart,source.indexOf('        const before = await pool.query',returnStart))+'})()',vm.createContext({...ctx,status:'returned'}));
+  assert.equal(returned.code,200);assert.equal((await db.query('SELECT count(*)::int n FROM equipment_rental_return_shortages')).rows[0].n,0);
+  assert.equal((await db.query('SELECT status FROM equipment_rental_bookings WHERE id=$1',[old])).rows[0].status,'returned');
+  assert.deepEqual((await db.query('SELECT booking_id,item_id FROM equipment_rental_booking_assets WHERE returned_at IS NULL')).rows,[{booking_id:result.id,item_id:camera}]);
+  // Closing original possession early must not free the camera before the extension starts.
+  const priorDays=await ctx.equipmentRentalAvailability(db,{shopId:shop,startDate:'2030-10-11',endDate:'2030-10-12',items:[{itemId:camera,quantity:1}]});assert.equal(priorDays.available,false);
+  assert.equal((await ctx.equipmentRentalExtensionPreview(db,{shopId:uuid(99),bookingId:result.id,endDate:'2030-10-16'})).error,'rental_booking_not_found');
+  const next=await extend({...args,bookingId:result.id,endDate:'2030-10-16',requestId:uuid(53)});assert.equal(next.startDate,'2030-10-16');
+  assert.equal((await db.query('SELECT status FROM equipment_rental_bookings WHERE id=$1',[result.id])).rows[0].status,'returned');
+  // Held external equipment can extend only through confirmed supplier coverage.
+  const supply=uuid(70);
+  await db.query('UPDATE equipment_rental_booking_assets SET returned_at=now() WHERE booking_id=$1',[next.id]);
+  await db.query('UPDATE equipment_rental_bookings SET handover_serials=$2::jsonb WHERE id=$1',[next.id,JSON.stringify([{itemId:camera,quantity:1,serials:['supplier text'],externalSupplyQty:1,externalSupplySources:[{shortageId:supply,code:'supplier text'}]}])]);
+  await db.query("INSERT INTO equipment_rental_booking_shortages(id,shop_id,booking_id,item_id,shortage_qty,rental_start,rental_end,status,resolved_at) VALUES($1,$2,$3,$4,1,'2030-10-17','2030-10-19','provided',now())",[supply,shop,next.id,camera]);
+  await db.query("INSERT INTO audit_log(action,entity_type,entity_id,data) VALUES('equipment_rental.shortage_dates','equipment_rental_booking_shortage',$1,$2::jsonb)",[supply,JSON.stringify({days:[{date:'2030-10-17',quantity:1},{date:'2030-10-19',quantity:1}]})]);
+  const extPreview=endDate=>ctx.equipmentRentalExtensionPreview(db,{shopId:shop,bookingId:next.id,endDate});
+  assert.equal((await extPreview('2030-10-17')).items[0].extendable,true);
+  assert.equal((await extPreview('2030-10-19')).items[0].extensionReason,'extension_supply_dates_unavailable');
+  const external=await extend({...args,bookingId:next.id,endDate:'2030-10-17',requestId:uuid(71)});assert.equal(external.ok,true);
+  const externalBooking=(await db.query('SELECT handover_serials FROM equipment_rental_bookings WHERE id=$1',[external.id])).rows[0];assert.equal(externalBooking.handover_serials[0].externalSupplySources[0].shortageId,supply);
+ }finally{await db.close()}
+});

@@ -73,21 +73,28 @@
    const ident=key(b);
    try{
     if(!currentShop||!isLeader()){resolve(false);return}
-    const res=await fetch('/api/rental/bookings/'+encodeURIComponent(b.id)+'/commitment',{credentials:'include',cache:'no-store'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const html=await res.text();
-    if(!html||!/<!doctype|<html/i.test(html))throw new Error('پاسخ تعهدنامه معتبر نیست');
-    // Only a trusted native desktop printing bridge can dispatch a silent job
-    // to the Windows print spooler. Browser print() does not guarantee that.
+    // R1094: Native print MUST come first. The Windows localhost /api proxy parses
+    // JSON, not the server's printable HTML. Fetching HTML here previously failed
+    // with HTTP 500 before the native bridge was even called.
     if(typeof window.__PB_DESKTOP_PRINT__==='function'){
      pendingPrint=true;paint();
      try{
-      const response=await window.__PB_DESKTOP_PRINT__({kind:'rental-commitment',bookingId:String(b.id),html});
-      if(!response||response.ok!==true)throw Error(String(response?.error||'native_print_failed'));
+      // Pull the latest mobile handover first: local SQLite may be up to 30s
+      // behind the server and the native printer verifies confirmed status.
+      const syncResponse=await fetch('/desktop/sync',{method:'POST',credentials:'include',cache:'no-store'});
+      if(!syncResponse.ok){const e=await syncResponse.json().catch(()=>({}));throw Error(String(e?.error||'desktop_sync_unavailable'))}
+      const response=await window.__PB_DESKTOP_PRINT__({kind:'rental-commitment',bookingId:String(b.id)});
+      if(!response||response.ok!==true)throw Error(String(response?.message||response?.error||'native_print_failed'));
       const ledger=persisted();ledger[ident]=new Date().toISOString();writeLedger(ledger);
       pendingPrint=false;paint();resolve(true);return;
      }catch(e){pendingPrint=false;notice('چاپگر ویندوز فرمان را نپذیرفت: '+String(e?.message||e));resolve(false);return}
     }
+    // Browser-only fallback: fetch and render the real document when the native
+    // bridge is absent. This path may open the system print dialog.
+    const res=await fetch('/api/rental/bookings/'+encodeURIComponent(b.id)+'/commitment',{credentials:'include',cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const html=await res.text();
+    if(!html||!/<!doctype|<html/i.test(html))throw new Error('پاسخ تعهدنامه معتبر نیست');
     const frame=document.createElement('iframe');frame.title='تعهدنامه '+String(b.photographer_name||b.customer_name||b.id);
     frame.setAttribute('aria-hidden','true');
     frame.style.cssText='position:fixed;top:0;left:-10000px;width:794px;height:1123px;border:0;opacity:0;pointer-events:none;';
@@ -130,6 +137,16 @@
    // Avoid bulk-printing older handovers the first time a machine is enrolled.
    const baseline={};
    for(const b of stamped)baseline[key(b)]='baseline';
+   // When a shop opens Windows immediately after a mobile handover, do not
+   // silently discard that just-confirmed print. Older historic bookings
+   // stay baselined to avoid a bulk reprint on first install.
+   const now=Date.now();
+   for(const b of stamped){
+    const stamp=Date.parse(handoverTime(b)),age=now-stamp;
+    if(Number.isFinite(age)&&age>=0&&age<=120000&&!pending.some(x=>key(x)===key(b))){
+     delete baseline[key(b)];pending.push(b);
+    }
+   }
    writeLedger(baseline);
    return;
   }
@@ -152,10 +169,13 @@
   if(active||!enabled||mobile())return;
   active=true;
   try{
-   const response=await fetch('/api/rental/overview',{credentials:'include',cache:'no-store'});
-   if(!response.ok)return;
+   // Native desktop reads the authoritative shop-scoped handover feed from
+   // the server. The local overview is a stale SQLite snapshot, not a print queue.
+   const nativeDesktop=typeof window.__PB_DESKTOP_PRINT__==='function';
+   const response=await fetch(nativeDesktop?'/api/rental/desktop/print-handovers':'/api/rental/overview',{credentials:'include',cache:'no-store'});
+   if(!response.ok){if(nativeDesktop)notice('دریافت تحویل‌های جدید از سرور ناموفق بود: HTTP '+response.status);return}
    const overview=await response.json();
-   const shopId=String(overview?.shop?.id||'');
+   const shopId=String(overview?.shop?.id||overview?.shopId||'');
    if(!shopId||!Array.isArray(overview.bookings))return;
    if(shopId!==currentShop){pending=[];currentShop=shopId;lastOverview=null}
    lastOverview=overview;

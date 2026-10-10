@@ -10640,6 +10640,11 @@ async function equipmentRentalEditDraft(db,shopId,bookingId) {
     const revision=crypto.createHash('sha256').update(JSON.stringify([booking.status,booking.payment_status,booking.rental_start,booking.rental_end,booking.total_amount,booking.updated_at,items])).digest('hex');
     return {booking,items,revision};
 }
+async function equipmentRentalEditAvailability(db,{shopId,bookingId,startDate,endDate,items}) {
+    const draft=await equipmentRentalEditDraft(db,shopId,bookingId);
+    if(draft.error)return draft;
+    return equipmentRentalAvailability(db,{shopId,startDate,endDate,items,excludeBookingId:bookingId});
+}
 async function equipmentRentalEditBooking(db,{shopId,bookingId,actorId,startDate,endDate,items,revision,allowShortage=false}) {
     await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`equipment-rental:${shopId}`]);
     await db.query('SELECT id FROM equipment_rental_bookings WHERE id=$1 AND shop_id=$2 FOR UPDATE',[bookingId,shopId]);
@@ -15557,12 +15562,17 @@ async function api(req, res, url) {
         return sendJson(res,200,{ok:true,items:q.rows[0]?.handover_serials||normalized,recordedAt:q.rows[0]?.handover_serials_recorded_at||null});
     }
 
-    const rentalEditRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/edit$/i);
-    if(rentalEditRoute&&['GET','PUT'].includes(req.method)){
+    const rentalEditRoute=url.pathname.match(/^\/api\/rental\/bookings\/([0-9a-f-]{36})\/edit(?:\/(availability))?$/i);
+    if(rentalEditRoute&&(rentalEditRoute[2]?req.method==='POST':['GET','PUT'].includes(req.method))){
         const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});
         if(!shop||shop.deleted_at)return sendJson(res,401,{error:'rental_auth_required'});
         await ensureEquipmentRentalV727Schema();await ensureEquipmentRentalV628Schema();
         const bookingId=rentalEditRoute[1];
+        if(rentalEditRoute[2]){
+          const body=await bodyJson(req,50000);
+          const result=await equipmentRentalEditAvailability(pool,{shopId:shop.id,bookingId,startDate:body.startDate,endDate:body.endDate,items:body.items});
+          return sendJson(res,result.error?409:200,result);
+        }
         if(req.method==='GET'){
           const draft=await equipmentRentalEditDraft(pool,shop.id,bookingId);
           if(draft.error)return sendJson(res,409,draft);

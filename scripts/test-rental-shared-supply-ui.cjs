@@ -18,44 +18,38 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    await page.addScriptTag({content:finance});await page.addScriptTag({content:runtime});
    await page.addScriptTag({path:path.join(root,'dist/web/photobridge-r1058-handover-holders.js')});
    assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual A/);assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual B/);assert.doesNotMatch(await page.locator('.pbR1058Holders').textContent(),/Planned A/);
-   await page.evaluate(()=>{void bookingStatus('b','picked_up')});
-   await page.waitForSelector('.pbR1068SourceTrigger');await page.locator('.pbR1068SourceTrigger').click();assert.deepEqual(await page.locator('.pbR1063SourceOptions button b').allTextContents(),['تجهیز خود فروشگاه','تجهیز تأمین‌شده']);assert.equal(await page.locator('.pbR1063SourceOptions small').count(),0);
-   const mobile=viewport.width<700,panel=page.locator('.pbR1068SourcePanel');
-   assert.equal(await panel.getAttribute('role'),mobile?'dialog':'presentation');
-   assert.equal(await panel.getAttribute('aria-modal'),mobile?'true':null);
-   assert.equal(await page.locator('.pbR1068SourcePicker').evaluate(x=>x.parentElement===document.body),true);
-   const bounds=await panel.boundingBox();assert(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=viewport.width&&bounds.y+bounds.height<=viewport.height);
-   if(mobile)assert(Math.abs(bounds.x+bounds.width/2-viewport.width/2)<2);
-   assert.equal(await page.locator('.pbR1068SourceTrigger').getAttribute('aria-expanded'),'true');
-   const scrollBefore=await page.evaluate(()=>document.querySelector('.pbR85ScanCard').scrollTop);
-   await page.keyboard.press('Escape');assert.equal(await page.locator('.pbR1068SourcePicker').count(),0);assert.equal(await page.locator('.pbR85ScanBack').count(),1);
-   assert.equal(await page.locator('.pbR1068SourceTrigger').getAttribute('aria-expanded'),'false');
-   assert.equal(await page.evaluate(()=>document.activeElement.matches('.pbR1068SourceTrigger')),true);
-   assert.equal(await page.evaluate(()=>document.querySelector('.pbR85ScanCard').scrollTop),scrollBefore);
-   await page.locator('.pbR1068SourceTrigger').click();await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.dataset.sourceKind),'external');
-   if(mobile){await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.matches('[data-source-close]')),true)}
-
+   const mobile=viewport.width<=700;
+   const choices=index=>mobile?page.locator('.pbR1063SourceOptions'):page.locator('[data-slot="'+index+'"] .pbR1069SourceChoices');
+   const option=(index,kind)=>choices(index).locator('[data-source-kind="'+kind+'"]');
+   const open=async(index=0)=>{if(mobile){if(await page.locator('.pbR1068SourcePicker').count())await page.keyboard.press('Escape');await page.locator('[data-slot-source-open="'+index+'"]').click()}else{assert.equal(await page.locator('.pbR1068SourceTrigger').count(),0);assert.equal(await page.locator('.pbR1068SourcePicker').count(),0);assert.equal(await choices(index).getAttribute('role'),'radiogroup')}assert.equal(await choices(index).locator('button').count(),2)};
+   const choose=async(index,kind)=>{await open(index);await option(index,kind).click()};
+   await page.evaluate(()=>{void bookingStatus('b','picked_up')});await page.waitForSelector('[data-slot="0"]');await open();
+   assert.deepEqual(await choices(0).locator('button b').allTextContents(),['تجهیز خود فروشگاه','تجهیز تأمین‌شده']);
    assert.equal(await page.evaluate(async()=>{const loaded=await document.fonts.load('500 17px PhotoBridgeHandover','تجهیز');return loaded.length===1&&document.fonts.check('500 17px PhotoBridgeHandover')}),true);
-   const menuFont=await page.locator('[data-source-kind=external] b').evaluate(x=>{const css=getComputedStyle(x);return {family:css.fontFamily,size:parseFloat(css.fontSize),weight:css.fontWeight}});assert.match(menuFont.family,/PhotoBridgeHandover/);assert.equal(menuFont.size,viewport.width<700?17:16);assert.equal(menuFont.weight,'500');const optionBox=await page.locator('[data-source-kind=external]').boundingBox();assert(optionBox.width<=viewport.width&&optionBox.height>=48);await page.locator('[data-source-kind=external]').click();
-   assert.equal(await page.locator('[data-done]').isDisabled(),true);
-   await page.locator('[data-supplied-toggle]').check();await page.locator('[data-slot-input]').fill('arbitrary identifier');
-   await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===1);
+   const menuFont=await option(0,'external').locator('b').evaluate(x=>{const css=getComputedStyle(x);return {family:css.fontFamily,size:parseFloat(css.fontSize),weight:css.fontWeight}});assert.match(menuFont.family,/PhotoBridgeHandover/);assert.equal(menuFont.size,mobile?17:16);assert.equal(menuFont.weight,'500');
+   const optionBox=await option(0,'external').boundingBox();assert(optionBox.width<=viewport.width&&optionBox.height>=48);
+   if(mobile){
+    const panel=page.locator('.pbR1068SourcePanel');assert.equal(await panel.getAttribute('role'),'dialog');assert.equal(await panel.getAttribute('aria-modal'),'true');assert.equal(await page.locator('.pbR1068SourcePicker').evaluate(x=>x.parentElement===document.body),true);
+    const bounds=await panel.boundingBox();assert(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=viewport.width&&bounds.y+bounds.height<=viewport.height);assert(Math.abs(bounds.x+bounds.width/2-viewport.width/2)<2);
+    const scrollBefore=await page.evaluate(()=>document.querySelector('.pbR85ScanCard').scrollTop);await page.keyboard.press('Escape');assert.equal(await page.locator('.pbR1068SourcePicker').count(),0);assert.equal(await page.locator('.pbR85ScanBack').count(),1);assert.equal(await page.evaluate(()=>document.activeElement.matches('.pbR1068SourceTrigger')),true);assert.equal(await page.evaluate(()=>document.querySelector('.pbR85ScanCard').scrollTop),scrollBefore);
+    await open();await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.dataset.sourceKind),'external');await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.matches('[data-source-close]')),true);
+   }else{
+    assert.equal(await option(0,'owned').getAttribute('aria-checked'),'true');await option(0,'owned').focus();await page.keyboard.press('ArrowRight');assert.equal(await option(0,'external').getAttribute('aria-checked'),'true');await choose(0,'owned');
+   }
+   await option(0,'external').click();assert.equal(await page.locator('[data-done]').isDisabled(),true);
+   if(!mobile)assert.equal(await option(0,'external').getAttribute('aria-checked'),'true');
+   await page.locator('[data-supplied-toggle]').check();await page.locator('[data-slot-input]').fill('arbitrary identifier');await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===1);
    await page.waitForSelector('#pb922InvoiceModal:not([hidden])');assert.match(await page.locator('.pb922InvoiceContent').textContent(),/Receiving Customer/);assert.match(await page.locator('.pb922InvoiceContent').textContent(),/Camera/);assert.match(await page.locator('.pb922InvoiceContent').textContent(),/100/);assert.deepEqual(await page.evaluate(()=>notices),[]);assert.deepEqual(await page.evaluate(()=>details),[]);await page.locator('[data-pb922-close]').click();
    const external=await page.evaluate(()=>calls[0].body);assert.deepEqual(external.assetCodes,[]);assert.deepEqual(external.externalSupplyCodes,[{itemId:'camera',code:'arbitrary identifier',shortageId:'source'}]);
-   await page.evaluate(()=>{void bookingStatus('a','picked_up')});await page.waitForSelector('.pbR1068SourceTrigger');await page.locator('.pbR1068SourceTrigger').click();
-   await page.locator('[data-source-kind=owned]').click();await page.locator('[data-slot-input]').fill('CAM-1');await page.locator('[data-slot-add]').click();
-   await page.waitForFunction(()=>!document.querySelector('[data-done]').disabled);await page.locator('.pbR1068SourceTrigger').click();await page.locator('[data-source-kind=owned]').click();assert.equal(await page.locator('[data-done]').isEnabled(),true);await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===2);
+   await page.evaluate(()=>{void bookingStatus('a','picked_up')});await page.waitForSelector('[data-slot="0"]');await choose(0,'owned');await page.locator('[data-slot-input]').fill('CAM-1');await page.locator('[data-slot-add]').click();
+   await page.waitForFunction(()=>!document.querySelector('[data-done]').disabled);await choose(0,'owned');assert.equal(await page.locator('[data-done]').isEnabled(),true);await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===2);
    await page.waitForSelector('#pb922InvoiceModal:not([hidden])');assert.equal(await page.locator('.pbR85ScanBack').count(),0);assert.deepEqual(await page.evaluate(()=>notices),[]);assert.deepEqual(await page.evaluate(()=>details),[]);
-   const owned=await page.evaluate(()=>calls[1].body);assert.deepEqual(owned.assetCodes,['CAM-1']);assert.deepEqual(owned.externalSupplyCodes,[]);
-   await page.locator('[data-pb922-close]').click();
-   await page.evaluate(()=>{window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:({items:[{itemId:'camera',title:'Camera',quantity:3,assets:[],supplyOptions:[{id:'source',bookingId:'a',availableQuantity:1,supplied:false},{id:'second',bookingId:'a',availableQuantity:1,supplied:false}]}]})});void bookingStatus('b','picked_up')});
-   await page.waitForSelector('[data-slot="2"]');
-   for(const index of [0,1]){const row=page.locator('[data-slot="'+index+'"]');await row.locator('.pbR1068SourceTrigger').click();assert.equal(await page.locator('.pbR1063SourceOptions button').count(),2);await page.locator('[data-source-kind=external]').click();}
-   await page.locator('[data-slot="2"] .pbR1068SourceTrigger').click();assert.equal(await page.locator('[data-source-kind=external]').isDisabled(),true);await page.keyboard.press('Escape');
-   await page.locator('[data-slot="0"] .pbR1068SourceTrigger').click();await page.locator('[data-source-kind=owned]').click();
-   await page.locator('[data-slot="2"] .pbR1068SourceTrigger').click();assert.equal(await page.locator('[data-source-kind=external]').isEnabled(),true);await page.locator('[data-source-kind=external]').click();
-   for(const index of [1,2])await page.locator('[data-slot="'+index+'"] [data-supplied-toggle]').check();
-   await page.locator('[data-slot="0"] [data-slot-input]').fill('CAM-1');await page.locator('[data-slot="0"] [data-slot-add]').click();await page.waitForFunction(()=>!document.querySelector('[data-done]').disabled);await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===3);const mixed=await page.evaluate(()=>calls[2].body);assert.deepEqual(mixed.assetCodes,['CAM-1']);assert.deepEqual(mixed.externalSupplyCodes.map(x=>x.shortageId).sort(),['second','source']);
+   const owned=await page.evaluate(()=>calls[1].body);assert.deepEqual(owned.assetCodes,['CAM-1']);assert.deepEqual(owned.externalSupplyCodes,[]);await page.locator('[data-pb922-close]').click();
+   await page.evaluate(()=>{window.fetch=async url=>({ok:true,json:async()=>String(url).includes('by-code')?{asset:{id:'asset',item_id:'camera',system_code:'CAM-1',serial_number:'serial'}}:({items:[{itemId:'camera',title:'Camera',quantity:3,assets:[],supplyOptions:[{id:'source',bookingId:'a',availableQuantity:1,supplied:false},{id:'second',bookingId:'a',availableQuantity:1,supplied:false}]}]})});void bookingStatus('b','picked_up')});await page.waitForSelector('[data-slot="2"]');
+   for(const index of [0,1])await choose(index,'external');await open(2);assert.equal(await option(2,'external').isDisabled(),true);if(mobile)await page.keyboard.press('Escape');
+   await choose(0,'owned');await open(2);assert.equal(await option(2,'external').isEnabled(),true);await option(2,'external').click();
+   for(const index of [1,2])await page.locator('[data-slot="'+index+'"] [data-supplied-toggle]').check();await page.locator('[data-slot="0"] [data-slot-input]').fill('CAM-1');await page.locator('[data-slot="0"] [data-slot-add]').click();await page.waitForFunction(()=>!document.querySelector('[data-done]').disabled);await page.locator('[data-done]').click();await page.waitForFunction(()=>calls.length===3);
+   const mixed=await page.evaluate(()=>calls[2].body);assert.deepEqual(mixed.assetCodes,['CAM-1']);assert.deepEqual(mixed.externalSupplyCodes.map(x=>x.shortageId).sort(),['second','source']);
    await page.close();
   }
  }finally{await browser.close()}

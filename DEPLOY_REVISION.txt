@@ -1,1 +1,1 @@
-2026-10-10-r1068-responsive-handover-source-picker
+2026-10-10-r1069-direct-desktop-source-disabled-shop-navigation

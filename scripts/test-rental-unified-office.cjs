@@ -9,6 +9,7 @@ test('one Office tab, explicit pickup/return actions and compact mobile calendar
  try{for(const viewport of [{width:390,height:844},{width:1366,height:768}]){
   const page=await browser.newPage({viewport});
   await page.setContent(`<head>${styles}</head><body class="rentalAppReady pbR100F9StaffMode"><main id="app"></main></body>`);
+  await page.addStyleTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.css')});
   await page.addScriptTag({content:`window.data={shop:{name:'Test Shop'},staffMode:true,bookings:[{id:'reserved',status:'reserved',rental_start:'2030-10-12',rental_end:'2030-10-14'},{id:'out',status:'picked_up',rental_start:'2030-10-12',rental_end:'2030-10-14'},{id:'returned',status:'returned',rental_start:'2030-10-12',rental_end:'2030-10-14'}]};window.actions=[];window.api=async()=>data;window.bookingStatus=async(id,status)=>actions.push([id,status]);`});
   await page.addScriptTag({content:staff});
   await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r100f86-shared-handover.js')});
@@ -21,6 +22,10 @@ test('one Office tab, explicit pickup/return actions and compact mobile calendar
   await page.locator('[data-booking="out"]').dispatchEvent('click');await page.waitForFunction(()=>actions.length===2);
   assert.deepEqual(await page.evaluate(()=>actions),[['reserved','picked_up'],['out','returned']]);
   assert.equal(await page.evaluate(()=>pbR100F89ActiveStaffDay),'2030-10-12');
+  if(viewport.width<851){
+   assert.equal(await page.locator('#pbR100F9StaffDates').evaluate(el=>getComputedStyle(el).overflowX),'auto');
+   assert.equal(await page.locator('#pbR100F9StaffDates>button').first().evaluate(el=>Math.round(el.getBoundingClientRect().height)),48);
+  }
   await page.evaluate(()=>pbR100F89PickStaffDay('2030-10-14'));
   assert.equal(await page.locator('[data-pb915-booking-id="returned"]').count(),1);
   assert.match(await page.locator('[data-pb915-booking-id="returned"] .pbR100F9StaffState').textContent(),/دریافت شده/);
@@ -34,6 +39,26 @@ test('one Office tab, explicit pickup/return actions and compact mobile calendar
    assert.equal(await page.locator('#pb904r2DayPanel').evaluate(x=>x.getBoundingClientRect().height),0);
    assert.equal(await page.locator('body').textContent().then(x=>x.includes('یک تاریخ را انتخاب کن')||x.includes('روی یک روز از تقویم بزن.')),false);
   }
+  await page.addStyleTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.css')});
+  await page.addScriptTag({content:`window.data={bookings:[{id:'first',status:'reserved',rental_start:'2030-10-12',rental_end:'2030-10-12',photographer_name:'First'},{id:'second',status:'picked_up',rental_start:'2030-10-13',rental_end:'2030-10-14',photographer_name:'Second'}]};window.pbR17TehranIsoDate=()=> '2030-10-12';window.registered=[];window.pbR1073RegisterOfficeDay=d=>registered.push(d);`});
+  await page.evaluate(()=>{const nav=document.createElement('nav');nav.id='rentalMobileBottomNav';nav.className='rentalMobileBottomNav';nav.innerHTML='<button data-rental-bottom-tab="items">اجاره تجهیزات</button><button data-rental-bottom-tab="sales" hidden data-pb-channel-off="true">فروش تجهیزات</button><button data-rental-bottom-tab="bookings">آفیش</button><button data-rental-bottom-tab="photographers">عکاس</button><button data-rental-bottom-tab="accounting">حسابداری</button>';document.body.append(nav)});
+  await page.addScriptTag({path:path.join(__dirname,'../dist/web/photobridge-r1073-mobile-office.js')});
+  await page.evaluate(()=>pbR1073PaintMobileOffice());
+  if(viewport.width<851){
+   assert.equal(await page.locator('.pb904r2CalendarSplit').evaluate(x=>getComputedStyle(x).display),'none');
+   const widths=await page.locator('#rentalMobileBottomNav>button:not([hidden]):not([data-rental-bottom-tab="photographers"])').evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().width));
+   assert.equal(widths.length,3);assert(widths.every(w=>Math.abs(w-widths[0])<2));
+   const nav=await page.locator('#rentalMobileBottomNav').evaluate(el=>({width:el.getBoundingClientRect().width,padding:parseFloat(getComputedStyle(el).paddingLeft)+parseFloat(getComputedStyle(el).paddingRight),gap:parseFloat(getComputedStyle(el).columnGap)||0,display:getComputedStyle(el).display}));
+   assert(Math.abs(widths.reduce((a,b)=>a+b,0)+nav.padding+2*nav.gap-nav.width)<3,JSON.stringify({widths,nav}));
+   assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="first"]').count(),1);
+   await page.locator('#pbR1073Register').click();assert.deepEqual(await page.evaluate(()=>registered),['2030-10-12']);
+   await page.locator('[data-office-day="2030-10-13"]').click();
+   assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="first"]').count(),0);
+   assert.equal(await page.locator('#pbR1073OfficeRows [data-pb915-booking-id="second"]').count(),1);
+   assert.match(await page.locator('#pbR1073OfficeRows').textContent(),/ثبت دریافت تجهیزات/);
+   await page.evaluate(()=>pbR1073PaintMobileOffice());assert.equal(await page.locator('[data-office-day="2030-10-13"]').getAttribute('class').then(x=>x.includes('active')),true);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  }else assert.equal(await page.locator('#pbR1073MobileOffice').count(),0);
   await page.close();
  }}finally{await browser.close()}
 });

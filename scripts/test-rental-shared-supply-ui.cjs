@@ -17,7 +17,7 @@ test('real pickup dialog chooses shared external or owned unit and inventory sho
    for(const id of ['pbR85AssetScanStyles','pb922FormalFinanceStyle'])await page.addStyleTag({content:html.match(new RegExp('<style id="'+id+'">([\\s\\S]*?)</style>'))[1]});
    await page.addScriptTag({content:finance});await page.addScriptTag({content:runtime});
    await page.addScriptTag({path:path.join(root,'dist/web/photobridge-r1058-handover-holders.js')});
-   assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual A/);assert.match(await page.locator('.pbR1058Holders').textContent(),/Actual B/);assert.doesNotMatch(await page.locator('.pbR1058Holders').textContent(),/Planned A/);
+   assert.equal(await page.locator('.pbR1058Holders').count(),0);await page.evaluate(()=>renderItems());assert.equal(await page.locator('.pbR1058Holders').count(),0);
    const mobile=viewport.width<=700;
    const choices=index=>mobile?page.locator('.pbR1063SourceOptions'):page.locator('[data-slot="'+index+'"] .pbR1069SourceChoices');
    const option=(index,kind)=>choices(index).locator('[data-source-kind="'+kind+'"]');

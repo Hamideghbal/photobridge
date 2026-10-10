@@ -15,6 +15,7 @@
  const put=(k,v)=>{try{localStorage.setItem(k,v);return true}catch{return false}};
  const native=!!window.__PB_DESKTOP_FETCH__||!!window.__PB_DESKTOP_OVERLAY_101__;
  let enabled=get(optKey)==='1'||(get(optKey)===null&&native);
+ const ensureNativeDefault=()=>{if(!enabled&&get(optKey)===null&&(window.__PB_DESKTOP_FETCH__||window.__PB_DESKTOP_OVERLAY_101__))enabled=true};
  let active=false,receiving=false,currentShop='',lastError='',lastName='',lastId='',button=null,pending=[],lastOverview=null;
  let pendingPrint=false,printed=0,initializing=false;
  const parse=s=>{try{return JSON.parse(s)}catch{return null}};
@@ -41,6 +42,7 @@
   button.style.color=enabled?'#08764a':'#344054';
  }
  function mount(){
+  ensureNativeDefault();
   const header=document.querySelector('header.top')||document.querySelector('#rentalHeader')||document.querySelector('header');
   if(!header||!document.body.classList.contains('rentalAppReady')){if(button)button.hidden=true;return}
   if(!button){

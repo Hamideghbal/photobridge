@@ -10124,4 +10124,61 @@ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display
  html body:not(.rentalAppReady) #loginView input{font-size:16px!important}
 }
 </style>
+
+<!-- R1054: isolate the mobile rental-login form from the app's other fixed/stacked panels. -->
+<style id="pbR1054RentalMobileAuthTouchStyles">
+@media(max-width:850px){
+  html body:not(.rentalAppReady) #loginView:not(.hidden){
+    position:fixed!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+    z-index:2147483647!important;display:flex!important;flex-direction:column!important;
+    align-items:center!important;justify-content:center!important;
+    width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;min-height:0!important;
+    margin:0!important;padding:12px!important;box-sizing:border-box!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    pointer-events:auto!important;touch-action:pan-y!important;
+    -webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden)>.authShell{
+    position:relative!important;z-index:1!important;width:min(430px,100%)!important;
+    min-width:0!important;max-width:100%!important;margin:auto!important;
+    pointer-events:auto!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) .unifiedLoginCard:not(.hidden){
+    position:relative!important;z-index:2!important;pointer-events:auto!important;
+    width:100%!important;max-width:100%!important;min-height:0!important;
+    max-height:none!important;overflow:visible!important;
+    margin:0!important;box-sizing:border-box!important;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) input,
+  html body:not(.rentalAppReady) #loginView:not(.hidden) button,
+  html body:not(.rentalAppReady) #loginView:not(.hidden) a{
+    pointer-events:auto!important;touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent;
+  }
+  html body:not(.rentalAppReady) #loginView:not(.hidden) input{
+    position:relative!important;z-index:3!important;
+    display:block!important;opacity:1!important;visibility:visible!important;
+    -webkit-user-select:text!important;user-select:text!important;
+    font-size:16px!important;min-height:44px!important;
+  }
+}
+</style>
+<script id="pbR1054RentalMobileAuthTouchRuntime">
+(()=>{
+  'use strict';
+  if(window.__PB_R1054_RENTAL_LOGIN_TOUCH__)return;
+  window.__PB_R1054_RENTAL_LOGIN_TOUCH__=true;
+  // The login modal was a fixed-position child of the large, layered application
+  // workspace. Portal it to the document root so mobile hit-testing and keyboard
+  // focus cannot be captured by a sibling workspace or ancestor stacking context.
+  const mount=()=>{
+    const login=document.getElementById('loginView');
+    if(!login||!document.body)return;
+    if(login.parentElement!==document.body)document.body.appendChild(login);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
+  else mount();
+  window.addEventListener('pageshow',mount,{passive:true});
+})();
+</script>
 </body></html>

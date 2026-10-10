@@ -10,7 +10,7 @@
   const enableInviteScroll=()=>{document.documentElement.classList.add('pbR98InviteScroll');if(document.body)document.body.classList.add('pbR98InviteScrollBody')};
   enableInviteScroll();
   const nativeFetch=window.fetch.bind(window);
-  const state={ctx:null,values:{birthJalali:'',nationalId:'',birthCertificateNo:'',businessLicenseNo:'',businessLicenseImage:null},raf:0,loading:false};
+  const state={ctx:null,contextReady:false,values:{birthJalali:'',nationalId:'',birthCertificateNo:'',businessLicenseNo:'',businessLicenseImage:null},raf:0,loading:false};
   const digits=s=>String(s||'').replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))).replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[+d]);
@@ -41,6 +41,26 @@
     state.ctx=next;
     seed(); scheduleSeries();
   }
+  function releaseContextGate(){
+    state.contextReady=true;
+    clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);
+    document.getElementById('pbInviteContextRetry')?.remove();
+    window.__PB_INVITE_GATE_TIMEOUT__=setTimeout(()=>{if(state.contextReady&&!document.querySelector('.photographerSignupForm'))showContextRetry(true)},8000);
+    scheduleSeries();
+  }
+  function acceptSignupContext(x){
+    if(!x||typeof x!=='object'||!Object.prototype.hasOwnProperty.call(x,'existingAccount'))return false;
+    mergeCtx(x);
+    releaseContextGate();
+    return true;
+  }
+  function showContextRetry(force=false){
+    if((state.contextReady&&!force)||document.getElementById('pbInviteContextRetry'))return;
+    const panel=document.createElement('section');panel.id='pbInviteContextRetry';panel.setAttribute('role','alert');
+    panel.innerHTML='<strong>بررسی دعوت‌نامه انجام نشد</strong><span>برای نمایش فرم درست، ارتباط امن حساب باید بررسی شود. لطفاً دوباره تلاش کنید.</span><button type="button">تلاش دوباره</button>';
+    panel.querySelector('button').onclick=()=>location.reload();document.body.append(panel);
+  }
+  window.__PB_INVITE_GATE_TIMEOUT__=setTimeout(showContextRetry,12000);
   function seed(){
     const p=state.ctx?.membershipProfile||{};
     for(const k of ['birthJalali','nationalId','birthCertificateNo','businessLicenseNo']) if(!state.values[k]&&p[k]) state.values[k]=String(p[k]);
@@ -153,13 +173,17 @@
     for(const label of form.querySelectorAll('label')){
       if(label.closest('#pbR94InviteRequired,#pbR94ExistingIdentity'))continue;
       const t=String(label.textContent||'').replace(/\s+/g,' ').trim();
-      if(!t.includes('تاریخ تولد عکاس'))continue;
-      const input=label.querySelector('input');if(!input)continue;
+      const input=label.querySelector('input');
+      const hint=String(input?.getAttribute('aria-label')||input?.getAttribute('placeholder')||input?.name||'');
+      if(!/تاریخ تولد|birth.?date/i.test(`${t} ${hint}`)||!input)continue;
       if(!state.values.birthJalali&&String(input.value||'').trim())state.values.birthJalali=digits(input.value).trim();
       input.readOnly=true;input.inputMode='none';input.dir='ltr';input.classList.add('pbR95BirthInput','jalaliDateInput','pbR100F7ProjectBirth');
       input.placeholder='برای انتخاب تاریخ لمس کنید';
-      input.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();calendar(input)}};
-      input.onclick=e=>{e.preventDefault();calendar(input)};
+      if(input.dataset.pbJalaliBound!=='1'){
+        input.dataset.pbJalaliBound='1';
+        input.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();calendar(input)}},true);
+        input.addEventListener('click',e=>{e.preventDefault();calendar(input)},true);
+      }
       input.setAttribute('aria-haspopup','dialog');input.setAttribute('aria-label','انتخاب تاریخ تولد با تقویم شمسی');
     }
   }
@@ -281,20 +305,24 @@
     // this avoids the scroll-lock/performance regression of the old invite observer.
     formObserver.observe(form,{childList:true});
   }
-  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx)return;watchExistingForm(form);decorateRentalIntro();upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);requestAnimationFrame(()=>document.documentElement.classList.remove('pbR100F7InviteBootPending'));}
+  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;watchExistingForm(form);decorateRentalIntro();upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
   function schedule(){if(state.raf)return;state.raf=requestAnimationFrame(render)}
   let settleTimers=[];function scheduleSeries(){schedule();settleTimers.forEach(clearTimeout);settleTimers=[80,220,600,1400,3000,6000,10000].map(ms=>setTimeout(schedule,ms))}
-  async function bootstrap(){if(state.loading)return;state.loading=true;try{
+  async function bootstrap(){if(state.loading||state.contextReady)return;state.loading=true;let accepted=false;try{
     const ir=await nativeFetch('/api/public/photographer-invites/'+encodeURIComponent(inviteCode),{credentials:'same-origin',cache:'no-store'});if(ir.ok){const j=await ir.json();if(j.signupContext)mergeCtx(j.signupContext);if(j.invite)mergeCtx({invite:j.invite})}
-    const u='/api/public/photographer-signup/context?invite='+encodeURIComponent(inviteCode)+'&mobile='+encodeURIComponent(mobile)+(mb?'&mb='+encodeURIComponent(mb):'');const cr=await nativeFetch(u,{credentials:'same-origin',cache:'no-store'});if(cr.ok)mergeCtx(await cr.json());
-  }catch{}finally{state.loading=false;scheduleSeries()}}
+    const resolvedMobile=mobile||String(state.ctx?.mobile||state.ctx?.invite?.targetMobile||state.ctx?.invite?.target_mobile||'').trim();
+    const query='?invite='+encodeURIComponent(inviteCode)+'&mobile='+encodeURIComponent(resolvedMobile)+(mb?'&mb='+encodeURIComponent(mb):'');
+    for(const endpoint of ['/api/public/photographer-signup/context-fast','/api/public/photographer-signup/context']){
+      try{const cr=await nativeFetch(endpoint+query,{credentials:'same-origin',cache:'no-store'});if(!cr.ok)continue;const data=await cr.json();if(acceptSignupContext(data)){accepted=true;break}}catch{}
+    }
+  }catch{}finally{state.loading=false;if(!accepted&&!state.contextReady)showContextRetry();scheduleSeries()}}
   window.fetch=async function(input,init={}){
     const raw=typeof input==='string'?input:(input?.url||'');let url;try{url=new URL(raw,location.origin)}catch{return nativeFetch(input,init)}const method=String(init?.method||'GET').toUpperCase();
     if(url.origin===location.origin&&url.pathname==='/api/public/photographer-signup'&&method==='POST'&&typeof init.body==='string'){
-      try{const b=JSON.parse(init.body),req=required();if(req.nationalId)b.nationalId=state.values.nationalId||'';if(req.birthCertificateNo)b.birthCertificateNo=state.values.birthCertificateNo||'';if(req.businessLicenseNo)b.businessLicenseNo=state.values.businessLicenseNo||'';if(req.businessLicenseImage&&state.values.businessLicenseImage&&!state.ctx?.membershipProfile?.businessLicenseImage)b.businessLicenseImage=state.values.businessLicenseImage;if(isExisting()){b.name='';b.province='';b.city='';b.locationLat=null;b.locationLng=null;b.locationAddress='';b.password='';b.confirmPassword=''}init={...init,body:JSON.stringify(b)}}catch{}
+      try{const b=JSON.parse(init.body),req=required();if(!isExisting()&&state.values.birthJalali)b.birthJalali=state.values.birthJalali;if(req.nationalId)b.nationalId=state.values.nationalId||'';if(req.birthCertificateNo)b.birthCertificateNo=state.values.birthCertificateNo||'';if(req.businessLicenseNo)b.businessLicenseNo=state.values.businessLicenseNo||'';if(req.businessLicenseImage&&state.values.businessLicenseImage&&!state.ctx?.membershipProfile?.businessLicenseImage)b.businessLicenseImage=state.values.businessLicenseImage;if(isExisting()){b.name='';b.province='';b.city='';b.locationLat=null;b.locationLng=null;b.locationAddress='';b.password='';b.confirmPassword=''}init={...init,body:JSON.stringify(b)}}catch{}
     }
     const res=await nativeFetch(input,init);
-    if(url.origin===location.origin&&url.pathname.includes('/api/public/photographer-signup/context')&&res.ok)res.clone().json().then(mergeCtx).catch(()=>{});
+    if(url.origin===location.origin&&url.pathname.includes('/api/public/photographer-signup/context')&&res.ok)res.clone().json().then(acceptSignupContext).catch(()=>{});
     if(url.origin===location.origin&&url.pathname==='/api/public/photographer-signup'&&method==='POST'&&!res.ok){res.clone().json().then(j=>{if(j?.requiredFields)mergeCtx({membershipRequiredFields:j.requiredFields,membershipProfile:j.profile||null});else if(j?.error==='membership_profile_required'){const map={'تاریخ تولد':'birthDate','شماره ملی':'nationalId','کد ملی':'nationalId','شماره شناسنامه':'birthCertificateNo','شماره جواز / پرونده':'businessLicenseNo','تصویر جواز / پرونده':'businessLicenseImage'},r={...required()};for(const f of j.fields||j.missingFields||[]){const k=map[String(f)];if(k)r[k]=true}mergeCtx({membershipRequiredFields:r})}}).catch(()=>{})}
     return res;
   };

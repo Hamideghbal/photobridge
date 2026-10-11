@@ -29,9 +29,9 @@ function mountSettings(){
   group.innerHTML='<strong>نحوه پذیرش سفارش اجاره از مشتری</strong>'+
    '<label for="pbR1095Select">محدودیت موجودی هنگام ثبت درخواست</label>'+
    '<select name="customerStockMode" id="pbR1095Select">'+
-   '<option value="flexible">پذیرش سفارش حتی با کسری موجودی</option>'+
-   '<option value="strict">فقط تجهیزات موجود در تاریخ انتخاب‌شده</option></select>'+
-   '<small>حالت اول: مشتری درخواست را ثبت می‌کند و کسری روی کارت سفارش مشخص می‌شود. حالت دوم: فقط تعداد آزاد همان تاریخ قابل سفارش است و تا تعیین تکلیف درخواست در موجودی نگه داشته می‌شود. تأیید نهایی همچنان با فروشگاه است.</small>';
+   '<option value="flexible">پذیرش آفیش فروشگاه حتی با کسری موجودی</option>'+
+   '<option value="strict">ثبت آفیش فروشگاه فقط با موجودی کامل</option></select>'+
+   '<small>این تنظیم فقط برای مدیر و اپراتور فروشگاه است. عکاس در هر دو حالت فقط تجهیز موجود را می‌بیند و تجهیز ناموجود برای او قرمز و غیرقابل انتخاب است؛ تعداد موجودی یا باقی‌مانده نیز به عکاس نمایش داده نمی‌شود.</small>';
   anchor.insertAdjacentElement('afterend',group);
  }
  const shop=typeof data!=='undefined'?data?.shop:null;

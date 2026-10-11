@@ -71,3 +71,19 @@ test('production server checks server-side scope on list, direct request and sel
  assert(!server.includes('await pool.query(`UPDATE equipment_rental_shops SET private_admin_only=true'),'never classify stores by name');
  assert(!server.includes("COALESCE(s.private_admin_only,false)=false OR $2::boolean=true"));
 });
+
+test('the previously requested origin-lab auto-release is explicitly cancelled',()=>{
+ const server=fs.readFileSync('dist/api/server.js','utf8');
+ const begin=server.indexOf('async function photographerCanDiscoverLabs(userId) {');
+ const end=server.indexOf('// v904R11',begin);
+ const fn=server.slice(begin,end);
+ assert.match(fn,/if \(await photographerJoinedViaLabInvite\(userId\)\)\s*return false;/);
+ assert(!server.includes('/* PB_R1105_ORIGIN_LAB_RELEASE */'));
+});
+test('legacy private store flags stay protected, while admin-owned labs can include accepted collaborators',()=>{
+ const server=fs.readFileSync('dist/api/server.js','utf8');
+ assert.match(server,/if\(shop.private_admin_only\)\{/);
+ assert.match(server,/COALESCE\(s.private_admin_only,false\)=false/);
+ assert.match(server,/ownScope\.restricted\.has\(String\(row.id\)\)\&\&ownScope\.allowed\.has\(String\(row.id\)\)/);
+ assert.match(server,/visibleScopedShopIds/);
+});

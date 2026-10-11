@@ -37,6 +37,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
         const chooser=route.includes('pbLabChooser=1')||route.includes('equipment-rental/book')||route.includes('pbDesktopPanel=store');
         assert.equal(geometry.header.height,chooser?72:114);
         assert.equal(geometry.header.y,0);
+        assert.equal(await header.locator('.photographerHeaderIdentity h1').evaluate(el=>getComputedStyle(el).fontSize),'16px');
         assert(geometry.identity.x>geometry.nav.x+geometry.nav.width);
         assert(geometry.actions.x+geometry.actions.width<geometry.nav.x);
         if(chooser)assert.equal(await header.locator('.pb1126Secondary').isVisible(),false);else assert(geometry.secondary.y>=72);
@@ -51,7 +52,8 @@ test('photographer desktop header aligns identity, navigation and actions while 
           await utilities.waitFor();
           await header.locator('.pb1127PrintModes').waitFor();
           assert.deepEqual((await header.locator('.pb1127PrintModes button').allTextContents()).map(t=>t.trim()),['چاپ عکس','صحافی آلبوم']);
-          assert.deepEqual((await utilities.locator('button').allTextContents()).map(t=>t.trim()),['← بازگشت','مالی','▣آرشیو']);
+          assert.deepEqual((await utilities.locator('button').allTextContents()).map(t=>t.trim()),['مالی','▣آرشیو']);
+          assert.equal(await header.locator('.pb1126Back,.photographerPrintModeBack').count(),0,'entered Lab has no Back action');
           assert((await utilities.boundingBox()).x<(await header.locator('.pb1127PrintModes').boundingBox()).x);
         }
         assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
@@ -75,6 +77,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
             }
             await page.evaluate(()=>Promise.all(document.querySelector('#pb1126DesktopHeader').getAnimations({subtree:true}).map(a=>a.finished)));
             assert.equal(await header.locator('.photographerHeaderIdentity h1').innerText(),identity);
+            assert.equal(await header.locator('.photographerHeaderIdentity h1').evaluate(el=>getComputedStyle(el).fontSize),'16px','name size remains identical across tabs');
             assert.deepEqual(await header.locator('.pb1126MainNav button').evaluateAll(bs=>bs.map(b=>({x:b.getBoundingClientRect().x,y:b.getBoundingClientRect().y,width:b.getBoundingClientRect().width}))),positions);
           }
           assert.equal(await page.locator('.pb1126ContentPanel').count(),2,'panels must be reused');
@@ -88,11 +91,12 @@ test('photographer desktop header aligns identity, navigation and actions while 
           await header.locator('[data-pb1126-kind="store"]').click();
           const store=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
           await store.locator('[data-enter-store-r96="shop"]').click();
-          await header.locator('.pb1126Back').waitFor();
+          await page.waitForFunction(()=>!document.documentElement.classList.contains('pb1127Choosing'));
+          assert.equal(await header.locator('.pb1126Back,.photographerPrintModeBack').count(),0,'entered Store has no Back action');
           assert.equal((await header.boundingBox()).height,114);
           assert.equal(await store.locator('#storePanel .storeHomeActionsV671').isVisible(),false);
           assert.equal(await store.locator('#equipmentPanel').isVisible(),true);
-          await header.locator('.pb1126Secondary>button:not(.pb1126Back)').first().click();
+          await header.locator('.pb1126Secondary>button').first().click();
           assert((await header.locator('.pb1126Secondary').boundingBox()).y>=72);
         }
       }else{

@@ -48,7 +48,7 @@
   chrome.classList.toggle('pb1127Choosing',choosing);
   row.hidden=choosing;
   const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
-  const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true');
+  const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));
   const signature=active+'|'+choosing+'|'+visible.map(el=>el.outerHTML).join('');
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
@@ -60,8 +60,7 @@
     if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}
     if(utilities&&original.closest('.photographerPrintModeUtilityCluster'))utilities.append(copy);else (modes||row).append(copy);
    }
-   if(utilities){for(const cls of ['photographerPrintModeBack','finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}
-   if(active==='store'&&!choosing){const back=document.createElement('button');back.type='button';back.className='pb1126Back';back.textContent='← بازگشت';back.onclick=()=>navigate('gallery');row.append(back);}
+   if(utilities){for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}
    row.dataset.source=signature;
   }
  }

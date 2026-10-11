@@ -5,6 +5,7 @@ const modulePattern=/(assets\/index-UIRefine-v655-r84\.js\?v=)[^"']+/g;
 const navigationPattern=/(photobridge-r1126-desktop-navigation\.(?:css|js)\?v=)[^"']+/g;
 for(const file of pages){
  let html=fs.readFileSync(file,'utf8');
+ html=html.replace(/<link\b[^>]*photobridge-r1132-print-copies-mobile-nav\.css[^>]*>\s*/gi,'');
  const isMain=file.endsWith('/index.html');
  const navMatches=[...html.matchAll(navigationPattern)];
  if(navMatches.length!==2)throw Error('[R1132] Expected photographer desktop boot navigation in '+file);

@@ -157,63 +157,68 @@ let portal=fs.readFileSync(portalPath,'utf8');
 portal=portal.replaceAll('/photobridge-r1095-owner-stock.js?v=1097','/photobridge-r1095-owner-stock.js?v=1098');
 portal=portal.replaceAll('/photobridge-r1057-daily-rental-availability.js?v=r1097','/photobridge-r1057-daily-rental-availability.js?v=r1098');
 
-// R1098: invitations are SMS-only. Remove the legacy copyable invite URL entirely.
-portal=replaceOnce(
- portal,
- '<div class="rentalInviteLink"><input id="rentalInviteUrl" placeholder="در حال ساخت لینک دعوت…" readonly=""/><button class="btn secondary" id="copyRentalInvite" type="button">کپی لینک</button></div>',
- '',
- 'remove copied invite link UI'
-);
-portal=replaceOnce(
- portal,
- '<div class="rentalInviteHint">دعوت فروشگاه، همکاری همین فروشگاه را برای عکاس فعال می‌کند. اگر عکاس یک یا چند دعوت فروشگاه را پذیرفته باشد، در صفحه فروشگاه فقط همان فروشگاه‌های دعوت‌کننده را می‌بیند. برای دعوت پیامکی می‌توانی بدهی قبلی او را ثبت کنی تا از همان ابتدا وارد حسابداری این فروشگاه شود.</div>',
- '<div class="rentalInviteHint">دعوت عکاس فقط از طریق پیامک انجام می‌شود. شماره موبایل را وارد کن تا لینک عضویت یا تأیید همکاری مستقیماً برای عکاس پیامک شود. در صورت نیاز می‌توانی بدهی قبلی او را هم ثبت کنی.</div>',
- 'sms-only invite hint'
-);
-portal=replaceOnce(
- portal,
- '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه</button>',
- '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه پیامکی</button>',
- 'sms-only invite button label'
-);
-portal=replaceOnce(
- portal,
- "  try{ensureRentalInvite()}catch(e){console.warn('[PhotoBridge rental] invite skipped',e)}\n",
- '',
- 'remove automatic direct invite link creation'
-);
-portal=replaceOnce(
- portal,
- "async function ensureRentalInvite(){try{const d=await api('/api/rental/photographer-invites',{method:'POST',body:'{}'});if($('#rentalInviteUrl'))$('#rentalInviteUrl').value=d.url||''}catch(e){if($('#rentalInviteUrl'))$('#rentalInviteUrl').placeholder='ساخت لینک دعوت انجام نشد.'}}\n$('#copyRentalInvite').addEventListener('click',async()=>{const v=$('#rentalInviteUrl').value;if(!v)return;try{await navigator.clipboard.writeText(v);message('#photographerMsg','لینک دعوت کپی شد.',true)}catch{const i=$('#rentalInviteUrl');i.select();document.execCommand('copy');message('#photographerMsg','لینک دعوت کپی شد.',true)}});\n",
- '',
- 'remove copied invite link runtime'
-);
-
-// Invitation SMS is informational in settings: always on and funded by PhotoBridge.
-portal=replaceOnce(
- portal,
- '<p class="muted">پیامک‌های فروشگاه از اعتبار همین پنل کسر می‌شوند. تأیید رزرو، رد یا لغو آفیش و دعوتنامه‌ها را می‌توانی جداگانه فعال یا غیرفعال کنی.</p>',
- '<p class="muted">پیامک‌های معمول فروشگاه از اعتبار همین پنل کسر می‌شوند و قابل تنظیم هستند. پیامک دعوت عکاس همیشه فعال است و هزینه آن توسط PhotoBridge پرداخت می‌شود.</p>',
- 'sms settings explanatory copy'
-);
-portal=replaceOnce(
- portal,
- '<label class="smsToggle"><input id="smsInviteEnabled" type="checkbox"/><span class="pbR1084InviteCopy">پیامک دعوت عکاس<small id="smsInviteCreditHint">برای پیامک‌های دعوت عکاس، از اعتبار پیامکی شما کسر نمی‌شود.</small></span></label>',
- '<div class="smsToggle pbR1098InviteSmsFixed" aria-label="پیامک دعوت عکاس همیشه فعال"><span aria-hidden="true">✓</span><span class="pbR1084InviteCopy">پیامک دعوت عکاس · همیشه فعال<small id="smsInviteCreditHint">هزینه این پیامک توسط PhotoBridge پرداخت می‌شود و از اعتبار پیامکی فروشگاه کم نمی‌شود.</small></span></div>',
- 'fixed invite sms indicator'
-);
-portal=replaceOnce(
- portal,
- "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;$('#smsInviteEnabled').checked=st.inviteEnabled!==false;const min=",
- "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;const min=",
- 'remove invite sms checkbox rendering'
-);
-portal=replaceOnce(
- portal,
- "inviteEnabled:$('#smsInviteEnabled').checked",
- "inviteEnabled:true",
- 'always save invite sms enabled'
-);
+const inviteUiMarker='<!-- PB_R1098_SMS_ONLY_INVITES -->';
+if(!portal.includes(inviteUiMarker)){
+ // R1098: invitations are SMS-only. Remove the legacy copyable invite URL entirely.
+ portal=replaceOnce(
+  portal,
+  '<div class="rentalInviteLink"><input id="rentalInviteUrl" placeholder="در حال ساخت لینک دعوت…" readonly=""/><button class="btn secondary" id="copyRentalInvite" type="button">کپی لینک</button></div>',
+  '',
+  'remove copied invite link UI'
+ );
+ portal=replaceOnce(
+  portal,
+  '<div class="rentalInviteHint">دعوت فروشگاه، همکاری همین فروشگاه را برای عکاس فعال می‌کند. اگر عکاس یک یا چند دعوت فروشگاه را پذیرفته باشد، در صفحه فروشگاه فقط همان فروشگاه‌های دعوت‌کننده را می‌بیند. برای دعوت پیامکی می‌توانی بدهی قبلی او را ثبت کنی تا از همان ابتدا وارد حسابداری این فروشگاه شود.</div>',
+  '<div class="rentalInviteHint">دعوت عکاس فقط از طریق پیامک انجام می‌شود. شماره موبایل را وارد کن تا لینک عضویت یا تأیید همکاری مستقیماً برای عکاس پیامک شود. در صورت نیاز می‌توانی بدهی قبلی او را هم ثبت کنی.</div>',
+  'sms-only invite hint'
+ );
+ portal=replaceOnce(
+  portal,
+  '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه</button>',
+  '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه پیامکی</button>',
+  'sms-only invite button label'
+ );
+ portal=replaceOnce(
+  portal,
+  "  try{ensureRentalInvite()}catch(e){console.warn('[PhotoBridge rental] invite skipped',e)}\n",
+  '',
+  'remove automatic direct invite link creation'
+ );
+ portal=replaceOnce(
+  portal,
+  "async function ensureRentalInvite(){try{const d=await api('/api/rental/photographer-invites',{method:'POST',body:'{}'});if($('#rentalInviteUrl'))$('#rentalInviteUrl').value=d.url||''}catch(e){if($('#rentalInviteUrl'))$('#rentalInviteUrl').placeholder='ساخت لینک دعوت انجام نشد.'}}\n$('#copyRentalInvite').addEventListener('click',async()=>{const v=$('#rentalInviteUrl').value;if(!v)return;try{await navigator.clipboard.writeText(v);message('#photographerMsg','لینک دعوت کپی شد.',true)}catch{const i=$('#rentalInviteUrl');i.select();document.execCommand('copy');message('#photographerMsg','لینک دعوت کپی شد.',true)}});\n",
+  '',
+  'remove copied invite link runtime'
+ );
+ 
+ // Invitation SMS is informational in settings: always on and funded by PhotoBridge.
+ portal=replaceOnce(
+  portal,
+  '<p class="muted">پیامک‌های فروشگاه از اعتبار همین پنل کسر می‌شوند. تأیید رزرو، رد یا لغو آفیش و دعوتنامه‌ها را می‌توانی جداگانه فعال یا غیرفعال کنی.</p>',
+  '<p class="muted">پیامک‌های معمول فروشگاه از اعتبار همین پنل کسر می‌شوند و قابل تنظیم هستند. پیامک دعوت عکاس همیشه فعال است و هزینه آن توسط PhotoBridge پرداخت می‌شود.</p>',
+  'sms settings explanatory copy'
+ );
+ portal=replaceOnce(
+  portal,
+  '<label class="smsToggle"><input id="smsInviteEnabled" type="checkbox"/><span class="pbR1084InviteCopy">پیامک دعوت عکاس<small id="smsInviteCreditHint">برای پیامک‌های دعوت عکاس، از اعتبار پیامکی شما کسر نمی‌شود.</small></span></label>',
+  '<div class="smsToggle pbR1098InviteSmsFixed" aria-label="پیامک دعوت عکاس همیشه فعال"><span aria-hidden="true">✓</span><span class="pbR1084InviteCopy">پیامک دعوت عکاس · همیشه فعال<small id="smsInviteCreditHint">هزینه این پیامک توسط PhotoBridge پرداخت می‌شود و از اعتبار پیامکی فروشگاه کم نمی‌شود.</small></span></div>',
+  'fixed invite sms indicator'
+ );
+ portal=replaceOnce(
+  portal,
+  "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;$('#smsInviteEnabled').checked=st.inviteEnabled!==false;const min=",
+  "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;const min=",
+  'remove invite sms checkbox rendering'
+ );
+ portal=replaceOnce(
+  portal,
+  "inviteEnabled:$('#smsInviteEnabled').checked",
+  "inviteEnabled:true",
+  'always save invite sms enabled'
+ );
+ 
+ portal=portal.replace('</body>',inviteUiMarker+'\n</body>');
+}
 const scrollAsset='/photobridge-r1098-owner-scroll.js?v=1098';
 portal=portal.replaceAll('<script defer src="'+scrollAsset+'"></script>','');
 const at=portal.lastIndexOf('</body>');

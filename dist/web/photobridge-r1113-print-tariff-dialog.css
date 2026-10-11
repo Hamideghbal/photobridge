@@ -1,0 +1,228 @@
+/* R1113 — print-tariff readability and polished price dialogs. Scoped to lab price UI. */
+.labPrintPricingCard > .panelHead p,
+.labSettingsTabbed .settingsBody .labPrintPricingCard > .panelHead p {
+  font-size: 14px !important;
+  line-height: 1.9 !important;
+  color: #43536c !important;
+  max-width: 780px;
+}
+.labPrintPricingCard .inventoryPriceGrid.head > b {
+  font-size: 12.5px !important;
+  font-weight: 850 !important;
+}
+.labPrintPricingCard .priceSizeIdentity > small,
+.labSettingsTabbed .settingsBody .labPrintPricingCard .priceSizeIdentity > small {
+  font-size: 12px !important;
+  line-height: 1.65 !important;
+}
+.labPrintPricingCard .priceSizeIdentity > button {
+  font-size: 12.5px !important;
+}
+.labPrintPricingCard .mobilePriceCell > small,
+.labSettingsTabbed .settingsBody .labPrintPricingCard .mobilePriceCell > small {
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  font-weight: 750 !important;
+  color: #475569 !important;
+}
+.labPrintPricingCard .inventoryPriceGrid input {
+  font-size: 14px !important;
+  min-height: 40px !important;
+}
+.globalModalLayer > .modal:has(.printSizeEditor) {
+  width: min(800px, calc(100vw - 32px)) !important;
+  border: 1px solid #dbe5f1 !important;
+  border-radius: 19px !important;
+  background: #fff !important;
+  box-shadow: 0 22px 68px rgba(24, 40, 74, .22) !important;
+}
+.globalModalLayer > .modal:has(.printSizeEditor) > .modalHead {
+  padding: 15px 19px !important;
+  border-bottom: 1px solid #e7edf6 !important;
+  background: linear-gradient(105deg,#f3f7ff 0%,#fff 80%) !important;
+}
+.globalModalLayer > .modal:has(.printSizeEditor) > .modalHead h2 {
+  color: #1e335c !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+.globalModalLayer > .modal:has(.printSizeEditor) > .modalContent {
+  padding: 17px 19px 19px !important;
+}
+.globalModalLayer .printSizeEditor {
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 14px !important;
+}
+.globalModalLayer .printSizeEditorIntro {
+  padding: 13px 16px !important;
+  background: #f0f6ff !important;
+  border: 1px solid #d9e6fc !important;
+  border-radius: 13px !important;
+}
+.globalModalLayer .printSizeEditorIntro > b {
+  color: #204b96 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+.globalModalLayer .printSizeEditorIntro > small {
+  color: #475d79 !important;
+  font-size: 13px !important;
+  line-height: 1.9 !important;
+}
+.globalModalLayer .printSizeEditorIdentity > label {
+  display: grid !important;
+  gap: 7px !important;
+  color: #34445e !important;
+  font-size: 13.5px !important;
+  font-weight: 750 !important;
+}
+.globalModalLayer .printSizeEditorIdentity input,
+.globalModalLayer .printSizeEditorTariffGrid input {
+  min-height: 44px !important;
+  border: 1px solid #d5dfed !important;
+  border-radius: 10px !important;
+  padding: 9px 10px !important;
+  font-size: 14px !important;
+  background: #fff !important;
+  color: #152b4b !important;
+}
+.globalModalLayer .printSizeEditor input:focus {
+  border-color: #527ad4 !important;
+  outline: 3px solid #dce8ff !important;
+  outline-offset: 0 !important;
+}
+.globalModalLayer .printSizeEditorTariffRecord {
+  margin-top: 2px !important;
+  padding: 14px !important;
+  border: 1px solid #e1e9f4 !important;
+  border-radius: 14px !important;
+  background: #fafcff !important;
+}
+.globalModalLayer .printSizeEditorTariffTitle > b {
+  font-size: 15px !important;
+  color: #243c67 !important;
+}
+.globalModalLayer .printSizeEditorTariffTitle > small {
+  font-size: 12.5px !important;
+  color: #5e718a !important;
+  line-height: 1.7 !important;
+}
+.globalModalLayer .printSizeEditorTariffGrid {
+  gap: 12px !important;
+}
+.globalModalLayer .printSizeEditorTariffGrid > label {
+  gap: 6px !important;
+}
+.globalModalLayer .printSizeEditorTariffGrid > label > span {
+  font-size: 12.5px !important;
+  line-height: 1.55 !important;
+  font-weight: 750 !important;
+  color: #425675 !important;
+}
+.globalModalLayer .printSizeEditorActions {
+  position: sticky;
+  bottom: -19px;
+  z-index: 6;
+  margin: 2px -19px -19px !important;
+  padding: 12px 19px calc(14px + env(safe-area-inset-bottom,0px)) !important;
+  background: #fff !important;
+  border-top: 1px solid #e1e9f4 !important;
+  box-shadow: 0 -6px 20px rgba(24,40,74,.05) !important;
+}
+.globalModalLayer .printSizeEditorActions button {
+  min-height: 41px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+.pb1113PriceNoticeBack {
+  position: fixed;
+  inset: 0;
+  z-index: 210000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(17,30,56,.56);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.pb1113PriceNotice {
+  width: min(430px,100%);
+  padding: 24px 22px 20px;
+  border-radius: 19px;
+  border: 1px solid #dce6f2;
+  background: #fff;
+  color: #1a2c47;
+  direction: rtl;
+  text-align: right;
+  font-family: Vazirmatn,Tahoma,Arial,sans-serif;
+  box-shadow: 0 24px 75px #091a3c40;
+}
+.pb1113PriceNoticeIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: #e6f6ef;
+  color: #158455;
+  font-size: 27px;
+  font-weight: 900;
+}
+.pb1113PriceNotice[data-tone="error"] .pb1113PriceNoticeIcon {
+  background: #fff0ed;
+  color: #b33a32;
+}
+.pb1113PriceNotice h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 900;
+  color: #1d375a;
+}
+.pb1113PriceNotice p {
+  margin: 0 0 19px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #4b5b74;
+}
+.pb1113PriceNotice button {
+  width: 100%;
+  min-height: 45px;
+  border: 0;
+  border-radius: 11px;
+  background: #315ecb;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.pb1113PriceNotice button:focus-visible { outline: 3px solid #b9ccff; outline-offset: 3px; }
+@media(max-width:700px) {
+  .labPrintPricingCard > .panelHead p,
+  .labSettingsTabbed .settingsBody .labPrintPricingCard > .panelHead p {font-size: 13px !important;}
+  .globalModalLayer > .modal:has(.printSizeEditor) {
+    width: calc(100vw - 16px) !important;
+    border-radius: 15px !important;
+  }
+  .globalModalLayer > .modal:has(.printSizeEditor) > .modalContent {
+    padding: 13px 13px 15px !important;
+  }
+  .globalModalLayer .printSizeEditorIdentity {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .globalModalLayer .printSizeEditorIdentity > label:first-child {grid-column: 1 / -1 !important;}
+  .globalModalLayer .printSizeEditorTariffGrid {grid-template-columns: repeat(2,minmax(0,1fr)) !important;}
+  .globalModalLayer .printSizeEditorTariffTitle {align-items:start !important;}
+  .globalModalLayer .printSizeEditorActions {
+    bottom: -15px;
+    margin: 2px -13px -15px !important;
+    padding: 10px 13px calc(12px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  .globalModalLayer .printSizeEditorActions button {min-height: 43px !important;font-size: 12.5px !important;}
+}
+@media(max-width:390px) {
+  .globalModalLayer .printSizeEditorTariffGrid {grid-template-columns: repeat(2,minmax(0,1fr)) !important;}
+}

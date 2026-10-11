@@ -50,3 +50,15 @@ test('production HTML loads one R1098 stock controller and scroll recovery',()=>
  assert.equal(owner.split('/photobridge-r1095-owner-stock.js?v=1098').length-1,1);
  assert.equal(owner.split('/photobridge-r1098-owner-scroll.js?v=1098').length-1,1);
 });
+
+
+test('photographer invitations are SMS-only and the invite channel cannot be disabled by a shop',()=>{
+ assert.doesNotMatch(owner,/id="copyRentalInvite"|id="rentalInviteUrl"|>کپی لینک</);
+ assert.doesNotMatch(owner,/id="smsInviteEnabled"/);
+ assert.match(owner,/پیامک دعوت عکاس · همیشه فعال/);
+ assert.match(owner,/هزینه این پیامک توسط PhotoBridge پرداخت می‌شود/);
+ assert.match(owner,/inviteEnabled:true/);
+ assert.match(server,/if \(kind==='invite'\) return true;/);
+ assert.match(server,/inviteEnabled:true/);
+ assert.match(server,/Boolean\(b\.bookingApprovedEnabled\), true, b\.bookingStatusEnabled !== false/);
+});

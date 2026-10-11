@@ -11720,7 +11720,8 @@ function galleryPreviewQuality(service) {
     return Math.max(45, Math.min(68, Number.isFinite(n) ? n : 58));
 }
 function galleryLifetimeDays(service) {
-    return 30;
+    const n = Math.round(Number(service?.metadata?.lifetime_days ?? 30));
+    return Math.max(1, Math.min(180, Number.isFinite(n) ? n : 30));
 }
 function galleryPostCompletionDays(service) {
     const n = Math.round(Number(service?.metadata?.post_completion_days || 7));

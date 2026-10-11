@@ -2,7 +2,7 @@
 export function galleryExpirySql(alias='g') {
  const phone=value=>`right(regexp_replace(translate(coalesce(${value},''),'۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩','01234567890123456789'),'[^0-9]','','g'),10)`;
  const exempt=`EXISTS(SELECT 1 FROM users owner JOIN users admin ON ${phone('owner.mobile')}=${phone('admin.mobile')} WHERE owner.id=${alias}.owner_id AND owner.active=true AND admin.active=true AND admin.platform_role='platform_admin' AND length(${phone('admin.mobile')})=10)`;
- return `CASE WHEN ${exempt} THEN NULL::timestamptz ELSE GREATEST(COALESCE(${alias}.expires_at,${alias}.created_at+interval '30 days'),(SELECT max(gr.deadline_after) FROM photographer_gallery_renewals gr WHERE gr.gallery_id=${alias}.id)) END`;
+ return `CASE WHEN ${exempt} THEN NULL::timestamptz ELSE GREATEST(COALESCE(${alias}.expires_at,${alias}.created_at+(COALESCE(${alias}.lifetime_days_snapshot,30)::int||' days')::interval),(SELECT max(gr.deadline_after) FROM photographer_gallery_renewals gr WHERE gr.gallery_id=${alias}.id)) END`;
 }
 export async function maintainGalleryLifetime(pool, deleteObject, push = async()=>{}) {
  const expiry=galleryExpirySql('g');

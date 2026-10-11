@@ -1,1 +1,1 @@
-2026-10-11-r1110-admin-gallery-exemption-usage
+2026-10-11-r1111-configured-gallery-lifetime

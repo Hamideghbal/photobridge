@@ -4,7 +4,7 @@ async function serve(page,state){
  await page.route('**/*',async r=>{const u=new URL(r.request().url());
  if(u.pathname.startsWith('/api/')){
   if(u.pathname==='/api/photographer/navigation-tabs'){if(state.delay)await new Promise(resolve=>setTimeout(resolve,state.delay));return r.fulfill({json:{tabs:state.tabs||{ai:false,album:false,instagram:false},adminBypass:false}})}
-  if(u.pathname==='/api/customer/client-galleries')return r.fulfill({json:{billing:{enabled:true,fee:0,renewalFee:10000,freeGalleriesRemaining:state.remaining??3,freeGalleryLimit:3,maxPhotos:500,balance:0,unlimited:!!state.unlimited,lifetimeDays:30,postCompletionDays:7},galleries:[],printSizes:[],uploadAvailable:true}});
+  if(u.pathname==='/api/customer/client-galleries')return r.fulfill({json:{billing:{enabled:true,fee:0,renewalFee:10000,freeGalleriesRemaining:state.remaining??3,freeGalleryLimit:3,maxPhotos:500,balance:0,unlimited:!!state.unlimited,lifetimeDays:45,postCompletionDays:7},galleries:[],printSizes:[],uploadAvailable:true}});
   if(u.pathname==='/api/public/video-guides')return r.fulfill({json:{guides:state.guides||[]}});
   if(u.pathname==='/api/admin/photographers')return r.fulfill({json:{photographers:[{id:'photographer-1',name:'Test Studio',mobile:'09121234567',active:true,labs_count:1,active_labs_count:1,gallery_count:4,gallery_paid_total:35000}]}});
   if(u.pathname==='/api/auth/me'&&state.admin)return r.fulfill({json:{user:{userId:'admin',name:'Platform Admin',platformRole:'platform_admin',labRole:'lab_admin'}}});
@@ -24,7 +24,7 @@ test('gallery has one expiry, hides missing guides and shares the Store chooser 
  await page.goto('https://panel.test/photographer/gallery');await page.waitForSelector('.clientGalleryWorkspace');
  await page.waitForFunction(()=>['ready','missing'].includes(document.documentElement.dataset.pb1109GalleryGuide));
  const guide=page.locator('#pb793-gallery-video-guide');assert.equal(await guide.isVisible(),uploaded);
- const policy=await page.locator('.clientGalleryPolicyLine').textContent();assert.match(policy,/۳۰ روز/);assert.doesNotMatch(policy,/بعد از تأیید نهایی/);assert.match(policy,/خودکار حذف/);
+ const policy=await page.locator('.clientGalleryPolicyLine').textContent();assert.match(policy,/۴۵ روز/);assert.doesNotMatch(policy,/بعد از تأیید نهایی/);assert.equal(await page.locator('.clientGalleryPolicyLine>span').count(),1);
  const galleryTheme=await page.locator('.clientGalleryIntroHeader').evaluate(el=>{const s=getComputedStyle(el);return {background:s.backgroundImage,shadow:s.boxShadow,radius:s.borderRadius}});
  if(width<820){
  await page.locator('.photographerBottomAppNav').getByRole('button',{name:'فروشگاه',exact:true}).click();

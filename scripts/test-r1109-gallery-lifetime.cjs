@@ -6,7 +6,7 @@ test('gallery expiry: approval does not shorten lifetime, paid renewals survive,
  const pool=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  try{
  await pool.query(`CREATE TABLE users(id uuid PRIMARY KEY,name text,mobile text,active boolean DEFAULT true,platform_role text DEFAULT 'user',gallery_brand_name text,gallery_brand_logo_key text,gallery_brand_logo_content_type text);
- CREATE TABLE photographer_client_galleries(id uuid PRIMARY KEY,owner_id uuid,title text,status text DEFAULT 'published',public_token text,created_at timestamptz DEFAULT now(),expires_at timestamptz,cleanup_after timestamptz);
+ CREATE TABLE photographer_client_galleries(id uuid PRIMARY KEY,owner_id uuid,title text,status text DEFAULT 'published',public_token text,created_at timestamptz DEFAULT now(),lifetime_days_snapshot int DEFAULT 30,expires_at timestamptz,cleanup_after timestamptz);
  CREATE TABLE photographer_gallery_renewals(gallery_id uuid REFERENCES photographer_client_galleries ON DELETE CASCADE,deadline_after timestamptz);
  CREATE TABLE photographer_gallery_media(id uuid PRIMARY KEY,gallery_id uuid REFERENCES photographer_client_galleries ON DELETE CASCADE,object_key text);
  CREATE TABLE photographer_gallery_orders(id uuid PRIMARY KEY,gallery_id uuid REFERENCES photographer_client_galleries ON DELETE CASCADE,status text,is_current boolean DEFAULT true);
@@ -53,6 +53,8 @@ test('gallery expiry: approval does not shorten lifetime, paid renewals survive,
  const stats=await pool.query(`SELECT u.id,${countSql},${paidSql} FROM users u WHERE u.id=$1`,[owner]);
  assert.equal(Number(stats.rows[0].gallery_paid_total),35000,'include creation/renewal debit history, exclude wallet credit and other services');
  assert.equal(stats.rows[0].gallery_count,(await pool.query('SELECT count(*)::int n FROM photographer_client_galleries WHERE owner_id=$1',[owner])).rows[0].n);
- assert(source.includes('return 30;'),'new gallery lifetime stays 30 days');assert(!source.includes('SET cleanup_after=now()+'),'approval must never introduce another expiry');
+ const lifeStart=source.indexOf('function galleryLifetimeDays('),lifeEnd=source.indexOf('function galleryPostCompletionDays(',lifeStart);
+ const life=vm.runInNewContext(source.slice(lifeStart,lifeEnd)+';galleryLifetimeDays');
+ assert.equal(life({metadata:{lifetime_days:45}}),45);assert.equal(life({metadata:{lifetime_days:15}}),15);assert.equal(life({}),30);assert(!source.includes('SET cleanup_after=now()+'),'approval must never introduce another expiry');
  }finally{await pool.end();await admin.query(`DROP SCHEMA ${schema} CASCADE`);await admin.end()}
 });

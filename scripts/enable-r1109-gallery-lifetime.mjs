@@ -36,8 +36,8 @@ js=js.replace('defaultValue:((fe=w.metadata)==null?void 0:fe.lifetime_days)||30,
 js=js.replace('e.jsxs("label",{children:[e.jsx("span",{children:"مهلت بعد از تأیید نهایی"}),e.jsxs("div",{className:"moneyInput",children:[e.jsx("input",{type:"number",min:"1",max:"60",step:"1",defaultValue:((be=w.metadata)==null?void 0:be.post_completion_days)||7,id:`service-gallery-cleanup-${w.service_key}`}),e.jsx("span",{children:"روز"})]})]})','null');
 fs.writeFileSync(bundle,js);
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
- let html=fs.readFileSync(file,'utf8').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1110');
- if(!html.includes('/photobridge-r1109-gallery-policy.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1109-gallery-policy.css?v=r1110">\n<script defer src="/photobridge-r1109-gallery-guide.js?v=r1110"></script>\n</head>');
+ let html=fs.readFileSync(file,'utf8').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1111');
+ if(!html.includes('/photobridge-r1109-gallery-policy.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1109-gallery-policy.css?v=r1111">\n<script defer src="/photobridge-r1109-gallery-guide.js?v=r1111"></script>\n</head>');
  fs.writeFileSync(file,html);
 }
 
@@ -62,3 +62,20 @@ if(!adminJs.includes('q.gallery_paid_total')){
 let policyJs=fs.readFileSync(bundle,'utf8');
 policyJs=policyJs.replace('className:"clientGalleryPolicyLine",children:[','className:"clientGalleryPolicyLine",children:E?[e.jsx("span",{children:"گالری‌های حساب ادمین محدودیت زمانی و حذف خودکار ندارند؛ حذف فقط به‌صورت دستی انجام می‌شود."})]:[');
 fs.writeFileSync(bundle,policyJs);
+
+// R1111: lifetime comes from the admin setting; no post-approval retention prose.
+let lifetimeServer=fs.readFileSync('dist/api/server.js','utf8');
+lifetimeServer=lifetimeServer.replace('function galleryLifetimeDays(service) {\n    return 30;\n}',`function galleryLifetimeDays(service) {
+    const n = Math.round(Number(service?.metadata?.lifetime_days ?? 30));
+    return Math.max(1, Math.min(180, Number.isFinite(n) ? n : 30));
+}`);
+fs.writeFileSync('dist/api/server.js',lifetimeServer);
+let lifetimeJs=fs.readFileSync(bundle,'utf8');
+lifetimeJs=lifetimeJs.replace('defaultValue:30,readOnly:!0,id:`service-gallery-life-${w.service_key}`','defaultValue:((fe=w.metadata)==null?void 0:fe.lifetime_days)||30,id:`service-gallery-life-${w.service_key}`');
+lifetimeJs=lifetimeJs.replace(',e.jsx("span",{children:"برای نگهداری عکس‌ها، پیش از پایان مهلت گالری را تمدید کن؛ در غیر این صورت گالری خودکار حذف می‌شود."})','');
+lifetimeJs=lifetimeJs.replace('عمر اولیه هر گالری ','طول عمر گالری ');
+lifetimeJs=lifetimeJs.replace('e.jsx("p",{children:"گالری تا پایان مهلت ۳۰ روزه قابل استفاده است. تأیید نهایی مشتری این مهلت را تغییر نمی‌دهد؛ برای ادامه دسترسی، گالری را پیش از انقضا تمدید کن."})','null');
+lifetimeJs=lifetimeJs.replace('عکس‌ها به‌صورت پیش‌نمایش کم‌حجم ذخیره می‌شوند. مهلت گالری ۳۰ روز است و تأیید مشتری آن را تغییر نمی‌دهد. تمدید، ۳۰ روز به مهلت گالری اضافه می‌کند.','عکس‌ها به‌صورت پیش‌نمایش کم‌حجم ذخیره می‌شوند. طول عمر گالری از عدد تعیین‌شده در این بخش گرفته می‌شود. تمدید، ۳۰ روز به مهلت گالری اضافه می‌کند.');
+lifetimeJs=lifetimeJs.replace('L.cleanup_after?e.jsxs(e.Fragment,{children:["حذف پس از تکمیل: ",e.jsx("b",{children:vn(L.cleanup_after)})]}):L.expires_at?','L.expires_at?');
+lifetimeJs=lifetimeJs.replace('l.cleanup_after?"حذف خودکار":"پایان مهلت گالری"','"پایان مهلت گالری"').replace('l.cleanup_after?vn(l.cleanup_after):l.expires_at?vn(l.expires_at):"—"','l.expires_at?vn(l.expires_at):"—"');
+fs.writeFileSync(bundle,lifetimeJs);

@@ -29,8 +29,8 @@
   const active=nav.querySelector(':scope > button.active');
   if(!active||active.getBoundingClientRect().width===0){indicator.style.opacity='0';return;}
   const base=nav.getBoundingClientRect(),rect=active.getBoundingClientRect();
-  const width=Math.max(18,rect.width-14)+'px';
-  const x=Math.round(rect.left-base.left+7+nav.scrollLeft)+'px';
+  const width=Math.max(18,rect.width-12)+'px';
+  const x=Math.round(rect.left-base.left+6+nav.scrollLeft)+'px';
   if(!indicator.dataset.ready)indicator.style.transition='none';
   if(indicator.style.width!==width)indicator.style.width=width;
   if(indicator.style.transform!=='translateX('+x+')')indicator.style.transform='translateX('+x+')';
@@ -62,7 +62,7 @@
    button.classList.toggle('active',active===key);if(active===key)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
   }
   // Preserve ordering if settings enable a previously removed tab.
-  const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind="'+key+'"]')).filter(Boolean);if(ordered.some((b,i)=>b!==nav.children[i]))nav.replaceChildren(...ordered);
+  const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind="'+key+'"]')).filter(Boolean);if(ordered.some((b,i)=>b!==nav.querySelectorAll(':scope>button')[i])){const indicator=nav.querySelector(':scope>.pb1131MovingIndicator');nav.replaceChildren(...ordered);if(indicator)nav.append(indicator);}
   requestAnimationFrame(()=>placeMainIndicator(nav));
   const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
   if(wallet){const label='کیف پول · '+wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
@@ -101,15 +101,15 @@
    panel=document.createElement('section');panel.className='pb1126ContentPanel';panel.dataset.panel=key;
    const loading=document.createElement('div');loading.className='pb1126Loading';loading.textContent='در حال دریافت…';loading.setAttribute('role','status');
    const frame=document.createElement('iframe');frame.title=key==='store'?'فروشگاه':'چاپ';
-   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
+   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)reveal(frame);new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
    const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
   }
   closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
-  render();reveal(panel.querySelector('iframe'));
+  render();reveal(panel);
  }
- function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();reveal(document.querySelector('#root .photographerMain'));}
+ function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(document.querySelector('#root .photographerRolePageScrollArea')||document.querySelector('#root .photographerMain'))));}
  // Register before legacy full-document navigation handlers.
  window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
  window.addEventListener('resize',schedule,{passive:true});

@@ -10,5 +10,6 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
   html=html.replace(/<meta name="viewport"[^>]*>/,match=>match+'\n'+boot);
   html=html.replace('photobridge-r1099-photographer-tabs.js?v=1106','photobridge-r1099-photographer-tabs.js?v=r1129');
   html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?v=)[^"]+/g,'$1r1132');
+  if(!html.includes('/photobridge-r1132-photo-copies-mobile.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1132-photo-copies-mobile.css?v=r1132">\n</head>');
   fs.writeFileSync(path,html);
 }

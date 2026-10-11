@@ -18611,6 +18611,8 @@ ${inviteUrl}`;
             return sendJson(res, 403, { error: 'forbidden' });
         const q = await pool.query(`WITH base AS (
       SELECT u.id,COALESCE(pp.studio_name,u.name) name,u.mobile,u.photographer_enabled active,
+        (SELECT count(*)::int FROM photographer_client_galleries cg WHERE cg.owner_id=u.id) AS gallery_count,
+        COALESCE((SELECT sum(gt.amount) FROM photographer_service_wallet_transactions gt WHERE gt.user_id=u.id AND gt.service_key='client_gallery' AND gt.kind='debit'),0)::bigint AS gallery_paid_total,
         CASE WHEN u.photographer_enabled THEN NULL ELSE pp.updated_at END account_suspended_at,
         COALESCE(NULLIF(u.photographer_origin_invite_type,''),oi.issuer_type,'site') membership_source_type,
         oi.issuer_lab_id,oi.issuer_rental_shop_id,oi.issuer_user_id,

@@ -36,7 +36,29 @@ js=js.replace('defaultValue:((fe=w.metadata)==null?void 0:fe.lifetime_days)||30,
 js=js.replace('e.jsxs("label",{children:[e.jsx("span",{children:"مهلت بعد از تأیید نهایی"}),e.jsxs("div",{className:"moneyInput",children:[e.jsx("input",{type:"number",min:"1",max:"60",step:"1",defaultValue:((be=w.metadata)==null?void 0:be.post_completion_days)||7,id:`service-gallery-cleanup-${w.service_key}`}),e.jsx("span",{children:"روز"})]})]})','null');
 fs.writeFileSync(bundle,js);
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
- let html=fs.readFileSync(file,'utf8').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1109');
- if(!html.includes('/photobridge-r1109-gallery-policy.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1109-gallery-policy.css?v=r1109">\n<script defer src="/photobridge-r1109-gallery-guide.js?v=r1109"></script>\n</head>');
+ let html=fs.readFileSync(file,'utf8').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1110');
+ if(!html.includes('/photobridge-r1109-gallery-policy.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1109-gallery-policy.css?v=r1110">\n<script defer src="/photobridge-r1109-gallery-guide.js?v=r1110"></script>\n</head>');
  fs.writeFileSync(file,html);
 }
+
+// R1110: read-only gallery usage in the admin photographer directory.
+let adminServer=fs.readFileSync('dist/api/server.js','utf8');
+const usageAnchor="SELECT u.id,COALESCE(pp.studio_name,u.name) name,u.mobile,u.photographer_enabled active,";
+if(!adminServer.includes('AS gallery_paid_total')){
+ if(!adminServer.includes(usageAnchor))throw Error('Admin photographer usage anchor missing');
+ adminServer=adminServer.replace(usageAnchor,usageAnchor+`
+        (SELECT count(*)::int FROM photographer_client_galleries cg WHERE cg.owner_id=u.id) AS gallery_count,
+        COALESCE((SELECT sum(gt.amount) FROM photographer_service_wallet_transactions gt WHERE gt.user_id=u.id AND gt.service_key='client_gallery' AND gt.kind='debit'),0)::bigint AS gallery_paid_total,`);
+ fs.writeFileSync('dist/api/server.js',adminServer);
+}
+let adminJs=fs.readFileSync(bundle,'utf8');
+const usageCell='e.jsxs("small",{children:[V(q.labs_count||0)," اتصال ثبت‌شده"]})';
+if(!adminJs.includes('q.gallery_paid_total')){
+ if(!adminJs.includes(usageCell))throw Error('Admin photographer usage cell missing');
+ adminJs=adminJs.replace(usageCell,usageCell+',e.jsxs("small",{className:"pb1110GalleryUsage",children:[V(q.gallery_count||0)," گالری · پرداخت گالری: ",V(q.gallery_paid_total||0)," تومان"]})');
+ fs.writeFileSync(bundle,adminJs);
+}
+
+let policyJs=fs.readFileSync(bundle,'utf8');
+policyJs=policyJs.replace('className:"clientGalleryPolicyLine",children:[','className:"clientGalleryPolicyLine",children:E?[e.jsx("span",{children:"گالری‌های حساب ادمین محدودیت زمانی و حذف خودکار ندارند؛ حذف فقط به‌صورت دستی انجام می‌شود."})]:[');
+fs.writeFileSync(bundle,policyJs);

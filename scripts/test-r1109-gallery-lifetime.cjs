@@ -5,7 +5,7 @@ test('gallery expiry: approval does not shorten lifetime, paid renewals survive,
  const schema='gallery_life_'+crypto.randomBytes(6).toString('hex'),admin=new Pool({connectionString:url});await admin.query(`CREATE SCHEMA ${schema}`);
  const pool=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  try{
- await pool.query(`CREATE TABLE users(id uuid PRIMARY KEY,name text,gallery_brand_name text,gallery_brand_logo_key text,gallery_brand_logo_content_type text);
+ await pool.query(`CREATE TABLE users(id uuid PRIMARY KEY,name text,mobile text,active boolean DEFAULT true,platform_role text DEFAULT 'user',gallery_brand_name text,gallery_brand_logo_key text,gallery_brand_logo_content_type text);
  CREATE TABLE photographer_client_galleries(id uuid PRIMARY KEY,owner_id uuid,title text,status text DEFAULT 'published',public_token text,created_at timestamptz DEFAULT now(),expires_at timestamptz,cleanup_after timestamptz);
  CREATE TABLE photographer_gallery_renewals(gallery_id uuid REFERENCES photographer_client_galleries ON DELETE CASCADE,deadline_after timestamptz);
  CREATE TABLE photographer_gallery_media(id uuid PRIMARY KEY,gallery_id uuid REFERENCES photographer_client_galleries ON DELETE CASCADE,object_key text);
@@ -22,9 +22,14 @@ test('gallery expiry: approval does not shorten lifetime, paid renewals survive,
  const source=fs.readFileSync('dist/api/server.js','utf8'),start=source.indexOf('async function publicGalleryByToken('),end=source.indexOf('async function galleryCurrentOrderPublic(',start);
  const gate=vm.runInNewContext(source.slice(start,end)+';publicGalleryByToken',{pool,galleryExpirySql,Date});
  assert.equal(await gate(expired),null,'active retouching must not bypass expiry');assert(await gate(completed),'approval cleanup date must be ignored');assert(await gate(legacy),'honor a paid legacy renewal');
+ const adminOwner=crypto.randomUUID(),adminAccount=crypto.randomUUID();
+ await pool.query("INSERT INTO users(id,name,mobile,platform_role) VALUES($1,'Admin Photographer','۰۹۱۲۱۲۳۴۵۶۷','user'),($2,'Main Admin','+989121234567','platform_admin')",[adminOwner,adminAccount]);
+ const adminGallery=crypto.randomUUID();await pool.query("INSERT INTO photographer_client_galleries(id,owner_id,title,public_token,expires_at) VALUES($1,$2,'Admin Gallery',$3,now()-interval '100 days')",[adminGallery,adminOwner,adminGallery]);
+ assert(await gate(adminGallery),'admin mobile gallery must remain accessible after expiry');
  const deleted=[],pushes=[];await maintainGalleryLifetime(pool,async key=>deleted.push(key),async(user,row)=>pushes.push({user,row}));
  assert.deepEqual(deleted.sort(),['expired-photo','expired-proof']);assert.equal((await pool.query('SELECT 1 FROM photographer_client_galleries WHERE id=$1',[expired])).rowCount,0);
- assert.equal((await pool.query('SELECT 1 FROM photographer_client_galleries')).rowCount,4);
+ assert.equal((await pool.query('SELECT 1 FROM photographer_client_galleries')).rowCount,5);
+ assert.equal((await pool.query('SELECT 1 FROM photographer_client_galleries WHERE id=$1',[adminGallery])).rowCount,1,'never auto-delete admin gallery');
  assert.equal(pushes.length,1);assert.equal(pushes[0].row.metadata.galleryId,near);assert.equal(pushes[0].row.metadata.days,3);
  await Promise.all([maintainGalleryLifetime(pool,async()=>{},async()=>{throw Error('duplicate notice')}),maintainGalleryLifetime(pool,async()=>{},async()=>{throw Error('duplicate notice')})]);
  assert.equal((await pool.query('SELECT 1 FROM system_notifications')).rowCount,1);
@@ -36,11 +41,18 @@ test('gallery expiry: approval does not shorten lifetime, paid renewals survive,
  CREATE TABLE photographer_service_wallet_transactions(id uuid DEFAULT gen_random_uuid(),user_id uuid,service_key text,kind text,amount bigint,balance_after bigint,reference_type text,reference_id text,reference_key text,note text,metadata jsonb);`);
  await pool.query('INSERT INTO photographer_service_wallets(user_id,balance) VALUES($1,50000)',[owner]);
  const renewStart=source.indexOf('const customerGalleryRenew'),renewEnd=source.indexOf('const customerGalleryDetail',renewStart);
- const renew=vm.runInNewContext('(async function(req,url,a,labId,res){'+source.slice(renewStart,renewEnd)+'})',{pool,crypto,galleryExpirySql,bodyJson:async r=>r.body,isUnlimitedAdminPhotographer:async()=>false,photographerWalletEnsure:async()=>{},photographerEffectivePrice:async()=>({enabled:true,customer_enabled:true,effective_price:10000}),sendJson:(_r,status,body)=>({status,body}),CLIENT_GALLERY_SERVICE_KEY:'gallery',audit:async()=>{}});
+ const renew=vm.runInNewContext('(async function(req,url,a,labId,res){'+source.slice(renewStart,renewEnd)+'})',{pool,crypto,galleryExpirySql,bodyJson:async r=>r.body,isUnlimitedAdminPhotographer:async()=>false,photographerWalletEnsure:async()=>{},photographerEffectivePrice:async()=>({enabled:true,customer_enabled:true,effective_price:10000}),sendJson:(_r,status,body)=>({status,body}),CLIENT_GALLERY_SERVICE_KEY:'client_gallery',audit:async()=>{}});
  const legacyRenew=await add(-1,new Date(Date.now()-86400000));await pool.query("INSERT INTO photographer_gallery_renewals(gallery_id,deadline_after) VALUES($1,now()+interval '2 days')",[legacyRenew]);
  const renewalRequest={method:'POST',body:{idempotencyKey:'renew-test'}},renewalUrl={pathname:'/api/customer/client-galleries/'+legacyRenew+'/renew'};
  const out=await renew(renewalRequest,renewalUrl,{userId:owner},null,{});assert.equal(out.status,200);assert.equal(out.body.chargedAmount,10000);assert.equal(out.body.cleanupAfter,null);assert.equal(out.body.deadlineKind,'expires_at');assert(new Date(out.body.expiresAt).getTime()>Date.now()+31.9*86400000);
  const again=await renew(renewalRequest,renewalUrl,{userId:owner},null,{});assert.equal(again.status,200);assert.equal(again.body.alreadyProcessed,true);assert.equal((await pool.query('SELECT balance FROM photographer_service_wallets WHERE user_id=$1',[owner])).rows[0].balance,'40000');
+ await pool.query("INSERT INTO photographer_service_wallet_transactions(user_id,service_key,kind,amount) VALUES($1,'client_gallery','debit',25000),($1,'client_gallery','credit',90000),($1,'ai_retouch','debit',7000),($2,'client_gallery','debit',5000)",[owner,adminOwner]);
+ const adminStart=source.indexOf("url.pathname === '/api/admin/photographers'"),adminEnd=source.indexOf('const adminPhotographerAccount',adminStart),adminQuery=source.slice(adminStart,adminEnd);
+ const countSql=adminQuery.match(/\(SELECT count\(\*\)::int FROM photographer_client_galleries cg WHERE cg.owner_id=u.id\) AS gallery_count/)[0];
+ const paidSql=adminQuery.match(/COALESCE\(\(SELECT sum\(gt.amount\)[\s\S]*? AS gallery_paid_total/)[0];
+ const stats=await pool.query(`SELECT u.id,${countSql},${paidSql} FROM users u WHERE u.id=$1`,[owner]);
+ assert.equal(Number(stats.rows[0].gallery_paid_total),35000,'include creation/renewal debit history, exclude wallet credit and other services');
+ assert.equal(stats.rows[0].gallery_count,(await pool.query('SELECT count(*)::int n FROM photographer_client_galleries WHERE owner_id=$1',[owner])).rows[0].n);
  assert(source.includes('return 30;'),'new gallery lifetime stays 30 days');assert(!source.includes('SET cleanup_after=now()+'),'approval must never introduce another expiry');
  }finally{await pool.end();await admin.query(`DROP SCHEMA ${schema} CASCADE`);await admin.end()}
 });

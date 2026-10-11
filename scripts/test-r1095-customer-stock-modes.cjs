@@ -44,7 +44,7 @@ test('store displays item-by-item shortage quantities on the incoming order card
  assert.match(o,/عدد، موجود /);
 });
 test('production HTML includes exactly one script of each role',()=>{
- for(const [html,path] of [[owner,'/photobridge-r1095-owner-stock.js?v=1097'],[customer,'/photobridge-r1095-customer-stock.js?v=1097']]){
+ for(const [html,path] of [[owner,'/photobridge-r1095-owner-stock.js?v=1097'],[customer,'/photobridge-r1095-customer-stock.js?v=1098']]){
   assert.equal(html.split(path).length-1,1,path);
  }
 });

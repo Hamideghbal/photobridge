@@ -4,14 +4,14 @@
 const q=x=>document.querySelector(x),qa=x=>[...document.querySelectorAll(x)];
 const mode=()=>{try{const s=selectedShopRecord();return s?.customer_rental_stock_mode||s?.customerStockMode||'flexible'}catch{return'flexible'}};
 const strict=()=>mode()==='strict';
-const num=x=>Number(x||0).toLocaleString('fa-IR');
+const approvalNotice='این درخواست موقت است و نهایی نیست؛ فروشگاه باید آن را تأیید یا رد کند.';
 let signature='',seq=0,result=null,lastFetch=0,busy=false,renderedRoot=null,renderedSignature='',resultFingerprint='';
 const body=()=>{try{return requestBody()}catch{return null}};
 const ready=x=>x&&x.shopId&&x.startDate&&x.endDate;
 function status(text,bad=false){
  let note=q('#pbR1095CustomerNote');const list=q('#items');if(!list)return;
  if(!note){note=document.createElement('div');note.id='pbR1095CustomerNote';list.parentElement?.insertBefore(note,list)}
- note.hidden=!strict();const next=strict()?text:'';if(note.textContent!==next)note.textContent=next;
+ note.hidden=false;const next=approvalNotice+(text?' '+text:'');if(note.textContent!==next)note.textContent=next;
  note.classList.toggle('bad',bad);
 }
 function update(itemsData){
@@ -24,23 +24,23 @@ function update(itemsData){
   const row=map.get(cb.value),free=dated&&row?Math.max(0,Math.floor(Number(row.available||0))):0;
   const blocked=!dated||!row||row.valid===false||free===0;
   if(dated&&row&&blocked&&cb.checked){cb.checked=false;anyShort=true}
-  cb.disabled=blocked;
+  cb.dataset.pbR1098StockGuard='1';cb.disabled=blocked;
   qty.disabled=blocked;qty.max=String(Math.max(1,free));
   if(free>0&&Number(qty.value)>free){qty.value=String(free);anyShort=true}
   let note=card.querySelector('.pbR1095ItemStock');
   if(!note){note=document.createElement('small');note.className='pbR1095ItemStock';card.querySelector('.itemInfo')?.append(note)}
-  const msg=!dated?'ابتدا تاریخ آفیش را انتخاب کنید':!row?'در حال بررسی موجودی…':free===0?'موجود نمی‌باشد': 'موجودی آزاد در این تاریخ: '+num(free)+' عدد';
+  const msg=dated&&row&&blocked?'موجود نمی‌باشد':'';
   if(note.textContent!==msg)note.textContent=msg;
   note.classList.toggle('bad',blocked&&dated);
   card.classList.toggle('pbR1095ItemUnavailable',blocked);
   card.classList.toggle('pbRentalItemUnavailable',Boolean(dated&&row&&blocked));
  }
  try{updateRentalCartCountV810()}catch{}
- const desc=!dated?'برای انتخاب تجهیزات ابتدا تاریخ شروع و پایان را تعیین کنید.':!itemsData?'در حال بررسی موجودی واقعی تاریخ انتخاب‌شده…':anyShort?'موجودی تغییر کرده است؛ تعداد یا اقلام انتخابی اصلاح شد.':'فقط تجهیزاتی که در تمام روزهای این بازه موجودند قابل انتخاب‌اند.';
+ const desc=!dated?'ابتدا تاریخ آفیش را انتخاب کنید.':anyShort?'اقلام انتخابی را بررسی کنید.':'';
  status(desc,anyShort);
 }
 async function refresh(force=false){
- if(!strict()){if(signature){signature='';result=null;renderedRoot=null;renderedSignature='';seq++}status('');return}
+ if(!strict()){if(signature){signature='';result=null;renderedRoot=null;renderedSignature='';seq++}for(const card of qa('#items label.item')){const cb=card.querySelector('input.pick'),qty=card.querySelector('input.qty');if(cb?.dataset.pbR1098StockGuard==='1'){cb.disabled=false;if(qty){qty.disabled=false;qty.max='99'}delete cb.dataset.pbR1098StockGuard}card.classList.remove('pbRentalItemUnavailable','pbR1095ItemUnavailable');card.querySelector('.pbR1095ItemStock')?.remove()}status('');return}
  const b=body();if(!b)return;
  const key=[b.shopId,b.startDate,b.endDate,(typeof items!=='undefined'?items:[]).map(x=>x.id).join(',')].join('|');
  const changed=signature!==key,needsPaint=renderedRoot!==(q('#items')?.firstElementChild||null)||renderedSignature!==key;
@@ -72,7 +72,7 @@ async function checkFinal(e){
   const out=await api('/api/customer/equipment-rental/availability',{method:'POST',body:JSON.stringify(b)});
   const lacks=(out.items||[]).filter(x=>x.valid===false||Number(x.shortage||0)>0);
   if(lacks.length||!out.available){
-   const detail=lacks.map(x=>(x.title||'تجهیز')+': درخواست '+num(x.requested)+'، موجود '+num(x.available)+'، کسری '+num(x.shortage)).join(' | ');
+   const detail=lacks.map(x=>(x.title||'تجهیز')+' — موجود نمی‌باشد').join(' | ');
    const m=q('#rentalRequestMsgV809');if(m)m.innerHTML='<div class="msg">'+escapeHtml(detail||'موجودی این تاریخ کافی نیست؛ اقلام را اصلاح کنید.')+'</div>';
    status('برخی اقلام انتخابی برای این تاریخ موجود نیستند.',true);await refresh(true);return;
   }
@@ -86,7 +86,7 @@ function attach(){
  const list=q('#items');if(list&&!list.dataset.pbR1095Watch){list.dataset.pbR1095Watch='1';new MutationObserver(()=>{if(strict())void refresh(false)}).observe(list,{childList:true})}
  for(const id of ['start','end']){const field=q('#'+id);if(field&&!field.dataset.pbR1095Watch){field.dataset.pbR1095Watch='1';field.addEventListener('change',()=>void refresh(true));field.addEventListener('input',()=>void refresh(true))}}
 }
-function tick(){attach();if(strict())void refresh(false);else{const note=q('#pbR1095CustomerNote');if(note)note.hidden=true}}
+function tick(){attach();void refresh(false)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick,{once:true});else tick();
 setInterval(tick,2200);
 document.addEventListener('click',e=>{if(e.target.closest?.('.pbR63OfficeBtn'))setTimeout(()=>void refresh(true),0)});

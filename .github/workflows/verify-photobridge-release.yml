@@ -79,6 +79,11 @@ jobs:
           node --check dist/web/photobridge-r1095-customer-stock.js
           node --test scripts/test-r1096-photographer-store.cjs
           node --test scripts/test-r1095-customer-stock-modes.cjs
+      - name: Verify photographer navigation settings
+        run: |
+          node --check dist/api/photographer-tab-settings.js
+          node --check dist/web/photobridge-r1099-photographer-tabs.js
+          node --test scripts/test-r1099-tab-settings.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

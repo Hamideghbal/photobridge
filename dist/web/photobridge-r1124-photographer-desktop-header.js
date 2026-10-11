@@ -2,7 +2,7 @@
   'use strict';
   if(!matchMedia('(min-width:821px)').matches)return;
   let avatar='',scheduled=false;
-  const header=()=>document.getElementById('photographerRoleHeaderV710');
+  const header=()=>document.getElementById('photographerRoleHeaderV710')||document.getElementById('photographerStoreRoleHeader');
   const source=(root,selector)=>root?.querySelector(selector);
   function render(){
     scheduled=false;
@@ -16,6 +16,13 @@
     if(!actions){actions=document.createElement('div');actions.className='pb1124PrimaryActions';actions.innerHTML='<button class="pb1124Wallet" type="button">کیف پول</button><button class="pb1124Exit" type="button">خروج</button>';h.append(actions);
       actions.querySelector('.pb1124Wallet').addEventListener('click',()=>source(h,'.headerWalletBadge,.mobileHeaderWallet')?.click());
       actions.querySelector('.pb1124Exit').addEventListener('click',()=>source(h,'.headerLogoutBtn,.mobileHeaderPower')?.click());
+    }
+    if(h.id==='photographerStoreRoleHeader'&&!source(h,'.pb1125SecondaryActions')){
+      const row=document.createElement('div');row.className='pb1125SecondaryActions';
+      h.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)').forEach(original=>{
+        const copy=original.cloneNode(true);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+        copy.addEventListener('click',()=>original.click());row.append(copy);
+      });h.append(row);
     }
     const wallet=source(h,'.headerWalletBadge,.mobileHeaderWallet');const button=source(actions,'.pb1124Wallet');
     if(wallet&&button){const value=(wallet.textContent?.trim()||'').replace(/^اعتبار\s*/,'').replace(/^کیف پول\s*/,'');const label=`کیف پول · ${value||'۰'}`;if(button.textContent!==label)button.textContent=label;}

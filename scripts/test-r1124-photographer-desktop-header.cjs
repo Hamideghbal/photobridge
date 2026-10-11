@@ -7,7 +7,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
   const {chromium}=require('playwright');
   const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
   try{
-    for(const [width,route] of [[1366,'/photographer/gallery'],[1024,'/photographer/gallery'],[1366,'/photographer/orders/flow?workspace=print&pbEntryDone=lab'],[390,'/photographer/gallery']]){
+    for(const [width,route] of [[1366,'/photographer/gallery'],[1024,'/photographer/gallery'],[1366,'/photographer/orders/flow?workspace=print&pbEntryDone=lab'],[1366,'/photographer/orders/flow?workspace=print&pbLabChooser=1'],[1366,'/equipment-rental/book'],[390,'/photographer/gallery']]){
       const page=await browser.newPage({viewport:{width,height:900},serviceWorkers:'block'});
       const errors=[];page.on('pageerror',error=>errors.push(error.message));
       await page.route('**/*',async request=>{
@@ -21,18 +21,22 @@ test('photographer desktop header aligns identity, navigation and actions while 
           if(url.pathname==='/api/photographer/navigation-tabs')result={tabs:{ai:true,album:true,instagram:true}};
           return request.fulfill({json:result});
         }
-        const target=url.pathname==='/'||!path.extname(url.pathname)?'dist/web/index.html':'dist/web'+url.pathname;
+        const target=url.pathname==='/equipment-rental/book'?'dist/api/equipment-rental-book.html':url.pathname==='/'||!path.extname(url.pathname)?'dist/web/index.html':'dist/web'+url.pathname;
         return fs.existsSync(target)?request.fulfill({path:path.resolve(target)}):request.fulfill({status:404,body:''});
       });
       await page.goto('https://panel.test'+route);
-      await page.locator('#photographerRoleHeaderV710').waitFor({state:'attached'});
+      const headerId=route.startsWith('/equipment')?'#photographerStoreRoleHeader':'#photographerRoleHeaderV710';
+      await page.locator(headerId).waitFor({state:'attached'});
       if(width>820){
-        await page.locator('#photographerRoleHeaderV710 .pb1124Avatar img').waitFor();
-        const boxes=await page.locator('#photographerRoleHeaderV710').evaluate(header=>{
+        await page.locator(headerId+' .pb1124Avatar img').waitFor();
+        const boxes=await page.locator(headerId).evaluate(header=>{
           const rect=selector=>{const bounds=(selector?header.querySelector(selector):header).getBoundingClientRect();return {x:bounds.x,y:bounds.y,width:bounds.width,height:bounds.height}};
-          return {header:rect(),identity:rect('.photographerHeaderIdentity'),nav:rect('.photographerHeaderNav'),actions:rect('.pb1124PrimaryActions'),secondary:rect('.photographerHeaderTools,.photographerPrintModeUtilityCluster')};
+          return {header:rect(),identity:rect('.photographerHeaderIdentity'),nav:rect('.photographerHeaderNav'),actions:rect('.pb1124PrimaryActions'),secondary:rect(header.id==='photographerStoreRoleHeader'?'.pb1125SecondaryActions':'.photographerHeaderTools,.photographerPrintModeUtilityCluster')};
         });
         assert.equal(boxes.header.height,114);
+        assert.equal(boxes.header.y,0,'header must touch the top of the viewport');
+        if(route.startsWith('/equipment')){assert.equal((await page.locator('#storePhotographerWorkspace>.shell').boundingBox()).y,114);await page.evaluate(()=>document.body.classList.remove('pbR96ChoosingStore'));const back=await page.locator('#pbR1123StoreBack').boundingBox();assert(back.y>=72&&back.y+back.height<=114);assert.equal(back.x,22);assert.equal(await page.locator('#photographerStoreIdentityBar').isVisible(),false);assert.equal(await page.locator('#storeSectionNavV673').isVisible(),false);assert.equal(await page.locator(headerId+' .photographerHomeModeNav').isVisible(),false);const storeNav=await page.locator('#pbR1123StoreDesktopNav').boundingBox();assert(storeNav.y<72);assert(storeNav.x>boxes.actions.x+boxes.actions.width);assert(storeNav.x+storeNav.width<boxes.identity.x);}
+        if(route.includes('pbLabChooser=1')){await page.locator('#pbR99LabChooser').waitFor();assert.equal((await page.locator('#pbR99LabChooser').boundingBox()).y,114);assert(await page.evaluate(()=>document.elementFromPoint(innerWidth-30,30).closest('#photographerRoleHeaderV710')!==null));}
         assert(boxes.identity.x>boxes.nav.x+boxes.nav.width,'identity belongs on the right');
         assert(boxes.actions.x+boxes.actions.width<boxes.nav.x,'wallet and exit belong on the left');
         assert(boxes.secondary.y>=boxes.header.y+72,'secondary actions belong under the fade line');

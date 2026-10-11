@@ -1,12 +1,18 @@
 /* A persistent photographer dock hosts the legacy Store/Print documents as content panels. */
 (()=>{
 'use strict';
-if(!matchMedia('(max-width:820px)').matches)return;
+if(!matchMedia('(max-width:820px)').matches||window.pb1134MobilePanelMounted)return;
+window.pb1134MobilePanelMounted=true;
 const initialQuery=new URLSearchParams(location.search),embedded=initialQuery.get('pbEmbeddedStore')==='1';
 const route=/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(signup|login|invite|register)(?:\/|$)/.test(location.pathname);
 if(embedded){
  document.documentElement.dataset.pb1106Embedded='1';
- const style=document.createElement('style');style.textContent='html[data-pb1106-embedded] body #photographerStoreBottomNav#photographerStoreBottomNav,html[data-pb1106-embedded] body .photographerBottomAppNav.photographerBottomAppNav{display:none!important}html[data-pb1106-embedded] body{padding-bottom:0!important}';document.head.append(style);return;
+ const style=document.createElement('style');style.textContent='html[data-pb1106-embedded] body #photographerStoreBottomNav#photographerStoreBottomNav,html[data-pb1106-embedded] body .photographerBottomAppNav.photographerBottomAppNav{display:none!important}html[data-pb1106-embedded] body{padding-bottom:0!important}';document.head.append(style);
+ // Legacy route styles must not restore a second dock inside the content frame.
+ const hideEmbeddedDock=()=>document.querySelectorAll('#photographerStoreBottomNav,.photographerBottomAppNav').forEach(nav=>{if(nav.style.getPropertyValue('display')!=='none'||nav.style.getPropertyPriority('display')!=='important')nav.style.setProperty('display','none','important');});
+ const watchEmbeddedDock=()=>{hideEmbeddedDock();new MutationObserver(hideEmbeddedDock).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchEmbeddedDock,{once:true});else watchEmbeddedDock();
+ return;
 }
 if(location.pathname==='/equipment-rental/book'&&window===window.top){
  const q=new URLSearchParams({pbStorePanel:'store',pbStoreQuery:location.search});location.replace('/photographer/gallery?'+q);return;

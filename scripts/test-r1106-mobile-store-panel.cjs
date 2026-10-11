@@ -26,6 +26,7 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  const frame=await page.locator('#pb1106StorePanel iframe').elementHandle().then(x=>x.contentFrame());
  await frame.waitForSelector('#storePhotographerWorkspace',{state:'attached'});await page.waitForSelector('#pb1106StoreLoading',{state:'hidden'});
  assert.equal(await frame.locator('#photographerStoreBottomNav').isVisible(),false,'store content must not duplicate the dock');
+ await frame.locator('#photographerStoreBottomNav').evaluate(nav=>nav.style.setProperty('display','flex','important'));await frame.waitForFunction(()=>document.querySelector('#photographerStoreBottomNav').style.getPropertyValue('display')==='none');assert.equal(await frame.locator('#photographerStoreBottomNav').isVisible(),false,'legacy inline styles cannot restore an embedded dock');
  assert(await nav.isVisible());
  for(const y of [30,140,260]){
  const topOwner=await page.evaluate(y=>document.elementFromPoint(innerWidth/2,y)?.closest('#pb1106StorePanel')?.id||null,y);

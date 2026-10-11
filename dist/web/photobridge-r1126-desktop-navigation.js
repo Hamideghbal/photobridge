@@ -66,7 +66,7 @@
   requestAnimationFrame(()=>placeMainIndicator(nav));
   if(previousActive&&previousActive!==active&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
    const selectedButton=nav.querySelector('[data-pb1126-kind="'+active+'"]');
-   if(selectedButton){selectedButton.classList.remove('pb1132Selected');void selectedButton.offsetWidth;selectedButton.classList.add('pb1132Selected');setTimeout(()=>selectedButton.classList.remove('pb1132Selected'),310);}
+   if(selectedButton)press(selectedButton);
   }
   nav.dataset.pb1132Active=active;
   const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
@@ -97,7 +97,14 @@
    row.dataset.source=signature;
   }
  }
- function press(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{transform:'scale(1)'},{transform:'scale(.94)',filter:'brightness(.97)'},{transform:'scale(1)',filter:'none'}],{duration:200,easing:'ease-out'});}
+ const pressTimers=new WeakMap();
+ function press(el){
+  if(!el||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  clearTimeout(pressTimers.get(el));
+  el.style.setProperty('animation','none','important');void el.offsetWidth;
+  el.style.setProperty('animation','pb1134HeaderMove .26s cubic-bezier(.2,.8,.2,1)','important');
+  pressTimers.set(el,setTimeout(()=>{el.style.removeProperty('animation');pressTimers.delete(el);},320));
+ }
  function motionContent(doc){return doc?.querySelector('#pbR99LabChooser')||doc?.querySelector('.rentalPanel.mobileActive,.simplePrintPilot,.photographerRolePageScrollArea');}
  function reveal(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});}
 
@@ -119,7 +126,7 @@
  }
  function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(document.querySelector('#root .photographerRolePageScrollArea')||document.querySelector('#root .photographerMain'))));}
  // Register before legacy full-document navigation handlers.
- window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
+ window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();navigate(b.dataset.pb1126Kind);},true);
  window.addEventListener('resize',schedule,{passive:true});
  window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print'].includes(panel))open(panel,false);else{closePanels();schedule();}});
  window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}schedule();}});

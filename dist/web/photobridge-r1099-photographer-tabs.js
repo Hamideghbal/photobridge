@@ -21,6 +21,7 @@ function feature(el){
  return null;
 }
 function currentFeature(){
+ if(new URLSearchParams(location.search).has('pbStorePanel'))return null;
  if(location.pathname.startsWith('/photographer/ai'))return 'ai';
  if(location.pathname.startsWith('/photographer/album-design'))return new URLSearchParams(location.search).get('pb_mode')==='instagram'?'instagram':'album';
  if(location.pathname.startsWith('/instagram-post-design'))return 'instagram';
@@ -69,7 +70,7 @@ async function openAdmin(){
 }
 async function load(){
  if(!photographer()||inFlight)return;inFlight=true;loadedPath=location.pathname;
- try{settings=await api('/api/photographer/navigation-tabs');apply()}catch{}finally{inFlight=false}
+ try{settings=await api('/api/photographer/navigation-tabs');apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{inFlight=false}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

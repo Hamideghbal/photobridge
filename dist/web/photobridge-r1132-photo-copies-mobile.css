@@ -49,3 +49,18 @@
   flex:0 0 27px!important;min-height:27px!important;height:27px!important;
  }
 }
+
+/* Match the Store admin's active pane slide/fade, without covering the
+   moving underline or affecting the mobile photographer layout. */
+@media(min-width:821px){
+ @keyframes pb1132PanelIn{
+  from{opacity:.35;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+ }
+ html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){
+  animation:pb1132PanelIn .24s cubic-bezier(.2,.8,.2,1) both!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){animation:none!important}
+}

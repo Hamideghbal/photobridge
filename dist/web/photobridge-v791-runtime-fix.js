@@ -118,7 +118,7 @@
   }
   async function deleteGallery(g,card,button){
     const title=String(g?.title||'این گالری');
-    if(!confirm(`گالری «${title}» و عکس‌ها و اطلاعات مربوط به آن حذف شود؟ این کار قابل بازگشت نیست.`))return;
+    if(!await window.pb1113GalleryConfirm(`گالری «${title}» و عکس‌ها و اطلاعات مربوط به آن حذف شود؟ این کار قابل بازگشت نیست.`))return;
     button.disabled=true;button.textContent='در حال حذف…';
     try{
       const r=await fetch(`/api/customer/client-galleries/${encodeURIComponent(String(g.id))}`,{method:'DELETE',credentials:'include',cache:'no-store',headers:authHeaders()});
@@ -127,7 +127,7 @@
       const count=qs('.clientGalleryListHead p');
       if(count){const n=qsa('.clientGalleryCard').length;count.textContent=`${fa(n)} گالری ساخته شده`}
     }catch{
-      button.disabled=false;button.textContent='حذف گالری';alert('حذف گالری انجام نشد. اتصال را بررسی و دوباره تلاش کن.');
+      button.disabled=false;button.textContent='حذف گالری';window.pb1113GalleryNotice('حذف گالری انجام نشد. اتصال را بررسی و دوباره تلاش کن.');
     }
   }
   function renewalEligible(deadline){
@@ -145,7 +145,7 @@
     if(!g?.id||button?.disabled)return;
     let d;try{d=await galleryData()}catch{d={}}
     const fee=Number(d?.billing?.renewalFee??d?.billing?.fee??0),days=Number(d?.billing?.renewalDays||30);
-    if(!confirm(`تمدید این گالری برای ${fa(days)} روز${fee>0?` با هزینه ${fee.toLocaleString('fa-IR')} تومان`:' بدون هزینه'} انجام شود؟`))return;
+    if(!await window.pb1113GalleryConfirm(`تمدید این گالری برای ${fa(days)} روز${fee>0?` با هزینه ${fee.toLocaleString('fa-IR')} تومان`:' بدون هزینه'} انجام شود؟`))return;
     const key=renewalKey(String(g.id));button.disabled=true;button.textContent='در حال تمدید…';
     try{
       const r=await fetch(`/api/customer/client-galleries/${encodeURIComponent(String(g.id))}/renew`,{method:'POST',credentials:'include',cache:'no-store',headers:authHeaders(),body:JSON.stringify({idempotencyKey:key.value})});
@@ -153,11 +153,11 @@
       if(!r.ok){
         if(r.status===402&&out?.error==='service_wallet_insufficient'){
           button.disabled=false;button.textContent='تمدید گالری';
-          if(confirm(`موجودی کیف پول کافی نیست. مبلغ لازم ${Number(out.required||fee).toLocaleString('fa-IR')} تومان است. به کیف پول بروی؟`)){history.pushState({},'', '/photographer/wallet');dispatchEvent(new PopStateEvent('popstate'));}
+          if(await window.pb1113GalleryConfirm(`موجودی کیف پول کافی نیست. مبلغ لازم ${Number(out.required||fee).toLocaleString('fa-IR')} تومان است. به کیف پول بروی؟`)){history.pushState({},'', '/photographer/wallet');dispatchEvent(new PopStateEvent('popstate'));}
           return;
         }
         if(out?.error==='gallery_renewal_not_yet_available'){button.remove();return}
-        if(out?.error==='gallery_renewal_expired'){button.disabled=false;button.textContent='تمدید گالری';alert('این گالری از مهلت عادی گذشته است؛ اگر هنوز حذف نشده باشد می‌توان آن را بازیابی و تمدید کرد. دوباره تلاش کن.');return}
+        if(out?.error==='gallery_renewal_expired'){button.disabled=false;button.textContent='تمدید گالری';window.pb1113GalleryNotice('این گالری از مهلت عادی گذشته است؛ اگر هنوز حذف نشده باشد می‌توان آن را بازیابی و تمدید کرد. دوباره تلاش کن.');return}
         throw new Error(out?.error||'gallery_renew_failed');
       }
       try{sessionStorage.removeItem(key.storageKey)}catch{}
@@ -166,9 +166,9 @@
       const deadline=g.cleanup_after||g.expires_at||out.deadlineAfter||'';
       if(life&&deadline){life.dataset.deadline=String(deadline);life.textContent=remainingLabel(deadline)}
       button.remove();gallerySnapshot=null;
-      alert(`گالری ${fa(Number(out.renewalDays||days))} روز تمدید شد${Number(out.chargedAmount||0)>0?` · ${Number(out.chargedAmount).toLocaleString('fa-IR')} تومان از کیف پول کسر شد`:''}.`);
+      window.pb1113GalleryNotice(`گالری ${fa(Number(out.renewalDays||days))} روز تمدید شد${Number(out.chargedAmount||0)>0?` · ${Number(out.chargedAmount).toLocaleString('fa-IR')} تومان از کیف پول کسر شد`:''}.`);
     }catch{
-      button.disabled=false;button.textContent='تمدید گالری';alert('تمدید گالری انجام نشد. اتصال را بررسی و دوباره تلاش کن.');
+      button.disabled=false;button.textContent='تمدید گالری';window.pb1113GalleryNotice('تمدید گالری انجام نشد. اتصال را بررسی و دوباره تلاش کن.');
     }
   }
 

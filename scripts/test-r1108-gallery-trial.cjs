@@ -17,16 +17,19 @@ test('real gallery create: three free galleries, paid fourth, deletion, rollback
  CREATE TABLE lab_hidden_print_sizes(lab_id uuid,size_id text);`);
  const {galleryCreationOffer,recordGalleryTrial}=await import('../dist/api/gallery-trial.js');
  const source=fs.readFileSync('dist/api/server.js','utf8'),start=source.indexOf("if (req.method === 'POST' && url.pathname === '/api/customer/client-galleries')"),end=source.indexOf('const customerGalleryRenew',start);
+ const lifeStart=source.indexOf('function galleryLifetimeDays('),lifeEnd=source.indexOf('function galleryPostCompletionDays(',lifeStart);
+ const lifetime=vm.runInNewContext(source.slice(lifeStart,lifeEnd)+';galleryLifetimeDays');
  const run=vm.runInNewContext('(async function(req,url,a,labId,res){'+source.slice(start,end)+'})',{
   pool,crypto,passwordHash:()=> 'hash',bodyJson:async req=>req.body,normalizeMobile:s=>s,cleanGalleryCode:s=>s,
   sendJson:(_res,status,body)=>({status,body}),isUnlimitedAdminPhotographer:async()=>false,
-  photographerWalletEnsure:async()=>{},photographerEffectivePrice:async()=>({enabled:true,customer_enabled:true,effective_price:10000}),
-  galleryServiceMaxPhotos:()=>500,galleryLifetimeDays:()=>30,galleryPostCompletionDays:()=>7,
+  photographerWalletEnsure:async()=>{},photographerEffectivePrice:async()=>({enabled:true,customer_enabled:true,effective_price:10000,metadata:{lifetime_days:45}}),
+  galleryServiceMaxPhotos:()=>500,galleryLifetimeDays:lifetime,galleryPostCompletionDays:()=>7,
   galleryCreationOffer,recordGalleryTrial,CLIENT_GALLERY_SERVICE_KEY:'client_gallery',PUBLIC_APP_URL:'https://test.invalid',audit:async()=>{}
  });
  const user=crypto.randomUUID(),lab=crypto.randomUUID(),create=id=>run({method:'POST',body:{title:'Trial',customerName:'Customer',customerMobile:'',accessCode:'1234'}},{pathname:'/api/customer/client-galleries'},{userId:id},lab,{});
  await pool.query('INSERT INTO photographer_service_wallets VALUES($1,0,now())',[user]);
  for(let i=0;i<3;i++){const r=await create(user);assert.equal(r.status,201);assert.equal(r.body.chargedAmount,0);assert.equal(r.body.balance,0)}
+ const dates=await pool.query("SELECT lifetime_days_snapshot,extract(epoch from (expires_at-now()))/86400 days FROM photographer_client_galleries WHERE owner_id=$1",[user]);assert(dates.rows.every(g=>g.lifetime_days_snapshot===45&&Number(g.days)>44.99&&Number(g.days)<=45),'creation uses the actual admin lifetime setting');
  assert.equal((await create(user)).status,402);
  assert.equal((await pool.query('SELECT count(*)::int n FROM audit_log')).rows[0].n,3);
  await pool.query('DELETE FROM photographer_client_galleries');assert.equal((await create(user)).status,402,'deletion must not restore trials');

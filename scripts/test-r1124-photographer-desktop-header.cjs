@@ -43,6 +43,8 @@ test('photographer desktop header aligns identity, navigation and actions while 
         if(chooser)assert.equal(await header.locator('.pb1126Secondary').isVisible(),false);else assert(geometry.secondary.y>=72);
         assert.deepEqual(await header.locator('.pb1126MainNav button').allTextContents(),['چاپ','گالری','فروشگاه']);
         assert.equal(await page.locator('#photographerRoleHeaderV710').isVisible(),false);
+        if(route.includes('pbEntryDone=lab'))await page.locator('.chatDock').waitFor();
+        else assert.equal(await page.locator('.chatDock').isVisible(),false,'chat is hidden outside an entered Lab');
         if(route.includes('pbLabChooser=1')){
           await page.locator('#pbR99LabChooser').waitFor();
           assert.equal((await page.locator('#pbR99LabChooser').boundingBox()).y,72);
@@ -64,6 +66,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
             function sample(){const h=document.querySelector('#pb1126DesktopHeader');const native=document.querySelector('#photographerRoleHeaderV710');window.pb1126Samples.push({same:h===window.pb1126Header,y:h?.getBoundingClientRect().y,labels:[...h.querySelectorAll('.pb1126MainNav button')].filter(b=>getComputedStyle(b).display!=='none').map(b=>b.textContent),native:native&&getComputedStyle(native).display!=='none'});window.pb1126Sampling=requestAnimationFrame(sample)}sample();
           });
           const identity=await header.locator('.photographerHeaderIdentity h1').innerText();
+          let chooserGeometry;
           const positions=await header.locator('.pb1126MainNav button').evaluateAll(bs=>bs.map(b=>({x:b.getBoundingClientRect().x,y:b.getBoundingClientRect().y,width:b.getBoundingClientRect().width})));
           for(const key of ['store','gallery','print','gallery','store','print','gallery']){
             await header.locator('[data-pb1126-kind="'+key+'"]').click();
@@ -72,16 +75,24 @@ test('photographer desktop header aligns identity, navigation and actions while 
               const frame=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
               await frame.locator(key==='store'?'#photographerStoreRoleHeader':'#pbR99LabChooser').waitFor({state:'attached'});
               assert.equal(await frame.locator(key==='store'?'#photographerStoreRoleHeader':'#photographerRoleHeaderV710').isVisible(),false);
-              await page.evaluate(()=>Promise.all([...document.querySelectorAll('.pb1126ContentPanel iframe')].flatMap(el=>el.getAnimations()).map(a=>a.finished)));
+              await page.evaluate(()=>Promise.all([...document.querySelectorAll('.pb1126ContentPanel iframe')].flatMap(el=>el.getAnimations()).map(a=>a.finished.catch(()=>{}))));
+              await frame.locator('body').evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
+              const intro=frame.locator(key==='store'?'.pbR96StoreChooserHead':'.pbR99LabIntro');await intro.waitFor();
+              const box=await intro.boundingBox();
+              assert.equal(box.y,92,'chooser introduction has a 20px gap below the main header');
+              assert.equal(box.height,176);assert.equal(box.width,760);
+              const design=await intro.evaluate(el=>{const s=getComputedStyle(el);return {background:s.backgroundImage,shadow:s.boxShadow,radius:s.borderRadius}});
+              if(chooserGeometry)assert.deepEqual({box,design},chooserGeometry,'Store and Lab chooser introductions match exactly');else chooserGeometry={box,design};
+              if(key==='print')assert.equal(await frame.locator('.chatDock').isVisible(),false,'Lab chooser has no chat');
               assert.equal((await frame.locator(key==='store'?'#storePhotographerWorkspace>.shell':'#pbR99LabChooser').boundingBox()).y,72,'embedded content starts immediately below the shared header');
             }
-            await page.evaluate(()=>Promise.all(document.querySelector('#pb1126DesktopHeader').getAnimations({subtree:true}).map(a=>a.finished)));
+            await page.evaluate(()=>Promise.all(document.querySelector('#pb1126DesktopHeader').getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{}))));
             assert.equal(await header.locator('.photographerHeaderIdentity h1').innerText(),identity);
             assert.equal(await header.locator('.photographerHeaderIdentity h1').evaluate(el=>getComputedStyle(el).fontSize),'16px','name size remains identical across tabs');
             assert.deepEqual(await header.locator('.pb1126MainNav button').evaluateAll(bs=>bs.map(b=>({x:b.getBoundingClientRect().x,y:b.getBoundingClientRect().y,width:b.getBoundingClientRect().width}))),positions);
           }
           assert.equal(await page.locator('.pb1126ContentPanel').count(),2,'panels must be reused');
-          const switchTime=await page.evaluate(()=>{const start=performance.now();document.querySelector('[data-pb1126-kind="store"]').click();return performance.now()-start});assert(switchTime<250,'a warm tab switch must not wait for a document load');
+          const switchTime=await page.evaluate(()=>{const start=performance.now();document.querySelector('[data-pb1126-kind="store"]').click();return {elapsed:performance.now()-start,animated:document.querySelector('.pb1126ContentPanel:not([hidden]) iframe').contentDocument.getAnimations().some(a=>a.effect.getTiming().duration===240)}});assert(switchTime.animated,'warm panel content animates');assert(switchTime.elapsed<250,'a warm tab switch must not wait for a document load');
           await header.locator('[data-pb1126-kind="store"]').click();
           await page.goBack();
           await page.waitForFunction(()=>!document.querySelector('.pb1126ContentPanel:not([hidden])'));
@@ -122,8 +133,16 @@ test('photographer desktop header aligns identity, navigation and actions while 
           const settings=page.locator('.standalonePhotographerSettings');await settings.waitFor();
           assert.deepEqual(await settings.locator('.settingsNav button').allTextContents(),['وضعیت حساب','موقعیت عکاسی','دعوت همکار']);
           assert.equal(await settings.getByText('تعرفه',{exact:true}).count(),0);
+          assert.equal(await page.locator('.chatDock').isVisible(),false,'Gallery settings do not expose laboratory chat');
           await settings.getByRole('button',{name:'وضعیت حساب',exact:true}).click();
           await settings.getByText('حساب پرداخت به میزان مصرف',{exact:true}).waitFor();
+          await header.locator('[data-pb1126-kind="print"]').click();
+          const lab=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
+          await lab.locator('[data-select="lab"]').click();
+          await lab.locator('.chatDock').waitFor();
+          assert(await lab.locator('.chatDock').isVisible(),'chat becomes available after entering the selected laboratory');
+          await header.locator('[data-pb1126-kind="gallery"]').click();
+          assert.equal(await page.locator('.chatDock').isVisible(),false);
         }
       }else{
         await page.locator('#photographerRoleHeaderV710').waitFor({state:'attached'});

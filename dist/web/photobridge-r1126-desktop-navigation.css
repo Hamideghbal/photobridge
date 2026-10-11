@@ -38,3 +38,15 @@
  @keyframes pb1127Select{from{transform:scale(.96)}to{transform:scale(1)}}
 }
 @media(prefers-reduced-motion:reduce){#pb1126ChromeHost button,#pb1126ChromeHost button::after{animation:none!important;transition:none!important}}
+@media(min-width:821px){
+ html body #equipmentPanel .pbR63RentalCalendar{width:min(900px,100%)!important;margin:0 auto!important;gap:6px!important}
+ html body #equipmentPanel .pbR63CalendarHead{grid-template-columns:32px 1fr 32px!important}
+ html body #equipmentPanel .pbR63CalendarHead button{height:30px!important}
+ html body #equipmentPanel .pbR63Week,html body #equipmentPanel .pbR63Days{gap:4px!important}
+ html body #equipmentPanel .pbR63Day{height:36px!important;min-height:36px!important;padding:5px!important;font-size:12px!important}
+ html body #equipmentPanel .pbR63CalendarFoot{padding-top:6px!important;gap:8px!important}
+ html body #equipmentPanel .pbR63OfficeBtn{min-height:36px!important}
+ html body .clientGalleryWorkspace .clientGalleryIntroHeader{padding:10px 13px!important}
+ html body .clientGalleryWorkspace .clientGalleryIntroCopy h2{font-size:17px!important;line-height:1.4!important;margin:3px 0!important}
+ html body .clientGalleryWorkspace .clientGalleryIntroCopy p{font-size:12px!important;line-height:1.65!important;max-width:none!important}
+}

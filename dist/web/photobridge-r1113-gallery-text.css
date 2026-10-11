@@ -31,3 +31,17 @@ html body .clientGalleryCardActions button{white-space:normal!important;height:a
 html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:18px!important;line-height:1.65!important}
 html body .clientGalleryManagerMobileNav>button>span{font-size:24px!important}
 html body .clientGalleryFinalizeWarning>span{font-size:28px!important}
+
+/* Desktop has room for compact controls and a clear text hierarchy. */
+@media(min-width:821px){
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm){font-size:15px!important;line-height:1.65!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:14px!important;line-height:1.65!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:22px!important;line-height:1.5!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:18px!important}
+ html body :is(.clientGalleryIntroCopy,.clientGalleryBaseModeNotice,.clientGallerySelectionOnlyHint,.clientGalleryCustomerNote) p{font-size:15px!important;line-height:1.8!important}
+ html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:15px!important}
+ html body .clientGalleryCardActions button{min-height:38px}
+ .pb1113GalleryDialog h2{font-size:20px}
+ .pb1113GalleryDialog p{font-size:16px}
+ .pb1113GalleryDialogActions button{font-size:14px;min-height:40px}
+}

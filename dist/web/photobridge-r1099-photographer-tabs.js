@@ -70,7 +70,7 @@ async function openAdmin(){
 }
 async function load(){
  if(!photographer()||inFlight)return;inFlight=true;loadedPath=location.pathname;
- try{settings=await api('/api/photographer/navigation-tabs');apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{inFlight=false}
+ try{settings=await api('/api/photographer/navigation-tabs');if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{inFlight=false}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

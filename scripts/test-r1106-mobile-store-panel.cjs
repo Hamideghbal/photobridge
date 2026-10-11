@@ -49,10 +49,10 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  }
  }finally{await browser.close()}
 });
-test('direct mobile Store entry restores its store panel; desktop Store navigation remains unchanged',async()=>{
+test('direct Store entry retains the mobile dock and uses the shared desktop header',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});await serve(mobile,{delay:0});await mobile.goto('https://panel.test/equipment-rental/book');await mobile.waitForSelector('#pb1106StorePanel',{state:'visible',timeout:8000});await mobile.waitForSelector('#pb1106StoreLoading',{state:'hidden'});assert(await mobile.locator('.photographerBottomAppNav').isVisible());await mobile.close();
- const desktop=await browser.newPage({viewport:{width:1366,height:844},serviceWorkers:'block'});await serve(desktop,{delay:0});await desktop.goto('https://panel.test/equipment-rental/book');assert.equal(new URL(desktop.url()).pathname,'/equipment-rental/book');assert.equal(await desktop.locator('#pb1106StorePanel').count(),0);await desktop.close();
+ const desktop=await browser.newPage({viewport:{width:1366,height:844},serviceWorkers:'block'});await serve(desktop,{delay:0});await desktop.goto('https://panel.test/equipment-rental/book');await desktop.waitForSelector('#pb1126DesktopHeader',{state:'visible'});await desktop.waitForSelector('.pb1126ContentPanel:not([hidden]) iframe');assert.equal(new URL(desktop.url()).pathname,'/photographer/gallery');assert.equal(new URL(desktop.url()).searchParams.get('pbDesktopPanel'),'store');assert.equal(await desktop.locator('#pb1106StorePanel').count(),0);await desktop.close();
  }finally{await browser.close()}
 });
 

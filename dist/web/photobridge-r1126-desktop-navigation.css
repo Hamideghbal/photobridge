@@ -138,3 +138,5 @@
  html:is(.pb1126Desktop,.pb1126Embedded) body :is(#storePhotographerWorkspace,#pbR99LabChooser) :is(.pbR96StoreChooserHead p,.pbR99LabIntro p){font:500 12px/1.8 Vazirmatn,Tahoma,sans-serif!important;max-width:none!important;margin:0!important}
 }
 @media(prefers-reduced-motion:reduce){html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary button.active{animation:none!important}}
+
+@media(min-width:821px){@keyframes pb1134HeaderMove{0%{transform:translateY(3px) scale(.96);filter:brightness(.96)}65%{transform:translateY(-1px) scale(1.015)}100%{transform:translateY(0) scale(1);filter:none}}}

@@ -14,7 +14,8 @@
   try{sessionStorage.removeItem('photobridge:r100f44:tab-transition');document.documentElement.classList.remove('pbF41TabTransition')}catch{}
 
   function visible(el){if(!el||!el.isConnected||el.hidden)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
-  function isPortal(){return !!($('.photographerMain')||$('#storePhotographerWorkspace')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
+  function photographerRoute(){return /^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register|login)(?:\/|$)/.test(location.pathname)||/^\/equipment-rental(?:\/|$)/.test(location.pathname)}
+  function isPortal(){return photographerRoute()&&!!($('.photographerMain')||$('#storePhotographerWorkspace')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
   function chooserVisible(){const c=$('#pbR99LabChooser');return visible(c)&&c.getBoundingClientRect().height>8}
   function labelMode(t){
     t=String(t||'').replace(/\s+/g,' ').trim();
@@ -172,10 +173,11 @@
     renderTimer=requestAnimationFrame(()=>{renderTimer=0;render()});
   }
   let bootTimer=0;function settleBoot(){if(!document.documentElement.classList.contains('pbR100F37LabEnterBoot'))return;const w=$('.photographerMain.photographerPrintWorkspace'),sc=w?.querySelector(':scope>.photographerRolePageScrollArea');if(!w||!sc||!sc.children.length||chooserVisible()||labName()==='لابراتوار')return;if(bootTimer)return;bootTimer=setTimeout(()=>{bootTimer=0;document.documentElement.classList.remove('pbR100F37LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{};try{const u=new URL(location.href);if(u.searchParams.get('pbEntryDone')==='lab'){u.searchParams.delete('pbEntryDone');history.replaceState(history.state,'',u.pathname+(u.searchParams.size?'?'+u.searchParams.toString():'')+u.hash)}}catch{}},320)}
-  async function loadMe(){try{const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){me=await r.json();avatarData=String(me?.user?.photographerAvatarData||'');schedule(0)}}catch{}}
+  async function loadMe(){if(!photographerRoute())return;try{const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){me=await r.json();avatarData=String(me?.user?.photographerAvatarData||'');schedule(0)}}catch{}}
   function start(){
     for(const name of ['pushState','replaceState']){const old=history[name];if(typeof old==='function'&&!old.__pbR100F38){const fn=function(...args){const out=old.apply(this,args);pendingMode='';pendingUntil=0;schedule(0);return out};fn.__pbR100F38=true;history[name]=fn}}
     void loadMe();render();
+    addEventListener('photobridge-auth-session-changed',()=>{if(photographerRoute()){void loadMe();schedule(0)}});
     const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
     addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});
     setInterval(()=>{clockBadge();settleBoot()},15000);

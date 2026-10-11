@@ -19,7 +19,7 @@ export async function adminMobileEntityScope(db,kind,userId,entityIds){
    WHERE m.${cfg.entity}=ANY($1::uuid[]) AND m.role=$2
    AND LENGTH(REGEXP_REPLACE(COALESCE(u.mobile,''),'[^0-9]','','g'))>=10
    AND EXISTS(SELECT 1 FROM users pa
-     WHERE pa.platform_role='platform_admin' AND pa.active=true
+     WHERE pa.platform_role='platform_admin'
        AND LENGTH(REGEXP_REPLACE(COALESCE(pa.mobile,''),'[^0-9]','','g'))>=10
        AND RIGHT(REGEXP_REPLACE(COALESCE(pa.mobile,''),'[^0-9]','','g'),10)
         = RIGHT(REGEXP_REPLACE(COALESCE(u.mobile,''),'[^0-9]','','g'),10))`,[ids,cfg.admin]);

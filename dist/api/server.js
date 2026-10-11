@@ -8487,7 +8487,7 @@ async function orderInvoicePriceRequirements(c, labId, orderId) {
           WHEN 'metallic' THEN CASE WHEN o.source='walkin' THEN wp.metallic ELSE p.metallic END
           ELSE NULL
         END base_price,
-        op.unit_price override_unit_price
+        op.unit_price override_unit_price,COALESCE(f.print_copies,1) copies
       FROM order_files f
       JOIN orders o ON o.id=f.order_id
       LEFT JOIN print_sizes s ON s.id=f.print_size_id
@@ -8496,7 +8496,7 @@ async function orderInvoicePriceRequirements(c, labId, orderId) {
       LEFT JOIN order_invoice_price_overrides op ON op.order_id=f.order_id AND op.lab_id=f.lab_id AND op.size_id=f.print_size_id AND op.print_type=f.print_type
       WHERE f.order_id=$1 AND f.lab_id=$2 AND f.original_state<>'deleted'
     )
-    SELECT size_id,size_label,print_type,base_price,override_unit_price,count(*)::int quantity
+    SELECT size_id,size_label,print_type,base_price,override_unit_price,sum(copies)::int quantity
     FROM priced
     WHERE base_price IS NULL
     GROUP BY size_id,size_label,print_type,base_price,override_unit_price
@@ -8593,7 +8593,7 @@ async function createOrGetInvoice(c, labId, orderId) {
         const debtQ = await c.query(`UPDATE invoices SET account_balance_at_issue=$2 WHERE id=$1 RETURNING *`, [inv.id, debt]);
         return { ...debtQ.rows[0], customer_total_debt: debt, lab_name: order.lab_name, customer_name: order.customer_name, order_number: order.number, order_created_at: order.created_at };
     }
-    const fq = await c.query(`SELECT f.print_size_id,f.print_type,f.chassis,f.frame,s.label size_label,op.unit_price override_unit_price,
+    const fq = await c.query(`SELECT f.print_size_id,f.print_type,f.chassis,f.frame,COALESCE(f.print_copies,1) print_copies,s.label size_label,op.unit_price override_unit_price,
       CASE WHEN o.source='walkin' THEN wp.luster ELSE p.luster END luster,
       CASE WHEN o.source='walkin' THEN wp.silk ELSE p.silk END silk,
       CASE WHEN o.source='walkin' THEN wp.metallic ELSE p.metallic END metallic,
@@ -8620,8 +8620,8 @@ async function createOrGetInvoice(c, labId, orderId) {
             printType: f.print_type || null, printTypeLabel: invoicePrintTypeLabel(f.print_type),
             chassis: Boolean(f.chassis), frame: Boolean(f.frame), unitPrice: unit, quantity: 0, lineTotal: 0
         };
-        current.quantity += 1;
-        current.lineTotal += unit;
+        current.quantity += Number(f.print_copies || 1);
+        current.lineTotal += unit * Number(f.print_copies || 1);
         grouped.set(key, current);
     }
     const items = [...grouped.values()];
@@ -10767,6 +10767,7 @@ async function equipmentRentalExtendBooking(db,{shopId,bookingId,actorId,endDate
 }
 
 function safeFileName(name) { return name.replace(/[^\p{L}\p{N}._ -]+/gu, '_').slice(0, 140) || 'file'; }
+function orderPrintCopyName(name, copies) { const s = String(name || 'file'); if (copies <= 1) return s; const p = s.lastIndexOf('.'), ext = p > 0 ? s.slice(p) : '', stem = p > 0 ? s.slice(0, p) : s, suffix = ' = ' + copies; return stem.slice(0, Math.max(1, 140 - ext.length - suffix.length)) + suffix + ext; }
 function albumMoney(value) { const n = Math.round(Number(value || 0)); return Number.isFinite(n) ? Math.max(0, n) : 0; }
 function albumSizeDimensionsFromLabel(value) { const raw = String(value || '').replace(/[×X]/g, 'x').replace(/٫/g, '.').replace(/\s+/g, ''); const m = raw.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i); if (!m)
     return { widthCm: null, heightCm: null }; const a = Number(m[1]), b = Number(m[2]); return Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0 ? { widthCm: a, heightCm: b } : { widthCm: null, heightCm: null }; }
@@ -14420,7 +14421,7 @@ async function api(req, res, url) {
         const c = await pool.connect();
         try {
             await c.query('BEGIN');
-            const stockReq = await c.query(`SELECT print_size_id,count(*) FILTER (WHERE chassis)::int chassis_qty,count(*) FILTER (WHERE frame)::int frame_qty FROM order_files WHERE order_id=$1 AND original_state='active' GROUP BY print_size_id`, [order.id]);
+            const stockReq = await c.query(`SELECT print_size_id,COALESCE(sum(print_copies) FILTER (WHERE chassis),0)::int chassis_qty,COALESCE(sum(print_copies) FILTER (WHERE frame),0)::int frame_qty FROM order_files WHERE order_id=$1 AND original_state='active' GROUP BY print_size_id`, [order.id]);
             for (const r of stockReq.rows) {
                 const pq = await c.query(`SELECT chassis,chassis_stock,frame,frame_stock FROM lab_prices WHERE lab_id=$1 AND size_id=$2 FOR UPDATE`, [order.lab_id, r.print_size_id]);
                 const p = pq.rows[0] || {}, cq = Number(r.chassis_qty || 0), fq = Number(r.frame_qty || 0);
@@ -22804,13 +22805,13 @@ ${inviteUrl}`;
                 const addDelta = (id, key, delta) => { if (!id || !delta)
                     return; const cur = stockDelta.get(id) || { chassis: 0, frame: 0 }; cur[key] += delta; stockDelta.set(id, cur); };
                 if (file.chassis)
-                    addDelta(oldSize, 'chassis', -1);
+                    addDelta(oldSize, 'chassis', -Number(file.print_copies || 1));
                 if (file.frame)
-                    addDelta(oldSize, 'frame', -1);
+                    addDelta(oldSize, 'frame', -Number(file.print_copies || 1));
                 if (chassis)
-                    addDelta(sizeId, 'chassis', 1);
+                    addDelta(sizeId, 'chassis', Number(file.print_copies || 1));
                 if (frame)
-                    addDelta(sizeId, 'frame', 1);
+                    addDelta(sizeId, 'frame', Number(file.print_copies || 1));
                 for (const id of [...stockDelta.keys()].sort()) {
                     const sq = await c.query(`SELECT chassis_stock,frame_stock FROM lab_prices WHERE lab_id=$1 AND size_id=$2 FOR UPDATE`, [labId, id]);
                     const st = sq.rows[0] || {}, delta = stockDelta.get(id);
@@ -22829,7 +22830,7 @@ ${inviteUrl}`;
                 }
                 const uq = await c.query(`UPDATE order_files SET print_size_id=$3,print_type=$4,chassis=$5,frame=$6 WHERE id=$1 AND lab_id=$2 RETURNING *`, [file.id, labId, sizeId, printType, chassis, frame]);
                 updatedFile = uq.rows[0];
-                const quoteQ = await c.query(`SELECT f.print_size_id,f.print_type,f.chassis,f.frame,s.label size_label,
+                const quoteQ = await c.query(`SELECT f.print_size_id,f.print_type,f.chassis,f.frame,COALESCE(f.print_copies,1) print_copies,s.label size_label,
             CASE WHEN o.source='walkin' THEN wp.luster ELSE p.luster END luster,
             CASE WHEN o.source='walkin' THEN wp.silk ELSE p.silk END silk,
             CASE WHEN o.source='walkin' THEN wp.metallic ELSE p.metallic END metallic,
@@ -22841,8 +22842,8 @@ ${inviteUrl}`;
                 const grouped = new Map();
                 for (const x of quoteQ.rows) {
                     const paper = Number(x[String(x.print_type || '')] || 0), addonChassis = x.chassis ? Number(x.chassis_price || 0) : 0, addonFrame = x.frame ? Number(x.frame_price || 0) : 0, unit = paper + addonChassis + addonFrame, key = `${x.print_size_id || ''}|${x.print_type || ''}|${Boolean(x.chassis)}|${Boolean(x.frame)}`, cur = grouped.get(key) || { sizeId: x.print_size_id || null, sizeLabel: x.size_label || 'سایز نامشخص', printType: x.print_type || null, printTypeLabel: invoicePrintTypeLabel(x.print_type), chassis: Boolean(x.chassis), frame: Boolean(x.frame), unitPrice: unit, quantity: 0, lineTotal: 0 };
-                    cur.quantity += 1;
-                    cur.lineTotal += unit;
+                    cur.quantity += Number(x.print_copies || 1);
+                    cur.lineTotal += unit * Number(x.print_copies || 1);
                     grouped.set(key, cur);
                 }
                 const items = [...grouped.values()], subtotal = Math.round(items.reduce((sum, x) => sum + Number(x.lineTotal || 0), 0));
@@ -25238,7 +25239,7 @@ ${inviteUrl}`;
             let submitted;
             try {
                 await c.query('BEGIN');
-                const stockReq = albumMode ? { rows: [] } : await c.query(`SELECT print_size_id,count(*) FILTER (WHERE chassis)::int chassis_qty,count(*) FILTER (WHERE frame)::int frame_qty FROM order_files WHERE order_id=$1 AND customer_id=$2 AND original_state='active' GROUP BY print_size_id`, [submitCustomerOrder[1], a.userId]);
+                const stockReq = albumMode ? { rows: [] } : await c.query(`SELECT print_size_id,COALESCE(sum(print_copies) FILTER (WHERE chassis),0)::int chassis_qty,COALESCE(sum(print_copies) FILTER (WHERE frame),0)::int frame_qty FROM order_files WHERE order_id=$1 AND customer_id=$2 AND original_state='active' GROUP BY print_size_id`, [submitCustomerOrder[1], a.userId]);
                 for (const reqRow of stockReq.rows) {
                     const pq = await c.query(`SELECT chassis,chassis_stock,frame,frame_stock FROM lab_prices WHERE lab_id=$1 AND size_id=$2 FOR UPDATE`, [labId, reqRow.print_size_id]);
                     const p = pq.rows[0] || {};
@@ -25462,9 +25463,12 @@ ${inviteUrl}`;
             if (!oq.rowCount)
                 return sendJson(res, 400, { error: 'invalid_order' });
             const albumMode = String(oq.rows[0].mode || 'print') === 'album';
+            const printCopies = b.printCopies == null ? 1 : Number(b.printCopies);
+            if (!Number.isSafeInteger(printCopies) || printCopies < 1 || printCopies > 99)
+                return sendJson(res, 400, { error: 'invalid_print_copies' });
             const id = crypto.randomUUID();
-            const name = safeFileName(String(b.name || 'file'));
-            const relativePath = String(b.relativePath || b.name || 'file').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').slice(0, 900);
+            const name = orderPrintCopyName(safeFileName(String(b.name || 'file')), albumMode ? 1 : printCopies);
+            const relativePath = String(b.relativePath || b.name || 'file').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/[^/]+$/, name).slice(0, 900);
             const baseKey = `labs/${labId}/customers/${a.userId}/orders/${orderId}/originals/${id}-${name}`;
             const key = storageConfigured ? storageKey(baseKey) : localStorageObjectKey(baseKey);
             const uploadUrl = storageConfigured ? await storagePresign('upload', key) : `/api/customer/uploads/local/${id}`;
@@ -25489,8 +25493,8 @@ ${inviteUrl}`;
                 return sendJson(res, 413, { error: 'file_too_large' });
             const wantsLabCrop = String(b.cropHandling || 'none') === 'lab';
             const cropHandling = wantsLabCrop ? 'lab' : 'none';
-            await pool.query(`INSERT INTO order_files(id,order_id,lab_id,customer_id,original_name,relative_path,object_key,content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,original_state)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'pending')`, [id, orderId, labId, a.userId, name, relativePath, key, b.contentType || null, bytes, b.width ? Number(b.width) : null, b.height ? Number(b.height) : null, b.dpi ? Number(b.dpi) : null, sizeId, printType, Boolean(b.chassis), Boolean(b.frame), cropHandling]);
+            await pool.query(`INSERT INTO order_files(id,order_id,lab_id,customer_id,original_name,relative_path,object_key,content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,print_copies,original_state)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'pending')`, [id, orderId, labId, a.userId, name, relativePath, key, b.contentType || null, bytes, b.width ? Number(b.width) : null, b.height ? Number(b.height) : null, b.dpi ? Number(b.dpi) : null, sizeId, printType, Boolean(b.chassis), Boolean(b.frame), cropHandling, albumMode ? 1 : printCopies]);
             return sendJson(res, 201, { fileId: id, key, uploadUrl, expiresIn: 900, storageMode: storageConfigured ? 'object' : 'local' });
         }
         const localUpload = url.pathname.match(/^\/api\/customer\/uploads\/local\/([0-9a-f-]+)$/);

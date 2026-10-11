@@ -1,13 +1,13 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
-async function serve(page,html,api){await page.route('**/*',async route=>{
+async function serve(page,html,api){const target=html.endsWith('-book.html')?'/equipment-rental/book':'/test';await page.route('**/*',async route=>{
  const url=new URL(route.request().url());
  if(url.pathname.startsWith('/api/'))return route.fulfill({json:await api(url,route.request())});
- if(url.pathname==='/test')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,html),'utf8')});
+ if(url.pathname===target)return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,html),'utf8')});
  const file=path.join(root,'dist/web',url.pathname.slice(1));
  if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({path:file});
  return route.fulfill({status:404,body:''});
-});await page.goto('https://layout.test/test');}
+});await page.goto('https://layout.test'+target);}
 test('Office list scrolls independently with many cards, without shrinking or overlapping cards',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
  for(const height of [768,600]){
@@ -50,10 +50,13 @@ test('customer inventory is private: strict blocks unavailable items, flexible p
  const page=await browser.newPage({viewport,serviceWorkers:'block'});let free=0;
  await serve(page,'dist/api/equipment-rental-book.html',async(u,req)=>{
  if(u.pathname==='/api/auth/me')return {user:{name:'Studio'}};
+ if(u.pathname==='/api/photographer/navigation-tabs')return {tabs:{ai:false,album:false,instagram:false},adminBypass:false};
  if(u.pathname==='/api/customer/equipment-rental/availability')return {available:free>0,rentalDays:1,totalAmount:100,depositAmount:0,items:[{itemId:'camera',title:'Camera',requested:1,dailyPrice:100,subtotal:100,available:free,shortage:free>0?0:1,valid:true,dailyAvailability:[{date:'2030-10-13',available:free,shortage:free>0?0:1}]}]};
  return {};
  });
  await page.waitForFunction(()=>window.__PB_R1096_SHOPPER_CHANNELS__);
+ await page.waitForFunction(()=>document.querySelectorAll('#photographerStoreBottomNav [data-pb1099-hidden]').length===3);
+ assert.equal(await page.locator('#photographerStoreBottomNav .photographerBottomAppNavGrid').evaluate(el=>el.style.getPropertyValue('--pb1099-tabs')),'3');
  await page.evaluate(mode=>{shopId='shop';shops=[{id:'shop',name:'Seven',customer_rental_stock_mode:mode,rental_enabled:true,sale_enabled:false}];items=[{id:'camera',title:'Camera',brand:'Sony',category:'camera',stock_total:2,daily_price:100}];document.querySelector('#start').value=isoToJalaliInput('2030-10-13');document.querySelector('#end').value=isoToJalaliInput('2030-10-13');leaveStoreChooserR96();document.querySelector('#equipmentFlow').style.display='';renderItems();openStoreSection('equipmentPanel');},mode);
  if(mode==='strict')await page.waitForFunction(()=>document.querySelector('#items .item')?.classList.contains('pbRentalItemUnavailable'));
  else await page.waitForSelector('#pbR1095CustomerNote',{state:'attached'});
@@ -72,6 +75,8 @@ test('customer inventory is private: strict blocks unavailable items, flexible p
  assert(!/موجودی|باقی‌مانده|کسری/.test(await card.textContent()));
  await card.locator('input.pick').check();await page.evaluate(()=>openRentalRequestV809());
  await page.waitForTimeout(200);assert(!/موجودی|باقی‌مانده|کسری/.test(await page.locator('#rentalRequestLinesV809').textContent()));
+ await page.evaluate(()=>{saleItems=[{id:'sale-camera',title:'Camera',category:'camera',stock_total:15,sale_price:100}];renderSales()});
+ assert(!/موجودی/.test(await page.locator('#saleItems').textContent()));
  assert.match(await page.locator('#rentalRequestModalV809').textContent(),/قطعی نیست|نهایی|تأیید فروشگاه/);
  await page.close();
  }

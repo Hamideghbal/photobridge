@@ -1,3 +1,4 @@
+import { handlePhotographerTabSettings } from './photographer-tab-settings.js';
 import {changeRentalAsset,rentalAssetPeakDemand,increaseRentalAssetStock} from './rentalAssetControls.js';
 import { createStoreDesktopSync } from './storeDesktopSync.js';
 // @ts-nocheck
@@ -12062,6 +12063,8 @@ async function api(req, res, url) {
         }
     }
     const a = await auth(req);
+    /* PB_R1099_PHOTOGRAPHER_TABS */
+    if (await handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit})) return;
     if (url.pathname === '/api/admin/maintenance' && req.method === 'GET') {
         if (!requireRole(a, 'platform_admin'))
             return sendJson(res, 403, { error: 'forbidden' });

@@ -6,7 +6,7 @@ for(const [file,url] of [
 ]){
  let src=fs.readFileSync(file,'utf8'),tag='<script defer src="'+url+'"></script>';
  const asset=url.split('?')[0];
- src=src.replaceAll('<script defer src="'+asset+'?v=1095"></script>','');
+ for(const version of ['1095','1097','1098'])src=src.replaceAll('<script defer src="'+asset+'?v='+version+'"></script>','');
  while(src.split(tag).length>2)src=src.replace(tag,'');
  if(!src.includes(tag)){
   const at=src.lastIndexOf('</body>');

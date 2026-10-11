@@ -16,8 +16,9 @@ test('photographer desktop header aligns identity, navigation and actions while 
         if(url.pathname.startsWith('/api/')){
           let result={};
           if(url.pathname==='/api/auth/me')result={user:{id:'customer',userId:'customer',labRole:'customer',platformRole:'user',name:'Test',mobile:'09120000000',photographerAvatarData:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII='},lab:{id:'lab',name:'Lab'}};
-          if(url.pathname==='/api/customer/home')result={lab:{id:'lab',name:'Lab',album_enabled:false},customer:{id:'customer',name:'Test'},status:{open:true},walletBalance:42,orders:[],prices:[],papers:[],sizes:[],counts:{flow:0,ready:0,completed:0,needs_fix:0},settings:{}};
+          if(url.pathname==='/api/customer/home')result={lab:{id:'lab',name:'Lab',album_enabled:true},customer:{id:'customer',name:'Test'},status:{open:true},walletBalance:42,orders:[],prices:[],papers:[],sizes:[],counts:{flow:0,ready:0,completed:0,needs_fix:0},settings:{}};
           if(url.pathname==='/api/customer/labs')result={memberships:[{id:'lab',name:'Lab'}]};
+          if(url.pathname==='/api/customer/equipment-rental/shops')result={shops:[{id:'shop',name:'Store',connected:true}]};
           if(url.pathname==='/api/customer/orders')result={labId:'lab',orders:[]};
           if(url.pathname==='/api/photographer/navigation-tabs'){await new Promise(resolve=>setTimeout(resolve,150));result={tabs:{ai:false,album:false,instagram:false}};}
           return request.fulfill({json:result});
@@ -33,16 +34,25 @@ test('photographer desktop header aligns identity, navigation and actions while 
           const rect=s=>{const b=(s?h.querySelector(s):h).getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}};
           return {header:rect(),identity:rect('.photographerHeaderIdentity'),nav:rect('.pb1126MainNav'),actions:rect('.pb1124PrimaryActions'),secondary:rect('.pb1126Secondary')};
         });
-        assert.equal(geometry.header.height,114);
+        const chooser=route.includes('pbLabChooser=1')||route.includes('equipment-rental/book')||route.includes('pbDesktopPanel=store');
+        assert.equal(geometry.header.height,chooser?72:114);
         assert.equal(geometry.header.y,0);
         assert(geometry.identity.x>geometry.nav.x+geometry.nav.width);
         assert(geometry.actions.x+geometry.actions.width<geometry.nav.x);
-        assert(geometry.secondary.y>=72);
+        if(chooser)assert.equal(await header.locator('.pb1126Secondary').isVisible(),false);else assert(geometry.secondary.y>=72);
         assert.deepEqual(await header.locator('.pb1126MainNav button').allTextContents(),['چاپ','گالری','فروشگاه']);
         assert.equal(await page.locator('#photographerRoleHeaderV710').isVisible(),false);
         if(route.includes('pbLabChooser=1')){
           await page.locator('#pbR99LabChooser').waitFor();
-          assert.equal((await page.locator('#pbR99LabChooser').boundingBox()).y,114);
+          assert.equal((await page.locator('#pbR99LabChooser').boundingBox()).y,72);
+        }
+        if(route.includes('pbEntryDone=lab')){
+          const utilities=header.locator('.pb1127PrintUtilities');
+          await utilities.waitFor();
+          await header.locator('.pb1127PrintModes').waitFor();
+          assert.deepEqual((await header.locator('.pb1127PrintModes button').allTextContents()).map(t=>t.trim()),['چاپ عکس','صحافی آلبوم']);
+          assert.deepEqual((await utilities.locator('button').allTextContents()).map(t=>t.trim()),['← بازگشت','مالی','▣آرشیو']);
+          assert((await utilities.boundingBox()).x<(await header.locator('.pb1127PrintModes').boundingBox()).x);
         }
         assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
         if(route==='/photographer/gallery'&&width===1366){
@@ -60,8 +70,10 @@ test('photographer desktop header aligns identity, navigation and actions while 
               const frame=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
               await frame.locator(key==='store'?'#photographerStoreRoleHeader':'#pbR99LabChooser').waitFor({state:'attached'});
               assert.equal(await frame.locator(key==='store'?'#photographerStoreRoleHeader':'#photographerRoleHeaderV710').isVisible(),false);
-              assert.equal((await frame.locator(key==='store'?'#storePhotographerWorkspace>.shell':'#pbR99LabChooser').boundingBox()).y,114,'embedded content starts immediately below the shared header');
+              await page.evaluate(()=>Promise.all([...document.querySelectorAll('.pb1126ContentPanel iframe')].flatMap(el=>el.getAnimations()).map(a=>a.finished)));
+              assert.equal((await frame.locator(key==='store'?'#storePhotographerWorkspace>.shell':'#pbR99LabChooser').boundingBox()).y,72,'embedded content starts immediately below the shared header');
             }
+            await page.evaluate(()=>Promise.all(document.querySelector('#pb1126DesktopHeader').getAnimations({subtree:true}).map(a=>a.finished)));
             assert.equal(await header.locator('.photographerHeaderIdentity h1').innerText(),identity);
             assert.deepEqual(await header.locator('.pb1126MainNav button').evaluateAll(bs=>bs.map(b=>({x:b.getBoundingClientRect().x,y:b.getBoundingClientRect().y,width:b.getBoundingClientRect().width}))),positions);
           }
@@ -73,6 +85,15 @@ test('photographer desktop header aligns identity, navigation and actions while 
           const samples=await page.evaluate(()=>{cancelAnimationFrame(window.pb1126Sampling);return window.pb1126Samples});
           assert(samples.length>10);
           assert(samples.every(s=>s.same&&s.y===0&&!s.native&&JSON.stringify(s.labels)===JSON.stringify(['چاپ','گالری','فروشگاه'])),'every painted frame must retain only the configured shared header');
+          await header.locator('[data-pb1126-kind="store"]').click();
+          const store=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
+          await store.locator('[data-enter-store-r96="shop"]').click();
+          await header.locator('.pb1126Back').waitFor();
+          assert.equal((await header.boundingBox()).height,114);
+          assert.equal(await store.locator('#storePanel .storeHomeActionsV671').isVisible(),false);
+          assert.equal(await store.locator('#equipmentPanel').isVisible(),true);
+          await header.locator('.pb1126Secondary>button:not(.pb1126Back)').first().click();
+          assert((await header.locator('.pb1126Secondary').boundingBox()).y>=72);
         }
       }else{
         await page.locator('#photographerRoleHeaderV710').waitFor({state:'attached'});

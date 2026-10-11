@@ -95,3 +95,4 @@ await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');
 await import('./create-r1092-windows-installer-zip.mjs');
+await import('./enable-r1132-final-assets.mjs');

@@ -87,6 +87,7 @@ await import('./enable-r1109-gallery-lifetime.mjs');
 await import('./enable-r1112-gallery-single-form.mjs');
 await import('./enable-r1113-gallery-text-dialogs.mjs');
 await import('./enable-r1118-lab-finance.mjs');
+await import('./enable-r1119-mobile-chat.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

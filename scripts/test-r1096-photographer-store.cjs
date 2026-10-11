@@ -81,7 +81,7 @@ test('strict stock refresh uses previous availability during periodic background
  const card={classList:{toggle(){}},querySelector(selector){
   return selector==='input.pick'?cb:selector==='input.qty'?qty:selector==='.itemInfo'?info:selector==='.pbR1095ItemStock'?itemStock:null;
  }};
- const list={firstElementChild:card,parentElement:{insertBefore(el){note=el}}};
+ const list={dataset:{},firstElementChild:card,parentElement:{insertBefore(el){note=el}}};
  const interval=[];
  const document={hidden:false,readyState:'complete',
   querySelector(s){return s==='#items'?list:s==='#pbR1095CustomerNote'?note:null},

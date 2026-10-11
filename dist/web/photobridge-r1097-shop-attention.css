@@ -1,0 +1,54 @@
+/* R1097 Store actionable-count badges: shared owner desktop, mobile, and Windows. */
+body.rentalAppReady #rentalDesktopPrimaryNav [data-rental-desktop-tab],
+body.rentalAppReady #rentalMobileBottomNav [data-rental-bottom-tab],
+body.rentalAppReady #rentalMobileDrawer [data-rental-tab],
+body.rentalAppReady #pb848BookingHeaderTabs [data-pb843-office-tab],
+body.rentalAppReady [data-pb842-tabs="photographers"] [data-pb842-tab]{
+ position:relative!important;
+}
+body.rentalAppReady .pbR1097AttentionBadge{
+ display:inline-flex!important;
+ box-sizing:border-box!important;
+ align-items:center!important;
+ justify-content:center!important;
+ position:absolute!important;
+ top:1px!important;
+ left:2px!important;
+ z-index:5!important;
+ min-width:21px!important;
+ height:21px!important;
+ padding:0 5px!important;
+ border-radius:999px!important;
+ border:1.5px solid #fff!important;
+ color:#fff!important;
+ background:#d92d20!important;
+ box-shadow:0 1px 5px rgba(180,35,24,.27)!important;
+ font:950 12px/1 Vazirmatn,Tahoma,Arial,sans-serif!important;
+ white-space:nowrap!important;
+ direction:ltr!important;
+ pointer-events:none!important;
+ transform:none!important;
+}
+body.rentalAppReady #rentalDesktopPrimaryNav .pbR1097AttentionBadge{
+ top:0!important;left:0!important;
+}
+body.rentalAppReady #rentalMobileBottomNav .pbR1097AttentionBadge{
+ top:0!important;left:2px!important;
+}
+body.rentalAppReady #rentalMobileDrawer .pbR1097AttentionBadge{
+ top:50%!important;left:5px!important;transform:translateY(-50%)!important;
+}
+body.rentalAppReady #pb848BookingHeaderTabs .pbR1097AttentionBadge,
+body.rentalAppReady [data-pb842-tabs="photographers"] .pbR1097AttentionBadge{
+ top:0!important;left:0!important;
+}
+body.rentalAppReady .pbR1097AttentionOn{overflow:visible!important}
+/* Existing small pending-only dot is superseded by combined outstanding tasks. */
+body.rentalAppReady.pbR1097AttentionReady #bottomBookingLiveBadge{display:none!important}
+body.rentalAppReady .pbR1097AttentionOn > .pb854TabCount{display:none!important}
+@media(max-width:820px){
+ body.rentalAppReady .pbR1097AttentionBadge{
+  min-width:21px!important;height:21px!important;font-size:12px!important;
+ }
+ body.rentalAppReady #rentalMobileBottomNav .pbR1097AttentionBadge{top:0!important;left:0!important}
+}

@@ -69,8 +69,13 @@
     for(const l of (Array.isArray(data.labs)?data.labs:[])){const id=String(l?.id||'');if(!id)continue;byId.set(id,{...(byId.get(id)||{}),...l,connected:Boolean(l.connected||membershipIds.has(id))})}
     const all=[...byId.values()];const primary=String(data.primaryLabId||'');const byPrimary=(a,b)=>Number(String(b?.id||'')===primary)-Number(String(a?.id||'')===primary);const connected=all.filter(x=>x.connected).sort(byPrimary);const available=all.filter(x=>!x.connected).sort(byPrimary);
     const active=String(data.activeLabId||connected.find(x=>x.selected)?.id||'');
+    const emptyReason=available.length
+      ? 'هنوز به لابراتواری متصل نیستی.'
+      : data.canDiscoverLabs
+        ? 'در حال حاضر هیچ لابراتوار فعال و قابل‌درخواستی برای این حساب یافت نشد. فعال‌سازی و تنظیمات نمایش لابراتوارها باید بررسی شود.'
+        : 'نمایش لابراتوارهای عمومی برای این حساب مجاز نیست؛ فقط لابراتوارهای دعوت‌کننده پس از عضویت تأییدشده دیده می‌شوند. اگر این حساب مستقل است، اطلاعات نوع ثبت‌نام باید بررسی شود.';
     const board=root.querySelector('.pbR99LabBoard');
-    board.innerHTML=`<div class="pbR99LabList">${connected.length?connected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join(''):'<div class="pbR99LabEmpty">هنوز به لابراتواری متصل نیستی.</div>'}</div>${available.length?`<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">${available.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')}</div>`:''}`;
+    board.innerHTML=`<div class="pbR99LabList">${connected.length?connected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join(''):`<div class="pbR99LabEmpty">${esc(emptyReason)}</div>`}</div>${available.length?`<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">${available.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')}</div>`:''}`;
     try{sessionStorage.setItem(CACHE_KEY,JSON.stringify({data,at:Date.now()}))}catch{}
     return true;
   }

@@ -84,10 +84,11 @@ jobs:
           node --check dist/api/photographer-tab-settings.js
           node --check dist/web/photobridge-r1099-photographer-tabs.js
           node --test scripts/test-r1099-tab-settings.cjs
-      - name: Verify revoked originating laboratory releases photographer discovery
+      - name: Verify admin-mobile laboratory and store access policy
         run: |
-          node --check scripts/enable-r1105-lab-origin-release.mjs
-          node --test scripts/test-r1105-lab-origin-release.cjs
+          node --check scripts/enable-r1106-admin-mobile-ownership.mjs
+          node --check dist/api/admin-mobile-entity-scope.js
+          node --test scripts/test-r1106-admin-mobile-entity-scope.mjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Prepare runner PostgreSQL for migration smoke test

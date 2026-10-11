@@ -520,6 +520,7 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 </style>
 <link rel="stylesheet" href="/photobridge-r1124-photographer-desktop-header.css?v=r1129">
 <script defer src="/photobridge-r1124-photographer-desktop-header.js?v=r1129"></script>
+<link rel="stylesheet" href="/photobridge-r1130-desktop-photographer-fixes.css?v=r1130">
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">
@@ -836,7 +837,7 @@ let storeLastRefresh=0;function refreshVisibleStoreData(force=false){if(document
 boot();document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVisibleStoreData(true)},{passive:true});window.addEventListener('focus',()=>refreshVisibleStoreData(false),{passive:true});setInterval(()=>refreshVisibleStoreData(false),180000);
 </script>
 <link rel="stylesheet" href="/photobridge-r63-photographer-store.css?v=100f13">
-<script defer src="/photobridge-r63-photographer-store.js?v=63"></script>
+<script defer src="/photobridge-r63-photographer-store.js?v=r1130"></script>
 
 <script id="pb855PhotographerStoreGalleryFix">
 (()=>{const bind=()=>{const g=document.getElementById('pb834ShopGallery'),c=document.getElementById('pb834ShopGalleryClose');if(!g||g.dataset.pb855Bound)return;g.dataset.pb855Bound='1';c?.addEventListener('click',()=>pb834CloseShopGallery());g.addEventListener('click',e=>{if(e.target===g)pb834CloseShopGallery()});document.addEventListener('keydown',e=>{if(!g.classList.contains('open'))return;if(e.key==='Escape')pb834CloseShopGallery();else if(e.key==='ArrowLeft')pb834ShopStep(1);else if(e.key==='ArrowRight')pb834ShopStep(-1)})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind()})();

@@ -50,3 +50,63 @@
  html body .clientGalleryWorkspace .clientGalleryIntroCopy h2{font-size:17px!important;line-height:1.4!important;margin:3px 0!important}
  html body .clientGalleryWorkspace .clientGalleryIntroCopy p{font-size:12px!important;line-height:1.65!important;max-width:none!important}
 }
+
+/* R1131: Store-admin-style sliding active underline on photographer desktop tabs. */
+@media (min-width:821px) {
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav{
+  position:relative!important;
+  isolation:isolate!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>button.active::after{
+  content:none!important;
+  display:none!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{
+  display:block!important;
+  position:absolute!important;
+  left:0!important;
+  bottom:0!important;
+  width:18px;
+  height:3px!important;
+  border-radius:999px!important;
+  background:#315efb!important;
+  opacity:0;
+  transform:translateX(0);
+  pointer-events:none!important;
+  z-index:4!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+}
+/* Inside the desktop print iframe, the standalone header is hidden; do not
+   reserve its height a second time for the fixed quote or file-size bar. */
+@media (min-width:1101px) {
+ html.pb1126Embedded body #root .photographerMain.pbFixedRoleHeader.simplePrintPilotWorkspaceMode{
+  --pb-role-header-h:0px!important;
+  padding-top:0!important;
+  margin-top:0!important;
+ }
+ html.pb1126Embedded body #root .photographerMain.simplePrintPilotWorkspaceMode>.simplePrintPilotMobileHeaderHost{
+  top:12px!important;
+  margin-top:0!important;
+ }
+ html.pb1126Embedded body #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotQuote{
+  top:12px!important;
+  bottom:12px!important;
+ }
+ html.pb1126Embedded body #root .photographerMain.simplePrintPilotWorkspaceMode>.photographerRolePageScrollArea{
+  padding-top:0!important;
+  margin-top:0!important;
+ }
+ html.pb1126Embedded body #root .photographerMain.simplePrintPilotWorkspaceMode>.photographerRolePageScrollArea>.simplePrintPilot{
+  padding-top:0!important;
+  margin-top:0!important;
+ }
+ html.pb1126Embedded body #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMain{
+  padding-top:0!important;
+  margin-top:52px!important;
+  height:calc(100% - 52px)!important;
+ }
+}
+@media (prefers-reduced-motion:reduce) {
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{transition:none!important}
+}

@@ -1,8 +1,8 @@
 // R1095: attach the two UI controllers to the real prebuilt HTML used by web and Windows.
 import fs from 'node:fs';
 for(const [file,url] of [
- ['dist/api/equipment-rental-portal.html','/photobridge-r1095-owner-stock.js?v=1097'],
- ['dist/api/equipment-rental-book.html','/photobridge-r1095-customer-stock.js?v=1097']
+ ['dist/api/equipment-rental-portal.html','/photobridge-r1095-owner-stock.js?v=1098'],
+ ['dist/api/equipment-rental-book.html','/photobridge-r1095-customer-stock.js?v=1098']
 ]){
  let src=fs.readFileSync(file,'utf8'),tag='<script defer src="'+url+'"></script>';
  const asset=url.split('?')[0];

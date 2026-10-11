@@ -64,3 +64,53 @@
 @media(prefers-reduced-motion:reduce){
  html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){animation:none!important}
 }
+
+
+/* Correct the old fixed six-column mobile selector with an equally-specific rule,
+   taking the live number of visible account tabs from --pb1099-tabs. */
+@media(max-width:820px){
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav){
+  display:flex!important;align-items:stretch!important;justify-content:stretch!important;
+  left:0!important;right:0!important;width:100%!important;max-width:100%!important;
+  min-width:0!important;box-sizing:border-box!important;padding-inline:6px!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav) > .mobileRailPrimaryGroup.photographerBottomAppNavGrid,
+ html body #photographerStoreBottomNav.photographerBottomAppNav > .mobileRailPrimaryGroup.photographerBottomAppNavGrid{
+  display:grid!important;flex:1 1 100%!important;grid-template-columns:repeat(var(--pb1099-tabs,3),minmax(0,1fr))!important;
+  grid-template-rows:54px!important;grid-auto-flow:row!important;
+  width:100%!important;min-width:0!important;max-width:none!important;column-gap:3px!important;
+  margin:0!important;padding:0!important;justify-content:stretch!important;align-items:stretch!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav) > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button:not([data-pb1099-hidden="1"]),
+ html body #photographerStoreBottomNav.photographerBottomAppNav > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button:not([data-pb1099-hidden="1"]){
+  grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  box-sizing:border-box!important;margin:0!important;padding-inline:2px!important;
+ }
+}
+@media(min-width:821px){
+ /* Reproduce the Store admin 280ms sliding line and 260ms selected-button movement. */
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{
+  top:calc(50% + 15px)!important;bottom:auto!important;height:2px!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>button.pb1132Selected{
+  animation:pb1132HeaderMove .26s cubic-bezier(.2,.8,.2,1)!important;
+ }
+ @keyframes pb1132HeaderMove{
+  0%{transform:translateY(3px) scale(.96);filter:brightness(.96)}
+  65%{transform:translateY(-1px) scale(1.015)}
+  100%{transform:translateY(0) scale(1);filter:none}
+ }
+ @keyframes pb1132PanelIn{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+ html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){
+  animation:pb1132PanelIn .24s cubic-bezier(.2,.8,.2,1) both!important;
+ }
+ .simplePrintPilotWorkspaceMode .simplePrintPhotoCard{
+  grid-template-areas:"thumb thumb" "info info" "copies copies" "paper addons" "actions actions"!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{transition:none!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>button.pb1132Selected,
+ html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){animation:none!important}
+}

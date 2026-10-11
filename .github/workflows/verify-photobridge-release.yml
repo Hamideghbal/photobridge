@@ -88,6 +88,8 @@ jobs:
         run: |
           node --check scripts/enable-r1105-lab-origin-release.mjs
           node --test scripts/test-r1105-lab-origin-release.cjs
+      - name: Verify desktop photographer Store page navigation
+        run: node --test scripts/test-r1123-photographer-desktop-store.cjs
       - name: Verify photographer mobile orders and one-row navigation
         run: |
           node --check dist/web/photobridge-r1122-mobile-print-orders.js

@@ -33,7 +33,7 @@
     text-align:right!important;align-items:flex-start!important;
   }
   html body :is(#root,#storePhotographerWorkspace,#pb1126ChromeHost) :is(#photographerRoleHeaderV710,#photographerStoreRoleHeader,#pb1126DesktopHeader) .photographerHeaderIdentity h1{
-    font-size:18px!important;line-height:1.35!important;margin:0!important;
+    font-size:16px!important;line-height:1.35!important;margin:0!important;
     max-width:190px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
   }
   html body :is(#root,#storePhotographerWorkspace,#pb1126ChromeHost) :is(#photographerRoleHeaderV710,#photographerStoreRoleHeader,#pb1126DesktopHeader) .photographerHeaderIdentity small{font-size:11px!important;line-height:1.4!important}

@@ -57,6 +57,8 @@
    for(const original of visible){
     const copy=cleanClone(original);copy.style.removeProperty('display');
     copy.onclick=()=>{press(copy);original.click();const content=doc.querySelector('.rentalPanel.mobileActive,.photographerPrintWorkspace');reveal(content);};
+    if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
+    if(copy.classList.contains('archive'))copy.textContent='آرشیو';
     if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}
     if(utilities&&original.closest('.photographerPrintModeUtilityCluster'))utilities.append(copy);else (modes||row).append(copy);
    }

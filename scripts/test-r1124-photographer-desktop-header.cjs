@@ -52,7 +52,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
           await utilities.waitFor();
           await header.locator('.pb1127PrintModes').waitFor();
           assert.deepEqual((await header.locator('.pb1127PrintModes button').allTextContents()).map(t=>t.trim()),['چاپ عکس','صحافی آلبوم']);
-          assert.deepEqual((await utilities.locator('button').allTextContents()).map(t=>t.trim()),['مالی','▣آرشیو']);
+          assert.deepEqual((await utilities.locator('button').allTextContents()).map(t=>t.trim()),['مالی','آرشیو']);
           assert.equal(await header.locator('.pb1126Back,.photographerPrintModeBack').count(),0,'entered Lab has no Back action');
           assert((await utilities.boundingBox()).x<(await header.locator('.pb1127PrintModes').boundingBox()).x);
         }
@@ -88,6 +88,7 @@ test('photographer desktop header aligns identity, navigation and actions while 
           const samples=await page.evaluate(()=>{cancelAnimationFrame(window.pb1126Sampling);return window.pb1126Samples});
           assert(samples.length>10);
           assert(samples.every(s=>s.same&&s.y===0&&!s.native&&JSON.stringify(s.labels)===JSON.stringify(['چاپ','گالری','فروشگاه'])),'every painted frame must retain only the configured shared header');
+          await page.setViewportSize({width:1366,height:720});
           await header.locator('[data-pb1126-kind="store"]').click();
           const store=page.frameLocator('.pb1126ContentPanel:not([hidden]) iframe');
           await store.locator('[data-enter-store-r96="shop"]').click();
@@ -96,8 +97,33 @@ test('photographer desktop header aligns identity, navigation and actions while 
           assert.equal((await header.boundingBox()).height,114);
           assert.equal(await store.locator('#storePanel .storeHomeActionsV671').isVisible(),false);
           assert.equal(await store.locator('#equipmentPanel').isVisible(),true);
+          assert.equal(await header.locator('.pb1126Secondary .active').innerText(),'اجاره تجهیزات');
+          assert.equal(await header.locator('[data-store-panel="bookingsPanel"]').innerText(),'آفیش‌های من');
+          const calendar=store.locator('#pbR63RentalCalendar');await calendar.waitFor();
+          await calendar.locator('[data-next]').click();
+          assert((await calendar.boundingBox()).height<390);
+          assert(await store.locator('#storePhotographerWorkspace>.shell').evaluate(el=>el.scrollHeight<=el.clientHeight+1),'rental calendar fits a laptop window without scrolling');
+          assert(await calendar.evaluate(el=>el.scrollHeight<=el.clientHeight+1&&el.scrollWidth<=el.clientWidth+1));
+          const days=calendar.locator('[data-date]:not([disabled])');
+          const startDate=await days.nth(0).getAttribute('data-date');
+          const endDate=await days.nth(1).getAttribute('data-date');
+          await calendar.locator('[data-date="'+startDate+'"]').click();
+          await calendar.locator('[data-date="'+endDate+'"]').click();
+          assert.equal(await calendar.locator('.edge').count(),2);
+          await calendar.locator('.pbR63OfficeBtn').click();
+          assert(await store.locator('#start').inputValue());
+          assert(await store.locator('#end').inputValue());
           await header.locator('.pb1126Secondary>button').first().click();
           assert((await header.locator('.pb1126Secondary').boundingBox()).y>=72);
+          await header.locator('[data-pb1126-kind="gallery"]').click();
+          const intro=page.locator('.clientGalleryIntroHeader');await intro.waitFor();
+          assert((await intro.boundingBox()).height<165,'desktop gallery introduction stays compact');
+          await header.locator('.settingsIconBtn').click();
+          const settings=page.locator('.standalonePhotographerSettings');await settings.waitFor();
+          assert.deepEqual(await settings.locator('.settingsNav button').allTextContents(),['وضعیت حساب','موقعیت عکاسی','دعوت همکار']);
+          assert.equal(await settings.getByText('تعرفه',{exact:true}).count(),0);
+          await settings.getByRole('button',{name:'وضعیت حساب',exact:true}).click();
+          await settings.getByText('حساب پرداخت به میزان مصرف',{exact:true}).waitFor();
         }
       }else{
         await page.locator('#photographerRoleHeaderV710').waitFor({state:'attached'});

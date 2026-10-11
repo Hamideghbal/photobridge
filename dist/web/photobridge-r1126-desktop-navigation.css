@@ -110,3 +110,17 @@
 @media (prefers-reduced-motion:reduce) {
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{transition:none!important}
 }
+
+/* R1132: store navigation's underline sits just below text, not at header edge. */
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{
+  bottom:17px!important;height:2px!important;border-radius:999px!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>button.active::after{
+  content:none!important;display:none!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{transition:none!important}
+}

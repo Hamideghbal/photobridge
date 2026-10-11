@@ -124,3 +124,17 @@
 @media(prefers-reduced-motion:reduce){
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator{transition:none!important}
 }
+@media(min-width:821px){
+ html:is(.pb1126Desktop,.pb1126Embedded):not(.pb1133LabChat) body .roleWorkspace:not(.labRoleWorkspace)>.chatDock,
+ html:has(#pbR99LabChooser) body .roleWorkspace:not(.labRoleWorkspace)>.chatDock,
+ html body.pbR100F14ChoosingLab .roleWorkspace:not(.labRoleWorkspace)>.chatDock{display:none!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary button.active{animation:pb1132HeaderMove .26s cubic-bezier(.2,.8,.2,1)!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body.pbR96ChoosingStore #storePhotographerWorkspace>.shell{width:100%!important;max-width:none!important;padding:20px 16px 42px!important;margin:0!important;scrollbar-gutter:stable both-edges!important}
+ html body.pbR96ChoosingStore #storePhotographerWorkspace .pbR96StoreChooser{width:min(760px,100%)!important;max-width:760px!important;margin:0 auto!important;padding:0!important;border:0!important;background:transparent!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body #pbR99LabChooser .pbR99LabWrap{width:min(792px,100%)!important;padding:20px 16px 42px!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body :is(#storePhotographerWorkspace,#pbR99LabChooser) :is(.pbR96StoreChooserHead,.pbR99LabIntro){box-sizing:border-box!important;width:100%!important;max-width:none!important;height:176px!important;min-height:176px!important;margin:0 0 18px!important;padding:20px 24px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:22px!important;background:linear-gradient(135deg,#3568fb 0%,#315be9 48%,#2748bd 100%)!important;box-shadow:0 12px 28px rgba(49,94,251,.16)!important;text-align:right!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body :is(#storePhotographerWorkspace,#pbR99LabChooser) :is(.pbR96StoreChooserHead,.pbR99LabIntro)::before{font:900 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;margin:0 0 12px!important;position:static!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body :is(#storePhotographerWorkspace,#pbR99LabChooser) :is(.pbR96StoreChooserHead h2,.pbR99LabIntro h1){font:900 26px/1.4 Vazirmatn,Tahoma,sans-serif!important;margin:0 0 8px!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body :is(#storePhotographerWorkspace,#pbR99LabChooser) :is(.pbR96StoreChooserHead p,.pbR99LabIntro p){font:500 12px/1.8 Vazirmatn,Tahoma,sans-serif!important;max-width:none!important;margin:0!important}
+}
+@media(prefers-reduced-motion:reduce){html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary button.active{animation:none!important}}

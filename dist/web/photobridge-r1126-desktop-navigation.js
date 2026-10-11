@@ -10,7 +10,7 @@
  }
  document.documentElement.classList.add('pb1126Desktop');
  const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
- let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false,previousMainTab=null;
+ let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false;
  try{const saved=JSON.parse(sessionStorage.getItem('pb1126-desktop-tabs'));if(saved?.tabs)settings=saved;}catch{}
  const panels=new Map();
  const kind=()=>new URLSearchParams(location.search).get('pbDesktopPanel')||(/\/orders|\/upload|\/archive|\/finance|\/album(?:\/|$)/.test(location.pathname)?'print':location.pathname.includes('/ai/')?'ai':location.pathname.includes('/album-design')?(new URLSearchParams(location.search).get('pb_mode')==='instagram'?'instagram':'album'):'gallery');
@@ -64,18 +64,6 @@
   // Preserve ordering if settings enable a previously removed tab.
   const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind="'+key+'"]')).filter(Boolean);if(ordered.some((b,i)=>b!==nav.querySelectorAll(':scope>button')[i])){const indicator=nav.querySelector(':scope>.pb1131MovingIndicator');nav.replaceChildren(...ordered);if(indicator)nav.append(indicator);}
   requestAnimationFrame(()=>placeMainIndicator(nav));
-  if(previousMainTab!==active){
-    const hadPrevious=previousMainTab!==null;
-    previousMainTab=active;
-    if(hadPrevious&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
-      const chosen=nav.querySelector(':scope > button.active');
-      chosen?.animate([
-       {transform:'translateY(3px) scale(.96)',filter:'brightness(.96)'},
-       {transform:'translateY(-1px) scale(1.015)',filter:'brightness(1.02)',offset:.65},
-       {transform:'translateY(0) scale(1)',filter:'none'}
-      ],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
-    }
-  }
   if(previousActive&&previousActive!==active&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
    const selectedButton=nav.querySelector('[data-pb1126-kind="'+active+'"]');
    if(selectedButton){selectedButton.classList.remove('pb1132Selected');void selectedButton.offsetWidth;selectedButton.classList.add('pb1132Selected');setTimeout(()=>selectedButton.classList.remove('pb1132Selected'),310);}
@@ -88,6 +76,8 @@
   document.documentElement.classList.toggle('pb1127Choosing',choosing);
   chrome.classList.toggle('pb1127Choosing',choosing);
   row.hidden=choosing;
+  document.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing&&!selected);
+  if(doc?.documentElement&&doc!==document)doc.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing);
   const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));
   const signature=active+'|'+choosing+'|'+visible.map(el=>el.outerHTML).join('');
@@ -97,7 +87,7 @@
    if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
    for(const original of visible){
     const copy=cleanClone(original);copy.style.removeProperty('display');
-    copy.onclick=()=>{press(copy);original.click();const content=doc.querySelector('.rentalPanel.mobileActive,.photographerPrintWorkspace');reveal(content);};
+    copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
     if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
     if(copy.classList.contains('archive'))copy.textContent='آرشیو';
     if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}
@@ -108,6 +98,7 @@
   }
  }
  function press(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{transform:'scale(1)'},{transform:'scale(.94)',filter:'brightness(.97)'},{transform:'scale(1)',filter:'none'}],{duration:200,easing:'ease-out'});}
+ function motionContent(doc){return doc?.querySelector('#pbR99LabChooser')||doc?.querySelector('.rentalPanel.mobileActive,.simplePrintPilot,.photographerRolePageScrollArea');}
  function reveal(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});}
 
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
@@ -118,13 +109,13 @@
    panel=document.createElement('section');panel.className='pb1126ContentPanel';panel.dataset.panel=key;
    const loading=document.createElement('div');loading.className='pb1126Loading';loading.textContent='در حال دریافت…';loading.setAttribute('role','status');
    const frame=document.createElement('iframe');frame.title=key==='store'?'فروشگاه':'چاپ';
-   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(frame.contentDocument.querySelector('.simplePrintPilot,.rentalPanel.mobileActive,.photographerRolePageScrollArea')||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
+   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
    const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
   }
   closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
-  render();if(!matchMedia('(prefers-reduced-motion:reduce)').matches){panel.classList.remove('pb1132Enter');void panel.offsetWidth;panel.classList.add('pb1132Enter');setTimeout(()=>panel.classList.remove('pb1132Enter'),290);}
+  render();reveal(motionContent(panel.querySelector('iframe').contentDocument));
  }
  function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(document.querySelector('#root .photographerRolePageScrollArea')||document.querySelector('#root .photographerMain'))));}
  // Register before legacy full-document navigation handlers.

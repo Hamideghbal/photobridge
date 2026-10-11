@@ -5,7 +5,7 @@ async function serve(page,state){
  if(u.pathname.startsWith('/api/')){
   if(u.pathname==='/api/photographer/navigation-tabs')return r.fulfill({json:{tabs:state.bypass?{ai:true,album:true,instagram:true}:state.tabs,adminBypass:!!state.bypass}});
   if(u.pathname==='/api/auth/me')return r.fulfill({json:{user:{userId:'customer',name:'Customer',labRole:'customer',platformRole:state.bypass?'platform_admin':'user',photographerName:'Test Studio'}}});
-  if(u.pathname==='/api/customer/entry-context')return r.fulfill({json:{destination:'none',connectedCount:0}});
+  if(u.pathname==='/api/customer/entry-context')return r.fulfill({json:state.entry||{destination:'none',connectedCount:0}});
   return r.fulfill({json:{labs:[],galleries:[],items:[],notifications:[],jobs:[],models:[],settings:{},stats:{},transactions:[],shops:[]}});
  }
  const f=u.pathname==='/equipment-rental/book'?path.join(root,'dist/api/equipment-rental-book.html'):path.join(root,'dist/web',u.pathname.startsWith('/photographer')?'index.html':u.pathname.slice(1));
@@ -30,7 +30,7 @@ test('actual mobile SPA: every disabled-tab combination occupies one full-width 
 test('direct disabled AI and default entry settle on gallery without repeated document navigation; admin photographer keeps all tabs',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'}),state={tabs:{ai:false,album:false,instagram:false}},documents=[];await serve(page,state);page.on('request',r=>{if(r.isNavigationRequest()&&r.frame()===page.mainFrame())documents.push(new URL(r.url()).pathname)});
- for(const start of ['/photographer/ai/retouch','/photographer']){documents.length=0;await page.goto('https://tabs.test'+start);await page.waitForURL('**/photographer/gallery');await checkDock(page,3);await page.waitForTimeout(800);assert.deepEqual(documents,[start,'/photographer/gallery'],'navigation must settle instead of looping')}
+ for(const start of ['/photographer/ai/retouch','/photographer']){documents.length=0;await page.goto('https://tabs.test'+start);await page.waitForURL('**/photographer/gallery');await checkDock(page,3);await page.waitForTimeout(800);assert.deepEqual(documents,start==='/photographer'?[start]:[start,'/photographer/gallery'],'default entry uses SPA navigation; disabled direct routes redirect once')}
  state.bypass=true;await page.goto('https://tabs.test/photographer/ai/retouch');await checkDock(page,6);await page.waitForTimeout(300);assert.equal(new URL(page.url()).pathname,'/photographer/ai/retouch');await page.close();
  }finally{await browser.close()}
 });
@@ -49,5 +49,23 @@ test('actual desktop role-header CSS cannot restore disabled tabs; enabling rest
  state.tabs={ai:true,album:true,instagram:true};await page.evaluate(()=>dispatchEvent(new Event('focus')));
  await page.waitForFunction(()=>document.querySelector('.photographerHomeModeNav')&&!document.querySelector('.photographerHomeModeNav [data-pb1099-hidden]'));
  assert.equal(await page.locator('.photographerHomeModeNav button:visible').count(),6);
+ }finally{await browser.close()}
+});
+
+test('default photographer entry always opens Gallery with AI enabled, including connected store/labs and admin photographer',async()=>{
+ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const entry of [{destination:'none',connectedCount:0},{destination:'rental',connectedCount:1},{destination:'lab',connectedCount:1,primaryLabId:'lab'},{destination:'lab',connectedCount:2}]){
+ const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'}),state={tabs:{ai:true,album:true,instagram:true},entry,bypass:entry.destination==='none'};
+ await serve(page,state);await page.goto('https://tabs.test/photographer');await page.waitForURL('**/photographer/gallery');await checkDock(page,6);assert(await page.getByRole('button',{name:'گالری',exact:true}).last().evaluate(e=>e.classList.contains('active')));await page.close();
+ }
+ }finally{await browser.close()}
+});
+test('explicit print and lab chooser navigation stays on the requested route',async()=>{
+ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const query of ['?workspace=print','?pbEntryDone=lab','?pbLabChooser=1']){
+ const page=await browser.newPage();let requests=0;await page.route('**/*',r=>{requests++;return r.fulfill({contentType:'text/html',body:'<body></body>'})});
+ await page.goto('https://entry.test/photographer'+query);const before=requests;await page.addScriptTag({content:fs.readFileSync(path.join(root,'dist/web/photobridge-r100f5-entry-routing.js'),'utf8')});await page.waitForTimeout(800);
+ assert.equal(new URL(page.url()).pathname+new URL(page.url()).search,'/photographer'+query);assert.equal(requests,before);await page.close();
+ }
  }finally{await browser.close()}
 });

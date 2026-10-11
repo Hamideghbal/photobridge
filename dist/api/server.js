@@ -1,3 +1,4 @@
+import { galleryExpirySql, maintainGalleryLifetime } from './gallery-lifetime.js';
 import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
 import { testAccountVisibleSql, testAccountSql } from './test-account-visibility.js';
 import { handlePhotographerTabSettings } from './photographer-tab-settings.js';
@@ -7182,7 +7183,7 @@ function webPushTargetUrl(kind, event, data) {
     if (event === 'equipment_collaboration_request') return '/rental/photographers';
     if (event === 'equipment_collaboration_review') return '/equipment-rental/book';
     if (event === 'equipment_rental_status' || event === 'equipment_sale_status') return '/equipment-rental/book';
-    if (event === 'client_gallery_finalized') return '/photographer/gallery';
+    if (event === 'client_gallery_finalized' || event === 'gallery.expiring') return '/photographer/gallery';
     if ((event === 'invoice_ready' || event === 'invoice_pricing_ready') && data?.invoiceId) return `/photographer/finance/invoices?workspace=print&invoice=${encodeURIComponent(String(data.invoiceId))}`;
     return '/photographer/orders/flow?workspace=print';
 }
@@ -11719,8 +11720,7 @@ function galleryPreviewQuality(service) {
     return Math.max(45, Math.min(68, Number.isFinite(n) ? n : 58));
 }
 function galleryLifetimeDays(service) {
-    const n = Math.round(Number(service?.metadata?.lifetime_days || 30));
-    return Math.max(1, Math.min(180, Number.isFinite(n) ? n : 30));
+    return 30;
 }
 function galleryPostCompletionDays(service) {
     const n = Math.round(Number(service?.metadata?.post_completion_days || 7));
@@ -11778,18 +11778,13 @@ function galleryBrandLogoUrl(row, ttlSeconds = 4 * 3600) { const key = String(ro
     return null; return storedObjectInlineUrl(key, 'gallery-brand-logo.webp', String(row?.gallery_brand_logo_content_type || 'image/webp'), ttlSeconds); }
 function cleanGalleryCode(value) { return normalizeDigits(String(value || '')).replace(/\s+/g, '').slice(0, 32); }
 async function publicGalleryByToken(token) {
-    const q = await pool.query(`SELECT g.*,u.name photographer_name,u.gallery_brand_name,u.gallery_brand_logo_key,u.gallery_brand_logo_content_type,
+    const q = await pool.query(`SELECT g.*,${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after,u.name photographer_name,u.gallery_brand_name,u.gallery_brand_logo_key,u.gallery_brand_logo_content_type,
     (SELECT o.status FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true LIMIT 1) current_order_status
     FROM photographer_client_galleries g JOIN users u ON u.id=g.owner_id WHERE g.public_token=$1 LIMIT 1`, [token]);
     const row = q.rows[0];
     if (!row || row.status !== 'published')
         return null;
-    const now = Date.now(), cleanupAt = row.cleanup_after ? new Date(row.cleanup_after).getTime() : null, expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : null;
-    if (cleanupAt && cleanupAt <= now)
-        return null;
-    const activeWorkflow = ['submitted', 'retouching', 'awaiting_approval'].includes(String(row.current_order_status || ''));
-    if (!cleanupAt && expiresAt && expiresAt <= now && !activeWorkflow)
-        return null;
+    if (row.expires_at && new Date(row.expires_at).getTime() <= Date.now()) return null;
     return row;
 }
 async function galleryCurrentOrderPublic(galleryId) {
@@ -11829,20 +11824,7 @@ async function galleryPublicContent(row) {
     };
 }
 async function cleanupExpiredClientGalleries() {
-    const q = await pool.query(`SELECT g.id FROM photographer_client_galleries g
-    LEFT JOIN photographer_gallery_orders o ON o.gallery_id=g.id AND o.is_current=true
-    WHERE (g.cleanup_after IS NOT NULL AND g.cleanup_after<=now()-interval '7 days')
-       OR (g.cleanup_after IS NULL AND g.expires_at IS NOT NULL AND g.expires_at<=now()-interval '7 days' AND COALESCE(o.status,'') NOT IN ('submitted','retouching','awaiting_approval'))
-    ORDER BY COALESCE(g.cleanup_after,g.expires_at) ASC LIMIT 50`);
-    for (const row of q.rows) {
-        const [mq, rq] = await Promise.all([
-            pool.query(`SELECT object_key FROM photographer_gallery_media WHERE gallery_id=$1 AND object_key IS NOT NULL`, [row.id]),
-            pool.query(`SELECT object_key FROM photographer_gallery_retouch_proofs WHERE gallery_id=$1 AND object_key IS NOT NULL`, [row.id])
-        ]);
-        for (const x of [...mq.rows, ...rq.rows])
-            await deleteStoredKeyBestEffort(String(x.object_key || ''));
-        await pool.query(`DELETE FROM photographer_client_galleries WHERE id=$1`, [row.id]);
-    }
+    await maintainGalleryLifetime(pool,deleteStoredKeyBestEffort,async(owner,notice)=>sendWebPushToRecipient('customer',owner,notice,'gallery.expiring',notice.metadata));
 }
 async function api(req, res, url) {
     // v790: country check for the Iran-focused mobile app. Prefer trusted proxy/CDN
@@ -13832,9 +13814,9 @@ async function api(req, res, url) {
                 return sendJson(res, 409, { error: 'gallery_order_not_awaiting_approval' });
             }
             if (decision === 'approve') {
-                const days = Math.max(1, Math.min(60, Number(row.post_completion_days_snapshot || 7)));
+                // Final customer approval does not change gallery expiry.
                 await c.query(`UPDATE photographer_gallery_orders SET status='completed',customer_approved_at=now(),completed_at=now(),revision_note=NULL,updated_at=now() WHERE id=$1`, [order.id]);
-                await c.query(`UPDATE photographer_client_galleries SET cleanup_after=now()+($2::int||' days')::interval,updated_at=now() WHERE id=$1`, [row.id, days]);
+                await c.query(`UPDATE photographer_client_galleries SET cleanup_after=NULL,updated_at=now() WHERE id=$1`, [row.id]);
             }
             else {
                 if (!requested.length) {
@@ -23971,7 +23953,7 @@ ${inviteUrl}`;
         if (req.method === 'GET' && url.pathname === '/api/customer/client-galleries') {
             const [billing, galleries, sizes] = await Promise.all([
                 photographerGalleryBillingSnapshot(a.userId),
-                pool.query(`SELECT g.id,g.title,g.customer_name,g.customer_mobile,g.public_token,g.status,g.digital_price,g.note,g.expires_at,g.cleanup_after,g.lifetime_days_snapshot,g.post_completion_days_snapshot,g.photo_limit,g.creation_fee,g.selection_enabled,g.watermark_enabled,g.watermark_text,g.created_at,g.updated_at,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active') media_count,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active' AND m.media_type='photo') photo_count,(SELECT count(*)::int FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.status<>'cancelled') order_count,COALESCE((SELECT sum(o.total)::bigint FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true AND o.status<>'cancelled'),0)::bigint ordered_total,(SELECT o.status FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true LIMIT 1) current_order_status FROM photographer_client_galleries g WHERE g.owner_id=$1 ORDER BY g.created_at DESC`, [a.userId]),
+                pool.query(`SELECT g.id,g.title,g.customer_name,g.customer_mobile,g.public_token,g.status,g.digital_price,g.note,${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after,g.lifetime_days_snapshot,g.post_completion_days_snapshot,g.photo_limit,g.creation_fee,g.selection_enabled,g.watermark_enabled,g.watermark_text,g.created_at,g.updated_at,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active') media_count,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active' AND m.media_type='photo') photo_count,(SELECT count(*)::int FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.status<>'cancelled') order_count,COALESCE((SELECT sum(o.total)::bigint FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true AND o.status<>'cancelled'),0)::bigint ordered_total,(SELECT o.status FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true LIMIT 1) current_order_status FROM photographer_client_galleries g WHERE g.owner_id=$1 ORDER BY g.created_at DESC`, [a.userId]),
                 pool.query(`SELECT s.id,s.label,s.width_cm,s.height_cm FROM print_sizes s WHERE s.active=true AND (s.owner_lab_id IS NULL OR s.owner_lab_id=$1) AND NOT EXISTS (SELECT 1 FROM lab_hidden_print_sizes h WHERE h.lab_id=$1 AND h.size_id=s.id) ORDER BY s.width_cm,s.height_cm,s.label`, [labId])
             ]);
             return sendJson(res, 200, { billing, galleries: galleries.rows.map((x) => ({ ...x, digital_price: Number(x.digital_price || 0), photo_limit: Number(x.photo_limit || 0), creation_fee: Number(x.creation_fee || 0), media_count: Number(x.media_count || 0), photo_count: Number(x.photo_count || 0), order_count: Number(x.order_count || 0), ordered_total: Number(x.ordered_total || 0), share_url: `${PUBLIC_APP_URL}/g/${x.public_token}` })), printSizes: sizes.rows, uploadAvailable, storageMode: storageConfigured ? 'object' : LOCAL_UPLOAD_FALLBACK ? 'local' : 'none' });
@@ -24042,7 +24024,7 @@ ${inviteUrl}`;
             const unlimited = await isUnlimitedAdminPhotographer(a.userId), c = await pool.connect();
             try {
                 await c.query('BEGIN');
-                const gq = await c.query(`SELECT id,title,expires_at,cleanup_after FROM photographer_client_galleries WHERE id=$1 AND owner_id=$2 FOR UPDATE`, [galleryId, a.userId]);
+                const gq = await c.query(`SELECT g.id,g.title,${galleryExpirySql('g')} AS expires_at FROM photographer_client_galleries g WHERE g.id=$1 AND g.owner_id=$2 FOR UPDATE`, [galleryId, a.userId]);
                 if (!gq.rowCount) {
                     await c.query('ROLLBACK');
                     return sendJson(res, 404, { error: 'gallery_not_found' });
@@ -24054,12 +24036,12 @@ ${inviteUrl}`;
                         await c.query('ROLLBACK');
                         return sendJson(res, 409, { error: 'gallery_renewal_idempotency_conflict' });
                     }
-                    const current = (await c.query(`SELECT expires_at,cleanup_after FROM photographer_client_galleries WHERE id=$1`, [galleryId])).rows[0] || {};
+                    const current = (await c.query(`SELECT ${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after FROM photographer_client_galleries g WHERE g.id=$1`, [galleryId])).rows[0] || {};
                     const wallet = await c.query(`SELECT balance FROM photographer_service_wallets WHERE user_id=$1`, [a.userId]);
                     await c.query('COMMIT');
                     return sendJson(res, 200, { ok: true, alreadyProcessed: true, renewalDays: Number(prev.days || renewalDays), chargedAmount: Number(prev.amount || 0), balance: Number(wallet.rows[0]?.balance || 0), expiresAt: current.expires_at || null, cleanupAfter: current.cleanup_after || null, deadlineKind: prev.deadline_kind, deadlineAfter: prev.deadline_after });
                 }
-                const gallery = gq.rows[0], deadlineKind = gallery.cleanup_after ? 'cleanup_after' : 'expires_at', deadlineRaw = gallery[deadlineKind];
+                const gallery = gq.rows[0], deadlineKind = 'expires_at', deadlineRaw = gallery[deadlineKind];
                 if (!deadlineRaw) {
                     await c.query('ROLLBACK');
                     return sendJson(res, 409, { error: 'gallery_renewal_deadline_missing' });
@@ -24098,13 +24080,10 @@ ${inviteUrl}`;
                     walletTransactionId = String(tq.rows[0]?.id || '') || null;
                 }
                 const baseMs = Math.max(deadline.getTime(), now.getTime()), deadlineAfter = new Date(baseMs + renewalDays * 86400000);
-                if (deadlineKind === 'cleanup_after')
-                    await c.query(`UPDATE photographer_client_galleries SET cleanup_after=$3,updated_at=now() WHERE id=$1 AND owner_id=$2`, [galleryId, a.userId, deadlineAfter]);
-                else
-                    await c.query(`UPDATE photographer_client_galleries SET expires_at=$3,updated_at=now() WHERE id=$1 AND owner_id=$2`, [galleryId, a.userId, deadlineAfter]);
+                await c.query(`UPDATE photographer_client_galleries SET expires_at=$3,cleanup_after=NULL,updated_at=now() WHERE id=$1 AND owner_id=$2`, [galleryId, a.userId, deadlineAfter]);
                 const renewalId = crypto.randomUUID();
                 await c.query(`INSERT INTO photographer_gallery_renewals(id,gallery_id,owner_id,idempotency_key,days,amount,wallet_transaction_id,deadline_kind,deadline_before,deadline_after) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, [renewalId, galleryId, a.userId, idempotencyKey, renewalDays, fee, walletTransactionId, deadlineKind, deadline, deadlineAfter]);
-                const current = (await c.query(`SELECT expires_at,cleanup_after FROM photographer_client_galleries WHERE id=$1`, [galleryId])).rows[0] || {};
+                const current = (await c.query(`SELECT ${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after FROM photographer_client_galleries g WHERE g.id=$1`, [galleryId])).rows[0] || {};
                 await c.query('COMMIT');
                 await audit(a.userId, labId, 'client_gallery.renew', 'photographer_client_gallery', galleryId, { renewalDays, fee, deadlineKind, deadlineBefore: deadline.toISOString(), deadlineAfter: deadlineAfter.toISOString(), renewalId }).catch(() => { });
                 return sendJson(res, 200, { ok: true, alreadyProcessed: false, renewalDays, chargedAmount: fee, balance: balanceAfter, expiresAt: current.expires_at || null, cleanupAfter: current.cleanup_after || null, deadlineKind, deadlineAfter: deadlineAfter.toISOString() });
@@ -24161,7 +24140,7 @@ ${inviteUrl}`;
             return sendJson(res, 200, { ok: true, id: galleryId });
         }
         if (customerGalleryDetail && req.method === 'GET') {
-            const q = await pool.query(`SELECT g.*,u.name owner_name,u.gallery_brand_name,u.gallery_brand_logo_key,u.gallery_brand_logo_content_type FROM photographer_client_galleries g JOIN users u ON u.id=g.owner_id WHERE g.id=$1 AND g.owner_id=$2 LIMIT 1`, [customerGalleryDetail[1], a.userId]);
+            const q = await pool.query(`SELECT g.*,${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after,u.name owner_name,u.gallery_brand_name,u.gallery_brand_logo_key,u.gallery_brand_logo_content_type FROM photographer_client_galleries g JOIN users u ON u.id=g.owner_id WHERE g.id=$1 AND g.owner_id=$2 LIMIT 1`, [customerGalleryDetail[1], a.userId]);
             if (!q.rowCount)
                 return sendJson(res, 404, { error: 'gallery_not_found' });
             const g = q.rows[0];

@@ -17,6 +17,11 @@ function replaceInRange(src,startAnchor,endAnchor,old,next,label){
  if(count!==1)throw new Error('[R1098] '+label+' anchor count '+count);
  return src.slice(0,start)+chunk.replace(old,next)+src.slice(end);
 }
+function replaceBetween(src,startAnchor,endAnchor,next,label){
+ const start=src.indexOf(startAnchor),end=src.indexOf(endAnchor,start+startAnchor.length);
+ if(start<0||end<0)throw new Error('[R1098] '+label+' route range missing');
+ return src.slice(0,start)+next+src.slice(end);
+}
 
 if(!server.includes(marker)){
  server=replaceOnce(
@@ -118,6 +123,14 @@ if(!server.includes(marker)){
   "inviteEnabled:true",
   'audit invite sms enabled'
  );
+
+ server=replaceBetween(
+  server,
+  "if (req.method === 'POST' && url.pathname === '/api/rental/photographer-invites') {",
+  "if (req.method === 'POST' && url.pathname === '/api/rental/photographer-invites/send-sms') {",
+  "if (req.method === 'POST' && url.pathname === '/api/rental/photographer-invites') {\n        const shop = await equipmentRentalCurrentShop(a);\n        if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });\n        return sendJson(res, 410, { error:'rental_invite_sms_only' });\n    }\n    ",
+  'disable direct rental invite link endpoint'
+ );
  server=server.replace(
   "async function equipmentRentalCreateBooking(db, {",
   marker+"\nasync function equipmentRentalCreateBooking(db, {"
@@ -150,6 +163,18 @@ portal=replaceOnce(
  '<div class="rentalInviteLink"><input id="rentalInviteUrl" placeholder="در حال ساخت لینک دعوت…" readonly=""/><button class="btn secondary" id="copyRentalInvite" type="button">کپی لینک</button></div>',
  '',
  'remove copied invite link UI'
+);
+portal=replaceOnce(
+ portal,
+ '<div class="rentalInviteHint">دعوت فروشگاه، همکاری همین فروشگاه را برای عکاس فعال می‌کند. اگر عکاس یک یا چند دعوت فروشگاه را پذیرفته باشد، در صفحه فروشگاه فقط همان فروشگاه‌های دعوت‌کننده را می‌بیند. برای دعوت پیامکی می‌توانی بدهی قبلی او را ثبت کنی تا از همان ابتدا وارد حسابداری این فروشگاه شود.</div>',
+ '<div class="rentalInviteHint">دعوت عکاس فقط از طریق پیامک انجام می‌شود. شماره موبایل را وارد کن تا لینک عضویت یا تأیید همکاری مستقیماً برای عکاس پیامک شود. در صورت نیاز می‌توانی بدهی قبلی او را هم ثبت کنی.</div>',
+ 'sms-only invite hint'
+);
+portal=replaceOnce(
+ portal,
+ '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه</button>',
+ '<button class="btn" id="sendRentalInviteSms" type="button">ارسال دعوتنامه پیامکی</button>',
+ 'sms-only invite button label'
 );
 portal=replaceOnce(
  portal,

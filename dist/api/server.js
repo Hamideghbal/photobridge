@@ -1,3 +1,4 @@
+import { testAccountVisibleSql, testAccountSql } from './test-account-visibility.js';
 import { handlePhotographerTabSettings } from './photographer-tab-settings.js';
 import {changeRentalAsset,rentalAssetPeakDemand,increaseRentalAssetStock} from './rentalAssetControls.js';
 import { createStoreDesktopSync } from './storeDesktopSync.js';
@@ -9479,8 +9480,7 @@ async function ensureEquipmentRentalV727Schema() {
               ADD COLUMN IF NOT EXISTS birthday_discount_days_before integer NOT NULL DEFAULT 7,
               ADD COLUMN IF NOT EXISTS birthday_discount_days_after integer NOT NULL DEFAULT 0,
               ADD COLUMN IF NOT EXISTS birthday_sms_enabled boolean NOT NULL DEFAULT false`);
-            await pool.query(`UPDATE equipment_rental_shops SET private_admin_only=true
-              WHERE private_admin_only=false AND (lower(coalesce(name,''))='sofia' OR lower(coalesce(slug,''))='sofia' OR lower(coalesce(slug,'')) LIKE '%sofia%' OR name ILIKE '%صوفیا%' OR name ILIKE '%سوفیا%')`);
+            /* PB_R1106_TEST_ACCOUNT_VISIBILITY */
             await pool.query(`ALTER TABLE equipment_rental_shop_memberships
               ADD COLUMN IF NOT EXISTS settlement_mode text NOT NULL DEFAULT 'ledger',
               ADD COLUMN IF NOT EXISTS permanent_discount_percent numeric(5,2) NOT NULL DEFAULT 0,
@@ -10583,11 +10583,12 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
     await ensureEquipmentRentalV727Schema();
     const sq=await db.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId]);
     const shop=sq.rows[0];if(!shop||!equipmentRentalShopSubscriptionActive(shop))return false;
-    if(shop.private_admin_only && !(await equipmentRentalPrivatePreviewAllowed(db,userId)))return false;
+    const visibility=await db.query(`SELECT ${testAccountSql('shop','s')} AS test_account FROM equipment_rental_shops s WHERE s.id=$1 AND ${testAccountVisibleSql('shop','s','$2')}`,[shopId,userId]);
+    if(!visibility.rowCount)return false;
     // A photographer whose account was created by a rental-store invitation can discover
     // only the rental-capable stores that invited them. Sales-only stores stay public.
     // Later lab/photographer invitations must not change the account's original source.
-    if (shop.rental_enabled !== false && (await photographerInitialInviteType(userId)) === 'rental') {
+    if (!visibility.rows[0]?.test_account && shop.rental_enabled !== false && (await photographerInitialInviteType(userId)) === 'rental') {
         const invitedShopIds = await equipmentRentalInvitedShopIds(db, userId);
         if (!invitedShopIds.includes(String(shopId))) return false;
     }
@@ -11103,7 +11104,7 @@ async function auth(req) {
       JOIN labs l0 ON l0.id=m0.lab_id
       WHERE m0.user_id=u.id AND m0.active=true AND ($2::text IS NULL OR m0.role=$2)
         AND ($3::uuid IS NULL OR m0.lab_id=$3::uuid)
-        AND ($2::text IS DISTINCT FROM 'customer' OR l0.service_only=true OR (l0.active=true AND COALESCE(l0.suspended,false)=false AND (l0.active_from IS NULL OR l0.active_from<=now()) AND (l0.active_until IS NULL OR l0.active_until>=now())))
+        AND ($2::text IS DISTINCT FROM 'customer' OR l0.service_only=true OR (${testAccountVisibleSql('lab','l0','u.id')} AND l0.active=true AND COALESCE(l0.suspended,false)=false AND (l0.active_from IS NULL OR l0.active_from<=now()) AND (l0.active_until IS NULL OR l0.active_until>=now())))
       ORDER BY
         CASE
           WHEN $2::text='customer' AND m0.lab_id=u.photographer_active_lab_id THEN 0
@@ -13920,8 +13921,8 @@ async function api(req, res, url) {
         await ensureEquipmentRentalV727Schema();
         const q = await pool.query(`SELECT s.id,s.name,s.province,s.city,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach
           FROM equipment_rental_shops s
-          WHERE s.active=true AND COALESCE(s.suspended,false)=false AND COALESCE(s.private_admin_only,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now())
-          ORDER BY s.created_at DESC LIMIT 100`);
+          WHERE s.active=true AND COALESCE(s.suspended,false)=false AND ${testAccountVisibleSql('shop','s','$1')} AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now())
+          ORDER BY s.created_at DESC LIMIT 100`,[a?.userId||null]);
         const location={province:url.searchParams.get('province')||'',city:url.searchParams.get('city')||''};
         const shops=q.rows.filter(shop=>reachAllows(shop,'rental',location)||reachAllows(shop,'sale',location)).map(shop=>({id:shop.id,name:shop.name,province:shop.province,city:shop.city}));
         return sendJson(res, 200, { shops, scoped: false, accessMode: 'collaboration_required' });
@@ -16297,7 +16298,7 @@ ${inviteUrl}`;
         const scopedShopIds = scoped ? await equipmentRentalInvitedShopIds(pool, a.userId) : [];
         const invitedShopSet = new Set(scopedShopIds.map(String));
         const viewer=(await pool.query('SELECT province,city FROM photographer_profiles WHERE user_id=$1 LIMIT 1',[a.userId])).rows[0]||{};
-        const q = await pool.query(`SELECT s.id,s.name,s.slug,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
+        const q = await pool.query(`SELECT ${testAccountSql('shop','s')} AS admin_test_account,s.id,s.name,s.slug,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
           count(i.id) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%'))::int active_items,COALESCE(min(i.daily_price) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')),0)::bigint min_daily_price,
           (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_items,
           (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) min_sale_price,
@@ -16316,11 +16317,11 @@ ${inviteUrl}`;
           (SELECT m.birth_certificate_no FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) birth_certificate_no,
           (SELECT m.business_license_no FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$1 AND m.role='photographer' LIMIT 1) business_license_no
           FROM equipment_rental_shops s LEFT JOIN equipment_rental_items i ON i.shop_id=s.id AND i.deleted_at IS NULL
-          WHERE s.active=true AND COALESCE(s.suspended,false)=false AND (COALESCE(s.private_admin_only,false)=false OR $2::boolean=true) AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now())
-          GROUP BY s.id ORDER BY connected DESC,active_items DESC,s.created_at DESC`, [a.userId, normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin']);
+          WHERE s.active=true AND COALESCE(s.suspended,false)=false AND ${testAccountVisibleSql('shop','s','$1')} AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now())
+          GROUP BY s.id ORDER BY connected DESC,active_items DESC,s.created_at DESC`, [a.userId]);
         const previewAllowed=normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin';
         const originContext=await photographerInitialOriginContext(a.userId),primaryShopId=originContext.originType==='rental'?originContext.primaryShopId:null;
-        const shops=q.rows.filter(shop=>!scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(shop=>{const previewPrivate=previewAllowed&&shop.private_admin_only===true;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),canRent:previewPrivate||reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
+        const shops=q.rows.filter(shop=>shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),canRent:previewPrivate||reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
         return sendJson(res, 200, { shops, scoped, primaryShopId:primaryShopId||null, scopedShopId: scopedShopIds.length===1?scopedShopIds[0]:null, scopedShopIds });
     }
     const customerRentalShopSelect = url.pathname.match(/^\/api\/customer\/equipment-rental\/shops\/([0-9a-f-]{36})\/select$/i);
@@ -16339,7 +16340,7 @@ ${inviteUrl}`;
           (SELECT m.birth_certificate_no FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$2 AND m.role='photographer' LIMIT 1) birth_certificate_no,
           (SELECT m.business_license_no FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$2 AND m.role='photographer' LIMIT 1) business_license_no
           FROM equipment_rental_shops s
-          WHERE s.id=$1 AND s.active=true AND COALESCE(s.suspended,false)=false AND (COALESCE(s.private_admin_only,false)=false OR $3::boolean=true) AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) LIMIT 1`, [shopId, a.userId, normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin']);
+          WHERE s.id=$1 AND s.active=true AND COALESCE(s.suspended,false)=false AND ${testAccountVisibleSql('shop','s','$2')} AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) LIMIT 1`, [shopId, a.userId]);
         if (!q.rowCount) return sendJson(res, 404, { error: 'rental_shop_unavailable' });
         // v631: rental-store context selection is intentionally isolated from
         // photographer_active_lab_id.  Selecting a rental shop must never call
@@ -23730,7 +23731,7 @@ ${inviteUrl}`;
                 labId = requestedLabId;
             }
         }
-        const access = await pool.query(`SELECT active,active_from,active_until,service_only FROM labs WHERE id=$1`, [labId]);
+        const access = await pool.query(`SELECT active,active_from,active_until,service_only FROM labs l WHERE id=$1 AND (l.service_only=true OR ${testAccountVisibleSql('lab','l','$2')})`, [labId,a.userId]);
         const ar = access.rows[0], now = new Date();
         if (!ar || !ar.active || (ar.active_from && now < new Date(ar.active_from)) || (ar.active_until && now > new Date(ar.active_until)))
             return sendJson(res, 403, { error: 'subscription_inactive' });
@@ -23809,13 +23810,13 @@ ${inviteUrl}`;
             const origin = await photographerInitialOriginContext(a.userId);
             if (origin.originType === 'rental') {
                 await ensureEquipmentRentalV727Schema();
-                const q = await pool.query(`SELECT m.shop_id::text id FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='photographer' AND m.active=true AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY (m.shop_id::text=$2::text) DESC,m.created_at ASC`, [a.userId, origin.primaryShopId || '']);
+                const q = await pool.query(`SELECT m.shop_id::text id FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='photographer' AND m.active=true AND ${testAccountVisibleSql('shop','s','$1')} AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY (m.shop_id::text=$2::text) DESC,m.created_at ASC`, [a.userId, origin.primaryShopId || '']);
                 const ids=q.rows.map(x=>String(x.id));
                 const primary=ids.includes(String(origin.primaryShopId||''))?String(origin.primaryShopId):ids[0]||null;
                 return sendJson(res,200,{destination:'rental',originType:origin.originType,primaryShopId:primary,connectedCount:ids.length,connectedIds:ids});
             }
             if (origin.originType === 'lab') {
-                const q = await pool.query(`SELECT m.lab_id::text id FROM lab_memberships m JOIN labs l ON l.id=m.lab_id WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND l.active=true AND COALESCE(l.suspended,false)=false AND l.service_only=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now()) ORDER BY (m.lab_id::text=$2::text) DESC,m.created_at ASC`, [a.userId, origin.primaryLabId || '']);
+                const q = await pool.query(`SELECT m.lab_id::text id FROM lab_memberships m JOIN labs l ON l.id=m.lab_id WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')} AND l.active=true AND COALESCE(l.suspended,false)=false AND l.service_only=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now()) ORDER BY (m.lab_id::text=$2::text) DESC,m.created_at ASC`, [a.userId, origin.primaryLabId || '']);
                 const ids=q.rows.map(x=>String(x.id));
                 const primary=ids.includes(String(origin.primaryLabId||''))?String(origin.primaryLabId):ids[0]||null;
                 return sendJson(res,200,{destination:'lab',originType:origin.originType,primaryLabId:primary,connectedCount:ids.length,connectedIds:ids});
@@ -23833,22 +23834,22 @@ ${inviteUrl}`;
             const memberships = canDiscoverLabs
                 ? await pool.query(`SELECT l.id,l.name,l.slug,l.province,l.city,l.service_only,m.active,(u.photographer_active_lab_id=l.id) selected
                     FROM lab_memberships m JOIN labs l ON l.id=m.lab_id JOIN users u ON u.id=m.user_id
-                    WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND (l.service_only=true OR (l.active=true AND COALESCE(l.suspended,false)=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now()))) ORDER BY l.service_only,l.name`, [a.userId])
+                    WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')} AND (l.service_only=true OR (l.active=true AND COALESCE(l.suspended,false)=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now()))) ORDER BY l.service_only,l.name`, [a.userId])
                 : await pool.query(`SELECT l.id,l.name,l.slug,l.province,l.city,l.service_only,m.active,(u.photographer_active_lab_id=l.id) selected
                     FROM lab_memberships m JOIN labs l ON l.id=m.lab_id JOIN users u ON u.id=m.user_id
-                    WHERE m.user_id=$1 AND m.role='customer' AND m.active=true
+                    WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')}
                       AND (l.service_only=true OR (l.id=ANY($2::uuid[]) AND l.active=true AND COALESCE(l.suspended,false)=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now())))
                     ORDER BY l.service_only,l.name`, [a.userId, invitedLabIds]);
             let labs = [];
             if (canDiscoverLabs) {
                 const q = await pool.query(`SELECT l.id,l.name,l.slug,l.province,l.city,l.photographer_join_discount_percent,
-            EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=l.id AND m.user_id=$1 AND m.role='customer' AND m.active=true) connected,
+            EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=l.id AND m.user_id=$1 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')}) connected,
             (SELECT r.status FROM lab_collaboration_requests r WHERE r.lab_id=l.id AND r.photographer_id=$1 LIMIT 1) request_status,
             (SELECT r.requested_at FROM lab_collaboration_requests r WHERE r.lab_id=l.id AND r.photographer_id=$1 LIMIT 1) requested_at,
             (SELECT r.reviewed_at FROM lab_collaboration_requests r WHERE r.lab_id=l.id AND r.photographer_id=$1 LIMIT 1) reviewed_at,
             COALESCE((SELECT s.discount_percent FROM lab_customer_finance_settings s WHERE s.lab_id=l.id AND s.customer_id=$1 AND s.discount_enabled=true LIMIT 1),0) collaboration_discount_percent
           FROM labs l
-          WHERE l.active=true AND COALESCE(l.suspended,false)=false AND l.service_only=false AND l.photographer_discovery_enabled=true
+          WHERE l.active=true AND COALESCE(l.suspended,false)=false AND l.service_only=false AND l.photographer_discovery_enabled=true AND ${testAccountVisibleSql('lab','l','$1')}
             AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now())
           ORDER BY connected DESC,l.city NULLS LAST,l.name`, [a.userId]);
                 labs = q.rows;
@@ -23857,10 +23858,15 @@ ${inviteUrl}`;
                 const q = await pool.query(`SELECT l.id,l.name,l.slug,l.province,l.city,0::numeric photographer_join_discount_percent,true connected,NULL::text request_status,NULL::timestamptz requested_at,NULL::timestamptz reviewed_at,
             COALESCE((SELECT s.discount_percent FROM lab_customer_finance_settings s WHERE s.lab_id=l.id AND s.customer_id=$1 AND s.discount_enabled=true LIMIT 1),0) collaboration_discount_percent
           FROM lab_memberships m JOIN labs l ON l.id=m.lab_id
-          WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND l.service_only=false
+          WHERE m.user_id=$1 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')} AND l.service_only=false
             AND l.id=ANY($2::uuid[]) AND l.active=true AND COALESCE(l.suspended,false)=false AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now())
           ORDER BY (l.id=$3::uuid) DESC,l.name`, [a.userId, invitedLabIds, activeLabId]);
                 labs = q.rows;
+            }
+            /* PB_R1106_PENDING_TEST_LAB_INVITES */
+            {
+                const testLabs=await pool.query(`SELECT l.id,l.name,l.slug,l.province,l.city,l.photographer_join_discount_percent,EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=l.id AND m.user_id=$1 AND m.role='customer' AND m.active=true) connected,NULL::text request_status,NULL::timestamptz requested_at,NULL::timestamptz reviewed_at,0::numeric collaboration_discount_percent FROM labs l WHERE l.active=true AND COALESCE(l.suspended,false)=false AND l.service_only=false AND ${testAccountSql('lab','l')} AND ${testAccountVisibleSql('lab','l','$1')} AND (l.active_from IS NULL OR l.active_from<=now()) AND (l.active_until IS NULL OR l.active_until>=now())`,[a.userId]);
+                const known=new Set(labs.map(row=>String(row.id)));labs.push(...testLabs.rows.filter(row=>!known.has(String(row.id))));
             }
             const originContext=await photographerInitialOriginContext(a.userId);
             const primaryLabId=originContext.originType==='lab'?originContext.primaryLabId:null;
@@ -23873,7 +23879,7 @@ ${inviteUrl}`;
                 return sendJson(res, 403, { error: 'lab_discovery_not_allowed' });
             const targetLab = customerLabRequest[1];
             if (req.method === 'POST') {
-                const lq = await pool.query(`SELECT id,name,photographer_discovery_enabled,photographer_join_discount_percent FROM labs WHERE id=$1 AND active=true AND COALESCE(suspended,false)=false AND service_only=false LIMIT 1`, [targetLab]);
+                const lq = await pool.query(`SELECT id,name,photographer_discovery_enabled,photographer_join_discount_percent FROM labs l WHERE id=$1 AND active=true AND COALESCE(suspended,false)=false AND service_only=false AND ${testAccountVisibleSql('lab','l','$2')} LIMIT 1`, [targetLab,a.userId]);
                 if (!lq.rowCount || !lq.rows[0].photographer_discovery_enabled)
                     return sendJson(res, 404, { error: 'lab_not_available' });
                 const exists = await pool.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true`, [targetLab, a.userId]);
@@ -23894,21 +23900,22 @@ ${inviteUrl}`;
         const customerLabSelect = url.pathname.match(/^\/api\/customer\/labs\/([0-9a-f-]+)\/select$/);
         if (customerLabSelect && req.method === 'POST') {
             const targetLab = customerLabSelect[1];
-            const q = await pool.query(`SELECT l.id,l.name,l.active,l.active_from,l.active_until,l.service_only,l.suspended,l.suspension_reason FROM lab_memberships m JOIN labs l ON l.id=m.lab_id WHERE m.user_id=$1 AND m.lab_id=$2 AND m.role='customer' AND m.active=true LIMIT 1`, [a.userId, targetLab]);
+            const q = await pool.query(`SELECT ${testAccountSql('lab','l')} AS test_account,l.id,l.name,l.active,l.active_from,l.active_until,l.service_only,l.suspended,l.suspension_reason FROM lab_memberships m JOIN labs l ON l.id=m.lab_id WHERE m.user_id=$1 AND m.lab_id=$2 AND m.role='customer' AND m.active=true AND ${testAccountVisibleSql('lab','l','$1')} LIMIT 1`, [a.userId, targetLab]);
             if (!q.rowCount)
                 return sendJson(res, 403, { error: 'membership_required' });
             const row = q.rows[0], t = new Date();
             if (row.suspended) return sendJson(res, 403, { error: 'lab_suspended', message: String(row.suspension_reason || 'این لابراتوار توسط ادمین PhotoBridge تعلیق شده است.') });
             if (!row.active || (row.active_from && t < new Date(row.active_from)) || (row.active_until && t > new Date(row.active_until)))
                 return sendJson(res, 403, { error: 'lab_unavailable' });
-            if (!row.service_only && !(await photographerCanDiscoverLabs(a.userId))) {
+            if (!row.service_only && !row.test_account && !(await photographerCanDiscoverLabs(a.userId))) {
                 const invitedLabIds = await photographerInvitedLabIds(a.userId);
                 if (!invitedLabIds.includes(String(targetLab)))
                     return sendJson(res, 403, { error: 'lab_invite_scope_required' });
             }
             await pool.query(`UPDATE users SET photographer_active_lab_id=$2,updated_at=now() WHERE id=$1`, [a.userId, targetLab]);
             await audit(a.userId, targetLab, 'photographer.active_lab.select', 'lab', targetLab, {}).catch(() => { });
-            return sendJson(res, 200, { ok: true, lab: row });
+            const {test_account,...publicRow}=row;
+            return sendJson(res, 200, { ok: true, lab: publicRow });
         }
         if (req.method === 'PUT' && url.pathname === '/api/customer/client-gallery-branding') {
             const b = await bodyJson(req, 2_500_000), brandName = String(b.brandName || '').trim().slice(0, 120), removeLogo = Boolean(b.removeLogo), logoBase64 = String(b.imageBase64 || ''), mimeType = String(b.mimeType || '').toLowerCase();

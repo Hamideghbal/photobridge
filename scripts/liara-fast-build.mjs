@@ -80,6 +80,8 @@ await import('./enable-r1097-store-readability.mjs');
 await import('./enable-r1098-stock-privacy.mjs');
 await import('./enable-r1099-photographer-tabs.mjs');
 await import('./enable-r1105-lab-origin-release.mjs');
+await import('./enable-r1106-test-account-visibility.mjs');
+await import('./enable-r1106-mobile-store-panel.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

@@ -1,0 +1,57 @@
+/* A persistent photographer dock hosts the legacy Store/Print documents as content panels. */
+(()=>{
+'use strict';
+if(!matchMedia('(max-width:820px)').matches)return;
+const initialQuery=new URLSearchParams(location.search),embedded=initialQuery.get('pbEmbeddedStore')==='1';
+const route=/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(signup|login|invite|register)(?:\/|$)/.test(location.pathname);
+if(embedded){
+ document.documentElement.dataset.pb1106Embedded='1';
+ const style=document.createElement('style');style.textContent='html[data-pb1106-embedded] body #photographerStoreBottomNav#photographerStoreBottomNav,html[data-pb1106-embedded] body .photographerBottomAppNav.photographerBottomAppNav{display:none!important}html[data-pb1106-embedded] body{padding-bottom:0!important}';document.head.append(style);return;
+}
+if(location.pathname==='/equipment-rental/book'&&window===window.top){
+ const q=new URLSearchParams({pbStorePanel:'store',pbStoreQuery:location.search});location.replace('/photographer/gallery?'+q);return;
+}
+if(!route)return;
+let dock,selected=null,authenticated=false;const panels=new Map();
+const style=document.createElement('style');
+style.textContent='.pb1106ContentPanel{position:fixed;inset:0 0 var(--pb1106-dock-height,84px);z-index:100000;background:#f7f8fc}.pb1106ContentPanel[hidden]{display:none}.pb1106ContentPanel iframe{width:100%;height:100%;border:0;display:block;background:#f7f8fc}.pb1106ContentLoading{position:absolute;inset:0;display:grid;place-items:center;background:#f7f8fc;color:#52617a;font:inherit}.pb1106ContentLoading[hidden]{display:none}html body.pb1106PanelOpen .photographerBottomAppNav{z-index:100001!important}html body.pb1106PanelOpen .photographerBottomAppNav button.active{background:transparent!important;color:#667085!important}html body.pb1106PanelOpen .photographerBottomAppNav button.active .photographerBottomNavIcon{background:#f1f5f9!important;color:#667085!important}html body.pb1106PanelOpen .photographerBottomAppNav [data-pb1106-selected]{background:#315cff!important;color:#fff!important}html body.pb1106PanelOpen .photographerBottomAppNav [data-pb1106-selected] .photographerBottomNavIcon{background:#315cff!important;color:#fff!important}';
+document.head.append(style);
+function feature(el){const name=el?.getAttribute('aria-label')||el?.textContent||'';return /فروشگاه/.test(name)||el?.classList.contains('photographerStoreEntry')?'store':/^چاپ$/.test(name.trim())?'print':null}
+function restoreKind(){const key=new URLSearchParams(location.search).get('pbStorePanel');return key==='1'?'store':['store','print'].includes(key)?key:null}
+function size(){if(dock){const height=dock.getBoundingClientRect().height;if(height>0)document.documentElement.style.setProperty('--pb1106-dock-height',height+'px')}}
+function sync(){
+ const nav=document.querySelector('.photographerBottomAppNav');if(!nav)return;
+ if(nav!==dock){dock=nav;new ResizeObserver(size).observe(nav)}size();
+ const kind=restoreKind();if(kind&&!selected)open(kind,false);
+}
+function mark(){for(const b of dock?.querySelectorAll('button,a')||[]){if(feature(b)===selected){b.dataset.pb1106Selected='1';b.setAttribute('aria-current','page')}else if(b.dataset.pb1106Selected){delete b.dataset.pb1106Selected;b.removeAttribute('aria-current')}}}
+function open(kind,push=true){
+ if(selected===kind)return;
+ for(const p of panels.values())p.hidden=true;
+ let panel=panels.get(kind);
+ if(!panel){
+  panel=document.createElement('section');panel.id=kind==='store'?'pb1106StorePanel':'pb1106PrintPanel';panel.className='pb1106ContentPanel';panel.setAttribute('aria-label',kind==='store'?'فروشگاه':'چاپ');
+  const loading=document.createElement('div');loading.id=kind==='store'?'pb1106StoreLoading':'pb1106PrintLoading';loading.className='pb1106ContentLoading';loading.setAttribute('role','status');loading.textContent=kind==='store'?'در حال دریافت فروشگاه…':'در حال دریافت چاپ…';
+  const frame=document.createElement('iframe');frame.title=kind==='store'?'فروشگاه تجهیزات':'چاپ';
+  frame.addEventListener('load',()=>{try{const url=new URL(frame.contentWindow.location.href);if(url.href==='about:blank')return;if(url.origin!==location.origin||/^\/photographer\/(login|signup|register)/.test(url.pathname)||!/^\/(equipment-rental|photographer)(\/|$)/.test(url.pathname)){location.assign(url.href);return}}catch{return}loading.hidden=true});
+  panel.append(frame,loading);panels.set(kind,panel);document.body.append(panel);
+  const q=new URLSearchParams(kind==='store'?initialQuery.get('pbStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbEmbeddedStore','1');frame.src=(kind==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
+ }
+ panel.hidden=false;selected=kind;document.body.classList.add('pb1106PanelOpen');mark();
+ if(push){const u=new URL(location.href);u.searchParams.set('pbStorePanel',kind);history.pushState({pb1106Panel:kind},'',u)}size();
+}
+function close(){
+ for(const panel of panels.values())panel.hidden=true;selected=null;document.body.classList.remove('pb1106PanelOpen');mark();
+ const u=new URL(location.href);if(u.searchParams.has('pbStorePanel')){u.searchParams.delete('pbStorePanel');u.searchParams.delete('pbStoreQuery');history.replaceState(history.state,'',u)}
+}
+// Head registration precedes both old full-document Store and Print click handlers.
+window.addEventListener('click',e=>{
+ const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNav a,.photographerHomeModeNav button,.photographerStoreEntry,.photographerStoreMobileNav');if(!el)return;
+ const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind);return}
+ if(selected)close(); // Other sections keep their normal React navigation.
+},true);
+window.addEventListener('popstate',()=>{const kind=restoreKind();if(kind)open(kind,false);else close()});
+window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;return}if(!authenticated)return;authenticated=false;close();for(const p of panels.values())p.remove();panels.clear()});
+function init(){sync();new MutationObserver(sync).observe(document.body,{childList:true,subtree:true})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();

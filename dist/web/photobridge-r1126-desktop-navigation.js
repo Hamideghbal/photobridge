@@ -10,7 +10,7 @@
  }
  document.documentElement.classList.add('pb1126Desktop');
  const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
- let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false;
+ let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false,previousMainTab=null;
  try{const saved=JSON.parse(sessionStorage.getItem('pb1126-desktop-tabs'));if(saved?.tabs)settings=saved;}catch{}
  const panels=new Map();
  const kind=()=>new URLSearchParams(location.search).get('pbDesktopPanel')||(/\/orders|\/upload|\/archive|\/finance|\/album(?:\/|$)/.test(location.pathname)?'print':location.pathname.includes('/ai/')?'ai':location.pathname.includes('/album-design')?(new URLSearchParams(location.search).get('pb_mode')==='instagram'?'instagram':'album'):'gallery');
@@ -64,6 +64,18 @@
   // Preserve ordering if settings enable a previously removed tab.
   const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind="'+key+'"]')).filter(Boolean);if(ordered.some((b,i)=>b!==nav.querySelectorAll(':scope>button')[i])){const indicator=nav.querySelector(':scope>.pb1131MovingIndicator');nav.replaceChildren(...ordered);if(indicator)nav.append(indicator);}
   requestAnimationFrame(()=>placeMainIndicator(nav));
+  if(previousMainTab!==active){
+    const hadPrevious=previousMainTab!==null;
+    previousMainTab=active;
+    if(hadPrevious&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+      const chosen=nav.querySelector(':scope > button.active');
+      chosen?.animate([
+       {transform:'translateY(3px) scale(.96)',filter:'brightness(.96)'},
+       {transform:'translateY(-1px) scale(1.015)',filter:'brightness(1.02)',offset:.65},
+       {transform:'translateY(0) scale(1)',filter:'none'}
+      ],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+    }
+  }
   if(previousActive&&previousActive!==active&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
    const selectedButton=nav.querySelector('[data-pb1126-kind="'+active+'"]');
    if(selectedButton){selectedButton.classList.remove('pb1132Selected');void selectedButton.offsetWidth;selectedButton.classList.add('pb1132Selected');setTimeout(()=>selectedButton.classList.remove('pb1132Selected'),310);}

@@ -7542,7 +7542,7 @@ html body.rentalAppReady #bookings [data-pb843-office-pane="out"] .pb100rOutComp
   visible(el,on);if(!el.classList.contains('pb917Row'))el.classList.add('pb917Row');
   style(el,{position:'relative',top:'auto',left:'auto',right:'auto',transform:'none',display:on?'flex':'none','flex-direction':'row','flex-wrap':'nowrap','align-items':'center','align-content':'center','justify-content':'flex-start',direction:'rtl',width:'100%','min-width':0,'max-width':'100%',height:height+'px','min-height':height+'px','max-height':height+'px',margin:0,padding:officeMobile?'0 4px':'0 2px',gap:'5px','box-sizing':'border-box','overflow-x':fill?'hidden':'auto','overflow-y':'hidden','touch-action':fill?'auto':'pan-x','overscroll-behavior-x':'contain','scrollbar-width':officeMobile?'none':'thin','scroll-snap-type':'none','scroll-padding-inline':'0px','border':0,'box-shadow':'none',background:'transparent'});
   qa('button',el).forEach(b=>{
-   if(el.id==='pb848BookingHeaderTabs'&&!['pending','calendar','shortages','returnShortages'].includes(b.dataset.pb843OfficeTab)){style(b,{display:'none'});return}
+   if(el.id==='pb848BookingHeaderTabs'&&(!['pending','calendar','shortages','returnShortages'].includes(b.dataset.pb843OfficeTab)||(b.dataset.pb843OfficeTab==='shortages'&&data?.shop?.customer_rental_stock_mode==='strict'))){style(b,{display:'none'});return}
    for(const name of ['pb917Tab','pb912UnifiedTab'])if(!b.classList.contains(name))b.classList.add(name);const active=b.classList.contains('active');
    style(b,{position:'relative',display:'inline-flex','align-items':'center','justify-content':'center',isolation:'isolate','flex-direction':officeMobile?'column':'row',flex:fill?'1 1 0':'0 0 auto',width:'auto','min-width':fill?'0':officeMobile?'136px':product?'max-content':'96px','max-width':'none',height:(height-8)+'px','min-height':(height-8)+'px','max-height':(height-8)+'px',margin:0,padding:officeMobile?'0 1px':fill?'0 5px':'0 11px','box-sizing':'border-box','font-family':fontFamily,'font-size':size+'px','font-weight':850,'font-style':'normal','line-height':'1.2','letter-spacing':'normal','text-transform':'none','white-space':'nowrap',gap:officeMobile?'1px':'5px',border:0,'border-radius':'8px','box-shadow':'none',outline:0,background:active?'#eaf0ff':'transparent',color:active?(brand?'#7187ad':'#315efb'):(brand?'#8a94a6':'#667085'),transform:'none',overflow:'visible',transition:matchMedia('(prefers-reduced-motion:reduce)').matches?'none':'background-color 160ms ease, color 160ms ease',animation:'none'});
    qa(':scope > span:not(.pb854TabCount):not(.pb868FilterCount)',b).forEach(label=>style(label,{'font-family':'inherit','font-size':'inherit','font-weight':'inherit','font-style':'inherit','line-height':'inherit',color:'inherit',margin:0,padding:0,'letter-spacing':'inherit',transition:'none',animation:'none'}));
@@ -10271,8 +10271,10 @@ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display
   window.addEventListener('pageshow',mount,{passive:true});
 })();
 </script>
-<script defer src="/photobridge-r1057-daily-rental-availability.js?v=r1085"></script>
+<script defer src="/photobridge-r1057-daily-rental-availability.js?v=r1097"></script>
 <script defer src="/photobridge-r1058-handover-holders.js?v=r1073"></script>
 <script defer src="/photobridge-r1059-office-extension.js?v=r1085"></script>
 <link rel="stylesheet" href="/photobridge-r1073-mobile-office.css?v=r1084"><script defer src="/photobridge-r1073-mobile-office.js?v=r1085"></script>
-<link rel="stylesheet" href="/photobridge-r1085-store-refinements.css?v=r1085"><script defer src="/photobridge-r1085-shared-finance.js?v=r1085"></script><script defer src="/photobridge-r1085-store-refinements.js?v=r1085"></script></body></html>
+<link rel="stylesheet" href="/photobridge-r1085-store-refinements.css?v=r1085"><script defer src="/photobridge-r1085-shared-finance.js?v=r1085"></script><script defer src="/photobridge-r1085-store-refinements.js?v=r1085"></script><script defer src="/photobridge-r1095-owner-stock.js?v=1097"></script>
+<link rel="stylesheet" href="/photobridge-r1097-store-readability.css?v=1097">
+</body></html>

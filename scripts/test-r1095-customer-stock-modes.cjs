@@ -7,44 +7,46 @@ const customer=fs.readFileSync('dist/api/equipment-rental-book.html','utf8');
 const migration=fs.readFileSync('migrations/176_equipment_customer_rental_stock_modes.sql','utf8');
 const c=fs.readFileSync('dist/web/photobridge-r1095-customer-stock.js','utf8');
 const o=fs.readFileSync('dist/web/photobridge-r1095-owner-stock.js','utf8');
-test('both request modes exist, with flexible as database default',()=>{
+
+test('store keeps the two owner shortage policies',()=>{
  assert.match(migration,/customer_rental_stock_mode text NOT NULL DEFAULT 'flexible'/);
  assert.match(migration,/CHECK \(customer_rental_stock_mode IN \('flexible','strict'\)\)/);
  assert.match(server,/const customerStockMode=b\.customerStockMode===undefined/);
  assert.match(server,/customer_rental_stock_mode=\$30/);
- assert.match(server,/saleBirthdaySms,customerStockMode/);
  assert.match(o,/select name="customerStockMode"/);
+ assert.match(o,/این تنظیم فقط برای مدیر و اپراتور فروشگاه است/);
 });
-test('strict pending requests acquire a durable shop-scoped stock hold, not an instant approval',()=>{
- assert.match(migration,/customer_stock_held boolean NOT NULL DEFAULT false/);
- assert.match(server,/stockHeld=deferredApproval&&shop\.customer_rental_stock_mode==='strict'&&!allowShortage/);
- assert.match(server,/if \(\(!deferredApproval\|\|stockHeld\) && !allowShortage && !availability\.available\)/);
- assert.match(server,/deposit_amount,notes,created_by,customer_stock_held/);
+
+test('photographer requests are always stock-safe while shortage permission belongs to store staff',()=>{
+ assert.match(server,/const stockHeld=false/);
+ assert.match(server,/if \(!allowShortage && !availability\.available\)/);
+ assert.match(server,/allowShortage: shop\.customer_rental_stock_mode==='flexible'/);
+ assert.match(server,/allowShortage:shop\.customer_rental_stock_mode==='flexible'&&body\.allowShortage===true/);
  assert.match(server,/initialStatus: 'pending_approval'/);
- assert.match(server,/b\.status='pending_approval' AND b\.customer_stock_held=true/);
- assert.match(server,/excludeBookingId: bookingId/);
+ assert.doesNotMatch(c,/customer_rental_stock_mode|selectedShopRecord/);
+ assert.match(c,/x\.isAvailable===false/);
+ assert.match(c,/موجود نمی‌باشد/);
+ assert.doesNotMatch(c,/موجودی آزاد|کسری \+|row\.available|qty\.max=String/);
 });
-test('shop directory tells the customer which selection policy applies',()=>{
- assert.match(server,/s\.rental_enabled,s\.sale_enabled,s\.customer_rental_stock_mode,s\.rental_reach/);
- assert.match(server,/customerStockMode:shop\.customer_rental_stock_mode\|\|'flexible'/);
- assert.match(c,/selectedShopRecord/);
- assert.match(c,/card\.querySelector\('input\.pick'\)/);
- assert.match(c,/qty\.max=String\(Math\.max\(1,free\)\)/);
- assert.match(c,/dated&&row&&blocked&&cb\.checked/,'temporary availability refresh must not erase selected items');
- assert.match(c,/async function checkFinal/);
- assert.match(c,/e\.stopImmediatePropagation\(\)/);
- assert.match(c,/\/api\/customer\/equipment-rental\/availability/);
+
+test('customer availability response exposes only binary stock state, not counts',()=>{
+ assert.match(server,/isAvailable:row\.valid!==false&&Number\(row\.shortage\|\|0\)<=0/);
+ assert.match(server,/hasAnyAvailability:row\.valid!==false&&Number\(row\.available\|\|0\)>0/);
+ assert.match(server,/map\(\(\{stock_total,\.\.\.item\}\)=>item\)/);
+ assert.match(server,/return sendJson\(res,409,\{error:'equipment_unavailable'\}\)/);
+ assert.doesNotMatch(customer,/موجودی \$\{fa\(i\.stock_total\)\}/);
+ assert.doesNotMatch(customer,/stock_total/);
 });
-test('store displays item-by-item shortage quantities on the incoming order card',()=>{
+
+test('store still sees detailed shortage quantities on incoming order cards',()=>{
  assert.match(o,/\.pbR1095StockDetails\.bad/);
  assert.match(o,/کسری موجودی:/);
  assert.match(o,/کسری '\+number\(x\.shortage\)/);
- assert.match(o,/data\.bookings\.filter\(b=>b\.status==='pending_approval'\)/);
  assert.match(o,/excludeBookingId:id/);
- assert.match(o,/عدد، موجود /);
 });
-test('production HTML includes exactly one script of each role',()=>{
- for(const [html,path] of [[owner,'/photobridge-r1095-owner-stock.js?v=1097'],[customer,'/photobridge-r1095-customer-stock.js?v=1097']]){
-  assert.equal(html.split(path).length-1,1,path);
- }
+
+test('production HTML loads one R1098 stock controller and scroll recovery',()=>{
+ assert.equal(customer.split('/photobridge-r1095-customer-stock.js?v=1098').length-1,1);
+ assert.equal(owner.split('/photobridge-r1095-owner-stock.js?v=1098').length-1,1);
+ assert.equal(owner.split('/photobridge-r1098-owner-scroll.js?v=1098').length-1,1);
 });

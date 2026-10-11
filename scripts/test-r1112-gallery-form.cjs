@@ -40,12 +40,12 @@ test('one gallery form accepts photos and price, resumes failed uploads without 
  await dialog.getByLabel('عنوان پروژه').fill('Project');await dialog.locator('.grid2 input').first().fill('Customer');await dialog.getByLabel('رمز ورود خصوصی').fill('1234');
  await dialog.locator('input[type=file]').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII=','base64')});
  await dialog.getByLabel('قیمت فایل دیجیتال (اختیاری · تومان)').fill('1500');await dialog.locator('.clientGalleryOrderingToggle input').check();
- assert(await dialog.locator('.pb1112CreateMedia').isVisible());assert(await dialog.locator('label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=(innerWidth<=820?16:14)));
+ assert(await dialog.locator('.pb1112CreateMedia').isVisible());assert(await dialog.locator('label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=(innerWidth<=820?14.4:12.6)));
  await dialog.getByRole('button',{name:'ساخت گالری رایگان',exact:true}).click();
  if(width===390){await page.locator('.pb1113GalleryDialog').getByRole('button',{name:'متوجه شدم',exact:true}).click();await dialog.getByRole('button',{name:'ادامه بارگذاری',exact:true}).click()}
  await dialog.waitFor({state:'hidden'});assert.equal(created,1,'retry must not create or charge again');assert.equal(completed,1);assert.equal(Number(saved.digitalPrice),1500);assert.equal(saved.selectionEnabled,true);assert.equal(saved.orderingEnabled,true,JSON.stringify(saved));
  assert.equal(await page.locator('.clientGalleryManager').count(),0,'no second settings step');
- const gallery=page.locator('.clientGalleryCard');await gallery.getByRole('button',{name:'انتشار گالری',exact:true}).click();await gallery.getByRole('button',{name:'نمایش مشتری',exact:true}).waitFor();assert.equal(published,true);
+ const gallery=page.locator('.clientGalleryCard');await gallery.getByRole('button',{name:'فعال کردن گالری',exact:true}).click();await gallery.getByRole('button',{name:'نمایش مشتری',exact:true}).waitFor();assert.equal(published,true);
  if(width===390)assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  if(width>820){
  const disabled=page.locator('.photographerHeaderNav button').filter({hasText:'هوش مصنوعی'});await disabled.waitFor({state:'hidden'});
@@ -56,9 +56,9 @@ test('one gallery form accepts photos and price, resumes failed uploads without 
  const invoice=page.locator('.clientGallerySettings .clientGalleryOrderingToggle input');await invoice.check();const selection=page.locator('#pb787ManagerSelection');await selection.click();assert(await selection.isChecked(),'ordering must prevent selection from being switched off');
  const deleteButton=page.locator('.clientGalleryMediaItem').getByRole('button',{name:'حذف',exact:true});await deleteButton.click();
  const confirmation=page.locator('.pb1113GalleryDialog');await confirmation.waitFor();assert.equal(await confirmation.getAttribute('dir'),'rtl');
- const style=await confirmation.evaluate(el=>{const s=getComputedStyle(el);return {font:s.fontFamily,align:s.textAlign,size:parseFloat(getComputedStyle(el.querySelector('p')).fontSize)}});assert.match(style.font,/Vazirmatn/);assert.equal(style.align,'right');assert(style.size>=(width<=820?18:16));
+ const style=await confirmation.evaluate(el=>{const s=getComputedStyle(el);return {font:s.fontFamily,align:s.textAlign,size:parseFloat(getComputedStyle(el.querySelector('p')).fontSize)}});assert.match(style.font,/Vazirmatn/);assert.equal(style.align,'right');assert(style.size>=(width<=820?16.2:14.4));
  await confirmation.getByRole('button',{name:'انصراف',exact:true}).click();assert.equal(deleted,0);await deleteButton.click();await confirmation.getByRole('button',{name:'تأیید',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.clientGalleryMediaItem'));assert.equal(deleted,1);
- await page.goto('https://panel.test/g/test');await page.waitForSelector('.clientGalleryLockCard');assert(await page.locator('.clientGalleryLockCard p').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=(innerWidth<=820?16:14)));
+ await page.goto('https://panel.test/g/test');await page.waitForSelector('.clientGalleryLockCard');assert(await page.locator('.clientGalleryLockCard p').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=(innerWidth<=820?14.4:12.6)));
  if(width===390)assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await page.close();
  }

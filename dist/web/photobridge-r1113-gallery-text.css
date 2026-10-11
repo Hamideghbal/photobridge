@@ -1,47 +1,54 @@
 /* Gallery-only typography: keep prices, photo controls and notes readable. */
-html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm){font-size:18px!important;line-height:1.75!important}
-html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:17px!important;line-height:1.7!important}
-html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:26px!important;line-height:1.5!important}
-html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:22px!important;line-height:1.5!important}
-html body :is(.clientGalleryIntroCopy,.clientGalleryBaseModeNotice,.clientGallerySelectionOnlyHint,.clientGalleryCustomerNote) p{font-size:18px!important;line-height:1.85!important}
+html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm){font-size:16.2px!important;line-height:1.75!important}
+html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:15.3px!important;line-height:1.7!important}
+html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:23.4px!important;line-height:1.5!important}
+html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:19.8px!important;line-height:1.5!important}
+html body :is(.clientGalleryIntroCopy,.clientGalleryBaseModeNotice,.clientGallerySelectionOnlyHint,.clientGalleryCustomerNote) p{font-size:16.2px!important;line-height:1.85!important}
 html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,li){overflow-wrap:anywhere}
 html body :is(.clientGalleryCreateForm,.clientGallerySettings,.clientGalleryTariffModal) :is(input,textarea,select){min-width:0;max-width:100%;font-family:inherit}
 html body .clientGalleryCardActions{flex-wrap:wrap;gap:10px}
 html body .clientGalleryCardActions button{white-space:normal!important;height:auto!important;min-height:46px}
 .pb1113GalleryDialog{box-sizing:border-box;width:min(480px,calc(100vw - 28px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #dce4f4;border-radius:22px;padding:24px;background:#fff;color:#172b4d;box-shadow:0 20px 65px #182c5033;font-family:Vazirmatn,Tahoma,Arial,sans-serif;text-align:right;animation:pb1113GalleryDialogIn .18s ease-out}
 .pb1113GalleryDialog::backdrop{background:#172b4d66;backdrop-filter:blur(3px)}
-.pb1113GalleryDialog h2{margin:0 0 12px;font-size:22px;line-height:1.5}
-.pb1113GalleryDialog p{margin:0;font-size:18px;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
+.pb1113GalleryDialog h2{margin:0 0 12px;font-size:19.8px;line-height:1.5}
+.pb1113GalleryDialog p{margin:0;font-size:16.2px;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
 .pb1113GalleryDialogActions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
-.pb1113GalleryDialogActions button{flex:1;min-width:0;min-height:46px;padding:10px 14px;border:1px solid #d9e2f3;border-radius:12px;background:#f5f7fc;color:#263b60;font:600 17px/1.6 Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer}
+.pb1113GalleryDialogActions button{flex:1;min-width:0;min-height:46px;padding:10px 14px;border:1px solid #d9e2f3;border-radius:12px;background:#f5f7fc;color:#263b60;font:600 15.3px/1.6 Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer}
 .pb1113GalleryDialogActions .primary{background:#315efb;color:white;border-color:#315efb}
 .pb1113GalleryDialogActions .danger{background:#dc3545;color:white;border-color:#dc3545}
 .pb1113GalleryDialogActions button:focus-visible{outline:3px solid #8fb0ff;outline-offset:3px}
 @keyframes pb1113GalleryDialogIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:820px){
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:16px!important;line-height:1.7!important}
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:23px!important}
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:20px!important}
- html body .clientGalleryIntroCopy p{font-size:17px!important;line-height:1.85!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:14.4px!important;line-height:1.7!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:20.7px!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:18px!important}
+ html body .clientGalleryIntroCopy p{font-size:15.3px!important;line-height:1.85!important}
  html body .clientGalleryManagerActions{flex-wrap:wrap}
  html body .clientGalleryMetrics{gap:6px}
  .pb1113GalleryDialog{padding:20px}
 }
 @media(prefers-reduced-motion:reduce){.pb1113GalleryDialog{animation:none}}
-html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:18px!important;line-height:1.65!important}
+html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:16.2px!important;line-height:1.65!important}
 html body .clientGalleryManagerMobileNav>button>span{font-size:24px!important}
 html body .clientGalleryFinalizeWarning>span{font-size:28px!important}
 
 /* Desktop has room for compact controls and a clear text hierarchy. */
 @media(min-width:821px){
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm){font-size:15px!important;line-height:1.65!important}
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:14px!important;line-height:1.65!important}
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:22px!important;line-height:1.5!important}
- html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:18px!important}
- html body :is(.clientGalleryIntroCopy,.clientGalleryBaseModeNotice,.clientGallerySelectionOnlyHint,.clientGalleryCustomerNote) p{font-size:15px!important;line-height:1.8!important}
- html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:15px!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm){font-size:13.5px!important;line-height:1.65!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(p,small,label,span,li,td,th,input,textarea,select,button){font-size:12.6px!important;line-height:1.65!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) :is(h1,h2){font-size:19.8px!important;line-height:1.5!important}
+ html body :is(.clientGalleryWorkspace,.clientGalleryManager,.publicClientGalleryPage,.clientGalleryCreateForm,.clientGalleryTariffModal,.clientGalleryFinalizeConfirm) h3{font-size:16.2px!important}
+ html body :is(.clientGalleryIntroCopy,.clientGalleryBaseModeNotice,.clientGallerySelectionOnlyHint,.clientGalleryCustomerNote) p{font-size:13.5px!important;line-height:1.8!important}
+ html body :is(.clientGalleryMediaItem,.clientGalleryRetouchMeta,.clientGalleryBrandPreview,.clientGalleryQuotaLine,.clientGalleryInvoiceSummary,.clientGalleryApprovalPhotoMetaV409,.clientGalleryCustomerOrderFacts) b{font-size:13.5px!important}
  html body .clientGalleryCardActions button{min-height:38px}
- .pb1113GalleryDialog h2{font-size:20px}
- .pb1113GalleryDialog p{font-size:16px}
- .pb1113GalleryDialogActions button{font-size:14px;min-height:40px}
+ .pb1113GalleryDialog h2{font-size:18px}
+ .pb1113GalleryDialog p{font-size:14.4px}
+ .pb1113GalleryDialogActions button{font-size:12.6px;min-height:40px}
 }
+
+/* Keep checkbox focus on the checkbox, not a full-width rectangle. */
+html body .clientGallerySettings label:has(input[type=checkbox]){outline:none!important;box-shadow:none!important}
+html body .clientGallerySettings input[type=checkbox]{box-shadow:none!important;outline:none!important}
+html body .clientGallerySettings input[type=checkbox]:focus-visible{outline:2px solid #315efb!important;outline-offset:2px!important}
+html body .clientGalleryCardActions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+html body .clientGalleryCardActions button{min-width:0!important;width:100%!important;padding:8px 4px!important;margin:0!important}

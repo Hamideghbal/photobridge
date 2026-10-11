@@ -15,7 +15,10 @@
         if(d.primaryLabId){await fetch('/api/customer/labs/'+encodeURIComponent(d.primaryLabId)+'/select',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:'{}'}).catch(()=>{})}
         done=true;location.replace('/photographer?pbEntryDone=lab');return
       }
-      done=true;location.replace('/photographer/ai/retouch');
+      // Use an available destination directly; returning to this entry route loops when AI is disabled.
+      let destination='/photographer/gallery';
+      try{const tabsResponse=await fetch('/api/photographer/navigation-tabs',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(tabsResponse.ok){const tabs=await tabsResponse.json();if(tabs.tabs?.ai!==false)destination='/photographer/ai/retouch'}}catch{}
+      done=true;location.replace(destination);
     }catch{}finally{busy=false}
   }
   addEventListener('photobridge-auth-session-changed',e=>{if(e?.detail?.labRole==='customer')setTimeout(route,20)});

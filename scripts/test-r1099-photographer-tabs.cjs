@@ -24,7 +24,7 @@ test('mobile and desktop hide each disabled tab, redistribute dock, admin bypass
  for(const route of ['/photographer/ai/retouch','/photographer/album-design','/photographer/album-design?pb_mode=instagram']){
  tabs={ai:false,album:false,instagram:false};await page.goto('https://tabs.test'+route);
  if(bypass){await page.waitForFunction(()=>document.querySelector('.photographerBottomAppNavGrid').style.getPropertyValue('--pb1099-tabs')==='6');assert.equal(new URL(page.url()).pathname+new URL(page.url()).search,route)}
- else await page.waitForURL('https://tabs.test/photographer');
+ else await page.waitForURL('https://tabs.test/photographer/gallery');
  }
  await page.close();
  }

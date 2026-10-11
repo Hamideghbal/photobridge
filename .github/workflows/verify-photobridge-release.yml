@@ -106,6 +106,10 @@ jobs:
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
         run: node --test scripts/test-r1108-gallery-trial.cjs
+      - name: Verify gallery ordering and selection invariant
+        run: |
+          node --check scripts/enable-r1112-gallery-single-form.mjs
+          node --test --test-name-pattern="ordering always" scripts/test-r1112-gallery-form.cjs
       - name: Verify gallery expiry, reminders and legacy renewals in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

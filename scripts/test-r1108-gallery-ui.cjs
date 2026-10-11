@@ -15,8 +15,8 @@ async function serve(page,state){
 }
 test('mobile gallery explains its workflow and offers free creation with readable dock and no horizontal overflow',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
- for(const width of [320,390]){
- const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});await serve(page,{});
+ for(const width of [320,390])for(const enabled of [false,true]){
+ const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});await serve(page,{tabs:{ai:enabled,album:enabled,instagram:enabled}});
  await page.goto('https://panel.test/photographer/gallery');await page.waitForSelector('.clientGalleryWorkspace');
  assert.match(await page.locator('.clientGalleryIntroCopy p').textContent(),/لینک گالری و رمز ورود/);
  assert.match(await page.locator('.clientGalleryIntroCopy p').textContent(),/سه گالری اول/);
@@ -25,6 +25,7 @@ test('mobile gallery explains its workflow and offers free creation with readabl
  const nav=page.locator('.photographerBottomAppNav');
  assert((await nav.locator('button em').evaluateAll(list=>list.map(el=>parseFloat(getComputedStyle(el).fontSize)))).every(size=>size>=13),'dock labels must be readable');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ assert((await nav.locator('button em').evaluateAll(list=>list.filter(el=>el.getBoundingClientRect().width>0).map(el=>el.scrollWidth<=el.clientWidth+1))).every(Boolean),'enlarged labels must fit with either three or six tabs');
  if(process.env.PB_CAPTURE_UI)await page.screenshot({path:'/tmp/r1108-gallery-'+width+'.png'});
  await page.locator('#pbF37Tabs button').filter({hasText:'گالری جدید'}).click();
  const create=page.getByRole('button',{name:'ساخت گالری رایگان',exact:true});await create.waitFor({state:'visible'});assert.equal(await create.isDisabled(),false,'zero-balance customer can create a trial gallery');

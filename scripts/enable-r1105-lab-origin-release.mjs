@@ -29,6 +29,24 @@ if(!src.includes(marker)){
   ].join('\n').replaceAll('QQ',String.fromCharCode(96));
   if(src.split(before).length!==2)throw Error('[R1105] discovery gate moved');
   src=src.replace(before,after);
+  // Legacy lab invitations may have an audit event but no redemption. Recover
+  // the actual original lab before falling back to a *later* collaboration.
+  const historical="primaryLabId = String(q.rows[0]?.id || '');\n        if (!primaryLabId) {";
+  const historicalWithAudit=[
+    "primaryLabId = String(q.rows[0]?.id || '');",
+    "        if (!primaryLabId) {",
+    "            const aq = await pool.query(QQSELECT a.lab_id::text id",
+    "                FROM audit_log a",
+    "                WHERE a.entity_type='user' AND a.entity_id::text=$1::text",
+    "                  AND a.lab_id IS NOT NULL",
+    "                  AND a.action IN ('invitation.register','photographer.invite_redeem')",
+    "                ORDER BY a.created_at ASC LIMIT 1QQ, [userId]);",
+    "            primaryLabId = String(aq.rows[0]?.id || '');",
+    "        }",
+    "        if (!primaryLabId) {"
+  ].join('\n').replaceAll('QQ',String.fromCharCode(96));
+  if(src.split(historical).length!==2)throw Error('[R1105] legacy inviter recovery moved');
+  src=src.replace(historical,historicalWithAudit);
   fs.writeFileSync(file,src,'utf8');
 }
 if(src.split(marker).length!==2)throw Error('[R1105] marker missing or duplicate');

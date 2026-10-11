@@ -11785,6 +11785,7 @@ async function publicGalleryByToken(token) {
     const row = q.rows[0];
     if (!row || row.status !== 'published')
         return null;
+    if (row.ordering_enabled) row.selection_enabled = true;
     if (row.expires_at && new Date(row.expires_at).getTime() <= Date.now()) return null;
     return row;
 }
@@ -11818,7 +11819,7 @@ async function galleryPublicContent(row) {
         galleryCurrentOrderPublic(row.id)
     ]);
     return {
-        id: row.id, title: row.title, customerName: row.customer_name, photographerName: row.photographer_name, brandName: String(row.gallery_brand_name || row.photographer_name || ''), brandLogoUrl: galleryBrandLogoUrl(row), note: row.note || '', selectionEnabled: Boolean(row.selection_enabled), orderingEnabled: Boolean(row.ordering_enabled), digitalPrice: Number(row.digital_price || 0), expiresAt: row.expires_at, cleanupAfter: row.cleanup_after,
+        id: row.id, title: row.title, customerName: row.customer_name, photographerName: row.photographer_name, brandName: String(row.gallery_brand_name || row.photographer_name || ''), brandLogoUrl: galleryBrandLogoUrl(row), note: row.note || '', selectionEnabled: Boolean(row.selection_enabled || row.ordering_enabled), orderingEnabled: Boolean(row.ordering_enabled), digitalPrice: Number(row.digital_price || 0), expiresAt: row.expires_at, cleanupAfter: row.cleanup_after,
         printPrices: tariffs.rows.map((x) => ({ sizeId: x.size_id, label: x.label, widthCm: Number(x.width_cm), heightCm: Number(x.height_cm), papers: [...(x.luster_enabled ? [{ value: 'luster', label: 'لاستر', price: Number(x.luster_price || 0) }] : []), ...(x.silk_enabled ? [{ value: 'silk', label: 'سیلک', price: Number(x.silk_price || 0) }] : []), ...(x.metallic_enabled ? [{ value: 'metallic', label: 'متالیک', price: Number(x.metallic_price || 0) }] : [])], chassisEnabled: Boolean(x.chassis_enabled), chassisPrice: Number(x.chassis_price || 0), frameEnabled: Boolean(x.frame_enabled), framePrice: Number(x.frame_price || 0) })),
         media: media.rows.map((x) => ({ id: x.id, type: x.media_type, name: x.original_name, contentType: x.content_type, bytes: Number(x.bytes || 0), url: galleryInlineUrl(String(x.object_key), String(x.original_name), String(x.content_type || 'application/octet-stream'), 900) })),
         order
@@ -24001,7 +24002,7 @@ ${inviteUrl}`;
                     balanceAfter = Number(wq.rows[0]?.balance || 0);
                 }
                 const q = await c.query(`INSERT INTO photographer_client_galleries(id,owner_id,lab_id,title,customer_name,customer_mobile,public_token,access_code_hash,status,digital_price,note,expires_at,photo_limit,creation_fee,wallet_transaction_id,selection_enabled,ordering_enabled,watermark_enabled,watermark_text,lifetime_days_snapshot,post_completion_days_snapshot)
-          VALUES($1,$2,$3,$4,$5,$6,$7,$8,'draft',0,$9,now()+($10::int||' days')::interval,$11,$12,$13,$14,$15,$16,$17,$10,$18) RETURNING *`, [galleryId, a.userId, labId, title, customerName, customerMobile || null, token, hash, note || null, lifetimeDays, photoLimit, fee, walletTransactionId, selectionEnabled, orderingEnabled, watermarkEnabled, watermarkEnabled ? watermarkText : null, postCompletionDays]);
+          VALUES($1,$2,$3,$4,$5,$6,$7,$8,'draft',$19,$9,now()+($10::int||' days')::interval,$11,$12,$13,$14,$15,$16,$17,$10,$18) RETURNING *`, [galleryId, a.userId, labId, title, customerName, customerMobile || null, token, hash, note || null, lifetimeDays, photoLimit, fee, walletTransactionId, selectionEnabled || orderingEnabled, orderingEnabled, watermarkEnabled, watermarkEnabled ? watermarkText : null, postCompletionDays, moneyAmount(b.digitalPrice)]); // R1112 gallery selection invariant
                 const gallery = q.rows[0];
                 if (offer.trial) await recordGalleryTrial(c, a.userId, labId, gallery.id);
                 await c.query(`INSERT INTO photographer_gallery_print_tariff_states(gallery_id,size_id,active)
@@ -24255,7 +24256,7 @@ ${inviteUrl}`;
                     return sendJson(res, 400, { error: 'gallery_code_too_short' });
                 hash = passwordHash(code);
             }
-            await pool.query(`UPDATE photographer_client_galleries SET title=$3,customer_name=$4,customer_mobile=$5,status=$6,digital_price=$7,note=$8,access_code_hash=$9,selection_enabled=$10,ordering_enabled=$11,watermark_enabled=$12,watermark_text=$13,updated_at=now() WHERE id=$1 AND owner_id=$2`, [current.id, a.userId, title, customerName, customerMobile || null, status, digitalPrice, note || null, hash, selectionEnabled, orderingEnabled, watermarkEnabled, watermarkEnabled ? watermarkText : null]);
+            await pool.query(`UPDATE photographer_client_galleries SET title=$3,customer_name=$4,customer_mobile=$5,status=$6,digital_price=$7,note=$8,access_code_hash=$9,selection_enabled=$10,ordering_enabled=$11,watermark_enabled=$12,watermark_text=$13,updated_at=now() WHERE id=$1 AND owner_id=$2`, [current.id, a.userId, title, customerName, customerMobile || null, status, digitalPrice, note || null, hash, selectionEnabled || orderingEnabled, orderingEnabled, watermarkEnabled, watermarkEnabled ? watermarkText : null]);
             if (Array.isArray(b.printPrices)) {
                 const c = await pool.connect();
                 try {

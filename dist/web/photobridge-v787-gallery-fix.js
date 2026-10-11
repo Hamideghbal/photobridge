@@ -20,6 +20,7 @@
       if(t.startsWith('عنوان پروژه')||t.startsWith('نام مشتری')||t.startsWith('رمز ورود خصوصی')){const s=document.createElement('em');s.className='pb787Req';s.textContent='اجباری';l.insertBefore(s,l.querySelector('input,textarea,div')||null)}
       if(t.startsWith('موبایل مشتری')){const s=document.createElement('em');s.className='pb787Opt';s.textContent='اختیاری';l.insertBefore(s,l.querySelector('input,textarea,div')||null)}
     });
+    if(form.closest('.pb1112CreateDialog'))return;
     const anchor=[...form.children].find(x=>text(x).includes('حالت پایه گالری'))||form.querySelector('.clientGalleryBaseModeNotice');
     const box=document.createElement('div');box.className='pb787CreateWorkflow';box.innerHTML=`
       <label class="pb787WorkflowToggle"><span><b>انتخاب فایل</b><small>مشتری بتواند عکس‌های موردنظرش را انتخاب و توضیح ثبت کند.</small></span><input id="pb787CreateSelection" type="checkbox" checked></label>
@@ -32,11 +33,14 @@
     const settings=document.querySelector('.clientGallerySettings');if(!settings||settings.dataset.pb787==='1')return;
     settings.dataset.pb787='1';
     const oldNotice=settings.querySelector('.clientGalleryBaseModeNotice');
-    if(oldNotice){oldNotice.innerHTML='<b>انتخاب فایل و فاکتور مستقل‌اند</b><span>هر کدام را می‌توانی جداگانه فعال یا غیرفعال کنی و بعداً تغییر بدهی.</span>'}
+    if(oldNotice){oldNotice.innerHTML='<b>انتخاب فایل برای سفارش الزامی است</b><span>با فعال‌کردن فاکتور و سفارش چاپ، انتخاب فایل هم فعال می‌شود.</span>'}
     const invoiceToggle=[...settings.querySelectorAll('label')].find(l=>text(l).includes('سفارش چاپ و فاکتور'));
     const sel=document.createElement('label');sel.className='pb787WorkflowToggle';sel.innerHTML=`<span><b>انتخاب فایل</b><small>مشتری امکان انتخاب عکس و ثبت توضیح داشته باشد.</small></span><input id="pb787ManagerSelection" type="checkbox" ${state.managerSelection?'checked':''}>`;
     if(invoiceToggle){invoiceToggle.parentNode.insertBefore(sel,invoiceToggle);invoiceToggle.querySelector('b').textContent='فاکتور و سفارش چاپ';}
     else settings.insertBefore(sel,settings.children[1]||null);
+    const selection=sel.querySelector('input'),invoice=invoiceToggle?.querySelector('input');
+    const enforce=()=>{if(invoice?.checked)selection.checked=true;state.managerSelection=selection.checked};
+    selection.addEventListener('change',enforce);invoice?.addEventListener('change',enforce);enforce();
   };
   const addInvoiceButton=()=>{
     const portal=document.getElementById('pb787-invoice-portal');
@@ -56,11 +60,12 @@
       const method=String(init?.method||'GET').toUpperCase();
       if(url.includes('/api/customer/client-galleries')&&(method==='POST'||method==='PATCH')&&typeof init.body==='string'){
         const body=JSON.parse(init.body||'{}');
-        if(method==='POST'&&/\/api\/customer\/client-galleries(?:\?|$)/.test(url)){body.selectionEnabled=state.createSelection;body.orderingEnabled=state.createInvoice;}
+        if(method==='POST'&&!document.querySelector('.pb1112CreateDialog')&&/\/api\/customer\/client-galleries(?:\?|$)/.test(url)){body.selectionEnabled=state.createSelection;body.orderingEnabled=state.createInvoice;}
         if(method==='PATCH'){
           const cb=document.querySelector('#pb787ManagerSelection');if(cb)body.selectionEnabled=!!cb.checked;
           const inv=[...document.querySelectorAll('.clientGallerySettings label')].find(l=>text(l).includes('فاکتور و سفارش چاپ')||text(l).includes('سفارش چاپ و فاکتور'))?.querySelector('input[type=checkbox]');if(inv)body.orderingEnabled=!!inv.checked;
         }
+        if(body.orderingEnabled)body.selectionEnabled=true;
         init={...init,body:JSON.stringify(body)};
       }
     }catch{}
@@ -69,7 +74,7 @@
       const url=typeof input==='string'?input:String(input?.url||'');
       if(String(init?.method||'GET').toUpperCase()==='GET'&&/\/api\/customer\/client-galleries\/[0-9a-f-]+(?:\?|$)/.test(url)){
         const data=await response.clone().json();
-        if(data?.gallery&&data.gallery.selection_enabled!==undefined){state.managerSelection=Boolean(data.gallery.selection_enabled);const cb=document.querySelector('#pb787ManagerSelection');if(cb)cb.checked=state.managerSelection;}
+        if(data?.gallery&&data.gallery.selection_enabled!==undefined){state.managerSelection=Boolean(data.gallery.selection_enabled||data.gallery.ordering_enabled);const cb=document.querySelector('#pb787ManagerSelection');if(cb)cb.checked=state.managerSelection;}
       }
     }catch{}
     return response;

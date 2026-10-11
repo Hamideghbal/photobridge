@@ -84,6 +84,7 @@ await import('./enable-r1106-test-account-visibility.mjs');
 await import('./enable-r1106-mobile-store-panel.mjs');
 await import('./enable-r1108-gallery-trial.mjs');
 await import('./enable-r1109-gallery-lifetime.mjs');
+await import('./enable-r1112-gallery-single-form.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

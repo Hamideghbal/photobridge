@@ -29,7 +29,7 @@ function currentFeature(){
 }
 function apply(){
  if(!settings||!photographer())return;
- for(const el of document.querySelectorAll('.photographerHomeModeNav button,.photographerHomeModeNav a,.photographerBottomAppNav button,.photographerBottomAppNav a,#pbHomeMobileMenu button,#pbHomeMobileMenu a')){
+ for(const el of document.querySelectorAll('.photographerHeaderNav button,.photographerHeaderNav a,.photographerHomeModeNav button,.photographerHomeModeNav a,.photographerBottomAppNav button,.photographerBottomAppNav a,#pbHomeMobileMenu button,#pbHomeMobileMenu a')){
   const key=feature(el);if(!key)continue;
   if(settings.tabs[key]===false){
    if(el.dataset.pb1099Hidden!=='1'){previousDisplay.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.dataset.pb1099Hidden='1'}
@@ -72,7 +72,7 @@ async function load(){
  if(!photographer()||inFlight)return;inFlight=true;loadedPath=location.pathname;
  try{settings=await api('/api/photographer/navigation-tabs');apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{inFlight=false}
 }
-function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true})}
+function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
 window.addEventListener('photobridge-auth-session-changed',()=>void load());

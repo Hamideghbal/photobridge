@@ -1,0 +1,115 @@
+/* R1132 — Store-admin motion parity, print copy stepper, and mobile full-width tabs. */
+@media(min-width:821px){
+  /* Main Store nav uses a blue moving underline with 280ms travel. Place it
+     close beneath the button lettering, not at the bottom of the 72px header. */
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > .pb1131MovingIndicator{
+    top:calc(50% + 15px)!important;
+    bottom:auto!important;
+    height:2px!important;
+    border-radius:999px!important;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+  }
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > button.active::after{
+    display:none!important;content:none!important;
+  }
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > button{
+    transition:transform .2s cubic-bezier(.2,.8,.2,1),color .2s ease,background-color .2s ease!important;
+  }
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > button.pb1132Selected{
+    animation:pb1132HeaderMove .26s cubic-bezier(.2,.8,.2,1)!important;
+  }
+  @keyframes pb1132HeaderMove{
+    0%{transform:translateY(3px) scale(.96);filter:brightness(.96)}
+    65%{transform:translateY(-1px) scale(1.015)}
+    100%{transform:translateY(0) scale(1);filter:none}
+  }
+  @keyframes pb1132PanelIn{
+    from{opacity:.35;transform:translateY(7px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){
+    animation:pb1132PanelIn .24s cubic-bezier(.2,.8,.2,1) both!important;
+  }
+}
+/* The count of visible mobile tabs is supplied by the account's tab settings.
+   R1122 hard-coded six columns even when only three are visible. */
+@media(max-width:820px){
+  html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav){
+    display:flex!important;
+    align-items:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    padding-inline:0!important;
+    gap:0!important;
+    justify-content:stretch!important;
+  }
+  html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav) > .mobileRailPrimaryGroup.photographerBottomAppNavGrid,
+  html body #photographerStoreBottomNav.photographerBottomAppNav > .mobileRailPrimaryGroup.photographerBottomAppNavGrid{
+    display:grid!important;
+    grid-template-columns:repeat(var(--pb1099-tabs,3),minmax(0,1fr))!important;
+    grid-template-rows:54px!important;
+    grid-auto-flow:row!important;
+    justify-content:stretch!important;
+    align-items:stretch!important;
+    align-content:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    margin-inline:0!important;
+    padding-inline:0!important;
+    column-gap:2px!important;
+    row-gap:0!important;
+    transform:none!important;
+    box-sizing:border-box!important;
+  }
+  html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav) > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button:not([data-pb1099-hidden="1"]),
+  html body #photographerStoreBottomNav.photographerBottomAppNav > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button:not([data-pb1099-hidden="1"]){
+    min-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
+    grid-row:1!important;
+    padding-inline:2px!important;
+    box-sizing:border-box!important;
+  }
+}
+/* Per-image quantity control sits underneath the photo name, before paper/add-ons. */
+.simplePrintPhotoCopies{
+  grid-column:1/-1!important;
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  padding:7px 9px!important;
+  background:#f7f9fe!important;
+  border:1px solid #e0e7f2!important;
+  border-radius:10px!important;
+  box-sizing:border-box!important;
+}
+.simplePrintPhotoCopies>span{font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif;color:#344054}
+.simplePrintPhotoCopyStepper{display:inline-flex;align-items:center;gap:5px;direction:ltr}
+.simplePrintPhotoCopyStepper>button{
+  display:grid!important;place-items:center!important;
+  width:32px!important;height:32px!important;min-width:32px!important;
+  padding:0!important;margin:0!important;
+  border:1px solid #d2dcf2!important;border-radius:8px!important;
+  background:#fff!important;color:#315efb!important;
+  font:900 17px/1 Vazirmatn,Tahoma,sans-serif!important;cursor:pointer!important;
+}
+.simplePrintPhotoCopyStepper>button:disabled{opacity:.4!important;cursor:default!important}
+.simplePrintPhotoCopyStepper>output{min-width:27px;text-align:center;font:900 13px Vazirmatn,Tahoma,sans-serif;color:#182b56}
+.simplePrintFinalCopies{display:grid;gap:7px;padding:9px 2px;border-top:1px solid #e4eaf5}
+.simplePrintFinalCopies>b{font-size:12px;color:#344054}
+.simplePrintFinalCopyRow{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;padding:6px 8px;background:#f8faff;border-radius:8px}
+.simplePrintFinalCopyRow>span{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+@media(min-width:821px){
+ .simplePrintPhotoCard>.simplePrintPhotoCopies{grid-area:copies!important}
+ .simplePrintPhotoCard{grid-template-areas:"thumb thumb" "info info" "copies copies" "paper addons" "actions actions"!important}
+}
+@media(prefers-reduced-motion:reduce){
+  html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]),
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > button.pb1132Selected{animation:none!important}
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader > .pb1126MainNav > .pb1131MovingIndicator{transition:none!important}
+}

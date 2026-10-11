@@ -77,7 +77,7 @@
     }else if(m==='ai'){
       const a=$$('.photographerAiSectionNav>button').slice(0,2);if(a[0])out.push(src(a[0],'روتوش صورت AI'));if(a[1])out.push(src(a[1],'سایر ابزارهای AI'));
     }else if(m==='gallery'){
-      const n=$('.clientGalleryListHead>button.primary,.clientGalleryEmpty>button.primary');if(n)out.push(src(n,'＋ گالری جدید',false));
+      const n=$('.clientGalleryListHead>button.primary,.clientGalleryEmpty>button.primary');if(n)out.push(src(n,n.textContent||'＋ گالری جدید',false));
     }else if(m==='album'||m==='instagram'){
       const filter=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar .albumDesignMobileTopFilter,.photographerAlbumDesignCatalog .albumDesignCatalogFilters .pb599AlbumFilterButton');if(filter)out.push(src(filter,'فیلتر',filter.classList.contains('pb603FilterActive')));
       const g=gridButtons();if(g[0])out.push(src(g[0],'▦',g[0].classList.contains('active')));if(g[1])out.push(src(g[1],'▤',g[1].classList.contains('active')));

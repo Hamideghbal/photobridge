@@ -1,3 +1,4 @@
+import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
 import { testAccountVisibleSql, testAccountSql } from './test-account-visibility.js';
 import { handlePhotographerTabSettings } from './photographer-tab-settings.js';
 import {changeRentalAsset,rentalAssetPeakDemand,increaseRentalAssetStock} from './rentalAssetControls.js';
@@ -11738,9 +11739,10 @@ async function photographerGalleryBillingSnapshot(userId) {
     try {
         await photographerWalletEnsure(c, userId);
         const service = await photographerEffectivePrice(c, userId, CLIENT_GALLERY_SERVICE_KEY);
-        const w = await c.query(`SELECT balance FROM photographer_service_wallets WHERE user_id=$1`, [userId]);
-        const balance = Number(w.rows[0]?.balance || 0), unlimited = await isUnlimitedAdminPhotographer(userId), fee = unlimited ? 0 : Math.max(0, Math.round(Number(service.effective_price || 0)));
-        return { enabled: Boolean(service.enabled && service.customer_enabled), fee, renewalFee: fee, renewalDays: 30, renewalWindowDays: 7, balance, unlimited, canCreate: Boolean(service.enabled && service.customer_enabled && (unlimited || fee <= 0 || balance >= fee)), maxPhotos: galleryServiceMaxPhotos(service), previewMaxEdge: galleryPreviewMaxEdge(service), previewQuality: galleryPreviewQuality(service), lifetimeDays: galleryLifetimeDays(service), postCompletionDays: galleryPostCompletionDays(service) };
+        const unlimited = await isUnlimitedAdminPhotographer(userId), standardFee = unlimited ? 0 : Math.max(0, Math.round(Number(service.effective_price || 0)));
+        const offer = await galleryCreationOffer(c, userId, {unlimited, standardFee});
+        const {balance, fee, freeGalleriesRemaining, freeGalleryLimit} = offer;
+        return { enabled: Boolean(service.enabled && service.customer_enabled), fee, renewalFee: standardFee, freeGalleriesRemaining, freeGalleryLimit, renewalDays: 30, renewalWindowDays: 7, balance, unlimited, canCreate: Boolean(service.enabled && service.customer_enabled && (unlimited || fee <= 0 || balance >= fee)), maxPhotos: galleryServiceMaxPhotos(service), previewMaxEdge: galleryPreviewMaxEdge(service), previewQuality: galleryPreviewQuality(service), lifetimeDays: galleryLifetimeDays(service), postCompletionDays: galleryPostCompletionDays(service) };
     }
     finally {
         c.release();
@@ -23994,7 +23996,8 @@ ${inviteUrl}`;
                     await c.query('ROLLBACK');
                     return sendJson(res, 403, { error: 'gallery_service_disabled' });
                 }
-                const fee = unlimited ? 0 : Math.max(0, Math.round(Number(service.effective_price || 0))), photoLimit = galleryServiceMaxPhotos(service), lifetimeDays = galleryLifetimeDays(service), postCompletionDays = galleryPostCompletionDays(service);
+                const offer = await galleryCreationOffer(c, a.userId, {unlimited, standardFee: Math.max(0, Math.round(Number(service.effective_price || 0))), lock: true});
+                const fee = offer.fee, photoLimit = galleryServiceMaxPhotos(service), lifetimeDays = galleryLifetimeDays(service), postCompletionDays = galleryPostCompletionDays(service);
                 let walletTransactionId = null, balanceAfter = null;
                 if (fee > 0) {
                     const wq = await c.query(`SELECT balance FROM photographer_service_wallets WHERE user_id=$1 FOR UPDATE`, [a.userId]);
@@ -24015,6 +24018,7 @@ ${inviteUrl}`;
                 const q = await c.query(`INSERT INTO photographer_client_galleries(id,owner_id,lab_id,title,customer_name,customer_mobile,public_token,access_code_hash,status,digital_price,note,expires_at,photo_limit,creation_fee,wallet_transaction_id,selection_enabled,ordering_enabled,watermark_enabled,watermark_text,lifetime_days_snapshot,post_completion_days_snapshot)
           VALUES($1,$2,$3,$4,$5,$6,$7,$8,'draft',0,$9,now()+($10::int||' days')::interval,$11,$12,$13,$14,$15,$16,$17,$10,$18) RETURNING *`, [galleryId, a.userId, labId, title, customerName, customerMobile || null, token, hash, note || null, lifetimeDays, photoLimit, fee, walletTransactionId, selectionEnabled, orderingEnabled, watermarkEnabled, watermarkEnabled ? watermarkText : null, postCompletionDays]);
                 const gallery = q.rows[0];
+                if (offer.trial) await recordGalleryTrial(c, a.userId, labId, gallery.id);
                 await c.query(`INSERT INTO photographer_gallery_print_tariff_states(gallery_id,size_id,active)
           SELECT $1,t.size_id,true FROM photographer_gallery_print_tariffs t LEFT JOIN print_sizes s ON s.id=t.size_id LEFT JOIN photographer_gallery_custom_sizes cs ON cs.id=t.size_id AND cs.owner_id=t.owner_id AND cs.active=true WHERE t.owner_id=$2 AND t.active=true AND ((s.id IS NOT NULL AND s.active=true AND (s.owner_lab_id IS NULL OR s.owner_lab_id=$3) AND NOT EXISTS (SELECT 1 FROM lab_hidden_print_sizes h WHERE h.lab_id=$3 AND h.size_id=t.size_id)) OR cs.id IS NOT NULL)
           ON CONFLICT(gallery_id,size_id) DO UPDATE SET active=EXCLUDED.active,updated_at=now()`, [galleryId, a.userId, labId]);

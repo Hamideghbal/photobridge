@@ -102,6 +102,10 @@ jobs:
           node --check dist/api/test-account-visibility.js
           node --check dist/web/photobridge-r1106-mobile-store-panel.js
           node --test --test-name-pattern="real PostgreSQL" scripts/test-r1106-test-account-visibility.cjs
+      - name: Verify three free galleries and concurrent creation in PostgreSQL
+        env:
+          PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
+        run: node --test scripts/test-r1108-gallery-trial.cjs
       - name: Smoke-test store discount migration in PostgreSQL
         run: |
           node --input-type=module <<'NODE'

@@ -74,19 +74,19 @@ test('disabled rental/sales disappear per selected shop; all tabs restore for ot
 });
 
 test('strict stock refresh uses previous availability during periodic background validation',async()=>{
- const notes=[];let note=null,clock=100000,requests=0,updates=0;
+ const notes=[];let note=null,itemStock=null,clock=100000,requests=0,updates=0;
  const cb={value:'camera-1',checked:true,disabled:false};
  const qty={value:'1',disabled:false,max:'99'};
- const info={append(el){note=el}};
+ const info={append(el){itemStock=el}};
  const card={classList:{toggle(){}},querySelector(selector){
-  return selector==='input.pick'?cb:selector==='input.qty'?qty:selector==='.itemInfo'?info:selector==='.pbR1095ItemStock'?null:null;
+  return selector==='input.pick'?cb:selector==='input.qty'?qty:selector==='.itemInfo'?info:selector==='.pbR1095ItemStock'?itemStock:null;
  }};
  const list={firstElementChild:card,parentElement:{insertBefore(el){note=el}}};
  const interval=[];
  const document={hidden:false,readyState:'complete',
   querySelector(s){return s==='#items'?list:s==='#pbR1095CustomerNote'?note:null},
   querySelectorAll(s){return s==='#items label.item'?[card]:[]},
-  createElement(){return {classList:{toggle(){}},hidden:false,set textContent(v){notes.push(v);this._text=v},get textContent(){return this._text||''}}},
+  createElement(tag){return {classList:{toggle(){}},hidden:false,set textContent(v){if(tag==='div')notes.push(v);this._text=v},get textContent(){return this._text||''}}},
   addEventListener(){}
  };
  class FakeDate extends Date{static now(){return clock}}

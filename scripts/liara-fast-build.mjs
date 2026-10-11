@@ -75,6 +75,7 @@ await import('./remove-r1092-legacy-windows-alert-panel.mjs');
 await import('./fix-r1093-inventory-visibility.mjs');
 await import('./enable-r1095-customer-rental-stock-modes.mjs');
 await import('./enable-r1095-stock-mode-ui.mjs');
+await import('./enable-r1096-photographer-store-ui.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

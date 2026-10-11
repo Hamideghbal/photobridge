@@ -57,8 +57,11 @@ test('photographer invitations are SMS-only and the invite channel cannot be dis
  assert.doesNotMatch(owner,/id="smsInviteEnabled"/);
  assert.match(owner,/پیامک دعوت عکاس · همیشه فعال/);
  assert.match(owner,/هزینه این پیامک توسط PhotoBridge پرداخت می‌شود/);
+ assert.match(owner,/ارسال دعوتنامه پیامکی/);
+ assert.match(owner,/دعوت عکاس فقط از طریق پیامک انجام می‌شود/);
  assert.match(owner,/inviteEnabled:true/);
  assert.match(server,/if \(kind==='invite'\) return true;/);
  assert.match(server,/inviteEnabled:true/);
  assert.match(server,/Boolean\(b\.bookingApprovedEnabled\), true, b\.bookingStatusEnabled !== false/);
+ assert.match(server,/rental_invite_sms_only/);
 });

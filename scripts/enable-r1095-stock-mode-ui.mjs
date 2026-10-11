@@ -2,11 +2,11 @@
 import fs from 'node:fs';
 for(const [file,url] of [
  ['dist/api/equipment-rental-portal.html','/photobridge-r1095-owner-stock.js?v=1097'],
- ['dist/api/equipment-rental-book.html','/photobridge-r1095-customer-stock.js?v=1097']
+ ['dist/api/equipment-rental-book.html','/photobridge-r1095-customer-stock.js?v=1098']
 ]){
  let src=fs.readFileSync(file,'utf8'),tag='<script defer src="'+url+'"></script>';
  const asset=url.split('?')[0];
- src=src.replaceAll('<script defer src="'+asset+'?v=1095"></script>','');
+ for(const version of [1095,1097])if(url!==asset+'?v='+version)src=src.replaceAll('<script defer src="'+asset+'?v='+version+'"></script>','');
  while(src.split(tag).length>2)src=src.replace(tag,'');
  if(!src.includes(tag)){
   const at=src.lastIndexOf('</body>');

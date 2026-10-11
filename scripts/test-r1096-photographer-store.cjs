@@ -75,7 +75,7 @@ test('disabled rental/sales disappear per selected shop; all tabs restore for ot
 
 test('strict stock refresh uses previous availability during periodic background validation',async()=>{
  const notes=[];let note=null,itemStock=null,clock=100000,requests=0,updates=0;
- const cb={value:'camera-1',checked:true,disabled:false};
+ const cb={dataset:{},value:'camera-1',checked:true,disabled:false};
  const qty={value:'1',disabled:false,max:'99'};
  const info={append(el){itemStock=el}};
  const card={classList:{toggle(){}},querySelector(selector){

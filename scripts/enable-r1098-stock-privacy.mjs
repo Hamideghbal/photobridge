@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const file='dist/api/equipment-rental-book.html';
+let html=fs.readFileSync(file,'utf8');
+const line='<small class="pbRentalDailyDates">${esc(window.pbRentalDailyAvailabilityText?.(i.dailyAvailability,i.requested||1)||\'\')}</small>';
+html=html.replaceAll(line,'');
+html=html.replaceAll('photobridge-r1057-daily-rental-availability.js?v=r1097','photobridge-r1057-daily-rental-availability.js?v=r1098');
+html=html.replaceAll('photobridge-r1095-customer-stock.js?v=1097','photobridge-r1095-customer-stock.js?v=1098');
+if(html.includes('pbRentalDailyAvailabilityText?.(i.dailyAvailability'))throw Error('Customer request still renders inventory counts');
+fs.writeFileSync(file,html);
+console.log('[PhotoBridge R1098] customer inventory counts removed; requests await shop approval');

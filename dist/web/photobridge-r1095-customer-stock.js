@@ -5,17 +5,18 @@ const q=x=>document.querySelector(x),qa=x=>[...document.querySelectorAll(x)];
 const mode=()=>{try{const s=selectedShopRecord();return s?.customer_rental_stock_mode||s?.customerStockMode||'flexible'}catch{return'flexible'}};
 const strict=()=>mode()==='strict';
 const num=x=>Number(x||0).toLocaleString('fa-IR');
-let signature='',seq=0,result=null,lastFetch=0,busy=false;
+let signature='',seq=0,result=null,lastFetch=0,busy=false,renderedRoot=null,renderedSignature='',resultFingerprint='';
 const body=()=>{try{return requestBody()}catch{return null}};
 const ready=x=>x&&x.shopId&&x.startDate&&x.endDate;
 function status(text,bad=false){
  let note=q('#pbR1095CustomerNote');const list=q('#items');if(!list)return;
  if(!note){note=document.createElement('div');note.id='pbR1095CustomerNote';list.parentElement?.insertBefore(note,list)}
- note.hidden=!strict();note.textContent=strict()?text:'';
+ note.hidden=!strict();const next=strict()?text:'';if(note.textContent!==next)note.textContent=next;
  note.classList.toggle('bad',bad);
 }
 function update(itemsData){
  if(!strict())return;
+ renderedRoot=q('#items')?.firstElementChild||null;renderedSignature=signature;
  const b=body(),dated=ready(b),map=new Map((itemsData?.items||[]).map(x=>[String(x.itemId),x]));
  let anyShort=false;
  for(const card of qa('#items label.item')){
@@ -38,18 +39,26 @@ function update(itemsData){
  status(desc,anyShort);
 }
 async function refresh(force=false){
- if(!strict()){status('');return}
+ if(!strict()){if(signature){signature='';result=null;renderedRoot=null;renderedSignature='';seq++}status('');return}
  const b=body();if(!b)return;
  const key=[b.shopId,b.startDate,b.endDate,(typeof items!=='undefined'?items:[]).map(x=>x.id).join(',')].join('|');
- if(!ready(b)){signature=key;result=null;update(null);return}
- if(!force&&signature===key&&Date.now()-lastFetch<12000){update(result);return}
- signature=key;const serial=++seq;lastFetch=Date.now();update(null);
+ const changed=signature!==key,needsPaint=renderedRoot!==(q('#items')?.firstElementChild||null)||renderedSignature!==key;
+ if(!ready(b)){if(changed){signature=key;seq++;result=null;resultFingerprint=''}if(changed||needsPaint)update(null);return}
+ if(!force&&!changed&&Date.now()-lastFetch<15000){if(needsPaint)update(result);return}
+ signature=key;const serial=++seq;lastFetch=Date.now();
+ // Keep the previous availability and checkboxes visible during background revalidation.
+ // Only changing the store/dates invalidates the old availability result.
+ if(changed){result=null;resultFingerprint='';update(null)}else if(needsPaint)update(result);
  try{
-  const catalog=(typeof items!=='undefined'?items:[]);if(!catalog.length){result={items:[]};update(result);return}
+  const catalog=(typeof items!=='undefined'?items:[]);
+  if(!catalog.length){result={items:[]};resultFingerprint='empty';update(result);return}
   const data=await api('/api/customer/equipment-rental/availability',{method:'POST',body:JSON.stringify({shopId:b.shopId,startDate:b.startDate,endDate:b.endDate,items:catalog.map(x=>({itemId:x.id,quantity:1}))})});
   if(serial!==seq||signature!==key)return;
-  result=data;update(data);
- }catch(e){if(serial===seq){result=null;status('بررسی موجودی انجام نشد؛ اتصال اینترنت را بررسی کنید.',true)}}
+  const fingerprint=JSON.stringify((data?.items||[]).map(x=>[x.itemId,x.available,x.valid]));
+  const shouldPaint=fingerprint!==resultFingerprint||renderedRoot!==(q('#items')?.firstElementChild||null);
+  result=data;resultFingerprint=fingerprint;
+  if(shouldPaint)update(data);
+ }catch(e){if(serial===seq){if(!result)update(null);status('بررسی موجودی انجام نشد؛ اتصال اینترنت را بررسی کنید.',true)}}
 }
 async function checkFinal(e){
  if(!strict())return;
@@ -73,10 +82,12 @@ async function checkFinal(e){
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function attach(){
  if(q('#rentalRequestSubmitV809')&&!q('#rentalRequestSubmitV809').dataset.pbR1095Guard){const t=q('#rentalRequestSubmitV809');t.dataset.pbR1095Guard='1';t.addEventListener('click',checkFinal,true)}
- const list=q('#items');if(list&&!list.dataset.pbR1095Watch){list.dataset.pbR1095Watch='1';new MutationObserver(()=>{if(strict())update(result)}).observe(list,{childList:true})}
+ const list=q('#items');if(list&&!list.dataset.pbR1095Watch){list.dataset.pbR1095Watch='1';new MutationObserver(()=>{if(strict())void refresh(false)}).observe(list,{childList:true})}
  for(const id of ['start','end']){const field=q('#'+id);if(field&&!field.dataset.pbR1095Watch){field.dataset.pbR1095Watch='1';field.addEventListener('change',()=>void refresh(true));field.addEventListener('input',()=>void refresh(true))}}
 }
 function tick(){attach();if(strict())void refresh(false);else{const note=q('#pbR1095CustomerNote');if(note)note.hidden=true}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick,{once:true});else tick();
 setInterval(tick,2200);
+document.addEventListener('click',e=>{if(e.target.closest?.('.pbR63OfficeBtn'))setTimeout(()=>void refresh(true),0)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&strict())void refresh(true)});
 })();

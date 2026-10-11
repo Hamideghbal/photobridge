@@ -4,7 +4,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
   let html=fs.readFileSync(path,'utf8');
   if(!html.includes('photobridge-r1124-photographer-desktop-header.css'))html=html.replace('</head>',assets+'</head>');
   html=html.replace(/(photobridge-r1124-photographer-desktop-header\.(?:css|js)\?v=)r112[45678]/g,'$1r1129');
-  const boot='<link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css?v=r1129">\n<script src="/photobridge-r1126-desktop-navigation.js?v=r1129"></script>';
+  const boot='<link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css?v=r1131">\n<script src="/photobridge-r1126-desktop-navigation.js?v=r1131"></script>';
   html=html.replace(/<link rel="stylesheet" href="\/photobridge-r1126-desktop-navigation\.css[^"]*">\s*<script src="\/photobridge-r1126-desktop-navigation\.js[^"]*"><\/script>\s*/g,'');
   // Read media queries after the mobile viewport is configured, before any legacy handlers.
   html=html.replace(/<meta name="viewport"[^>]*>/,match=>match+'\n'+boot);

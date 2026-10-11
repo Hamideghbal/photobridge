@@ -42,12 +42,32 @@
   const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind="'+key+'"]')).filter(Boolean);if(ordered.some((b,i)=>b!==nav.children[i]))nav.replaceChildren(...ordered);
   const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
   if(wallet){const label='کیف پول · '+wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
-  const row=chrome.querySelector('.pb1126Secondary');
-  const sources=active==='store'?(currentDocument()?.body?.classList.contains('pbR96ChoosingStore')?[]:[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]):active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
+  const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();
+  const choosing=active==='store'?(!doc?.querySelector('#photographerStoreRoleHeader')||doc.body?.classList.contains('pbR96ChoosingStore')):active==='print'?(!!doc?.querySelector('#pbR99LabChooser')||doc?.body?.classList.contains('pbR100F14ChoosingLab')||doc?.documentElement?.classList.contains('pbR100F14LabChooserBoot')||(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print')):false;
+  document.documentElement.classList.toggle('pb1127Choosing',choosing);
+  chrome.classList.toggle('pb1127Choosing',choosing);
+  row.hidden=choosing;
+  const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true');
-  const signature=active+'|'+visible.map(el=>el.outerHTML).join('');
-  if(row.dataset.source!==signature){row.replaceChildren();for(const original of visible){const copy=cleanClone(original);copy.style.removeProperty('display');copy.onclick=()=>original.click();row.append(copy);}if(active==='store'){const back=document.createElement('button');back.type='button';back.className='pb1126Back';back.textContent='← بازگشت';back.onclick=()=>navigate('gallery');row.append(back);}row.dataset.source=signature;}
+  const signature=active+'|'+choosing+'|'+visible.map(el=>el.outerHTML).join('');
+  if(row.dataset.source!==signature){
+   row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
+   let modes,utilities;
+   if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
+   for(const original of visible){
+    const copy=cleanClone(original);copy.style.removeProperty('display');
+    copy.onclick=()=>{press(copy);original.click();const content=doc.querySelector('.rentalPanel.mobileActive,.photographerPrintWorkspace');reveal(content);};
+    if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}
+    if(utilities&&original.closest('.photographerPrintModeUtilityCluster'))utilities.append(copy);else (modes||row).append(copy);
+   }
+   if(utilities){for(const cls of ['photographerPrintModeBack','finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}
+   if(active==='store'&&!choosing){const back=document.createElement('button');back.type='button';back.className='pb1126Back';back.textContent='← بازگشت';back.onclick=()=>navigate('gallery');row.append(back);}
+   row.dataset.source=signature;
+  }
  }
+ function press(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{transform:'scale(.96)'},{transform:'scale(1)'}],{duration:180,easing:'ease-out'});}
+ function reveal(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{opacity:.55,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});}
+
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
  function closePanels(){for(const p of panels.values())p.hidden=true;selected=null;document.documentElement.classList.remove('pb1126PanelOpen');}
  function open(key,push=true){
@@ -62,11 +82,11 @@
   }
   closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
-  render();
+  render();reveal(panel.querySelector('iframe'));
  }
- function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();}
+ function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();reveal(document.querySelector('#root .photographerMain'));}
  // Register before legacy full-document navigation handlers.
- window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();navigate(b.dataset.pb1126Kind);},true);
+ window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
  window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print'].includes(panel))open(panel,false);else{closePanels();schedule();}});
  window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}schedule();}});
  window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;return;}if(!authenticated)return;authenticated=false;try{sessionStorage.removeItem('pb1126-desktop-tabs');}catch{}closePanels();for(const p of panels.values())p.remove();panels.clear();schedule();});

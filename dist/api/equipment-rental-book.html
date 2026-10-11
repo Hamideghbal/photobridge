@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css?v=r1126">
-<script src="/photobridge-r1126-desktop-navigation.js?v=r1126"></script>
+<link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css?v=r1127">
+<script src="/photobridge-r1126-desktop-navigation.js?v=r1127"></script>
 <meta name="robots" content="noindex,follow">
 <link rel="icon" href="/photobridge-favicon-v0140.png">
 <link rel="manifest" href="/photobridge.webmanifest?v=783">
@@ -519,8 +519,8 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 }
 @media(max-width:820px){#pbR1123StoreDesktopNav{display:none!important}}
 </style>
-<link rel="stylesheet" href="/photobridge-r1124-photographer-desktop-header.css?v=r1126">
-<script defer src="/photobridge-r1124-photographer-desktop-header.js?v=r1126"></script>
+<link rel="stylesheet" href="/photobridge-r1124-photographer-desktop-header.css?v=r1127">
+<script defer src="/photobridge-r1124-photographer-desktop-header.js?v=r1127"></script>
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">
@@ -646,7 +646,7 @@ function renderStoreChooserR96(){
 function syncStoreChooserTopR100F12(){const w=$('#storePhotographerWorkspace');if(w)w.style.setProperty('--pb-store-chooser-top','0px')}
 function enterStoreChooserR96(panel=''){if(panel)requestedStorePanelR96=panel;document.body.classList.add('pbR96ChoosingStore');syncStoreChooserTopR100F12();setStoreSelectorOpen(false);renderStoreChooserR96();showMobilePanel('storeChooserPanelR96');updateMobilePanelTitle('storeChooserPanelR96')}
 function leaveStoreChooserR96(){document.body.classList.remove('pbR96ChoosingStore');}
-function openRequestedStorePanelR96(){const map={sales:'salesPanel',finance:'financePanel',bookings:'bookingsPanel',rental:'equipmentPanel',store:'storePanel'};const id=map[requestedStorePanelR96]||'equipmentPanel';requestedStorePanelR96='store';openStoreSection(id)}
+function openRequestedStorePanelR96(){const map={sales:'salesPanel',finance:'financePanel',bookings:'bookingsPanel',rental:'equipmentPanel',store:'storePanel'};let id=map[requestedStorePanelR96]||'equipmentPanel';if(matchMedia('(min-width:821px)').matches&&id==='storePanel')id='equipmentPanel';requestedStorePanelR96='store';openStoreSection(id)}
 function syncPhotographerStoreIdentity(){const s=selectedShopRecord(),bar=$('#photographerStoreIdentityBar'),name=$('#photographerStoreHeaderName'),btn=$('#storeIdentityToggle'),shopName=String(s?.name||'').trim(),fallback=shopName||'فروشگاه تجهیزات';if(name)name.textContent=fallback;if(bar)bar.classList.toggle('ready',Boolean(shopName));if(btn){btn.classList.remove('switchable');btn.disabled=true;btn.setAttribute('aria-label','فروشگاه فعال')}document.title=(shopName||'فروشگاه تجهیزات')+' | PhotoBridge'}
 let storeNotifications=[];
 function updateStoreHeaderClock(){try{const now=new Date(),date=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{timeZone:'Asia/Tehran',weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(now),time=new Intl.DateTimeFormat('fa-IR',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hour12:false}).format(now),de=$('#storePhotographerDate'),te=$('#storePhotographerTime');if(de)de.textContent=date;if(te)te.textContent=time}catch{}}

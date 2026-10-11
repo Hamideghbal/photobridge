@@ -114,3 +114,54 @@
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>button.pb1132Selected,
  html.pb1126Desktop body .pb1126ContentPanel.pb1132Enter:not([hidden]){animation:none!important}
 }
+
+/* R1134: six-or-fewer photographer destinations always occupy ONE full-width row.
+   R1132's later grid override was forcing two groups of three on the print screen.
+   Flex layout responds to whichever primary destinations are currently enabled. */
+@media(max-width:820px){
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"]{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  left:0!important;right:0!important;
+  box-sizing:border-box!important;
+  padding:6px max(5px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(5px,env(safe-area-inset-left,0px))!important;
+  overflow-x:hidden!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"] > .mobileRailPrimaryGroup.photographerBottomAppNavGrid,
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"] > .mobileRailPrimaryGroup.photographerBottomAppNavGrid[data-pb1099-grid]{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  flex:1 1 100%!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  margin:0!important;padding:0!important;
+  gap:2px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  transform:none!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"] > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button:not([hidden]):not([data-pb1099-hidden="1"]){
+  flex:1 1 0!important;
+  width:0!important;min-width:0!important;max-width:none!important;
+  min-height:54px!important;height:54px!important;max-height:54px!important;
+  padding:3px 1px!important;margin:0!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"] > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button[data-pb1099-hidden="1"]{
+  display:none!important;
+ }
+ html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav)[aria-label="ناوبری اصلی عکاس"] > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button em{
+  min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  line-height:1.2!important;
+  text-align:center!important;
+ }
+}

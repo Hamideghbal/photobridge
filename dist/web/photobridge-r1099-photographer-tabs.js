@@ -2,7 +2,8 @@
 (()=>{
 'use strict';
 const keys=['ai','album','instagram'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام'};
-let settings=null,scheduled=false,inFlight=false,loadedPath=null;
+let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false;
+const previousDisplay=new WeakMap();
 const admin=()=>location.pathname.startsWith('/admin');
 const photographer=()=>location.pathname.startsWith('/photographer')||location.pathname==='/equipment-rental/book';
 async function api(path,options={}){
@@ -29,14 +30,21 @@ function apply(){
  if(!settings||!photographer())return;
  for(const el of document.querySelectorAll('.photographerHomeModeNav button,.photographerHomeModeNav a,.photographerBottomAppNav button,.photographerBottomAppNav a,#pbHomeMobileMenu button,#pbHomeMobileMenu a')){
   const key=feature(el);if(!key)continue;
-  if(settings.tabs[key]===false){if(el.dataset.pb1099Hidden!=='1'){el.dataset.pb1099Hidden='1'}}else if(el.dataset.pb1099Hidden)delete el.dataset.pb1099Hidden;
+  if(settings.tabs[key]===false){
+   if(el.dataset.pb1099Hidden!=='1'){previousDisplay.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.dataset.pb1099Hidden='1'}
+   // Legacy role-header CSS uses !important, so its button display rules must not restore disabled tabs.
+   if(el.style.getPropertyValue('display')!=='none'||el.style.getPropertyPriority('display')!=='important')el.style.setProperty('display','none','important');
+  }else if(el.dataset.pb1099Hidden){
+   delete el.dataset.pb1099Hidden;const previous=previousDisplay.get(el);
+   if(previous?.value)el.style.setProperty('display',previous.value,previous.priority);else el.style.removeProperty('display');previousDisplay.delete(el);
+  }
  }
  for(const grid of document.querySelectorAll('.photographerBottomAppNavGrid')){
   grid.dataset.pb1099Grid='1';
-  const count=[...grid.children].filter(el=>el.dataset.pb1099Hidden!=='1').length;
+  const count=[...grid.children].filter(el=>el.dataset.pb1099Hidden!=='1'&&!el.hidden&&getComputedStyle(el).display!=='none').length;
   if(count&&grid.style.getPropertyValue('--pb1099-tabs')!==String(count))grid.style.setProperty('--pb1099-tabs',String(count));
  }
- const active=currentFeature();if(active&&settings.tabs[active]===false)location.replace('/photographer');
+ const active=currentFeature();if(active&&settings.tabs[active]===false&&!redirecting){redirecting=true;location.replace('/photographer/gallery')}
 }
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;apply();mountAdmin();if(photographer()&&loadedPath!==location.pathname)void load()})}
 function installStyle(){
@@ -66,6 +74,7 @@ async function load(){
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
+window.addEventListener('photobridge-auth-session-changed',()=>void load());
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

@@ -10,7 +10,8 @@ if(!server.includes(marker)){
 }
 fs.writeFileSync(serverPath,server);
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
- let html=fs.readFileSync(file,'utf8');const tag='<script defer src="/photobridge-r1099-photographer-tabs.js?v=1099"></script>';
+ let html=fs.readFileSync(file,'utf8');const tag='<script defer src="/photobridge-r1099-photographer-tabs.js?v=1103"></script>';
+ html=html.replace(/<script defer src="\/photobridge-r1099-photographer-tabs\.js\?v=[^"]*"><\/script>/g,tag);
  if(!html.includes(tag)){const at=html.lastIndexOf('</body>');if(at<0)throw Error('Photographer page body missing');html=html.slice(0,at)+tag+'\n'+html.slice(at);}
  if(html.split(tag).length-1!==1)throw Error('Photographer tab asset duplicate');
  fs.writeFileSync(file,html);

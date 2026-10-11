@@ -501,6 +501,22 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 <script defer src="/photobridge-r1113-gallery-dialogs.js?v=r1113"></script>
 <link rel="stylesheet" href="/photobridge-r1118-lab-finance.css?v=r1118">
 <link rel="stylesheet" href="/photobridge-r1119-mobile-chat.css?v=r1119">
+<style id="pbR1123PhotographerStoreDesktop">
+#pbR1123StoreDesktopNav{display:none}
+@media(min-width:821px){
+ body.rentalPhotographerMode #photographerStoreRoleHeader .photographerHomeModeNav{display:none!important}
+ body.rentalPhotographerMode #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:flex!important;align-items:center;justify-content:center;gap:5px;min-width:0;margin-inline:auto;padding:0 7px;direction:rtl}
+ body.rentalPhotographerMode #pbR1123StoreDesktopNav>button{display:inline-flex;justify-content:center;align-items:center;min-height:40px;min-width:62px;padding:7px 11px;background:transparent!important;border:0!important;border-bottom:3px solid transparent!important;border-radius:0!important;box-shadow:none!important;color:#475467!important;font:900 13px/1.2 Vazirmatn,Tahoma,sans-serif!important;cursor:pointer;white-space:nowrap}
+ body.rentalPhotographerMode #pbR1123StoreDesktopNav>button.active,body.rentalPhotographerMode #pbR1123StoreDesktopNav>button[aria-selected="true"]{color:var(--pb-r100-accent,#1677ff)!important;border-bottom-color:var(--pb-r100-accent,#1677ff)!important}
+ body.rentalPhotographerMode #pbR1123StoreDesktopNav>button[hidden],body.rentalPhotographerMode #pbR1123StoreDesktopNav>button[aria-hidden="true"]{display:none!important}
+ body.rentalPhotographerMode #pbR1123StoreBack{display:inline-flex!important;align-items:center;justify-content:center;gap:5px;min-height:36px;margin-inline-start:12px;padding:6px 12px;border:1px solid #d7deea;border-radius:9px;background:#fff;color:#344054!important;font:850 12px/1.3 Vazirmatn,Tahoma,sans-serif;text-decoration:none!important;white-space:nowrap}
+ body.rentalPhotographerMode #storeSectionNavV673{display:none!important}
+ body.rentalPhotographerMode:not(.pbR96ChoosingStore) #app>.rentalPanel:not(.mobileActive){display:none!important}
+ body.rentalPhotographerMode:not(.pbR96ChoosingStore) #app>.rentalPanel.mobileActive:not([hidden]){display:block!important}
+ body.rentalPhotographerMode.pbR96ChoosingStore #pbR1123StoreDesktopNav{visibility:hidden!important;pointer-events:none!important}
+}
+@media(max-width:820px){#pbR1123StoreDesktopNav{display:none!important}}
+</style>
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">
@@ -508,6 +524,14 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
   <div class="workspaceIdentity photographerHeaderIdentity"><div class="workspaceIdentityCopy"><h1 id="storePhotographerName">…</h1><small id="storePhotographerManager">مدیریت عکاسی</small><div class="workspaceIdentityMeta photographerIdentityDateOnly"><div class="todayStamp compact"><span id="storePhotographerDate">امروز</span><b id="storePhotographerTime"></b></div></div></div></div>
   <div class="workspaceNav photographerHeaderNav primaryRoleActions roleHeaderPrimary photographerHomeModeNav" aria-label="دسترسی‌های اصلی عکاس">
     <button type="button" class="rolePrimaryAction" data-main-href="/photographer/orders/flow?workspace=print&amp;pbLabChooser=1">چاپ</button><button type="button" class="rolePrimaryAction" data-main-href="/photographer/ai/retouch">هوش مصنوعی</button><button type="button" class="rolePrimaryAction" data-main-href="/photographer/gallery">گالری</button><button type="button" class="rolePrimaryAction" data-main-href="/photographer/album-design">طراحی آلبوم</button><button type="button" class="rolePrimaryAction photographerInstagramDesignEntry" data-main-href="/photographer/album-design?pb_mode=instagram">طراحی اینستاگرام</button><button type="button" class="rolePrimaryAction active storeDesktopPrimary" aria-current="page">فروشگاه تجهیزات</button>
+  </div>
+  <!-- R1123: separate desktop-only Store channels; keep native photographer navigation for mobile. -->
+  <div id="pbR1123StoreDesktopNav" class="workspaceNav photographerHeaderNav primaryRoleActions roleHeaderPrimary" aria-label="بخش‌های فروشگاه عکاس">
+    <button type="button" data-store-panel="equipmentPanel">اجاره</button>
+    <button type="button" data-store-panel="salesPanel">فروش</button>
+    <button type="button" data-store-panel="bookingsPanel">آفیش</button>
+    <button type="button" data-store-panel="financePanel">مالی</button>
+    <a id="pbR1123StoreBack" href="/photographer" aria-label="بازگشت به پنل عکاس"><span aria-hidden="true">←</span> بازگشت</a>
   </div>
   <div class="mobileHeaderQuickActions photographerMobileHeaderQuickActions">
     <div class="photographerMobileHeaderPrimaryRow">
@@ -743,8 +767,29 @@ async function cancelBooking(id,statusValue){if(statusValue!=='pending_approval'
 function mobilePanelTitle(id){return ({storeChooserPanelR96:'انتخاب فروشگاه',storePanel:'فروشگاه',equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌ها و رزروها',financePanel:'فاکتور و مالی'})[id]||'فروشگاه'}
 function updateMobilePanelTitle(id){const bar=$('#mobilePanelTitleBar');if(!bar)return;const label=mobilePanelTitle(id),span=bar.querySelector('span');if(span)span.textContent=label;bar.dataset.panel=id;bar.classList.toggle('storeHomeTitleHidden',id==='storePanel')}
 function syncStoreHeaderActionsV809(id){const rentalCart=$('#rentalCartBtnV810'),cart=$('#saleCartBtn');if(rentalCart){rentalCart.hidden=true;rentalCart.style.setProperty('display','none','important')}if(cart){cart.hidden=id!=='salesPanel';cart.style.setProperty('display',id==='salesPanel'?'inline-flex':'none','important')}if(id==='equipmentPanel')updateRentalCartCountV810()}
-function showMobilePanel(id){$$('.rentalPanel').forEach(p=>p.classList.toggle('mobileActive',p.id===id));updateMobilePanelTitle(id);syncStoreHeaderActionsV809(id);$$('#storeSectionNavV673 [data-store-panel]').forEach(b=>b.classList.toggle('active',b.dataset.storePanel===id));if(window.matchMedia?.('(max-width:820px)').matches)$('#rentalHero')?.classList.toggle('mobilePanelHidden',id!=='storePanel');if(id!=='salesPanel')closeSaleCart();const scroller=$('.storePhotographerWorkspace>.shell');if(scroller)scroller.scrollTo({top:0,behavior:'auto'})}
-function openStoreSection(id){const panel=$('#'+id);if(!panel)return;syncStoreHeaderActionsV809(id);if(window.matchMedia?.('(max-width:820px)').matches){showMobilePanel(id);return}const nav=$('#storeSectionNavV673'),shell=$('.storePhotographerWorkspace>.shell');$$('#storeSectionNavV673 [data-store-panel]').forEach(b=>{const on=b.dataset.storePanel===id;b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false')});if(nav)nav.dataset.pb706Active=id;if(shell){const sr=shell.getBoundingClientRect(),pr=panel.getBoundingClientRect(),sticky=(nav?.getBoundingClientRect().height||0)+12;const y=Math.max(0,shell.scrollTop+(pr.top-sr.top)-sticky);shell.scrollTo({top:y,behavior:'smooth'})}else panel.scrollIntoView({behavior:'smooth',block:'start'})}
+function showMobilePanel(id){
+ $$('.rentalPanel').forEach(p=>p.classList.toggle('mobileActive',p.id===id));
+ updateMobilePanelTitle(id);syncStoreHeaderActionsV809(id);
+ $$('#storeSectionNavV673 [data-store-panel],#pbR1123StoreDesktopNav [data-store-panel]').forEach(b=>{
+  const on=b.dataset.storePanel===id;b.classList.toggle('active',on);
+  b.setAttribute('aria-selected',on?'true':'false');
+  if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')
+ });
+ if(window.matchMedia?.('(max-width:820px)').matches)$('#rentalHero')?.classList.toggle('mobilePanelHidden',id!=='storePanel');
+ if(id!=='salesPanel')closeSaleCart();
+ const scroller=$('.storePhotographerWorkspace>.shell');if(scroller)scroller.scrollTo({top:0,behavior:'auto'})
+}
+function openStoreSection(id){
+ if(!$('#'+id))return;
+ if(window.matchMedia?.('(max-width:820px)').matches){showMobilePanel(id);return}
+ // Windows: show exactly one section instead of scrolling through all sections.
+ if(id==='storePanel'){
+  const shop=selectedShopRecord();
+  id=shop?.rental_enabled===false?(shop.sale_enabled===false?'bookingsPanel':'salesPanel'):'equipmentPanel'
+ }
+ showMobilePanel(id);
+ const nav=$('#storeSectionNavV673');if(nav)nav.dataset.pb706Active=id
+}
 async function boot(){
   const params=new URLSearchParams(location.search),requestedPanel=String(params.get('panel')||''),walletPayment=String(params.get('walletPayment')||'');
   requestedStorePanelR96=requestedPanel||'store';pendingWalletPaymentR96=walletPayment;if(walletPayment&&!requestedPanel)requestedStorePanelR96='sales';shopId='';setDefaultDates();

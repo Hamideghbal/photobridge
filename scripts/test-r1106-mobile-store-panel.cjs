@@ -27,13 +27,24 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  await frame.waitForSelector('#storePhotographerWorkspace',{state:'attached'});await page.waitForSelector('#pb1106StoreLoading',{state:'hidden'});
  assert.equal(await frame.locator('#photographerStoreBottomNav').isVisible(),false,'store content must not duplicate the dock');
  assert(await nav.isVisible());
+ for(const y of [30,140,260]){
+ const topOwner=await page.evaluate(y=>document.elementFromPoint(innerWidth/2,y)?.closest('#pb1106StorePanel')?.id||null,y);
+ assert.equal(topOwner,'pb1106StorePanel','Gallery header, subheader and New Gallery action must not cover Store');
+ }
+ if(process.env.PB_CAPTURE_UI)await page.screenshot({path:'/tmp/r1107-store-'+width+'.png'});
+ assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['فروشگاه'],'only Store is selected, not the underlying Gallery');
  await nav.getByRole('button',{name:'چاپ',exact:true}).click();await page.waitForSelector('#pb1106StorePanel',{state:'hidden'});
- await page.waitForSelector('#pb1106PrintPanel',{state:'visible'});await nav.getByRole('button',{name:'گالری',exact:true}).click({timeout:5000});await page.waitForURL('**/photographer/gallery');
+ await page.waitForSelector('#pb1106PrintPanel',{state:'visible'});
+ assert.equal(await page.evaluate(()=>document.elementFromPoint(innerWidth/2,30)?.closest('#pb1106PrintPanel')?.id),'pb1106PrintPanel','Print covers the old Gallery header');
+ assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['چاپ']);
+ await nav.getByRole('button',{name:'گالری',exact:true}).click({timeout:5000});await page.waitForURL('**/photographer/gallery');
+ assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['گالری'],'closing Print restores the Gallery selection');
  await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();await page.waitForSelector('#pb1106StorePanel',{state:'visible'});
  assert.equal(await page.evaluate(node=>node===document.querySelector('.photographerBottomAppNav'),original),true,'same dock DOM node remains mounted');
  assert.equal(docs.length,1,'Store navigation must not reload the main document');
  assert((await page.evaluate(()=>dockFrames)).every(x=>x.count===3&&x.height>0),'dock remains visible in every sampled animation frame');
  await page.goBack();await page.waitForSelector('#pb1106StorePanel',{state:'hidden'});assert(await nav.isVisible());
+ assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['گالری'],'browser Back restores the underlying Gallery');
  await page.close();
  }
  }finally{await browser.close()}

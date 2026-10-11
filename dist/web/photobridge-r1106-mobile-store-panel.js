@@ -12,19 +12,39 @@ if(location.pathname==='/equipment-rental/book'&&window===window.top){
  const q=new URLSearchParams({pbStorePanel:'store',pbStoreQuery:location.search});location.replace('/photographer/gallery?'+q);return;
 }
 if(!route)return;
-let dock,selected=null,authenticated=false;const panels=new Map();
+let dock,dockObserver,selected=null,authenticated=false;const panels=new Map(),dockState=new Map();
 const style=document.createElement('style');
-style.textContent='.pb1106ContentPanel{position:fixed;inset:0 0 var(--pb1106-dock-height,84px);z-index:100000;background:#f7f8fc}.pb1106ContentPanel[hidden]{display:none}.pb1106ContentPanel iframe{width:100%;height:100%;border:0;display:block;background:#f7f8fc}.pb1106ContentLoading{position:absolute;inset:0;display:grid;place-items:center;background:#f7f8fc;color:#52617a;font:inherit}.pb1106ContentLoading[hidden]{display:none}html body.pb1106PanelOpen .photographerBottomAppNav{z-index:100001!important}html body.pb1106PanelOpen .photographerBottomAppNav button.active{background:transparent!important;color:#667085!important}html body.pb1106PanelOpen .photographerBottomAppNav button.active .photographerBottomNavIcon{background:#f1f5f9!important;color:#667085!important}html body.pb1106PanelOpen .photographerBottomAppNav [data-pb1106-selected]{background:#315cff!important;color:#fff!important}html body.pb1106PanelOpen .photographerBottomAppNav [data-pb1106-selected] .photographerBottomNavIcon{background:#315cff!important;color:#fff!important}';
+style.textContent='.pb1106ContentPanel{position:fixed;inset:0 0 var(--pb1106-dock-height,84px);z-index:2147483000!important;background:#f7f8fc}.pb1106ContentPanel[hidden]{display:none}.pb1106ContentPanel iframe{width:100%;height:100%;border:0;display:block;background:#f7f8fc}.pb1106ContentLoading{position:absolute;inset:0;display:grid;place-items:center;background:#f7f8fc;color:#52617a;font:inherit}.pb1106ContentLoading[hidden]{display:none}html body.pb1106PanelOpen .photographerBottomAppNav{z-index:2147483100!important}';
 document.head.append(style);
 function feature(el){const name=el?.getAttribute('aria-label')||el?.textContent||'';return /فروشگاه/.test(name)||el?.classList.contains('photographerStoreEntry')?'store':/^چاپ$/.test(name.trim())?'print':null}
 function restoreKind(){const key=new URLSearchParams(location.search).get('pbStorePanel');return key==='1'?'store':['store','print'].includes(key)?key:null}
 function size(){if(dock){const height=dock.getBoundingClientRect().height;if(height>0)document.documentElement.style.setProperty('--pb1106-dock-height',height+'px')}}
 function sync(){
  const nav=document.querySelector('.photographerBottomAppNav');if(!nav)return;
- if(nav!==dock){dock=nav;new ResizeObserver(size).observe(nav)}size();
- const kind=restoreKind();if(kind&&!selected)open(kind,false);
+ if(nav!==dock){
+  dockObserver?.disconnect();dock=nav;new ResizeObserver(size).observe(nav);
+  dockObserver=new MutationObserver(()=>{if(selected)mark()});
+  dockObserver.observe(nav,{subtree:true,attributes:true,attributeFilter:['class','aria-current']});
+ }size();
+ const kind=restoreKind();if(kind&&!selected)open(kind,false);if(selected)mark();
 }
-function mark(){for(const b of dock?.querySelectorAll('button,a')||[]){if(feature(b)===selected){b.dataset.pb1106Selected='1';b.setAttribute('aria-current','page')}else if(b.dataset.pb1106Selected){delete b.dataset.pb1106Selected;b.removeAttribute('aria-current')}}}
+function mark(){
+ for(const b of dock?.querySelectorAll('button,a')||[]){
+  const key=b.getAttribute('aria-label')||b.textContent;
+  if(selected){
+   if(!dockState.has(key))dockState.set(key,{active:b.classList.contains('active'),current:b.getAttribute('aria-current')});
+   const active=feature(b)===selected;
+   if(b.classList.contains('active')!==active)b.classList.toggle('active',active);
+   if(active){if(!b.hasAttribute('data-pb1106-selected'))b.dataset.pb1106Selected='1';if(b.getAttribute('aria-current')!=='page')b.setAttribute('aria-current','page')}
+   else{if(b.hasAttribute('data-pb1106-selected'))delete b.dataset.pb1106Selected;if(b.hasAttribute('aria-current'))b.removeAttribute('aria-current')}
+  }else{
+   const saved=dockState.get(key);
+   if(saved){b.classList.toggle('active',saved.active);if(saved.current===null)b.removeAttribute('aria-current');else b.setAttribute('aria-current',saved.current)}
+   if(b.hasAttribute('data-pb1106-selected'))delete b.dataset.pb1106Selected;
+  }
+ }
+ if(!selected)dockState.clear();
+}
 function open(kind,push=true){
  if(selected===kind)return;
  for(const p of panels.values())p.hidden=true;

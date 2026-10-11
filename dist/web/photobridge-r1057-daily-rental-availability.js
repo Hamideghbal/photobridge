@@ -23,11 +23,10 @@
      const id=card.querySelector('.pick')?.value,row=snapshot.get(id),quantity=Math.max(1,Number(card.querySelector('.qty')?.value)||1);
      let label=card.querySelector('.pbRentalDailyDates');
      if(!label){label=document.createElement('small');label.className='pbRentalDailyDates';card.querySelector('.itemInfo')?.append(label)}
-     const unavailable=Boolean(row)&&(row.valid===false||Number(row.available)<=0);
+     const unavailable=Boolean(row)&&(row.valid===false||row.isAvailable===false);
      card.classList.toggle('pbRentalItemUnavailable',unavailable);
      label.classList.toggle('pbRentalUnavailableLabel',unavailable);
-     const detail=window.pbRentalDailyAvailabilityText(row?.dailyAvailability,quantity);
-     const text=unavailable?'موجود نمی‌باشد'+(detail?'\n'+detail:''):detail;
+     const text=unavailable?'موجود نمی‌باشد':'';
      if(label.textContent!==text)label.textContent=text;
    });
  }

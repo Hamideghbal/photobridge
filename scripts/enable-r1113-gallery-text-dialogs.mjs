@@ -12,3 +12,11 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  if(!html.includes('/photobridge-r1113-gallery-text.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1113-gallery-text.css?v=r1113">\n<script defer src="/photobridge-r1113-gallery-dialogs.js?v=r1113"></script>\n</head>');
  fs.writeFileSync(file,html);
 }
+
+// Gallery card actions are supplied by the legacy runtime overlay.
+const overlay='dist/web/photobridge-v791-runtime-fix.js';
+let runtime=fs.readFileSync(overlay,'utf8');
+const begin=runtime.indexOf('  async function deleteGallery('),finish=runtime.indexOf('  function matchGalleryToCard(',begin);
+if(begin<0||finish<0)throw Error('Gallery runtime dialog anchors missing');
+runtime=runtime.slice(0,begin)+runtime.slice(begin,finish).replace(/\bconfirm\(/g,'await window.pb1113GalleryConfirm(').replace(/\balert\(/g,'window.pb1113GalleryNotice(')+runtime.slice(finish);
+fs.writeFileSync(overlay,runtime);

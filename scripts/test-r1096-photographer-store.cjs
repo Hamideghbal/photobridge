@@ -73,8 +73,8 @@ test('disabled rental/sales disappear per selected shop; all tabs restore for ot
  assert.match(navRoot.style.properties['grid-template-columns'],/repeat\(4,/);
 });
 
-test('strict stock refresh uses previous availability during periodic background validation',async()=>{
- const notes=[];let note=null,itemStock=null,clock=100000,requests=0,updates=0;
+test('photographer stock controller exposes only binary availability and blocks unavailable items',async()=>{
+ let note=null,itemStock=null,clock=100000,requests=0,available=true;
  const cb={value:'camera-1',checked:true,disabled:false};
  const qty={value:'1',disabled:false,max:'99'};
  const info={append(el){itemStock=el}};
@@ -82,31 +82,31 @@ test('strict stock refresh uses previous availability during periodic background
   return selector==='input.pick'?cb:selector==='input.qty'?qty:selector==='.itemInfo'?info:selector==='.pbR1095ItemStock'?itemStock:null;
  }};
  const list={dataset:{},firstElementChild:card,parentElement:{insertBefore(el){note=el}}};
- const interval=[];
+ const intervals=[],listeners={};
  const document={hidden:false,readyState:'complete',
-  querySelector(s){return s==='#items'?list:s==='#pbR1095CustomerNote'?note:null},
+  querySelector(s){return s==='#items'?list:s==='#pbR1095CustomerNote'?note:s==='#rentalRequestSubmitV809'?null:null},
   querySelectorAll(s){return s==='#items label.item'?[card]:[]},
-  createElement(tag){return {classList:{toggle(){}},hidden:false,set textContent(v){if(tag==='div')notes.push(v);this._text=v},get textContent(){return this._text||''}}},
-  addEventListener(){}
+  createElement(){return {classList:{toggle(){}},hidden:false,_text:'',set textContent(v){this._text=v},get textContent(){return this._text}}},
+  addEventListener(type,fn){listeners[type]=fn}
  };
  class FakeDate extends Date{static now(){return clock}}
  const context=vm.createContext({window:{},document,MutationObserver:class{observe(){}},
-  setInterval(fn){interval.push(fn)},setTimeout(){},Date:FakeDate,console,
-  items:[{id:'camera-1'}],
-  selectedShopRecord(){return {customer_rental_stock_mode:'strict'}},
-  requestBody(){return {shopId:'shop-a',startDate:'2026-10-13',endDate:'2026-10-14',items:[{itemId:'camera-1',quantity:1}]}},
-  async api(){requests++;return {available:true,items:[{itemId:'camera-1',available:2,valid:true}]}},
-  updateRentalCartCountV810(){updates++}
+  setInterval(fn){intervals.push(fn)},setTimeout(){},Date:FakeDate,console,
+  requestBody(){return {shopId:'shop-a',startDate:'2026-10-13',endDate:'2026-10-14',items:[{itemId:'camera-1',quantity:Number(qty.value)}]}},
+  async api(){requests++;return {available,items:[{itemId:'camera-1',valid:true,isAvailable:available,hasAnyAvailability:available}]};},
+  updateRentalCartCountV810(){}
  });
  vm.runInContext(stock,context);
  const flush=async()=>{await new Promise(r=>setImmediate(r));await new Promise(r=>setImmediate(r))};
  await flush();
- assert.equal(requests,1);assert.equal(qty.max,'2');assert(!cb.disabled);
- const initialNotes=notes.length;
- for(let i=0;i<6;i++){interval[0]();await flush()}
- assert.equal(requests,1);assert.equal(notes.length,initialNotes,'idle ticks do not repaint note');
- clock+=16000;interval[0]();await flush();
- assert.equal(requests,2);assert.equal(notes.length,initialNotes,'background fetch does not blank or repaint stock');
- assert.equal(qty.max,'2');assert(cb.checked&&!cb.disabled);
- assert(updates<=3,'no periodic cart repaint');
+ assert.equal(requests,1);
+ assert.equal(qty.max,'99');
+ assert.equal(cb.disabled,false);
+ assert.equal(itemStock.textContent,'');
+ assert.doesNotMatch(stock,/موجودی آزاد|باقی.?مانده|کسری [0-9]|row\.available/);
+ available=false;clock+=13000;intervals[0]();await flush();
+ assert.equal(requests,2);
+ assert.equal(cb.checked,false);
+ assert.equal(cb.disabled,true);
+ assert.equal(itemStock.textContent,'موجود نمی‌باشد');
 });

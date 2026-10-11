@@ -6,6 +6,8 @@ const versions=[
 ];
 for(const file of pages){
  let html=fs.readFileSync(file,'utf8');
+ // Some legacy build steps re-inject a superseded trial stylesheet; discard it.
+ html=html.replace(/<link\\b[^>]*photobridge-r1132-print-copies-mobile-nav\\.css[^>]*>\\s*/gi,'');
  for(const [pattern,replacement] of versions){
   if(!pattern.test(html))throw Error('[R1132] Missing expected production asset in '+file+': '+pattern);
   pattern.lastIndex=0;html=html.replace(pattern,replacement);

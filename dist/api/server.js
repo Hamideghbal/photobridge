@@ -22017,9 +22017,9 @@ ${inviteUrl}`;
                         continue;
                     const cur = stockReq.get(String(f.print_size_id)) || { chassis: 0, frame: 0 };
                     if (f.chassis)
-                        cur.chassis++;
+                        cur.chassis += Number(f.print_copies || 1);
                     if (f.frame)
-                        cur.frame++;
+                        cur.frame += Number(f.print_copies || 1);
                     stockReq.set(String(f.print_size_id), cur);
                 }
                 for (const [sizeId, reqs] of stockReq) {
@@ -22045,8 +22045,8 @@ ${inviteUrl}`;
                 const nq = await c.query(`INSERT INTO orders(id,lab_id,customer_id,mode,status,delivery,priority,album_data,total,source,walkin_customer_name,walkin_customer_mobile,settlement_mode,payment_status,recovered_from_order_id,invoice_required,recovery_note,recovered_at)
           VALUES($1,$2,$3,$4,'sent',$5,$6,$7,0,$8,$9,$10,'ledger','not_required',$11,$12,$13,now()) RETURNING *`, [newOrderId, labId, sourceOrder.customer_id, sourceOrder.mode || 'print', sourceOrder.delivery || 'pickup', sourceOrder.priority || 'normal', sourceOrder.album_data || null, sourceOrder.source || 'photographer', sourceOrder.walkin_customer_name || null, sourceOrder.walkin_customer_mobile || null, sourceOrder.id, invoiceRequired, note]);
                 for (const f of prepared)
-                    await c.query(`INSERT INTO order_files(id,order_id,lab_id,customer_id,original_name,relative_path,object_key,content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,original_state)
-          VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'active')`, [f.id, newOrderId, labId, sourceOrder.customer_id, f.original_name, f.relative_path, f.object_key, f.content_type, f.bytes, f.width, f.height, f.dpi, f.print_size_id, f.print_type, Boolean(f.chassis), Boolean(f.frame), f.crop_handling || 'none']);
+                    await c.query(`INSERT INTO order_files(id,order_id,lab_id,customer_id,original_name,relative_path,object_key,content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,print_copies,original_state)
+          VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'active')`, [f.id, newOrderId, labId, sourceOrder.customer_id, f.original_name, f.relative_path, f.object_key, f.content_type, f.bytes, f.width, f.height, f.dpi, f.print_size_id, f.print_type, Boolean(f.chassis), Boolean(f.frame), f.crop_handling || 'none', Number(f.print_copies || 1)]);
                 const newOrder = nq.rows[0];
                 const recoveryLabel = invoiceRequired ? 'چاپ مجدد با فاکتور جدید' : 'چاپ مجدد بدون فاکتور';
                 await statusEvent(c, newOrder, 'sent', a.userId, `${recoveryLabel} · بازیابی از سفارش #${sourceOrder.number}${note ? ` · ${note}` : ''}`);
@@ -22294,9 +22294,9 @@ ${inviteUrl}`;
                         continue;
                     const cur = stockReq.get(String(f.print_size_id)) || { chassis: 0, frame: 0 };
                     if (f.chassis)
-                        cur.chassis++;
+                        cur.chassis += Number(f.print_copies || 1);
                     if (f.frame)
-                        cur.frame++;
+                        cur.frame += Number(f.print_copies || 1);
                     stockReq.set(String(f.print_size_id), cur);
                 }
                 for (const [sizeId, reqs] of stockReq) {

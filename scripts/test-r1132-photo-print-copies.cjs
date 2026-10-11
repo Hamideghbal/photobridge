@@ -56,7 +56,7 @@ test('migration and responsive dock settings are present',()=>{
  assert.ok(sql.includes('print_copies BETWEEN 1 AND 99'));
  assert.ok(css.includes('flex:1 1 0!important'));
  assert.ok(css.includes('flex-wrap:nowrap!important'));
- assert.ok(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1132'));
- assert.ok(html.includes('assets/index-UIRefine-v655-r84.js?v=r1132'));
+ assert.ok(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134'));
+ assert.ok(html.includes('assets/index-UIRefine-v655-r84.js?v=r1133'));
  assert.ok(header.includes('bottom:17px!important'));
 });

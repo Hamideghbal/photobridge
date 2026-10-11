@@ -91,6 +91,33 @@ if(!server.includes(marker)){
   "if(availability.error||!availability.available){await c.query('ROLLBACK');return sendJson(res,409,{error:'equipment_unavailable'});}",
   'customer payment error privacy'
  );
+
+ // Photographer invitation SMS is a PhotoBridge-funded mandatory channel. It is
+ // independent from the shop's optional SMS notification master switch.
+ server=replaceOnce(
+  server,
+  "return { balance, smsPrice, serviceEnabled:Boolean(service.enabled), canSend:Boolean(service.enabled && (smsPrice<=0 || balance>=smsPrice)), settings:{ enabled:settings.enabled !== false, bookingApprovedEnabled:settings.booking_approved_enabled !== false, bookingStatusEnabled:settings.booking_status_enabled !== false, inviteEnabled:settings.invite_enabled !== false }, transactions:txq.rows, payments:payq.rows };",
+  "return { balance, smsPrice, serviceEnabled:Boolean(service.enabled), canSend:Boolean(service.enabled && (smsPrice<=0 || balance>=smsPrice)), settings:{ enabled:settings.enabled !== false, bookingApprovedEnabled:settings.booking_approved_enabled !== false, bookingStatusEnabled:settings.booking_status_enabled !== false, inviteEnabled:true }, transactions:txq.rows, payments:payq.rows };",
+  'invite sms settings always enabled'
+ );
+ server=replaceOnce(
+  server,
+  "    if (r.enabled === false) return false;\n    if (kind==='booking_approved') return r.booking_approved_enabled !== false;\n    if (kind==='invite') return r.invite_enabled !== false;",
+  "    if (kind==='invite') return true;\n    if (r.enabled === false) return false;\n    if (kind==='booking_approved') return r.booking_approved_enabled !== false;",
+  'invite sms bypasses shop notification toggle'
+ );
+ server=replaceOnce(
+  server,
+  "[shop.id, Boolean(b.enabled), Boolean(b.bookingApprovedEnabled), Boolean(b.inviteEnabled), b.bookingStatusEnabled !== false]",
+  "[shop.id, Boolean(b.enabled), Boolean(b.bookingApprovedEnabled), true, b.bookingStatusEnabled !== false]",
+  'persist invite sms enabled'
+ );
+ server=replaceOnce(
+  server,
+  "inviteEnabled:Boolean(b.inviteEnabled)",
+  "inviteEnabled:true",
+  'audit invite sms enabled'
+ );
  server=server.replace(
   "async function equipmentRentalCreateBooking(db, {",
   marker+"\nasync function equipmentRentalCreateBooking(db, {"
@@ -116,6 +143,52 @@ const portalPath='dist/api/equipment-rental-portal.html';
 let portal=fs.readFileSync(portalPath,'utf8');
 portal=portal.replaceAll('/photobridge-r1095-owner-stock.js?v=1097','/photobridge-r1095-owner-stock.js?v=1098');
 portal=portal.replaceAll('/photobridge-r1057-daily-rental-availability.js?v=r1097','/photobridge-r1057-daily-rental-availability.js?v=r1098');
+
+// R1098: invitations are SMS-only. Remove the legacy copyable invite URL entirely.
+portal=replaceOnce(
+ portal,
+ '<div class="rentalInviteLink"><input id="rentalInviteUrl" placeholder="در حال ساخت لینک دعوت…" readonly=""/><button class="btn secondary" id="copyRentalInvite" type="button">کپی لینک</button></div>',
+ '',
+ 'remove copied invite link UI'
+);
+portal=replaceOnce(
+ portal,
+ "  try{ensureRentalInvite()}catch(e){console.warn('[PhotoBridge rental] invite skipped',e)}\n",
+ '',
+ 'remove automatic direct invite link creation'
+);
+portal=replaceOnce(
+ portal,
+ "async function ensureRentalInvite(){try{const d=await api('/api/rental/photographer-invites',{method:'POST',body:'{}'});if($('#rentalInviteUrl'))$('#rentalInviteUrl').value=d.url||''}catch(e){if($('#rentalInviteUrl'))$('#rentalInviteUrl').placeholder='ساخت لینک دعوت انجام نشد.'}}\n$('#copyRentalInvite').addEventListener('click',async()=>{const v=$('#rentalInviteUrl').value;if(!v)return;try{await navigator.clipboard.writeText(v);message('#photographerMsg','لینک دعوت کپی شد.',true)}catch{const i=$('#rentalInviteUrl');i.select();document.execCommand('copy');message('#photographerMsg','لینک دعوت کپی شد.',true)}});\n",
+ '',
+ 'remove copied invite link runtime'
+);
+
+// Invitation SMS is informational in settings: always on and funded by PhotoBridge.
+portal=replaceOnce(
+ portal,
+ '<p class="muted">پیامک‌های فروشگاه از اعتبار همین پنل کسر می‌شوند. تأیید رزرو، رد یا لغو آفیش و دعوتنامه‌ها را می‌توانی جداگانه فعال یا غیرفعال کنی.</p>',
+ '<p class="muted">پیامک‌های معمول فروشگاه از اعتبار همین پنل کسر می‌شوند و قابل تنظیم هستند. پیامک دعوت عکاس همیشه فعال است و هزینه آن توسط PhotoBridge پرداخت می‌شود.</p>',
+ 'sms settings explanatory copy'
+);
+portal=replaceOnce(
+ portal,
+ '<label class="smsToggle"><input id="smsInviteEnabled" type="checkbox"/><span class="pbR1084InviteCopy">پیامک دعوت عکاس<small id="smsInviteCreditHint">برای پیامک‌های دعوت عکاس، از اعتبار پیامکی شما کسر نمی‌شود.</small></span></label>',
+ '<div class="smsToggle pbR1098InviteSmsFixed" aria-label="پیامک دعوت عکاس همیشه فعال"><span aria-hidden="true">✓</span><span class="pbR1084InviteCopy">پیامک دعوت عکاس · همیشه فعال<small id="smsInviteCreditHint">هزینه این پیامک توسط PhotoBridge پرداخت می‌شود و از اعتبار پیامکی فروشگاه کم نمی‌شود.</small></span></div>',
+ 'fixed invite sms indicator'
+);
+portal=replaceOnce(
+ portal,
+ "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;$('#smsInviteEnabled').checked=st.inviteEnabled!==false;const min=",
+ "$('#smsBookingStatus').checked=st.bookingStatusEnabled!==false;const min=",
+ 'remove invite sms checkbox rendering'
+);
+portal=replaceOnce(
+ portal,
+ "inviteEnabled:$('#smsInviteEnabled').checked",
+ "inviteEnabled:true",
+ 'always save invite sms enabled'
+);
 const scrollAsset='/photobridge-r1098-owner-scroll.js?v=1098';
 portal=portal.replaceAll('<script defer src="'+scrollAsset+'"></script>','');
 const at=portal.lastIndexOf('</body>');
@@ -124,4 +197,4 @@ portal=portal.slice(0,at)+'<script defer src="'+scrollAsset+'"></script>\n'+port
 if(portal.split(scrollAsset).length-1!==1)throw new Error('[R1098] owner scroll asset duplicate');
 fs.writeFileSync(portalPath,portal,'utf8');
 
-console.log('[R1098] photographer sale stock counts removed and store scroll recovery attached');
+console.log('[R1098] photographer stock privacy, SMS-only invitations and store scroll recovery attached');

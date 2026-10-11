@@ -15,33 +15,44 @@ function status(text,bad=false){
  note.classList.toggle('bad',bad);
 }
 function update(itemsData){
- if(!strict())return;
+ // Show out-of-stock status in either shop policy; restrictions apply only in strict mode.
+ const limited=strict();
  renderedRoot=q('#items')?.firstElementChild||null;renderedSignature=signature;
  const b=body(),dated=ready(b),map=new Map((itemsData?.items||[]).map(x=>[String(x.itemId),x]));
  let anyShort=false;
  for(const card of qa('#items label.item')){
   const cb=card.querySelector('input.pick'),qty=card.querySelector('input.qty');if(!cb||!qty)continue;
   const row=map.get(cb.value),free=dated&&row?Math.max(0,Math.floor(Number(row.available||0))):0;
-  const blocked=!dated||!row||row.valid===false||free===0;
+  const unavailable=Boolean(dated&&row&&(row.valid===false||free===0));
+  const blocked=limited&&(!dated||!row||unavailable);
   if(dated&&row&&blocked&&cb.checked){cb.checked=false;anyShort=true}
   cb.disabled=blocked;
-  qty.disabled=blocked;qty.max=String(Math.max(1,free));
-  if(free>0&&Number(qty.value)>free){qty.value=String(free);anyShort=true}
+  qty.disabled=blocked;
+  if(limited){
+   qty.max=String(Math.max(1,free));
+   if(free>0&&Number(qty.value)>free){qty.value=String(free);anyShort=true}
+  }else{
+   // Flexible stores still accept a shortage request. Never block or clamp
+   // these customers just because live availability reports zero.
+   qty.max='99';
+  }
   let note=card.querySelector('.pbR1095ItemStock');
   if(!note){note=document.createElement('small');note.className='pbR1095ItemStock';card.querySelector('.itemInfo')?.append(note)}
-  const msg=!dated?'ابتدا تاریخ آفیش را انتخاب کنید':!row?'در حال بررسی موجودی…':free===0?'برای این تاریخ ناموجود': 'موجودی آزاد در این تاریخ: '+num(free)+' عدد';
+  const msg=!dated?'ابتدا تاریخ آفیش را انتخاب کنید':!row?'در حال بررسی موجودی…':unavailable?'موجود نمی‌باشد':'موجودی آزاد در این تاریخ: '+num(free)+' عدد';
   if(note.textContent!==msg)note.textContent=msg;
-  note.classList.toggle('bad',blocked&&dated);
+  note.classList.toggle('bad',unavailable);
   card.classList.toggle('pbR1095ItemUnavailable',blocked);
+  card.classList.toggle('pbR1097OutOfStock',unavailable);
  }
  try{updateRentalCartCountV810()}catch{}
  const desc=!dated?'برای انتخاب تجهیزات ابتدا تاریخ شروع و پایان را تعیین کنید.':!itemsData?'در حال بررسی موجودی واقعی تاریخ انتخاب‌شده…':anyShort?'موجودی تغییر کرده است؛ تعداد یا اقلام انتخابی اصلاح شد.':'فقط تجهیزاتی که در تمام روزهای این بازه موجودند قابل انتخاب‌اند.';
  status(desc,anyShort);
 }
 async function refresh(force=false){
- if(!strict()){if(signature){signature='';result=null;renderedRoot=null;renderedSignature='';seq++}status('');return}
- const b=body();if(!b)return;
- const key=[b.shopId,b.startDate,b.endDate,(typeof items!=='undefined'?items:[]).map(x=>x.id).join(',')].join('|');
+ const b=body();if(!b||!b.shopId)return;
+ // Include the store policy in the key to reset disabled states when a store
+ // switches between strict and flexible without altering the dates.
+ const key=[mode(),b.shopId,b.startDate,b.endDate,(typeof items!=='undefined'?items:[]).map(x=>x.id).join(',')].join('|');
  const changed=signature!==key,needsPaint=renderedRoot!==(q('#items')?.firstElementChild||null)||renderedSignature!==key;
  if(!ready(b)){if(changed){signature=key;seq++;result=null;resultFingerprint=''}if(changed||needsPaint)update(null);return}
  if(!force&&!changed&&Date.now()-lastFetch<15000){if(needsPaint)update(result);return}
@@ -82,12 +93,12 @@ async function checkFinal(e){
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function attach(){
  if(q('#rentalRequestSubmitV809')&&!q('#rentalRequestSubmitV809').dataset.pbR1095Guard){const t=q('#rentalRequestSubmitV809');t.dataset.pbR1095Guard='1';t.addEventListener('click',checkFinal,true)}
- const list=q('#items');if(list&&!list.dataset.pbR1095Watch){list.dataset.pbR1095Watch='1';new MutationObserver(()=>{if(strict())void refresh(false)}).observe(list,{childList:true})}
+ const list=q('#items');if(list&&!list.dataset.pbR1095Watch){list.dataset.pbR1095Watch='1';new MutationObserver(()=>void refresh(false)).observe(list,{childList:true})}
  for(const id of ['start','end']){const field=q('#'+id);if(field&&!field.dataset.pbR1095Watch){field.dataset.pbR1095Watch='1';field.addEventListener('change',()=>void refresh(true));field.addEventListener('input',()=>void refresh(true))}}
 }
-function tick(){attach();if(strict())void refresh(false);else{const note=q('#pbR1095CustomerNote');if(note)note.hidden=true}}
+function tick(){attach();void refresh(false)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick,{once:true});else tick();
 setInterval(tick,2200);
 document.addEventListener('click',e=>{if(e.target.closest?.('.pbR63OfficeBtn'))setTimeout(()=>void refresh(true),0)});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&strict())void refresh(true)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh(true)});
 })();

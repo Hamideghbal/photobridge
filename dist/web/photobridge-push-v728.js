@@ -57,7 +57,9 @@
   async function unsubscribeCurrentAccount(){
     const ep=endpoint();
     try{
-      const reg=await navigator.serviceWorker?.ready;
+      // Logout must not wait for an active worker that may never be installed.
+      // An existing registration still gets its subscription and worker cleanup.
+      const reg=await navigator.serviceWorker?.getRegistration?.('/');
       const sub=await reg?.pushManager?.getSubscription?.();
       if(sub?.endpoint&&ep){
         try{await nativeFetch(ep,{method:'DELETE',credentials:'include',cache:'no-store',headers:headers(),body:JSON.stringify({endpoint:sub.endpoint})})}catch{}

@@ -72,6 +72,8 @@ jobs:
           node --check dist/api/server.js
           node --check dist/web/photobridge-r1095-customer-stock.js
           node --check dist/web/photobridge-r1095-owner-stock.js
+          node --check dist/web/photobridge-r1098-owner-scroll.js
+          node --check scripts/enable-r1098-photographer-stock-privacy.mjs
           node --test scripts/test-r1095-customer-stock-modes.cjs
       - name: Verify photographer storefront channels and stable stock cards
         run: |

@@ -14,6 +14,14 @@ const style=document.createElement('style');style.textContent=
 document.head.append(style);
 let settingsLast='',shopId='',store=new Map(),working=new Set(),timer;
 function mountSettings(){
+ const strict=typeof data!=='undefined'&&data?.shop?.customer_rental_stock_mode==='strict';
+ document.body.classList.toggle('pbR1097StrictStock',strict);
+ const shortageTab=q('[data-pb843-office-tab="shortages"]');
+ if(strict&&shortageTab?.classList.contains('active')){try{pb843SetOfficeTab('calendar')}catch{}}
+ if(shortageTab){
+  if(strict){shortageTab.hidden=true;shortageTab.dataset.pbR1097Hidden='1';if(shortageTab.style.getPropertyValue('display')!=='none')shortageTab.style.setProperty('display','none','important')}
+  else if(shortageTab.dataset.pbR1097Hidden==='1'){shortageTab.hidden=false;shortageTab.style.removeProperty('display');delete shortageTab.dataset.pbR1097Hidden}
+ }
  const form=q('#shopForm'),anchor=q('#settings .reachSettingsGroup');if(!form||!anchor)return;
  let group=q('#pbR1095Mode');
  if(!group){

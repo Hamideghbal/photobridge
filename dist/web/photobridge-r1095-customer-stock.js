@@ -29,10 +29,11 @@ function update(itemsData){
   if(free>0&&Number(qty.value)>free){qty.value=String(free);anyShort=true}
   let note=card.querySelector('.pbR1095ItemStock');
   if(!note){note=document.createElement('small');note.className='pbR1095ItemStock';card.querySelector('.itemInfo')?.append(note)}
-  const msg=!dated?'ابتدا تاریخ آفیش را انتخاب کنید':!row?'در حال بررسی موجودی…':free===0?'برای این تاریخ ناموجود': 'موجودی آزاد در این تاریخ: '+num(free)+' عدد';
+  const msg=!dated?'ابتدا تاریخ آفیش را انتخاب کنید':!row?'در حال بررسی موجودی…':free===0?'موجود نمی‌باشد': 'موجودی آزاد در این تاریخ: '+num(free)+' عدد';
   if(note.textContent!==msg)note.textContent=msg;
   note.classList.toggle('bad',blocked&&dated);
   card.classList.toggle('pbR1095ItemUnavailable',blocked);
+  card.classList.toggle('pbRentalItemUnavailable',Boolean(dated&&row&&blocked));
  }
  try{updateRentalCartCountV810()}catch{}
  const desc=!dated?'برای انتخاب تجهیزات ابتدا تاریخ شروع و پایان را تعیین کنید.':!itemsData?'در حال بررسی موجودی واقعی تاریخ انتخاب‌شده…':anyShort?'موجودی تغییر کرده است؛ تعداد یا اقلام انتخابی اصلاح شد.':'فقط تجهیزاتی که در تمام روزهای این بازه موجودند قابل انتخاب‌اند.';

@@ -1,14 +1,16 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const html=fs.readFileSync('dist/api/equipment-rental-book.html','utf8');
 test('desktop header replaces global photographer nav with Store sections and back',()=>{
- const header=html.match(/<div id="pbR1123StoreDesktopNav"[\\s\\S]*?<\\/div>/)?.[0]||'';
+ const start=html.indexOf('<div id="pbR1123StoreDesktopNav"');
+ const header=html.slice(start,html.indexOf('</div>',start)+6);
+ assert.ok(start>=0,'desktop header exists');
  for(const [name,id] of [['اجاره','equipmentPanel'],['فروش','salesPanel'],['آفیش','bookingsPanel'],['مالی','financePanel']]){
   assert.ok(header.includes('data-store-panel="'+id+'">'+name),id)
  }
- assert.match(header,/id="pbR1123StoreBack" href="\\/photographer"/);
- assert.match(html,/body.rentalPhotographerMode #storeSectionNavV673\\{display:none!important\\}/);
- assert.match(html,/#app>\\.rentalPanel:not\\(\\.mobileActive\\)\\{display:none!important\\}/);
- assert.match(html,/@media\\(max-width:820px\\)\\{#pbR1123StoreDesktopNav\\{display:none!important\\}\\}/)
+ assert.ok(header.includes('id="pbR1123StoreBack" href="/photographer"'));
+ assert.ok(html.includes('body.rentalPhotographerMode #storeSectionNavV673{display:none!important}'));
+ assert.ok(html.includes('#app>.rentalPanel:not(.mobileActive){display:none!important}'));
+ assert.ok(html.includes('@media(max-width:820px){#pbR1123StoreDesktopNav{display:none!important}}'));
 });
 function route(mobile,id){
  const source=html.slice(html.indexOf('function showMobilePanel(id){'),html.indexOf('async function boot(){'));

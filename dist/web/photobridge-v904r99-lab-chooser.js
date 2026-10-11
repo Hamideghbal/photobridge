@@ -116,13 +116,14 @@
     document.body.appendChild(c);setTimeout(()=>c.remove(),1800);
   }
   function isPrintPrimaryNav(el){
-    if(!el)return false;
+    if(!el||!isPhotographerRoute()||el.closest?.('.labBottomAppNav,.labBottomAppNavGrid,.labMain'))return false;
     const href=String(el.dataset?.mainHref||el.getAttribute?.('href')||'');
     const text=String(el.textContent||el.getAttribute?.('aria-label')||'').replace(/\s+/g,' ').trim();
     const inPrimary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
     return inPrimary&&(href.includes('workspace=print')||text==='چاپ');
   }
   document.addEventListener('click',e=>{
+    if(!isPhotographerRoute())return;
     const el=e.target?.closest?.('button,a,[data-main-href]');if(!el)return;
     const chooser=document.getElementById(ROOT_ID),primary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
     /* R100F20: every exit from Print/Lab gets a zero-frame cover. Some bottom-nav buttons navigate through JS and have no href, so href cannot be the gate. */

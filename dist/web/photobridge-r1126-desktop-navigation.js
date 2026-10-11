@@ -90,8 +90,8 @@
    row.dataset.source=signature;
   }
  }
- function press(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{transform:'scale(.96)'},{transform:'scale(1)'}],{duration:180,easing:'ease-out'});}
- function reveal(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{opacity:.55,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});}
+ function press(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{transform:'scale(1)'},{transform:'scale(.94)',filter:'brightness(.97)'},{transform:'scale(1)',filter:'none'}],{duration:200,easing:'ease-out'});}
+ function reveal(el){if(!matchMedia('(prefers-reduced-motion:reduce)').matches)el?.animate([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});}
 
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
  function closePanels(){for(const p of panels.values())p.hidden=true;selected=null;document.documentElement.classList.remove('pb1126PanelOpen');}

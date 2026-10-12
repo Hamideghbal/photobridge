@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
   if(!matchMedia('(min-width:821px)').matches)return;
-  let avatar='',scheduled=false;
+  let avatar='',avatarReady=false,scheduled=false;
   const header=()=>document.getElementById('photographerRoleHeaderV710')||document.getElementById('photographerStoreRoleHeader');
   const source=(root,selector)=>root?.querySelector(selector);
   function render(){
@@ -24,11 +24,12 @@
         copy.addEventListener('click',()=>original.click());row.append(copy);
       });h.append(row);
     }
+    const ready=avatarReady?'1':'0';if(h.dataset.pb1168IdentityReady!==ready){h.dataset.pb1168IdentityReady=ready;window.dispatchEvent(new Event('photobridge-desktop-identity-ready'));}
     const wallet=source(h,'.headerWalletBadge,.mobileHeaderWallet');const button=source(actions,'.pb1124Wallet');
     if(wallet&&button){const value=(wallet.textContent?.trim()||'').replace(/^اعتبار\s*/,'').replace(/^کیف پول\s*/,'');const label=`کیف پول · ${value||'۰'}`;if(button.textContent!==label)button.textContent=label;}
   }
   function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(render)}
-  async function loadAvatar(){try{const response=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(!response.ok)return;const data=await response.json();avatar=String(data?.user?.photographerAvatarData||'');schedule()}catch{}}
+  async function loadAvatar(){try{const response=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(!response.ok)return;const data=await response.json();avatar=String(data?.user?.photographerAvatarData||'');schedule()}catch{}finally{avatarReady=true;schedule()}}
   function start(){schedule();void loadAvatar();const root=document.getElementById('root')||document.body;new MutationObserver(schedule).observe(root,{childList:true,subtree:true});addEventListener('photobridge-auth-session-changed',()=>void loadAvatar());}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

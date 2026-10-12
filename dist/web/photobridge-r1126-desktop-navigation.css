@@ -146,3 +146,10 @@
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator.pb1131MovingIndicator{transition:transform .36s cubic-bezier(.25,.65,.35,1),width .36s cubic-bezier(.25,.65,.35,1),opacity .18s ease!important}
 }
 @media(prefers-reduced-motion:reduce){html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator.pb1131MovingIndicator{transition:none!important}}
+
+/* R1168: hide legacy sources before first paint; show only the canonical identity. */
+@media(min-width:821px){
+ html.pb1126Desktop body #root #photographerRoleHeaderV710.photographerHeaderRefined.photographerHeaderRefined,
+ html.pb1126Desktop body #root #photographerStoreRoleHeader.photographerHeaderRefined.photographerHeaderRefined{display:none!important;visibility:hidden!important;pointer-events:none!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.photographerHeaderIdentity:not([data-pb1168-ready="1"]){visibility:hidden!important}
+}

@@ -53,7 +53,21 @@
    chrome.querySelector('.pb1124Exit').onclick=()=>nativeHeader(document)?.querySelector('.headerLogoutBtn,.mobileHeaderPower')?.click();
   }
   const identity=(nativeHeader(document)||native).querySelector('.photographerHeaderIdentity');
-  if(identity){const target=chrome.querySelector('.photographerHeaderIdentity');const signature=identity.innerHTML;if(target.dataset.source!==signature){const copy=cleanClone(identity);copy.querySelectorAll('#pbR100F25AvatarBtn,.pbF25AvatarBtn').forEach(el=>el.remove());target.replaceChildren(...copy.childNodes);target.dataset.source=signature;}}
+  if(identity){
+   const target=chrome.querySelector('.photographerHeaderIdentity');
+   const name=identity.querySelector('h1')?.textContent?.trim()||'عکاسی';
+   const subtitle=identity.querySelector('.workspaceIdentityCopy small')?.textContent?.trim()||identity.querySelector('small')?.textContent?.trim()||'';
+   const date=identity.querySelector('.photographerIdentityDateOnly')?.textContent?.trim()||'';
+   const avatar=identity.querySelector('.pb1124Avatar img')?.getAttribute('src')||'';
+   const signature=JSON.stringify([name,subtitle,date,avatar]);
+   if(target.dataset.source!==signature){
+    const photo=document.createElement('span');photo.className='pb1124Avatar';photo.setAttribute('aria-label','عکس پروفایل عکاسی');
+    if(avatar){const img=document.createElement('img');img.src=avatar;img.alt='عکس پروفایل عکاسی';photo.append(img);}else photo.textContent=name[0]||'ع';
+    const copy=document.createElement('div');copy.className='workspaceIdentityCopy';
+    const title=document.createElement('h1');title.textContent=name;const role=document.createElement('small');role.textContent=subtitle;const clock=document.createElement('p');clock.className='photographerIdentityDateOnly';clock.textContent=date;copy.append(title,role,clock);target.replaceChildren(photo,copy);target.dataset.source=signature;
+   }
+   target.dataset.pb1168Ready=(nativeHeader(document)||native)?.dataset.pb1168IdentityReady==='1'?'1':'0';
+  }
   const nav=chrome.querySelector('.pb1126MainNav'),active=selected||kind(),previousActive=nav.dataset.pb1132Active||'';
   for(const [key,label,href] of tabs){
    let button=nav.querySelector('[data-pb1126-kind="'+key+'"]');
@@ -128,6 +142,7 @@
  function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(motionContent(document))));}
  // Register before legacy full-document navigation handlers.
  window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
+ window.addEventListener('photobridge-desktop-identity-ready',schedule);
  window.addEventListener('resize',schedule,{passive:true});
  window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print'].includes(panel))open(panel,false);else{closePanels();schedule();}});
  window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}schedule();}});

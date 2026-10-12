@@ -34,7 +34,7 @@ test('mobile sticky manager header and scrolling editor footer remain visible',(
  assert.match(css,/clientGalleryTariffTableScroller\{[\s\S]*?overflow-y:auto!important/);
  assert.match(css,/clientGalleryTariffTableFoot\{[\s\S]*?flex:0 0 auto!important/);
  assert.match(css,/clientGalleryTariffPriceGrid:not\(\.head\)/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1162/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1163/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159/);
 });
 
@@ -49,11 +49,11 @@ test('desktop gallery manager uses explicit back, identity and photo tab regions
  assert.match(css,/grid-area:tabs!important/);
  assert.match(css,/grid-template-areas:"back identity" "tabs tabs"!important/);
  assert.match(css,/\.pb1155ManagerTop>\.clientGalleryManagerActions\{\s*display:none!important/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1162/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1163/);
 });
 test('duplicate text delete control is hidden while trash SVG is preserved',()=>{
  const vm=require('node:vm');
- const source=fs.readFileSync('dist/web/photobridge-r1162-gallery-card-cleanup.js','utf8');
+ const source=fs.readFileSync('dist/web/photobridge-r1163-gallery-card-cleanup.js','utf8');
  let removed=0,hiddenButton=false;
  const textButton={
   textContent:'حذف گالری',hidden:false,tabIndex:0,
@@ -78,5 +78,5 @@ test('duplicate text delete control is hidden while trash SVG is preserved',()=>
  assert.equal(textButton.hidden,true,'duplicate text delete button is hidden');
  assert.equal(textButton.tabIndex,-1,'duplicate delete button leaves keyboard focus order');
  assert.ok(hiddenButton);
- assert.match(html,/photobridge-r1162-gallery-card-cleanup\.js\?v=r1162/);
+ assert.match(html,/photobridge-r1163-gallery-card-cleanup\.js\?v=r1163/);
 });

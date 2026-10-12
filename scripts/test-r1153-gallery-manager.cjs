@@ -35,5 +35,5 @@ test('mobile sticky manager header and scrolling editor footer remain visible',(
  assert.match(css,/clientGalleryTariffTableFoot\{[\s\S]*?flex:0 0 auto!important/);
  assert.match(css,/clientGalleryTariffPriceGrid:not\(\.head\)/);
  assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1158/);
- assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1158/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159/);
 });

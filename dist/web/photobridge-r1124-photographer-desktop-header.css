@@ -121,3 +121,83 @@
  html body #storePhotographerWorkspace #photographerStoreRoleHeader.photographerHeaderRefined>#pbR1123StoreDesktopNav{position:static!important;transform:none!important}
  html body #storePhotographerWorkspace #photographerStoreRoleHeader #pbR1123StoreBack{top:76px!important;right:auto!important;height:32px!important;min-height:32px!important}
 }
+
+/* R1163 — desktop photographer title, profile and primary toolbar. */
+@media(min-width:821px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader .photographerHeaderIdentity h1{
+  font-size:12.5px!important;line-height:1.35!important;max-width:155px!important;
+  font-weight:750!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .photographerHeaderIdentity .pb1124Avatar{
+  display:none!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ProfileButton{
+  display:grid!important;place-items:center!important;flex:0 0 39px!important;
+  height:39px!important;width:39px!important;min-height:39px!important;
+  padding:0!important;margin:0!important;border-radius:50%!important;
+  border:1px solid #d7e2f1!important;color:#3753a1!important;background:#edf4ff!important;
+  box-shadow:none!important;font:850 17px/1 Vazirmatn,Tahoma,sans-serif!important;
+  cursor:pointer!important;overflow:hidden!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ProfileButton img{
+  width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1124PrimaryActions{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:6px!important;flex-wrap:nowrap!important;max-width:100%!important;min-width:0!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTools{
+  display:flex!important;align-items:center!important;gap:5px!important;flex-wrap:nowrap!important;
+  margin:0!important;padding:0!important;min-width:0!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTool{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-width:35px!important;width:35px!important;height:35px!important;min-height:35px!important;
+  padding:0!important;margin:0!important;flex:none!important;border-radius:9px!important;
+  background:#f7faff!important;border:1px solid #dce4f2!important;color:#344054!important;
+  font:800 17px/1 Vazirmatn,Tahoma,sans-serif!important;box-shadow:none!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTool.pb1163-invite{
+  width:auto!important;min-width:0!important;padding:0 8px!important;
+  white-space:nowrap!important;font-size:11px!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1124PrimaryActions>.pb1124Exit{
+  display:grid!important;place-items:center!important;flex:0 0 38px!important;
+  width:38px!important;min-width:38px!important;height:38px!important;min-height:38px!important;
+  padding:0!important;background:#fff!important;color:#475467!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1124PrimaryActions>.pb1124Exit svg{
+  width:20px!important;height:20px!important;display:block!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1124PrimaryActions>.pb1124Wallet{
+  min-width:0!important;white-space:nowrap!important;padding:7px 9px!important;font-size:11.5px!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1163GalleryManagerRow{
+  display:flex!important;justify-content:flex-start!important;align-items:center!important;
+  direction:rtl!important;overflow:visible!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  justify-content:flex-start!important;width:100%!important;direction:rtl!important;
+  padding:0 2px!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-height:33px!important;height:33px!important;padding:5px 14px!important;min-width:0!important;
+  border:1px solid #dce4f2!important;border-radius:9px!important;
+  background:#fff!important;color:#344054!important;font:750 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  white-space:nowrap!important;cursor:pointer!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction.active{
+  background:#edf3ff!important;color:#315efb!important;border-color:#bbd0ff!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction[data-kind="back"]{
+  margin-left:6px!important;background:#f8fafc!important;
+ }
+}
+@media(min-width:821px) and (max-width:1180px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader .photographerHeaderIdentity h1{font-size:12px!important;max-width:120px!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1124PrimaryActions{gap:4px!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTools{gap:3px!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTool{width:31px!important;min-width:31px!important;height:33px!important;min-height:33px!important}
+}

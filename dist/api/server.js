@@ -10039,6 +10039,7 @@ async function equipmentRentalAccountingOverview(shopId) {
     return { summary: { debitTotal: Number(x.debit_total || 0), creditTotal: Number(x.credit_total || 0), balance: Number(x.balance || 0) }, balances: balancesQ.rows, entries: entriesQ.rows, invoices: markedInvoices };
 }
 
+function equipmentRentalBusinessCategory(value){const allowed=["equipment_rental", "equipment_sale", "equipment_rental_sale", "frame", "chassis", "frame_chassis"];return allowed.includes(String(value||''))?String(value):null;}
 function equipmentRentalMembershipRequiredFields(shop) {
     // R100F5: store-wide membership requirements were retired. Store-required
     // fields are selected for each phone/invitation. Birth date is a core
@@ -13911,12 +13912,12 @@ async function api(req, res, url) {
     // verified-mobile / 30-day trial model used by PhotoBridge laboratories.
     if (req.method === 'GET' && url.pathname === '/api/public/equipment-rental/shops') {
         await ensureEquipmentRentalV727Schema();
-        const q = await pool.query(`SELECT s.id,s.name,s.province,s.city,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach
+        const q = await pool.query(`SELECT s.id,s.name,s.business_category,s.province,s.city,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach
           FROM equipment_rental_shops s
           WHERE s.active=true AND COALESCE(s.suspended,false)=false AND ${testAccountVisibleSql('shop','s','$1')} AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now())
           ORDER BY s.created_at DESC LIMIT 100`,[a?.userId||null]);
         const location={province:url.searchParams.get('province')||'',city:url.searchParams.get('city')||''};
-        const shops=q.rows.filter(shop=>reachAllows(shop,'rental',location)||reachAllows(shop,'sale',location)).map(shop=>({id:shop.id,name:shop.name,province:shop.province,city:shop.city}));
+        const shops=q.rows.filter(shop=>reachAllows(shop,'rental',location)||reachAllows(shop,'sale',location)).map(shop=>({id:shop.id,name:shop.name,business_category:shop.business_category,province:shop.province,city:shop.city}));
         return sendJson(res, 200, { shops, scoped: false, accessMode: 'collaboration_required' });
     }
     if (req.method === 'GET' && url.pathname === '/api/public/equipment-rental/sale-items') {
@@ -13926,6 +13927,7 @@ async function api(req, res, url) {
         await ensureActivationWorkflowRuntimeSchema();
         const b = await bodyJson(req);
         const shopName = String(b.shopName || b.name || '').trim(), managerName = String(b.managerName || '').trim();
+        const businessCategory=equipmentRentalBusinessCategory(b.businessCategory||'equipment_rental_sale');if(!businessCategory)return sendJson(res,400,{error:'invalid_business_category'});
         const province = String(b.province || '').trim(), city = String(b.city || '').trim();
         const location = optionalLatLng(b.locationLat, b.locationLng), locationAddress = String(b.locationAddress || '').trim().slice(0,500);
         const mobile = normalizeMobile(String(b.mobile || '')), password = String(b.password || '');
@@ -13952,7 +13954,7 @@ async function api(req, res, url) {
             if (mq.rowCount) return sendJson(res, 409, { error: 'rental_admin_already_exists' });
         }
         try {
-            const challenge = await createSignupMobileChallenge('equipment_rental_trial', mobile, { shopName, managerName, province, city, locationLat: location.lat, locationLng: location.lng, locationAddress, existingUserId: existing?.id || null }, password, req, Boolean(existing));
+            const challenge = await createSignupMobileChallenge('equipment_rental_trial', mobile, { shopName, businessCategory, managerName, province, city, locationLat: location.lat, locationLng: location.lng, locationAddress, existingUserId: existing?.id || null }, password, req, Boolean(existing));
             return sendJson(res, 202, { ok: true, verificationRequired: true, existingAccount: Boolean(existing), ...challenge });
         } catch (e) { const status=Number(e?.status||0)||500; if(status>=500) console.error('[rental-trial-signup]',{code:String(e?.code||''),message:String(e?.message||'')}); return sendJson(res, status, { error: e?.message || 'rental_trial_signup_failed' }); }
     }
@@ -13985,6 +13987,7 @@ async function api(req, res, url) {
             const sq = await c.query(`INSERT INTO equipment_rental_shops(id,name,slug,province,city,address,manager_name,manager_mobile,active,active_from,active_until,created_by,location_lat,location_lng,location_address,activation_status)
               VALUES($1,$2,$3,$4,$5,$6,$7,$8,false,now(),NULL,$9,$10,$11,$12,'draft')
               RETURNING id,name,slug,province,city,active,active_from,active_until,activation_status,location_lat,location_lng,location_address`, [shopId, shopName, slug, province, city, locationAddress || `${city}، ${province}`, managerName, mobile, userId, locationLat, locationLng, locationAddress || `${city}، ${province}`]);
+            await c.query(`UPDATE equipment_rental_shops SET business_category=$2 WHERE id=$1`,[shopId,equipmentRentalBusinessCategory(p.businessCategory||'equipment_rental_sale')||'equipment_rental_sale']);
             await c.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active) VALUES($1,$2,'shop_admin',true)`, [shopId, userId]);
             await c.query(`UPDATE signup_mobile_verifications SET status='used',used_at=now() WHERE id=$1`, [challengeId]);
             await c.query('COMMIT');
@@ -15129,6 +15132,7 @@ async function api(req, res, url) {
         if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
         const b = await bodyJson(req, 200_000), name = b.name === undefined ? shop.name : String(b.name || '').trim();
         if (!name) return sendJson(res, 400, { error: 'shop_name_required' });
+        const businessCategory=equipmentRentalBusinessCategory(b.businessCategory===undefined?(shop.business_category||'equipment_rental_sale'):b.businessCategory);if(!businessCategory)return sendJson(res,400,{error:'invalid_business_category'});
         const province = b.province === undefined ? shop.province : String(b.province || '').trim() || null;
         const city = b.city === undefined ? shop.city : String(b.city || '').trim() || null;
         if (province && city && !isValidIranLocation(province, city)) return sendJson(res, 400, { error: 'invalid_location' });
@@ -15161,6 +15165,7 @@ async function api(req, res, url) {
         const saleBirthdayAfter=b.saleBirthdayDaysAfter===undefined?Number(shop.sale_birthday_days_after||0):Math.max(0,Math.min(60,Math.round(Number(b.saleBirthdayDaysAfter||0))));
         const saleBirthdaySms=b.saleBirthdaySmsEnabled===undefined?Boolean(shop.sale_birthday_sms_enabled):b.saleBirthdaySmsEnabled===true;
         await pool.query(`UPDATE equipment_rental_shops SET name=$2,province=$3,city=$4,address=$5,phone=$6,manager_name=$7,manager_mobile=$8,description=$9,deposit_policy=$10,location_lat=$11,location_lng=$12,location_address=$13,sales_wallet_checkout_enabled=$14,membership_required_fields=$15::jsonb,birthday_discount_enabled=$16,birthday_discount_percent=$17,birthday_discount_days_before=$18,birthday_discount_days_after=$19,birthday_sms_enabled=$20,rental_enabled=$21,sale_enabled=$22,rental_reach=$23::jsonb,sale_reach=$24::jsonb,sale_birthday_discount_enabled=$25,sale_birthday_discount_percent=$26,sale_birthday_days_before=$27,sale_birthday_days_after=$28,sale_birthday_sms_enabled=$29,updated_at=now() WHERE id=$1`, [shop.id, name, province, city, b.address === undefined ? shop.address : String(b.address || '').trim() || null, b.phone === undefined ? shop.phone : String(b.phone || '').trim() || null, b.managerName === undefined ? shop.manager_name : String(b.managerName || '').trim() || null, b.managerMobile === undefined ? shop.manager_mobile : normalizeMobile(String(b.managerMobile || '')) || null, b.description === undefined ? shop.description : String(b.description || '').trim() || null, b.depositPolicy === undefined ? shop.deposit_policy : String(b.depositPolicy || '').trim() || null, locationLat, locationLng, locationAddress, salesWalletCheckoutEnabled, JSON.stringify(membershipRequiredFields), birthdayDiscountEnabled, birthdayDiscountPercent, birthdayDiscountDaysBefore, birthdayDiscountDaysAfter, birthdaySmsEnabled,rentalEnabled,saleEnabled,JSON.stringify(rentalReach),JSON.stringify(saleReach),saleBirthdayEnabled,saleBirthdayPercent,saleBirthdayBefore,saleBirthdayAfter,saleBirthdaySms]);
+        await pool.query(`UPDATE equipment_rental_shops SET business_category=$2 WHERE id=$1`,[shop.id,businessCategory]);
         await audit(a.userId, undefined, 'equipment_rental.shop_update', 'equipment_rental_shop', shop.id, { name, locationLat, locationLng, salesWalletCheckoutEnabled, membershipRequiredFields, birthdayDiscountEnabled, birthdayDiscountPercent, birthdaySmsEnabled }).catch(() => {});
         return sendJson(res, 200, { ok: true });
     }
@@ -16290,7 +16295,7 @@ ${inviteUrl}`;
         const scopedShopIds = scoped ? await equipmentRentalInvitedShopIds(pool, a.userId) : [];
         const invitedShopSet = new Set(scopedShopIds.map(String));
         const viewer=(await pool.query('SELECT province,city FROM photographer_profiles WHERE user_id=$1 LIMIT 1',[a.userId])).rows[0]||{};
-        const q = await pool.query(`SELECT ${testAccountSql('shop','s')} AS admin_test_account,s.id,s.name,s.slug,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
+        const q = await pool.query(`SELECT ${testAccountSql('shop','s')} AS admin_test_account,s.id,s.name,s.slug,s.business_category,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
           count(i.id) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%'))::int active_items,COALESCE(min(i.daily_price) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')),0)::bigint min_daily_price,
           (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_items,
           (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) min_sale_price,
@@ -16322,7 +16327,7 @@ ${inviteUrl}`;
         await ensureEquipmentRentalV727Schema();
         const shopId = String(customerRentalShopSelect[1] || '');
         if (!(await equipmentRentalPhotographerCanAccessShop(pool, a.userId, shopId)) && !(await equipmentRentalPhotographerCanAccessShop(pool,a.userId,shopId,'sale'))) return sendJson(res, 403, { error: 'shop_reach_forbidden' });
-        const q = await pool.query(`SELECT s.id,s.name,s.slug,s.province,s.city,s.address,s.description,s.deposit_policy,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,
+        const q = await pool.query(`SELECT s.id,s.name,s.slug,s.business_category,s.province,s.city,s.address,s.description,s.deposit_policy,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,
           EXISTS(SELECT 1 FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$2 AND m.role='photographer' AND m.active=true) connected,
           (SELECT m.settlement_mode FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$2 AND m.role='photographer' LIMIT 1) settlement_mode,
           (SELECT m.permanent_discount_percent FROM equipment_rental_shop_memberships m WHERE m.shop_id=s.id AND m.user_id=$2 AND m.role='photographer' LIMIT 1) permanent_discount_percent,

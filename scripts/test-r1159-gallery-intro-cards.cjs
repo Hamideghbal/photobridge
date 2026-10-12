@@ -36,7 +36,9 @@ test('all gallery-card action counts have gap-free layouts',()=>{
 test('gallery card uses two exact action rows with icon-only deletion',()=>{
  const at=ui.indexOf('className:"clientGalleryCardActions pb1160GalleryActions"');
  assert(at>=0,'gallery action group exists');
- const card=ui.slice(at,ui.indexOf('className:"clientGalleryEmpty"',at));
+ const cardEnd=ui.indexOf(']})]})',at);
+ assert(cardEnd>at,'gallery action rows close correctly');
+ const card=ui.slice(at,cardEnd+6);
  const topAt=card.indexOf('className:"pb1161GalleryTopRow"');
  const bottomAt=card.indexOf('className:"pb1161GalleryBottomRow"');
  assert(topAt>=0&&bottomAt>topAt,'two separate action rows are present');

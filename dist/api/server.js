@@ -18482,7 +18482,7 @@ ${inviteUrl}`;
                     throw Object.assign(new Error('invalid_fields'), { status: 400 });
                 if (existingUser) {
                     userId = String(existingUser.id);
-                    await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=$2,location_lng=$3,location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=now(),updated_at=now() WHERE id=$1`, [userId, location.lat, location.lng, locationAddress || '']);
+                    await c.query(`UPDATE users SET name=$5,mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=$2,location_lng=$3,location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=now(),updated_at=now() WHERE id=$1`, [userId, location.lat, location.lng, locationAddress || '', name]);
                 }
                 else {
                     const uq = await c.query(`INSERT INTO users(name,mobile,password_hash,mobile_verified_at,location_lat,location_lng,location_address,location_updated_at,photographer_enabled,photographer_joined_at) VALUES($1,$2,$3,now(),$4,$5,$6,CASE WHEN $4::double precision IS NULL THEN NULL ELSE now() END,true,now()) RETURNING id`, [name, mobile, String(challenge.password_hash), location?.lat ?? null, location?.lng ?? null, locationAddress || null]);

@@ -19406,8 +19406,11 @@ ${inviteUrl}`;
             if (b.localOnly === true && !await requireLocalIntakePrimary()) return;
             const intakeId = String(b.clientOrderId || '').trim();
             const existingCustomerId = String(b.customerId || '').trim();
-            const studioName = String(b.studioName || '').trim().slice(0, 140);
+            const studioName = String(b.studioName || b.mobile || '').trim().slice(0, 140);
             const mobile = normalizeMobile(String(b.mobile || ''));
+            // PB1142 optional mobile-only customer, opening debt and invitation
+            const initialDebt = Number(b.initialDebt ?? 0);
+            if (!Number.isSafeInteger(initialDebt) || initialDebt < 0 || initialDebt > 1_000_000_000_000 || (existingCustomerId && initialDebt)) return sendJson(res,400,{error:'invalid_initial_debt'});
             const mode = String(b.mode || 'print');
             const delivery = ['pickup', 'courier'].includes(String(b.delivery)) ? String(b.delivery) : 'pickup';
             const priority = ['normal', 'urgent', 'very_urgent'].includes(String(b.priority)) ? String(b.priority) : 'normal';
@@ -19486,6 +19489,12 @@ ${inviteUrl}`;
                         newInvitation = !existingInvite.rowCount;
                     }
                 }
+                if (initialDebt > 0) {
+                    const priorDebt = await c.query("SELECT id FROM finance_transactions WHERE lab_id=$1 AND reference_type='lab_delegated_opening_debt' AND reference_id=$2 LIMIT 1",[labId,customerId]);
+                    if(priorDebt.rowCount){await c.query('ROLLBACK');return sendJson(res,409,{error:'initial_debt_already_recorded'});}
+                    await ensureFinanceAccounts(c,labId);
+                    await postBalancedFinanceTransaction(c,{labId,actorId:a.userId,referenceType:'lab_delegated_opening_debt',referenceId:customerId,description:'بدهی قبلی مشتری حضوری '+mobile,lines:[{accountKey:'receivable',customerId,debit:initialDebt,note:'بدهی قبلی'},{accountKey:'opening_balance_equity',customerId,credit:initialDebt,note:'مانده افتتاحیه'}]});
+                }
                 const paymentStatus = settlement === 'prepaid' ? 'awaiting_receipt' : 'not_required';
                 const oq = await c.query(`INSERT INTO orders(lab_id,customer_id,mode,status,delivery,priority,album_data,album_stage,
                     settlement_mode,payment_status,source) VALUES($1,$2,$3,'uploading',$4,$5,$6::jsonb,$7,$8,$9,'lab_delegated')
@@ -19507,7 +19516,7 @@ ${inviteUrl}`;
             } finally { c.release(); }
             await audit(a.userId, labId, 'order.delegated_create', 'order', result.orderId,
                 { customerId: result.customerId, mode, pendingRegistration: result.pendingRegistration, clientOrderId: intakeId }).catch(() => {});
-            if (result.invitationId && result.newInvitation) {
+            if (result.invitationId && (b.sendInvitation === true || b.sendInvitation === undefined && result.newInvitation)) {
                 const iq = await pool.query(`SELECT i.token,i.sms_status,i.target_mobile,i.target_name,
                     l.name lab_name,l.sms_customer_notifications_allowed FROM invitations i
                     JOIN labs l ON l.id=i.lab_id WHERE i.id=$1 AND i.lab_id=$2`, [result.invitationId, labId]);
@@ -19557,7 +19566,10 @@ ${inviteUrl}`;
                 return sendJson(res, 200, { fileId: id, replay: true, state: f.original_state,
                     uploadUrl: url, storageMode: key.startsWith('client-local-recovery/') ? 'device-local' : key.startsWith('local/') ? 'local' : 'object' });
             }
-            const name = safeFileName(String(b.name || 'file'));
+            const printCopies = Number(b.printCopies ?? 1);
+            if(!Number.isInteger(printCopies)||printCopies<1||printCopies>99)return sendJson(res,400,{error:'invalid_print_copies'});
+            let name = safeFileName(String(b.name || 'file'));
+            if (!albumMode && printCopies > 1) {const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';name=safeFileName(stem.slice(0,110)+' = '+printCopies+ext);}
             const relativePath = String(b.relativePath || b.name || 'file').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').slice(0, 900);
             let sizeId = albumMode ? null : (b.printSizeId ? String(b.printSizeId) : null);
             if (sizeId && !await labCanUsePrintSize(pool, labId, sizeId))
@@ -19578,12 +19590,12 @@ ${inviteUrl}`;
                 : storageConfigured ? storageKey(baseKey) : localStorageObjectKey(baseKey);
             const uploadUrl = deviceLocal ? null : storageConfigured ? await storagePresign('upload', key) : `/api/lab/delegated-files/${id}/local`;
             await pool.query(`INSERT INTO order_files(id,order_id,lab_id,customer_id,original_name,relative_path,object_key,
-                content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,original_state)
-                VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+                content_type,bytes,width,height,dpi,print_size_id,print_type,chassis,frame,crop_handling,print_copies,original_state)
+                VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
                 [id, order.id, labId, order.customer_id, name, relativePath, key, b.contentType || null, bytes,
                     b.width ? Number(b.width) : null, b.height ? Number(b.height) : null, b.dpi ? Number(b.dpi) : null,
                     sizeId, printType, Boolean(b.chassis), Boolean(b.frame),
-                    String(b.cropHandling || '') === 'lab' ? 'lab' : 'none', deviceLocal ? 'active' : 'pending']);
+                    String(b.cropHandling || '') === 'lab' ? 'lab' : 'none', albumMode ? 1 : printCopies, deviceLocal ? 'active' : 'pending']);
             return sendJson(res, 201, { fileId: id, state: deviceLocal ? 'active' : 'pending',
                 uploadUrl, storageMode: deviceLocal ? 'device-local' : storageConfigured ? 'object' : 'local' });
         }
@@ -19683,8 +19695,8 @@ ${inviteUrl}`;
                 }
                 if (!albumMode) {
                     const stockReq = await c.query(`SELECT print_size_id,
-                        count(*) FILTER(WHERE chassis)::int chassis_qty,
-                        count(*) FILTER(WHERE frame)::int frame_qty
+                        COALESCE(SUM(print_copies) FILTER(WHERE chassis),0)::int chassis_qty,
+                        COALESCE(SUM(print_copies) FILTER(WHERE frame),0)::int frame_qty
                         FROM order_files WHERE order_id=$1 AND original_state='active' GROUP BY print_size_id`, [orderId]);
                     for (const reqRow of stockReq.rows) {
                         const pq = await c.query(`SELECT chassis,chassis_stock,frame,frame_stock FROM lab_prices

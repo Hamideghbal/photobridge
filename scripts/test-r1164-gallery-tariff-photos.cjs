@@ -14,7 +14,7 @@ test('gallery tariff overlay sits above the desktop photographer fixed header',(
  assert.match(css,/z-index:2147483601!important/);
  assert.match(css,/height:min\(800px,calc\(100dvh - 40px\)\)!important/);
  assert.match(css,/align-items:center!important;justify-content:center!important/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1164/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1165/);
 });
 test('digital file price is inside print tariff modal and persisted through its save flow',()=>{
  assert(modal.startsWith('function V0('));
@@ -67,7 +67,7 @@ test('desktop gallery photo totals render circular badges and store-style transi
  assert.match(headerCss,/border-radius:50%!important/);
  assert.match(headerCss,/\.pb1164MovingIndicator\{/);
  assert.match(headerCss,/transition:transform \.28s cubic-bezier/);
- assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1164/);
- assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1164/);
+ assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1165/);
+ assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1165/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&cards=r1164/);
 });

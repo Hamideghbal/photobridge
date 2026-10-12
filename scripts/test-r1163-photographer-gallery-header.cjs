@@ -1,0 +1,46 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+const chrome=fs.readFileSync('dist/web/photobridge-r1163-desktop-gallery-header.js','utf8');
+const css=fs.readFileSync('dist/web/photobridge-r1124-photographer-desktop-header.css','utf8');
+const galleryCss=fs.readFileSync('dist/web/photobridge-r1153-gallery-manager.css','utf8');
+const html=fs.readFileSync('dist/web/index.html','utf8');
+test('desktop photographer tools live by the wallet and logout remains a power icon',()=>{
+ assert.match(chrome,/pb1163HeaderTools/);
+ assert.match(chrome,/\['settings','notifications','invite'\]/);
+ assert.match(chrome,/const svgPower=/);
+ assert.match(chrome,/pb1124Exit/);
+ assert.match(chrome,/\.roleHeaderToolButtons button/);
+ assert.match(chrome,/pb1163ProfileButton/);
+ assert.match(chrome,/pbF37AvatarBtn/);
+ assert.match(css,/\.photographerHeaderIdentity h1\{[\s\S]*?font-size:12\.5px!important/);
+ assert.match(css,/\.pb1163HeaderTools\{/);
+ assert.match(css,/\.pb1163ProfileButton\{/);
+ assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1163/);
+ assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1163/);
+});
+test('gallery manager uses back, all photos and selected photos in desktop secondary header',()=>{
+ assert.match(chrome,/className='pb1163ManagerRow'/);
+ assert.match(chrome,/make\(back,'back'\);make\(tabs\[0\],'all'\);make\(tabs\[1\],'selected'\)/);
+ assert.match(chrome,/pb1163GalleryManagerRow/);
+ assert.match(galleryCss,/clientGalleryManagerViewTabs\{\s*display:none!important/);
+ assert.match(galleryCss,/clientGalleryManagerTop\.pb1155ManagerTop>\.backBtn/);
+});
+test('gallery studio image alone invokes existing file input and the password is below mobile',()=>{
+ const logo=ui.indexOf('className:"pb1153LogoField"');
+ assert(logo>0);
+ const brand=ui.slice(logo,logo+1050);
+ assert.match(brand,/className:"pb1163LogoPicker"/);
+ assert.match(brand,/onClick:\(\)=>v\.current\?\.click\(\)/);
+ assert.doesNotMatch(brand,/children:J\.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
+ const settings=ui.indexOf('className:"card clientGallerySettings"');
+ assert(settings>0);
+ const fields=ui.slice(settings,settings+1850);
+ const mobile=fields.indexOf('children:["موبایل"');
+ const password=fields.indexOf('className:"pb1163GalleryPassword"');
+ assert(mobile>=0&&password>mobile&&password-mobile<420,'password immediately follows mobile');
+ assert.match(fields,/children:\["رمز",e\.jsx\("input"/);
+ assert.match(fields,/رمز قبلی به‌صورت امن نگهداری می‌شود و قابل نمایش نیست/);
+ assert.doesNotMatch(fields,/رمز جدید \(اختیاری\)/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&cards=r1163/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1163/);
+});

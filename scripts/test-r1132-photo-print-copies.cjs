@@ -57,6 +57,6 @@ test('migration and responsive dock settings are present',()=>{
  assert.ok(css.includes('flex:1 1 0!important'));
  assert.ok(css.includes('flex-wrap:nowrap!important'));
  assert.ok(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134'));
- assert.ok(html.includes('assets/index-UIRefine-v655-r84.js?v=r1138'));
+ assert.ok(html.includes('assets/index-UIRefine-v655-r84.js?v=r1145'));
  assert.ok(header.includes('bottom:17px!important'));
 });

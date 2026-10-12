@@ -19353,6 +19353,25 @@ ${inviteUrl}`;
             }
             return sendJson(res,405,{error:'method_not_allowed'});
         }
+        // PB1148 laboratory identity image: inherits authenticated lab-admin scope
+    if (url.pathname === '/api/lab/profile-image' && ['GET', 'PUT'].includes(req.method)) {
+        const key = `lab_profile_image:${labId}`;
+        if (req.method === 'GET') {
+            const q = await pool.query(`SELECT value FROM platform_settings WHERE key=$1`, [key]);
+            return sendJson(res, 200, { imageData: String(q.rows[0]?.value?.imageData || '') });
+        }
+        const b = await bodyJson(req, 600000), imageData = String(b?.imageData || '').trim();
+        if (!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(imageData))
+            return sendJson(res, 400, { error: 'image_invalid' });
+        if (imageData.length > 500000) return sendJson(res, 413, { error: 'image_too_large' });
+        try {
+            const image = await sharp(Buffer.from(imageData.split(',')[1], 'base64'), { limitInputPixels: 16777216 }).metadata();
+            if (!['jpeg', 'png', 'webp'].includes(image.format) || !image.width || !image.height) throw new Error('invalid_image');
+        } catch { return sendJson(res, 400, { error: 'image_invalid' }); }
+        await pool.query(`INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`, [key, JSON.stringify({ imageData })]);
+        return sendJson(res, 200, { ok: true, imageData });
+    }
+
         if (req.method === 'GET' && url.pathname === '/api/lab/desktop-access') {
             const q = await pool.query(`SELECT l.id,l.name,l.active,l.primary_download_device_id
                 FROM labs l JOIN lab_memberships m ON m.lab_id=l.id AND m.user_id=$2

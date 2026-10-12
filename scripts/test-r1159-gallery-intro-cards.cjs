@@ -32,3 +32,29 @@ test('all gallery-card action counts have gap-free layouts',()=>{
  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159/);
 });
+
+test('gallery card has three top actions and two equal bottom actions with working trash confirmation',()=>{
+ const at=ui.indexOf('className:"clientGalleryCardActions pb1160GalleryActions"');
+ assert(at>=0,'new gallery card action group is present');
+ const card=ui.slice(at,ui.indexOf(']})',at));
+ const positions=[
+  'onClick:()=>PB1112publish(L)',
+  'onClick:()=>I(L.id)',
+  'className:"pbActionButton pb1160GalleryDelete"',
+  'children:"کپی لینک"',
+  'children:"نمایش مشتری"'
+ ].map(x=>card.indexOf(x));
+ assert(positions.every(n=>n>=0),'all five gallery actions render');
+ assert(positions.every((n,i)=>i===0||n>positions[i-1]),'publish, manage, delete, copy and preview are in the requested order');
+ assert.match(card,/aria-label":`حذف گالری \$\{L\.title\}`/);
+ assert.match(card,/pb1113GalleryConfirm/);
+ assert.match(card,/method:"DELETE"/);
+ assert.match(card,/children:e\.jsx\("svg"/);
+ assert.match(css,/\.pb1160GalleryActions:has\(>button:nth-child\(5\):last-child\)/);
+ assert.match(css,/grid-template-columns:repeat\(14,minmax\(0,1fr\)\)/);
+ assert.match(css,/>button:nth-child\(-n\+2\)\{[\s\S]*?grid-column:span 6/);
+ assert.match(css,/>button:nth-child\(3\)\{[\s\S]*?grid-column:span 2/);
+ assert.match(css,/>button:nth-child\(n\+4\)\{[\s\S]*?grid-column:span 7/);
+ assert.match(html,/gallery-intro-cards\.css\?v=r1159&cards=r1160/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&cards=r1160/);
+});

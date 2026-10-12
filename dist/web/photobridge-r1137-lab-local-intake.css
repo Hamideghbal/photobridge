@@ -47,3 +47,13 @@
 .pb1137Intake .pb1143PickerNotice{font-size:11px;color:#b54708;margin:5px 0 0}
 .pb1143PickerNotice:empty{display:none}
 @media(max-width:540px){.pb1137Intake .pb1139PickerMenu{width:100%;min-width:0;max-width:100%}.pb1143NewGrid{gap:6px}.pb1137Intake .pb1143NewCustomer label{font-size:11px}.pb1143NewActions{gap:5px}.pb1137Intake .pb1143CustomerAdd{min-width:75px}}
+
+/* PB1144: the new-customer form takes over the picker; do not show search or customer rows behind it. */
+.pb1137Intake .pb1139PickerMenu{position:fixed;inset:auto;min-width:0;max-width:calc(100vw - 24px);box-sizing:border-box;z-index:100;overflow-y:auto}
+.pb1137Intake .pb1139PickerMenu>[hidden]{display:none!important}
+.pb1137Intake .pb1139PickerMenu.pb1144Creating{max-width:calc(100vw - 24px);box-shadow:0 15px 35px #0f172a26}
+.pb1137Intake .pb1144PickerBack{border:0;background:transparent;color:#315efb;width:100%;text-align:right;padding:5px 8px;font-size:12px;height:auto;min-height:29px}
+.pb1137Intake .pb1143NewCustomer{margin-top:4px;padding:12px}
+.pb1143NewGrid{grid-template-columns:1fr 1fr}
+.pb1143NewGrid>label:first-child{grid-column:1/-1}
+@media(max-width:540px){.pb1137Intake .pb1139PickerMenu{width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px);min-width:0}.pb1143NewGrid{gap:8px}.pb1137Intake .pb1143NewCustomer{padding:10px}}

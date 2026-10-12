@@ -5533,7 +5533,7 @@ async function photographerIdentityByMobile(db, mobileValue) {
     const mobile = normalizeMobile(String(mobileValue || ''));
     if (!/^09\d{9}$/.test(mobile))
         return null;
-    const q = await db.query(`SELECT u.id,u.name,u.mobile,u.password_hash,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,u.location_lat,u.location_lng,u.location_address,u.account_deleted_at,
+    const q = await db.query(`SELECT u.id,u.name,u.mobile,u.password_hash,u.active,u.platform_role,u.photographer_enabled,u.public_retouch_enabled,u.mobile_verified_at,u.location_lat,u.location_lng,u.location_address,u.account_deleted_at,
       pp.user_id photographer_profile_user_id,pp.studio_name photographer_name,pp.password_hash photographer_password_hash,pp.province photographer_province,pp.city photographer_city,pp.location_lat photographer_location_lat,pp.location_lng photographer_location_lng,pp.location_address photographer_location_address,
       EXISTS(SELECT 1 FROM lab_memberships lm WHERE lm.user_id=u.id AND lm.role='customer' AND lm.active=true) photographer_membership_exists,
       EXISTS(SELECT 1 FROM equipment_rental_shop_memberships rm WHERE rm.user_id=u.id AND rm.role='photographer') photographer_rental_membership_exists,
@@ -5562,6 +5562,11 @@ async function photographerIdentityByMobile(db, mobileValue) {
     if (retouch.length >= 1)
         return { ...retouch[0], existingPhotographer: false, duplicateMobileResolved: activeRows.length > 1 };
     return { ...activeRows[0], existingPhotographer: false, duplicateMobileResolved: activeRows.length > 1 };
+}
+// Verified PhotoBridge accounts can accept lab invitations via mobile OTP only.
+// A lab-created mobile placeholder has neither a verified account nor a photographer role.
+function labInviteExistingAccount(identity) {
+    return Boolean(identity && (identity.existingPhotographer || identity.mobile_verified_at || identity.public_retouch_enabled));
 }
 async function ensurePhotographerProfile(db, args) {
     const current = await photographerProfileByUserId(db, args.userId);
@@ -18362,7 +18367,7 @@ ${inviteUrl}`;
         if (valid && /^09\d{9}$/.test(targetMobile)) {
             try {
                 const existing = await photographerIdentityByMobile(pool, targetMobile);
-                if (existing?.existingPhotographer) {
+                if (labInviteExistingAccount(existing)) {
                     const member = await pool.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true LIMIT 1`, [r.lab_id, existing.id]);
                     existingAccount = { exists: true, name: String(existing.photographer_name || existing.name || r.target_name || 'عکاسی'), alreadyConnected: Boolean(member.rowCount), canDiscoverLabs: await photographerCanDiscoverLabs(String(existing.id)) };
                 }
@@ -18397,10 +18402,10 @@ ${inviteUrl}`;
         catch (e) {
             return sendJson(res, e?.status || 409, { error: e?.message || 'mobile_ambiguous' });
         }
-        const existingPhotographer = existingUser?.existingPhotographer ? existingUser : null;
-        if (existingPhotographer) {
+        const existingAccount = labInviteExistingAccount(existingUser);
+        if (existingAccount) {
             try {
-                const challenge = await createSignupMobileChallenge('invite', mobile, { token, existingAccount: true, existingUserId: String(existingPhotographer.id) }, '', req, true);
+                const challenge = await createSignupMobileChallenge('invite', mobile, { token, existingAccount: true, existingUserId: String(existingUser.id) }, '', req, true);
                 return sendJson(res, 202, { ok: true, verificationRequired: true, existingAccount: true, confirmationOnly: true, ...challenge });
             }
             catch (e) {
@@ -18447,23 +18452,26 @@ ${inviteUrl}`;
                 throw Object.assign(new Error('invalid_invite'), { status: 400 });
             if (inv.target_mobile && normalizeMobile(String(inv.target_mobile)) !== mobile)
                 throw Object.assign(new Error('invite_mobile_mismatch'), { status: 400 });
-            const existingUser = await photographerIdentityByMobile(c, mobile), existingPhotographer = existingUser?.existingPhotographer ? existingUser : null;
+            const existingUser = await photographerIdentityByMobile(c, mobile), existingAccount = labInviteExistingAccount(existingUser);
+            if (p.existingAccount === true && (!existingAccount || String(p.existingUserId||'') !== String(existingUser?.id||'')))
+                throw Object.assign(new Error('invite_identity_changed'),{status:409});
+            const existingPhotographer = existingUser?.existingPhotographer ? existingUser : null;
             let userId, resolvedName = '', resolvedLocation = null, resolvedLocationAddress = '';
             const priorLabRelationship = existingUser ? await labPhotographerPriorRelationship(c, String(inv.lab_id), mobile) : { previousRelationship: false };
             let profile = null;
-            if (existingPhotographer) {
-                userId = String(existingPhotographer.id);
+            if (existingAccount) {
+                userId = String(existingUser.id);
                 profile = await ensurePhotographerProfile(c, {
                     userId,
-                    studioName: String(existingPhotographer.photographer_name || existingPhotographer.name || inv.target_name || 'عکاسی'),
-                    passwordHash: String(existingPhotographer.photographer_password_hash || existingPhotographer.password_hash || ''),
-                    province: String(existingPhotographer.photographer_province || ''),
-                    city: String(existingPhotographer.photographer_city || ''),
-                    lat: existingPhotographer.photographer_location_lat ?? null,
-                    lng: existingPhotographer.photographer_location_lng ?? null,
-                    locationAddress: String(existingPhotographer.photographer_location_address || '')
+                    studioName: String(existingUser.photographer_name || existingUser.name || inv.target_name || 'عکاسی'),
+                    passwordHash: String(existingUser.photographer_password_hash || existingUser.password_hash || ''),
+                    province: String(existingUser.photographer_province || ''),
+                    city: String(existingUser.photographer_city || ''),
+                    lat: existingUser.photographer_location_lat ?? existingUser.location_lat ?? null,
+                    lng: existingUser.photographer_location_lng ?? existingUser.location_lng ?? null,
+                    locationAddress: String(existingUser.photographer_location_address || existingUser.location_address || '')
                 });
-                resolvedName = String(profile?.studio_name || existingPhotographer.photographer_name || 'عکاسی');
+                resolvedName = String(profile?.studio_name || existingUser.photographer_name || existingUser.name || 'عکاسی');
                 resolvedLocation = profile?.location_lat != null && profile?.location_lng != null ? { lat: Number(profile.location_lat), lng: Number(profile.location_lng) } : null;
                 resolvedLocationAddress = String(profile?.location_address || '');
                 await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),updated_at=now() WHERE id=$1`, [userId]);
@@ -18474,7 +18482,7 @@ ${inviteUrl}`;
                     throw Object.assign(new Error('invalid_fields'), { status: 400 });
                 if (existingUser) {
                     userId = String(existingUser.id);
-                    await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=$2,location_lng=$3,location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=now(),updated_at=now() WHERE id=$1`, [userId, location.lat, location.lng, locationAddress || '']);
+                    await c.query(`UPDATE users SET name=$5,mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=$2,location_lng=$3,location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=now(),updated_at=now() WHERE id=$1`, [userId, location.lat, location.lng, locationAddress || '', name]);
                 }
                 else {
                     const uq = await c.query(`INSERT INTO users(name,mobile,password_hash,mobile_verified_at,location_lat,location_lng,location_address,location_updated_at,photographer_enabled,photographer_joined_at) VALUES($1,$2,$3,now(),$4,$5,$6,CASE WHEN $4::double precision IS NULL THEN NULL ELSE now() END,true,now()) RETURNING id`, [name, mobile, String(challenge.password_hash), location?.lat ?? null, location?.lng ?? null, locationAddress || null]);
@@ -18485,7 +18493,7 @@ ${inviteUrl}`;
                 resolvedLocation = location;
                 resolvedLocationAddress = locationAddress;
             }
-            await ensurePhotographerCoreAccount(c, { userId, issuerLabId: inv.lab_id, originInviteType: existingPhotographer ? null : 'lab' });
+            await ensurePhotographerCoreAccount(c, { userId, issuerLabId: inv.lab_id, originInviteType: existingAccount ? null : 'lab' });
             const accountingInvitation = priorLabRelationship.previousRelationship ? { ...inv, accounting_replace_opening_balance: true } : inv;
             const accounting = await accountingAttachCustomerByPolicy(c, { labId: String(inv.lab_id), customerId: userId, name: resolvedName, mobile, invitation: accountingInvitation, actorId: inv.created_by || null });
             if (priorLabRelationship.previousRelationship && inv.accounting_opening_balance != null) accounting.rejoinBalanceReset = await resetCustomerReceivableForRejoin(c, { labId: String(inv.lab_id), customerId: userId, amount: Number(inv.accounting_opening_balance || 0), actorId: inv.created_by || null });
@@ -18496,9 +18504,18 @@ ${inviteUrl}`;
             await c.query(`UPDATE invitations SET uses=uses+1 WHERE id=$1`, [inv.id]);
             await c.query(`UPDATE signup_mobile_verifications SET status='used',used_at=now() WHERE id=$1`, [challengeId]);
             await c.query('COMMIT');
-            await audit(userId, inv.lab_id, 'invitation.register', 'user', userId, { mobileVerified: true, accounting, reusedExistingCustomer: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser), confirmationOnly: Boolean(existingPhotographer), locationConfigured: Boolean(resolvedLocation?.lat != null), locationAddress: resolvedLocationAddress || undefined }).catch(() => { });
-            publishLabEvent(String(inv.lab_id), 'photographer_invite_accepted', { userId, photographerName: resolvedName || String(inv.target_name || 'عکاس جدید'), mobile, reusedExisting: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser), source: inv.accounting_external_party_id ? 'accounting_invite' : 'legacy_invite' });
-            return sendJson(res, 201, { ok: true, verified: true, accounting, reusedExistingCustomer: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser) });
+            if (existingAccount) {
+                try { await createSession(userId,res,'photographer'); }
+                catch (sessionError) {
+                    console.error('[lab-invite-confirm:session-failed]',{code:String(sessionError?.code||''),message:String(sessionError?.message||'')});
+                    return sendJson(res,503,{error:'invitation_confirmed_login_failed'});
+                }
+            }
+            await audit(userId, inv.lab_id, 'invitation.register', 'user', userId, { mobileVerified: true, accounting, reusedExistingCustomer: Boolean(existingAccount), reusedExistingIdentity: Boolean(existingUser), confirmationOnly: Boolean(existingAccount), locationConfigured: Boolean(resolvedLocation?.lat != null), locationAddress: resolvedLocationAddress || undefined }).catch(() => { });
+            publishLabEvent(String(inv.lab_id), 'photographer_invite_accepted', { userId, photographerName: resolvedName || String(inv.target_name || 'عکاس جدید'), mobile, reusedExisting: Boolean(existingAccount), reusedExistingIdentity: Boolean(existingUser), source: inv.accounting_external_party_id ? 'accounting_invite' : 'legacy_invite' });
+            return sendJson(res, 201, { ok: true, verified: true, accounting, reusedExistingCustomer: Boolean(existingAccount),
+                reusedExistingIdentity: Boolean(existingUser), loggedIn: Boolean(existingAccount),
+                redirect: existingAccount ? '/photographer' : undefined });
         }
         catch (e) {
             await c.query('ROLLBACK').catch(() => { });
@@ -19383,10 +19400,18 @@ ${inviteUrl}`;
         }
         if (req.method === 'GET' && url.pathname === '/api/lab/delegated-orders/bootstrap') {
             const [customers, sizes, lab] = await Promise.all([
-                pool.query(`SELECT u.id,COALESCE(NULLIF(pp.studio_name,''),u.name) name,u.mobile,m.settlement_mode,
-                    NOT m.active AS "registrationPending"
+                pool.query(`SELECT u.id,
+                    CASE WHEN m.active THEN COALESCE(NULLIF(pp.studio_name,''),u.name)
+                         WHEN COALESCE(u.photographer_enabled,false)=true OR u.mobile_verified_at IS NOT NULL OR pp.user_id IS NOT NULL
+                         THEN COALESCE(NULLIF(pp.studio_name,''),u.name)
+                         ELSE COALESCE(NULLIF(pending_i.target_name,''),NULLIF(pp.studio_name,''),u.name)
+                    END name,
+                    u.mobile,m.settlement_mode,NOT m.active AS "registrationPending"
                     FROM lab_memberships m JOIN users u ON u.id=m.user_id
                     LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+                    LEFT JOIN LATERAL (SELECT i.target_name FROM invitations i
+                        WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile AND i.active=true AND i.uses=0
+                        ORDER BY i.created_at DESC LIMIT 1) pending_i ON true
                     WHERE m.lab_id=$1 AND m.role='customer'
                     AND (m.active=true OR EXISTS(
                         SELECT 1 FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile
@@ -19450,7 +19475,9 @@ ${inviteUrl}`;
             if (!await requireLocalIntakePrimary()) return;
             const b = await bodyJson(req);
             const mobile = normalizeMobile(String(b.mobile || ''));
+            const temporaryName = String(b.name || '').trim().replace(/\s+/g,' ').slice(0,140);
             const openingDebt = Number(b.initialDebt ?? 0);
+            if (!temporaryName) return sendJson(res,400,{error:'customer_temporary_name_required'});
             if (!/^09\d{9}$/.test(mobile)) return sendJson(res, 400, { error: 'invalid_sms_mobile' });
             if (!Number.isSafeInteger(openingDebt) || openingDebt<0 || openingDebt>1_000_000_000_000)
                 return sendJson(res, 400, { error: 'invalid_initial_debt' });
@@ -19459,16 +19486,23 @@ ${inviteUrl}`;
             try {
                 await c.query('BEGIN');
                 await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))', [labId, mobile]);
-                const users = await c.query('SELECT id,name FROM users WHERE mobile=$1 FOR UPDATE', [mobile]);
+                const users = await c.query(`SELECT u.id,u.name,u.photographer_enabled,u.mobile_verified_at,pp.studio_name
+                    FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+                    WHERE u.mobile=$1 FOR UPDATE OF u`, [mobile]);
                 if (users.rowCount>1) {
                     await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_ambiguous' });
                 }
-                let customerId = users.rows[0]?.id, customerName = String(users.rows[0]?.name || mobile);
+                let customerId = users.rows[0]?.id;
+                const account = users.rows[0];
+                const officialAccount = Boolean(account && (account.photographer_enabled || account.mobile_verified_at || account.studio_name));
+                const customerName = officialAccount
+                    ? String(account.studio_name || account.name || temporaryName)
+                    : temporaryName;
                 if (!customerId) {
                     const randomPassword = crypto.randomBytes(32).toString('hex');
                     const u = await c.query(`INSERT INTO users(name,mobile,password_hash,platform_role,active)
                         VALUES($1,$2,$3,'user',true) RETURNING id`,
-                        [mobile,mobile,passwordHash(randomPassword)]);
+                        [temporaryName,mobile,passwordHash(randomPassword)]);
                     customerId = u.rows[0].id;
                 }
                 const mq = await c.query(`SELECT role,active FROM lab_memberships
@@ -19476,13 +19510,15 @@ ${inviteUrl}`;
                 if (mq.rowCount && mq.rows[0].role !== 'customer') {
                     await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_is_lab_admin' });
                 }
-                const registered = mq.rowCount>0 && mq.rows[0].active===true;
-                if (registered && openingDebt>0) {
-                    await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'opening_debt_existing_member' });
+                // Adding an already linked mobile must not silently update existing debt or resubmit an invitation.
+                if (mq.rowCount) {
+                    await c.query('ROLLBACK');
+                    return sendJson(res,409,{error:mq.rows[0].active===true
+                        ? 'customer_already_registered':'customer_already_preregistered'});
                 }
                 if (!mq.rowCount) await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active)
                     VALUES($1,$2,'customer',false)`, [labId,customerId]);
-                const invitation = registered ? null : await ensureDelegatedCustomerInvite(c,mobile,customerName);
+                const invitation = await ensureDelegatedCustomerInvite(c,mobile,customerName);
                 if (openingDebt>0) {
                     const priorDebt = await c.query(`SELECT id FROM finance_transactions
                         WHERE lab_id=$1 AND reference_type='lab_delegated_opening_debt' AND reference_id=$2 LIMIT 1`,
@@ -19500,14 +19536,14 @@ ${inviteUrl}`;
                 }
                 await c.query('COMMIT');
                 created = { customer: { id: customerId, name: customerName, mobile,
-                    registrationPending: !registered }, invitationId: invitation?.id || null };
+                    registrationPending: true }, invitationId: invitation?.id || null };
             } catch (e) {
                 await c.query('ROLLBACK').catch(()=>{});
                 if (e.code==='23505') return sendJson(res,409,{error:'duplicate_mobile'});
                 throw e;
             } finally { c.release(); }
             await audit(a.userId,labId,'customer.pre_register','user',created.customer.id,
-                {mobile,initialDebt:openingDebt,registrationPending:created.customer.registrationPending}).catch(()=>{});
+                {mobile,temporaryName,initialDebt:openingDebt,registrationPending:created.customer.registrationPending}).catch(()=>{});
             if (b.sendInvitation===true && created.invitationId) {
                 Object.assign(created,await sendDelegatedCustomerInvite(created.invitationId,created.customer.id));
             }

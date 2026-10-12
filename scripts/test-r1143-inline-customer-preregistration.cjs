@@ -9,12 +9,12 @@ const end=source.indexOf('// Intake created by the lab on behalf',start);
 assert(start>=0&&end>start,'pre-registration route found');
 const route=source.slice(start,end);
 const customerId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-async function exercise({pathname='/api/lab/delegated-customers',body={},existing=false,member=null,priorDebt=false,existingInvite=false,sendAllowed=true,enabled=true}={}){
+async function exercise({pathname='/api/lab/delegated-customers',body={},existing=false,member=null,priorDebt=false,existingInvite=false,sendAllowed=true,enabled=true,registeredAccount=false}={}){
  const statements=[],ledger=[],sms=[],answers=[];
  const rows=arr=>({rows:arr,rowCount:arr.length});
  const query=async(sql,args=[])=>{
   statements.push({sql,args});
-  if(sql.includes('SELECT id,name FROM users WHERE mobile'))return rows(existing?[{id:customerId,name:'Previously Registered'}]:[]);
+  if(sql.includes('LEFT JOIN photographer_profiles pp')&&sql.includes('FOR UPDATE OF u'))return rows(existing?[{id:customerId,name:'Previously Registered',studio_name:registeredAccount?'Official Studio':null,photographer_enabled:registeredAccount,mobile_verified_at:registeredAccount?'2026-01-01':null}]:[]);
   if(sql.includes('INSERT INTO users('))return rows([{id:customerId}]);
   if(sql.includes('SELECT role,active FROM lab_memberships'))return rows(member===null?[]:[{role:'customer',active:member}]);
   if(sql.includes('SELECT id,token,sms_status FROM invitations'))return rows(existingInvite?[{id:'invite',token:'secret',sms_status:'sent'}]:[]);
@@ -28,7 +28,7 @@ async function exercise({pathname='/api/lab/delegated-customers',body={},existin
  const c={query,release(){}};
  const pool={query,connect:async()=>c};
  const args={
-  req:{method:'POST'},url:{pathname},res:{},bodyJson:async()=>({mobile:'09120000001',initialDebt:50000,sendInvitation:false,...body}),
+  req:{method:'POST'},url:{pathname},res:{},bodyJson:async()=>({name:'نام موقت لابراتوار',mobile:'09120000001',initialDebt:50000,sendInvitation:false,...body}),
   requireLocalIntakePrimary:async()=>enabled,normalizeMobile:x=>x,pool,labId:'lab',a:{userId:'actor'},crypto,
   passwordHash:x=>x,PUBLIC_APP_URL:'https://app.test',
   ensureFinanceAccounts:async()=>{},postBalancedFinanceTransaction:async(db,data)=>ledger.push(data),
@@ -42,6 +42,7 @@ test('new mobile is held as unverified member and debt is posted once before any
  const r=await exercise();
  assert.equal(r.answers[0].status,201);
  assert.equal(r.answers[0].body.customer.registrationPending,true);
+ assert.equal(r.answers[0].body.customer.name,'نام موقت لابراتوار');
  assert(r.statements.some(x=>x.sql.includes("'customer',false)")));
  assert(r.statements.some(x=>x.sql.includes('INSERT INTO invitations(')));
  assert(!r.statements.some(x=>x.sql.includes('INSERT INTO orders(')));
@@ -50,8 +51,9 @@ test('new mobile is held as unverified member and debt is posted once before any
  assert.equal(r.sms.length,0);
 });
 test('preexisting global user is reused with pending membership; invitation SMS is centrally funded',async()=>{
- const r=await exercise({existing:true,body:{initialDebt:0,sendInvitation:true}});
+ const r=await exercise({existing:true,registeredAccount:true,body:{initialDebt:0,sendInvitation:true}});
  assert.equal(r.answers[0].body.customer.id,customerId);
+ assert.equal(r.answers[0].body.customer.name,'Official Studio');
  assert.equal(r.answers[0].body.customer.registrationPending,true);
  assert.equal(r.sms.length,1);
  assert.equal(r.sms[0].chargeLabId,undefined);
@@ -61,18 +63,18 @@ test('preexisting global user is reused with pending membership; invitation SMS 
 test('repeat pending customer cannot duplicate an opening debt',async()=>{
  const r=await exercise({existing:true,member:false,priorDebt:true});
  assert.equal(r.answers[0].status,409);
- assert.equal(r.answers[0].body.error,'initial_debt_already_recorded');
+ assert.equal(r.answers[0].body.error,'customer_already_preregistered');
  assert.equal(r.ledger.length,0);
  assert(r.statements.some(x=>x.sql==='ROLLBACK'));
 });
 test('active membership is reused without pending invitation or opening-debt overwrite',async()=>{
  const blocked=await exercise({existing:true,member:true});
- assert.equal(blocked.answers[0].body.error,'opening_debt_existing_member');
- const good=await exercise({existing:true,member:true,body:{initialDebt:0,sendInvitation:true}});
- assert.equal(good.answers[0].status,201);
- assert.equal(good.answers[0].body.customer.registrationPending,false);
- assert(!good.statements.some(x=>x.sql.includes('INSERT INTO invitations(')));
- assert.equal(good.sms.length,0);
+ assert.equal(blocked.answers[0].status,409);
+ assert.equal(blocked.answers[0].body.error,'customer_already_registered');
+ const noDebt=await exercise({existing:true,member:true,body:{initialDebt:0,sendInvitation:true}});
+ assert.equal(noDebt.answers[0].body.error,'customer_already_registered');
+ assert(!noDebt.statements.some(x=>x.sql.includes('INSERT INTO invitations(')));
+ assert.equal(noDebt.sms.length,0);
 });
 test('resend allowed only for pending customer and cannot be rapid-fire',async()=>{
  const pathname='/api/lab/delegated-customers/'+customerId+'/resend-invitation';
@@ -90,12 +92,17 @@ test('resend allowed only for pending customer and cannot be rapid-fire',async()
 test('bootstrap and repeat invoices can see the pending membership without activating it',()=>{
  const bootstrap=source.slice(source.indexOf("'/api/lab/delegated-orders/bootstrap'"),source.indexOf("// PB1143: registering"));
  assert.match(bootstrap,/NOT m.active AS "registrationPending"/);
+ assert.match(bootstrap,/pending_i.target_name/);
+ assert.match(bootstrap,/pp.studio_name/);
  assert.match(bootstrap,/i.active=true AND i.uses=0/);
  const create=source.slice(source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')"),source.indexOf('const delegatedFiles ='));
  assert.match(create,/m.active=true OR EXISTS/);
  assert.match(create,/i.target_mobile=u.mobile/);
  assert(!ui.includes('const newFields='));
  assert.match(ui,/pb1143NewCustomer/);
+ assert.match(ui,/نام موقت مشتری/);
+ assert.match(ui,/showNew\(true\)/);
+ assert.match(ui,/list.hidden=value/);
  assert.match(ui,/formatMoney/);
  assert.match(ui,/resend-invitation/);
  assert.match(ui,/customerId:customers.value/);

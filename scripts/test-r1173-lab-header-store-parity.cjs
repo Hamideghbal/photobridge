@@ -28,7 +28,7 @@ test('tab counts are circular and underline slides between retained buttons',()=
  assert.match(override,/transition:transform \.28s cubic-bezier/);
  const fn=js.slice(js.indexOf('function secondary(h){'),js.indexOf('// Mark the whole optional shortcut'));
  assert(fn.startsWith('function secondary(h){'));
- assert(fn.includes("const buttons=()=>[...row.querySelectorAll(':scope>button')];"));
+ assert(fn.includes("const buttons=()=>[...row.querySelectorAll(':scope>button[data-pb1173-index]')];"));
  assert(fn.includes('if(row._source!==source||buttons().length!==originals.length)'));
  assert(fn.includes("const strong=original.querySelector('b')"));
  assert(fn.includes("badge.className='pb1173TabCount'"));
@@ -51,10 +51,10 @@ test('both old quick-access surfaces and reserved grid row are removed in print 
  assert(!override.includes('grid-template-areas:"quick quick"'));
 });
 test('R1173 cache and build guards keep updates after deploy',()=>{
- assert(html.includes('photobridge-r1147-lab-admin-header.css?v=r1173'));
- assert(html.includes('photobridge-r1147-lab-admin-header.js?v=r1173'));
- assert(build.includes('photobridge-r1147-lab-admin-header.css?v=r1173'));
- assert(build.includes('photobridge-r1147-lab-admin-header.js?v=r1173'));
+ assert(html.includes('photobridge-r1147-lab-admin-header.css?v=r1174'));
+ assert(html.includes('photobridge-r1147-lab-admin-header.js?v=r1174'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.css?v=r1174'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.js?v=r1174'));
  assert(build.includes('test-r1172-lab-desktop-header.cjs'));
  assert(build.includes('test-r1173-lab-header-store-parity.cjs'));
 });

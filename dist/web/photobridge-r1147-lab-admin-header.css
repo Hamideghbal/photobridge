@@ -228,3 +228,105 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
   transition:none!important;animation:none!important;
  }
 }
+
+
+/* R1174 — the same subdued shadow as the Store section bar (0 5px 14px rgba(15,23,42,.055)).
+   All desktop lab UI type sizes are nudged down, with the largest change in the main nav. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav{
+  gap:clamp(13px,1.28vw,20px)!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button:is([data-source],[data-category]){
+  font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  min-width:0!important;padding:7px 0!important;
+ }
+ html body #root .labRoleWorkspace .pb1147LabAdminHeader .workspaceIdentityCopy h1{
+  font-size:16px!important;font-weight:850!important;
+ }
+ html body #root .labRoleWorkspace .pb1147LabAdminHeader .pb1148Manager{
+  font-size:9px!important;
+ }
+ html body #root .labRoleWorkspace .pb1147LabAdminHeader .labHeaderCenter :is(.headerWalletBadge,.headerLogoutBtn,.systemNotificationBell){
+  font-size:11px!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader{
+  box-shadow:0 5px 14px rgba(15,23,42,.055)!important;
+  background:#fff!important;overflow-x:auto!important;overflow-y:hidden!important;
+  scrollbar-gutter:auto!important;scrollbar-width:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader::after{
+  content:none!important;display:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader>button[data-pb1173-index]{
+  font:800 11px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+  border:0!important;box-shadow:none!important;background:transparent!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader .pb1173TabCount{
+  width:21px!important;height:21px!important;min-width:21px!important;flex-basis:21px!important;
+  font-size:10px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea,
+ html body #root .labRoleWorkspace .labOrderScrollArea{
+  overflow-y:auto!important;scrollbar-gutter:auto!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea{
+  font-size:12px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea :is(button,input,select,textarea){
+  font-size:11px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea :is(h2,h3){
+  font-size:16px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea :is(small,.eyebrow){
+  font-size:10px!important;
+ }
+ /* Print and album: the entire old search-and-status strip beneath the second
+    header is gone, not merely its search box. The source buttons stay mounted
+    (hidden) for native click handlers and count synchronization. */
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .stageQueueWorkspace.compactStageQueue{
+  padding-top:0!important;margin-top:0!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .stageQueueWorkspace.compactStageQueue>.labQueueStickyBar.quickAccessAlwaysOpen,
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labQueueSearchSlot{
+  display:none!important;margin:0!important;padding:0!important;
+  height:0!important;min-height:0!important;border:0!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) #pb1137LocalIntakeButton{
+  display:none!important;
+ }
+ /* Only text/round counts in the left cluster; no underline on the three states. */
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav{
+  display:flex!important;justify-content:flex-start!important;
+  gap:15px!important;direction:rtl!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>button.pb1174QueueLaunch{
+  display:inline-flex!important;order:-1!important;flex:0 0 auto!important;
+  margin-inline-end:auto!important;margin-inline-start:0!important;
+  padding:5px 12px!important;min-width:0!important;
+  font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  color:#315efb!important;background:#eef3ff!important;
+  border:0!important;border-radius:8px!important;box-shadow:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>button.pb1174QueueLaunch[hidden]{
+  display:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>button[data-pb1173-index]{
+  order:0!important;flex:0 0 auto!important;
+  padding:5px 0!important;margin:0!important;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;border-bottom:0!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>button[data-pb1173-index]::before,
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>button[data-pb1173-index]::after{
+  content:none!important;display:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>.pb1173MovingIndicator{
+  opacity:0!important;display:none!important;
+ }
+}
+@media (min-width:821px) and (max-width:1100px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .pb1147LabAdminHeader .pb1147LabNav button:is([data-source],[data-category]){
+  font-size:10.5px!important;
+ }
+}

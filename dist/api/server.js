@@ -10549,6 +10549,23 @@ async function equipmentRentalFindPhotographerByMobile(db, mobileValue) {
       ORDER BY u.created_at LIMIT 2`, [mobile]);
     return q.rowCount === 1 ? q.rows[0] : null;
 }
+// Only an explicit platform-admin action may establish shop-manager access.
+async function equipmentRentalBindManagerAccess(db,shop){
+    const fail=code=>{throw Object.assign(new Error(code),{status:409})};
+    const mobile=normalizeMobile(String(shop.manager_mobile||''));
+    if(!/^09\d{9}$/.test(mobile))fail('manager_mobile_invalid');
+    const users=await db.query(`SELECT id,mobile_verified_at FROM users WHERE active=true AND right(regexp_replace(coalesce(mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) ORDER BY id LIMIT 2 FOR UPDATE`,[mobile]);
+    if(users.rowCount!==1)fail(users.rowCount?'manager_account_ambiguous':'manager_account_not_found');
+    const user=users.rows[0];if(!user.mobile_verified_at)fail('manager_mobile_not_verified');
+    const owners=await db.query(`SELECT shop_id,user_id FROM equipment_rental_shop_memberships WHERE role='shop_admin' AND active=true AND (shop_id=$1 OR user_id=$2) FOR UPDATE`,[shop.id,user.id]);
+    if(owners.rows.some(x=>String(x.user_id)!==String(user.id)||String(x.shop_id)!==String(shop.id)))fail('manager_access_conflict');
+    const staff=await db.query(`SELECT shop_id FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='handover_staff' AND active=true FOR UPDATE`,[user.id]);
+    if(staff.rows.some(x=>String(x.shop_id)!==String(shop.id)))fail('manager_staff_conflict');
+    // A manager must have one operational role; photographer memberships remain untouched.
+    await db.query(`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE shop_id=$1 AND user_id=$2 AND role='handover_staff' AND active=true`,[shop.id,user.id]);
+    await db.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'shop_admin',true,now()) ON CONFLICT(shop_id,user_id,role) DO UPDATE SET active=true,updated_at=now()`,[shop.id,user.id]);
+    return {userId:user.id};
+}
 async function equipmentRentalEnsurePhotographerLink(db, shopId, userId) {
     if (!shopId || !userId) return;
     await db.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at)
@@ -16707,6 +16724,19 @@ ${inviteUrl}`;
           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,now(),now()+interval '30 days',$12)`, [id, name, slug, String(b.province || '').trim() || null, String(b.city || '').trim() || null, String(b.address || '').trim() || null, String(b.phone || '').trim() || null, String(b.managerName || '').trim() || null, normalizeMobile(String(b.managerMobile || '')) || null, String(b.description || '').trim() || null, String(b.depositPolicy || '').trim() || null, a.userId]);
         await audit(a.userId, undefined, 'platform_admin.equipment_rental_shop_create', 'equipment_rental_shop', id, { name, slug }).catch(() => {});
         return sendJson(res, 201, { ok: true, id, slug });
+    }
+    const managerAccessRoute=url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})\/manager-access$/i);
+    if(req.method==='POST'&&managerAccessRoute){
+        if(!requireRole(a,'platform_admin'))return sendJson(res,403,{error:'forbidden'});
+        const c=await pool.connect();
+        try{
+            await c.query('BEGIN');
+            const shop=(await c.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL FOR UPDATE`,[managerAccessRoute[1]])).rows[0];
+            if(!shop)throw Object.assign(new Error('rental_shop_not_found'),{status:404});
+            const linked=await equipmentRentalBindManagerAccess(c,shop);
+            await c.query('COMMIT');
+            await audit(a.userId,undefined,'platform_admin.shop_manager_access','equipment_rental_shop',shop.id,{userId:linked.userId}).catch(()=>{});return sendJson(res,200,{ok:true,...linked});
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message});throw e}finally{c.release()}
     }
     const adminRentalShop = url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})$/i);
     if (req.method === 'PATCH' && adminRentalShop) {

@@ -247,3 +247,18 @@
   transition:none!important;animation:none!important;
  }
 }
+
+/* R1165: desktop gallery filters move like the Store header, with a close underline. */
+@media(min-width:821px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction:is([data-kind="all"],[data-kind="selected"]){
+  min-height:36px!important;padding:5px 12px 9px!important;
+  background:transparent!important;border:0!important;border-radius:0!important;
+  color:#475467!important;box-shadow:none!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction:is([data-kind="all"],[data-kind="selected"]).active{
+  background:transparent!important;color:#315efb!important;border:0!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1164MovingIndicator{
+  bottom:4px!important;height:2px!important;
+ }
+}

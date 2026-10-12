@@ -9672,7 +9672,7 @@ async function ensureEquipmentRentalV829BrandSchema(){
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS equipment_store_brands_active_uidx ON equipment_store_brands(shop_id,lower(name)) WHERE deleted_at IS NULL`);
     await pool.query(`INSERT INTO equipment_store_brands(shop_id,name,sort_order)
       SELECT s.id,v.name,v.sort_order FROM equipment_rental_shops s CROSS JOIN (VALUES ('Sony',10),('Canon',20),('Nikon',30)) AS v(name,sort_order)
-      WHERE NOT EXISTS (SELECT 1 FROM equipment_store_brands b WHERE b.shop_id=s.id AND lower(b.name)=lower(v.name))`);
+      WHERE COALESCE(s.business_category,'equipment_rental_sale') NOT IN ('frame','chassis','frame_chassis') AND NOT EXISTS (SELECT 1 FROM equipment_store_brands b WHERE b.shop_id=s.id AND lower(b.name)=lower(v.name))`);
     await pool.query(`WITH inventory_brands AS (
       SELECT shop_id,btrim(brand) name FROM equipment_rental_items WHERE deleted_at IS NULL AND btrim(COALESCE(brand,''))<>''
       UNION SELECT shop_id,btrim(brand) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(brand,''))<>''
@@ -9773,7 +9773,7 @@ async function equipmentRentalCatalogSnapshot(shopId) {
         equipmentGlobalCatalogSnapshot(false)
     ]);
     const shop=(await pool.query('SELECT business_category FROM equipment_rental_shops WHERE id=$1',[shopId])).rows[0];
-    if(frameShop(shop)){const hidden=['camera','lens','photo_gear','video_gear'];return {categories:cq.rows.filter(x=>!hidden.includes(x.code)),models:mq.rows.filter(x=>!hidden.includes(x.category_code)),storeBrands:bq.rows.filter(x=>!['Sony','Canon','Nikon'].includes(x.name)),storeModels:smq.rows.filter(x=>!hidden.includes(x.category_code)),globalCategories:[],brands:[],products:[]};}
+    if(frameShop(shop)){const hidden=['camera','lens','photo_gear','video_gear'];return {categories:cq.rows.filter(x=>!hidden.includes(x.code)),models:mq.rows.filter(x=>!hidden.includes(x.category_code)),storeBrands:bq.rows,storeModels:smq.rows.filter(x=>!hidden.includes(x.category_code)),globalCategories:[],brands:[],products:[]};}
     return { categories:cq.rows, models:mq.rows, storeBrands:bq.rows, storeModels:smq.rows, globalCategories:global.categories, brands:global.brands, products:global.products };
 }
 function equipmentRentalCatalogCode() { return 'custom_' + crypto.randomUUID().replace(/-/g,'').slice(0,16); }

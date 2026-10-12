@@ -10,8 +10,9 @@ function paintIdentity(h){const identity=h.querySelector('.labHeaderIdentity');i
 function secondary(h){
  let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
  const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');
- if(!source){row?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}
+ if(!source){row?.remove();h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}
  if(!row){row=document.createElement('nav');row.className='pb1148SecondaryHeader';row.setAttribute('aria-label','زیرگزینه‌های لابراتوار');h.after(row);}
+ let fade=h.parentElement.querySelector(':scope>.pb1175HeaderFade');if(!fade){fade=document.createElement('div');fade.className='pb1175HeaderFade';fade.setAttribute('aria-hidden','true');row.after(fade);}
  h.parentElement.classList.add('pb1148HasSecondary');
  source.classList.add('pb1148SecondarySource');
  const originals=[...source.querySelectorAll(':scope>button')];
@@ -48,20 +49,11 @@ function secondary(h){
  }
  const isQueue=source.classList.contains('mainQueueFilters')&&/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
  row.classList.toggle('pb1174QueueNav',isQueue);
- let intake=row.querySelector(':scope>.pb1174QueueLaunch');
- if(isQueue){
-  if(!intake){
-   intake=document.createElement('button');intake.type='button';
-   intake.className='pb1174QueueLaunch';
-   intake.textContent='ثبت سفارش عکس حضوری';
-   intake.addEventListener('click',()=>document.getElementById('pb1137LocalIntakeButton')?.click());
-   row.prepend(intake);
-  }
-  const real=document.getElementById('pb1137LocalIntakeButton');
-  const shouldHide=!real;
-  if(intake.hidden!==shouldHide)intake.hidden=shouldHide;
-  if(real&&intake.disabled!==real.disabled)intake.disabled=real.disabled;
- }else intake?.remove();
+ // The original registered-device launch button is the ONLY one; move it,
+ // retaining its native click handler and not inserting a second proxy.
+ const intake=document.getElementById('pb1137LocalIntakeButton');
+ if(isQueue&&intake&&intake.parentElement!==row)row.prepend(intake);
+ row.querySelector(':scope>.pb1174QueueLaunch')?.remove();
  row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');
  buttons().forEach((button,index)=>{
   const original=originals[index];if(!original)return;
@@ -140,7 +132,7 @@ function retireQuickAccess(){
  }
 }
 function navigate(path){if(location.pathname===path)return;history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}
-function clearDesktop(){document.querySelector('.labRoleWorkspace')?.classList.remove('pb1173QueueClean');document.querySelectorAll('.labRoleWorkspace .pb1172RetiredQuickAccess').forEach(x=>x.classList.remove('pb1172RetiredQuickAccess'));document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
+function clearDesktop(){document.querySelectorAll('.labRoleWorkspace .pb1175HeaderFade').forEach(x=>x.remove());document.querySelector('.labRoleWorkspace')?.classList.remove('pb1173QueueClean');document.querySelectorAll('.labRoleWorkspace .pb1172RetiredQuickAccess').forEach(x=>x.classList.remove('pb1172RetiredQuickAccess'));document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
 function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!location.pathname.startsWith('/lab'))return;const h=document.querySelector('.labRoleWorkspace .labSingleHeader');if(!h||!h.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return;h.classList.add('pb1147LabAdminHeader');paintIdentity(h);secondary(h);retireQuickAccess();
  let nav=h.querySelector('.pb1147LabNav');if(!nav){nav=document.createElement('nav');nav.className='pb1147LabNav';nav.setAttribute('aria-label','سفارش‌ها و تنظیمات لابراتوار');
   for(const [title,selector]of [['سفارش چاپ','.labPrintTopNav'],['سفارش آلبوم','.albumTopNav'],['آرشیو','.labArchiveHeaderBtn'],['مالی','.labFinanceHeaderBtn']]){if(!h.querySelector(selector))continue;if(selector==='.labArchiveHeaderBtn'&&nav.children.length){const line=document.createElement('span');line.className='pb1147Divider';line.setAttribute('aria-hidden','true');nav.append(line);}const button=document.createElement('button');button.type='button';const label=document.createElement('span');label.className='pb1149NavLabel';label.textContent=title;button.append(label);button.dataset.source=selector;button.onclick=()=>h.querySelector(selector)?.click();nav.append(button);}

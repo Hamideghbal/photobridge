@@ -175,10 +175,10 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
   transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
  }
  /* Fade the blue beneath the whole second header, not inside individual buttons. */
- html body #root .labRoleWorkspace.pb1148HasSecondary .pb1148SecondaryHeader::after {
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader::after {
   content:"";position:fixed;top:120px;right:0;left:0;height:16px;
   background:linear-gradient(to bottom,rgba(49,94,251,.12),rgba(49,94,251,.035) 55%,transparent);
-  pointer-events:none;z-index:-1;
+  pointer-events:none;z-index:0;
  }
  /* Two old shortcut boxes are the quick-access card and the sidebar.
     Remove both AND their reserved first grid row, preserving search / filters. */

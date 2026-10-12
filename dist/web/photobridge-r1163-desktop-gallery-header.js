@@ -62,7 +62,7 @@
     button.title=kind==='settings'?'تنظیمات عکاسی':kind==='invite'?'دعوت همکار':'اعلان‌ها';
     button.setAttribute('aria-label',button.title);
     button.textContent=kind==='settings'?'⚙':kind==='invite'?'دعوت همکار':'🔔';
-    button.addEventListener('click',()=>original.isConnected&&original.click());
+    button.addEventListener('click',()=>{const live=chooseSource([...nativeHeader()?.querySelectorAll('.roleHeaderToolButtons button')||[]],kind);if(live?.isConnected)live.click();});
     actions.append(button);
    }
    actions.dataset.source=signature;

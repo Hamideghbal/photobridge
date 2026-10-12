@@ -198,7 +198,9 @@ function mount(){
  if(host){const intro=host.querySelector('.labQueueQuickIntroV464 button');if(intro&&intro.textContent!=='دسترسی سریع')intro.textContent='دسترسی سریع';}
  if(!/^\/lab(?:\/|$)/.test(location.pathname)||!host||!provider||!provider.deviceId()){old?.remove();return;}
  if(primaryState===null){checkPrimary();return;}if(!primaryState){old?.remove();return;}
- const target=host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}
+ const desktopQueue=window.matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)').matches&&/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
+ const header=desktopQueue?host.querySelector('.pb1148SecondaryHeader.pb1174QueueNav'):null;
+ const target=header||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}
  if(old){if(old.parentElement!==target)target.append(old);return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;
  target.append(button);
 }

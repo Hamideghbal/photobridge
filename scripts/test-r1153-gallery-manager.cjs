@@ -21,7 +21,9 @@ test('gallery manager moves delete action to red overlay while keeping confirmat
 test('brand asks for only photographer name, logo and Save',()=>{
  assert.match(ui,/className:"card clientGalleryBrandSettings pb1153Brand"/);
  assert.match(ui,/className:"pb1153BrandFields"/);
- assert.match(ui,/J.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
+ assert.match(ui,/className:"pb1163LogoPicker"/);
+ assert.match(ui,/onClick:\(\)=>v\.current\?\.click\(\)/);
+ assert.doesNotMatch(ui,/J.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
  assert.match(ui,/className:"primary pb1153BrandSave"/);
  assert.doesNotMatch(ui,/در گالری مشتری جای لوگوی PhotoBridge نمایش داده می‌شود/);
 });
@@ -34,7 +36,7 @@ test('mobile sticky manager header and scrolling editor footer remain visible',(
  assert.match(css,/clientGalleryTariffTableScroller\{[\s\S]*?overflow-y:auto!important/);
  assert.match(css,/clientGalleryTariffTableFoot\{[\s\S]*?flex:0 0 auto!important/);
  assert.match(css,/clientGalleryTariffPriceGrid:not\(\.head\)/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1162/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1163/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159/);
 });
 
@@ -49,7 +51,7 @@ test('desktop gallery manager uses explicit back, identity and photo tab regions
  assert.match(css,/grid-area:tabs!important/);
  assert.match(css,/grid-template-areas:"back identity" "tabs tabs"!important/);
  assert.match(css,/\.pb1155ManagerTop>\.clientGalleryManagerActions\{\s*display:none!important/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1162/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1163/);
 });
 test('duplicate text delete control is hidden while trash SVG is preserved',()=>{
  const vm=require('node:vm');

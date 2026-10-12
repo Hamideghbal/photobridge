@@ -193,3 +193,48 @@ html body #root .clientGalleryCardActions>button{grid-column:auto!important;min-
   justify-self:start!important;max-width:100%!important;
  }
 }
+
+/* R1163 — gallery manager controls live under the unified desktop header. */
+@media(min-width:821px){
+ html.pb1126Desktop body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop{
+  display:block!important;width:100%!important;min-width:0!important;
+  padding:6px 0 10px!important;margin:0 0 10px!important;
+  border-bottom:1px solid #e5eaf2!important;
+ }
+ html.pb1126Desktop body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop>.backBtn,
+ html.pb1126Desktop body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop>.clientGalleryManagerViewTabs{
+  display:none!important;
+ }
+ html.pb1126Desktop body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop>div:not([class]){
+  display:block!important;min-width:0!important;width:100%!important;
+  margin:0!important;padding:0 2px!important;
+ }
+ html.pb1126Desktop body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop h2{
+  font-size:15px!important;max-width:100%!important;margin:0 0 2px!important;
+ }
+}
+html body #root .clientGalleryManager .pb1153LogoField>.pb1163LogoPicker{
+ display:grid!important;place-items:center!important;
+ width:60px!important;height:60px!important;min-width:60px!important;min-height:60px!important;
+ margin:0 auto!important;padding:0!important;border:1px solid #dce5f3!important;
+ border-radius:15px!important;background:#f0f4ff!important;color:#315efb!important;
+ cursor:pointer!important;overflow:hidden!important;box-shadow:none!important;
+}
+html body #root .clientGalleryManager .pb1153LogoField>.pb1163LogoPicker img,
+html body #root .clientGalleryManager .pb1153LogoField>.pb1163LogoPicker .pb1153LogoFallback{
+ width:100%!important;height:100%!important;object-fit:cover!important;
+ border:0!important;border-radius:0!important;margin:0!important;display:grid!important;place-items:center!important;
+}
+html body #root .clientGalleryManager .pb1153BrandFields{grid-template-columns:minmax(0,1fr) 85px!important;align-items:center!important}
+html body #root .clientGalleryManager .pb1163GalleryPassword>small{
+ display:block!important;max-width:100%!important;margin-top:5px!important;
+ font-size:11px!important;line-height:1.7!important;color:#667085!important;
+}
+@media(max-width:820px){
+ html body #root .clientGalleryManager .pb1153BrandFields{
+  grid-template-columns:minmax(0,1fr) 76px!important;
+ }
+ html body #root .clientGalleryManager .pb1153LogoField>.pb1163LogoPicker{
+  width:55px!important;height:55px!important;min-width:55px!important;min-height:55px!important;
+ }
+}

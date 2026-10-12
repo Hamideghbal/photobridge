@@ -94,6 +94,7 @@ await import('./enable-r1124-photographer-desktop-header.mjs');
 await import('./enable-r1138-primary-lab-intake.mjs');
 await import('./enable-r1142-intake-copies-customer.mjs');
 await import('./enable-r1143-folder-storage.mjs');
+await import('./enable-r1147-lab-admin-header.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

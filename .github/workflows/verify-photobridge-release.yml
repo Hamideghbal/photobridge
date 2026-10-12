@@ -93,6 +93,7 @@ jobs:
       - name: Verify primary-device restriction for local laboratory intake
         run: |
           node --check dist/web/photobridge-r1137-lab-local-intake.js
+          node --check dist/web/photobridge-r1147-lab-admin-header.js
           node --test scripts/test-r1138-primary-intake-api.cjs scripts/test-r1142-intake-copies-customer.cjs
           node --test scripts/test-r1143-inline-customer-preregistration.cjs
           node --check dist/web/photobridge-r1144-lab-invite-existing.js

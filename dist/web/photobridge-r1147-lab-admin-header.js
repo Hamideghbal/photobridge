@@ -1,0 +1,16 @@
+(()=>{'use strict';if(window.pb1147LabHeader)return;window.pb1147LabHeader=true;
+const media=matchMedia('(min-width:821px)'),categories=[['عمومی','/lab/settings',['general','hours']],['عکاسان و همکاری','/lab/settings/customers',['customers','walkin']],['مالی و تعرفه‌ها','/lab/settings/prices',['prices','album','payment','wallet','subscription']],['اعلان و ارتباط','/lab/settings/sms',['sms']],['سیستم و ارسال','/lab/settings/windowsAlert',['windowsAlert','local','snappbox']]];
+let scheduled=false;
+function navigate(path){if(location.pathname===path)return;history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}
+function render(){scheduled=false;if(!media.matches||!location.pathname.startsWith('/lab'))return;const h=document.querySelector('.labRoleWorkspace .labSingleHeader');if(!h||!h.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return;h.classList.add('pb1147LabAdminHeader');
+ let nav=h.querySelector('.pb1147LabNav');if(!nav){nav=document.createElement('nav');nav.className='pb1147LabNav';nav.setAttribute('aria-label','سفارش‌ها و تنظیمات لابراتوار');
+  for(const [title,selector]of [['سفارش چاپ','.labPrintTopNav'],['سفارش آلبوم','.albumTopNav'],['آرشیو','.labArchiveHeaderBtn'],['مالی','.labFinanceHeaderBtn']]){if(!h.querySelector(selector))continue;const button=document.createElement('button');button.type='button';button.textContent=title;button.dataset.source=selector;button.onclick=()=>h.querySelector(selector)?.click();nav.append(button);}
+  const divider=document.createElement('span');divider.className='pb1147Divider';divider.setAttribute('aria-hidden','true');nav.append(divider);
+  categories.forEach(([title,path],index)=>{const button=document.createElement('button');button.type='button';button.textContent=title;button.dataset.category=index;button.onclick=()=>{const original=document.querySelectorAll('.labSettingsCategoryTabs>button')[index];if(original)original.click();else navigate(path);};nav.append(button);});
+  nav.addEventListener('click',e=>{if(!e.target.closest('button')||matchMedia('(prefers-reduced-motion:reduce)').matches)return;document.querySelector('.labRolePageScrollArea')?.animate([{opacity:.7,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});});h.append(nav);
+ }
+ const section=location.pathname.split('/')[3]||'general';nav.querySelectorAll('button').forEach(button=>{const original=button.dataset.source&&h.querySelector(button.dataset.source);const active=original?original.classList.contains('active'):button.dataset.category!==undefined&&(location.pathname.startsWith('/lab/settings')||location.pathname==='/lab/wallet')&&categories[Number(button.dataset.category)][2].includes(location.pathname==='/lab/wallet'?'wallet':section);button.classList.toggle('active',!!active);button.setAttribute('aria-current',active?'page':'false');});
+}
+function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(render)}
+function start(){schedule();new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});addEventListener('popstate',schedule);media.addEventListener('change',schedule);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();

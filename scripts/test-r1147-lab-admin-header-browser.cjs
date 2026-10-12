@@ -1,0 +1,26 @@
+const fs=require('fs'),path=require('path');(async()=>{const {chromium}=require('playwright');const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:1440,height:900},isMobile:false});const route='/lab/settings/local';      await page.route('**/*',async request=>{
+        const url=new URL(request.request().url());
+        if(url.pathname.startsWith('/api/')){
+          let result={};if(url.pathname==='/api/lab/dashboard')result={lab:{id:'lab',name:'Lab',active:true,album_enabled:true},customers:[],temporaryCustomers:[],invitations:[],prices:[],hours:[],status:{open:true},ordersOpen:0,recentOrders:[],walletBalance:0,orderStats:{},collaborationPending:{count:0}};if(url.pathname==='/api/lab/orders')result={orders:[]};if(url.pathname==='/api/lab/notifications')result={notifications:[],unread:0};
+          if(url.pathname==='/api/auth/me')result={user:{id:'customer',userId:'customer',labRole:'lab_admin',platformRole:'user',name:'Test',mobile:'09120000000',photographerAvatarData:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII='},lab:{id:'lab',name:'Lab'}};
+          if(url.pathname==='/api/customer/home')result={lab:{id:'lab',name:'Lab',album_enabled:true},customer:{id:'customer',name:'Test'},status:{open:true},walletBalance:42,orders:[],prices:[],papers:[],sizes:[],counts:{flow:0,ready:0,completed:0,needs_fix:0},settings:{}};
+          if(url.pathname==='/api/customer/labs')result={memberships:[{id:'lab',name:'Lab'}]};
+          if(url.pathname==='/api/customer/equipment-rental/shops')result={shops:[{id:'shop',name:'Store',connected:true}]};
+          if(url.pathname==='/api/customer/orders')result={labId:'lab',orders:[]};
+          if(url.pathname==='/api/photographer/navigation-tabs'){await new Promise(resolve=>setTimeout(resolve,150));result={tabs:{ai:false,album:false,instagram:false}};}
+          return request.fulfill({json:result});
+        }
+        const target=url.pathname==='/equipment-rental/book'?'dist/api/equipment-rental-book.html':url.pathname==='/'||!path.extname(url.pathname)?'dist/web/index.html':'dist/web'+url.pathname;
+        return fs.existsSync(target)?request.fulfill({path:path.resolve(target)}):request.fulfill({status:404,body:''});
+      });
+      await page.goto('https://panel.test'+route);
+await page.waitForSelector('.pb1147LabNav');
+const assert=require('node:assert/strict');
+const nav=page.locator('.pb1147LabNav');assert.equal(await nav.locator('button').count(),9);assert.equal(await nav.locator('.pb1147Divider').count(),1);
+const bounds=await page.evaluate(()=>{const h=document.querySelector('.labSingleHeader'),nav=h.querySelector('.pb1147LabNav'),identity=h.querySelector('.labHeaderIdentity'),tools=h.querySelector('.labHeaderCenter');return{nav:nav.getBoundingClientRect().toJSON(),identity:identity.getBoundingClientRect().toJSON(),tools:tools.getBoundingClientRect().toJSON(),height:h.getBoundingClientRect().height,bottom:h.getBoundingClientRect().bottom,contentTop:document.querySelector('.labSettingsSectionTabs').getBoundingClientRect().top}});
+assert(bounds.contentTop>=bounds.bottom,'settings sections remain below the main header');assert(bounds.identity.x>bounds.nav.x,'identity on right');assert(bounds.tools.x<bounds.nav.x,'wallet and exit on left');assert(bounds.tools.x<50,'actions aligned to left header edge');assert(Math.abs(bounds.nav.y-bounds.identity.y)<50,'single aligned header');
+await nav.getByRole('button',{name:'عمومی',exact:true}).click();await page.waitForURL('**/lab/settings');await page.waitForFunction(()=>document.querySelector('.pb1147LabNav [data-category="0"]').getAttribute('aria-current')==='page');assert.equal(await nav.getByRole('button',{name:'عمومی',exact:true}).getAttribute('aria-current'),'page');
+await nav.getByRole('button',{name:'سفارش چاپ',exact:true}).click();await page.waitForURL('**/lab/orders');await page.waitForFunction(()=>document.querySelector('.pb1147LabNav button[data-source=".labPrintTopNav"]').getAttribute('aria-current')==='page');assert.equal(await nav.getByRole('button',{name:'سفارش چاپ',exact:true}).getAttribute('aria-current'),'page');
+await nav.getByRole('button',{name:'سیستم و ارسال',exact:true}).click();await page.waitForURL('**/lab/settings/windowsAlert');await page.waitForFunction(()=>document.querySelector('.pb1147LabNav [data-category="4"]').getAttribute('aria-current')==='page');
+await page.setViewportSize({width:390,height:844});assert.equal(await nav.isVisible(),false,'desktop header does not replace mobile navigation');assert.equal(await page.locator('.labMobileHeaderQuickActions').isVisible(),true);
+console.log('Lab header desktop alignment, settings navigation, print navigation and mobile preservation passed');await browser.close()})();

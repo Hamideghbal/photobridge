@@ -13,7 +13,7 @@ for(const file of pages){
  if(isMain){
   if(!modulePattern.test(html))throw Error('[R1132] Missing main photographer bundle');
   modulePattern.lastIndex=0;
-  html=html.replace(modulePattern,'$1r1155');
+  html=html.replace(modulePattern,'$1r1158');
  }
  html=html.replace(/(photobridge-r1132-photo-copies-mobile\\.css\\?v=)[^"']+/g,'$1r1134');
  if(!html.includes(css))html=html.replace('</head>',css+'\n</head>');

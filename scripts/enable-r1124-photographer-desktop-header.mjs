@@ -14,6 +14,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
   html=html.replace(/<script src="\/photobridge-r1106-mobile-store-panel\.js[^"]*"><\/script>\s*/g,'');
   html=html.replace('</head>','<script src="/photobridge-r1106-mobile-store-panel.js?v=r1135"></script>\n</head>');
   html=html.replace(/(photobridge-r1106-mobile-store-panel\.js\?v=)[^"]+/g,'$1r1135').replace(/(photobridge-r1119-mobile-chat\.css\?v=)[^"]+/g,'$1r1135');
-  html=html.replace(/(photobridge-r1122-mobile-print-orders\.css\?v=)[^"]+/g,'$1r1136');
+  html=html.replace(/(photobridge-r1122-mobile-print-orders\.css\?v=)[^"]+/g,'$1r1137');
+  if(path==='dist/web/index.html'&&!html.includes('/photobridge-r1137-lab-local-intake.js'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1137-lab-local-intake.css?v=r1137"><script defer src="/photobridge-r1137-lab-local-intake.js?v=r1137"></script>\n</head>');
   fs.writeFileSync(path,html);
 }

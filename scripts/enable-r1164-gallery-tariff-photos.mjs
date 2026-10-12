@@ -15,12 +15,13 @@ for(const marker of [
  if(!ui.includes(marker))throw Error('R1164 gallery pricing/photo marker missing: '+marker);
 }
 if(ui.includes('عکس‌ها و ویدیوها')||ui.includes('＋ افزودن عکس / ویدیو'))throw Error('R1164 gallery must be photo-only');
+if(!managerCss.includes('/* R1165:')||!desktopCss.includes('/* R1165:')||!desktopJs.includes("bar.querySelectorAll(':scope > button')")||!desktopJs.includes("find(current,'.clientGalleryMediaPanel')"))throw Error('R1165 tariff layout or desktop gallery motion patch missing');
 if(!managerCss.includes('/* R1164:')||!managerCss.includes('z-index:2147483600!important')||!desktopCss.includes('/* R1164:')||!desktopJs.includes('pb1164MovingIndicator')||!desktopJs.includes('pb1164TabCount'))throw Error('R1164 desktop overlay or gallery tab animation is missing');
 const htmlFile='dist/web/index.html';let html=fs.readFileSync(htmlFile,'utf8');
 const rewrites=[
- [/photobridge-r1153-gallery-manager\.css\?v=r(?:1163|1164)/g,'photobridge-r1153-gallery-manager.css?v=r1164'],
- [/photobridge-r1124-photographer-desktop-header\.css\?v=r(?:1163|1164)/g,'photobridge-r1124-photographer-desktop-header.css?v=r1164'],
- [/photobridge-r1163-desktop-gallery-header\.js\?v=r(?:1163|1164)/g,'photobridge-r1163-desktop-gallery-header.js?v=r1164'],
+ [/photobridge-r1153-gallery-manager\.css\?v=r(?:1163|1164|1165)/g,'photobridge-r1153-gallery-manager.css?v=r1165'],
+ [/photobridge-r1124-photographer-desktop-header\.css\?v=r(?:1163|1164|1165)/g,'photobridge-r1124-photographer-desktop-header.css?v=r1165'],
+ [/photobridge-r1163-desktop-gallery-header\.js\?v=r(?:1163|1164|1165)/g,'photobridge-r1163-desktop-gallery-header.js?v=r1165'],
  [/index-UIRefine-v655-r84\.js\?v=r1159&cards=r(?:1163|1164)/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1164']
 ];
 for(const [pattern,version] of rewrites){if(!pattern.test(html))throw Error('R1164 HTML asset missing: '+version);html=html.replace(pattern,version);}

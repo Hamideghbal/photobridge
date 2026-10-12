@@ -294,3 +294,8 @@ html body #root .clientGalleryManager .clientGallerySettings>.clientGalleryOrder
   width:100%!important;
  }
 }
+
+/* R1165: free vertical space for print sizes in the tariff editor. */
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffIntro{
+ display:none!important;margin:0!important;padding:0!important;
+}

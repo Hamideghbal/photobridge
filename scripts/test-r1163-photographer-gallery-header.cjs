@@ -15,8 +15,8 @@ test('desktop photographer tools live by the wallet and logout remains a power i
  assert.match(css,/\.photographerHeaderIdentity h1\{[\s\S]*?font-size:12\.5px!important/);
  assert.match(css,/\.pb1163HeaderTools\{/);
  assert.match(css,/\.pb1163ProfileButton\{/);
- assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1164/);
- assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1164/);
+ assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1165/);
+ assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1165/);
 });
 test('gallery manager uses back, all photos and selected photos in desktop secondary header',()=>{
  assert.match(chrome,/className='pb1163ManagerRow'/);
@@ -42,5 +42,5 @@ test('gallery studio image alone invokes existing file input and the password is
  assert.match(fields,/رمز قبلی به‌صورت امن نگهداری می‌شود و قابل نمایش نیست/);
  assert.doesNotMatch(fields,/رمز جدید \(اختیاری\)/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&cards=r1164/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1164/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1165/);
 });

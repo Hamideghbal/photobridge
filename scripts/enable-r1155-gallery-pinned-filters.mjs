@@ -13,7 +13,7 @@ if(!ui.includes('className:"clientGalleryManagerTop pb1155ManagerTop"')){
 ui=ui.replace('children:"سفارش چاپ و فاکتور"','children:"نمایش قیمت و صدور فاکتور"');
 fs.writeFileSync(file,ui);
 const page='dist/web/index.html';let html=fs.readFileSync(page,'utf8');
-html=html.replace(/photobridge-r1153-gallery-manager.css\?v=[^"']+/g,'photobridge-r1153-gallery-manager.css?v=r1156');
+html=html.replace(/photobridge-r1153-gallery-manager.css\?v=[^"']+/g,'photobridge-r1153-gallery-manager.css?v=r1158');
 fs.writeFileSync(page,html);
 
 html=fs.readFileSync(page,'utf8').replace(/photobridge-v904r100f41-header-date-name-fit.js\?v=[^"']+/g,'photobridge-v904r100f41-header-date-name-fit.js?v=r1156');fs.writeFileSync(page,html);

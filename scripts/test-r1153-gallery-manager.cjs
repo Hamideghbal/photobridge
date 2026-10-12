@@ -53,7 +53,7 @@ test('desktop gallery manager uses explicit back, identity and photo tab regions
 });
 test('duplicate text delete control is hidden while trash SVG is preserved',()=>{
  const vm=require('node:vm');
- const source=fs.readFileSync('dist/web/photobridge-r1163-gallery-card-cleanup.js','utf8');
+ const source=fs.readFileSync('dist/web/photobridge-r1162-gallery-card-cleanup.js','utf8');
  let removed=0,hiddenButton=false;
  const textButton={
   textContent:'حذف گالری',hidden:false,tabIndex:0,
@@ -78,5 +78,5 @@ test('duplicate text delete control is hidden while trash SVG is preserved',()=>
  assert.equal(textButton.hidden,true,'duplicate text delete button is hidden');
  assert.equal(textButton.tabIndex,-1,'duplicate delete button leaves keyboard focus order');
  assert.ok(hiddenButton);
- assert.match(html,/photobridge-r1163-gallery-card-cleanup\.js\?v=r1163/);
+ assert.match(html,/photobridge-r1162-gallery-card-cleanup\.js\?v=r1162/);
 });

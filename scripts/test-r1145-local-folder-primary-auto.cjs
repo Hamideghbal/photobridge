@@ -49,7 +49,7 @@ test('permission is checked before overwriting persisted folder',async()=>{
 test('only a confirmed stored handle counts as successful folder choice',async()=>{
  const candidate={name:'photos',queryPermission:async()=> 'granted'};
  const pick=folderPicker({supported:()=>true,window:{showDirectoryPicker:async()=>candidate},permission:async()=>true,persist:async()=>{},load:async()=>({...candidate,isSameEntry:async()=>false})});
- await assert.rejects(pick(),/folder_handle_not_saved/);
+ await assert.rejects(pick(),/مرورگر نتوانست دسترسی پوشه را ذخیره کند/);
 });
 test('picker help does not demand a second manual primary-device action',()=>{
  const settings=source.slice(start,source.indexOf('function ',start+12)>start?source.indexOf('function ',start+12):start+10000);

@@ -33,5 +33,5 @@ test('build preserves existing desktop nav and provides R1134 CSS on both entryp
  }
  assert.ok(build.includes('photobridge-r1132-photo-copies-mobile.css?v=r1134'));
  assert.ok(build.includes("html=html.replace(navigationPattern,'$1r1135')"));
- assert.ok(build.includes("html=html.replace(modulePattern,'$1r1138')"));
+ assert.ok(build.includes("html=html.replace(modulePattern,'$1r1146')"));
 });

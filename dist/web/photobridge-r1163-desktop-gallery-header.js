@@ -89,13 +89,21 @@
           [...find(live,'.clientGalleryManagerViewTabs')?.querySelectorAll('button')||[]][role==='all'?0:1];
         if(!target?.isConnected)return;
         const changed=role!=='back'&&!target.classList.contains('active');
+        const animate=changed&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // The same press + content-reveal pairing used by the desktop Store tabs.
+        // Animate the mounted button before React swaps the filtered gallery.
+        if(animate){
+          b.animate?.([{transform:'translateY(3px) scale(.96)',opacity:.7},{transform:'translateY(-1px) scale(1.015)',opacity:1},{transform:'translateY(0) scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+        }
         target.click();
-        if(changed&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-          b.animate([{transform:'translateY(3px) scale(.96)',opacity:.7},{transform:'translateY(-1px) scale(1.015)',opacity:1},{transform:'translateY(0) scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
-          requestAnimationFrame(()=>{
-            const content=find(document,'.clientGalleryManager .clientGalleryMediaGrid')||find(document,'.clientGalleryManager .clientGalleryManagerGrid');
-            content?.animate([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
-          });
+        if(animate){
+          // React commits the selected/all view on the next frame; animate the
+          // visible gallery section rather than querying a nonexistent grid.
+          requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            const current=find(document,'.clientGalleryManager');
+            const content=find(current,'.clientGalleryMediaPanel')||find(current,'.clientGalleryMediaGrid')||find(current,'.clientGalleryManagerGrid')||current;
+            content?.animate?.([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+          }));
         }
        });
       bar.append(b);
@@ -104,7 +112,7 @@
      make(back,'back');make(tabs[0],'all');make(tabs[1],'selected');
     }
     const controls=[back,...tabs];
-    [...bar.children].forEach((button,i)=>{
+    [...bar.querySelectorAll(':scope > button')].forEach((button,i)=>{
      const source=controls[i];
      if(i===0){const text=source.textContent.trim();if(button.textContent!==text)button.textContent=text;}
      else{

@@ -72,7 +72,7 @@ test('shortcut card itself is retired in both print and album queues',()=>{
 test('mobile lab views keep original layout; asset versions survive build',()=>{
  assert(js.includes("const media=matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)')"));
  for(const ext of ['css','js']){
-  const asset='photobridge-r1147-lab-admin-header.'+ext+'?v=r1174';
+  const asset='photobridge-r1147-lab-admin-header.'+ext+'?v=r1175';
   assert(html.includes(asset));
   assert(build.includes(asset));
  }

@@ -201,3 +201,49 @@
  html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTools{gap:3px!important}
  html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163HeaderTool{width:31px!important;min-width:31px!important;height:33px!important;min-height:33px!important}
 }
+
+/* R1164: store-style indicator and compact round counts in desktop gallery tabs. */
+@media(min-width:821px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow{
+  position:relative!important;isolation:isolate!important;
+  align-items:center!important;gap:8px!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction{
+  position:relative!important;display:inline-flex!important;
+  align-items:center!important;justify-content:center!important;
+  gap:7px!important;padding:5px 11px!important;z-index:2!important;
+  font-size:12px!important;transition:background-color .18s,color .18s,border-color .18s!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow .pb1164TabLabel{
+  display:inline-block!important;line-height:1.4!important;white-space:nowrap!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow .pb1164TabCount{
+  display:grid!important;place-items:center!important;
+  flex:0 0 auto!important;
+  min-width:22px!important;width:22px!important;height:22px!important;
+  border-radius:50%!important;padding:0!important;
+  background:#e9eff9!important;border:1px solid #d5dfef!important;
+  color:#465773!important;
+  font:800 11px/1 Vazirmatn,Tahoma,sans-serif!important;
+  font-variant-numeric:tabular-nums!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction.active .pb1164TabCount{
+  background:#dce9ff!important;border-color:#b8d0ff!important;color:#315efb!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1164MovingIndicator{
+  display:block!important;position:absolute!important;left:0!important;bottom:0!important;
+  height:2px!important;width:18px;
+  background:#315efb!important;border-radius:999px!important;
+  opacity:0;z-index:3!important;pointer-events:none!important;
+  transform:translateX(0);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+}
+@media(min-width:821px) and (prefers-reduced-motion:reduce){
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1164MovingIndicator{
+  transition:none!important;
+ }
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1163ManagerRow>.pb1163ManagerAction{
+  transition:none!important;animation:none!important;
+ }
+}

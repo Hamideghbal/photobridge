@@ -45,7 +45,7 @@ if(!server.includes('// PB1138 primary-only local intake')){
 }
 for(const page of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let html=fs.readFileSync(page,'utf8');
- if(page==='dist/web/index.html')html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?v=)[^"']+/g,'$1r1138');
- html=html.replace(/(photobridge-r1137-lab-local-intake\.(?:css|js)\?v=)[^"']+/g,'$1r1142');
+ if(page==='dist/web/index.html')html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?v=)[^"']+/g,'$1r1145');
+ html=html.replace(/(photobridge-r1137-lab-local-intake\.(?:css|js)\?v=)[^"']+/g,'$1r1144');
  fs.writeFileSync(page,html);
 }

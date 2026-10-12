@@ -143,6 +143,9 @@
   }
 
   function render(){
+    const galleryManager=mobile()&&location.pathname.startsWith('/photographer/gallery')&&!!$('.clientGalleryManager');
+    document.body.classList.toggle('pb1156GalleryManager',galleryManager);
+    if(!galleryManager)$('#pb1156GalleryBack')?.remove();
     if(!mobile()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(!isPortal()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1'){
@@ -159,6 +162,10 @@
     ensureHeader();ensureSub();ensureMenu();
     $('#pbF37StudioName').textContent=studioName();$('#pbF37Manager').textContent=managerName();clockBadge();fitHeaderName($('#pbF37PhotographerHeader'));paintAvatar();
     const info=context(m);$('#pbF37ContextText').textContent=info.title;const meta=$('#pbF37ContextMeta');meta.hidden=!info.meta;if(info.meta)meta.textContent=info.meta;
+    if(galleryManager){
+      let back=$('#pb1156GalleryBack');
+      if(!back){back=document.createElement('button');back.id='pb1156GalleryBack';back.type='button';back.textContent='→ بازگشت';back.onclick=()=>$('.clientGalleryManagerTop>.backBtn')?.click();$('#pbF37ContextTitle').appendChild(back);}
+    }
     const aa=actions(m),tabs=$('#pbF37Tabs');document.body.classList.toggle('pbF37HasTabs',!!aa.length);document.body.classList.toggle('pbF37NoTabs',!aa.length);tabs.hidden=!aa.length;tabs.style.setProperty('--pb-f37-tabs',String(Math.max(1,aa.length)));
     const sig=`${m}|${info.title}|${info.meta}|`+aa.map(a=>`${a.id}:${a.label}:${a.active?'1':'0'}`).join('|');if(sig!==lastSig){lastSig=sig;tabs.innerHTML=aa.map(a=>`<button type="button" class="${a.active?'active':''}" data-f37-source="${a.id}">${esc(a.label)}</button>`).join('')}
     if(m==='print')fixPrint();else clearPrint();

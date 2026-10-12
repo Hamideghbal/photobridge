@@ -36,7 +36,7 @@ if(!server.includes('// R1112 gallery selection invariant')){
  fs.writeFileSync('dist/api/server.js',server);
 }
 for(const page of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
- let html=fs.readFileSync(page,'utf8').replace(/photobridge-v787-gallery-fix.js\?v=[^"']+/g,'photobridge-v787-gallery-fix.js?v=r1112').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1112');
+ let html=fs.readFileSync(page,'utf8').replace(/photobridge-v787-gallery-fix.js\?v=[^"']+/g,'photobridge-v787-gallery-fix.js?v=r1154').replace(/index-UIRefine-v655-r84.js\?v=[^"']+/g,'index-UIRefine-v655-r84.js?v=r1112');
  if(!html.includes('/photobridge-r1112-gallery-form.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1112-gallery-form.css?v=r1112">\n</head>');
  fs.writeFileSync(page,html);
 }

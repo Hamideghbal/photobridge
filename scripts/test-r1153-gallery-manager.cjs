@@ -6,7 +6,6 @@ const css=fs.readFileSync('dist/web/photobridge-r1153-gallery-manager.css','utf8
 const html=fs.readFileSync('dist/web/index.html','utf8');
 function segment(start,end){const a=ui.indexOf(start),b=ui.indexOf(end,a+start.length);assert(a>=0&&b>a,`Cannot find gallery section: ${start}`);return ui.slice(a,b)}
 const tariff=segment('function V0({rows:', 'function W0(){');
-const manager=segment('function c0(', 'function q0('); // actual manager component marker is checked below separately
 test('tariff save stays tappable; invalid active print sizes explain how to fix',()=>{
  assert.match(tariff,/disabled:r,onClick:\(\)=>\{if\(k\)/);
  assert.match(tariff,/قیمت چاپ لاستر، سیلک یا متالیک بیشتر از صفر/);
@@ -22,7 +21,7 @@ test('gallery manager moves delete action to red overlay while keeping confirmat
 test('brand asks for only photographer name, logo and Save',()=>{
  assert.match(ui,/className:"card clientGalleryBrandSettings pb1153Brand"/);
  assert.match(ui,/className:"pb1153BrandFields"/);
- assert.match(ui,/children:"انتخاب لوگو"/);
+ assert.match(ui,/J.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
  assert.match(ui,/className:"primary pb1153BrandSave"/);
  assert.doesNotMatch(ui,/در گالری مشتری جای لوگوی PhotoBridge نمایش داده می‌شود/);
 });

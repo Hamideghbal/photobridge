@@ -107,3 +107,4 @@ await import('./create-r1092-windows-installer-zip.mjs');
 await import('./enable-r1132-final-assets.mjs');
 await import('./enable-r1159-gallery-intro-cards.mjs');
 await import('./enable-r1160-gallery-card-actions.mjs');
+await import('./enable-r1162-gallery-header-delete.mjs');

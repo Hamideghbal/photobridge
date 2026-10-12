@@ -19420,13 +19420,11 @@ ${inviteUrl}`;
         };
         const sendDelegatedCustomerInvite = async (invitationId, customerId) => {
             const iq = await pool.query(`SELECT i.id,i.token,i.target_mobile,i.target_name,
-                l.name lab_name,l.sms_customer_notifications_allowed FROM invitations i
+                l.name lab_name FROM invitations i
                 JOIN labs l ON l.id=i.lab_id
                 WHERE i.id=$1 AND i.lab_id=$2 AND i.active=true AND i.uses=0`, [invitationId, labId]);
             const invite = iq.rows[0];
             if (!invite) return { invitationSmsSent: false, invitationSmsError: 'invalid_invite' };
-            if (!invite.sms_customer_notifications_allowed)
-                return { invitationSmsSent: false, invitationSmsError: 'sms_customer_notifications_not_allowed' };
             // Atomic send reservation stops repeated clicks from creating duplicate SMS charges.
             const reserved = await pool.query(`UPDATE invitations
                 SET sms_status='not_sent',sms_reference='dispatching',sms_sent_at=now()
@@ -19437,8 +19435,8 @@ ${inviteUrl}`;
             try {
                 const message = `سلام ${invite.target_name || ''}\nلابراتوار «${invite.lab_name || 'PhotoBridge'}» شما را برای همکاری دعوت کرده است.\nلینک تکمیل عضویت: ${PUBLIC_APP_URL}/invite/${invite.token}`;
                 const sms = await sendSms({ mobile: invite.target_mobile, message, purpose: 'lab_invitation',
-                    eventKey: 'delegated_customer_pre_registration', labId, chargeLabId: labId,
-                    serviceKey: 'sms_customer_notification', metadata: { invitationId, customerId } });
+                    eventKey: 'delegated_customer_pre_registration', labId,
+                    metadata: { invitationId, customerId } });
                 await pool.query(`UPDATE invitations SET sms_status='sent',sms_reference=$2,sms_sent_at=now()
                     WHERE id=$1`, [invitationId, String(sms?.reference || '') || null]);
                 return { invitationSmsSent: true };

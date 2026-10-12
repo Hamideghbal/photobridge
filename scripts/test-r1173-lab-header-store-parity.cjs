@@ -1,0 +1,60 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const css=fs.readFileSync('dist/web/photobridge-r1147-lab-admin-header.css','utf8');
+const js=fs.readFileSync('dist/web/photobridge-r1147-lab-admin-header.js','utf8');
+const html=fs.readFileSync('dist/web/index.html','utf8');
+const build=fs.readFileSync('scripts/enable-r1147-lab-admin-header.mjs','utf8');
+const override=css.slice(css.indexOf('/* R1173 — Windows laboratory headers'));
+test('primary lab nav uses more spacing and Store-sized labels',()=>{
+ assert(override.includes('gap:clamp(12px,1.2vw,18px)!important'));
+ assert(override.includes('font:850 12.5px/1.4 Vazirmatn,Tahoma,sans-serif!important'));
+ assert(override.includes('and (pointer:fine)'));
+});
+test('secondary lab tabs have neither background panels nor border even when selected',()=>{
+ const rule=override.slice(override.indexOf('.pb1148SecondaryHeader button {'),override.indexOf('.pb1148SecondaryHeader .pb1173TabCount'));
+ assert.match(rule,/border:0!important;border-radius:0!important/);
+ assert.match(rule,/background:transparent!important/);
+ assert.match(rule,/button:is\(\.active,\[aria-selected="true"\]\)/);
+ assert.match(rule,/color:#315efb!important/);
+ assert.match(rule,/button:hover/);
+ assert.match(override,/\.pb1148SecondaryHeader::after/);
+ assert.match(override,/linear-gradient\(to bottom,rgba\(49,94,251,\.12\)/);
+});
+test('tab counts are circular and underline slides between retained buttons',()=>{
+ assert.match(override,/\.pb1173TabCount/);
+ assert.match(override,/border-radius:50%!important/);
+ assert.match(override,/\.pb1173MovingIndicator/);
+ assert.match(override,/transition:transform \.28s cubic-bezier/);
+ const fn=js.slice(js.indexOf('function secondary(h){'),js.indexOf('// Mark the whole optional shortcut'));
+ assert(fn.startsWith('function secondary(h){'));
+ assert(fn.includes("const buttons=()=>[...row.querySelectorAll(':scope>button')];"));
+ assert(fn.includes('if(row._source!==source||buttons().length!==originals.length)'));
+ assert(fn.includes("const strong=original.querySelector('b')"));
+ assert(fn.includes("badge.className='pb1173TabCount'"));
+ assert(fn.includes("indicator.className='pb1173MovingIndicator'"));
+ assert(fn.includes("indicator.style.transform='translateX('+offset+')'"));
+ assert(fn.includes('button.animate?.('));
+ assert(fn.includes('panel?.animate?.('));
+ assert(fn.includes("prefers-reduced-motion:reduce"));
+});
+test('both old quick-access surfaces and reserved grid row are removed in print and album, without hiding filters',()=>{
+ assert(js.includes("root.classList.toggle('pb1173QueueClean',isQueue)"));
+ assert(js.includes("classList.remove('pb1173QueueClean')"));
+ assert.match(override,/\.pb1173QueueClean \.labQueueQuickAccessV464/);
+ assert.match(override,/\.pb1173QueueClean \.labQuickSideMenu/);
+ assert.match(override,/\.pb1173QueueClean \.stageQueueWorkspace\.compactStageQueue/);
+ assert.match(override,/grid-template-areas:"filters search"!important/);
+ assert.match(override,/grid-template-rows:38px!important/);
+ assert.match(override,/>\.compactQueueFilters \{/);
+ assert.match(override,/>\.labQueueSearchSlot \{/);
+ assert(!override.includes('grid-template-areas:"quick quick"'));
+});
+test('R1173 cache and build guards keep updates after deploy',()=>{
+ assert(html.includes('photobridge-r1147-lab-admin-header.css?v=r1173'));
+ assert(html.includes('photobridge-r1147-lab-admin-header.js?v=r1173'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.css?v=r1173'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.js?v=r1173'));
+ assert(build.includes('test-r1172-lab-desktop-header.cjs'));
+ assert(build.includes('test-r1173-lab-header-store-parity.cjs'));
+});

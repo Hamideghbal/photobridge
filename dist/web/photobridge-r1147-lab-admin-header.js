@@ -15,7 +15,7 @@ function secondary(h){
  h.parentElement.classList.add('pb1148HasSecondary');
  source.classList.add('pb1148SecondarySource');
  const originals=[...source.querySelectorAll(':scope>button')];
- const buttons=()=>[...row.querySelectorAll(':scope>button')];
+ const buttons=()=>[...row.querySelectorAll(':scope>button[data-pb1173-index]')];
  // Rebuild only when the source/number of tabs changes: an active-state
  // change must retain the underline and its previous position to slide.
  if(row._source!==source||buttons().length!==originals.length){
@@ -46,6 +46,22 @@ function secondary(h){
   indicator.className='pb1173MovingIndicator';indicator.setAttribute('aria-hidden','true');
   row.append(indicator);
  }
+ const isQueue=source.classList.contains('mainQueueFilters')&&/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
+ row.classList.toggle('pb1174QueueNav',isQueue);
+ let intake=row.querySelector(':scope>.pb1174QueueLaunch');
+ if(isQueue){
+  if(!intake){
+   intake=document.createElement('button');intake.type='button';
+   intake.className='pb1174QueueLaunch';
+   intake.textContent='ثبت سفارش عکس حضوری';
+   intake.addEventListener('click',()=>document.getElementById('pb1137LocalIntakeButton')?.click());
+   row.prepend(intake);
+  }
+  const real=document.getElementById('pb1137LocalIntakeButton');
+  const shouldHide=!real;
+  if(intake.hidden!==shouldHide)intake.hidden=shouldHide;
+  if(real&&intake.disabled!==real.disabled)intake.disabled=real.disabled;
+ }else intake?.remove();
  row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');
  buttons().forEach((button,index)=>{
   const original=originals[index];if(!original)return;
@@ -68,7 +84,7 @@ function secondary(h){
  const indicator=row.querySelector(':scope>.pb1173MovingIndicator');
  requestAnimationFrame(()=>{
   if(!row.isConnected||!indicator)return;
-  const active=row.querySelector(':scope>button.active');
+  const active=row.classList.contains('pb1174QueueNav')?null:row.querySelector(':scope>button[data-pb1173-index].active');
   if(!active){indicator.style.opacity='0';return;}
   const base=row.getBoundingClientRect(),rect=active.getBoundingClientRect();
   const width=Math.max(18,rect.width-8)+'px';

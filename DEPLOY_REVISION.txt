@@ -1,1 +1,1 @@
-2026-10-12-r1152-gallery-mobile-actions-print-size-context
+2026-10-12-r1153-gallery-mobile-manager-print-tariff-scroll-save

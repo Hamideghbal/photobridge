@@ -238,3 +238,59 @@ html body #root .clientGalleryManager .pb1163GalleryPassword>small{
   width:55px!important;height:55px!important;min-width:55px!important;min-height:55px!important;
  }
 }
+
+/* R1164: gallery tariff pricing overlay must stack above the fixed desktop header. */
+@media(min-width:821px){
+ html body>.globalModalLayer.modalBack:has(.clientGalleryTariffTableModal){
+  position:fixed!important;inset:0!important;
+  z-index:2147483600!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:20px!important;box-sizing:border-box!important;
+  overflow:hidden!important;
+ }
+ html body>.globalModalLayer.modalBack:has(.clientGalleryTariffTableModal)>.modal{
+  position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;
+  transform:none!important;z-index:2147483601!important;
+  width:min(1000px,calc(100vw - 40px))!important;
+  max-width:calc(100vw - 40px)!important;
+  height:min(800px,calc(100dvh - 40px))!important;
+  max-height:calc(100dvh - 40px)!important;
+  margin:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;
+ }
+ html body>.globalModalLayer.modalBack:has(.clientGalleryTariffTableModal)>.modal>.modalHead{
+  position:relative!important;top:auto!important;flex:0 0 auto!important;
+ }
+ html body>.globalModalLayer.modalBack:has(.clientGalleryTariffTableModal)>.modal>.modalContent{
+  flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;
+ }
+}
+html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice{
+ display:grid!important;grid-template-columns:minmax(150px,1fr) minmax(130px,220px)!important;
+ align-items:center!important;gap:10px!important;flex:0 0 auto!important;
+ width:100%!important;box-sizing:border-box!important;
+ padding:10px 13px!important;background:#f2f7ff!important;
+ border:1px solid #cfddfa!important;border-radius:11px!important;
+ color:#273b62!important;font-size:13px!important;font-weight:800!important;
+}
+html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice>span{
+ display:flex!important;align-items:baseline!important;gap:8px!important;flex-wrap:wrap!important;
+}
+html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice small{
+ color:#64748b!important;font-size:11px!important;font-weight:500!important;
+}
+html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice>input{
+ width:100%!important;box-sizing:border-box!important;height:39px!important;min-height:39px!important;
+ text-align:center!important;direction:ltr!important;background:#fff!important;
+ border:1px solid #d5dfed!important;border-radius:9px!important;
+}
+html body #root .clientGalleryManager .clientGallerySettings>.clientGalleryOrderingToggle{
+ margin:8px 0 10px!important;
+}
+@media(max-width:820px){
+ html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice{
+  grid-template-columns:minmax(0,1fr)!important;gap:7px!important;padding:9px 10px!important;
+ }
+ html body .clientGalleryTariffTableModal .pb1164TariffDigitalPrice>input{
+  width:100%!important;
+ }
+}

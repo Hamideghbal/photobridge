@@ -1,0 +1,23 @@
+const fs=require('fs'),path=require('path');(async()=>{const {chromium}=require('playwright');const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:1440,height:900},isMobile:false});const route='/lab/orders';      const handleRoute=async request=>{
+        const url=new URL(request.request().url());
+        if(url.pathname.startsWith('/api/')){
+          let result={};if(url.pathname==='/api/lab/dashboard')result={lab:{id:'lab',name:'Lab',active:true,album_enabled:true},customers:[],temporaryCustomers:[],invitations:[],prices:[],hours:[],status:{open:true},ordersOpen:0,recentOrders:[],walletBalance:0,orderStats:{},collaborationPending:{count:0}};if(url.pathname==='/api/lab/orders')result={orders:[]};if(url.pathname==='/api/lab/notifications')result={notifications:[],unread:0};
+          if(url.pathname==='/api/auth/me')result={user:{id:'customer',userId:'customer',labRole:'lab_admin',platformRole:'user',name:'Test',mobile:'09120000000',photographerAvatarData:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII='},lab:{id:'lab',name:'Lab'}};
+          if(url.pathname==='/api/customer/home')result={lab:{id:'lab',name:'Lab',album_enabled:true},customer:{id:'customer',name:'Test'},status:{open:true},walletBalance:42,orders:[],prices:[],papers:[],sizes:[],counts:{flow:0,ready:0,completed:0,needs_fix:0},settings:{}};
+          if(url.pathname==='/api/customer/labs')result={memberships:[{id:'lab',name:'Lab'}]};
+          if(url.pathname==='/api/customer/equipment-rental/shops')result={shops:[{id:'shop',name:'Store',connected:true}]};
+          if(url.pathname==='/api/customer/orders')result={labId:'lab',orders:[]};
+          if(url.pathname==='/api/photographer/navigation-tabs'){await new Promise(resolve=>setTimeout(resolve,150));result={tabs:{ai:false,album:false,instagram:false}};}
+          return request.fulfill({json:result});
+        }
+        const target=url.pathname==='/equipment-rental/book'?'dist/api/equipment-rental-book.html':url.pathname==='/'||!path.extname(url.pathname)?'dist/web/index.html':'dist/web'+url.pathname;
+        return fs.existsSync(target)?request.fulfill({path:path.resolve(target)}):request.fulfill({status:404,body:''});
+      };await page.route('**/*',handleRoute);
+      await page.goto('https://panel.test'+route);
+const assert=require('node:assert/strict');await page.setViewportSize({width:390,height:844});await page.goto('https://panel.test/lab/orders');await page.waitForSelector('.pb1151PrintModes');
+const nav=page.locator('.pb1151PrintModes');assert.equal(await nav.getByRole('button').count(),2);
+const checkWidths=async()=>{const boxes=await page.locator('.labBottomAppNavGrid>button:visible').evaluateAll(xs=>xs.map(x=>x.getBoundingClientRect().toJSON()));assert.equal(boxes.length,3);assert(Math.abs(boxes[0].width-boxes[2].width)<1);assert(Math.min(...boxes.map(x=>x.left))<12);assert(Math.max(...boxes.map(x=>x.right))>await page.evaluate(()=>document.documentElement.clientWidth-12),'all three buttons span the mobile width');};await checkWidths();
+const geometry=await page.evaluate(()=>({header:document.querySelector('.labSingleHeader').getBoundingClientRect().bottom,modes:document.querySelector('.pb1151PrintModes').getBoundingClientRect().toJSON(),content:document.querySelector('.labRolePageScrollArea').getBoundingClientRect().top}));assert(geometry.modes.top>=geometry.header);assert(geometry.content>=geometry.modes.bottom,'orders below both headers');
+await nav.getByRole('button',{name:'صحافی آلبوم'}).click();await page.waitForURL('**/lab/album');await page.waitForFunction(()=>[...document.querySelectorAll('.pb1151PrintModes button')].some(x=>x.textContent==='صحافی آلبوم'&&x.getAttribute('aria-current')==='page'));assert(await page.locator('.labBottomAppNavGrid>button[aria-label="سفارش‌های چاپ"]').evaluate(x=>x.classList.contains('active')));
+await nav.getByRole('button',{name:'چاپ عکس'}).click();await page.waitForURL('**/lab/orders');await checkWidths();
+await page.setViewportSize({width:1440,height:900});await page.waitForFunction(()=>!document.querySelector('.pb1151PrintModes'));assert.equal(await page.locator('.pb1147LabNav').isVisible(),true,'desktop header preserved');console.log('Mobile full-width nav, photo/album navigation and header clearance passed');await browser.close()})();

@@ -1,0 +1,17 @@
+.pb1151PrintModes{display:none}
+@media(max-width:820px),(hover:none),(pointer:coarse){
+html body #root .labRoleWorkspace main.pageMain > nav.labBottomAppNav.labMobileUtilityRail.labBottomAppNav{display:flex!important;left:0!important;right:auto!important;width:100vw!important;min-width:100vw!important;max-width:none!important;padding:7px 8px!important;box-sizing:border-box!important}
+html body #root .labRoleWorkspace .labBottomAppNavGrid{display:flex!important;width:100%!important;max-width:none!important;gap:6px!important;flex-wrap:nowrap!important;justify-content:stretch!important}
+html body #root .labRoleWorkspace .labBottomAppNavGrid>button{flex:1 1 0!important;min-width:0!important;width:0!important;max-width:none!important;margin:0!important;box-sizing:border-box!important}
+html body #root .labRoleWorkspace .labBottomAppNavGrid>button[aria-label="صحافی آلبوم"]{display:none!important}
+html body #root .labRoleWorkspace main.pb1151PrintPage{padding-top:calc(var(--pb1151-header-bottom) + 48px)!important}
+html body #root .labRoleWorkspace main.pb1151PrintPage>.pb1151PrintModes{display:flex!important;position:fixed;top:var(--pb1151-header-bottom);left:8px;right:auto;width:calc(100vw - 16px);height:48px;box-sizing:border-box;background:white;z-index:145;padding:5px 0;gap:7px;direction:rtl}
+html body #root .labRoleWorkspace .pb1151PrintModes button{flex:1;min-width:0;border:1px solid #dce5f1;border-radius:10px;background:white;color:#526078;font:800 14px Vazirmatn,Tahoma,sans-serif;padding:6px;transition:background .18s,color .18s}
+html body #root .labRoleWorkspace .pb1151PrintModes button.active{background:#315efb;color:white;border-color:#315efb}
+html body #root .labRoleWorkspace main.pb1151PrintPage .labHeaderNav{display:none!important}
+html body #root .labRoleWorkspace main.pb1151PrintPage .labRolePageScrollArea{height:calc(100dvh - var(--pb1151-header-bottom) - 48px - 78px)!important;min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.pb1151PrintModes button{transition:none}}
+@media(max-width:820px),(hover:none),(pointer:coarse){
+html body #root .labRoleWorkspace main.pb1151PrintPage>.labSingleHeader{position:fixed!important;top:0!important;left:8px!important;right:auto!important;width:calc(100vw - 16px)!important;z-index:146!important}
+}

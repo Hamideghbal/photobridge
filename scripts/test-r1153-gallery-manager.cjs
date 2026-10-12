@@ -13,7 +13,7 @@ test('tariff save stays tappable; invalid active print sizes explain how to fix'
 });
 test('gallery manager moves delete action to red overlay while keeping confirmation',()=>{
  assert.match(ui,/className:"pb1153PhotoDelete"/);
- assert.match(ui,/aria-label`?:?`?حذف عکس/);
+ assert.match(ui,/aria-label":`حذف عکس/);
  assert.match(ui,/این عکس از گالری حذف شود؟/);
  assert.match(css,/\.clientGalleryMediaVisual \.pb1153PhotoDelete/);
  assert.match(css,/background:#d92d20/);

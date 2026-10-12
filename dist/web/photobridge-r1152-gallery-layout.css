@@ -1,0 +1,18 @@
+/* Private access/quota information is already represented on the gallery card. */
+html body .clientGalleryShareBox{display:none!important}
+@media(max-width:820px){
+html body #root .clientGalleryCardActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;align-items:stretch!important}
+html body #root .clientGalleryCardActions>button{width:100%!important;min-width:0!important;margin:0!important;padding:8px 6px!important;min-height:48px!important;height:48px!important;font-size:12px!important;line-height:1.5!important;box-sizing:border-box!important}
+html body #root .clientGalleryCardActions>button:last-child:nth-child(odd){grid-column:1/-1}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffTableScroller{overflow:visible!important;max-width:100%!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffPriceGrid.head{display:none!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffPriceGrid:not(.head){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;min-width:0!important;width:100%!important;box-sizing:border-box!important;border:1px solid #dce5f1!important;border-radius:14px!important;padding:10px!important;margin-bottom:10px!important;background:#fff!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffSizeIdentity{min-width:0!important;align-self:center!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffRowToggle{min-width:0!important;justify-self:stretch!important;display:flex!important;align-items:center!important;gap:5px!important;margin:0!important;padding:5px!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffPriceCell{display:grid!important;gap:3px!important;margin:0!important;min-width:0!important;width:100%!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffPriceCell small{display:block!important;font-size:12px!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffPriceCell input{width:100%!important;min-width:0!important;box-sizing:border-box!important;height:40px!important;font-size:16px!important;padding:5px 8px!important;direction:ltr;text-align:center}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryTariffRowActions{align-self:end!important;min-width:0!important}.clientGalleryTariffRowActions button{width:100%;min-height:40px}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryCustomSizeEditor{grid-template-columns:repeat(2,minmax(0,1fr))!important;min-width:0!important}
+html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryCustomSizeEditor>div,html body .clientGalleryTariffModal.clientGalleryTariffModal .clientGalleryCustomSizeEditor>label:first-of-type{grid-column:1/-1}
+}

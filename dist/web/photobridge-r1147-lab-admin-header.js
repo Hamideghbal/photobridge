@@ -7,7 +7,82 @@ function paintIdentity(h){const identity=h.querySelector('.labHeaderIdentity');i
  let role=identity.querySelector('.pb1148Manager');if(!role){role=document.createElement('small');role.className='pb1148Manager';identity.querySelector('.workspaceIdentityCopy')?.append(role);}const label='مدیر لابراتوار'+(manager?' · '+manager:'');if(role.textContent!==label)role.textContent=label;
  if(!loaded&&!loading&&window.pbLabLocalIntakeStorage){loading=true;const snapshot=epoch;Promise.all([request('/api/lab/profile-image'),request('/api/auth/me')]).then(([image,me])=>{if(snapshot!==epoch)return;avatar=image.imageData||'';manager=me.user?.name||'';loaded=true;}).catch(()=>{if(snapshot===epoch)loaded=true;}).finally(()=>{if(snapshot===epoch){loading=false;schedule();}});}
 }
-function secondary(h){let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');if(!source){row?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}if(!row){row=document.createElement('nav');row.className='pb1148SecondaryHeader';row.setAttribute('aria-label','بخش‌های تنظیمات لابراتوار');h.after(row);}h.parentElement.classList.add('pb1148HasSecondary');source.classList.add('pb1148SecondarySource');const signature=[...source.querySelectorAll(':scope>button')].map(x=>x.textContent+':'+x.className+':'+x.disabled).join('|');if(row._source!==source||row.dataset.signature!==signature){row._source=source;row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');row.replaceChildren();[...source.querySelectorAll(':scope>button')].forEach((original,index)=>{const button=document.createElement('button');button.type='button';button.textContent=original.textContent;button.className=original.className;button.disabled=original.disabled;button.onclick=()=>{source.querySelectorAll(':scope>button')[index]?.click();schedule();};row.append(button);});row.dataset.signature=signature;}}
+function secondary(h){
+ let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
+ const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');
+ if(!source){row?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}
+ if(!row){row=document.createElement('nav');row.className='pb1148SecondaryHeader';row.setAttribute('aria-label','زیرگزینه‌های لابراتوار');h.after(row);}
+ h.parentElement.classList.add('pb1148HasSecondary');
+ source.classList.add('pb1148SecondarySource');
+ const originals=[...source.querySelectorAll(':scope>button')];
+ const buttons=()=>[...row.querySelectorAll(':scope>button')];
+ // Rebuild only when the source/number of tabs changes: an active-state
+ // change must retain the underline and its previous position to slide.
+ if(row._source!==source||buttons().length!==originals.length){
+  row._source=source;
+  row.replaceChildren();
+  originals.forEach((original,index)=>{
+   const button=document.createElement('button');button.type='button';
+   button.dataset.pb1173Index=String(index);
+   button.addEventListener('click',()=>{
+    const live=row._source?.querySelectorAll(':scope>button')[index];
+    if(!live||live.disabled)return;
+    const changed=!button.classList.contains('active');
+    if(changed&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+     button.animate?.([{transform:'translateY(3px) scale(.96)',opacity:.7},{transform:'translateY(-1px) scale(1.015)',opacity:1},{transform:'translateY(0) scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+    }
+    live.click();
+    if(changed&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+     requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const panel=document.querySelector('.labRolePageScrollArea .stageQueueWorkspace,.labRolePageScrollArea .settingsBody,.labRolePageScrollArea .financePage')||document.querySelector('.labRolePageScrollArea');
+      panel?.animate?.([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+     }));
+    }
+    schedule();
+   });
+   row.append(button);
+  });
+  const indicator=document.createElement('span');
+  indicator.className='pb1173MovingIndicator';indicator.setAttribute('aria-hidden','true');
+  row.append(indicator);
+ }
+ row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');
+ buttons().forEach((button,index)=>{
+  const original=originals[index];if(!original)return;
+  const raw=original.textContent.trim();
+  const strong=original.querySelector('b');
+  const suffix=raw.match(/([0-9۰-۹٠-٩]+)\s*$/);
+  const count=strong?.textContent.trim()||suffix?.[1]||'';
+  const label=count&&raw.endsWith(count)?raw.slice(0,raw.length-count.length).trim():raw;
+  if(button.dataset.label!==label||button.dataset.count!==count){
+   const name=document.createElement('span');name.className='pb1173TabLabel';name.textContent=label;
+   button.replaceChildren(name);
+   if(count){const badge=document.createElement('b');badge.className='pb1173TabCount';badge.textContent=count;button.append(badge);}
+   button.dataset.label=label;button.dataset.count=count;
+  }
+  const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';
+  button.classList.toggle('active',active);
+  button.setAttribute('aria-selected',String(active));
+  button.disabled=original.disabled;
+ });
+ const indicator=row.querySelector(':scope>.pb1173MovingIndicator');
+ requestAnimationFrame(()=>{
+  if(!row.isConnected||!indicator)return;
+  const active=row.querySelector(':scope>button.active');
+  if(!active){indicator.style.opacity='0';return;}
+  const base=row.getBoundingClientRect(),rect=active.getBoundingClientRect();
+  const width=Math.max(18,rect.width-8)+'px';
+  const offset=Math.round(rect.left-base.left+4+row.scrollLeft)+'px';
+  if(!indicator.dataset.ready)indicator.style.transition='none';
+  indicator.style.width=width;
+  indicator.style.transform='translateX('+offset+')';
+  indicator.style.opacity='1';
+  if(!indicator.dataset.ready){
+   indicator.dataset.ready='1';
+   requestAnimationFrame(()=>indicator.isConnected&&indicator.style.removeProperty('transition'));
+  }
+ });
+}
 
 // Mark the whole optional shortcut card, not only its links, so no empty
 // quick-access slot remains above the print or album orders on Windows.
@@ -18,6 +93,7 @@ function retireQuickAccess(){
  for(const el of root.querySelectorAll('.pb1172RetiredQuickAccess')){
   if(!isQueue)el.classList.remove('pb1172RetiredQuickAccess');
  }
+ root.classList.toggle('pb1173QueueClean',isQueue);
  if(!isQueue)return;
  const known='.labQueueQuickAccessV464,.labQueueQuickIntroV464';
  for(const el of root.querySelectorAll(known)){
@@ -48,7 +124,7 @@ function retireQuickAccess(){
  }
 }
 function navigate(path){if(location.pathname===path)return;history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}
-function clearDesktop(){document.querySelectorAll('.labRoleWorkspace .pb1172RetiredQuickAccess').forEach(x=>x.classList.remove('pb1172RetiredQuickAccess'));document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
+function clearDesktop(){document.querySelector('.labRoleWorkspace')?.classList.remove('pb1173QueueClean');document.querySelectorAll('.labRoleWorkspace .pb1172RetiredQuickAccess').forEach(x=>x.classList.remove('pb1172RetiredQuickAccess'));document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
 function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!location.pathname.startsWith('/lab'))return;const h=document.querySelector('.labRoleWorkspace .labSingleHeader');if(!h||!h.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return;h.classList.add('pb1147LabAdminHeader');paintIdentity(h);secondary(h);retireQuickAccess();
  let nav=h.querySelector('.pb1147LabNav');if(!nav){nav=document.createElement('nav');nav.className='pb1147LabNav';nav.setAttribute('aria-label','سفارش‌ها و تنظیمات لابراتوار');
   for(const [title,selector]of [['سفارش چاپ','.labPrintTopNav'],['سفارش آلبوم','.albumTopNav'],['آرشیو','.labArchiveHeaderBtn'],['مالی','.labFinanceHeaderBtn']]){if(!h.querySelector(selector))continue;if(selector==='.labArchiveHeaderBtn'&&nav.children.length){const line=document.createElement('span');line.className='pb1147Divider';line.setAttribute('aria-hidden','true');nav.append(line);}const button=document.createElement('button');button.type='button';const label=document.createElement('span');label.className='pb1149NavLabel';label.textContent=title;button.append(label);button.dataset.source=selector;button.onclick=()=>h.querySelector(selector)?.click();nav.append(button);}

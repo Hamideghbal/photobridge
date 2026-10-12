@@ -94,6 +94,7 @@ jobs:
         run: |
           node --check dist/web/photobridge-r1137-lab-local-intake.js
           node --test scripts/test-r1138-primary-intake-api.cjs scripts/test-r1142-intake-copies-customer.cjs
+          node --test scripts/test-r1143-inline-customer-preregistration.cjs
       - name: Verify photographer mobile orders and one-row navigation
         run: |
           node --check dist/web/photobridge-r1122-mobile-print-orders.js

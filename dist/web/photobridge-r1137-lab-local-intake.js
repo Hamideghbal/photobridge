@@ -11,19 +11,65 @@ async function api(url,body){try{return await storage().request(url,{...(body?{m
 
 function field(parent,label,input){if(['INPUT','SELECT','TEXTAREA'].includes(input.tagName))input.setAttribute('aria-label',label);const wrapper=node('label');wrapper.append(node('span',label),input);parent.append(wrapper);return input;}
 function select(options){const el=node('select');for(const [value,label] of options){const o=node('option',label);o.value=value;el.append(o);}return el;}
-function customerMenu(parent,options,onChange){
+function customerMenu(parent,customers,registerCustomer,resendInvitation){
  const wrapper=node('div',null,'pb1139Customer');wrapper.append(node('span','عکاس / مشتری'));
  const button=node('button','انتخاب عکاس ▾');button.type='button';button.setAttribute('aria-label','عکاس / مشتری');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
  const menu=node('div',null,'pb1139PickerMenu');menu.hidden=true;
  const search=node('input');search.type='search';search.placeholder='جستجوی نام یا موبایل';search.setAttribute('aria-label','جستجوی عکاس');search.autocomplete='off';
- const list=node('div',null,'pb1139PickerOptions');list.setAttribute('role','listbox');list.setAttribute('aria-label','انتخاب عکاس');menu.append(search,list);wrapper.append(button,menu);parent.append(wrapper);
+ const list=node('div',null,'pb1139PickerOptions');list.setAttribute('role','listbox');list.setAttribute('aria-label','انتخاب عکاس');
+ const panel=node('section',null,'pb1143NewCustomer');panel.hidden=true;
+ const newTitle=node('strong','پیش‌ثبت‌نام مشتری');panel.append(newTitle);
+ const fields=node('div',null,'pb1143NewGrid');panel.append(fields);
+ const number=field(fields,'شماره موبایل',node('input'));number.inputMode='tel';number.dir='ltr';number.placeholder='09xxxxxxxxx';number.autocomplete='off';
+ const debt=field(fields,'بدهی قبلی (تومان)',node('input'));debt.type='text';debt.inputMode='numeric';debt.dir='ltr';debt.value='0';debt.autocomplete='off';
+ const actions=node('div',null,'pb1143NewActions');panel.append(actions);
+ const smsLabel=field(actions,'ارسال پیامک دعوتنامه',node('input'));smsLabel.type='checkbox';
+ const addCustomer=node('button','افزودن','pb1143CustomerAdd');addCustomer.type='button';actions.append(addCustomer);
+ const notice=node('p',null,'pb1143PickerNotice');notice.setAttribute('role','status');menu.append(search,list,panel,notice);
+ wrapper.append(button,menu);parent.append(wrapper);
  const model={value:'',button};
- const normalize=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x))).toLocaleLowerCase('fa-IR');
- function render(){list.replaceChildren();const term=normalize(search.value.trim());for(const [value,label]of options){if(value!=='new'&&term&&!normalize(label).includes(term))continue;const option=node('button',label);option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(model.value===value));option.onclick=()=>{model.value=value;button.textContent=label+' ▾';menu.hidden=true;button.setAttribute('aria-expanded','false');onChange(value);};list.append(option);}if(!list.children.length)list.append(node('p','عکاسی پیدا نشد.'));}
- button.onclick=()=>{menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));if(!menu.hidden)render();};search.oninput=render;
- search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();list.querySelector('[role=option]')?.click();}});
- wrapper.addEventListener('keydown',e=>{if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();const options=[...list.querySelectorAll('[role=option]')];const index=options.indexOf(document.activeElement);const current=index<0?(e.key==='ArrowDown'?-1:0):index;options[(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}if(e.key==='Escape'&&!menu.hidden){e.preventDefault();e.stopPropagation();menu.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}});
- parent.closest('dialog').addEventListener('click',e=>{if(!wrapper.contains(e.target)){menu.hidden=true;button.setAttribute('aria-expanded','false');}});
+ const digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
+ const normalize=text=>digits(text).toLocaleLowerCase('fa-IR');
+ const mobileValue=text=>{let d=digits(text).replace(/\D/g,'');if(d.startsWith('0098'))d='0'+d.slice(4);else if(d.startsWith('98')&&d.length===12)d='0'+d.slice(2);else if(/^9\d{9}$/.test(d))d='0'+d;return d;};
+ const moneyValue=text=>digits(text).replace(/[^0-9]/g,'');
+ const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
+ debt.oninput=()=>{debt.value=formatMoney(debt.value);};
+ const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':null].filter(Boolean).join(' · ');
+ function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;button.textContent=itemLabel(c)+' ▾';panel.hidden=true;menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';}
+ function render(){
+  list.replaceChildren();const term=normalize(search.value.trim());
+  for(const c of customers){if(term&&!normalize(itemLabel(c)).includes(term))continue;
+   const row=node('div',null,'pb1143ChoiceRow');
+   const option=node('button',itemLabel(c));option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(model.value===c.id));option.onclick=()=>selectCustomer(c);row.append(option);
+   if(c.registrationPending){const resend=node('button','ارسال مجدد','pb1143Resend');resend.type='button';resend.setAttribute('aria-label','ارسال مجدد دعوت‌نامه برای '+c.mobile);resend.title='ارسال مجدد دعوت‌نامه';resend.onclick=async()=>{
+    resend.disabled=true;notice.textContent='در حال ارسال دعوت‌نامه…';
+    try{const response=await resendInvitation(c.id);notice.textContent=response.invitationSmsSent?'پیامک دعوت‌نامه مجدداً ارسال شد.':'ارسال پیامک انجام نشد.';}
+    catch(e){notice.textContent=e.message;}finally{resend.disabled=false;}
+   };row.append(resend);}
+   list.append(row);
+  }
+  const newRow=node('button','＋ مشتری جدید');newRow.type='button';newRow.setAttribute('role','option');newRow.onclick=()=>{panel.hidden=false;notice.textContent='';const typed=mobileValue(search.value);if(/^09\d{9}$/.test(typed))number.value=typed;};list.append(newRow);
+ }
+ addCustomer.onclick=async()=>{
+  const mobile=mobileValue(number.value),rawDebt=moneyValue(debt.value),openingDebt=Number(rawDebt||0);
+  if(!/^09\d{9}$/.test(mobile)){notice.textContent='شماره موبایل ۱۱ رقمی معتبر وارد کن.';return;}
+  if(!Number.isSafeInteger(openingDebt)||openingDebt<0||openingDebt>1_000_000_000_000){notice.textContent='مبلغ بدهی قبلی معتبر نیست.';return;}
+  addCustomer.disabled=true;notice.textContent='در حال افزودن مشتری…';
+  try{
+   const created=await registerCustomer({mobile,initialDebt:openingDebt,sendInvitation:smsLabel.checked});
+   const c=created.customer;if(!c?.id)throw Error('ثبت مشتری انجام نشد.');
+   const previous=customers.findIndex(x=>x.id===c.id);
+   if(previous>=0)customers[previous]=c;else customers.push(c);
+   search.value='';render();selectCustomer(c);
+   if(smsLabel.checked&&c.registrationPending&&!created.invitationSmsSent){
+    menu.hidden=false;button.setAttribute('aria-expanded','true');notice.textContent='مشتری اضافه شد اما پیامک ارسال نشد. از گزینهٔ «ارسال مجدد» استفاده کن.';
+   }
+  }catch(e){notice.textContent=e.message;}finally{addCustomer.disabled=false;}
+ };
+ button.onclick=()=>{menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));if(!menu.hidden)render();else panel.hidden=true;};
+ search.oninput=render;search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();list.querySelector('[role=option]')?.click();}});
+ wrapper.addEventListener('keydown',e=>{if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){const options=[...list.querySelectorAll('[role=option]')];if(!options.length)return;e.preventDefault();const index=options.indexOf(document.activeElement);const current=index<0?(e.key==='ArrowDown'?-1:0):index;options[(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}if(e.key==='Escape'&&!menu.hidden){e.preventDefault();e.stopPropagation();menu.hidden=true;panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}});
+ parent.closest('dialog').addEventListener('click',e=>{if(!wrapper.contains(e.target)){menu.hidden=true;panel.hidden=true;button.setAttribute('aria-expanded','false');}});
  return model;
 }
 async function open(){
@@ -47,11 +93,9 @@ async function open(){
  const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);
  if(loadError){error.textContent=loadError.message;modal.showModal();return;}
  const settings=node('div',null,'pb1137Settings pb1139EntryRow');form.append(settings);
- const newFields=node('div',null,'pb1137Settings');newFields.hidden=true;form.append(newFields);
- const customers=customerMenu(settings,[...(bootstrap.customers||[]).map(c=>[c.id,`${c.name} · ${c.mobile}`]),['new','مشتری جدید']],value=>{newFields.hidden=value!=='new';});
- const mobile=field(newFields,'شماره موبایل',node('input'));mobile.inputMode='tel';mobile.dir='ltr';mobile.placeholder='09xxxxxxxxx';
- const initialDebt=field(newFields,'بدهی قبلی (تومان)',node('input'));initialDebt.type='number';initialDebt.min='0';initialDebt.max='1000000000000';initialDebt.step='1';initialDebt.value='0';
- const invite=field(newFields,'ارسال پیامک دعوتنامه',node('input'));invite.type='checkbox';
+ const customers=customerMenu(settings,[...(bootstrap.customers||[])],
+  payload=>api('/api/lab/delegated-customers',payload),
+  customerId=>api('/api/lab/delegated-customers/'+customerId+'/resend-invitation',{}));
  const sizes=(bootstrap.printSizes||[]).map(s=>[s.id,s.label]);
  const defaultSize=field(settings,'سایز چاپ',select([['','انتخاب سایز'],...sizes]));
  const paperOptions=[['luster','لاستر'],['silk','سیلک'],['metallic','متالیک']];
@@ -105,7 +149,7 @@ async function open(){
  function busy(value){submitting=value;form.dataset.busy=value?'1':'';for(const control of modal.querySelectorAll('button,input,select'))control.disabled=value||locked&&control!==submit&&control!==close;}
  form.onsubmit=async e=>{
   e.preventDefault();if(submitting)return;
-  if(!customers.value||customers.value==='new'&&(!/^09\d{9}$/.test(mobile.value.trim())||!Number.isSafeInteger(Number(initialDebt.value))||Number(initialDebt.value)<0||Number(initialDebt.value)>1000000000000)){error.textContent='مشتری و شماره موبایل معتبر را مشخص کن.';return;}
+  if(!customers.value){error.textContent='مشتری و شماره موبایل معتبر را مشخص کن.';return;}
   if(pendingFiles.length){error.textContent='عکس‌های انتخاب‌شده را با دکمهٔ افزودن به سفارش اضافه کن.';return;}
   if(!entries.length||entries.some(x=>!x.size||x.file.size<=0)){error.textContent='عکس‌ها و سایز چاپ هر عکس را مشخص کن.';return;}
   busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';
@@ -113,7 +157,7 @@ async function open(){
    if(!await provider.permission(directory))throw Error('اجازهٔ نوشتن در مسیر همیشگی داده نشد؛ سفارش ارسال نشد.');
    // Reserve the existing draft first so the normal folders include the real order number.
    locked=true;startedAt ||= new Date().toISOString();
-   if(!order)order=await api('/api/lab/delegated-orders',{clientOrderId,localOnly:true,mode:'print',delivery:'pickup',priority:'normal',...(customers.value==='new'?{mobile:mobile.value.trim(),initialDebt:Number(initialDebt.value),sendInvitation:invite.checked}:{customerId:customers.value})});
+   if(!order)order=await api('/api/lab/delegated-orders',{clientOrderId,localOnly:true,mode:'print',delivery:'pickup',priority:'normal',customerId:customers.value});
    for(const item of entries){if(item.registered)continue;const result=await api('/api/lab/delegated-orders/'+order.orderId+'/files/presign',{clientFileId:item.id,name:item.file.name,relativePath:item.file.name,bytes:item.file.size,contentType:item.file.type,printSizeId:item.size,printType:item.paper,printCopies:item.copies,localOnly:true});if(result.storageMode!=='device-local'||result.uploadUrl)throw Error('سفارش محلی تأیید نشد؛ هیچ عکسی به سرور ارسال نشد.');item.registered=true;item.fileId=result.fileId;}
    const detail=await api('/api/lab/orders/'+order.orderId);
    detail.order._local_download_started_at=startedAt;

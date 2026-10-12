@@ -14,7 +14,7 @@ function secondary(h){let row=h.parentElement.querySelector(':scope>.pb1148Secon
 function retireQuickAccess(){
  const root=document.querySelector('.labRoleWorkspace');
  if(!root)return;
- const isQueue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);
+ const isQueue=/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
  for(const el of root.querySelectorAll('.pb1172RetiredQuickAccess')){
   if(!isQueue)el.classList.remove('pb1172RetiredQuickAccess');
  }
@@ -27,7 +27,7 @@ function retireQuickAccess(){
   const parent=el.parentElement;
   if(parent&&parent!==root&&parent.children.length<=3){
    const others=[...parent.children].filter(node=>!node.matches(known));
-   if(others.every(node=>/^دسترسی سریع(?:\\s|$)/.test(node.textContent.trim())&&node.querySelectorAll('button,a').length<=8)){
+   if(others.every(node=>/^دسترسی سریع(?:\s|$)/.test(node.textContent.trim())&&node.querySelectorAll('button,a').length<=8)){
     parent.classList.add('pb1172RetiredQuickAccess');
    }
   }
@@ -35,10 +35,10 @@ function retireQuickAccess(){
  // Older order/album views render a different shortcut card with only this
  // exact heading. Find a compact dedicated card, never the order list itself.
  for(const title of root.querySelectorAll('h2,h3,h4,h5,h6,legend,summary,strong')){
-  if(title.textContent.replace(/\\s+/g,' ').trim()!=='دسترسی سریع')continue;
+  if(title.textContent.replace(/\s+/g,' ').trim()!=='دسترسی سریع')continue;
   let candidate=null,depth=0;
   for(let parent=title.parentElement;parent&&parent!==root&&depth++<5;parent=parent.parentElement){
-   const text=parent.textContent.replace(/\\s+/g,' ').trim();
+   const text=parent.textContent.replace(/\s+/g,' ').trim();
    const actions=parent.querySelectorAll('button,a').length;
    if(text.startsWith('دسترسی سریع')&&text.length<=420&&actions>0&&actions<=8){
     candidate=parent;

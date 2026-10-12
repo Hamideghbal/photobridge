@@ -9,12 +9,13 @@ for(const file of pages){
  const isMain=file.endsWith('/index.html');
  const navMatches=[...html.matchAll(navigationPattern)];
  if(navMatches.length!==2)throw Error('[R1132] Expected photographer desktop boot navigation in '+file);
- html=html.replace(navigationPattern,'$1r1167');
+ html=html.replace(navigationPattern,'$1r1168');
  if(isMain){
   if(!modulePattern.test(html))throw Error('[R1132] Missing main photographer bundle');
   modulePattern.lastIndex=0;
   html=html.replace(modulePattern,'$1r1158');
  }
+ html=html.replace(/(photobridge-r1124-photographer-desktop-header\.js\?v=)[^"']+/g,'$1r1168');
  html=html.replace(/(photobridge-r1132-photo-copies-mobile\\.css\\?v=)[^"']+/g,'$1r1134');
  if(!html.includes(css))html=html.replace('</head>',css+'\n</head>');
  if(html.split('photobridge-r1132-photo-copies-mobile.css').length!==2)throw Error('[R1132] Responsive sheet must be included once in '+file);

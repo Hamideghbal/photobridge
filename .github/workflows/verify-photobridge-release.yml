@@ -97,6 +97,8 @@ jobs:
           node --test scripts/test-r1143-inline-customer-preregistration.cjs
           node --check dist/web/photobridge-r1144-lab-invite-existing.js
           node --test scripts/test-r1144-lab-invite-existing.cjs
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+          node --test scripts/test-r1145-local-folder-primary.cjs
       - name: Verify photographer mobile orders and one-row navigation
         run: |
           node --check dist/web/photobridge-r1122-mobile-print-orders.js

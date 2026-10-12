@@ -28,7 +28,7 @@ test('tab counts are circular and underline slides between retained buttons',()=
  assert.match(override,/transition:transform \.28s cubic-bezier/);
  const fn=js.slice(js.indexOf('function secondary(h){'),js.indexOf('// Mark the whole optional shortcut'));
  assert(fn.startsWith('function secondary(h){'));
- assert(fn.includes("const buttons=()=>[...row.querySelectorAll(':scope>button')];"));
+ assert(fn.includes("const buttons=()=>[...row.querySelectorAll(':scope>button[data-pb1173-index]')];"));
  assert(fn.includes('if(row._source!==source||buttons().length!==originals.length)'));
  assert(fn.includes("const strong=original.querySelector('b')"));
  assert(fn.includes("badge.className='pb1173TabCount'"));

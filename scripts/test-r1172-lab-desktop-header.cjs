@@ -56,6 +56,7 @@ test('shortcut card itself is retired in both print and album queues',()=>{
   };
   known.parentElement=card;title.parentElement=card;
   const root={
+   classList:{toggle:(name,on)=>flags.add('root:'+name+':'+on)},
    querySelectorAll:q=>q==='.labQueueQuickAccessV464,.labQueueQuickIntroV464'?[known]:q.startsWith('h2,h3')?[title]:[]
   };
   card.parentElement=root;
@@ -64,13 +65,14 @@ test('shortcut card itself is retired in both print and album queues',()=>{
   });
   assert(flags.has('shortcut:pb1172RetiredQuickAccess'),path+' shortcut');
   assert(flags.has('card:pb1172RetiredQuickAccess'),path+' surrounding empty space');
+  assert(flags.has('root:pb1173QueueClean:true'),path+' desktop queue root cleaned');
  }
 });
 
 test('mobile lab views keep original layout; asset versions survive build',()=>{
  assert(js.includes("const media=matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)')"));
  for(const ext of ['css','js']){
-  const asset='photobridge-r1147-lab-admin-header.'+ext+'?v=r1172';
+  const asset='photobridge-r1147-lab-admin-header.'+ext+'?v=r1173';
   assert(html.includes(asset));
   assert(build.includes(asset));
  }

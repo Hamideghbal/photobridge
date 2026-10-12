@@ -14,5 +14,6 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
   html=html.replace(/<script src="\/photobridge-r1106-mobile-store-panel\.js[^"]*"><\/script>\s*/g,'');
   html=html.replace('</head>','<script src="/photobridge-r1106-mobile-store-panel.js?v=r1135"></script>\n</head>');
   html=html.replace(/(photobridge-r1106-mobile-store-panel\.js\?v=)[^"]+/g,'$1r1135').replace(/(photobridge-r1119-mobile-chat\.css\?v=)[^"]+/g,'$1r1135');
+  html=html.replace(/(photobridge-r1122-mobile-print-orders\.css\?v=)[^"]+/g,'$1r1136');
   fs.writeFileSync(path,html);
 }

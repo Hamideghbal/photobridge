@@ -18,6 +18,7 @@ test('mobile print order statuses remain reachable through the existing React fi
   assert.doesNotMatch(js,/\/api\/customer\/orders/);
 });
 test('R1122 assets are included in the served photographer page',()=>{
-  assert.match(html,/photobridge-r1122-mobile-print-orders\.css\?v=r1122/);
+  assert.match(html,/photobridge-r1122-mobile-print-orders\.css\?v=r1136/);
   assert.match(html,/photobridge-r1122-mobile-print-orders\.js\?v=r1122/);
 });
+

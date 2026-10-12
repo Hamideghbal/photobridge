@@ -114,3 +114,10 @@
   html body #root main.photographerMain > nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav) > .mobileRailPrimaryGroup.photographerBottomAppNavGrid > button em{font-size:7.8px!important}
   html body #root main.photographerMain .ordersWorkspace.liveCustomerOrders > #pbR1122PrintOrderStatuses > button{font-size:8px!important;padding-inline:1px!important}
 }
+/* Keep one visible status rail while the original React buttons remain click targets. */
+@media(max-width:820px){
+ html body.pbF37PrintMode:has(#pbR1122PrintOrderStatuses) #root main.photographerMain .photographerContextStatuses,
+ html body.pbF37PrintMode:has(#pbR1122PrintOrderStatuses) .pb761PhotoStatuses{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+}

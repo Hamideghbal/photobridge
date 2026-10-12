@@ -16,8 +16,8 @@ if(!css.includes('/* R1161:') || !css.includes('grid-template-columns:repeat(2,m
 const htmlFile='dist/web/index.html';
 let html=fs.readFileSync(htmlFile,'utf8');
 for(const [pattern,replacement] of [
- [/photobridge-r1159-gallery-intro-cards\.css\?v=r1159(?:&cards=r1160|&cards=r1161|&cards=r1163)?/g,'photobridge-r1159-gallery-intro-cards.css?v=r1159&cards=r1161'],
- [/index-UIRefine-v655-r84\.js\?v=r1159(?:&cards=r1160|&cards=r1161|&cards=r1163)?/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1161']
+ [/photobridge-r1159-gallery-intro-cards\.css\?v=r1159(?:&cards=r1160|&cards=r1161|&cards=r1163|&cards=r1164)?/g,'photobridge-r1159-gallery-intro-cards.css?v=r1159&cards=r1161'],
+ [/index-UIRefine-v655-r84\.js\?v=r1159(?:&cards=r1160|&cards=r1161|&cards=r1163|&cards=r1164)?/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1161']
 ]){
  if(!pattern.test(html))throw Error('R1161 HTML asset reference missing: '+replacement);
  html=html.replace(pattern,replacement);

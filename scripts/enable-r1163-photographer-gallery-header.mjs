@@ -14,10 +14,10 @@ const replace=(regexp,target)=>{
  if(!regexp.test(html))throw Error('R1163 asset missing: '+target);
  html=html.replace(regexp,target);
 };
-replace(/photobridge-r1153-gallery-manager\.css\?v=r(?:1158|1162|1163)/g,'photobridge-r1153-gallery-manager.css?v=r1163');
-replace(/photobridge-r1124-photographer-desktop-header\.css\?v=r(?:1129|1135|1163)/g,'photobridge-r1124-photographer-desktop-header.css?v=r1163');
-replace(/index-UIRefine-v655-r84\.js\?v=r1159&cards=r(?:1161|1163)/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1163');
+replace(/photobridge-r1153-gallery-manager\.css\?v=r(?:1158|1162|1163|1164)/g,'photobridge-r1153-gallery-manager.css?v=r1163');
+replace(/photobridge-r1124-photographer-desktop-header\.css\?v=r(?:1129|1135|1163|1164)/g,'photobridge-r1124-photographer-desktop-header.css?v=r1163');
+replace(/index-UIRefine-v655-r84\.js\?v=r1159&cards=r(?:1161|1163|1164)/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1163');
 const asset='<script defer src="/photobridge-r1163-desktop-gallery-header.js?v=r1163"></script>';
-if(!html.includes(asset))html=html.replace('</head>',asset+'\n</head>');
+if(!/photobridge-r1163-desktop-gallery-header\.js\?v=r(?:1163|1164)/.test(html))html=html.replace('</head>',asset+'\n</head>');
 fs.writeFileSync(path,html);
 console.log('[R1163] unified desktop controls and gallery profile/password fields ready');

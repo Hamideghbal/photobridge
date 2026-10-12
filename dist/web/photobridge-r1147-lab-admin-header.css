@@ -40,3 +40,13 @@ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSettingsNavigat
 }
 
 @media(min-width:821px){html body #root .labRoleWorkspace .pb1148SecondarySource,html body #root .labRoleWorkspace .financeNavDock:has(.pb1148SecondarySource){display:none!important}}
+/* The header owns navigation; the old quick-access panel is retired. */
+html body #root .labRoleWorkspace .labQueueQuickAccessV464,html body #root .labRoleWorkspace .labQueueQuickIntroV464{display:none!important}
+@media(min-width:821px){
+html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader::after{content:''!important;display:block!important;left:18px!important;right:18px!important;width:auto!important;height:1px!important;bottom:0!important;opacity:1!important;background:linear-gradient(90deg,transparent 0%,#d4dce6 15%,#d4dce6 85%,transparent 100%)!important;pointer-events:none}
+html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!important}
+.pb1149NavLabel{position:relative;display:inline-block;white-space:nowrap}
+.pb1149NavLabel::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:#315efb;transform:scaleX(0);transition:transform .18s}
+.pb1147LabNav button.active .pb1149NavLabel::after{transform:scaleX(1)}
+}
+@media(prefers-reduced-motion:reduce){.pb1149NavLabel::after{transition:none}}

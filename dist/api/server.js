@@ -18496,9 +18496,18 @@ ${inviteUrl}`;
             await c.query(`UPDATE invitations SET uses=uses+1 WHERE id=$1`, [inv.id]);
             await c.query(`UPDATE signup_mobile_verifications SET status='used',used_at=now() WHERE id=$1`, [challengeId]);
             await c.query('COMMIT');
+            if (existingPhotographer) {
+                try { await createSession(userId,res,'photographer'); }
+                catch (sessionError) {
+                    console.error('[lab-invite-confirm:session-failed]',{code:String(sessionError?.code||''),message:String(sessionError?.message||'')});
+                    return sendJson(res,503,{error:'invitation_confirmed_login_failed'});
+                }
+            }
             await audit(userId, inv.lab_id, 'invitation.register', 'user', userId, { mobileVerified: true, accounting, reusedExistingCustomer: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser), confirmationOnly: Boolean(existingPhotographer), locationConfigured: Boolean(resolvedLocation?.lat != null), locationAddress: resolvedLocationAddress || undefined }).catch(() => { });
             publishLabEvent(String(inv.lab_id), 'photographer_invite_accepted', { userId, photographerName: resolvedName || String(inv.target_name || 'عکاس جدید'), mobile, reusedExisting: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser), source: inv.accounting_external_party_id ? 'accounting_invite' : 'legacy_invite' });
-            return sendJson(res, 201, { ok: true, verified: true, accounting, reusedExistingCustomer: Boolean(existingPhotographer), reusedExistingIdentity: Boolean(existingUser) });
+            return sendJson(res, 201, { ok: true, verified: true, accounting, reusedExistingCustomer: Boolean(existingPhotographer),
+                reusedExistingIdentity: Boolean(existingUser), loggedIn: Boolean(existingPhotographer),
+                redirect: existingPhotographer ? '/photographer' : undefined });
         }
         catch (e) {
             await c.query('ROLLBACK').catch(() => { });
@@ -19383,10 +19392,18 @@ ${inviteUrl}`;
         }
         if (req.method === 'GET' && url.pathname === '/api/lab/delegated-orders/bootstrap') {
             const [customers, sizes, lab] = await Promise.all([
-                pool.query(`SELECT u.id,COALESCE(NULLIF(pp.studio_name,''),u.name) name,u.mobile,m.settlement_mode,
-                    NOT m.active AS "registrationPending"
+                pool.query(`SELECT u.id,
+                    CASE WHEN m.active THEN COALESCE(NULLIF(pp.studio_name,''),u.name)
+                         WHEN COALESCE(u.photographer_enabled,false)=true OR u.mobile_verified_at IS NOT NULL OR pp.user_id IS NOT NULL
+                         THEN COALESCE(NULLIF(pp.studio_name,''),u.name)
+                         ELSE COALESCE(NULLIF(pending_i.target_name,''),NULLIF(pp.studio_name,''),u.name)
+                    END name,
+                    u.mobile,m.settlement_mode,NOT m.active AS "registrationPending"
                     FROM lab_memberships m JOIN users u ON u.id=m.user_id
                     LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+                    LEFT JOIN LATERAL (SELECT i.target_name FROM invitations i
+                        WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile AND i.active=true AND i.uses=0
+                        ORDER BY i.created_at DESC LIMIT 1) pending_i ON true
                     WHERE m.lab_id=$1 AND m.role='customer'
                     AND (m.active=true OR EXISTS(
                         SELECT 1 FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile
@@ -19450,7 +19467,9 @@ ${inviteUrl}`;
             if (!await requireLocalIntakePrimary()) return;
             const b = await bodyJson(req);
             const mobile = normalizeMobile(String(b.mobile || ''));
+            const temporaryName = String(b.name || '').trim().replace(/\s+/g,' ').slice(0,140);
             const openingDebt = Number(b.initialDebt ?? 0);
+            if (!temporaryName) return sendJson(res,400,{error:'customer_temporary_name_required'});
             if (!/^09\d{9}$/.test(mobile)) return sendJson(res, 400, { error: 'invalid_sms_mobile' });
             if (!Number.isSafeInteger(openingDebt) || openingDebt<0 || openingDebt>1_000_000_000_000)
                 return sendJson(res, 400, { error: 'invalid_initial_debt' });
@@ -19459,16 +19478,23 @@ ${inviteUrl}`;
             try {
                 await c.query('BEGIN');
                 await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))', [labId, mobile]);
-                const users = await c.query('SELECT id,name FROM users WHERE mobile=$1 FOR UPDATE', [mobile]);
+                const users = await c.query(`SELECT u.id,u.name,u.photographer_enabled,u.mobile_verified_at,pp.studio_name
+                    FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+                    WHERE u.mobile=$1 FOR UPDATE OF u`, [mobile]);
                 if (users.rowCount>1) {
                     await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_ambiguous' });
                 }
-                let customerId = users.rows[0]?.id, customerName = String(users.rows[0]?.name || mobile);
+                let customerId = users.rows[0]?.id;
+                const account = users.rows[0];
+                const officialAccount = Boolean(account && (account.photographer_enabled || account.mobile_verified_at || account.studio_name));
+                const customerName = officialAccount
+                    ? String(account.studio_name || account.name || temporaryName)
+                    : temporaryName;
                 if (!customerId) {
                     const randomPassword = crypto.randomBytes(32).toString('hex');
                     const u = await c.query(`INSERT INTO users(name,mobile,password_hash,platform_role,active)
                         VALUES($1,$2,$3,'user',true) RETURNING id`,
-                        [mobile,mobile,passwordHash(randomPassword)]);
+                        [temporaryName,mobile,passwordHash(randomPassword)]);
                     customerId = u.rows[0].id;
                 }
                 const mq = await c.query(`SELECT role,active FROM lab_memberships
@@ -19476,13 +19502,15 @@ ${inviteUrl}`;
                 if (mq.rowCount && mq.rows[0].role !== 'customer') {
                     await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_is_lab_admin' });
                 }
-                const registered = mq.rowCount>0 && mq.rows[0].active===true;
-                if (registered && openingDebt>0) {
-                    await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'opening_debt_existing_member' });
+                // Adding an already linked mobile must not silently update existing debt or resubmit an invitation.
+                if (mq.rowCount) {
+                    await c.query('ROLLBACK');
+                    return sendJson(res,409,{error:mq.rows[0].active===true
+                        ? 'customer_already_registered':'customer_already_preregistered'});
                 }
                 if (!mq.rowCount) await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active)
                     VALUES($1,$2,'customer',false)`, [labId,customerId]);
-                const invitation = registered ? null : await ensureDelegatedCustomerInvite(c,mobile,customerName);
+                const invitation = await ensureDelegatedCustomerInvite(c,mobile,customerName);
                 if (openingDebt>0) {
                     const priorDebt = await c.query(`SELECT id FROM finance_transactions
                         WHERE lab_id=$1 AND reference_type='lab_delegated_opening_debt' AND reference_id=$2 LIMIT 1`,
@@ -19500,14 +19528,14 @@ ${inviteUrl}`;
                 }
                 await c.query('COMMIT');
                 created = { customer: { id: customerId, name: customerName, mobile,
-                    registrationPending: !registered }, invitationId: invitation?.id || null };
+                    registrationPending: true }, invitationId: invitation?.id || null };
             } catch (e) {
                 await c.query('ROLLBACK').catch(()=>{});
                 if (e.code==='23505') return sendJson(res,409,{error:'duplicate_mobile'});
                 throw e;
             } finally { c.release(); }
             await audit(a.userId,labId,'customer.pre_register','user',created.customer.id,
-                {mobile,initialDebt:openingDebt,registrationPending:created.customer.registrationPending}).catch(()=>{});
+                {mobile,temporaryName,initialDebt:openingDebt,registrationPending:created.customer.registrationPending}).catch(()=>{});
             if (b.sendInvitation===true && created.invitationId) {
                 Object.assign(created,await sendDelegatedCustomerInvite(created.invitationId,created.customer.id));
             }

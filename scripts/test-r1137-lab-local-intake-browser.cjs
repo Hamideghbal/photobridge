@@ -53,11 +53,14 @@ for(const mode of ['success','disk','remote','secondary','no-folder'])test(`conf
   await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
   assert.equal(await page.locator('.pb1139Group').count(),1);
   if(mode==='success'){
+   const initialSize=await page.locator('dialog').boundingBox();
    await page.getByLabel('سایز چاپ',{exact:true}).selectOption('large');await page.getByLabel('کاغذ',{exact:true}).selectOption('silk');
    await page.locator('form>input[type=file]').setInputFiles({name:'Second.JPG',mimeType:'image/jpeg',buffer:Buffer.from('def')});await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
-   assert.equal(await page.locator('.pb1139Group').count(),2);assert.equal(await page.locator('.pb1139Group').nth(0).locator('b').innerText(),'10×15 · لاستر');
+   assert.equal(await page.locator('.pb1139Group').count(),2);const expandedSize=await page.locator('dialog').boundingBox();assert.equal(expandedSize.height,initialSize.height,'dialog height stays stable as groups are added');assert.equal(await page.locator('.pb1139Group').nth(0).locator('b').innerText(),'10×15 · لاستر');
    await page.locator('form>input[type=file]').setInputFiles({name:'Removed.JPG',mimeType:'image/jpeg',buffer:Buffer.from('ghi')});await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
-   await page.locator('.pb1139Group').nth(2).getByRole('button',{name:'حذف گروه'}).click();assert.equal(await page.locator('.pb1139Group').count(),2);
+   assert.equal(await page.locator('.pb1139Group').count(),2,'repeated size appends to the existing group');
+   assert.equal(await page.locator('.pb1139Group').nth(1).locator('figure').count(),2);
+   await page.locator('.pb1139Group').nth(1).locator('figure').last().getByRole('button',{name:'حذف عکس'}).click();
   }
   if(mode==='success'){
    await page.locator('.pb1139Group').nth(1).getByLabel('کاغذ عکس').selectOption('metallic');

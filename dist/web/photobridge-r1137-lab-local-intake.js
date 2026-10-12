@@ -69,15 +69,15 @@ async function open(){
   for(const group of groups){
    const card=node('section',null,'pb1139Group');card.dataset.groupId=group.id;
    const head=node('div',null,'pb1139GroupHead');head.append(node('b',`${group.label} · ${group.paperLabel}`),node('span',`${group.items.length.toLocaleString('fa-IR')} عکس`));
-   const toggle=node('button',group.collapsed?'باز کردن':'جمع کردن');toggle.type='button';toggle.setAttribute('aria-expanded',String(!group.collapsed));toggle.onclick=()=>{group.collapsed=!group.collapsed;renderGroups();};head.append(toggle);
+   const toggle=node('button',group.collapsed?'▾':'▴','pb1141Collapse');toggle.type='button';toggle.setAttribute('aria-label',group.collapsed?'باز کردن':'جمع کردن');toggle.setAttribute('aria-expanded',String(!group.collapsed));toggle.onclick=()=>{group.collapsed=!group.collapsed;renderGroups();};head.append(toggle);
    const input=node('input');input.type='file';input.accept=fileInput.accept;input.multiple=true;input.hidden=true;
    const more=node('button','افزودن عکس');more.type='button';more.onclick=()=>input.click();input.onchange=()=>{if(locked||submitting)return;group.items.push(...makeItems(input.files,group.size,group.paper));syncEntries();renderGroups();};head.append(more,input);
    const remove=node('button','حذف گروه');remove.type='button';remove.onclick=()=>{if(locked||submitting)return;groups=groups.filter(x=>x!==group);group.items.forEach(x=>URL.revokeObjectURL(x.preview));syncEntries();renderGroups();};head.append(remove);card.append(head);
    const photos=node('div',null,'pb1139GroupPhotos');photos.hidden=!!group.collapsed;
    for(const item of group.items){
     const photo=node('figure');const image=node('img');image.src=item.preview;image.alt=item.file.name;photo.append(image,node('figcaption',item.file.name));
-    const paper=field(photo,'کاغذ عکس',select(paperOptions));paper.value=item.paper;paper.onchange=()=>{if(!locked&&!submitting)item.paper=paper.value;};
-    const del=node('button','حذف عکس');del.type='button';del.onclick=()=>{if(locked||submitting)return;URL.revokeObjectURL(item.preview);group.items=group.items.filter(x=>x!==item);if(!group.items.length)groups=groups.filter(x=>x!==group);syncEntries();renderGroups();};photo.append(del);photos.append(photo);
+    const actions=node('div',null,'pb1141PhotoActions');photo.append(actions);const paper=field(actions,'کاغذ عکس',select(paperOptions));paper.value=item.paper;paper.onchange=()=>{if(!locked&&!submitting)item.paper=paper.value;};
+    const del=node('button',null,'pb1141DeletePhoto');del.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7"/></svg>';del.type='button';del.setAttribute('aria-label','حذف عکس');del.title='حذف عکس';del.onclick=()=>{if(locked||submitting)return;URL.revokeObjectURL(item.preview);group.items=group.items.filter(x=>x!==item);if(!group.items.length)groups=groups.filter(x=>x!==group);syncEntries();renderGroups();};actions.append(del);photos.append(photo);
    }card.append(photos);list.append(card);
   }
  }
@@ -85,7 +85,8 @@ async function open(){
   if(locked||submitting)return;
   if(!defaultSize.value||!pendingFiles.length){error.textContent='سایز چاپ و عکس‌های این گروه را انتخاب کن.';return;}
   const items=pendingFiles.map(file=>{const preview=URL.createObjectURL(file);previews.push(preview);return{file,id:crypto.randomUUID(),size:defaultSize.value,paper:defaultPaper.value,preview};});
-  groups.push({size:defaultSize.value,paper:defaultPaper.value,id:crypto.randomUUID(),label:sizes.find(x=>x[0]===defaultSize.value)?.[1]||'',paperLabel:paperOptions.find(x=>x[0]===defaultPaper.value)[1],items});entries=groups.flatMap(x=>x.items);pendingFiles=[];fileInput.value='';choose.textContent='انتخاب عکس‌ها';error.textContent='';renderGroups();
+  const existing=groups.find(group=>group.size===defaultSize.value);
+  if(existing){existing.items.push(...items);existing.collapsed=false;}else groups.push({size:defaultSize.value,paper:defaultPaper.value,id:crypto.randomUUID(),label:sizes.find(x=>x[0]===defaultSize.value)?.[1]||'',paperLabel:paperOptions.find(x=>x[0]===defaultPaper.value)[1],items});entries=groups.flatMap(x=>x.items);pendingFiles=[];fileInput.value='';choose.textContent='انتخاب عکس‌ها';error.textContent='';renderGroups();
  };
  const submit=node('button','ثبت سفارش و صدور فاکتور', 'pb1137Submit');submit.type='submit';form.append(submit);
  const clientOrderId=crypto.randomUUID();

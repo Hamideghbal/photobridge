@@ -9701,7 +9701,7 @@ async function ensureEquipmentRentalV830ModelSchema(){
         WHERE equipment_store_models.customized=false AND equipment_store_models.deleted_at IS NULL`);
     await pool.query(`WITH used AS (
       SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,btrim(model) name FROM equipment_rental_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
-      UNION SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,btrim(model) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
+      UNION SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,COALESCE(NULLIF(btrim(variant_specs->>'baseModel'),''),btrim(model)) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
     ) INSERT INTO equipment_store_models(shop_id,category_code,brand_name,name,customized,sort_order)
       SELECT u.shop_id,u.category_code,u.brand_name,u.name,true,1000 FROM used u
       WHERE NOT EXISTS (SELECT 1 FROM equipment_store_models m WHERE m.shop_id=u.shop_id AND m.deleted_at IS NULL AND m.category_code=u.category_code AND lower(COALESCE(m.brand_name,''))=lower(COALESCE(u.brand_name,'')) AND lower(btrim(m.name))=lower(btrim(u.name)))`);

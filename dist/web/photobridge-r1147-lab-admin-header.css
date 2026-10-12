@@ -104,3 +104,127 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
   transition:none!important;
  }
 }
+
+/* R1173 — Windows laboratory headers: Store interaction language, zero shortcut chrome. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav {
+  gap:clamp(12px,1.2vw,18px)!important;
+  padding-inline:8px!important;
+  justify-content:center!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button:is([data-source],[data-category]) {
+  font:850 12.5px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  padding:7px 1px!important;
+  height:40px!important;
+  letter-spacing:0!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav .pb1147Divider {
+  margin-inline:2px!important;
+ }
+ /* The Store uses unboxed text tabs. Selected state changes ink; the underline slides. */
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader {
+  position:fixed!important;direction:rtl!important;
+  justify-content:flex-start!important;align-items:center!important;
+  gap:14px!important;
+  height:48px!important;padding:4px 20px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  border:0!important;border-radius:0!important;
+  background:#fff!important;
+  box-shadow:0 12px 18px -12px rgba(49,94,251,.3)!important;
+  isolation:isolate!important;
+  scrollbar-width:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader::-webkit-scrollbar{display:none}
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button {
+  position:relative!important;z-index:1!important;
+  flex:0 0 auto!important;display:inline-flex!important;
+  justify-content:center!important;align-items:center!important;gap:7px!important;
+  min-height:36px!important;height:36px!important;
+  padding:6px 3px!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;outline-offset:3px!important;
+  font:850 12.5px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+  color:#475467!important;
+  white-space:nowrap!important;
+  transition:color .18s ease,transform .18s ease!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button:is(.active,[aria-selected="true"]) {
+  color:#315efb!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button:hover {
+  color:#315efb!important;background:transparent!important;border:0!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader .pb1173TabCount {
+  display:grid!important;place-items:center!important;
+  flex:0 0 23px!important;width:23px!important;min-width:23px!important;height:23px!important;
+  padding:0!important;border:1px solid #d6dfef!important;
+  border-radius:50%!important;background:#eaf0f9!important;color:#526179!important;
+  font:800 11px/1 Vazirmatn,Tahoma,sans-serif!important;
+  font-variant-numeric:tabular-nums!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button:is(.active,[aria-selected="true"]) .pb1173TabCount {
+  color:#315efb!important;background:#e2edff!important;border-color:#c4d5fc!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader .pb1173MovingIndicator {
+  display:block!important;position:absolute!important;left:0!important;bottom:4px!important;
+  width:20px;height:2px!important;border-radius:999px!important;
+  background:#315efb!important;opacity:0;pointer-events:none!important;z-index:2!important;
+  transform:translateX(0);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),opacity .15s ease!important;
+ }
+ /* Fade the blue beneath the whole second header, not inside individual buttons. */
+ html body #root .labRoleWorkspace.pb1148HasSecondary .pb1148SecondaryHeader::after {
+  content:"";position:fixed;top:120px;right:0;left:0;height:16px;
+  background:linear-gradient(to bottom,rgba(49,94,251,.12),rgba(49,94,251,.035) 55%,transparent);
+  pointer-events:none;z-index:-1;
+ }
+ /* Two old shortcut boxes are the quick-access card and the sidebar.
+    Remove both AND their reserved first grid row, preserving search / filters. */
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQueueQuickAccessV464,
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQueueQuickIntroV464,
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQuickSideMenu,
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQuickHomeInlineQueue,
+ html body #root .labRoleWorkspace.pb1173QueueClean .pb1172RetiredQuickAccess {
+  display:none!important;visibility:hidden!important;
+  height:0!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;
+ }
+ html body #root .labRoleWorkspace.pb1173QueueClean .stageQueueWorkspace.compactStageQueue {
+  padding-top:0!important;margin-top:0!important;
+ }
+ html body #root .labRoleWorkspace.pb1173QueueClean .stageQueueWorkspace.compactStageQueue>.labQueueStickyBar.quickAccessAlwaysOpen {
+  position:sticky!important;top:0!important;left:auto!important;right:auto!important;
+  width:100%!important;max-width:none!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(180px,320px)!important;
+  grid-template-areas:"filters search"!important;
+  grid-template-rows:38px!important;
+  column-gap:12px!important;row-gap:0!important;
+  min-height:0!important;height:auto!important;
+  padding:5px 8px!important;margin:0 0 8px!important;
+  transform:none!important;
+ }
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQueueStickyBar.quickAccessAlwaysOpen>.compactQueueFilters {
+  grid-area:filters!important;grid-column:1!important;grid-row:1!important;
+  width:100%!important;max-width:none!important;
+ }
+ html body #root .labRoleWorkspace.pb1173QueueClean .labQueueStickyBar.quickAccessAlwaysOpen>.labQueueSearchSlot {
+  grid-area:search!important;grid-column:2!important;grid-row:1!important;
+  display:block!important;width:100%!important;max-width:none!important;
+ }
+}
+@media (min-width:821px) and (hover:hover) and (pointer:fine) and (max-width:1100px){
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav {
+  gap:10px!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button:is([data-source],[data-category]){
+  font-size:12px!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader .pb1173MovingIndicator,
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button{
+  transition:none!important;animation:none!important;
+ }
+}

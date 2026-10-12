@@ -9,9 +9,47 @@ function paintIdentity(h){const identity=h.querySelector('.labHeaderIdentity');i
 }
 function secondary(h){let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');if(!source){row?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}if(!row){row=document.createElement('nav');row.className='pb1148SecondaryHeader';row.setAttribute('aria-label','بخش‌های تنظیمات لابراتوار');h.after(row);}h.parentElement.classList.add('pb1148HasSecondary');source.classList.add('pb1148SecondarySource');const signature=[...source.querySelectorAll(':scope>button')].map(x=>x.textContent+':'+x.className+':'+x.disabled).join('|');if(row._source!==source||row.dataset.signature!==signature){row._source=source;row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');row.replaceChildren();[...source.querySelectorAll(':scope>button')].forEach((original,index)=>{const button=document.createElement('button');button.type='button';button.textContent=original.textContent;button.className=original.className;button.disabled=original.disabled;button.onclick=()=>{source.querySelectorAll(':scope>button')[index]?.click();schedule();};row.append(button);});row.dataset.signature=signature;}}
 
+// Mark the whole optional shortcut card, not only its links, so no empty
+// quick-access slot remains above the print or album orders on Windows.
+function retireQuickAccess(){
+ const root=document.querySelector('.labRoleWorkspace');
+ if(!root)return;
+ const isQueue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);
+ for(const el of root.querySelectorAll('.pb1172RetiredQuickAccess')){
+  if(!isQueue)el.classList.remove('pb1172RetiredQuickAccess');
+ }
+ if(!isQueue)return;
+ const known='.labQueueQuickAccessV464,.labQueueQuickIntroV464';
+ for(const el of root.querySelectorAll(known)){
+  el.classList.add('pb1172RetiredQuickAccess');
+  // A wrapper containing only the retired shortcut heading and links can
+  // otherwise keep its padding/min-height when the children are hidden.
+  const parent=el.parentElement;
+  if(parent&&parent!==root&&parent.children.length<=3){
+   const others=[...parent.children].filter(node=>!node.matches(known));
+   if(others.every(node=>/^دسترسی سریع(?:\\s|$)/.test(node.textContent.trim())&&node.querySelectorAll('button,a').length<=8)){
+    parent.classList.add('pb1172RetiredQuickAccess');
+   }
+  }
+ }
+ // Older order/album views render a different shortcut card with only this
+ // exact heading. Find a compact dedicated card, never the order list itself.
+ for(const title of root.querySelectorAll('h2,h3,h4,h5,h6,legend,summary,strong')){
+  if(title.textContent.replace(/\\s+/g,' ').trim()!=='دسترسی سریع')continue;
+  let candidate=null,depth=0;
+  for(let parent=title.parentElement;parent&&parent!==root&&depth++<5;parent=parent.parentElement){
+   const text=parent.textContent.replace(/\\s+/g,' ').trim();
+   const actions=parent.querySelectorAll('button,a').length;
+   if(text.startsWith('دسترسی سریع')&&text.length<=420&&actions>0&&actions<=8){
+    candidate=parent;
+   }else if(candidate)break;
+  }
+  (candidate||title).classList.add('pb1172RetiredQuickAccess');
+ }
+}
 function navigate(path){if(location.pathname===path)return;history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}
-function clearDesktop(){document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
-function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!location.pathname.startsWith('/lab'))return;const h=document.querySelector('.labRoleWorkspace .labSingleHeader');if(!h||!h.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return;h.classList.add('pb1147LabAdminHeader');paintIdentity(h);secondary(h);
+function clearDesktop(){document.querySelectorAll('.labRoleWorkspace .pb1172RetiredQuickAccess').forEach(x=>x.classList.remove('pb1172RetiredQuickAccess'));document.querySelectorAll('.labRoleWorkspace .pb1147LabNav,.labRoleWorkspace .pb1148SecondaryHeader,.labRoleWorkspace .pb1148LabAvatar,.labRoleWorkspace .pb1148Manager').forEach(x=>x.remove());document.querySelectorAll('.pb1148HasSecondary,.pb1148SecondarySource,.pb1147LabAdminHeader').forEach(x=>x.classList.remove('pb1148HasSecondary','pb1148SecondarySource','pb1147LabAdminHeader'));}
+function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!location.pathname.startsWith('/lab'))return;const h=document.querySelector('.labRoleWorkspace .labSingleHeader');if(!h||!h.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return;h.classList.add('pb1147LabAdminHeader');paintIdentity(h);secondary(h);retireQuickAccess();
  let nav=h.querySelector('.pb1147LabNav');if(!nav){nav=document.createElement('nav');nav.className='pb1147LabNav';nav.setAttribute('aria-label','سفارش‌ها و تنظیمات لابراتوار');
   for(const [title,selector]of [['سفارش چاپ','.labPrintTopNav'],['سفارش آلبوم','.albumTopNav'],['آرشیو','.labArchiveHeaderBtn'],['مالی','.labFinanceHeaderBtn']]){if(!h.querySelector(selector))continue;if(selector==='.labArchiveHeaderBtn'&&nav.children.length){const line=document.createElement('span');line.className='pb1147Divider';line.setAttribute('aria-hidden','true');nav.append(line);}const button=document.createElement('button');button.type='button';const label=document.createElement('span');label.className='pb1149NavLabel';label.textContent=title;button.append(label);button.dataset.source=selector;button.onclick=()=>h.querySelector(selector)?.click();nav.append(button);}
   const divider=document.createElement('span');divider.className='pb1147Divider';divider.setAttribute('aria-hidden','true');nav.append(divider);

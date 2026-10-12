@@ -46,6 +46,8 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
   await page.getByLabel('جستجوی عکاس').fill('۰۹۱۲۰۰۰۰۰۰۰');
   if(mode==='new-customer'){
    await page.getByRole('option',{name:/مشتری جدید/}).click();
+   assert.equal(await page.getByRole('option').count(),0,'customer rows hidden while adding');
+   await page.getByLabel('نام موقت مشتری',{exact:true}).fill('آتلیه آزمایشی');
    await page.getByLabel('شماره موبایل',{exact:true}).fill('09120000001');
    await page.getByLabel('بدهی قبلی (تومان)').fill('50000');
    assert.equal(await page.getByLabel('بدهی قبلی (تومان)').inputValue(),'50,000');
@@ -89,7 +91,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
   await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
   if(mode==='remote'){await page.getByRole('status').filter({hasText:'هیچ عکسی به سرور ارسال نشد'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')));}
   else if(mode==='disk'){await page.getByRole('status').filter({hasText:'disk full'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')),'an unfinished draft must never become an invoiced order');}
-  else if(mode==='new-customer'){await page.getByText('سفارش شمارهٔ 42 ثبت شد.').waitFor();const reg=calls.find(x=>x.url==='/api/lab/delegated-customers');assert.equal(reg.body.mobile,'09120000001');assert.equal(reg.body.initialDebt,50000);assert.equal(reg.body.sendInvitation,true);assert(calls.some(x=>x.url.endsWith('/resend-invitation')));const create=calls.find(x=>x.url==='/api/lab/delegated-orders');assert.equal(create.body.customerId,'new-customer');assert.equal(create.body.initialDebt,undefined);assert.equal(create.body.mobile,undefined);}
+  else if(mode==='new-customer'){await page.getByText('سفارش شمارهٔ 42 ثبت شد.').waitFor();const reg=calls.find(x=>x.url==='/api/lab/delegated-customers');assert.equal(reg.body.mobile,'09120000001');assert.equal(reg.body.name,'آتلیه آزمایشی');assert.equal(reg.body.initialDebt,50000);assert.equal(reg.body.sendInvitation,true);assert(calls.some(x=>x.url.endsWith('/resend-invitation')));const create=calls.find(x=>x.url==='/api/lab/delegated-orders');assert.equal(create.body.customerId,'new-customer');assert.equal(create.body.initialDebt,undefined);assert.equal(create.body.mobile,undefined);}
   else{
    await page.getByText('سفارش شمارهٔ 42 ثبت شد.').waitFor();assert.equal(await page.evaluate(()=>window.readLocalPhoto()),'abc','original is saved in exactly the existing date/customer/print-job path');
    assert.equal(await page.evaluate(()=>window.readLocalPhoto('20-30-metallic-order-42',window.pbLabLocalIntakeStorage.fileName('Second = 2.JPG'))),'def','second size/paper batch remains separate and is retained');

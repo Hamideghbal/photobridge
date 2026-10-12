@@ -1,1 +1,1 @@
-2026-10-12-r1171-explicit-store-manager-access
+2026-10-13-r1172-lab-desktop-header-quick-access-cleanup

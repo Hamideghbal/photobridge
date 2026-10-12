@@ -50,3 +50,57 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
 .pb1147LabNav button.active .pb1149NavLabel::after{transform:scaleX(1)}
 }
 @media(prefers-reduced-motion:reduce){.pb1149NavLabel::after{transition:none}}
+ 
+/* R1172: Windows lab header uses the same type rhythm as the Store header. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav{
+  align-items:center!important;justify-content:center!important;gap:8px!important;
+  direction:rtl!important;min-width:0!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button:is([data-source],[data-category]){
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  height:40px!important;min-height:40px!important;min-width:0!important;
+  padding:7px 0!important;flex:0 0 auto!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;color:#475467!important;
+  font:850 13px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  letter-spacing:normal!important;white-space:nowrap!important;
+  transition:color .18s ease,transform .18s ease!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button:is([data-source],[data-category]).active{
+  color:#315efb!important;background:transparent!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav .pb1149NavLabel{
+  font:inherit!important;line-height:1.4!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav .pb1149NavLabel::after{
+  height:2px!important;bottom:-5px!important;border-radius:999px!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader{
+  direction:rtl!important;justify-content:flex-start!important;text-align:right!important;
+  gap:8px!important;padding:4px 18px!important;overflow-x:auto!important;
+  overscroll-behavior-x:contain!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button{
+  display:inline-flex!important;justify-content:center!important;align-items:center!important;
+  height:32px!important;min-height:32px!important;padding:5px 10px!important;
+  font:800 12px/1.3 Vazirmatn,Tahoma,sans-serif!important;
+  border:1px solid #dce4f2!important;border-radius:9px!important;
+  background:#fff!important;color:#344054!important;box-shadow:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader button.active{
+  background:#eef3ff!important;color:#315efb!important;border-color:#cbd8ff!important;
+ }
+ /* Retire both the shortcut controls and the card that reserved their space. */
+ html body #root .labRoleWorkspace .labQueueQuickAccessV464,
+ html body #root .labRoleWorkspace .labQueueQuickIntroV464,
+ html body #root .labRoleWorkspace .pb1172RetiredQuickAccess{
+  display:none!important;margin:0!important;padding:0!important;
+  height:0!important;min-height:0!important;border:0!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root .labRoleWorkspace .pb1147LabNav button:is([data-source],[data-category]){
+  transition:none!important;
+ }
+}

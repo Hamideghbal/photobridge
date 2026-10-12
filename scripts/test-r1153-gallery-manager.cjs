@@ -37,3 +37,46 @@ test('mobile sticky manager header and scrolling editor footer remain visible',(
  assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1158/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159/);
 });
+
+test('desktop gallery manager uses explicit back, identity and photo tab regions',()=>{
+ assert.match(ui,/className:"clientGalleryManagerTop pb1155ManagerTop"/);
+ assert.match(ui,/className:"clientGalleryManagerViewTabs"/);
+ assert.match(ui,/className:"backBtn",onClick:r,children:"→ بازگشت"/);
+ assert.match(css,/\/\* R1162:/);
+ assert.match(css,/grid-template-areas:"back identity tabs"!important/);
+ assert.match(css,/grid-area:back!important/);
+ assert.match(css,/grid-area:identity!important/);
+ assert.match(css,/grid-area:tabs!important/);
+ assert.match(css,/grid-template-areas:"back identity" "tabs tabs"!important/);
+ assert.match(css,/\.pb1155ManagerTop>\.clientGalleryManagerActions\{\s*display:none!important/);
+ assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1162/);
+});
+test('duplicate text delete control is hidden while trash SVG is preserved',()=>{
+ const vm=require('node:vm');
+ const source=fs.readFileSync('dist/web/photobridge-r1162-gallery-card-cleanup.js','utf8');
+ let removed=0,hiddenButton=false;
+ const textButton={
+  textContent:'حذف گالری',hidden:false,tabIndex:0,
+  style:{setProperty:(key,value,priority)=>{assert.equal(key,'display');assert.equal(value,'none');assert.equal(priority,'important');hiddenButton=true}},
+  setAttribute:(key,value)=>{assert.equal(key,'aria-hidden');assert.equal(value,'true')}
+ };
+ const trash={textContent:'',hidden:false};
+ const card={
+  querySelector:selector=>selector==='.pb1160GalleryDelete:has(svg)'?trash:null,
+  querySelectorAll:selector=>selector==='button'?[trash,textButton]:[],
+ };
+ let observed=false;
+ class Observer{observe(root,options){observed=!!root&&options.subtree===true&&options.childList===true}}
+ const document={
+  readyState:'complete',
+  getElementById:id=>id==='root'?{}:null,
+  querySelectorAll:selector=>selector==='.clientGalleryCard'?[card]:[]
+ };
+ vm.runInNewContext(source,{document,window:{addEventListener:()=>{}},MutationObserver:Observer});
+ assert.ok(observed,'React gallery changes are watched');
+ assert.equal(trash.hidden,false,'valid icon-only trash button remains visible');
+ assert.equal(textButton.hidden,true,'duplicate text delete button is hidden');
+ assert.equal(textButton.tabIndex,-1,'duplicate delete button leaves keyboard focus order');
+ assert.ok(hiddenButton);
+ assert.match(html,/photobridge-r1162-gallery-card-cleanup\.js\?v=r1162/);
+});

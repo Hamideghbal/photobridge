@@ -8,9 +8,9 @@ test('desktop navigation animates content below fixed scroll chrome and respects
  await page.addScriptTag({content:source.slice(a,b)+'window.testReveal=()=>reveal(motionContent(document));'});
  await page.evaluate(()=>window.testReveal());
  const running=await page.locator('.clientGalleryWorkspace').evaluate(el=>{const animation=el.getAnimations()[0];animation.pause();animation.currentTime=80;return {opacity:Number(getComputedStyle(el).opacity),frames:animation.effect.getKeyframes(),wrapper:el.parentElement.getAnimations().length}});
- assert(running.opacity<1&&running.opacity>.35);assert.equal(running.wrapper,0);assert.equal(running.frames[0].transform,'translateY(7px)');
+ assert(running.opacity<1&&running.opacity>.35);assert.equal(running.wrapper,0);assert.equal(running.frames[0].transform,'translateY(12px)');
  await page.evaluate(()=>{window.testReveal();window.testReveal()});assert.equal(await page.locator('.clientGalleryWorkspace').evaluate(el=>el.getAnimations().length),1,'repeated clicks cancel previous motion');
  await page.locator('.clientGalleryWorkspace').evaluate(el=>el.getAnimations().forEach(a=>a.cancel()));await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>window.testReveal());assert.equal(await page.locator('.clientGalleryWorkspace').evaluate(el=>el.getAnimations().length),0);
  }finally{await browser.close()}
 });
-test('motion stays desktop-only and versioned in the build',()=>{assert(source.includes("if(!matchMedia('(min-width:821px)').matches)return;"));assert(source.includes('reveal(motionContent(document))'));const html=fs.readFileSync('dist/web/index.html','utf8');assert(html.includes('photobridge-r1126-desktop-navigation.js?v=r1166'));});
+test('motion stays desktop-only and versioned in the build',()=>{assert(source.includes("if(!matchMedia('(min-width:821px)').matches)return;"));assert(source.includes('reveal(motionContent(document))'));const html=fs.readFileSync('dist/web/index.html','utf8');assert(html.includes('photobridge-r1126-desktop-navigation.js?v=r1167'));});

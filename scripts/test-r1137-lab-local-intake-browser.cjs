@@ -10,10 +10,10 @@ for(const mode of ['success','disk','remote','secondary','no-folder'])test(`conf
  try{
   const page=await browser.newPage({viewport:{width:1366,height:900}});const calls=[],registered=[];let fileId;page.setDefaultTimeout(8000);
   await page.route('**/*',async route=>{
-   const url=new URL(route.request().url());if(!url.pathname.startsWith('/api/'))return route.fulfill({body:'<div class="labRoleWorkspace"><main><div class="roleHeaderToolButtons" style="display:none"></div><div class="ordersWorkspace"></div></main></div>',contentType:'text/html'});
+   const url=new URL(route.request().url());if(!url.pathname.startsWith('/api/'))return route.fulfill({body:'<div class="labRoleWorkspace"><main><div class="roleHeaderToolButtons" style="display:none"></div><div class="ordersWorkspace"><div class="labQueueQuickIntroV464"><button>دسترسی سریع متن طولانی</button></div><div class="mainQueueFilters"><button>در جریان</button></div></div></main></div>',contentType:'text/html'});
    const body=route.request().postDataJSON();calls.push({url:url.pathname,body,headers:route.request().headers()});
    if(url.pathname.endsWith('/download-device'))return route.fulfill({json:{registered:true,isThisDevice:mode!=='secondary'}});
-   if(url.pathname.endsWith('/bootstrap'))return route.fulfill({json:{customers:[{id:'customer',name:'Display Studio',mobile:'09120000000'}],printSizes:[{id:'size',label:'10×15'},{id:'large',label:'20×30'}]}});
+   if(url.pathname.endsWith('/bootstrap')){await new Promise(resolve=>setTimeout(resolve,180));return route.fulfill({json:{customers:[{id:'customer',name:'Display Studio',mobile:'09120000000'}],printSizes:[{id:'size',label:'10×15'},{id:'large',label:'20×30'}]}});}
    if(url.pathname.endsWith('/presign')){fileId=body.clientFileId;registered.push(body);return route.fulfill({json:{fileId,storageMode:mode==='remote'?'object':'device-local',uploadUrl:mode==='remote'?'https://upload.test/photo':null}});}
    if(url.pathname==='/api/lab/orders/order')return route.fulfill({json:{order:{id:'order',number:42,mode:'print',customer_name:'Customer'},files:registered.map(x=>({id:x.clientFileId,original_name:x.name,print_size_id:x.printSizeId,size_label:x.printSizeId==='size'?'10×15':'20×30',print_type:x.printType,bytes:x.bytes}))}});
    if(url.pathname.endsWith('/submit'))return route.fulfill({json:{order:{id:'order'},invoice:{number:42}}});
@@ -34,6 +34,9 @@ for(const mode of ['success','disk','remote','secondary','no-folder'])test(`conf
    assert.equal(await page.locator('#pb1137LocalIntakeButton').count(),0);assert.equal(calls.filter(x=>x.body).length,0);return;
   }
   await page.getByRole('button',{name:'ثبت سفارش عکس حضوری',exact:true}).click();
+  assert.equal(await page.locator('dialog[open]').count(),0,'dialog stays closed while bootstrap loads');
+  assert.equal(await page.locator('#pb1137LocalIntakeButton').evaluate(x=>x.parentElement.className),'mainQueueFilters');
+  assert.equal(await page.locator('.labQueueQuickIntroV464 button').innerText(),'دسترسی سریع');
   if(mode==='no-folder'){await page.getByRole('status').filter({hasText:'مسیر همیشگی ذخیره هنوز تنظیم نشده'}).waitFor();assert.equal(calls.filter(x=>x.body).length,0);assert.equal(await page.evaluate(()=>pickerCalls),0);return;}
   assert.equal(await page.getByRole('button',{name:'انتخاب پوشهٔ ذخیره روی هارد'}).count(),0);
   await page.getByRole('button',{name:'عکاس / مشتری',exact:true}).click();
@@ -44,25 +47,34 @@ for(const mode of ['success','disk','remote','secondary','no-folder'])test(`conf
   assert.equal(await page.getByLabel('تحویل سفارش').count(),0);assert.equal(await page.getByLabel('اولویت').count(),0);
   const row=await page.locator('.pb1139EntryRow>.pb1139Customer>button,.pb1139EntryRow>label>select,.pb1139EntryRow>label>button').evaluateAll(items=>items.map(x=>x.getBoundingClientRect().y));
   assert.equal(row.length,5);assert(Math.max(...row)-Math.min(...row)<2,'all entry controls share one aligned row');
-  await page.locator('input[type=file]').setInputFiles({name:'Photo.JPG',mimeType:'image/jpeg',buffer:Buffer.from('abc')});
+  await page.locator('form>input[type=file]').setInputFiles({name:'Photo.JPG',mimeType:'image/jpeg',buffer:Buffer.from('abc')});
   await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
   assert.equal(calls.filter(x=>x.body).length,0,'unadded files cannot be silently omitted from final registration');
-  await page.getByRole('button',{name:/افزودن/}).click();
+  await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
   assert.equal(await page.locator('.pb1139Group').count(),1);
   if(mode==='success'){
    await page.getByLabel('سایز چاپ',{exact:true}).selectOption('large');await page.getByLabel('کاغذ',{exact:true}).selectOption('silk');
-   await page.locator('input[type=file]').setInputFiles({name:'Second.JPG',mimeType:'image/jpeg',buffer:Buffer.from('def')});await page.getByRole('button',{name:/افزودن/}).click();
+   await page.locator('form>input[type=file]').setInputFiles({name:'Second.JPG',mimeType:'image/jpeg',buffer:Buffer.from('def')});await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
    assert.equal(await page.locator('.pb1139Group').count(),2);assert.equal(await page.locator('.pb1139Group').nth(0).locator('b').innerText(),'10×15 · لاستر');
-   await page.locator('input[type=file]').setInputFiles({name:'Removed.JPG',mimeType:'image/jpeg',buffer:Buffer.from('ghi')});await page.getByRole('button',{name:/افزودن/}).click();
+   await page.locator('form>input[type=file]').setInputFiles({name:'Removed.JPG',mimeType:'image/jpeg',buffer:Buffer.from('ghi')});await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
    await page.locator('.pb1139Group').nth(2).getByRole('button',{name:'حذف گروه'}).click();assert.equal(await page.locator('.pb1139Group').count(),2);
+  }
+  if(mode==='success'){
+   await page.locator('.pb1139Group').nth(1).getByLabel('کاغذ عکس').selectOption('metallic');
+   const group=page.locator('.pb1139Group').first();
+   await group.getByRole('button',{name:'جمع کردن'}).click();assert.equal(await group.locator('.pb1139GroupPhotos').isVisible(),false);
+   await group.getByRole('button',{name:'باز کردن'}).click();
+   await group.getByLabel('کاغذ عکس').selectOption('metallic');await group.getByLabel('کاغذ عکس').selectOption('luster');
+   await group.locator('input[type=file]').setInputFiles({name:'Extra.JPG',mimeType:'image/jpeg',buffer:Buffer.from('extra')});
+   assert.equal(await group.locator('figure').count(),2);await group.locator('figure').last().getByRole('button',{name:'حذف عکس'}).click();assert.equal(await group.locator('figure').count(),1);
   }
   await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
   if(mode==='remote'){await page.getByRole('status').filter({hasText:'هیچ عکسی به سرور ارسال نشد'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')));}
   else if(mode==='disk'){await page.getByRole('status').filter({hasText:'disk full'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')),'an unfinished draft must never become an invoiced order');}
   else{
    await page.getByText('سفارش شمارهٔ 42 ثبت شد.').waitFor();assert.equal(await page.evaluate(()=>window.readLocalPhoto()),'abc','original is saved in exactly the existing date/customer/print-job path');
-   assert.equal(await page.evaluate(()=>window.readLocalPhoto('20-30-silk-order-42','second.jpg')),'def','second size/paper batch remains separate and is retained');
-   assert.equal(registered.length,2);assert.deepEqual(registered.map(x=>[x.printSizeId,x.printType]),[['size','luster'],['large','silk']]);assert(!registered.some(x=>x.name==='Removed.JPG'));
+   assert.equal(await page.evaluate(()=>window.readLocalPhoto('20-30-metallic-order-42','second.jpg')),'def','second size/paper batch remains separate and is retained');
+   assert.equal(registered.length,2);assert.deepEqual(registered.map(x=>[x.printSizeId,x.printType]),[['size','luster'],['large','metallic']]);assert(!registered.some(x=>x.name==='Removed.JPG'));
    const create=calls.find(x=>x.url==='/api/lab/delegated-orders');assert.equal(create.body.delivery,'pickup');assert.equal(create.body.priority,'normal');
    const upload=calls.find(x=>x.url.endsWith('/presign'));assert.equal(upload.body.localOnly,true);assert.equal(upload.body.bytes,3);assert.equal(upload.headers['x-photobridge-device-id'],'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
    assert(!calls.some(x=>x.url.includes('/local')||x.url.includes('uploads')));

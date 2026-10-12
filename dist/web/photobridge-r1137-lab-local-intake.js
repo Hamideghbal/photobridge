@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 if(window.pb1137LocalIntake)return;window.pb1137LocalIntake=true;
-let active=null;
+let active=null,opening=false;
 const q=(s,r=document)=>r.querySelector(s);
 function node(tag,text,cls){const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
 const storage=()=>window.pbLabLocalIntakeStorage;
@@ -27,24 +27,25 @@ function customerMenu(parent,options,onChange){
  return model;
 }
 async function open(){
- if(active)return;
+ if(active||opening)return;
+ opening=true;
+ const launch=document.getElementById('pb1137LocalIntakeButton');if(launch){launch.disabled=true;launch.textContent='در حال آماده‌سازی…';}
+ const provider=storage();let directory,bootstrap,loadError;
+ try{
+  const [primary,root,data]=await Promise.all([api('/api/lab/download-device'),provider.root(),api('/api/lab/delegated-orders/bootstrap')]);
+  if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);
+  if(!root)throw Error('مسیر همیشگی ذخیره هنوز تنظیم نشده است. آن را در تنظیمات «ذخیره روی هارد» لابراتوار مشخص کن.');
+  directory=root;bootstrap=data;
+ }catch(e){loadError=e;}
+ finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}
  const modal=node('dialog',null,'pb1137Intake');modal.setAttribute('dir','rtl');modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');active=modal;
  const head=node('header');head.append(node('h2','ثبت سفارش عکس حضوری'));const close=node('button','بستن');close.type='button';head.append(close);modal.append(head);
  const previews=[];
- const message=node('p','عکس‌ها در مسیر همیشگی کامپیوتر اصلی لابراتوار ذخیره می‌شوند. عکس‌ها را در گروه‌های سایز و کاغذ اضافه کن؛ سپس سفارش را ثبت کن.');modal.append(message);
+ const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');modal.append(message);
  const form=node('form');form.method='dialog';modal.append(form);
  const error=node('p',null,'pb1137Error');error.setAttribute('role','status');form.append(error);
- const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);modal.showModal();
- const provider=storage();let directory,bootstrap;
- try{
-  const primary=await api('/api/lab/download-device');
-  if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);
-  directory=await provider.root();
-  if(!directory)throw Error('مسیر همیشگی ذخیره هنوز تنظیم نشده است. آن را در تنظیمات «ذخیره روی هارد» لابراتوار مشخص کن.');
-  bootstrap=await api('/api/lab/delegated-orders/bootstrap');
- }catch(e){error.textContent=e.message;return;}
- if(active!==modal)return;
- form.append(node('div','ذخیرهٔ خودکار در مسیر اصلی لابراتوار: '+directory.name,'pb1138SavePath'));
+ const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);
+ if(loadError){error.textContent=loadError.message;modal.showModal();return;}
  const settings=node('div',null,'pb1137Settings pb1139EntryRow');form.append(settings);
  const newFields=node('div',null,'pb1137Settings');newFields.hidden=true;form.append(newFields);
  const customers=customerMenu(settings,[...(bootstrap.customers||[]).map(c=>[c.id,`${c.name} · ${c.mobile}`]),['new','مشتری جدید']],value=>{newFields.hidden=value!=='new';});
@@ -61,20 +62,30 @@ async function open(){
  const empty=node('p','سایز و کاغذ را انتخاب کن، عکس‌ها را اضافه کن و برای سایز بعدی همین کار را تکرار کن.','pb1139Empty');list.append(empty);
  let entries=[],groups=[],pendingFiles=[],order=null,submitting=false,locked=false,startedAt=null;
  fileInput.onchange=()=>{pendingFiles=[...fileInput.files];choose.textContent=pendingFiles.length?`${pendingFiles.length.toLocaleString('fa-IR')} عکس انتخاب شد`:'انتخاب عکس‌ها';};
+ function syncEntries(){entries=groups.flatMap(x=>x.items);}
+ function makeItems(files,size,paper){return [...files].map(file=>{const preview=URL.createObjectURL(file);previews.push(preview);return{file,id:crypto.randomUUID(),size,paper,preview};});}
  function renderGroups(){
   list.replaceChildren();if(!groups.length){list.append(empty);return;}
   for(const group of groups){
    const card=node('section',null,'pb1139Group');card.dataset.groupId=group.id;
    const head=node('div',null,'pb1139GroupHead');head.append(node('b',`${group.label} · ${group.paperLabel}`),node('span',`${group.items.length.toLocaleString('fa-IR')} عکس`));
-   const remove=node('button','حذف گروه');remove.type='button';remove.onclick=()=>{if(locked||submitting)return;groups=groups.filter(x=>x!==group);group.items.forEach(x=>URL.revokeObjectURL(x.preview));entries=groups.flatMap(x=>x.items);renderGroups();};head.append(remove);card.append(head);
-   const photos=node('div',null,'pb1139GroupPhotos');for(const item of group.items){const photo=node('figure');const image=node('img');image.src=item.preview;image.alt=item.file.name;photo.append(image,node('figcaption',item.file.name));photos.append(photo);}card.append(photos);list.append(card);
+   const toggle=node('button',group.collapsed?'باز کردن':'جمع کردن');toggle.type='button';toggle.setAttribute('aria-expanded',String(!group.collapsed));toggle.onclick=()=>{group.collapsed=!group.collapsed;renderGroups();};head.append(toggle);
+   const input=node('input');input.type='file';input.accept=fileInput.accept;input.multiple=true;input.hidden=true;
+   const more=node('button','افزودن عکس');more.type='button';more.onclick=()=>input.click();input.onchange=()=>{if(locked||submitting)return;group.items.push(...makeItems(input.files,group.size,group.paper));syncEntries();renderGroups();};head.append(more,input);
+   const remove=node('button','حذف گروه');remove.type='button';remove.onclick=()=>{if(locked||submitting)return;groups=groups.filter(x=>x!==group);group.items.forEach(x=>URL.revokeObjectURL(x.preview));syncEntries();renderGroups();};head.append(remove);card.append(head);
+   const photos=node('div',null,'pb1139GroupPhotos');photos.hidden=!!group.collapsed;
+   for(const item of group.items){
+    const photo=node('figure');const image=node('img');image.src=item.preview;image.alt=item.file.name;photo.append(image,node('figcaption',item.file.name));
+    const paper=field(photo,'کاغذ عکس',select(paperOptions));paper.value=item.paper;paper.onchange=()=>{if(!locked&&!submitting)item.paper=paper.value;};
+    const del=node('button','حذف عکس');del.type='button';del.onclick=()=>{if(locked||submitting)return;URL.revokeObjectURL(item.preview);group.items=group.items.filter(x=>x!==item);if(!group.items.length)groups=groups.filter(x=>x!==group);syncEntries();renderGroups();};photo.append(del);photos.append(photo);
+   }card.append(photos);list.append(card);
   }
  }
  add.onclick=()=>{
   if(locked||submitting)return;
   if(!defaultSize.value||!pendingFiles.length){error.textContent='سایز چاپ و عکس‌های این گروه را انتخاب کن.';return;}
   const items=pendingFiles.map(file=>{const preview=URL.createObjectURL(file);previews.push(preview);return{file,id:crypto.randomUUID(),size:defaultSize.value,paper:defaultPaper.value,preview};});
-  groups.push({id:crypto.randomUUID(),label:sizes.find(x=>x[0]===defaultSize.value)?.[1]||'',paperLabel:paperOptions.find(x=>x[0]===defaultPaper.value)[1],items});entries=groups.flatMap(x=>x.items);pendingFiles=[];fileInput.value='';choose.textContent='انتخاب عکس‌ها';error.textContent='';renderGroups();
+  groups.push({size:defaultSize.value,paper:defaultPaper.value,id:crypto.randomUUID(),label:sizes.find(x=>x[0]===defaultSize.value)?.[1]||'',paperLabel:paperOptions.find(x=>x[0]===defaultPaper.value)[1],items});entries=groups.flatMap(x=>x.items);pendingFiles=[];fileInput.value='';choose.textContent='انتخاب عکس‌ها';error.textContent='';renderGroups();
  };
  const submit=node('button','ثبت سفارش و صدور فاکتور', 'pb1137Submit');submit.type='submit';form.append(submit);
  const clientOrderId=crypto.randomUUID();
@@ -102,16 +113,18 @@ async function open(){
    const done=node('button','نمایش سفارش');done.type='button';done.onclick=()=>{closeModal();location.assign('/lab/orders');};form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;
   }catch(e){busy(false);error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':e.message;}
  };
+ modal.showModal();
 }
 function mount(){
  const provider=storage();
  const host=document.querySelector('.labRoleWorkspace main')||document.querySelector('main.labMain');
  const old=document.getElementById('pb1137LocalIntakeButton');
+ if(host){const intro=host.querySelector('.labQueueQuickIntroV464 button');if(intro&&intro.textContent!=='دسترسی سریع')intro.textContent='دسترسی سریع';}
  if(!/^\/lab(?:\/|$)/.test(location.pathname)||!host||!provider||!provider.deviceId()){old?.remove();return;}
  if(primaryState===null){checkPrimary();return;}if(!primaryState){old?.remove();return;}
- const target=host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}
- if(old){if(old.parentElement!==target)target.prepend(old);return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;
- target.prepend(button);
+ const target=host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}
+ if(old){if(old.parentElement!==target)target.append(old);return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;
+ target.append(button);
 }
 let primaryState=null,checking=false;
 async function checkPrimary(){if(checking)return;checking=true;try{const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;}catch{primaryState=false;}finally{checking=false;schedule();}}

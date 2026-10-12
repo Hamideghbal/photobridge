@@ -21,7 +21,9 @@ test('gallery manager moves delete action to red overlay while keeping confirmat
 test('brand asks for only photographer name, logo and Save',()=>{
  assert.match(ui,/className:"card clientGalleryBrandSettings pb1153Brand"/);
  assert.match(ui,/className:"pb1153BrandFields"/);
- assert.match(ui,/J.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
+ assert.match(ui,/className:"pb1163LogoPicker"/);
+ assert.match(ui,/onClick:\(\)=>v\.current\?\.click\(\)/);
+ assert.doesNotMatch(ui,/J.logoUrl\?"تغییر لوگو":"انتخاب لوگو"/);
  assert.match(ui,/className:"primary pb1153BrandSave"/);
  assert.doesNotMatch(ui,/در گالری مشتری جای لوگوی PhotoBridge نمایش داده می‌شود/);
 });

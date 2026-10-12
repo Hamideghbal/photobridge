@@ -19383,10 +19383,15 @@ ${inviteUrl}`;
         }
         if (req.method === 'GET' && url.pathname === '/api/lab/delegated-orders/bootstrap') {
             const [customers, sizes, lab] = await Promise.all([
-                pool.query(`SELECT u.id,COALESCE(pp.studio_name,u.name) name,u.mobile,m.settlement_mode
+                pool.query(`SELECT u.id,COALESCE(NULLIF(pp.studio_name,''),u.name) name,u.mobile,m.settlement_mode,
+                    NOT m.active AS "registrationPending"
                     FROM lab_memberships m JOIN users u ON u.id=m.user_id
                     LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
-                    WHERE m.lab_id=$1 AND m.role='customer' AND m.active=true ORDER BY name`, [labId]),
+                    WHERE m.lab_id=$1 AND m.role='customer'
+                    AND (m.active=true OR EXISTS(
+                        SELECT 1 FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile
+                        AND i.active=true AND i.uses=0))
+                    ORDER BY name`, [labId]),
                 pool.query(`SELECT s.id,s.label,s.width_cm,s.height_cm,p.luster,p.silk,p.metallic,p.chassis,p.frame
                     FROM print_sizes s LEFT JOIN lab_prices p ON p.size_id=s.id AND p.lab_id=$1
                     WHERE s.active=true AND (s.owner_lab_id IS NULL OR s.owner_lab_id=$1)
@@ -19397,6 +19402,144 @@ ${inviteUrl}`;
             const album = lab.rows[0]?.album_enabled ? await albumCatalogForLab(labId, false) : { enabled: false };
             return sendJson(res, 200, { lab: lab.rows[0], customers: customers.rows,
                 printSizes: sizes.rows, album, cachedAt: new Date().toISOString() });
+        }
+
+        // PB1143: registering a walk-in customer is independent of an order.
+        // Pending laboratory membership remains inactive until the mobile owner accepts.
+        const ensureDelegatedCustomerInvite = async (db, mobile, customerName) => {
+            const valid = await db.query(`SELECT id,token,sms_status FROM invitations
+                WHERE lab_id=$1 AND target_mobile=$2 AND active=true AND uses=0
+                AND (expires_at IS NULL OR expires_at>now())
+                ORDER BY created_at DESC LIMIT 1`, [labId, mobile]);
+            if (valid.rowCount) return valid.rows[0];
+            const created = await db.query(`INSERT INTO invitations(lab_id,token,created_by,target_mobile,target_name,max_uses,sms_status)
+                VALUES($1,$2,$3,$4,$5,1,'not_sent') RETURNING id,token,sms_status`,
+                [labId, crypto.randomBytes(18).toString('base64url'), a.userId, mobile,
+                    customerName === mobile ? null : customerName]);
+            return created.rows[0];
+        };
+        const sendDelegatedCustomerInvite = async (invitationId, customerId) => {
+            const iq = await pool.query(`SELECT i.id,i.token,i.target_mobile,i.target_name,
+                l.name lab_name,l.sms_customer_notifications_allowed FROM invitations i
+                JOIN labs l ON l.id=i.lab_id
+                WHERE i.id=$1 AND i.lab_id=$2 AND i.active=true AND i.uses=0`, [invitationId, labId]);
+            const invite = iq.rows[0];
+            if (!invite) return { invitationSmsSent: false, invitationSmsError: 'invalid_invite' };
+            if (!invite.sms_customer_notifications_allowed)
+                return { invitationSmsSent: false, invitationSmsError: 'sms_customer_notifications_not_allowed' };
+            // Atomic send reservation stops repeated clicks from creating duplicate SMS charges.
+            const reserved = await pool.query(`UPDATE invitations
+                SET sms_status='not_sent',sms_reference='dispatching',sms_sent_at=now()
+                WHERE id=$1 AND (sms_sent_at IS NULL OR sms_sent_at<now()-interval '60 seconds')
+                RETURNING id`, [invitationId]);
+            if (!reserved.rowCount)
+                return { invitationSmsSent: false, invitationSmsError: 'invitation_sms_rate_limited' };
+            try {
+                const message = `سلام ${invite.target_name || ''}\nلابراتوار «${invite.lab_name || 'PhotoBridge'}» شما را برای همکاری دعوت کرده است.\nلینک تکمیل عضویت: ${PUBLIC_APP_URL}/invite/${invite.token}`;
+                const sms = await sendSms({ mobile: invite.target_mobile, message, purpose: 'lab_invitation',
+                    eventKey: 'delegated_customer_pre_registration', labId, chargeLabId: labId,
+                    serviceKey: 'sms_customer_notification', metadata: { invitationId, customerId } });
+                await pool.query(`UPDATE invitations SET sms_status='sent',sms_reference=$2,sms_sent_at=now()
+                    WHERE id=$1`, [invitationId, String(sms?.reference || '') || null]);
+                return { invitationSmsSent: true };
+            } catch (e) {
+                await pool.query(`UPDATE invitations SET sms_status='failed',sms_reference=NULL WHERE id=$1`,
+                    [invitationId]).catch(() => {});
+                return { invitationSmsSent: false, invitationSmsError: String(e?.message || 'sms_send_failed') };
+            }
+        };
+        if (req.method === 'POST' && url.pathname === '/api/lab/delegated-customers') {
+            if (!await requireLocalIntakePrimary()) return;
+            const b = await bodyJson(req);
+            const mobile = normalizeMobile(String(b.mobile || ''));
+            const openingDebt = Number(b.initialDebt ?? 0);
+            if (!/^09\d{9}$/.test(mobile)) return sendJson(res, 400, { error: 'invalid_sms_mobile' });
+            if (!Number.isSafeInteger(openingDebt) || openingDebt<0 || openingDebt>1_000_000_000_000)
+                return sendJson(res, 400, { error: 'invalid_initial_debt' });
+            const c = await pool.connect();
+            let created;
+            try {
+                await c.query('BEGIN');
+                await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))', [labId, mobile]);
+                const users = await c.query('SELECT id,name FROM users WHERE mobile=$1 FOR UPDATE', [mobile]);
+                if (users.rowCount>1) {
+                    await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_ambiguous' });
+                }
+                let customerId = users.rows[0]?.id, customerName = String(users.rows[0]?.name || mobile);
+                if (!customerId) {
+                    const randomPassword = crypto.randomBytes(32).toString('hex');
+                    const u = await c.query(`INSERT INTO users(name,mobile,password_hash,platform_role,active)
+                        VALUES($1,$2,$3,'user',true) RETURNING id`,
+                        [mobile,mobile,passwordHash(randomPassword)]);
+                    customerId = u.rows[0].id;
+                }
+                const mq = await c.query(`SELECT role,active FROM lab_memberships
+                    WHERE lab_id=$1 AND user_id=$2 FOR UPDATE`, [labId,customerId]);
+                if (mq.rowCount && mq.rows[0].role !== 'customer') {
+                    await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'mobile_is_lab_admin' });
+                }
+                const registered = mq.rowCount>0 && mq.rows[0].active===true;
+                if (registered && openingDebt>0) {
+                    await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'opening_debt_existing_member' });
+                }
+                if (!mq.rowCount) await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active)
+                    VALUES($1,$2,'customer',false)`, [labId,customerId]);
+                const invitation = registered ? null : await ensureDelegatedCustomerInvite(c,mobile,customerName);
+                if (openingDebt>0) {
+                    const priorDebt = await c.query(`SELECT id FROM finance_transactions
+                        WHERE lab_id=$1 AND reference_type='lab_delegated_opening_debt' AND reference_id=$2 LIMIT 1`,
+                        [labId,customerId]);
+                    if (priorDebt.rowCount) {
+                        await c.query('ROLLBACK'); return sendJson(res, 409, { error: 'initial_debt_already_recorded' });
+                    }
+                    await ensureFinanceAccounts(c,labId);
+                    await postBalancedFinanceTransaction(c, {
+                        labId,actorId:a.userId,referenceType:'lab_delegated_opening_debt',referenceId:customerId,
+                        description:'بدهی قبلی مشتری حضوری '+mobile,
+                        lines:[{accountKey:'receivable',customerId,debit:openingDebt,note:'بدهی قبلی'},
+                            {accountKey:'opening_balance_equity',customerId,credit:openingDebt,note:'مانده افتتاحیه'}]
+                    });
+                }
+                await c.query('COMMIT');
+                created = { customer: { id: customerId, name: customerName, mobile,
+                    registrationPending: !registered }, invitationId: invitation?.id || null };
+            } catch (e) {
+                await c.query('ROLLBACK').catch(()=>{});
+                if (e.code==='23505') return sendJson(res,409,{error:'duplicate_mobile'});
+                throw e;
+            } finally { c.release(); }
+            await audit(a.userId,labId,'customer.pre_register','user',created.customer.id,
+                {mobile,initialDebt:openingDebt,registrationPending:created.customer.registrationPending}).catch(()=>{});
+            if (b.sendInvitation===true && created.invitationId) {
+                Object.assign(created,await sendDelegatedCustomerInvite(created.invitationId,created.customer.id));
+            }
+            return sendJson(res,201,{ok:true,...created});
+        }
+        const delegatedResend = url.pathname.match(/^\/api\/lab\/delegated-customers\/([0-9a-f-]{36})\/resend-invitation$/i);
+        if (req.method === 'POST' && delegatedResend) {
+            if (!await requireLocalIntakePrimary()) return;
+            const c = await pool.connect();
+            let inviteId, mobile;
+            try {
+                await c.query('BEGIN');
+                const mq = await c.query(`SELECT u.mobile,u.name FROM lab_memberships m
+                    JOIN users u ON u.id=m.user_id
+                    WHERE m.lab_id=$1 AND m.user_id=$2 AND m.role='customer' AND m.active=false
+                    FOR UPDATE OF m`, [labId,delegatedResend[1]]);
+                if (!mq.rowCount) {
+                    await c.query('ROLLBACK');return sendJson(res,409,{error:'customer_not_pending'});
+                }
+                mobile = mq.rows[0].mobile;
+                await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))', [labId,mobile]);
+                const invitation = await ensureDelegatedCustomerInvite(c,mobile,mq.rows[0].name);
+                inviteId=invitation.id;
+                await c.query('COMMIT');
+            } catch (e) { await c.query('ROLLBACK').catch(()=>{});throw e; }
+            finally { c.release(); }
+            const delivery = await sendDelegatedCustomerInvite(inviteId,delegatedResend[1]);
+            await audit(a.userId,labId,'customer.pre_register_invite_resend','user',
+                delegatedResend[1],{mobile,success:delivery.invitationSmsSent}).catch(()=>{});
+            return sendJson(res,delivery.invitationSmsSent?200:409,{ok:delivery.invitationSmsSent,...delivery});
         }
         // Intake created by the lab on behalf of a photographer. The caller must
         // be a lab admin; a Windows notification-agent token cannot use this API.
@@ -19445,7 +19588,10 @@ ${inviteUrl}`;
                 let customerId, pendingRegistration = false, invitation = null, newInvitation = false, settlement = 'ledger';
                 if (existingCustomerId) {
                     const q = await c.query(`SELECT u.id,m.settlement_mode FROM lab_memberships m JOIN users u ON u.id=m.user_id
-                        WHERE m.lab_id=$1 AND m.user_id=$2 AND m.role='customer' AND m.active=true LIMIT 1`, [labId, existingCustomerId]);
+                        WHERE m.lab_id=$1 AND m.user_id=$2 AND m.role='customer'
+                        AND (m.active=true OR EXISTS(
+                            SELECT 1 FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile
+                            AND i.active=true AND i.uses=0)) LIMIT 1`, [labId, existingCustomerId]);
                     if (!q.rowCount) {
                         await c.query('ROLLBACK');
                         return sendJson(res, 404, { error: 'photographer_not_in_lab' });

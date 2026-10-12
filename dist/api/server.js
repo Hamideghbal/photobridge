@@ -9672,7 +9672,7 @@ async function ensureEquipmentRentalV829BrandSchema(){
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS equipment_store_brands_active_uidx ON equipment_store_brands(shop_id,lower(name)) WHERE deleted_at IS NULL`);
     await pool.query(`INSERT INTO equipment_store_brands(shop_id,name,sort_order)
       SELECT s.id,v.name,v.sort_order FROM equipment_rental_shops s CROSS JOIN (VALUES ('Sony',10),('Canon',20),('Nikon',30)) AS v(name,sort_order)
-      WHERE NOT EXISTS (SELECT 1 FROM equipment_store_brands b WHERE b.shop_id=s.id AND lower(b.name)=lower(v.name))`);
+      WHERE COALESCE(s.business_category,'equipment_rental_sale') NOT IN ('frame','chassis','frame_chassis') AND NOT EXISTS (SELECT 1 FROM equipment_store_brands b WHERE b.shop_id=s.id AND lower(b.name)=lower(v.name))`);
     await pool.query(`WITH inventory_brands AS (
       SELECT shop_id,btrim(brand) name FROM equipment_rental_items WHERE deleted_at IS NULL AND btrim(COALESCE(brand,''))<>''
       UNION SELECT shop_id,btrim(brand) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(brand,''))<>''
@@ -9701,7 +9701,7 @@ async function ensureEquipmentRentalV830ModelSchema(){
         WHERE equipment_store_models.customized=false AND equipment_store_models.deleted_at IS NULL`);
     await pool.query(`WITH used AS (
       SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,btrim(model) name FROM equipment_rental_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
-      UNION SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,btrim(model) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
+      UNION SELECT shop_id,category category_code,NULLIF(btrim(brand),'') brand_name,COALESCE(NULLIF(btrim(variant_specs->>'baseModel'),''),btrim(model)) name FROM equipment_sale_items WHERE deleted_at IS NULL AND btrim(COALESCE(model,''))<>''
     ) INSERT INTO equipment_store_models(shop_id,category_code,brand_name,name,customized,sort_order)
       SELECT u.shop_id,u.category_code,u.brand_name,u.name,true,1000 FROM used u
       WHERE NOT EXISTS (SELECT 1 FROM equipment_store_models m WHERE m.shop_id=u.shop_id AND m.deleted_at IS NULL AND m.category_code=u.category_code AND lower(COALESCE(m.brand_name,''))=lower(COALESCE(u.brand_name,'')) AND lower(btrim(m.name))=lower(btrim(u.name)))`);
@@ -9719,7 +9719,35 @@ async function syncEquipmentRentalV830CentralModelsForShop(shopId){
         SET category_code=EXCLUDED.category_code,brand_name=EXCLUDED.brand_name,name=EXCLUDED.name,sort_order=EXCLUDED.sort_order,updated_at=now()
         WHERE equipment_store_models.customized=false AND equipment_store_models.deleted_at IS NULL`,[shopId]);
 }
+function frameShop(shop){return ['frame','chassis','frame_chassis'].includes(shop?.business_category);}
+function frameDefaults(type){const frame=[['frame_wood','قاب چوبی'],['frame_metal','قاب فلزی'],['frame_pvc','قاب PVC'],['frame_custom','قاب سفارشی']],chassis=[['chassis_mdf','شاسی MDF'],['chassis_foam','شاسی فوم'],['chassis_wood','شاسی چوبی'],['chassis_custom','شاسی سفارشی']];return type==='frame'?frame:type==='chassis'?chassis:type==='frame_chassis'?[...frame,...chassis]:[];}
+function frameVariant(shop,b,current=null){
+ if(!frameShop(shop))return {model:(b.model===undefined?String(current?.model||current?.title||''):String(b.model||'')).trim(),specs:current?.variant_specs||{}};
+ const hasFields=Object.keys(b).some(k=>k.startsWith('variant'));if(current&&!hasFields)return {model:(b.model===undefined?String(current.model||current.title||''):String(b.model||'')).trim(),specs:current.variant_specs||{}};
+ const old=current?.variant_specs||{},model=String(b.model??old.baseModel??current?.model??'').trim();
+ const material=String(b.variantMaterial??old.material??'').trim(),color=String(b.variantColor??old.color??'').trim();
+ const number=k=>{const raw=b[k];if(raw===undefined)return old[k.replace('variant','').replace(/^./,c=>c.toLowerCase())]??null;if(String(raw).trim()==='')return null;const n=Number(normalizeDigits(String(raw)).replace('٫','.'));return Number.isFinite(n)&&n>0&&n<=10000?n:NaN;};
+ const widthCm=number('variantWidthCm'),heightCm=number('variantHeightCm'),diameterCm=number('variantDiameterCm'),thicknessMm=number('variantThicknessMm');
+ if(!model||!material||material.length>80||!color||color.length>40||![widthCm,heightCm,diameterCm,thicknessMm].every(n=>n===null||Number.isFinite(n))||!thicknessMm||(!diameterCm&&(!widthCm||!heightCm))||(diameterCm&&(widthCm||heightCm)))return {error:'frame_variant_specs_required'};
+ const specs={baseModel:model,material,color,widthCm,heightCm,diameterCm,thicknessMm};const size=diameterCm?'قطر '+diameterCm+' سانتی‌متر':widthCm+'×'+heightCm+' سانتی‌متر';
+ return {specs,model:[model,'جنس '+material,size,'ضخامت '+thicknessMm+' میلی‌متر','رنگ '+color].join(' · ')};
+}
+const frameDefaultSeeds=new Map();
 async function equipmentRentalSeedDefaultsForShop(shopId) {
+    const shop=(await pool.query('SELECT business_category FROM equipment_rental_shops WHERE id=$1',[shopId])).rows[0];
+    if(frameShop(shop)){const key=String(shopId)+':'+shop.business_category;if(!frameDefaultSeeds.has(key)){const pending=(async()=>{
+      const defaults=frameDefaults(shop.business_category);
+      for(const [index,[code,name]] of defaults.entries()){
+        await pool.query('INSERT INTO equipment_catalog_categories(shop_id,code,name,sort_order) VALUES($1,$2,$3,$4) ON CONFLICT(shop_id,code) DO NOTHING',[shopId,code,name,(index+1)*10]);
+        for(const [j,model] of ['ساده','کلاسیک','مدرن','سفارشی'].entries()){
+          const hash=crypto.createHash('sha256').update('frame-default:'+shopId+':'+code+':'+model).digest('hex'),modelId=[hash.slice(0,8),hash.slice(8,12),hash.slice(12,16),hash.slice(16,20),hash.slice(20,32)].join('-');
+          await pool.query(`INSERT INTO equipment_store_models(id,shop_id,category_code,brand_name,name,customized,sort_order) SELECT $1,$2,$3,'تولید فروشگاه',$4,true,$5 WHERE NOT EXISTS(SELECT 1 FROM equipment_store_models WHERE shop_id=$2 AND category_code=$3 AND name=$4) ON CONFLICT(id) DO NOTHING`,[modelId,shopId,code,model,(j+1)*10]);
+        }
+      }
+      await pool.query(`INSERT INTO equipment_store_brands(shop_id,name,sort_order) SELECT $1,'تولید فروشگاه',10 WHERE NOT EXISTS(SELECT 1 FROM equipment_store_brands WHERE shop_id=$1 AND name='تولید فروشگاه')`,[shopId]);
+      })().catch(error=>{frameDefaultSeeds.delete(key);throw error});frameDefaultSeeds.set(key,pending)}await frameDefaultSeeds.get(key);return;
+    }
+
     await pool.query(`INSERT INTO equipment_catalog_categories(shop_id,code,name,sort_order)
       VALUES ($1,'camera','دوربین',10),($1,'lens','لنز',20),($1,'photo_gear','تجهیزات عکاسی',30),($1,'video_gear','تجهیزات فیلم‌برداری',40)
       ON CONFLICT(shop_id,code) DO NOTHING`, [shopId]);
@@ -9744,6 +9772,8 @@ async function equipmentRentalCatalogSnapshot(shopId) {
           ORDER BY (m.deleted_at IS NOT NULL),m.category_code,COALESCE(m.brand_name,''),m.sort_order,m.name`, [shopId]),
         equipmentGlobalCatalogSnapshot(false)
     ]);
+    const shop=(await pool.query('SELECT business_category FROM equipment_rental_shops WHERE id=$1',[shopId])).rows[0];
+    if(frameShop(shop)){const hidden=['camera','lens','photo_gear','video_gear'];return {categories:cq.rows.filter(x=>!hidden.includes(x.code)),models:mq.rows.filter(x=>!hidden.includes(x.category_code)),storeBrands:bq.rows,storeModels:smq.rows.filter(x=>!hidden.includes(x.category_code)),globalCategories:[],brands:[],products:[]};}
     return { categories:cq.rows, models:mq.rows, storeBrands:bq.rows, storeModels:smq.rows, globalCategories:global.categories, brands:global.brands, products:global.products };
 }
 function equipmentRentalCatalogCode() { return 'custom_' + crypto.randomUUID().replace(/-/g,'').slice(0,16); }
@@ -15421,11 +15451,11 @@ async function api(req, res, url) {
         const shop = await equipmentRentalCurrentShop(a);
         if (!shop) return sendJson(res,401,{error:'rental_auth_required'});
         await ensureEquipmentGlobalCatalogV827Schema();
-        const b=await bodyJson(req,350_000),model=String(b.model||'').trim(),title=model;
+        const b=await bodyJson(req,350_000),variant=frameVariant(shop,b);if(variant.error)return sendJson(res,400,{error:variant.error});const model=variant.model,title=model;
         if(!model)return sendJson(res,400,{error:'sale_item_model_required'});if(!title)return sendJson(res,400,{error:'sale_item_title_required'});
         const id=crypto.randomUUID(),salePrice=equipmentRentalMoney(b.salePrice),stockTotal=Math.max(0,Math.min(9999,Math.round(Number(normalizeDigits(String(b.stockTotal||1)).replace(/[^0-9]/g,''))||0)));
         const galleryImages=equipmentGalleryNormalize(b.galleryImages,shop.id);if(!galleryImages.length&&b.imageObjectKey)galleryImages.push(...equipmentGalleryNormalize([{objectKey:b.imageObjectKey,name:b.imageName,contentType:b.imageContentType,bytes:b.imageBytes}],shop.id));const first=galleryImages.find(x=>x.objectKey)||null,imageObjectKey=first?.objectKey||null,imageName=first?.name||null,imageContentType=first?.contentType||null,imageBytes=first?.bytes||null;let catalogProductId=/^[0-9a-f-]{36}$/i.test(String(b.catalogProductId||''))?String(b.catalogProductId):null;if(catalogProductId){const cq=await pool.query(`SELECT id FROM equipment_global_products WHERE id=$1 AND deleted_at IS NULL LIMIT 1`,[catalogProductId]);if(!cq.rowCount)catalogProductId=null;}
-        const insertSaleItem=async(catalogId)=>pool.query(`INSERT INTO equipment_sale_items(id,shop_id,category,title,brand,model,sku,sale_price,stock_total,active,description,image_object_key,image_name,image_content_type,image_bytes,catalog_product_id,gallery_images) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10,$11,$12,$13,$14,$15,$16::jsonb)`,[id,shop.id,String(b.category||'other').trim().slice(0,40)||'other',title,String(b.brand||'').trim()||null,model||null,String(b.sku||'').trim()||null,salePrice,stockTotal,String(b.description||'').trim()||null,imageObjectKey,imageName,imageContentType,imageBytes,catalogId,JSON.stringify(galleryImages)]);
+        const insertSaleItem=async(catalogId)=>pool.query(`INSERT INTO equipment_sale_items(id,shop_id,category,title,brand,model,sku,sale_price,stock_total,active,description,image_object_key,image_name,image_content_type,image_bytes,catalog_product_id,gallery_images,variant_specs) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10,$11,$12,$13,$14,$15,$16::jsonb,$17::jsonb)`,[id,shop.id,String(b.category||'other').trim().slice(0,40)||'other',title,String(b.brand||'').trim()||null,model||null,String(b.sku||'').trim()||null,salePrice,stockTotal,String(b.description||'').trim()||null,imageObjectKey,imageName,imageContentType,imageBytes,catalogId,JSON.stringify(galleryImages),JSON.stringify(variant.specs)]);
         try{await insertSaleItem(catalogProductId);}catch(e){if(String(e?.code||'')==='23503'&&catalogProductId){console.warn('[equipment-sale:item-create] stale catalog product ignored',{catalogProductId,shopId:shop.id});catalogProductId=null;try{await insertSaleItem(null);}catch(e2){e=e2;}}console.error('[equipment-sale:item-create]',{code:String(e?.code||''),message:String(e?.message||''),shopId:shop.id});if(String(e?.code||'')==='23505')return sendJson(res,409,{error:'sale_item_sku_duplicate'});return sendJson(res,500,{error:'sale_item_create_failed',diagnosticCode:String(e?.code||'')||undefined});}
         await audit(a.userId,undefined,'equipment_sale.item_create','equipment_sale_item',id,{shopId:shop.id,title,salePrice,stockTotal}).catch(()=>{});
         return sendJson(res,201,{ok:true,id});
@@ -15434,10 +15464,10 @@ async function api(req, res, url) {
     if(req.method==='PATCH'&&rentalSaleItemRoute){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentGlobalCatalogV827Schema();
         const current=(await pool.query(`SELECT * FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL LIMIT 1`,[rentalSaleItemRoute[1],shop.id])).rows[0];if(!current)return sendJson(res,404,{error:'sale_item_not_found'});
-        const b=await bodyJson(req,200_000),model=b.model===undefined?String(current.model||current.title||'').trim():String(b.model||'').trim(),title=model;if(!model)return sendJson(res,400,{error:'sale_item_model_required'});if(!title)return sendJson(res,400,{error:'sale_item_title_required'});
+        const b=await bodyJson(req,200_000),variant=frameVariant(shop,b,current);if(variant.error)return sendJson(res,400,{error:variant.error});const model=variant.model,title=model;if(!model)return sendJson(res,400,{error:'sale_item_model_required'});if(!title)return sendJson(res,400,{error:'sale_item_title_required'});
         const salePrice=b.salePrice===undefined?Number(current.sale_price||0):equipmentRentalMoney(b.salePrice),stockTotal=b.stockTotal===undefined?Number(current.stock_total||0):Math.max(0,Math.min(9999,Math.round(Number(normalizeDigits(String(b.stockTotal||0)).replace(/[^0-9]/g,''))||0))),active=b.active===undefined?Boolean(current.active):Boolean(b.active),clearImage=Boolean(b.clearImage);
         let galleryImages=clearImage?[]:(b.galleryImages===undefined?(Array.isArray(current.gallery_images)?current.gallery_images:[]):equipmentGalleryNormalize(b.galleryImages,shop.id));if(!galleryImages.length&&!clearImage&&b.imageObjectKey)galleryImages=equipmentGalleryNormalize([{objectKey:b.imageObjectKey,name:b.imageName,contentType:b.imageContentType,bytes:b.imageBytes}],shop.id);const first=galleryImages.find(x=>x.objectKey)||null,imageObjectKey=first?.objectKey||null,imageName=first?.name||null,imageContentType=first?.contentType||null,imageBytes=first?.bytes||null,catalogProductId=b.catalogProductId===undefined?current.catalog_product_id:(/^[0-9a-f-]{36}$/i.test(String(b.catalogProductId||''))?String(b.catalogProductId):null);
-        try{await pool.query(`UPDATE equipment_sale_items SET category=$3,title=$4,brand=$5,model=$6,sku=$7,sale_price=$8,stock_total=$9,active=$10,description=$11,image_object_key=$12,image_name=$13,image_content_type=$14,image_bytes=$15,catalog_product_id=$16,gallery_images=$17::jsonb,updated_at=now() WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL`,[current.id,shop.id,b.category===undefined?current.category:String(b.category||'other').slice(0,40),title,b.brand===undefined?current.brand:String(b.brand||'').trim()||null,model||null,b.sku===undefined?current.sku:String(b.sku||'').trim()||null,salePrice,stockTotal,active,b.description===undefined?current.description:String(b.description||'').trim()||null,imageObjectKey,imageName,imageContentType,imageBytes,catalogProductId,JSON.stringify(galleryImages)]);}catch(e){if(String(e?.code||'')==='23505')return sendJson(res,409,{error:'sale_item_sku_duplicate'});throw e;}
+        try{await pool.query(`UPDATE equipment_sale_items SET category=$3,title=$4,brand=$5,model=$6,sku=$7,sale_price=$8,stock_total=$9,active=$10,description=$11,image_object_key=$12,image_name=$13,image_content_type=$14,image_bytes=$15,catalog_product_id=$16,gallery_images=$17::jsonb,variant_specs=$18::jsonb,updated_at=now() WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL`,[current.id,shop.id,b.category===undefined?current.category:String(b.category||'other').slice(0,40),title,b.brand===undefined?current.brand:String(b.brand||'').trim()||null,model||null,b.sku===undefined?current.sku:String(b.sku||'').trim()||null,salePrice,stockTotal,active,b.description===undefined?current.description:String(b.description||'').trim()||null,imageObjectKey,imageName,imageContentType,imageBytes,catalogProductId,JSON.stringify(galleryImages),JSON.stringify(variant.specs)]);}catch(e){if(String(e?.code||'')==='23505')return sendJson(res,409,{error:'sale_item_sku_duplicate'});throw e;}
         await audit(a.userId,undefined,'equipment_sale.item_update','equipment_sale_item',current.id,{shopId:shop.id,title,salePrice,stockTotal,active}).catch(()=>{});
         return sendJson(res,200,{ok:true});
     }

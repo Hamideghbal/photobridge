@@ -1,0 +1,2 @@
+ALTER TABLE equipment_sale_items ADD COLUMN IF NOT EXISTS variant_specs jsonb NOT NULL DEFAULT '{}'::jsonb;
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='equipment_sale_items'::regclass AND conname='equipment_sale_items_variant_specs_object') THEN ALTER TABLE equipment_sale_items ADD CONSTRAINT equipment_sale_items_variant_specs_object CHECK(jsonb_typeof(variant_specs)='object'); END IF; END $$;

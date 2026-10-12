@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+const page='dist/web/index.html';let html=fs.readFileSync(page,'utf8');if(!html.includes('photobridge-r1152-gallery-layout.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1152-gallery-layout.css?v=r1152">\n</head>');fs.writeFileSync(page,html);
+const file='dist/api/server.js';let api=fs.readFileSync(file,'utf8');if(!api.includes('// PB1152 gallery-owned size context')){
+const start=api.indexOf('const customerGalleryDetail ='),end=api.indexOf('const customerGalleryTariffs =',start);let part=api.slice(start,end);if(start<0||end<0)throw Error('Gallery detail anchor missing');
+part=part.replace('const [media, profileTariffs, galleryTariffStates, orders, currentQ]', 'const [media, profileTariffs, galleryTariffStates, orders, currentQ, gallerySizes]');
+const anchor="pool.query(`SELECT * FROM photographer_gallery_orders WHERE gallery_id=$1 AND is_current=true LIMIT 1`, [g.id])";if(!part.includes(anchor))throw Error('Gallery sizes query anchor missing');
+part=part.replace(anchor,anchor+",\n                // PB1152 gallery-owned size context\n                pool.query(`SELECT s.id,s.label,s.width_cm,s.height_cm FROM print_sizes s WHERE s.active=true AND (s.owner_lab_id IS NULL OR s.owner_lab_id=$1) AND NOT EXISTS (SELECT 1 FROM lab_hidden_print_sizes h WHERE h.lab_id=$1 AND h.size_id=s.id) ORDER BY s.width_cm,s.height_cm,s.label`,[g.lab_id])");
+part=part.replace('profilePrintTariffs: profileTariffs.rows.map', 'printSizes: gallerySizes.rows, profilePrintTariffs: profileTariffs.rows.map');api=api.slice(0,start)+part+api.slice(end);fs.writeFileSync(file,api);}
+const bundle='dist/web/assets/index-UIRefine-v655-r84.js';let js=fs.readFileSync(bundle,'utf8');js=js.replace('function Eu(t,a){const s=', 'function Eu(t,a){a=t?.printSizes??a;const s=');fs.writeFileSync(bundle,js);

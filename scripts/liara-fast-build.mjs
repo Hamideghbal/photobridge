@@ -97,6 +97,7 @@ await import('./enable-r1143-folder-storage.mjs');
 await import('./enable-r1148-lab-profile-image.mjs');
 await import('./enable-r1147-lab-admin-header.mjs');
 await import('./enable-r1151-lab-mobile-print-navigation.mjs');
+await import('./enable-r1152-gallery-layout-prices.mjs');
 await import('./prepare-store-desktop-ui.mjs');
 await import('./prepare-lab-desktop-ui.mjs');
 await import('./reassemble-r1091-store-installer.mjs');

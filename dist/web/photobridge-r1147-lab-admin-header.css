@@ -1,5 +1,5 @@
 .pb1147LabNav{display:none}
-@media(min-width:821px){
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader{display:grid!important;grid-template-columns:170px minmax(0,1fr) 190px!important;direction:rtl!important;align-items:center!important;gap:14px!important;min-height:94px!important;padding:12px 20px!important;background:#fff!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader::after{content:'';position:absolute;bottom:0;right:20px;left:20px;height:1px;background:linear-gradient(90deg,transparent,#cad6e2 15%,#cad6e2 85%,transparent)}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labHeaderIdentity{grid-column:1!important;grid-row:1!important;justify-content:flex-start!important;width:100%!important;min-width:0!important;margin:0!important}.pb1147LabAdminHeader .labHeaderIdentity h1{font-size:19px!important}.pb1147LabAdminHeader .labHeaderIdentity small,.pb1147LabAdminHeader .labHeaderIdentity .todayStamp{font-size:11px!important}
@@ -13,14 +13,14 @@ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav butto
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSettingsCategoryTabs{display:none!important}html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSettingsNavigation{padding-top:8px!important;margin-top:8px!important}html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSettingsSectionTabs{margin:0!important}
 }
 @media(prefers-reduced-motion:reduce){.pb1147LabNav button,.pb1147LabNav button::after{transition:none!important}}
-@media(min-width:821px){
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) main.pbFixedRoleHeader{padding-top:96px!important}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader{height:96px!important;min-height:96px!important;box-sizing:border-box!important}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labRolePageScrollArea{height:calc(100dvh - 96px)!important;min-height:0}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .pb1147LabNav button{height:36px!important;min-height:0!important;line-height:20px!important}
 }
 .pb1148SecondaryHeader,.pb1148LabAvatar,.pb1148Manager{display:none!important}
-@media(min-width:821px){
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader{height:72px!important;min-height:72px!important;padding:0 18px!important;grid-template-columns:230px minmax(0,1fr) 190px!important}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) main.pbFixedRoleHeader{padding-top:72px!important}
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labRolePageScrollArea{height:calc(100dvh - 72px)!important}
@@ -39,10 +39,10 @@ html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) main.pbFixedRoleHea
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSettingsNavigation{display:none!important}
 }
 
-@media(min-width:821px){html body #root .labRoleWorkspace .pb1148SecondarySource,html body #root .labRoleWorkspace .financeNavDock:has(.pb1148SecondarySource){display:none!important}}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){html body #root .labRoleWorkspace .pb1148SecondarySource,html body #root .labRoleWorkspace .financeNavDock:has(.pb1148SecondarySource){display:none!important}}
 /* The header owns navigation; the old quick-access panel is retired. */
-html body #root .labRoleWorkspace .labQueueQuickAccessV464,html body #root .labRoleWorkspace .labQueueQuickIntroV464{display:none!important}
-@media(min-width:821px){
+@media(min-width:821px) and (hover:hover) and (pointer:fine){html body #root .labRoleWorkspace .labQueueQuickAccessV464,html body #root .labRoleWorkspace .labQueueQuickIntroV464{display:none!important}}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
 html body #root .labRoleWorkspace:has(.pb1147LabAdminHeader) .labSingleHeader::after{content:''!important;display:block!important;left:18px!important;right:18px!important;width:auto!important;height:1px!important;bottom:0!important;opacity:1!important;background:linear-gradient(90deg,transparent 0%,#d4dce6 15%,#d4dce6 85%,transparent 100%)!important;pointer-events:none}
 html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!important}
 .pb1149NavLabel{position:relative;display:inline-block;white-space:nowrap}

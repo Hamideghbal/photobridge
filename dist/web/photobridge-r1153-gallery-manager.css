@@ -134,3 +134,62 @@ html body #root .clientGalleryCardActions>button{grid-column:auto!important;min-
  html body #root .pb1158Intro>summary{font-size:14px!important;padding:11px 13px!important}
  html body #root .pb1158Intro .clientGalleryIntroCopy p{font-size:14px!important;line-height:1.8!important}
 }
+
+/* R1162: the desktop manager has exactly three header areas; no phantom fourth cell. */
+@media(min-width:821px){
+ html body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop{
+  display:grid!important;direction:rtl!important;
+  grid-template-columns:max-content minmax(0,1fr) max-content!important;
+  grid-template-areas:"back identity tabs"!important;
+  align-items:center!important;gap:10px 14px!important;
+  min-width:0!important;width:100%!important;
+  padding:12px 2px!important;box-sizing:border-box!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>.backBtn{
+  grid-area:back!important;grid-column:auto!important;grid-row:auto!important;
+  order:unset!important;justify-self:start!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  white-space:nowrap!important;min-width:max-content!important;
+  min-height:38px!important;margin:0!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>div:not([class]){
+  grid-area:identity!important;grid-column:auto!important;grid-row:auto!important;
+  order:unset!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;text-align:right!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>div:not([class]) h2,
+ html body #root .clientGalleryManager .pb1155ManagerTop>div:not([class]) p{
+  display:block!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>div:not([class]) h2{
+  font-size:17px!important;line-height:1.5!important;margin:0 0 3px!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>div:not([class]) p{
+  font-size:12px!important;line-height:1.5!important;margin:0!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>.clientGalleryManagerViewTabs{
+  grid-area:tabs!important;grid-column:auto!important;grid-row:auto!important;
+  order:unset!important;justify-self:end!important;
+  display:flex!important;align-items:center!important;gap:6px!important;
+  width:max-content!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;padding:5px!important;box-sizing:border-box!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>.clientGalleryManagerViewTabs button{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-width:0!important;white-space:nowrap!important;margin:0!important;
+  min-height:36px!important;padding:5px 10px!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>.clientGalleryManagerActions{
+  display:none!important;
+ }
+}
+@media(min-width:821px) and (max-width:1150px){
+ html body #root .clientGalleryManager .clientGalleryManagerTop.pb1155ManagerTop{
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  grid-template-areas:"back identity" "tabs tabs"!important;
+ }
+ html body #root .clientGalleryManager .pb1155ManagerTop>.clientGalleryManagerViewTabs{
+  justify-self:start!important;max-width:100%!important;
+ }
+}

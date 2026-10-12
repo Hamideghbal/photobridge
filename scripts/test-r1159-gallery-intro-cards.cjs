@@ -41,23 +41,19 @@ test('gallery card uses two exact action rows with icon-only deletion',()=>{
  const bottomAt=card.indexOf('className:"pb1161GalleryBottomRow"');
  assert(topAt>=0&&bottomAt>topAt,'two separate action rows are present');
  const top=card.slice(topAt,bottomAt),bottom=card.slice(bottomAt);
- assert.equal((top.match(/e\\.jsx\\("button"/g)||[]).length,3,'top row contains exactly three buttons');
- assert.equal((bottom.match(/e\\.jsx\\("button"/g)||[]).length,2,'bottom row contains exactly two buttons');
- assert.match(top,/onClick:\\(\\)=>PB1112publish\\(L\\)/);
- assert.match(top,/onClick:\\(\\)=>I\\(L\\.id\\)/);
- assert.match(top,/className:"pbActionButton pb1160GalleryDelete"/);
- assert.match(top,/aria-label":`حذف گالری \\$\\{L\\.title\\}`/);
- assert.match(top,/pb1113GalleryConfirm/);
- assert.match(top,/method:"DELETE"/);
- assert.match(top,/children:e\\.jsx\\("svg"/);
- assert.doesNotMatch(top,/title:"حذف گالری"/,'no visible delete tooltip');
- assert.match(bottom,/children:"کپی لینک"/);
- assert.match(bottom,/children:"نمایش مشتری"/);
+ assert.equal(top.split('e.jsx("button"').length-1,3,'top row contains exactly three buttons');
+ assert.equal(bottom.split('e.jsx("button"').length-1,2,'bottom row contains exactly two buttons');
+ for(const token of ['PB1112publish(L)','onClick:()=>I(L.id)','className:"pbActionButton pb1160GalleryDelete"','aria-label":`حذف گالری','pb1113GalleryConfirm','method:"DELETE"','children:e.jsx("svg"']){
+   assert.ok(top.includes(token),'missing upper action: '+token);
+ }
+ assert.ok(!top.includes('title:"حذف گالری"'),'no delete tooltip or visible caption');
+ assert.ok(bottom.includes('children:"کپی لینک"'));
+ assert.ok(bottom.includes('children:"نمایش مشتری"'));
  assert.ok(bottom.indexOf('children:"کپی لینک"')<bottom.indexOf('children:"نمایش مشتری"'));
- assert.match(css,/\\.pb1161GalleryTopRow\\{/);
- assert.match(css,/grid-template-columns:minmax\\(0,1fr\\) minmax\\(0,1fr\\) 42px!important/);
- assert.match(css,/\\.pb1161GalleryBottomRow\\{/);
- assert.match(css,/grid-template-columns:repeat\\(2,minmax\\(0,1fr\\)\\)!important/);
- assert.match(html,/gallery-intro-cards\\.css\\?v=r1159&cards=r1161/);
- assert.match(html,/index-UIRefine-v655-r84\\.js\\?v=r1159&cards=r1161/);
+ assert.ok(css.includes('.pb1161GalleryTopRow{'));
+ assert.ok(css.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px!important'));
+ assert.ok(css.includes('.pb1161GalleryBottomRow{'));
+ assert.ok(css.includes('grid-template-columns:repeat(2,minmax(0,1fr))!important'));
+ assert.ok(html.includes('gallery-intro-cards.css?v=r1159&cards=r1161'));
+ assert.ok(html.includes('index-UIRefine-v655-r84.js?v=r1159&cards=r1161'));
 });

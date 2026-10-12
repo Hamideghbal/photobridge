@@ -1,0 +1,51 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const api=fs.readFileSync('dist/api/server.js','utf8');
+const picker=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
+const invite=fs.readFileSync('dist/web/photobridge-r1144-lab-invite-existing.js','utf8');
+const html=fs.readFileSync('dist/web/index.html','utf8');
+const helperStart=api.indexOf('function labInviteExistingAccount(identity) {');
+const helperEnd=api.indexOf('async function ensurePhotographerProfile',helperStart);
+assert(helperStart>0&&helperEnd>helperStart);
+const helper=Function(api.slice(helperStart,helperEnd)+'return labInviteExistingAccount;')();
+test('unverified lab placeholders must never skip full registration',()=>{
+ assert.equal(helper({id:'placeholder',existingPhotographer:false,mobile_verified_at:null,public_retouch_enabled:false}),false);
+ assert.equal(helper({id:'real',existingPhotographer:false,mobile_verified_at:'2026-01-01',public_retouch_enabled:false}),true);
+ assert.equal(helper({id:'photographer',existingPhotographer:true,mobile_verified_at:null}),true);
+ assert.equal(helper(null),false);
+});
+test('existing registered members see SMS verification instead of signup fields',()=>{
+ const publicInvite=api.slice(api.indexOf('const publicInvite = url.pathname.match'),api.indexOf('const verifyInvite = url.pathname.match'));
+ assert.match(publicInvite,/if \(labInviteExistingAccount\(existing\)\)/);
+ assert.match(publicInvite,/const existingAccount = labInviteExistingAccount\(existingUser\)/);
+ assert.match(publicInvite,/createSignupMobileChallenge\('invite', mobile, \{ token, existingAccount: true, existingUserId:/);
+ assert.match(invite,/data\.existingAccount\?\.exists===true/);
+ assert.match(invite,/endpoint\+'\/register'/);
+ assert.match(invite,/endpoint\+'\/register\/verify'/);
+ assert.match(invite,/کد تأیید شش‌رقمی/);
+ assert.doesNotMatch(invite,/businessLicense|nationalId|locationLat|confirmPassword/);
+});
+test('verified invite logs the existing account into photographer portal only after SMS check',()=>{
+ const verify=api.slice(api.indexOf('const verifyInvite = url.pathname.match'),api.indexOf('// v904R7 —'));
+ assert.match(verify,/lockAndVerifySignupChallenge\(c, 'invite', challengeId, code\)/);
+ assert.match(verify,/p\.existingUserId/);
+ assert.match(verify,/invite_identity_changed/);
+ assert.match(verify,/await c\.query\('COMMIT'\);[\s\S]*?if \(existingAccount\) \{[\s\S]*?await createSession\(userId,res,'photographer'\)/);
+ assert.match(verify,/loggedIn: Boolean\(existingAccount\)/);
+ assert.match(verify,/name=\$5,mobile_verified_at=COALESCE/);
+ assert.match(verify,/ensurePhotographerProfile\(c, \{/);
+});
+test('lab customer row shows entered temporary name until official name is available',()=>{
+ const list=api.slice(api.indexOf("url.pathname === '/api/lab/delegated-orders/bootstrap'"),api.indexOf('// PB1143: registering'));
+ const customer=api.slice(api.indexOf("url.pathname === '/api/lab/delegated-customers'"),api.indexOf('const delegatedResend ='));
+ assert.match(list,/CASE WHEN m\.active THEN/);
+ assert.match(list,/pending_i\.target_name/);
+ assert.match(list,/pp\.studio_name/);
+ assert.match(customer,/temporaryName/);
+ assert.match(customer,/\[temporaryName,mobile,passwordHash\(randomPassword\)\]/);
+ assert.match(customer,/customer_already_registered/);
+ assert.match(customer,/customer_already_preregistered/);
+ assert.match(customer,/await c\.query\('ROLLBACK'\);[\s\S]*?return sendJson\(res,409/);
+ assert.match(picker,/نام موقت مشتری/);
+ assert.match(picker,/search\.hidden=value;list\.hidden=value/);
+ assert.match(html,/photobridge-r1144-lab-invite-existing\.js\?v=r1144/);
+});

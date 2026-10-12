@@ -16,7 +16,9 @@ if(!server.includes("from './gallery-trial.js'")){
 }
 const bundle='dist/web/assets/index-UIRefine-v655-r84.js';let js=fs.readFileSync(bundle,'utf8');
 const replace=(old,next)=>{if(js.includes(next))return;if(!js.includes(old))throw Error('R1108 gallery UI anchor missing');js=js.replace(old,next)};
-replace('children:"برای هر مشتری یک گالری خصوصی بساز؛ انتخاب، پیش‌فاکتور و تأیید نهایی را یک‌جا مدیریت کن."',
+// R1159 replaces the old introductory paragraph with a compact disclosure.
+// The trial wording and allowance are retained in its preview and expanded copy.
+if (!js.includes('className:"pb1159IntroCosts"')) replace('children:"برای هر مشتری یک گالری خصوصی بساز؛ انتخاب، پیش‌فاکتور و تأیید نهایی را یک‌جا مدیریت کن."',
  'children:"گالری، فضای خصوصی عکس‌های هر مشتری است. عکس‌ها را بارگذاری کن و لینک گالری و رمز ورود را برای مشتری بفرست تا از موبایل یا کامپیوتر عکس‌های دلخواهش را انتخاب کند. در صورت فعال‌کردن سفارش، مشتری می‌تواند چاپ یا فایل دیجیتال را با تعرفه‌های خودت درخواست کند. پیش‌فاکتور، نسخه روتوش‌شده و تأیید نهایی مشتری را در همان گالری پیگیری کن؛ بدون رفت‌وبرگشت فایل‌ها در پیام‌رسان. برای شروع، ساخت سه گالری اول هر حساب رایگان است؛ تمدید گالری تعرفه جداگانه دارد."');
 replace('children:"＋ گالری جدید"})]}),e.jsx("div",{className:"clientGalleryCards"', 'children:"＋ گالری جدید"+(Number(k.freeGalleriesRemaining)>0?" · "+V(k.freeGalleriesRemaining)+" رایگان باقی‌مانده":"")})]}),e.jsx("div",{className:"clientGalleryCards"');
 replace('E?"ساخت گالری":"ساخت گالری و کسر از کیف پول"','E?"ساخت گالری":C===0?"ساخت گالری رایگان":"ساخت گالری و کسر از کیف پول"');

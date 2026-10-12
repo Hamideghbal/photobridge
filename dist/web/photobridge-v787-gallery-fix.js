@@ -31,8 +31,8 @@
     const settings=document.querySelector('.clientGallerySettings');if(!settings||settings.dataset.pb787==='1')return;
     settings.dataset.pb787='1';
     settings.querySelector('.clientGalleryBaseModeNotice')?.remove();
-    const invoiceToggle=[...settings.querySelectorAll('label')].find(l=>text(l).includes('سفارش چاپ و فاکتور'));
-    const title=invoiceToggle?.querySelector('b');if(title)title.textContent='فاکتور و سفارش چاپ';
+    const invoiceToggle=[...settings.querySelectorAll('label')].find(l=>text(l).includes('سفارش چاپ و فاکتور')||text(l).includes('نمایش قیمت و صدور فاکتور'));
+    const title=invoiceToggle?.querySelector('b');if(title)title.textContent='نمایش قیمت و صدور فاکتور';
   };
   const addInvoiceButton=()=>{
     const portal=document.getElementById('pb787-invoice-portal');
@@ -54,7 +54,7 @@
         const body=JSON.parse(init.body||'{}');
         if(method==='POST'&&!document.querySelector('.pb1112CreateDialog')&&/\/api\/customer\/client-galleries(?:\?|$)/.test(url)){body.selectionEnabled=true;body.orderingEnabled=state.createInvoice;}
         if(method==='PATCH'){
-          const inv=[...document.querySelectorAll('.clientGallerySettings label')].find(l=>text(l).includes('فاکتور و سفارش چاپ')||text(l).includes('سفارش چاپ و فاکتور'))?.querySelector('input[type=checkbox]');if(inv)body.orderingEnabled=!!inv.checked;
+          const inv=[...document.querySelectorAll('.clientGallerySettings label')].find(l=>text(l).includes('فاکتور و سفارش چاپ')||text(l).includes('سفارش چاپ و فاکتور')||text(l).includes('نمایش قیمت و صدور فاکتور'))?.querySelector('input[type=checkbox]');if(inv)body.orderingEnabled=!!inv.checked;
         }
         body.selectionEnabled=true;
         init={...init,body:JSON.stringify(body)};

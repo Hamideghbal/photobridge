@@ -19313,6 +19313,14 @@ ${inviteUrl}`;
         if (!labAccess.rows[0].active && url.pathname.startsWith('/api/lab/invitations'))
             return sendJson(res, 409, { error: 'lab_not_activated', message: 'برای ارسال یا مدیریت دعوت‌نامه، لابراتوار باید ابتدا توسط ادمین PhotoBridge فعال شود.' });
         const requestDeviceId = String(req.headers['x-photobridge-device-id'] || '').trim();
+        // PB1138 primary-only local intake: use the same device binding as normal downloads.
+        const requireLocalIntakePrimary = async (db = pool) => {
+            const q = await db.query('SELECT primary_download_device_id FROM labs WHERE id=$1 FOR SHARE', [labId]);
+            const primary = q.rows[0]?.primary_download_device_id;
+            if (!primary) { sendJson(res, 409, { error: 'download_device_not_registered' }); return false; }
+            if (!requestDeviceId || requestDeviceId !== primary) { sendJson(res, 403, { error: 'not_primary_download_device' }); return false; }
+            return true;
+        };
         if (url.pathname === '/api/lab/birthday-campaign') {
             if(req.method==='GET'){
                 const row=(await pool.query('SELECT * FROM lab_birthday_campaigns WHERE lab_id=$1',[labId])).rows[0]||null;
@@ -19395,6 +19403,7 @@ ${inviteUrl}`;
         // A stable client UUID makes reconnects safe after an ambiguous timeout.
         if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders') {
             const b = await bodyJson(req);
+            if (b.localOnly === true && !await requireLocalIntakePrimary()) return;
             const intakeId = String(b.clientOrderId || '').trim();
             const existingCustomerId = String(b.customerId || '').trim();
             const studioName = String(b.studioName || '').trim().slice(0, 140);
@@ -19528,9 +19537,8 @@ ${inviteUrl}`;
             const b = await bodyJson(req);
             // Files originating on the laboratory's desktop stay on that device.
             // The server receives their metadata for order stages and invoicing only.
-            const deviceLocal = b.localOnly === true && req.headers['x-photobridge-desktop-local-file'] === '1'
-                && /^pbwin-[0-9a-f-]{36}$/i.test(requestDeviceId);
-            if (b.localOnly && !deviceLocal) return sendJson(res, 403, { error: 'desktop_local_file_required' });
+            const deviceLocal = b.localOnly === true;
+            if (deviceLocal && !await requireLocalIntakePrimary()) return;
             if (!deviceLocal && !uploadAvailable) return sendJson(res, 503, { error: 'upload_not_configured' });
             const oq = await pool.query(`SELECT o.id,o.mode,o.customer_id FROM lab_delegated_order_intakes d
                 JOIN orders o ON o.id=d.order_id WHERE d.lab_id=$1 AND o.id=$2 AND o.status='uploading'`,
@@ -19657,8 +19665,11 @@ ${inviteUrl}`;
                     await c.query('COMMIT');
                     return sendJson(res, 200, { order, invoice: invoice.rows[0] || null, replay: true });
                 }
-                const fq = await c.query(`SELECT id,print_size_id,chassis,frame,original_state FROM order_files
+                const fq = await c.query(`SELECT id,print_size_id,chassis,frame,original_state,object_key FROM order_files
                     WHERE order_id=$1 AND lab_id=$2`, [orderId, labId]);
+                if (fq.rows.some(f => String(f.object_key || '').startsWith('client-local-recovery/')) && !await requireLocalIntakePrimary(c)) {
+                    await c.query('ROLLBACK'); return;
+                }
                 if (fq.rows.some(f => f.original_state !== 'active') || fq.rowCount === 0) {
                     await c.query('ROLLBACK');
                     return sendJson(res, 409, { error: 'files_not_ready' });

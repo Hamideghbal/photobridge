@@ -90,6 +90,10 @@ jobs:
           node --test scripts/test-r1105-lab-origin-release.cjs
       - name: Verify desktop photographer Store page navigation
         run: node --test scripts/test-r1123-photographer-desktop-store.cjs
+      - name: Verify primary-device restriction for local laboratory intake
+        run: |
+          node --check dist/web/photobridge-r1137-lab-local-intake.js
+          node --test scripts/test-r1138-primary-intake-api.cjs
       - name: Verify photographer mobile orders and one-row navigation
         run: |
           node --check dist/web/photobridge-r1122-mobile-print-orders.js

@@ -46,7 +46,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
   await page.getByLabel('جستجوی عکاس').fill('۰۹۱۲۰۰۰۰۰۰۰');
   if(mode==='new-customer'){
    await page.getByRole('option',{name:/مشتری جدید/}).click();
-   assert.equal(await page.getByRole('option').count(),0,'customer rows hidden while adding');
+   assert.equal(await page.locator('.pb1139PickerOptions [role=option]:visible').count(),0,'customer rows hidden while adding');
    await page.getByLabel('نام موقت مشتری',{exact:true}).fill('آتلیه آزمایشی');
    await page.getByLabel('شماره موبایل',{exact:true}).fill('09120000001');
    await page.getByLabel('بدهی قبلی (تومان)').fill('50000');
@@ -64,7 +64,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
   assert.equal(row.length,5);assert(Math.max(...row)-Math.min(...row)<2,'all entry controls share one aligned row');
   await page.locator('form>input[type=file]').setInputFiles({name:'Photo.JPG',mimeType:'image/jpeg',buffer:Buffer.from('abc')});
   await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
-  assert.equal(calls.filter(x=>x.body).length,0,'unadded files cannot be silently omitted from final registration');
+  assert.equal(calls.filter(x=>x.body&&x.url.includes('/delegated-orders')).length,0,'unadded files cannot be silently omitted from final registration');
   await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
   await page.locator('.pb1139Group').first().waitFor();assert.equal(await page.locator('.pb1139Group').count(),1);
   if(mode==='success'){

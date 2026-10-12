@@ -292,7 +292,7 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
   display:none!important;margin:0!important;padding:0!important;
   height:0!important;min-height:0!important;border:0!important;
  }
- html body #root .labRoleWorkspace:has(.pb1174QueueNav) #pb1137LocalIntakeButton{
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .stageQueueWorkspace.compactStageQueue #pb1137LocalIntakeButton{
   display:none!important;
  }
  /* Only text/round counts in the left cluster; no underline on the three states. */
@@ -329,4 +329,68 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
  html body #root .labRoleWorkspace .pb1147LabAdminHeader .pb1147LabNav button:is([data-source],[data-category]){
   font-size:10.5px!important;
  }
+}
+
+
+/* R1175 — native walk-in button, Store's blue downward header glow and no phantom scrollbar gutter. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader {
+  box-shadow:0 6px 16px -8px rgba(49,94,251,.18)!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+ }
+ /* A separate fixed sibling is essential: the scrollable header clips its own
+    ::after gradient. Its subtle blue fade does not cover or intercept controls. */
+ html body #root .labRoleWorkspace .pb1175HeaderFade {
+  display:block!important;position:fixed!important;
+  top:120px!important;inset-inline:0!important;
+  width:100%!important;height:21px!important;
+  background:linear-gradient(to bottom,
+    rgba(49,94,251,.12) 0%,
+    rgba(49,94,251,.055) 42%,
+    rgba(49,94,251,.017) 75%,
+    transparent 100%)!important;
+  z-index:139!important;pointer-events:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  order:-1!important;flex:0 0 auto!important;
+  margin-inline-end:auto!important;margin-inline-start:0!important;
+  height:34px!important;min-height:34px!important;
+  padding:5px 12px!important;min-width:0!important;
+  color:#315efb!important;background:#eef3ff!important;
+  border:0!important;border-radius:8px!important;
+  box-shadow:none!important;
+  font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  white-space:nowrap!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch:disabled {
+  cursor:default!important;opacity:.56!important;
+ }
+ /* The original R1174 proxy must never reappear, including cached markup. */
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav > .pb1174QueueLaunch {
+  display:none!important;
+ }
+ /* There is exactly one scroll owner. No stable gutter on queue pages, while
+    mousewheel/touchpad scrolling continues to work when items overflow. */
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav),
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labRolePageScrollArea,
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labOrderScrollArea {
+  scrollbar-gutter:auto!important;
+  scrollbar-width:none!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labRolePageScrollArea {
+  overflow-y:auto!important;overflow-x:hidden!important;
+  padding-inline-end:0!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .stageQueueWorkspace.compactStageQueue,
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labOrderScrollArea {
+  overflow:visible!important;
+ }
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labRolePageScrollArea::-webkit-scrollbar,
+ html body #root .labRoleWorkspace:has(.pb1174QueueNav) .labOrderScrollArea::-webkit-scrollbar {
+  display:none!important;width:0!important;height:0!important;
+ }
+}
+@media(max-width:820px){
+ html body #root .labRoleWorkspace .pb1175HeaderFade{display:none!important}
 }

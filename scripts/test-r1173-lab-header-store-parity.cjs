@@ -51,10 +51,10 @@ test('both old quick-access surfaces and reserved grid row are removed in print 
  assert(!override.includes('grid-template-areas:"quick quick"'));
 });
 test('R1173 cache and build guards keep updates after deploy',()=>{
- assert(html.includes('photobridge-r1147-lab-admin-header.css?v=r1174'));
- assert(html.includes('photobridge-r1147-lab-admin-header.js?v=r1174'));
- assert(build.includes('photobridge-r1147-lab-admin-header.css?v=r1174'));
- assert(build.includes('photobridge-r1147-lab-admin-header.js?v=r1174'));
+ assert(html.includes('photobridge-r1147-lab-admin-header.css?v=r1175'));
+ assert(html.includes('photobridge-r1147-lab-admin-header.js?v=r1175'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.css?v=r1175'));
+ assert(build.includes('photobridge-r1147-lab-admin-header.js?v=r1175'));
  assert(build.includes('test-r1172-lab-desktop-header.cjs'));
  assert(build.includes('test-r1173-lab-header-store-parity.cjs'));
 });

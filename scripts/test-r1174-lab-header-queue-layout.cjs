@@ -26,8 +26,8 @@ test('lab print and album second header puts real walk-in action right and statu
  assert.match(js,/source\.classList\.contains\('mainQueueFilters'\)/);
  assert.match(js,/album\(\?:s\|\[-\/\]\|\$\)/);
  assert(js.includes("row.classList.toggle('pb1174QueueNav',isQueue)"));
- assert(js.includes("intake.textContent='ثبت سفارش عکس حضوری'"));
- assert(js.includes("document.getElementById('pb1137LocalIntakeButton')?.click()"));
+ assert(js.includes("const intake=document.getElementById('pb1137LocalIntakeButton')"));
+ assert(!js.includes("document.getElementById('pb1137LocalIntakeButton')?.click()"));
  assert(js.includes("row.prepend(intake)"));
  assert.match(patch,/\.pb1148SecondaryHeader\.pb1174QueueNav>button\.pb1174QueueLaunch\{/);
  assert.match(patch,/order:-1!important/);
@@ -54,7 +54,7 @@ test('the three status tabs get only selected color and no underline or box',()=
 test('mobile remains unaffected and R1174 survives production build',()=>{
  assert.match(patch,/@media \(min-width:821px\) and \(hover:hover\) and \(pointer:fine\)/);
  for(const ext of ['css','js']){
-  const name='photobridge-r1147-lab-admin-header.'+ext+'?v=r1174';
+  const name='photobridge-r1147-lab-admin-header.'+ext+'?v=r1175';
   assert(html.includes(name),name);
   assert(build.includes(name),name);
  }

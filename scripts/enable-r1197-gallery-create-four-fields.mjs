@@ -23,8 +23,10 @@ modal=modal.slice(0,digitalStart)+modal.slice(digitalEnd+1);
 once('"سفارش چاپ و فاکتور (انتخاب عکس فعال است)"','"سفارش و فاکتور"','invoice checkbox label');
 once('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)',
  'disabled:g||!!PB1112draft.current','invoice checkbox enabling');
-once('digitalPrice:Number(h.digitalPrice||0)','digitalPrice:0','no hidden digital price');
 ui=ui.slice(0,start)+modal+ui.slice(end);
+const digitalPayload='digitalPrice:Number(h.digitalPrice||0)';
+if(ui.split(digitalPayload).length!==2)throw Error('[R1197] single create payload digital price missing');
+ui=ui.replace(digitalPayload,'digitalPrice:0');
 
 const serverFile='dist/api/server.js';
 let server=fs.readFileSync(serverFile,'utf8');

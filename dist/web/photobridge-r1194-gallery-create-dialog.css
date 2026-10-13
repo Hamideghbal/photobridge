@@ -1,0 +1,80 @@
+/* PhotoBridge R1194 — Photographer > Gallery > New private gallery.
+   React portals .globalModalLayer directly into body; the shared overlay used
+   z-index:100000 whereas desktop photographer headers are at 2147483550.
+   Keep this modal above the header, centered and fully contained in the
+   visual viewport on narrow and short screens, with its own scrollable body.
+   Do not alter tariff, delete, invoice or other global dialogs. */
+
+html body > .globalModalLayer.modalBack:has(> .modal.pb1112CreateDialog) {
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483600!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  place-items:center!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+
+html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog {
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  z-index:2147483601!important;
+  transform:none!important;
+  margin:0!important;
+  padding:0!important;
+  width:min(700px,calc(100vw - 24px))!important;
+  max-width:calc(100vw - 24px)!important;
+  max-height:calc(100dvh - 24px)!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+
+html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog > .modalHead {
+  position:relative!important;
+  inset:auto!important;
+  flex:0 0 auto!important;
+  z-index:3!important;
+  margin:0!important;
+  background:#fff!important;
+}
+
+html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog > .modalContent {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+
+html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog .clientGalleryCreateForm {
+  min-width:0!important;
+}
+
+@media(max-width:820px) {
+  html body > .globalModalLayer.modalBack:has(> .modal.pb1112CreateDialog) {
+    padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))!important;
+    align-items:center!important;
+  }
+  html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog {
+    width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;
+    max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+    border-radius:14px!important;
+  }
+  html body > .globalModalLayer.modalBack > .modal.pb1112CreateDialog > .modalHead {
+    position:relative!important;
+    top:auto!important;
+  }
+}

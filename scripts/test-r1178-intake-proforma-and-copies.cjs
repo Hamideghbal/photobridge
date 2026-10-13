@@ -1,0 +1,76 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const server=fs.readFileSync('dist/api/server.js','utf8');
+const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+const intake=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
+const css=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.css','utf8');
+const prices=fs.readFileSync('dist/web/photobridge-r1178-photographer-prices.js','utf8');
+const page=fs.readFileSync('dist/web/index.html','utf8');
+test('desktop walk-in modal has balanced editable right pane and live proforma left pane',()=>{
+ assert(intake.includes("pb1178IntakeWorkspace"));
+ assert(intake.includes("pb1178IntakeEditor"));
+ assert(intake.includes("pb1178IntakeBill"));
+ assert(intake.includes("function refreshInvoice()"));
+ assert(intake.includes("billTotals.replaceChildren(count,amount)"));
+ assert(intake.includes("customers.onChange=refreshInvoice"));
+ assert(intake.includes("model.onChange?.(c)"));
+ assert(intake.includes("priceBySize.get(String(group.size))?.[paper]"));
+ assert(intake.includes("ثبت سفارش و ذخیره پیش‌فاکتور"));
+ assert(css.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)'));
+ assert(css.includes('grid-template-areas:"editor bill"'));
+ assert(css.includes('overflow-y:auto!important;overflow-x:hidden!important'));
+ assert(css.includes('.pb1139Customer>button'));
+ assert(css.includes('width:100%!important'));
+});
+test('walk-in submission is a proforma until the ready handover',()=>{
+ assert(server.includes('PB1178 deferred delegated proforma'));
+ assert(server.includes("const localIntake = fq.rows.every"));
+ assert(server.includes("const status = localIntake ? 'downloaded'"));
+ assert(server.includes("downloaded_at=CASE WHEN $4 THEN COALESCE(downloaded_at,now()) ELSE downloaded_at END"));
+ assert(server.includes("submitted._invoice = null"));
+ assert(!server.includes("if (!invoicePricingRequired) submitted._invoice = await createOrGetInvoice"));
+ assert(server.includes("if (status === 'ready') {"));
+ assert(server.includes("invoice = await createOrGetInvoice(c, labId, labOrder[1])"));
+ assert(intake.includes("provider.saveResume(order.orderId"));
+ assert(intake.includes("const saved=await provider.write"));
+});
+test('lab order detail exposes and edits copies for each photo, re-prices order and inventory',()=>{
+ assert(server.includes('f.frame,f.print_copies,f.crop_handling'));
+ assert(server.includes("const printCopies = b.printCopies == null ? Number(file.print_copies || 1)"));
+ assert(server.includes("print_copies=$7,original_name=$8"));
+ assert(server.includes("addDelta(sizeId, 'chassis', printCopies)"));
+ assert(server.includes("addDelta(sizeId, 'frame', printCopies)"));
+ assert(server.includes("cur.quantity += Number(x.print_copies || 1)"));
+ assert(ui.includes('className:"pb1178CopiesEdit"'));
+ assert(ui.includes('children:"تعداد چاپ: "+V(le.print_copies||1)+" · اصلاح"'));
+ assert(ui.includes('className:"pb1178CopiesField"'));
+ assert(ui.includes('copies:Number(le.print_copies||1)'));
+ assert(ui.includes('printCopies:Number(Ne.copies||1)'));
+ assert(ui.includes('Number(le.print_copies||1)!==Number(Ne.copies||1)'));
+});
+test('photographer duplicate photo under same size increments quantity not upload count',()=>{
+ assert(ui.includes('const identifier=oe=>[oe.name,oe.size,oe.lastModified]'));
+ assert(ui.includes('const groups=new Map()'));
+ assert(ui.includes('const existing=E.current.find(Q=>Q.id===ue)?.files||[]'));
+ assert(ui.includes('printCopies:Math.min(99,pbPrintCopies(old)+row.count)'));
+ assert(ui.includes('const fresh=[...groups.values()].filter'));
+ assert(ui.includes('printCopies:Math.min(99,row.count)'));
+ assert(ui.includes('pbPrintCopyFilename'));
+});
+test('photographer sees only active selected lab prices inside print screen',()=>{
+ assert(ui.includes('className:"pb1178LabPrices"'));
+ assert(ui.includes('window.pb1178ShowLabPrices?.(t)'));
+ assert(prices.includes('data?.lab?.name'));
+ assert(prices.includes('data?.prices'));
+ assert(prices.includes('تعرفه‌های چاپ'));
+ assert(prices.includes('document.createElement'));
+ assert(page.includes('photobridge-r1178-photographer-prices.js?v=r1178'));
+ assert(page.includes('photobridge-r1178-print-ux.css?v=r1178'));
+});
+test('both changed intake assets and prebuilt customer print bundle are versioned',()=>{
+ assert(page.includes('photobridge-r1137-lab-local-intake.css?v=r1178'));
+ assert(page.includes('photobridge-r1137-lab-local-intake.js?v=r1178'));
+ assert(page.includes('&intake=r1178'));
+ new Function(intake);new Function(prices);
+});

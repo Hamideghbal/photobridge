@@ -29,7 +29,7 @@ if(!ui.includes('pb1201BirthdaySettingsButton')) {
     const a=actions.indexOf(startMarker),b=a<0?-1:actions.indexOf('," ",',a);
     if(a<0||b<0||b-a>480)throw Error('[R1201] '+label+' action changed');
     const action=actions.slice(a,b);
-    actions=actions.slice(0,a)+actions.slice(b+4);
+    actions=actions.slice(0,a)+actions.slice(b+5);
     return action;
   }
   const accounting=cutAction('t==="lab"&&!Ot&&!At&&e.jsx("button",{className:"externalAccountingBtn "', 'accounting marker');

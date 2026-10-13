@@ -57,3 +57,111 @@
 .pb1143NewGrid{grid-template-columns:1fr 1fr}
 .pb1143NewGrid>label:first-child{grid-column:1/-1}
 @media(max-width:540px){.pb1137Intake .pb1139PickerMenu{width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px);min-width:0}.pb1143NewGrid{gap:8px}.pb1137Intake .pb1143NewCustomer{padding:10px}}
+
+
+/* PB1178 – two-column desktop local photo intake with an always-visible proforma. */
+@media(min-width:900px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake[open]{
+  width:min(1440px,calc(100vw - 24px))!important;
+  height:min(900px,calc(100dvh - 22px))!important;max-height:calc(100dvh - 22px)!important;
+  overflow:hidden!important;display:flex!important;flex-direction:column!important;
+  border-radius:18px!important;background:#f7faff!important;padding:14px 16px!important;
+ }
+ .pb1137Intake>form{
+  flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;gap:7px!important;
+ }
+ .pb1137Intake .pb1178IntakeWorkspace{
+  flex:1 1 auto!important;min-height:0!important;min-width:0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-areas:"editor bill"!important;gap:13px!important;
+  direction:rtl!important;overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeEditor{
+  grid-area:editor!important;min-width:0!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeBill{
+  grid-area:bill!important;min-width:0!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;background:#fff!important;border:1px solid #dce5f4!important;
+  border-radius:14px!important;padding:13px!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px 9px!important;flex-shrink:0!important;margin:0 0 7px!important;
+  padding:9px!important;border-radius:12px!important;overflow:visible!important;
+  background:#fff!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer{
+  grid-column:1/-1!important;width:100%!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label{
+  width:100%!important;min-width:0!important;margin:0!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  grid-column:auto!important;
+ }
+ .pb1137Intake .pb1137Settings :is(select,button){
+  height:35px!important;min-height:35px!important;padding:5px 10px!important;
+  border-radius:8px!important;font:750 11.5px Vazirmatn,Tahoma,sans-serif!important;
+ }
+ .pb1137Intake .pb1139Customer>button{
+  width:100%!important;min-height:38px!important;height:38px!important;
+  text-align:right!important;display:flex!important;align-items:center!important;
+  justify-content:space-between!important;gap:10px!important;
+  border:1px solid #cbd8f1!important;background:#fff!important;
+  padding:6px 12px!important;font-size:12px!important;
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain!important;scrollbar-gutter:stable!important;
+  display:flex!important;flex-direction:column!important;gap:8px!important;
+  padding:3px 7px 14px 2px!important;margin:0!important;
+ }
+ .pb1137Intake .pb1139Group{flex:0 0 auto!important}
+ .pb1137Intake form>.pb1137Submit{flex:0 0 44px!important;height:44px!important;margin:1px 0 0!important;position:static!important}
+}
+.pb1137Intake .pb1178BillTitle{
+ display:flex;flex-direction:column;gap:2px;padding:5px 2px 11px;
+ border-bottom:1px solid #e2e9f5
+}
+.pb1137Intake .pb1178BillTitle strong{font-size:16px;color:#234ba2}
+.pb1137Intake .pb1178BillTitle small{font-size:10px;color:#667085}
+.pb1137Intake .pb1178BillCustomer{font-weight:850!important;color:#334b77!important;margin:10px 0!important}
+.pb1137Intake .pb1178BillRows{
+ flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
+ padding:2px 4px 12px;scrollbar-gutter:stable
+}
+.pb1137Intake .pb1178BillRow{
+ display:grid;grid-template-columns:minmax(0,1fr) 75px 145px;align-items:center;
+ gap:8px;border-bottom:1px solid #eef1f6;padding:10px 5px;font-size:11px;
+}
+.pb1137Intake .pb1178BillRow b{font-size:11px;color:#475467}
+.pb1137Intake .pb1178BillRow span{color:#667085;text-align:center}
+.pb1137Intake .pb1178BillRow strong{color:#2351ac;text-align:left;font-size:11px}
+.pb1137Intake .pb1178BillEmpty{font-size:11px!important;color:#98a2b3!important}
+.pb1137Intake .pb1178BillFoot{padding:12px 8px 4px;border-top:1px solid #e2e9f5}
+.pb1137Intake .pb1178BillTotals{display:flex;flex-direction:column;gap:8px}
+.pb1137Intake .pb1178BillTotals span{font-size:11px;color:#667085}
+.pb1137Intake .pb1178BillTotals strong{font-size:18px;color:#234fba}
+.pb1137Intake .pb1178BillNotice{font-size:10px!important;line-height:1.6!important;margin:9px 0 0!important;color:#667085!important}
+.pb1137Intake .pb1139PickerMenu{z-index:10000!important}
+.pb1137Intake .pb1139Customer>button{font-size:12px!important}
+@media(max-width:899px){
+ .pb1137Intake[open]{
+  width:min(760px,calc(100vw - 12px))!important;height:calc(100dvh - 12px)!important;
+  display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  padding:10px!important;
+ }
+ .pb1137Intake>form{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+ .pb1137Intake .pb1178IntakeWorkspace{flex:1!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;gap:10px!important}
+ .pb1137Intake .pb1178IntakeEditor{flex:0 0 auto!important;min-height:270px!important}
+ .pb1137Intake .pb1137Files.pb1139Groups{overflow:auto!important;min-height:200px!important;max-height:43dvh!important}
+ .pb1137Intake .pb1178IntakeBill{flex:0 0 auto!important;min-height:150px!important;background:#fff!important;border:1px solid #e2e9f5!important;border-radius:12px!important;padding:10px!important}
+ .pb1137Intake form>.pb1137Submit{flex-shrink:0!important;position:static!important}
+ .pb1137Intake .pb1139Customer>button{width:100%!important;min-height:40px!important;height:40px!important;text-align:right!important}
+ .pb1137Intake .pb1178BillRows{max-height:32dvh;overflow:auto}
+}

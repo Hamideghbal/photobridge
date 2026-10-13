@@ -137,6 +137,7 @@ await import('./enable-r1195-gallery-create-compact.mjs');
 await import('./enable-r1196-gallery-field-align.mjs');
 await import('./enable-r1197-gallery-create-four-fields.mjs');
 await import('./enable-r1201-lab-invoice-ux.mjs');
+await import('./enable-r1201-lab-intake-general.mjs');
 await import('./enable-r1201-lab-controls.mjs');
 await import('./enable-r1202-lab-invoice-preview-counters.mjs');
 

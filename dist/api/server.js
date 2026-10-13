@@ -10539,7 +10539,7 @@ async function equipmentRentalShopOverview(shopId) {
     for(const row of photographerRows)row.name=equipmentRentalCustomerLabel(row.name,row.mobile);
     const assets=await equipmentRentalAssetsSnapshot(pool,shopId);
     const supply=await equipmentRentalSupplyPool(pool,shopId,null);
-    return { shop, items, assets, externalSupplyHolders:supply.holders, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows.map(p => { const d = applySpecialDiscount(p.price, true, shop?.subscription_discount_amount, shop?.subscription_discount_percent); return { ...p, base_price: Number(p.price || 0), price: d.amount, special_discount_percent: d.discountPercent, special_discount_amount: d.specialDiscountAmount }; }), renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
+    return { shop:isProductionShop(shop)?{...shop,rental_enabled:false}:shop, items, assets, externalSupplyHolders:supply.holders, saleItems, saleOrders: saleOrdersQ.rows, shortages: shortagesQ.rows, returnShortages:returnShortagesQ.rows, salesWallet, salesWalletTopup: { configured:Boolean(zibalConfigured), minTopup:Number(walletCfg.rentalShopWalletMinTopup||10000), amounts:Array.isArray(walletCfg.rentalShopWalletTopupAmounts)?walletCfg.rentalShopWalletTopupAmounts:[] }, bookings: bookingsQ.rows, photographers: photographerRows, photographerInvites:inviteHistoryQ.rows, collaborationRequests: collaborationQ.rows, catalog, subscription: { active: equipmentRentalShopSubscriptionActive(shop), activeUntil: shop?.active_until || null, plans: plansQ.rows.map(p => { const d = applySpecialDiscount(p.price, true, shop?.subscription_discount_amount, shop?.subscription_discount_percent); return { ...p, base_price: Number(p.price || 0), price: d.amount, special_discount_percent: d.discountPercent, special_discount_amount: d.specialDiscountAmount }; }), renewals: renewalsQ.rows, gateway: { provider: 'zibal', configured: zibalConfigured, amountMultiplier: ZIBAL_AMOUNT_MULTIPLIER } } };
 }
 async function equipmentRentalFindPhotographerByMobile(db, mobileValue) {
     const mobile = normalizeMobile(String(mobileValue || ''));
@@ -10639,7 +10639,7 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
     if (!userId || !shopId) return false;
     await ensureEquipmentRentalV727Schema();
     const sq=await db.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId]);
-    const shop=sq.rows[0];if(!shop||!equipmentRentalShopSubscriptionActive(shop))return false;
+    const shop=sq.rows[0];if(!shop||!equipmentRentalShopSubscriptionActive(shop)||(isProductionShop(shop)&&channel==='sale'&&shop.sale_enabled===false))return false;
     const visibility=await db.query(`SELECT ${testAccountSql('shop','s')} AS test_account FROM equipment_rental_shops s WHERE s.id=$1 AND ${testAccountVisibleSql('shop','s','$2')}`,[shopId,userId]);
     if(!visibility.rowCount)return false;
     // A photographer whose account was created by a rental-store invitation can discover
@@ -10664,7 +10664,7 @@ async function equipmentRentalCreateBooking(db, { shopId, photographerId = null,
     await db.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [`equipment-rental:${shopId}`]);
     const shopQ = await db.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 FOR UPDATE`, [shopId]);
     const shop = shopQ.rows[0];
-    if (!shop || !equipmentRentalShopSubscriptionActive(shop) || shop.rental_enabled===false) return { error: 'rental_shop_unavailable' };
+    if (!shop || !equipmentRentalShopSubscriptionActive(shop) || shop.rental_enabled===false || isProductionShop(shop)) return { error: 'rental_shop_unavailable' };
     let availability = await equipmentRentalAvailability(db, { shopId, startDate, endDate, items });
     if (availability.error) return availability;
     const deferredApproval = initialStatus === 'pending_approval';
@@ -16387,7 +16387,7 @@ ${inviteUrl}`;
           GROUP BY s.id ORDER BY connected DESC,active_items DESC,s.created_at DESC`, [a.userId]);
         const previewAllowed=normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin';
         const originContext=await photographerInitialOriginContext(a.userId),primaryShopId=originContext.originType==='rental'?originContext.primaryShopId:null;
-        const shops=q.rows.filter(shop=>isProductionShop(shop) || shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),canRent:previewPrivate||reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
+        const shops=q.rows.filter(shop=>isProductionShop(shop) || shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),rental_enabled:isProductionShop(shop)?false:shop.rental_enabled,canRent:!isProductionShop(shop)&&(previewPrivate||reachAllows(shop,'rental',viewer)),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
         return sendJson(res, 200, { shops, scoped, primaryShopId:primaryShopId||null, scopedShopId: scopedShopIds.length===1?scopedShopIds[0]:null, scopedShopIds });
     }
     const customerRentalShopSelect = url.pathname.match(/^\/api\/customer\/equipment-rental\/shops\/([0-9a-f-]{36})\/select$/i);
@@ -16411,7 +16411,7 @@ ${inviteUrl}`;
         // v631: rental-store context selection is intentionally isolated from
         // photographer_active_lab_id.  Selecting a rental shop must never call
         // or mutate the laboratory-selection flow.
-        return sendJson(res, 200, { ok: true, shop: q.rows[0], connected: Boolean(q.rows[0].connected) });
+        return sendJson(res, 200, { ok: true, shop:isProductionShop(q.rows[0])?{...q.rows[0],rental_enabled:false}:q.rows[0], connected: Boolean(q.rows[0].connected) });
     }
 
     const customerRentalMembershipProfile=url.pathname.match(/^\/api\/customer\/equipment-rental\/shops\/([0-9a-f-]{36})\/membership-profile$/i);

@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
  let s=fs.readFileSync("dist/api/server.js","utf8");
  if(s.includes("PB1178 deferred delegated proforma"))return;
  const one=(old,repl)=>{const n=s.split(old).length-1;if(n!==1)throw Error("R1178 server patch "+n+" matches: "+old.slice(0,120));s=s.replace(old,repl);};
+ one('f.print_type,f.chassis,f.frame,f.crop_handling,f.original_state,f.created_at', 'f.print_type,f.chassis,f.frame,f.print_copies,f.crop_handling,f.original_state,f.created_at');
  const fileLine="const file = fq.rows[0];\n                if (!['sent', 'received', 'downloaded', 'needs_fix'].includes(String(file.status || ''))) {";
  one(fileLine,`const file = fq.rows[0];
                 // PB1178: allow accurate per-photo print count edits before printing.

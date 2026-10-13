@@ -1,6 +1,7 @@
 /* R1177 — laboratory finance: single-row controls and in-page statement modes. */
 @media (min-width:821px) and (hover:hover) and (pointer:fine){
- html body #root .labRoleWorkspace .financeWorkspace .financeSummary.accountingSummary:not(.financeDashboardWrap *){display:none!important}
+ html body #root .labRoleWorkspace .financeWorkspace>.financeSummary.accountingSummary{display:none!important}
+ html body #root .labRoleWorkspace .financeWorkspace:has(.financeDashboardWrap)>.financeSummary.accountingSummary{display:grid!important}
  html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar{
   display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
   justify-content:flex-start!important;gap:7px!important;
@@ -164,12 +165,11 @@ html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice :is(td,
  padding:5px 8px!important;border:1px solid #dce5f2!important;text-align:right!important;
 }
 html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice th{background:#edf3ff!important}
-html body #root .labRoleWorkspace .pb1176Backdrop{
+html body .pb1176Backdrop{
  width:min(880px,calc(100vw - 28px))!important;height:auto!important;
  max-height:calc(100dvh - 26px)!important;padding:0!important;
  overflow:visible!important;border-radius:17px!important;
 }
-html body #root .labRoleWorkspace .pb1176Form,
 .pb1176Backdrop .pb1176Form{
  gap:8px!important;padding:12px 14px!important;overflow:visible!important;
  max-height:calc(100dvh - 30px)!important;

@@ -10650,7 +10650,7 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
         if (!invitedShopIds.includes(String(shopId))) return false;
     }
     const pq=await db.query(`SELECT province,city FROM photographer_profiles WHERE user_id=$1 LIMIT 1`,[userId]);
-    const effectiveChannel=shop.rental_enabled===false&&shop.sale_enabled===true?'sale':channel==='sale'?'sale':'rental';
+    const effectiveChannel=isProductionShop(shop)||shop.rental_enabled===false&&shop.sale_enabled===true?'sale':channel==='sale'?'sale':'rental';
     return reachAllows(shop,effectiveChannel,pq.rows[0]||{});
 }
 async function equipmentRentalPhotographerCanAccessShop(db, userId, shopId, channel='rental') {

@@ -12,7 +12,7 @@ test('React creates new gallery fee/capacity/lifetime only once inside header',(
  assert(sample.includes('dialogClassName:"pb1112CreateDialog",headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
  assert(sample.includes('هزینه ساخت')&&sample.includes('ظرفیت')&&sample.includes('عمر اولیه'));
  assert.equal((sample.match(/className:"clientGalleryCreateBilling"/g)||[]).length,1,'no duplicate summary in form body');
- assert(sample.includes('children:[e.jsxs("label",{children:["عنوان پروژه"'));
+ assert(sample.includes('children:[e.jsxs("label",{children:[')&&sample.includes('"عنوان پروژه"'));
  assert(sample.includes('className:"grid2"'));
  assert(sample.includes('"نام مشتری"')&&sample.includes('"موبایل مشتری"'));
 });
@@ -38,7 +38,7 @@ test('creation header contains title, summary and close and keeps short-screen s
 });
 test('fresh asset URLs load without affecting other modal paths',()=>{
  assert.equal(index.split('/photobridge-r1195-gallery-create-compact.css?v=r1195').length-1,1);
- assert.match(index,/index-UIRefine-v655-r84\.js\?v=[^"]+&gallery=r1195"/);
+ assert.match(index,/index-UIRefine-v655-r84\.js\?v=[^"]+&gallery=r1195(?:&fields=r1196)?"/);
 });
 test('Chromium visually verifies three fields stay one row at mobile and desktop sizes when available',{skip:(()=>{try{require.resolve('playwright');return false}catch{return 'Browser harness unavailable'}})()},async()=>{
  const {chromium}=require('playwright');

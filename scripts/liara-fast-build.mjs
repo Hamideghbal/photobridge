@@ -131,4 +131,5 @@ await import('./enable-r1188-lab-browser-tabs.mjs');
 await import('./enable-r1189-lab-queue-stability.mjs');
 await import('./enable-r1190-desktop-tab-speed.mjs');
 await import('./enable-r1192-mobile-pwa-tabs.mjs');
+await import('./enable-r1193-photographer-stable-tabs.mjs');
 

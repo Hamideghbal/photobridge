@@ -1,0 +1,43 @@
+/* R1178 per-photo copies and active lab tariff preview */
+html body #root .labRoleWorkspace .pb1178CopiesEdit{
+ border:1px solid #c9d9ff!important;background:#ecf3ff!important;color:#315efb!important;
+ border-radius:8px!important;padding:5px 10px!important;min-height:29px!important;
+ font:800 11px Vazirmatn,Tahoma,sans-serif!important;width:auto!important;
+ white-space:nowrap!important;cursor:pointer!important;
+}
+html body #root .labRoleWorkspace .labPrintSettingsGrid>.pb1178CopiesField{
+ display:flex!important;flex-direction:column!important;gap:5px!important;
+ color:#475467!important;font-size:12px!important;
+}
+html body #root .labRoleWorkspace .pb1178CopiesField input{
+ width:100%!important;min-height:39px!important;max-width:170px!important;
+ border:1px solid #cbd8ef!important;border-radius:9px!important;
+ padding:7px 10px!important;background:#fff!important;color:#344054!important;
+ font:850 13px Vazirmatn,Tahoma,sans-serif!important;
+}
+html body #root .simplePrintPilotHeaderActions .pb1178LabPrices{
+ flex:0 0 auto!important;padding:7px 13px!important;min-height:36px!important;
+ border:1px solid #b9ccff!important;border-radius:9px!important;
+ color:#315efb!important;background:#eef3ff!important;
+ font:850 11px Vazirmatn,Tahoma,sans-serif!important;cursor:pointer!important;
+}
+.pb1178TariffDialog{
+ width:min(920px,calc(100vw - 24px));height:auto;max-height:86dvh;
+ margin:auto;padding:17px 20px;border:1px solid #dce4f3;border-radius:18px;
+ background:#fff;color:#344054;box-shadow:0 22px 65px #0f172a33;
+ font:12px/1.6 Vazirmatn,Tahoma,sans-serif;
+}
+.pb1178TariffDialog::backdrop{background:#0f172a99;backdrop-filter:blur(2px)}
+.pb1178TariffHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:13px}
+.pb1178TariffHead h2{font-size:16px;margin:0 0 5px;color:#2856b0}
+.pb1178TariffHead p{font-size:11px;color:#667085;margin:0}
+.pb1178TariffDialog .pb1178TariffClose{width:33px;height:33px;border:1px solid #dae2ef;background:#f5f7ff;border-radius:50%;color:#667085;font:20px Tahoma;cursor:pointer}
+.pb1178TariffScroll{max-height:64dvh;overflow:auto;overscroll-behavior:contain;border-radius:10px;border:1px solid #e5ebf5}
+.pb1178TariffTable{width:100%;border-collapse:collapse;white-space:nowrap;text-align:right}
+.pb1178TariffTable :is(td,th){text-align:right;padding:9px 11px;border-bottom:1px solid #ebeff6}
+.pb1178TariffTable thead th{position:sticky;top:0;background:#edf3ff;color:#2856b0;z-index:1}
+.pb1178TariffTable tbody tr:nth-child(even){background:#fafcff}
+.pb1178TariffTable td.unpriced{color:#98a2b3}
+.pb1178TariffFoot{font-size:11px;color:#667085;margin:11px 0 0}
+.pb1178TariffEmpty{margin:14px;color:#667085}
+@media(max-width:760px){html body #root .simplePrintPilotHeaderActions .pb1178LabPrices{padding:7px 9px!important;font-size:10px!important}.pb1178TariffDialog{padding:11px}.pb1178TariffTable :is(td,th){padding:7px 8px;font-size:11px}}

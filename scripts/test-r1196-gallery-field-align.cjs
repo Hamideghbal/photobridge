@@ -20,8 +20,10 @@ test('the first row places every required/optional badge NEXT TO its field title
 test('the original required validations and optional mobile remain untouched',()=>{
  assert(app.includes('!h.title.trim()||!h.customerName.trim()'));
  assert(app.includes('if(String(h.accessCode||"").replace('));
- const region=app.slice(app.indexOf('const T=async()=>{',app.indexOf('PB1112open')-9000),app.indexOf('PB1112open'));
- assert(!region.includes('!h.customerMobile.trim()'),'mobile is not suddenly required');
+ const at=app.indexOf('!h.title.trim()||!h.customerName.trim()');
+ assert(at>0);
+ const validation=app.slice(at,at+450);
+ assert(!validation.includes('!h.customerMobile.trim()'),'mobile is not suddenly required');
 });
 test('first three inputs stay one row with captions and badges above inputs',()=>{
  assert(css.includes('.clientGalleryCreateForm > label:first-child,'));

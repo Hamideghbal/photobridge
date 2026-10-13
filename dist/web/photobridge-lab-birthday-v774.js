@@ -13,7 +13,7 @@
     #pb774BirthdayShade button[type=submit]{background:#315efb;color:white}
   `;document.head.append(css);
   let shade=null;
-  function eligible(){return /^\\/lab\\/settings(?:\\/general)?\\/?$/.test(location.pathname)&&!!document.querySelector('.settingsBody .settingRows')}
+  function eligible(){return location.pathname==='/lab/settings'||location.pathname==='/lab/settings/general'||location.pathname==='/lab/settings/'&&!!document.querySelector('.settingsBody .settingRows')}
   function mount(){let b=document.getElementById('pb774BirthdayEntry');if(!eligible()){b?.closest('.pb1201BirthdayRow')?.remove();return}if(b)return;
     b=document.createElement('button');b.id='pb774BirthdayEntry';b.type='button';b.textContent='🎂 پیام و هدیهٔ تولد عکاس‌ها';b.onclick=open;const host=document.querySelector('.settingsBody .settingRows');const row=document.createElement('div');row.className='pb1201BirthdayRow';row.append(b);host.append(row)}
   async function open(){if(shade)return;shade=document.createElement('div');shade.id='pb774BirthdayShade';shade.innerHTML=`<form aria-label="تنظیم هدیه تولد"><h2>تبریک و هدیهٔ تولد عکاس‌ها</h2><p>تخفیف روی ماندهٔ حساب فاکتورهای چاپ یا صحافی در بازهٔ انتخابی اعمال می‌شود. پیامک در روز تولد ارسال می‌شود.</p>

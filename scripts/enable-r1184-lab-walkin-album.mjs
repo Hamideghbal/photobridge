@@ -117,6 +117,7 @@ if(!src.includes('PB1184 album walk-in configurator')){
  "quantity.append(minus,count,plus);if(!albumMode)photo.append(quantity);photos.append(photo);",'album no print copies');
  one("let group=groups.find(x=>x.size===defaultSize.value);const fresh=!group;",
  "if(albumMode&&groups.length&&groups[0].size!==defaultSize.value)throw Error('برای هر سفارش آلبوم فقط یک سایز مجاز است.');let group=groups.find(x=>x.size===defaultSize.value);const fresh=!group;",'single album size only');
+ one("function busy(value){submitting=value;form.dataset.busy=value?'1':'';for(const control of modal.querySelectorAll('button,input,select'))control.disabled=value||locked&&control!==submit&&control!==close;}","function busy(value){submitting=value;form.dataset.busy=value?'1':'';for(const control of modal.querySelectorAll('button,input,select'))control.disabled=value||locked&&control!==submit&&control!==close;if(albumMode&&groups.length)defaultSize.disabled=true;}",'keep single album size fixed while changing files');
  one("  busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';",
  "  let albumData=null;if(albumMode)try{albumData=albumForm.collect()}catch(e){error.textContent=e.message;return;}\n  busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';",'validate album before draft');
  one("mode:'print',delivery:'pickup',priority:'normal',customerId:customers.value",

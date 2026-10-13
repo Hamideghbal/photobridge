@@ -36,7 +36,9 @@ test('real Chromium computed animation stays disabled through all 3D queue phase
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-gpu']});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}});
-  await page.route('https://fonts.googleapis.com/**',route=>route.abort());
+  // A failed imported stylesheet makes Chromium reject addStyleTag itself.
+  // Supply an empty font stylesheet so queue animation assertions stay offline.
+  await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,contentType:'text/css',body:''}));
   await page.setContent('<div id="root"><div class="labRoleWorkspace"><nav class="pb1174QueueNav"></nav><div class="labRolePageScrollArea rolePageScrollArea"><div class="stageQueueWorkspace compactStageQueue"><div class="labQueueStickyBar"></div><section class="labOrderScrollArea queuePageTurn out forward"><article class="labOrderCard orderEnterFade">سفارش آزمایشی</article></section></div></div></div>');
   await page.addStyleTag({path:'dist/web/assets/index-UIRefine-v586.css'});
   const before=await page.locator('.queuePageTurn').evaluate(el=>getComputedStyle(el).animationName);

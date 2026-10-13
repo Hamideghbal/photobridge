@@ -7,6 +7,7 @@ function requireLocalDatabase(){
 test('real PostgreSQL: mobile-based test visibility, targeted invitations and accepted invitations',async()=>{
  requireLocalDatabase();
  const {testAccountVisibleSql,testAccountSql}=await import('../dist/api/test-account-visibility.js');
+ const {isProductionShop}=await import('../dist/api/frame-production.js');
  const pool=new Pool({connectionString:testDatabaseUrl}),db=await pool.connect();
  try{
  await db.query('BEGIN');
@@ -35,7 +36,7 @@ test('real PostgreSQL: mobile-based test visibility, targeted invitations and ac
  const fs=require('node:fs'),vm=require('node:vm'),server=fs.readFileSync('dist/api/server.js','utf8');
  const functions=server.slice(server.indexOf('async function equipmentRentalPhotographerCanDiscoverShop('),server.indexOf('async function equipmentRentalCreateBooking('));
  const gates=vm.runInNewContext(functions+';({discover:equipmentRentalPhotographerCanDiscoverShop,access:equipmentRentalPhotographerCanAccessShop})',{
-  ensureEquipmentRentalV727Schema:async()=>{},equipmentRentalShopSubscriptionActive:()=>true,
+  isProductionShop,ensureEquipmentRentalV727Schema:async()=>{},equipmentRentalShopSubscriptionActive:()=>true,
   photographerInitialInviteType:async()=> 'rental',equipmentRentalInvitedShopIds:async()=>[],reachAllows:()=>true,testAccountVisibleSql,testAccountSql
  });
  assert.equal(await gates.discover(db,ids.invited,ids.testShop),true,'targeted test invite must work even before redemption and across origin scope');
@@ -53,6 +54,12 @@ test('real PostgreSQL: mobile-based test visibility, targeted invitations and ac
  await db.query('UPDATE users SET active=false WHERE id=$1',[ids.admin]);assert.deepEqual(await visible('shop','outsider'),[ids.publicShop]);assert.deepEqual(await visible('lab','outsider'),[ids.publicLab]);
  // Open/untargeted invite does not make a test institution public.
  await db.query('DELETE FROM photographer_invite_redemptions');await db.query('UPDATE photographer_invites SET target_mobile=NULL,active=true');assert.deepEqual(await visible('shop','invited'),[ids.publicShop]);
+ await db.query('ALTER TABLE equipment_rental_shops ADD COLUMN business_category text');
+ const frameShopId=crypto.randomUUID();
+ await db.query('INSERT INTO equipment_rental_shops(id,name,manager_mobile,private_admin_only,business_category) VALUES($1,$2,$3,false,$4)',[frameShopId,'Frame producer','09129999998','frame_chassis']);
+ assert.equal(await gates.discover(db,ids.outsider,frameShopId,'sale'),true,'public production shop may be discovered without an invitation');
+ assert.equal(await gates.access(db,ids.outsider,frameShopId,'sale'),true,'first production order does not require existing cooperation');
+ assert.equal(await gates.access(db,ids.outsider,frameShopId,'rental'),false,'production browsing never grants a rental membership');
  }finally{await db.query('ROLLBACK');db.release();await pool.end()}
 });
 test('all production visibility SELECTs compile against the disposable local PostgreSQL schema',async()=>{

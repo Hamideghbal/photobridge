@@ -48,6 +48,7 @@ test('Chromium geometry: caption and badge baseline match, input directly beneat
  try{
   for(const width of [320,390,700,1366]){
    const page=await browser.newPage({viewport:{width,height:720}});
+   await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,contentType:'text/css',body:''}));
    await page.setContent('<div class="modalBack globalModalLayer"><section class="modal pb1112CreateDialog"><div class="modalHead"><h2>گالری خصوصی جدید</h2><div class="clientGalleryCreateBilling">هزینه ساخت | ظرفیت | عمر اولیه</div><button>×</button></div><div class="modalContent"><div class="clientGalleryCreateForm"><label><span class="pb1196FieldCaption">عنوان پروژه<small>اجباری</small></span><input></label><div class="grid2"><label><span class="pb1196FieldCaption">نام مشتری<small>اجباری</small></span><input></label><label><span class="pb1196FieldCaption">موبایل مشتری<small>اختیاری</small></span><input></label></div><label>رمز ورود<input></label></div></div></section></div>');
    for(const file of ['dist/web/assets/index-UIRefine-v586.css','dist/web/photobridge-r1112-gallery-form.css','dist/web/photobridge-r1194-gallery-create-dialog.css','dist/web/photobridge-r1195-gallery-create-compact.css','dist/web/photobridge-r1196-gallery-field-align.css'])await page.addStyleTag({path:file});
    const geom=await page.evaluate(()=>{

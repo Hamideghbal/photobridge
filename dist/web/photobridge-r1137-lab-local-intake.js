@@ -109,9 +109,18 @@ async function open(){
  const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');modal.append(message);
  const form=node('form');form.method='dialog';modal.append(form);
  const error=node('p',null,'pb1137Error');error.setAttribute('role','status');form.append(error);
+ const workspace=node('div',null,'pb1178IntakeWorkspace'),editor=node('section',null,'pb1178IntakeEditor'),bill=node('aside',null,'pb1178IntakeBill');
+ editor.setAttribute('aria-label','مشخصات سفارش و عکس‌ها');bill.setAttribute('aria-label','پیش‌فاکتور سفارش');
+ workspace.append(editor,bill);form.append(workspace);
+ const billTitle=node('div',null,'pb1178BillTitle');billTitle.append(node('strong','پیش‌فاکتور'),node('small','صرفاً برآورد؛ فاکتور قطعی در آماده تحویل صادر می‌شود.'));
+ const billCustomer=node('p','عکاسی انتخاب نشده','pb1178BillCustomer');
+ const billRows=node('div',null,'pb1178BillRows');billRows.setAttribute('aria-live','polite');
+ const billFoot=node('div',null,'pb1178BillFoot');const billTotals=node('div',null,'pb1178BillTotals');
+ const billNotice=node('p','مبلغ نهایی پس از تعیین تعرفه و انتخاب «آماده تحویل» قطعی می‌شود.','pb1178BillNotice');
+ billFoot.append(billTotals,billNotice);bill.append(billTitle,billCustomer,billRows,billFoot);
  const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);
  if(loadError){error.textContent=loadError.message;modal.showModal();return;}
- const settings=node('div',null,'pb1137Settings pb1139EntryRow');form.append(settings);
+ const settings=node('div',null,'pb1137Settings pb1139EntryRow');editor.append(settings);
  const customers=customerMenu(settings,[...(bootstrap.customers||[])],
   payload=>api('/api/lab/delegated-customers',payload),
   customerId=>api('/api/lab/delegated-customers/'+customerId+'/resend-invitation',{}));
@@ -122,11 +131,37 @@ async function open(){
  const fileInput=node('input');fileInput.type='file';fileInput.accept='image/jpeg,image/png,image/tiff,image/webp';fileInput.multiple=true;fileInput.hidden=true;form.append(fileInput);
  const choose=node('button','انتخاب عکس‌ها');choose.type='button';choose.setAttribute('aria-label','انتخاب عکس‌ها');field(settings,'عکس‌ها',choose);choose.onclick=()=>fileInput.click();
  const add=node('button','＋ افزودن','pb1139Add');add.type='button';add.setAttribute('aria-label','افزودن گروه عکس');field(settings,' ',add);
- const list=node('div',null,'pb1137Files pb1139Groups');form.append(list);
+ const list=node('div',null,'pb1137Files pb1139Groups');editor.append(list);
  const empty=node('p','سایز و کاغذ را انتخاب کن، عکس‌ها را اضافه کن و برای سایز بعدی همین کار را تکرار کن.','pb1139Empty');list.append(empty);
  let entries=[],groups=[],pendingFiles=[],order=null,submitting=false,locked=false,startedAt=null;
+ const priceBySize=new Map((bootstrap.printSizes||[]).map(row=>[String(row.id),row]));
+ const paperName=key=>paperOptions.find(x=>x[0]===key)?.[1]||key;
+ const money=value=>Math.round(Number(value||0)).toLocaleString('fa-IR');
+ function refreshInvoice(){
+  billRows.replaceChildren();
+  const client=bootstrap.customers?.find(c=>String(c.id)===String(customers.value));
+  billCustomer.textContent=client?String(client.name||client.mobile||'عکاسی'):'عکاسی انتخاب نشده';
+  let total=0,missing=0,totalPrints=0;
+  for(const group of groups){
+   const byPaper=new Map();
+   for(const item of group.items){const k=String(item.paper||group.paper);byPaper.set(k,(byPaper.get(k)||0)+Math.max(1,Number(item.copies||1)));}
+   for(const [paper,count] of byPaper){
+    const price=priceBySize.get(String(group.size))?.[paper];
+    const valid=price!=null&&Number.isFinite(Number(price))&&Number(price)>=0;
+    const amount=valid?Number(price)*count:0;
+    total+=amount;totalPrints+=count;if(!valid)missing++;
+    const row=node('div',null,'pb1178BillRow');row.append(node('b',String(group.label)+' · '+paperName(paper)),node('span',count.toLocaleString('fa-IR')+' چاپ'),node('strong',valid?money(amount)+' تومان':'تعرفه نامشخص'));billRows.append(row);
+   }
+  }
+  if(!groups.length)billRows.append(node('p','هنوز عکس یا سایزی به سفارش اضافه نشده است.','pb1178BillEmpty'));
+  const count=node('span','تعداد فایل: '+entries.length.toLocaleString('fa-IR')+' · تعداد چاپ: '+totalPrints.toLocaleString('fa-IR'));
+  const amount=node('strong',(missing?'جمع قیمت‌های مشخص: ':'جمع پیش‌فاکتور: ')+money(total)+' تومان');
+  billTotals.replaceChildren(count,amount);
+  billNotice.textContent=missing?'برای '+missing.toLocaleString('fa-IR')+' ردیف هنوز تعرفه مشخص نیست؛ قیمت نهایی در آماده تحویل تعیین می‌شود.':'این مبلغ پیش‌فاکتور است؛ فاکتور قطعی فقط بعد از «آماده تحویل» صادر می‌شود.';
+ }
+ customers.button.addEventListener('click',()=>requestAnimationFrame(refreshInvoice));
  fileInput.onchange=()=>{pendingFiles=[...fileInput.files];choose.textContent=pendingFiles.length?`${pendingFiles.length.toLocaleString('fa-IR')} عکس انتخاب شد`:'انتخاب عکس‌ها';};
- function syncEntries(){entries=groups.flatMap(x=>x.items);}
+ function syncEntries(){entries=groups.flatMap(x=>x.items);refreshInvoice();}
  async function appendFiles(group,files,size,paper){
   const additions=[];
   for(const file of files){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);if(item){additions.push({existing:item});}else additions.push({file,hash,size,paper,copies:1});}
@@ -134,7 +169,7 @@ async function open(){
   for(const item of additions){if(item.existing){item.existing.copies++;continue;}item.id=crypto.randomUUID();item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);}
  }
  function renderGroups(){
-  list.replaceChildren();if(!groups.length){list.append(empty);return;}
+  list.replaceChildren();if(!groups.length){list.append(empty);refreshInvoice();return;}
   for(const group of groups){
    const card=node('section',null,'pb1139Group');card.dataset.groupId=group.id;
    const head=node('div',null,'pb1139GroupHead');head.append(node('b',`${group.label} · ${group.paperLabel}`),node('span',`${group.items.length.toLocaleString('fa-IR')} عکس`));
@@ -145,13 +180,14 @@ async function open(){
    const photos=node('div',null,'pb1139GroupPhotos');photos.hidden=!!group.collapsed;
    for(const item of group.items){
     const photo=node('figure');const image=node('img');image.src=item.preview;image.alt=item.file.name;photo.append(image,node('figcaption',item.file.name));
-    const actions=node('div',null,'pb1141PhotoActions');photo.append(actions);const paper=field(actions,'کاغذ عکس',select(paperOptions));paper.value=item.paper;paper.onchange=()=>{if(!locked&&!submitting)item.paper=paper.value;};
+    const actions=node('div',null,'pb1141PhotoActions');photo.append(actions);const paper=field(actions,'کاغذ عکس',select(paperOptions));paper.value=item.paper;paper.onchange=()=>{if(!locked&&!submitting){item.paper=paper.value;refreshInvoice();}};
     const del=node('button',null,'pb1141DeletePhoto');del.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7"/></svg>';del.type='button';del.setAttribute('aria-label','حذف عکس');del.title='حذف عکس';del.onclick=()=>{if(locked||submitting)return;URL.revokeObjectURL(item.preview);group.items=group.items.filter(x=>x!==item);if(!group.items.length)groups=groups.filter(x=>x!==group);syncEntries();renderGroups();};actions.append(del);
     const quantity=node('div',null,'pb1142Quantity');quantity.append(node('span','تعداد'));
     const minus=node('button','−'),count=node('input'),plus=node('button','＋');minus.type=plus.type='button';minus.setAttribute('aria-label','کم کردن تعداد چاپ');plus.setAttribute('aria-label','افزایش تعداد چاپ');count.type='number';count.min='1';count.max='99';count.step='1';count.value=item.copies;count.setAttribute('aria-label','تعداد چاپ');
-    const setCopies=value=>{if(locked||submitting)return;const n=Number(value);if(Number.isInteger(n)&&n>=1&&n<=99)item.copies=n;count.value=item.copies;};minus.onclick=()=>setCopies(item.copies-1);plus.onclick=()=>setCopies(item.copies+1);count.onchange=()=>setCopies(count.value);quantity.append(minus,count,plus);photo.append(quantity);photos.append(photo);
+    const setCopies=value=>{if(locked||submitting)return;const n=Number(value);if(Number.isInteger(n)&&n>=1&&n<=99)item.copies=n;count.value=item.copies;refreshInvoice();};minus.onclick=()=>setCopies(item.copies-1);plus.onclick=()=>setCopies(item.copies+1);count.onchange=()=>setCopies(count.value);quantity.append(minus,count,plus);photo.append(quantity);photos.append(photo);
    }card.append(photos);list.append(card);
   }
+  refreshInvoice();
  }
  add.onclick=async()=>{
   if(locked||submitting)return;
@@ -163,7 +199,7 @@ async function open(){
    await appendFiles(group,pendingFiles,defaultSize.value,defaultPaper.value);if(fresh)groups.push(group);group.collapsed=false;syncEntries();pendingFiles=[];fileInput.value='';choose.textContent='انتخاب عکس‌ها';error.textContent='';renderGroups();
   }catch(e){error.textContent=e.message;}finally{busy(false);}
  };
- const submit=node('button','ثبت سفارش و صدور فاکتور', 'pb1137Submit');submit.type='submit';form.append(submit);
+ const submit=node('button','ثبت سفارش و ذخیره پیش‌فاکتور', 'pb1137Submit');submit.type='submit';form.append(submit);
  const clientOrderId=crypto.randomUUID();
  function busy(value){submitting=value;form.dataset.busy=value?'1':'';for(const control of modal.querySelectorAll('button,input,select'))control.disabled=value||locked&&control!==submit&&control!==close;}
  form.onsubmit=async e=>{
@@ -185,10 +221,11 @@ async function open(){
    for(const {item,file,target} of targets){if(item.saved)continue;const saved=await provider.write(target.dir,file.original_name,item.file);item.saved=true;item.localName=saved.name;}
    provider.saveResume(order.orderId,{startedAt,done:entries.length,total:entries.length,loadedBytes:entries.reduce((n,x)=>n+x.file.size,0),totalBytes:entries.reduce((n,x)=>n+x.file.size,0),completedIds:entries.map(x=>x.fileId),remaining:0,lastError:null,localComplete:true});
    const result=await api('/api/lab/delegated-orders/'+order.orderId+'/submit',{});
-   form.replaceChildren(node('h3','سفارش شمارهٔ '+order.orderNumber+' ثبت شد.'),node('p',result.invoice?'فاکتور صادر شد. عکس‌ها روی هارد این کامپیوتر ذخیره شدند.':'عکس‌ها روی هارد ذخیره شدند. برای صدور فاکتور، تعرفه‌های ناقص سفارش را تکمیل کن.'));
+   form.replaceChildren(node('h3','سفارش شمارهٔ '+order.orderNumber+' ثبت شد.'),node('p','عکس‌ها در مسیر سفارش روی هارد ثبت شدند. وضعیت سفارش دانلودشده است؛ پیش‌فاکتور تا زمان «آماده تحویل» قطعی نمی‌شود.'));
    const done=node('button','نمایش سفارش');done.type='button';done.onclick=()=>{closeModal();location.assign('/lab/orders');};form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;
   }catch(e){busy(false);error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':e.message;}
  };
+ refreshInvoice();
  modal.showModal();
 }
 function mount(){

@@ -27,7 +27,7 @@ function pb1184AlbumConfigurator(editor,settings,album,sizeSelect,entriesFn){
   const active=covers.filter(x=>!x.sizeId||String(x.sizeId)===currentSize);
   const oldCover=cover.value;
   cover.replaceChildren(...[['','انتخاب جلد'],...active.map(x=>[String(x.id),[x.materialName,x.modelName,x.name].filter(Boolean).join(' · ')]),['__custom__','جلد سفارشی']].map(([id,label])=>{const opt=node('option',label);opt.value=id;return opt}));
-  if([...cover.options].some(x=>x.value===oldCover))cover.value=oldCover;
+  if([...cover.options].some(x=>x.value===oldCover))cover.value=oldCover;else if(album.coverCatalogEnabled===false)cover.value='__custom__';
   const selected=active.find(x=>String(x.id)===String(cover.value));
   const oldColor=color.value;
   color.replaceChildren(...[['','انتخاب رنگ'],...(selected?.colors||[]).filter(x=>x.active!==false).map(x=>[String(x.id),String(x.name||x.colorValue||'رنگ')])].map(([id,label])=>{const opt=node('option',label);opt.value=id;return opt}));
@@ -88,6 +88,7 @@ if(!src.includes('PB1184 album walk-in configurator')){
  one("launch.textContent='در حال آماده‌سازی…';","launch.textContent='در حال آماده‌سازی…';",'launch state'); // no-op anchor intentional?
  one("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent=intakeTitle;",'restore appropriate title');
  one("modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');","modal.setAttribute('aria-label',intakeTitle);",'dialog title');
+ one("const modal=node('dialog',null,'pb1137Intake');","const modal=node('dialog',null,'pb1137Intake');if(albumMode)modal.classList.add('pb1184AlbumMode');",'album modal class');
  one("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2',intakeTitle));",'heading');
  one("const sizes=(bootstrap.printSizes||[]).map(s=>[s.id,s.label]);",
  "const sizes=(albumMode?(bootstrap.album?.sizes||[]):(bootstrap.printSizes||[])).map(s=>[s.id,s.label]);",'album size catalog');
@@ -101,7 +102,7 @@ if(!src.includes('PB1184 album walk-in configurator')){
  "const priceBySize=new Map((bootstrap.printSizes||[]).map(row=>[String(row.id),row]));const albumForm=albumMode?pb1184AlbumConfigurator(editor,settings,bootstrap.album||{},defaultSize,()=>entries):null;albumForm?.panel.addEventListener('pb1184-estimate',()=>refreshInvoice());",'insert album configuration below chooser');
  one("  let total=0,missing=0,totalPrints=0;",
  "  if(albumMode){const q=albumForm.estimate();for(const [label,amount] of q.rows){const row=node('div',null,'pb1178BillRow');row.append(node('b',label),node('strong',amount));billRows.append(row)}if(!q.rows.length)billRows.append(node('p','فایل‌های لت آلبوم را انتخاب کن.','pb1178BillEmpty'));billTotals.replaceChildren(node('span',q.count.toLocaleString('fa-IR')+' لت · '+q.sizeLabel),node('strong',(q.missing?'جمع مبالغ مشخص: ':'برآورد: ')+money(q.total)+' تومان'));billNotice.textContent='تعرفه‌های نامشخص هنگام صدور فاکتور نهایی توسط اپراتور تعیین می‌شوند.';return;}\n  let total=0,missing=0,totalPrints=0;",'album pre-invoice');
- one("if(item){additions.push({existing:item});}else additions.push({file,hash,size,paper,copies:1});",
+ one("if(item){additions.push({existing:item});}else additions.push({file,hash,size,paper,copies:1,chassis:false});",
  "if(item){if(albumMode)throw Error('این فایل قبلاً به لت‌های آلبوم اضافه شده است.');additions.push({existing:item});}else additions.push({file,hash,size,paper,copies:1});",'one spread per file');
  one("  list.replaceChildren();if(!groups.length){list.append(empty);refreshInvoice();return;}",
  "  list.replaceChildren();defaultSize.disabled=albumMode&&groups.length>0;if(!groups.length){list.append(empty);refreshInvoice();return;}",'lock album size after first files');

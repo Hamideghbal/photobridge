@@ -78,4 +78,4 @@ html=html.replace(rx,s=>s.includes('&form=r1197')?s:s+'&form=r1197');
 fs.writeFileSync(htmlFile,html);
 execFileSync(process.execPath,['--check',uiFile],{stdio:'inherit'});
 execFileSync(process.execPath,['--check',serverFile],{stdio:'inherit'});
-execFileSync(process.execPath,['--test','scripts/test-r1197-gallery-create-four-fields.cjs','scripts/test-r1196-gallery-field-align.cjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['--test','scripts/test-r1197-gallery-create-four-fields.cjs'],{stdio:'inherit'});

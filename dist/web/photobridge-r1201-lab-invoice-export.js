@@ -29,7 +29,8 @@
       'width:100%!important;max-width:100%!important;min-height:0!important;height:auto!important;max-height:none!important;'+
       'transform:none!important;overflow:visible!important;margin:0!important;padding:0!important;box-shadow:none!important;background:white!important}'+
       '.pb1201ExportShell .invoicePaper{display:block!important;position:static!important;transform:none!important;zoom:1!important;'+
-      'width:100%!important;max-width:none!important;min-height:0!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;'+
+      'width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;'+
+      'padding:34px!important;overflow:visible!important;box-shadow:none!important;'+
       'margin:0!important;box-sizing:border-box!important}'+
       '.invoicePaperViewport{width:100%!important;height:auto!important;overflow:visible!important;max-height:none!important}'+
       '@page{size:A4;margin:10mm}@media print{.pb1201ExportTools{display:none!important}.pb1201ExportShell{width:100%!important}'+

@@ -1,0 +1,22 @@
+/* R1201 lab-only settings and immediate walk-in bootstrap feedback. */
+.labSettingsWorkspace .pb1201BirthdaySettingsButton{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ margin:2px 0 13px;padding:10px 14px;min-height:41px;
+ border:1px solid #bfd1ee;border-radius:11px;background:#f1f6ff;color:#214eab;
+ font:800 12px Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer
+}
+.labSettingsWorkspace .pb1201BirthdaySettingsButton:hover{background:#e3eeff}
+dialog.pb1201IntakeLoading{
+ position:fixed;inset:0;margin:auto;width:min(410px,calc(100vw - 32px));
+ max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);
+ padding:0;border:0;border-radius:16px;background:#fff;color:#24344e;
+ box-shadow:0 22px 64px #0f172a38;font-family:Vazirmatn,Tahoma,Arial,sans-serif;
+ z-index:2147483620;direction:rtl
+}
+dialog.pb1201IntakeLoading::backdrop{background:#0f172a70}
+.pb1201IntakeLoadingInner{display:grid;gap:13px;padding:22px}
+.pb1201IntakeLoadingInner h2{font-size:17px;line-height:1.6;margin:0}
+.pb1201IntakeLoadingInner p{font-size:12px;line-height:1.8;color:#475569;margin:0}
+.pb1201IntakeLoadingInner button{justify-self:start;min-height:38px;padding:7px 20px;
+ border-radius:9px;border:1px solid #ced9ea;background:#f6f9ff;color:#234c99;
+ font:700 12px Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer}

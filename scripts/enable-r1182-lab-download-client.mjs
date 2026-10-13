@@ -16,7 +16,7 @@ if(!s.includes('PB1182 original-format download fallback')){
  'return{rootName:r.root.name,day:r.day,size:c.size,fallbackOriginal:!!o.pbFallbackOriginal,downloadName}','download warning metadata');
  s=s.slice(0,a)+ky+qy+s.slice(c);
  const bt=String.fromCharCode(96),expression='$'+'{t.order.id}',needle='await Me('+bt+'/api/lab/orders/'+expression+'/download-check'+bt+');';
- const replacement='const preflight=await Me('+bt+'/api/lab/orders/'+expression+'/download-check'+bt+');if(Number(preflight.fallbackOriginalCount||0)>0)window.alert("نسخه آماده چاپ "+String(preflight.fallbackOriginalCount)+" عکس روی سرور پیدا نشد؛ نسخه اصلی این عکس‌ها دریافت می‌شود. قبل از چاپ فرمت فایل‌ها را بررسی کنید: "+(preflight.fallbackNames||[]).join("، "));';
+ const replacement='await Me('+bt+'/api/lab/orders/'+expression+'/download-check'+bt+').then(preflight=>{if(Number(preflight.fallbackOriginalCount||0)>0)window.alert("نسخه آماده چاپ "+String(preflight.fallbackOriginalCount)+" عکس روی سرور پیدا نشد؛ نسخه اصلی این عکس‌ها دریافت می‌شود. قبل از چاپ فرمت فایل‌ها را بررسی کنید: "+(preflight.fallbackNames||[]).join("، "));});';
  s=change(s,needle,replacement,'operator fallback warning');
  fs.writeFileSync(path,s);
 }

@@ -119,4 +119,7 @@ await import('./enable-r1181-server.mjs');
 await import('./enable-r1181-lab-photo-controls.mjs');
 await import('./enable-r1182-lab-file-availability.mjs');
 await import('./enable-r1182-lab-download-client.mjs');
+await import('./enable-r1183-lab-direct-stream.mjs');
+await import('./enable-r1183-lab-image-ui.mjs');
+await import('./enable-r1183-finalize.mjs');
 

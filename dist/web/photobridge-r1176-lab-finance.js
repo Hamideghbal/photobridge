@@ -9,7 +9,8 @@ function manual({api,customers=[],refresh}){
  if(document.querySelector('.pb1176Backdrop'))return;
  const dialog=node('dialog','pb1176Backdrop');dialog.dir='rtl';dialog.setAttribute('aria-label','ثبت فاکتور دستی');
  const box=node('section','pb1176Form');
- const header=node('header','pb1176ModalHead'),close=node('button','pb1176Close','×');
+ const header=node('header','pb1176ModalHead'),close=node('button','pb1176Close');
+ close.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>';
  close.type='button';close.setAttribute('aria-label','بستن');close.onclick=()=>dialog.close();
  header.append(node('h2',null,'ثبت فاکتور دستی'),close);box.append(header);
  const help=node('p','pb1176Help','می‌توانید برای چاپ عکس با سایزها و قیمت‌های مختلف، یا برای هر کالا و خدمت دیگری ردیف ثبت کنید. این فاکتور در حساب مشتری ثبت می‌شود.');
@@ -85,5 +86,6 @@ function detailed(statement,invoices){
  const w=window.open('','_blank','width=1024,height=900');if(!w)return alert('مرورگر پنجره چاپ را مسدود کرده است.');
  w.document.open();w.document.write(html);w.document.close();
 }
-window.pb1176Finance={manual,detailed};
+function items(invoice){if(!invoice)return [];try{const list=typeof invoice.items==='string'?JSON.parse(invoice.items):invoice.items;return Array.isArray(list)?list:[]}catch{return []}}
+window.pb1176Finance={manual,detailed,items};
 })();

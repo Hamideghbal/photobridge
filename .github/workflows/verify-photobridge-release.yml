@@ -139,6 +139,13 @@ jobs:
           node --test scripts/test-r1163-photographer-gallery-header.cjs
           node --test scripts/test-r1164-gallery-tariff-photos.cjs
           node --test scripts/test-r1165-gallery-motion.cjs
+      - name: Verify R1201 laboratory invoice and order UI
+        run: |
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+          node --check dist/web/photobridge-r1201-lab-invoice-export.js
+          node --check dist/web/photobridge-lab-birthday-v774.js
+          node --check dist/web/photobridge-r1137-lab-local-intake.js
+          node --test scripts/test-r1201-lab-invoice-controls.cjs
       - name: Verify gallery expiry, reminders and legacy renewals in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

@@ -33,7 +33,7 @@ once(header,
 // Even that compositing pass still makes all photos/text flicker on some
 // Windows monitors. Keep the stable tab underline and button feedback only.
 once(header,
- "if(changed&&!matchMedia('(prefers-reduced-motion:reduce)').matches){\n      requestAnimationFrame(()=>requestAnimationFrame(()=>{\n       const panel=document.querySelector('.labRolePageScrollArea .stageQueueWorkspace,.labRolePageScrollArea .settingsBody,.labRolePageScrollArea .financePage')||document.querySelector('.labRolePageScrollArea');\n       panel?.animate?.([{opacity:.85},{opacity:1}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});\n      }));\n     }",
+ "panel?.animate?.([{opacity:.85},{opacity:1}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});",
  "/* PB1188 fixed scroll viewport; only the selected tab animates */",
  'lab status panel reveal');
 once(header,

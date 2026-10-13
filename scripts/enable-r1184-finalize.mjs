@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const path='dist/web/index.html';let html=fs.readFileSync(path,'utf8');
+const style='<link rel="stylesheet" href="/photobridge-r1184-album-intake-paper.css?v=r1184">';
+if(!html.includes(style))html=html.replace('</head>',style+'\n</head>');
+for(const ext of ['css','js'])html=html.replace(new RegExp('(photobridge-r1137-lab-local-intake\\.'+ext+'\\?v=)[^"\\s]+','g'),'$1r1184');
+html=html.replace(/(index-UIRefine-v655-r84\.js\?v=[^"']+)/g,v=>v.includes('album=r1184')?v:v+'&album=r1184');
+fs.writeFileSync(path,html);
+execFileSync(process.execPath,['--check','dist/web/photobridge-r1137-lab-local-intake.js'],{stdio:'inherit'});
+execFileSync(process.execPath,['--test','scripts/test-r1184-lab-walkin-album.cjs'],{stdio:'inherit'});

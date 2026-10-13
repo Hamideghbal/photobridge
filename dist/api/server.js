@@ -9728,11 +9728,11 @@ function frameVariant(shop,b,current=null){
  const hasFields=Object.keys(b).some(k=>k.startsWith('variant'));if(current&&!hasFields)return {model:(b.model===undefined?String(current.model||current.title||''):String(b.model||'')).trim(),specs:current.variant_specs||{}};
  const old=current?.variant_specs||{},model=String(b.model??old.baseModel??current?.model??'').trim();
  const material=String(b.variantMaterial??old.material??'').trim(),color=String(b.variantColor??old.color??'').trim();
- const number=k=>{const raw=b[k];if(raw===undefined)return old[k.replace('variant','').replace(/^./,c=>c.toLowerCase())]??null;if(String(raw).trim()==='')return null;const n=Number(normalizeDigits(String(raw)).replace('٫','.'));return Number.isFinite(n)&&n>0&&n<=10000?n:NaN;};
+ const number=k=>{const raw=b[k];if(raw===undefined)return old[k.replace('variant','').replace(/^./,c=>c.toLowerCase())]??null;if(raw===null||String(raw).trim()==='')return null;const n=Number(normalizeDigits(String(raw)).replace('٫','.'));return Number.isFinite(n)&&n>0&&n<=10000?n:NaN;};
  const widthCm=number('variantWidthCm'),heightCm=number('variantHeightCm'),diameterCm=number('variantDiameterCm'),thicknessMm=number('variantThicknessMm');
- if(!model||!material||material.length>80||!color||color.length>40||![widthCm,heightCm,diameterCm,thicknessMm].every(n=>n===null||Number.isFinite(n))||!thicknessMm||(!diameterCm&&(!widthCm||!heightCm))||(diameterCm&&(widthCm||heightCm)))return {error:'frame_variant_specs_required'};
+ if(!model||!material||material.length>80||!color||color.length>40||![widthCm,heightCm,diameterCm,thicknessMm].every(n=>n===null||Number.isFinite(n))||(!diameterCm&&(!widthCm||!heightCm))||(diameterCm&&(widthCm||heightCm)))return {error:'frame_variant_specs_required'};
  const specs={baseModel:model,material,color,widthCm,heightCm,diameterCm,thicknessMm};const size=diameterCm?'قطر '+diameterCm+' سانتی‌متر':widthCm+'×'+heightCm+' سانتی‌متر';
- return {specs,model:[model,'جنس '+material,size,'ضخامت '+thicknessMm+' میلی‌متر','رنگ '+color].join(' · ')};
+ return {specs,model:[model,'جنس '+material,size,thicknessMm?'قطر / ضخامت '+thicknessMm+' میلی‌متر':'','رنگ '+color].filter(Boolean).join(' · ')};
 }
 const frameDefaultSeeds=new Map();
 async function equipmentRentalSeedDefaultsForShop(shopId) {

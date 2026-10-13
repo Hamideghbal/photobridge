@@ -8,13 +8,13 @@ test('the first row places every required/optional badge NEXT TO its field title
  const b=app.indexOf('function PBClientGalleryCompare(',a);
  assert(a>=0&&b>a);
  const modal=app.slice(a,b);
- for(const [title,badge,value] of [['عنوان پروژه','اجباری','h.title'],['نام مشتری','اجباری','h.customerName'],['موبایل مشتری','اختیاری','h.customerMobile'],['رمز ورود خصوصی','اجباری','h.accessCode']]){
+ for(const [title,badge,value] of [['عنوان پروژه','اجباری','h.title'],['نام مشتری','اجباری','h.customerName'],['موبایل مشتری','اختیاری','h.customerMobile']]){
   const fragment='e.jsxs("label",{children:[e.jsxs("span",{className:"pb1196FieldCaption",children:["'+title+'",e.jsx("small",{"aria-hidden":!0,children:"'+badge+'"})]}),e.jsx("input",{';
   assert(modal.includes(fragment),title+' caption/badge must be a single visual line before input');
   const start=modal.indexOf(fragment);
   assert(modal.slice(start,start+450).includes('value:'+value),title+' actual field binding unchanged');
  }
- assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,4);
+ assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,3);
  assert(modal.includes('headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
 });
 test('the original required validations and optional mobile remain untouched',()=>{

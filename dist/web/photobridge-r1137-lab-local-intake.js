@@ -96,7 +96,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
 async function open(){
  if(active||opening)return;
  opening=true;
- const loadingTitle=/^\\/lab\\/album/.test(location.pathname)?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';
+ const loadingTitle=location.pathname.startsWith('/lab/album')?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';
  const readyDialog=node('dialog',null,'pb1137Intake pb1201IntakeLoading');
  readyDialog.setAttribute('dir','rtl');
  readyDialog.setAttribute('aria-label',loadingTitle);

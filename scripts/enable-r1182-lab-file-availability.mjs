@@ -55,16 +55,16 @@ if(!src.includes('PB1182 coherent source and print object resolution')){
  });
  section('        const labFileDownload = url.pathname.match(','        const labFileEditPresign = url.pathname.match(',s=>{
   s=one(s,'SELECT COALESCE(f.print_object_key,f.object_key) object_key,COALESCE(f.print_name,f.original_name) original_name,COALESCE(f.print_content_type,f.content_type) content_type,f.print_conversion_status,o.settlement_mode,o.payment_status FROM order_files',
-    'SELECT f.object_key,f.print_object_key,f.original_name,f.print_name,f.content_type,f.print_content_type,f.print_conversion_status,o.settlement_mode,o.payment_status FROM order_files','download keys');
+    'SELECT f.object_key,f.print_object_key,f.original_name,f.print_name,f.content_type,f.print_content_type,f.bytes,f.print_bytes,f.print_conversion_status,o.settlement_mode,o.payment_status FROM order_files','download keys');
   s=one(s,"            const row = q.rows[0];",
-    "            const row = q.rows[0], chosen = await pb1182Choose(row);\n            if(!chosen.available)return sendJson(res,404,{error:'file_not_found'});\n            const fileName=chosen.fallback?row.original_name:(row.print_name||row.original_name);\n            const fileType=chosen.fallback?row.content_type:(row.print_content_type||row.content_type);",'download chosen');
+    "            const row = q.rows[0], chosen = await pb1182Choose(row);\n            if(!chosen.available)return sendJson(res,404,{error:'file_not_found'});\n            const fileName=chosen.fallback?row.original_name:(row.print_name||row.original_name);\n            const fileType=chosen.fallback?row.content_type:(row.print_content_type||row.content_type);\n            const fileBytes=chosen.fallback?Number(row.bytes||0):Number(row.print_bytes||row.bytes||0);",'download chosen');
   s=s.replaceAll("String(row.object_key || '').startsWith('client-local-recovery/')","chosen.deviceLocal");
   s=s.replaceAll("String(row.object_key || '').startsWith('local/')","String(chosen.key || '').startsWith('local/')");
   s=s.replaceAll('localPathForKey(row.object_key)','localPathForKey(chosen.key)');
   s=s.replaceAll('key: row.object_key','key: chosen.key');
   s=s.replaceAll('name: row.original_name','name: fileName');
   s=s.replaceAll('contentType: row.content_type','contentType: fileType');
-  s=s.replaceAll('expiresIn: 300 });','expiresIn: 300, fallbackOriginal:chosen.fallback });');
+  s=s.replaceAll('expiresIn: 300 });','expiresIn: 300, fallbackOriginal:chosen.fallback, bytes:fileBytes });');
   if(!s.includes('key: chosen.key')||!s.includes('fallbackOriginal:chosen.fallback'))throw Error('R1182 download substitutions failed');
   return s;
  });

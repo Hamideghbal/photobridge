@@ -112,3 +112,4 @@ await import('./enable-r1163-photographer-gallery-header.mjs');
 await import('./enable-r1164-gallery-tariff-photos.mjs');
 await import('./enable-r1176-lab-finance.mjs');
 await import('./enable-r1177-lab-settings-finance.mjs');
+await import('./enable-r1178-release.mjs');

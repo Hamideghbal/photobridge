@@ -21,3 +21,5 @@ if(!s.includes('PB1182 original-format download fallback')){
  fs.writeFileSync(path,s);
 }
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
+
+execFileSync(process.execPath,['--test','scripts/test-r1182-lab-file-availability.cjs'],{stdio:'inherit'});

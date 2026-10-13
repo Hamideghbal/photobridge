@@ -9,8 +9,9 @@ export function productionTransition(order,action){
 }
 export function productionSchedule(input,order={}){
  const date=(value)=>{if(value===null||value==='')return null;const x=String(value||'');if(!/^\d{4}-\d{2}-\d{2}$/.test(x)||!Number.isFinite(new Date(x+'T00:00:00Z').getTime())||new Date(x+'T00:00:00Z').toISOString().slice(0,10)!==x)fail('invalid_production_date',400);return x;};
- const ready=input.expectedReadyDate===undefined?String(order.expected_ready_date||'').slice(0,10)||null:date(input.expectedReadyDate);
- const delivery=input.expectedDeliveryDate===undefined?String(order.expected_delivery_date||'').slice(0,10)||null:date(input.expectedDeliveryDate);
+ const saved=value=>value instanceof Date?value.toISOString().slice(0,10):String(value||'').slice(0,10)||null;
+ const ready=input.expectedReadyDate===undefined?saved(order.expected_ready_date):date(input.expectedReadyDate);
+ const delivery=input.expectedDeliveryDate===undefined?saved(order.expected_delivery_date):date(input.expectedDeliveryDate);
  if(ready&&delivery&&delivery<ready)fail('delivery_before_ready',400);
  return {ready,delivery};
 }

@@ -28,6 +28,7 @@ if(!source.includes('pb1177LedgerDetails')){
  fs.writeFileSync(path,source);
 }
 const htmlFile='dist/web/index.html';let html=fs.readFileSync(htmlFile,'utf8');
+if(!html.includes('/photobridge-r1177-lab-finance-layout.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1177-lab-finance-layout.css?v=r1177">\n</head>');
 html=html.replace(/(photobridge-r1147-lab-admin-header\.js\?v=)[^"']+/g,'$1r1177');
 html=html.replace(/(photobridge-r1176-lab-finance\.(?:js|css)\?v=)[^"']+/g,'$1r1177');
 html=html.replace(/(&finance=)r\d+/,'$1r1177');

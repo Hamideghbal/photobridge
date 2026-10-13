@@ -73,3 +73,11 @@ test('production site HTML loads fresh lab entry and header code',()=>{
  assert.match(html,/photobridge-r1147-lab-admin-header\.js\?v=[^"]+&site=r1188"/);
  assert(!html.includes('photobridge-r1147-lab-admin-header.js?v=r1175"'));
 });
+
+// R1188 final authorization integrity: only the UI entry point is unhidden.
+test('browser visibility never bypasses authenticated device and order protections',()=>{
+ assert(intake.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
+ assert(intake.includes("const [primary,root,data]=await Promise.all("));
+ assert(intake.includes("provider.write("));
+ assert(intake.includes("storageMode!=='device-local'"));
+});

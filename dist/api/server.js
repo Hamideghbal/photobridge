@@ -1,3 +1,4 @@
+import { isProductionShop, createProductionOrders, productionTransition, productionSchedule, frameLedger, normalizeProductionOptions } from './frame-production.js';
 import { galleryExpirySql, maintainGalleryLifetime } from './gallery-lifetime.js';
 import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
 import { testAccountVisibleSql, testAccountSql } from './test-account-visibility.js';
@@ -7154,7 +7155,7 @@ function customerEventNotificationCopy(event, data) {
     if (event === 'equipment_rental_request_cancelled')
         return { title: 'درخواست آفیش لغو شد', message: `${data?.photographerName || 'عکاس'} درخواست آفیش منتظر تأیید را لغو کرد.` };
     if (event === 'equipment_sale_order_new')
-        return { title: 'سفارش فروش جدید', message: `${data?.photographerName || 'یک عکاس'} سفارش خرید تجهیزات ثبت کرد${data?.itemTitle ? ` · ${data.itemTitle}` : ''}.` };
+        return { title: data?.production?'سفارش تولید قاب و شاسی':'سفارش فروش جدید', message: `${data?.photographerName || 'یک عکاس'} ${data?.production?'سفارش تولید قاب و شاسی':'سفارش خرید تجهیزات'} ثبت کرد${data?.itemTitle ? ` · ${data.itemTitle}` : ''}.` };
     if (event === 'equipment_collaboration_request')
         return { title: 'درخواست همکاری جدید', message: `${data?.photographerName || 'یک عکاس'} برای همکاری با فروشگاه درخواست فرستاد.` };
     if (event === 'equipment_rental_status') {
@@ -7164,6 +7165,7 @@ function customerEventNotificationCopy(event, data) {
         return { title: titleMap[status] || 'وضعیت اجاره تجهیزات تغییر کرد', message: `${bodyMap[status] || 'وضعیت درخواست اجاره به‌روزرسانی شد.'}${data?.shopName ? ` · ${data.shopName}` : ''}${data?.invoiceNumber ? ` · فاکتور #${data.invoiceNumber}` : ''}` };
     }
     if (event === 'equipment_sale_status') {
+        if(data?.productionStage){const stages={awaiting_approval:'منتظر تأیید',in_production:'در حال تولید',ready:'آماده تحویل',delivered:'تحویل‌شده',cancelled:'لغوشده'};return {title:'سفارش قاب و شاسی · '+(stages[data.productionStage]||'به‌روزرسانی'),message:`سفارش شما در «${data.shopName||'فروشگاه'}» ${stages[data.productionStage]||'به‌روزرسانی'} است.`};}
         const status = String(data?.status || '');
         const titleMap = { confirmed:'سفارش فروشگاه تأیید شد', completed:'سفارش فروشگاه تکمیل شد', cancelled:'سفارش فروشگاه لغو شد' };
         const bodyMap = { confirmed:'فروشگاه سفارش خرید تجهیزات شما را تأیید کرد.', completed:'فروشگاه سفارش خرید تجهیزات را تکمیل کرد.', cancelled:'سفارش خرید تجهیزات توسط فروشگاه لغو شد.' };
@@ -10492,7 +10494,7 @@ async function equipmentRentalShopOverview(shopId) {
           LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
           LEFT JOIN equipment_rental_shop_memberships m ON m.shop_id=b.shop_id AND m.user_id=b.photographer_id AND m.role='photographer'
           WHERE b.shop_id=$1 GROUP BY b.id,pp.studio_name,u.name,u.mobile,m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no ORDER BY b.created_at DESC LIMIT 250`, [shopId]),
-        pool.query(`SELECT m.user_id,m.active,m.created_at,m.opening_debt,m.collateral_requirement,m.collateral_note,m.settlement_mode,m.permanent_discount_percent,m.sale_discount_percent,m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no,m.business_license_image_object_key,m.business_license_image_name,m.business_license_image_content_type,m.business_license_image_bytes,COALESCE(pp.studio_name,u.name) name,u.mobile,COALESCE(u.photographer_enabled,false) photographer_enabled,(NOT COALESCE(u.photographer_enabled,false)) pre_registered,
+        pool.query(`SELECT m.user_id,m.active,m.created_at,m.opening_debt,m.collateral_requirement,m.collateral_note,m.settlement_mode,m.permanent_discount_percent,m.sale_discount_percent,m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no,m.business_license_image_object_key,m.business_license_image_name,m.business_license_image_content_type,m.business_license_image_bytes,EXISTS(SELECT 1 FROM equipment_sale_orders so WHERE so.shop_id=m.shop_id AND so.buyer_user_id=m.user_id AND so.production_stage='awaiting_approval') production_connection_pending,COALESCE(pp.studio_name,u.name) name,u.mobile,COALESCE(u.photographer_enabled,false) photographer_enabled,(NOT COALESCE(u.photographer_enabled,false)) pre_registered,
           EXISTS(SELECT 1 FROM photographer_invites pi WHERE pi.issuer_type='rental' AND pi.issuer_rental_shop_id=$1 AND pi.target_mobile IS NOT NULL AND right(regexp_replace(coalesce(pi.target_mobile,''),'[^0-9]','','g'),10)=right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10) AND pi.active=true AND (pi.expires_at IS NULL OR pi.expires_at>now()) AND NOT EXISTS(SELECT 1 FROM photographer_invite_redemptions rr WHERE rr.invite_id=pi.id)) connection_pending,
           (SELECT count(*)::int FROM equipment_rental_bookings b WHERE b.shop_id=$1 AND b.photographer_id=u.id) booking_count,
           COALESCE((SELECT sum(CASE WHEN e.direction='debit' THEN e.amount ELSE -e.amount END)::bigint FROM equipment_rental_accounting_entries e WHERE e.shop_id=$1 AND e.photographer_id=u.id),0)::bigint current_balance
@@ -10643,7 +10645,7 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
     // A photographer whose account was created by a rental-store invitation can discover
     // only the rental-capable stores that invited them. Sales-only stores stay public.
     // Later lab/photographer invitations must not change the account's original source.
-    if (!visibility.rows[0]?.test_account && shop.rental_enabled !== false && (await photographerInitialInviteType(userId)) === 'rental') {
+    if (!isProductionShop(shop) && !visibility.rows[0]?.test_account && shop.rental_enabled !== false && (await photographerInitialInviteType(userId)) === 'rental') {
         const invitedShopIds = await equipmentRentalInvitedShopIds(db, userId);
         if (!invitedShopIds.includes(String(shopId))) return false;
     }
@@ -10653,6 +10655,7 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
 }
 async function equipmentRentalPhotographerCanAccessShop(db, userId, shopId, channel='rental') {
     if (!(await equipmentRentalPhotographerCanDiscoverShop(db,userId,shopId,channel))) return false;
+    if(channel==='sale'){const sq=await db.query('SELECT business_category FROM equipment_rental_shops WHERE id=$1',[shopId]);if(isProductionShop(sq.rows[0]))return true;}
     const membership=await db.query(`SELECT 1 FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND role='photographer' AND active=true LIMIT 1`,[shopId,userId]).catch(()=>({rowCount:0}));
     return membership.rowCount>0;
 }
@@ -15489,10 +15492,29 @@ async function api(req, res, url) {
         return sendJson(res,200,{ok:true});
     }
     if(req.method==='DELETE'&&rentalSaleItemRoute){const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentRentalV654Schema();const q=await pool.query(`UPDATE equipment_sale_items SET active=false,deleted_at=now(),updated_at=now() WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL RETURNING id`,[rentalSaleItemRoute[1],shop.id]);if(!q.rowCount)return sendJson(res,404,{error:'sale_item_not_found'});await audit(a.userId,undefined,'equipment_sale.item_delete','equipment_sale_item',q.rows[0].id,{shopId:shop.id}).catch(()=>{});return sendJson(res,200,{ok:true});}
+    const productionOrderRoute=url.pathname.match(/^\/api\/rental\/production-orders\/([0-9a-f-]{36})$/i);
+    if(req.method==='PATCH'&&productionOrderRoute){
+        const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+        const b=await bodyJson(req,50000),c=await pool.connect();let result;
+        try{await c.query('BEGIN');const order=(await c.query(`SELECT * FROM equipment_sale_orders WHERE id=$1 AND shop_id=$2 AND production_stage IS NOT NULL FOR UPDATE`,[productionOrderRoute[1],shop.id])).rows[0];if(!order)throw Object.assign(new Error('sale_order_not_found'),{status:404});
+        const stage=productionTransition(order,String(b.action||'')),schedule=productionSchedule(b,order);const next=stage==='cancelled'?'cancelled':stage==='delivered'?'completed':stage==='awaiting_approval'?'pending':'confirmed';
+        if(b.action==='confirm'){await c.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'photographer',true,now()) ON CONFLICT(shop_id,user_id,role) DO UPDATE SET active=true,updated_at=now()`,[shop.id,order.buyer_user_id]);await frameLedger(c,order);}
+        if(b.action==='cancel'){if(order.status==='confirmed')await frameLedger(c,order,true);if(order.payment_status==='paid')await equipmentSaleRefundPaidOrder(c,order);}
+        result=(await c.query(`UPDATE equipment_sale_orders SET status=$3,production_stage=$4,production_confirmed_at=CASE WHEN production_stage='awaiting_approval' AND $4='in_production' THEN now() ELSE production_confirmed_at END,expected_ready_date=$5,expected_delivery_date=$6,payment_status=CASE WHEN $3='cancelled' AND payment_status='paid' THEN 'refunded' ELSE payment_status END,refunded_at=CASE WHEN $3='cancelled' AND payment_status='paid' THEN now() ELSE refunded_at END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[order.id,shop.id,next,stage,schedule.ready,schedule.delivery])).rows[0];await c.query('COMMIT');
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message});if(e.message==='sale_wallet_insufficient_for_refund')return sendJson(res,409,{error:e.message});throw e}finally{c.release()}
+        if(b.action!=='schedule'&&result.buyer_user_id)void publishCustomerEventEverywhere(result.buyer_user_id,'equipment_sale_status',{orderId:result.id,shopId:shop.id,shopName:shop.name,status:result.status,productionStage:result.production_stage,expectedReadyDate:result.expected_ready_date,expectedDeliveryDate:result.expected_delivery_date});
+        let sms=null;if(b.action==='ready'&&result.buyer_mobile)try{await sendSms({chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',userId:a.userId,mobile:result.buyer_mobile,message:`PhotoBridge: سفارش قاب و شاسی شما در «${shop.name}» آماده است. ${result.delivery_method==='courier'?'برای ارسال با پیک پیگیری کنید.':'برای دریافت حضوری مراجعه کنید.'}`,purpose:'rental_production_ready',eventKey:'production_ready',referenceId:result.id,metadata:{shopId:shop.id,orderId:result.id}});sms={sent:true};}catch(e){sms={sent:false,error:e.message};console.error('[production-ready-sms]',{orderId:result.id,message:e.message});}
+        await audit(a.userId,undefined,'equipment_frame.production_status','equipment_sale_order',result.id,{shopId:shop.id,action:b.action,stage:result.production_stage}).catch(()=>{});return sendJson(res,200,{ok:true,order:result,sms});
+    }
+    if(url.pathname==='/api/rental/production-options'&&['GET','PUT'].includes(req.method)){
+      const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});if(!isProductionShop(shop))return sendJson(res,404,{error:'production_shop_unavailable'});const key='frame_production_options:'+shop.id;
+      if(req.method==='GET'){const q=await pool.query('SELECT value FROM platform_settings WHERE key=$1',[key]);return sendJson(res,200,{options:q.rows[0]?.value||{types:[],models:[],sizes:[],thicknesses:[],colors:[]}});}
+      try{const options=normalizeProductionOptions(await bodyJson(req,100000));await pool.query(`INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`,[key,JSON.stringify(options)]);return sendJson(res,200,{ok:true,options});}catch(e){if(e.status)return sendJson(res,e.status,{error:e.message});throw e}
+    }
     const rentalSaleOrderRoute=url.pathname.match(/^\/api\/rental\/sale-orders\/([0-9a-f-]{36})$/i);
     if(req.method==='PATCH'&&rentalSaleOrderRoute){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentRentalV658Schema();const b=await bodyJson(req,50_000),next=String(b.status||'');if(!['confirmed','completed','cancelled'].includes(next))return sendJson(res,400,{error:'invalid_sale_order_status'});
-        const c=await pool.connect();try{await c.query('BEGIN');const oq=await c.query(`SELECT * FROM equipment_sale_orders WHERE id=$1 AND shop_id=$2 FOR UPDATE`,[rentalSaleOrderRoute[1],shop.id]);const order=oq.rows[0];if(!order){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_order_not_found'});}const prev=String(order.status||'');if(prev==='completed'||prev==='cancelled'){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_order_closed'});}const allowed=(prev==='pending'&&['confirmed','cancelled'].includes(next))||(prev==='confirmed'&&['completed','cancelled'].includes(next));if(!allowed){await c.query('ROLLBACK');return sendJson(res,409,{error:'invalid_sale_order_transition'});}if(next==='confirmed'&&prev==='pending'){const iq=await c.query(`SELECT stock_total,active FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL FOR UPDATE`,[order.sale_item_id,shop.id]);const item=iq.rows[0];if(!item||!item.active||Number(item.stock_total||0)<Number(order.quantity||0)){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient'});}await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total-$2,active=CASE WHEN stock_total-$2<=0 THEN false ELSE active END,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);}if(next==='cancelled'&&prev==='confirmed'){await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total+$2,active=true,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);if(String(order.payment_status||'')==='paid')await equipmentSaleRefundPaidOrder(c,order);}const uq=await c.query(`UPDATE equipment_sale_orders SET status=$3,payment_status=CASE WHEN $3='cancelled' AND payment_status='paid' THEN 'refunded' ELSE payment_status END,refunded_at=CASE WHEN $3='cancelled' AND payment_status='paid' THEN now() ELSE refunded_at END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[order.id,shop.id,next]);await c.query('COMMIT');await audit(a.userId,undefined,'equipment_sale.order_status','equipment_sale_order',order.id,{shopId:shop.id,previousStatus:prev,status:next,paymentStatus:uq.rows[0]?.payment_status||null}).catch(()=>{});if(order.buyer_user_id)publishCustomerEventEverywhere(String(order.buyer_user_id),'equipment_sale_status',{orderId:order.id,status:next,shopId:shop.id,shopName:String(shop.name||'فروشگاه تجهیزات'),paymentStatus:uq.rows[0]?.payment_status||null});return sendJson(res,200,{ok:true,order:uq.rows[0]});}catch(e){await c.query('ROLLBACK').catch(()=>{});if(String(e?.message||'')==='sale_wallet_insufficient_for_refund')return sendJson(res,409,{error:'sale_wallet_insufficient_for_refund',balance:e.balance,required:e.required});throw e;}finally{c.release();}
+        const c=await pool.connect();try{await c.query('BEGIN');const oq=await c.query(`SELECT * FROM equipment_sale_orders WHERE id=$1 AND shop_id=$2 FOR UPDATE`,[rentalSaleOrderRoute[1],shop.id]);const order=oq.rows[0];if(!order){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_order_not_found'});}if(order.production_stage){await c.query('ROLLBACK');return sendJson(res,409,{error:'use_production_transition'});}const prev=String(order.status||'');if(prev==='completed'||prev==='cancelled'){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_order_closed'});}const allowed=(prev==='pending'&&['confirmed','cancelled'].includes(next))||(prev==='confirmed'&&['completed','cancelled'].includes(next));if(!allowed){await c.query('ROLLBACK');return sendJson(res,409,{error:'invalid_sale_order_transition'});}if(next==='confirmed'&&prev==='pending'){const iq=await c.query(`SELECT stock_total,active FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL FOR UPDATE`,[order.sale_item_id,shop.id]);const item=iq.rows[0];if(!item||!item.active||Number(item.stock_total||0)<Number(order.quantity||0)){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient'});}await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total-$2,active=CASE WHEN stock_total-$2<=0 THEN false ELSE active END,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);}if(next==='cancelled'&&prev==='confirmed'){await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total+$2,active=true,updated_at=now() WHERE id=$1`,[order.sale_item_id,order.quantity]);if(String(order.payment_status||'')==='paid')await equipmentSaleRefundPaidOrder(c,order);}const uq=await c.query(`UPDATE equipment_sale_orders SET status=$3,payment_status=CASE WHEN $3='cancelled' AND payment_status='paid' THEN 'refunded' ELSE payment_status END,refunded_at=CASE WHEN $3='cancelled' AND payment_status='paid' THEN now() ELSE refunded_at END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[order.id,shop.id,next]);await c.query('COMMIT');await audit(a.userId,undefined,'equipment_sale.order_status','equipment_sale_order',order.id,{shopId:shop.id,previousStatus:prev,status:next,paymentStatus:uq.rows[0]?.payment_status||null}).catch(()=>{});if(order.buyer_user_id)publishCustomerEventEverywhere(String(order.buyer_user_id),'equipment_sale_status',{orderId:order.id,status:next,shopId:shop.id,shopName:String(shop.name||'فروشگاه تجهیزات'),paymentStatus:uq.rows[0]?.payment_status||null});return sendJson(res,200,{ok:true,order:uq.rows[0]});}catch(e){await c.query('ROLLBACK').catch(()=>{});if(String(e?.message||'')==='sale_wallet_insufficient_for_refund')return sendJson(res,409,{error:'sale_wallet_insufficient_for_refund',balance:e.balance,required:e.required});throw e;}finally{c.release();}
     }
     if (req.method === 'POST' && url.pathname === '/api/rental/availability') {
         const shop = await equipmentRentalCurrentShop(a);
@@ -16365,7 +16387,7 @@ ${inviteUrl}`;
           GROUP BY s.id ORDER BY connected DESC,active_items DESC,s.created_at DESC`, [a.userId]);
         const previewAllowed=normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin';
         const originContext=await photographerInitialOriginContext(a.userId),primaryShopId=originContext.originType==='rental'?originContext.primaryShopId:null;
-        const shops=q.rows.filter(shop=>shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),canRent:previewPrivate||reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
+        const shops=q.rows.filter(shop=>isProductionShop(shop) || shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),canRent:previewPrivate||reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
         return sendJson(res, 200, { shops, scoped, primaryShopId:primaryShopId||null, scopedShopId: scopedShopIds.length===1?scopedShopIds[0]:null, scopedShopIds });
     }
     const customerRentalShopSelect = url.pathname.match(/^\/api\/customer\/equipment-rental\/shops\/([0-9a-f-]{36})\/select$/i);
@@ -16457,7 +16479,7 @@ ${inviteUrl}`;
               LEFT JOIN equipment_rental_booking_items bi ON bi.booking_id=b.id LEFT JOIN equipment_rental_items i ON i.id=bi.item_id
               WHERE inv.shop_id=$1 AND inv.photographer_id=$2 AND b.status IN ('picked_up','returned')
               GROUP BY inv.id,b.id ORDER BY inv.issued_at DESC LIMIT 100`, [shopId,a.userId]),
-            pool.query(`SELECT o.id,o.quantity,o.unit_price,o.total_amount,o.status,o.payment_status,o.paid_at,o.created_at,o.updated_at,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title
+            pool.query(`SELECT o.id,o.production_stage,o.production_confirmed_at,o.quantity,o.unit_price,o.total_amount,o.status,o.payment_status,o.paid_at,o.created_at,o.updated_at,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title
               FROM equipment_sale_orders o JOIN equipment_sale_items i ON i.id=o.sale_item_id
               WHERE o.shop_id=$1 AND o.buyer_user_id=$2 AND o.status IN ('confirmed','completed')
               ORDER BY COALESCE(o.updated_at,o.created_at) DESC LIMIT 200`, [shopId,a.userId])
@@ -16482,12 +16504,12 @@ ${inviteUrl}`;
             });
         }
         const saleInvoices=saleRows.map((row)=>{
-            const amount=Number(row.total_amount||0);saleDebit+=amount;
-            const paid=String(row.payment_status||'')==='paid';if(paid)saleCredit+=amount;
-            const issued=row.updated_at||row.created_at;
+            const amount=Number(row.total_amount||0);if(!row.production_stage)saleDebit+=amount;
+            const paid=String(row.payment_status||'')==='paid';if(paid&&!row.production_stage)saleCredit+=amount;
+            const issued=row.production_confirmed_at||row.updated_at||row.created_at;
             const invoiceNumber=`ES-${String(row.id||'').replace(/-/g,'').slice(0,10).toUpperCase()}`;
-            saleEntries.push({id:`sale-debit:${row.id}`,booking_id:null,entry_type:'sale_invoice',direction:'debit',amount,description:`خرید تجهیزات · ${row.item_title||'تجهیز'} ×${Number(row.quantity||1)}`,entry_date:issued,created_at:issued,kind:'sale'});
-            if(paid){
+            if(!row.production_stage)saleEntries.push({id:`sale-debit:${row.id}`,booking_id:null,entry_type:'sale_invoice',direction:'debit',amount,description:`خرید تجهیزات · ${row.item_title||'تجهیز'} ×${Number(row.quantity||1)}`,entry_date:issued,created_at:issued,kind:'sale'});
+            if(paid&&!row.production_stage){
                 const paidAt=row.paid_at||issued;
                 saleEntries.push({id:`sale-credit:${row.id}`,booking_id:null,entry_type:'sale_payment',direction:'credit',amount,description:`پرداخت خرید · ${row.item_title||'تجهیز'}`,entry_date:paidAt,created_at:paidAt,kind:'sale'});
                 payments.push({id:`sale-payment:${row.id}`,kind:'sale',amount,description:`پرداخت خرید · ${row.item_title||'تجهیز'}`,paid_at:paidAt,created_at:paidAt,payment_method:'wallet',status_label:'پرداخت‌شده'});
@@ -16522,8 +16544,8 @@ ${inviteUrl}`;
     if (req.method === 'GET' && url.pathname === '/api/customer/equipment-rental/sale-items') {
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});
         await ensureEquipmentRentalV663Schema();await ensureEquipmentGlobalCatalogV827Schema();const shopId=String(url.searchParams.get('shopId')||'');if(!/^[0-9a-f-]{36}$/i.test(shopId))return sendJson(res,400,{error:'invalid_shop'});if(!(await equipmentRentalPhotographerCanAccessShop(pool,a.userId,shopId,'sale')))return sendJson(res,403,{error:'rental_shop_scope_forbidden'});
-        const [q,sq]=await Promise.all([pool.query(`SELECT i.*,s.name shop_name,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND i.stock_total>0 AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY COALESCE(c.sort_order,9999),i.title`,[shopId]),pool.query(`SELECT id,name,sales_wallet_checkout_enabled FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId])]);
-        return sendJson(res,200,{items:q.rows.map(equipmentItemPublic),shop:{id:shopId,name:sq.rows[0]?.name||null,walletCheckoutEnabled:Boolean(sq.rows[0]?.sales_wallet_checkout_enabled)}});
+        const [q,sq]=await Promise.all([pool.query(`SELECT i.*,s.name shop_name,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.stock_total>0 OR s.business_category IN ('frame','chassis','frame_chassis')) AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY COALESCE(c.sort_order,9999),i.title`,[shopId]),pool.query(`SELECT id,name,business_category,sales_wallet_checkout_enabled FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId])]);
+        const production=isProductionShop(sq.rows[0]);const terms=production?(await pool.query("SELECT settlement_mode FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND role='photographer' AND active=true",[shopId,a.userId])).rows[0]:null;return sendJson(res,200,{items:q.rows.map(equipmentItemPublic),shop:{id:shopId,name:sq.rows[0]?.name||null,production,walletCheckoutEnabled:terms?terms.settlement_mode==='prepaid':Boolean(sq.rows[0]?.sales_wallet_checkout_enabled)}});
     }
     if (req.method === 'GET' && url.pathname === '/api/customer/equipment-rental/sale-orders') {
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});await ensureEquipmentRentalV654Schema();const q=await pool.query(`SELECT o.*,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,s.name shop_name FROM equipment_sale_orders o JOIN equipment_sale_items i ON i.id=o.sale_item_id JOIN equipment_rental_shops s ON s.id=o.shop_id WHERE o.buyer_user_id=$1 ORDER BY o.created_at DESC LIMIT 100`,[a.userId]);return sendJson(res,200,{orders:q.rows});
@@ -16536,9 +16558,10 @@ ${inviteUrl}`;
         const c=await pool.connect();
         try{
             await c.query('BEGIN');
-            const iq=await c.query(`SELECT i.*,s.active shop_active,COALESCE(s.suspended,false) shop_suspended,s.active_from,s.active_until,s.sales_wallet_checkout_enabled,s.sale_enabled,s.sale_reach,s.province,s.city,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,s.sale_birthday_days_before,s.sale_birthday_days_after FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id WHERE i.id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') FOR UPDATE OF i`,[itemId]);
+            const iq=await c.query(`SELECT i.*,s.business_category,s.activation_status,s.active shop_active,COALESCE(s.suspended,false) shop_suspended,s.active_from,s.active_until,s.sales_wallet_checkout_enabled,s.sale_enabled,s.sale_reach,s.province,s.city,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,s.sale_birthday_days_before,s.sale_birthday_days_after FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id WHERE i.id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') FOR UPDATE OF i`,[itemId]);
             const item=iq.rows[0];
-            if(!item||!item.shop_active||item.shop_suspended||!equipmentRentalShopSubscriptionActive({active:true,suspended:item.shop_suspended,active_from:item.active_from,active_until:item.active_until})){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_item_unavailable'});}
+            if(item&&isProductionShop(item)){await c.query('ROLLBACK');return sendJson(res,409,{error:'use_production_checkout'});}
+            if(!item||!item.shop_active||item.shop_suspended||!equipmentRentalShopSubscriptionActive({active:true,activation_status:item.activation_status,suspended:item.shop_suspended,active_from:item.active_from,active_until:item.active_until})){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_item_unavailable'});}
             if(!(await equipmentRentalPhotographerCanAccessShop(c,a.userId,item.shop_id,'sale'))){await c.query('ROLLBACK');return sendJson(res,403,{error:'rental_shop_scope_forbidden'});}
             if(Number(item.stock_total||0)<quantity){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient'});}
             const uq=await c.query(`SELECT u.name,u.mobile,COALESCE(pp.studio_name,u.name) photographer_name FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE u.id=$1 LIMIT 1`,[a.userId]),u=uq.rows[0]||{};
@@ -16557,6 +16580,15 @@ ${inviteUrl}`;
             throw e;
         }finally{c.release();}
     }
+    if(req.method==='POST'&&url.pathname==='/api/customer/equipment-rental/production-checkout'){
+        if(!a||a.labRole!=='customer')return sendJson(res,401,{error:'photographer_auth_required'});
+        const b=await bodyJson(req,220000),shopId=String(b.shopId||'');if(!/^[0-9a-f-]{36}$/i.test(shopId))return sendJson(res,400,{error:'invalid_sale_cart'});
+        if(!(await equipmentRentalPhotographerCanAccessShop(pool,a.userId,shopId,'sale')))return sendJson(res,403,{error:'rental_shop_scope_forbidden'});
+        const c=await pool.connect();try{await c.query('BEGIN');const shop=(await c.query('SELECT * FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[shopId])).rows[0];if(!equipmentRentalShopSubscriptionActive(shop)||!isProductionShop(shop))throw Object.assign(new Error('production_shop_unavailable'),{status:404});
+        const out=await createProductionOrders(c,{shop,userId:a.userId,items:b.items,body:b,price:equipmentSalePrice,pay:equipmentSaleDebitBuyerAndCreditShop});await c.query('COMMIT');
+        void publishRentalShopEvent(shopId,'equipment_sale_order_new',{production:true,orderIds:out.orderIds,photographerId:a.userId,totalAmount:out.totalAmount,status:'pending'});return sendJson(res,201,out);
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.message==='service_wallet_insufficient')return sendJson(res,402,{error:e.message,balance:Number(e.balance||0),required:Number(e.required||0)});if(e.status)return sendJson(res,e.status,{error:e.message});throw e}finally{c.release()}
+    }
     if (req.method === 'POST' && url.pathname === '/api/customer/equipment-rental/sale-cart-checkout') {
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});
         await ensureEquipmentRentalV663Schema();
@@ -16571,6 +16603,7 @@ ${inviteUrl}`;
             await c.query('BEGIN');
             const sq=await c.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 FOR UPDATE`,[shopId]),shop=sq.rows[0];
             if(!equipmentRentalShopSubscriptionActive(shop)||shop.sale_enabled===false){await c.query('ROLLBACK');return sendJson(res,404,{error:'sale_shop_unavailable'});}
+            if(isProductionShop(shop)){await c.query('ROLLBACK');return sendJson(res,409,{error:'use_production_checkout'});}
             const ids=cart.map(x=>x.itemId).sort();
             const iq=await c.query(`SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND id=ANY($2::uuid[]) AND active=true AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY id FOR UPDATE`,[shopId,ids]);
             if(iq.rowCount!==ids.length){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_cart_changed'});}

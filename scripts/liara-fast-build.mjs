@@ -122,4 +122,6 @@ await import('./enable-r1182-lab-download-client.mjs');
 await import('./enable-r1183-lab-direct-stream.mjs');
 await import('./enable-r1183-lab-image-ui.mjs');
 await import('./enable-r1183-finalize.mjs');
+await import('./enable-r1184-lab-walkin-album.mjs');
+await import('./enable-r1184-finalize.mjs');
 

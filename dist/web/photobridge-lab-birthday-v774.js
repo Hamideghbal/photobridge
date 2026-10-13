@@ -2,7 +2,7 @@
   'use strict';
   if(window.__PB_LAB_BIRTHDAY_774__)return;window.__PB_LAB_BIRTHDAY_774__=true;
   const css=document.createElement('style');css.textContent=`
-    #pb774BirthdayEntry{position:fixed;right:18px;bottom:105px;z-index:10020;border:1px solid #bed0ed;border-radius:12px;background:#fff;color:#3157c8;padding:11px 15px;font:800 13px Vazirmatn,Tahoma,sans-serif;box-shadow:0 5px 15px #1e3a8a24;cursor:pointer}
+    #pb774BirthdayEntry{position:static!important;inset:auto!important;align-self:start;justify-self:start;min-height:40px;border:1px solid #bed0ed;border-radius:12px;background:#fff;color:#3157c8;padding:10px 15px;font:800 13px Vazirmatn,Tahoma,sans-serif;box-shadow:0 5px 15px #1e3a8a24;cursor:pointer}
     #pb774BirthdayShade{position:fixed;inset:0;z-index:2147482001;background:#0f1e3388;display:grid;place-items:center;padding:16px;direction:rtl;font:13px Vazirmatn,Tahoma,sans-serif}
     #pb774BirthdayShade *{box-sizing:border-box}#pb774BirthdayShade form{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:20px;color:#24344e;box-shadow:0 18px 42px #0003}
     #pb774BirthdayShade h2{margin:0 0 10px;font-size:19px}#pb774BirthdayShade p{line-height:1.7;color:#64748b}
@@ -13,9 +13,9 @@
     #pb774BirthdayShade button[type=submit]{background:#315efb;color:white}
   `;document.head.append(css);
   let shade=null;
-  function eligible(){return location.pathname.startsWith('/lab/settings')&&!!document.querySelector('.pageMain')}
-  function mount(){let b=document.getElementById('pb774BirthdayEntry');if(!eligible()){b?.remove();return}if(b)return;
-    b=document.createElement('button');b.id='pb774BirthdayEntry';b.type='button';b.textContent='🎂 پیام و هدیهٔ تولد عکاس‌ها';b.onclick=open;document.body.append(b)}
+  function eligible(){return /^\\/lab\\/settings(?:\\/general)?\\/?$/.test(location.pathname)&&!!document.querySelector('.settingsBody .settingRows')}
+  function mount(){let b=document.getElementById('pb774BirthdayEntry');if(!eligible()){b?.closest('.pb1201BirthdayRow')?.remove();return}if(b)return;
+    b=document.createElement('button');b.id='pb774BirthdayEntry';b.type='button';b.textContent='🎂 پیام و هدیهٔ تولد عکاس‌ها';b.onclick=open;const host=document.querySelector('.settingsBody .settingRows');const row=document.createElement('div');row.className='pb1201BirthdayRow';row.append(b);host.append(row)}
   async function open(){if(shade)return;shade=document.createElement('div');shade.id='pb774BirthdayShade';shade.innerHTML=`<form aria-label="تنظیم هدیه تولد"><h2>تبریک و هدیهٔ تولد عکاس‌ها</h2><p>تخفیف روی ماندهٔ حساب فاکتورهای چاپ یا صحافی در بازهٔ انتخابی اعمال می‌شود. پیامک در روز تولد ارسال می‌شود.</p>
     <label class="check"><input type="checkbox" name="discountEnabled"> تخفیف تولد فعال</label><div class="row"><label>درصد<input type="number" name="discountPercent" min="0" max="100" step="0.5"></label><label>روز قبل<input type="number" name="daysBefore" min="0" max="60"></label><label>روز بعد<input type="number" name="daysAfter" min="0" max="60"></label></div>
     <label class="check"><input type="checkbox" name="printEnabled"> چاپ عکس</label><label class="check"><input type="checkbox" name="albumEnabled"> صحافی آلبوم</label><label class="check"><input type="checkbox" name="smsEnabled"> ارسال پیامک تبریک در روز تولد</label>

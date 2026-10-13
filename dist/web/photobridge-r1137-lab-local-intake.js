@@ -96,12 +96,6 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
 async function open(){
  if(active||opening)return;
  opening=true;
- const loadingTitle=location.pathname.startsWith('/lab/album')?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';
- const readyDialog=node('dialog',null,'pb1137Intake pb1201IntakeLoading');
- readyDialog.setAttribute('dir','rtl');
- readyDialog.setAttribute('aria-label',loadingTitle);
- readyDialog.append(node('strong',loadingTitle),node('p','در حال آماده‌سازی فرم سفارش…'));
- document.body.append(readyDialog);readyDialog.showModal();
  const launch=document.getElementById('pb1137LocalIntakeButton');if(launch){launch.disabled=true;launch.textContent='در حال آماده‌سازی…';}
  const provider=storage();let directory,bootstrap,loadError;
  try{
@@ -110,7 +104,7 @@ async function open(){
   if(!root)throw Error('مسیر همیشگی ذخیره هنوز تنظیم نشده است. آن را در تنظیمات «ذخیره روی هارد» لابراتوار مشخص کن.');
   directory=root;bootstrap=data;
  }catch(e){loadError=e;}
- finally{readyDialog.close();readyDialog.remove();opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}
+ finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}
  const modal=node('dialog',null,'pb1137Intake');modal.setAttribute('dir','rtl');modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');active=modal;
  const head=node('header');head.append(node('h2','ثبت سفارش عکس حضوری'));const close=node('button','بستن');close.type='button';head.append(close);modal.append(head);
  const previews=[];

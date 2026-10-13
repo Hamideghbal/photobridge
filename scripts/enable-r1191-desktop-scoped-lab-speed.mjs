@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+// Preserve original mobile animations/card batches; the speed fix is desktop web.
+const file='dist/web/assets/index-UIRefine-v655-r84.js';
+let s=fs.readFileSync(file,'utf8');
+const old='const ee=(le,nt,xt)=>{if(ue.current!=null){window.clearTimeout(ue.current);ue.current=null}xt();R({direction:"forward",phase:"idle",nonce:Date.now()});return Promise.resolve()}';
+const next='const ee=(le,nt,xt)=>{/* R1191 preserve mobile */if(window.matchMedia("(min-width:821px) and (hover:hover) and (pointer:fine)").matches){if(ue.current!=null){window.clearTimeout(ue.current);ue.current=null}xt();R({direction:"forward",phase:"idle",nonce:Date.now()});return Promise.resolve()}return new Promise(Mt=>{if(le===nt){xt(),Mt();return}ue.current!=null&&window.clearTimeout(ue.current);const qt=oe(nt)>oe(le)?"forward":"backward",Jt=Date.now();R({direction:qt,phase:"out",nonce:Jt}),ue.current=window.setTimeout(()=>{xt(),R({direction:qt,phase:"in",nonce:Jt+1}),ue.current=window.setTimeout(()=>{R({direction:qt,phase:"idle",nonce:Jt+2}),ue.current=null,Mt()},560)},340)})}';
+if(s.includes(old))s=s.replace(old,next);else if(!s.includes(next))throw Error('[R1191] lab desktop fast transition not found');
+const first='x.useEffect(()=>{if(!Be.length){Ge(0);return}let le=Math.min(Be.length,24);Ge(le);let nt=0;const xt=()=>{le=Math.min(Be.length,le+24);Ge(le);if(le<Be.length)nt=requestAnimationFrame(xt)};if(le<Be.length)nt=requestAnimationFrame(xt);return()=>{if(nt)cancelAnimationFrame(nt)}},[T,o,s,bt]);';
+const second='x.useEffect(()=>{if(!Be.length){Ge(0);return}if(!window.matchMedia("(min-width:821px) and (hover:hover) and (pointer:fine)").matches){Ge(0);let le=0;const nt=window.setTimeout(()=>Ge(1),35),xt=window.setInterval(()=>{le+=1,Ge(Math.min(Be.length,le+1)),le+1>=Be.length&&window.clearInterval(xt)},105);return()=>{window.clearTimeout(nt),window.clearInterval(xt)}}let le=Math.min(Be.length,24);Ge(le);let nt=0;const xt=()=>{le=Math.min(Be.length,le+24);Ge(le);if(le<Be.length)nt=requestAnimationFrame(xt)};if(le<Be.length)nt=requestAnimationFrame(xt);return()=>{if(nt)cancelAnimationFrame(nt)}},[T,o,s,bt]);';
+if(s.includes(first))s=s.replace(first,second);else if(!s.includes(second))throw Error('[R1191] lab desktop fast card batching not found');
+fs.writeFileSync(file,s);
+const htmlFile='dist/web/index.html';
+let html=fs.readFileSync(htmlFile,'utf8');
+const rx=/(index-UIRefine-v655-r84\.js\?v=[^"']+)/g;
+if([...html.matchAll(rx)].length!==1)throw Error('[R1191] expected exactly one React module');
+html=html.replace(rx,v=>v.includes('&desktop=r1191')?v:v+'&desktop=r1191');
+fs.writeFileSync(htmlFile,html);
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+execFileSync(process.execPath,['--test','scripts/test-r1191-desktop-scoped-lab-speed.cjs','scripts/test-r1190-desktop-tab-speed.cjs'],{stdio:'inherit'});

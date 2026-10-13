@@ -39,11 +39,11 @@ test('one gallery form accepts photos and price, resumes failed uploads without 
  const dialog=page.getByRole('dialog',{name:'گالری خصوصی جدید'});
  await dialog.getByLabel('عنوان پروژه').fill('Project');await dialog.locator('.grid2 input').first().fill('Customer');await dialog.getByLabel('رمز ورود خصوصی').fill('1234');
  await dialog.locator('input[type=file]').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII=','base64')});
- await dialog.getByLabel('قیمت فایل دیجیتال (اختیاری · تومان)').fill('1500');await dialog.locator('.clientGalleryOrderingToggle input').check();
+ assert.equal(await dialog.getByLabel('قیمت فایل دیجیتال (اختیاری · تومان)').count(),0);await dialog.locator('.clientGalleryOrderingToggle input').check();
  assert(await dialog.locator('.pb1112CreateMedia').isVisible());assert(await dialog.locator('label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=(innerWidth<=820?14.4:12.6)));
  await dialog.getByRole('button',{name:'ساخت گالری رایگان',exact:true}).click();
  if(width===390){await page.locator('.pb1113GalleryDialog').getByRole('button',{name:'متوجه شدم',exact:true}).click();await dialog.getByRole('button',{name:'ادامه بارگذاری',exact:true}).click()}
- await dialog.waitFor({state:'hidden'});assert.equal(created,1,'retry must not create or charge again');assert.equal(completed,1);assert.equal(Number(saved.digitalPrice),1500);assert.equal(saved.selectionEnabled,true);assert.equal(saved.orderingEnabled,true,JSON.stringify(saved));
+ await dialog.waitFor({state:'hidden'});assert.equal(created,1,'retry must not create or charge again');assert.equal(completed,1);assert.equal(Number(saved.digitalPrice),0);assert.equal(saved.selectionEnabled,true);assert.equal(saved.orderingEnabled,true,JSON.stringify(saved));
  assert.equal(await page.locator('.clientGalleryManager').count(),0,'no second settings step');
  const gallery=page.locator('.clientGalleryCard');await gallery.getByRole('button',{name:'فعال کردن گالری',exact:true}).click();await gallery.getByRole('button',{name:'نمایش مشتری',exact:true}).waitFor();assert.equal(published,true);
  if(width===390)assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));

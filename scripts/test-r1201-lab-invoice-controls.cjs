@@ -46,12 +46,11 @@ test('payment form uses previously selected customer, without redundant selector
  assert(bundle.includes('Ye=()=>{ft({customerId:z||""'));
 });
 test('birthday entry is only inside general settings; both walk-in modes show loading immediately',()=>{
- assert(birthday.includes("document.querySelector('.settingsBody .settingRows')"));
- assert(birthday.includes('host.append(row)'));
- assert(!birthday.includes('document.body.append(b)'));
- assert(birthday.includes("['/lab/settings','/lab/settings/','/lab/settings/general']"));
+ assert(bundle.includes('className:"pb1201BirthdaySettingsButton"'));
+ assert(birthday.includes('window.pb774OpenBirthdayCampaign=open;'));
+ assert(!birthday.includes('setInterval(mount,900);mount();'));
  assert(intake.includes('pb1201IntakeLoading'));
- const i=intake.indexOf('readyDialog.showModal()'),j=intake.indexOf("api('/api/lab/delegated-orders/bootstrap')",i);
+ const i=intake.indexOf('prep.showModal()'),j=intake.indexOf("api('/api/lab/delegated-orders/bootstrap')",i);
  assert(i>0&&j>i);
  assert(html.includes('/photobridge-r1201-lab-invoice-export.js?v=r1201'));
  assert(html.includes('/photobridge-r1201-lab-finance-invoice.css?v=r1201'));

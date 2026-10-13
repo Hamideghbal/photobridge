@@ -9,7 +9,7 @@ const server=fs.readFileSync('dist/api/server.js','utf8');
 
 test('lab invoice summary is hidden ONLY on invoice tab',()=>{
  assert(bundle.includes('p&&(t!=="lab"||w!=="invoices")&&e.jsx("div",{className:"financeSummary'));
- assert.match(css,/\.financeWorkspace:has\(\.invoiceTableCard\)>\\.financeSummary\{display:none!important\}/);
+ assert(css.includes('.financeWorkspace:has(.invoiceTableCard)>.financeSummary{display:none!important}'));
 });
 test('today dates are default using Tehran calendar and one-click today exists',()=>{
  assert(bundle.includes('[_pbInvFrom,_setPbInvFrom]=x.useState(()=>t==="lab"?$s(new Date()):"")'));

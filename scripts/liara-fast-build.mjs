@@ -136,4 +136,5 @@ await import('./enable-r1194-gallery-create-dialog.mjs');
 await import('./enable-r1195-gallery-create-compact.mjs');
 await import('./enable-r1196-gallery-field-align.mjs');
 await import('./enable-r1197-gallery-create-four-fields.mjs');
+await import('./enable-r1201-lab-controls.mjs');
 

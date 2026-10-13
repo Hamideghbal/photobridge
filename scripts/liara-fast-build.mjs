@@ -128,4 +128,5 @@ await import('./enable-r1185-lab-desktop-statement-layout.mjs');
 await import('./enable-r1186-lab-walkin-button.mjs');
 await import('./enable-r1187-photo-tab-jitter.mjs');
 await import('./enable-r1188-lab-browser-tabs.mjs');
+await import('./enable-r1189-lab-queue-stability.mjs');
 

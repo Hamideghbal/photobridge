@@ -46,6 +46,7 @@ test('Chromium visually verifies three fields stay one row at mobile and desktop
  try{
   for(const width of [320,390,1366]){
    const page=await browser.newPage({viewport:{width,height:740}});
+   await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,contentType:'text/css',body:''}));
    await page.setContent('<div class="modalBack globalModalLayer"><div class="modal pb1112CreateDialog"><div class="panelHead modalHead"><h2>گالری خصوصی جدید</h2><div class="clientGalleryCreateBilling"><span><small>هزینه ساخت</small><b>رایگان</b></span><span><small>ظرفیت</small><b>500 عکس</b></span><span><small>عمر اولیه</small><b>45 روز</b></span></div><button>×</button></div><div class="modalContent"><div class="clientGalleryCreateForm"><label>عنوان پروژه<input></label><div class="grid2"><label>نام مشتری<input></label><label>موبایل مشتری<input></label></div><label>رمز ورود<input></label></div></div></div></div>');
    await page.addStyleTag({path:'dist/web/assets/index-UIRefine-v586.css'});
    await page.addStyleTag({path:'dist/web/photobridge-r1112-gallery-form.css'});

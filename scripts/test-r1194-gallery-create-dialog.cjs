@@ -45,6 +45,7 @@ test('computed overlay stacking and containment when a local Chromium harness is
  try{
   for(const width of [390,1366]){
    const page=await browser.newPage({viewport:{width,height:740},isMobile:width<=820,hasTouch:width<=820});
+   await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,contentType:'text/css',body:''}));
    await page.setContent('<div id="root"><header style="position:fixed;inset:0 0 auto;height:114px;z-index:2147483550;background:blue">Header</header></div><div class="modalBack globalModalLayer"><section class="modal card pb1112CreateDialog" role="dialog"><div class="modalHead" style="min-height:54px">گالری خصوصی جدید</div><div class="modalContent"><div class="clientGalleryCreateForm" style="height:950px">Form</div></div></section></div>');
    await page.addStyleTag({path:'dist/web/assets/index-UIRefine-v586.css'});
    await page.addStyleTag({path:'dist/web/photobridge-r1112-gallery-form.css'});

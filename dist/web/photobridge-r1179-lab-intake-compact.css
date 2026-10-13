@@ -1,0 +1,111 @@
+/* R1179 – local print intake: more room for editing, less room for proforma. */
+@media(min-width:1020px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake[open]{
+  padding:9px 12px!important;
+  height:min(900px,calc(100dvh - 14px))!important;
+  max-height:calc(100dvh - 14px)!important;
+ }
+ .pb1137Intake>header{min-height:34px!important;padding-bottom:5px!important}
+ .pb1137Intake>header h2{font-size:16px!important;line-height:1.4!important}
+ .pb1137Intake>header button{padding:5px 10px!important;min-height:30px!important}
+ .pb1137Intake>p{margin:1px 0 3px!important;font-size:10.5px!important;line-height:1.35!important}
+ .pb1137Intake>form{margin-top:1px!important;gap:4px!important}
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,2.65fr) minmax(265px,1fr)!important;
+  gap:9px!important
+ }
+ .pb1137Intake .pb1178IntakeBill{padding:9px!important}
+ .pb1137Intake .pb1178BillTitle{padding:1px 2px 6px!important}
+ .pb1137Intake .pb1178BillTitle strong{font-size:13px!important}
+ .pb1137Intake .pb1178BillTitle small{font-size:9px!important;line-height:1.45!important}
+ .pb1137Intake .pb1178BillCustomer{margin:4px 0!important;font-size:11px!important}
+ .pb1137Intake .pb1178BillRow{
+  grid-template-columns:minmax(0,1fr) 50px 94px!important;
+  gap:4px!important;padding:6px 3px!important;font-size:9.5px!important
+ }
+ .pb1137Intake .pb1178BillRow :is(b,span,strong){font-size:9.5px!important}
+ .pb1137Intake .pb1178BillRows{padding:0 0 5px!important;scrollbar-gutter:auto!important}
+ .pb1137Intake .pb1178BillFoot{padding:7px 3px 1px!important}
+ .pb1137Intake .pb1178BillTotals{gap:4px!important}
+ .pb1137Intake .pb1178BillTotals span{font-size:10px!important}
+ .pb1137Intake .pb1178BillTotals strong{font-size:15px!important}
+ .pb1137Intake .pb1178BillNotice{font-size:9px!important;margin:5px 0 0!important}
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  /* Five visible fields in a single compact horizontal toolbar (RTL). */
+  display:grid!important;
+  grid-template-columns:minmax(175px,1.65fr) minmax(90px,.9fr) minmax(84px,.85fr) minmax(115px,1.05fr) minmax(75px,.75fr)!important;
+  align-items:end!important;gap:5px!important;
+  padding:7px!important;margin:0 0 5px!important
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer{
+  grid-column:auto!important;min-width:0!important;align-self:stretch!important
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label{
+  grid-column:auto!important;min-width:0!important;width:100%!important
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){grid-column:auto!important}
+ .pb1137Intake .pb1137Settings.pb1139EntryRow :is(label,.pb1139Customer){
+  margin:0!important;gap:2px!important;font-size:10px!important
+ }
+ .pb1137Intake .pb1137Settings :is(select,button),
+ .pb1137Intake .pb1139Customer>button{
+  height:34px!important;min-height:34px!important;
+  padding:5px 7px!important;line-height:1.4!important;
+  font:750 10.5px Vazirmatn,Tahoma,sans-serif!important;
+  width:100%!important;min-width:0!important
+ }
+ .pb1137Intake .pb1139Customer>button{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  text-align:right!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;
+  border:1px solid #cbd8f1!important
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  flex:1 1 0!important;min-height:0!important;height:0!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;scrollbar-gutter:auto!important;
+  padding:1px 5px 10px 1px!important
+ }
+ .pb1137Intake .pb1139Group{border-radius:10px!important}
+ .pb1137Intake .pb1139GroupHead{padding:5px 9px!important;gap:6px!important}
+ .pb1137Intake .pb1139GroupHead :is(button,span){font-size:10px!important}
+ .pb1137Intake .pb1139GroupPhotos{gap:7px!important;padding:6px!important}
+ .pb1137Intake .pb1139GroupPhotos figure{flex-basis:105px!important}
+ .pb1137Intake .pb1139GroupPhotos img{width:105px!important;height:58px!important}
+ .pb1137Intake .pb1139Empty{padding:10px!important}
+ .pb1137Intake form>.pb1137Submit{
+  height:38px!important;flex-basis:38px!important;min-height:38px!important;margin:1px 0 0!important;
+ }
+}
+@media(min-width:900px) and (max-width:1019px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,2fr) minmax(230px,1fr)!important;gap:8px!important
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:5px!important
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer{grid-column:1/-1!important}
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  flex:1 1 0!important;min-height:0!important;height:0!important;
+  overflow-y:auto!important
+ }
+}
+/* Lab card action buttons must shrink or wrap within the order card, never escape it. */
+html body #root .labRoleWorkspace .labOrderFoot{min-width:0!important;max-width:100%!important}
+html body #root .labRoleWorkspace .labOrderMiniActions{
+ display:flex!important;align-items:center!important;justify-content:flex-end!important;
+ flex-wrap:wrap!important;gap:5px!important;min-width:0!important;max-width:100%!important
+}
+html body #root .labRoleWorkspace .labOrderMiniActions>.miniCourierBtn{
+ min-width:0!important;max-width:100%!important;width:auto!important;
+ flex:0 1 auto!important;white-space:normal!important;overflow-wrap:normal!important;
+ padding:5px 8px!important;font:800 10px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+ border-radius:8px!important;box-sizing:border-box!important
+}
+@media(max-width:680px){
+ html body #root .labRoleWorkspace .labOrderFoot{flex-wrap:wrap!important;gap:5px!important}
+ html body #root .labRoleWorkspace .labOrderMiniActions{
+  width:100%!important;justify-content:flex-start!important
+ }
+}

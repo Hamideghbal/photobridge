@@ -24,9 +24,17 @@ patchOnce(navigation,
 // Header button feedback remains but do not synchronously force a full page
 // layout to restart the animation when switching the tab.
 patchOnce(navigation,
- "el.style.setProperty('animation','none','important');void el.offsetWidth;\n   el.style.setProperty('animation','pb1134HeaderMove .26s cubic-bezier(.2,.8,.2,1)','important');",
- "/* R1193: no synchronous layout flush on photographer tab press */\n   el.animate?.([{transform:'translateY(2px) scale(.98)'},{transform:'translateY(0) scale(1)'}],{duration:180,easing:'ease-out'});",
+ "el.style.setProperty('animation','none','important');void el.offsetWidth;",
+ "el.animate?.([{transform:'translateY(2px) scale(.98)'},{transform:'translateY(0) scale(1)'}],{duration:180,easing:'ease-out'});",
  'photographer tab press forced layout');
+patchOnce(navigation,
+ "el.style.setProperty('animation','pb1134HeaderMove .26s cubic-bezier(.2,.8,.2,1)','important');",
+ "/* R1193 no CSS tab animation replay required */",
+ 'photographer tab press CSS replay');
+patchOnce(navigation,
+ "pressTimers.set(el,setTimeout(()=>{el.style.removeProperty('animation');pressTimers.delete(el);},320));",
+ "/* R1193 Web Animations button feedback completes by itself */",
+ 'photographer tab press cleanup timer');
 
 const gallery='dist/web/photobridge-r1163-desktop-gallery-header.js';
 patchOnce(gallery,

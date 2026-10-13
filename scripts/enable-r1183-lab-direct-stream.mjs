@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/api/server.js';let src=fs.readFileSync(path,'utf8');
 function once(a,b){const count=src.split(a).length-1;if(count!==1)throw Error('R1183 server anchor '+count+' '+a.slice(0,100));src=src.replace(a,b)}
-function pb1183DirectRoute(){
+async function pb1183DirectRoute(){
  // Authenticated lab endpoint; works across multiple processes/restarts without in-memory download tokens.
  const match=url.pathname.match(/^\/api\/lab\/order-files\/([0-9a-f-]+)\/content$/);
  if(match&&req.method==='GET'){
@@ -77,7 +77,7 @@ function pb1183DirectRoute(){
  }
 }
 if(!src.includes('PB1183 authenticated lab image stream')){
- const body=pb1183DirectRoute.toString().replace(/^function pb1183DirectRoute\(\)\s*\{/,'').replace(/}\s*$/,'');
+ const body=pb1183DirectRoute.toString().replace(/^async function pb1183DirectRoute\(\)\s*\{/,'').replace(/}\s*$/,'');
  once('        const labFilePreview = url.pathname.match(',
  '        // PB1183 authenticated lab image stream: no transient per-process URL token.\n'+body+'\n        const labFilePreview = url.pathname.match(');
  // HEAD of one storage endpoint is not a reliable gate for a subsequent GET

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/api/server.js';let src=fs.readFileSync(path,'utf8');
 function one(a,b){const n=src.split(a).length-1;if(n!==1)throw Error('R1181 server anchor '+n+': '+a.slice(0,100));src=src.replace(a,b);}
-function pb1181DeleteEndpoint(){
+async function pb1181DeleteEndpoint(){
  const labPreprintFileRemove=url.pathname.match(/^\/api\/lab\/order-files\/([0-9a-f-]+)$/);
  if(labPreprintFileRemove&&req.method==='DELETE'){
   const c=await pool.connect();let removed=null;
@@ -54,7 +54,8 @@ if(!src.includes('PB1181 defer unpriced print edits')){
 "                return sendJson(res, 200, { ok: true, file: updatedFile, order, items, total: pricingPending ? null : subtotal, pricingRequired: pricingPending, correction });");
  one("if ((cq && (p.chassis == null || (p.chassis_stock != null && Number(p.chassis_stock) < cq)))\n                            || (fqty && (p.frame == null || (p.frame_stock != null && Number(p.frame_stock) < fqty))))",
 "if ((cq && p.chassis_stock != null && Number(p.chassis_stock) < cq)\n                            || (fqty && p.frame_stock != null && Number(p.frame_stock) < fqty))");
- const injected=pb1181DeleteEndpoint.toString().replace(/^function pb1181DeleteEndpoint\(\)\s*\{/,'').replace(/\}\s*$/,'');
+ one("FROM order_files f LEFT JOIN print_sizes s ON s.id=f.print_size_id WHERE f.order_id=$1 AND f.lab_id=$2 ORDER BY s.width_cm NULLS LAST", "FROM order_files f LEFT JOIN print_sizes s ON s.id=f.print_size_id WHERE f.order_id=$1 AND f.lab_id=$2 AND f.original_state<>'deleted' ORDER BY s.width_cm NULLS LAST");
+ const injected=pb1181DeleteEndpoint.toString().replace(/^async function pb1181DeleteEndpoint\(\)\s*\{/,'').replace(/\}\s*$/,'');
  one("        const labFilePreview = url.pathname.match(",
 "        // PB1181 mark removed photos before printing, preserve original storage.\n"+injected+"\n        const labFilePreview = url.pathname.match(");
  fs.writeFileSync(path,src);

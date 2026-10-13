@@ -22,7 +22,7 @@ test('lab album tab gives native album walk-in action and opens album mode',()=>
 test('album uses exactly one size for all its spreads and blocks duplicate page files',()=>{
  assert.match(intake,/defaultSize\.disabled=albumMode&&groups\.length>0/);
  assert.match(intake,/if\(albumMode&&groups\.length\)defaultSize\.disabled=true/);
- assert.match(intake,/اگر.*یک سایز مجاز است/);
+ assert.match(intake,/برای هر سفارش آلبوم فقط یک سایز مجاز است/);
  assert.match(intake,/if\(albumMode\)throw Error\('این فایل قبلاً به لت‌های آلبوم اضافه شده است/);
  assert.match(intake,/if\(!albumMode\)photo\.append\(quantity\)/);
  assert.match(intake,/if\(!albumMode\)actions\.append\(chassisLabel\)/);

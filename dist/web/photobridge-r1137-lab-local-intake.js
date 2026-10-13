@@ -13,7 +13,9 @@ function field(parent,label,input){if(['INPUT','SELECT','TEXTAREA'].includes(inp
 function select(options){const el=node('select');for(const [value,label] of options){const o=node('option',label);o.value=value;el.append(o);}return el;}
 function customerMenu(parent,customers,registerCustomer,resendInvitation){
  const wrapper=node('div',null,'pb1139Customer');wrapper.append(node('span','عکاس / مشتری'));
- const button=node('button','انتخاب عکاس ▾');button.type='button';button.setAttribute('aria-label','عکاس / مشتری');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+ const button=node('button');button.type='button';
+ const selectionValue=node('span','انتخاب عکاس','pb1179CustomerValue'),selectionChevron=node('span','▾','pb1179CustomerChevron');
+ button.append(selectionValue,selectionChevron);button.setAttribute('aria-label','عکاس / مشتری');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
  const menu=node('div',null,'pb1139PickerMenu');menu.hidden=true;
  const search=node('input');search.type='search';search.placeholder='جستجوی نام یا موبایل';search.setAttribute('aria-label','جستجوی عکاس');search.autocomplete='off';
  const list=node('div',null,'pb1139PickerOptions');list.setAttribute('role','listbox');list.setAttribute('aria-label','انتخاب عکاس');
@@ -53,7 +55,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
  const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
  debt.oninput=()=>{debt.value=formatMoney(debt.value);};
  const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':null].filter(Boolean).join(' · ');
- function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;button.textContent=itemLabel(c)+' ▾';showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';model.onChange?.(c);}
+ function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;selectionValue.textContent=itemLabel(c);showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';model.onChange?.(c);}
  function render(){
   list.replaceChildren();const term=normalize(search.value.trim());
   for(const c of customers){if(term&&!normalize(itemLabel(c)).includes(term))continue;

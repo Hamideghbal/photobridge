@@ -165,3 +165,199 @@
  .pb1137Intake .pb1139Customer>button{width:100%!important;min-height:40px!important;height:40px!important;text-align:right!important}
  .pb1137Intake .pb1178BillRows{max-height:32dvh;overflow:auto}
 }
+
+
+/* PB1179 – give the photo editor ~72% of the desktop width; compact real dropdown
+   and keep every added size reachable without scrolling the whole dialog. */
+@media (min-width:900px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake[open]{
+  height:min(960px,calc(100dvh - 14px))!important;
+  max-height:calc(100dvh - 14px)!important;
+  padding:9px 12px!important;
+  gap:3px!important;
+ }
+ .pb1137Intake>header{padding:0 0 5px!important;min-height:31px!important}
+ .pb1137Intake>header h2{font-size:16px!important;line-height:1.4!important}
+ .pb1137Intake>header button{
+  padding:5px 10px!important;min-height:27px!important;
+  font-size:10.5px!important
+ }
+ .pb1137Intake>p{margin:0 0 3px!important;font-size:10.5px!important}
+ .pb1137Intake>form{gap:4px!important;margin-top:0!important}
+ .pb1137Intake>form>.pb1137Error{margin:0!important;line-height:1.3!important}
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,2.35fr) minmax(285px,.93fr)!important;
+  gap:9px!important;overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeEditor{gap:0!important;min-height:0!important}
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  grid-template-columns:minmax(165px,1.65fr) minmax(105px,.85fr)
+   minmax(83px,.67fr) minmax(117px,.97fr) minmax(85px,.75fr)!important;
+  display:grid!important;align-items:end!important;
+  gap:6px!important;min-width:0!important;
+  margin:0 0 4px!important;padding:6px 7px!important;
+  border-radius:10px!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  width:auto!important;min-width:0!important;
+  grid-column:auto!important;margin:0!important;
+ }
+ .pb1137Intake .pb1137Settings .pb1139Customer>span,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow label>span{
+  font:800 10px/1.45 Vazirmatn,Tahoma,sans-serif!important;
+  color:#667085!important;white-space:nowrap!important;
+ }
+ .pb1137Intake .pb1137Settings :is(button,select){
+  display:flex!important;align-items:center!important;
+  height:34px!important;min-height:34px!important;
+  line-height:1.4!important;font-size:10.5px!important;
+  padding:4px 7px!important;border-radius:8px!important;
+  min-width:0!important;width:100%!important;
+ }
+ .pb1137Intake .pb1137Settings select{display:block!important}
+ .pb1137Intake .pb1137Settings .pb1139Customer>button{
+  display:flex!important;gap:6px!important;
+  justify-content:space-between!important;
+  height:34px!important;min-height:34px!important;
+  padding:4px 9px!important;min-width:0!important;
+  border:1px solid #c9d8ec!important;font-size:11px!important;
+ }
+ .pb1137Intake .pb1179CustomerValue{
+  display:block!important;min-width:0!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  font:800 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ .pb1137Intake .pb1179CustomerChevron{
+  display:grid!important;place-items:center!important;
+  flex:0 0 18px!important;width:18px!important;height:22px!important;
+  font:900 15px/1 Vazirmatn,Tahoma,sans-serif!important;
+  color:#46669d!important;
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 0!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:auto!important;scrollbar-width:thin!important;
+  gap:5px!important;margin:0!important;padding:2px 5px 6px 1px!important;
+ }
+ .pb1137Intake .pb1139Group{
+  min-height:0!important;flex:0 0 auto!important;
+  border-radius:10px!important;
+ }
+ .pb1137Intake .pb1139GroupHead{
+  gap:5px!important;min-height:24px!important;
+  padding:3px 7px!important;
+ }
+ .pb1137Intake .pb1139GroupHead>b{
+  min-width:0!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;
+  font-size:10px!important
+ }
+ .pb1137Intake .pb1139GroupHead>span{font-size:9px!important}
+ .pb1137Intake .pb1139GroupHead button{
+  min-height:22px!important;height:24px!important;
+  padding:2px 6px!important;font-size:9px!important;
+  border-radius:6px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos{
+  display:flex!important;align-items:flex-start!important;
+  gap:6px!important;max-height:155px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  padding:5px 7px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos[hidden]{display:none!important}
+ .pb1137Intake .pb1139GroupPhotos figure{
+  flex:0 0 88px!important;width:88px!important;min-width:0!important;
+ }
+ .pb1137Intake .pb1139GroupPhotos img{
+  width:88px!important;height:49px!important;
+  border-radius:7px!important;object-fit:contain!important
+ }
+ .pb1137Intake .pb1139GroupPhotos figcaption{
+  font-size:9px!important;line-height:1.3!important;margin:2px 0!important
+ }
+ .pb1137Intake .pb1139GroupPhotos label{
+  min-width:0!important;margin:1px 0!important;gap:1px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos label>span,
+ .pb1137Intake .pb1142Quantity>span{font-size:9px!important}
+ .pb1137Intake .pb1139GroupPhotos :is(select,input,button){
+  min-height:23px!important;height:24px!important;
+  padding:2px 4px!important;font-size:9.5px!important;
+  border-radius:6px!important
+ }
+ .pb1137Intake .pb1142Quantity{gap:2px!important;margin-top:2px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+  width:31px!important;min-width:0!important;
+  font-size:10px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+  flex:0 0 20px!important;width:20px!important;padding:0!important
+ }
+ .pb1137Intake .pb1178IntakeBill{
+  padding:8px 9px!important;border-radius:12px!important
+ }
+ .pb1137Intake .pb1178BillTitle{
+  padding:2px 0 6px!important;gap:0!important
+ }
+ .pb1137Intake .pb1178BillTitle strong{font-size:13px!important}
+ .pb1137Intake .pb1178BillTitle small{font-size:9px!important}
+ .pb1137Intake .pb1178BillCustomer{
+  margin:5px 0!important;font-size:11px!important
+ }
+ .pb1137Intake .pb1178BillRows{
+  overflow-y:auto!important;scrollbar-gutter:auto!important;
+  padding:0 1px 4px!important;min-height:0!important
+ }
+ .pb1137Intake .pb1178BillRow{
+  grid-template-columns:minmax(0,1fr) 47px 98px!important;
+  gap:4px!important;padding:6px 1px!important
+ }
+ .pb1137Intake .pb1178BillRow :is(b,span,strong){
+  font-size:9.5px!important;overflow-wrap:anywhere!important
+ }
+ .pb1137Intake .pb1178BillFoot{
+  padding:8px 2px 1px!important
+ }
+ .pb1137Intake .pb1178BillTotals{gap:3px!important}
+ .pb1137Intake .pb1178BillTotals span{font-size:10px!important}
+ .pb1137Intake .pb1178BillTotals strong{font-size:15px!important}
+ .pb1137Intake .pb1178BillNotice{
+  font-size:9px!important;line-height:1.5!important;margin:5px 0 0!important
+ }
+ .pb1137Intake form>.pb1137Submit{
+  flex:0 0 37px!important;min-height:37px!important;
+  height:37px!important;margin:3px 0 0!important;
+  font-size:12px!important;border-radius:9px!important
+ }
+}
+@media (min-width:900px) and (max-width:1250px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,1.8fr) minmax(260px,.88fr)!important
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  grid-template-columns:minmax(135px,1.25fr) minmax(84px,.85fr)
+   minmax(74px,.65fr) minmax(93px,.9fr) minmax(74px,.7fr)!important;
+  column-gap:4px!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  grid-column:auto!important
+ }
+}
+@media(max-width:899px){
+ .pb1137Intake .pb1179CustomerValue{
+  min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis
+ }
+ .pb1137Intake .pb1179CustomerChevron{flex:0 0 18px;font-size:15px}
+ .pb1137Intake .pb1139Customer>button{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:7px!important;padding-inline:10px!important
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  overscroll-behavior:contain!important;scrollbar-gutter:auto!important
+ }
+}

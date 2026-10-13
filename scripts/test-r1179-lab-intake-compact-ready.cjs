@@ -10,7 +10,7 @@ const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
 
 test('new intake layout gives a larger right editor and smaller proforma pane',()=>{
  assert.match(css,/grid-template-columns:minmax\(0,2\.65fr\) minmax\(265px,1fr\)/);
- assert(css.includes('.pb1178IntakeEditor'));
+ assert(walkin.includes("editor=node('section',null,'pb1178IntakeEditor')"));
  assert(css.includes('.pb1178IntakeBill'));
  assert(css.includes('grid-template-columns:minmax(175px,1.65fr) minmax(90px,.9fr)'));
  assert(css.includes('.pb1137Settings>.pb1139Customer'));

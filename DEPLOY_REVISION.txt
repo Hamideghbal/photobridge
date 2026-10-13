@@ -1,1 +1,1 @@
-2026-10-13-r1195-gallery-create-compact-header-fields
+2026-10-13-r1196-gallery-field-inline-required-input-align

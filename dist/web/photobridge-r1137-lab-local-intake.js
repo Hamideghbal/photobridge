@@ -53,7 +53,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
  const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
  debt.oninput=()=>{debt.value=formatMoney(debt.value);};
  const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':null].filter(Boolean).join(' · ');
- function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;button.textContent=itemLabel(c)+' ▾';showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';}
+ function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;button.textContent=itemLabel(c)+' ▾';showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';model.onChange?.(c);}
  function render(){
   list.replaceChildren();const term=normalize(search.value.trim());
   for(const c of customers){if(term&&!normalize(itemLabel(c)).includes(term))continue;
@@ -159,7 +159,7 @@ async function open(){
   billTotals.replaceChildren(count,amount);
   billNotice.textContent=missing?'برای '+missing.toLocaleString('fa-IR')+' ردیف هنوز تعرفه مشخص نیست؛ قیمت نهایی در آماده تحویل تعیین می‌شود.':'این مبلغ پیش‌فاکتور است؛ فاکتور قطعی فقط بعد از «آماده تحویل» صادر می‌شود.';
  }
- customers.button.addEventListener('click',()=>requestAnimationFrame(refreshInvoice));
+ customers.onChange=refreshInvoice;
  fileInput.onchange=()=>{pendingFiles=[...fileInput.files];choose.textContent=pendingFiles.length?`${pendingFiles.length.toLocaleString('fa-IR')} عکس انتخاب شد`:'انتخاب عکس‌ها';};
  function syncEntries(){entries=groups.flatMap(x=>x.items);refreshInvoice();}
  async function appendFiles(group,files,size,paper){

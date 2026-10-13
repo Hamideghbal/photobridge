@@ -7,7 +7,7 @@ for(const ext of ['css','js']){
  const name='photobridge-r1137-lab-local-intake.'+ext;
  html=html.replace(new RegExp('('+name.replaceAll('.','\\.')+'\\?v=)[^"\\s]+','g'),'$1r1178');
 }
-html=html.replace(/(&cards=r\d+)/,'$1&intake=r1178');
+if(!html.includes('&intake=r1178'))html=html.replace(/(&cards=r\d+)/,'$1&intake=r1178');
 const assets='<link rel="stylesheet" href="/photobridge-r1178-print-ux.css?v=r1178"><script defer src="/photobridge-r1178-photographer-prices.js?v=r1178"></script>';
 if(!html.includes('/photobridge-r1178-print-ux.css'))html=html.replace('</head>',assets+'\n</head>');
 fs.writeFileSync(path,html);

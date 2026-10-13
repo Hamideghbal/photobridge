@@ -30,7 +30,7 @@ test('invoice switch active independently of digital price and uses real price m
  assert(modal.includes('disabled:g||!!PB1112draft.current,checked:!!h.orderingEnabled'));
  assert(!modal.includes('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)'));
  assert(modal.includes('orderingEnabled:event.target.checked,selectionEnabled:true'));
- assert(modal.includes('digitalPrice:0'));
+ assert(ui.includes('digitalPrice:0'));
  assert(ui.includes('className:"pb1164TariffDigitalPrice"'),'digital price editor remains in tariff settings');
  assert(ui.includes('galleryPrintTariffStates'),'management uses actual gallery tariff states');
 });
@@ -47,7 +47,7 @@ test('server validates priced active photographer tariffs BEFORE charging for ne
  assert(code.includes("error: 'gallery_ordering_tariff_required'"));
  assert(code.indexOf("error: 'gallery_ordering_tariff_required'")<code.indexOf('photographerWalletEnsure('),'do not charge for unpriced invoice');
  assert(code.includes('INSERT INTO photographer_gallery_print_tariff_states'),'new gallery gets existing tariffs');
- assert(modal.includes('برای فعال‌کردن سفارش و فاکتور، ابتدا قیمت چاپ'));
+ assert(ui.includes('برای فعال‌کردن سفارش و فاکتور، ابتدا قیمت چاپ'));
 });
 test('four equal columns remain level and legacy lower duplicate captions are hidden',()=>{
  assert(css.includes('width:min(850px,calc(100vw - 24px))!important'));

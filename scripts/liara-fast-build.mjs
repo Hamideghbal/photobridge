@@ -114,3 +114,4 @@ await import('./enable-r1176-lab-finance.mjs');
 await import('./enable-r1177-lab-settings-finance.mjs');
 await import('./enable-r1178-release.mjs');
 await import('./enable-r1179-lab-walkin-invoice-view.mjs');
+await import('./enable-r1180-lab-order-details.mjs');

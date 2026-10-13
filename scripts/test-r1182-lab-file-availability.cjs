@@ -52,3 +52,16 @@ test('release build applies patch with no database or uploaded-file mutation',()
  const script=fs.readFileSync('scripts/enable-r1182-lab-file-availability.mjs','utf8');
  assert.doesNotMatch(script,/DELETE FROM order_files|UPDATE order_files|storageDelete\(/);
 });
+
+test('recovered original downloads under true source filename and true source byte count',()=>{
+ const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+ assert.match(ui,/PB1182 original-format download fallback/);
+ assert.match(ui,/pbDownloadName/);
+ assert.match(ui,/pbDownloadBytes/);
+ assert.match(ui,/downloadName=o.pbDownloadName\|\|a.original_name/);
+ assert.match(ui,/downloadBytes=Number\(o.pbDownloadBytes\|\|a.bytes\|\|0\)/);
+ assert.match(ui,/preflight.fallbackOriginalCount/);
+ const r=region('const labFileDownload =','const labFileEditPresign =');
+ assert.match(r,/const fileBytes=chosen.fallback\?Number\(row.bytes\|\|0\)/);
+ assert.match(r,/bytes:fileBytes/);
+});

@@ -25,6 +25,9 @@
       '.pb1201ExportShell{width:190mm;max-width:100%;margin:0 auto;padding:0!important}'+
       '.pb1201ExportTools{padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:700 12px Tahoma,sans-serif}'+
       '.pb1201ExportTools button{background:#315efb;color:white;border:0;padding:9px 16px;border-radius:8px;cursor:pointer}'+
+      '.pb1201ExportShell .globalInvoicePreviewLayer,.pb1201ExportShell .invoicePreviewModal{position:static!important;inset:auto!important;display:block!important;'+
+      'width:100%!important;max-width:100%!important;min-height:0!important;height:auto!important;max-height:none!important;'+
+      'transform:none!important;overflow:visible!important;margin:0!important;padding:0!important;box-shadow:none!important;background:white!important}'+
       '.pb1201ExportShell .invoicePaper{display:block!important;position:static!important;transform:none!important;zoom:1!important;'+
       'width:100%!important;max-width:none!important;min-height:0!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;'+
       'margin:0!important;box-sizing:border-box!important}'+

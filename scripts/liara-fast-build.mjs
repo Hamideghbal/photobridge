@@ -125,4 +125,5 @@ await import('./enable-r1183-finalize.mjs');
 await import('./enable-r1184-lab-walkin-album.mjs');
 await import('./enable-r1184-finalize.mjs');
 await import('./enable-r1185-lab-desktop-statement-layout.mjs');
+await import('./enable-r1186-lab-walkin-button.mjs');
 

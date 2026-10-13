@@ -1,1 +1,1 @@
-2026-10-13-r1194-gallery-create-dialog-above-header
+2026-10-13-r1195-gallery-create-compact-header-fields

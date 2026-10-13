@@ -1,1 +1,1 @@
-2026-10-13-r1182-lab-preview-download-storage-reliability
+2026-10-13-r1183-lab-authenticated-photo-stream

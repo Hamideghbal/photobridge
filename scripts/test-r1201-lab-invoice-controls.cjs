@@ -18,8 +18,11 @@ test('accounting invoices present view and correction, accounting toggle last, w
  assert(start>0&&end>start);
  const rows=bundle.slice(start,end);
  assert(!rows.includes('className:"miniOrderFilesBtn"'));
- const corr=rows.indexOf('className:"miniCorrectionBtn"'), mark=rows.indexOf('className:"externalAccountingBtn"');
- assert(corr>=0&&mark>corr);
+ const stackStart=rows.indexOf('className:"invoiceActionStack"');
+ const stackEnd=rows.indexOf(']})]},',stackStart);
+ const actions=rows.slice(stackStart,stackEnd);
+ const corr=actions.indexOf('className:"miniCorrectionBtn"'), mark=actions.indexOf('className:"externalAccountingBtn"');
+ assert(stackStart>0&&stackEnd>stackStart&&corr>=0&&mark>corr);
  assert(bundle.includes('t==="lab"?null:e.jsx("button",{disabled:!a.pdf_ready'));
 });
 test('print and PDF share invoice preview DOM and never emit a second template',()=>{

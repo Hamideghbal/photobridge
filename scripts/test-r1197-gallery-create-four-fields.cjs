@@ -72,6 +72,7 @@ test('real Chromium: on phone and desktop all four field inputs form one top row
  try{
   for(const width of [320,390,1366]){
    const page=await browser.newPage({viewport:{width,height:740}});
+   await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,contentType:'text/css',body:''}));
    await page.setContent('<div class="modalBack globalModalLayer"><section class="modal pb1112CreateDialog"><div class="modalHead"><h2>گالری خصوصی جدید</h2></div><div class="modalContent"><div class="clientGalleryCreateForm"><label><span class="pb1196FieldCaption">عنوان پروژه<small>اجباری</small></span><input><small>اجباری</small></label><div class="grid2"><label><span class="pb1196FieldCaption">نام مشتری<small>اجباری</small></span><input><small>اجباری</small></label><label><span class="pb1196FieldCaption">موبایل مشتری<small>اختیاری</small></span><input><small>اختیاری</small></label></div><label><span class="pb1196FieldCaption">رمز ورود خصوصی<small>اجباری</small></span><input><small>اجباری</small></label><label>یادداشت<input></label></div></div></section></div>');
    for(const f of ['dist/web/assets/index-UIRefine-v586.css','dist/web/photobridge-r1112-gallery-form.css','dist/web/photobridge-r1194-gallery-create-dialog.css','dist/web/photobridge-r1195-gallery-create-compact.css','dist/web/photobridge-r1196-gallery-field-align.css','dist/web/photobridge-r1197-gallery-create-four-fields.css'])await page.addStyleTag({path:f});
    const state=await page.evaluate(()=>{

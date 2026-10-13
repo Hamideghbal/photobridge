@@ -1,1 +1,1 @@
-2026-10-13-r1187-photo-tabs-stable-content
+2026-10-13-r1188-lab-browser-button-no-content-jitter

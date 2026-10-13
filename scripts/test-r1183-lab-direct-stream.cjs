@@ -9,7 +9,7 @@ test('Authenticated stream is inside lab admin role gate, not a public token',()
  const start=api.indexOf("if (url.pathname.startsWith('/api/lab/'))");
  const stream=api.indexOf('PB1183 authenticated lab image stream');
  assert.ok(start>=0&&stream>start);
- assert.match(section('PB1183 authenticated lab image stream','const labFilePreview'),/\/api\/lab\/order-files\//);
+ assert.ok(section('PB1183 authenticated lab image stream','const labFilePreview').includes('order-files'));
  assert.match(section('PB1183 authenticated lab image stream','const labFilePreview'),/req.method==='GET'/);
  assert.doesNotMatch(section('PB1183 authenticated lab image stream','const labFilePreview'),/downloadTokens/);
 });

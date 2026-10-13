@@ -1476,7 +1476,7 @@ async function load(opts={}){
   try{pbR100F9InitStaffSettings()}catch(e){console.warn('[PhotoBridge rental] handover staff settings skipped',e)}
   try{setDefaultJalaliDates()}catch(e){console.warn('[PhotoBridge rental] default dates skipped',e)}
   try{ensureRentalInvite()}catch(e){console.warn('[PhotoBridge rental] invite skipped',e)}
-  try{selectRentalTab(rentalTabFromPath(),{push:false,reloadExtra:opts.reloadExtra!==false})}catch(e){console.error('[PhotoBridge rental] tab init failed',e)}
+  try{selectRentalTab(['frame','chassis','frame_chassis'].includes(data?.shop?.business_category)&&['items','bookings'].includes(rentalTabFromPath())?'sales':rentalTabFromPath(),{push:false,reloadExtra:opts.reloadExtra!==false})}catch(e){console.error('[PhotoBridge rental] tab init failed',e)}
   try{startRentalLiveWatch()}catch(e){console.warn('[PhotoBridge rental] live watch skipped',e)}
   return true
 }
@@ -10279,4 +10279,4 @@ html body.rentalAppReady #rentalDesktopPrimaryNav .pbR1050ChannelDivider{display
 <link rel="stylesheet" href="/photobridge-r1073-mobile-office.css?v=r1084"><script defer src="/photobridge-r1073-mobile-office.js?v=r1085"></script>
 <link rel="stylesheet" href="/photobridge-r1085-store-refinements.css?v=r1085"><script defer src="/photobridge-r1085-shared-finance.js?v=r1085"></script><script defer src="/photobridge-r1085-store-refinements.js?v=r1085"></script><script defer src="/photobridge-r1095-owner-stock.js?v=1097"></script>
 <link rel="stylesheet" href="/photobridge-r1097-store-readability.css?v=1097">
-<script src="/photobridge-r1172-production-owner.js?v=r1172"></script><script src="/photobridge-r1172-frame-invoice.js?v=r1172"></script></body></html>
+<script src="/photobridge-r1172-production-owner.js?v=r1204"></script><script src="/photobridge-r1172-frame-invoice.js?v=r1172"></script></body></html>

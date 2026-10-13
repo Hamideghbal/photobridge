@@ -35,7 +35,7 @@ if(!html.includes('/photobridge-r1201-lab-finance-invoice.css')){
 }
 const r=/(index-UIRefine-v655-r84\.js\?v=[^"']+)/g;
 if([...html.matchAll(r)].length!==1)throw Error('[R1202] main bundle marker changed');
-html=html.replace(r,t=>t.includes('&invoice=r1202')?t:t+'&invoice=r1202');
+html=html.replace(r,t=>t.includes('&invoice=r1202')?t:t.includes('&lab=r1201')?t.replace('&lab=r1201','&invoice=r1202&lab=r1201'):t+'&invoice=r1202');
 fs.writeFileSync(page,html);
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','dist/web/photobridge-r1201-lab-invoice-export.js'],{stdio:'inherit'});

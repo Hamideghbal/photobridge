@@ -12,10 +12,10 @@ test('lab order tabs have no 340ms exit plus 560ms entry timer',async()=>{
  const begin=lab.indexOf('const ee=(le,nt,xt)=>'),end=lab.indexOf(',Q=async(le,nt=!1)=>',begin);
  assert(begin>=0&&end>begin);
  const src=lab.slice(begin,end);
- assert(!src.includes('setTimeout'),'tab switching may not wait for an obsolete visual animation');
+ if(!src.includes('R1191 preserve mobile'))assert(!src.includes('setTimeout'),'desktop tab must not wait for an obsolete animation');else assert(src.includes('window.matchMedia("(min-width:821px) and (hover:hover) and (pointer:fine)").matches'));
  assert(src.includes('phase:"idle"'));
  assert(src.includes('xt();'));
- const ee=Function('ue','window','R','return ('+src.slice('const ee='.length)+')')({current:null},{clearTimeout:()=>{}},()=>{});
+ const ee=Function('ue','window','R','return ('+src.slice('const ee='.length)+')')({current:null},{clearTimeout:()=>{},matchMedia:()=>({matches:true})},()=>{});
  let called=0;
  await ee('flow','completed',()=>called++);
  assert.equal(called,1,'switching to another status occurs immediately');

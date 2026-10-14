@@ -17,5 +17,11 @@ test('real PostgreSQL: model colors share size/profile prices, matched SKU IDs s
  const history=(await db.query('SELECT * FROM equipment_sale_orders')).rows[0];assert.equal(Number(history.unit_price),100);assert.equal(history.production_specs.color,'#2563eb');assert.equal(history.production_specs.widthCm,13);
  const archived=(await db.query('SELECT * FROM equipment_sale_items WHERE id=$1',[blue.id])).rows[0];assert.equal(archived.active,false);assert.equal(archived.variant_specs.archived,true);
  const before=(await db.query('SELECT count(*)::int n FROM equipment_sale_items')).rows[0].n;await assert.rejects(save({...body,colors:['#000000'],version:frameModelVersion(edited.items),variants:[body.variants[0],{...body.variants[0],price:999}]},saved.id),{message:'frame_variant_duplicate'});assert.equal((await db.query('SELECT count(*)::int n FROM equipment_sale_items')).rows[0].n,before);
+ const {deleteFrameModel}=await import('../dist/api/frame-model-catalog.js');const liveRows=(await db.query('SELECT * FROM equipment_sale_items')).rows;
+ await assert.rejects(deleteFrameModel(db,{shop:{...shop,id:crypto.randomUUID()},modelId:saved.id,version:frameModelVersion(liveRows)}),{message:'frame_model_not_found'});
+ await assert.rejects(deleteFrameModel(db,{shop,modelId:saved.id,version:'stale'}),{message:'frame_model_changed'});
+ const deleted=await deleteFrameModel(db,{shop,modelId:saved.id,version:frameModelVersion(liveRows)});assert.equal(deleted.removed,liveRows.length);
+ assert.equal((await db.query('SELECT count(*)::int n FROM equipment_sale_items WHERE deleted_at IS NOT NULL AND active=false')).rows[0].n,liveRows.length);
+ const afterDelete=(await db.query('SELECT * FROM equipment_sale_orders')).rows[0];assert.equal(Number(afterDelete.unit_price),100);assert.equal(afterDelete.production_specs.color,'#2563eb');
  }finally{await db.query('ROLLBACK');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}
 });

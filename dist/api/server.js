@@ -1,4 +1,4 @@
-import {saveFrameModel} from './frame-model-catalog.js';
+import {saveFrameModel,deleteFrameModel} from './frame-model-catalog.js';
 import { isProductionShop, createProductionOrders, productionTransition, productionSchedule, frameLedger, normalizeProductionOptions } from './frame-production.js';
 import { galleryExpirySql, maintainGalleryLifetime } from './gallery-lifetime.js';
 import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
@@ -15467,6 +15467,10 @@ async function api(req, res, url) {
     }
     // v0.17.654 — equipment sales inventory and order workflow.
     const frameModelRoute=url.pathname.match(/^\/api\/rental\/frame-models\/([0-9a-f-]{36})$/i);
+    if(req.method==='DELETE'&&frameModelRoute){
+      const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+      const body=await bodyJson(req,500_000),db=await pool.connect();try{const out=await deleteFrameModel(db,{shop,modelId:frameModelRoute[1],version:body.version});await audit(a.userId,undefined,'equipment_frame.model_delete','equipment_frame_model',out.id,{shopId:shop.id,removed:out.removed}).catch(()=>{});return sendJson(res,200,{ok:true,...out});}catch(e){if(e.status)return sendJson(res,e.status,{error:e.message});throw e}finally{db.release();}
+    }
     if((req.method==='POST'&&url.pathname==='/api/rental/frame-models')||(req.method==='PATCH'&&frameModelRoute)){
       const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
       const body=await bodyJson(req,500_000),db=await pool.connect();try{const out=await saveFrameModel(db,{shop,body,modelId:frameModelRoute?.[1]||null,frameVariant,galleryNormalize:equipmentGalleryNormalize,normalizeDigits});await audit(a.userId,undefined,'equipment_frame.model_save','equipment_frame_model',out.id,{shopId:shop.id,variants:out.items.length}).catch(()=>{});return sendJson(res,200,{ok:true,...out});}catch(e){if(e.status)return sendJson(res,e.status,{error:e.message});throw e}finally{db.release();}

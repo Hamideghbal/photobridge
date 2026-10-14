@@ -325,6 +325,13 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{content:""!important;display:block!important;position:absolute!important;left:0!important;right:0!important;width:100%!important;height:1px!important;background:#ccd7e5!important;pointer-events:none!important;z-index:2!important;border:0!important;box-shadow:none!important}
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before{top:0!important;bottom:auto!important}
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{bottom:0!important;top:auto!important}
+
+/* Explicitly override legacy drawer translation on the active state. Legacy CSS
+   kept translateX(-105%) despite .open, leaving Checkout fully offscreen. */
+html body.frameCustomerStore #saleCartDrawer.open{transform:translate3d(0,0,0)!important;translate:none!important;visibility:visible!important;pointer-events:auto!important}
+@media(max-width:820px){
+ html body.frameCustomerStore #saleCartDrawer.open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(89dvh,760px)!important;max-height:calc(100dvh - 6px)!important;transform:translate3d(0,0,0)!important}
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

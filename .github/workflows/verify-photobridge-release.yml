@@ -111,6 +111,20 @@ jobs:
         run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
+      - name: Verify frame palette, variant photos and prices in Chromium
+        run: |
+          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1
+          /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs
+      - name: Save frame editor screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame-palette-browser-screenshots
+          path: /tmp/r1207-owner-*.png
+          if-no-files-found: ignore
       - name: Prepare runner PostgreSQL for migration smoke test
         run: |
           sudo systemctl start postgresql
@@ -180,3 +194,37 @@ jobs:
 
       - name: Smoke-test strict customer stock migration in PostgreSQL
         run: node scripts/test-r1095-stock-migration-smoke.mjs
+
+
+  verify-frame-live-publication:
+    name: Verify frame palette on live site
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: deploy-verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for matching Liara revision and palette assets
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const expected=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
+          const get=async path=>{const r=await fetch('https://photobridge.ir'+path,{signal:AbortSignal.timeout(15000),headers:{'cache-control':'no-cache'}});if(!r.ok)throw Error(path+' returned HTTP '+r.status);return {text:await r.text(),revision:r.headers.get('x-photobridge-deploy-revision')};};
+          let last='';
+          for(let attempt=1;attempt<=24;attempt++){
+            try{
+              const portal=await get('/rental/sales');
+              if(portal.revision!==expected)throw Error('Live revision '+portal.revision+'; expected '+expected);
+              const buyer=await get('/equipment-rental/book');
+              if(!portal.text.includes('frame-owner.js?v=r1208-palette')||!buyer.text.includes('frame-store.js?v=r1208-palette'))throw Error('Published pages still reference old frame assets');
+              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1208-palette'),store=await get('/photobridge-r1207-frame-store.js?v=r1208-palette'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1208-palette');
+              if(!owner.text.includes('framePaletteColor')||!owner.text.includes('material:d.specs.material')||!store.text.includes('frameColorCircle')||!store.text.includes("selector('material'")||!catalog.text.includes('colorHex'))throw Error('Live frame assets are incomplete');
+              console.log('LIVE VERIFIED: '+expected+'; owner palette, material combinations, buyer color circles and material choices are served by photobridge.ir.');process.exit(0);
+            }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
+            if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));
+          }
+          throw Error('Live publication was not confirmed: '+last);
+          NODE

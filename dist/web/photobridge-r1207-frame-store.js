@@ -47,7 +47,7 @@ html.pb1126Embedded body.frameCustomerStore #storePhotographerWorkspace>#photogr
  .frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentityCopy{width:100%!important;min-width:0!important;align-items:center!important;text-align:center!important;margin:0!important;padding:0!important}
  .frameCustomerStore #storePhotographerWorkspace #storePhotographerName{display:block!important;width:100%!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:center!important;margin:0!important}
  .frameCustomerStore #storePhotographerWorkspace #storePhotographerManager,.frameCustomerStore #storePhotographerWorkspace .photographerIdentityDateOnly{width:100%!important;justify-content:center!important;text-align:center!important}
- .frameCustomerStore .frameProductCard .frameSizePriceRow{margin:8px 0 5px}.frameCustomerStore .frameProductCard .saleItemBuy{margin-top:2px!important;align-items:center!important}.frameCustomerStore .frameProductCard .saleItemBuy>.field>span:first-child{display:none!important}
+ .frameCustomerStore #salesPanel .frameProductCard .frameSizePriceRow{margin:8px 0 3px!important}.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy{margin-top:0!important;align-items:center!important}.frameCustomerStore .frameProductCard .saleItemBuy>.field>span:first-child{display:none!important}
 }
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

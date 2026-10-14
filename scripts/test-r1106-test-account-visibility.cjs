@@ -6,7 +6,7 @@ function requireLocalDatabase(){
 }
 test('real PostgreSQL: mobile-based test visibility, targeted invitations and accepted invitations',async()=>{
  requireLocalDatabase();
- const {testAccountVisibleSql,testAccountSql}=await import('../dist/api/test-account-visibility.js');
+ const {testAccountVisibleSql,testAccountSql,adminMobileViewerSql}=await import('../dist/api/test-account-visibility.js');
  const {isProductionShop}=await import('../dist/api/frame-production.js');
  const pool=new Pool({connectionString:testDatabaseUrl}),db=await pool.connect();
  try{
@@ -37,7 +37,7 @@ test('real PostgreSQL: mobile-based test visibility, targeted invitations and ac
  const functions=server.slice(server.indexOf('async function equipmentRentalPhotographerCanDiscoverShop('),server.indexOf('async function equipmentRentalCreateBooking('));
  const gates=vm.runInNewContext(functions+';({discover:equipmentRentalPhotographerCanDiscoverShop,access:equipmentRentalPhotographerCanAccessShop})',{
   isProductionShop,ensureEquipmentRentalV727Schema:async()=>{},equipmentRentalShopSubscriptionActive:()=>true,
-  photographerInitialInviteType:async()=> 'rental',equipmentRentalInvitedShopIds:async()=>[],reachAllows:()=>true,testAccountVisibleSql,testAccountSql
+  photographerInitialInviteType:async()=> 'rental',equipmentRentalInvitedShopIds:async()=>[],reachAllows:()=>true,testAccountVisibleSql,testAccountSql,adminMobileViewerSql
  });
  assert.equal(await gates.discover(db,ids.invited,ids.testShop),true,'targeted test invite must work even before redemption and across origin scope');
  assert.equal(await gates.discover(db,ids.admin,ids.otherTestShop),true,'admin mobile sees all its test shops');
@@ -64,7 +64,7 @@ test('real PostgreSQL: mobile-based test visibility, targeted invitations and ac
 });
 test('all production visibility SELECTs compile against the disposable local PostgreSQL schema',async()=>{
  requireLocalDatabase();
- const {testAccountVisibleSql,testAccountSql}=await import('../dist/api/test-account-visibility.js'),fs=require('node:fs');
+ const {testAccountVisibleSql,testAccountSql,adminMobileViewerSql}=await import('../dist/api/test-account-visibility.js'),fs=require('node:fs');
  const pool=new Pool({connectionString:testDatabaseUrl}),db=await pool.connect();
  try{
  await db.query('BEGIN');
@@ -75,7 +75,7 @@ test('all production visibility SELECTs compile against the disposable local Pos
  const src=fs.readFileSync('dist/api/server.js','utf8');let count=0;
  for(const match of src.matchAll(/`([^`]*testAccountVisibleSql[^`]*)`/g)){
   if(!match[1].trim().startsWith('SELECT'))continue;
-  const sql=new Function('testAccountVisibleSql','testAccountSql','return `'+match[1]+'`')(testAccountVisibleSql,testAccountSql);
+  const sql=new Function('testAccountVisibleSql','testAccountSql','adminMobileViewerSql','return `'+match[1]+'`')(testAccountVisibleSql,testAccountSql,adminMobileViewerSql);
   const n=Math.max(0,...[...sql.matchAll(/\$(\d+)/g)].map(x=>Number(x[1])));
   await db.query('EXPLAIN '+sql,Array(n).fill(null));count++;
  }

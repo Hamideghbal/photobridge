@@ -165,7 +165,7 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches;
+ const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
  const host=document.getElementById('pbR1123StoreDesktopNav');
  if(desktop&&host&&nav.parentElement!==host)host.append(nav);
  if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);

@@ -62,3 +62,16 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  }catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}
 }
 
+
+export async function deleteFrameModel(db,{shop,modelId,version}){
+ if(!isProductionShop(shop))fail('production_shop_unavailable',404);
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(modelId||'')))fail('frame_model_not_found',404);
+ await db.query('BEGIN');try{
+ await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[shop.id+':frame-model:'+modelId]);
+ const rows=(await db.query("SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL AND (variant_specs->>'baseId'=$2 OR id=$2::uuid) ORDER BY id FOR UPDATE",[shop.id,modelId])).rows;
+ if(!rows.length)fail('frame_model_not_found',404);
+ if(version!==frameModelVersion(rows))fail('frame_model_changed',409);
+ await db.query('UPDATE equipment_sale_items SET active=false,deleted_at=now(),updated_at=now() WHERE shop_id=$1 AND id=ANY($2::uuid[])',[shop.id,rows.map(row=>row.id)]);
+ await db.query('COMMIT');return {id:modelId,removed:rows.length};
+ }catch(error){await db.query('ROLLBACK').catch(()=>{});throw error;}
+}

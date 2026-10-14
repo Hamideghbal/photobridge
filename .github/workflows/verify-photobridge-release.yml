@@ -117,13 +117,15 @@ jobs:
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs scripts/test-r1209-independent-colors.cjs
+          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs scripts/test-r1209-independent-colors.cjs scripts/test-r1210-frame-owner-card.cjs scripts/test-r1210-model-delete.cjs
       - name: Save frame editor screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frame-palette-browser-screenshots
-          path: /tmp/r1207-owner-*.png
+          path: |
+            /tmp/r1207-owner-*.png
+            /tmp/r1210-owner-card-*.png
           if-no-files-found: ignore
       - name: Prepare runner PostgreSQL for migration smoke test
         run: |
@@ -197,7 +199,7 @@ jobs:
 
 
   verify-frame-live-publication:
-    name: Verify frame palette on live site
+    name: Verify shared frame cards on live site
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: deploy-verification
     runs-on: ubuntu-latest
@@ -219,10 +221,10 @@ jobs:
               const portal=await get('/rental/sales');
               if(portal.revision!==expected)throw Error('Live revision '+portal.revision+'; expected '+expected);
               const buyer=await get('/equipment-rental/book');
-              if(!portal.text.includes('frame-owner.js?v=r1209-size-prices')||!buyer.text.includes('frame-store.js?v=r1209-size-prices'))throw Error('Published pages still reference old frame assets');
-              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1209-size-prices'),store=await get('/photobridge-r1207-frame-store.js?v=r1209-size-prices'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1209-size-prices');
-              if(!owner.text.includes('framePaletteColor')||!owner.text.includes('frameAddModelColor')||!owner.text.includes('colors:[...colors]')||!store.text.includes('frameColorCircle')||!store.text.includes("selector('material'")||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
-              console.log('LIVE VERIFIED: '+expected+'; independent model colors, size/profile prices and buyer color circles are served by photobridge.ir.');process.exit(0);
+              if(!portal.text.includes('frame-owner.js?v=r1210-shared-cards')||!buyer.text.includes('frame-store.js?v=r1210-shared-cards'))throw Error('Published pages still reference old frame assets');
+              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1210-shared-cards'),store=await get('/photobridge-r1207-frame-store.js?v=r1210-shared-cards'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1210-shared-cards');
+              if(!owner.text.includes('framePaletteColor')||!owner.text.includes('frameAddModelColor')||!owner.text.includes('colors:[...colors]')||!store.text.includes('C.card(')||!owner.text.includes('deleteModel(')||!catalog.text.includes('frameColorCircle')||!catalog.text.includes('cardStyles')||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
+              console.log('LIVE VERIFIED: '+expected+'; shared model cards, registered photos, owner edit/delete and color/size/profile selectors are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
             if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));
           }

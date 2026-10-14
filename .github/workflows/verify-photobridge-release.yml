@@ -221,8 +221,8 @@ jobs:
               const portal=await get('/rental/sales');
               if(portal.revision!==expected)throw Error('Live revision '+portal.revision+'; expected '+expected);
               const buyer=await get('/equipment-rental/book');
-              if(!portal.text.includes('frame-owner.js?v=r1212-definition-flow')||!buyer.text.includes('frame-store.js?v=r1212-definition-flow'))throw Error('Published pages still reference old frame assets');
-              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1212-definition-flow'),store=await get('/photobridge-r1207-frame-store.js?v=r1212-definition-flow'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1212-definition-flow');
+              if(!portal.text.includes('frame-owner.js?v=r1212c-toman')||!buyer.text.includes('frame-store.js?v=r1212c-toman'))throw Error('Published pages still reference old frame assets');
+              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1212c-toman'),store=await get('/photobridge-r1207-frame-store.js?v=r1212c-toman'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1212c-toman');
               if(!catalog.text.includes('frameToman')||!owner.text.includes('frameModelTopRow')||!owner.text.includes('frameColorImages')||!owner.text.includes('sizeOnly:true')||!owner.text.includes('colorImages')||!catalog.text.includes('repeat(3,minmax(0,1fr))')||!catalog.text.includes('color_image_urls')||!owner.text.includes('framePaletteColor')||!owner.text.includes('frameSelectMenu')||!owner.text.includes('colors:[...colors]')||!store.text.includes('C.card(')||!owner.text.includes('deleteModel(')||!catalog.text.includes('frameColorCircle')||!catalog.text.includes('cardStyles')||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
               console.log('LIVE VERIFIED: '+expected+'; shared model cards, registered photos, owner edit/delete and color/size/profile selectors are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}

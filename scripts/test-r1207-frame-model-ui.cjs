@@ -19,3 +19,12 @@ for(const width of [1440,390])test('model palette is editable independently of s
  assert.equal(state.requests[1].method,'PATCH');assert.equal(state.requests[1].body.variants[1].price,300);assert.deepEqual(state.overview.saleItems.map(x=>x.id).sort(),ids);assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  }finally{await browser.close()}
 });
+test('legacy different color prices require an explicit shared size/profile price',async()=>{
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});try{
+ const page=await browser.newPage(),state=await openPortal(page,'frame_chassis');await page.waitForFunction(()=>document.querySelector('#frameOption-models option[value="مدرن"]'));
+ const legacy=['قرمز','آبی'].map((color,index)=>({id:'50000000-0000-4000-8000-'+String(index+1).padStart(12,'0'),category:'frame_custom',active:true,title:'مدرن',model:'مدرن',sale_price:index?200:100,stock_total:1,gallery_images:[],updated_at:'2026-10-14T00:00:00Z',variant_specs:{baseId:'40000000-0000-4000-8000-000000000001',baseModel:'مدرن',material:'چوب',color,widthCm:13,heightCm:18,thicknessMm:2}}));
+ await page.evaluate(items=>{data.saleItems=items;renderSales();editSaleItem(items[0].id);},legacy);assert.equal(await page.locator('.frameDraftCard').count(),1);assert.equal(await page.locator('.framePriceConflict').count(),1);
+ await page.evaluate(()=>document.querySelector('#saleItemForm').requestSubmit());assert.equal(state.requests.length,0);assert((await page.locator('#frameVariantDraftMessage').textContent()).includes('قیمت مشترک'));
+ await page.locator('[data-frame-edit-draft="0"]').click();await page.locator('#saleItemForm [name=salePrice]').fill('150');await page.locator('#frameAddVariant').click();assert.equal(await page.locator('.framePriceConflict').count(),0);await page.evaluate(()=>document.querySelector('#saleItemForm').requestSubmit());await page.locator('body.saleItemModalOpen').waitFor({state:'hidden'});assert.equal(state.requests[0].body.variants.length,1);assert.equal(state.requests[0].body.variants[0].price,150);assert.deepEqual(state.requests[0].body.colors,['قرمز','آبی']);
+ }finally{await browser.close()}
+});

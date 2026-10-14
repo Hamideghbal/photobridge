@@ -1,7 +1,57 @@
 (()=>{'use strict';const C=window.PBFrameCatalog,selected=new Map();
 const isFrame=()=>Boolean(saleShopConfig?.production);
-function render(){applyFrameCustomerView();if(!isFrame())return;const host=document.getElementById('saleItems');if(!host)return;const groups=C.groups(saleItems);host.innerHTML=groups.map(g=>{const item=C.choose(g,selected.get(g.id));if(!item)return '';selected.set(g.id,item.id);return C.card(g,item.id,{esc,money});}).join('')||'<div class="empty">مدلی برای سفارش وجود ندارد.</div>';applySaleCategory();}
+function render(){applyFrameCustomerView();if(!isFrame())return;const host=document.getElementById('saleItems');if(!host)return;const groups=C.groups(saleItems);host.innerHTML=groups.map(g=>{const item=C.choose(g,selected.get(g.id));if(!item)return '';selected.set(g.id,item.id);return C.card(g,item.id,{esc,money});}).join('')||'<div class="empty">مدلی برای سفارش وجود ندارد.</div>';applySaleCategory();mountFrameSizeTriggers();}
 const originalRender=renderSales;renderSales=function(){originalRender();render();renderFrameOrderRows();};
+// Standalone model-card tests do not supply the full checkout implementation.
+function frameRevealOpenCart(){
+ const isProd=isFrame()||document.body.classList.contains('frameCustomerStore');
+ const drawer=document.getElementById('saleCartDrawer');
+ if(!isProd||!drawer?.classList.contains('open'))return;
+ drawer.style.setProperty('left','0','important');
+ drawer.style.setProperty('right','auto','important');
+ drawer.style.setProperty('transform','none','important');
+ drawer.style.setProperty('translate','none','important');
+ drawer.style.setProperty('visibility','visible','important');
+ drawer.style.setProperty('pointer-events','auto','important');
+ drawer.style.setProperty('transition','none','important');
+}
+if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
+ const frameOriginalOpenCart=openSaleCart,frameOriginalCloseCart=closeSaleCart;
+ openSaleCart=function(...args){
+  const result=frameOriginalOpenCart.apply(this,args);
+  frameRevealOpenCart();
+  requestAnimationFrame(frameRevealOpenCart);
+  return result;
+ };
+ closeSaleCart=function(...args){
+  const result=frameOriginalCloseCart.apply(this,args);
+  const drawer=document.getElementById('saleCartDrawer');
+  if(drawer)for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
+  return result;
+ };
+ // Other legacy event handlers may capture the old checkout function by reference.
+ document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-frame-customer-cart],#saleCartCheckout'))return;
+  requestAnimationFrame(frameRevealOpenCart);
+  setTimeout(frameRevealOpenCart,50);
+ },true);
+}
+function frameForceCloseCart(){
+ const drawer=document.getElementById('saleCartDrawer'),backdrop=document.getElementById('saleCartBackdrop');
+ if(drawer){
+  drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');
+  for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
+ }
+ if(backdrop)backdrop.hidden=true;
+ if(!document.getElementById('frameCheckoutDialog'))document.body.style.overflow='';
+}
+if(typeof openStoreSection==='function'){
+ const frameOriginalOpenSection=openStoreSection;
+ openStoreSection=function(id,...args){
+  if(customerFrame()&&id!=='salesPanel')frameForceCloseCart();
+  return frameOriginalOpenSection.call(this,id,...args);
+ };
+}
 const originalCart=renderSaleCart;renderSaleCart=function(){originalCart();if(isFrame()){const rows=[...document.querySelectorAll('#saleCartLines .saleCartLine')];for(const [index,line] of rows.entries()){const entry=saleCart[index],item=saleItems.find(x=>String(x.id)===String(entry?.itemId));if(item){const title=line.querySelector('b');if(title){title.textContent=item.variant_specs?.baseModel||item.title||'قاب و شاسی';const variant=C.label(item);if(variant){const meta=document.createElement('small');meta.className='frameCartVariant';meta.textContent=variant;title.after(meta);}}}}}};
 function changeChoice(e){const el=e.target.closest('[data-frame-choice]');if(!el||!isFrame())return;const card=el.closest('[data-frame-model]'),g=C.groups(saleItems).find(x=>String(x.id)===card.dataset.frameModel);if(!g)return;const current=C.choose(g,selected.get(g.id)),quantity=card.querySelector('input[id^=saleQty-]')?.value||'1',next=C.changeChoice(g,current,el.dataset.frameChoice,el.dataset.frameColor||el.value);if(next){selected.set(g.id,next.id);render();const qty=document.getElementById('saleQty-'+next.id);if(qty)qty.value=quantity;}}
 document.addEventListener('change',changeChoice);
@@ -41,15 +91,149 @@ function renderFrameOrderRows(){
  }
 }
 
-let categoryOrigin=null,frameShellTop=null;const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
-const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
-function positionFrameNavigation(){const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');if(!customerFrame()){if(shell&&frameShellTop){if(frameShellTop.value)shell.style.setProperty('top',frameShellTop.value,frameShellTop.priority);else shell.style.removeProperty('top');frameShellTop=null;}return;}if(!bar||!nav)return;const bottom=bar.getBoundingClientRect().bottom,contentTop=bottom+nav.getBoundingClientRect().height;document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');if(shell){if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};if(shell.style.getPropertyValue('top')!==contentTop+'px')shell.style.setProperty('top',contentTop+'px','important');}}
 
-function applyFrameCustomerView(){const enabled=customerFrame();document.body.classList.toggle('frameCustomerStore',enabled);ensureFrameOrdersPanel(enabled);for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR68,#saleCartBtn,#saleBrandBtnR68,#rentalBrandBtnR68,#rentalCartBtnV810,#pbR1123StoreDesktopNav,#storeSectionNavV673,[data-store-panel=equipmentPanel],[data-store-panel=bookingsPanel]')){if(enabled){if(!frameHiddenControls.has(el))frameHiddenControls.set(el,{hidden:el.hidden,display:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.hidden=true;el.style.setProperty('display','none','important');}else if(frameHiddenControls.has(el)){const prior=frameHiddenControls.get(el);el.hidden=prior.hidden;if(prior.display)el.style.setProperty('display',prior.display,prior.priority);else el.style.removeProperty('display');frameHiddenControls.delete(el);}}for(const button of document.querySelectorAll('[data-store-panel=salesPanel]')){const label=button.querySelector('b')||button;if(enabled){if(!frameControlLabels.has(label))frameControlLabels.set(label,label.innerHTML);if(label.textContent!=='فروشگاه')label.textContent='فروشگاه';}else if(frameControlLabels.has(label)){label.innerHTML=frameControlLabels.get(label);frameControlLabels.delete(label);}}const bar=document.getElementById('photographerStoreIdentityBar');let nav=document.getElementById('frameCustomerNav');if(enabled&&bar&&!nav){nav=document.createElement('nav');nav.id='frameCustomerNav';nav.setAttribute('aria-label','بخش‌های فروشگاه قاب');nav.innerHTML='<button type="button" data-frame-customer-view="salesPanel">فروشگاه</button><button type="button" data-frame-customer-view="financePanel">مالی</button><button type="button" data-frame-customer-view="frameOrdersPanel">سفارش‌ها</button><button type="button" data-frame-customer-categories>دسته‌بندی</button><button type="button" data-frame-customer-cart>سبد خرید <small data-frame-cart-count>۰</small></button>';bar.after(nav);new ResizeObserver(positionFrameNavigation).observe(bar);new MutationObserver(positionFrameNavigation).observe(bar,{attributes:true,attributeFilter:['style','class']});}
- const category=document.getElementById('saleCategoryBtnR68');if(enabled&&nav&&category){if(!categoryOrigin)categoryOrigin={parent:category.parentNode,next:category.nextSibling};nav.querySelector('[data-frame-customer-categories]')?.remove();if(category.parentNode!==nav)nav.insertBefore(category,nav.querySelector('[data-frame-customer-cart]'));}else if(!enabled&&categoryOrigin&&category&&category.parentNode===nav){categoryOrigin.parent.insertBefore(category,categoryOrigin.next);}
+
+window.pbFrameConfirmCheckout=function({total,wallet}){
+ return new Promise(resolve=>{
+  const previous=document.activeElement,priorOverflow=document.body.style.overflow;
+  const dialog=document.createElement('section');dialog.id='frameCheckoutDialog';dialog.className='frameCheckoutDialog';
+  dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','frameCheckoutTitle');
+  dialog.innerHTML='<button type="button" class="frameCheckoutBackdrop" data-frame-checkout-cancel aria-label="بستن"></button><div class="frameCheckoutCard"><header><div><b id="frameCheckoutTitle">تأیید ثبت سفارش</b><small>فروشگاه قاب و شاسی</small></div><button type="button" data-frame-checkout-cancel aria-label="بستن">×</button></header><div class="frameCheckoutBody"><p>مشخصات سبد خرید را بررسی کنید. پس از ثبت، مراحل تولید در بخش «سفارش‌ها» نمایش داده می‌شود.</p><div class="frameCheckoutSummary"><span>مبلغ سفارش</span><b></b></div><div class="frameCheckoutSummary"><span>روش تحویل</span><b data-frame-delivery-label></b></div><p class="frameCheckoutPayment"></p></div><footer><button type="button" data-frame-checkout-cancel>بازگشت</button><button type="button" class="frameCheckoutSubmit" data-frame-checkout-submit>تأیید و ثبت سفارش</button></footer></div>';
+  dialog.querySelector('.frameCheckoutSummary b').textContent=money(total);
+  const method=document.getElementById('productionDeliveryMethod')?.value||'pickup';
+  dialog.querySelector('[data-frame-delivery-label]').textContent=method==='courier'?'ارسال با پیک به آدرس ثبت‌شده':'تحویل حضوری';
+  dialog.querySelector('.frameCheckoutPayment').textContent=wallet?'پس از تأیید، مبلغ از کیف پول شما پرداخت می‌شود.':'پرداخت و تسویه مطابق شرایط فروشگاه انجام می‌شود.';
+  const done=accepted=>{
+   if(!dialog.isConnected)return;
+   dialog.remove();document.body.style.overflow=priorOverflow;document.removeEventListener('keydown',onKey);
+   if(previous?.isConnected)previous.focus({preventScroll:true});
+   resolve(accepted);
+  };
+  const onKey=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}if(e.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([disabled])')];const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};
+  dialog.addEventListener('click',e=>{if(e.target.closest('[data-frame-checkout-cancel]'))done(false);else if(e.target.closest('[data-frame-checkout-submit]'))done(true)});
+  document.body.append(dialog);document.body.style.overflow='hidden';document.addEventListener('keydown',onKey);
+  dialog.querySelector('.frameCheckoutSubmit')?.focus({preventScroll:true});
+ });
+};
+
+let frameSizeSheet=null,frameSizeSheetPreviousFocus=null,frameSizeSheetPreviousOverflow='';
+function mountFrameSizeTriggers(){
+ if(!customerFrame())return;
+ for(const select of document.querySelectorAll('#saleItems .frameSizePriceRow select[data-frame-choice="size"]')){
+  const field=select.closest('label');if(!field||field.querySelector('[data-frame-size-trigger]'))continue;
+  const button=document.createElement('button');button.type='button';button.className='frameSizeTrigger';
+  button.dataset.frameSizeTrigger=select.closest('[data-frame-model]')?.dataset.frameModel||'';
+  button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-label','انتخاب سایز');
+  button.innerHTML='<span></span><span aria-hidden="true">⌄</span>';
+  button.querySelector('span').textContent=select.selectedOptions[0]?.textContent||'انتخاب سایز';
+  field.append(button);
+ }
+}
+function closeFrameSizeSheet(){
+ const sheet=frameSizeSheet;if(!sheet)return;
+ frameSizeSheet=null;sheet.remove();document.body.style.overflow=frameSizeSheetPreviousOverflow;
+ if(frameSizeSheetPreviousFocus?.isConnected)frameSizeSheetPreviousFocus.focus({preventScroll:true});
+ frameSizeSheetPreviousFocus=null;
+}
+function openFrameSizeSheet(trigger){
+ if(!customerFrame()||!window.matchMedia('(max-width:820px)').matches)return;
+ const field=trigger.closest('label'),select=field?.querySelector('select[data-frame-choice="size"]');
+ if(!select)return;
+ closeFrameSizeSheet();
+ frameSizeSheetPreviousFocus=trigger;frameSizeSheetPreviousOverflow=document.body.style.overflow;
+ const sheet=document.createElement('section');sheet.id='frameSizeSheet';sheet.className='frameSizeSheet';
+ sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','انتخاب سایز قاب و شاسی');
+ const model=trigger.closest('[data-frame-model]')?.querySelector('.saleItemInfo b')?.textContent||'';
+ const options=[...select.options].filter(o=>!o.disabled&&o.value);
+ sheet.innerHTML='<button type="button" class="frameSizeBackdrop" data-frame-size-close aria-label="بستن انتخاب سایز"></button><div class="frameSizeDialog"><header><div><b>انتخاب سایز</b><small></small></div><button type="button" data-frame-size-close aria-label="بستن">×</button></header><div class="frameSizeOptions" role="listbox"></div></div>';
+ sheet.querySelector('.frameSizeDialog header small').textContent=model;
+ const host=sheet.querySelector('.frameSizeOptions');
+ for(const option of options){
+  const button=document.createElement('button');button.type='button';button.dataset.frameSizeValue=option.value;
+  button.setAttribute('role','option');button.setAttribute('aria-selected',String(option.value===select.value));
+  button.innerHTML='<span></span><span aria-hidden="true"></span>';
+  button.firstElementChild.textContent=option.textContent;
+  button.lastElementChild.textContent=option.value===select.value?'✓':'';
+  host.append(button);
+ }
+ frameSizeSheet=sheet;document.body.append(sheet);document.body.style.overflow='hidden';
+ sheet.querySelector('[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
+ sheet.querySelector('.frameSizeDialog header button')?.focus({preventScroll:true});
+ sheet.addEventListener('click',event=>{
+  if(event.target.closest('[data-frame-size-close]')){closeFrameSizeSheet();return;}
+  const btn=event.target.closest('[data-frame-size-value]');
+  if(!btn)return;
+  const value=btn.dataset.frameSizeValue,group=trigger.dataset.frameSizeTrigger;
+  closeFrameSizeSheet();
+  select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));
+  requestAnimationFrame(()=>document.querySelector('[data-frame-size-trigger="'+CSS.escape(group)+'"]')?.focus({preventScroll:true}));
+ });
+}
+document.addEventListener('click',e=>{const trigger=e.target.closest('[data-frame-size-trigger]');if(trigger&&window.matchMedia('(max-width:820px)').matches){e.preventDefault();e.stopPropagation();openFrameSizeSheet(trigger)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&frameSizeSheet){e.preventDefault();closeFrameSizeSheet();}});
+
+let categoryOrigin=null,frameShellTop=null,frameCartPortals=null;const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
+const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
+function positionFrameNavigation(){
+ const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');
+ if(!customerFrame()){
+  if(shell&&frameShellTop){if(frameShellTop.value)shell.style.setProperty('top',frameShellTop.value,frameShellTop.priority);else shell.style.removeProperty('top');frameShellTop=null;}
+  return;
+ }
+ if(!bar||!nav)return;
+ const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
+ const host=document.getElementById('pbR1123StoreDesktopNav');
+ if(desktop&&host&&nav.parentElement!==host)host.append(nav);
+ if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);
+ const bottom=bar.getBoundingClientRect().bottom;
+ const contentTop=bottom+(desktop?0:nav.getBoundingClientRect().height);
+ document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
+ document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
+ if(shell){
+  if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
+  if(shell.style.getPropertyValue('top')!==contentTop+'px')shell.style.setProperty('top',contentTop+'px','important');
+ }
+}
+window.addEventListener('resize',()=>{if(customerFrame())requestAnimationFrame(positionFrameNavigation)},{passive:true});
+function applyFrameCustomerView(){const enabled=customerFrame();document.body.classList.toggle('frameCustomerStore',enabled);ensureFrameOrdersPanel(enabled);
+ const backdrop=document.getElementById('saleCartBackdrop'),drawer=document.getElementById('saleCartDrawer');
+ if(enabled&&drawer&&backdrop){
+  if(!frameCartPortals)frameCartPortals=[backdrop,drawer].map(node=>({node,parent:node.parentNode,next:node.nextSibling}));
+  if(backdrop.parentNode!==document.body)document.body.append(backdrop);
+  if(drawer.parentNode!==document.body)document.body.append(drawer);
+ }else if(!enabled&&frameCartPortals){
+  for(const {node,parent,next}of frameCartPortals)if(parent?.isConnected)parent.insertBefore(node,next?.parentNode===parent?next:null);
+  frameCartPortals=null;
+ }
+for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR68,#saleCartBtn,#saleBrandBtnR68,#rentalBrandBtnR68,#rentalCartBtnV810,#storeSectionNavV673,[data-store-panel=equipmentPanel],[data-store-panel=bookingsPanel]')){if(enabled){if(!frameHiddenControls.has(el))frameHiddenControls.set(el,{hidden:el.hidden,display:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.hidden=true;el.style.setProperty('display','none','important');}else if(frameHiddenControls.has(el)){const prior=frameHiddenControls.get(el);el.hidden=prior.hidden;if(prior.display)el.style.setProperty('display',prior.display,prior.priority);else el.style.removeProperty('display');frameHiddenControls.delete(el);}}for(const button of document.querySelectorAll('[data-store-panel=salesPanel]')){const label=button.querySelector('b')||button;if(enabled){if(!frameControlLabels.has(label))frameControlLabels.set(label,label.innerHTML);if(label.textContent!=='فروشگاه')label.textContent='فروشگاه';}else if(frameControlLabels.has(label)){label.innerHTML=frameControlLabels.get(label);frameControlLabels.delete(label);}}const bar=document.getElementById('photographerStoreIdentityBar');let nav=document.getElementById('frameCustomerNav');if(enabled){document.getElementById('pbR1123StoreDesktopNav')?.classList.add('frameDesktopHost')}else document.getElementById('pbR1123StoreDesktopNav')?.classList.remove('frameDesktopHost');if(enabled&&bar&&!nav){nav=document.createElement('nav');nav.id='frameCustomerNav';nav.setAttribute('aria-label','بخش‌های فروشگاه قاب');nav.innerHTML='<button type="button" data-frame-customer-view="salesPanel">فروشگاه</button><button type="button" data-frame-customer-view="financePanel">مالی</button><button type="button" data-frame-customer-view="frameOrdersPanel">سفارش‌ها</button><button type="button" data-frame-customer-cart>سبد خرید <small data-frame-cart-count>۰</small></button>';bar.after(nav);new ResizeObserver(positionFrameNavigation).observe(bar);new MutationObserver(positionFrameNavigation).observe(bar,{attributes:true,attributeFilter:['style','class']});}
+
+ const category=document.getElementById('saleCategoryBtnR68'),salesContent=document.getElementById('salesContent');
+ if(enabled&&category&&salesContent){
+  if(!categoryOrigin)categoryOrigin={parent:category.parentNode,next:category.nextSibling};
+  let sub=salesContent.querySelector('#frameCustomerCategoryRow');
+  if(!sub){sub=document.createElement('div');sub.id='frameCustomerCategoryRow';sub.className='frameCustomerCategoryRow';sub.innerHTML='<b>دسته‌بندی فروشگاه</b><div class="frameCustomerCategoryButton"></div>';salesContent.prepend(sub);}
+  const slot=sub.querySelector('.frameCustomerCategoryButton');
+  if(category.parentElement!==slot)slot.append(category);
+ }else if(!enabled&&categoryOrigin&&category){
+  const origin=categoryOrigin;
+  if(origin.parent?.isConnected)origin.parent.insertBefore(category,origin.next?.parentElement===origin.parent?origin.next:null);
+  salesContent?.querySelector('#frameCustomerCategoryRow')?.remove();
+  categoryOrigin=null;
+ }
+
  if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
  for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
+ if(enabled&&bar){
+  if(!bar.dataset.frameBorderOriginal){
+   bar.dataset.frameBorderOriginal=JSON.stringify({top:bar.style.getPropertyValue('border-top'),topPriority:bar.style.getPropertyPriority('border-top'),bottom:bar.style.getPropertyValue('border-bottom'),bottomPriority:bar.style.getPropertyPriority('border-bottom')});
+  }
+  bar.style.setProperty('border-top','1px solid #ccd7e5','important');
+  bar.style.setProperty('border-bottom','1px solid #ccd7e5','important');
+ }else if(!enabled&&bar?.dataset.frameBorderOriginal){
+  try{const prev=JSON.parse(bar.dataset.frameBorderOriginal);for(const [side,value,priority]of [['top',prev.top,prev.topPriority],['bottom',prev.bottom,prev.bottomPriority]]){if(value)bar.style.setProperty('border-'+side,value,priority);else bar.style.removeProperty('border-'+side)}}catch{}
+  delete bar.dataset.frameBorderOriginal;
+ }
  const studio=document.getElementById('storePhotographerName');if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;}
  positionFrameNavigation();}
 if(typeof syncPhotographerStoreIdentity==='function'){const original=syncPhotographerStoreIdentity;syncPhotographerStoreIdentity=function(...args){original(...args);applyFrameCustomerView();};}
@@ -110,6 +294,103 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
 .frameCustomerStore #salesCheckoutNotice{display:none!important}
 .frameCustomerStore #saleCartDrawer #saleCartCheckoutHint{font-size:10px;line-height:1.5}
 @media(max-width:820px){.frameCustomerStore #frameCustomerNav button{font-size:11px}.frameCustomerStore .frameOrderStep small{font-size:8px}}
+
+/* R1218: the photographer/store separator is a real line, not a shadow or pale-blue glow. */
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader{border-bottom:1px solid #ccd7e5!important;box-shadow:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{background:#fff!important;background-image:none!important;background-color:#fff!important;box-shadow:none!important;filter:none!important;text-shadow:none!important;border:0!important;border-top:1px solid #ccd7e5!important;border-bottom:1px solid #ccd7e5!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #storeIdentityToggle,html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #photographerStoreHeaderName{background:transparent!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;filter:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>.shell{background:#f5f7fb!important;background-image:none!important}
+.frameCustomerStore #frameSizeSheet,.frameSizeSheet{position:fixed;inset:0;z-index:2147483000;display:grid;align-items:end;direction:rtl;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important}
+.frameSizeSheet *{font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;box-sizing:border-box}
+.frameSizeBackdrop{position:absolute;inset:0;background:rgba(15,23,42,.48);border:0;width:100%;cursor:pointer}
+.frameSizeDialog{position:relative;z-index:1;background:#fff;border-radius:22px 22px 0 0;width:100%;max-height:min(74dvh,650px);display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -12px 48px #10182826;text-align:right}
+.frameSizeDialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e4e7ec;padding:15px 16px}
+.frameSizeDialog header b{font-size:16px;color:#101828}
+.frameSizeDialog header small{display:block;font-size:11px;color:#667085;margin-top:4px}
+.frameSizeDialog header button{background:#f2f4f7;border:0;border-radius:9px;width:34px;height:34px;font-size:22px}
+.frameSizeOptions{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 16px;display:grid;gap:7px}
+.frameSizeOptions button{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;width:100%;background:#fff;border:1px solid #e4e7ec;border-radius:11px;color:#344054;text-align:right;min-height:45px;font-size:14px;cursor:pointer}
+.frameSizeOptions button[aria-selected="true"]{border-color:#315efb;background:#eef2ff;color:#315efb;font-weight:900}
+@media(max-width:820px){
+ .frameCustomerStore #saleItems .frameSizePriceRow label{position:relative}
+ .frameCustomerStore #saleItems .frameSizePriceRow select[data-frame-choice="size"]{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;padding:0!important;border:0!important}
+ .frameCustomerStore .frameSizeTrigger{display:flex!important;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:40px;padding:7px 10px;background:#fff;border:1px solid #dbe5f2;border-radius:9px;color:#344054;font:800 13px Vazirmatn,Tahoma,Arial,sans-serif;direction:rtl;text-align:right}
+ .frameCustomerStore #salesPanel .frameProductCard .saleItemBuy{align-items:center!important;margin-top:5px!important}
+ .frameCustomerStore #salesPanel .frameProductCard .saleItemBuy>.btn{min-height:34px!important;height:34px!important;margin-top:3px!important;align-self:center!important}
+}
+@media(min-width:821px){.frameSizeTrigger{display:none!important}}
+
+.frameCheckoutDialog{position:fixed;inset:0;z-index:2147483100;display:grid;place-items:center;padding:14px;direction:rtl;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important}
+.frameCheckoutDialog *{box-sizing:border-box;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important}
+.frameCheckoutBackdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);border:0;cursor:pointer}
+.frameCheckoutCard{position:relative;z-index:1;background:#fff;box-shadow:0 20px 65px #10182840;border:1px solid #e4e7ec;border-radius:18px;width:min(440px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;text-align:right;color:#101828}
+.frameCheckoutCard header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 17px;border-bottom:1px solid #e4e7ec}
+.frameCheckoutCard header b{font-size:17px;line-height:1.5}.frameCheckoutCard header small{display:block;font-size:11px;color:#667085;margin-top:4px}
+.frameCheckoutCard header button{width:34px;height:34px;border:0;border-radius:9px;background:#f2f4f7;color:#344054;font-size:21px}
+.frameCheckoutBody{padding:17px;display:grid;gap:10px;font-size:13px;line-height:1.85}
+.frameCheckoutBody p{margin:0}.frameCheckoutBody .frameCheckoutPayment{font-size:11px;color:#667085}
+.frameCheckoutSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #eef1f5;border-radius:10px}
+.frameCheckoutSummary b{color:#101828;text-align:left;font-size:13px}
+.frameCheckoutCard footer{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:13px 17px 17px;border-top:1px solid #e4e7ec}
+.frameCheckoutCard footer button{font-size:13px;font-weight:800;min-height:44px;padding:10px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;color:#344054;cursor:pointer}
+.frameCheckoutCard footer .frameCheckoutSubmit{background:#315efb;color:#fff;border-color:#315efb}
+@media(max-width:600px){.frameCheckoutDialog{align-items:end;padding:0}.frameCheckoutCard{width:100%;border-radius:22px 22px 0 0;max-height:90dvh;padding-bottom:env(safe-area-inset-bottom,0px)}.frameCheckoutCard footer{padding-bottom:17px}}
+
+/* Ensure the desktop parent stays visible after legacy r1123 hiding rules,
+   even when the frame navigation has been physically moved into that parent. */
+@media(min-width:821px){
+html body.frameCustomerStore #pbR1123StoreDesktopNav{display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;min-width:0!important;pointer-events:auto!important}
+html body.frameCustomerStore #pbR1123StoreDesktopNav #frameCustomerNav{display:flex!important;visibility:visible!important;opacity:1!important}
+}
+/* R1218 customer navigation: replace the two redundant desktop shop header items with
+   the real Store/Finance/Orders/Cart controls; keep categories beneath Store. */
+body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;min-width:0!important}
+body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav>button{display:none!important}
+body.frameCustomerStore #frameCustomerCategoryRow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:8px 12px;margin:0 0 12px;background:#fff;border:1px solid #e4e7ec;border-radius:11px}
+body.frameCustomerStore #frameCustomerCategoryRow>b{font-size:12px;font-weight:900;line-height:1.6;color:#344054;flex:0 0 auto}
+body.frameCustomerStore #frameCustomerCategoryRow .frameCustomerCategoryButton{flex:0 1 220px;min-width:0}
+body.frameCustomerStore #frameCustomerCategoryRow #saleCategoryBtnR68{display:flex!important;align-items:center;justify-content:space-between;width:100%!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:7px 10px!important;background:#f8fafc!important;border:1px solid #dbe5f2!important;border-radius:8px!important;color:#344054!important;font:800 11px Vazirmatn,Tahoma,Arial,sans-serif!important}
+body.frameCustomerStore #frameCustomerCategoryRow #saleCategoryBtnR68 small{display:inline!important;font-size:11px!important}
+body.frameCustomerStore #frameCustomerCategoryRow #saleCategoryBtnR68 b{display:inline!important;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px!important}
+@media(min-width:821px){
+ body.frameCustomerStore #photographerStoreRoleHeader #frameCustomerNav{position:relative!important;inset:auto!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;width:max-content!important;max-width:100%!important;height:44px!important;min-height:0!important;margin:0!important;padding:0 4px!important;gap:5px!important;border:0!important;background:transparent!important;box-shadow:none!important;z-index:auto!important}
+ body.frameCustomerStore #photographerStoreRoleHeader #frameCustomerNav button{flex:0 1 auto!important;min-height:36px!important;height:36px!important;padding:7px 10px!important;font-size:12px!important;white-space:nowrap!important;border:0!important;border-bottom:3px solid transparent!important;border-radius:0!important;background:transparent!important}
+ body.frameCustomerStore #photographerStoreRoleHeader #frameCustomerNav button.active{border-bottom-color:#315efb!important;color:#315efb!important}
+ body.frameCustomerStore #photographerStoreRoleHeader #frameCustomerNav [data-frame-customer-cart]{background:#fff3cf!important;border:1px solid #f59e0b!important;border-radius:8px!important;min-height:34px!important;height:34px!important}
+ body.frameCustomerStore #storeSectionNavV673{display:none!important}
+ body.frameCustomerStore #storePhotographerWorkspace>.shell{top:var(--frame-customer-content-top,112px)!important}
+}
+@media(max-width:820px){
+ body.frameCustomerStore #frameCustomerNav{height:44px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:36px!important;padding:4px 8px!important}
+ body.frameCustomerStore #frameCustomerNav [data-frame-customer-view=salesPanel]{grid-area:1/1!important}
+ body.frameCustomerStore #frameCustomerNav [data-frame-customer-view=financePanel]{grid-area:1/2!important}
+ body.frameCustomerStore #frameCustomerNav [data-frame-customer-view=frameOrdersPanel]{grid-area:1/3!important}
+ body.frameCustomerStore #frameCustomerNav [data-frame-customer-cart]{grid-area:1/4!important}
+ body.frameCustomerStore #frameCustomerCategoryRow{padding:7px 9px;gap:8px}
+ body.frameCustomerStore #frameCustomerCategoryRow .frameCustomerCategoryButton{flex:1;max-width:220px}
+}
+
+body.frameCustomerStore #saleCartDrawer{position:fixed!important;top:0!important;bottom:0!important;left:0!important;height:100dvh!important;max-height:100dvh!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;overflow:hidden!important;z-index:5201!important}
+body.frameCustomerStore #saleCartDrawer .saleCartLines{overflow-y:auto!important;min-height:0!important;overscroll-behavior:contain}
+body.frameCustomerStore #saleCartDrawer .saleCartFooter{position:relative!important;bottom:auto!important;display:grid!important;flex:0 0 auto!important;max-height:none!important}
+body.frameCustomerStore #saleCartBackdrop{position:fixed!important;inset:0!important;z-index:5200!important}
+
+/* Paint explicit one-pixel separators even when a legacy inline border reset wins. */
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{position:fixed!important;isolation:isolate!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before,
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{content:""!important;display:block!important;position:absolute!important;left:0!important;right:0!important;width:100%!important;height:1px!important;background:#ccd7e5!important;pointer-events:none!important;z-index:2!important;border:0!important;box-shadow:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before{top:0!important;bottom:auto!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{bottom:0!important;top:auto!important}
+
+
+html body.frameCustomerStore #saleCartBackdrop[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
+html body.frameCustomerStore #saleCartDrawer:not(.open){display:none!important;visibility:hidden!important;pointer-events:none!important}
+/* Explicitly override legacy drawer translation on the active state. Legacy CSS
+   kept translateX(-105%) despite .open, leaving Checkout fully offscreen. */
+html body.frameCustomerStore #saleCartDrawer.open{left:0!important;right:auto!important;transform:none!important;translate:none!important;visibility:visible!important;pointer-events:auto!important;transition:none!important}
+@media(max-width:820px){
+ html body.frameCustomerStore #saleCartDrawer.open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(89dvh,760px)!important;max-height:calc(100dvh - 6px)!important;transform:translate3d(0,0,0)!important}
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

@@ -14,3 +14,28 @@ for(const width of [390,1440])test('owner card previews registered color/size/pr
  await page.screenshot({path:'/tmp/r1210-owner-card-'+width+'.png'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await card.locator('[data-frame-delete-model]').click();await page.locator('.frameProductCard').waitFor({state:'hidden'});assert.equal(state.requests.filter(x=>x.method==='DELETE').length,1);assert(state.requests.find(x=>x.method==='DELETE').body.version);assert.equal(state.overview.saleItems.length,0);assert.deepEqual(errors,[]);
  }finally{await browser.close()}
 });
+
+
+test('frame producer desktop Orders replaces giant calendar and scrolls through long production queue',async()=>{
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:740}});
+  await openPortal(page,'frame_chassis');
+  await page.evaluate(()=>{
+   data.saleOrders=Array.from({length:18},(_,i)=>({id:'80000000-0000-4000-8000-'+String(i+1).padStart(12,'0'),buyer_name:'عکاس '+(i+1),quantity:2,total_amount:75000,status:'pending',production_stage:'awaiting_approval',payment_status:'unpaid',delivery_method:'pickup',production_specs:{title:'قاب تست'}}));
+   renderSales();selectRentalTab('bookings');
+  });
+  await page.locator('#bookings.active .productionCard').first().waitFor();
+  assert.equal(await page.locator('#bookings .productionCard').count(),18);
+  const details=await page.locator('#bookings').evaluate(el=>{
+   const css=getComputedStyle(el),legacy=[...el.children].filter(node=>!node.classList.contains('frameProductionOrdersBox'));
+   el.scrollTop=500;
+   return {overflow:css.overflowY,scrollTop:el.scrollTop,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight,legacyHidden:legacy.every(node=>getComputedStyle(node).display==='none'),boxVisible:el.querySelector('.frameProductionOrdersBox')?.getBoundingClientRect().height>0};
+  });
+  assert.equal(details.overflow,'auto');
+  assert(details.scrollHeight>details.clientHeight,JSON.stringify(details));
+  assert(details.scrollTop>0,'long production queue must scroll vertically');
+  assert(details.legacyHidden,'old Office/calendar must not cover production orders');
+  assert(details.boxVisible,'production orders must be visible');
+ }finally{await browser.close()}
+});

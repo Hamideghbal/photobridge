@@ -9291,7 +9291,10 @@ function equipmentItemPublic(row) {
         image_urls=equipmentGalleryPublic(fallback);
         thumbnail_urls=equipmentGalleryPreviewPublic(fallback);
     }
-    return {...row,image_urls,thumbnail_urls,image_url:image_urls[0]||null,thumbnail_url:thumbnail_urls[0]||image_urls[0]||null,image_count:image_urls.length};
+    const galleryFor=images=>equipmentGalleryPublic({...row,gallery_images:images,image_object_key:null,image_name:null,image_content_type:null,image_bytes:null});
+    const color_image_urls=Array.isArray(row.variant_specs?.colorGalleryImages)?galleryFor(row.variant_specs.colorGalleryImages):[];
+    const pricing_image_urls=Array.isArray(row.variant_specs?.pricingGalleryImages)?galleryFor(row.variant_specs.pricingGalleryImages):image_urls;
+    return {...row,color_image_urls,pricing_image_urls,image_urls,thumbnail_urls,image_url:image_urls[0]||null,thumbnail_url:thumbnail_urls[0]||image_urls[0]||null,image_count:image_urls.length};
 }
 let equipmentGlobalCatalogV827SchemaPromise=null;
 async function ensureEquipmentGlobalCatalogV827Schema(){

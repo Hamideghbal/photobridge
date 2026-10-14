@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import {isProductionShop} from './frame-production.js';
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
-export function frameModelVersion(rows){return JSON.stringify(rows.map(x=>[String(x.id),x.updated_at?new Date(x.updated_at).toISOString():'']).sort((a,b)=>a[0].localeCompare(b[0])));}
+export function frameModelVersion(rows){return JSON.stringify(rows.filter(x=>!x.variant_specs?.archived).map(x=>[String(x.id),x.updated_at?new Date(x.updated_at).toISOString():'',String(x.variant_specs?.modelRevision||''),Number(x.sale_price||0),x.active!==false]).sort((a,b)=>a[0].localeCompare(b[0])));}
 export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,galleryNormalize,normalizeDigits}){
  if(!isProductionShop(shop))fail('production_shop_unavailable',404);
  const material=String(body.material||'').trim(),model=String(body.model||'').trim(),description=String(body.description||'').trim();
@@ -16,6 +16,7 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  const old=new Map(existing.map(x=>[String(x.id),x])),seen=new Set(),ids=new Set(),variants=[];
  const kind=shop.business_category==='chassis'?'chassis':shop.business_category==='frame'?'frame':body.kind;
  if(!['frame','chassis'].includes(kind))fail('frame_kind_required');
+ const modelRevision=crypto.randomUUID();
  for(const input of body.variants){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('frame_variant_specs_required');if(input.active!==undefined&&typeof input.active!=='boolean')fail('frame_variant_specs_required');
  const current=input.id?old.get(String(input.id)):null;if(input.id&&!current)fail('frame_variant_not_found',404);if(current&&ids.has(current.id))fail('frame_variant_duplicate');if(current)ids.add(current.id);
@@ -24,7 +25,7 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  const raw=normalizeDigits(String(input.price??'')).replace(/[٬,\s]/g,'');const price=Number(raw);if(!raw||!Number.isSafeInteger(price)||price<0)fail('frame_variant_price_required');
  const signature=JSON.stringify([v.specs.color,v.specs.widthCm,v.specs.heightCm,v.specs.diameterCm,v.specs.thicknessMm]);if(seen.has(signature))fail('frame_variant_duplicate');seen.add(signature);
  const gallery=input.galleryImages===undefined?(current?.gallery_images||[]):galleryNormalize(input.galleryImages,shop.id);if(!Array.isArray(gallery)||gallery.length>8)fail('frame_variant_image_invalid');
- variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id}}});
+ variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision}}});
  }
  // Omitted combinations become unavailable; keep rows referenced by historical orders.
  for(const item of existing)if(!ids.has(item.id))await db.query("UPDATE equipment_sale_items SET active=false,variant_specs=jsonb_set(variant_specs,'{archived}','true'::jsonb),updated_at=now() WHERE id=$1 AND shop_id=$2",[item.id,shop.id]);

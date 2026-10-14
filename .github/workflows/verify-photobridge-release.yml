@@ -111,6 +111,20 @@ jobs:
         run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
+      - name: Verify frame palette, variant photos and prices in Chromium
+        run: |
+          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1
+          /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs
+      - name: Save frame editor screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame-palette-browser-screenshots
+          path: /tmp/r1207-owner-*.png
+          if-no-files-found: ignore
       - name: Prepare runner PostgreSQL for migration smoke test
         run: |
           sudo systemctl start postgresql
@@ -180,3 +194,4 @@ jobs:
 
       - name: Smoke-test strict customer stock migration in PostgreSQL
         run: node scripts/test-r1095-stock-migration-smoke.mjs
+

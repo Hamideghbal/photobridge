@@ -139,3 +139,6 @@ await import('./enable-r1197-gallery-create-four-fields.mjs');
 await import('./enable-r1201-lab-controls.mjs');
 await import('./enable-r1202-lab-invoice-preview-counters.mjs');
 
+
+
+await import('./enable-r1208-frame-palette.mjs');

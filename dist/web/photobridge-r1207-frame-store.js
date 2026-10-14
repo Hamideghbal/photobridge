@@ -81,6 +81,35 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
  .frameCustomerStore #storePhotographerWorkspace #storePhotographerName{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
  .frameCustomerStore #salesPanel .frameProductCard .frameSizePriceRow{margin:8px 0 3px!important}.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy{margin-top:0!important;align-items:flex-start!important}.frameCustomerStore .frameProductCard .saleItemBuy>.field>span:first-child{display:none!important}
 }
+
+.frameCustomerStore #salesContent>h3{display:none!important}
+.frameCustomerStore #frameOrdersPanel{min-width:0}
+.frameCustomerStore .frameOrdersHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.frameCustomerStore .frameOrdersHead h2{margin:0;font-size:16px}
+.frameCustomerStore .frameOrdersHead button{font:inherit;font-size:11px;border:1px solid #dbe5f2;background:#fff;color:#315efb;border-radius:8px;padding:8px 12px}
+.frameCustomerStore #saleOrders{display:grid;gap:10px}
+.frameCustomerStore #saleOrders .saleOrderCustomer{padding:12px!important;border:1px solid #e4e7ec;border-radius:12px;background:#fff;min-width:0}
+.frameCustomerStore .frameOrderStepper{display:flex;align-items:flex-start;margin-top:12px;direction:rtl;width:100%;gap:0}
+.frameCustomerStore .frameOrderStep{flex:1;min-width:0;text-align:center;position:relative}
+.frameCustomerStore .frameOrderStep:not(:last-child):after{content:'';position:absolute;top:11px;left:-50%;width:100%;height:2px;background:#d0d5dd;z-index:0}
+.frameCustomerStore .frameOrderStep.complete:not(:last-child):after{background:#315efb}
+.frameCustomerStore .frameOrderCircle{display:grid;place-items:center;width:24px;height:24px;border:2px solid #d0d5dd;border-radius:50%;background:#fff;color:#667085;margin:0 auto 5px;position:relative;z-index:1;font-size:11px}
+.frameCustomerStore .frameOrderStep.complete .frameOrderCircle{background:#315efb;border-color:#315efb;color:#fff}
+.frameCustomerStore .frameOrderStep.current .frameOrderCircle{box-shadow:0 0 0 3px #dbe4ff}
+.frameCustomerStore .frameOrderStep small{display:block;white-space:normal;font-size:9px;line-height:1.5;color:#667085}
+.frameCustomerStore .frameOrderCancelled{font-size:11px;color:#b42318;margin-top:9px}
+.frameCustomerStore #saleCartDrawer .saleCartLines{padding:5px 10px}
+.frameCustomerStore #saleCartDrawer .saleCartLine{grid-template-columns:38px minmax(0,1fr) auto;gap:7px;padding:7px 0}
+.frameCustomerStore #saleCartDrawer .saleCartLine img,.frameCustomerStore #saleCartDrawer .saleCartPhotoPlaceholder{width:38px;height:38px;border-radius:7px}
+.frameCustomerStore #saleCartDrawer .saleCartLine b{font-size:10.5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.frameCustomerStore #saleCartDrawer .saleCartLine small{font-size:9px;line-height:1.4}
+.frameCustomerStore #saleCartDrawer .saleCartQty{gap:2px}
+.frameCustomerStore #saleCartDrawer .saleCartQty button{width:23px;height:23px}
+.frameCustomerStore #saleCartDrawer .saleCartQty span{min-width:17px;font-size:9px}
+.frameCustomerStore #saleCartDrawer .saleCartRemove{font-size:9px;padding:0}
+.frameCustomerStore #salesCheckoutNotice{display:none!important}
+.frameCustomerStore #saleCartDrawer #saleCartCheckoutHint{font-size:10px;line-height:1.5}
+@media(max-width:820px){.frameCustomerStore #frameCustomerNav button{font-size:11px}.frameCustomerStore .frameOrderStep small{font-size:8px}}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

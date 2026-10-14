@@ -36,6 +36,22 @@ if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
   setTimeout(frameRevealOpenCart,50);
  },true);
 }
+function frameForceCloseCart(){
+ const drawer=document.getElementById('saleCartDrawer'),backdrop=document.getElementById('saleCartBackdrop');
+ if(drawer){
+  drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');
+  for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
+ }
+ if(backdrop)backdrop.hidden=true;
+ if(!document.getElementById('frameCheckoutDialog'))document.body.style.overflow='';
+}
+if(typeof openStoreSection==='function'){
+ const frameOriginalOpenSection=openStoreSection;
+ openStoreSection=function(id,...args){
+  if(customerFrame()&&id!=='salesPanel')frameForceCloseCart();
+  return frameOriginalOpenSection.call(this,id,...args);
+ };
+}
 const originalCart=renderSaleCart;renderSaleCart=function(){originalCart();if(isFrame()){const rows=[...document.querySelectorAll('#saleCartLines .saleCartLine')];for(const [index,line] of rows.entries()){const entry=saleCart[index],item=saleItems.find(x=>String(x.id)===String(entry?.itemId));if(item){const title=line.querySelector('b');if(title){title.textContent=item.variant_specs?.baseModel||item.title||'قاب و شاسی';const variant=C.label(item);if(variant){const meta=document.createElement('small');meta.className='frameCartVariant';meta.textContent=variant;title.after(meta);}}}}}};
 function changeChoice(e){const el=e.target.closest('[data-frame-choice]');if(!el||!isFrame())return;const card=el.closest('[data-frame-model]'),g=C.groups(saleItems).find(x=>String(x.id)===card.dataset.frameModel);if(!g)return;const current=C.choose(g,selected.get(g.id)),quantity=card.querySelector('input[id^=saleQty-]')?.value||'1',next=C.changeChoice(g,current,el.dataset.frameChoice,el.dataset.frameColor||el.value);if(next){selected.set(g.id,next.id);render();const qty=document.getElementById('saleQty-'+next.id);if(qty)qty.value=quantity;}}
 document.addEventListener('change',changeChoice);
@@ -366,6 +382,9 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before{top:0!important;bottom:auto!important}
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{bottom:0!important;top:auto!important}
 
+
+html body.frameCustomerStore #saleCartBackdrop[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
+html body.frameCustomerStore #saleCartDrawer:not(.open){display:none!important;visibility:hidden!important;pointer-events:none!important}
 /* Explicitly override legacy drawer translation on the active state. Legacy CSS
    kept translateX(-105%) despite .open, leaving Checkout fully offscreen. */
 html body.frameCustomerStore #saleCartDrawer.open{left:0!important;right:auto!important;transform:none!important;translate:none!important;visibility:visible!important;pointer-events:auto!important;transition:none!important}

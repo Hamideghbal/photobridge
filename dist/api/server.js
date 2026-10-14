@@ -1,3 +1,4 @@
+import {saveFrameModel} from './frame-model-catalog.js';
 import { isProductionShop, createProductionOrders, productionTransition, productionSchedule, frameLedger, normalizeProductionOptions } from './frame-production.js';
 import { galleryExpirySql, maintainGalleryLifetime } from './gallery-lifetime.js';
 import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
@@ -15465,6 +15466,11 @@ async function api(req, res, url) {
         return sendJson(res,409,{error:'asset_delete_requires_unit_selection'});
     }
     // v0.17.654 — equipment sales inventory and order workflow.
+    const frameModelRoute=url.pathname.match(/^\/api\/rental\/frame-models\/([0-9a-f-]{36})$/i);
+    if((req.method==='POST'&&url.pathname==='/api/rental/frame-models')||(req.method==='PATCH'&&frameModelRoute)){
+      const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+      const body=await bodyJson(req,500_000),db=await pool.connect();try{const out=await saveFrameModel(db,{shop,body,modelId:frameModelRoute?.[1]||null,frameVariant,galleryNormalize:equipmentGalleryNormalize,normalizeDigits});await audit(a.userId,undefined,'equipment_frame.model_save','equipment_frame_model',out.id,{shopId:shop.id,variants:out.items.length}).catch(()=>{});return sendJson(res,200,{ok:true,...out});}catch(e){if(e.status)return sendJson(res,e.status,{error:e.message});throw e}finally{db.release();}
+    }
     if (req.method === 'POST' && url.pathname === '/api/rental/sale-items') {
         // v832: inventory preparation must work for the authenticated store even when the
         // subscription is temporarily inactive. Public selling/checkout remains subscription-gated.
@@ -15484,6 +15490,7 @@ async function api(req, res, url) {
     if(req.method==='PATCH'&&rentalSaleItemRoute){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});await ensureEquipmentGlobalCatalogV827Schema();
         const current=(await pool.query(`SELECT * FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL LIMIT 1`,[rentalSaleItemRoute[1],shop.id])).rows[0];if(!current)return sendJson(res,404,{error:'sale_item_not_found'});
+        if(frameShop(shop)&&current.variant_specs?.baseId)return sendJson(res,409,{error:'use_frame_model_editor'});
         const b=await bodyJson(req,200_000),variant=frameVariant(shop,b,current);if(variant.error)return sendJson(res,400,{error:variant.error});const model=variant.model,title=model;if(!model)return sendJson(res,400,{error:'sale_item_model_required'});if(!title)return sendJson(res,400,{error:'sale_item_title_required'});
         const salePrice=b.salePrice===undefined?Number(current.sale_price||0):equipmentRentalMoney(b.salePrice),stockTotal=b.stockTotal===undefined?Number(current.stock_total||0):Math.max(0,Math.min(9999,Math.round(Number(normalizeDigits(String(b.stockTotal||0)).replace(/[^0-9]/g,''))||0))),active=b.active===undefined?Boolean(current.active):Boolean(b.active),clearImage=Boolean(b.clearImage);
         let galleryImages=clearImage?[]:(b.galleryImages===undefined?(Array.isArray(current.gallery_images)?current.gallery_images:[]):equipmentGalleryNormalize(b.galleryImages,shop.id));if(!galleryImages.length&&!clearImage&&b.imageObjectKey)galleryImages=equipmentGalleryNormalize([{objectKey:b.imageObjectKey,name:b.imageName,contentType:b.imageContentType,bytes:b.imageBytes}],shop.id);const first=galleryImages.find(x=>x.objectKey)||null,imageObjectKey=first?.objectKey||null,imageName=first?.name||null,imageContentType=first?.contentType||null,imageBytes=first?.bytes||null,catalogProductId=b.catalogProductId===undefined?current.catalog_product_id:(/^[0-9a-f-]{36}$/i.test(String(b.catalogProductId||''))?String(b.catalogProductId):null);

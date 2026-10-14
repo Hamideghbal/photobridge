@@ -7,6 +7,40 @@ function changeChoice(e){const el=e.target.closest('[data-frame-choice]');if(!el
 document.addEventListener('change',changeChoice);
 document.addEventListener('click',e=>{if(e.target.closest('[data-frame-color]')){changeChoice(e);return;}const btn=e.target.closest('[data-frame-show-gallery]');if(btn){pb834OpenShopGallery('sale',btn.dataset.frameShowGallery);if(typeof pb834ShopGalleryState!=='undefined'){pb834ShopGalleryState.index=Number(btn.dataset.frameGalleryIndex)||0;pb834RenderShopGallery();}}});
 
+
+const frameStageList=[['awaiting_approval','در انتظار تأیید'],['in_production','در حال تولید'],['ready','آماده تحویل'],['delivered','تحویل‌شده']];
+let frameOrdersOrigin=null;
+function ensureFrameOrdersPanel(enabled){
+ const orders=document.getElementById('saleOrders'),sales=document.getElementById('salesPanel');
+ if(!orders||!sales)return;
+ let panel=document.getElementById('frameOrdersPanel');
+ if(enabled){
+  if(!panel){panel=document.createElement('section');panel.id='frameOrdersPanel';panel.className='rentalPanel';panel.innerHTML='<div class="box"><header class="frameOrdersHead"><h2>سفارش‌های من</h2><button type="button" data-frame-order-refresh>به‌روزرسانی وضعیت</button></header><div class="frameOrdersHost"></div></div>';sales.after(panel);}
+  const dest=panel.querySelector('.frameOrdersHost');
+  if(orders.parentNode!==dest){frameOrdersOrigin={parent:orders.parentElement,next:orders.nextSibling};dest.append(orders);}
+ }else if(panel){
+  const dest=frameOrdersOrigin?.parent||document.getElementById('salesContent');
+  if(dest)dest.insertBefore(orders,frameOrdersOrigin?.next?.parentNode===dest?frameOrdersOrigin.next:null);
+  panel.remove();frameOrdersOrigin=null;
+ }
+}
+function frameStepMarkup(stage){
+ if(stage==='cancelled')return '<div class="frameOrderCancelled">سفارش لغو شده است</div>';
+ const index=frameStageList.findIndex(row=>row[0]===stage);
+ return '<div class="frameOrderStepper" aria-label="مراحل سفارش">'+frameStageList.map(([key,label],i)=>'<div class="frameOrderStep '+(i<=index?'complete ':'')+(i===index?'current':'')+'"><span class="frameOrderCircle" aria-hidden="true">'+(i<index?'✓':(i+1))+'</span><small>'+label+'</small></div>').join('')+'</div>';
+}
+function renderFrameOrderRows(){
+ if(!customerFrame())return;
+ const root=document.getElementById('saleOrders');if(!root)return;
+ const rows=(saleOrders||[]).filter(o=>String(o.shop_id)===String(shopId));
+ for(const [i,el] of [...root.querySelectorAll('.saleOrderCustomer')].entries()){
+  const order=rows[i],info=el.querySelector('div');if(!info||!order?.production_stage)continue;
+  el.classList.add('frameOrderCustomer');
+  info.querySelector('.frameOrderStepper,.frameOrderCancelled')?.remove();
+  info.insertAdjacentHTML('beforeend',frameStepMarkup(order.production_stage));
+ }
+}
+
 let categoryOrigin=null,frameShellTop=null;const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
 const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
 function positionFrameNavigation(){const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');if(!customerFrame()){if(shell&&frameShellTop){if(frameShellTop.value)shell.style.setProperty('top',frameShellTop.value,frameShellTop.priority);else shell.style.removeProperty('top');frameShellTop=null;}return;}if(!bar||!nav)return;const bottom=bar.getBoundingClientRect().bottom,contentTop=bottom+nav.getBoundingClientRect().height;document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');if(shell){if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};if(shell.style.getPropertyValue('top')!==contentTop+'px')shell.style.setProperty('top',contentTop+'px','important');}}

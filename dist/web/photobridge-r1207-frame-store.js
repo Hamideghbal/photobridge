@@ -4,13 +4,16 @@ function render(){applyFrameCustomerView();if(!isFrame())return;const host=docum
 const originalRender=renderSales;renderSales=function(){originalRender();render();renderFrameOrderRows();};
 // Standalone model-card tests do not supply the full checkout implementation.
 function frameRevealOpenCart(){
- if(!isFrame())return;
+ const isProd=isFrame()||document.body.classList.contains('frameCustomerStore');
  const drawer=document.getElementById('saleCartDrawer');
- if(!drawer?.classList.contains('open'))return;
+ if(!isProd||!drawer?.classList.contains('open'))return;
+ drawer.style.setProperty('left','0','important');
+ drawer.style.setProperty('right','auto','important');
  drawer.style.setProperty('transform','none','important');
  drawer.style.setProperty('translate','none','important');
  drawer.style.setProperty('visibility','visible','important');
  drawer.style.setProperty('pointer-events','auto','important');
+ drawer.style.setProperty('transition','none','important');
 }
 if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
  const frameOriginalOpenCart=openSaleCart,frameOriginalCloseCart=closeSaleCart;
@@ -23,7 +26,7 @@ if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
  closeSaleCart=function(...args){
   const result=frameOriginalCloseCart.apply(this,args);
   const drawer=document.getElementById('saleCartDrawer');
-  if(drawer)for(const key of ['transform','translate','visibility','pointer-events'])drawer.style.removeProperty(key);
+  if(drawer)for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
   return result;
  };
  // Other legacy event handlers may capture the old checkout function by reference.
@@ -317,6 +320,12 @@ html body.frameCustomerStore #storePhotographerWorkspace>.shell{background:#f5f7
 .frameCheckoutCard footer .frameCheckoutSubmit{background:#315efb;color:#fff;border-color:#315efb}
 @media(max-width:600px){.frameCheckoutDialog{align-items:end;padding:0}.frameCheckoutCard{width:100%;border-radius:22px 22px 0 0;max-height:90dvh;padding-bottom:env(safe-area-inset-bottom,0px)}.frameCheckoutCard footer{padding-bottom:17px}}
 
+/* Ensure the desktop parent stays visible after legacy r1123 hiding rules,
+   even when the frame navigation has been physically moved into that parent. */
+@media(min-width:821px){
+html body.frameCustomerStore #pbR1123StoreDesktopNav{display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;min-width:0!important;pointer-events:auto!important}
+html body.frameCustomerStore #pbR1123StoreDesktopNav #frameCustomerNav{display:flex!important;visibility:visible!important;opacity:1!important}
+}
 /* R1218 customer navigation: replace the two redundant desktop shop header items with
    the real Store/Finance/Orders/Cart controls; keep categories beneath Store. */
 body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;min-width:0!important}
@@ -359,7 +368,7 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
 
 /* Explicitly override legacy drawer translation on the active state. Legacy CSS
    kept translateX(-105%) despite .open, leaving Checkout fully offscreen. */
-html body.frameCustomerStore #saleCartDrawer.open{transform:translate3d(0,0,0)!important;translate:none!important;visibility:visible!important;pointer-events:auto!important}
+html body.frameCustomerStore #saleCartDrawer.open{left:0!important;right:auto!important;transform:none!important;translate:none!important;visibility:visible!important;pointer-events:auto!important;transition:none!important}
 @media(max-width:820px){
  html body.frameCustomerStore #saleCartDrawer.open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(89dvh,760px)!important;max-height:calc(100dvh - 6px)!important;transform:translate3d(0,0,0)!important}
 }

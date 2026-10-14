@@ -131,7 +131,7 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches;
+ const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
  const host=document.getElementById('pbR1123StoreDesktopNav');
  if(desktop&&host&&nav.parentElement!==host)host.append(nav);
  if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);
@@ -318,6 +318,13 @@ body.frameCustomerStore #saleCartDrawer{position:fixed!important;top:0!important
 body.frameCustomerStore #saleCartDrawer .saleCartLines{overflow-y:auto!important;min-height:0!important;overscroll-behavior:contain}
 body.frameCustomerStore #saleCartDrawer .saleCartFooter{position:relative!important;bottom:auto!important;display:grid!important;flex:0 0 auto!important;max-height:none!important}
 body.frameCustomerStore #saleCartBackdrop{position:fixed!important;inset:0!important;z-index:5200!important}
+
+/* Paint explicit one-pixel separators even when a legacy inline border reset wins. */
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{position:fixed!important;isolation:isolate!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before,
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{content:""!important;display:block!important;position:absolute!important;left:0!important;right:0!important;width:100%!important;height:1px!important;background:#ccd7e5!important;pointer-events:none!important;z-index:2!important;border:0!important;box-shadow:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before{top:0!important;bottom:auto!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{bottom:0!important;top:auto!important}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

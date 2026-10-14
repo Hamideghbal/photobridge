@@ -391,6 +391,13 @@ html body.frameCustomerStore #saleCartDrawer.open{left:0!important;right:auto!im
 @media(max-width:820px){
  html body.frameCustomerStore #saleCartDrawer.open{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:min(89dvh,760px)!important;max-height:calc(100dvh - 6px)!important;transform:translate3d(0,0,0)!important}
 }
+@media(min-width:821px){
+html body.frameCustomerStore #pbR1123StoreDesktopNav>button{display:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar .storeIdentityActionsV809,
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar .storeHeaderActionV809,
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar [data-store-panel]{display:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar{height:36px!important;min-height:36px!important;max-height:36px!important;padding:2px 12px!important}
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

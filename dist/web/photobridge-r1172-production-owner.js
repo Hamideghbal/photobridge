@@ -11,7 +11,7 @@ function frameDeliveryMapLink(order){const point=order?.production_specs?.delive
 function stageProgress(stage){
  if(stage==='cancelled')return '<div class="productionCancelled">سفارش لغو شده است</div>';
  const index=productionSteps.findIndex(x=>x[0]===stage);
- return '<div class="productionStepper" aria-label="مراحل پیشرفت سفارش">'+productionSteps.map(([key,label],i)=>'<div class="productionStep '+(i<=index?'complete ':'')+(i===index?'current':'')+'"><span class="productionStepCircle">'+(i<index?'✓':(i+1))+'</span><small>'+label+'</small></div>').join('')+'</div>';
+ return '<div class="productionStepper" aria-label="مراحل پیشرفت سفارش">'+productionSteps.map(([key,label],i)=>'<div class="productionStep '+(i<=index?'complete ':'')+(i===index?'current':'')+'">'+(i===index+1?'<button type="button" class="productionStepCircle" data-production-action="'+(['confirm','ready','deliver'][index]||'')+'" aria-label="'+label+'" title="'+label+'">'+(i+1)+'</button>':'<span class="productionStepCircle">'+(i<index?'✓':(i+1))+'</span>')+'<small>'+label+'</small></div>').join('')+'</div>';
 }
 function renderProduction(){const root=document.getElementById('saleOrdersList');if(!root)return;const box=root.closest('.box');if(box){box.classList.add('frameProductionOrdersBox');box.style.setProperty('display','block','important');}const all=(data.saleOrders||[]).filter(o=>o.production_stage),rows=all.filter(o=>o.production_stage===selected);root.innerHTML=`<nav class="productionTabs">${Object.entries(labels).map(([key,label])=>`<button type="button" data-production-tab="${key}" class="${selected===key?'active':''}">${label} <small>${fa(all.filter(o=>o.production_stage===key).length)}</small></button>`).join('')}</nav><div class="productionCards">${rows.map(o=>`<article class="productionCard" data-production-order="${esc(o.id)}"><header><b>${esc(o.buyer_name)}</b><span>${labels[o.production_stage]}</span></header>${stageProgress(o.production_stage)}<p>${esc(o.production_specs?.title||o.item_title)} · ${fa(o.quantity)} عدد</p><p><b>${money(o.total_amount)}</b> · ${o.payment_status==='paid'?'پرداخت‌شده':'حساب دفتری'} · ${o.delivery_method==='courier'?'ارسال با پیک':'دریافت حضوری'}</p>${o.delivery_address?`<p>${esc(o.delivery_address)}</p>`:''}${frameDeliveryMapLink(o)}<div class="productionDates"><label>تاریخ آماده‌شدن<input class="jalaliDateInput" data-production-ready readonly placeholder="انتخاب تاریخ" value="${esc(isoToJalaliInput(o.expected_ready_date)||'')}" ${['delivered','cancelled'].includes(o.production_stage)?'disabled':''}></label><label>تاریخ تحویل<input class="jalaliDateInput" data-production-delivery readonly placeholder="انتخاب تاریخ" value="${esc(isoToJalaliInput(o.expected_delivery_date)||'')}" ${['delivered','cancelled'].includes(o.production_stage)?'disabled':''}></label></div><div class="productionActions">${o.production_confirmed_at&&o.status!=='cancelled'?`<button type="button" data-frame-invoice="${esc(o.id)}">فاکتور</button>`:''}${!['delivered','cancelled'].includes(o.production_stage)?`<button type="button" data-production-action="schedule">ذخیره زمان‌بندی</button><button type="button" class="btn" data-production-action="${({awaiting_approval:'confirm',in_production:'ready',ready:'deliver'})[o.production_stage]}">${({awaiting_approval:'تأیید و شروع تولید',in_production:'آماده شد + اطلاع به مشتری',ready:'ثبت تحویل'})[o.production_stage]}</button><button type="button" class="danger" data-production-action="cancel">${o.production_stage==='awaiting_approval'?'رد سفارش':'لغو سفارش'}${o.payment_status==='paid'?' و برگشت وجه':''}</button>`:''}</div><div data-production-message></div></article>`).join('')||'<div class="empty">سفارشی در این مرحله نیست.</div>'}</div>${legacyMarkup?'<details><summary>سفارش‌های فروش قبلی</summary>'+legacyMarkup+'</details>':''}`;}
 
@@ -20,6 +20,8 @@ function mountWorkspace(){
  const sales=document.getElementById('sales'),bookings=document.getElementById('bookings');
  if(!sales||!bookings)return;
  document.body.classList.add('frameProductionShop');
+ const rentalContext=document.getElementById('rentalHeaderFilterHost');if(rentalContext&&!rentalContext.parentElement.classList.contains('frameRentalContext')){const wrapper=document.createElement('div');wrapper.className='frameRentalContext';rentalContext.before(wrapper);wrapper.append(rentalContext);}
+
  if(typeof rentalTabTitles!=='undefined'){rentalTabTitles.sales='فروشگاه';rentalTabTitles.bookings='سفارش‌ها';}
  document.getElementById('frameProductionWorkspaceTabs')?.remove();
  const box=document.getElementById('saleOrdersList')?.closest('.box');
@@ -53,5 +55,26 @@ document.addEventListener('click',async e=>{const add=e.target.closest('[data-fr
 document.addEventListener('change',e=>{if(e.target.matches('[data-frame-option="sizes"]')){const size=parseFrameSize(e.target.value),form=document.getElementById('saleItemForm');form.elements.variantWidthCm.value=size?.width||'';form.elements.variantHeightCm.value=size?.height||'';form.elements.variantDiameterCm.value=size?.diameter||'';}});
 
 document.addEventListener('keydown',e=>{const input=e.target.closest('[data-frame-new]');if(input&&e.key==='Enter'){e.preventDefault();if(!document.querySelector('[data-frame-save="'+input.dataset.frameNew+'"]').disabled)void addFrameOption(input.dataset.frameNew);}});
+const compactStyle=document.createElement('style');compactStyle.textContent=`
+body.frameProductionShop.pb899MainBookings .frameRentalContext{display:none!important}
+
+body.frameProductionShop #bookings>[data-pb843-office-pane],
+body.frameProductionShop #bookings>.pb843BookingTabs,
+body.frameProductionShop #bookings .pb843BookingCalendarBox{display:none!important}
+body.frameProductionShop #bookings .productionCards{gap:8px!important}
+body.frameProductionShop #bookings .productionCard{padding:10px 12px!important;margin:0!important;border-radius:10px!important;font-size:12px!important}
+body.frameProductionShop #bookings .productionCard p{margin:5px 0!important;line-height:1.5!important}
+body.frameProductionShop #bookings .productionStepper{margin:8px 0!important;gap:4px!important}
+body.frameProductionShop #bookings .productionStepCircle{width:24px!important;height:24px!important;font:inherit;font-size:11px!important;padding:0!important}
+body.frameProductionShop #bookings button.productionStepCircle{cursor:pointer;border-color:#315efb!important;color:#315efb!important}
+body.frameProductionShop #bookings button.productionStepCircle:hover{background:#eef3ff!important}
+body.frameProductionShop #bookings .productionStep:not(:last-child):after{top:11px!important}
+body.frameProductionShop #bookings .productionStep small{font-size:9px!important}
+body.frameProductionShop #bookings .productionDates{margin:8px 0!important;gap:8px!important}
+body.frameProductionShop #bookings .productionDates label{gap:3px!important;font-size:11px!important}
+body.frameProductionShop #bookings .productionDates input{padding:5px 8px!important;min-height:32px!important;height:32px!important;font-size:12px!important}
+body.frameProductionShop #bookings .productionActions{gap:6px!important}
+body.frameProductionShop #bookings .productionActions button{padding:6px 9px!important;min-height:32px!important;font-size:11px!important;flex:0 1 auto!important}
+`;document.head.append(compactStyle);
 if(frame())renderSales();
 })();

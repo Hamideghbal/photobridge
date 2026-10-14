@@ -25,5 +25,26 @@ document.addEventListener('click',async e=>{const add=e.target.closest('[data-fr
 document.addEventListener('change',e=>{if(e.target.matches('[data-frame-option="sizes"]')){const size=parseFrameSize(e.target.value),form=document.getElementById('saleItemForm');form.elements.variantWidthCm.value=size?.width||'';form.elements.variantHeightCm.value=size?.height||'';form.elements.variantDiameterCm.value=size?.diameter||'';}});
 
 document.addEventListener('keydown',e=>{const input=e.target.closest('[data-frame-new]');if(input&&e.key==='Enter'){e.preventDefault();if(!document.querySelector('[data-frame-save="'+input.dataset.frameNew+'"]').disabled)void addFrameOption(input.dataset.frameNew);}});
+const compactStyle=document.createElement('style');compactStyle.textContent=`
+body.frameProductionShop.pb899MainBookings .frameRentalContext{display:none!important}
+
+body.frameProductionShop #bookings>[data-pb843-office-pane],
+body.frameProductionShop #bookings>.pb843BookingTabs,
+body.frameProductionShop #bookings .pb843BookingCalendarBox{display:none!important}
+body.frameProductionShop #bookings .productionCards{gap:8px!important}
+body.frameProductionShop #bookings .productionCard{padding:10px 12px!important;margin:0!important;border-radius:10px!important;font-size:12px!important}
+body.frameProductionShop #bookings .productionCard p{margin:5px 0!important;line-height:1.5!important}
+body.frameProductionShop #bookings .productionStepper{margin:8px 0!important;gap:4px!important}
+body.frameProductionShop #bookings .productionStepCircle{width:24px!important;height:24px!important;font:inherit;font-size:11px!important;padding:0!important}
+body.frameProductionShop #bookings button.productionStepCircle{cursor:pointer;border-color:#315efb!important;color:#315efb!important}
+body.frameProductionShop #bookings button.productionStepCircle:hover{background:#eef3ff!important}
+body.frameProductionShop #bookings .productionStep:not(:last-child):after{top:11px!important}
+body.frameProductionShop #bookings .productionStep small{font-size:9px!important}
+body.frameProductionShop #bookings .productionDates{margin:8px 0!important;gap:8px!important}
+body.frameProductionShop #bookings .productionDates label{gap:3px!important;font-size:11px!important}
+body.frameProductionShop #bookings .productionDates input{padding:5px 8px!important;min-height:32px!important;height:32px!important;font-size:12px!important}
+body.frameProductionShop #bookings .productionActions{gap:6px!important}
+body.frameProductionShop #bookings .productionActions button{padding:6px 9px!important;min-height:32px!important;font-size:11px!important;flex:0 1 auto!important}
+`;document.head.append(compactStyle);
 if(frame())renderSales();
 })();

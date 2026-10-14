@@ -49,6 +49,13 @@ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdent
  .frameCustomerStore #storePhotographerWorkspace #storePhotographerManager,.frameCustomerStore #storePhotographerWorkspace .photographerIdentityDateOnly{width:100%!important;justify-content:center!important;text-align:center!important}
  .frameCustomerStore #salesPanel .frameProductCard .frameSizePriceRow{margin:8px 0 3px!important}.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy{margin-top:0!important;align-items:flex-start!important}.frameCustomerStore .frameProductCard .saleItemBuy>.field>span:first-child{display:none!important}
 }
+@media(min-width:821px){
+html body.frameCustomerStore #pbR1123StoreDesktopNav>button{display:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar .storeIdentityActionsV809,
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar .storeHeaderActionV809,
+html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar [data-store-panel]{display:none!important}
+html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar{height:36px!important;min-height:36px!important;max-height:36px!important;padding:2px 12px!important}
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

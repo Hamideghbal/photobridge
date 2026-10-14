@@ -15,12 +15,21 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  if(modelId&&body.version!==frameModelVersion(existing))fail('frame_model_changed',409);
  const old=new Map(existing.map(x=>[String(x.id),x])),seen=new Set(),ids=new Set(),variants=[];
  if(existing.some(x=>x.variant_specs?.colorIndependent)&&body.colors===undefined)fail('frame_model_colors_required');
- let colors=null,inputs=body.variants;
+ let colors=null,inputs=body.variants;const colorImages=new Map();
  if(body.colors!==undefined){
    if(!Array.isArray(body.colors)||!body.colors.length||body.colors.length>20)fail('frame_model_colors_required');
    const savedColors=new Set(existing.map(x=>String(x.variant_specs?.color||'')));
    colors=body.colors.map(value=>{const raw=String(value||'').trim();if(/^#[0-9a-f]{6}$/i.test(raw))return raw.toLowerCase();if(savedColors.has(raw))return raw;fail('frame_model_color_invalid');});
    if(new Set(colors).size!==colors.length)fail('frame_model_color_duplicate');
+   if(body.colorImages!==undefined){
+     if(!body.colorImages||typeof body.colorImages!=='object'||Array.isArray(body.colorImages))fail('frame_color_image_invalid');
+     for(const [raw,value] of Object.entries(body.colorImages)){
+       const color=/^#[0-9a-f]{6}$/i.test(raw)?raw.toLowerCase():raw;
+       if(!colors.includes(color)||colorImages.has(color)||!Array.isArray(value)||value.length>1)fail('frame_color_image_invalid');
+       const gallery=galleryNormalize(value,shop.id);if(!Array.isArray(gallery)||gallery.length!==value.length)fail('frame_color_image_invalid');colorImages.set(color,gallery);
+     }
+   }
+
    const pricingKeys=new Set();inputs=[];
    for(const input of body.variants){
      if(!input||typeof input!=='object'||Array.isArray(input))fail('frame_variant_specs_required');
@@ -34,7 +43,7 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
        if(requested&&(!old.has(String(requested))||old.get(String(requested)).variant_specs?.color!==color))fail('frame_variant_not_found',404);
        const current=requested?old.get(String(requested)):existing.find(x=>x.variant_specs?.color===color&&key(x.variant_specs)===pricingKey);
        const representative=input.id?old.get(String(input.id)):null;
-       inputs.push({...input,id:current?.id,color,galleryImages:input.galleryImages===undefined&&!current?representative?.gallery_images:input.galleryImages});
+       inputs.push({...input,id:current?.id,color,galleryImages:input.galleryImages===undefined&&!current?(representative?.variant_specs?.pricingGalleryImages??representative?.gallery_images):input.galleryImages});
      }
    }
  }
@@ -50,8 +59,11 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  const v=frameVariant(shop,b);if(v.error)fail(v.error);
  const raw=normalizeDigits(String(input.price??'')).replace(/[٬,\s]/g,'');const price=Number(raw);if(!raw||!Number.isSafeInteger(price)||price<0)fail('frame_variant_price_required');
  const signature=JSON.stringify([v.specs.material,v.specs.color,v.specs.widthCm,v.specs.heightCm,v.specs.diameterCm,v.specs.thicknessMm]);if(seen.has(signature))fail('frame_variant_duplicate');seen.add(signature);
- const gallery=input.galleryImages===undefined?(current?.gallery_images||[]):galleryNormalize(input.galleryImages,shop.id);if(!Array.isArray(gallery)||gallery.length>8)fail('frame_variant_image_invalid');
- variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision,...(colors?{modelColors:colors,colorIndependent:true}:{})}}});
+ const pricingGallery=input.galleryImages===undefined?(current?.variant_specs?.pricingGalleryImages??current?.gallery_images??[]):galleryNormalize(input.galleryImages,shop.id);if(!Array.isArray(pricingGallery)||pricingGallery.length>8)fail('frame_variant_image_invalid');
+ const priorColor=existing.find(row=>row.variant_specs?.color===input.color&&Array.isArray(row.variant_specs?.colorGalleryImages));
+ const colorGallery=colorImages.has(input.color)?colorImages.get(input.color):(priorColor?.variant_specs?.colorGalleryImages||[]);
+ const gallery=colorGallery.length?colorGallery:pricingGallery;
+ variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision,...(colors?{modelColors:colors,colorIndependent:true,colorGalleryImages:colorGallery,pricingGalleryImages:pricingGallery}:{})}}});
  }
  // Omitted combinations become unavailable; keep rows referenced by historical orders.
  for(const item of existing)if(!ids.has(item.id))await db.query("UPDATE equipment_sale_items SET active=false,variant_specs=jsonb_set(variant_specs,'{archived}','true'::jsonb),updated_at=now() WHERE id=$1 AND shop_id=$2",[item.id,shop.id]);

@@ -11,6 +11,7 @@ for(const width of [1440,390])for(const category of ['frame_chassis','equipment_
  if(category==='frame_chassis'){
  await page.locator('[data-production-tab="in_production"]').click();
  assert(await page.locator('#saleOrdersList').isVisible());
+ assert.equal(await page.locator('#pb1013SaleCalendar').count(),0);
  assert.equal(await page.locator('#pb848BookingHeaderTabs').isVisible(),false);
  assert.equal(await page.locator('#bookings .pb843BookingCalendarBox').first().isVisible(),false);
  const card=page.locator('[data-production-order="order-test"]');

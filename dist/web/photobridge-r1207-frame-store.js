@@ -42,6 +42,30 @@ function renderFrameOrderRows(){
 }
 
 
+
+window.pbFrameConfirmCheckout=function({total,wallet}){
+ return new Promise(resolve=>{
+  const previous=document.activeElement,priorOverflow=document.body.style.overflow;
+  const dialog=document.createElement('section');dialog.id='frameCheckoutDialog';dialog.className='frameCheckoutDialog';
+  dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','frameCheckoutTitle');
+  dialog.innerHTML='<button type="button" class="frameCheckoutBackdrop" data-frame-checkout-cancel aria-label="بستن"></button><div class="frameCheckoutCard"><header><div><b id="frameCheckoutTitle">تأیید ثبت سفارش</b><small>فروشگاه قاب و شاسی</small></div><button type="button" data-frame-checkout-cancel aria-label="بستن">×</button></header><div class="frameCheckoutBody"><p>مشخصات سبد خرید را بررسی کنید. پس از ثبت، مراحل تولید در بخش «سفارش‌ها» نمایش داده می‌شود.</p><div class="frameCheckoutSummary"><span>مبلغ سفارش</span><b></b></div><div class="frameCheckoutSummary"><span>روش تحویل</span><b data-frame-delivery-label></b></div><p class="frameCheckoutPayment"></p></div><footer><button type="button" data-frame-checkout-cancel>بازگشت</button><button type="button" class="frameCheckoutSubmit" data-frame-checkout-submit>تأیید و ثبت سفارش</button></footer></div>';
+  dialog.querySelector('.frameCheckoutSummary b').textContent=money(total);
+  const method=document.getElementById('productionDeliveryMethod')?.value||'pickup';
+  dialog.querySelector('[data-frame-delivery-label]').textContent=method==='courier'?'ارسال با پیک به آدرس ثبت‌شده':'تحویل حضوری';
+  dialog.querySelector('.frameCheckoutPayment').textContent=wallet?'پس از تأیید، مبلغ از کیف پول شما پرداخت می‌شود.':'پرداخت و تسویه مطابق شرایط فروشگاه انجام می‌شود.';
+  const done=accepted=>{
+   if(!dialog.isConnected)return;
+   dialog.remove();document.body.style.overflow=priorOverflow;document.removeEventListener('keydown',onKey);
+   if(previous?.isConnected)previous.focus({preventScroll:true});
+   resolve(accepted);
+  };
+  const onKey=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}if(e.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([disabled])')];const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};
+  dialog.addEventListener('click',e=>{if(e.target.closest('[data-frame-checkout-cancel]'))done(false);else if(e.target.closest('[data-frame-checkout-submit]'))done(true)});
+  document.body.append(dialog);document.body.style.overflow='hidden';document.addEventListener('keydown',onKey);
+  dialog.querySelector('.frameCheckoutSubmit')?.focus({preventScroll:true});
+ });
+};
+
 let frameSizeSheet=null,frameSizeSheetPreviousFocus=null,frameSizeSheetPreviousOverflow='';
 function mountFrameSizeTriggers(){
  if(!customerFrame())return;
@@ -192,6 +216,22 @@ html body.frameCustomerStore #storePhotographerWorkspace>.shell{background:#f5f7
  .frameCustomerStore #salesPanel .frameProductCard .saleItemBuy>.btn{min-height:34px!important;height:34px!important;margin-top:3px!important;align-self:center!important}
 }
 @media(min-width:821px){.frameSizeTrigger{display:none!important}}
+
+.frameCheckoutDialog{position:fixed;inset:0;z-index:2147483100;display:grid;place-items:center;padding:14px;direction:rtl;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important}
+.frameCheckoutDialog *{box-sizing:border-box;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important}
+.frameCheckoutBackdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);border:0;cursor:pointer}
+.frameCheckoutCard{position:relative;z-index:1;background:#fff;box-shadow:0 20px 65px #10182840;border:1px solid #e4e7ec;border-radius:18px;width:min(440px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;text-align:right;color:#101828}
+.frameCheckoutCard header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 17px;border-bottom:1px solid #e4e7ec}
+.frameCheckoutCard header b{font-size:17px;line-height:1.5}.frameCheckoutCard header small{display:block;font-size:11px;color:#667085;margin-top:4px}
+.frameCheckoutCard header button{width:34px;height:34px;border:0;border-radius:9px;background:#f2f4f7;color:#344054;font-size:21px}
+.frameCheckoutBody{padding:17px;display:grid;gap:10px;font-size:13px;line-height:1.85}
+.frameCheckoutBody p{margin:0}.frameCheckoutBody .frameCheckoutPayment{font-size:11px;color:#667085}
+.frameCheckoutSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #eef1f5;border-radius:10px}
+.frameCheckoutSummary b{color:#101828;text-align:left;font-size:13px}
+.frameCheckoutCard footer{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:13px 17px 17px;border-top:1px solid #e4e7ec}
+.frameCheckoutCard footer button{font-size:13px;font-weight:800;min-height:44px;padding:10px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;color:#344054;cursor:pointer}
+.frameCheckoutCard footer .frameCheckoutSubmit{background:#315efb;color:#fff;border-color:#315efb}
+@media(max-width:600px){.frameCheckoutDialog{align-items:end;padding:0}.frameCheckoutCard{width:100%;border-radius:22px 22px 0 0;max-height:90dvh;padding-bottom:env(safe-area-inset-bottom,0px)}.frameCheckoutCard footer{padding-bottom:17px}}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

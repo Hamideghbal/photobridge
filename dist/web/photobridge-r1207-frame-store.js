@@ -2,21 +2,37 @@
 const isFrame=()=>Boolean(saleShopConfig?.production);
 function render(){applyFrameCustomerView();if(!isFrame())return;const host=document.getElementById('saleItems');if(!host)return;const groups=C.groups(saleItems);host.innerHTML=groups.map(g=>{const item=C.choose(g,selected.get(g.id));if(!item)return '';selected.set(g.id,item.id);return C.card(g,item.id,{esc,money});}).join('')||'<div class="empty">مدلی برای سفارش وجود ندارد.</div>';applySaleCategory();mountFrameSizeTriggers();}
 const originalRender=renderSales;renderSales=function(){originalRender();render();renderFrameOrderRows();};
-const frameOriginalOpenCart=openSaleCart,frameOriginalCloseCart=closeSaleCart;
-openSaleCart=function(...args){
- const result=frameOriginalOpenCart.apply(this,args);
- if(isFrame()){
-  const drawer=document.getElementById('saleCartDrawer');
-  if(drawer){drawer.style.setProperty('transform','translate3d(0,0,0)','important');drawer.style.setProperty('visibility','visible','important');}
- }
- return result;
-};
-closeSaleCart=function(...args){
- const result=frameOriginalCloseCart.apply(this,args);
+// Standalone model-card tests do not supply the full checkout implementation.
+function frameRevealOpenCart(){
+ if(!isFrame())return;
  const drawer=document.getElementById('saleCartDrawer');
- if(drawer){drawer.style.removeProperty('transform');drawer.style.removeProperty('visibility');}
- return result;
-};
+ if(!drawer?.classList.contains('open'))return;
+ drawer.style.setProperty('transform','none','important');
+ drawer.style.setProperty('translate','none','important');
+ drawer.style.setProperty('visibility','visible','important');
+ drawer.style.setProperty('pointer-events','auto','important');
+}
+if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
+ const frameOriginalOpenCart=openSaleCart,frameOriginalCloseCart=closeSaleCart;
+ openSaleCart=function(...args){
+  const result=frameOriginalOpenCart.apply(this,args);
+  frameRevealOpenCart();
+  requestAnimationFrame(frameRevealOpenCart);
+  return result;
+ };
+ closeSaleCart=function(...args){
+  const result=frameOriginalCloseCart.apply(this,args);
+  const drawer=document.getElementById('saleCartDrawer');
+  if(drawer)for(const key of ['transform','translate','visibility','pointer-events'])drawer.style.removeProperty(key);
+  return result;
+ };
+ // Other legacy event handlers may capture the old checkout function by reference.
+ document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-frame-customer-cart],#saleCartCheckout'))return;
+  requestAnimationFrame(frameRevealOpenCart);
+  setTimeout(frameRevealOpenCart,50);
+ },true);
+}
 const originalCart=renderSaleCart;renderSaleCart=function(){originalCart();if(isFrame()){const rows=[...document.querySelectorAll('#saleCartLines .saleCartLine')];for(const [index,line] of rows.entries()){const entry=saleCart[index],item=saleItems.find(x=>String(x.id)===String(entry?.itemId));if(item){const title=line.querySelector('b');if(title){title.textContent=item.variant_specs?.baseModel||item.title||'قاب و شاسی';const variant=C.label(item);if(variant){const meta=document.createElement('small');meta.className='frameCartVariant';meta.textContent=variant;title.after(meta);}}}}}};
 function changeChoice(e){const el=e.target.closest('[data-frame-choice]');if(!el||!isFrame())return;const card=el.closest('[data-frame-model]'),g=C.groups(saleItems).find(x=>String(x.id)===card.dataset.frameModel);if(!g)return;const current=C.choose(g,selected.get(g.id)),quantity=card.querySelector('input[id^=saleQty-]')?.value||'1',next=C.changeChoice(g,current,el.dataset.frameChoice,el.dataset.frameColor||el.value);if(next){selected.set(g.id,next.id);render();const qty=document.getElementById('saleQty-'+next.id);if(qty)qty.value=quantity;}}
 document.addEventListener('change',changeChoice);
@@ -146,7 +162,7 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
+ const desktop=window.matchMedia('(min-width:821px)').matches;
  const host=document.getElementById('pbR1123StoreDesktopNav');
  if(desktop&&host&&nav.parentElement!==host)host.append(nav);
  if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);

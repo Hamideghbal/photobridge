@@ -20,10 +20,11 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  for(const input of body.variants){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('frame_variant_specs_required');if(input.active!==undefined&&typeof input.active!=='boolean')fail('frame_variant_specs_required');
  const current=input.id?old.get(String(input.id)):null;if(input.id&&!current)fail('frame_variant_not_found',404);if(current&&ids.has(current.id))fail('frame_variant_duplicate');if(current)ids.add(current.id);
- const b={model,variantMaterial:material,variantColor:input.color,variantWidthCm:input.widthCm??'',variantHeightCm:input.heightCm??'',variantDiameterCm:input.diameterCm??'',variantThicknessMm:input.thicknessMm??''};
+ const variantMaterial=String(input.material??material).trim();if(!variantMaterial||variantMaterial.length>80)fail('frame_base_required');
+ const b={model,variantMaterial,variantColor:input.color,variantWidthCm:input.widthCm??'',variantHeightCm:input.heightCm??'',variantDiameterCm:input.diameterCm??'',variantThicknessMm:input.thicknessMm??''};
  const v=frameVariant(shop,b);if(v.error)fail(v.error);
  const raw=normalizeDigits(String(input.price??'')).replace(/[٬,\s]/g,'');const price=Number(raw);if(!raw||!Number.isSafeInteger(price)||price<0)fail('frame_variant_price_required');
- const signature=JSON.stringify([v.specs.color,v.specs.widthCm,v.specs.heightCm,v.specs.diameterCm,v.specs.thicknessMm]);if(seen.has(signature))fail('frame_variant_duplicate');seen.add(signature);
+ const signature=JSON.stringify([v.specs.material,v.specs.color,v.specs.widthCm,v.specs.heightCm,v.specs.diameterCm,v.specs.thicknessMm]);if(seen.has(signature))fail('frame_variant_duplicate');seen.add(signature);
  const gallery=input.galleryImages===undefined?(current?.gallery_images||[]):galleryNormalize(input.galleryImages,shop.id);if(!Array.isArray(gallery)||gallery.length>8)fail('frame_variant_image_invalid');
  variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision}}});
  }
@@ -35,3 +36,4 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  await db.query('COMMIT');return {id,items:saved};
  }catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}
 }
+

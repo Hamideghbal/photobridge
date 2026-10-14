@@ -19,6 +19,7 @@ function mountWorkspace(){
  const sales=document.getElementById('sales'),bookings=document.getElementById('bookings');
  if(!sales||!bookings)return;
  document.body.classList.add('frameProductionShop');
+ if(typeof rentalTabTitles!=='undefined'){rentalTabTitles.sales='فروشگاه';rentalTabTitles.bookings='سفارش‌ها';}
  document.getElementById('frameProductionWorkspaceTabs')?.remove();
  const box=document.getElementById('saleOrdersList')?.closest('.box');
  if(box){box.classList.add('frameProductionOrdersBox');if(box.parentElement!==bookings)bookings.prepend(box);const heading=box.querySelector('h2');if(heading)heading.textContent='سفارش‌ها';const desc=box.querySelector('.muted');if(desc)desc.textContent='مرحله تولید، تاریخ آماده‌شدن و تحویل هر سفارش را از همین بخش مدیریت کنید.';}

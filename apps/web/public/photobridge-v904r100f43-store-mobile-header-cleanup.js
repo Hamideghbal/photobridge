@@ -25,6 +25,7 @@
     fit();
     const root=document.querySelector('#photographerStoreRoleHeader')||document.documentElement;
     new MutationObserver(queue).observe(root,{childList:true,subtree:true,characterData:true});
+    new MutationObserver(queue).observe(document.body,{attributes:true,attributeFilter:['class']});
     addEventListener('resize',queue,{passive:true});
     addEventListener('pageshow',queue,{passive:true});
   }

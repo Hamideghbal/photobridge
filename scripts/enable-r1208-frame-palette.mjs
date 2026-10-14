@@ -2,7 +2,8 @@ import fs from 'node:fs';
 // Make the deployed portal and storefront request the palette revision.
 for(const name of ['dist/api/equipment-rental-portal.html','dist/api/equipment-rental-book.html']){
  let html=fs.readFileSync(name,'utf8');
- for(const asset of ['frame-catalog','frame-owner','frame-store'])html=html.replaceAll('photobridge-r1207-'+asset+'.js?v=r1207','photobridge-r1207-'+asset+'.js?v=r1212-definition-flow').replaceAll('photobridge-r1207-'+asset+'.js?v=r1209-size-prices','photobridge-r1207-'+asset+'.js?v=r1212-definition-flow').replaceAll('photobridge-r1207-'+asset+'.js?v=r1211-color-photos','photobridge-r1207-'+asset+'.js?v=r1212-definition-flow').replaceAll('photobridge-r1207-'+asset+'.js?v=r1210-shared-cards','photobridge-r1207-'+asset+'.js?v=r1212-definition-flow').replaceAll('photobridge-r1207-'+asset+'.js?v=r1208-palette','photobridge-r1207-'+asset+'.js?v=r1212-definition-flow');
+ for(const asset of ['frame-catalog','frame-owner','frame-store'])html=html.replaceAll('photobridge-r1207-'+asset+'.js?v=r1207','photobridge-r1207-'+asset+'.js?v=r1212c-toman').replaceAll('photobridge-r1207-'+asset+'.js?v=r1209-size-prices','photobridge-r1207-'+asset+'.js?v=r1212c-toman').replaceAll('photobridge-r1207-'+asset+'.js?v=r1211-color-photos','photobridge-r1207-'+asset+'.js?v=r1212c-toman').replaceAll('photobridge-r1207-'+asset+'.js?v=r1210-shared-cards','photobridge-r1207-'+asset+'.js?v=r1212c-toman').replaceAll('photobridge-r1207-'+asset+'.js?v=r1208-palette','photobridge-r1207-'+asset+'.js?v=r1212c-toman');
+ html=html.replaceAll('photobridge-r1172-production-owner.js?v=r1207','photobridge-r1172-production-owner.js?v=r1212c-toman');
  fs.writeFileSync(name,html);
 }
 console.log('[R1212] Model details, color galleries and size-only prices.');

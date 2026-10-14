@@ -116,6 +116,10 @@ jobs:
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'photobridge_test'"
           sudo -u postgres createdb photobridge_test
+      - name: Verify atomic frame model concurrent edits
+        env:
+          PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
+        run: node --test scripts/test-r1207-frame-model-concurrency.cjs
       - name: Verify mobile-based test institution access in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

@@ -2,7 +2,7 @@ import {saveFrameModel,deleteFrameModel} from './frame-model-catalog.js';
 import { isProductionShop, createProductionOrders, productionTransition, productionSchedule, frameLedger, normalizeProductionOptions } from './frame-production.js';
 import { galleryExpirySql, maintainGalleryLifetime } from './gallery-lifetime.js';
 import { galleryCreationOffer, recordGalleryTrial } from './gallery-trial.js';
-import { testAccountVisibleSql, testAccountSql } from './test-account-visibility.js';
+import { testAccountVisibleSql, testAccountSql, adminMobileViewerSql } from './test-account-visibility.js';
 import { handlePhotographerTabSettings } from './photographer-tab-settings.js';
 import {changeRentalAsset,rentalAssetPeakDemand,increaseRentalAssetStock} from './rentalAssetControls.js';
 import { createStoreDesktopSync } from './storeDesktopSync.js';
@@ -10644,8 +10644,10 @@ async function equipmentRentalPhotographerCanDiscoverShop(db, userId, shopId, ch
     await ensureEquipmentRentalV727Schema();
     const sq=await db.query(`SELECT * FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId]);
     const shop=sq.rows[0];if(!shop||!equipmentRentalShopSubscriptionActive(shop)||(isProductionShop(shop)&&channel==='sale'&&shop.sale_enabled===false))return false;
-    const visibility=await db.query(`SELECT ${testAccountSql('shop','s')} AS test_account FROM equipment_rental_shops s WHERE s.id=$1 AND ${testAccountVisibleSql('shop','s','$2')}`,[shopId,userId]);
+    const visibility=await db.query(`SELECT ${testAccountSql('shop','s')} AS test_account,${adminMobileViewerSql('$2')} AS admin_mobile_viewer FROM equipment_rental_shops s WHERE s.id=$1 AND ${testAccountVisibleSql('shop','s','$2')}`,[shopId,userId]);
     if(!visibility.rowCount)return false;
+    // The platform-admin's photographer identity may test active frame storefronts across geographic reach.
+    if(channel==='sale' && isProductionShop(shop) && visibility.rows[0]?.admin_mobile_viewer)return true;
     // A photographer whose account was created by a rental-store invitation can discover
     // only the rental-capable stores that invited them. Sales-only stores stay public.
     // Later lab/photographer invitations must not change the account's original source.
@@ -16378,7 +16380,7 @@ ${inviteUrl}`;
         const scopedShopIds = scoped ? await equipmentRentalInvitedShopIds(pool, a.userId) : [];
         const invitedShopSet = new Set(scopedShopIds.map(String));
         const viewer=(await pool.query('SELECT province,city FROM photographer_profiles WHERE user_id=$1 LIMIT 1',[a.userId])).rows[0]||{};
-        const q = await pool.query(`SELECT ${testAccountSql('shop','s')} AS admin_test_account,s.id,s.name,s.slug,s.business_category,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
+        const q = await pool.query(`SELECT ${testAccountSql('shop','s')} AS admin_test_account,${adminMobileViewerSql('$1')} AS admin_mobile_viewer,s.id,s.name,s.slug,s.business_category,s.province,s.city,s.address,s.description,s.deposit_policy,s.private_admin_only,s.sales_wallet_checkout_enabled,s.membership_required_fields,s.birthday_discount_enabled,s.birthday_discount_percent,s.birthday_discount_days_before,s.birthday_discount_days_after,s.birthday_sms_enabled,s.rental_enabled,s.sale_enabled,s.rental_reach,s.sale_reach,s.sale_birthday_discount_enabled,s.sale_birthday_discount_percent,
           count(i.id) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%'))::int active_items,COALESCE(min(i.daily_price) FILTER (WHERE i.active=true AND i.deleted_at IS NULL AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%')),0)::bigint min_daily_price,
           (SELECT count(*)::int FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) sale_items,
           (SELECT COALESCE(min(si.sale_price),0)::bigint FROM equipment_sale_items si WHERE si.shop_id=s.id AND si.active=true AND si.deleted_at IS NULL AND si.stock_total>0 AND (si.sku IS NULL OR si.sku NOT ILIKE 'SOFIA-DEMO-%')) min_sale_price,
@@ -16401,7 +16403,7 @@ ${inviteUrl}`;
           GROUP BY s.id ORDER BY connected DESC,active_items DESC,s.created_at DESC`, [a.userId]);
         const previewAllowed=normalizeMobile(String(a.mobile||''))===EQUIPMENT_STORE_PREVIEW_ADMIN_MOBILE_V802 || String(a.platformRole||'')==='platform_admin';
         const originContext=await photographerInitialOriginContext(a.userId),primaryShopId=originContext.originType==='rental'?originContext.primaryShopId:null;
-        const shops=q.rows.filter(shop=>isProductionShop(shop) || shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,...shop})=>{const previewPrivate=false;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),rental_enabled:isProductionShop(shop)?false:shop.rental_enabled,canRent:!isProductionShop(shop)&&(previewPrivate||reachAllows(shop,'rental',viewer)),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
+        const shops=q.rows.filter(shop=>isProductionShop(shop) || shop.admin_test_account || !scoped || shop.rental_enabled===false && shop.sale_enabled===true || invitedShopSet.has(String(shop.id))).map(({admin_test_account,admin_mobile_viewer,...shop})=>{const previewPrivate=isProductionShop(shop)&&shop.sale_enabled!==false&&admin_mobile_viewer===true;return {...shop,is_primary:String(shop.id)===String(primaryShopId||''),rental_enabled:isProductionShop(shop)?false:shop.rental_enabled,canRent:!isProductionShop(shop)&&reachAllows(shop,'rental',viewer),canBuy:previewPrivate||reachAllows(shop,'sale',viewer)}}).sort((x,y)=>Number(Boolean(y.is_primary))-Number(Boolean(x.is_primary)));
         return sendJson(res, 200, { shops, scoped, primaryShopId:primaryShopId||null, scopedShopId: scopedShopIds.length===1?scopedShopIds[0]:null, scopedShopIds });
     }
     const customerRentalShopSelect = url.pathname.match(/^\/api\/customer\/equipment-rental\/shops\/([0-9a-f-]{36})\/select$/i);

@@ -17,3 +17,8 @@ export function testAccountVisibleSql(kind, alias, viewer) {
    (invite.active=true AND invite.target_mobile IS NOT NULL AND length(${phone('viewer.mobile')})=10 AND ${phone('invite.target_mobile')}=${phone('viewer.mobile')} AND (invite.expires_at IS NULL OR invite.expires_at>now()) AND (invite.max_uses IS NULL OR invite.uses<invite.max_uses))
    OR EXISTS(SELECT 1 FROM photographer_invite_redemptions redeemed WHERE redeemed.invite_id=invite.id AND redeemed.user_id=viewer.id))))`;
 }
+
+export function adminMobileViewerSql(viewer) {
+ if(!/^(?:[$][1-9][0-9]*|[a-z][a-z0-9_]*[.]id)$/i.test(viewer))throw Error('invalid_visibility_viewer');
+ return `EXISTS(SELECT 1 FROM users viewer JOIN users admin ON ${phone('viewer.mobile')}=${phone('admin.mobile')} WHERE viewer.id=${viewer} AND viewer.active=true AND admin.platform_role='platform_admin' AND admin.active=true AND length(${phone('admin.mobile')})=10)`;
+}

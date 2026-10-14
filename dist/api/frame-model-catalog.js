@@ -14,10 +14,35 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  if(modelId&&!existing.length)fail('frame_model_not_found',404);
  if(modelId&&body.version!==frameModelVersion(existing))fail('frame_model_changed',409);
  const old=new Map(existing.map(x=>[String(x.id),x])),seen=new Set(),ids=new Set(),variants=[];
+ if(existing.some(x=>x.variant_specs?.colorIndependent)&&body.colors===undefined)fail('frame_model_colors_required');
+ let colors=null,inputs=body.variants;
+ if(body.colors!==undefined){
+   if(!Array.isArray(body.colors)||!body.colors.length||body.colors.length>20)fail('frame_model_colors_required');
+   const savedColors=new Set(existing.map(x=>String(x.variant_specs?.color||'')));
+   colors=body.colors.map(value=>{const raw=String(value||'').trim();if(/^#[0-9a-f]{6}$/i.test(raw))return raw.toLowerCase();if(savedColors.has(raw))return raw;fail('frame_model_color_invalid');});
+   if(new Set(colors).size!==colors.length)fail('frame_model_color_duplicate');
+   const pricingKeys=new Set();inputs=[];
+   for(const input of body.variants){
+     if(!input||typeof input!=='object'||Array.isArray(input))fail('frame_variant_specs_required');
+     const pricing=frameVariant(shop,{model,variantMaterial:input.material??material,variantColor:colors[0],variantWidthCm:input.widthCm??'',variantHeightCm:input.heightCm??'',variantDiameterCm:input.diameterCm??'',variantThicknessMm:input.thicknessMm??''});if(pricing.error)fail(pricing.error);
+     const key=spec=>JSON.stringify([spec.widthCm??null,spec.heightCm??null,spec.diameterCm??null,spec.thicknessMm??null]);
+     const pricingKey=key(pricing.specs);if(pricingKeys.has(pricingKey))fail('frame_variant_duplicate');pricingKeys.add(pricingKey);
+     if(input.id&&!old.has(String(input.id)))fail('frame_variant_not_found',404);
+     if(input.rowIds!==undefined&&(!input.rowIds||typeof input.rowIds!=='object'||Array.isArray(input.rowIds)))fail('frame_variant_not_found',404);
+     for(const color of colors){
+       const requested=input.rowIds?.[color]||(input.id&&old.get(String(input.id))?.variant_specs?.color===color?input.id:null);
+       if(requested&&(!old.has(String(requested))||old.get(String(requested)).variant_specs?.color!==color))fail('frame_variant_not_found',404);
+       const current=requested?old.get(String(requested)):existing.find(x=>x.variant_specs?.color===color&&key(x.variant_specs)===pricingKey);
+       const representative=input.id?old.get(String(input.id)):null;
+       inputs.push({...input,id:current?.id,color,galleryImages:input.galleryImages===undefined&&!current?representative?.gallery_images:input.galleryImages});
+     }
+   }
+ }
+
  const kind=shop.business_category==='chassis'?'chassis':shop.business_category==='frame'?'frame':body.kind;
  if(!['frame','chassis'].includes(kind))fail('frame_kind_required');
  const modelRevision=crypto.randomUUID();
- for(const input of body.variants){
+ for(const input of inputs){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('frame_variant_specs_required');if(input.active!==undefined&&typeof input.active!=='boolean')fail('frame_variant_specs_required');
  const current=input.id?old.get(String(input.id)):null;if(input.id&&!current)fail('frame_variant_not_found',404);if(current&&ids.has(current.id))fail('frame_variant_duplicate');if(current)ids.add(current.id);
  const variantMaterial=String(input.material??material).trim();if(!variantMaterial||variantMaterial.length>80)fail('frame_base_required');
@@ -26,7 +51,7 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  const raw=normalizeDigits(String(input.price??'')).replace(/[٬,\s]/g,'');const price=Number(raw);if(!raw||!Number.isSafeInteger(price)||price<0)fail('frame_variant_price_required');
  const signature=JSON.stringify([v.specs.material,v.specs.color,v.specs.widthCm,v.specs.heightCm,v.specs.diameterCm,v.specs.thicknessMm]);if(seen.has(signature))fail('frame_variant_duplicate');seen.add(signature);
  const gallery=input.galleryImages===undefined?(current?.gallery_images||[]):galleryNormalize(input.galleryImages,shop.id);if(!Array.isArray(gallery)||gallery.length>8)fail('frame_variant_image_invalid');
- variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision}}});
+ variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision,...(colors?{modelColors:colors,colorIndependent:true}:{})}}});
  }
  // Omitted combinations become unavailable; keep rows referenced by historical orders.
  for(const item of existing)if(!ids.has(item.id))await db.query("UPDATE equipment_sale_items SET active=false,variant_specs=jsonb_set(variant_specs,'{archived}','true'::jsonb),updated_at=now() WHERE id=$1 AND shop_id=$2",[item.id,shop.id]);

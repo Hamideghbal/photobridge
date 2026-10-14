@@ -117,7 +117,7 @@ jobs:
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs
+          node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs scripts/test-r1209-independent-colors.cjs
       - name: Save frame editor screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -133,7 +133,7 @@ jobs:
       - name: Verify atomic frame model concurrent edits
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
-        run: node --test scripts/test-r1207-frame-model-concurrency.cjs
+        run: node --test scripts/test-r1207-frame-model-concurrency.cjs scripts/test-r1209-color-pricing-postgres.cjs
       - name: Verify mobile-based test institution access in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
@@ -219,10 +219,10 @@ jobs:
               const portal=await get('/rental/sales');
               if(portal.revision!==expected)throw Error('Live revision '+portal.revision+'; expected '+expected);
               const buyer=await get('/equipment-rental/book');
-              if(!portal.text.includes('frame-owner.js?v=r1208-palette')||!buyer.text.includes('frame-store.js?v=r1208-palette'))throw Error('Published pages still reference old frame assets');
-              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1208-palette'),store=await get('/photobridge-r1207-frame-store.js?v=r1208-palette'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1208-palette');
-              if(!owner.text.includes('framePaletteColor')||!owner.text.includes('material:d.specs.material')||!store.text.includes('frameColorCircle')||!store.text.includes("selector('material'")||!catalog.text.includes('colorHex'))throw Error('Live frame assets are incomplete');
-              console.log('LIVE VERIFIED: '+expected+'; owner palette, material combinations, buyer color circles and material choices are served by photobridge.ir.');process.exit(0);
+              if(!portal.text.includes('frame-owner.js?v=r1209-size-prices')||!buyer.text.includes('frame-store.js?v=r1209-size-prices'))throw Error('Published pages still reference old frame assets');
+              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1209-size-prices'),store=await get('/photobridge-r1207-frame-store.js?v=r1209-size-prices'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1209-size-prices');
+              if(!owner.text.includes('framePaletteColor')||!owner.text.includes('frameAddModelColor')||!owner.text.includes('colors:[...colors]')||!store.text.includes('frameColorCircle')||!store.text.includes("selector('material'")||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
+              console.log('LIVE VERIFIED: '+expected+'; independent model colors, size/profile prices and buyer color circles are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
             if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));
           }

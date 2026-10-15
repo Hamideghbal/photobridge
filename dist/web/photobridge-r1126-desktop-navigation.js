@@ -89,10 +89,15 @@
   const frameStore=active==='store'&&doc?.body?.classList.contains('frameCustomerStore')&&doc?.querySelector('#frameCustomerNav');
   const cameraStore=active==='store'&&!frameStore&&doc?.body?.classList.contains('rentalPhotographerMode')&&doc?.querySelector('#photographerStoreRoleHeader')&&doc?.querySelector('#pbR1123StoreDesktopNav')&&!doc?.body?.classList.contains('pbR96ChoosingStore');
   const storeHeader=Boolean(frameStore||cameraStore);
-  const frameStoreName=storeHeader?(doc.querySelector('#photographerStoreHeaderName')?.textContent?.trim()||(frameStore?'فروشگاه قاب و شاسی':'فروشگاه تجهیزات تصویربرداری')):'';
+  const frameStoreName=storeHeader?(doc.querySelector('#photographerStoreHeaderName')?.textContent?.trim()||''):'';
   const saleCart=doc?.querySelector('#photographerStoreIdentityBar #saleCartBtn'),saleSection=doc?.querySelector('#pbR1123StoreDesktopNav [data-store-panel="salesPanel"]');
   const cameraSaleAvailable=Boolean(cameraStore&&saleSection&&!saleSection.hidden&&saleSection.getAttribute('aria-hidden')!=='true');
   const cameraCart=cameraStore?(cameraSaleAvailable?(saleCart||saleSection):doc.querySelector('#photographerStoreIdentityBar .rentalCartBtnV810:not([hidden])')):null;
+  const cartDrawer=storeHeader?doc.querySelector('#saleCartDrawer'):null;
+  if(cartDrawer&&!cartDrawer._pb1126LayerObserver){
+   const syncCartLayer=()=>doc.defaultView.frameElement?.closest('.pb1126ContentPanel')?.classList.toggle('pb1126CartOpen',cartDrawer.classList.contains('open'));
+   cartDrawer._pb1126LayerObserver=new MutationObserver(syncCartLayer);cartDrawer._pb1126LayerObserver.observe(cartDrawer,{attributes:true,attributeFilter:['class']});syncCartLayer();
+  }
   if(storeHeader){chrome.style.setProperty('width','100vw','important');chrome.style.setProperty('left','0','important');chrome.style.setProperty('right','auto','important');}
   else for(const property of ['width','left','right'])chrome.style.removeProperty(property);
   document.documentElement.classList.toggle('pb1126FrameStore',Boolean(frameStore));
@@ -116,10 +121,14 @@
    if(storeHeader){
     const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';
     if(frameStore){
-     const prefix='فروشگاه قاب و شاسی',shopName=frameStoreName.replace(/^فروشگاه قاب و شاسی\s*/,'').trim();
-     const shop=document.createElement('span');shop.className='pb1126FrameStoreShopName';shop.textContent=shopName||frameStoreName;
-     const category=document.createElement('small');category.className='pb1126FrameStoreCategory';category.textContent=prefix;title.append(shop,category);
-    }else title.textContent=frameStoreName;
+     const prefix='فروشگاه قاب شاسی',shopName=frameStoreName.replace(/^فروشگاه قاب(?: و)? شاسی\s*/,'').trim();
+     const shop=document.createElement('span');shop.className='pb1126FrameStoreShopName';shop.textContent=shopName;
+     const category=document.createElement('small');category.className='pb1126FrameStoreCategory';category.textContent=prefix;title.append(category,shop);
+    }else{
+     const prefix='فروشگاه تجهیزات عکاسی و فیلمبرداری',shopName=frameStoreName.replace(/^فروشگاه تجهیزات (?:عکاسی و فیلمبرداری|تصویربرداری)\s*/,'').trim();
+     const category=document.createElement('small');category.className='pb1126FrameStoreCategory';category.textContent=prefix;
+     const shop=document.createElement('span');shop.className='pb1126FrameStoreShopName';shop.textContent=shopName;title.append(category,shop);
+    }
     const nav=document.createElement('nav');nav.className='pb1126FrameStoreTabs';nav.setAttribute('aria-label','بخش‌های فروشگاه');
     const cart=document.createElement('div');cart.className='pb1126FrameStoreCart';
     const controls=frameStore?frameStoreControls:cameraStoreControls;

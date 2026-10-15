@@ -123,7 +123,7 @@ test('Windows parent centers the frame store title, keeps four sections right, a
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}});await openStore(page,true,false,true);
   const title=page.locator('.pb1126FrameStoreTitle'),tabs=page.locator('.pb1126FrameStoreTabs .pb1126FrameStoreControl'),cart=page.locator('.pb1126FrameStoreCart .pb1126FrameStoreControl');
-  assert.equal(await title.locator('.pb1126FrameStoreShopName').textContent(),'SS قاب');assert.equal(await title.locator('.pb1126FrameStoreCategory').textContent(),'فروشگاه قاب و شاسی');const titleBox=await title.boundingBox(),rowBox=await page.locator('.pb1126Secondary').boundingBox();assert(Math.abs(titleBox.x+titleBox.width/2-720)<3,'store name is centered: '+JSON.stringify({titleBox,rowBox,innerWidth:await page.evaluate(()=>innerWidth)}));assert(parseFloat(await title.locator('.pb1126FrameStoreCategory').evaluate(el=>getComputedStyle(el).fontSize))<parseFloat(await title.locator('.pb1126FrameStoreShopName').evaluate(el=>getComputedStyle(el).fontSize)));
+  assert.equal(await title.locator('.pb1126FrameStoreShopName').textContent(),'SS قاب');assert.equal(await title.locator('.pb1126FrameStoreCategory').textContent(),'فروشگاه قاب شاسی');const titleBox=await title.boundingBox(),rowBox=await page.locator('.pb1126Secondary').boundingBox();assert(Math.abs(titleBox.x+titleBox.width/2-720)<3,'store name is centered: '+JSON.stringify({titleBox,rowBox,innerWidth:await page.evaluate(()=>innerWidth)}));assert(parseFloat(await title.locator('.pb1126FrameStoreCategory').evaluate(el=>getComputedStyle(el).fontSize))<parseFloat(await title.locator('.pb1126FrameStoreShopName').evaluate(el=>getComputedStyle(el).fontSize)));
   assert.equal(await tabs.count(),4);assert.equal(await cart.count(),1);assert((await cart.boundingBox()).x<150);assert((await tabs.first().boundingBox()).x>900);
   assert.equal(await page.locator('.pb1126FrameStoreTabs .active').evaluate(el=>getComputedStyle(el,'::after').content),'""');
   const storeFrame=page.frameLocator('.pb1126ContentPanel iframe'),surface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,viewport:innerWidth,top:el.getBoundingClientRect().top}));
@@ -142,11 +142,11 @@ test('Windows camera store puts shop name centered, actions right, and an availa
   const cameraShop={...shop,id:'10000000-0000-4000-8000-000000000002',name:'دوربین مرکزی',business_category:'equipment_rental_sale',rental_enabled:true,sale_enabled:true,connected:true,canRent:true,canBuy:true};
   await openStore(page,true,false,true,cameraShop);
   const title=page.locator('.pb1126FrameStoreTitle'),tabs=page.locator('.pb1126FrameStoreTabs .pb1126FrameStoreControl'),cart=page.locator('.pb1126FrameStoreCart .pb1126FrameStoreControl');
-  assert.equal(await title.textContent(),'دوربین مرکزی');const titleBox=await title.boundingBox();assert(Math.abs(titleBox.x+titleBox.width/2-720)<3);
+  assert.equal(await title.locator('.pb1126FrameStoreCategory').textContent(),'فروشگاه تجهیزات عکاسی و فیلمبرداری');assert.equal(await title.locator('.pb1126FrameStoreShopName').textContent(),'دوربین مرکزی');const titleBox=await title.boundingBox();assert(Math.abs(titleBox.x+titleBox.width/2-720)<3);
   assert.equal(await page.locator('#pb1126DesktopHeader').evaluate(el=>el.classList.contains('pb1126CameraStore')),true);
   assert.equal(await cart.count(),1);assert((await cart.boundingBox()).x<150);assert.equal(await tabs.count(),3);assert((await tabs.first().boundingBox()).x>900);
   assert.deepEqual((await tabs.allTextContents()).map(x=>x.trim()).filter(Boolean).slice(0,3),['اجاره تجهیزات','آفیش‌های من','مالی']);
-  await cart.click();await page.frameLocator('.pb1126ContentPanel iframe').locator('#saleCartDrawer').waitFor({state:'visible'});
+  await cart.click();await page.frameLocator('.pb1126ContentPanel iframe').locator('#saleCartDrawer').waitFor({state:'visible'});await page.locator('.pb1126ContentPanel.pb1126CartOpen').waitFor();assert((await page.locator('.pb1126ContentPanel.pb1126CartOpen').evaluate(el=>getComputedStyle(el).zIndex))>2147483500);
  }finally{await browser.close()}
 });
 

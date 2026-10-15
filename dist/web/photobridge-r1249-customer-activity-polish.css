@@ -120,21 +120,21 @@ body.frameCustomerStore .pb1249InlineDone{color:#027a48!important}
 @media(max-width:820px){.pb1249OwnerNotices{top:calc(env(safe-area-inset-top,0px) + 75px)!important;left:10px!important}}
 /* Restore a visible and draggable native scrollbar in OWNER's product shop tab. */
 @media(min-width:821px){
- html:has(> body.rentalAppReady.frameProductionShop.pb899MainSales),
- html body.rentalAppReady.frameProductionShop.pb899MainSales{
+ html:has(> body.rentalAppReady.pb899MainSales),
+ html body.rentalAppReady.pb899MainSales{
   overflow-y:auto!important;scrollbar-width:thin!important;
   scrollbar-color:#98a2b3 #eef2f7!important;
  }
- html:has(> body.rentalAppReady.frameProductionShop.pb899MainSales)::-webkit-scrollbar,
- html body.rentalAppReady.frameProductionShop.pb899MainSales::-webkit-scrollbar{
+ html:has(> body.rentalAppReady.pb899MainSales)::-webkit-scrollbar,
+ html body.rentalAppReady.pb899MainSales::-webkit-scrollbar{
   width:9px!important;display:block!important;height:auto!important;
  }
- html:has(> body.rentalAppReady.frameProductionShop.pb899MainSales)::-webkit-scrollbar-thumb,
- html body.rentalAppReady.frameProductionShop.pb899MainSales::-webkit-scrollbar-thumb{
+ html:has(> body.rentalAppReady.pb899MainSales)::-webkit-scrollbar-thumb,
+ html body.rentalAppReady.pb899MainSales::-webkit-scrollbar-thumb{
   background:#98a2b3!important;border-radius:999px!important;border:2px solid #eef2f7!important;
  }
- html:has(> body.rentalAppReady.frameProductionShop.pb899MainSales)::-webkit-scrollbar-track,
- html body.rentalAppReady.frameProductionShop.pb899MainSales::-webkit-scrollbar-track{
+ html:has(> body.rentalAppReady.pb899MainSales)::-webkit-scrollbar-track,
+ html body.rentalAppReady.pb899MainSales::-webkit-scrollbar-track{
   background:#eef2f7!important;
  }
  html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary .pb1126FrameStoreCart{

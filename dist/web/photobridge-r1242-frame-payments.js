@@ -168,6 +168,6 @@
 
  window.pb1242OpenPayment=id=>openPayment(id,false);
  document.addEventListener('click',event=>{const button=event.target.closest('[data-frame-payment-open]');if(button){event.preventDefault();void openPayment(button.dataset.framePaymentOpen,button.dataset.framePaymentOwner==='1');}});
- const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});setInterval(()=>{if(!document.hidden)void pollOwnerActivity();},22000);setTimeout(()=>void pollOwnerActivity(),3500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollOwnerActivity();});};
+ const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});setInterval(()=>void pollOwnerActivity(),22000);setTimeout(()=>void pollOwnerActivity(),3500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollOwnerActivity();});};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

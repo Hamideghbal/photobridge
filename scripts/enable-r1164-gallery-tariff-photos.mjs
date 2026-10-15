@@ -22,7 +22,7 @@ const rewrites=[
  [/photobridge-r1153-gallery-manager\.css\?v=r(?:1163|1164|1165)/g,'photobridge-r1153-gallery-manager.css?v=r1165'],
  [/photobridge-r1124-photographer-desktop-header\.css\?v=r(?:1163|1164|1165)/g,'photobridge-r1124-photographer-desktop-header.css?v=r1165'],
  [/photobridge-r1163-desktop-gallery-header\.js\?v=r(?:1163|1164|1165)/g,'photobridge-r1163-desktop-gallery-header.js?v=r1165'],
- [/index-UIRefine-v655-r84\.js\?v=r1159&cards=r(?:1163|1164)/g,'index-UIRefine-v655-r84.js?v=r1159&cards=r1164']
+ [/index-UIRefine-v655-r84\.js\?v=r1159(?:&wallet=r1238)?&cards=r(?:1163|1164)/g,'index-UIRefine-v655-r84.js?v=r1159&wallet=r1238&cards=r1164']
 ];
 for(const [pattern,version] of rewrites){if(!pattern.test(html))throw Error('R1164 HTML asset missing: '+version);html=html.replace(pattern,version);}
 fs.writeFileSync(htmlFile,html);

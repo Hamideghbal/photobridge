@@ -474,20 +474,10 @@ document.addEventListener('click',e=>{
 });
 
 const updateCart=renderSaleCart;renderSaleCart=function(...args){updateCart(...args);applyFrameCustomerView();};
-/* R1227: the Store tab is a chooser action on mobile, not a tab reselect.
-   Route it at the original click handler as well as the capture guard below,
-   so no alternate renderer can silently reopen the selected sales panel. */
-function frameMobileStoreChooser(e){
- if(!window.matchMedia('(max-width:820px)').matches||typeof enterStoreChooserR96!=='function')return false;
- if(e){e.preventDefault();e.stopImmediatePropagation();}
- enterStoreChooserR96('store');
- applyFrameCustomerView();
- return true;
-}
 document.addEventListener('click',e=>{if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore'))return;
  const history=e.target.closest('[data-frame-customer-history]');
  if(history&&window.matchMedia('(min-width:821px)').matches){e.preventDefault();frameOrderView='history';openStoreSection('frameOrdersPanel');renderFrameOrderRows();applyFrameCustomerView();void loadSales();return;}
- const view=e.target.closest('[data-frame-customer-view]');if(view){if(view.dataset.frameCustomerView==='salesPanel'&&frameMobileStoreChooser(e))return;if(view.dataset.frameCustomerView==='frameOrdersPanel')frameOrderView='orders';openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel'){renderFrameOrderRows();void loadSales();}applyFrameCustomerView();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
+ const view=e.target.closest('[data-frame-customer-view]');if(view){if(view.dataset.frameCustomerView==='frameOrdersPanel')frameOrderView='orders';openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel'){renderFrameOrderRows();void loadSales();}applyFrameCustomerView();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
 window.addEventListener('resize',positionFrameNavigation);
 const customerStyle=document.createElement('style');customerStyle.textContent=`
 .frameCustomerStore #storeSectionNavV673,.frameCustomerStore #pbR1123StoreDesktopNav,.frameCustomerStore [data-store-panel=equipmentPanel],.frameCustomerStore [data-store-panel=bookingsPanel],.frameCustomerStore #rentalCartBtnV810,.frameCustomerStore #saleFilterBarR68,.frameCustomerStore #saleBrandBtnR68,.frameCustomerStore #rentalBrandBtnR68,.frameCustomerStore #photographerStoreIdentityBar .storeIdentityLabel,.frameCustomerStore #photographerStoreIdentityBar [data-shop-category],.frameCustomerStore #storeIdentityActionsV809{display:none!important}
@@ -905,12 +895,9 @@ document.addEventListener('click',event=>{
   (mobile&&event.target.closest(
    '#photographerStoreBottomNav [data-store-home],'+
    '#photographerStoreBottomNav [aria-label="فروشگاه"],'+
-   '.photographerBottomAppNav [data-store-home],'+
-   '#frameCustomerNav [data-frame-customer-view="salesPanel"],'+
-   '#storeSectionNavV673 [data-store-panel="salesPanel"]'
+   '.photographerBottomAppNav [data-store-home]'
   ));
  if(!storeEntry||typeof enterStoreChooserR96!=='function')return;
- if(mobile&&frameMobileStoreChooser(event))return;
  event.preventDefault();event.stopImmediatePropagation();
  enterStoreChooserR96('store');applyFrameCustomerView();
 },true);

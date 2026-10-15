@@ -689,9 +689,13 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader::after{
   content:""!important;display:block!important;position:absolute!important;
-  top:auto!important;bottom:0!important;left:0!important;right:0!important;
-  height:1px!important;width:100%!important;z-index:3!important;
-  background:linear-gradient(90deg,transparent,#becfe1 8%,#becfe1 92%,transparent)!important;
+  top:auto!important;bottom:-11px!important;left:0!important;right:0!important;
+  height:12px!important;width:100%!important;z-index:3!important;
+  /* Restore the soft blue under-header accent used in the other photographer
+     pages without putting a blue halo behind the shop-name text itself. */
+  background:
+   linear-gradient(90deg,transparent,rgba(75,148,245,.88) 12%,rgba(75,148,245,.88) 88%,transparent) center top/100% 1px no-repeat,
+   radial-gradient(ellipse 62% 100% at 50% 0,rgba(47,129,245,.25),rgba(47,129,245,0) 75%) center top/100% 12px no-repeat!important;
   box-shadow:none!important;filter:none!important;pointer-events:none!important;
   transform:none!important;border:0!important
  }
@@ -740,6 +744,8 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName::after{
   display:none!important;content:none!important
  }
+ /* Keep the category row comfortably below the buttons/navigation strip. */
+ html body.frameCustomerStore #salesPanel #frameCustomerCategoryRow{margin-top:18px!important;margin-bottom:15px!important}
  html body.frameCustomerStore #frameCustomerNav{animation:none!important;transition:none!important}
  html body.frameCustomerStore #frameCustomerNav button{animation:none!important;transition:none!important}
 }

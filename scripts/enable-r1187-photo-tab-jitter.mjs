@@ -21,7 +21,7 @@ for(const [path,before,after] of patches){
  const source=fs.readFileSync(path,'utf8');
  const occurrences=source.split(before).length-1;
  if(occurrences===1)fs.writeFileSync(path,source.replace(before,after));
- else if(!source.includes(after))throw Error('[R1187] missing or ambiguous panel motion in '+path);
+ else if(!source.includes(after)&&!(path==='dist/web/photobridge-r1147-lab-admin-header.js'&&source.includes('PB1188 fixed scroll viewport; only the selected tab animates')&&!source.includes("panel?.animate?.([{opacity:.35,transform:'translateY(7px)'")))throw Error('[R1187] missing or ambiguous panel motion in '+path);
 }
 
 // Bust cached copies, retaining the existing release prefix for legacy checks.
@@ -33,11 +33,11 @@ const scripts=[
 for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let html=fs.readFileSync(path,'utf8');
  for(const name of scripts){
-  const rx=new RegExp('('+name+'\\.js\\?v=[^"\\s&]+)(?:&motion=r1187)?(?=")','g');
+  const rx=new RegExp('('+name+'\\.js\\?v=[^"\\s]+)(?=")','g');
   const count=[...html.matchAll(rx)].length;
   if(path==='dist/web/index.html'&&count!==1)throw Error('[R1187] expected one '+name+' in index.html, got '+count);
   if(count>1)throw Error('[R1187] duplicate '+name+' in '+path);
-  html=html.replace(rx,'$1&motion=r1187');
+  html=html.replace(rx,match=>match.includes('&motion=r1187')?match:match+'&motion=r1187');
  }
  fs.writeFileSync(path,html);
 }

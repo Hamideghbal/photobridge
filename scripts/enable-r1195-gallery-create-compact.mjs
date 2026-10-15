@@ -20,22 +20,23 @@ once('children:[e.jsx("h2",{children:t}),e.jsx("button",{onClick:a,"aria-label":
  'render header extras between title and close');
 const start=ui.indexOf('c&&e.jsx(On,{title:"گالری خصوصی جدید",dialogClassName:"pb1112CreateDialog"');
 if(start<0)throw Error('[R1195] photographer new gallery modal missing');
-const billingStart=ui.indexOf('e.jsxs("div",{className:"clientGalleryCreateBilling",children:[',start);
-const billingEnd=ui.indexOf(',e.jsxs("label",{children:["عنوان پروژه"',billingStart);
-if(billingStart<start||billingEnd<billingStart||billingEnd-billingStart>1150)throw Error('[R1195] unrecognized gallery billing shape');
-const billing=ui.slice(billingStart,billingEnd);
-for(const label of ['هزینه ساخت','ظرفیت','عمر اولیه']){
- if(!billing.includes(label))throw Error('[R1195] expected billing field: '+label);
+if(!ui.includes('dialogClassName:"pb1112CreateDialog",headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"')){
+ const billingStart=ui.indexOf('e.jsxs("div",{className:"clientGalleryCreateBilling",children:[',start);
+ const billingEnd=ui.indexOf(',e.jsxs("label",{children:["عنوان پروژه"',billingStart);
+ if(billingStart<start||billingEnd<billingStart||billingEnd-billingStart>1150)throw Error('[R1195] unrecognized gallery billing shape');
+ const billing=ui.slice(billingStart,billingEnd);
+ for(const label of ['هزینه ساخت','ظرفیت','عمر اولیه']){
+  if(!billing.includes(label))throw Error('[R1195] expected billing field: '+label);
+ }
+ if(!billing.endsWith('})'))throw Error('[R1195] billing JSX incomplete');
+ // Move the billing summary from the form to the shared React modal header.
+ ui=ui.slice(0,billingStart)+ui.slice(billingEnd+1);
+ const head='dialogClassName:"pb1112CreateDialog",onClose:';
+ once(head,'dialogClassName:"pb1112CreateDialog",headerExtra:'+billing+',onClose:','gallery header billing slot');
 }
-if(!billing.endsWith('})'))throw Error('[R1195] billing JSX incomplete');
-// Remove only the first child of the gallery form; it is now rendered as the
-// header sibling to the title and close action, not duplicated.
-ui=ui.slice(0,billingStart)+ui.slice(billingEnd+1);
-const head='dialogClassName:"pb1112CreateDialog",onClose:';
-once(head,'dialogClassName:"pb1112CreateDialog",headerExtra:'+billing+',onClose:','gallery header billing slot');
 if(ui.includes('children:[e.jsxs("div",{className:"clientGalleryCreateBilling"'))
  throw Error('[R1195] gallery duplicate billing not removed from form');
-if(!ui.includes('children:[e.jsxs("label",{children:["عنوان پروژه"'))
+if(!ui.includes('children:[e.jsxs("label",{children:[')||!ui.includes('"عنوان پروژه"'))
  throw Error('[R1195] first project label missing after move');
 fs.writeFileSync(file,ui);
 

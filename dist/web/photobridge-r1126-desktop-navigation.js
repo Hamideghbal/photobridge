@@ -87,9 +87,18 @@
   if(wallet){const label='کیف پول · '+wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
   const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();
   const frameStore=active==='store'&&doc?.body?.classList.contains('frameCustomerStore')&&doc?.querySelector('#frameCustomerNav');
-  const frameStoreName=frameStore?(doc.querySelector('#photographerStoreHeaderName')?.textContent?.trim()||'فروشگاه قاب و شاسی'):'';
+  const cameraStore=active==='store'&&!frameStore&&doc?.body?.classList.contains('rentalPhotographerMode')&&doc?.querySelector('#photographerStoreRoleHeader')&&doc?.querySelector('#pbR1123StoreDesktopNav')&&!doc?.body?.classList.contains('pbR96ChoosingStore');
+  const storeHeader=Boolean(frameStore||cameraStore);
+  const frameStoreName=storeHeader?(doc.querySelector('#photographerStoreHeaderName')?.textContent?.trim()||(frameStore?'فروشگاه قاب و شاسی':'فروشگاه تجهیزات تصویربرداری')):'';
+  const saleCart=doc?.querySelector('#photographerStoreIdentityBar #saleCartBtn'),saleSection=doc?.querySelector('#pbR1123StoreDesktopNav [data-store-panel="salesPanel"]');
+  const cameraSaleAvailable=Boolean(cameraStore&&saleSection&&!saleSection.hidden&&saleSection.getAttribute('aria-hidden')!=='true');
+  const cameraCart=cameraStore?(cameraSaleAvailable?(saleCart||saleSection):doc.querySelector('#photographerStoreIdentityBar .rentalCartBtnV810:not([hidden])')):null;
+  if(storeHeader){chrome.style.setProperty('width','100vw','important');chrome.style.setProperty('left','0','important');chrome.style.setProperty('right','auto','important');}
+  else for(const property of ['width','left','right'])chrome.style.removeProperty(property);
   document.documentElement.classList.toggle('pb1126FrameStore',Boolean(frameStore));
   chrome.classList.toggle('pb1126FrameStore',Boolean(frameStore));
+  document.documentElement.classList.toggle('pb1126CameraStore',Boolean(cameraStore));
+  chrome.classList.toggle('pb1126CameraStore',Boolean(cameraStore));
   const choosing=active==='store'?(!doc?.querySelector('#photographerStoreRoleHeader')||doc.body?.classList.contains('pbR96ChoosingStore')):active==='print'?(!!doc?.querySelector('#pbR99LabChooser')||doc?.body?.classList.contains('pbR100F14ChoosingLab')||doc?.documentElement?.classList.contains('pbR100F14LabChooserBoot')||(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print')):false;
   document.documentElement.classList.toggle('pb1127Choosing',choosing);
   chrome.classList.toggle('pb1127Choosing',choosing);
@@ -98,24 +107,34 @@
   if(doc?.documentElement&&doc!==document)doc.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing);
   const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));
+  const cameraStoreControls=cameraStore?visible.filter(el=>el.dataset.storePanel!=='salesPanel'):[];
   const frameStoreControls=frameStore?[...frameStore.querySelectorAll('button[data-frame-customer-view],button[data-frame-customer-history],button[data-frame-customer-cart]')].filter(el=>getComputedStyle(el).display!=='none'):[];
-  const signature=active+'|'+choosing+'|'+(frameStore?'frame:'+frameStoreName+frameStoreControls.map(el=>el.outerHTML).join(''):visible.map(el=>el.outerHTML).join(''));
+  const headerControls=frameStore?frameStoreControls:cameraStore?cameraStoreControls:[];
+  const signature=active+'|'+choosing+'|'+(storeHeader?'store:'+frameStoreName+headerControls.map(el=>el.outerHTML).join('')+(cameraCart?.outerHTML||''):visible.map(el=>el.outerHTML).join(''));
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
-   if(frameStore){
-    const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';title.textContent=frameStoreName;
+   if(storeHeader){
+    const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';
+    if(frameStore){
+     const prefix='فروشگاه قاب و شاسی',shopName=frameStoreName.replace(/^فروشگاه قاب و شاسی\s*/,'').trim();
+     const shop=document.createElement('span');shop.className='pb1126FrameStoreShopName';shop.textContent=shopName||frameStoreName;
+     const category=document.createElement('small');category.className='pb1126FrameStoreCategory';category.textContent=prefix;title.append(shop,category);
+    }else title.textContent=frameStoreName;
     const nav=document.createElement('nav');nav.className='pb1126FrameStoreTabs';nav.setAttribute('aria-label','بخش‌های فروشگاه');
     const cart=document.createElement('div');cart.className='pb1126FrameStoreCart';
-    for(const original of frameStoreControls){
+    const controls=frameStore?frameStoreControls:cameraStoreControls;
+    for(const original of controls){
      const copy=cleanClone(original);copy.classList.add('pb1126FrameStoreControl');copy.style.removeProperty('display');
+     if(cameraStore){const labels={equipmentPanel:'اجاره تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
      copy.onclick=()=>{original.click();requestAnimationFrame(()=>{schedule();reveal(motionContent(doc));});};
      (original.matches('[data-frame-customer-cart]')?cart:nav).append(copy);
     }
+    if(cameraCart){const copy=cleanClone(cameraCart);copy.classList.add('pb1126FrameStoreControl');copy.style.removeProperty('display');if(cameraCart===saleSection){copy.textContent='سبد خرید';copy.setAttribute('aria-label','سبد خرید');copy.onclick=()=>{if(typeof doc.defaultView.openSaleCart==='function')doc.defaultView.openSaleCart();else{saleSection.click();doc.defaultView.setTimeout(()=>doc.querySelector('#saleCartBtn')?.click(),0);}};}else copy.onclick=()=>cameraCart.click();cart.append(copy);}
     row.append(title,nav,cart);
    }
    let modes,utilities;
    if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
-   for(const original of frameStore?[]:visible){
+   for(const original of storeHeader?[]:visible){
     const copy=cleanClone(original);copy.style.removeProperty('display');
     copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
     if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
@@ -131,13 +150,13 @@
  function press(el){
   if(!el||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   clearTimeout(pressTimers.get(el));
-  el.style.setProperty('animation','none','important');void el.offsetWidth;
-  el.style.setProperty('animation','pb1134HeaderMove .26s cubic-bezier(.2,.8,.2,1)','important');
-  pressTimers.set(el,setTimeout(()=>{el.style.removeProperty('animation');pressTimers.delete(el);},320));
+  el.animate?.([{transform:'translateY(2px) scale(.98)'},{transform:'translateY(0) scale(1)'}],{duration:180,easing:'ease-out'});
+  /* R1193 no CSS tab animation replay required */
+  /* R1193 Web Animations button feedback completes by itself */
  }
  function motionContent(doc){return doc?.querySelector('.clientGalleryWorkspace,.clientGalleryManager,.rentalPanel.mobileActive,.simplePrintPilot')||doc?.querySelector('.photographerRolePageScrollArea')?.firstElementChild||doc?.querySelector('#pbR99LabChooser')?.firstElementChild;}
  const contentAnimations=new WeakMap();
- function reveal(el){if(!el||matchMedia('(prefers-reduced-motion:reduce)').matches)return;contentAnimations.get(el)?.cancel();contentAnimations.set(el,el.animate([{opacity:.35,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing:'cubic-bezier(.25,.65,.35,1)'}));}
+ function reveal(el){if(!el||window.__PB_ALLOW_WHOLE_PAGE_MOTION__!==true||matchMedia('(prefers-reduced-motion:reduce)').matches)return;contentAnimations.get(el)?.cancel();contentAnimations.set(el,el.animate([{opacity:.85},{opacity:1}],{duration:420,easing:'cubic-bezier(.25,.65,.35,1)'}));}
 
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
  function closePanels(){for(const p of panels.values())p.hidden=true;selected=null;document.documentElement.classList.remove('pb1126PanelOpen');}

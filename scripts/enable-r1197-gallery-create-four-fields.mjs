@@ -9,6 +9,7 @@ if(start<0||end<start)throw Error('[R1197] new gallery JSX boundaries not found'
 let modal=ui.slice(start,end);
 function once(needle,replacement,label) {
  const count=modal.split(needle).length-1;
+ if(count===0&&modal.includes(replacement))return;
  if(count!==1)throw Error('[R1197] '+label+': expected once, got '+count);
  modal=modal.replace(needle,replacement);
 }
@@ -17,16 +18,17 @@ once('e.jsxs("label",{children:["رمز ورود خصوصی",e.jsx("input",{',
  'password caption');
 const digitalStart=modal.indexOf('e.jsxs("label",{children:["قیمت فایل دیجیتال (اختیاری · تومان)"');
 const digitalEnd=modal.indexOf(',e.jsxs("label",{className:"clientGalleryOrderingToggle"',digitalStart);
-if(digitalStart<0||digitalEnd<digitalStart||digitalEnd-digitalStart>650)
- throw Error('[R1197] duplicate create-form digital price changed');
-modal=modal.slice(0,digitalStart)+modal.slice(digitalEnd+1);
+if(digitalStart>=0){
+ if(digitalEnd<digitalStart||digitalEnd-digitalStart>650)throw Error('[R1197] duplicate create-form digital price changed');
+ modal=modal.slice(0,digitalStart)+modal.slice(digitalEnd+1);
+}else if(modal.includes('قیمت فایل دیجیتال (اختیاری · تومان)'))throw Error('[R1197] digital-price control remains in create form');
 once('"سفارش چاپ و فاکتور (انتخاب عکس فعال است)"','"سفارش و فاکتور"','invoice checkbox label');
 once('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)',
  'disabled:g||!!PB1112draft.current','invoice checkbox enabling');
 ui=ui.slice(0,start)+modal+ui.slice(end);
 const digitalPayload='digitalPrice:Number(h.digitalPrice||0)';
-if(ui.split(digitalPayload).length!==2)throw Error('[R1197] single create payload digital price missing');
-ui=ui.replace(digitalPayload,'digitalPrice:0');
+if(ui.split(digitalPayload).length===2)ui=ui.replace(digitalPayload,'digitalPrice:0');
+else if(!ui.includes('digitalPrice:0'))throw Error('[R1197] single create payload digital price missing');
 
 const serverFile='dist/api/server.js';
 let server=fs.readFileSync(serverFile,'utf8');
@@ -54,13 +56,17 @@ const guard=[
  "            }",
  ""
 ].join('\n');
-if(section.split(anchor).length!==2)throw Error('[R1197] pre-wallet creation guard anchor changed');
-section=section.replace(anchor,guard+anchor);
+if(!section.includes("if (orderingEnabled && moneyAmount(b.digitalPrice) <= 0)")){
+ if(section.split(anchor).length!==2)throw Error('[R1197] pre-wallet creation guard anchor changed');
+ section=section.replace(anchor,guard+anchor);
+}
 server=server.slice(0,sectionStart)+section+server.slice(sectionEnd);
 const message='v==="gallery_ordering_tariff_required"?"برای فعال‌کردن سفارش و فاکتور، ابتدا قیمت چاپ را در مدیریت تعرفه‌های گالری ثبت کن.":';
 const old='v==="gallery_service_disabled"?"ساخت گالری مشتری در حال حاضر توسط ادمین غیرفعال است.":';
-if(ui.split(old).length!==2)throw Error('[R1197] gallery create API error mapping changed');
-ui=ui.replace(old,message+old);
+if(!ui.includes('برای فعال‌کردن سفارش و فاکتور، ابتدا قیمت چاپ')){
+ if(ui.split(old).length!==2)throw Error('[R1197] gallery create API error mapping changed');
+ ui=ui.replace(old,message+old);
+}
 fs.writeFileSync(uiFile,ui);
 fs.writeFileSync(serverFile,server);
 

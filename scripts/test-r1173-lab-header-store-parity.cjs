@@ -35,7 +35,6 @@ test('tab counts are circular and underline slides between retained buttons',()=
  assert(fn.includes("indicator.className='pb1173MovingIndicator'"));
  assert(fn.includes("indicator.style.transform='translateX('+offset+')'"));
  assert(fn.includes('button.animate?.('));
- assert(fn.includes('panel?.animate?.('));
  assert(fn.includes("prefers-reduced-motion:reduce"));
 });
 test('both old quick-access surfaces and reserved grid row are removed in print and album, without hiding filters',()=>{

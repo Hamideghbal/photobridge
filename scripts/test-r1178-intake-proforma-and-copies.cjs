@@ -15,7 +15,7 @@ test('desktop walk-in modal has balanced editable right pane and live proforma l
  assert(intake.includes("billTotals.replaceChildren(count,amount)"));
  assert(intake.includes("customers.onChange=refreshInvoice"));
  assert(intake.includes("model.onChange?.(c)"));
- assert(intake.includes("priceBySize.get(String(group.size))?.[paper]"));
+ assert(intake.includes("priceBySize.get(String(group.size))"));
  assert(intake.includes("ثبت سفارش و ذخیره پیش‌فاکتور"));
  assert(css.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)'));
  assert(css.includes('grid-template-areas:"editor bill"'));

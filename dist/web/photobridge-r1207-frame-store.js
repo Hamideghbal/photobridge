@@ -310,6 +310,17 @@ function positionFrameNavigation(){
  const contentTop=bottom+nav.getBoundingClientRect().height;
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
  document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
+ if(!desktop){
+  const dock=document.getElementById('photographerStoreBottomNav');
+  const bounds=dock?.getBoundingClientRect();
+  // Use the real top of the bottom dock, including safe-area changes, instead
+  // of reserving an approximate 70px that can leave a visible blank gap.
+  if(bounds?.height>0){
+   const space=Math.max(0,Math.round(window.innerHeight-bounds.top));
+   if(document.documentElement.style.getPropertyValue('--frame-bottom-dock-space')!==space+'px')
+    document.documentElement.style.setProperty('--frame-bottom-dock-space',space+'px');
+  }
+ }
  if(shell){
   if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
   if(shell.style.getPropertyValue('top')!==contentTop+'px')shell.style.setProperty('top',contentTop+'px','important');
@@ -1077,7 +1088,7 @@ frameR1228Layout.textContent=`
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
   position:fixed!important;top:var(--frame-customer-content-top,174px)!important;
-  bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;
+  bottom:var(--frame-bottom-dock-space,70px)!important;
   inset-inline:0!important;left:0!important;right:0!important;width:100vw!important;
   max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;
   margin:0!important;padding:7px 10px 0!important;box-sizing:border-box!important;

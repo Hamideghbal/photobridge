@@ -185,6 +185,18 @@
 }
 @media(prefers-reduced-motion:reduce){html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator.pb1131MovingIndicator{transition:none!important}}
 
+/* R1239: account for the left-side Windows scrollbar in embedded store frames.
+   The content viewport is narrower than 100vw, so shift fixed full-width
+   chooser/catalog surfaces back across that gutter. */
+@media(min-width:821px){
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell,
+ html:is(.pb1126Desktop,.pb1126Embedded) body.pbR96ChoosingStore #storePhotographerWorkspace>.shell{
+  left:calc(100% - 100vw)!important;right:auto!important;width:100vw!important;max-width:none!important
+ }
+ html.pb1126Desktop #pb1126UtilityWindow .pb1126UtilityFrame{height:100%!important;min-height:0!important}
+ html.pb1126Desktop body>.globalModalLayer{z-index:2147483602!important}
+}
+
 /* R1168: hide legacy sources before first paint; show only the canonical identity. */
 @media(min-width:821px){
  html.pb1126Desktop body #root #photographerRoleHeaderV710.photographerHeaderRefined.photographerHeaderRefined,

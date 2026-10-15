@@ -158,6 +158,8 @@ test('Windows Store tab reopens the shop chooser from inside the selected shop',
   const storeFrame=page.frameLocator('.pb1126ContentPanel iframe');
   await page.locator('[data-pb1126-kind="store"]').click();
   await storeFrame.locator('body.pbR96ChoosingStore').waitFor();
+  const chooserSurface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width,viewport:innerWidth,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace')).backgroundColor,shellBackground:getComputedStyle(el).backgroundColor}));
+  assert(Math.abs(chooserSurface.left)<1&&Math.abs(chooserSurface.right-chooserSurface.viewport)<1,'Windows store chooser must fill the entire iframe viewport: '+JSON.stringify(chooserSurface));
   assert(await storeFrame.locator('#storeChooserPanelR96').isVisible());
   await storeFrame.locator('[data-enter-store-r96]').click();
   await storeFrame.locator('.frameProductCard').waitFor();
@@ -188,6 +190,9 @@ test('Windows photographer tools open closable overlays without switching tabs o
    assert.equal(await modal.getAttribute('role'),'presentation');
    assert.equal(await modal.locator('[role=dialog]').getAttribute('aria-modal'),'true');
    assert((await modal.locator('iframe[src*="'+path+'"]').getAttribute('src')).includes(path));
+   const utility=modal.frameLocator('iframe[src*="'+path+'"]');
+   if(path.endsWith('/wallet'))await utility.locator('.customerWalletPage .walletBalanceHero').waitFor({timeout:12000});
+   else {await utility.locator('.standalonePhotographerSettings').waitFor({state:'visible',timeout:12000});}
    assert.equal(await activeStore.getAttribute('aria-current'),'page','the underlying Store tab stays selected');
    assert(await storeFrame.locator('.frameProductCard').isVisible(),'the current shop remains open underneath the utility window');
    await modal.locator('#pb1126UtilityClose').click();
@@ -197,5 +202,10 @@ test('Windows photographer tools open closable overlays without switching tabs o
   };
   await openAndClose('#pb1126DesktopHeader .pb1124Wallet','/photographer/wallet');
   await openAndClose('.pb1163-settings','/photographer/settings');
+  await page.locator('.pb1163-notifications').click();
+  const notification=page.locator('.globalModalLayer .systemNotificationCenter');
+  await notification.waitFor({timeout:5000});
+  assert((await notification.innerText()).includes('رویدادهای PhotoBridge'));
+  await page.locator('.globalModalLayer [aria-label="بستن"]').click();
  }finally{await browser.close()}
 });

@@ -175,16 +175,31 @@ function frameStepMarkup(stage){
  const index=frameStageList.findIndex(row=>row[0]===stage);
  return '<div class="frameOrderStepper" aria-label="مراحل سفارش">'+frameStageList.map(([key,label],i)=>'<div class="frameOrderStep '+(i<=index?'complete ':'')+(i===index?'current':'')+'"><span class="frameOrderCircle" aria-hidden="true">'+(i<index?'✓':(i+1))+'</span><small>'+label+'</small></div>').join('')+'</div>';
 }
+function frameOrderIsHistory(order){
+ return ['delivered','cancelled','rejected','refunded','completed'].includes(String(order?.production_stage||order?.status||'').toLowerCase());
+}
 function renderFrameOrderRows(){
  if(!customerFrame())return;
  const root=document.getElementById('saleOrders');if(!root)return;
  const rows=(saleOrders||[]).filter(o=>String(o.shop_id)===String(shopId));
+ let visible=0;
  for(const [i,el] of [...root.querySelectorAll('.saleOrderCustomer')].entries()){
-  const order=rows[i],info=el.querySelector('div');if(!info||!order?.production_stage)continue;
+  const order=rows[i],info=el.querySelector('div');
+  const show=Boolean(order)&&(frameOrderView==='history'?frameOrderIsHistory(order):!frameOrderIsHistory(order));
+  if(el.hidden===show)el.hidden=!show;
+  if(show)visible++;
+  if(!info||!order?.production_stage)continue;
   el.classList.add('frameOrderCustomer');
   info.querySelector('.frameOrderStepper,.frameOrderCancelled')?.remove();
   info.insertAdjacentHTML('beforeend',frameStepMarkup(order.production_stage));
  }
+ const panel=document.getElementById('frameOrdersPanel');
+ const title=panel?.querySelector('.frameOrdersHead h2');
+ const label=frameOrderView==='history'?'سوابق خرید':'سفارش‌های من';
+ if(title&&title.textContent!==label)title.textContent=label;
+ let empty=panel?.querySelector('#frameOrderViewEmpty');
+ if(!empty&&panel){empty=document.createElement('div');empty.id='frameOrderViewEmpty';empty.className='empty';root.after(empty);}
+ if(empty){empty.hidden=visible>0||!rows.length;empty.textContent=frameOrderView==='history'?'هنوز خرید تکمیل‌شده‌ای ثبت نشده است.':'سفارش در جریان ندارید.';}
 }
 
 
@@ -268,7 +283,7 @@ function openFrameSizeSheet(trigger){
 document.addEventListener('click',e=>{const trigger=e.target.closest('[data-frame-size-trigger]');if(trigger&&window.matchMedia('(max-width:820px)').matches){e.preventDefault();e.stopPropagation();openFrameSizeSheet(trigger)}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&frameSizeSheet){e.preventDefault();closeFrameSizeSheet();}});
 
-let categoryOrigin=null,frameShellTop=null,frameCartPortals=null;const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
+let categoryOrigin=null,frameShellTop=null,frameCartPortals=null,frameOrderView='orders';const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
 const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
 function positionFrameNavigation(){
  const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');
@@ -278,9 +293,9 @@ function positionFrameNavigation(){
  }
  if(!bar||!nav)return;
  const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
- const host=document.getElementById('pbR1123StoreDesktopNav');
- if(desktop&&host&&nav.parentElement!==host)host.append(nav);
- if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);
+ // R1228: both the Windows and mobile layouts get the real store name first,
+ // then the frame shop's own navigation. Never nest it inside the native header.
+ if(nav.previousElementSibling!==bar)bar.after(nav);
  // Anchor the shop title to the measured photographer header, not the legacy
  // fixed 64px offset (which becomes wrong when long studio names wrap).
  if(!desktop){
@@ -289,7 +304,7 @@ function positionFrameNavigation(){
   if(bar.style.getPropertyValue('top')!==top+'px'||bar.style.getPropertyPriority('top')!=='important')bar.style.setProperty('top',top+'px','important');
  }else if(bar.style.getPropertyValue('top'))bar.style.removeProperty('top');
  const bottom=bar.getBoundingClientRect().bottom;
- const contentTop=bottom+(desktop?0:nav.getBoundingClientRect().height);
+ const contentTop=bottom+nav.getBoundingClientRect().height;
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
  document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
  if(shell){
@@ -308,7 +323,7 @@ function applyFrameCustomerView(){const enabled=customerFrame()&&!document.body.
   for(const {node,parent,next}of frameCartPortals)if(parent?.isConnected)parent.insertBefore(node,next?.parentNode===parent?next:null);
   frameCartPortals=null;
  }
-for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR68,#saleCartBtn,#saleBrandBtnR68,#rentalBrandBtnR68,#rentalCartBtnV810,#storeSectionNavV673,[data-store-panel=equipmentPanel],[data-store-panel=bookingsPanel]')){if(enabled){if(!frameHiddenControls.has(el))frameHiddenControls.set(el,{hidden:el.hidden,display:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.hidden=true;el.style.setProperty('display','none','important');}else if(frameHiddenControls.has(el)){const prior=frameHiddenControls.get(el);el.hidden=prior.hidden;if(prior.display)el.style.setProperty('display',prior.display,prior.priority);else el.style.removeProperty('display');frameHiddenControls.delete(el);}}for(const button of document.querySelectorAll('[data-store-panel=salesPanel]')){const label=button.querySelector('b')||button;if(enabled){if(!frameControlLabels.has(label))frameControlLabels.set(label,label.innerHTML);if(label.textContent!=='فروشگاه')label.textContent='فروشگاه';}else if(frameControlLabels.has(label)){label.innerHTML=frameControlLabels.get(label);frameControlLabels.delete(label);}}const bar=document.getElementById('photographerStoreIdentityBar');let nav=document.getElementById('frameCustomerNav');if(enabled){document.getElementById('pbR1123StoreDesktopNav')?.classList.add('frameDesktopHost')}else document.getElementById('pbR1123StoreDesktopNav')?.classList.remove('frameDesktopHost');if(enabled&&bar&&!nav){nav=document.createElement('nav');nav.id='frameCustomerNav';nav.setAttribute('aria-label','بخش‌های فروشگاه قاب');nav.innerHTML='<button type="button" data-frame-customer-view="salesPanel">فروشگاه</button><button type="button" data-frame-customer-view="financePanel">مالی</button><button type="button" data-frame-customer-view="frameOrdersPanel">سفارش‌ها</button><button type="button" data-frame-customer-cart>سبد خرید <small data-frame-cart-count>۰</small></button>';bar.after(nav);new ResizeObserver(positionFrameNavigation).observe(bar);new MutationObserver(positionFrameNavigation).observe(bar,{attributes:true,attributeFilter:['style','class']});}
+for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR68,#saleCartBtn,#saleBrandBtnR68,#rentalBrandBtnR68,#rentalCartBtnV810,#storeSectionNavV673,[data-store-panel=equipmentPanel],[data-store-panel=bookingsPanel]')){if(enabled){if(!frameHiddenControls.has(el))frameHiddenControls.set(el,{hidden:el.hidden,display:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.hidden=true;el.style.setProperty('display','none','important');}else if(frameHiddenControls.has(el)){const prior=frameHiddenControls.get(el);el.hidden=prior.hidden;if(prior.display)el.style.setProperty('display',prior.display,prior.priority);else el.style.removeProperty('display');frameHiddenControls.delete(el);}}for(const button of document.querySelectorAll('[data-store-panel=salesPanel]')){const label=button.querySelector('b')||button;if(enabled){if(!frameControlLabels.has(label))frameControlLabels.set(label,label.innerHTML);if(label.textContent!=='فروشگاه')label.textContent='فروشگاه';}else if(frameControlLabels.has(label)){label.innerHTML=frameControlLabels.get(label);frameControlLabels.delete(label);}}const bar=document.getElementById('photographerStoreIdentityBar');let nav=document.getElementById('frameCustomerNav');if(enabled){document.getElementById('pbR1123StoreDesktopNav')?.classList.add('frameDesktopHost')}else document.getElementById('pbR1123StoreDesktopNav')?.classList.remove('frameDesktopHost');if(enabled&&bar&&!nav){nav=document.createElement('nav');nav.id='frameCustomerNav';nav.setAttribute('aria-label','بخش‌های فروشگاه قاب');nav.innerHTML='<button type="button" data-frame-customer-view="salesPanel">فروشگاه</button><button type="button" data-frame-customer-view="financePanel">مالی</button><button type="button" data-frame-customer-view="frameOrdersPanel">سفارش‌ها</button><button type="button" data-frame-customer-history>سوابق خرید</button><button type="button" data-frame-customer-cart>سبد خرید <small data-frame-cart-count>۰</small></button>';bar.after(nav);new ResizeObserver(positionFrameNavigation).observe(bar);new MutationObserver(positionFrameNavigation).observe(bar,{attributes:true,attributeFilter:['style','class']});}
 
  const category=document.getElementById('saleCategoryBtnR68'),salesContent=document.getElementById('salesContent');
  if(enabled&&category&&salesContent){
@@ -324,7 +339,7 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
   categoryOrigin=null;
  }
 
- if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
+ if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive')&&(button.dataset.frameCustomerView!=='frameOrdersPanel'||frameOrderView==='orders');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const history=nav.querySelector('[data-frame-customer-history]');if(history){const active=document.getElementById('frameOrdersPanel')?.classList.contains('mobileActive')&&frameOrderView==='history';history.classList.toggle('active',Boolean(active));history.setAttribute('aria-current',active?'page':'false');}const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
  for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
  if(enabled&&bar){
@@ -441,7 +456,10 @@ function frameMobileStoreChooser(e){
  applyFrameCustomerView();
  return true;
 }
-document.addEventListener('click',e=>{if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore'))return;const view=e.target.closest('[data-frame-customer-view]');if(view){if(view.dataset.frameCustomerView==='salesPanel'&&frameMobileStoreChooser(e))return;openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel')void loadSales();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
+document.addEventListener('click',e=>{if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore'))return;
+ const history=e.target.closest('[data-frame-customer-history]');
+ if(history&&window.matchMedia('(min-width:821px)').matches){e.preventDefault();frameOrderView='history';openStoreSection('frameOrdersPanel');renderFrameOrderRows();applyFrameCustomerView();void loadSales();return;}
+ const view=e.target.closest('[data-frame-customer-view]');if(view){if(view.dataset.frameCustomerView==='salesPanel'&&frameMobileStoreChooser(e))return;if(view.dataset.frameCustomerView==='frameOrdersPanel')frameOrderView='orders';openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel'){renderFrameOrderRows();void loadSales();}applyFrameCustomerView();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
 window.addEventListener('resize',positionFrameNavigation);
 const customerStyle=document.createElement('style');customerStyle.textContent=`
 .frameCustomerStore #storeSectionNavV673,.frameCustomerStore #pbR1123StoreDesktopNav,.frameCustomerStore [data-store-panel=equipmentPanel],.frameCustomerStore [data-store-panel=bookingsPanel],.frameCustomerStore #rentalCartBtnV810,.frameCustomerStore #saleFilterBarR68,.frameCustomerStore #saleBrandBtnR68,.frameCustomerStore #rentalBrandBtnR68,.frameCustomerStore #photographerStoreIdentityBar .storeIdentityLabel,.frameCustomerStore #photographerStoreIdentityBar [data-shop-category],.frameCustomerStore #storeIdentityActionsV809{display:none!important}

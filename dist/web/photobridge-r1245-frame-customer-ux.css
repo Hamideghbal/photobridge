@@ -23,7 +23,7 @@ html body.frameCustomerStore #frameCustomerNav{
 html body.frameCustomerStore #storePhotographerWorkspace :is(#salesPanel,#frameOrdersPanel,#financePanel)>.box{
   background:transparent!important;
   background-image:none!important;
-  border-color:transparent!important;
+  border:0!important;
   box-shadow:none!important;
 }
 html body.frameCustomerStore #storePhotographerWorkspace :is(#salesPanel,#frameOrdersPanel,#financePanel) {

@@ -7,26 +7,31 @@ function frameRevealOpenCart(){
  const isProd=isFrame()||document.body.classList.contains('frameCustomerStore');
  const drawer=document.getElementById('saleCartDrawer');
  if(!isProd||!drawer?.classList.contains('open'))return;
- drawer.style.setProperty('left','0','important');
- drawer.style.setProperty('right','auto','important');
- drawer.style.setProperty('transform','none','important');
- drawer.style.setProperty('translate','none','important');
+ // A stale inline transform from old builds prevented the drawer from entering.
+ // Preserve the new CSS transform/transition instead of forcing transition:none.
+ for(const key of ['transform','translate','transition','left','right'])drawer.style.removeProperty(key);
  drawer.style.setProperty('visibility','visible','important');
  drawer.style.setProperty('pointer-events','auto','important');
- drawer.style.setProperty('transition','none','important');
 }
 if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
  const frameOriginalOpenCart=openSaleCart,frameOriginalCloseCart=closeSaleCart;
  openSaleCart=function(...args){
+  const drawer=document.getElementById('saleCartDrawer');
+  const animate=Boolean(drawer&&customerFrame()&&!drawer.classList.contains('open'));
+  if(animate)drawer.classList.add('frameCartMotionStart');
   const result=frameOriginalOpenCart.apply(this,args);
   frameRevealOpenCart();
-  requestAnimationFrame(frameRevealOpenCart);
+  if(animate){
+   // Start offscreen, force a style frame, then let CSS animate to the open state.
+   void drawer.offsetHeight;
+   requestAnimationFrame(()=>{if(drawer.classList.contains('open'))drawer.classList.remove('frameCartMotionStart');});
+  }
   return result;
  };
  closeSaleCart=function(...args){
   const result=frameOriginalCloseCart.apply(this,args);
   const drawer=document.getElementById('saleCartDrawer');
-  if(drawer)for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
+  if(drawer){drawer.classList.remove('frameCartMotionStart');for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);}
   return result;
  };
  // Other legacy event handlers may capture the old checkout function by reference.
@@ -39,7 +44,7 @@ if(typeof openSaleCart==='function'&&typeof closeSaleCart==='function'){
 function frameForceCloseCart(){
  const drawer=document.getElementById('saleCartDrawer'),backdrop=document.getElementById('saleCartBackdrop');
  if(drawer){
-  drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');
+  drawer.classList.remove('open','frameCartMotionStart');drawer.setAttribute('aria-hidden','true');
   for(const key of ['transform','translate','visibility','pointer-events','left','right','transition'])drawer.style.removeProperty(key);
  }
  if(backdrop)backdrop.hidden=true;
@@ -176,7 +181,7 @@ let categoryOrigin=null,frameShellTop=null,frameCartPortals=null;const frameHidd
 const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
 function positionFrameNavigation(){
  const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');
- if(!customerFrame()){
+ if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore')){
   if(shell&&frameShellTop){if(frameShellTop.value)shell.style.setProperty('top',frameShellTop.value,frameShellTop.priority);else shell.style.removeProperty('top');frameShellTop=null;}
   return;
  }
@@ -508,7 +513,95 @@ body.frameCustomerStore #financePanel .frameLedgerDetailsGrid{display:grid;grid-
 body.frameCustomerStore #financePanel .frameLedgerDetailsGrid>div{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
 body.frameCustomerStore #financePanel .frameLedgerDetailsGrid small{font-size:10px;color:#667085}
 body.frameCustomerStore #financePanel .frameLedgerDetailsGrid b{font-size:11px;color:#101828;font-weight:750}
+
+/* R1221: shared frame shop preview & shopper cart. */
+html body.frameCustomerStore #salesCheckoutNotice,
+html body.frameCustomerStore #saleCartDrawer .approvalNotice,
+html body.frameCustomerStore #saleCartDrawer .paymentPendingNote{display:none!important}
+html body.pbR96ChoosingStore #frameCustomerNav{display:none!important}
+html body.pbR96ChoosingStore.frameCustomerStore #storePhotographerWorkspace>.shell{top:var(--pb-store-chooser-top,0px)!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy{align-items:center!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy>.btn{
+ display:flex!important;justify-content:center!important;align-items:center!important;
+ margin-top:0!important;align-self:center!important;min-height:34px!important;height:34px!important;
+ padding:5px 8px!important;white-space:nowrap!important;font-size:12px!important;line-height:1.2!important;
+ transform:translateY(-1px)
+}
+html body.frameCustomerStore #salesPanel .frameProductCard .saleItemBuy .qtyStepperV810{
+ height:34px!important;min-height:34px!important;align-items:center!important
+}
+html body.frameCustomerStore #pb834ShopGallery .pb834ShopGalleryNav.prev{
+ left:10px!important;right:auto!important;direction:ltr!important
+}
+html body.frameCustomerStore #pb834ShopGallery .pb834ShopGalleryNav.next{
+ right:10px!important;left:auto!important;direction:ltr!important
+}
+html body.frameCustomerStore #pb834ShopGallery .pb834ShopGalleryHead{
+ display:flex!important;flex-wrap:nowrap!important;gap:7px!important;align-items:center!important;min-width:0
+}
+html body.frameCustomerStore #pb834ShopGallery #pb834ShopGalleryTitle{
+ display:block!important;flex:1 1 auto!important;min-width:0!important;max-width:100%;
+ font-size:clamp(10px,2.9vw,13px)!important;line-height:1.4!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important
+}
+html body.frameCustomerStore #pb834ShopGallery #pb834ShopGalleryClose{flex:0 0 34px!important}
+/* The old store CSS sets transition:none and transform:none with !important.
+   Use an explicit entering class so the drawer starts below the viewport. */
+html body.frameCustomerStore #saleCartDrawer.open{
+ transform:translate3d(0,0,0)!important;translate:none!important;
+ transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .22s ease!important;
+ will-change:transform
+}
+html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
+ transform:translate3d(-105%,0,0)!important;opacity:.97!important;transition:none!important
+}
+@media(max-width:820px){
+ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
+  transform:translate3d(0,105%,0)!important;opacity:.97!important
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html body.frameCustomerStore #saleCartDrawer.open{transition:none!important;will-change:auto}
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
+
+/* Frame previews can render the old red «پیش‌خرید» notice even when there is
+   no frameCustomerStore body class yet. Suppress it at its actual render source. */
+if(typeof renderShopperWallet==='function'){
+ const priorShopperWallet=renderShopperWallet;
+ renderShopperWallet=function(...args){
+  const result=priorShopperWallet.apply(this,args),notice=document.getElementById('salesCheckoutNotice');
+  if(notice){const production=isFrame();notice.hidden=production;if(production){notice.replaceChildren();notice.style.setProperty('display','none','important')}else notice.style.removeProperty('display');}
+  return result;
+ };
+}
+/* The inline card gallery already uses left=previous/right=next. Match the
+   full-screen preview (including keyboard keys) to that same direction. */
+if(typeof pb834RenderShopGallery==='function'){
+ const previousGalleryRender=pb834RenderShopGallery;
+ pb834RenderShopGallery=function(...args){
+  const result=previousGalleryRender.apply(this,args);
+  if(customerFrame()){
+   const prev=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.prev');
+   const next=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.next');
+   if(prev){prev.textContent='‹';prev.setAttribute('aria-label','عکس قبلی');}
+   if(next){next.textContent='›';next.setAttribute('aria-label','عکس بعدی');}
+  }
+  return result;
+ };
+ document.addEventListener('keydown',event=>{
+  if(!customerFrame()||!document.getElementById('pb834ShopGallery')?.classList.contains('open')||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+  event.preventDefault();event.stopImmediatePropagation();
+  pb834ShopStep(event.key==='ArrowRight'?1:-1);
+ },true);
+}
+document.addEventListener('click',event=>{
+ const storeEntry=event.target.closest('#photographerStoreRoleHeader .storeDesktopPrimary');
+ if(!storeEntry)return;
+ event.preventDefault();event.stopPropagation();
+ if(typeof enterStoreChooserR96==='function')enterStoreChooserR96('store');
+},true);
+
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();
 

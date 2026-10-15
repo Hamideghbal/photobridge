@@ -1,1 +1,1 @@
-2026-10-15-r1244-photographer-store-visual-polish
+2026-10-15-r1245-frame-customer-invoice-orders-receipt-ui

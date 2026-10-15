@@ -25,10 +25,10 @@ export async function frameLedger(db,order,reverse=false){
  if(!order.buyer_user_id)return;
  const amount=Number(order.total_amount||0);if(!amount)return;
  const add=async(type,direction,description)=>db.query(`INSERT INTO equipment_rental_accounting_entries(shop_id,photographer_id,sale_order_id,entry_type,direction,amount,description,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$2) ON CONFLICT(sale_order_id,entry_type,direction) WHERE sale_order_id IS NOT NULL DO NOTHING`,[order.shop_id,order.buyer_user_id,order.id,type,direction,amount,description]);
- if(reverse){await add('sale_reversal','credit','لغو سفارش قاب و شاسی · '+order.id.slice(0,8));if(order.payment_status==='paid')await add('sale_refund','debit','برگشت وجه سفارش قاب و شاسی · '+order.id.slice(0,8));}
- else{await add('sale_charge','debit','سفارش تولید قاب و شاسی · '+order.id.slice(0,8));if(order.payment_status==='paid')await add('payment','credit','پرداخت آنلاین قاب و شاسی · '+order.id.slice(0,8));}
+ if(reverse){await add('sale_reversal','credit','لغو سفارش قاب و شاسی · '+order.id.slice(0,8));if(order.payment_status==='paid'&&order.buyer_wallet_transaction_id)await add('sale_refund','debit','برگشت وجه سفارش قاب و شاسی · '+order.id.slice(0,8));}
+ else{await add('sale_charge','debit','سفارش تولید قاب و شاسی · '+order.id.slice(0,8));if(order.payment_status==='paid')await add('payment','credit',(order.frame_payment_id?'پرداخت بانکی قاب و شاسی · ':'پرداخت آنلاین قاب و شاسی · ')+order.id.slice(0,8));}
 }
-export async function createProductionOrders(db,{shop,userId,items,body,price,pay}){
+export async function createProductionOrders(db,{shop,userId,items,body,price}){
  if(!isProductionShop(shop)||shop.sale_enabled===false)fail('production_shop_unavailable',404);
  if(!['pickup','courier'].includes(body.deliveryMethod))fail('delivery_method_required',400);
  // Delivery location comes from the authenticated photographer profile, never from checkout input.
@@ -44,11 +44,12 @@ export async function createProductionOrders(db,{shop,userId,items,body,price,pa
  const address=body.deliveryMethod==='courier'?String(u.saved_delivery_address||'').trim().slice(0,1000):'';
  if(body.deliveryMethod==='courier'&&!address)fail('photographer_delivery_address_unavailable',400);
  const deliveryLocation=(Number.isFinite(Number(u.saved_lat))&&Number.isFinite(Number(u.saved_lng))&&u.saved_lat!==null&&u.saved_lng!==null)?{lat:Number(u.saved_lat),lng:Number(u.saved_lng)}:null;
- const terms=(await db.query("SELECT settlement_mode FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND role='photographer' AND active=true",[shop.id,userId])).rows[0];
- const total=lines.reduce((n,x)=>n+x.p.totalAmount,0),wallet=terms?terms.settlement_mode==='prepaid':Boolean(shop.sales_wallet_checkout_enabled),cartId=crypto.randomUUID();let payment={};
- if(wallet)payment=await pay(db,{orderId:cartId,shopId:shop.id,buyerUserId:userId,amount:total,itemTitle:'سفارش قاب و شاسی',quantity:lines.reduce((n,x)=>n+x.quantity,0)});
+ const total=lines.reduce((n,x)=>n+x.p.totalAmount,0),cartId=crypto.randomUUID();
+ const bank={cardNumber:shop.payment_card_number||'',iban:shop.payment_iban||'',accountHolder:shop.payment_account_holder||''};
+ await db.query(`INSERT INTO equipment_frame_payments(id,shop_id,buyer_user_id,total_amount,bank_details) VALUES($1,$2,$3,$4,$5::jsonb)`,[cartId,shop.id,userId,total,JSON.stringify(bank)]);
  await db.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'photographer',false,now()) ON CONFLICT(shop_id,user_id,role) DO NOTHING`,[shop.id,userId]);
  const orders=[];for(const {item,quantity,p} of lines){
- const id=crypto.randomUUID();const row=(await db.query(`INSERT INTO equipment_sale_orders(id,shop_id,sale_item_id,buyer_user_id,buyer_name,buyer_mobile,quantity,unit_price,total_amount,status,payment_status,buyer_wallet_transaction_id,shop_wallet_transaction_id,paid_at,notes,created_by,gross_amount,discount_percent,discount_amount,discount_reason,production_stage,delivery_method,delivery_address,production_specs) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10,$11,$12,$13,$14,$4,$15,$16,$17,$18,'awaiting_approval',$19,$20,$21::jsonb) RETURNING *`,[id,shop.id,item.id,userId,u.studio_name,u.mobile,quantity,item.sale_price,p.totalAmount,wallet?'paid':'unpaid',payment.buyerTx?.id||null,payment.shopTx?.id||null,wallet?new Date():null,String(body.notes||'').trim().slice(0,2000)||null,p.grossAmount,p.discountPercent,p.discountAmount,p.discountReason,body.deliveryMethod,address||null,JSON.stringify({...item.variant_specs,title:item.title,...(body.deliveryMethod==='courier'&&deliveryLocation?{deliveryLocation}:{})})])).rows[0];orders.push(row);
- }return {ok:true,cartId,orderIds:orders.map(x=>x.id),checkoutMode:wallet?'wallet':'ledger',status:'pending',paymentStatus:wallet?'paid':'unpaid',totalAmount:total,walletBalance:wallet?payment.buyerBalanceAfter:null};
+ const id=crypto.randomUUID();const row=(await db.query(`INSERT INTO equipment_sale_orders(id,shop_id,sale_item_id,buyer_user_id,buyer_name,buyer_mobile,quantity,unit_price,total_amount,status,payment_status,buyer_wallet_transaction_id,shop_wallet_transaction_id,paid_at,notes,created_by,gross_amount,discount_percent,discount_amount,discount_reason,production_stage,delivery_method,delivery_address,production_specs,frame_payment_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10,$11,$12,$13,$14,$4,$15,$16,$17,$18,'awaiting_approval',$19,$20,$21::jsonb,$22) RETURNING *`,[id,shop.id,item.id,userId,u.studio_name,u.mobile,quantity,item.sale_price,p.totalAmount,'unpaid',null,null,null,String(body.notes||'').trim().slice(0,2000)||null,p.grossAmount,p.discountPercent,p.discountAmount,p.discountReason,body.deliveryMethod,address||null,JSON.stringify({...item.variant_specs,title:item.title,...(body.deliveryMethod==='courier'&&deliveryLocation?{deliveryLocation}:{})}),cartId])).rows[0];orders.push(row);
+ }return {ok:true,cartId,orderIds:orders.map(x=>x.id),checkoutMode:'bank_transfer',paymentId:cartId,status:'pending',paymentStatus:'unpaid',totalAmount:total,walletBalance:null};
 }
+

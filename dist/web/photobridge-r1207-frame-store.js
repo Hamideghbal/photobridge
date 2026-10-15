@@ -190,6 +190,7 @@ function renderFrameOrderRows(){
   if(show)visible++;
   if(!info||!order?.production_stage)continue;
   el.classList.add('frameOrderCustomer');
+  if(order.frame_payment_id)el.dataset.framePaymentId=order.frame_payment_id;
   info.querySelector('.frameOrderStepper,.frameOrderCancelled')?.remove();
   info.insertAdjacentHTML('beforeend',frameStepMarkup(order.production_stage));
  }
@@ -204,7 +205,7 @@ function renderFrameOrderRows(){
 
 
 
-window.pbFrameConfirmCheckout=function({total,wallet}){
+window.pbFrameConfirmCheckout=function({total}){
  return new Promise(resolve=>{
   const previous=document.activeElement,priorOverflow=document.body.style.overflow;
   const dialog=document.createElement('section');dialog.id='frameCheckoutDialog';dialog.className='frameCheckoutDialog';
@@ -213,7 +214,7 @@ window.pbFrameConfirmCheckout=function({total,wallet}){
   dialog.querySelector('.frameCheckoutSummary b').textContent=money(total);
   const method=document.getElementById('productionDeliveryMethod')?.value||'pickup';
   dialog.querySelector('[data-frame-delivery-label]').textContent=method==='courier'?'ارسال با پیک به آدرس ثبت‌شده':'تحویل حضوری';
-  dialog.querySelector('.frameCheckoutPayment').textContent=wallet?'پس از تأیید، مبلغ از کیف پول شما پرداخت می‌شود.':'پرداخت و تسویه مطابق شرایط فروشگاه انجام می‌شود.';
+  dialog.querySelector('.frameCheckoutPayment').textContent='پرداخت با واریز به حساب فروشگاه و ارسال رسید انجام می‌شود. رسید باید توسط فروشگاه تأیید شود.';
   const done=accepted=>{
    if(!dialog.isConnected)return;
    dialog.remove();document.body.style.overflow=priorOverflow;document.removeEventListener('keydown',onKey);
@@ -1198,5 +1199,6 @@ const tabFeedback=document.createElement('style');tabFeedback.textContent=`
 document.head.append(tabFeedback);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();
+
 
 

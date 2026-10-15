@@ -1,1 +1,1 @@
-2026-10-15-r1250-store-order-sms-and-compact-frame-cards
+2026-10-15-r1251-immutable-store-business-category

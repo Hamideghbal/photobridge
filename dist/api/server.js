@@ -10090,7 +10090,7 @@ async function equipmentRentalAccountingOverview(shopId) {
     return { summary: { debitTotal: Number(x.debit_total || 0), creditTotal: Number(x.credit_total || 0), balance: Number(x.balance || 0) }, balances: balancesQ.rows, entries: entriesQ.rows, invoices: markedInvoices };
 }
 
-function equipmentRentalBusinessCategory(value){const allowed=["equipment_rental", "equipment_sale", "equipment_rental_sale", "frame", "chassis", "frame_chassis"];return allowed.includes(String(value||''))?String(value):null;}
+function equipmentRentalBusinessCategory(value){const allowed=["equipment_rental_sale", "frame_chassis"];return allowed.includes(value)?value:null;}
 function equipmentRentalMembershipRequiredFields(shop) {
     // R100F5: store-wide membership requirements were retired. Store-required
     // fields are selected for each phone/invitation. Birth date is a core
@@ -13998,7 +13998,7 @@ async function api(req, res, url) {
         await ensureActivationWorkflowRuntimeSchema();
         const b = await bodyJson(req);
         const shopName = String(b.shopName || b.name || '').trim(), managerName = String(b.managerName || '').trim();
-        const businessCategory=equipmentRentalBusinessCategory(b.businessCategory||'equipment_rental_sale');if(!businessCategory)return sendJson(res,400,{error:'invalid_business_category'});
+        const businessCategory=equipmentRentalBusinessCategory(b.businessCategory);if(!businessCategory)return sendJson(res,400,{error:'invalid_business_category'});
         const province = String(b.province || '').trim(), city = String(b.city || '').trim();
         const location = optionalLatLng(b.locationLat, b.locationLng), locationAddress = String(b.locationAddress || '').trim().slice(0,500);
         const mobile = normalizeMobile(String(b.mobile || '')), password = String(b.password || '');
@@ -14036,6 +14036,8 @@ async function api(req, res, url) {
         try {
             await c.query('BEGIN');
             const challenge = await lockAndVerifySignupChallenge(c, 'equipment_rental_trial', challengeId, code), p = challenge.payload || {}, mobile = normalizeMobile(String(challenge.mobile || ''));
+            const businessCategory=equipmentRentalBusinessCategory(p.businessCategory);
+            if(!businessCategory)throw Object.assign(new Error('invalid_business_category'),{status:400});
             const shopName = String(p.shopName || '').trim(), managerName = String(p.managerName || '').trim(), province = String(p.province || '').trim(), city = String(p.city || '').trim();
             const locationLat = Number(p.locationLat), locationLng = Number(p.locationLng), locationAddress = String(p.locationAddress || '').trim().slice(0,500);
             if (!shopName || !managerName || !isValidIranLocation(province, city) || !Number.isFinite(locationLat) || !Number.isFinite(locationLng)) throw Object.assign(new Error('signup_payload_invalid'), { status: 400 });
@@ -14058,7 +14060,7 @@ async function api(req, res, url) {
             const sq = await c.query(`INSERT INTO equipment_rental_shops(id,name,slug,province,city,address,manager_name,manager_mobile,active,active_from,active_until,created_by,location_lat,location_lng,location_address,activation_status)
               VALUES($1,$2,$3,$4,$5,$6,$7,$8,false,now(),NULL,$9,$10,$11,$12,'draft')
               RETURNING id,name,slug,province,city,active,active_from,active_until,activation_status,location_lat,location_lng,location_address`, [shopId, shopName, slug, province, city, locationAddress || `${city}، ${province}`, managerName, mobile, userId, locationLat, locationLng, locationAddress || `${city}، ${province}`]);
-            await c.query(`UPDATE equipment_rental_shops SET business_category=$2 WHERE id=$1`,[shopId,equipmentRentalBusinessCategory(p.businessCategory||'equipment_rental_sale')||'equipment_rental_sale']);
+            await c.query(`UPDATE equipment_rental_shops SET business_category=$2 WHERE id=$1`,[shopId,businessCategory]);
             await c.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active) VALUES($1,$2,'shop_admin',true)`, [shopId, userId]);
             await c.query(`UPDATE signup_mobile_verifications SET status='used',used_at=now() WHERE id=$1`, [challengeId]);
             await c.query('COMMIT');
@@ -15204,7 +15206,8 @@ async function api(req, res, url) {
         if (!shop) return sendJson(res, 401, { error: 'rental_auth_required' });
         const b = await bodyJson(req, 200_000), name = b.name === undefined ? shop.name : String(b.name || '').trim();
         if (!name) return sendJson(res, 400, { error: 'shop_name_required' });
-        const businessCategory=equipmentRentalBusinessCategory(b.businessCategory===undefined?(shop.business_category||'equipment_rental_sale'):b.businessCategory);if(!businessCategory)return sendJson(res,400,{error:'invalid_business_category'});
+        const businessCategory=shop.business_category||'equipment_rental_sale';
+        if(b.businessCategory!==undefined&&b.businessCategory!==businessCategory)return sendJson(res,409,{error:'business_category_immutable'});
         const province = b.province === undefined ? shop.province : String(b.province || '').trim() || null;
         const city = b.city === undefined ? shop.city : String(b.city || '').trim() || null;
         if (province && city && !isValidIranLocation(province, city)) return sendJson(res, 400, { error: 'invalid_location' });
@@ -15238,7 +15241,6 @@ async function api(req, res, url) {
         const saleBirthdaySms=b.saleBirthdaySmsEnabled===undefined?Boolean(shop.sale_birthday_sms_enabled):b.saleBirthdaySmsEnabled===true;
         await pool.query(`UPDATE equipment_rental_shops SET name=$2,province=$3,city=$4,address=$5,phone=$6,manager_name=$7,manager_mobile=$8,description=$9,deposit_policy=$10,location_lat=$11,location_lng=$12,location_address=$13,sales_wallet_checkout_enabled=$14,membership_required_fields=$15::jsonb,birthday_discount_enabled=$16,birthday_discount_percent=$17,birthday_discount_days_before=$18,birthday_discount_days_after=$19,birthday_sms_enabled=$20,rental_enabled=$21,sale_enabled=$22,rental_reach=$23::jsonb,sale_reach=$24::jsonb,sale_birthday_discount_enabled=$25,sale_birthday_discount_percent=$26,sale_birthday_days_before=$27,sale_birthday_days_after=$28,sale_birthday_sms_enabled=$29,updated_at=now() WHERE id=$1`, [shop.id, name, province, city, b.address === undefined ? shop.address : String(b.address || '').trim() || null, b.phone === undefined ? shop.phone : String(b.phone || '').trim() || null, b.managerName === undefined ? shop.manager_name : String(b.managerName || '').trim() || null, b.managerMobile === undefined ? shop.manager_mobile : normalizeMobile(String(b.managerMobile || '')) || null, b.description === undefined ? shop.description : String(b.description || '').trim() || null, b.depositPolicy === undefined ? shop.deposit_policy : String(b.depositPolicy || '').trim() || null, locationLat, locationLng, locationAddress, salesWalletCheckoutEnabled, JSON.stringify(membershipRequiredFields), birthdayDiscountEnabled, birthdayDiscountPercent, birthdayDiscountDaysBefore, birthdayDiscountDaysAfter, birthdaySmsEnabled,rentalEnabled,saleEnabled,JSON.stringify(rentalReach),JSON.stringify(saleReach),saleBirthdayEnabled,saleBirthdayPercent,saleBirthdayBefore,saleBirthdayAfter,saleBirthdaySms]);
         await audit(a.userId, undefined, 'equipment_rental.shop_update', 'equipment_rental_shop', shop.id, { name, locationLat, locationLng, salesWalletCheckoutEnabled, membershipRequiredFields, birthdayDiscountEnabled, birthdayDiscountPercent, birthdaySmsEnabled }).catch(() => {});
-        await pool.query(`UPDATE equipment_rental_shops SET business_category=$2 WHERE id=$1`,[shop.id,businessCategory]);
         return sendJson(res, 200, { ok: true });
     }
     // v0.17.620 — equipment image upload. Object storage is preferred; local fallback remains available for test/dev.

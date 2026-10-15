@@ -6,6 +6,51 @@
  const errors={invalid_card_number:'شماره کارت باید ۱۶ رقم باشد.',invalid_iban:'شماره شبا معتبر نیست.',account_holder_required:'نام صاحب حساب را وارد کنید.',bank_details_unavailable:'شماره حساب فروشگاه هنوز ثبت نشده است؛ با فروشگاه هماهنگ کنید.',receipt_not_replaceable:'رسید در حال بررسی یا تأیید شده است؛ امکان جایگزینی ندارد.',receipt_not_pending:'این رسید قبلاً بررسی شده است.',payment_group_changed:'وضعیت یکی از سفارش‌ها تغییر کرده است؛ پرداخت را با فروشگاه بررسی کنید.',invalid_receipt_image:'عکس رسید باید JPG، PNG یا WebP و حداکثر ۶ مگابایت باشد.',receipt_too_large:'حداکثر حجم رسید ۶ مگابایت است.',storage_not_configured:'ذخیره رسید فعلاً در دسترس نیست؛ دوباره تلاش کنید.'};
  const errorText=e=>errors[e?.error]||'انجام نشد؛ دوباره تلاش کنید.';
  let scheduled=false,settingsShop='',dialog=null;
+ const bankCache=new Map();
+ const receiptInline=card=>card.querySelector('.pb1249InlineReceipt');
+ async function inlineCustomerReceipt(card,order){
+  if(!order?.frame_payment_id)return;
+  const id=String(order.frame_payment_id),status=order.receipt_status||'awaiting_receipt';
+  if(!['awaiting_receipt','rejected'].includes(status)){
+   receiptInline(card)?.remove();card.removeAttribute('data-pb1249-inline-ready');return;
+  }
+  let host=receiptInline(card);
+  if(!host){host=document.createElement('section');host.className='pb1249InlineReceipt';host.dataset.paymentId=id;
+   host.innerHTML='<p class="pb1249InlineWait">در حال دریافت اطلاعات واریز…</p>';
+   card.append(host);
+  }
+  if(host.dataset.paymentId!==id){host.remove();return inlineCustomerReceipt(card,order);}
+  if(host.dataset.loaded==='1'||host.dataset.loading==='1')return;
+  host.dataset.loading='1';
+  try{
+   if(!bankCache.has(id))bankCache.set(id,request('/api/customer/equipment-rental/frame-payments/'+id).catch(error=>{bankCache.delete(id);throw error;}));
+   const result=await bankCache.get(id);
+   if(!host.isConnected)return;
+   const bank=result.paymentSettings||{},configured=Boolean(bank.cardNumber||bank.iban);
+   if(!configured){host.innerHTML='<p class="pb1249InlineWait">شماره کارت و شبا هنوز توسط فروشگاه ثبت نشده است.</p>';host.dataset.loaded='1';return;}
+   host.innerHTML='<div class="pb1249InlineTitle">اطلاعات واریز به فروشگاه</div>'+bankMarkup(bank)+
+    '<form class="pb1249InlineForm"><label class="pb1249InlinePicker">انتخاب تصویر رسید<input type="file" accept="image/jpeg,image/png,image/webp" required></label><button type="submit">ارسال رسید پرداخت</button><small role="status">پس از ارسال رسید، سفارش وارد مرحله تأیید فروشگاه می‌شود.</small></form>';
+   host.dataset.loaded='1';card.dataset.pb1249InlineReady='1';
+   host.querySelectorAll('[data-copy-bank]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copyBank);b.textContent='کپی شد';}catch{b.textContent='کپی نشد';}});
+   const form=host.querySelector('form'),picker=form.querySelector('input'),message=form.querySelector('[role=status]');
+   form.onsubmit=async event=>{
+    event.preventDefault();const file=picker.files?.[0],button=form.querySelector('button');
+    if(!file||file.size>6*1024*1024||!['image/jpeg','image/png','image/webp'].includes(file.type)){message.textContent=errors.invalid_receipt_image;return;}
+    button.disabled=true;message.textContent='در حال ارسال رسید…';
+    try{
+     const image=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
+     await request('/api/customer/equipment-rental/frame-payments/'+id+'/receipt',{method:'POST',body:JSON.stringify({image,name:file.name})});
+     if(typeof saleOrders!=='undefined')for(const o of saleOrders)if(String(o.frame_payment_id)===id)o.receipt_status='pending';
+     host.innerHTML='<p role="status" class="pb1249InlineDone">رسید ارسال شد؛ سفارش در انتظار تأیید فروشگاه است.</p>';
+     card.removeAttribute('data-pb1249-inline-ready');bankCache.delete(id);
+     if(typeof loadSales==='function')void loadSales();
+     schedule();
+    }catch(e){message.textContent=errorText(e);button.disabled=false;}
+   };
+  }catch(e){if(host.isConnected){host.innerHTML='<p class="pb1249InlineWait">دریافت حساب بانکی انجام نشد. از دکمه جزئیات پرداخت استفاده کنید.</p>';host.dataset.loaded='1';}}
+  finally{if(host.isConnected)delete host.dataset.loading;}
+ }
+
  const owner=()=>typeof data!=='undefined'&&['frame','chassis','frame_chassis'].includes(data?.shop?.business_category)&&!data.staffMode;
  const customer=()=>document.body.classList.contains('frameCustomerStore');
  const statusText={awaiting_receipt:'در انتظار ارسال رسید',pending:'رسید در انتظار تأیید',approved:'پرداخت تأیید شده',rejected:'رسید رد شده؛ ارسال مجدد'};
@@ -21,6 +66,7 @@
   const meta=card.querySelector('.salePaymentMeta span');
   const text=paid?(cancelled?'پرداخت‌شده · پیگیری استرداد با فروشگاه':'پرداخت‌شده'):statusText[status]||'پرداخت‌نشده';
   if(meta&&meta.textContent!==text)meta.textContent=text;
+  if(!isOwner)void inlineCustomerReceipt(card,order);
  }
  async function mountSettings(){
   const host=q('#settings');if(!host||!owner())return;
@@ -63,8 +109,65 @@
   };
   try{await reload();}catch(e){if(root.isConnected)body.textContent=errorText(e);}
  }
+ // The owner should notice newly placed orders and payment receipts without
+ // having to manually refresh. The feed is scoped to the authenticated shop.
+ let ownerPolling=false,ownerPollAt=0;
+ const seenKey=id=>'photobridge:frame:owner-activity:'+id;
+ function showOwnerActivity(event){
+  const area=q('#pb1249OwnerNotices')||document.createElement('aside');area.id='pb1249OwnerNotices';
+  area.setAttribute('aria-live','polite');area.className='pb1249OwnerNotices';
+  if(!area.isConnected)document.body.append(area);
+  const el=document.createElement('article');el.className='pb1249OwnerNotice';
+  const title=document.createElement('b');title.textContent=event.kind==='receipt'?'رسید پرداخت جدید':'سفارش جدید قاب و شاسی';
+  const line=document.createElement('p');line.textContent=(event.name||'عکاس')+(event.kind==='receipt'?' رسید پرداخت فرستاده است.':' سفارش جدید ثبت کرده است.');
+  const open=document.createElement('button');open.type='button';open.textContent='بررسی';
+  const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','بستن اعلان');
+  close.onclick=()=>el.remove();open.onclick=()=>{
+   el.remove();
+   if(typeof selectRentalTab==='function')selectRentalTab('sales');
+   if(event.kind==='receipt'&&event.paymentId)void openPayment(event.paymentId,true);
+  };
+  el.append(title,line,open,close);area.prepend(el);
+  while(area.children.length>3)area.lastElementChild.remove();
+  try{const sound=new Audio('/photobridge-notification-v780.wav');sound.volume=.6;void sound.play().catch(()=>{});}catch{}
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'&&document.hidden){
+   try{const notice=new Notification(title.textContent,{body:line.textContent,tag:'pb-frame-'+event.key});notice.onclick=()=>{window.focus();open.click();notice.close();};}catch{}
+  }
+ }
+ async function pollOwnerActivity(){
+  if(ownerPolling||!owner()||!document.body.classList.contains('rentalAppReady'))return;
+  if(Date.now()-ownerPollAt<12000)return;
+  ownerPolling=true;ownerPollAt=Date.now();
+  try{
+   const id=String(data.shop.id||'');if(!id)return;
+   const result=await request('/api/rental/frame-activity');
+   if(!owner()||String(data.shop.id)!==id)return;
+   const rows=Array.isArray(result.orders)?result.orders:[];
+   let previous=[];try{previous=JSON.parse(localStorage.getItem(seenKey(id))||'[]');if(!Array.isArray(previous))previous=[];}catch{}
+   const seen=new Set(previous),fresh=[],recent=Date.now()-7*86400000;
+   for(const o of rows){
+    const created=new Date(o.createdAt||0).getTime();
+    const orderKey='order:'+o.id;
+    if(!seen.has(orderKey)){
+     if(o.status==='pending'&&created>=recent)fresh.push({key:orderKey,kind:'order',name:o.photographerName,paymentId:o.paymentId});
+     seen.add(orderKey);
+    }
+    if(o.receiptStatus==='pending'&&o.receiptSubmittedAt){
+     const receiptKey='receipt:'+o.paymentId+':'+String(o.receiptSubmittedAt);
+     if(!seen.has(receiptKey)){
+      if(new Date(o.receiptSubmittedAt).getTime()>=recent)fresh.push({key:receiptKey,kind:'receipt',name:o.photographerName,paymentId:o.paymentId});
+      seen.add(receiptKey);
+     }
+    }
+   }
+   try{localStorage.setItem(seenKey(id),JSON.stringify([...seen].slice(-250)));}catch{}
+   const unique=new Map(fresh.map(x=>[x.key,x]));
+   [...unique.values()].slice(0,3).forEach(showOwnerActivity);
+  }catch{}finally{ownerPolling=false;}
+ }
+
  window.pb1242OpenPayment=id=>openPayment(id,false);
  document.addEventListener('click',event=>{const button=event.target.closest('[data-frame-payment-open]');if(button){event.preventDefault();void openPayment(button.dataset.framePaymentOpen,button.dataset.framePaymentOwner==='1');}});
- const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});};
+ const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});setInterval(()=>void pollOwnerActivity(),22000);setTimeout(()=>void pollOwnerActivity(),3500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollOwnerActivity();});};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

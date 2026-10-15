@@ -94,3 +94,23 @@ test('bank approval before production confirmation is accounted for; cancellatio
   assert.equal((await f.db.query("SELECT count(*)::int n FROM equipment_rental_accounting_entries WHERE entry_type='payment'")).rows[0].n,2,'confirmation does not duplicate already received money');assert.equal(f.payCalls(),0);
  }finally{await f.db.close();}
 });
+
+test('owner activity feed reports new frame orders and submitted receipts and stays scoped to shop',async()=>{
+ const f=await fixture();try{
+  const order=await f.make();
+  const endpoint='/api/rental/frame-activity';
+  let response=await f.run('GET',endpoint,f.owner);
+  assert.equal(response.status,200);
+  assert.equal(response.body.orders.length,2);
+  assert(response.body.orders.every(o=>o.paymentId===order.paymentId));
+  assert(response.body.orders.every(o=>o.receiptStatus==='awaiting_receipt'));
+  assert.equal((await f.run('GET',endpoint,f.customer)).status,401);
+  assert.equal((await f.run('POST',endpoint,f.owner,{})).status,405);
+  await f.run('PUT','/api/rental/frame-payment-settings',f.owner,{cardNumber:'6037991234567890',accountHolder:'قاب'});
+  const sent=await f.run('POST','/api/customer/equipment-rental/frame-payments/'+order.paymentId+'/receipt',f.customer,{image:await image(),name:'receipt.png'});
+  assert.equal(sent.status,201);
+  response=await f.run('GET',endpoint,f.owner);
+  assert(response.body.orders.every(o=>o.receiptStatus==='pending'&&o.receiptSubmittedAt));
+  assert(!JSON.stringify(response.body).includes('receipt_object_key'),'never expose receipt object key in activity feed');
+ }finally{await f.db.close();}
+});

@@ -154,7 +154,7 @@ document.addEventListener('change',changeChoice);
 document.addEventListener('click',e=>{if(e.target.closest('[data-frame-color]')){changeChoice(e);return;}const btn=e.target.closest('[data-frame-show-gallery]');if(btn){pb834OpenShopGallery('sale',btn.dataset.frameShowGallery);if(typeof pb834ShopGalleryState!=='undefined'){pb834ShopGalleryState.index=Number(btn.dataset.frameGalleryIndex)||0;pb834RenderShopGallery();}}});
 
 
-const frameStageList=[['awaiting_approval','در انتظار تأیید'],['in_production','در حال تولید'],['ready','آماده تحویل'],['delivered','تحویل‌شده']];
+const frameStageList=[['awaiting_receipt','ارسال رسید'],['awaiting_approval','تأیید سفارش'],['in_production','در حال تولید'],['ready','آماده تحویل'],['delivered','تحویل‌شده']];
 let frameOrdersOrigin=null;
 function ensureFrameOrdersPanel(enabled){
  const orders=document.getElementById('saleOrders'),sales=document.getElementById('salesPanel');
@@ -170,9 +170,12 @@ function ensureFrameOrdersPanel(enabled){
   panel.remove();frameOrdersOrigin=null;
  }
 }
-function frameStepMarkup(stage){
+function frameStepMarkup(order){
+ const stage=order?.production_stage||order?.status;
  if(stage==='cancelled')return '<div class="frameOrderCancelled">سفارش لغو شده است</div>';
- const index=frameStageList.findIndex(row=>row[0]===stage);
+ const receipt=order?.receipt_status||'awaiting_receipt';
+ const effective=['awaiting_receipt','rejected'].includes(receipt)?'awaiting_receipt':stage;
+ const index=frameStageList.findIndex(row=>row[0]===effective);
  return '<div class="frameOrderStepper" aria-label="مراحل سفارش">'+frameStageList.map(([key,label],i)=>'<div class="frameOrderStep '+(i<=index?'complete ':'')+(i===index?'current':'')+'"><span class="frameOrderCircle" aria-hidden="true">'+(i<index?'✓':(i+1))+'</span><small>'+label+'</small></div>').join('')+'</div>';
 }
 function frameOrderIsHistory(order){
@@ -192,7 +195,7 @@ function renderFrameOrderRows(){
   el.classList.add('frameOrderCustomer');
   if(order.frame_payment_id)el.dataset.framePaymentId=order.frame_payment_id;
   info.querySelector('.frameOrderStepper,.frameOrderCancelled')?.remove();
-  info.insertAdjacentHTML('beforeend',frameStepMarkup(order.production_stage));
+  info.insertAdjacentHTML('beforeend',frameStepMarkup(order));
  }
  const panel=document.getElementById('frameOrdersPanel');
  const title=panel?.querySelector('.frameOrdersHead h2');

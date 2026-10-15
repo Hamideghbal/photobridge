@@ -26,8 +26,8 @@ export async function reviewFramePayment(db,{paymentId,shopId,userId,action,note
  if(payment.status==='approved'&&action==='approve')return payment;
  if(payment.status!=='pending'||!payment.receipt_object_key)fail('receipt_not_pending');
  const orders=(await db.query('SELECT * FROM equipment_sale_orders WHERE frame_payment_id=$1 ORDER BY id FOR UPDATE',[paymentId])).rows;
- if(!orders.length||orders.some(o=>o.shop_id!==shopId||o.buyer_user_id!==payment.buyer_user_id||o.status==='cancelled'||o.payment_status!=='unpaid'))fail('payment_group_changed');
- const total=orders.reduce((n,o)=>n+Number(o.total_amount),0);if(Math.abs(total-Number(payment.total_amount))>.001)fail('payment_group_changed');
+ if(action==='approve'&&(!orders.length||orders.some(o=>o.shop_id!==shopId||o.buyer_user_id!==payment.buyer_user_id||o.status==='cancelled'||o.payment_status!=='unpaid')))fail('payment_group_changed');
+ const total=orders.reduce((n,o)=>n+Number(o.total_amount),0);if(action==='approve'&&Math.abs(total-Number(payment.total_amount))>.001)fail('payment_group_changed');
  if(action==='approve'){
   for(const order of orders){
    await db.query("UPDATE equipment_sale_orders SET payment_status='paid',paid_at=COALESCE(paid_at,now()),updated_at=now() WHERE id=$1",[order.id]);

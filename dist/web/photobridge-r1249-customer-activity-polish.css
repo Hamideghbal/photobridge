@@ -152,3 +152,91 @@ body.frameCustomerStore .pb1249InlineDone{color:#027a48!important}
   color:#315efb!important;background:#eef4ff!important;font:800 11px Vazirmatn,Tahoma,sans-serif!important;
  }
 }
+
+/* R1250 — compact payment cards and frame/chassis product cards. */
+body.frameCustomerStore #frameOrdersPanel .saleOrderCustomer{
+ padding:12px 13px!important;margin:2px 0!important;gap:6px!important;
+ border-radius:12px!important;line-height:1.65!important;
+}
+body.frameCustomerStore #frameOrdersPanel #saleOrders{gap:9px!important}
+body.frameCustomerStore #frameOrdersPanel .frameOrderStepper{margin:9px 0 3px!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249DuplicateReceiptAction{display:none!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineReceipt{
+ margin:8px 0 0!important;padding:10px 12px!important;gap:6px!important;
+ border-radius:10px!important;background:#f7faff!important;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineAmount{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ padding:0 0 7px;border-bottom:1px solid #dce7f6;
+ font:750 12px/1.5 Vazirmatn,Tahoma,sans-serif;color:#475467;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineAmount b{
+ font-size:15px!important;color:#1d4ed8!important;white-space:nowrap;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineTitle{font-size:11px!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineReceipt .pb1242BankAccount{
+ padding:7px 10px!important;border-radius:9px!important;gap:5px!important;
+ display:grid!important;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineReceipt .pb1242BankAccount>label{
+ display:flex!important;align-items:center!important;flex-wrap:wrap!important;
+ gap:6px!important;min-width:0!important;margin:0!important;
+ font-size:11px!important;line-height:1.65!important;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineReceipt .pb1242BankAccount>label:has(>span[dir=ltr]):last-child{
+ padding-top:6px!important;border-top:1px solid #eef2f6!important;
+}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineForm{gap:6px!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlinePicker{min-height:38px!important;padding:7px!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineForm>button{min-height:38px!important}
+body.frameCustomerStore #frameOrdersPanel .pb1249InlineForm>small{line-height:1.5!important}
+/* Cards are reduced without shrinking the primary purchase button or clipping quantity controls. */
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard,
+body.frameCustomerStore #saleItems .frameProductCard{
+ padding:11px!important;border-radius:12px!important;gap:6px!important;
+ align-content:start!important;min-width:0!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .saleItemInfo,
+body.frameCustomerStore #saleItems .frameProductCard .saleItemInfo{
+ margin:0 0 5px!important;gap:3px!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .saleItemInfo b,
+body.frameCustomerStore #saleItems .frameProductCard .saleItemInfo b{font-size:14px!important}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .saleItemPhoto,
+body.frameCustomerStore #saleItems .frameProductCard .saleItemPhoto{
+ height:145px!important;max-height:145px!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .frameStoreChoices,
+body.frameCustomerStore #saleItems .frameProductCard .frameStoreChoices{
+ margin:6px 0!important;gap:6px!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .frameSizePriceRow,
+body.frameCustomerStore #saleItems .frameProductCard .frameSizePriceRow{
+ margin:5px 0!important;gap:7px!important;min-width:0!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .saleItemPrice,
+body.frameCustomerStore #saleItems .frameProductCard .saleItemPrice{margin:0!important;font-size:15px!important}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .frameOwnerActions{
+ gap:6px!important;margin:4px 0 0!important;
+}
+body.rentalAppReady:has(#saleItems .frameProductCard) #saleItems .frameProductCard .frameOwnerActions button{
+ padding:7px 9px!important;min-height:35px!important;
+}
+body.frameCustomerStore #saleItems .frameProductCard .saleItemBuy{
+ display:grid!important;grid-template-columns:minmax(0,1fr) minmax(92px,auto)!important;
+ gap:7px!important;align-items:center!important;margin:5px 0 0!important;
+}
+body.frameCustomerStore #saleItems .frameProductCard .saleItemBuy>.btn{
+ min-width:0!important;width:100%!important;min-height:38px!important;height:auto!important;
+ margin:0!important;align-self:stretch!important;padding:7px 8px!important;
+ font-size:11px!important;white-space:normal!important;
+}
+body.frameCustomerStore #saleItems .frameProductCard .saleItemBuy>.field{
+ min-width:0!important;width:100%!important;max-width:115px!important;
+}
+@media(max-width:460px){
+ body.frameCustomerStore #saleItems .frameProductCard .saleItemBuy{
+  grid-template-columns:minmax(0,1fr) minmax(88px,auto)!important;
+ }
+ body.frameCustomerStore #frameOrdersPanel .saleOrderCustomer{padding:10px!important}
+}

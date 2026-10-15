@@ -14,7 +14,7 @@ if(!p.includes('photobridge-r1250-owner-settings.js')){
  const categoryFix="if(f.elements.businessCategory){f.elements.businessCategory.disabled=false;f.elements.businessCategory.value=['frame','chassis','frame_chassis'].includes(s.business_category)?'frame_chassis':'equipment_rental_sale';}";
  p=one(p,categoryMarker,categoryFix,'restore selection of legacy shop categories');
  p=one(p,'"equipment_rental_sale": "فروش و اجاره تجهیزات عکاسی"','"equipment_rental_sale": "فروش و اجاره تجهیزات عکاسی و فیلمبرداری"','shop type display name');
- p=one(p,'</body></html>','<link rel="stylesheet" href="/photobridge-r1250-owner-settings.css?v=r1250"><script defer src="/photobridge-r1250-owner-settings.js?v=r1250"></script></body></html>','owner production settings assets');
+ const closing='</body></html>',position=p.lastIndexOf(closing);if(position<0)throw Error('owner document closing tags missing');p=p.slice(0,position)+'<link rel="stylesheet" href="/photobridge-r1250-owner-settings.css?v=r1250"><script defer src="/photobridge-r1250-owner-settings.js?v=r1250"></script>'+p.slice(position);
  p=p.replace('/photobridge-r1242-frame-payments.js?v=r1249','/photobridge-r1242-frame-payments.js?v=r1250');
  fs.writeFileSync(file,p);
 }

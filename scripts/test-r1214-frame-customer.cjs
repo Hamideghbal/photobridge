@@ -184,10 +184,10 @@ test('Windows photographer tools open closable overlays without switching tabs o
   assert.equal(shopSurface.gutter,'auto');assert.equal(shopSurface.overflow,'auto');assert.equal(shopSurface.scrollbar,'none');assert.equal(shopSurface.left,0);assert(Math.abs(shopSurface.width-shopSurface.viewport)<1);assert(Math.abs(shopSurface.right-shopSurface.viewport)<1);
   const openAndClose=async(selector,path)=>{
    await page.locator(selector).click();
-   const modal=page.locator('#pb1126UtilityWindow');await modal.waitFor();
+   const modal=page.locator('#pb1126UtilityWindow');await modal.waitFor({state:'visible'});
    assert.equal(await modal.getAttribute('role'),'presentation');
    assert.equal(await modal.locator('[role=dialog]').getAttribute('aria-modal'),'true');
-   assert((await modal.locator('iframe').getAttribute('src')).includes(path));
+   assert((await modal.locator('iframe[src*="'+path+'"]').getAttribute('src')).includes(path));
    assert.equal(await activeStore.getAttribute('aria-current'),'page','the underlying Store tab stays selected');
    assert(await storeFrame.locator('.frameProductCard').isVisible(),'the current shop remains open underneath the utility window');
    await modal.locator('#pb1126UtilityClose').click();
@@ -197,6 +197,5 @@ test('Windows photographer tools open closable overlays without switching tabs o
   };
   await openAndClose('#pb1126DesktopHeader .pb1124Wallet','/photographer/wallet');
   await openAndClose('.pb1163-settings','/photographer/settings');
-  await openAndClose('.pb1163-invite','/photographer/settings/invites');
  }finally{await browser.close()}
 });

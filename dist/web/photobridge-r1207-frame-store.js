@@ -1,6 +1,97 @@
 (()=>{'use strict';const C=window.PBFrameCatalog,selected=new Map();
 const isFrame=()=>Boolean(saleShopConfig?.production);
-function render(){applyFrameCustomerView();if(!isFrame())return;const host=document.getElementById('saleItems');if(!host)return;const groups=C.groups(saleItems);host.innerHTML=groups.map(g=>{const item=C.choose(g,selected.get(g.id));if(!item)return '';selected.set(g.id,item.id);return C.card(g,item.id,{esc,money});}).join('')||'<div class="empty">مدلی برای سفارش وجود ندارد.</div>';applySaleCategory();mountFrameSizeTriggers();}
+/* R1224: frame cards are keyed, persistent DOM. Repeated wallet, order and
+   visibility refreshes must never detach photos, reset scroll/dots or flash. */
+let frameRenderedShop='';
+function frameCardSignature(g,item){
+ return JSON.stringify([item.id,g.model,g.material,g.description,g.category,g.variants.map(x=>[
+  x.id,x.updated_at,x.sale_price,x.active,x.title,x.model,x.description,x.image_url,
+  x.image_urls,x.thumbnail_url,x.thumbnail_urls,x.color_image_urls,x.variant_specs
+ ])]);
+}
+function frameFreshCard(g,id){
+ const temp=document.createElement('template');temp.innerHTML=C.card(g,id,{esc,money}).trim();return temp.content.firstElementChild;
+}
+function frameUpdatePhotoNodes(current,next,card){
+ const a=current?.querySelector('.framePhotoViewport'),b=next?.querySelector('.framePhotoViewport');
+ if(!current||!next||!a||!b){if(current&&next)current.replaceWith(next);else if(current)current.remove();else if(next)card.querySelector('.saleItemHead')?.append(next);return;}
+ const oldImg=[...a.querySelectorAll('.saleItemPhoto')],newImg=[...b.querySelectorAll('.saleItemPhoto')];
+ const sourceOld=oldImg.map(x=>x.getAttribute('src')),sourceNew=newImg.map(x=>x.getAttribute('src'));
+ const sameSource=sourceOld.length===sourceNew.length&&sourceOld.every((src,i)=>src===sourceNew[i]);
+ const copyAttrs=()=>{
+  const actual=a.querySelectorAll('[data-frame-show-gallery]'),fresh=b.querySelectorAll('[data-frame-show-gallery]');
+  for(let i=0;i<actual.length;i++){
+   const latest=fresh[i];if(!latest)continue;
+   for(const key of ['data-frame-show-gallery','data-frame-gallery-index']){
+    if(actual[i].getAttribute(key)!==latest.getAttribute(key))actual[i].setAttribute(key,latest.getAttribute(key));
+   }
+   const alt=newImg[i]?.getAttribute('alt');if(alt!==undefined&&oldImg[i]?.getAttribute('alt')!==alt)oldImg[i].setAttribute('alt',alt);
+  }
+ };
+ if(sameSource){card._framePhotoToken=undefined;copyAttrs();return;}
+ const token=Symbol('frame-photo-change');card._framePhotoToken=token;
+ const urls=sourceNew.filter(Boolean);
+ const loaders=urls.map(url=>new Promise((done,reject)=>{
+   const img=new Image();img.onload=()=>{const decoded=typeof img.decode==='function'?img.decode().catch(()=>{}):Promise.resolve();decoded.then(done);};
+   img.onerror=reject;img.src=url;if(img.complete&&img.naturalWidth>0)done();
+ }));
+ Promise.all(loaders).then(()=>{
+  if(!card.isConnected||card._framePhotoToken!==token)return;
+  if(oldImg.length===newImg.length){
+   newImg.forEach((image,i)=>{const url=image.getAttribute('src');if(oldImg[i].getAttribute('src')!==url)oldImg[i].setAttribute('src',url);});
+   copyAttrs();
+  }else{
+   const view=next.querySelector('.framePhotoViewport');if(view)view.scrollLeft=a.scrollLeft;
+   current.replaceWith(next);
+  }
+ }).catch(()=>{if(card._framePhotoToken===token){ // Keep the old image visible if a new source fails.
+  card._framePhotoToken=undefined;
+ }});
+}
+function frameUpdateCard(existing,fresh){
+ const quantity=existing.querySelector('input[id^="saleQty-"]')?.value||'1';
+ existing.dataset.selectedItem=fresh.dataset.selectedItem;
+ for(const selector of ['.saleItemInfo','.frameSharedDescription','.frameStoreChoices','.frameSizePriceRow','.saleItemBuy']){
+  const oldNode=existing.querySelector(':scope > '+selector)||existing.querySelector(':scope > .saleItemHead > '+selector);
+  const newNode=fresh.querySelector(':scope > '+selector)||fresh.querySelector(':scope > .saleItemHead > '+selector);
+  if(oldNode&&newNode){
+   if(oldNode.outerHTML!==newNode.outerHTML)oldNode.replaceWith(newNode);
+  }else if(oldNode&&!newNode)oldNode.remove();
+  else if(!oldNode&&newNode){
+   const before=selector==='.frameSharedDescription'?existing.querySelector('.frameStoreChoices,.frameSizePriceRow'):selector==='.frameStoreChoices'?existing.querySelector('.frameSizePriceRow'):null;
+   existing.insertBefore(newNode,before);
+  }
+ }
+ const input=existing.querySelector('input[id^="saleQty-"]');if(input)input.value=quantity;
+ const oldVisual=existing.querySelector('.saleItemHead .framePhotoCarousel,.saleItemHead .saleItemPhotoPlaceholder');
+ const freshVisual=fresh.querySelector('.saleItemHead .framePhotoCarousel,.saleItemHead .saleItemPhotoPlaceholder');
+ if(oldVisual||freshVisual)frameUpdatePhotoNodes(oldVisual,freshVisual,existing);
+}
+function render(){
+ applyFrameCustomerView();if(!isFrame()){frameRenderedShop='';return;}
+ const host=document.getElementById('saleItems');if(!host)return;
+ const currentShop=String(shopId||'');
+ if(frameRenderedShop!==currentShop){frameRenderedShop=currentShop;selected.clear();host.replaceChildren();}
+ const groups=C.groups(saleItems),wanted=new Set();
+ for(let i=0;i<groups.length;i++){
+  const g=groups[i],item=C.choose(g,selected.get(g.id));if(!item)continue;
+  selected.set(g.id,item.id);wanted.add(String(g.id));
+  const signature=frameCardSignature(g,item);
+  let card=[...host.children].find(x=>x.classList?.contains('frameProductCard')&&x.dataset.frameModel===String(g.id));
+  if(!card){card=frameFreshCard(g,item.id);card.dataset.frameRenderSignature=signature;host.insertBefore(card,host.children[i]||null);}
+  else{
+   if(card.dataset.frameRenderSignature!==signature){
+    frameUpdateCard(card,frameFreshCard(g,item.id));
+    card.dataset.frameRenderSignature=signature;
+   }
+   if(host.children[i]!==card)host.insertBefore(card,host.children[i]||null);
+  }
+ }
+ for(const el of [...host.children])if(el.classList.contains('frameProductCard')&&!wanted.has(el.dataset.frameModel))el.remove();
+ if(!wanted.size&&host.textContent!=='مدلی برای سفارش وجود ندارد.')host.innerHTML='<div class="empty">مدلی برای سفارش وجود ندارد.</div>';
+ if(wanted.size)host.querySelector(':scope > .empty')?.remove();
+ applySaleCategory();mountFrameSizeTriggers();
+}
 const originalRender=renderSales;renderSales=function(){originalRender();render();renderFrameOrderRows();};
 // Standalone model-card tests do not supply the full checkout implementation.
 function frameRevealOpenCart(){
@@ -598,9 +689,13 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader::after{
   content:""!important;display:block!important;position:absolute!important;
-  top:auto!important;bottom:0!important;left:0!important;right:0!important;
-  height:1px!important;width:100%!important;z-index:3!important;
-  background:linear-gradient(90deg,transparent,#becfe1 8%,#becfe1 92%,transparent)!important;
+  top:auto!important;bottom:-11px!important;left:0!important;right:0!important;
+  height:12px!important;width:100%!important;z-index:3!important;
+  /* Restore the soft blue under-header accent used in the other photographer
+     pages without putting a blue halo behind the shop-name text itself. */
+  background:
+   linear-gradient(90deg,transparent,rgba(75,148,245,.88) 12%,rgba(75,148,245,.88) 88%,transparent) center top/100% 1px no-repeat,
+   radial-gradient(ellipse 62% 100% at 50% 0,rgba(47,129,245,.25),rgba(47,129,245,0) 75%) center top/100% 12px no-repeat!important;
   box-shadow:none!important;filter:none!important;pointer-events:none!important;
   transform:none!important;border:0!important
  }
@@ -649,6 +744,8 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName::after{
   display:none!important;content:none!important
  }
+ /* Keep the category row comfortably below the buttons/navigation strip. */
+ html body.frameCustomerStore #salesPanel #frameCustomerCategoryRow{margin-top:18px!important;margin-bottom:15px!important}
  html body.frameCustomerStore #frameCustomerNav{animation:none!important;transition:none!important}
  html body.frameCustomerStore #frameCustomerNav button{animation:none!important;transition:none!important}
 }
@@ -668,15 +765,46 @@ if(typeof renderShopperWallet==='function'){
    full-screen preview (including keyboard keys) to that same direction. */
 if(typeof pb834RenderShopGallery==='function'){
  const previousGalleryRender=pb834RenderShopGallery;
+ let previewToken=0;
  pb834RenderShopGallery=function(...args){
-  const result=previousGalleryRender.apply(this,args);
-  if(customerFrame()){
-   const prev=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.prev');
-   const next=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.next');
+  if(!customerFrame())return previousGalleryRender.apply(this,args);
+  const st=typeof pb834ShopGalleryState!=='undefined'?pb834ShopGalleryState:null;
+  const stage=document.getElementById('pb834ShopGalleryStage');
+  const thumbs=document.getElementById('pb834ShopGalleryThumbs');
+  const available=st?.urls?.map((_,i)=>i).filter(i=>!st.bad.has(i))||[];
+  if(!stage||!thumbs||!available.length)return previousGalleryRender.apply(this,args);
+  if(!available.includes(st.index))st.index=available[0];
+  const key=JSON.stringify([st.urls,st.thumbUrls,st.title,available]);
+  const previous=stage.querySelector('img');
+  const sameGallery=stage.dataset.frameStableGallery===key&&previous?.isConnected;
+  if(!sameGallery){
+   const value=previousGalleryRender.apply(this,args);
+   stage.dataset.frameStableGallery=key;
+   const prev=stage.querySelector('.pb834ShopGalleryNav.prev'),next=stage.querySelector('.pb834ShopGalleryNav.next');
    if(prev){prev.textContent='‹';prev.setAttribute('aria-label','عکس قبلی');}
    if(next){next.textContent='›';next.setAttribute('aria-label','عکس بعدی');}
+   return value;
   }
-  return result;
+  const title=document.getElementById('pb834ShopGalleryTitle');
+  const label=st.title+' · '+fa(available.indexOf(st.index)+1)+' از '+fa(available.length);
+  if(title&&title.textContent!==label)title.textContent=label;
+  const src=st.urls[st.index];
+  if(previous.getAttribute('src')!==src){
+   // Keep the previous decoded photo in place until the next one has loaded.
+   const token=++previewToken,newImage=new Image();
+   newImage.onload=()=>{
+    const ready=typeof newImage.decode==='function'?newImage.decode().catch(()=>{}):Promise.resolve();
+    ready.then(()=>{if(token===previewToken&&previous.isConnected&&typeof pb834ShopGalleryState!=='undefined'&&pb834ShopGalleryState===st&&st.urls[st.index]===src)previous.setAttribute('src',src)});
+   };
+   newImage.onerror=()=>{if(token===previewToken&&typeof pb834ShopGalleryState!=='undefined'&&pb834ShopGalleryState===st){st.bad.add(st.index);pb834RenderShopGallery();}};
+   newImage.src=src;
+   if(newImage.complete&&newImage.naturalWidth>0)newImage.onload();
+  }else previewToken++;
+  thumbs.querySelectorAll('button[data-i]').forEach(button=>{
+   const on=Number(button.dataset.i)===st.index;
+   if(button.classList.contains('active')!==on)button.classList.toggle('active',on);
+  });
+  return undefined;
  };
  document.addEventListener('keydown',event=>{
   if(!customerFrame()||!document.getElementById('pb834ShopGallery')?.classList.contains('open')||!['ArrowLeft','ArrowRight'].includes(event.key))return;

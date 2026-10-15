@@ -1,6 +1,6 @@
 (()=>{'use strict';
  // Shop-owner settings UI scoped by the shop's persisted business category.
- const frameType=()=>['frame','chassis','frame_chassis'].includes(String(window.data?.shop?.business_category||''));
+ const frameType=()=>['frame','chassis','frame_chassis'].includes(String(typeof data!=='undefined'?data?.shop?.business_category:''));
  let queued=false;
  const qa=(selector,root=document)=>[...root.querySelectorAll(selector)];
  function sync(){

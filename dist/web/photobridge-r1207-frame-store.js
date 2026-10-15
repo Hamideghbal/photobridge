@@ -228,16 +228,92 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
   if(!bar.dataset.frameBorderOriginal){
    bar.dataset.frameBorderOriginal=JSON.stringify({top:bar.style.getPropertyValue('border-top'),topPriority:bar.style.getPropertyPriority('border-top'),bottom:bar.style.getPropertyValue('border-bottom'),bottomPriority:bar.style.getPropertyPriority('border-bottom')});
   }
-  bar.style.setProperty('border-top','1px solid #ccd7e5','important');
-  bar.style.setProperty('border-bottom','1px solid #ccd7e5','important');
+  bar.style.setProperty('border-top','0','important');
+  bar.style.setProperty('border-bottom','0','important');
  }else if(!enabled&&bar?.dataset.frameBorderOriginal){
   try{const prev=JSON.parse(bar.dataset.frameBorderOriginal);for(const [side,value,priority]of [['top',prev.top,prev.topPriority],['bottom',prev.bottom,prev.bottomPriority]]){if(value)bar.style.setProperty('border-'+side,value,priority);else bar.style.removeProperty('border-'+side)}}catch{}
   delete bar.dataset.frameBorderOriginal;
  }
  const studio=document.getElementById('storePhotographerName');if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;}
- positionFrameNavigation();}
+ positionFrameNavigation();syncFrameFinance();}
 if(typeof syncPhotographerStoreIdentity==='function'){const original=syncPhotographerStoreIdentity;syncPhotographerStoreIdentity=function(...args){original(...args);applyFrameCustomerView();};}
 if(typeof showMobilePanel==='function'){const original=showMobilePanel;showMobilePanel=function(id){if(customerFrame()&&['storePanel','equipmentPanel','bookingsPanel'].includes(id))id='salesPanel';original(id);applyFrameCustomerView();};}
+
+/* R1220: the frame photographer is a payer, not the shop owner. Keep underlying
+   finance records unchanged and only relabel this customer's view. */
+const frameFinanceOriginalLabels=new Map();
+let frameLedgerWithDetails=false;
+function frameFinanceLabel(el,label){
+ if(!el)return;
+ if(customerFrame()){
+  if(!frameFinanceOriginalLabels.has(el))frameFinanceOriginalLabels.set(el,el.textContent);
+  if(el.textContent!==label)el.textContent=label;
+ }else if(frameFinanceOriginalLabels.has(el)){
+  el.textContent=frameFinanceOriginalLabels.get(el);frameFinanceOriginalLabels.delete(el);
+ }
+}
+function renderFrameStatementDetails(){
+ const tbody=document.querySelector('#financePanel #ledger .accountingTable tbody');
+ if(!tbody)return;
+ tbody.querySelectorAll('.frameLedgerDetailsRow').forEach(row=>row.remove());
+ if(!customerFrame()||!frameLedgerWithDetails||typeof financeStatementFilteredV812!=='function')return;
+ const entries=financeStatementFilteredV812().slice().reverse();
+ const rows=[...tbody.children].filter(el=>el.tagName==='TR');
+ entries.forEach((entry,index)=>{
+  const target=rows[index];if(!target)return;
+  const date=entry.entry_date||entry.created_at;
+  const details=[
+   ['نوع سند',typeof accountTypeLabel==='function'?accountTypeLabel(entry.entry_type||''):(entry.entry_type||'گردش حساب')],
+   ['شرح کامل',entry.description||'—'],
+   ['تاریخ ثبت',date&&typeof dateFa==='function'?dateFa(date):'—'],
+   ['ماهیت',entry.direction==='debit'?'بدهکار':'بستانکار'],
+   ['مبلغ',typeof money==='function'?money(entry.amount||0):String(entry.amount||0)],
+   ['شماره پیگیری',entry.reference_number||entry.payment_reference||entry.reference_id||entry.invoice_number||'—'],
+   ['مرجع فاکتور',entry.invoice_id||'—'],
+   ['روش پرداخت',entry.payment_method?(typeof financePaymentMethodLabelV811==='function'?financePaymentMethodLabelV811(entry):entry.payment_method):'—']
+  ].filter(([key,value])=>value!==null&&value!==undefined&&value!==''&&(value!=='—'||['شرح کامل','شماره پیگیری'].includes(key)));
+  const row=document.createElement('tr');row.className='frameLedgerDetailsRow';
+  const cell=document.createElement('td');cell.colSpan=target.children.length||6;
+  const wrap=document.createElement('div');wrap.className='frameLedgerDetailsGrid';
+  for(const [key,value]of details){
+   const item=document.createElement('div'),label=document.createElement('small'),text=document.createElement('b');
+   label.textContent=key;text.textContent=String(value);item.append(label,text);wrap.append(item);
+  }
+  cell.append(wrap);row.append(cell);target.after(row);
+ });
+}
+function syncFrameFinance(){
+ const frame=customerFrame(),panel=document.getElementById('financePanel');
+ if(!panel)return;
+ frameFinanceLabel(panel.querySelector('[data-finance-tab-v811="payments"]'),'پرداختی‌ها');
+ frameFinanceLabel(panel.querySelector('.financeSectionHeadingV815 small'),'وضعیت حساب، فاکتورها، پرداختی‌ها و حساب معین فروشگاه');
+ const empty=panel.querySelector('#financePaymentsV811 .empty');
+ if(frame&&empty&&empty.textContent.includes('دریافتی'))empty.textContent=empty.textContent.replace(/دریافتی/g,'پرداختی');
+ const toolbar=panel.querySelector('.statementToolbarV812');
+ let toggle=panel.querySelector('#frameFinanceDetailsToggle');
+ if(!frame){toggle?.remove();panel.querySelectorAll('.frameLedgerDetailsRow').forEach(el=>el.remove());return;}
+ if(toolbar&&!toggle){
+  toggle=document.createElement('button');toggle.type='button';toggle.id='frameFinanceDetailsToggle';
+  toggle.className='btn secondary frameFinanceDetailsToggle';toggle.textContent='با جزئیات';
+  toolbar.append(toggle);
+ }
+ if(toggle){toggle.setAttribute('aria-pressed',String(frameLedgerWithDetails));toggle.classList.toggle('active',frameLedgerWithDetails);}
+ renderFrameStatementDetails();
+}
+if(typeof renderFinance==='function'){
+ const frameOriginalFinanceRender=renderFinance;
+ renderFinance=function(...args){const result=frameOriginalFinanceRender.apply(this,args);syncFrameFinance();return result;};
+}
+if(typeof renderFinanceStatementV812==='function'){
+ const frameOriginalStatementRender=renderFinanceStatementV812;
+ renderFinanceStatementV812=function(...args){const result=frameOriginalStatementRender.apply(this,args);syncFrameFinance();return result;};
+}
+document.addEventListener('click',e=>{
+ if(!customerFrame()||!e.target.closest('#frameFinanceDetailsToggle'))return;
+ frameLedgerWithDetails=!frameLedgerWithDetails;
+ syncFrameFinance();
+});
+
 const updateCart=renderSaleCart;renderSaleCart=function(...args){updateCart(...args);applyFrameCustomerView();};
 document.addEventListener('click',e=>{if(!customerFrame())return;const view=e.target.closest('[data-frame-customer-view]');if(view){openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel')void loadSales();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
 window.addEventListener('resize',positionFrameNavigation);
@@ -398,6 +474,40 @@ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdent
 html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar [data-store-panel]{display:none!important}
 html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar{height:36px!important;min-height:36px!important;max-height:36px!important;padding:2px 12px!important}
 }
+
+/* R1220 · frame storefront only, mobile header, checkout and ledger refinements. */
+@media(max-width:820px){
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader{border-bottom:0!important;box-shadow:none!important;filter:none!important}
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  background:#fff!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;
+  filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #storeIdentityToggle,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName{
+  background:transparent!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;filter:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before,
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{
+  background:#ccd7e5!important;
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%)!important;
+  mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%)!important
+ }
+ html body.frameCustomerStore #saleCartDrawer #saleCartCheckout:not(:disabled){
+  background:#2154e8!important;background-image:linear-gradient(135deg,#3168ff,#1d4ed8)!important;
+  color:#fff!important;opacity:1!important;filter:none!important;border:1px solid #1d4ed8!important;
+  box-shadow:0 4px 13px rgba(29,78,216,.3)!important;font-weight:900!important
+ }
+ html body.frameCustomerStore #saleCartDrawer #saleCartCheckout:disabled{opacity:.5!important;box-shadow:none!important}
+}
+body.frameCustomerStore #saleCartDrawer .paymentPendingNote,
+body.frameCustomerStore #saleCartDrawer .approvalNotice{display:none!important}
+body.frameCustomerStore #financePanel .frameFinanceDetailsToggle{flex:0 0 auto;width:auto;min-height:38px;padding:7px 13px;border:1px solid #cbd5e1;background:#fff;color:#344054;font:800 12px Vazirmatn,Tahoma,Arial,sans-serif}
+body.frameCustomerStore #financePanel .frameFinanceDetailsToggle.active{background:#315efb!important;color:#fff!important;border-color:#315efb!important}
+body.frameCustomerStore #financePanel .frameLedgerDetailsRow>td{background:#f8faff!important;padding:10px!important;border-bottom:1px solid #e5eaf4!important}
+body.frameCustomerStore #financePanel .frameLedgerDetailsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;direction:rtl;text-align:right;white-space:normal}
+body.frameCustomerStore #financePanel .frameLedgerDetailsGrid>div{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+body.frameCustomerStore #financePanel .frameLedgerDetailsGrid small{font-size:10px;color:#667085}
+body.frameCustomerStore #financePanel .frameLedgerDetailsGrid b{font-size:11px;color:#101828;font-weight:750}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();

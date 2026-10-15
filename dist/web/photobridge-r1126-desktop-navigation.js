@@ -98,10 +98,21 @@
   if(doc?.documentElement&&doc!==document)doc.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing);
   const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));
-  const signature=active+'|'+choosing+'|'+(frameStore?'frame:'+frameStoreName:visible.map(el=>el.outerHTML).join(''));
+  const frameStoreControls=frameStore?[...frameStore.querySelectorAll('button[data-frame-customer-view],button[data-frame-customer-history],button[data-frame-customer-cart]')].filter(el=>getComputedStyle(el).display!=='none'):[];
+  const signature=active+'|'+choosing+'|'+(frameStore?'frame:'+frameStoreName+frameStoreControls.map(el=>el.outerHTML).join(''):visible.map(el=>el.outerHTML).join(''));
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
-   if(frameStore){const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';title.textContent=frameStoreName;row.append(title);}
+   if(frameStore){
+    const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';title.textContent=frameStoreName;
+    const nav=document.createElement('nav');nav.className='pb1126FrameStoreTabs';nav.setAttribute('aria-label','بخش‌های فروشگاه');
+    const cart=document.createElement('div');cart.className='pb1126FrameStoreCart';
+    for(const original of frameStoreControls){
+     const copy=cleanClone(original);copy.classList.add('pb1126FrameStoreControl');copy.style.removeProperty('display');
+     copy.onclick=()=>{original.click();requestAnimationFrame(()=>{schedule();reveal(motionContent(doc));});};
+     (original.matches('[data-frame-customer-cart]')?cart:nav).append(copy);
+    }
+    row.append(title,nav,cart);
+   }
    let modes,utilities;
    if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
    for(const original of frameStore?[]:visible){

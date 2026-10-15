@@ -9,9 +9,15 @@
  html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary{grid-column:1/-1;grid-row:2;position:relative;width:100%;display:flex;justify-content:center;align-items:center;gap:8px;height:41px;overflow:hidden}
  html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary>button{font:800 12px/1.3 Vazirmatn,Tahoma,sans-serif!important;min-height:32px!important;height:32px!important;padding:5px 10px!important;border:1px solid #dce4f2!important;border-radius:9px!important;background:#fff!important;color:#344054!important;box-shadow:none!important;cursor:pointer}
  html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary>button.active{background:#eef3ff!important;color:#315efb!important}
- html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{background:#fff!important;box-shadow:none!important}
- html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary>.pb1126FrameStoreTitle{display:block;width:100%;text-align:center;color:#1d2939;font:850 15px/1.4 Vazirmatn,Tahoma,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:none;filter:none}
- html.pb1126FrameStore .pb1126ContentPanel[data-panel=store],html.pb1126FrameStore .pb1126ContentPanel[data-panel=store] iframe{background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 46%,#fff 100%)!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{justify-content:center!important;background:#fff!important;box-shadow:none!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary>.pb1126FrameStoreTitle{position:absolute;left:16px;top:50%;transform:translateY(-50%);display:block;max-width:22%;text-align:left;color:#1d2939;font:850 14px/1.4 Vazirmatn,Tahoma,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:none;filter:none}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary>.pb1126FrameStoreTabs{display:flex;align-items:center;justify-content:center;gap:7px;max-width:62%;height:100%;direction:rtl}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary>.pb1126FrameStoreCart{position:absolute;right:14px;top:0;height:100%;display:flex;align-items:center;justify-content:flex-end}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary .pb1126FrameStoreControl{position:relative!important;min-width:70px!important;width:auto!important;height:32px!important;min-height:32px!important;padding:4px 8px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#344054!important;box-shadow:none!important;font:800 11px/1.3 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;cursor:pointer}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary .pb1126FrameStoreControl.active{color:#245be4!important;background:transparent!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary .pb1126FrameStoreTabs .pb1126FrameStoreControl.active::after{content:""!important;position:absolute!important;left:8px!important;right:8px!important;bottom:0!important;height:2px!important;border:0!important;border-radius:999px!important;background:linear-gradient(90deg,transparent,#315efb 20%,#315efb 80%,transparent)!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary .pb1126FrameStoreCart .pb1126FrameStoreControl{color:#475467!important;font-weight:850!important}
+ html.pb1126FrameStore .pb1126ContentPanel[data-panel=store],html.pb1126FrameStore .pb1126ContentPanel[data-panel=store] iframe{background:linear-gradient(180deg,rgba(49,94,251,.075) 0%,rgba(49,94,251,.026) 44%,rgba(49,94,251,0) 100%)!important}
  .pb1126ContentPanel{position:fixed;inset:114px 0 0;background:#f7f8fc;z-index:2147483400;}
  .pb1126ContentPanel[hidden]{display:none}
  .pb1126ContentPanel iframe{height:100%;width:100%;border:0;display:block;background:#f7f8fc}
@@ -23,10 +29,10 @@
  html.pb1126Embedded body #storePhotographerWorkspace>.shell,html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace>.shell{top:0!important;padding-top:16px!important}
  #pb1126UtilityWindow{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:28px;background:rgba(16,24,40,.34);backdrop-filter:blur(3px)}
  #pb1126UtilityWindow[hidden]{display:none!important}
- #pb1126UtilityWindow .pb1126UtilityDialog{display:flex;flex-direction:column;width:min(1040px,96vw);height:min(820px,92dvh);min-height:300px;overflow:hidden;border:1px solid #dbe4ef;border-radius:16px;background:#fff;box-shadow:0 26px 80px rgba(16,24,40,.24)}
- #pb1126UtilityWindow .pb1126UtilityBar{flex:0 0 48px;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 16px;background:#fff;border-bottom:1px solid #e7edf5;color:#25364b}
+ #pb1126UtilityWindow .pb1126UtilityDialog{display:flex;flex-direction:column;width:min(980px,96vw);height:min(900px,96dvh);min-height:280px;overflow:hidden;border:1px solid #dbe4ef;border-radius:14px;background:#fff;box-shadow:0 26px 80px rgba(16,24,40,.24)}
+ #pb1126UtilityWindow .pb1126UtilityBar{flex:0 0 40px;min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;background:#fff;border-bottom:1px solid #e7edf5;color:#25364b}
  #pb1126UtilityWindow .pb1126UtilityBar strong{font:850 14px/1.4 Vazirmatn,Tahoma,sans-serif}
- #pb1126UtilityWindow .pb1126UtilityClose{display:grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid #e1e7ef;border-radius:9px;background:#fff;color:#475467;font:400 24px/1 Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+ #pb1126UtilityWindow .pb1126UtilityClose{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid #e1e7ef;border-radius:8px;background:#fff;color:#475467;font:400 22px/1 Vazirmatn,Tahoma,sans-serif;cursor:pointer}
  #pb1126UtilityWindow .pb1126UtilityClose:hover{background:#f3f6fa;color:#182230}
  #pb1126UtilityWindow .pb1126UtilityFrame{flex:1 1 auto;width:100%;height:0;min-height:0;border:0;background:#fff}
 }
@@ -37,7 +43,8 @@
  html.pb1126Desktop body #root{height:100dvh!important;min-height:0!important;overflow:hidden!important}
  html.pb1126Embedded.pb1126FrameStoreHost,html.pb1126Embedded.pb1126FrameStoreHost body{height:100%!important;min-height:0!important;overflow:hidden!important}
  html.pb1126Embedded.pb1126FrameStoreHost body #root{height:100dvh!important;min-height:0!important;overflow:hidden!important}
- html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{position:fixed!important;top:49px!important;bottom:0!important;height:auto!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{position:fixed!important;top:0!important;left:0!important;right:0!important;inset-inline:0!important;width:100vw!important;max-width:none!important;margin:0!important;bottom:0!important;height:auto!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important;scrollbar-width:none!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
 }
 @media(min-width:821px){
  html.pb1126Desktop.pb1127Choosing body #pb1126ChromeHost #pb1126DesktopHeader{height:72px!important;min-height:72px!important;grid-template-rows:72px!important}

@@ -28,10 +28,10 @@ test('mobile photographer bottom navigation overrides legacy three-column grid w
 test('build preserves existing desktop nav and provides R1134 CSS on both entrypoints',()=>{
  for(const entry of [index,store]){
   assert.equal((entry.match(/photobridge-r1132-photo-copies-mobile\.css\?v=r1134/g)||[]).length,1);
-  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.css?v=r1234-photographer-utility-scroll'));
-  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.js?v=r1234-photographer-utility-scroll'));
+  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.css?v=r1235-frame-store-header-blue'));
+  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.js?v=r1235-frame-store-header-blue'));
  }
  assert.ok(build.includes('photobridge-r1132-photo-copies-mobile.css?v=r1134'));
- assert.ok(build.includes("html=html.replace(navigationPattern,'$1r1234-photographer-utility-scroll')"));
+ assert.ok(build.includes("html=html.replace(navigationPattern,'$1r1235-frame-store-header-blue')"));
  assert.ok(build.includes("html=html.replace(modulePattern,'$1r1158')"));
 });

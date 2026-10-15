@@ -311,6 +311,8 @@ function positionFrameNavigation(){
  const contentTop=bottom+nav.getBoundingClientRect().height;
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
  document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
+ const frameStoreHost=document.documentElement.classList.contains('pb1126FrameStoreHost');
+ if(frameStoreHost)nav.style.setProperty('display','none','important');
  if(!desktop){
   const dock=document.getElementById('photographerStoreBottomNav');
   const bounds=dock?.getBoundingClientRect();
@@ -326,7 +328,7 @@ function positionFrameNavigation(){
  }
  if(shell){
   if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
-  const shellTop=document.documentElement.classList.contains('pb1126FrameStoreHost')?'49px':contentTop+'px';
+  const shellTop=frameStoreHost?'0px':contentTop+'px';
   if(shell.style.getPropertyValue('top')!==shellTop)shell.style.setProperty('top',shellTop,'important');
  }
 }
@@ -1071,15 +1073,15 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
   background:#fff!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #e0e8f4!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
-  top:0!important;background:transparent!important;background-image:none!important;border-bottom-color:transparent!important
+  display:none!important;top:0!important;background:transparent!important;background-image:none!important;border-bottom-color:transparent!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:none!important}
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
-  top:49px!important;padding-top:0!important;background:transparent!important;background-image:none!important
+  top:0!important;padding-top:0!important;background:transparent!important;background-image:none!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace,
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore{
-  background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 48%,#fff 100%) fixed!important;
+  background:linear-gradient(180deg,rgba(49,94,251,.075) 0%,rgba(49,94,251,.026) 44%,rgba(49,94,251,0) 100%) fixed!important;
   background-size:100% 100vh!important;background-repeat:no-repeat!important
  }
 }
@@ -1090,7 +1092,7 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
 @media(max-width:820px){
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore),
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace{
-  background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 48%,#fff 100%) fixed!important;
+  background:linear-gradient(180deg,rgba(49,94,251,.075) 0%,rgba(49,94,251,.026) 44%,rgba(49,94,251,0) 100%) fixed!important;
   background-size:100% 100vh!important;background-repeat:no-repeat!important;
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #frameCustomerNav#frameCustomerNav{
@@ -1102,7 +1104,7 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
   inset-inline:0!important;left:0!important;right:0!important;width:100vw!important;
   max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;
   margin:0!important;padding:7px 10px 0!important;box-sizing:border-box!important;
-  overflow-x:hidden!important;overflow-y:auto!important;
+  overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none!important;scrollbar-gutter:auto!important;
   background:transparent!important;background-image:none!important;
   -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important
  }
@@ -1134,11 +1136,9 @@ const tabFeedback=document.createElement('style');tabFeedback.textContent=`
   border-color:#c5d6ee!important;box-shadow:0 2px 7px rgba(52,84,128,.08)!important
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart])::after{
-  content:""!important;position:absolute!important;display:block!important;left:22%!important;right:22%!important;
-  bottom:-6px!important;height:2px!important;border:0!important;border-radius:999px!important;
-  background:linear-gradient(90deg,transparent 0%,#6f8fd4 24%,#6f8fd4 76%,transparent 100%)!important;
-  box-shadow:0 0 5px rgba(89,122,190,.22)!important;pointer-events:none!important
+  content:none!important;display:none!important
  }
+ @media(min-width:821px){html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}}
 `;
 document.head.append(tabFeedback);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

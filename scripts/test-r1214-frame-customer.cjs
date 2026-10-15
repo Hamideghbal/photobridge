@@ -113,8 +113,22 @@ test('Windows parent frame-store mode uses the parent title row and starts the i
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{const page=await browser.newPage({viewport:{width:1440,height:900}});await openStore(page,true,true);
   const bounds=await page.evaluate(()=>{const box=s=>document.querySelector(s).getBoundingClientRect(),active=document.querySelector('#frameCustomerNav button.active:not([data-frame-customer-cart])');return {host:document.documentElement.classList.contains('pb1126FrameStoreHost'),titleDisplay:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).display,tabsTop:box('#frameCustomerNav').top,contentTop:box('#storePhotographerWorkspace>.shell').top,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).backgroundColor,backgroundImage:getComputedStyle(document.querySelector('#storePhotographerWorkspace')).backgroundImage,navBackground:getComputedStyle(document.querySelector('#frameCustomerNav')).backgroundColor,activeBackground:getComputedStyle(active).backgroundColor,activeUnderline:getComputedStyle(active,'::after').backgroundImage,glow:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).boxShadow};});
-  assert.equal(bounds.host,true);assert.equal(bounds.titleDisplay,'none');assert.equal(bounds.tabsTop,0);assert.equal(bounds.contentTop,49);assert.equal(bounds.background,'rgba(0, 0, 0, 0)');assert(bounds.backgroundImage.includes('linear-gradient'));assert.equal(bounds.navBackground,'rgba(0, 0, 0, 0)');assert.equal(bounds.activeBackground,'rgb(255, 255, 255)');assert(bounds.activeUnderline.includes('linear-gradient'));assert.equal(bounds.glow,'none');
-  const header=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');assert.match(header,/frameStore\?\[\]:visible/);assert.match(header,/className='pb1126FrameStoreTitle'/);assert.match(header,/q\.set\('pbDesktopFrameStore','1'\)/);
+  assert.equal(bounds.host,true);assert.equal(bounds.titleDisplay,'none');assert.equal(bounds.tabsTop,0);assert.equal(bounds.contentTop,0);assert.equal(bounds.background,'rgba(0, 0, 0, 0)');assert(bounds.backgroundImage.includes('linear-gradient'));assert.equal(bounds.navBackground,'rgba(0, 0, 0, 0)');assert.equal(bounds.activeBackground,'rgb(255, 255, 255)');assert.equal(bounds.activeUnderline,'none');assert.equal(bounds.glow,'none');
+  const header=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');assert.match(header,/frameStore\?\[\]:visible/);assert.match(header,/className='pb1126FrameStoreTitle'/);assert.match(header,/className='pb1126FrameStoreTabs'/);assert.match(header,/className='pb1126FrameStoreCart'/);assert.match(header,/q\.set\('pbDesktopFrameStore','1'\)/);
+ }finally{await browser.close()}
+});
+
+test('Windows parent puts the store title left, four sections centered and cart right in its second header',async()=>{
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:900}});await openStore(page,true,false,true);
+  const title=page.locator('.pb1126FrameStoreTitle'),tabs=page.locator('.pb1126FrameStoreTabs .pb1126FrameStoreControl'),cart=page.locator('.pb1126FrameStoreCart .pb1126FrameStoreControl');
+  assert.equal(await title.textContent(),'فروشگاه قاب و شاسی SS قاب');assert((await title.boundingBox()).x<500);
+  assert.equal(await tabs.count(),4);assert.equal(await cart.count(),1);assert((await cart.boundingBox()).x>900);
+  assert.equal(await page.locator('.pb1126FrameStoreTabs .active').evaluate(el=>getComputedStyle(el,'::after').content),'""');
+  const storeFrame=page.frameLocator('.pb1126ContentPanel iframe'),surface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,viewport:innerWidth,top:el.getBoundingClientRect().top}));
+  assert.equal(surface.left,0);assert(Math.abs(surface.right-surface.viewport)<1);assert.equal(surface.top,0);
+  await tabs.filter({hasText:'مالی'}).click();await storeFrame.locator('#financePanel').waitFor();
  }finally{await browser.close()}
 });
 
@@ -148,8 +162,8 @@ test('Windows photographer tools open closable overlays without switching tabs o
   assert(scroll.root[0]<=scroll.root[1]+1,'the React root must stay within the viewport');
   const frameScroll=await storeFrame.locator('html').evaluate(el=>({height:el.scrollHeight,client:el.clientHeight}));
   assert(frameScroll.height<=frameScroll.client+1,'frame store iframe must not scroll outside its catalog pane');
-  const shopSurface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({gutter:getComputedStyle(el).scrollbarGutter,overflow:getComputedStyle(el).overflowY}));
-  assert.equal(shopSurface.gutter,'auto');assert.equal(shopSurface.overflow,'auto');
+  const shopSurface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({gutter:getComputedStyle(el).scrollbarGutter,overflow:getComputedStyle(el).overflowY,scrollbar:getComputedStyle(el).scrollbarWidth,width:el.getBoundingClientRect().width,viewport:innerWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}));
+  assert.equal(shopSurface.gutter,'auto');assert.equal(shopSurface.overflow,'auto');assert.equal(shopSurface.scrollbar,'none');assert.equal(shopSurface.left,0);assert(Math.abs(shopSurface.width-shopSurface.viewport)<1);assert(Math.abs(shopSurface.right-shopSurface.viewport)<1);
   const openAndClose=async(selector,path)=>{
    await page.locator(selector).click();
    const modal=page.locator('#pb1126UtilityWindow');await modal.waitFor();

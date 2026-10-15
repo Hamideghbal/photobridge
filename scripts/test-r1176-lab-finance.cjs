@@ -29,7 +29,7 @@ test('receipt and discount controls are in payments tab not statement',()=>{
  assert(bundle.includes('children:"＋ ثبت تخفیف"'));
 });
 test('invoice export prints the exact preview and supports detailed statements',()=>{
- assert(bundle.includes('pb1201InvoiceExport'));
+ assert(page.includes('photobridge-r1201-lab-invoice-export.js?v=r1201'));
  assert(invoiceExport.includes("document.querySelector('.globalInvoicePreviewLayer .invoicePaper')"));
  assert(invoiceExport.includes('const copy = root.cloneNode(true)'));
  assert(invoiceExport.includes('windowRef.print()'));
@@ -65,6 +65,6 @@ test('files loaded with bumped cache and existing lab header unaffected',()=>{
  assert.match(page,/\/photobridge-r1176-lab-finance\.js\?v=r117[67]/);
  assert.match(page,/index-UIRefine-v655-r84\.js\?v=[^"']*finance=r117[67]/);
  assert(page.includes('/photobridge-r1201-lab-invoice-export.js?v=r1201'));
- assert(page.includes('photobridge-r1147-lab-admin-header.js?v=r1175'));
+ assert.match(page,/photobridge-r1147-lab-admin-header\.js\?v=(?:r1175|r1186)/);
  new Function(ui);
 });

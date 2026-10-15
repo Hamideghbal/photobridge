@@ -246,7 +246,20 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
   try{const prev=JSON.parse(bar.dataset.frameBorderOriginal);for(const [side,value,priority]of [['top',prev.top,prev.topPriority],['bottom',prev.bottom,prev.bottomPriority]]){if(value)bar.style.setProperty('border-'+side,value,priority);else bar.style.removeProperty('border-'+side)}}catch{}
   delete bar.dataset.frameBorderOriginal;
  }
- const studio=document.getElementById('storePhotographerName');if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;if(studio.title!==title)studio.title=title;}
+ const studio=document.getElementById('storePhotographerName');
+ if(studio){
+  const small=enabled&&window.matchMedia('(max-width:820px)').matches;
+  if(small){
+   if(!studio.dataset.frameNameStyleBackup)studio.dataset.frameNameStyleBackup=JSON.stringify(studio.getAttribute('style')||'');
+   for(const [key,value]of [['white-space','normal'],['overflow','visible'],['text-overflow','clip'],['max-height','none'],['line-height','1.23'],['overflow-wrap','anywhere']]){
+    if(studio.style.getPropertyValue(key)!==value||studio.style.getPropertyPriority(key)!=='important')studio.style.setProperty(key,value,'important');
+   }
+  }else if(studio.dataset.frameNameStyleBackup!==undefined){
+   try{studio.setAttribute('style',JSON.parse(studio.dataset.frameNameStyleBackup))}catch{}
+   delete studio.dataset.frameNameStyleBackup;
+  }
+ }
+ if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;if(studio.title!==title)studio.title=title;}
  positionFrameNavigation();syncFrameFinance();}
 if(typeof syncPhotographerStoreIdentity==='function'){const original=syncPhotographerStoreIdentity;syncPhotographerStoreIdentity=function(...args){original(...args);applyFrameCustomerView();};}
 if(typeof showMobilePanel==='function'){const original=showMobilePanel;showMobilePanel=function(id){if(customerFrame()&&['storePanel','equipmentPanel','bookingsPanel'].includes(id))id='salesPanel';original(id);applyFrameCustomerView();};}

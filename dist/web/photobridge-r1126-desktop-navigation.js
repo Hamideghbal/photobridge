@@ -12,7 +12,7 @@
  const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
  let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false;
  try{const saved=JSON.parse(sessionStorage.getItem('pb1126-desktop-tabs'));if(saved?.tabs)settings=saved;}catch{}
- const panels=new Map();
+ const panels=new Map();let utilityPanel=null,utilityReturnFocus=null,utilityPreviousOverflow='',utilityEscapeHandler=null;
  const kind=()=>new URLSearchParams(location.search).get('pbDesktopPanel')||(/\/orders|\/upload|\/archive|\/finance|\/album(?:\/|$)/.test(location.pathname)?'print':location.pathname.includes('/ai/')?'ai':location.pathname.includes('/album-design')?(new URLSearchParams(location.search).get('pb_mode')==='instagram'?'instagram':'album'):'gallery');
  const nativeHeader=doc=>doc.querySelector('#photographerRoleHeaderV710,#photographerStoreRoleHeader');
  function currentDocument(){return selected?panels.get(selected)?.querySelector('iframe')?.contentDocument:document;}
@@ -49,7 +49,7 @@
    chrome=document.createElement('header');chrome.id='pb1126DesktopHeader';chrome.className='photographerHeaderRefined';chrome.setAttribute('aria-label','دسترسی‌های عکاس');
    chrome.innerHTML='<div class="photographerHeaderIdentity"></div><nav class="photographerHeaderNav pb1126MainNav"></nav><div class="pb1124PrimaryActions"><button type="button" class="pb1124Wallet">کیف پول</button><button type="button" class="pb1124Exit">خروج</button></div><div class="pb1126Secondary"></div>';
    host.append(chrome);document.body.append(host);
-   chrome.querySelector('.pb1124Wallet').onclick=()=>nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet')?.click();
+   chrome.querySelector('.pb1124Wallet').onclick=()=>{if(!openUtilityWindow('wallet'))nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet')?.click();};
    chrome.querySelector('.pb1124Exit').onclick=()=>nativeHeader(document)?.querySelector('.headerLogoutBtn,.mobileHeaderPower')?.click();
   }
   const identity=(nativeHeader(document)||native).querySelector('.photographerHeaderIdentity');
@@ -144,6 +144,41 @@
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
   render();reveal(motionContent(panel.querySelector('iframe').contentDocument));
  }
+ const utilityPages={wallet:{title:'کیف پول',path:'/photographer/wallet'},settings:{title:'تنظیمات عکاسی',path:'/photographer/settings'},invite:{title:'دعوت همکار',path:'/photographer/settings/invites'}};
+ function closeUtilityWindow(){
+  if(!utilityPanel)return;
+  utilityPanel.remove();utilityPanel=null;document.body.style.overflow=utilityPreviousOverflow;
+  if(utilityEscapeHandler){window.removeEventListener('keydown',utilityEscapeHandler,true);utilityEscapeHandler=null;}
+  const focus=utilityReturnFocus;utilityReturnFocus=null;if(focus?.isConnected)focus.focus({preventScroll:true});
+ }
+ function openUtilityWindow(kind){
+  const page=utilityPages[kind];if(!page)return false;
+  if(!utilityPanel){
+   utilityReturnFocus=document.activeElement;utilityPreviousOverflow=document.body.style.overflow;
+   utilityPanel=document.createElement('div');utilityPanel.id='pb1126UtilityWindow';utilityPanel.setAttribute('role','presentation');
+   const dialog=document.createElement('section');dialog.className='pb1126UtilityDialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','pb1126UtilityTitle');
+   const bar=document.createElement('header');bar.className='pb1126UtilityBar';
+   const title=document.createElement('strong');title.id='pb1126UtilityTitle';
+   const close=document.createElement('button');close.type='button';close.id='pb1126UtilityClose';close.className='pb1126UtilityClose';close.setAttribute('aria-label','بستن');close.title='بستن';close.textContent='×';close.addEventListener('click',closeUtilityWindow);
+   const frame=document.createElement('iframe');frame.className='pb1126UtilityFrame';
+   bar.append(title,close);dialog.append(bar,frame);utilityPanel.append(dialog);
+   utilityPanel.addEventListener('mousedown',event=>{if(event.target===utilityPanel)closeUtilityWindow();});
+   document.body.append(utilityPanel);document.body.style.overflow='hidden';
+   utilityEscapeHandler=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeUtilityWindow();}};
+   window.addEventListener('keydown',utilityEscapeHandler,true);
+  }
+  const title=utilityPanel.querySelector('#pb1126UtilityTitle'),frame=utilityPanel.querySelector('.pb1126UtilityFrame');
+  title.textContent=page.title;frame.title=page.title;frame.src=page.path+'?pbDesktopContent=1&pbUtilityWindow=1';
+  utilityPanel.querySelector('#pb1126UtilityClose').focus({preventScroll:true});
+  return true;
+ }
+ window.pb1126OpenPhotographerWindow=openUtilityWindow;
+ window.addEventListener('click',event=>{
+  const button=event.target?.closest?.('.pb1124Wallet,.pb1163-settings,.pb1163-invite');if(!button)return;
+  const kind=button.classList.contains('pb1124Wallet')?'wallet':button.classList.contains('pb1163-invite')?'invite':'settings';
+  if(!openUtilityWindow(kind))return;
+  event.preventDefault();event.stopImmediatePropagation();
+ },true);
  function openStoreChooser(doc){const button=doc?.querySelector('[data-store-home]');if(!button)return false;button.click();return true;}
  function navigate(key){
   if(key==='store'){

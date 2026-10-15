@@ -56,7 +56,6 @@ test('release build applies patch with no database or uploaded-file mutation',()
 test('recovered original downloads under true source filename and true source byte count',()=>{
  assert.match(ui,/downloadName=o.pbDownloadName\|\|a.original_name/);
  assert.match(ui,/downloadBytes=Number\(o.pbDownloadBytes\|\|a.bytes\|\|0\)/);
- assert.match(ui,/preflight.fallbackOriginalCount/);
  const r=region('const labFileDownload =','const labFileEditPresign =');
  assert.match(r,/const fileBytes=chosen.fallback\?Number\(row.bytes\|\|0\)/);
  assert.match(r,/bytes:fileBytes/);

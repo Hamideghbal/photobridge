@@ -292,18 +292,21 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches && !document.documentElement.classList.contains('pb1126Embedded');
- // R1228: both the Windows and mobile layouts get the real store name first,
- // then the frame shop's own navigation. Never nest it inside the native header.
- if(nav.previousElementSibling!==bar)bar.after(nav);
+ const desktop=window.matchMedia('(min-width:821px)').matches;
+ // R1229: use the *actual existing desktop header row* for the shop name,
+ // rather than adding a second identity ribbon below it. Keep mobile as-is.
+ const role=document.getElementById('photographerStoreRoleHeader');
+ if(desktop){if(role&&nav.previousElementSibling!==role)role.after(nav);}
+ else if(nav.previousElementSibling!==bar)bar.after(nav);
  // Anchor the shop title to the measured photographer header, not the legacy
  // fixed 64px offset (which becomes wrong when long studio names wrap).
  if(!desktop){
-  const role=document.getElementById('photographerStoreRoleHeader');
   const top=Math.round(role?.getBoundingClientRect().bottom||64);
   if(bar.style.getPropertyValue('top')!==top+'px'||bar.style.getPropertyPriority('top')!=='important')bar.style.setProperty('top',top+'px','important');
  }else if(bar.style.getPropertyValue('top'))bar.style.removeProperty('top');
- const bottom=bar.getBoundingClientRect().bottom;
+ // Desktop starts immediately below the real unified header, with no ghost
+ // 42px store-title strip; mobile retains its existing title strip.
+ const bottom=desktop?Math.round(role?.getBoundingClientRect().bottom||64):bar.getBoundingClientRect().bottom;
  const contentTop=bottom+nav.getBoundingClientRect().height;
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
  document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
@@ -340,8 +343,20 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
  }
 
  if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive')&&(button.dataset.frameCustomerView!=='frameOrdersPanel'||frameOrderView==='orders');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const history=nav.querySelector('[data-frame-customer-history]');if(history){const active=document.getElementById('frameOrdersPanel')?.classList.contains('mobileActive')&&frameOrderView==='history';history.classList.toggle('active',Boolean(active));history.setAttribute('aria-current',active?'page':'false');}const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
- for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
+ for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',window.matchMedia('(min-width:821px)').matches?'none':el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
+ // Make the real desktop header row show the store title instead of the
+ // legacy «خرید تجهیزات / مالی» buttons. Keep the original buttons in the
+ // DOM for non-frame store owners and revert cleanly on store switching.
+ const desktopHost=document.getElementById('pbR1123StoreDesktopNav');
+ let desktopTitle=desktopHost?.querySelector('#frameDesktopStoreTitle');
+ const desktopFrame=enabled&&window.matchMedia('(min-width:821px)').matches;
+ if(desktopFrame&&desktopHost){
+  if(!desktopTitle){desktopTitle=document.createElement('strong');desktopTitle.id='frameDesktopStoreTitle';desktopHost.append(desktopTitle);}
+  const value=bar?.querySelector('#photographerStoreHeaderName')?.textContent||'انتخاب فروشگاه';
+  if(desktopTitle.textContent!==value)desktopTitle.textContent=value;
+  if(desktopTitle.title!==value)desktopTitle.title=value;
+ }else if(desktopTitle)desktopTitle.remove();
  if(enabled&&bar){
   if(!bar.dataset.frameBorderOriginal){
    bar.dataset.frameBorderOriginal=JSON.stringify({top:bar.style.getPropertyValue('border-top'),topPriority:bar.style.getPropertyPriority('border-top'),bottom:bar.style.getPropertyValue('border-bottom'),bottomPriority:bar.style.getPropertyPriority('border-bottom')});

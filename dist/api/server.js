@@ -5275,7 +5275,13 @@ async function sendSms(args) {
     if (!adapter)
         throw new Error('sms_provider_unsupported');
     let charge = null;
-    if (args.chargeRentalShopId && args.serviceKey) {
+    // r1250_sms_ready_marker: only a verified platform-admin-owned TEST store.
+    let adminTestNoCharge=false;
+    if(args.chargeRentalShopId&&args.userId){
+      const q=await pool.query('SELECT '+testAccountSql('shop','s')+' AS test_shop FROM equipment_rental_shops s JOIN users actor ON actor.id=$2 AND actor.platform_role=\'platform_admin\' AND actor.active=true WHERE s.id=$1 LIMIT 1',[args.chargeRentalShopId,args.userId]);
+      adminTestNoCharge=q.rows[0]?.test_shop===true;
+    }
+    if (args.chargeRentalShopId && args.serviceKey && !adminTestNoCharge) {
         try {
             charge = await reserveEquipmentRentalSmsCharge({ shopId: args.chargeRentalShopId, serviceKey: args.serviceKey, purpose: args.purpose, note: `هزینه ${args.purpose}`, referenceId: args.referenceId || null, createdBy: args.userId || null, metadata: { purpose: args.purpose, eventKey: args.eventKey, mobile, ...(args.metadata || {}) } });
         }
@@ -9794,7 +9800,7 @@ async function equipmentRentalSmsWalletSnapshot(shopId) {
     const [wq,sq,setq,txq,payq] = await Promise.all([
         pool.query(`SELECT balance,updated_at FROM equipment_rental_sms_wallets WHERE shop_id=$1`, [shopId]),
         pool.query(`SELECT service_key,name,unit_price,enabled FROM platform_services WHERE service_key='sms_customer_notification' LIMIT 1`),
-        pool.query(`SELECT enabled,booking_approved_enabled,invite_enabled,booking_status_enabled,updated_at FROM equipment_rental_sms_settings WHERE shop_id=$1`, [shopId]),
+        pool.query(`SELECT enabled,booking_approved_enabled,invite_enabled,booking_status_enabled,ready_enabled,updated_at FROM equipment_rental_sms_settings WHERE shop_id=$1`, [shopId]),
         pool.query(`SELECT id,kind,amount,balance_after,note,created_at FROM equipment_rental_sms_wallet_transactions WHERE shop_id=$1 ORDER BY created_at DESC LIMIT 30`, [shopId]),
         pool.query(`SELECT id,amount,payable_amount,status,gateway_track_id,gateway_ref_number,created_at,paid_at FROM service_wallet_gateway_payments WHERE owner_type='rental_shop' AND owner_id=$1 ORDER BY created_at DESC LIMIT 20`, [shopId])
     ]);
@@ -9809,7 +9815,7 @@ async function equipmentRentalSmsWalletSnapshot(shopId) {
         await pool.query(`UPDATE equipment_rental_sms_wallets SET balance=$2,updated_at=GREATEST(updated_at,$3::timestamptz) WHERE shop_id=$1`, [shopId,balance,latestTx.created_at]).catch(()=>{});
     }
     const smsPrice = Math.max(0, Number(service.unit_price || 0));
-    return { balance, smsPrice, serviceEnabled:Boolean(service.enabled), canSend:Boolean(service.enabled && (smsPrice<=0 || balance>=smsPrice)), settings:{ enabled:settings.enabled !== false, bookingApprovedEnabled:settings.booking_approved_enabled !== false, bookingStatusEnabled:settings.booking_status_enabled !== false, inviteEnabled:settings.invite_enabled !== false }, transactions:txq.rows, payments:payq.rows };
+    return { balance, smsPrice, serviceEnabled:Boolean(service.enabled), canSend:Boolean(service.enabled && (smsPrice<=0 || balance>=smsPrice)), settings:{ enabled:settings.enabled !== false, bookingApprovedEnabled:settings.booking_approved_enabled !== false, bookingStatusEnabled:settings.booking_status_enabled !== false, inviteEnabled:true, readyEnabled:settings.ready_enabled !== false }, transactions:txq.rows, payments:payq.rows };
 }
 async function reserveEquipmentRentalSmsCharge(args) {
     const c = await pool.connect();
@@ -9850,11 +9856,12 @@ async function refundEquipmentRentalSmsCharge(charge, reason='sms_failed') {
 }
 async function equipmentRentalSmsAutoAllowed(shopId, kind) {
     await equipmentRentalSmsWalletEnsure(pool, shopId);
-    const q = await pool.query(`SELECT enabled,booking_approved_enabled,invite_enabled,booking_status_enabled FROM equipment_rental_sms_settings WHERE shop_id=$1 LIMIT 1`, [shopId]);
+    const q = await pool.query(`SELECT enabled,booking_approved_enabled,invite_enabled,booking_status_enabled,ready_enabled FROM equipment_rental_sms_settings WHERE shop_id=$1 LIMIT 1`, [shopId]);
     const r=q.rows[0]||{};
+    if (kind==='invite') return true;
     if (r.enabled === false) return false;
     if (kind==='booking_approved') return r.booking_approved_enabled !== false;
-    if (kind==='invite') return r.invite_enabled !== false;
+    if (kind==='production_ready') return r.ready_enabled !== false;
     if (kind==='booking_status') return r.booking_status_enabled !== false;
     return true;
 }
@@ -9873,8 +9880,8 @@ async function equipmentRentalNotifyBookingStatusSms(shop, bookingId, kind, acto
     if (!b || !/^09\d{9}$/.test(mobile)) return { sent:false, skipped:true, reason:'no_mobile' };
     const faDate = (v) => { const iso=equipmentRentalDate(v); try { return iso ? new Intl.DateTimeFormat('fa-IR-u-ca-persian',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(`${iso}T12:00:00Z`)) : '—'; } catch { return iso || '—'; } };
     const rejected = kind === 'rejected';
-    const title = rejected ? 'درخواست آفیش تجهیزات شما رد شد.' : 'رزرو تجهیزات شما توسط فروشگاه لغو شد.';
-    const message = `PhotoBridge\n${title}\nفروشگاه: ${String(shop.name || 'فروشگاه تجهیزات')}\nکد درخواست: ${bookingId.slice(0,8).toUpperCase()}\nبازه: ${faDate(b.rental_start)} تا ${faDate(b.rental_end)}${b.item_titles?`\nتجهیزات: ${b.item_titles}`:''}\nبرای مشاهده وضعیت، بخش آفیش‌های تجهیزات را باز کنید.`;
+    const title = rejected ? 'سفارش تجهیزات شما رد شد.' : 'سفارش تجهیزات شما توسط فروشگاه لغو شد.';
+    const message = `PhotoBridge\n${title}\nفروشگاه: ${String(shop.name || 'فروشگاه تجهیزات')}\nکد درخواست: ${bookingId.slice(0,8).toUpperCase()}\nبازه: ${faDate(b.rental_start)} تا ${faDate(b.rental_end)}${b.item_titles?`\nتجهیزات: ${b.item_titles}`:''}\nبرای مشاهده وضعیت، بخش سفارش‌های تجهیزات را باز کنید.`;
     try {
         const out = await sendSms({ mobile, message, purpose:rejected?'rental_booking_rejected':'rental_booking_cancelled', eventKey:rejected?'booking_rejected':'booking_cancelled', userId:actorId, chargeRentalShopId:shop.id, serviceKey:'sms_customer_notification', referenceId:bookingId, metadata:{ rentalShopId:shop.id, rentalBookingId:bookingId, rentalStatus:kind } });
         return { sent:true, reference:out?.reference || null, chargedAmount:Number(out?.chargedAmount || 0), walletBalance:out?.walletBalance };
@@ -15122,8 +15129,8 @@ async function api(req, res, url) {
         if (!shop) return sendJson(res, 401, { error:'rental_auth_required' });
         const b = await bodyJson(req, 80_000);
         await equipmentRentalSmsWalletEnsure(pool, shop.id);
-        const q = await pool.query(`UPDATE equipment_rental_sms_settings SET enabled=$2,booking_approved_enabled=$3,invite_enabled=$4,booking_status_enabled=$5,updated_at=now() WHERE shop_id=$1 RETURNING *`, [shop.id, Boolean(b.enabled), Boolean(b.bookingApprovedEnabled), Boolean(b.inviteEnabled), b.bookingStatusEnabled !== false]);
-        await audit(a.userId, undefined, 'equipment_rental.sms_settings_update', 'equipment_rental_shop', shop.id, { enabled:Boolean(b.enabled), bookingApprovedEnabled:Boolean(b.bookingApprovedEnabled), bookingStatusEnabled:b.bookingStatusEnabled !== false, inviteEnabled:Boolean(b.inviteEnabled) }).catch(()=>{});
+        const q = await pool.query(`UPDATE equipment_rental_sms_settings SET enabled=$2,booking_approved_enabled=$3,invite_enabled=true,booking_status_enabled=$4,ready_enabled=$5,updated_at=now() WHERE shop_id=$1 RETURNING *`, [shop.id, Boolean(b.enabled), Boolean(b.bookingApprovedEnabled), b.bookingStatusEnabled !== false, b.readyEnabled !== false]);
+        await audit(a.userId, undefined, 'equipment_rental.sms_settings_update', 'equipment_rental_shop', shop.id, { enabled:Boolean(b.enabled), bookingApprovedEnabled:Boolean(b.bookingApprovedEnabled), bookingStatusEnabled:b.bookingStatusEnabled !== false, inviteEnabled:true, readyEnabled:b.readyEnabled !== false }).catch(()=>{});
         return sendJson(res, 200, { ok:true, settings:q.rows[0] });
     }
     if (req.method === 'GET' && url.pathname === '/api/rental/sales-wallet') {
@@ -15530,7 +15537,20 @@ async function api(req, res, url) {
         result=(await c.query(`UPDATE equipment_sale_orders SET status=$3,production_stage=$4,production_confirmed_at=CASE WHEN production_stage='awaiting_approval' AND $4='in_production' THEN now() ELSE production_confirmed_at END,expected_ready_date=$5,expected_delivery_date=$6,payment_status=CASE WHEN $3='cancelled' AND payment_status='paid' AND buyer_wallet_transaction_id IS NOT NULL THEN 'refunded' ELSE payment_status END,refunded_at=CASE WHEN $3='cancelled' AND payment_status='paid' AND buyer_wallet_transaction_id IS NOT NULL THEN now() ELSE refunded_at END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[order.id,shop.id,next,stage,schedule.ready,schedule.delivery])).rows[0];await c.query('COMMIT');
         }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message});if(e.message==='sale_wallet_insufficient_for_refund')return sendJson(res,409,{error:e.message});throw e}finally{c.release()}
         if(b.action!=='schedule'&&result.buyer_user_id)void publishCustomerEventEverywhere(result.buyer_user_id,'equipment_sale_status',{orderId:result.id,shopId:shop.id,shopName:shop.name,status:result.status,productionStage:result.production_stage,expectedReadyDate:result.expected_ready_date,expectedDeliveryDate:result.expected_delivery_date});
-        let sms=null;if(b.action==='ready'&&result.buyer_mobile)try{await sendSms({chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',userId:a.userId,mobile:result.buyer_mobile,message:`PhotoBridge: سفارش قاب و شاسی شما در «${shop.name}» آماده است. ${result.delivery_method==='courier'?'برای ارسال با پیک پیگیری کنید.':'برای دریافت حضوری مراجعه کنید.'}`,purpose:'rental_production_ready',eventKey:'production_ready',referenceId:result.id,metadata:{shopId:shop.id,orderId:result.id}});sms={sent:true};}catch(e){sms={sent:false,error:e.message};console.error('[production-ready-sms]',{orderId:result.id,message:e.message});}
+        let sms=null;
+        if(result.buyer_mobile&&['confirm','cancel','ready'].includes(b.action)){
+          const kind=b.action==='ready'?'production_ready':b.action==='confirm'?'booking_approved':'booking_status';
+          const allowed=await equipmentRentalSmsAutoAllowed(shop.id,kind);
+          if(allowed)try{
+            const n=String(shop.name||'فروشگاه قاب و شاسی');
+            const message=b.action==='ready'?'PhotoBridge: سفارش قاب و شاسی شما در «'+n+'» آماده است. '+(result.delivery_method==='courier'?'برای ارسال با پیک پیگیری کنید.':'برای دریافت حضوری مراجعه کنید.'):b.action==='confirm'?'PhotoBridge\nسفارش قاب و شاسی شما در «'+n+'» تأیید شد.\nشماره سفارش: '+String(result.id).slice(0,8).toUpperCase():'PhotoBridge\nسفارش قاب و شاسی شما در «'+n+'» لغو شد.\nشماره سفارش: '+String(result.id).slice(0,8).toUpperCase();
+            const purpose=b.action==='ready'?'rental_production_ready':b.action==='confirm'?'frame_order_approved':'frame_order_cancelled';
+            const eventKey=b.action==='ready'?'production_ready':b.action==='confirm'?'booking_approved':'booking_cancelled';
+            const out=await sendSms({chargeRentalShopId:shop.id,serviceKey:'sms_customer_notification',userId:a.userId,mobile:result.buyer_mobile,message,purpose,eventKey,referenceId:result.id,metadata:{shopId:shop.id,orderId:result.id}});
+            sms={sent:true,reference:out?.reference||null};
+          }catch(e){sms={sent:false,error:e.message};console.error('[frame-order-sms]',{orderId:result.id,action:b.action,message:e.message});}
+          else sms={sent:false,skipped:true,reason:'disabled'};
+        }
         await audit(a.userId,undefined,'equipment_frame.production_status','equipment_sale_order',result.id,{shopId:shop.id,action:b.action,stage:result.production_stage}).catch(()=>{});return sendJson(res,200,{ok:true,order:result,sms});
     }
     if(url.pathname==='/api/rental/production-options'&&['GET','PUT'].includes(req.method)){
@@ -15815,7 +15835,7 @@ async function api(req, res, url) {
                     const paymentRequired=nextStatus==='payment_pending';
                     const message = paymentRequired
                       ? `PhotoBridge\nدرخواست تجهیزات شما در «${String(shop.name || 'فروشگاه تجهیزات')}» تأیید شد.\nبرای قطعی شدن رزرو، پرداخت مبلغ ${Number(approvedBooking.total_amount||0).toLocaleString('fa-IR')} تومان در بخش آفیش‌ها الزامی است.\nکد درخواست: ${bookingId.slice(0,8).toUpperCase()}\nبازه: ${faDate(approvedBooking.rental_start)} تا ${faDate(approvedBooking.rental_end)}`
-                      : `PhotoBridge\nرزرو تجهیزات شما در «${String(shop.name || 'فروشگاه تجهیزات')}» تأیید و نهایی شد.\nکد رزرو: ${bookingId.slice(0,8).toUpperCase()}\nبازه: ${faDate(approvedBooking.rental_start)} تا ${faDate(approvedBooking.rental_end)}\nوضعیت رزرو در پنل تجهیزات در دسترس است.`;
+                      : `PhotoBridge\nرزرو تجهیزات شما در «${String(shop.name || 'فروشگاه تجهیزات')}» تأیید و نهایی شد.\nکد سفارش: ${bookingId.slice(0,8).toUpperCase()}\nبازه: ${faDate(approvedBooking.rental_start)} تا ${faDate(approvedBooking.rental_end)}\nوضعیت سفارش در پنل تجهیزات در دسترس است.`;
                     try { const out = await sendSms({ mobile, message, purpose:'rental_booking_approved', eventKey:'booking_approved', userId:a.userId, chargeRentalShopId:shop.id, serviceKey:'sms_customer_notification', referenceId:bookingId, metadata:{ rentalShopId:shop.id, rentalBookingId:bookingId, paymentRequired } }); sms = { sent:true, reference:out?.reference || null, chargedAmount:Number(out?.chargedAmount || 0), walletBalance:out?.walletBalance }; }
                     catch(e) { sms = { sent:false, skipped:false, error:String(e?.message || 'sms_send_failed'), balance:e?.balance, required:e?.required }; }
                 }

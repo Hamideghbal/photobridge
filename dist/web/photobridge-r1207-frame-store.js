@@ -949,7 +949,7 @@ frameR1228Layout.textContent=`
   box-shadow:none!important;opacity:1!important;cursor:pointer!important
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart]){
-  color:#245be4!important;border-color:#cbdafe!important;background:#edf3ff!important
+  color:#245be4!important;border-color:#bfd2f1!important;background:#fff!important
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart]{
   position:absolute!important;left:max(12px,calc((100vw - 1140px)/2))!important;right:auto!important;
@@ -993,7 +993,7 @@ frameR1228Layout.textContent=`
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-history]{display:none!important}
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace,
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
-  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%)!important;
+  background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 48%,#fff 100%)!important;
   background-color:#fff!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace #salesPanel,
@@ -1079,7 +1079,7 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace,
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore{
-  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%) fixed!important;
+  background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 48%,#fff 100%) fixed!important;
   background-size:100% 100vh!important;background-repeat:no-repeat!important
  }
 }
@@ -1090,7 +1090,7 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
 @media(max-width:820px){
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore),
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace{
-  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%) fixed!important;
+  background:linear-gradient(180deg,#e6f2ff 0%,#f5f9ff 48%,#fff 100%) fixed!important;
   background-size:100% 100vh!important;background-repeat:no-repeat!important;
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #frameCustomerNav#frameCustomerNav{
@@ -1128,6 +1128,19 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
 }
 `;
 document.head.append(frameR1228Layout);
+const tabFeedback=document.createElement('style');tabFeedback.textContent=`
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart]){
+  position:relative!important;background:#fff!important;background-color:#fff!important;
+  border-color:#c5d6ee!important;box-shadow:0 2px 7px rgba(52,84,128,.08)!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart])::after{
+  content:""!important;position:absolute!important;display:block!important;left:22%!important;right:22%!important;
+  bottom:-6px!important;height:2px!important;border:0!important;border-radius:999px!important;
+  background:linear-gradient(90deg,transparent 0%,#6f8fd4 24%,#6f8fd4 76%,transparent 100%)!important;
+  box-shadow:0 0 5px rgba(89,122,190,.22)!important;pointer-events:none!important
+ }
+`;
+document.head.append(tabFeedback);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();
 

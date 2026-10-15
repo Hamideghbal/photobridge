@@ -112,8 +112,8 @@ test('Windows frame store puts the shop name below the header and tabs below the
 test('Windows parent frame-store mode uses the parent title row and starts the iframe tabs beneath it',async()=>{
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{const page=await browser.newPage({viewport:{width:1440,height:900}});await openStore(page,true,true);
-  const bounds=await page.evaluate(()=>{const box=s=>document.querySelector(s).getBoundingClientRect();return {host:document.documentElement.classList.contains('pb1126FrameStoreHost'),titleDisplay:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).display,tabsTop:box('#frameCustomerNav').top,contentTop:box('#storePhotographerWorkspace>.shell').top,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).backgroundColor,backgroundImage:getComputedStyle(document.querySelector('#storePhotographerWorkspace')).backgroundImage,navBackground:getComputedStyle(document.querySelector('#frameCustomerNav')).backgroundColor,glow:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).boxShadow};});
-  assert.equal(bounds.host,true);assert.equal(bounds.titleDisplay,'none');assert.equal(bounds.tabsTop,0);assert.equal(bounds.contentTop,49);assert.equal(bounds.background,'rgba(0, 0, 0, 0)');assert(bounds.backgroundImage.includes('linear-gradient'));assert.equal(bounds.navBackground,'rgba(0, 0, 0, 0)');assert.equal(bounds.glow,'none');
+  const bounds=await page.evaluate(()=>{const box=s=>document.querySelector(s).getBoundingClientRect(),active=document.querySelector('#frameCustomerNav button.active:not([data-frame-customer-cart])');return {host:document.documentElement.classList.contains('pb1126FrameStoreHost'),titleDisplay:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).display,tabsTop:box('#frameCustomerNav').top,contentTop:box('#storePhotographerWorkspace>.shell').top,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).backgroundColor,backgroundImage:getComputedStyle(document.querySelector('#storePhotographerWorkspace')).backgroundImage,navBackground:getComputedStyle(document.querySelector('#frameCustomerNav')).backgroundColor,activeBackground:getComputedStyle(active).backgroundColor,activeUnderline:getComputedStyle(active,'::after').backgroundImage,glow:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).boxShadow};});
+  assert.equal(bounds.host,true);assert.equal(bounds.titleDisplay,'none');assert.equal(bounds.tabsTop,0);assert.equal(bounds.contentTop,49);assert.equal(bounds.background,'rgba(0, 0, 0, 0)');assert(bounds.backgroundImage.includes('linear-gradient'));assert.equal(bounds.navBackground,'rgba(0, 0, 0, 0)');assert.equal(bounds.activeBackground,'rgb(255, 255, 255)');assert(bounds.activeUnderline.includes('linear-gradient'));assert.equal(bounds.glow,'none');
   const header=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');assert.match(header,/frameStore\?\[\]:visible/);assert.match(header,/className='pb1126FrameStoreTitle'/);assert.match(header,/q\.set\('pbDesktopFrameStore','1'\)/);
  }finally{await browser.close()}
 });
@@ -132,5 +132,39 @@ test('Windows Store tab reopens the shop chooser from inside the selected shop',
   await page.locator('[data-pb1126-kind="store"]').click();
   await storeFrame.locator('body.pbR96ChoosingStore').waitFor();
   assert(await storeFrame.locator('#storeChooserPanelR96').isVisible(),'the Windows Store tab reopens the chooser while a store is already selected');
+ }finally{await browser.close()}
+});
+
+test('Windows photographer tools open closable overlays without switching tabs or adding outer scrollbars',async()=>{
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  await openStore(page,true,false,true);
+  const storeFrame=page.frameLocator('.pb1126ContentPanel iframe');
+  const activeStore=page.locator('[data-pb1126-kind="store"]');
+  const scroll=await page.evaluate(()=>({html:[document.documentElement.scrollHeight,innerHeight],body:[document.body.scrollHeight,document.body.clientHeight],root:[document.querySelector('#root').scrollHeight,document.querySelector('#root').clientHeight]}));
+  assert(scroll.html[0]<=scroll.html[1]+1,'the photographer document must not add an empty outer scrollbar');
+  assert(scroll.body[0]<=scroll.body[1]+1,'body must not create a second scroll region');
+  assert(scroll.root[0]<=scroll.root[1]+1,'the React root must stay within the viewport');
+  const frameScroll=await storeFrame.locator('html').evaluate(el=>({height:el.scrollHeight,client:el.clientHeight}));
+  assert(frameScroll.height<=frameScroll.client+1,'frame store iframe must not scroll outside its catalog pane');
+  const shopSurface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({gutter:getComputedStyle(el).scrollbarGutter,overflow:getComputedStyle(el).overflowY}));
+  assert.equal(shopSurface.gutter,'auto');assert.equal(shopSurface.overflow,'auto');
+  const openAndClose=async(selector,path)=>{
+   await page.locator(selector).click();
+   const modal=page.locator('#pb1126UtilityWindow');await modal.waitFor();
+   assert.equal(await modal.getAttribute('role'),'presentation');
+   assert.equal(await modal.locator('[role=dialog]').getAttribute('aria-modal'),'true');
+   assert((await modal.locator('iframe').getAttribute('src')).includes(path));
+   assert.equal(await activeStore.getAttribute('aria-current'),'page','the underlying Store tab stays selected');
+   assert(await storeFrame.locator('.frameProductCard').isVisible(),'the current shop remains open underneath the utility window');
+   await modal.locator('#pb1126UtilityClose').click();
+   assert.equal(await page.locator('#pb1126UtilityWindow').count(),0);
+   assert.equal(await activeStore.getAttribute('aria-current'),'page');
+   assert(await storeFrame.locator('.frameProductCard').isVisible());
+  };
+  await openAndClose('#pb1126DesktopHeader .pb1124Wallet','/photographer/wallet');
+  await openAndClose('.pb1163-settings','/photographer/settings');
+  await openAndClose('.pb1163-invite','/photographer/settings/invites');
  }finally{await browser.close()}
 });

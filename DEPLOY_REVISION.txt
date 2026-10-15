@@ -1,1 +1,1 @@
-2026-10-15-r1231-frame-store-title-chooser-categories
+2026-10-15-r1232-windows-frame-store-title-row

@@ -13,4 +13,4 @@ test('desktop navigation animates content below fixed scroll chrome and respects
  await page.locator('.clientGalleryWorkspace').evaluate(el=>el.getAnimations().forEach(a=>a.cancel()));await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>window.testReveal());assert.equal(await page.locator('.clientGalleryWorkspace').evaluate(el=>el.getAnimations().length),0);
  }finally{await browser.close()}
 });
-test('motion stays desktop-only and versioned in the build',()=>{assert(source.includes("if(!matchMedia('(min-width:821px)').matches)return;"));assert(source.includes('reveal(motionContent(document))'));const html=fs.readFileSync('dist/web/index.html','utf8');assert(html.includes('photobridge-r1126-desktop-navigation.js?v=r1168'));});
+test('motion stays desktop-only and versioned in the build',()=>{assert(source.includes("if(!matchMedia('(min-width:821px)').matches)return;"));assert(source.includes('reveal(motionContent(document))'));const html=fs.readFileSync('dist/web/index.html','utf8');assert(html.includes('photobridge-r1126-desktop-navigation.js?v=r1232-frame-store-title'));});

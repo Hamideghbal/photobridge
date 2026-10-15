@@ -3,7 +3,7 @@
  'use strict';
  if(!matchMedia('(min-width:821px)').matches)return;
  const query=new URLSearchParams(location.search);
- if(query.get('pbDesktopContent')==='1'){document.documentElement.classList.add('pb1126Embedded');return;}
+ if(query.get('pbDesktopContent')==='1'){document.documentElement.classList.add('pb1126Embedded');if(query.get('pbDesktopFrameStore')==='1')document.documentElement.classList.add('pb1126FrameStoreHost');return;}
  if(!/^\/photographer(?:\/|$)/.test(location.pathname)||/^\/photographer\/(login|signup|register|invite)(?:\/|$)/.test(location.pathname)){
   if(location.pathname==='/equipment-rental/book')location.replace('/photographer/gallery?pbDesktopPanel=store&pbDesktopStoreQuery='+encodeURIComponent(location.search));
   return;
@@ -86,6 +86,10 @@
   const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
   if(wallet){const label='کیف پول · '+wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
   const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();
+  const frameStore=active==='store'&&doc?.body?.classList.contains('frameCustomerStore')&&doc?.querySelector('#frameCustomerNav');
+  const frameStoreName=frameStore?(doc.querySelector('#photographerStoreHeaderName')?.textContent?.trim()||'فروشگاه قاب و شاسی'):'';
+  document.documentElement.classList.toggle('pb1126FrameStore',Boolean(frameStore));
+  chrome.classList.toggle('pb1126FrameStore',Boolean(frameStore));
   const choosing=active==='store'?(!doc?.querySelector('#photographerStoreRoleHeader')||doc.body?.classList.contains('pbR96ChoosingStore')):active==='print'?(!!doc?.querySelector('#pbR99LabChooser')||doc?.body?.classList.contains('pbR100F14ChoosingLab')||doc?.documentElement?.classList.contains('pbR100F14LabChooserBoot')||(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print')):false;
   document.documentElement.classList.toggle('pb1127Choosing',choosing);
   chrome.classList.toggle('pb1127Choosing',choosing);
@@ -94,12 +98,13 @@
   if(doc?.documentElement&&doc!==document)doc.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing);
   const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));
-  const signature=active+'|'+choosing+'|'+visible.map(el=>el.outerHTML).join('');
+  const signature=active+'|'+choosing+'|'+(frameStore?'frame:'+frameStoreName:visible.map(el=>el.outerHTML).join(''));
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
+   if(frameStore){const title=document.createElement('strong');title.className='pb1126FrameStoreTitle';title.textContent=frameStoreName;row.append(title);}
    let modes,utilities;
    if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
-   for(const original of visible){
+   for(const original of frameStore?[]:visible){
     const copy=cleanClone(original);copy.style.removeProperty('display');
     copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
     if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
@@ -133,7 +138,7 @@
    const frame=document.createElement('iframe');frame.title=key==='store'?'فروشگاه':'چاپ';
    frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
-   const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
+   const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
   }
   closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}

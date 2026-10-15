@@ -9,7 +9,7 @@ for(const file of pages){
  const isMain=file.endsWith('/index.html');
  const navMatches=[...html.matchAll(navigationPattern)];
  if(navMatches.length!==2)throw Error('[R1132] Expected photographer desktop boot navigation in '+file);
- html=html.replace(navigationPattern,'$1r1234-photographer-utility-scroll');
+ html=html.replace(navigationPattern,'$1r1235-frame-store-header-blue');
  if(isMain){
   if(!modulePattern.test(html))throw Error('[R1132] Missing main photographer bundle');
   modulePattern.lastIndex=0;

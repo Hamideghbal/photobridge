@@ -20,7 +20,7 @@ for(const [width,height] of [[375,667],[390,844]])test('mobile frame shadow and 
  const last=page.locator('.pbR96StoreCard').last();const bounds=await last.boundingBox(),surface=await shell.boundingBox();assert(bounds.y+bounds.height<=surface.y+surface.height,'last shop must fit above dock');
  const button=last.locator('[data-enter-store-r96]');assert(await button.evaluate(el=>{const r=el.getBoundingClientRect();const top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===top||el.contains(top)}),'last shop button must not be covered');
  await page.screenshot({path:'/tmp/r1225-chooser-bottom-'+width+'.png'});
- await button.click();await page.locator('body:not(.pbR96ChoosingStore).frameCustomerStore').waitFor();assert(await page.locator('.frameProductCard').isVisible());
+ await button.click();await page.locator('body:not(.pbR96ChoosingStore).frameCustomerStore').waitFor();assert(await page.locator('.frameProductCard').isVisible());await page.locator('#photographerStoreBottomNav [data-store-home]').evaluate(el=>el.click());await page.locator('body.pbR96ChoosingStore').waitFor();assert(await page.locator('#storeChooserPanelR96').isVisible(),'the mobile Store button opens the chooser again from inside a selected store');
  assert.deepEqual(errors,[]);
  }finally{await browser.close()}
 });

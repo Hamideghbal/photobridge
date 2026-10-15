@@ -11,7 +11,7 @@
  html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary>button.active{background:#eef3ff!important;color:#315efb!important}
  html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{background:#fff!important;box-shadow:none!important}
  html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary>.pb1126FrameStoreTitle{display:block;width:100%;text-align:center;color:#1d2939;font:850 15px/1.4 Vazirmatn,Tahoma,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:none;filter:none}
- html.pb1126FrameStore .pb1126ContentPanel[data-panel=store],html.pb1126FrameStore .pb1126ContentPanel[data-panel=store] iframe{background:#e8f3ff!important}
+ html.pb1126FrameStore .pb1126ContentPanel[data-panel=store],html.pb1126FrameStore .pb1126ContentPanel[data-panel=store] iframe{background:linear-gradient(180deg,#dcecff 0%,#eef6ff 46%,#fff 100%)!important}
  .pb1126ContentPanel{position:fixed;inset:114px 0 0;background:#f7f8fc;z-index:2147483400;}
  .pb1126ContentPanel[hidden]{display:none}
  .pb1126ContentPanel iframe{height:100%;width:100%;border:0;display:block;background:#f7f8fc}

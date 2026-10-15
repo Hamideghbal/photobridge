@@ -144,7 +144,18 @@
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
   render();reveal(motionContent(panel.querySelector('iframe').contentDocument));
  }
- function navigate(key){if(key==='store'||key==='print'){open(key);return;}closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(motionContent(document))));}
+ function openStoreChooser(doc){const button=doc?.querySelector('[data-store-home]');if(!button)return false;button.click();return true;}
+ function navigate(key){
+  if(key==='store'){
+   if(selected==='store'&&openStoreChooser(currentDocument()))return;
+   open('store');
+   const frame=panels.get('store')?.querySelector('iframe');
+   if(frame&&!openStoreChooser(frame.contentDocument))frame.addEventListener('load',()=>openStoreChooser(frame.contentDocument),{once:true});
+   return;
+  }
+  if(key==='print'){open(key);return;}
+  closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(motionContent(document))));
+ }
  // Register before legacy full-document navigation handlers.
  window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
  window.addEventListener('photobridge-desktop-identity-ready',schedule);

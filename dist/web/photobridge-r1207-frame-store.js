@@ -993,8 +993,8 @@ frameR1228Layout.textContent=`
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-history]{display:none!important}
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace,
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
-  background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
-  background-color:#eaf5ff!important
+  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%)!important;
+  background-color:#fff!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace #salesPanel,
  html body.frameCustomerStore #storePhotographerWorkspace #salesPanel>.box{
@@ -1037,8 +1037,8 @@ frameR1228Layout.textContent=`
   inset-inline:0!important;left:0!important;right:0!important;z-index:511!important;
   width:100%!important;max-width:none!important;height:49px!important;min-height:49px!important;
   margin:0!important;padding:4px 16px!important;transform:none!important;
-  background:#fff!important;background-image:none!important;box-shadow:none!important;
-  border:0!important;border-bottom:1px solid #e2e8f0!important
+  background:transparent!important;background-image:none!important;box-shadow:none!important;
+  border:0!important;border-bottom:1px solid #e2e8f080!important
  }
  html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
   top:var(--frame-customer-content-top,155px)!important;margin-top:0!important;padding-top:0!important
@@ -1071,14 +1071,17 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
   background:#fff!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #e0e8f4!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
-  top:0!important
+  top:0!important;background:transparent!important;background-image:none!important;border-bottom-color:transparent!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:none!important}
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
-  top:49px!important;padding-top:0!important;background:#e8f3ff!important;background-image:none!important
+  top:49px!important;padding-top:0!important;background:transparent!important;background-image:none!important
  }
  html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace,
- html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore{background:#e8f3ff!important;background-image:none!important}
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore{
+  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%) fixed!important;
+  background-size:100% 100vh!important;background-repeat:no-repeat!important
+ }
 }
 
 /* Mobile: the blue surface must remain visible and fill the full viewport down
@@ -1087,11 +1090,11 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
 @media(max-width:820px){
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore),
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace{
-  background:#e8f3ff!important;background-image:none!important;
+  background:linear-gradient(180deg,#dcecff 0%,#eff6ff 48%,#fff 100%) fixed!important;
+  background-size:100% 100vh!important;background-repeat:no-repeat!important;
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #frameCustomerNav#frameCustomerNav{
-  background:linear-gradient(180deg,#e5f2ff 0%,#e8f3ff 100%)!important;
-  background-color:#e8f3ff!important;
+  background:transparent!important;background-image:none!important;
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
   position:fixed!important;top:var(--frame-customer-content-top,174px)!important;
@@ -1100,7 +1103,7 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
   max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;
   margin:0!important;padding:7px 10px 0!important;box-sizing:border-box!important;
   overflow-x:hidden!important;overflow-y:auto!important;
-  background:#e8f3ff!important;background-image:none!important;
+  background:transparent!important;background-image:none!important;
   -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important
  }
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell>#app{

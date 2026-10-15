@@ -11,7 +11,7 @@
     for(const [name,value] of Object.entries({
       position:'fixed',top:`${top}px`,left:'0px',right:'0px',width:'100%',height:'42px',
       'min-height':'42px','max-height':'42px',background:'#fff','background-color':'#fff',
-      'background-image':'none',color:'#101828',border:'0px', 'box-shadow':document.body.classList.contains('frameCustomerStore')?'0 10px 16px -12px rgba(22,119,255,.82),0 18px 28px -20px rgba(22,119,255,.58)':'none',filter:'none',
+      'background-image':'none',color:'#101828',border:'0px', 'box-shadow':document.body.classList.contains('frameCustomerStore')?'0 14px 27px -14px rgba(38,126,246,.27),0 24px 42px -23px rgba(38,126,246,.14)':'none',filter:'none',
     }))if(b.style.getPropertyValue(name)!==value||b.style.getPropertyPriority(name)!=='important')b.style.setProperty(name,value,'important');
     const toggle=b.querySelector('#storeIdentityToggle');
     if(toggle&&toggle.style.getPropertyValue('color')!=='#101828')toggle.style.setProperty('color','#101828','important');

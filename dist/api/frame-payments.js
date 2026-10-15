@@ -41,13 +41,29 @@ export async function reviewFramePayment(db,{paymentId,shopId,userId,action,note
 
 export async function handleFramePayments(req,res,url,a,d){
  const settings=url.pathname==='/api/rental/frame-payment-settings';
+ const activity=url.pathname==='/api/rental/frame-activity';
  const match=url.pathname.match(/^\/api\/(customer\/equipment-rental|rental)\/frame-payments\/([0-9a-f-]{36})(?:\/(receipt|review))?$/i);
- if(!settings&&!match)return false;
+ if(!settings&&!match&&!activity)return false;
  const reply=(status,data)=>{d.sendJson(res,status,data);return true;};
  try{
-  let shop=null;const owner=settings||match?.[1]==='rental';
+  let shop=null;const owner=settings||activity||match?.[1]==='rental';
   if(owner){shop=await d.currentShop(a);if(!shop)return reply(401,{error:'rental_auth_required'});if(!isProductionShop(shop))return reply(404,{error:'production_shop_unavailable'});}
   else if(!a||a.labRole!=='customer')return reply(401,{error:'photographer_auth_required'});
+  if(activity){
+   if(req.method!=='GET')return reply(405,{error:'method_not_allowed'});
+   // A small, scoped snapshot for the store-side order/receipt alert.
+   const rows=(await d.pool.query(`SELECT o.id,o.frame_payment_id,o.buyer_name,o.created_at,
+         o.status,o.production_stage,p.status AS receipt_status,p.submitted_at AS receipt_submitted_at
+         FROM equipment_sale_orders o
+         LEFT JOIN equipment_frame_payments p ON p.id=o.frame_payment_id
+         WHERE o.shop_id=$1 AND o.frame_payment_id IS NOT NULL
+           AND o.created_at>=now()-interval '30 days'
+         ORDER BY o.created_at DESC LIMIT 75`,[shop.id])).rows;
+   return reply(200,{orders:rows.map(o=>({id:o.id,paymentId:o.frame_payment_id,
+     photographerName:o.buyer_name||'عکاس',createdAt:o.created_at,
+     status:o.status,stage:o.production_stage,
+     receiptStatus:o.receipt_status,receiptSubmittedAt:o.receipt_submitted_at}))});
+  }
   if(settings){
    if(req.method==='GET')return reply(200,{paymentSettings:frameBankDetails(shop)});
    if(req.method!=='PUT')return reply(405,{error:'method_not_allowed'});

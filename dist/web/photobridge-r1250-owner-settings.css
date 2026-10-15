@@ -1,7 +1,8 @@
 /* PhotoBridge r1250 — manufacturing shops have no rental handover/commitment settings. */
 body.pb1250ProductionMode #settings #pbR100F9StaffSettings,
 body.pb1250ProductionMode #settings .pb1250RentalSettingsRemoved,
-body.pb1250ProductionMode #settings .pb1250RentalReachRemoved,
+body.pb1250ProductionMode #settings .pb1250RentalReachRemoved .settingsInline:has([name="rentalReachMode"]),
+body.pb1250ProductionMode #settings .pb1250RentalReachRemoved .settingsChecks label:has([name="rentalEnabled"]),
 body.pb1250ProductionMode #settings #shopForm label:has(>[name="depositPolicy"]),
 body.pb1250ProductionMode #settings #shopForm label:has([name="rentalEnabled"]),
 body.pb1250ProductionMode #settings #shopForm label:has([name="rentalReachMode"]),
@@ -25,3 +26,32 @@ body.pb1250ProductionMode #photographerList [data-edit-guarantee]{
  font-size:10px;line-height:1.8;font-weight:500;color:#667085;
 }
 #sms .smsAlwaysEnabled::before{content:"✓";color:#027a48;font-size:16px}
+
+/* Owner-side model cards share the same compact measurements as customer cards. */
+body.pb1250ProductionMode #sales #saleItems .frameProductCard{
+ padding:11px!important;gap:6px!important;border-radius:12px!important;min-width:0!important;
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .saleItemInfo{
+ margin:0 0 5px!important;gap:3px!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .saleItemInfo b{
+ font-size:14px!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .saleItemPhoto{
+ height:145px!important;max-height:145px!important;object-fit:contain!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .frameStoreChoices{
+ margin:6px 0!important;gap:6px!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .frameSizePriceRow{
+ margin:5px 0!important;gap:7px!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .saleItemPrice{
+ font-size:15px!important;margin:0!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .frameOwnerActions{
+ margin-top:4px!important;gap:6px!important
+}
+body.pb1250ProductionMode #sales #saleItems .frameProductCard .frameOwnerActions button{
+ min-height:35px!important;padding:7px 9px!important
+}

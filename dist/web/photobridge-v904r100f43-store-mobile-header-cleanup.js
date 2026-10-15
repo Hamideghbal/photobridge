@@ -9,9 +9,12 @@
     if(!mobile())return;
     const h=document.querySelector('#photographerStoreRoleHeader .workspaceIdentityCopy>h1');
     if(!h)return;
-    if(document.body.classList.contains('frameCustomerStore')){for(const [key,value]of Object.entries({'font-size':'13px','line-height':'20px','max-height':'20px',overflow:'hidden','text-overflow':'ellipsis','white-space':'nowrap'}))h.style.setProperty(key,value,'important');return;}
+    // R1222: the legacy frame-only branch forced a single-line ellipsis
+    // AFTER the R1222 header painted, causing a late truncation/flash. Let
+    // frame stores use the same full-name wrapping with compact adaptive type.
+    const frame=document.body.classList.contains('frameCustomerStore');
     const len=[...text(h)].length;
-    const size=len>58?9.2:len>48?9.8:len>38?10.5:len>30?11.2:len>24?12:13;
+    const size=frame?(len>50?9:len>38?9.7:len>27?10.5:11.5):(len>58?9.2:len>48?9.8:len>38?10.5:len>30?11.2:len>24?12:13);
     h.style.setProperty('font-size',size+'px','important');
     h.style.setProperty('line-height','1.17','important');
     h.style.setProperty('max-height','none','important');

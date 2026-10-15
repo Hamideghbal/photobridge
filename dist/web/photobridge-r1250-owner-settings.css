@@ -1,0 +1,27 @@
+/* PhotoBridge r1250 — manufacturing shops have no rental handover/commitment settings. */
+body.pb1250ProductionMode #settings #pbR100F9StaffSettings,
+body.pb1250ProductionMode #settings .pb1250RentalSettingsRemoved,
+body.pb1250ProductionMode #settings .pb1250RentalReachRemoved,
+body.pb1250ProductionMode #settings #shopForm label:has(>[name="depositPolicy"]),
+body.pb1250ProductionMode #settings #shopForm label:has([name="rentalEnabled"]),
+body.pb1250ProductionMode #settings #shopForm label:has([name="rentalReachMode"]),
+body.pb1250ProductionMode #settings #shopForm label:has([name="rentalReachProvinces"]),
+body.pb1250ProductionMode #settings #shopForm label:has([name="rentalReachCities"]),
+body.pb1250ProductionMode #photographerList .pb1250RentalCollateral,
+body.pb1250ProductionMode #photographerList [data-edit-collateral],
+body.pb1250ProductionMode #photographerList [data-edit-guarantee]{
+ display:none!important;
+}
+#shopForm .pb1250ShopCategoryField{min-width:0}
+#shopForm .pb1250ShopCategoryField select{
+ width:100%;min-height:39px;border:1px solid #d0d5dd;border-radius:9px;
+ background:#fff;font:750 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer;
+}
+#sms .smsAlwaysEnabled{
+ display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ color:#344054;font:800 11px Vazirmatn,Tahoma,sans-serif;
+}
+#sms .smsAlwaysEnabled small{
+ font-size:10px;line-height:1.8;font-weight:500;color:#667085;
+}
+#sms .smsAlwaysEnabled::before{content:"✓";color:#027a48;font-size:16px}

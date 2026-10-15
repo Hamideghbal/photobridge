@@ -158,6 +158,10 @@ test('Windows Store tab reopens the shop chooser from inside the selected shop',
   const storeFrame=page.frameLocator('.pb1126ContentPanel iframe');
   await page.locator('[data-pb1126-kind="store"]').click();
   await storeFrame.locator('body.pbR96ChoosingStore').waitFor();
+ await page.screenshot({path:'/tmp/r1239-store-chooser.png'});
+  const sharedPanel=await page.locator('.pb1126ContentPanel').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width,viewport:document.documentElement.clientWidth,iframe:el.querySelector('iframe').getBoundingClientRect().toJSON()}));
+  assert(Math.abs(sharedPanel.left)<1&&Math.abs(sharedPanel.right-sharedPanel.viewport)<1,'the shared tab panel must reach both viewport edges: '+JSON.stringify(sharedPanel));
+  assert(Math.abs(sharedPanel.iframe.left)<1&&Math.abs(sharedPanel.iframe.right-sharedPanel.viewport)<1,'the tab iframe must reach both viewport edges: '+JSON.stringify(sharedPanel));
   const chooserSurface=await storeFrame.locator('#storePhotographerWorkspace>.shell').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width,viewport:innerWidth,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace')).backgroundColor,shellBackground:getComputedStyle(el).backgroundColor}));
   assert(Math.abs(chooserSurface.left)<1&&Math.abs(chooserSurface.right-chooserSurface.viewport)<1,'Windows store chooser must fill the entire iframe viewport: '+JSON.stringify(chooserSurface));
   assert(await storeFrame.locator('#storeChooserPanelR96').isVisible());
@@ -186,6 +190,7 @@ test('Windows photographer tools open closable overlays without switching tabs o
   assert.equal(shopSurface.gutter,'auto');assert.equal(shopSurface.overflow,'auto');assert.equal(shopSurface.scrollbar,'none');assert.equal(shopSurface.left,0);assert(Math.abs(shopSurface.width-shopSurface.viewport)<1);assert(Math.abs(shopSurface.right-shopSurface.viewport)<1);
   const openAndClose=async(selector,path)=>{
    await page.locator(selector).click();
+   if(path.endsWith('/wallet'))assert.equal(await page.locator('#pb1126DesktopHeader .pb1124Wallet').innerText(),'کیف پول','desktop wallet action must retain its text label');
    const modal=page.locator('#pb1126UtilityWindow');await modal.waitFor({state:'visible'});
    assert.equal(await modal.getAttribute('role'),'presentation');
    assert.equal(await modal.locator('[role=dialog]').getAttribute('aria-modal'),'true');

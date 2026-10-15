@@ -53,7 +53,9 @@
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail .pbFrameStoreScrollThumb{position:absolute!important;top:0!important;left:2px!important;width:6px!important;min-height:34px!important;border-radius:999px!important;background:rgba(71,84,103,.48)!important;box-shadow:0 0 0 1px rgba(255,255,255,.5)!important;cursor:grab!important;touch-action:none!important;user-select:none!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail .pbFrameStoreScrollThumb:active{background:rgba(49,94,251,.68)!important;cursor:grabbing!important}
  html.pb1126Desktop body #pb1126ChromeHost,html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader{width:100vw!important;max-width:none!important;left:0!important;right:auto!important}
- html.pb1126Desktop .pb1126ContentPanel{left:0!important;right:auto!important;width:100vw!important}
+ /* Keep every desktop tab flush to the iframe viewport. A fixed 100vw panel
+    otherwise includes the left-side Windows scrollbar and leaves a gutter. */
+ html.pb1126Desktop .pb1126ContentPanel{left:0!important;right:-15px!important;width:auto!important}
  html.pb1126Desktop .pb1126ContentPanel{box-sizing:border-box!important;overflow:hidden!important}
  html.pb1126Desktop .pb1126ContentPanel iframe{box-sizing:border-box!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
  html.pb1126Desktop .pb1126ContentPanel.pb1126CartOpen{z-index:2147483601!important}

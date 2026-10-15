@@ -83,8 +83,10 @@
    if(selectedButton)press(selectedButton);
   }
   nav.dataset.pb1132Active=active;
-  const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
-  if(wallet){const label=wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
+  // Keep a readable fixed label in the desktop header even when the native
+  // wallet badge has no balance (or contains only a number).
+  const walletButton=chrome.querySelector('.pb1124Wallet');
+  if(walletButton&&walletButton.textContent!=='کیف پول')walletButton.textContent='کیف پول';
   const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();
   const frameStore=active==='store'&&doc?.body?.classList.contains('frameCustomerStore')&&doc?.querySelector('#frameCustomerNav');
   const cameraStore=active==='store'&&!frameStore&&doc?.body?.classList.contains('rentalPhotographerMode')&&doc?.querySelector('#photographerStoreRoleHeader')&&doc?.querySelector('#pbR1123StoreDesktopNav')&&!doc?.body?.classList.contains('pbR96ChoosingStore');

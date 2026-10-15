@@ -718,7 +718,7 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
   animation:none!important;transition:none!important;text-shadow:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
-  border:0!important;box-shadow:0 10px 16px -12px rgba(22,119,255,.82),0 18px 28px -20px rgba(22,119,255,.58)!important;filter:none!important;
+  border:0!important;box-shadow:0 14px 27px -14px rgba(38,126,246,.27),0 24px 42px -23px rgba(38,126,246,.14)!important;filter:none!important;
   background:#fff!important;background-image:none!important;
   backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
   text-shadow:none!important;animation:none!important;transition:none!important;

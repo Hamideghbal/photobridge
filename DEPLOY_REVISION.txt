@@ -1,1 +1,1 @@
-2026-10-15-r1251-immutable-store-business-category
+2026-10-15-r1252-frame-customer-cards-and-inline-receipt

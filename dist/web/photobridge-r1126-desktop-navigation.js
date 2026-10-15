@@ -148,7 +148,7 @@
     }
     // Camera/photo-video store: bring the REAL category action up beside cart.
     // Keep the original filter logic in the embedded shop, not a disconnected copy.
-    if(storeHeader){
+    if(cameraStore){
      const categoryButton=doc.querySelector('#saleCategoryBtnR68');
      if(categoryButton){
       const categoryCopy=document.createElement('button');

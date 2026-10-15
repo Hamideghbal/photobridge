@@ -285,9 +285,28 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&frameSizeSheet){e.p
 
 let categoryOrigin=null,frameShellTop=null,frameCartPortals=null,frameOrderView='orders';const frameHiddenControls=new Map(),frameControlLabels=new Map(),frameLayoutDisplays=new Map();
 const customerFrame=()=>typeof selectedShopRecord==='function'?['frame','chassis','frame_chassis'].includes(selectedShopRecord()?.business_category):isFrame();
+function ensureFrameStoreScrollbar(shell){
+ if(!shell||!document.documentElement.classList.contains('pb1126FrameStoreHost')||!window.matchMedia('(min-width:821px)').matches)return;
+ let rail=document.getElementById('pbFrameStoreScrollRail');
+ if(!rail){
+  rail=document.createElement('div');rail.id='pbFrameStoreScrollRail';rail.className='pbFrameStoreScrollRail';rail.setAttribute('role','scrollbar');rail.setAttribute('aria-label','پیمایش فروشگاه');rail.setAttribute('aria-orientation','vertical');rail.tabIndex=0;
+  const thumb=document.createElement('div');thumb.className='pbFrameStoreScrollThumb';rail.append(thumb);document.body.append(rail);
+  let drag=null;
+  const sync=()=>{if(!rail.isConnected||!shell.isConnected)return;const view=shell.clientHeight,total=shell.scrollHeight,track=rail.clientHeight,overflow=total>view+1;rail.hidden=!overflow;if(!overflow)return;const thumbHeight=Math.min(track,Math.max(34,track*view/total)),travel=Math.max(0,track-thumbHeight),maxScroll=Math.max(1,total-view);thumb.style.height=thumbHeight+'px';thumb.style.transform='translateY('+Math.round(travel*shell.scrollTop/maxScroll)+'px)';rail.setAttribute('aria-valuemin','0');rail.setAttribute('aria-valuemax',String(maxScroll));rail.setAttribute('aria-valuenow',String(Math.round(shell.scrollTop)));};
+  const stop=event=>{if(!drag||event.pointerId!==drag.pointerId)return;drag=null;try{thumb.releasePointerCapture(event.pointerId)}catch{}};
+  thumb.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();drag={pointerId:event.pointerId,startY:event.clientY,startScroll:shell.scrollTop};try{thumb.setPointerCapture(event.pointerId)}catch{}});
+  thumb.addEventListener('pointermove',event=>{if(!drag||event.pointerId!==drag.pointerId)return;const travel=Math.max(1,rail.clientHeight-thumb.offsetHeight),range=Math.max(0,shell.scrollHeight-shell.clientHeight);shell.scrollTop=drag.startScroll+(event.clientY-drag.startY)*range/travel;});
+  thumb.addEventListener('pointerup',stop);thumb.addEventListener('pointercancel',stop);
+  rail.addEventListener('pointerdown',event=>{if(event.target===thumb)return;const rect=rail.getBoundingClientRect(),track=Math.max(1,rail.clientHeight-thumb.offsetHeight),range=Math.max(0,shell.scrollHeight-shell.clientHeight);shell.scrollTop=Math.max(0,Math.min(range,(event.clientY-rect.top-thumb.offsetHeight/2)/track*range));});
+  rail.addEventListener('keydown',event=>{const step=event.key==='PageDown'?shell.clientHeight*.85:event.key==='PageUp'?-shell.clientHeight*.85:event.key==='ArrowDown'?48:event.key==='ArrowUp'?-48:event.key==='Home'?-shell.scrollHeight:event.key==='End'?shell.scrollHeight:0;if(!step)return;event.preventDefault();shell.scrollTop+=step;});
+  shell.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync,{passive:true});new ResizeObserver(sync).observe(shell);new MutationObserver(sync).observe(shell,{childList:true,subtree:true});rail._pbSync=sync;
+ }
+ rail._pbSync?.();
+}
 function positionFrameNavigation(){
  const bar=document.getElementById('photographerStoreIdentityBar'),nav=document.getElementById('frameCustomerNav'),shell=document.querySelector('#storePhotographerWorkspace>.shell');
  if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore')){
+  const rail=document.getElementById('pbFrameStoreScrollRail');if(rail)rail.hidden=true;
   if(shell&&frameShellTop){if(frameShellTop.value)shell.style.setProperty('top',frameShellTop.value,frameShellTop.priority);else shell.style.removeProperty('top');frameShellTop=null;}
   return;
  }
@@ -330,6 +349,7 @@ function positionFrameNavigation(){
   if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
   const shellTop=frameStoreHost?'0px':contentTop+'px';
   if(shell.style.getPropertyValue('top')!==shellTop)shell.style.setProperty('top',shellTop,'important');
+  if(frameStoreHost&&window.matchMedia('(min-width:821px)').matches)ensureFrameStoreScrollbar(shell);
  }
 }
 window.addEventListener('resize',()=>{if(customerFrame())requestAnimationFrame(positionFrameNavigation)},{passive:true});
@@ -1138,7 +1158,6 @@ const tabFeedback=document.createElement('style');tabFeedback.textContent=`
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart])::after{
   content:none!important;display:none!important
  }
- @media(min-width:821px){html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}}
 `;
 document.head.append(tabFeedback);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

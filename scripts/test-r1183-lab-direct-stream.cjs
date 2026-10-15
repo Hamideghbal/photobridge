@@ -33,10 +33,11 @@ test('Authenticated download still requires primary lab machine and paid invoice
  assert.match(block,/payment_required/);
  assert.match(block,/original_state<>'deleted'/);
 });
-test('No false-negative S3 HEAD gate blocks streaming download',()=>{
+test('Preflight shares the same resolver as preview and download',()=>{
  const block=section('const labOrderDownloadCheck =','const labAlbumDownloadComplete =');
- assert.match(block,/String\(row.object_key\|\|row.print_object_key\|\|''\)/);
- assert.doesNotMatch(block,/chosen=await pb1182Choose/);
+ assert.match(block,/const chosen=await pb1182Choose\(row\),ok=chosen\.available/);
+ assert.match(block,/if\(ok&&chosen\.fallback\)fallback\.push/);
+ assert.match(block,/download_files_unavailable/);
 });
 test('Lab thumbnails, lightbox and download use authenticated direct stream, not preview token',()=>{
  assert.match(ui,/PB1183 authenticated image transport/);

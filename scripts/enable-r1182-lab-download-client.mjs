@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/web/assets/index-UIRefine-v655-r84.js';let s=fs.readFileSync(path,'utf8');
 function change(region,a,b,name){const n=region.split(a).length-1;if(n!==1)throw Error('R1182 browser '+name+': '+n);return region.replace(a,b);}
-if(!s.includes('PB1182 original-format download fallback')){
+const alreadyPatched=s.includes('pbDownloadName=filename')&&s.includes('downloadName=o.pbDownloadName||a.original_name')&&s.includes('preflight.fallbackOriginalCount');
+if(!s.includes('PB1182 original-format download fallback')&&!alreadyPatched){
  const a=s.indexOf('async function Ky(t){'),b=s.indexOf('async function Qy(',a),c=s.indexOf('async function Dg(',b);
  if(a<0||b<0||c<0)throw Error('R1182 download helpers changed');
  let ky=s.slice(a,b),qy=s.slice(b,c);

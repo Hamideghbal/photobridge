@@ -25,10 +25,10 @@ test('header tab redraw preserves native action and never leaves the old dead pr
  assert.ok(header.includes("if(!isQueue&&intake&&intake.parentElement===row)intake.remove()"));
  assert.ok(header.includes("row.querySelector(':scope>.pb1174QueueLaunch')?.remove()"));
 });
-test('single native action stays on print and album queue, and original primary machine restrictions still hold',()=>{
+test('single native action stays visible on print and album queue while submission keeps primary machine restrictions',()=>{
  assert.ok(intake.includes("const albumTab=/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)"));
  assert.ok(intake.includes("const desktopQueue=window.matchMedia("));
- assert.ok(intake.includes("if(!primaryState){old?.remove();return;}"));
+ assert.ok(!intake.includes("if(!primaryState){old?.remove();return;}"));
  assert.ok(intake.includes('if(!primary.registered||!primary.isThisDevice)throw Error('));
  assert.ok(header.includes("const intake=document.getElementById('pb1137LocalIntakeButton')"));
  assert.match(css,/\.pb1148SecondaryHeader\.pb1174QueueNav > #pb1137LocalIntakeButton\.pb1137Launch\s*\{\s*display:inline-flex!important/);

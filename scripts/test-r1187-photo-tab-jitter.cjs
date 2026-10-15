@@ -28,8 +28,9 @@ test('gallery media tab change no longer translates photo content',()=>{
  assert(gallery.includes("className='pb1164MovingIndicator'"));
 });
 test('lab orders and top-level tabs keep scrollable content stationary',()=>{
- assert(lab.includes("panel?.animate?.([{opacity:.85},{opacity:1}],{duration:240"));
- assert(lab.includes("document.querySelector('.labRolePageScrollArea')?.animate([{opacity:.85},{opacity:1}],{duration:180"));
+ assert(!lab.includes("panel?.animate?.("));
+ assert(!lab.includes("document.querySelector('.labRolePageScrollArea')?.animate("));
+ assert(lab.includes('PB1188 fixed scroll viewport; only the selected tab animates'));
  assert(!lab.includes("transform:'translateY(7px)'"));
  assert(!lab.includes("transform:'translateY(5px)'"));
  assert(lab.includes("const intake=document.getElementById('pb1137LocalIntakeButton')"));

@@ -55,7 +55,7 @@ test('release build applies patch with no database or uploaded-file mutation',()
 
 test('recovered original downloads under true source filename and true source byte count',()=>{
  const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
- assert.match(ui,/PB1182 original-format download fallback/);
+ assert.match(ui,/pbDownloadName=filename/);
  assert.match(ui,/pbDownloadName/);
  assert.match(ui,/pbDownloadBytes/);
  assert.match(ui,/downloadName=o.pbDownloadName\|\|a.original_name/);

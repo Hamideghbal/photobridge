@@ -27,23 +27,24 @@ test('mount preserves exactly one native button and native onclick across deskto
  const headerNode={name:'header',append(el){if(el.parentElement)el.parentElement.remove(el);el.parentElement=this;elements.push(el)}};
  filter.remove=headerNode.remove=el=>{const i=elements.indexOf(el);if(i>=0)elements.splice(i,1);el.parentElement=null};
  const host={querySelector(q){if(q==='.pb1148SecondaryHeader.pb1174QueueNav')return headerNode;if(q==='.mainQueueFilters')return filter;return null}};
- const doc={querySelector:q=>q==='.labRoleWorkspace main'?host:null,
+ const doc={querySelector:q=>q==='.labRoleWorkspace main'?host:q==='.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'?headerNode:null,
    getElementById:()=>elements.find(el=>el.id==='pb1137LocalIntakeButton')||null};
  let desktop=true;
  const win={matchMedia:()=>({matches:desktop})};
  const provider={deviceId:()=> 'device-1'};
  const location={pathname:'/lab/orders'};
- const open=()=>{};
+ const opened=[];const open=mode=>opened.push(mode);
  const node=(tag,label,cls)=>({tag,label,className:cls,parentElement:null,remove(){this.parentElement?.remove(this)}});
  const mount=new Function('storage','document','window','location','primaryState','node','checkPrimary','open',fn+';return mount')(
    ()=>provider,doc,win,location,true, node,()=>{},open);
  mount();mount();
  assert.equal(elements.length,1);
  assert.equal(elements[0].parentElement,headerNode);
- assert.equal(elements[0].onclick,open);
+ elements[0].onclick();assert.deepEqual(opened,['print']);
  location.pathname='/lab/albums';mount();
  assert.equal(elements.length,1);
  assert.equal(elements[0].parentElement,headerNode);
+ elements[0].onclick();assert.deepEqual(opened,['print','album']);
  desktop=false;mount();
  assert.equal(elements.length,1);
  assert.equal(elements[0].parentElement,filter);

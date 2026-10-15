@@ -36,6 +36,10 @@
     if(cell.textContent.includes('رزرو'))cell.textContent='سفارش‌ها';
     if(cell.textContent.includes('ودیعه')||cell.textContent.includes('مدرک ضمانت'))cell.classList.add('pb1250RentalCollateral');
    });
+   qa('button[onclick*="editPhotographerCollateral"]',list).forEach(button=>button.classList.add('pb1250RentalCollateral'));
+   qa('.pb860PhotographerDetails > div',list).forEach(block=>{
+    if(block.querySelector(':scope>strong')?.textContent.includes('ودیعه'))block.classList.add('pb1250RentalCollateral');
+   });
    qa('tbody tr',list).forEach(row=>{
     const th=qa('thead th',list),idx=th.findIndex(c=>c.classList.contains('pb1250RentalCollateral'));
     if(idx>=0&&row.children[idx])row.children[idx].classList.add('pb1250RentalCollateral');

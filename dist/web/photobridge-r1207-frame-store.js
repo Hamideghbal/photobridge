@@ -985,6 +985,23 @@ frameR1228Layout.textContent=`
   top:var(--frame-customer-content-top,155px)!important;
   background:#f5f7fb!important;background-image:none!important
  }
+ /* R1237: keep the embedded desktop viewport flush with the iframe and use
+    the catalog shell as its only scroll owner. */
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore,
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #root,
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace{
+  width:100%!important;min-width:0!important;max-width:100%!important;height:100dvh!important;min-height:0!important;
+  overflow:hidden!important;box-sizing:border-box!important
+ }
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
+  left:0!important;right:0!important;width:100vw!important;min-width:0!important;max-width:100vw!important;
+  margin:0!important;box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;
+  scrollbar-width:none!important;scrollbar-gutter:auto!important;overscroll-behavior:contain!important
+ }
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail{left:0!important;width:10px!important;z-index:2147483500!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #saleCartDrawer.open{top:0!important;z-index:2147483501!important;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .22s ease!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{transform:translate3d(-105%,0,0)!important;transition:none!important}
  html body.frameCustomerStore #frameOrdersPanel .saleOrderCustomer[hidden],
  html body.frameCustomerStore #frameOrderViewEmpty[hidden]{display:none!important}
 }

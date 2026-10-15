@@ -10,6 +10,7 @@ html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace#
   background:#f5f7fb linear-gradient(180deg,#d9ecff 0,#e7f3ff 105px,#f0f7ff 270px,#f5f7fb 480px)!important;
   background-repeat:no-repeat!important;
   background-size:100% 100%!important;
+  border-top:1px solid #485566!important;
 }
 /* The Windows desktop host has its own second header, independent of the iframe nav. */
 html.pb1126FrameStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{

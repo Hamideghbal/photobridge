@@ -84,7 +84,7 @@
   }
   nav.dataset.pb1132Active=active;
   const wallet=nativeHeader(document)?.querySelector('.headerWalletBadge,.mobileHeaderWallet');
-  if(wallet){const label='کیف پول · '+wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
+  if(wallet){const label=wallet.textContent.trim().replace(/^اعتبار\s*|^کیف پول\s*/,'');const b=chrome.querySelector('.pb1124Wallet');if(b.textContent!==label)b.textContent=label;}
   const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();
   const frameStore=active==='store'&&doc?.body?.classList.contains('frameCustomerStore')&&doc?.querySelector('#frameCustomerNav');
   const cameraStore=active==='store'&&!frameStore&&doc?.body?.classList.contains('rentalPhotographerMode')&&doc?.querySelector('#photographerStoreRoleHeader')&&doc?.querySelector('#pbR1123StoreDesktopNav')&&!doc?.body?.classList.contains('pbR96ChoosingStore');
@@ -183,38 +183,41 @@
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
   render();reveal(motionContent(panel.querySelector('iframe').contentDocument));
  }
- const utilityPages={wallet:{title:'کیف پول',path:'/photographer/wallet'},settings:{title:'تنظیمات عکاسی',path:'/photographer/settings'},invite:{title:'دعوت همکار',path:'/photographer/settings/invites'}};
+ const utilityPages={wallet:{title:'کیف پول',path:'/photographer/wallet'},settings:{title:'تنظیمات عکاسی',path:'/photographer/settings'}};
+ const utilityFrames=new Map();
  function closeUtilityWindow(){
   if(!utilityPanel)return;
-  utilityPanel.remove();utilityPanel=null;document.body.style.overflow=utilityPreviousOverflow;
+  utilityPanel.hidden=true;document.body.style.overflow=utilityPreviousOverflow;
   if(utilityEscapeHandler){window.removeEventListener('keydown',utilityEscapeHandler,true);utilityEscapeHandler=null;}
   const focus=utilityReturnFocus;utilityReturnFocus=null;if(focus?.isConnected)focus.focus({preventScroll:true});
  }
  function openUtilityWindow(kind){
   const page=utilityPages[kind];if(!page)return false;
+  utilityReturnFocus=document.activeElement;utilityPreviousOverflow=document.body.style.overflow;
   if(!utilityPanel){
-   utilityReturnFocus=document.activeElement;utilityPreviousOverflow=document.body.style.overflow;
-   utilityPanel=document.createElement('div');utilityPanel.id='pb1126UtilityWindow';utilityPanel.setAttribute('role','presentation');
+   utilityPanel=document.createElement('div');utilityPanel.id='pb1126UtilityWindow';utilityPanel.setAttribute('role','presentation');utilityPanel.hidden=true;
    const dialog=document.createElement('section');dialog.className='pb1126UtilityDialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','pb1126UtilityTitle');
    const bar=document.createElement('header');bar.className='pb1126UtilityBar';
    const title=document.createElement('strong');title.id='pb1126UtilityTitle';
    const close=document.createElement('button');close.type='button';close.id='pb1126UtilityClose';close.className='pb1126UtilityClose';close.setAttribute('aria-label','بستن');close.title='بستن';close.textContent='×';close.addEventListener('click',closeUtilityWindow);
-   const frame=document.createElement('iframe');frame.className='pb1126UtilityFrame';
-   bar.append(title,close);dialog.append(bar,frame);utilityPanel.append(dialog);
+   const frameHost=document.createElement('div');frameHost.className='pb1126UtilityFrames';frameHost.style.cssText='display:flex;flex:1 1 auto;min-height:0';
+   bar.append(title,close);dialog.append(bar,frameHost);utilityPanel.append(dialog);
    utilityPanel.addEventListener('mousedown',event=>{if(event.target===utilityPanel)closeUtilityWindow();});
    document.body.append(utilityPanel);document.body.style.overflow='hidden';
    utilityEscapeHandler=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeUtilityWindow();}};
    window.addEventListener('keydown',utilityEscapeHandler,true);
   }
-  const title=utilityPanel.querySelector('#pb1126UtilityTitle'),frame=utilityPanel.querySelector('.pb1126UtilityFrame');
-  title.textContent=page.title;frame.title=page.title;frame.src=page.path+'?pbDesktopContent=1&pbUtilityWindow=1';
+  const title=utilityPanel.querySelector('#pb1126UtilityTitle'),frameHost=utilityPanel.querySelector('.pb1126UtilityFrames');
+  let frame=utilityFrames.get(kind);if(!frame){frame=document.createElement('iframe');frame.className='pb1126UtilityFrame';frame.title=page.title;frame.src=page.path+'?pbDesktopContent=1&pbUtilityWindow=1';utilityFrames.set(kind,frame);frameHost.append(frame);}
+  for(const [key,cached] of utilityFrames)cached.style.display=key===kind?'block':'none';
+  title.textContent=page.title;document.body.style.overflow='hidden';utilityPanel.hidden=false;
   utilityPanel.querySelector('#pb1126UtilityClose').focus({preventScroll:true});
   return true;
  }
  window.pb1126OpenPhotographerWindow=openUtilityWindow;
  window.addEventListener('click',event=>{
-  const button=event.target?.closest?.('.pb1124Wallet,.pb1163-settings,.pb1163-invite');if(!button)return;
-  const kind=button.classList.contains('pb1124Wallet')?'wallet':button.classList.contains('pb1163-invite')?'invite':'settings';
+  const button=event.target?.closest?.('.pb1124Wallet,.pb1163-settings');if(!button)return;
+  const kind=button.classList.contains('pb1124Wallet')?'wallet':'settings';
   if(!openUtilityWindow(kind))return;
   event.preventDefault();event.stopImmediatePropagation();
  },true);

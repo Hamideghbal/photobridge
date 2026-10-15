@@ -87,7 +87,7 @@ if(!src.includes('PB1183 authenticated lab image stream')){
  let segment=src.slice(start,end);
  const old="const chosen=await pb1182Choose(row),ok=chosen.available;";
  if(segment.split(old).length!==2)throw Error('R1183 preflight resolver anchor missing');
- segment=segment.replace(old,"const ok=Boolean(String(row.object_key||row.print_object_key||'').trim());");
+ segment=segment.replace(old,"const ok=Boolean(String(row.object_key||row.print_object_key||'').trim());").replace("                    if(ok&&chosen.fallback)fallback.push(row.original_name);\n","");
  src=src.slice(0,start)+segment+src.slice(end);
  fs.writeFileSync(path,src);
 }

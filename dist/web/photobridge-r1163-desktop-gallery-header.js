@@ -53,16 +53,16 @@
   if(!actions){actions=document.createElement('div');actions.className='pb1163HeaderTools';const wallet=find(primary,'.pb1124Wallet');wallet?.after(actions);}
   const native=nativeHeader();
   const sources=[...native?.querySelectorAll('.roleHeaderToolButtons button')||[]].filter(b=>!b.classList.contains('headerLogoutBtn')&&!b.classList.contains('headerWalletBadge'));
-  const selected=['settings','notifications','invite'].map(k=>[k,chooseSource(sources,k)]).filter(([,b])=>!!b);
+  const selected=['settings','notifications'].map(k=>[k,chooseSource(sources,k)]).filter(([,b])=>!!b);
   const signature=selected.map(([k,b])=>k+':'+b.outerHTML).join('|');
   if(actions.dataset.source!==signature){
    actions.replaceChildren();
    for(const [kind,original] of selected){
     const button=document.createElement('button');button.type='button';button.className='pb1163HeaderTool pb1163-'+kind;
-    button.title=kind==='settings'?'تنظیمات عکاسی':kind==='invite'?'دعوت همکار':'اعلان‌ها';
+    button.title=kind==='settings'?'تنظیمات عکاسی':'اعلان‌ها';
     button.setAttribute('aria-label',button.title);
-    button.textContent=kind==='settings'?'⚙':kind==='invite'?'دعوت همکار':'🔔';
-    button.addEventListener('click',()=>{const live=chooseSource([...nativeHeader()?.querySelectorAll('.roleHeaderToolButtons button')||[]],kind);if(live?.isConnected)live.click();});
+    button.textContent=kind==='settings'?'⚙':'🔔';
+    button.addEventListener('click',()=>{if(kind==='settings'&&typeof window.pb1126OpenPhotographerWindow==='function'){window.pb1126OpenPhotographerWindow('settings');return;}const live=chooseSource([...nativeHeader()?.querySelectorAll('.roleHeaderToolButtons button')||[]],kind);if(live?.isConnected)live.click();});
     actions.append(button);
    }
    actions.dataset.source=signature;
@@ -96,13 +96,13 @@
           b.animate?.([{transform:'translateY(3px) scale(.96)',opacity:.7},{transform:'translateY(-1px) scale(1.015)',opacity:1},{transform:'translateY(0) scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
         }
         target.click();
-        if(animate){
+        if(animate&&window.__PB_ALLOW_WHOLE_PAGE_MOTION__===true){
           // React commits the selected/all view on the next frame; animate the
           // visible gallery section rather than querying a nonexistent grid.
           requestAnimationFrame(()=>requestAnimationFrame(()=>{
             const current=find(document,'.clientGalleryManager');
             const content=find(current,'.clientGalleryMediaPanel')||find(current,'.clientGalleryMediaGrid')||find(current,'.clientGalleryManagerGrid')||current;
-            content?.animate?.([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+            content?.animate?.([{opacity:.85},{opacity:1}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
           }));
         }
        });

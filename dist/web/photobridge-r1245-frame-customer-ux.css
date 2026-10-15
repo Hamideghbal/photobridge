@@ -11,6 +11,11 @@ html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace#
   background-repeat:no-repeat!important;
   background-size:100% 100%!important;
 }
+/* The Windows desktop host has its own second header, independent of the iframe nav. */
+html.pb1126FrameStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{
+  border-bottom:1px solid #485566!important;
+  box-shadow:0 1px 0 rgba(45,55,72,.20)!important;
+}
 html body.frameCustomerStore #frameCustomerNav{
   border-bottom:1px solid #485566!important;
   box-shadow:0 1px 0 rgba(45,55,72,.20)!important;

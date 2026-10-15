@@ -82,19 +82,7 @@ export function createStoreDesktopSync(d){
     const fields=op.entity==='items'?['category','title','brand','model','daily_price','deposit_amount','stock_total','active','description','sku']:['category','title','brand','model','sale_price','stock_total','active','description','sku'];
     const values={};for(const key of fields)if(p[key]!==undefined)values[key]=p[key];
     if(!String(values.title||row?.title||'').trim())fail('item_title_required',400);for(const key of ['daily_price','deposit_amount','sale_price','stock_total'])if(key in values&&!validMoney(values[key]))fail('invalid_item_amount',400);
-    if(op.entity==='items'&&values.stock_total===0)fail('invalid_item_stock',400);const keys=Object.keys(values),params=keys.map(k=>values[k]);if(op.action.endsWith('.create')){params.push(id,shop.id);row=(await c.query(`INSERT INTO ${table}(${keys.join(',')},id,shop_id) VALUES(${params.map((_,i)=>'$'+(i+1)).join(',')}) RETURNING *`,params)).rows[0]}else{params.push(id,shop.id);row=(await c.query(`UPDATE ${table} SET ${keys.map((k,i)=>k+'= WHERE id=$${params.length-1} AND shop_id=$${params.length} RETURNING *`,params)).rows[0]}
-   }else if(op.action==='item.delete'){row=(await c.query(`UPDATE ${table} SET active=false,deleted_at=now(),updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[id,shop.id])).rows[0];
-   }else if(op.action==='shortage.update'){
-    if(!['pending','provided'].includes(p.status))fail('invalid_shortage_status',400);
-    row=(await c.query(`UPDATE equipment_rental_booking_shortages SET status=$3,resolution_note=$4,resolved_at=CASE WHEN $3='provided' THEN now() ELSE NULL END,resolved_by=CASE WHEN $3='provided' THEN $5::uuid ELSE NULL::uuid END,updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[id,shop.id,p.status,String(p.note||''),a.userId])).rows[0];
-   }else fail('unsupported_offline_operation',400);
-   const result={ok:true,id:row.id,updatedAt:iso(row.updated_at),revision:row.desktop_revision,mapping,entity:op.entity,record:row};
-   await c.query('INSERT INTO equipment_store_desktop_operations(shop_id,operation_id,device_id,payload_hash,result) VALUES($1,$2,$3,$4,$5::jsonb)',[shop.id,op.id,op.deviceId,hash,JSON.stringify(result)]);
-   await c.query('COMMIT');sendJson(res,200,result);
-  }catch(e){await c.query('ROLLBACK');if(e.syncStatus)sendJson(res,e.syncStatus,{error:e.message,...e.detail});else throw e}finally{c.release()}return true;
- }
-}
-+(i+1)).join(',')}${keys.length?',':''}updated_at=now() WHERE id=$${params.length-1} AND shop_id=$${params.length} RETURNING *`,params)).rows[0]}
+    if(op.entity==='items'&&values.stock_total===0)fail('invalid_item_stock',400);const keys=Object.keys(values),params=keys.map(k=>values[k]);if(op.action.endsWith('.create')){params.push(id,shop.id);row=(await c.query(`INSERT INTO ${table}(${keys.join(',')},id,shop_id) VALUES(${params.map((_,i)=>'$'+(i+1)).join(',')}) RETURNING *`,params)).rows[0]}else{params.push(id,shop.id);row=(await c.query(`UPDATE ${table} SET ${keys.map((k,i)=>k+'=$'+(i+1)).join(',')}${keys.length?',':''}updated_at=now() WHERE id=$${params.length-1} AND shop_id=$${params.length} RETURNING *`,params)).rows[0]}
    }else if(op.action==='item.delete'){row=(await c.query(`UPDATE ${table} SET active=false,deleted_at=now(),updated_at=now() WHERE id=$1 AND shop_id=$2 RETURNING *`,[id,shop.id])).rows[0];
    }else if(op.action==='shortage.update'){
     if(!['pending','provided'].includes(p.status))fail('invalid_shortage_status',400);

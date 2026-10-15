@@ -240,3 +240,25 @@ body.frameCustomerStore #saleItems .frameProductCard .saleItemBuy>.field{
  }
  body.frameCustomerStore #frameOrdersPanel .saleOrderCustomer{padding:10px!important}
 }
+
+
+/* Keep category beside cart, never a separate wide row below the frame header. */
+body.frameCustomerStore #frameCustomerCategoryRow{display:none!important}
+body.frameCustomerStore #frameCustomerNav .pb1250FrameCategoryHeader{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 auto!important;min-width:0!important;width:auto!important;
+ max-width:126px!important;min-height:35px!important;padding:6px 9px!important;
+ border:1px solid #d4e1f3!important;border-radius:9px!important;
+ color:#315efb!important;background:#eef4ff!important;
+ font:800 10.5px Vazirmatn,Tahoma,sans-serif!important;
+}
+body.frameCustomerStore #frameCustomerNav .pb1250FrameCategoryHeader b{display:none!important}
+body.frameCustomerStore #frameCustomerNav .pb1250FrameCategoryHeader small{
+ display:inline!important;font-size:10px!important;color:inherit!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader.pb1126FrameStore .pb1126FrameStoreCart .pb1249CameraCategory{
+ min-width:0!important;min-height:35px!important;padding:6px 11px!important;
+ border-radius:9px!important;border:1px solid #d4e1f3!important;
+ background:#eef4ff!important;color:#315efb!important;
+ font:850 11px Vazirmatn,Tahoma,sans-serif!important;
+}

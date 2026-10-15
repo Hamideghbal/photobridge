@@ -292,7 +292,7 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches;
+ const desktop=window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded');
  // R1229: use the *actual existing desktop header row* for the shop name,
  // rather than adding a second identity ribbon below it. Keep mobile as-is.
  const role=document.getElementById('photographerStoreRoleHeader');
@@ -315,11 +315,13 @@ function positionFrameNavigation(){
   const bounds=dock?.getBoundingClientRect();
   // Use the real top of the bottom dock, including safe-area changes, instead
   // of reserving an approximate 70px that can leave a visible blank gap.
-  if(bounds?.height>0){
-   const space=Math.max(0,Math.round(window.innerHeight-bounds.top));
-   if(document.documentElement.style.getPropertyValue('--frame-bottom-dock-space')!==space+'px')
-    document.documentElement.style.setProperty('--frame-bottom-dock-space',space+'px');
-  }
+  // Embedded mobile shop is hosted below the *parent app's* bottom dock.
+  // Its local dock is hidden, so reserving 70px inside the iframe creates
+  // precisely the visible white gap reported at the bottom of the catalog.
+  const visible=Boolean(bounds&&bounds.height>0&&getComputedStyle(dock).display!=='none');
+  const space=visible?Math.max(0,Math.round(window.innerHeight-bounds.top)):0;
+  if(document.documentElement.style.getPropertyValue('--frame-bottom-dock-space')!==space+'px')
+   document.documentElement.style.setProperty('--frame-bottom-dock-space',space+'px');
  }
  if(shell){
   if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
@@ -354,14 +356,14 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
  }
 
  if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive')&&(button.dataset.frameCustomerView!=='frameOrdersPanel'||frameOrderView==='orders');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const history=nav.querySelector('[data-frame-customer-history]');if(history){const active=document.getElementById('frameOrdersPanel')?.classList.contains('mobileActive')&&frameOrderView==='history';history.classList.toggle('active',Boolean(active));history.setAttribute('aria-current',active?'page':'false');}const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
- for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',window.matchMedia('(min-width:821px)').matches?'none':el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
+ for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded')?'none':el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
  // Make the real desktop header row show the store title instead of the
  // legacy «خرید تجهیزات / مالی» buttons. Keep the original buttons in the
  // DOM for non-frame store owners and revert cleanly on store switching.
  const desktopHost=document.getElementById('pbR1123StoreDesktopNav');
  let desktopTitle=desktopHost?.querySelector('#frameDesktopStoreTitle');
- const desktopFrame=enabled&&window.matchMedia('(min-width:821px)').matches;
+ const desktopFrame=enabled&&window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded');
  if(desktopFrame&&desktopHost){
   if(!desktopTitle){desktopTitle=document.createElement('strong');desktopTitle.id='frameDesktopStoreTitle';desktopHost.append(desktopTitle);}
   const value=bar?.querySelector('#photographerStoreHeaderName')?.textContent||'انتخاب فروشگاه';
@@ -1072,6 +1074,24 @@ frameR1228Layout.textContent=`
   top:var(--frame-customer-content-top,113px)!important;
   margin-top:0!important;padding-top:0!important
  }
+}
+
+/* Embedded Windows content owns a visible in-frame store-title strip at y=0.
+   The unified role header in this mode belongs to the desktop parent app and
+   is intentionally hidden here. Do not remove the only visible title. */
+@media(min-width:821px){
+ html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  display:grid!important;visibility:visible!important;position:fixed!important;
+  top:0!important;left:0!important;right:0!important;width:100%!important;
+  height:42px!important;min-height:42px!important;max-height:42px!important;
+  padding:3px 14px!important;place-items:center!important;
+  background:#fff!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #e0e8f4!important
+ }
+ html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #storeIdentityToggle,
+ html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #photographerStoreHeaderName{
+  display:block!important;visibility:visible!important;box-shadow:none!important
+ }
+ html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:none!important}
 }
 
 /* Mobile: the blue surface must remain visible and fill the full viewport down

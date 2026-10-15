@@ -51,14 +51,14 @@ function frameUpdatePhotoNodes(current,next,card){
 function frameUpdateCard(existing,fresh){
  const quantity=existing.querySelector('input[id^="saleQty-"]')?.value||'1';
  existing.dataset.selectedItem=fresh.dataset.selectedItem;
- for(const selector of ['.saleItemInfo','.frameSharedDescription','.frameStoreChoices','.frameSizePriceRow','.saleItemBuy']){
+ for(const selector of ['.saleItemInfo','.frameSharedDescription','.frameStoreChoices','.framePurchaseControls']){
   const oldNode=existing.querySelector(':scope > '+selector)||existing.querySelector(':scope > .saleItemHead > '+selector);
   const newNode=fresh.querySelector(':scope > '+selector)||fresh.querySelector(':scope > .saleItemHead > '+selector);
   if(oldNode&&newNode){
    if(oldNode.outerHTML!==newNode.outerHTML)oldNode.replaceWith(newNode);
   }else if(oldNode&&!newNode)oldNode.remove();
   else if(!oldNode&&newNode){
-   const before=selector==='.frameSharedDescription'?existing.querySelector('.frameStoreChoices,.frameSizePriceRow'):selector==='.frameStoreChoices'?existing.querySelector('.frameSizePriceRow'):null;
+   const before=selector==='.frameSharedDescription'?existing.querySelector('.frameStoreChoices,.framePurchaseControls'):selector==='.frameStoreChoices'?existing.querySelector('.framePurchaseControls'):null;
    existing.insertBefore(newNode,before);
   }
  }
@@ -372,10 +372,8 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
  const category=document.getElementById('saleCategoryBtnR68'),salesContent=document.getElementById('salesContent');
  if(enabled&&category&&salesContent){
   if(!categoryOrigin)categoryOrigin={parent:category.parentNode,next:category.nextSibling};
-  let sub=salesContent.querySelector('#frameCustomerCategoryRow');
-  if(!sub){sub=document.createElement('div');sub.id='frameCustomerCategoryRow';sub.className='frameCustomerCategoryRow';sub.innerHTML='<b>دسته‌بندی فروشگاه</b><div class="frameCustomerCategoryButton"></div>';salesContent.prepend(sub);}
-  const slot=sub.querySelector('.frameCustomerCategoryButton');
-  if(category.parentElement!==slot)slot.append(category);
+  salesContent.querySelector('#frameCustomerCategoryRow')?.remove();
+  if(nav&&category.parentElement!==nav)nav.append(category);
  }else if(!enabled&&categoryOrigin&&category){
   const origin=categoryOrigin;
   if(origin.parent?.isConnected)origin.parent.insertBefore(category,origin.next?.parentElement===origin.parent?origin.next:null);
@@ -1198,6 +1196,23 @@ const tabFeedback=document.createElement('style');tabFeedback.textContent=`
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart])::after{
   content:none!important;display:none!important
  }
+
+/* R1250: keep category beside cart; compact the shared purchase controls. */
+html body.frameCustomerStore #frameCustomerCategoryRow{display:none!important}
+html body.frameCustomerStore #frameCustomerNav{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+html body.frameCustomerStore #frameCustomerNav #saleCategoryBtnR68{grid-area:auto!important;min-width:0!important;width:100%!important;font-size:11px!important}
+html body.frameCustomerStore #salesPanel .frameProductCard{padding:11px!important;gap:5px!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .saleItemPhoto{height:150px!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .frameStoreChoices{margin:5px 0!important;gap:6px!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px 8px;align-items:end;margin-top:auto}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .frameSizePriceRow,
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .saleItemBuy{display:contents!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .frameSizePriceRow>label{grid-area:1/1;min-width:0}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .saleItemBuy>.btn{grid-area:1/2;width:100%!important;height:34px!important;min-height:34px!important;margin:0!important;transform:none!important;align-self:end!important;font-size:11px!important;white-space:normal!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .saleItemPrice{grid-area:2/1;font-size:14px!important;min-height:32px!important;justify-content:flex-start!important;margin:0!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .saleItemBuy>.field{grid-area:2/2;width:100%!important;margin:0!important}
+html body.frameCustomerStore #salesPanel .frameProductCard .framePurchaseControls .saleItemBuy>.field>span:first-child{display:none!important}
+@media(max-width:820px){html body.frameCustomerStore #frameCustomerNav{grid-template-columns:repeat(3,minmax(0,1fr))!important}html body.frameCustomerStore #frameCustomerNav#frameCustomerNav>button{grid-area:auto!important}html body.frameCustomerStore #frameCustomerNav#frameCustomerNav>[data-frame-customer-cart]{grid-area:2/3!important}html body.frameCustomerStore #frameCustomerNav#frameCustomerNav>#saleCategoryBtnR68{grid-area:2/2!important}}
 `;
 document.head.append(tabFeedback);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

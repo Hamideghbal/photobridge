@@ -156,7 +156,7 @@
     const m=mode(),storeHeader=$('#photographerStoreRoleHeader');
     document.body.classList.toggle('pbF37StoreMode',m==='store');
     if(m==='store'){ // Store owns its native header only while Store is the authoritative section.
-      storeHeader?.classList.add('pbF37CoreHeader');fitHeaderName(storeHeader);lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return;
+      storeHeader?.classList.add('pbF37CoreHeader');if(!document.body.classList.contains('frameCustomerStore'))fitHeaderName(storeHeader);lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return;
     }
     storeHeader?.classList.remove('pbF37CoreHeader');
     ensureHeader();ensureSub();ensureMenu();

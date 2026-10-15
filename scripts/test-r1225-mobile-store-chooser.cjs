@@ -12,7 +12,8 @@ for(const [width,height] of [[375,667],[390,844]])test('mobile frame shadow and 
  await page.screenshot({path:'/tmp/r1225-mobile-header-'+width+'.png'});
  await page.evaluate(()=>{const first=shops[0];shops=Array.from({length:18},(_,i)=>({...first,id:first.id.slice(0,-2)+String(i+1).padStart(2,'0'),name:'فروشگاه آزمایشی '+(i+1)}));});
  await page.locator('#frameCustomerNav [data-frame-customer-view=salesPanel]').click();
- await page.locator('body.pbR96ChoosingStore').waitFor();assert(await page.locator('#storeChooserPanelR96').isVisible());assert.equal(await page.locator('#frameCustomerNav').isVisible(),false);
+ assert.equal(await page.locator('body.pbR96ChoosingStore').count(),0,'the upper Store tab keeps the current shop open');assert(await page.locator('#salesPanel').evaluate(el=>el.classList.contains('mobileActive')));
+ await page.locator('#photographerStoreBottomNav [data-store-home]').evaluate(el=>el.click());await page.locator('body.pbR96ChoosingStore').waitFor();assert(await page.locator('#storeChooserPanelR96').isVisible());assert.equal(await page.locator('#frameCustomerNav').isVisible(),false);
  assert.equal(await page.locator('body.frameCustomerStore').count(),0);
  assert.equal(await page.locator('.pbR96StoreCard').count(),18);
  const shell=page.locator('#storePhotographerWorkspace>.shell');await shell.evaluate(el=>el.scrollTop=el.scrollHeight);

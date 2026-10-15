@@ -257,6 +257,12 @@ body.frameCustomerStore .pb1242ReceiptLink{
     pointer-events:none!important;
     background:linear-gradient(90deg,transparent 0%,rgba(152,162,179,.34) 12%,rgba(152,162,179,.34) 88%,transparent 100%)!important;
   }
+  /* Remove the previous sky-blue layer behind the iframe scroller, too. */
+  html body.rentalPhotographerMode.frameCustomerStore
+  #storePhotographerWorkspace#storePhotographerWorkspace{
+    background:#f4f6fa!important;
+    background-image:none!important;
+  }
   /* Exact same blend as owner page:
      .105 -> .045 at 38% -> zero at 92px over #f4f6fa.
      It is drawn ONCE, on the visible scroller, not again on its frame. */

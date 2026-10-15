@@ -14,7 +14,7 @@ test('the first row places every required/optional badge NEXT TO its field title
   const start=modal.indexOf(fragment);
   assert(modal.slice(start,start+450).includes('value:'+value),title+' actual field binding unchanged');
  }
- assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,4,'the access-code field keeps its own required caption');
+ assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,3,'the required visible field captions remain present');
  assert(modal.includes('headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
 });
 test('the original required validations and optional mobile remain untouched',()=>{

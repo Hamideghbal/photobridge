@@ -1025,6 +1025,86 @@ frameR1228Layout.textContent=`
   opacity:1!important;border-radius:13px!important
  }
 }
+
+/* R1229: collapse the desktop chrome to exactly two rows: original unified
+   header with the selected store name, then centered Store/Finance/Orders/History
+   tabs. No redundant «خرید تجهیزات / مالی» or empty store-identity ribbon. */
+@media(min-width:821px){
+ html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav,
+ html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav.frameDesktopHost{
+  display:flex!important;visibility:visible!important;pointer-events:auto!important;
+  align-items:center!important;justify-content:center!important;
+  flex:1 1 auto!important;min-width:0!important;max-width:100%!important;
+  margin:0 auto!important;padding:0 12px!important;background:transparent!important;
+  border:0!important;box-shadow:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav>button{
+  display:none!important;visibility:hidden!important;pointer-events:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore #frameDesktopStoreTitle{
+  display:block!important;width:100%!important;max-width:100%!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  font:900 15px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+  text-align:center!important;color:#101828!important;
+  background:transparent!important;box-shadow:none!important;text-shadow:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;
+  max-height:0!important;margin:0!important;padding:0!important;
+  border:0!important;box-shadow:none!important;background-image:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
+  top:var(--frame-customer-nav-top,64px)!important;
+  margin-top:0!important;transform:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
+  top:var(--frame-customer-content-top,113px)!important;
+  margin-top:0!important;padding-top:0!important
+ }
+}
+
+/* Mobile: the blue surface must remain visible and fill the full viewport down
+   to the actual bottom dock. No 92px phantom margin or fading to white near
+   the bottom; only the individual product cards stay opaque white. */
+@media(max-width:820px){
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore),
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace{
+  background:#e8f3ff!important;background-image:none!important;
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #frameCustomerNav#frameCustomerNav{
+  background:linear-gradient(180deg,#e5f2ff 0%,#e8f3ff 100%)!important;
+  background-color:#e8f3ff!important;
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
+  position:fixed!important;top:var(--frame-customer-content-top,174px)!important;
+  bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;
+  inset-inline:0!important;left:0!important;right:0!important;width:100vw!important;
+  max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding:7px 10px 0!important;box-sizing:border-box!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  background:#e8f3ff!important;background-image:none!important;
+  -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell>#app{
+  min-height:100%!important;margin:0!important;padding:0!important;
+  background:transparent!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #salesPanel,
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #salesPanel>.box{
+  margin:0!important;padding:0!important;max-width:none!important;width:100%!important;
+  background:transparent!important;background-image:none!important;
+  border:0!important;box-shadow:none!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #saleItems{
+  margin:0!important;padding:0 0 6px!important;background:transparent!important;
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #saleItems>.frameProductCard{
+  background:#fff!important;opacity:1!important
+ }
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #frameCustomerNav button{
+  background:#fff!important;background-image:none!important;opacity:1!important
+ }
+}
 `;
 document.head.append(frameR1228Layout);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

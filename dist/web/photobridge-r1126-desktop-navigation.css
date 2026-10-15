@@ -46,16 +46,15 @@
  html.pb1126Desktop body #root{height:100dvh!important;min-height:0!important;overflow:hidden!important}
  html.pb1126Embedded.pb1126FrameStoreHost,html.pb1126Embedded.pb1126FrameStoreHost body{height:100%!important;min-height:0!important;overflow:hidden!important}
  html.pb1126Embedded.pb1126FrameStoreHost body #root{height:100dvh!important;min-height:0!important;overflow:hidden!important}
- html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{position:fixed!important;top:0!important;left:calc(100% - 100vw)!important;right:auto!important;width:100vw!important;max-width:none!important;margin:0!important;bottom:0!important;height:auto!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important;scrollbar-width:none!important;pointer-events:auto!important;touch-action:pan-y!important}
+ html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{position:fixed!important;top:0!important;left:0!important;right:0!important;width:auto!important;max-width:none!important;margin:0!important;bottom:0!important;height:auto!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important;scrollbar-width:none!important;pointer-events:auto!important;touch-action:pan-y!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail{position:fixed!important;top:0!important;bottom:0!important;left:0!important;z-index:2147483405!important;width:10px!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;background:rgba(255,255,255,.28)!important;border:0!important;padding:0!important;margin:0!important;touch-action:none!important;user-select:none!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail[hidden]{display:none!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail .pbFrameStoreScrollThumb{position:absolute!important;top:0!important;left:2px!important;width:6px!important;min-height:34px!important;border-radius:999px!important;background:rgba(71,84,103,.48)!important;box-shadow:0 0 0 1px rgba(255,255,255,.5)!important;cursor:grab!important;touch-action:none!important;user-select:none!important}
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #pbFrameStoreScrollRail .pbFrameStoreScrollThumb:active{background:rgba(49,94,251,.68)!important;cursor:grabbing!important}
  html.pb1126Desktop body #pb1126ChromeHost,html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader{width:100vw!important;max-width:none!important;left:0!important;right:auto!important}
- /* Keep every desktop tab flush to the iframe viewport. A fixed 100vw panel
-    otherwise includes the left-side Windows scrollbar and leaves a gutter. */
- html.pb1126Desktop .pb1126ContentPanel{left:0!important;right:-15px!important;width:auto!important}
+ /* The document owns no scrollbar; each tab owns its content scrolling. */
+ html.pb1126Desktop .pb1126ContentPanel{left:0!important;right:0!important;width:auto!important}
  html.pb1126Desktop .pb1126ContentPanel{box-sizing:border-box!important;overflow:hidden!important}
  html.pb1126Desktop .pb1126ContentPanel iframe{box-sizing:border-box!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
  html.pb1126Desktop .pb1126ContentPanel.pb1126CartOpen{z-index:2147483601!important}
@@ -187,13 +186,11 @@
 }
 @media(prefers-reduced-motion:reduce){html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126MainNav>.pb1131MovingIndicator.pb1131MovingIndicator{transition:none!important}}
 
-/* R1239: account for the left-side Windows scrollbar in embedded store frames.
-   The content viewport is narrower than 100vw, so shift fixed full-width
-   chooser/catalog surfaces back across that gutter. */
+/* Align embedded store surfaces with their own viewport. */
 @media(min-width:821px){
  html.pb1126Embedded.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell,
  html:is(.pb1126Desktop,.pb1126Embedded) body.pbR96ChoosingStore #storePhotographerWorkspace>.shell{
-  left:calc(100% - 100vw)!important;right:auto!important;width:100vw!important;max-width:none!important
+  left:0!important;right:0!important;width:auto!important;max-width:none!important
  }
  html.pb1126Desktop #pb1126UtilityWindow .pb1126UtilityFrame{height:100%!important;min-height:0!important}
  html.pb1126Desktop body>.globalModalLayer{z-index:2147483602!important}
@@ -201,7 +198,14 @@
 
 /* R1168: hide legacy sources before first paint; show only the canonical identity. */
 @media(min-width:821px){
- html.pb1126Desktop body #root #photographerRoleHeaderV710.photographerHeaderRefined.photographerHeaderRefined,
- html.pb1126Desktop body #root #photographerStoreRoleHeader.photographerHeaderRefined.photographerHeaderRefined{display:none!important;visibility:hidden!important;pointer-events:none!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root #photographerRoleHeaderV710.photographerHeaderRefined.photographerHeaderRefined,
+ html:is(.pb1126Desktop,.pb1126Embedded) body :is(#root,#storePhotographerWorkspace) #photographerStoreRoleHeader.photographerHeaderRefined.photographerHeaderRefined{display:none!important;visibility:hidden!important;pointer-events:none!important}
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.photographerHeaderIdentity:not([data-pb1168-ready="1"]){visibility:hidden!important}
+}
+
+
+/* R1241: the outer document and embedded tabs must not reserve an empty
+   native scrollbar track. Scrolling remains in each tab's content area. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop,.pb1126Embedded){scrollbar-gutter:auto!important}
 }

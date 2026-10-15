@@ -1,1 +1,1 @@
-2026-10-15-r1252-frame-customer-cards-and-inline-receipt
+2026-10-15-r1253-store-sms-invitation-notice

@@ -28,7 +28,7 @@ test('PWA header normalization is idempotent to prevent MutationObserver flashin
 });
 test('frame customer page caches and PWA manifest use the latest revisions',()=>{
  const portal=read('dist/api/equipment-rental-book.html');
- assert(portal.includes('frame-store.js?v=r1228-desktop'));
+ assert(portal.includes('frame-store.js?v=r1229-layout'));
  assert(portal.includes('frame-catalog.js?v=r1224-steady'));
  assert(portal.includes('photobridge.webmanifest?v=r1222'));
 });

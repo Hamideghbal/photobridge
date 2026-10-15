@@ -52,13 +52,13 @@ export async function handleFramePayments(req,res,url,a,d){
   if(activity){
    if(req.method!=='GET')return reply(405,{error:'method_not_allowed'});
    // A small, scoped snapshot for the store-side order/receipt alert.
-   const rows=(await d.pool.query(`SELECT o.id,o.frame_payment_id,o.buyer_name,o.created_at,
+   const rows=(await d.pool.query(`SELECT o.id,o.frame_payment_id,o.buyer_name,p.created_at AS created_at,
          o.status,o.production_stage,p.status AS receipt_status,p.submitted_at AS receipt_submitted_at
          FROM equipment_sale_orders o
          LEFT JOIN equipment_frame_payments p ON p.id=o.frame_payment_id
          WHERE o.shop_id=$1 AND o.frame_payment_id IS NOT NULL
-           AND o.created_at>=now()-interval '30 days'
-         ORDER BY o.created_at DESC LIMIT 75`,[shop.id])).rows;
+           AND p.created_at>=now()-interval '30 days'
+         ORDER BY p.created_at DESC LIMIT 75`,[shop.id])).rows;
    return reply(200,{orders:rows.map(o=>({id:o.id,paymentId:o.frame_payment_id,
      photographerName:o.buyer_name||'عکاس',createdAt:o.created_at,
      status:o.status,stage:o.production_stage,

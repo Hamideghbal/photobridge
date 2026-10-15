@@ -326,7 +326,8 @@ function positionFrameNavigation(){
  }
  if(shell){
   if(!frameShellTop)frameShellTop={value:shell.style.getPropertyValue('top'),priority:shell.style.getPropertyPriority('top')};
-  if(shell.style.getPropertyValue('top')!==contentTop+'px')shell.style.setProperty('top',contentTop+'px','important');
+  const shellTop=document.documentElement.classList.contains('pb1126FrameStoreHost')?'49px':contentTop+'px';
+  if(shell.style.getPropertyValue('top')!==shellTop)shell.style.setProperty('top',shellTop,'important');
  }
 }
 window.addEventListener('resize',()=>{if(customerFrame())requestAnimationFrame(positionFrameNavigation)},{passive:true});
@@ -357,7 +358,7 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
  }
 
  if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive')&&(button.dataset.frameCustomerView!=='frameOrdersPanel'||frameOrderView==='orders');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const history=nav.querySelector('[data-frame-customer-history]');if(history){const active=document.getElementById('frameOrdersPanel')?.classList.contains('mobileActive')&&frameOrderView==='history';history.classList.toggle('active',Boolean(active));history.setAttribute('aria-current',active?'page':'false');}const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
- for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
+ for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?(document.documentElement.classList.contains('pb1126FrameStoreHost')?'none':'grid'):'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
  if(enabled&&bar){
   if(!bar.dataset.frameBorderOriginal){
@@ -1058,22 +1059,26 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
  background:#ffffffa6!important;color:#101828!important
 }
 
-/* Embedded Windows content owns a visible in-frame store-title strip at y=0.
-   The unified role header in this mode belongs to the desktop parent app and
-   is intentionally hidden here. Do not remove the only visible title. */
+/* In the Windows app, the parent secondary header row displays the store name.
+   Keep the child iframe's own title strip out of the way and start its tabs at
+   the top edge, directly beneath that parent title row. */
 @media(min-width:821px){
- html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
-  display:grid!important;visibility:visible!important;position:fixed!important;
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  display:none!important;visibility:hidden!important;position:fixed!important;
   top:0!important;left:0!important;right:0!important;width:100%!important;
   height:42px!important;min-height:42px!important;max-height:42px!important;
   padding:3px 14px!important;place-items:center!important;
   background:#fff!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #e0e8f4!important
  }
- html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #storeIdentityToggle,
- html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar #photographerStoreHeaderName{
-  display:block!important;visibility:visible!important;box-shadow:none!important
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
+  top:0!important
  }
- html.pb1126Embedded body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:none!important}
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav{display:none!important}
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
+  top:49px!important;padding-top:0!important;background:#e8f3ff!important;background-image:none!important
+ }
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace,
+ html.pb1126FrameStoreHost.pb1126FrameStoreHost body.rentalPhotographerMode.frameCustomerStore{background:#e8f3ff!important;background-image:none!important}
 }
 
 /* Mobile: the blue surface must remain visible and fill the full viewport down

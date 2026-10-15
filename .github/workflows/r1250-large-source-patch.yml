@@ -30,3 +30,5 @@ jobs:
             git commit -m 'R1250 implement production SMS and settings in main portal sources'
             git push origin HEAD:feature/r1250-shop-sms-business-category-frame-compact
           fi
+
+# Retry once after fixing final HTML insertion anchor.

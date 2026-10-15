@@ -13,9 +13,12 @@
     const keep=invites[0];invites.slice(1).forEach(x=>x.remove());
     let label=qs(':scope>.pb703InviteLabel,:scope>.pb700InviteLabel,:scope>.pb699InviteLabel,:scope>.pb698InviteLabel',keep);
     if(!label){label=document.createElement('span')}
-    label.className='pb698InviteLabel pb699InviteLabel pb700InviteLabel pb703InviteLabel';
-    label.textContent='دعوت همکار';
-    keep.replaceChildren(label);keep.title='دعوت همکار';keep.setAttribute('aria-label','دعوت همکار');
+    const className='pb698InviteLabel pb699InviteLabel pb700InviteLabel pb703InviteLabel';
+    if(label.className!==className)label.className=className;
+    if(label.textContent!=='دعوت همکار')label.textContent='دعوت همکار';
+    if(keep.firstElementChild!==label||keep.childElementCount!==1)keep.replaceChildren(label);
+    if(keep.title!=='دعوت همکار')keep.title='دعوت همکار';
+    if(keep.getAttribute('aria-label')!=='دعوت همکار')keep.setAttribute('aria-label','دعوت همکار');
   }
 
   function showHelp(){
@@ -54,9 +57,13 @@
   function normalizeRow(row){
     if(!row)return;ensureInviteLabel(row);ensureInstall(row);
     const bell=qs('.mobileNotificationBell',row),power=qs('.mobileHeaderPower',row),settings=qs('.mobileHeaderSettings',row),wallet=qs('.mobileHeaderWallet',row);
-    [bell,power,settings,wallet].filter(Boolean).forEach(x=>row.appendChild(x));
-    // Invite/install stay DOM children but CSS absolutely places them on line two, so no first-row width is consumed.
-    const invite=qs('.mobileHeaderInvite',row),install=qs('.mobileHeaderInstall',row);if(invite)row.appendChild(invite);if(install)row.appendChild(install);
+    // R1222: do not reorder already-ordered nodes. The subtree MutationObserver
+    // previously observed our own appendChild/replaceChildren calls and kept
+    // rewriting the header indefinitely (visible as flashing labels).
+    const invite=qs('.mobileHeaderInvite',row),install=qs('.mobileHeaderInstall',row);
+    const order=[bell,power,settings,wallet,invite,install].filter(Boolean);
+    const tail=Array.from(row.children).slice(-order.length);
+    if(order.some((node,i)=>tail[i]!==node))order.forEach(node=>row.appendChild(node));
     row.classList.add('pb703MobileQuickActions');
   }
 

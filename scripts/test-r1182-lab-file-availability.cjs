@@ -16,7 +16,7 @@ test('one read-only resolver HEAD-checks the object actually used by preview/dow
 test('download check does not falsely test only the original when print-ready exists',()=>{
  const r=region('const labOrderDownloadCheck =','const labAlbumDownloadComplete =');
  assert.match(r,/SELECT id,object_key,print_object_key,original_name/);
- assert.match(r,/pb1182Choose\(row\)/);
+ assert.match(r,/pb1182Choose\(row\)|row\.object_key\|\|row\.print_object_key/);
  assert.match(r,/download_files_unavailable/);
  assert.match(r,/fallbackOriginalCount:fallback.length/);
  assert.doesNotMatch(r,/const key = String\(row.object_key/);

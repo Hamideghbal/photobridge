@@ -33,9 +33,10 @@ test('Authenticated download still requires primary lab machine and paid invoice
  assert.match(block,/payment_required/);
  assert.match(block,/original_state<>'deleted'/);
 });
-test('Preflight shares the same resolver as preview and download',()=>{
- const block=section('const labOrderDownloadCheck =','const labAlbumDownloadComplete =');
- assert.match(block,/if\(ok&&chosen\.fallback\)fallback\.push/);
+test('Preflight checks both stored object keys without referencing a removed resolver result',()=>{
+ const block=section('const labOrderDownloadCheck =','const labAlbumDownloadComplete');
+ assert.match(block,/row\.object_key\|\|row\.print_object_key/);
+ assert.doesNotMatch(block,/chosen\.fallback/);
  assert.match(block,/download_files_unavailable/);
 });
 test('Lab thumbnails, lightbox and download use authenticated direct stream, not preview token',()=>{

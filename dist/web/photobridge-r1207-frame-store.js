@@ -1167,6 +1167,25 @@ html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCusto
 }
 `;
 document.head.append(frameR1228Layout);
+document.addEventListener('click',event=>{
+ const trigger=event.target?.closest?.('[data-frame-description]');if(!trigger)return;
+ event.preventDefault();
+ const text=trigger.textContent.trim();if(!text)return;
+ const overlay=document.createElement('div');overlay.className='frameDescriptionDialog';overlay.setAttribute('role','presentation');
+ const dialog=document.createElement('section');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','توضیحات محصول');
+ const close=document.createElement('button');close.type='button';close.className='frameDescriptionClose';close.setAttribute('aria-label','بستن');close.textContent='×';
+ const content=document.createElement('p');content.textContent=text;dialog.append(close,content);overlay.append(dialog);document.body.append(overlay);
+ const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',key,true);trigger.focus({preventScroll:true});};
+ const key=e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}};
+ close.addEventListener('click',dismiss,{once:true});overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss();});document.addEventListener('keydown',key,true);close.focus({preventScroll:true});
+});
+const frameDescriptionStyle=document.createElement('style');frameDescriptionStyle.textContent=`
+.frameDescriptionDialog{position:fixed;inset:0;z-index:2147483500;display:grid;place-items:center;padding:16px;background:rgba(16,24,40,.38)}
+.frameDescriptionDialog section{position:relative;width:min(420px,92vw);max-height:min(70vh,500px);overflow:auto;padding:22px 18px 18px;border:1px solid #dbe5f2;border-radius:14px;background:#fff;box-shadow:0 18px 60px #10182833}
+.frameDescriptionDialog p{margin:0;color:#344054;font-size:13px;line-height:1.9;white-space:pre-wrap}
+.frameDescriptionClose{position:absolute;top:7px;left:8px;width:30px;height:30px;border:0;border-radius:8px;background:#f2f4f7;color:#344054;font-size:21px;cursor:pointer}
+`;
+document.head.append(frameDescriptionStyle);
 const tabFeedback=document.createElement('style');tabFeedback.textContent=`
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart]){
   position:relative!important;background:#fff!important;background-color:#fff!important;

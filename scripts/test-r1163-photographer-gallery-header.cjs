@@ -4,9 +4,10 @@ const chrome=fs.readFileSync('dist/web/photobridge-r1163-desktop-gallery-header.
 const css=fs.readFileSync('dist/web/photobridge-r1124-photographer-desktop-header.css','utf8');
 const galleryCss=fs.readFileSync('dist/web/photobridge-r1153-gallery-manager.css','utf8');
 const html=fs.readFileSync('dist/web/index.html','utf8');
-test('desktop photographer tools live by the wallet and logout remains a power icon',()=>{
+test('desktop photographer tools omit duplicate invite and retain settings and notifications',()=>{
  assert.match(chrome,/pb1163HeaderTools/);
- assert.match(chrome,/\['settings','notifications','invite'\]/);
+ assert.match(chrome,/\['settings','notifications'\]/);
+ assert.doesNotMatch(chrome,/kind==='invite'|'دعوت همکار'/);
  assert.match(chrome,/const svgPower=/);
  assert.match(chrome,/pb1124Exit/);
  assert.match(chrome,/\.roleHeaderToolButtons button/);
@@ -41,6 +42,18 @@ test('gallery studio image alone invokes existing file input and the password is
  assert.match(fields,/children:\["رمز",e\.jsx\("input"/);
  assert.match(fields,/رمز قبلی به‌صورت امن نگهداری می‌شود و قابل نمایش نیست/);
  assert.doesNotMatch(fields,/رمز جدید \(اختیاری\)/);
- assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&cards=r1164/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&wallet=r1238&cards=r1164/);
  assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1165/);
+});
+
+test('wallet and settings utility frames are reused between opens and invite route is removed',()=>{
+ const navigation=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ assert.match(navigation,/const utilityFrames=new Map\(\)/);
+ assert.match(navigation,/utilityPanel\.hidden=true/);
+ assert.match(navigation,/cached\.style\.display=key===kind\?'block':'none'/);
+ assert.doesNotMatch(navigation,/invite:\{title:'دعوت همکار'/);
+ assert.doesNotMatch(navigation,/pb1163-invite/);
+ assert.match(ui,/کیف پول خدمات عکاسی/);
+ assert.doesNotMatch(ui,/این اعتبار برای سرویس‌های هوش مصنوعی و گالری مشتریان PhotoBridge/);
+ assert.doesNotMatch(ui,/walletUsageNote/);
 });

@@ -190,6 +190,13 @@ function positionFrameNavigation(){
  const host=document.getElementById('pbR1123StoreDesktopNav');
  if(desktop&&host&&nav.parentElement!==host)host.append(nav);
  if(!desktop&&nav.previousElementSibling!==bar)bar.after(nav);
+ // Anchor the shop title to the measured photographer header, not the legacy
+ // fixed 64px offset (which becomes wrong when long studio names wrap).
+ if(!desktop){
+  const role=document.getElementById('photographerStoreRoleHeader');
+  const top=Math.round(role?.getBoundingClientRect().bottom||64);
+  if(bar.style.getPropertyValue('top')!==top+'px'||bar.style.getPropertyPriority('top')!=='important')bar.style.setProperty('top',top+'px','important');
+ }else if(bar.style.getPropertyValue('top'))bar.style.removeProperty('top');
  const bottom=bar.getBoundingClientRect().bottom;
  const contentTop=bottom+(desktop?0:nav.getBoundingClientRect().height);
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
@@ -239,7 +246,7 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
   try{const prev=JSON.parse(bar.dataset.frameBorderOriginal);for(const [side,value,priority]of [['top',prev.top,prev.topPriority],['bottom',prev.bottom,prev.bottomPriority]]){if(value)bar.style.setProperty('border-'+side,value,priority);else bar.style.removeProperty('border-'+side)}}catch{}
   delete bar.dataset.frameBorderOriginal;
  }
- const studio=document.getElementById('storePhotographerName');if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;}
+ const studio=document.getElementById('storePhotographerName');if(enabled&&studio){const raw=typeof photographerMe!=='undefined'?(photographerMe?.user?.photographerName||photographerMe?.user?.studioName||photographerMe?.user?.name||studio.textContent):studio.textContent;const clean=String(raw||'').trim().replace(/^(?:عکاسی\s*)+/u,'').trim();const title=clean?'عکاسی '+clean:'عکاسی';if(studio.textContent!==title)studio.textContent=title;if(studio.title!==title)studio.title=title;}
  positionFrameNavigation();syncFrameFinance();}
 if(typeof syncPhotographerStoreIdentity==='function'){const original=syncPhotographerStoreIdentity;syncPhotographerStoreIdentity=function(...args){original(...args);applyFrameCustomerView();};}
 if(typeof showMobilePanel==='function'){const original=showMobilePanel;showMobilePanel=function(id){if(customerFrame()&&['storePanel','equipmentPanel','bookingsPanel'].includes(id))id='salesPanel';original(id);applyFrameCustomerView();};}
@@ -562,6 +569,75 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
 }
 @media(prefers-reduced-motion:reduce){
  html body.frameCustomerStore #saleCartDrawer.open{transition:none!important;will-change:auto}
+}
+
+/* R1222: mobile studio/store geometry uses one measured header boundary.
+   No blue halo or late transition is allowed on these static header labels. */
+@media(max-width:820px){
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader{
+  height:85px!important;min-height:85px!important;max-height:85px!important;
+  overflow:visible!important;box-shadow:none!important;filter:none!important;
+  border:0!important;background-image:none!important;
+  transition:none!important;animation:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader::before{
+  content:none!important;display:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader::after{
+  content:""!important;display:block!important;position:absolute!important;
+  top:auto!important;bottom:0!important;left:0!important;right:0!important;
+  height:1px!important;width:100%!important;z-index:3!important;
+  background:linear-gradient(90deg,transparent,#becfe1 8%,#becfe1 92%,transparent)!important;
+  box-shadow:none!important;filter:none!important;pointer-events:none!important;
+  transform:none!important;border:0!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentity,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentityCopy{
+  min-width:0!important;max-width:100%!important;overflow:visible!important;
+  transition:none!important;animation:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader #storePhotographerName{
+  display:block!important;white-space:normal!important;overflow:visible!important;
+  text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:normal!important;
+  max-height:none!important;max-width:100%!important;line-height:1.23!important;
+  font-size:clamp(10px,2.9vw,12.5px)!important;letter-spacing:0!important;
+  text-shadow:none!important;filter:none!important;animation:none!important;transition:none!important;
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader #storePhotographerManager,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .todayStamp,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentityMeta{
+  animation:none!important;transition:none!important;text-shadow:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  border:0!important;box-shadow:none!important;filter:none!important;
+  background:#fff!important;background-image:none!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  text-shadow:none!important;animation:none!important;transition:none!important;
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before{
+  display:none!important;content:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{
+  content:""!important;display:block!important;position:absolute!important;top:auto!important;
+  bottom:0!important;left:0!important;right:0!important;width:100%!important;height:1px!important;
+  background:linear-gradient(90deg,transparent,#becfe1 8%,#becfe1 92%,transparent)!important;
+  mask-image:none!important;-webkit-mask-image:none!important;
+  filter:none!important;box-shadow:none!important;transform:none!important;pointer-events:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #storeIdentityToggle,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName{
+  box-shadow:none!important;text-shadow:none!important;background:transparent!important;background-image:none!important;
+  filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  animation:none!important;transition:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #storeIdentityToggle::before,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #storeIdentityToggle::after,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName::before,
+ html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName::after{
+  display:none!important;content:none!important
+ }
+ html body.frameCustomerStore #frameCustomerNav{animation:none!important;transition:none!important}
+ html body.frameCustomerStore #frameCustomerNav button{animation:none!important;transition:none!important}
 }
 `;document.head.append(customerStyle);applyFrameCustomerView();
 

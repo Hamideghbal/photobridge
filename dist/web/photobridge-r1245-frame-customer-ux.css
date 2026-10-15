@@ -216,3 +216,63 @@ body.frameCustomerStore .pb1242ReceiptLink{
   }
   body.frameCustomerStore #equipmentInvoiceModalV812 .pb922Paper .pb922Grand{font-size:12px!important}
 }
+
+/* R1248 — Windows-only parity with the STORE OWNER page.
+   Source: equipment-rental-portal.html #pbR100F94HeaderActionsAndDepth.
+   There is ONE softly fading separator at the second header; the scroll
+   surface has NO extra top border. The blue fade ends within 92px. */
+@media (min-width:821px){
+  /* Underlying owner canvas; do not stack a second blue gradient in the iframe host. */
+  html.pb1126FrameStore .pb1126ContentPanel[data-panel="store"],
+  html.pb1126FrameStore .pb1126ContentPanel[data-panel="store"] iframe{
+    background:#f4f6fa!important;
+    background-image:none!important;
+  }
+  /* Desktop host header: no full-width dark line and no lower drop-shadow. */
+  html.pb1126FrameStore body #pb1126ChromeHost
+  #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary{
+    position:relative!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+  html.pb1126FrameStore body #pb1126ChromeHost
+  #pb1126DesktopHeader.pb1126FrameStore>.pb1126Secondary::after{
+    content:""!important;
+    display:block!important;
+    position:absolute!important;
+    left:18px!important;right:18px!important;bottom:0!important;
+    height:1px!important;
+    pointer-events:none!important;
+    background:linear-gradient(90deg,transparent 0%,rgba(152,162,179,.34) 12%,rgba(152,162,179,.34) 88%,transparent 100%)!important;
+    z-index:2!important;
+  }
+  /* Standalone desktop renders its secondary tabs in the iframe instead. */
+  html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav{
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+  html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav::after{
+    content:""!important;display:block!important;position:absolute!important;
+    left:18px!important;right:18px!important;bottom:0!important;height:1px!important;
+    pointer-events:none!important;
+    background:linear-gradient(90deg,transparent 0%,rgba(152,162,179,.34) 12%,rgba(152,162,179,.34) 88%,transparent 100%)!important;
+  }
+  /* Remove the previous sky-blue layer behind the iframe scroller, too. */
+  html body.rentalPhotographerMode.frameCustomerStore
+  #storePhotographerWorkspace#storePhotographerWorkspace{
+    background:#f4f6fa!important;
+    background-image:none!important;
+  }
+  /* Exact same blend as owner page:
+     .105 -> .045 at 38% -> zero at 92px over #f4f6fa.
+     It is drawn ONCE, on the visible scroller, not again on its frame. */
+  html body.rentalPhotographerMode.frameCustomerStore
+  #storePhotographerWorkspace#storePhotographerWorkspace>.shell{
+    border-top:0!important;
+    box-shadow:none!important;
+    background-color:#f4f6fa!important;
+    background-image:linear-gradient(180deg,rgba(49,94,251,.105) 0px,rgba(49,94,251,.045) 35px,rgba(49,94,251,0) 92px)!important;
+    background-repeat:no-repeat!important;
+    background-size:100% 100%!important;
+  }
+}

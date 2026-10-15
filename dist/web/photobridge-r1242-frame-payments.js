@@ -109,8 +109,65 @@
   };
   try{await reload();}catch(e){if(root.isConnected)body.textContent=errorText(e);}
  }
+ // The owner should notice newly placed orders and payment receipts without
+ // having to manually refresh. The feed is scoped to the authenticated shop.
+ let ownerPolling=false,ownerPollAt=0;
+ const seenKey=id=>'photobridge:frame:owner-activity:'+id;
+ function showOwnerActivity(event){
+  const area=q('#pb1249OwnerNotices')||document.createElement('aside');area.id='pb1249OwnerNotices';
+  area.setAttribute('aria-live','polite');area.className='pb1249OwnerNotices';
+  if(!area.isConnected)document.body.append(area);
+  const el=document.createElement('article');el.className='pb1249OwnerNotice';
+  const title=document.createElement('b');title.textContent=event.kind==='receipt'?'رسید پرداخت جدید':'سفارش جدید قاب و شاسی';
+  const line=document.createElement('p');line.textContent=(event.name||'عکاس')+(event.kind==='receipt'?' رسید پرداخت فرستاده است.':' سفارش جدید ثبت کرده است.');
+  const open=document.createElement('button');open.type='button';open.textContent='بررسی';
+  const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','بستن اعلان');
+  close.onclick=()=>el.remove();open.onclick=()=>{
+   el.remove();
+   if(typeof selectRentalTab==='function')selectRentalTab('sales');
+   if(event.kind==='receipt'&&event.paymentId)void openPayment(event.paymentId,true);
+  };
+  el.append(title,line,open,close);area.prepend(el);
+  while(area.children.length>3)area.lastElementChild.remove();
+  try{const sound=new Audio('/photobridge-notification-v780.wav');sound.volume=.6;void sound.play().catch(()=>{});}catch{}
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'&&document.hidden){
+   try{const notice=new Notification(title.textContent,{body:line.textContent,tag:'pb-frame-'+event.key});notice.onclick=()=>{window.focus();open.click();notice.close();};}catch{}
+  }
+ }
+ async function pollOwnerActivity(){
+  if(ownerPolling||!owner()||!document.body.classList.contains('rentalAppReady'))return;
+  if(Date.now()-ownerPollAt<12000)return;
+  ownerPolling=true;ownerPollAt=Date.now();
+  try{
+   const id=String(data.shop.id||'');if(!id)return;
+   const result=await request('/api/rental/frame-activity');
+   if(!owner()||String(data.shop.id)!==id)return;
+   const rows=Array.isArray(result.orders)?result.orders:[];
+   let previous=[];try{previous=JSON.parse(localStorage.getItem(seenKey(id))||'[]');if(!Array.isArray(previous))previous=[];}catch{}
+   const seen=new Set(previous),fresh=[],recent=Date.now()-7*86400000;
+   for(const o of rows){
+    const created=new Date(o.createdAt||0).getTime();
+    const orderKey='order:'+o.id;
+    if(!seen.has(orderKey)){
+     if(o.status==='pending'&&created>=recent)fresh.push({key:orderKey,kind:'order',name:o.photographerName,paymentId:o.paymentId});
+     seen.add(orderKey);
+    }
+    if(o.receiptStatus==='pending'&&o.receiptSubmittedAt){
+     const receiptKey='receipt:'+o.paymentId+':'+String(o.receiptSubmittedAt);
+     if(!seen.has(receiptKey)){
+      if(new Date(o.receiptSubmittedAt).getTime()>=recent)fresh.push({key:receiptKey,kind:'receipt',name:o.photographerName,paymentId:o.paymentId});
+      seen.add(receiptKey);
+     }
+    }
+   }
+   try{localStorage.setItem(seenKey(id),JSON.stringify([...seen].slice(-250)));}catch{}
+   const unique=new Map(fresh.map(x=>[x.key,x]));
+   [...unique.values()].slice(0,3).forEach(showOwnerActivity);
+  }catch{}finally{ownerPolling=false;}
+ }
+
  window.pb1242OpenPayment=id=>openPayment(id,false);
  document.addEventListener('click',event=>{const button=event.target.closest('[data-frame-payment-open]');if(button){event.preventDefault();void openPayment(button.dataset.framePaymentOpen,button.dataset.framePaymentOwner==='1');}});
- const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});};
+ const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});setInterval(()=>{if(!document.hidden)void pollOwnerActivity();},22000);setTimeout(()=>void pollOwnerActivity(),3500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollOwnerActivity();});};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

@@ -986,8 +986,8 @@ frameR1228Layout.textContent=`
   background:#fff!important;color:#2556d8!important;border-color:#7d9ef5!important
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-history]{display:none!important}
- html body.frameCustomerStore #storePhotographerWorkspace,
- html body.frameCustomerStore #storePhotographerWorkspace>.shell{
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace,
+ html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
   background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
   background-color:#eaf5ff!important
  }

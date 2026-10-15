@@ -191,7 +191,7 @@ test('Windows photographer tools open closable overlays without switching tabs o
    assert.equal(await activeStore.getAttribute('aria-current'),'page','the underlying Store tab stays selected');
    assert(await storeFrame.locator('.frameProductCard').isVisible(),'the current shop remains open underneath the utility window');
    await modal.locator('#pb1126UtilityClose').click();
-   assert.equal(await page.locator('#pb1126UtilityWindow').count(),0);
+   assert(await modal.isHidden(),'utility window closes while retaining its cached iframe');
    assert.equal(await activeStore.getAttribute('aria-current'),'page');
    assert(await storeFrame.locator('.frameProductCard').isVisible());
   };

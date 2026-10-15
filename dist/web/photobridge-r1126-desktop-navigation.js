@@ -146,6 +146,22 @@
      if(original.matches('[data-frame-customer-cart]')){const count=original.querySelector('[data-frame-cart-count],.saleCartCount')?.textContent?.trim()||doc.querySelector('#saleCartCount')?.textContent?.trim()||'۰';copy.replaceChildren(document.createTextNode('سبد خرید '));const badge=document.createElement('span');badge.className='pb1242CartCount';badge.textContent=count;copy.append(badge);}
      (original.matches('[data-frame-customer-cart]')?cart:nav).append(copy);
     }
+    // Camera/photo-video store: bring the REAL category action up beside cart.
+    // Keep the original filter logic in the embedded shop, not a disconnected copy.
+    if(cameraStore){
+     const categoryButton=doc.querySelector('#saleCategoryBtnR68');
+     if(categoryButton){
+      const categoryCopy=document.createElement('button');
+      categoryCopy.type='button';categoryCopy.className='pb1126FrameStoreControl pb1249CameraCategory';
+      categoryCopy.textContent='دسته‌بندی';categoryCopy.setAttribute('aria-label','دسته‌بندی فروشگاه');
+      categoryCopy.onclick=()=>{if(!categoryButton.isConnected)return;
+       if(typeof doc.defaultView.openStoreSection==='function')doc.defaultView.openStoreSection('salesPanel');
+       else saleSection?.click();
+       categoryButton.click();
+      };
+      cart.append(categoryCopy);
+     }
+    }
     if(cameraCart){const copy=cleanClone(cameraCart);copy.classList.add('pb1126FrameStoreControl');copy.style.removeProperty('display');if(cameraCart===saleSection){copy.textContent='سبد خرید';copy.setAttribute('aria-label','سبد خرید');copy.onclick=()=>{if(typeof doc.defaultView.openSaleCart==='function')doc.defaultView.openSaleCart();else{saleSection.click();doc.defaultView.setTimeout(()=>doc.querySelector('#saleCartBtn')?.click(),0);}};}else copy.onclick=()=>cameraCart.click();cart.append(copy);}
     row.append(title,nav,cart);
    }

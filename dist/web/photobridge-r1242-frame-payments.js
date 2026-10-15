@@ -28,7 +28,7 @@
    if(!host.isConnected)return;
    const bank=result.paymentSettings||{},configured=Boolean(bank.cardNumber||bank.iban);
    if(!configured){host.innerHTML='<p class="pb1249InlineWait">شماره کارت و شبا هنوز توسط فروشگاه ثبت نشده است.</p>';host.dataset.loaded='1';return;}
-   host.innerHTML='<div class="pb1249InlineTitle">اطلاعات واریز به فروشگاه</div>'+bankMarkup(bank)+
+   host.innerHTML='<div class="pb1249InlineAmount"><span>مبلغ سفارش</span><b>'+money(result.payment?.totalAmount||0)+'</b></div><div class="pb1249InlineTitle">اطلاعات واریز به فروشگاه</div>'+bankMarkup(bank)+
     '<form class="pb1249InlineForm"><label class="pb1249InlinePicker">انتخاب تصویر رسید<input type="file" accept="image/jpeg,image/png,image/webp" required></label><button type="submit">ارسال رسید پرداخت</button><small role="status">پس از ارسال رسید، سفارش وارد مرحله تأیید فروشگاه می‌شود.</small></form>';
    host.dataset.loaded='1';card.dataset.pb1249InlineReady='1';
    host.querySelectorAll('[data-copy-bank]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copyBank);b.textContent='کپی شد';}catch{b.textContent='کپی نشد';}});
@@ -47,7 +47,7 @@
      schedule();
     }catch(e){message.textContent=errorText(e);button.disabled=false;}
    };
-  }catch(e){if(host.isConnected){host.innerHTML='<p class="pb1249InlineWait">دریافت حساب بانکی انجام نشد. از دکمه جزئیات پرداخت استفاده کنید.</p>';host.dataset.loaded='1';}}
+  }catch(e){if(host.isConnected){host.innerHTML='<p class="pb1249InlineWait">دریافت حساب بانکی انجام نشد. <button type="button" data-frame-payment-open="'+esc(id)+'">جزئیات پرداخت</button></p>';host.dataset.loaded='1';}}
   finally{if(host.isConnected)delete host.dataset.loading;}
  }
 
@@ -66,7 +66,7 @@
   const meta=card.querySelector('.salePaymentMeta span');
   const text=paid?(cancelled?'پرداخت‌شده · پیگیری استرداد با فروشگاه':'پرداخت‌شده'):statusText[status]||'پرداخت‌نشده';
   if(meta&&meta.textContent!==text)meta.textContent=text;
-  if(!isOwner)void inlineCustomerReceipt(card,order);
+  if(!isOwner){const direct=['awaiting_receipt','rejected'].includes(status);button.hidden=direct;button.classList.toggle('pb1249DuplicateReceiptAction',direct);void inlineCustomerReceipt(card,order);}
  }
  async function mountSettings(){
   const host=q('#settings');if(!host||!owner())return;

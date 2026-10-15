@@ -292,7 +292,8 @@ function positionFrameNavigation(){
   return;
  }
  if(!bar||!nav)return;
- const desktop=window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded');
+ const embedded=document.documentElement.classList.contains('pb1126Embedded');
+ const desktop=window.matchMedia('(min-width:821px)').matches&&!embedded;
  // R1229: use the *actual existing desktop header row* for the shop name,
  // rather than adding a second identity ribbon below it. Keep mobile as-is.
  const role=document.getElementById('photographerStoreRoleHeader');
@@ -300,13 +301,13 @@ function positionFrameNavigation(){
  else if(nav.previousElementSibling!==bar)bar.after(nav);
  // Anchor the shop title to the measured photographer header, not the legacy
  // fixed 64px offset (which becomes wrong when long studio names wrap).
- if(!desktop){
+ if(!embedded){
   const top=Math.round(role?.getBoundingClientRect().bottom||64);
   if(bar.style.getPropertyValue('top')!==top+'px'||bar.style.getPropertyPriority('top')!=='important')bar.style.setProperty('top',top+'px','important');
  }else if(bar.style.getPropertyValue('top'))bar.style.removeProperty('top');
- // Desktop starts immediately below the real unified header, with no ghost
- // 42px store-title strip; mobile retains its existing title strip.
- const bottom=desktop?Math.round(role?.getBoundingClientRect().bottom||64):bar.getBoundingClientRect().bottom;
+ // The selected store name owns a compact row below the native header; tabs
+ // start immediately below that row in desktop, embedded desktop and mobile.
+ const bottom=Math.round(bar.getBoundingClientRect().bottom||((role?.getBoundingClientRect().bottom||64)+42));
  const contentTop=bottom+nav.getBoundingClientRect().height;
  document.documentElement.style.setProperty('--frame-customer-nav-top',bottom+'px');
  document.documentElement.style.setProperty('--frame-customer-content-top',contentTop+'px');
@@ -356,20 +357,8 @@ for(const el of document.querySelectorAll('.salesFilterDockV809,#saleFilterBarR6
  }
 
  if(nav){nav.hidden=!enabled;nav.querySelectorAll('[data-frame-customer-view]').forEach(button=>{const panel=document.getElementById(button.dataset.frameCustomerView),active=panel?.classList.contains('mobileActive')&&(button.dataset.frameCustomerView!=='frameOrdersPanel'||frameOrderView==='orders');button.classList.toggle('active',Boolean(active));button.setAttribute('aria-current',active?'page':'false');});const history=nav.querySelector('[data-frame-customer-history]');if(history){const active=document.getElementById('frameOrdersPanel')?.classList.contains('mobileActive')&&frameOrderView==='history';history.classList.toggle('active',Boolean(active));history.setAttribute('aria-current',active?'page':'false');}const count=nav.querySelector('[data-frame-cart-count]'),old=document.getElementById('saleCartCount');if(count&&old)count.textContent=old.textContent;}
- for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded')?'none':el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
+ for(const el of [bar,document.getElementById('storeIdentityToggle'),document.getElementById('photographerStoreHeaderName')].filter(Boolean)){if(enabled){if(!frameLayoutDisplays.has(el))frameLayoutDisplays.set(el,{value:el.style.getPropertyValue('display'),priority:el.style.getPropertyPriority('display')});el.style.setProperty('display',el===bar?'grid':'block','important');}else if(frameLayoutDisplays.has(el)){const saved=frameLayoutDisplays.get(el);if(saved.value)el.style.setProperty('display',saved.value,saved.priority);else el.style.removeProperty('display');frameLayoutDisplays.delete(el);}}
  if(enabled&&bar){const names=bar.querySelectorAll('#photographerStoreHeaderName');for(const [index,name]of [...names].entries()){if(index===0){const raw=String(selectedShopRecord()?.name||'').trim();name.textContent=raw.startsWith('فروشگاه قاب و شاسی')?raw:'فروشگاه قاب و شاسی'+(raw?' '+raw:'');}else name.remove();}}
- // Make the real desktop header row show the store title instead of the
- // legacy «خرید تجهیزات / مالی» buttons. Keep the original buttons in the
- // DOM for non-frame store owners and revert cleanly on store switching.
- const desktopHost=document.getElementById('pbR1123StoreDesktopNav');
- let desktopTitle=desktopHost?.querySelector('#frameDesktopStoreTitle');
- const desktopFrame=enabled&&window.matchMedia('(min-width:821px)').matches&&!document.documentElement.classList.contains('pb1126Embedded');
- if(desktopFrame&&desktopHost){
-  if(!desktopTitle){desktopTitle=document.createElement('strong');desktopTitle.id='frameDesktopStoreTitle';desktopHost.append(desktopTitle);}
-  const value=bar?.querySelector('#photographerStoreHeaderName')?.textContent||'انتخاب فروشگاه';
-  if(desktopTitle.textContent!==value)desktopTitle.textContent=value;
-  if(desktopTitle.title!==value)desktopTitle.title=value;
- }else if(desktopTitle)desktopTitle.remove();
  if(enabled&&bar){
   if(!bar.dataset.frameBorderOriginal){
    bar.dataset.frameBorderOriginal=JSON.stringify({top:bar.style.getPropertyValue('border-top'),topPriority:bar.style.getPropertyPriority('border-top'),bottom:bar.style.getPropertyValue('border-bottom'),bottomPriority:bar.style.getPropertyPriority('border-bottom')});
@@ -1026,41 +1015,47 @@ frameR1228Layout.textContent=`
  }
 }
 
-/* R1229: collapse the desktop chrome to exactly two rows: original unified
-   header with the selected store name, then centered Store/Finance/Orders/History
-   tabs. No redundant «خرید تجهیزات / مالی» or empty store-identity ribbon. */
+/* R1231: keep the store title in its own compact row directly below the
+   Windows header, then place the four customer tabs immediately below it. */
 @media(min-width:821px){
  html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav,
- html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav.frameDesktopHost{
-  display:flex!important;visibility:visible!important;pointer-events:auto!important;
-  align-items:center!important;justify-content:center!important;
-  flex:1 1 auto!important;min-width:0!important;max-width:100%!important;
-  margin:0 auto!important;padding:0 12px!important;background:transparent!important;
-  border:0!important;box-shadow:none!important
- }
+ html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav.frameDesktopHost,
  html body.rentalPhotographerMode.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav>button{
   display:none!important;visibility:hidden!important;pointer-events:none!important
  }
- html body.rentalPhotographerMode.frameCustomerStore #frameDesktopStoreTitle{
-  display:block!important;width:100%!important;max-width:100%!important;
-  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
-  font:900 15px/1.5 Vazirmatn,Tahoma,sans-serif!important;
-  text-align:center!important;color:#101828!important;
-  background:transparent!important;box-shadow:none!important;text-shadow:none!important
- }
  html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
-  display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;
-  max-height:0!important;margin:0!important;padding:0!important;
-  border:0!important;box-shadow:none!important;background-image:none!important
+  display:grid!important;visibility:visible!important;position:fixed!important;
+  top:var(--pb-store-role-header-h,64px)!important;left:0!important;right:0!important;width:100%!important;
+  height:42px!important;min-height:42px!important;max-height:42px!important;
+  margin:0!important;padding:3px 14px!important;place-items:center!important;box-sizing:border-box!important;
+  background:#fff!important;background-image:none!important;box-shadow:none!important;filter:none!important;
+  border:0!important;border-bottom:1px solid #dce5f1!important;text-shadow:none!important
  }
  html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
-  top:var(--frame-customer-nav-top,64px)!important;
-  margin-top:0!important;transform:none!important
+  position:fixed!important;top:var(--frame-customer-nav-top,106px)!important;
+  inset-inline:0!important;left:0!important;right:0!important;z-index:511!important;
+  width:100%!important;max-width:none!important;height:49px!important;min-height:49px!important;
+  margin:0!important;padding:4px 16px!important;transform:none!important;
+  background:#fff!important;background-image:none!important;box-shadow:none!important;
+  border:0!important;border-bottom:1px solid #e2e8f0!important
  }
  html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>.shell{
-  top:var(--frame-customer-content-top,113px)!important;
-  margin-top:0!important;padding-top:0!important
+  top:var(--frame-customer-content-top,155px)!important;margin-top:0!important;padding-top:0!important
  }
+}
+html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+ box-shadow:none!important;filter:none!important;text-shadow:none!important
+}
+html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before,
+html body.rentalPhotographerMode.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{
+ content:none!important;display:none!important;box-shadow:none!important;filter:none!important
+}
+html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart]{
+ background:#f59e0b!important;background-color:#f59e0b!important;background-image:none!important;
+ border:1px solid #d97706!important;color:#101828!important;font-weight:800!important
+}
+html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart] small{
+ background:#ffffffa6!important;color:#101828!important
 }
 
 /* Embedded Windows content owns a visible in-frame store-title strip at y=0.

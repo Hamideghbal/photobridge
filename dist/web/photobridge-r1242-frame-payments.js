@@ -15,6 +15,7 @@
   if(!button){button=document.createElement('button');button.type='button';button.className='pb1242PaymentButton';button.dataset.framePaymentOpen=order.frame_payment_id;card.append(button);}
   const status=order.receipt_status||'awaiting_receipt',label=(isOwner?'پرداخت / رسید · ':'')+(statusText[status]||'پرداخت سفارش');
   if(button.textContent!==label)button.textContent=label;
+  button.dataset.frameReceiptStatus=status;
   button.dataset.framePaymentOwner=isOwner?'1':'0';
   const paid=order.payment_status==='paid',cancelled=order.status==='cancelled';
   const meta=card.querySelector('.salePaymentMeta span');

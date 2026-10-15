@@ -10,10 +10,6 @@
  html body.rentalPhotographerMode.frameCustomerStore:not(.pbR96ChoosingStore) #storePhotographerWorkspace>.shell{
   z-index:1!important;background:transparent!important;background-image:none!important;
  }
- html body.rentalPhotographerMode.frameCustomerStore #frameCustomerNav#frameCustomerNav{
-  border-bottom:1px solid rgba(152,162,179,.34)!important;
-  box-shadow:none!important;
- }
  /* The camera shop category is in the same mobile header cluster as the cart. */
  html body.rentalPhotographerMode:not(.frameCustomerStore) #photographerStoreIdentityBar .pb1249CategoryHeader{
   flex:0 0 auto;min-height:32px;max-width:124px;

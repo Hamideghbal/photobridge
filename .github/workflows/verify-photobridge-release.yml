@@ -113,7 +113,7 @@ jobs:
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium
         run: |
-          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.3.14
+          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"

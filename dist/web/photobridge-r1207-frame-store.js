@@ -571,7 +571,7 @@ if(typeof renderShopperWallet==='function'){
  const priorShopperWallet=renderShopperWallet;
  renderShopperWallet=function(...args){
   const result=priorShopperWallet.apply(this,args),notice=document.getElementById('salesCheckoutNotice');
-  if(notice){notice.hidden=isFrame();if(isFrame())notice.replaceChildren();}
+  if(notice){const production=isFrame();notice.hidden=production;if(production){notice.replaceChildren();notice.style.setProperty('display','none','important')}else notice.style.removeProperty('display');}
   return result;
  };
 }

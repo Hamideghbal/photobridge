@@ -431,7 +431,17 @@ document.addEventListener('click',e=>{
 });
 
 const updateCart=renderSaleCart;renderSaleCart=function(...args){updateCart(...args);applyFrameCustomerView();};
-document.addEventListener('click',e=>{if(!customerFrame())return;const view=e.target.closest('[data-frame-customer-view]');if(view){openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel')void loadSales();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
+/* R1227: the Store tab is a chooser action on mobile, not a tab reselect.
+   Route it at the original click handler as well as the capture guard below,
+   so no alternate renderer can silently reopen the selected sales panel. */
+function frameMobileStoreChooser(e){
+ if(!window.matchMedia('(max-width:820px)').matches||typeof enterStoreChooserR96!=='function')return false;
+ if(e){e.preventDefault();e.stopImmediatePropagation();}
+ enterStoreChooserR96('store');
+ applyFrameCustomerView();
+ return true;
+}
+document.addEventListener('click',e=>{if(!customerFrame()||document.body.classList.contains('pbR96ChoosingStore'))return;const view=e.target.closest('[data-frame-customer-view]');if(view){if(view.dataset.frameCustomerView==='salesPanel'&&frameMobileStoreChooser(e))return;openStoreSection(view.dataset.frameCustomerView);if(view.dataset.frameCustomerView==='frameOrdersPanel')void loadSales();return;}if(e.target.closest('[data-frame-customer-categories]')){openStoreSection('salesPanel');document.getElementById('saleCategoryBtnR68')?.click();return;}if(e.target.closest('[data-frame-customer-cart]'))openSaleCart();if(e.target.closest('[data-frame-order-refresh]'))void loadSales();});
 window.addEventListener('resize',positionFrameNavigation);
 const customerStyle=document.createElement('style');customerStyle.textContent=`
 .frameCustomerStore #storeSectionNavV673,.frameCustomerStore #pbR1123StoreDesktopNav,.frameCustomerStore [data-store-panel=equipmentPanel],.frameCustomerStore [data-store-panel=bookingsPanel],.frameCustomerStore #rentalCartBtnV810,.frameCustomerStore #saleFilterBarR68,.frameCustomerStore #saleBrandBtnR68,.frameCustomerStore #rentalBrandBtnR68,.frameCustomerStore #photographerStoreIdentityBar .storeIdentityLabel,.frameCustomerStore #photographerStoreIdentityBar [data-shop-category],.frameCustomerStore #storeIdentityActionsV809{display:none!important}
@@ -755,9 +765,11 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav::before{
   content:""!important;display:block!important;position:absolute!important;
-  inset:0!important;z-index:-1!important;pointer-events:none!important;
-  background:radial-gradient(ellipse 80% 110% at 50% 0,rgba(32,119,247,.24),rgba(32,119,247,.1) 48%,transparent 82%)!important;
+  inset:-9px -12px -18px!important;z-index:-1!important;pointer-events:none!important;
+  /* R1227: softer and more diffused than the previous concentrated blue rim. */
+  background:radial-gradient(ellipse 115% 155% at 50% 12%,rgba(42,126,246,.13) 0%,rgba(54,142,250,.065) 49%,rgba(54,142,250,0) 100%)!important;
   border:0!important;box-shadow:none!important;opacity:1!important;
+  filter:blur(8px)!important;
  }
  html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button{
   background:#fff!important;background-color:#fff!important;background-image:none!important;
@@ -852,11 +864,9 @@ document.addEventListener('click',event=>{
    '#storeSectionNavV673 [data-store-panel="salesPanel"]'
   ));
  if(!storeEntry||typeof enterStoreChooserR96!=='function')return;
+ if(mobile&&frameMobileStoreChooser(event))return;
  event.preventDefault();event.stopImmediatePropagation();
- enterStoreChooserR96('store');
- // The original frame shop remains selected when the chooser opens, but its
- // fixed store navigation must unmount immediately. Do not re-enter salesPanel.
- applyFrameCustomerView();
+ enterStoreChooserR96('store');applyFrameCustomerView();
 },true);
 
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

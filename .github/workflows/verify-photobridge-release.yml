@@ -113,11 +113,13 @@ jobs:
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium
         run: |
-          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1
+          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1241-desktop-viewport.cjs
+          node --test scripts/test-r1241-desktop-viewport.cjs scripts/test-r1242-payment-ui.cjs
+          node --test scripts/test-r1242-frame-payments.cjs
+          node --test scripts/test-r1172-production.cjs
           node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs scripts/test-r1209-independent-colors.cjs scripts/test-r1210-frame-owner-card.cjs scripts/test-r1210-model-delete.cjs scripts/test-r1214-frame-customer.cjs scripts/test-r1219-frame-orders.cjs scripts/test-r1222-mobile-brand.cjs scripts/test-r1225-mobile-store-chooser.cjs
           node --check dist/web/photobridge-r1207-frame-store.js
           node --check dist/web/photobridge-r1172-production-owner.js
@@ -229,9 +231,9 @@ jobs:
               // The Liara fast-build legitimately rewrites frame-owner r1207 to
               // r1216-mobile; accepting only r1207 made every healthy deploy
               // incorrectly fail live verification for eight minutes.
-              const refs={owner:/frame-owner\\.js\\?v=(?:r1207|r1216-mobile)/.test(portal.text),buyer:buyer.text.includes('frame-store.js?v=r1236-photographer-store-header-scroll'),photographerHeader:buyer.text.includes('photobridge-r1126-desktop-navigation.js?v=r1240-photographer-wallet-label-and-store-full-bleed'),production:portal.text.includes('production-owner.js?v=r1219-compact')};
+              const refs={owner:portal.text.includes('photobridge-r1207-frame-owner.js?v=r1207')||portal.text.includes('photobridge-r1207-frame-owner.js?v=r1216-mobile'),buyer:buyer.text.includes('frame-store.js?v=r1242-bank-payments'),photographerHeader:buyer.text.includes('photobridge-r1126-desktop-navigation.js?v=r1242-bank-payments-wallet-ui'),production:portal.text.includes('production-owner.js?v=r1242-bank-payments')};
               if(Object.values(refs).some(ok=>!ok))throw Error('Published page asset mismatch: '+JSON.stringify(refs));
-              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1207'),store=await get('/photobridge-r1207-frame-store.js?v=r1236-photographer-store-header-scroll'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1224-steady'),production=await get('/photobridge-r1172-production-owner.js?v=r1219-compact');
+              const owner=await get('/photobridge-r1207-frame-owner.js?v=r1207'),store=await get('/photobridge-r1207-frame-store.js?v=r1242-bank-payments'),catalog=await get('/photobridge-r1207-frame-catalog.js?v=r1224-steady'),production=await get('/photobridge-r1172-production-owner.js?v=r1242-bank-payments');
               if(!production.text.includes('scrollbar-gutter:stable')||!store.text.includes('pbFrameConfirmCheckout')||!store.text.includes('frameSizeSheet')||!store.text.includes('frameOrdersPanel')||!store.text.includes('grid-area:2/1/3/5')||!store.text.includes('فروشگاه قاب و شاسی')||!catalog.text.includes('direction:ltr;unicode-bidi:isolate')||!catalog.text.includes('frameSizePriceRow')||!catalog.text.includes('framePhotoViewport')||!store.text.includes('frameCustomerNav')||!catalog.text.includes('frameToman')||!owner.text.includes('frameModelTopRow')||!owner.text.includes('frameColorImages')||!owner.text.includes('sizeOnly:true')||!owner.text.includes('colorImages')||!catalog.text.includes('repeat(3,minmax(0,1fr))')||!catalog.text.includes('color_image_urls')||!owner.text.includes('framePaletteColor')||!owner.text.includes('frameSelectMenu')||!owner.text.includes('colors:[...colors]')||!store.text.includes('C.card(')||!owner.text.includes('deleteModel(')||!catalog.text.includes('frameColorCircle')||!catalog.text.includes('cardStyles')||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
               console.log('LIVE VERIFIED: '+expected+'; shared model cards, registered photos, owner edit/delete and color/size/profile selectors are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}

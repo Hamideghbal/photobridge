@@ -1,1 +1,1 @@
-2026-10-15-r1241-desktop-viewport-single-header
+2026-10-15-r1242-bank-transfer-receipts-wallet-ui

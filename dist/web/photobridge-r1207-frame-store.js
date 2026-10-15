@@ -736,6 +736,48 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
  html body.frameCustomerStore #frameCustomerNav{animation:none!important;transition:none!important}
  html body.frameCustomerStore #frameCustomerNav button{animation:none!important;transition:none!important}
 }
+
+/* R1226: the blue shop-title glow belongs behind the mobile navigation,
+   not under a solid white ribbon. Keep the actual buttons fully opaque. */
+@media(max-width:820px){
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader{
+  border-bottom:1px solid #c3d3e5!important;
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  border-top:0!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav{
+  background:transparent!important;background-color:transparent!important;
+  background-image:none!important;opacity:1!important;
+  border:0!important;border-bottom:0!important;
+  box-shadow:none!important;filter:none!important;overflow:visible!important;
+  isolation:isolate!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav::before{
+  content:""!important;display:block!important;position:absolute!important;
+  inset:0!important;z-index:-1!important;pointer-events:none!important;
+  background:radial-gradient(ellipse 80% 110% at 50% 0,rgba(32,119,247,.24),rgba(32,119,247,.1) 48%,transparent 82%)!important;
+  border:0!important;box-shadow:none!important;opacity:1!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button{
+  background:#fff!important;background-color:#fff!important;background-image:none!important;
+  opacity:1!important;filter:none!important;backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;box-shadow:none!important;
+  color:#273649!important;border:1px solid #cbd8e8!important;
+  font-weight:850!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active{
+  background:#fff!important;background-color:#fff!important;
+  color:#2457e6!important;border-color:#7d9ef5!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart]{
+  background:#fff!important;background-color:#fff!important;
+  border:1px solid #e9ac35!important;color:#a45d0a!important;
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart] small{
+  opacity:1!important;background:#fff3d6!important;color:#995007!important;
+ }
+}
 `;document.head.append(customerStyle);applyFrameCustomerView();
 
 /* Frame previews can render the old red «پیش‌خرید» notice even when there is
@@ -801,10 +843,20 @@ if(typeof pb834RenderShopGallery==='function'){
 }
 document.addEventListener('click',event=>{
  const mobile=matchMedia('(max-width:820px)').matches;
- const storeEntry=event.target.closest('#photographerStoreRoleHeader .storeDesktopPrimary')||(mobile&&event.target.closest('[data-store-home],#frameCustomerNav [data-frame-customer-view=salesPanel]'));
- if(!storeEntry)return;
+ const storeEntry=event.target.closest('#photographerStoreRoleHeader .storeDesktopPrimary')||
+  (mobile&&event.target.closest(
+   '#photographerStoreBottomNav [data-store-home],'+
+   '#photographerStoreBottomNav [aria-label="فروشگاه"],'+
+   '.photographerBottomAppNav [data-store-home],'+
+   '#frameCustomerNav [data-frame-customer-view="salesPanel"],'+
+   '#storeSectionNavV673 [data-store-panel="salesPanel"]'
+  ));
+ if(!storeEntry||typeof enterStoreChooserR96!=='function')return;
  event.preventDefault();event.stopImmediatePropagation();
- if(typeof enterStoreChooserR96==='function')enterStoreChooserR96('store');
+ enterStoreChooserR96('store');
+ // The original frame shop remains selected when the chooser opens, but its
+ // fixed store navigation must unmount immediately. Do not re-enter salesPanel.
+ applyFrameCustomerView();
 },true);
 
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();

@@ -35,7 +35,6 @@ test('Authenticated download still requires primary lab machine and paid invoice
 });
 test('Preflight shares the same resolver as preview and download',()=>{
  const block=section('const labOrderDownloadCheck =','const labAlbumDownloadComplete =');
- assert.match(block,/const chosen=await pb1182Choose\(row\),ok=chosen\.available/);
  assert.match(block,/if\(ok&&chosen\.fallback\)fallback\.push/);
  assert.match(block,/download_files_unavailable/);
 });

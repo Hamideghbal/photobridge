@@ -57,5 +57,5 @@ test('gallery card uses two exact action rows with icon-only deletion',()=>{
  assert.ok(css.includes('.pb1161GalleryBottomRow{'));
  assert.ok(css.includes('grid-template-columns:repeat(2,minmax(0,1fr))!important'));
  assert.ok(html.includes('gallery-intro-cards.css?v=r1159&cards=r1161'));
- assert.ok(html.includes('index-UIRefine-v655-r84.js?v=r1159&cards=r1164'));
+ assert.ok(html.includes('index-UIRefine-v655-r84.js?v=r1159&wallet=r1238&cards=r1164'));
 });

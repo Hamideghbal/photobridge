@@ -765,15 +765,46 @@ if(typeof renderShopperWallet==='function'){
    full-screen preview (including keyboard keys) to that same direction. */
 if(typeof pb834RenderShopGallery==='function'){
  const previousGalleryRender=pb834RenderShopGallery;
+ let previewToken=0;
  pb834RenderShopGallery=function(...args){
-  const result=previousGalleryRender.apply(this,args);
-  if(customerFrame()){
-   const prev=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.prev');
-   const next=document.querySelector('#pb834ShopGalleryStage .pb834ShopGalleryNav.next');
+  if(!customerFrame())return previousGalleryRender.apply(this,args);
+  const st=typeof pb834ShopGalleryState!=='undefined'?pb834ShopGalleryState:null;
+  const stage=document.getElementById('pb834ShopGalleryStage');
+  const thumbs=document.getElementById('pb834ShopGalleryThumbs');
+  const available=st?.urls?.map((_,i)=>i).filter(i=>!st.bad.has(i))||[];
+  if(!stage||!thumbs||!available.length)return previousGalleryRender.apply(this,args);
+  if(!available.includes(st.index))st.index=available[0];
+  const key=JSON.stringify([st.urls,st.thumbUrls,st.title,available]);
+  const previous=stage.querySelector('img');
+  const sameGallery=stage.dataset.frameStableGallery===key&&previous?.isConnected;
+  if(!sameGallery){
+   const value=previousGalleryRender.apply(this,args);
+   stage.dataset.frameStableGallery=key;
+   const prev=stage.querySelector('.pb834ShopGalleryNav.prev'),next=stage.querySelector('.pb834ShopGalleryNav.next');
    if(prev){prev.textContent='‹';prev.setAttribute('aria-label','عکس قبلی');}
    if(next){next.textContent='›';next.setAttribute('aria-label','عکس بعدی');}
+   return value;
   }
-  return result;
+  const title=document.getElementById('pb834ShopGalleryTitle');
+  const label=st.title+' · '+fa(available.indexOf(st.index)+1)+' از '+fa(available.length);
+  if(title&&title.textContent!==label)title.textContent=label;
+  const src=st.urls[st.index];
+  if(previous.getAttribute('src')!==src){
+   // Keep the previous decoded photo in place until the next one has loaded.
+   const token=++previewToken,newImage=new Image();
+   newImage.onload=()=>{
+    const ready=typeof newImage.decode==='function'?newImage.decode().catch(()=>{}):Promise.resolve();
+    ready.then(()=>{if(token===previewToken&&previous.isConnected&&typeof pb834ShopGalleryState!=='undefined'&&pb834ShopGalleryState===st&&st.urls[st.index]===src)previous.setAttribute('src',src)});
+   };
+   newImage.onerror=()=>{if(token===previewToken&&typeof pb834ShopGalleryState!=='undefined'&&pb834ShopGalleryState===st){st.bad.add(st.index);pb834RenderShopGallery();}};
+   newImage.src=src;
+   if(newImage.complete&&newImage.naturalWidth>0)newImage.onload();
+  }else previewToken++;
+  thumbs.querySelectorAll('button[data-i]').forEach(button=>{
+   const on=Number(button.dataset.i)===st.index;
+   if(button.classList.contains('active')!==on)button.classList.toggle('active',on);
+  });
+  return undefined;
  };
  document.addEventListener('keydown',event=>{
   if(!customerFrame()||!document.getElementById('pb834ShopGallery')?.classList.contains('open')||!['ArrowLeft','ArrowRight'].includes(event.key))return;

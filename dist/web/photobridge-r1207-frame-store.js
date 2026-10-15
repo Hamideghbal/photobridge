@@ -887,6 +887,131 @@ document.addEventListener('click',event=>{
  enterStoreChooserR96('store');applyFrameCustomerView();
 },true);
 
+/* R1228: Windows layout: header, store name, four centered tabs, catalog.
+   Mobile layout: same soft blue surface as the other photographer tabs. */
+const frameR1228Layout=document.createElement('style');
+frameR1228Layout.id='frameR1228Layout';
+frameR1228Layout.textContent=`
+@media(min-width:821px){
+ html body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav,
+ html body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav.frameDesktopHost,
+ html body.frameCustomerStore #photographerStoreRoleHeader #pbR1123StoreDesktopNav>button,
+ html body.frameCustomerStore #storeSectionNavV673{
+  display:none!important;visibility:hidden!important;pointer-events:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  position:fixed!important;top:var(--pb-store-role-header-h,64px)!important;left:0!important;right:0!important;
+  width:100%!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+  display:grid!important;place-items:center!important;box-sizing:border-box!important;
+  padding:4px 16px!important;background:#fff!important;background-image:none!important;
+  border:0!important;border-bottom:1px solid #dce5f1!important;
+  box-shadow:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  text-shadow:none!important;isolation:isolate!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::before,
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{
+  content:none!important;display:none!important;box-shadow:none!important
+ }
+ html body.frameCustomerStore #photographerStoreIdentityBar #storeIdentityToggle,
+ html body.frameCustomerStore #photographerStoreIdentityBar #photographerStoreHeaderName{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;text-align:center!important;background:transparent!important;
+  box-shadow:none!important;filter:none!important;opacity:1!important
+ }
+ html body.frameCustomerStore #photographerStoreIdentityBar #photographerStoreHeaderName{
+  font-size:15px!important;line-height:26px!important;color:#101828!important;
+  white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav{
+  position:fixed!important;top:var(--frame-customer-nav-top,106px)!important;
+  inset-inline:0!important;left:0!important;right:0!important;
+  z-index:511!important;width:100%!important;max-width:none!important;
+  height:49px!important;min-height:49px!important;box-sizing:border-box!important;
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:center!important;gap:8px!important;
+  margin:0!important;padding:4px 16px!important;
+  background:#fff!important;background-image:none!important;opacity:1!important;
+  border:0!important;border-bottom:1px solid #e2e8f0!important;
+  box-shadow:none!important;filter:none!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-view],
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-history]{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 auto!important;min-width:100px!important;height:36px!important;min-height:36px!important;
+  padding:5px 13px!important;border:1px solid transparent!important;border-radius:8px!important;
+  background:transparent!important;background-image:none!important;
+  color:#475467!important;font:850 12.5px Vazirmatn,Tahoma,sans-serif!important;
+  box-shadow:none!important;opacity:1!important;cursor:pointer!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active:not([data-frame-customer-cart]){
+  color:#245be4!important;border-color:#cbdafe!important;background:#edf3ff!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-cart]{
+  position:absolute!important;left:max(12px,calc((100vw - 1140px)/2))!important;right:auto!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+  width:auto!important;min-width:104px!important;height:36px!important;min-height:36px!important;
+  padding:5px 11px!important;background:#fff7df!important;color:#935b0b!important;
+  border:1px solid #f1c978!important;border-radius:8px!important;
+  box-shadow:none!important;opacity:1!important;cursor:pointer!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>.shell{
+  top:var(--frame-customer-content-top,155px)!important;
+  background:#f5f7fb!important;background-image:none!important
+ }
+ html body.frameCustomerStore #frameOrdersPanel .saleOrderCustomer[hidden],
+ html body.frameCustomerStore #frameOrderViewEmpty[hidden]{display:none!important}
+}
+@media(max-width:820px){
+ /* Exactly the pale, open blue used below the white header in other mobile tabs. */
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav{
+  background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
+  background-color:transparent!important;background-clip:padding-box!important;
+  box-shadow:none!important;border:0!important;filter:none!important;opacity:1!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav::before{
+  content:none!important;display:none!important;background:none!important;filter:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
+  box-shadow:none!important;filter:none!important;
+  border-bottom:1px solid #e1eaf5!important;background:#fff!important;background-image:none!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button{
+  background:#fff!important;background-color:#fff!important;background-image:none!important;
+  opacity:1!important;filter:none!important;backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border:1px solid #ccdbee!important;color:#273649!important;
+  font-weight:850!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button.active{
+  background:#fff!important;color:#2556d8!important;border-color:#7d9ef5!important
+ }
+ html body.frameCustomerStore #frameCustomerNav#frameCustomerNav button[data-frame-customer-history]{display:none!important}
+ html body.frameCustomerStore #storePhotographerWorkspace,
+ html body.frameCustomerStore #storePhotographerWorkspace>.shell{
+  background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
+  background-color:#eaf5ff!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #salesPanel,
+ html body.frameCustomerStore #storePhotographerWorkspace #salesPanel>.box{
+  background:transparent!important;background-color:transparent!important;background-image:none!important;
+  border:0!important;box-shadow:none!important;outline:0!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #salesPanel>.box{
+  padding:0!important;margin:0!important;border-radius:0!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #salesContent{
+  background:transparent!important;background-image:none!important;padding:0!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #saleItems{
+  background:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important
+ }
+ html body.frameCustomerStore #storePhotographerWorkspace #saleItems>.frameProductCard{
+  background:#fff!important;background-image:none!important;
+  opacity:1!important;border-radius:13px!important
+ }
+}
+`;
+document.head.append(frameR1228Layout);
 const style=document.createElement('style');style.textContent=C.cardStyles();document.head.append(style);if(isFrame())render();
 })();
 

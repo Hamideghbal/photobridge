@@ -142,3 +142,4 @@ await import('./enable-r1202-lab-invoice-preview-counters.mjs');
 
 
 await import('./enable-r1208-frame-palette.mjs');
+await import('./generate-r1222-brand-icons.mjs');

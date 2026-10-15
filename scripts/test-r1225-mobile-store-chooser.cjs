@@ -8,7 +8,7 @@ for(const [width,height] of [[375,667],[390,844]])test('mobile frame shadow and 
  try{const page=await browser.newPage({viewport:{width,height}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await openStore(page);
  const header=page.locator('#photographerStoreRoleHeader'),identity=page.locator('#photographerStoreIdentityBar');
  assert.equal(await header.evaluate(el=>getComputedStyle(el,'::after').display),'none');
- const shadow=await identity.evaluate(el=>getComputedStyle(el).boxShadow);assert(shadow.includes('38, 126, 246'));assert(shadow.includes('14px 27px -14px'));assert(shadow.includes('24px 42px -23px'));
+ const shadow=await identity.evaluate(el=>getComputedStyle(el).boxShadow);assert.equal(shadow,'none','frame store should match the soft blue background of other tabs, without a title shadow');
  await page.screenshot({path:'/tmp/r1225-mobile-header-'+width+'.png'});
  await page.evaluate(()=>{const first=shops[0];shops=Array.from({length:18},(_,i)=>({...first,id:first.id.slice(0,-2)+String(i+1).padStart(2,'0'),name:'فروشگاه آزمایشی '+(i+1)}));});
  await page.locator('#frameCustomerNav [data-frame-customer-view=salesPanel]').click();

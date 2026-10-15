@@ -10,13 +10,13 @@ for(const [width,height] of [[375,667],[390,844]])test('mobile frame shadow and 
  assert.equal(await header.evaluate(el=>getComputedStyle(el,'::after').display),'none');
  const shadow=await identity.evaluate(el=>getComputedStyle(el).boxShadow);assert.equal(shadow,'none','frame store should match the soft blue background of other tabs, without a title shadow');
  await page.screenshot({path:'/tmp/r1225-mobile-header-'+width+'.png'});
- await page.evaluate(()=>{const first=shops[0];shops=Array.from({length:18},(_,i)=>({...first,id:first.id.slice(0,-2)+String(i+1).padStart(2,'0'),name:'فروشگاه آزمایشی '+(i+1)}));});
+ await page.evaluate(()=>{const first=shops[0];shops=Array.from({length:18},(_,i)=>({...first,id:first.id.slice(0,-2)+String(i+1).padStart(2,'0'),name:'فروشگاه آزمایشی '+(i+1),business_category:i<9?'equipment_rental_sale':'frame_chassis'}));});
  await page.locator('#frameCustomerNav [data-frame-customer-view=salesPanel]').click();
  assert.equal(await page.locator('body.pbR96ChoosingStore').count(),0,'the upper Store tab keeps the current shop open');assert(await page.locator('#salesPanel').evaluate(el=>el.classList.contains('mobileActive')));
  await page.locator('#photographerStoreBottomNav [data-store-home]').evaluate(el=>el.click());await page.locator('body.pbR96ChoosingStore').waitFor();assert(await page.locator('#storeChooserPanelR96').isVisible());assert.equal(await page.locator('#frameCustomerNav').isVisible(),false);
  assert.equal(await page.locator('body.frameCustomerStore').count(),0);
- assert.equal(await page.locator('.pbR96StoreCard').count(),18);
- const shell=page.locator('#storePhotographerWorkspace>.shell');await shell.evaluate(el=>el.scrollTop=el.scrollHeight);
+ assert.equal(await page.locator('.pbR96StoreCard').count(),18);assert.equal(await page.locator('#storeChooserFiltersR1231 [data-store-filter]').count(),3);await page.locator('#storeChooserFiltersR1231 [data-store-filter=camera]').click();assert.equal(await page.locator('.pbR96StoreCard:visible').count(),9);await page.locator('#storeChooserFiltersR1231 [data-store-filter=frames]').click();assert.equal(await page.locator('.pbR96StoreCard:visible').count(),9);await page.locator('#storeChooserFiltersR1231 [data-store-filter=all]').click();assert.equal(await page.locator('.pbR96StoreCard:visible').count(),18);
+ const shell=page.locator('#storePhotographerWorkspace>.shell');const scroll=await shell.evaluate(el=>({height:el.clientHeight,content:el.scrollHeight,bottom:getComputedStyle(el).bottom}));assert(scroll.content>scroll.height,'chooser list should scroll through its full content');await shell.evaluate(el=>el.scrollTop=el.scrollHeight);
  const last=page.locator('.pbR96StoreCard').last();const bounds=await last.boundingBox(),surface=await shell.boundingBox();assert(bounds.y+bounds.height<=surface.y+surface.height,'last shop must fit above dock');
  const button=last.locator('[data-enter-store-r96]');assert(await button.evaluate(el=>{const r=el.getBoundingClientRect();const top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===top||el.contains(top)}),'last shop button must not be covered');
  await page.screenshot({path:'/tmp/r1225-chooser-bottom-'+width+'.png'});

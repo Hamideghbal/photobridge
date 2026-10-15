@@ -298,7 +298,7 @@ function positionFrameNavigation(){
  }
 }
 window.addEventListener('resize',()=>{if(customerFrame())requestAnimationFrame(positionFrameNavigation)},{passive:true});
-function applyFrameCustomerView(){const enabled=customerFrame();document.body.classList.toggle('frameCustomerStore',enabled);ensureFrameOrdersPanel(enabled);
+function applyFrameCustomerView(){const enabled=customerFrame()&&!document.body.classList.contains('pbR96ChoosingStore');document.body.classList.toggle('frameCustomerStore',enabled);ensureFrameOrdersPanel(enabled);
  const backdrop=document.getElementById('saleCartBackdrop'),drawer=document.getElementById('saleCartDrawer');
  if(enabled&&drawer&&backdrop){
   if(!frameCartPortals)frameCartPortals=[backdrop,drawer].map(node=>({node,parent:node.parentNode,next:node.nextSibling}));
@@ -688,16 +688,7 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
   content:none!important;display:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreRoleHeader#photographerStoreRoleHeader::after{
-  content:""!important;display:block!important;position:absolute!important;
-  top:auto!important;bottom:-11px!important;left:0!important;right:0!important;
-  height:12px!important;width:100%!important;z-index:3!important;
-  /* Restore the soft blue under-header accent used in the other photographer
-     pages without putting a blue halo behind the shop-name text itself. */
-  background:
-   linear-gradient(90deg,transparent,rgba(75,148,245,.88) 12%,rgba(75,148,245,.88) 88%,transparent) center top/100% 1px no-repeat,
-   radial-gradient(ellipse 62% 100% at 50% 0,rgba(47,129,245,.25),rgba(47,129,245,0) 75%) center top/100% 12px no-repeat!important;
-  box-shadow:none!important;filter:none!important;pointer-events:none!important;
-  transform:none!important;border:0!important
+  content:none!important;display:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentity,
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreRoleHeader .workspaceIdentityCopy{
@@ -717,7 +708,7 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
   animation:none!important;transition:none!important;text-shadow:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar{
-  border:0!important;box-shadow:none!important;filter:none!important;
+  border:0!important;box-shadow:0 10px 16px -12px rgba(22,119,255,.82),0 18px 28px -20px rgba(22,119,255,.58)!important;filter:none!important;
   background:#fff!important;background-image:none!important;
   backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
   text-shadow:none!important;animation:none!important;transition:none!important;
@@ -726,11 +717,7 @@ html body.frameCustomerStore #saleCartDrawer.open.frameCartMotionStart{
   display:none!important;content:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace>#photographerStoreIdentityBar#photographerStoreIdentityBar::after{
-  content:""!important;display:block!important;position:absolute!important;top:auto!important;
-  bottom:0!important;left:0!important;right:0!important;width:100%!important;height:1px!important;
-  background:linear-gradient(90deg,transparent,#becfe1 8%,#becfe1 92%,transparent)!important;
-  mask-image:none!important;-webkit-mask-image:none!important;
-  filter:none!important;box-shadow:none!important;transform:none!important;pointer-events:none!important
+  display:none!important;content:none!important
  }
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #storeIdentityToggle,
  html body.frameCustomerStore #storePhotographerWorkspace #photographerStoreIdentityBar #photographerStoreHeaderName{
@@ -813,9 +800,10 @@ if(typeof pb834RenderShopGallery==='function'){
  },true);
 }
 document.addEventListener('click',event=>{
- const storeEntry=event.target.closest('#photographerStoreRoleHeader .storeDesktopPrimary');
+ const mobile=matchMedia('(max-width:820px)').matches;
+ const storeEntry=event.target.closest('#photographerStoreRoleHeader .storeDesktopPrimary')||(mobile&&event.target.closest('[data-store-home],#frameCustomerNav [data-frame-customer-view=salesPanel]'));
  if(!storeEntry)return;
- event.preventDefault();event.stopPropagation();
+ event.preventDefault();event.stopImmediatePropagation();
  if(typeof enterStoreChooserR96==='function')enterStoreChooserR96('store');
 },true);
 

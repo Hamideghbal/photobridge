@@ -15,6 +15,33 @@ assert.equal((await action('approve')).status,200);assert.equal((await db.query(
 }finally{await db.close();}});
 test('custom hosts cannot access platform routes, require correct order token, reject cross-origin checkout and pending domains',async()=>{const db=await fixture();try{const {handleCustomStorefront,createPublicOrder}=await mod(),d=deps(db),out=await createPublicOrder(db,{shop,hostname:'shop.example.com',body:body()});async function call(path,options={}){const res={setHeader(){},writeHead(status){this.status=status;},end(body){this.ended=body;}};const handled=await handleCustomStorefront({method:'GET',headers:{host:'shop.example.com',...options.headers},...options},res,new URL(path,'https://shop.example.com'),d);return {...res,handled};}assert.equal((await call('/admin')).status,404);for(const asset of ['/storefront.css','/photobridge-r1207-frame-catalog.js','/assets/photobridge-handover-vazirmatn.woff2']){const response=await call(asset);assert.equal(response.status,200);assert(response.ended.length>100);}assert.equal((await call('/assets/index-UIRefine-v655-r84.js')).status,404);assert.equal((await call('/api/storefront/catalog')).data.items[0].sale_price,18000);assert.equal((await call('/api/storefront/orders/'+out.id)).status,404);const correct=await call('/api/storefront/orders/'+out.id,{headers:{host:'shop.example.com',authorization:'Bearer '+out.accessToken}});assert.equal(correct.status,200);assert.equal(correct.data.order.customer_mobile,undefined);assert.equal((await call('/api/storefront/orders',{method:'POST',headers:{host:'shop.example.com',origin:'https://evil.com'}})).status,403);await db.query('UPDATE equipment_store_domains SET active=false');assert.equal((await call('/api/storefront/catalog')).status,503);assert.equal((await call('/.well-known/photobridge-storefront')).ended,'proof');assert.equal((await call('/',{headers:{host:'photobridge.ir'}})).handled,false);assert.equal((await call('/',{headers:{host:'www.photobridge.ir'}})).handled,false);
 }finally{await db.close();}});
+test('merchant catalog images load from PhotoBridge while merchant host keeps private media closed',async()=>{
+ const db=await fixture();
+ try{
+  const full='/api/album-asset/c2lnbmVk.c2ln',thumb='/api/album-asset-preview/c2lnbmVk.c2ln';
+  const d=deps(db,{publicItem:row=>({...row,
+   image_url:full,thumbnail_url:thumb,
+   image_urls:[full,'https://cdn.example.com/other.webp'],
+   thumbnail_urls:[thumb],
+   color_image_urls:[full],
+   pricing_image_urls:[full],
+   gallery_images:[{objectKey:'equipment-rental/hidden/original.webp'}],
+   arbitrary_link:'/api/admin/private'})});
+  async function call(path){const res={setHeader(){},writeHead(status){this.status=status;},end(){}};await(await mod()).handleCustomStorefront({method:'GET',headers:{host:'shop.example.com'}},res,new URL(path,'https://shop.example.com'),d);return res;}
+  const catalog=await call('/api/storefront/catalog'),row=catalog.data.items[0];
+  assert.equal(catalog.status,200);
+  assert.equal(row.sale_price,18000);
+  assert.equal(row.image_url,'https://photobridge.ir'+full);
+  assert.equal(row.thumbnail_url,'https://photobridge.ir'+thumb);
+  assert.deepEqual(row.image_urls,['https://photobridge.ir'+full,'https://cdn.example.com/other.webp']);
+  assert.deepEqual(row.thumbnail_urls,['https://photobridge.ir'+thumb]);
+  assert.deepEqual(row.color_image_urls,['https://photobridge.ir'+full]);
+  assert.deepEqual(row.pricing_image_urls,['https://photobridge.ir'+full]);
+  assert.equal(row.arbitrary_link,'/api/admin/private');
+  assert.equal((await call(full)).status,404,'custom host must not expose the protected asset endpoint');
+  assert.equal((await call('/admin')).status,404);
+ }finally{await db.close();}
+});
 test('domain registration requires platform administrator and same origin',async()=>{const db=await fixture();try{assert.equal((await management(db,'/api/admin/storefront/domains','GET',null,{})).status,403);assert.equal((await management(db,'/api/admin/storefront/domains','POST',{hostname:'new.example.com',shopId},{platformRole:'platform_admin'})).status,201);assert.equal((await management(db,'/api/admin/storefront/domains','POST',{hostname:'new.example.com',shopId:other},{platformRole:'platform_admin'})).status,409);const res={};await(await mod()).handleStorefrontManagement({method:'POST',headers:{origin:'https://evil.com'},body:{}},res,new URL('https://photobridge.ir/api/admin/storefront/domains'),{platformRole:'platform_admin'},deps(db));assert.equal(res.status,403);}finally{await db.close();}});
 test('receipt submission normalizes images, rejects repeat writes and removes replaced receipt only after resubmission',async()=>{const db=await fixture();try{const {createPublicOrder,handleCustomStorefront}=await mod(),out=await createPublicOrder(db,{shop,hostname:'shop.example.com',body:body()}),deleted=[];let counter=0;const d=deps(db,{sharp:require('sharp'),storeReceipt:async()=>`receipt-${++counter}.jpg`,deleteObject:async key=>deleted.push(key)}),image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+y+9sAAAAASUVORK5CYII=';async function upload(value=image){const res={setHeader(){}};await handleCustomStorefront({method:'POST',headers:{host:'shop.example.com',origin:'https://shop.example.com',authorization:'Bearer '+out.accessToken},body:{image:value}},res,new URL('/api/storefront/orders/'+out.id+'/receipt','https://shop.example.com'),d);return res;}
 assert.equal((await upload('invalid')).status,400);assert.equal((await upload()).status,200);assert.equal((await upload()).status,409);assert.equal(counter,1);assert.equal((await management(db,'/api/rental/storefront/orders/'+out.id,'PATCH',{action:'reject',note:'رسید واضح نیست'})).status,200);assert.equal((await upload()).status,200);assert.deepEqual(deleted,['receipt-1.jpg']);assert.equal((await db.query('SELECT receipt_object_key,status FROM equipment_store_public_orders')).rows[0].status,'pending_review');}finally{await db.close();}});

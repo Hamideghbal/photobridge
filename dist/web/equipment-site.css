@@ -88,3 +88,129 @@ body.equipment-site{height:100dvh;min-height:0;overflow:hidden;display:flex;flex
 .equipment-site .photographer-panel button[type=submit]{min-height:42px}
 .equipment-site #equipmentHeaderMessage{font-size:12px;line-height:1.8;min-height:20px;color:#475467}
 @media(max-width:760px){.equipment-site .photographer-dropdown .photographer-panel{position:fixed;top:70px;left:12px;right:12px;width:auto;max-width:none}.equipment-site .photographer-dropdown{z-index:165}}
+
+/* r1281: clean white surface with a quiet PhotoBridge-blue light below the fixed header. */
+.equipment-site > .equipment-page-scroll{
+  background-color:#fff!important;
+  background-image:linear-gradient(180deg,rgba(42,112,218,.11) 0px,rgba(67,135,234,.06) 110px,rgba(255,255,255,0) 275px)!important;
+  background-repeat:no-repeat!important;
+}
+.equipment-site > .site-header{box-shadow:0 9px 25px rgba(40,101,190,.11)!important}
+.equipment-site > .equipment-page-scroll > .site-main{background:transparent}
+
+/* Header photographer login: always readable, including hover/open/keyboard states. */
+.equipment-site .photographer-dropdown > summary.equipment-office-entry{
+ background:#163b64!important;border-color:#163b64!important;
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+ border-radius:10px!important;box-shadow:none!important;
+}
+.equipment-site .photographer-dropdown > summary.equipment-office-entry::after{color:#fff!important}
+.equipment-site .photographer-dropdown:is([open],:focus-within) > summary.equipment-office-entry,
+.equipment-site .photographer-dropdown > summary.equipment-office-entry:is(:hover,:focus-visible,:active){
+ background:#21588c!important;border-color:#21588c!important;
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+.equipment-site .photographer-dropdown .photographer-panel{
+ box-sizing:border-box;width:236px!important;max-width:calc(100vw - 24px)!important;
+ padding:12px!important;border-radius:11px!important;
+ background:#fff!important;border:1px solid #dce7f5!important;
+ box-shadow:0 12px 34px rgba(28,65,112,.14)!important;
+}
+.equipment-site .photographer-dropdown .photographer-panel h2{
+ font-size:calc(13px * var(--site-scale,1))!important;
+ color:#182f4a!important;margin:0 0 3px!important;
+}
+.equipment-site .photographer-dropdown .photographer-panel form{gap:7px!important}
+.equipment-site .photographer-dropdown .photographer-panel label{
+ display:grid!important;gap:3px!important;font-size:calc(11px * var(--site-scale,1))!important;
+ color:#40546c!important;line-height:1.45!important;
+}
+.equipment-site .photographer-dropdown .photographer-panel input{
+ min-height:35px!important;height:35px!important;
+ padding:5px 8px!important;font-size:12px!important;
+ border:1px solid #cbd8e9!important;border-radius:7px!important;
+ color:#182f4a!important;background:#fff!important;
+}
+.equipment-site .photographer-dropdown .photographer-panel button[type=submit]{
+ display:block;width:100%;min-height:35px!important;height:35px!important;
+ padding:5px 9px!important;border:0!important;border-radius:8px!important;
+ background:#205b96!important;color:#fff!important;
+ -webkit-text-fill-color:#fff!important;font-size:12px!important;cursor:pointer;
+}
+.equipment-site .photographer-dropdown .photographer-panel button[type=submit]:is(:hover,:focus-visible,:active){
+ background:#164677!important;color:#fff!important;-webkit-text-fill-color:#fff!important
+}
+.equipment-site .photographer-dropdown .photographer-panel .photographer-close{
+ top:6px!important;left:7px!important;width:24px;height:24px;line-height:24px;padding:0!important;
+ color:#64748b!important;-webkit-text-fill-color:#64748b!important;
+}
+.equipment-site #equipmentHeaderMessage{font-size:11px!important;min-height:0!important;margin:6px 0 0!important;line-height:1.65!important}
+
+/* The /rental-equipment page now contains the actual mobile/password form, not a CTA. */
+.equipment-site[data-equipment-page='/rental-equipment'] .page-hero{
+ padding:16px 0 10px!important;max-width:100%;text-align:center;
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .page-hero h1{
+ margin:0 0 5px!important;font-size:calc(25px * var(--site-scale,1))!important;
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .page-hero p{
+ font-size:calc(12px * var(--site-scale,1))!important;line-height:1.8!important;
+ margin:0!important;
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .article-layout{
+ width:100%;min-height:min(43vh,400px);display:flex!important;
+ justify-content:center;align-items:center;padding:0 0 42px!important;
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .article-body{
+ width:100%;max-width:380px;min-width:0;
+}
+.equipment-site .equipment-office-section{max-width:380px;width:100%;margin:16px auto}
+.equipment-site .equipment-office-login-card{
+ display:grid;gap:10px;padding:24px 24px 18px;
+ background:#fff;border:1px solid #dae5f3;
+ border-radius:17px;box-shadow:0 16px 45px rgba(43,88,144,.10);
+}
+.equipment-site .equipment-office-login-card h2{
+ margin:0!important;text-align:center;font-size:calc(17px * var(--site-scale,1))!important;
+ line-height:1.5;color:#213b5a;
+}
+.equipment-site .equipment-office-login-card > p{
+ margin:0!important;text-align:center;line-height:1.85!important;
+ font-size:calc(11px * var(--site-scale,1))!important;color:#64748b;
+}
+.equipment-site .equipment-office-login-card form{display:grid;gap:11px;min-width:0}
+.equipment-site .equipment-office-login-card label{
+ display:grid;gap:5px;font-size:calc(12px * var(--site-scale,1));
+ font-weight:650;color:#34465d;
+}
+.equipment-site .equipment-office-login-card input{
+ box-sizing:border-box;width:100%;min-height:40px;padding:8px 11px;
+ border:1px solid #cbd8e9;border-radius:9px;background:#fff;
+ color:#16293d;font:inherit;font-size:13px;
+}
+.equipment-site .equipment-office-login-card input:focus-visible{
+ outline:2px solid #99c0ed;outline-offset:0;border-color:#498bdf;
+}
+.equipment-site .equipment-office-login-card input[name=mobile]{direction:ltr;text-align:left}
+.equipment-site .equipment-office-login-card button[type=submit]{
+ display:block;width:100%;min-height:40px;border-radius:9px;
+ background:#205b96!important;color:#fff!important;
+ -webkit-text-fill-color:#fff!important;font-size:13px;cursor:pointer;
+}
+.equipment-site .equipment-office-login-card button[type=submit]:is(:hover,:focus-visible,:active){
+ background:#164677!important;color:#fff!important;-webkit-text-fill-color:#fff!important
+}
+.equipment-site .equipment-office-login-card .equipment-office-login-message{
+ margin:0!important;min-height:16px;text-align:center;font-size:11px!important;
+ line-height:1.75!important;color:#526782;
+}
+@media(max-width:760px){
+ .equipment-site .photographer-dropdown .photographer-panel{
+  position:fixed!important;top:68px!important;left:12px!important;right:auto!important;
+  width:min(236px,calc(100vw - 24px))!important;
+ }
+ .equipment-site[data-equipment-page='/rental-equipment'] .page-hero{padding:12px 0!important}
+ .equipment-site[data-equipment-page='/rental-equipment'] .page-hero h1{font-size:21px!important}
+ .equipment-site[data-equipment-page='/rental-equipment'] .article-layout{min-height:0;padding:16px 0 34px!important}
+ .equipment-site .equipment-office-login-card{padding:18px!important;gap:8px}
+}

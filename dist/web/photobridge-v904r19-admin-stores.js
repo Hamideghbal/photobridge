@@ -5,6 +5,7 @@ let pbStoreRemembered=false;try{pbStoreRemembered=sessionStorage.getItem(PB_ADMI
 const S={active:pbStoreRemembered,loading:false,loaded:false,opening:false,shops:[],summary:{},query:''};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fa=v=>Number(v||0).toLocaleString('fa-IR');
+const normalizeStoreMobile=value=>{let s=String(value||'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\\D/g,'');if(s.startsWith('0098'))s='0'+s.slice(4);else if(s.startsWith('98')&&s.length===12)s='0'+s.slice(2);else if(/^9\\d{9}$/.test(s))s='0'+s;return s};
 const money=v=>`${fa(Math.round(Number(v||0)))} تومان`;
 const dt=v=>{if(!v)return'—';try{return new Date(v).toLocaleString('fa-IR',{dateStyle:'short',timeStyle:'short'})}catch{return'—'}};
 async function api(url,opts={}){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...opts,headers:{'content-type':'application/json',...(opts.headers||{})}});let out={};try{out=await r.json()}catch{}if(!r.ok){const e=new Error(out.error||`HTTP ${r.status}`);e.data=out;e.status=r.status;throw e}return out}
@@ -15,7 +16,11 @@ body.pb904r19AdminClean .adminTabs.adminTabsUnified{margin:0 0 12px!important;pa
 body.pb904r19AdminClean .adminTabs.adminTabsUnified::-webkit-scrollbar{display:none!important}
 body.pb904r19AdminClean .adminTabs.adminTabsUnified>button{flex:0 0 auto!important;min-height:32px!important;height:32px!important;padding:0 10px!important;border-radius:8px!important;font-size:9.5px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}
 body.pb904r19AdminStores .adminPage>*:not(.adminTabs):not(#pb904r19AdminStoresPanel){display:none!important}
-#pb904r19AdminStoresPanel{display:none;direction:rtl;margin:0}
+#pb904r19AdminStoresPanel{display:none;direction:rtl;margin:0;min-height:0;min-width:0}
+body.pb904r19AdminStores .adminPage{overflow:hidden!important}
+body.pb904r19AdminStores #pb904r19AdminStoresPanel{flex:1 1 auto!important;min-height:0!important;min-width:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 2px max(112px,env(safe-area-inset-bottom,0px))!important}
+body.pb904r19AdminStores .pb904r19StoresCard{overflow-x:auto!important;overflow-y:visible!important}
+body.pb904r19AdminStores .pb904r19StoresTable tbody tr:last-child td{border-bottom:0}
 body.pb904r19AdminStores #pb904r19AdminStoresPanel{display:block!important}
 .pb904r19StoreTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;margin-bottom:10px}
 .pb904r19StoreTop h2{margin:0;font-size:16px}.pb904r19StoreTop p{margin:3px 0 0;color:#667085;font-size:9.5px}
@@ -38,22 +43,29 @@ function render(){const p=panel();if(!p)return;const rows=filtered(),requested=S
 }
 async function load(){if(S.loading)return;S.loading=true;render();try{const out=await api('/api/admin/equipment-rental/overview');S.shops=Array.isArray(out.shops)?out.shops:[];S.summary=out.summary||{}}catch(e){S.shops=[];const p=panel();if(p)p.innerHTML='<div class="pb904r19Empty">دریافت اطلاعات فروشگاه‌ها انجام نشد.</div>'}finally{S.loading=false;S.loaded=true;render();if(S.active)requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('pbR100F11AdminStoreBoot')))}}
 function modal(){let m=document.getElementById('pb904r19StoreModal');if(m)return m;m=document.createElement('div');m.id='pb904r19StoreModal';document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('open')});return m}
-function edit(s){const m=modal();m.innerHTML=`<div class="pb904r19StoreModalCard"><div class="pb904r19StoreModalHead"><h3>ویرایش ${esc(s.name||'فروشگاه')}</h3><button type="button" data-close>×</button></div><form id="pb904r19StoreForm" class="pb904r19StoreForm"><label>نام فروشگاه<input name="name" value="${esc(s.name||'')}"></label><label>نام مدیر<input name="managerName" value="${esc(s.manager_name||'')}"></label><label>موبایل مدیر<input name="managerMobile" dir="ltr" value="${esc(s.manager_mobile||'')}"></label><label>تلفن<input name="phone" dir="ltr" value="${esc(s.phone||'')}"></label><label>استان<input name="province" value="${esc(s.province||'')}"></label><label>شهر<input name="city" value="${esc(s.city||'')}"></label><label class="wide">آدرس<input name="address" value="${esc(s.address||'')}"></label><label>تخفیف اشتراک (درصد)<input type="number" name="subscriptionDiscountPercent" min="0" max="100" step="0.5" required value="${esc(s.subscription_discount_percent||0)}"></label><label class="wide">توضیحات<textarea name="description">${esc(s.description||'')}</textarea></label><label class="wide">قانون ودیعه<textarea name="depositPolicy">${esc(s.deposit_policy||'')}</textarea></label></form><div class="pb904r19StoreModalActions"><button type="button" data-close>انصراف</button><button type="button" class="save" id="pb904r19StoreSave">ذخیره تغییرات</button></div></div>`;m.classList.add('open');m.querySelector('#pb904r19StoreSave').onclick=async()=>{const f=m.querySelector('#pb904r19StoreForm'),b=Object.fromEntries(new FormData(f).entries()),btn=m.querySelector('#pb904r19StoreSave');
+function edit(s){const m=modal();m.innerHTML=`<div class="pb904r19StoreModalCard"><div class="pb904r19StoreModalHead"><h3>ویرایش ${esc(s.name||'فروشگاه')}</h3><button type="button" data-close>×</button></div><form id="pb904r19StoreForm" class="pb904r19StoreForm"><label>نام فروشگاه<input name="name" value="${esc(s.name||'')}"></label><label>نام مدیر<input name="managerName" value="${esc(s.manager_name||'')}"></label><label>موبایل مدیر<input name="managerMobile" dir="ltr" inputmode="tel" autocomplete="off" maxlength="18" value="${esc(s.manager_mobile||'')}"><small>تغییر این شماره، حساب ورود مدیر را خودکار منتقل نمی‌کند؛ دسترسی مدیر جداگانه تنظیم می‌شود.</small></label><label>تلفن<input name="phone" dir="ltr" value="${esc(s.phone||'')}"></label><label>استان<input name="province" value="${esc(s.province||'')}"></label><label>شهر<input name="city" value="${esc(s.city||'')}"></label><label class="wide">آدرس<input name="address" value="${esc(s.address||'')}"></label><label>تخفیف اشتراک (درصد)<input type="number" name="subscriptionDiscountPercent" min="0" max="100" step="0.5" required value="${esc(s.subscription_discount_percent||0)}"></label><label class="wide">توضیحات<textarea name="description">${esc(s.description||'')}</textarea></label><label class="wide">قانون ودیعه<textarea name="depositPolicy">${esc(s.deposit_policy||'')}</textarea></label></form><div class="pb904r19StoreModalActions"><button type="button" data-close>انصراف</button><button type="button" class="save" id="pb904r19StoreSave">ذخیره تغییرات</button></div></div>`;m.classList.add('open');m.querySelector('#pb904r19StoreSave').onclick=async()=>{const f=m.querySelector('#pb904r19StoreForm'),b=Object.fromEntries(new FormData(f).entries()),btn=m.querySelector('#pb904r19StoreSave');
 const discount=Number(b.subscriptionDiscountPercent),pctBefore=Number(s.subscription_discount_percent||0);
 if(!Number.isFinite(discount)||discount<0||discount>100)return alert('درصد تخفیف اشتراک باید بین صفر تا ۱۰۰ باشد.');
 delete b.subscriptionDiscountPercent;
 const before={name:s.name,managerName:s.manager_name,managerMobile:s.manager_mobile,phone:s.phone,province:s.province,city:s.city,address:s.address,description:s.description,depositPolicy:s.deposit_policy};
-const changedProfile=Object.entries(b).some(([k,v])=>String(v||'').trim()!==String(before[k]||'').trim());
-btn.disabled=true;btn.textContent='در حال ذخیره…';let discountSaved=false;
+const mobileValue=normalizeStoreMobile(b.managerMobile),oldMobile=normalizeStoreMobile(before.managerMobile);
+if(mobileValue!==''&&!/^09\\d{9}$/.test(mobileValue))return alert('موبایل مدیر باید ۱۱ رقم و با ۰۹ شروع شود.');
+const mobileChanged=mobileValue!==oldMobile;
+delete b.managerMobile;
+const changed=Object.fromEntries(Object.entries(b).filter(([k,v])=>String(v||'').trim()!==String(before[k]||'').trim()));
+btn.disabled=true;btn.textContent='در حال ذخیره…';let discountSaved=false,profileSaved=false,mobileSaved=false;
 try{
   const url='/api/admin/equipment-rental/shops/'+encodeURIComponent(s.id);
   if(discount!==pctBefore){const saved=await api(url,{method:'PATCH',body:JSON.stringify({subscriptionDiscountPercent:discount})});if(Number(saved.subscription_discount_percent)!==discount)throw new Error('discount_verify_failed');discountSaved=true;}
-  if(changedProfile)await api(url,{method:'PATCH',body:JSON.stringify(b)});
+  if(Object.keys(changed).length){await api(url,{method:'PATCH',body:JSON.stringify(changed)});profileSaved=true;}
+  if(mobileChanged){const saved=await api(url,{method:'PATCH',body:JSON.stringify({managerMobile:mobileValue})});if(normalizeStoreMobile(saved.manager_mobile)!==mobileValue)throw new Error('manager_mobile_verify_failed');mobileSaved=true;}
   await load();
   const current=S.shops.find(x=>String(x.id)===String(s.id));
-  if(discount!==pctBefore&&Number(current?.subscription_discount_percent)!==discount)throw new Error('discount_readback_failed');
+  if(!current)throw new Error('store_readback_failed');
+  if(discount!==pctBefore&&Number(current.subscription_discount_percent)!==discount)throw new Error('discount_readback_failed');
+  if(mobileChanged&&normalizeStoreMobile(current.manager_mobile)!==mobileValue)throw new Error('manager_mobile_readback_failed');
   m.classList.remove('open');
-}catch(e){alert((discountSaved?'تخفیف ذخیره شد؛ اما ذخیره بقیه اطلاعات/بازخوانی انجام نشد: ':'ذخیره تغییرات فروشگاه انجام نشد: ')+(e?.data?.message||e?.data?.error||e?.message||'خطای نامشخص'))}
+}catch(e){alert((discountSaved||profileSaved||mobileSaved?'بخشی از تغییرات ذخیره شد؛ اما همه اطلاعات تأیید نشد: ':'ذخیره تغییرات فروشگاه انجام نشد: ')+(e?.data?.message||e?.data?.error||e?.message||'خطای نامشخص'))}
 finally{btn.disabled=false;btn.textContent='ذخیره تغییرات'}}}
 async function managerAccess(s){
  if(!confirm(`دسترسی مدیریت فروشگاه «${s.name||'فروشگاه'}» برای حساب موجود شماره ${s.manager_mobile||'—'} فعال شود؟ حساب عکاسی حفظ می‌شود.`))return;

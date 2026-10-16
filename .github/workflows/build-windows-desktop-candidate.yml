@@ -36,6 +36,8 @@ jobs:
         run: |
           $hash=(Get-FileHash desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($hash -ne '49788a4b7db76696742a9ebdfc054b71029993c76677fcf5da95d94085f2dad0') { throw "Unexpected Windows source checksum" }
+      - name: Normalize Windows working-copy line endings for existing build-time patches
+        run: node scripts/normalize-windows-desktop-build-eol.mjs
       - name: Prepare current site UI payload
         run: |
           npm install --omit=dev --no-audit --no-fund

@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const dropdown=document.querySelector('.photographer-dropdown');if(!dropdown)return;
+const header=document.querySelector('.site-header');if(header){const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',header.getBoundingClientRect().height+'px');new ResizeObserver(measure).observe(header);measure();}const dropdown=document.querySelector('.photographer-dropdown');if(!dropdown)return;
 const form=document.querySelector('#equipmentHeaderLogin'),session=document.querySelector('#equipmentHeaderSession'),message=document.querySelector('#equipmentHeaderMessage');
 async function request(path,body){const response=await fetch(path,{credentials:'same-origin',...(body?{method:'POST',body:JSON.stringify(body)}:{}),headers:{'content-type':'application/json','x-photobridge-portal':'photographer'}});const data=await response.json();if(!response.ok)throw Error(({credentials_invalid:'شماره موبایل یا رمز عبور صحیح نیست.',invalid_credentials:'شماره موبایل یا رمز عبور صحیح نیست.'})[data?.error]||'عملیات انجام نشد؛ دوباره تلاش کنید.');return data;}
 function show(user){const signed=user?.labRole==='customer';form.hidden=signed;session.hidden=!signed;session.querySelector('b').textContent=signed?(user.photographerName||user.name||'عکاس'):'';}

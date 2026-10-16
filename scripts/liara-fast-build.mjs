@@ -156,3 +156,5 @@ await import('./enable-r1267-lab-site.mjs');
 await import('./enable-r1268-equipment-site.mjs');
 
 await import("./enable-r1269-equipment-navigation.mjs");
+
+await import("./enable-r1270-equipment-pages.mjs");

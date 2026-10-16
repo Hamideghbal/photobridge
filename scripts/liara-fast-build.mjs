@@ -170,3 +170,5 @@ await import("./enable-r1274-equipment-layout.mjs");
 await import("./enable-r1275-site-position.mjs");
 
 await import("./enable-r1276-equipment-reviews.mjs");
+
+await import("./enable-r1278-mobile-launch.mjs");

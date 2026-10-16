@@ -51,8 +51,9 @@ function mark(){
  }
  if(!selected)dockState.clear();
 }
-function open(kind,push=true){
- if(selected===kind)return;
+function showChooser(panel){const frame=panel?.querySelector('iframe');if(!frame)return;const show=()=>{try{const button=frame.contentDocument?.querySelector('[data-store-home]');if(button){button.click();return true;}}catch{}return false;};if(!show())frame.addEventListener('load',show,{once:true});}
+function open(kind,push=true,choose=false){
+ if(selected===kind){if(choose&&kind==='store')showChooser(panels.get(kind));return;}
  for(const p of panels.values())p.hidden=true;
  let panel=panels.get(kind);
  if(!panel){
@@ -61,9 +62,9 @@ function open(kind,push=true){
   const frame=document.createElement('iframe');frame.title=kind==='store'?'فروشگاه تجهیزات':'چاپ';
   frame.addEventListener('load',()=>{try{const url=new URL(frame.contentWindow.location.href);if(url.href==='about:blank')return;if(url.origin!==location.origin||/^\/photographer\/(login|signup|register)/.test(url.pathname)||!/^\/(equipment-rental|photographer)(\/|$)/.test(url.pathname)){location.assign(url.href);return}}catch{return}loading.hidden=true});
   panel.append(frame,loading);panels.set(kind,panel);document.body.append(panel);
-  const q=new URLSearchParams(kind==='store'?initialQuery.get('pbStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbEmbeddedStore','1');frame.src=(kind==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
+  const q=new URLSearchParams(kind==='store'?(choose?'':initialQuery.get('pbStoreQuery')||''):'workspace=print&pbLabChooser=1');q.set('pbEmbeddedStore','1');frame.src=(kind==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
  }
- panel.hidden=false;selected=kind;document.body.classList.add('pb1106PanelOpen');mark();
+ if(choose&&kind==='store')showChooser(panel);panel.hidden=false;selected=kind;document.body.classList.add('pb1106PanelOpen');mark();
  if(push){const u=new URL(location.href);u.searchParams.set('pbStorePanel',kind);history.pushState({pb1106Panel:kind},'',u)}size();
 }
 function close(){
@@ -73,7 +74,7 @@ function close(){
 // Head registration precedes both old full-document Store and Print click handlers.
 window.addEventListener('click',e=>{
  const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNav a,.photographerHomeModeNav button,.photographerStoreEntry,.photographerStoreMobileNav');if(!el)return;
- const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind);return}
+ const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind,true,kind==='store');return}
  if(selected)close(); // Other sections keep their normal React navigation.
 },true);
 window.addEventListener('popstate',()=>{const kind=restoreKind();if(kind)open(kind,false);else close()});

@@ -32,7 +32,9 @@ test('header is outside scroller on all pages and login routes to PhotoBridge',(
   const html=render({},page);
   assert.ok(html.indexOf('class="site-header"')<html.indexOf('class="equipment-page-scroll"'),page);
   assert.ok(html.indexOf('class="equipment-page-scroll"')<html.indexOf('class="site-footer"'),page);
-  assert.match(html,/href="https:\/\/photobridge\.ir\/equipment-rental\/book\?panel=rental"/);
+  assert.match(html,/href="https:\/\/photobridge\.ir\/equipment-rental\/book\?panel=rental&pbOfficeLogin=1"/);
+  assert.doesNotMatch(html,/id="equipmentHeaderLogin"/);
+  assert.doesNotMatch(html,/id="rentalBookingForm"/);
   assert.match(html,/<\/footer><\/div><script id="site-layout-data"/);
  }
 });

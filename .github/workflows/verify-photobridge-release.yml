@@ -27,6 +27,7 @@ jobs:
       - name: Check changed JavaScript syntax
         run: |
           node --check dist/api/server.js
+          node --test scripts/test-r1257-domain-proof.cjs
           node --check dist/web/photobridge-v904r19-admin-stores.js
           node --check dist/web/photobridge-r100f90-entity-discount-activation.js
       - name: Run production build

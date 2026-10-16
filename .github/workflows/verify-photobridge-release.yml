@@ -41,6 +41,9 @@ jobs:
           node --check dist/web/lab-site-editor.js
           node --test scripts/test-r1278-equipment-site.mjs
           node --test scripts/test-r1280-equipment-local-login-prices.mjs
+          node --test scripts/test-r1281-equipment-office-origin-layout.mjs
+          node --check dist/web/equipment-site.js
+          node --check dist/api/equipment-office-handoff.js
           node --check dist/api/equipment-office-handoff.js
           node --check dist/web/equipment-site.js
           node --check dist/web/storefront.js

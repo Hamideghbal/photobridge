@@ -63,7 +63,7 @@ for(const width of [390,1440])for(const surface of ['header','office'])test('loc
   if(surface==='office'){
    await page.locator(formSelector+' [name=password]').fill('bad');
    await page.locator(formSelector+' [type=submit]').click();
-   await page.locator('#equipmentOfficePageMessage').getByText('شماره موبایل یا رمز عبور صحیح نیست.').waitFor();
+   await page.waitForFunction(()=>document.querySelector('#equipmentOfficePageMessage')?.textContent==='شماره موبایل یا رمز عبور صحیح نیست.');
    assert(!checkedPassword,'wrong password must not create a handoff ticket');
   }
   await page.locator(formSelector+' [name=password]').fill('correct-password');

@@ -1,0 +1,14 @@
+/* R1279 – first-party equipment-office login: never appears on custom domains. */
+#equipmentOfficeLogin[hidden]{display:none!important}
+#authNeeded:has(#equipmentOfficeLogin:not([hidden])){max-width:440px;margin:24px auto;padding:28px 24px;text-align:right;background:#fff;border:1px solid #dfe6ef;box-shadow:0 14px 32px #15263d0c;border-radius:18px}
+#authNeeded:has(#equipmentOfficeLogin:not([hidden])) h2{text-align:center;margin:0 0 10px;font-size:19px}
+#authNeeded:has(#equipmentOfficeLogin:not([hidden]))>p{margin-bottom:20px;text-align:center}
+#equipmentOfficeLogin{display:grid;gap:13px;text-align:right;direction:rtl}
+#equipmentOfficeLogin label{display:grid;gap:7px;font-size:12px;font-weight:750;color:#344054}
+#equipmentOfficeLogin input{width:100%;min-width:0;min-height:43px;border:1px solid #ccd5e3;border-radius:9px;background:#f9fbff;padding:9px 12px;color:#15263d;font:inherit;font-size:14px}
+#equipmentOfficeLogin input:focus{outline:2px solid #315efb55;outline-offset:1px;background:#fff}
+#equipmentOfficeLogin button{min-height:44px;padding:10px 16px;border:0;border-radius:10px;color:white;background:#315efb;font:inherit;font-size:13px;font-weight:850;cursor:pointer}
+#equipmentOfficeLogin button:disabled{opacity:.65;cursor:wait}
+#equipmentOfficeLoginMessage{font-size:12px;line-height:1.8;min-height:20px;color:#475467}
+#authNeeded #equipmentOfficeLoginFallback{display:block;text-align:center;margin-top:14px;font-size:12px}
+@media(max-width:580px){#authNeeded:has(#equipmentOfficeLogin:not([hidden])){margin:16px 12px;padding:19px 16px}}

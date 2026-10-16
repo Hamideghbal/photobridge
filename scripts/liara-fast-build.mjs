@@ -162,3 +162,5 @@ await import("./enable-r1270-equipment-pages.mjs");
 await import("./enable-r1271-equipment-collections.mjs");
 
 await import("./enable-r1272-site-typography.mjs");
+
+await import("./enable-r1273-text-editor.mjs");

@@ -1,1 +1,1 @@
-2026-10-16-r1280-local-store-login-single-use-handoff-discount-prices
+2026-10-17-r1281-equipment-office-origin-inline-login-header-contrast

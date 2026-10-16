@@ -28,7 +28,7 @@ for(const width of [390,1440])test('cross-domain office entry authenticates only
    }
    if(pathname==='/photographer/gallery')return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html lang="fa"><body><main id="photographerStoreReached">فروشگاه فوتوبریج</main></body></html>'});
    if(pathname==='/equipment-rental/book'){
-    const html='<!doctype html><html lang="fa" dir="rtl"><head><meta name="viewport" content="width=device-width,initial-scale=1">'+
+    const html='<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
     '<script defer src="/photobridge-r1106-mobile-store-panel.js"></script>'+
     '<script defer src="/photobridge-r1126-desktop-navigation.js"></script>'+
     '<script defer src="/photobridge-r1279-equipment-office-login.js"></script></head><body>'+

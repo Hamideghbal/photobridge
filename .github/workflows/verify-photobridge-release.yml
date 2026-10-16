@@ -115,6 +115,11 @@ jobs:
         run: node --test scripts/test-r1132-photo-print-copies.cjs
       - name: Verify photographer mobile bottom navigation never wraps into two rows
         run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs
+      - name: Verify admin-store isolated manager mobile update
+        run: |
+          node --check scripts/enable-r1264-admin-store-mobile-save.mjs
+          node --check dist/web/photobridge-v904r19-admin-stores.js
+          node --test scripts/test-r1264-admin-store-mobile-route.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium
@@ -123,7 +128,7 @@ jobs:
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1241-desktop-viewport.cjs scripts/test-r1242-payment-ui.cjs scripts/test-r1254-frame-settings.cjs scripts/test-r1263-desktop-store-business-mode.cjs scripts/test-r1263-frame-manual-ui.cjs
+          node --test scripts/test-r1241-desktop-viewport.cjs scripts/test-r1242-payment-ui.cjs scripts/test-r1254-frame-settings.cjs scripts/test-r1263-desktop-store-business-mode.cjs scripts/test-r1263-frame-manual-ui.cjs scripts/test-r1264-admin-store-editor-browser.cjs
           node --test scripts/test-r1242-frame-payments.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1169-store-categories.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1256-storefront.cjs

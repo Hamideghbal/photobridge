@@ -120,6 +120,9 @@ export async function handleCustomStorefront(req,res,url,d){
  if(equipmentPhotographerRoute(req,url,shop)){
   if(req.method!=='GET'&&req.headers.origin!==`https://${host}`)return reply(403,{error:'invalid_origin'});
   if(req.method!=='GET'&&!d.rateAllowed(req,host))return reply(429,{error:'try_again_later'});
+  // Trusted per-request tenant marker, never accepted from client headers.
+  // Core customer routes use this to scope reads and writes to this shop.
+  req.photobridgeStorefrontShopId=String(shop.id);
   req.headers['x-photobridge-portal']='photographer';
   return false;
  }

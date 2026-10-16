@@ -29,5 +29,6 @@ one('#rentalCollaboration button').onclick=async e=>{e.currentTarget.disabled=tr
 one('#rentalBookingForm').onsubmit=sendBooking;
 one('#rentalConfirm').onclick=confirmBooking;
 for(const id of ['rentalFrom','rentalTo'])one('#'+id).onchange=()=>{const from=one('#rentalFrom').value,to=one('#rentalTo').value;one('#rentalDateLabels').textContent=[from&&dates(from),to&&dates(to)].filter(Boolean).join(' ← ');resetQuote();};
+window.addEventListener('equipment-photographer-session',()=>{if(shop)void restore();});
 window.PBStorefrontRental={init(data,preview){if(!data?.rentalEnabled||data.production)return;shop=data;const origin=data.platformOrigin||'https://photobridge.ir';one('#rentalSignup').href=new URL('/photographer/signup',origin).href;one('#rentalProfileLink').href=new URL('/equipment-rental/book',origin).href;one('#rentalSection').hidden=false;one('#rentalNav').hidden=false;one('#rentalTopLink').hidden=false;const today=new Date(),local=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);for(const id of ['rentalFrom','rentalTo'])one('#'+id).min=local;if(preview){one('#rentalLogin').hidden=true;one('#rentalMessage').textContent='پیش‌نمایش بخش آفیش — ورود و ثبت آفیش در پیش‌نمایش غیرفعال است.';return;}void restore();}};
 })();

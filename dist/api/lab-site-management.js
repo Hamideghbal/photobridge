@@ -1,9 +1,10 @@
+import {normalizeSiteLayout} from './site-layout.js';
 import {normalizeTextStyles} from './site-text-style.js';
 import {defaultLabSite,mergeLabSite,SITE_FIELDS,SITE_IMAGES,SITE_SECTIONS} from './lab-site-content.js';
 const fail=(error,status=400)=>{throw Object.assign(new Error(error),{status});};
 export async function normalizeLabSite(input,sharp,allowedImages=SITE_IMAGES){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('invalid_site_config');
- const out={};if(input.textStyles!==undefined)out.textStyles=normalizeTextStyles(input.textStyles);
+ const out={};if(input.layout!==undefined)out.layout=normalizeSiteLayout(input.layout);if(input.textStyles!==undefined)out.textStyles=normalizeTextStyles(input.textStyles);
  for(const [key,max]of Object.entries(SITE_FIELDS)){if(input[key]===undefined)continue;if(typeof input[key]!=='string'||input[key].length>max)fail('invalid_site_text');out[key]=input[key].trim();}
  for(const k of ['displayName','heroTitle'])if(out[k]!==undefined&&!out[k])fail('site_title_required');
  if(out.phone&&!/^[+0-9۰-۹٠-٩()\s-]{5,40}$/.test(out.phone))fail('invalid_site_phone');

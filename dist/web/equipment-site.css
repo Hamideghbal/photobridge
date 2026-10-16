@@ -88,3 +88,94 @@ body.equipment-site{height:100dvh;min-height:0;overflow:hidden;display:flex;flex
 .equipment-site .photographer-panel button[type=submit]{min-height:42px}
 .equipment-site #equipmentHeaderMessage{font-size:12px;line-height:1.8;min-height:20px;color:#475467}
 @media(max-width:760px){.equipment-site .photographer-dropdown .photographer-panel{position:fixed;top:70px;left:12px;right:12px;width:auto;max-width:none}.equipment-site .photographer-dropdown{z-index:165}}
+
+/* r1281 – compact, readable photographer login; pale blue glow under a white header. */
+.equipment-site .site-header .photographer-dropdown>summary.equipment-office-entry,
+.equipment-site .site-header .photographer-dropdown[open]>summary.equipment-office-entry,
+.equipment-site .site-header .photographer-dropdown>summary.equipment-office-entry:hover,
+.equipment-site .site-header .photographer-dropdown>summary.equipment-office-entry:focus-visible{
+ color:#fff!important;background:#15263d!important;border-color:#15263d!important;
+ opacity:1!important;-webkit-text-fill-color:#fff!important;box-shadow:0 3px 10px #15263d12!important
+}
+.equipment-site .site-header .photographer-dropdown>summary.equipment-office-entry::after{color:#fff!important;opacity:1}
+.equipment-site .site-header .photographer-dropdown .photographer-panel{
+ width:min(244px,calc(100vw - 24px))!important;max-width:none!important;
+ padding:12px 13px!important;border-radius:11px!important;
+ border:1px solid #d9e4f1!important;background:#fff!important;
+ box-shadow:0 12px 30px #18365c26!important
+}
+.equipment-site .photographer-panel h2{font-size:13px!important;color:#182b46!important;line-height:1.5;margin:0 0 3px!important}
+.equipment-site .photographer-panel form{display:grid;gap:7px!important}
+.equipment-site .photographer-panel label{font-size:11px!important;gap:4px!important;color:#263951!important;font-weight:700}
+.equipment-site .photographer-panel input{height:36px!important;min-height:36px!important;padding:5px 9px!important;border:1px solid #cbd6e4!important;border-radius:8px!important;font-size:12px!important;color:#172d4d!important;background:#fff!important}
+.equipment-site .photographer-panel .primary,
+.equipment-site .photographer-panel button[type=submit],
+.equipment-site .photographer-panel button[type=submit]:hover,
+.equipment-site .photographer-panel button[type=submit]:focus-visible{
+ width:100%!important;min-height:36px!important;height:36px!important;
+ padding:5px 9px!important;border-radius:8px!important;
+ background:#1959bf!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+ border:1px solid #1959bf!important;font-size:11px!important;font-weight:800!important;opacity:1!important
+}
+.equipment-site .photographer-panel button[type=submit]:disabled{cursor:wait!important;opacity:.75!important}
+.equipment-site #equipmentHeaderMessage{font-size:11px!important;line-height:1.65!important;color:#455876!important;margin:6px 0 0!important;min-height:0!important}
+.equipment-site .photographer-panel .photographer-close{color:#34445d!important;font-size:20px!important}
+@media(max-width:760px){
+ .equipment-site .photographer-dropdown .photographer-panel{
+  position:fixed!important;inset:auto 12px auto 12px!important;top:70px!important;
+  width:auto!important;max-width:280px!important;margin-inline:auto!important
+ }
+}
+
+/* The equipment office page uses the main form, rather than a link opening the header. */
+body.equipment-site[data-equipment-page='/rental-equipment']{background:#fff!important}
+.equipment-site[data-equipment-page='/rental-equipment']>.site-header{background:#fff!important;box-shadow:0 9px 28px #4c8ce519!important}
+.equipment-site[data-equipment-page='/rental-equipment']>.equipment-page-scroll{
+ background:linear-gradient(180deg,#edf5ff 0px,#f7fbff 145px,#fff 360px)!important
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .site-main{background:transparent!important}
+.equipment-site[data-equipment-page='/rental-equipment'] .article-layout{
+ display:block!important;max-width:100%!important;width:100%!important;margin:0 auto!important
+}
+.equipment-site[data-equipment-page='/rental-equipment'] .article-body{
+ width:100%!important;max-width:100%!important;margin:0 auto!important
+}
+.equipment-site .equipment-office-login-card{
+ box-sizing:border-box;width:min(100%,395px);margin:22px auto 62px!important;
+ padding:23px 25px 17px;background:#fff;border:1px solid #e1e9f5;
+ box-shadow:0 12px 32px #2d6bd316;border-radius:15px;
+ direction:rtl;text-align:right
+}
+.equipment-site .equipment-office-login-card h2{
+ font-size:18px!important;font-weight:850!important;line-height:1.5!important;
+ color:#193254!important;margin:0 0 7px!important;text-align:center
+}
+.equipment-site .equipment-office-login-card>p:not(.equipment-office-login-message){
+ font-size:12px!important;line-height:1.9!important;color:#61728a!important;
+ margin:0 0 16px!important;text-align:center
+}
+.equipment-site .equipment-office-login-form{display:grid;gap:12px;width:100%}
+.equipment-site .equipment-office-login-form label{display:grid;gap:6px;font-size:12px;font-weight:750;color:#253851}
+.equipment-site .equipment-office-login-form input{
+ box-sizing:border-box;width:100%;min-height:43px;padding:9px 12px;
+ border:1px solid #cbd8e8;border-radius:9px;background:white;color:#18304f;font:inherit;font-size:13px
+}
+.equipment-site .equipment-office-login-form input[name=mobile]{direction:ltr;text-align:left}
+.equipment-site .equipment-office-login-form input:focus{outline:2px solid #91b9f6;outline-offset:1px}
+.equipment-site .equipment-office-login-form button[type=submit],
+.equipment-site .equipment-office-login-form button[type=submit]:hover,
+.equipment-site .equipment-office-login-form button[type=submit]:focus-visible{
+ width:100%;min-height:43px;display:block;border-radius:9px;
+ background:#1959bf!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+ border:1px solid #1959bf!important;opacity:1!important;
+ font-size:13px;font-weight:850;cursor:pointer
+}
+.equipment-site .equipment-office-login-form button[type=submit]:disabled{opacity:.75!important;cursor:wait}
+.equipment-site .equipment-office-login-message{
+ min-height:18px;margin:10px 0 0!important;font-size:11px;
+ color:#385b88;line-height:1.8;text-align:center
+}
+@media(max-width:760px){
+ .equipment-site .equipment-office-login-card{width:min(100%,360px);padding:20px 17px 14px;margin:18px auto 38px!important}
+ .equipment-site .equipment-office-login-card h2{font-size:16px!important}
+}

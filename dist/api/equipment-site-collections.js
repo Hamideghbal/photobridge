@@ -1,0 +1,14 @@
+// Equipment-only editable collections. No HTML, scripts or external links are stored.
+const fail=code=>{throw Object.assign(new Error(code),{status:400});};
+export const servicePath=value=>typeof value==='string'&&/^\/(?:products|equipment|rental-equipment|guides(?:\/(?:camera|lenses|rental))?|order-guide|faq|about|contact)(?:#[a-zA-Z0-9_-]+)?$/.test(value);
+export const siteImage=value=>typeof value==='string'&&( /^\/equipment-site\/(?:studio-camera\.webp|equipment-kit\.webp|logo\.svg)$/.test(value)||value.length<=600000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(value));
+export function readCollections(c,saved={},shop={}){
+ const defaults=[['print','print','/products'],['paper','paper','/guides'],['pro','gallery',shop.rental_enabled?'/rental-equipment':'/order-guide']].map(([prefix,image,href],i)=>({id:'service-'+(i+1),title:c[prefix+'Title'],text:c[prefix+'Text'],button:c[prefix+'Button'],href,images:[c.images[image]]}));
+ c.serviceCards=Array.isArray(saved.serviceCards)?saved.serviceCards.slice(0,12).filter(x=>x&&typeof x.id==='string'&&/^[\w-]{1,64}$/.test(x.id)).map(x=>({id:x.id,title:String(x.title||'').slice(0,150),text:String(x.text||'').slice(0,1500),button:String(x.button||'').slice(0,80),href:servicePath(x.href)?x.href:'/products',images:Array.isArray(x.images)?x.images.filter(siteImage).slice(0,5):[]})):defaults;
+ c.faqs=Array.isArray(saved.faqs)?saved.faqs.slice(0,30).filter(x=>x&&typeof x.id==='string'&&/^[\w-]{1,64}$/.test(x.id)).map(x=>({id:x.id,question:String(x.question||'').slice(0,250),answer:String(x.answer||'').slice(0,2000)})):[1,2,3].map(i=>({id:'faq-'+i,question:c['faq'+i+'Q'],answer:c['faq'+i+'A']}));return c;
+}
+export function validateCollections(input){
+ let imageBytes=0;const result={};
+ for(const key of ['serviceCards','faqs']){if(input[key]===undefined)continue;const rows=input[key],max=key==='serviceCards'?12:30;if(!Array.isArray(rows)||rows.length>max)fail('invalid_site_collection');const ids=new Set();result[key]=rows.map(row=>{if(!row||typeof row!=='object'||typeof row.id!=='string'||!/^\w[\w-]{0,63}$/.test(row.id)||ids.has(row.id))fail('invalid_site_collection');ids.add(row.id);const out={id:row.id},fields=key==='serviceCards'?{title:150,text:1500,button:80}:{question:250,answer:2000};for(const [field,maxLength]of Object.entries(fields)){if(typeof row[field]!=='string'||row[field].length>maxLength)fail('invalid_site_text');out[field]=row[field].trim();}if(key==='serviceCards'){if(!servicePath(row.href)||!Array.isArray(row.images)||row.images.length>5||row.images.some(v=>!siteImage(v)))fail('invalid_site_collection');out.href=row.href;out.images=[...row.images];for(const src of out.images)if(src.startsWith('data:'))imageBytes+=src.length;}return out;});}
+ if(imageBytes>2400000)fail('site_images_too_large');return result;
+}

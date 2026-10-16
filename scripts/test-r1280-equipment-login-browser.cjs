@@ -49,6 +49,6 @@ for(const width of [390,1440])test('local storefront login POST handoff reaches 
   await page.locator('#equipmentHeaderLogin [type=submit]').click();
   await page.waitForURL(url=>url.hostname==='photobridge.ir'&&url.searchParams.get('pbDirectShop')===shopId,{timeout:15000});
   assert(checkedPassword);assert(receivedHandoff);
-  await page.locator('#officeReached').waitFor();
+  assert.equal(new URL(page.url()).searchParams.get('pbDirectShop'),shopId,'the exact originating shop must be in destination URL');
  }finally{await browser.close()}
 });

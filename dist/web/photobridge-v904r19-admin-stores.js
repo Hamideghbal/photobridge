@@ -49,7 +49,7 @@ if(!Number.isFinite(discount)||discount<0||discount>100)return alert('درصد �
 delete b.subscriptionDiscountPercent;
 const before={name:s.name,managerName:s.manager_name,managerMobile:s.manager_mobile,phone:s.phone,province:s.province,city:s.city,address:s.address,description:s.description,depositPolicy:s.deposit_policy};
 const mobileValue=normalizeStoreMobile(b.managerMobile),oldMobile=normalizeStoreMobile(before.managerMobile);
-if(mobileValue!==''&&!/^09\d{9}$/.test(mobileValue))return alert('موبایل مدیر باید ۱۱ رقم و با ۰۹ شروع شود.');
+if(String(b.managerMobile||'').trim()&&!/^09\d{9}$/.test(mobileValue))return alert('موبایل مدیر باید ۱۱ رقم و با ۰۹ شروع شود.');
 const mobileChanged=mobileValue!==oldMobile;
 delete b.managerMobile;
 const changed=Object.fromEntries(Object.entries(b).filter(([k,v])=>String(v||'').trim()!==String(before[k]||'').trim()));

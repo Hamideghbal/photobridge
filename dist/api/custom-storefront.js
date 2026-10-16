@@ -1,3 +1,4 @@
+import {publicSiteReviews,manageSiteReviews} from './store-site-reviews.js';
 import {handleEquipmentSite} from './equipment-site.js';
 import {handleEquipmentSiteManagement} from './equipment-site-management.js';
 import {handleLabDomain} from './lab-storefront.js';
@@ -82,6 +83,7 @@ export async function handleStorefrontManagement(req,res,url,a,d){
   if(req.method==='DELETE'){await d.pool.query('UPDATE equipment_store_domains SET active=false,updated_at=now() WHERE hostname=$1',[hostname]);await d.audit(a.userId,domain.lab_id||undefined,'storefront.domain_disable',domain.lab_id?'lab':'equipment_rental_shop',domain.lab_id||domain.shop_id,{hostname});return reply(200,{ok:true});}
   if(req.method==='POST'&&domainRoute[2]==='verify'){const result=await activateStoreDomain(d,domain);await d.audit(a.userId,domain.lab_id||undefined,'storefront.domain_verify',domain.lab_id?'lab':'equipment_rental_shop',domain.lab_id||domain.shop_id,{hostname,...result});return reply(200,result);}
  }
+ if(manager&&await manageSiteReviews(req,res,url,a,shop,d))return true;
  if(manager&&url.pathname==='/api/rental/storefront/bank'){
  if(req.method==='GET')return reply(200,{bank:frameBankDetails(shop)});
  if(req.method==='PUT'){const bank=normalizeFrameBank(await d.bodyJson(req,10000));await d.pool.query('UPDATE equipment_rental_shops SET payment_card_number=$2,payment_iban=$3,payment_account_holder=$4,updated_at=now() WHERE id=$1',[shop.id,bank.cardNumber||null,bank.iban||null,bank.accountHolder||null]);await d.audit(a.userId,undefined,'storefront.bank_settings','equipment_rental_shop',shop.id,{hasCard:Boolean(bank.cardNumber),hasIban:Boolean(bank.iban)});return reply(200,{ok:true});}
@@ -119,6 +121,7 @@ export async function handleCustomStorefront(req,res,url,d){
  if(domain.lab_id)return handleLabDomain(req,res,url,domain,d);
  const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND (COALESCE(sale_enabled,false)=true OR COALESCE(rental_enabled,false)=true) AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
+ if(await publicSiteReviews(req,res,url,shop,host,d))return true;
  if(!isProductionShop(shop)&&await handleEquipmentSite(req,res,url,domain,shop,d))return true;
  const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
  if(req.method==='GET'&&Object.hasOwn(assets,url.pathname)){const [file,contentType]=assets[url.pathname],body=fs.readFileSync(path.join(d.webRoot,file));res.writeHead(200,{'content-type':contentType,'content-security-policy':"default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"});res.end(body);return true;}

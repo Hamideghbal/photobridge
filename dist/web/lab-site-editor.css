@@ -3,3 +3,5 @@
 .editor-header{position:sticky;top:0;z-index:50}
 
 .position-controls{display:flex;flex-wrap:wrap;gap:5px;margin-block:8px}.position-controls button{flex:1;min-width:70px}#layoutPanel input[type=checkbox]{width:auto}
+
+#reviewAdminList article{border:1px solid #dce3ef;border-radius:8px;padding:10px;margin-block:8px}#reviewAdminList p{white-space:pre-wrap;overflow-wrap:anywhere}#reviewAdminList small{display:block;margin-bottom:6px}#reviewAdminList button{font-size:11px;padding:5px;margin:3px}

@@ -68,6 +68,11 @@ jobs:
         run: |
           node --check dist/api/storeDesktopSync.js
           node --test scripts/test-r1093-desktop-inventory-filter.cjs
+      - name: Verify offline frame-sale synchronization and invoice safety
+        run: |
+          node --check apps/store-desktop/offline-frame-orders.cjs
+          node --check apps/store-desktop/frame-orders-ui.js
+          node --test scripts/test-r1263-offline-frame-sale-sync.cjs
       - name: Verify customer stock modes and incoming order shortages
         run: |
           node --check dist/api/server.js

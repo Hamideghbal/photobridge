@@ -1,3 +1,4 @@
+import {issueEquipmentStoreHandoff} from './equipment-office-handoff.js';
 import {publicSiteReviews,manageSiteReviews} from './store-site-reviews.js';
 import {handleEquipmentSite} from './equipment-site.js';
 import {handleEquipmentSiteManagement} from './equipment-site-management.js';
@@ -126,6 +127,20 @@ export async function handleCustomStorefront(req,res,url,d){
  const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
  if(req.method==='GET'&&Object.hasOwn(assets,url.pathname)){const [file,contentType]=assets[url.pathname],body=fs.readFileSync(path.join(d.webRoot,file));res.writeHead(200,{'content-type':contentType,'content-security-policy':"default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"});res.end(body);return true;}
  if(req.method==='GET'&&url.pathname==='/api/storefront/catalog')return reply(200,await catalog(d.pool,shop,d.publicItem,d.publicOrigin));
+ // This is a same-origin, CSRF-protected exchange AFTER the normal customer login.
+ // Never trust a caller-supplied shop ID, mobile number, or target URL.
+ if(url.pathname==='/api/storefront/office-handoff'&&req.method==='POST'){
+  if(!shop.rental_enabled||isProductionShop(shop))return reply(404,{error:'not_found'});
+  if(req.headers.origin!=='https://'+host)return reply(403,{error:'invalid_origin'});
+  if(!d.rateAllowed(req,host))return reply(429,{error:'try_again_later'});
+  req.headers['x-photobridge-portal']='photographer';
+  const actor=await d.auth(req);
+  if(!actor||actor.labRole!=='customer')return reply(401,{error:'photographer_auth_required'});
+  const ticket=await issueEquipmentStoreHandoff(d.pool,{userId:actor.userId,shopId:shop.id,host});
+  if(!ticket)return reply(503,{error:'handoff_failed'});
+  return reply(200,{ticket,origin:'https://'+host,destination:d.publicOrigin+'/api/auth/equipment-site-handoff'});
+ }
+
  // Only these existing photographer API actions may run on equipment-shop hosts.
  // Leave authentication, membership, dates, stock and pricing to their original
  // PhotoBridge handlers; never grant access to /api/admin, /api/rental or labs.

@@ -14,7 +14,7 @@ if(embedded){
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchEmbeddedDock,{once:true});else watchEmbeddedDock();
  return;
 }
-if(location.pathname==='/equipment-rental/book'&&window===window.top){
+if(location.pathname==='/equipment-rental/book'&&window===window.top&&new URLSearchParams(location.search).get('pbOfficeLogin')!=='1'){
  const q=new URLSearchParams({pbStorePanel:'store',pbStoreQuery:location.search});location.replace('/photographer/gallery?'+q);return;
 }
 if(!route)return;

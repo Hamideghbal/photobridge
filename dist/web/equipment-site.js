@@ -1,11 +1,48 @@
-(()=>{'use strict';
-const header=document.querySelector('.site-header');if(header){const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',header.getBoundingClientRect().height+'px');new ResizeObserver(measure).observe(header);measure();}const dropdown=document.querySelector('.photographer-dropdown');if(!dropdown)return;dropdown.querySelector('.login-panel-close')?.addEventListener('click',()=>{dropdown.open=false;dropdown.querySelector('summary').focus({preventScroll:true});});
-const form=document.querySelector('#equipmentHeaderLogin'),session=document.querySelector('#equipmentHeaderSession'),message=document.querySelector('#equipmentHeaderMessage');
-async function request(path,body){const response=await fetch(path,{credentials:'same-origin',...(body?{method:'POST',body:JSON.stringify(body)}:{}),headers:{'content-type':'application/json','x-photobridge-portal':'photographer'}});const data=await response.json();if(!response.ok)throw Error(({credentials_invalid:'شماره موبایل یا رمز عبور صحیح نیست.',invalid_credentials:'شماره موبایل یا رمز عبور صحیح نیست.'})[data?.error]||'عملیات انجام نشد؛ دوباره تلاش کنید.');return data;}
-function show(user){const signed=user?.labRole==='customer';form.hidden=signed;session.hidden=!signed;session.querySelector('b').textContent=signed?(user.photographerName||user.name||'عکاس'):'';}
-async function restore(){try{const data=await request('/api/auth/me');show(data?.user);}catch{show(null);}}
-form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('button');button.disabled=true;message.textContent='در حال ورود…';try{await request('/api/auth/customer-login',Object.fromEntries(new FormData(form)));form.elements.password.value='';await restore();message.textContent=session.hidden?'ورود با حساب عکاسی تأیید نشد.':'ورود انجام شد.';window.dispatchEvent(new Event('equipment-photographer-session'));}catch(error){message.textContent=error.message;}finally{button.disabled=false;}});
-document.querySelector('#equipmentHeaderLogout').addEventListener('click',async event=>{event.currentTarget.disabled=true;try{await request('/api/auth/logout',{});show(null);message.textContent='از حساب خارج شدید.';window.dispatchEvent(new Event('equipment-photographer-session'));}catch(error){message.textContent=error.message;}finally{event.currentTarget.disabled=false;}});
-dropdown.addEventListener('toggle',()=>{if(dropdown.open&&!form.hidden)form.elements.mobile.focus({preventScroll:true});});
-document.addEventListener('click',event=>{if(!dropdown.contains(event.target))dropdown.open=false;});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&dropdown.open){dropdown.open=false;dropdown.querySelector('summary').focus({preventScroll:true});}});void restore();
+/* Equipment storefront r1281 – two native local photographer forms; one safe handoff. */
+(()=>{
+'use strict';
+const header=document.querySelector('.equipment-site > .site-header');
+if(header){
+ const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',Math.round(header.getBoundingClientRect().height)+'px');
+ if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(header);measure();
+}
+const dialog=document.querySelector('.photographer-dropdown');
+const forms=[...document.querySelectorAll('#equipmentHeaderLogin,#equipmentOfficePageLogin')];
+if(!forms.length)return;
+dialog?.querySelector('.photographer-close')?.addEventListener('click',()=>{dialog.open=false;});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&dialog?.open)dialog.open=false;});
+async function json(path,body){
+ const r=await fetch(path,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json','x-photobridge-portal':'photographer'},body:JSON.stringify(body)});
+ let data={};try{data=await r.json()}catch{}
+ if(!r.ok)throw new Error(r.status===401?'شماره موبایل یا رمز عبور اشتباه است.':r.status===403?'دسترسی به آفیش این فروشگاه برای حساب شما فعال نیست.':r.status===429?'تعداد تلاش‌های ورود زیاد است. کمی بعد دوباره امتحان کنید.':'ورود یا انتقال انجام نشد. دوباره تلاش کنید.');
+ return data;
+}
+let busy=false;
+for(const form of forms)form.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const button=form.querySelector('button[type=submit]');
+ const message=document.getElementById(form.id==='equipmentHeaderLogin'?'equipmentHeaderMessage':'equipmentOfficePageMessage');
+ if(busy)return;
+ busy=true;for(const f of forms)f.querySelector('button[type=submit]').disabled=true;
+ message.textContent='در حال بررسی اطلاعات…';
+ const mobile=String(form.elements.mobile.value||'').trim(),password=String(form.elements.password.value||'');
+ try{
+  await json('/api/auth/customer-login',{mobile,password});
+  form.elements.password.value='';
+  message.textContent='ورود تأیید شد؛ در حال انتقال به آفیش همین فروشگاه…';
+  const {ticket,origin,destination}=await json('/api/storefront/office-handoff',{});
+  if(!/^[A-Za-z0-9_-]{43}$/.test(String(ticket||''))||origin!==location.origin||destination!=='https://photobridge.ir/api/auth/equipment-site-handoff')throw Error('انتقال امن انجام نشد.');
+  const handoff=document.createElement('form');
+  handoff.method='POST';handoff.action=destination;handoff.style.display='none';
+  for(const [name,value] of Object.entries({ticket,origin})){
+   const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;handoff.appendChild(input);
+  }
+  document.body.appendChild(handoff);
+  handoff.submit();
+ }catch(e){message.textContent=e.message||'ورود انجام نشد.';}
+ finally{
+  form.elements.password.value='';
+  busy=false;for(const f of forms)f.querySelector('button[type=submit]').disabled=false;
+ }
+});
 })();

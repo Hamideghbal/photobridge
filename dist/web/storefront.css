@@ -48,3 +48,13 @@ main{width:100%;margin:0 auto;padding:24px 24px 40px}.storeIntro{display:flex;ga
 .storeIntro .rentalTopLink{color:#244fb4;background:#fff}
 @media(max-width:900px){.rentalItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:639px){.rentalSection{padding:12px;margin:12px 0 25px}.rentalSectionHead{padding:13px}.rentalSectionHead h2{font-size:calc(16px * var(--site-scale,1))}.rentalFields,.rentalDates{grid-template-columns:1fr}.rentalItems,.rentalBookings{grid-template-columns:1fr}.rentalProductImage{height:185px}.rentalActionRow>.btn{flex:1}.storeIntro .rentalTopLink{display:inline-flex;font-size:calc(10px * var(--site-scale,1));white-space:nowrap;align-items:center;margin-inline-start:auto}.storeIntro:has(.rentalTopLink:not([hidden])){flex-wrap:wrap}}
+
+
+/* Equipment sale prices: discounted amount first, old amount crossed out below. */
+.equipmentPriceStack{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;direction:rtl;line-height:1.4;white-space:nowrap}
+.equipmentPriceStack .equipmentPriceCurrent{display:block;color:#047857;font-weight:900;font-size:inherit;line-height:1.5}
+.equipmentPriceStack .equipmentPriceOld{display:block;color:#8a96a8;font-size:.78em;font-weight:500;line-height:1.5;text-decoration:line-through;text-decoration-thickness:1.5px}
+.equipmentPriceRegular{display:inline-block}
+.equipment-site .equipment-product .saleItemPrice:has(.equipmentPriceStack){display:flex;align-items:center;min-height:51px}
+.equipment-site .equipment-product .saleItemPrice .equipmentPriceStack{font-size:calc(16px * var(--site-scale,1))}
+.equipment-site .equipment-product .saleItemPrice .equipmentPriceOld{font-size:calc(11px * var(--site-scale,1))}

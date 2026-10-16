@@ -5,7 +5,7 @@
  const query=new URLSearchParams(location.search);
  if(query.get('pbDesktopContent')==='1'){document.documentElement.classList.add('pb1126Embedded');if(query.get('pbUtilityWindow')==='1'){document.documentElement.classList.add('pb1126Desktop',location.pathname.includes('/wallet')?'pb1242UtilityWallet':'pb1242UtilitySettings');}if(query.get('pbDesktopFrameStore')==='1')document.documentElement.classList.add('pb1126FrameStoreHost');return;}
  if(!/^\/photographer(?:\/|$)/.test(location.pathname)||/^\/photographer\/(login|signup|register|invite)(?:\/|$)/.test(location.pathname)){
-  if(location.pathname==='/equipment-rental/book')location.replace('/photographer/gallery?pbDesktopPanel=store&pbDesktopStoreQuery='+encodeURIComponent(location.search));
+  if(location.pathname==='/equipment-rental/book'&&new URLSearchParams(location.search).get('pbOfficeLogin')!=='1')location.replace('/photographer/gallery?pbDesktopPanel=store&pbDesktopStoreQuery='+encodeURIComponent(location.search));
   return;
  }
  document.documentElement.classList.add('pb1126Desktop');

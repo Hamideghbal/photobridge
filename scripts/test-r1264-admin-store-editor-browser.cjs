@@ -29,14 +29,13 @@ test('admin store list scrolls to the last row and mobile-only edit leaves other
   });
   await page.goto('http://photobridge.local/admin?pbtab=stores');
   await page.addScriptTag({path:pageScript});
-  await page.locator('#pb904r19StoresTable tbody tr').last().waitFor().catch(()=>{});
   await page.waitForFunction(()=>document.querySelectorAll('.pb904r19StoresTable tbody tr').length===24);
   const panel=page.locator('#pb904r19AdminStoresPanel');
   const geometry=await panel.evaluate(x=>({height:x.clientHeight,scrollHeight:x.scrollHeight,overflowY:getComputedStyle(x).overflowY}));
   assert.equal(geometry.overflowY,'auto');
   assert(geometry.scrollHeight>geometry.height,'admin store panel should be independently scrollable');
-  await page.locator('.pb904r19StoresTable tbody tr').last().scrollIntoViewIfNeeded();
   const lastButton=page.locator('.pb904r19StoresTable tbody tr').last().locator('[data-edit]');
+  await lastButton.scrollIntoViewIfNeeded();
   const rect=await lastButton.boundingBox();
   assert(rect&&rect.y>=0&&rect.y+rect.height<=580,'last store actions must be fully visible: '+JSON.stringify(rect));
   await page.locator('.pb904r19StoresTable tbody tr').first().locator('[data-edit]').click();

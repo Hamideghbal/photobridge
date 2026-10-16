@@ -46,5 +46,5 @@ export async function readEquipmentHandoffPost(req){
  let size=0;const chunks=[];
  for await(const c of req){size+=c.length;if(size>512)return null;chunks.push(c);}
  const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
- return params.size===1?params.get('ticket'):null;
+ return params.size===2?{ticket:params.get('ticket'),origin:params.get('origin')}:null;
 }

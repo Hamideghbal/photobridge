@@ -524,6 +524,7 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 <script src="/photobridge-r1106-mobile-store-panel.js?v=r1135"></script>
 <link rel="stylesheet" href="/photobridge-r1242-payments.css?v=r1242">
 <script defer src="/photobridge-r1242-frame-payments.js?v=r1249&layout=r1252"></script>
+<link rel="stylesheet" href="/photobridge-r1279-equipment-office-login.css?v=r1279"><script defer src="/photobridge-r1279-equipment-office-login.js?v=r1279"></script>
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">
@@ -573,7 +574,7 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
   <button type="button" data-store-panel="financePanel">مالی</button>
 </nav>
 <main class="shell">
-<section id="authNeeded" class="box loginNeeded" style="display:none"><h2>برای رزرو وارد حساب عکاس شو</h2><p style="color:#667085;font-size:11px;line-height:1.9">رزرو تجهیزات به حساب عکاسی PhotoBridge متصل می‌شود تا آفیش‌ها، فاکتورها و حساب مالی هر فروشگاه در دسترس باشد.</p><a href="/photographer">ورود عکاس</a></section>
+<section id="authNeeded" class="box loginNeeded" style="display:none"><h2>ورود عکاس به آفیش تجهیزات</h2><p style="color:#667085;font-size:11px;line-height:1.9">برای مشاهده تجهیزات و درخواست آفیش، یک‌بار با حساب عکاسی فوتوبریج وارد شوید.</p><form id="equipmentOfficeLogin" hidden><label>شماره موبایل<input name="mobile" type="tel" inputmode="tel" dir="ltr" autocomplete="username" maxlength="20" required></label><label>رمز عبور<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">ورود و مشاهده آفیش تجهیزات</button><p id="equipmentOfficeLoginMessage" role="status" aria-live="polite"></p></form><a id="equipmentOfficeLoginFallback" href="/photographer">ورود از صفحه اصلی عکاسان</a></section>
 <!-- v849: storefront is live for all authenticated photographer accounts. -->
 <section id="app" style="display:block">
 <div id="mobilePanelTitleBar" class="mobilePanelTitleBar" aria-live="polite"><span>فروشگاه</span></div>

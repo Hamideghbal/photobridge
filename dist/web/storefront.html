@@ -32,10 +32,29 @@
   <main>
     <section class="storeIntro" aria-labelledby="title">
       <div class="introMark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><rect x="10" y="8" width="44" height="48" rx="5" stroke="currentColor" stroke-width="2"/><rect x="17" y="15" width="30" height="34" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="m18 43 9-11 7 7 5-5 8 9M26 24h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div><span class="eyebrow">خرید مستقیم از فروشگاه</span><h1 id="title">در حال دریافت فروشگاه…</h1><p id="about"></p></div>
-      <a class="browseLink" href="#catalog" id="salesTopLink">مشاهده محصولات <span aria-hidden="true">←</span></a>
-      <a class="browseLink rentalTopLink" id="rentalTopLink" href="#rentalSection" hidden>ورود عکاس و ثبت آفیش ←</a>
+      <div><span class="eyebrow" data-site-field="tagline">خرید مستقیم از فروشگاه</span><h1 id="title" data-site-field="heroTitle">در حال دریافت فروشگاه…</h1><p id="about" data-site-field="heroText"></p></div>
+      <a class="browseLink" href="#catalog" id="salesTopLink"><span data-site-field="heroButton">مشاهده محصولات</span> <span aria-hidden="true">←</span></a>
+      <a class="browseLink rentalTopLink" id="rentalTopLink" href="#rentalSection" hidden><span data-site-field="secondaryButton">ورود عکاس و ثبت آفیش</span> ←</a><div class="storeHeroVisual equipmentSiteOnly"><img data-site-image="hero" src="/equipment-demo/canon-r6ii.png" alt="تصویر نمایشی دوربین عکاسی"><small>تصویر نمایشی؛ موجودی واقعی در لیست تجهیزات</small></div>
     </section>
+    <div id="siteSections" class="equipmentSiteOnly" aria-label="آشنایی با خدمات فروشگاه">
+      <section data-site-section="features" class="storeEditorialSection" aria-labelledby="featuresHeading">
+        <div class="editorialHead"><span class="eyebrow">انتخاب آگاهانه</span><h2 id="featuresHeading" data-site-field="featuresTitle">همه‌چیز برای یک انتخاب آگاهانه</h2><p data-site-field="featuresText">پیش از خرید یا رزرو، مشخصات و گزینه‌های فعال فروشگاه را بررسی کنید.</p></div>
+        <div class="storeFeatureGrid">
+          <article class="storeFeatureCard"><img data-site-image="feature" loading="lazy" alt="نمونهٔ نمایشی دوربین عکاسی" src="/equipment-demo/sony-a7iv.png"><h3 data-site-field="feature1Title">دوربین و لنز</h3><p data-site-field="feature1Text">مدل‌ها و گزینه‌های فعال فروشگاه را ببینید.</p></article>
+          <article class="storeFeatureCard"><span class="storeFeatureIcon" aria-hidden="true">◈</span><h3 data-site-field="feature2Title">نور و تجهیزات جانبی</h3><p data-site-field="feature2Text">ابزار موردنیاز پروژه را انتخاب کنید.</p></article>
+          <article class="storeFeatureCard"><span class="storeFeatureIcon" aria-hidden="true">↗</span><h3 data-site-field="feature3Title">خرید و رزرو در یک مسیر</h3><p data-site-field="feature3Text">خرید عمومی و آفیش عکاسان مستقل هستند.</p></article>
+        </div>
+      </section>
+      <section data-site-section="steps" class="storeEditorialSection" aria-labelledby="stepsHeading"><div class="editorialHead"><span class="eyebrow">راهنمای کوتاه</span><h2 id="stepsHeading" data-site-field="stepsTitle">از انتخاب تا ثبت درخواست</h2></div><div class="storeStepsGrid">
+        <article><b>۰۱</b><h3 data-site-field="step1Title">تجهیزات را انتخاب کنید</h3><p data-site-field="step1Text">فهرست و مشخصات را ببینید.</p></article>
+        <article><b>۰۲</b><h3 data-site-field="step2Title">قیمت و شرایط را ببینید</h3><p data-site-field="step2Text">شرایط خرید و آفیش را بررسی کنید.</p></article>
+        <article><b>۰۳</b><h3 data-site-field="step3Title">درخواست را ثبت کنید</h3><p data-site-field="step3Text">سفارش یا آفیش را از مسیر مربوطه ثبت کنید.</p></article>
+      </div></section>
+      <section data-site-section="gallery" class="storeEditorialSection storeGallery" aria-labelledby="galleryHeading">
+        <div><span class="eyebrow">تجهیزات عکاسی و فیلم‌برداری</span><h2 id="galleryHeading" data-site-field="galleryTitle">نگاهی به تجهیزات</h2><p data-site-field="galleryText">تصویر نمایشی از تجهیزات عکاسی؛ مدل‌ها و موجودی واقعی را در فهرست محصولات بررسی کنید.</p><small data-site-field="galleryCaption">تصاویر نمایشی هستند و لزوماً موجودی فروشگاه را نشان نمی‌دهند.</small></div><img data-site-image="gallery" loading="lazy" src="/equipment-demo/dji-rs3pro.png" alt="تصویر نمایشی تجهیزات فیلم‌برداری">
+      </section>
+      <section data-site-section="faq" class="storeEditorialSection storeFaq" aria-labelledby="faqHeading"><div class="editorialHead"><h2 id="faqHeading" data-site-field="faqTitle">سؤالات رایج</h2></div><details><summary data-site-field="faq1Q">برای خرید باید عضو فوتوبریج باشم؟</summary><p data-site-field="faq1A">برای خرید عمومی نیازی به عضویت ندارید.</p></details><details><summary data-site-field="faq2Q">برای آفیش چه حسابی لازم است؟</summary><p data-site-field="faq2A">با حساب عکاسی و همکاری تأییدشده امکان‌پذیر است.</p></details></section>
+    </div>
     <div id="previewNotice" class="notice" hidden>پیش‌نمایش سایت اختصاصی — ثبت سفارش در این حالت غیرفعال است.</div>
     <section id="catalog" class="catalogSection" aria-labelledby="catalogTitle">
       <div class="catalogToolbar">
@@ -71,9 +90,9 @@
       </form>
     </section>
     <section id="tracking" aria-label="پیگیری سفارش"></section>
-    <section id="storeAbout" class="aboutStore" aria-labelledby="aboutTitle"><div><span class="eyebrow">آشنایی بیشتر</span><h2 id="aboutTitle">درباره فروشگاه</h2><p id="storeDescription"></p><div id="contactDetails" class="contactDetails"></div></div><div class="shoppingSteps"><h3>مراحل خرید از فروشگاه</h3><ol><li><span>۱</span><div><b>انتخاب محصول</b><small>مدل و مشخصات دلخواه را انتخاب کنید.</small></div></li><li><span>۲</span><div><b>ثبت سفارش و پرداخت</b><small>مشخصات را ثبت و رسید واریز را ارسال کنید.</small></div></li><li><span>۳</span><div><b>پیگیری تا تحویل</b><small>وضعیت سفارش را با لینک اختصاصی دنبال کنید.</small></div></li></ol></div></section>
+    <section id="storeAbout" class="aboutStore" aria-labelledby="aboutTitle"><div><span class="eyebrow">آشنایی بیشتر</span><h2 id="aboutTitle" data-site-field="aboutTitle">درباره فروشگاه</h2><p id="storeDescription" data-site-field="aboutText"></p><div id="contactDetails" class="contactDetails"></div></div><div class="shoppingSteps"><h3>مراحل خرید از فروشگاه</h3><ol><li><span>۱</span><div><b>انتخاب محصول</b><small>مدل و مشخصات دلخواه را انتخاب کنید.</small></div></li><li><span>۲</span><div><b>ثبت سفارش و پرداخت</b><small>مشخصات را ثبت و رسید واریز را ارسال کنید.</small></div></li><li><span>۳</span><div><b>پیگیری تا تحویل</b><small>وضعیت سفارش را با لینک اختصاصی دنبال کنید.</small></div></li></ol></div></section>
   </main>
-  <footer class="storeFooter"><strong id="footerStoreName"></strong><span id="footer"></span></footer>
+  <footer class="storeFooter"><strong id="footerStoreName"></strong><span id="footer" data-site-field="footerText"></span></footer>
   <div id="cartOverlay" class="overlay" hidden>
     <section class="cart" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
       <div class="cartHead"><div><small class="eyebrow">خرید مستقیم از فروشگاه</small><h2 id="cartTitle">سبد خرید شما</h2></div><button id="closeCart" class="close" type="button" aria-label="بستن سبد خرید">×</button></div>

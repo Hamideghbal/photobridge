@@ -12,7 +12,7 @@ if(!src.includes(marker)){
   '        // Manager contact edits must never touch activation, subscription or memberships.',
   "        if(Object.keys(b).length===1&&Object.prototype.hasOwnProperty.call(b,'managerMobile')){",
   "            const mobile=normalizeMobile(String(b.managerMobile||''));",
-  "            if(mobile&&!/^09\\d{9}$/.test(mobile))return sendJson(res,400,{error:'manager_mobile_invalid',message:'شماره موبایل مدیر باید با ۰۹ آغاز شود و ۱۱ رقم باشد.'});",
+  "            if(String(b.managerMobile||'').trim()&&!/^09\\d{9}$/.test(mobile))return sendJson(res,400,{error:'manager_mobile_invalid',message:'شماره موبایل مدیر باید با ۰۹ آغاز شود و ۱۱ رقم باشد.'});",
   '            try{',
   "                const updated=await pool.query('UPDATE equipment_rental_shops SET manager_mobile=$2,updated_at=now() WHERE id=$1 AND deleted_at IS NULL RETURNING manager_mobile',[current.id,mobile||null]);",
   "                if(!updated.rowCount)return sendJson(res,404,{error:'rental_shop_not_found'});",

@@ -1,3 +1,5 @@
+import {handleLabSiteManagement,getLabSiteState} from './lab-site-management.js';
+import {renderLabPage} from './lab-site-content.js';
 import {handleCustomStorefront,handleStorefrontManagement} from './custom-storefront.js';
 import {channelItem,channelPrice} from './storefront-pricing.js';
 import { shopSmsTestRecipient, productionOrderSms } from './store-order-sms.js';
@@ -19485,6 +19487,7 @@ ${inviteUrl}`;
             return sendJson(res, 403, { error: 'lab_suspended', message: String(labAccess.rows[0].suspension_reason || 'این لابراتوار توسط ادمین PhotoBridge تعلیق شده است.') });
         if (!labAccess.rows[0].active && url.pathname.startsWith('/api/lab/invitations'))
             return sendJson(res, 409, { error: 'lab_not_activated', message: 'برای ارسال یا مدیریت دعوت‌نامه، لابراتوار باید ابتدا توسط ادمین PhotoBridge فعال شود.' });
+        if(await handleLabSiteManagement(req,res,url,a,storefrontDependencies()))return;
         const requestDeviceId = String(req.headers['x-photobridge-device-id'] || '').trim();
         // PB1138 primary-only local intake: use the same device binding as normal downloads.
         const requireLocalIntakePrimary = async (db = pool) => {
@@ -26043,6 +26046,14 @@ async function bootstrap() {
         if(await handleCustomStorefront(req,res,url,storefrontDependencies()))return;
         if (url.pathname.startsWith('/api/'))
             return await api(req, res, url);
+        if(req.method==='GET'&&['/lab/site-editor','/lab/site-preview'].includes(url.pathname)){
+            const actor=await auth(req);if(actor?.labRole!=='lab_admin'||!actor.labId)return sendJson(res,403,{error:'forbidden'});
+            const allowed=(await pool.query('SELECT suspended FROM labs WHERE id=$1',[actor.labId])).rows[0];if(!allowed||allowed.suspended&&actor.platformRole!=='platform_admin'&&!actor.labAdminOwnerBypass)return sendJson(res,403,{error:'forbidden'});
+            if(url.pathname==='/lab/site-editor'){const html=fs.readFileSync(path.join(DIST_ROOT,'web','lab-site-editor.html'));res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow','content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'self'"});res.end(html);return;}
+            const state=await getLabSiteState(pool,actor.labId),nonce=crypto.randomBytes(16).toString('base64'),page=renderLabPage(state.lab,state.config,new URL(PUBLIC_APP_URL).origin,{preview:true,nonce,hostname:new URL(PUBLIC_APP_URL).hostname});
+            res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow','content-security-policy':"default-src 'self'; script-src 'self' 'nonce-"+nonce+"'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; base-uri 'none'; frame-ancestors 'self'"});res.end(page.html);return;
+        }
+
         // v857: the photographer store is live. Never allow the legacy SPA Coming Soon route to render.
         if(req.method==='GET'&&['/rental/storefront','/admin/storefront'].includes(url.pathname)){
             const actor=await auth(req);if(url.pathname.startsWith('/admin/')?!requireRole(actor,'platform_admin'):!await equipmentRentalCurrentShop(actor))return sendJson(res,403,{error:'forbidden'});

@@ -5,6 +5,7 @@
  'use strict';
  const params=new URLSearchParams(location.search);
  if(location.pathname!=='/equipment-rental/book'||params.get('pbOfficeLogin')!=='1')return;
+ if(location.hostname!=='photobridge.ir'||location.protocol!=='https:'){location.replace('https://photobridge.ir/equipment-rental/book?panel=rental&pbOfficeLogin=1');return;}
  const form=document.getElementById('equipmentOfficeLogin');
  const container=document.getElementById('authNeeded');
  const app=document.getElementById('app');

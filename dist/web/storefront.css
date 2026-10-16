@@ -48,3 +48,52 @@ main{width:100%;margin:0 auto;padding:24px 24px 40px}.storeIntro{display:flex;ga
 .storeIntro .rentalTopLink{color:#244fb4;background:#fff}
 @media(max-width:900px){.rentalItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:639px){.rentalSection{padding:12px;margin:12px 0 25px}.rentalSectionHead{padding:13px}.rentalSectionHead h2{font-size:16px}.rentalFields,.rentalDates{grid-template-columns:1fr}.rentalItems,.rentalBookings{grid-template-columns:1fr}.rentalProductImage{height:185px}.rentalActionRow>.btn{flex:1}.storeIntro .rentalTopLink{display:inline-flex;font-size:10px;white-space:nowrap;align-items:center;margin-inline-start:auto}.storeIntro:has(.rentalTopLink:not([hidden])){flex-wrap:wrap}}
+
+
+/* Equipment-store editorial homepage (frame/chassis storefront is intentionally unchanged). */
+.equipmentSiteOnly{display:none!important}
+body.equipmentSite{--blue:var(--primary,#315efb);--ink:var(--site-ink,#18283e);background:var(--page-bg,#f7f9fd);color:var(--ink);font-family:var(--site-font,Vazirmatn),Tahoma,sans-serif;font-size:var(--site-size,15px)}
+body.equipmentSite .equipmentSiteOnly{display:block!important}
+body.equipmentSite .storeIntro{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.94fr);grid-template-rows:auto auto auto;gap:12px 42px;align-items:center;padding:46px clamp(22px,5vw,72px);border:1px solid #dae4ed;border-radius:22px;background:linear-gradient(140deg,#fff,#f2f6ff 70%,#e9f2ff);min-height:425px}
+body.equipmentSite .introMark{display:none}
+body.equipmentSite .storeIntro>div:nth-child(2){grid-column:1;grid-row:1;align-self:end}
+body.equipmentSite .storeIntro .eyebrow{font-size:12px;font-weight:800;color:var(--blue);margin-bottom:14px}
+body.equipmentSite .storeIntro h1{font-size:clamp(27px,3.15vw,46px);line-height:1.55;font-weight:900;letter-spacing:-.04em;white-space:pre-line;margin:0 0 16px}
+body.equipmentSite .storeIntro p{display:block;-webkit-line-clamp:unset;overflow:visible;font-size:clamp(13px,1.15vw,16px);line-height:2;max-width:560px}
+body.equipmentSite .storeIntro .browseLink{grid-column:1;grid-row:2;justify-self:start;margin:10px 0 0;background:var(--blue);border-color:var(--blue);color:#fff;min-height:47px;padding:10px 19px;font-size:13px}
+body.equipmentSite .storeIntro .rentalTopLink:not([hidden]){grid-row:3;background:white;color:var(--blue)}
+body.equipmentSite .storeIntro .storeHeroVisual{grid-column:2;grid-row:1 / span 3;position:relative;min-height:300px;border-radius:18px;background:radial-gradient(circle at 40% 40%,#fff 0%,#dbe8fc 72%);box-shadow:inset 0 0 0 1px #cfdbed;display:flex!important;align-items:center;justify-content:center;overflow:hidden}
+body.equipmentSite .storeHeroVisual img{width:80%;max-width:430px;height:300px;object-fit:contain;filter:drop-shadow(0 18px 22px #2438582c)}
+body.equipmentSite .storeHeroVisual small{position:absolute;bottom:11px;inset-inline:12px;font-size:10px;text-align:center;color:#3b4c64;background:#ffffffc9;border-radius:7px;padding:3px}
+body.equipmentSite #siteSections{max-width:1320px;margin:0 auto}
+body.equipmentSite .storeEditorialSection{margin:44px 0;padding:12px 6px;scroll-margin-top:110px}
+body.equipmentSite .editorialHead{max-width:710px;margin-bottom:22px}
+body.equipmentSite .editorialHead h2,body.equipmentSite .storeGallery h2{font-size:clamp(20px,2vw,29px);line-height:1.65;margin:0 0 10px}
+body.equipmentSite .editorialHead p,body.equipmentSite .storeGallery p{font-size:13px;line-height:2;color:#58677b}
+body.equipmentSite .storeFeatureGrid,body.equipmentSite .storeStepsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+body.equipmentSite .storeFeatureCard,body.equipmentSite .storeStepsGrid article{background:#fff;border:1px solid #e3e8f1;border-radius:17px;padding:22px;min-height:176px}
+body.equipmentSite .storeFeatureCard h3,body.equipmentSite .storeStepsGrid h3{font-size:16px;margin:8px 0}
+body.equipmentSite .storeFeatureCard p,body.equipmentSite .storeStepsGrid p{font-size:12px;line-height:2;color:#65748a;margin-bottom:0}
+body.equipmentSite .storeFeatureCard img{height:126px;max-width:180px;object-fit:contain;margin:auto}
+body.equipmentSite .storeFeatureIcon{width:64px;height:64px;display:grid;place-items:center;border-radius:15px;background:#e9efff;color:var(--blue);font-size:33px}
+body.equipmentSite .storeStepsGrid article b{color:var(--blue);font-size:22px}
+body.equipmentSite .storeGallery{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:32px 44px;background:#fff;border:1px solid #e2e8f1;border-radius:21px}
+body.equipmentSite .storeGallery>img{width:100%;height:290px;object-fit:contain;background:radial-gradient(circle,#f5f8ff,#e4ecfa);border-radius:15px}
+body.equipmentSite .storeGallery small{color:#7b8797;font-size:11px}
+body.equipmentSite .storeFaq{max-width:850px}
+body.equipmentSite .storeFaq details{border-bottom:1px solid #dce5ef;padding:14px 2px}
+body.equipmentSite .storeFaq summary{font-size:14px;cursor:pointer;font-weight:800}
+body.equipmentSite .storeFaq details p{font-size:13px;margin-top:10px;color:#57667a}
+body.equipmentSite .aboutStore{padding-top:44px}
+@media(max-width:800px){
+ body.equipmentSite .storeIntro{grid-template-columns:1fr;grid-template-rows:auto;gap:16px;padding:23px;min-height:0}
+ body.equipmentSite .storeIntro>div:nth-child(2),body.equipmentSite .storeIntro .browseLink,body.equipmentSite .storeIntro .rentalTopLink:not([hidden]),body.equipmentSite .storeIntro .storeHeroVisual{grid-column:1;grid-row:auto}
+ body.equipmentSite .storeIntro .storeHeroVisual{min-height:205px}
+ body.equipmentSite .storeHeroVisual img{height:205px}
+ body.equipmentSite .storeIntro .browseLink{margin:0}
+ body.equipmentSite .storeIntro h1{font-size:29px}
+ body.equipmentSite .storeFeatureGrid,body.equipmentSite .storeStepsGrid{grid-template-columns:1fr}
+ body.equipmentSite .storeGallery{grid-template-columns:1fr;padding:24px;gap:20px}
+ body.equipmentSite .storeGallery>img{height:200px}
+ body.equipmentSite .storeEditorialSection{margin:28px 0}
+}

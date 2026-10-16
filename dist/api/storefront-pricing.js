@@ -1,0 +1,9 @@
+const fail=code=>{throw Object.assign(new Error(code),{status:400});};
+function amount(value){const raw=String(value??'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[٬,\s]/g,'');const n=Number(raw);if(!raw||!Number.isSafeInteger(n)||n<0||n>1e12)fail('invalid_channel_price');return n;}
+export function normalizeChannelPricing(input,previous={},basePrice=0){
+ if(input===undefined)return previous;
+ if(!input||typeof input!=='object'||Array.isArray(input))fail('invalid_sales_channels');
+ const out={};for(const channel of ['photobridge','website']){const p=input[channel]??previous[channel]??{};if(typeof p!=='object'||Array.isArray(p))fail('invalid_sales_channels');if(p.enabled!==undefined&&typeof p.enabled!=='boolean')fail('invalid_sales_channels');const discountPercent=Number(p.discountPercent??0);if(!Number.isFinite(discountPercent)||discountPercent<0||discountPercent>100)fail('invalid_channel_discount');out[channel]={enabled:p.enabled??channel==='photobridge',price:amount(p.price??basePrice),discountPercent};if(out[channel].enabled&&out[channel].price<=0)fail('invalid_channel_price');}return out;
+}
+export function channelPrice(item,channel){if(!item)return null;const rule=item.variant_specs?.salesChannels?.[channel];if(rule?.enabled===false||channel==='website'&&rule?.enabled!==true)return null;const gross=Number(rule?.price??item.sale_price),discountPercent=Number(rule?.discountPercent??0);if(!Number.isSafeInteger(gross)||gross<0||!Number.isFinite(discountPercent)||discountPercent<0||discountPercent>100)return null;return {gross,discountPercent,price:Math.round(gross*(100-discountPercent)/100)};}
+export function channelItem(item,channel){const p=channelPrice(item,channel);if(!p)return null;const {salesChannels,...specs}=item.variant_specs||{};return {...item,variant_specs:specs,sale_price:p.price,channel_gross_price:p.gross,channel_discount_percent:p.discountPercent};}

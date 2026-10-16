@@ -1,3 +1,4 @@
+import {normalizeChannelPricing} from './storefront-pricing.js';
 import crypto from 'node:crypto';
 import {isProductionShop} from './frame-production.js';
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
@@ -65,7 +66,7 @@ export async function saveFrameModel(db,{shop,body,modelId=null,frameVariant,gal
  const colorGallery=colorImages.has(input.color)?colorImages.get(input.color):(priorColor?.variant_specs?.colorGalleryImages||[]);
  const firstColor=colors?.[0];const oldDefault=existing.find(row=>row.variant_specs?.color===firstColor&&Array.isArray(row.variant_specs?.colorGalleryImages));const defaultGallery=sizeOnly?(colorImages.has(firstColor)?colorImages.get(firstColor):(oldDefault?.variant_specs?.colorGalleryImages||[])):[];
  const gallery=colorGallery.length?colorGallery:defaultGallery.length?defaultGallery:pricingGallery;
- variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision,...(colors?{modelColors:colors,colorIndependent:true,...(sizeOnly?{sizeOnly:true,productType,defaultColorGalleryImages:defaultGallery}:{}),colorGalleryImages:colorGallery,pricingGalleryImages:pricingGallery}:{})}}});
+ variants.push({id:current?.id||crypto.randomUUID(),current,price,active:input.active!==false,gallery,variant:{...v,specs:{...v.specs,baseId:id,modelRevision,salesChannels:normalizeChannelPricing(input.salesChannels,current?.variant_specs?.salesChannels,price),...(colors?{modelColors:colors,colorIndependent:true,...(sizeOnly?{sizeOnly:true,productType,defaultColorGalleryImages:defaultGallery}:{}),colorGalleryImages:colorGallery,pricingGalleryImages:pricingGallery}:{})}}});
  }
  // Omitted combinations become unavailable; keep rows referenced by historical orders.
  for(const item of existing)if(!ids.has(item.id))await db.query("UPDATE equipment_sale_items SET active=false,variant_specs=jsonb_set(variant_specs,'{archived}','true'::jsonb),updated_at=now() WHERE id=$1 AND shop_id=$2",[item.id,shop.id]);

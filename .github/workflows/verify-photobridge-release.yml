@@ -46,7 +46,11 @@ jobs:
           node --check dist/web/storefront.js
       - name: Run production build
         run: npm run build
-      - name: Verify photographer mobile chooser and header layout\n        run: |\n          node --check dist/web/photobridge-r1282-photographer-mobile-navigation.js\n          node --test scripts/test-r1282-photographer-mobile-chooser.cjs\n      - name: Verify cross-device automatic commitment print receiver
+      - name: Verify photographer mobile chooser and header layout
+        run: |
+          node --check dist/web/photobridge-r1282-photographer-mobile-navigation.js
+          node --test scripts/test-r1282-photographer-mobile-chooser.cjs
+      - name: Verify cross-device automatic commitment print receiver
         run: |
           node --check dist/web/photobridge-r1087-commitment-autoprint.js
           node --test scripts/test-r1087-commitment-autoprint.cjs

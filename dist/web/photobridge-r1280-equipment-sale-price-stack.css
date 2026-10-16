@@ -1,0 +1,7 @@
+/* PhotoBridge photographer / equipment Store: current sale price on top, old price below. */
+.saleItemCard .saleItemPrice:has(.equipmentPriceStack){display:flex!important;align-items:center!important;justify-content:flex-start!important;min-height:54px!important;padding-block:5px!important;white-space:normal!important}
+.saleItemCard .equipmentPriceStack{display:inline-flex!important;flex-direction:column!important;align-items:flex-start!important;gap:3px!important;direction:rtl;white-space:nowrap;line-height:1.4}
+.saleItemCard .equipmentPriceCurrent{display:block!important;font-weight:900!important;color:#047857!important;font-size:clamp(13px,1.15vw,17px)!important;line-height:1.5!important}
+.saleItemCard .equipmentPriceOld{display:block!important;color:#8896a9!important;font-size:11px!important;font-weight:500!important;text-decoration:line-through!important;text-decoration-thickness:1.5px!important;line-height:1.5!important}
+.saleItemCard .equipmentPriceRegular{display:inline-block}
+@media(max-width:820px){.saleItemCard .saleItemPrice:has(.equipmentPriceStack){min-height:48px!important}.saleItemCard .equipmentPriceCurrent{font-size:14px!important}}

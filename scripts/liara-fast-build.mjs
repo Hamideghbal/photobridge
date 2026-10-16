@@ -150,3 +150,5 @@ await import('./enable-r1208-frame-palette.mjs');
 await import('./generate-r1222-brand-icons.mjs');
 await import('./enable-r1250-store-order-sms.mjs');
 await import('./enable-r1252-frame-customer-layout.mjs');
+
+await import('./enable-r1267-lab-site.mjs');

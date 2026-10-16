@@ -12,7 +12,7 @@ test('equipment handoff does not reject privacy-restricted top-level POST Origin
   const req=Readable.from([Buffer.from(new URLSearchParams({ticket:token,origin:url}).toString())]);
   req.headers={'content-type':'application/x-www-form-urlencoded','origin':originHeader};
   const data=await readEquipmentHandoffPost(req);
-  assert.deepEqual(data,{ticket,origin:url});
+  assert.deepEqual(data,{ticket:token,origin:url});
  }
  const server=readFileSync('dist/api/server.js','utf8');
  const start=server.indexOf("url.pathname==='/api/auth/equipment-site-handoff'");

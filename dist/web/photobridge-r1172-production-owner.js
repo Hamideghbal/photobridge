@@ -57,6 +57,8 @@ document.addEventListener('change',e=>{if(e.target.matches('[data-frame-option="
 document.addEventListener('keydown',e=>{const input=e.target.closest('[data-frame-new]');if(input&&e.key==='Enter'){e.preventDefault();if(!document.querySelector('[data-frame-save="'+input.dataset.frameNew+'"]').disabled)void addFrameOption(input.dataset.frameNew);}});
 const compactStyle=document.createElement('style');compactStyle.textContent=`
 /* Frame/chassis stores do not use equipment-rental settings. */
+html body.frameProductionShop #photographerList [onclick^="editPhotographerCollateral("],
+html body.frameProductionShop #photographerList .pb861PhotographerAccount>small{display:none!important}
 html body.frameProductionShop #settings #pbR100F9StaffSettings,
 html body.frameProductionShop #settings #shopForm label:has([name="depositPolicy"]),
 html body.frameProductionShop #settings #pbR1095Mode{display:none!important}

@@ -30,6 +30,13 @@ jobs:
           node --test scripts/test-r1257-domain-proof.cjs
           node --check dist/web/photobridge-v904r19-admin-stores.js
           node --check dist/web/photobridge-r100f90-entity-discount-activation.js
+      - name: Verify equipment custom-site footer, header and office navigation
+        run: |
+          node --check dist/api/equipment-site-content.js
+          node --check dist/api/equipment-site-management.js
+          node --check dist/web/equipment-site.js
+          node --check dist/web/lab-site-editor.js
+          node --test scripts/test-r1278-equipment-site.mjs
       - name: Run production build
         run: npm run build
       - name: Verify cross-device automatic commitment print receiver

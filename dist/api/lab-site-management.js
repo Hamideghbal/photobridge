@@ -1,6 +1,6 @@
 import {defaultLabSite,mergeLabSite,SITE_FIELDS,SITE_IMAGES,SITE_SECTIONS} from './lab-site-content.js';
 const fail=(error,status=400)=>{throw Object.assign(new Error(error),{status});};
-export async function normalizeLabSite(input,sharp){
+export async function normalizeLabSite(input,sharp,allowedImages=SITE_IMAGES){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('invalid_site_config');
  const out={};
  for(const [key,max]of Object.entries(SITE_FIELDS)){if(input[key]===undefined)continue;if(typeof input[key]!=='string'||input[key].length>max)fail('invalid_site_text');out[key]=input[key].trim();}
@@ -10,8 +10,8 @@ export async function normalizeLabSite(input,sharp){
  if(input.font!==undefined){if(!['Vazirmatn','Tahoma','Arial'].includes(input.font))fail('invalid_site_font');out.font=input.font;}
  if(input.fontSize!==undefined){if(!Number.isInteger(input.fontSize)||input.fontSize<14||input.fontSize>20)fail('invalid_site_font_size');out.fontSize=input.fontSize;}
  for(const key of ['sections','hidden'])if(input[key]!==undefined){const list=input[key];if(!Array.isArray(list)||list.some(x=>!SITE_SECTIONS.includes(x))||new Set(list).size!==list.length)fail('invalid_site_sections');if(key==='sections'&&list.length!==SITE_SECTIONS.length)fail('invalid_site_sections');out[key]=[...list];}
- if(input.images!==undefined){if(!input.images||typeof input.images!=='object'||Array.isArray(input.images))fail('invalid_site_image');out.images={};for(const key of Object.keys(SITE_IMAGES)){
-  const value=input.images[key];if(value===undefined)continue;if(Object.values(SITE_IMAGES).includes(value)){out.images[key]=value;continue;}
+ if(input.images!==undefined){if(!input.images||typeof input.images!=='object'||Array.isArray(input.images))fail('invalid_site_image');out.images={};for(const key of Object.keys(allowedImages)){
+  const value=input.images[key];if(value===undefined)continue;if(Object.values(allowedImages).includes(value)){out.images[key]=value;continue;}
   if(typeof value!=='string'||value.length>600000||!/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+={0,2}$/.test(value))fail('invalid_site_image');
   const bytes=Buffer.from(value.split(',')[1],'base64');if(bytes.length>430000)fail('site_image_too_large');
   let result;try{result=await sharp(bytes,{limitInputPixels:20000000,animated:false}).rotate().resize({width:1400,height:1400,fit:'inside',withoutEnlargement:true}).webp({quality:80}).toBuffer();}catch{fail('invalid_site_image');}

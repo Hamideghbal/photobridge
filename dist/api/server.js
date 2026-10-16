@@ -1,3 +1,5 @@
+import {renderEquipmentPage} from './equipment-site-content.js';
+import {getEquipmentSiteState} from './equipment-site-management.js';
 import {handleLabSiteManagement,getLabSiteState} from './lab-site-management.js';
 import {renderLabPage} from './lab-site-content.js';
 import {handleCustomStorefront,handleStorefrontManagement} from './custom-storefront.js';
@@ -26046,6 +26048,11 @@ async function bootstrap() {
         if(await handleCustomStorefront(req,res,url,storefrontDependencies()))return;
         if (url.pathname.startsWith('/api/'))
             return await api(req, res, url);
+        if(req.method==='GET'&&['/rental/site-editor','/rental/site-preview'].includes(url.pathname)){
+            const actor=await auth(req),shop=await equipmentRentalCurrentShop(actor);if(!shop||isProductionShop(shop))return sendJson(res,403,{error:'forbidden'});
+            if(url.pathname==='/rental/site-editor'){const html=fs.readFileSync(path.join(DIST_ROOT,'web','lab-site-editor.html'),'utf8').replace('<body>','<body data-site-kind="equipment">').replaceAll('لابراتوار','فروشگاه').replaceAll('/lab/settings','/rental/settings').replaceAll('/lab/site-preview','/rental/site-preview');res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow','content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; frame-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'self'"});res.end(html);return;}
+            const state=await getEquipmentSiteState(pool,shop),nonce=crypto.randomBytes(16).toString('base64'),page=renderEquipmentPage(shop,state.config,new URL(PUBLIC_APP_URL).origin,{preview:true,nonce,hostname:new URL(PUBLIC_APP_URL).hostname});res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow','content-security-policy':"default-src 'self'; script-src 'self' 'nonce-"+nonce+"'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; base-uri 'none'; frame-ancestors 'self'"});res.end(page.html);return;
+        }
         if(req.method==='GET'&&['/lab/site-editor','/lab/site-preview'].includes(url.pathname)){
             const actor=await auth(req);if(actor?.labRole!=='lab_admin'||!actor.labId)return sendJson(res,403,{error:'forbidden'});
             const allowed=(await pool.query('SELECT suspended FROM labs WHERE id=$1',[actor.labId])).rows[0];if(!allowed||allowed.suspended&&actor.platformRole!=='platform_admin'&&!actor.labAdminOwnerBypass)return sendJson(res,403,{error:'forbidden'});

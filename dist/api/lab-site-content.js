@@ -35,14 +35,14 @@ export function defaultLabSite(lab){return {
  navServices:'خدمات چاپ',navPrices:'تعرفه‌ها',navGuides:'راهنمای چاپ',navAbout:'دربارهٔ ما',navPhotographers:'ورود عکاسان',metaTitle:'',metaDescription:'',
  primary:'#315efb',background:'#f8f7f3',ink:'#192838',font:'Vazirmatn',fontSize:15,sections:[...SITE_SECTIONS],hidden:[],images:{...SITE_IMAGES}
 };}
-export function mergeLabSite(lab,saved={}){const defaults=defaultLabSite(lab),out={...defaults,images:{...defaults.images}};
+export function mergeLabSite(lab,saved={},defaults=defaultLabSite(lab)){const out={...defaults,images:{...defaults.images}};
  for(const [key,max] of Object.entries(SITE_FIELDS))if(typeof saved[key]==='string')out[key]=saved[key].slice(0,max);
  for(const key of ['primary','background','ink'])if(/^#[0-9a-f]{6}$/i.test(saved[key]||''))out[key]=saved[key];
  if(['Vazirmatn','Tahoma','Arial'].includes(saved.font))out.font=saved.font;
  if(Number.isInteger(saved.fontSize)&&saved.fontSize>=14&&saved.fontSize<=20)out.fontSize=saved.fontSize;
  if(Array.isArray(saved.sections)&&saved.sections.length===SITE_SECTIONS.length&&new Set(saved.sections).size===SITE_SECTIONS.length&&saved.sections.every(k=>SITE_SECTIONS.includes(k)))out.sections=[...saved.sections];
  if(Array.isArray(saved.hidden))out.hidden=[...new Set(saved.hidden.filter(k=>SITE_SECTIONS.includes(k)))];
- for(const k of Object.keys(SITE_IMAGES)){const v=saved.images?.[k];if(Object.values(SITE_IMAGES).includes(v)||typeof v==='string'&&v.length<600000&&/^data:image\/webp;base64,[a-zA-Z0-9+/]+={0,2}$/.test(v))out.images[k]=v;}
+ for(const k of Object.keys(defaults.images)){const v=saved.images?.[k];if(Object.values(defaults.images).includes(v)||typeof v==='string'&&v.length<600000&&/^data:image\/webp;base64,[a-zA-Z0-9+/]+={0,2}$/.test(v))out.images[k]=v;}
  return out;}
 
 export const cityPagePath=lab=>!lab.city?null:lab.city.trim()==='کرج'?'/photo-printing/karaj':'/photo-printing/city/'+encodeURIComponent(lab.city.trim());

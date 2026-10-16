@@ -1,3 +1,5 @@
+import {handleEquipmentSite} from './equipment-site.js';
+import {handleEquipmentSiteManagement} from './equipment-site-management.js';
 import {handleLabDomain} from './lab-storefront.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -63,6 +65,7 @@ function storefrontItemImages(item,origin){
 }
 async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled===true&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
 export async function handleStorefrontManagement(req,res,url,a,d){
+ if(await handleEquipmentSiteManagement(req,res,url,a,d))return true;
  const admin=url.pathname.startsWith('/api/admin/storefront/'),manager=url.pathname.startsWith('/api/rental/storefront/');if(!admin&&!manager)return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
  try{
@@ -115,6 +118,7 @@ export async function handleCustomStorefront(req,res,url,d){
  if(domain.lab_id)return handleLabDomain(req,res,url,domain,d);
  const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND (COALESCE(sale_enabled,false)=true OR COALESCE(rental_enabled,false)=true) AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
+ if(!isProductionShop(shop)&&await handleEquipmentSite(req,res,url,domain,shop,d))return true;
  const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
  if(req.method==='GET'&&Object.hasOwn(assets,url.pathname)){const [file,contentType]=assets[url.pathname],body=fs.readFileSync(path.join(d.webRoot,file));res.writeHead(200,{'content-type':contentType,'content-security-policy':"default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"});res.end(body);return true;}
  if(req.method==='GET'&&url.pathname==='/api/storefront/catalog')return reply(200,await catalog(d.pool,shop,d.publicItem,d.publicOrigin));

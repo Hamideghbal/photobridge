@@ -8,10 +8,10 @@ function normalizeEquipmentSocialLinks(input){
  return input.map((link,index)=>{
   if(!link||typeof link!=='object'||Array.isArray(link)||typeof link.label!=='string'||typeof link.url!=='string'||typeof link.enabled!=='boolean')throw Object.assign(new Error('invalid_site_social_links'),{status:400});
   const label=link.label.trim(),url=link.url.trim();
-  if(!label||label.length>45||url.length>1500||!/^https?:\/\//i.test(url))throw Object.assign(new Error('invalid_site_social_links'),{status:400});
-  let parsed;try{parsed=new URL(url);}catch{}
-  if(!parsed||!['http:','https:'].includes(parsed.protocol)||parsed.username||parsed.password)throw Object.assign(new Error('invalid_site_social_links'),{status:400});
-  return {id:String(link.id||index).slice(0,70),label,url:parsed.href,enabled:link.enabled};
+  if(!label||label.length>45||url.length>1500||(url&&!/^https?:\/\//i.test(url))||(link.enabled&&!url))throw Object.assign(new Error('invalid_site_social_links'),{status:400});
+  let parsed;try{if(url)parsed=new URL(url);}catch{}
+  if(url&&(!parsed||!['http:','https:'].includes(parsed.protocol)||parsed.username||parsed.password))throw Object.assign(new Error('invalid_site_social_links'),{status:400});
+  return {id:String(link.id||index).slice(0,70),label,url:parsed?.href||'',enabled:link.enabled};
  });
 }
 export async function getEquipmentSiteState(pool,shop){const row=(await pool.query('SELECT config,revision FROM equipment_public_site_content WHERE shop_id=$1',[shop.id])).rows[0];const publicShop=Object.fromEntries(['id','name','description','phone','address','province','city','business_category','sale_enabled','rental_enabled'].map(k=>[k,shop[k]]));return {shop:publicShop,config:mergeEquipmentSite(shop,row?.config||{}),revision:row?.revision||0,defaultImages:EQUIPMENT_IMAGES};}

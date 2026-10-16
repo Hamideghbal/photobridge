@@ -807,6 +807,7 @@ function openStoreSection(id){
 }
 async function boot(){
   const params=new URLSearchParams(location.search),requestedPanel=String(params.get('panel')||''),walletPayment=String(params.get('walletPayment')||'');
+  const linkedShopId=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(String(params.get('shopId')||''))?String(params.get('shopId')):'';
   requestedStorePanelR96=requestedPanel||'store';pendingWalletPaymentR96=walletPayment;if(walletPayment&&!requestedPanel)requestedStorePanelR96='sales';shopId='';setDefaultDates();
   // R100F14: paint the chooser on frame zero. If a recent list exists, show it immediately while fresh data is requested in parallel.
   try{const cached=JSON.parse(sessionStorage.getItem(STORE_CHOOSER_CACHE_KEY)||'null');if(cached&&Array.isArray(cached.shops)){storeDiscoveryScopedV904=Boolean(cached.scoped);shops=[...new Map(cached.shops.filter(x=>x&&x.id).map(x=>[String(x.id),x])).values()].sort((a,b)=>Number(Boolean(b.is_primary))-Number(Boolean(a.is_primary)));renderShops();renderStoreChooserR96()}}catch{}
@@ -816,6 +817,19 @@ async function boot(){
     storeDiscoveryScopedV904=Boolean(d.scoped);shops=[...new Map((d.shops||[]).filter(x=>x&&x.id).map(x=>[String(x.id),x])).values()].sort((a,b)=>Number(Boolean(b.is_primary))-Number(Boolean(a.is_primary)));
     try{sessionStorage.setItem(STORE_CHOOSER_CACHE_KEY,JSON.stringify({scoped:storeDiscoveryScopedV904,shops,at:Date.now()}))}catch{}
     renderShops();renderStoreChooserR96();
+    // A branded equipment-store login must land in THAT store's آفیش tab,
+    // never on the photographer's last-used store or a generic shop list.
+    if(linkedShopId){
+      const linked=shops.find(x=>String(x.id)===linkedShopId);
+      if(linked?.connected&&linked.rental_enabled!==false){
+        requestedStorePanelR96='rental';
+        await selectShop(linked.id);
+      }else if(linked){
+        const ordered=[linked,...shops.filter(x=>String(x.id)!==linkedShopId)];
+        shops=ordered;renderShops();renderStoreChooserR96();
+        msg('برای ثبت آفیش این فروشگاه، ابتدا درخواست همکاری را ارسال کنید یا دعوت‌نامهٔ آن را بپذیرید.');
+      }else msg('این فروشگاه در فهرست فروشگاه‌های مجاز حساب شما نیست. از فروشگاه درخواست دعوت‌نامه کنید.');
+    }
     if(walletPayment){params.delete('walletPayment');const qs=params.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:''))}
   }catch(e){
     $('#app').style.display='none';document.body.classList.remove('pbR96ChoosingStore');

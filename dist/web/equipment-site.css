@@ -75,3 +75,16 @@ body.equipment-site{height:100dvh;min-height:0;overflow:hidden;display:flex;flex
 .equipment-site .equipment-office-cta>p{font-size:calc(14px * var(--site-scale,1));line-height:2;color:var(--muted);margin:0}
 .equipment-site .equipment-office-cta .primary{width:fit-content}
 @media(max-width:760px){.equipment-site .equipment-office-entry{font-size:11px;padding:7px 10px}}
+
+/* r1280 – preserve the photographer dropdown login on the custom site. */
+.equipment-site .photographer-dropdown{position:relative;flex:none}
+.equipment-site .photographer-dropdown summary.equipment-office-entry{list-style:none;user-select:none;cursor:pointer}
+.equipment-site .photographer-dropdown summary.equipment-office-entry::-webkit-details-marker{display:none}
+.equipment-site .photographer-dropdown .photographer-panel{z-index:160;left:0;right:auto;width:min(310px,calc(100vw - 24px));padding:18px;text-align:right}
+.equipment-site .photographer-panel .photographer-close{position:absolute;top:8px;left:8px;border:0;background:transparent;font-size:22px;color:#667085;cursor:pointer}
+.equipment-site .photographer-panel label{display:grid;gap:6px;color:var(--ink);font-size:12px}
+.equipment-site .photographer-panel input{width:100%;min-height:42px;padding:9px 12px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;color:#15263d;font:inherit}
+.equipment-site .photographer-panel input[name=mobile]{direction:ltr;text-align:left}
+.equipment-site .photographer-panel button[type=submit]{min-height:42px}
+.equipment-site #equipmentHeaderMessage{font-size:12px;line-height:1.8;min-height:20px;color:#475467}
+@media(max-width:760px){.equipment-site .photographer-dropdown .photographer-panel{position:fixed;top:70px;left:12px;right:12px;width:auto;max-width:none}.equipment-site .photographer-dropdown{z-index:165}}

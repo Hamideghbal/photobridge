@@ -5,7 +5,7 @@ let pbStoreRemembered=false;try{pbStoreRemembered=sessionStorage.getItem(PB_ADMI
 const S={active:pbStoreRemembered,loading:false,loaded:false,opening:false,shops:[],summary:{},query:''};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fa=v=>Number(v||0).toLocaleString('fa-IR');
-const normalizeStoreMobile=value=>{let s=String(value||'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\\D/g,'');if(s.startsWith('0098'))s='0'+s.slice(4);else if(s.startsWith('98')&&s.length===12)s='0'+s.slice(2);else if(/^9\\d{9}$/.test(s))s='0'+s;return s};
+const normalizeStoreMobile=value=>{let s=String(value||'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g,'');if(s.startsWith('0098'))s='0'+s.slice(4);else if(s.startsWith('98')&&s.length===12)s='0'+s.slice(2);else if(/^9\d{9}$/.test(s))s='0'+s;return s};
 const money=v=>`${fa(Math.round(Number(v||0)))} تومان`;
 const dt=v=>{if(!v)return'—';try{return new Date(v).toLocaleString('fa-IR',{dateStyle:'short',timeStyle:'short'})}catch{return'—'}};
 async function api(url,opts={}){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...opts,headers:{'content-type':'application/json',...(opts.headers||{})}});let out={};try{out=await r.json()}catch{}if(!r.ok){const e=new Error(out.error||`HTTP ${r.status}`);e.data=out;e.status=r.status;throw e}return out}
@@ -49,7 +49,7 @@ if(!Number.isFinite(discount)||discount<0||discount>100)return alert('درصد �
 delete b.subscriptionDiscountPercent;
 const before={name:s.name,managerName:s.manager_name,managerMobile:s.manager_mobile,phone:s.phone,province:s.province,city:s.city,address:s.address,description:s.description,depositPolicy:s.deposit_policy};
 const mobileValue=normalizeStoreMobile(b.managerMobile),oldMobile=normalizeStoreMobile(before.managerMobile);
-if(mobileValue!==''&&!/^09\\d{9}$/.test(mobileValue))return alert('موبایل مدیر باید ۱۱ رقم و با ۰۹ شروع شود.');
+if(mobileValue!==''&&!/^09\d{9}$/.test(mobileValue))return alert('موبایل مدیر باید ۱۱ رقم و با ۰۹ شروع شود.');
 const mobileChanged=mobileValue!==oldMobile;
 delete b.managerMobile;
 const changed=Object.fromEntries(Object.entries(b).filter(([k,v])=>String(v||'').trim()!==String(before[k]||'').trim()));

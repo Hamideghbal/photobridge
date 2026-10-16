@@ -1,4 +1,4 @@
-import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost} from './equipment-office-handoff.js';
+import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
 import {handleLabSiteManagement,getLabSiteState} from './lab-site-management.js';
@@ -11922,9 +11922,15 @@ async function api(req, res, url) {
     // expiring, one-use, shop-scoped grant for a first-party HTTP-only session.
     if(req.method==='POST'&&url.pathname==='/api/auth/equipment-site-handoff'){
         const form=await readEquipmentHandoffPost(req);
-        // A top-level cross-site form POST sends the *shop's* Origin, not PhotoBridge's.
-        // Match it to the claimed source, which must also match the one-use grant.
-        if(req.headers.origin&&req.headers.origin!==form?.origin)return sendJson(res,403,{error:'invalid_origin'});
+        // Referrer-Policy: no-referrer on the equipment site can cause browsers to
+        // send Origin: null on a cross-site top-level POST. This is not the origin
+        // that issued the handoff, and rejecting it breaks otherwise valid logins.
+        // The consumed, unguessable one-use grant is already bound to the exact
+        // verified store hostname in the database. Enforce matching Origin when
+        // the browser supplies a concrete origin; never trust the form alone.
+        const browserOrigin=String(req.headers.origin||'');
+        if(!equipmentHandoffOriginAllowed(browserOrigin,form?.origin))
+            return sendJson(res,403,{error:'invalid_origin'});
         const grant=form&&await consumeEquipmentStoreHandoff(pool,form);
         if(!grant){res.writeHead(303,{location:'/photographer?login_error=office_handoff','cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;}
         await createSession(grant.userId,res,'photographer');

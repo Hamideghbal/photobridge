@@ -54,6 +54,9 @@ body.equipment-site{height:100dvh;min-height:0;overflow:hidden;display:flex;flex
 @media(max-width:1230px){
  .equipment-site .desktop-nav{display:none!important}
  .equipment-site .mobile-menu{display:block;flex-shrink:0}
+ .equipment-site .mobile-menu>summary{cursor:pointer;list-style:none;font-size:22px;line-height:1.5;padding:2px 4px}
+ .equipment-site .mobile-menu>summary::-webkit-details-marker{display:none}
+ .equipment-site .mobile-menu-links{position:absolute;top:100%;inset-inline:0;background:var(--page-bg);border-bottom:1px solid var(--line);display:grid;gap:10px;padding:16px 22px;box-shadow:0 14px 24px #142c3e18;z-index:30;font-size:13px}
  .equipment-site .header-inner{justify-content:space-between}
  .equipment-site .mobile-menu-links{max-height:min(70dvh,530px);overflow:auto}
 }

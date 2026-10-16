@@ -24,7 +24,7 @@ for(const width of [390,1440])test('branded equipment storefront uses photograph
   assert(await page.locator('#catalog').isVisible(),'public retail remains visible when enabled');
   assert.equal(await page.locator('.frameProductCard').count(),1,'website sale prices still render');
   await page.locator('#rentalLogin').waitFor({state:'visible'});
-  await page.locator('#rentalLogin [name=mobile]').fill('09121234567');
+  await page.locator('#rentalLogin [name=photographerMobile]').fill('09121234567');
   await page.locator('#rentalLogin [name=password]').fill('a strong local account password');
   await page.locator('#rentalLogin button[type=submit]').click();
   await page.locator('#rentalBookingForm').waitFor({state:'visible'});

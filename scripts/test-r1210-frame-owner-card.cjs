@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{chromium}=require('playwright');
-const source=fs.readFileSync('scripts/test-r1207-frame-model-ui.cjs','utf8'),start=source.indexOf('async function openPortal('),end=source.indexOf('\nfor(const width',start),openPortal=Function('fs','path',source.slice(start,end)+'return openPortal;')(fs,path);
+const {openPortal}=require('./test-r1207-frame-model-ui.cjs');
 const modelId='40000000-0000-4000-8000-000000000001',colors=['#ef4444','#2563eb'];
 const items=colors.flatMap((color,c)=>[[13,18,2,100],[20,30,4,250],[20,30,6,400]].map(([widthCm,heightCm,thicknessMm,price],p)=>({id:'50000000-0000-4000-8000-'+String(c*3+p+1).padStart(12,'0'),category:'frame_custom',active:true,stock_total:1,title:'مدرن',model:'مدرن',description:'مدل با عکس‌های ثبت‌شده',sale_price:price,image_url:'http://photobridge.test/'+(c?'blue':'red')+'-'+p+'.jpg',image_urls:['http://photobridge.test/'+(c?'blue':'red')+'-'+p+'.jpg'],gallery_images:[],updated_at:'2026-10-14T00:00:00Z',variant_specs:{baseId:modelId,baseModel:'مدرن',material:'چوب',color,widthCm,heightCm,thicknessMm,modelColors:colors,colorIndependent:true}})));
 for(const width of [390,1440])test('owner card previews registered color/size/profile photo and price and deletes the whole model at '+width,async()=>{

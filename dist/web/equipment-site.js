@@ -1,11 +1,8 @@
+/* Public equipment site: keep stable header geometry. Authentication belongs to the PhotoBridge first-party origin. */
 (()=>{'use strict';
-const header=document.querySelector('.site-header');if(header){const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',header.getBoundingClientRect().height+'px');new ResizeObserver(measure).observe(header);measure();}const dropdown=document.querySelector('.photographer-dropdown');if(!dropdown)return;dropdown.querySelector('.login-panel-close')?.addEventListener('click',()=>{dropdown.open=false;dropdown.querySelector('summary').focus({preventScroll:true});});
-const form=document.querySelector('#equipmentHeaderLogin'),session=document.querySelector('#equipmentHeaderSession'),message=document.querySelector('#equipmentHeaderMessage');
-async function request(path,body){const response=await fetch(path,{credentials:'same-origin',...(body?{method:'POST',body:JSON.stringify(body)}:{}),headers:{'content-type':'application/json','x-photobridge-portal':'photographer'}});const data=await response.json();if(!response.ok)throw Error(({credentials_invalid:'شماره موبایل یا رمز عبور صحیح نیست.',invalid_credentials:'شماره موبایل یا رمز عبور صحیح نیست.'})[data?.error]||'عملیات انجام نشد؛ دوباره تلاش کنید.');return data;}
-function show(user){const signed=user?.labRole==='customer';form.hidden=signed;session.hidden=!signed;session.querySelector('b').textContent=signed?(user.photographerName||user.name||'عکاس'):'';}
-async function restore(){try{const data=await request('/api/auth/me');show(data?.user);}catch{show(null);}}
-form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('button');button.disabled=true;message.textContent='در حال ورود…';try{await request('/api/auth/customer-login',Object.fromEntries(new FormData(form)));form.elements.password.value='';await restore();if(session.hidden){message.textContent='ورود با حساب عکاسی تأیید نشد.';}else{message.textContent='در حال ورود به آفیش فوتوبریج…';window.location.assign('https://photobridge.ir/equipment-rental/book?panel=rental');return;}window.dispatchEvent(new Event('equipment-photographer-session'));}catch(error){message.textContent=error.message;}finally{button.disabled=false;}});
-document.querySelector('#equipmentHeaderLogout').addEventListener('click',async event=>{event.currentTarget.disabled=true;try{await request('/api/auth/logout',{});show(null);message.textContent='از حساب خارج شدید.';window.dispatchEvent(new Event('equipment-photographer-session'));}catch(error){message.textContent=error.message;}finally{event.currentTarget.disabled=false;}});
-dropdown.addEventListener('toggle',()=>{if(dropdown.open&&!form.hidden)form.elements.mobile.focus({preventScroll:true});});
-document.addEventListener('click',event=>{if(!dropdown.contains(event.target))dropdown.open=false;});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&dropdown.open){dropdown.open=false;dropdown.querySelector('summary').focus({preventScroll:true});}});void restore();
+ const header=document.querySelector('.equipment-site > .site-header');
+ if(!header)return;
+ const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',Math.round(header.getBoundingClientRect().height)+'px');
+ if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(header);
+ measure();
 })();

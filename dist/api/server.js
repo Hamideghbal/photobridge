@@ -1,4 +1,4 @@
-import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost} from './equipment-office-handoff.js';
+import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
 import {handleLabSiteManagement,getLabSiteState} from './lab-site-management.js';
@@ -11929,7 +11929,7 @@ async function api(req, res, url) {
         // verified store hostname in the database. Enforce matching Origin when
         // the browser supplies a concrete origin; never trust the form alone.
         const browserOrigin=String(req.headers.origin||'');
-        if(browserOrigin&&browserOrigin!=='null'&&browserOrigin!==form?.origin)
+        if(!equipmentHandoffOriginAllowed(browserOrigin,form?.origin))
             return sendJson(res,403,{error:'invalid_origin'});
         const grant=form&&await consumeEquipmentStoreHandoff(pool,form);
         if(!grant){res.writeHead(303,{location:'/photographer?login_error=office_handoff','cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;}

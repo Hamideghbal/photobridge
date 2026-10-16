@@ -123,7 +123,7 @@ jobs:
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1241-desktop-viewport.cjs scripts/test-r1242-payment-ui.cjs scripts/test-r1254-frame-settings.cjs scripts/test-r1263-desktop-store-business-mode.cjs
+          node --test scripts/test-r1241-desktop-viewport.cjs scripts/test-r1242-payment-ui.cjs scripts/test-r1254-frame-settings.cjs scripts/test-r1263-desktop-store-business-mode.cjs scripts/test-r1263-frame-manual-ui.cjs
           node --test scripts/test-r1242-frame-payments.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1169-store-categories.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1256-storefront.cjs

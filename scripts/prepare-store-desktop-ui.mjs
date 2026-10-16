@@ -7,5 +7,6 @@ add(path.join(root,'dist/api/equipment-rental-portal.html'),'equipment-rental-po
 // R97: desktop-only behavior is now part of the hot-update payload as well. After one R97+
 // desktop install, future overlay fixes arrive with a normal site deploy and do not require a new installer.
 add(path.join(root,'apps/store-desktop/desktop-overlay.js'),'desktop-overlay.js');
+add(path.join(root,'apps/store-desktop/frame-orders-ui.js'),'frame-orders-ui.js');
 files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
 const build=crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex');fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify({protocol:1,channel:'store',build,generatedAt:new Date().toISOString(),files}));console.log('Store UI release prepared:',files.length,'files',build.slice(0,12));

@@ -40,7 +40,7 @@ export function createStoreDesktopSync(d){
    const idMap=Object.fromEntries((await c.query('SELECT local_id,server_id FROM equipment_store_desktop_ids WHERE shop_id=$1',[shop.id])).rows.map(x=>[x.local_id,x.server_id]));
    const map=x=>typeof x==='string'?(idMap[x]||x):Array.isArray(x)?x.map(map):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,map(v)])):x;
    const p=map(op.payload||{}),id=map(op.entityId),table=TABLES[op.entity],mapping={};let row=null;
-   const actions={'booking.create':['bookings'],'booking.status':['bookings'],'entry.create':['entries'],'item.create':['items','saleItems'],'item.update':['items','saleItems'],'item.delete':['items','saleItems'],'shortage.update':['shortages']};if(!actions[op.action]?.includes(op.entity))fail('invalid_action_entity',400);
+   const actions={'booking.create':['bookings'],'booking.status':['bookings'],'entry.create':['entries'],'item.create':['items','saleItems'],'item.update':['items','saleItems'],'item.delete':['items','saleItems'],'shortage.update':['shortages'],'saleBatch.create':['saleOrders']};if(!actions[op.action]?.includes(op.entity))fail('invalid_action_entity',400);
    if(!table)fail('unsupported_desktop_entity',400);
    if(!op.action.endsWith('.create')){
     row=(await c.query(`SELECT * FROM ${table} WHERE id=$1 AND shop_id=$2 FOR UPDATE`,[id,shop.id])).rows[0];if(!row)fail('record_not_found');
@@ -48,7 +48,42 @@ export function createStoreDesktopSync(d){
     if(op.baseOperation){const base=(await c.query('SELECT result FROM equipment_store_desktop_operations WHERE shop_id=$1 AND operation_id=$2',[shop.id,op.baseOperation])).rows[0];if(!base)fail('dependency_pending');expected=base.result.revision}
     if(expected===null||expected===undefined||String(row.desktop_revision)!==String(expected))fail('record_changed_on_server',409,{serverRecord:row});
    }
-   if(op.action==='booking.create'){
+   if(op.action==='saleBatch.create'){
+    // A single queued operation creates all lines of an in-store frame invoice
+    // atomically. The operation receipt makes lost acknowledgements replay-safe.
+    const frame=['frame','chassis','frame_chassis'].includes(String(shop.business_category||''));
+    if(!frame||shop.sale_enabled===false)fail('manual_sale_not_allowed',403);
+    const name=String(p.buyerName||'').trim(),mobile=String(p.buyerMobile||'').trim();
+    if(name.length<2||name.length>140||(mobile&&!/^09\d{9}$/.test(mobile)))fail('invalid_manual_buyer',400);
+    if(!Array.isArray(p.lines)||!p.lines.length||p.lines.length>30)fail('invalid_manual_lines',400);
+    const ref=String(p.invoiceRef||'').trim();
+    if(!/^OFF-[A-Z0-9-]{8,55}$/.test(ref))fail('invalid_manual_invoice',400);
+    const ids=new Set(),rows=[];
+    for(const line of p.lines){
+      const itemId=String(line.saleItemId||''),orderId=String(line.orderId||''),quantity=Number(line.quantity);
+      if(!UUID.test(itemId)||!UUID.test(orderId)||ids.has(itemId)||!Number.isSafeInteger(quantity)||quantity<1||quantity>99||!validMoney(line.expectedUnitPrice))fail('invalid_manual_lines',400);
+      ids.add(itemId);
+      const item=(await c.query('SELECT id,shop_id,active,deleted_at,sale_price,stock_total,title FROM equipment_sale_items WHERE shop_id=$1 AND id=$2 FOR UPDATE',[shop.id,itemId])).rows[0];
+      if(!item||!item.active||item.deleted_at)fail('manual_item_unavailable',409,{itemId});
+      const unit=Number(item.sale_price);
+      if(unit!==Number(line.expectedUnitPrice))fail('manual_price_changed',409,{itemId,serverUnitPrice:unit});
+      const total=unit*quantity;
+      if(!Number.isSafeInteger(total)||total>1e12)fail('invalid_manual_amount',400);
+      rows.push({orderId,itemId,quantity,unit,total,title:item.title});
+    }
+    let grand=0;for(const line of rows)grand+=line.total;
+    if(!Number.isSafeInteger(grand)||grand!==Number(p.expectedTotal))fail('manual_price_changed',409,{serverTotal:grand});
+    const extra=String(p.notes||'').trim().slice(0,500);
+    for(const line of rows){
+      row=(await c.query(`INSERT INTO equipment_sale_orders
+        (id,shop_id,sale_item_id,buyer_name,buyer_mobile,quantity,unit_price,total_amount,
+         status,payment_status,notes,created_by)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,'confirmed','unpaid',$9,$10) RETURNING *`,
+        [line.orderId,shop.id,line.itemId,name,mobile||null,line.quantity,line.unit,line.total,
+         'سفارش حضوری | '+ref+(extra?' | '+extra:''),a.userId])).rows[0];
+    }
+    row={id,updated_at:new Date(),desktop_revision:0,invoiceRef:ref,totalAmount:grand,lines:rows};
+   }else if(op.action==='booking.create'){
     if(!Array.isArray(p.items)||!p.items.length||p.items.length>500)fail('invalid_items',400);
     if(p.photographerId){const member=await c.query("SELECT 1 FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND active=true AND role='photographer'",[shop.id,p.photographerId]);if(!member.rowCount)fail('photographer_not_member')}
     if(!p.photographerId&&p.photographerMobile){const person=await d.preRegister(c,shop.id,p.photographerMobile,p.customerName||'عکاس');if(person){p.photographerId=person.id;if(p.localPhotographerId){if(!UUID.test(p.localPhotographerId))fail('invalid_photographer',400);mapping[p.localPhotographerId]=person.id;await c.query('INSERT INTO equipment_store_desktop_ids(shop_id,local_id,server_id,entity) VALUES($1,$2,$3,$4)',[shop.id,p.localPhotographerId,person.id,'photographers'])}}}

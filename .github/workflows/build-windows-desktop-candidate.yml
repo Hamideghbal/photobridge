@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "desktop-sources/**"
+      - "apps/store-desktop/**"
+      - "scripts/enable-r1263-desktop-frame-orders.mjs"
       - ".github/workflows/build-windows-desktop-candidate.yml"
   workflow_dispatch:
 
@@ -27,15 +29,15 @@ jobs:
           Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -DestinationPath . -Force
           Copy-Item "$env:RUNNER_TEMP/store-overlay.js" apps/store-desktop/desktop-overlay.js -Force
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
+      - name: Enable offline frame manual orders in native candidate
+        run: node scripts/enable-r1263-desktop-frame-orders.mjs
       - name: Verify saved source archive checksum
         shell: pwsh
         run: |
           $hash=(Get-FileHash desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($hash -ne '49788a4b7db76696742a9ebdfc054b71029993c76677fcf5da95d94085f2dad0') { throw "Unexpected Windows source checksum" }
-      - name: Prepare current site UI payload
-        run: |
-          npm install --omit=dev --no-audit --no-fund
-          npm run build
+      - name: Prepare current prebuilt Windows store UI payload
+        run: node scripts/prepare-store-desktop-ui.mjs
       - name: Test and package native store app
         shell: pwsh
         run: |

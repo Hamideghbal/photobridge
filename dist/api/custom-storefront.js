@@ -24,6 +24,7 @@ async function activateStoreDomain(d,domain){const result=await (d.verifyDomain|
 
 export function publicOrderTransition(current,action,production){const allowed={awaiting_receipt:{cancel:'cancelled'},pending_review:{approve:production?'in_production':'confirmed',reject:'awaiting_receipt',cancel:'cancelled'},in_production:{ready:'ready',cancel:'cancelled'},confirmed:{ready:'ready',cancel:'cancelled'},ready:{deliver:'delivered',cancel:'cancelled'}};const next=allowed[current]?.[action];if(!next)fail('invalid_store_order_transition',409);return next;}
 export async function createPublicOrder(db,{shop,hostname,body}){
+ if(shop.sale_enabled===false)fail('store_sales_unavailable',403);
  if(!/^[A-Za-z0-9_-]{43}$/.test(String(body.accessToken||'')))fail('invalid_order_token');
  if(!uuid(body.idempotencyKey)||!Array.isArray(body.items)||!body.items.length||body.items.length>50)fail('invalid_store_cart');
  const name=String(body.name||'').trim(),mobile=String(body.mobile||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
@@ -58,7 +59,7 @@ function storefrontItemImages(item,origin){
  }
  return out;
 }
-async function catalog(db,shop,publicItem,publicOrigin){const rows=(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop)},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
+async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled===true&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
 export async function handleStorefrontManagement(req,res,url,a,d){
  const admin=url.pathname.startsWith('/api/admin/storefront/'),manager=url.pathname.startsWith('/api/rental/storefront/');if(!admin&&!manager)return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
@@ -89,6 +90,18 @@ export async function handleStorefrontManagement(req,res,url,a,d){
  return reply(404,{error:'not_found'});
  }catch(e){if(e.code==='23505')return reply(409,{error:'domain_already_registered'});if(e.status)return reply(e.status,{error:e.message});throw e;}
 }
+// Fail closed: the branded photographer flow delegates narrowly to the current
+// authenticated customer API, which enforces verified identity and memberships.
+export function equipmentPhotographerRoute(req,url,shop){
+ if(isProductionShop(shop)||shop.rental_enabled!==true)return false;
+ if(req.headers.authorization||req.headers['x-photobridge-impersonation'])return false;
+ const p=url.pathname,m=req.method;
+ if(m==='POST'&&['/api/auth/customer-login','/api/auth/logout','/api/customer/equipment-rental/availability','/api/customer/equipment-rental/bookings','/api/customer/equipment-rental/collaboration-requests'].includes(p))return true;
+ if(m==='GET'&&['/api/auth/me','/api/customer/equipment-rental/bookings'].includes(p))return true;
+ if(m==='GET'&&p==='/api/customer/equipment-rental/items')return url.searchParams.get('shopId')===String(shop.id);
+ if(m==='PUT'&&p===`/api/customer/equipment-rental/shops/${shop.id}/membership-profile`)return true;
+ return false;
+}
 export async function handleCustomStorefront(req,res,url,d){
  const raw=String(req.headers.host||'').toLowerCase(),host=raw.replace(/:\d+$/,'');if(host===d.primaryHostname||host==='www.'+d.primaryHostname||(d.platformHosts||[]).includes(host)||host==='localhost'||host==='127.0.0.1')return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
@@ -96,11 +109,20 @@ export async function handleCustomStorefront(req,res,url,d){
  const domain=(await d.pool.query('SELECT * FROM equipment_store_domains WHERE hostname=$1',[host])).rows[0];if(!domain)return reply(404,{error:'unknown_store_domain'});
  if(req.method==='GET'&&url.pathname==='/.well-known/photobridge-storefront'){res.writeHead(200,{'content-type':'text/plain','cache-control':'no-store'});res.end(domain.verification_token);return true;}
  if(!domain.active||!domain.verified_at||!domain.routed_at)return reply(503,{error:'store_domain_pending'});
- const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND sale_enabled=true AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
+ const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND (COALESCE(sale_enabled,false)=true OR COALESCE(rental_enabled,false)=true) AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
- const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
+ const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
  if(req.method==='GET'&&Object.hasOwn(assets,url.pathname)){const [file,contentType]=assets[url.pathname],body=fs.readFileSync(path.join(d.webRoot,file));res.writeHead(200,{'content-type':contentType,'content-security-policy':"default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"});res.end(body);return true;}
  if(req.method==='GET'&&url.pathname==='/api/storefront/catalog')return reply(200,await catalog(d.pool,shop,d.publicItem,d.publicOrigin));
+ // Only these existing photographer API actions may run on equipment-shop hosts.
+ // Leave authentication, membership, dates, stock and pricing to their original
+ // PhotoBridge handlers; never grant access to /api/admin, /api/rental or labs.
+ if(equipmentPhotographerRoute(req,url,shop)){
+  if(req.method!=='GET'&&req.headers.origin!==`https://${host}`)return reply(403,{error:'invalid_origin'});
+  if(req.method!=='GET'&&!d.rateAllowed(req,host))return reply(429,{error:'try_again_later'});
+  req.headers['x-photobridge-portal']='photographer';
+  return false;
+ }
  if(req.method!=='GET'&&req.headers.origin!==`https://${host}`)return reply(403,{error:'invalid_origin'});
  if(url.pathname==='/api/storefront/orders'&&req.method==='POST'){if(!d.rateAllowed(req,host))return reply(429,{error:'try_again_later'});const body=await d.bodyJson(req,100000),c=await d.pool.connect();try{return reply(201,await createPublicOrder(c,{shop,hostname:host,body}));}finally{c.release();}}
  const route=url.pathname.match(/^\/api\/storefront\/orders\/([0-9a-f-]{36})(?:\/(receipt))?$/i);

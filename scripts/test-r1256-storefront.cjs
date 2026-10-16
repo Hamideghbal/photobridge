@@ -4,7 +4,7 @@ const shopId='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-80
 const mod=()=>import('../dist/api/custom-storefront.js'),pricing=()=>import('../dist/api/storefront-pricing.js');
 const shop={id:shopId,business_category:'frame_chassis',payment_card_number:'6037991234567890',payment_account_holder:'فروشگاه'};
 const body=()=>({accessToken:crypto.randomBytes(32).toString('base64url'),idempotencyKey:crypto.randomUUID(),name:'مشتری عمومی',mobile:'۰۹۱۲۱۲۳۴۵۶۷',deliveryMethod:'pickup',items:[{itemId,quantity:2}],totalAmount:1,unitPrice:1});
-async function fixture(){const db=new PGlite();await db.exec(`CREATE TABLE users(id uuid PRIMARY KEY);CREATE TABLE equipment_rental_shops(id uuid PRIMARY KEY,name text,active boolean DEFAULT true,sale_enabled boolean DEFAULT true,suspended boolean DEFAULT false,active_from timestamptz,active_until timestamptz,deleted_at timestamptz,business_category text,payment_card_number text,payment_account_holder text,payment_iban text,updated_at timestamptz);CREATE TABLE equipment_sale_items(id uuid PRIMARY KEY,shop_id uuid,title text,model text,active boolean DEFAULT true,deleted_at timestamptz,sale_price bigint,stock_total int,variant_specs jsonb,updated_at timestamptz);`);const migration=fs.readFileSync('migrations/182_custom_storefronts.sql','utf8');await db.exec(migration);await db.exec(migration);await db.query('INSERT INTO equipment_rental_shops(id,name,business_category,payment_card_number,payment_account_holder) VALUES($1,$2,$3,$4,$5)',[shopId,'قاب روشن','frame_chassis',shop.payment_card_number,shop.payment_account_holder]);await db.query('INSERT INTO equipment_rental_shops(id,name) VALUES($1,$2)',[other,'دوربین']);await db.query("INSERT INTO equipment_store_domains(hostname,shop_id,verification_token,verified_at,routed_at,active) VALUES('shop.example.com',$1,'proof',now(),now(),true)",[shopId]);await db.query("INSERT INTO equipment_sale_items VALUES($1,$2,'قاب',NULL,true,NULL,10000,4,$3::jsonb,now())",[itemId,shopId,JSON.stringify({salesChannels:{photobridge:{enabled:true,price:10000,discountPercent:0},website:{enabled:true,price:20000,discountPercent:10}}})]);return db;}
+async function fixture(){const db=new PGlite();await db.exec(`CREATE TABLE users(id uuid PRIMARY KEY);CREATE TABLE equipment_rental_shops(id uuid PRIMARY KEY,name text,active boolean DEFAULT true,sale_enabled boolean DEFAULT true,rental_enabled boolean DEFAULT false,suspended boolean DEFAULT false,active_from timestamptz,active_until timestamptz,deleted_at timestamptz,business_category text,payment_card_number text,payment_account_holder text,payment_iban text,updated_at timestamptz);CREATE TABLE equipment_sale_items(id uuid PRIMARY KEY,shop_id uuid,title text,model text,active boolean DEFAULT true,deleted_at timestamptz,sale_price bigint,stock_total int,variant_specs jsonb,updated_at timestamptz);`);const migration=fs.readFileSync('migrations/182_custom_storefronts.sql','utf8');await db.exec(migration);await db.exec(migration);await db.query('INSERT INTO equipment_rental_shops(id,name,business_category,payment_card_number,payment_account_holder) VALUES($1,$2,$3,$4,$5)',[shopId,'قاب روشن','frame_chassis',shop.payment_card_number,shop.payment_account_holder]);await db.query('INSERT INTO equipment_rental_shops(id,name) VALUES($1,$2)',[other,'دوربین']);await db.query("INSERT INTO equipment_store_domains(hostname,shop_id,verification_token,verified_at,routed_at,active) VALUES('shop.example.com',$1,'proof',now(),now(),true)",[shopId]);await db.query("INSERT INTO equipment_sale_items VALUES($1,$2,'قاب',NULL,true,NULL,10000,4,$3::jsonb,now())",[itemId,shopId,JSON.stringify({salesChannels:{photobridge:{enabled:true,price:10000,discountPercent:0},website:{enabled:true,price:20000,discountPercent:10}}})]);return db;}
 function deps(db,overrides={}){return {pool:{query:db.query.bind(db),connect:async()=>({query:db.query.bind(db),release(){}})},sendJson:(res,status,data)=>{res.status=status;res.data=data;},bodyJson:async req=>req.body,requireRole:a=>a?.platformRole==='platform_admin',currentShop:async a=>a?.rentalShopId?{...shop,id:a.rentalShopId}:null,publicOrigin:'https://photobridge.ir',primaryHostname:'photobridge.ir',publicItem:x=>x,rateAllowed:()=>true,audit:async()=>{},webRoot:path.resolve('dist/web'),verifyDomain:async()=>({owned:false,routed:false}),...overrides};}
 async function management(db,url,method,body,a={rentalShopId:shopId}){const res={};await(await mod()).handleStorefrontManagement({method,headers:{origin:'https://photobridge.ir'},body},res,new URL(url,'https://photobridge.ir'),a,deps(db));return res;}
 test('channel pricing is independent, validates discount/price and never exposes alternate channel',async()=>{const {normalizeChannelPricing,channelItem,channelPrice}=await pricing();const channels=normalizeChannelPricing({photobridge:{enabled:false,price:10000},website:{enabled:true,price:'۲۰٬۰۰۰',discountPercent:10}});const item={sale_price:999,variant_specs:{color:'سفید',salesChannels:channels}};assert.equal(channelPrice(item,'photobridge'),null);assert.equal(channelItem(item,'website').sale_price,18000);assert.equal(channelItem(item,'website').variant_specs.salesChannels,undefined);assert.equal(channelPrice({sale_price:100},'website'),null);assert.equal(channelPrice({sale_price:100},'photobridge').price,100);assert.throws(()=>normalizeChannelPricing({website:{enabled:true,price:-1}}));assert.throws(()=>normalizeChannelPricing({website:{enabled:true,price:1,discountPercent:101}}));});
@@ -40,6 +40,43 @@ test('merchant catalog images load from PhotoBridge while merchant host keeps pr
   assert.equal(row.arbitrary_link,'/api/admin/private');
   assert.equal((await call(full)).status,404,'custom host must not expose the protected asset endpoint');
   assert.equal((await call('/admin')).status,404);
+ }finally{await db.close();}
+});
+
+test('rental-only merchant domain exposes only scoped photographer booking actions; public sale remains disabled',async()=>{
+ const db=await fixture();
+ try{
+  await db.query("UPDATE equipment_rental_shops SET business_category='equipment_rental_sale',sale_enabled=false,rental_enabled=true WHERE id=$1",[shopId]);
+  const {handleCustomStorefront,createPublicOrder,equipmentPhotographerRoute}=await mod();
+  const d=deps(db,{publicItem:x=>x});
+  async function call(p,method='GET',origin,headers={}){
+   const req={method,headers:{host:'shop.example.com',...(origin?{origin}:{}),...headers},body:{}},res={setHeader(){},writeHead(status){this.status=status;},end(content){this.ended=content}};
+   const handled=await handleCustomStorefront(req,res,new URL(p,'https://shop.example.com'),d);
+   return {handled,status:res.status,data:res.data,portal:req.headers['x-photobridge-portal']};
+  }
+  const cat=await call('/api/storefront/catalog');
+  assert.equal(cat.status,200);assert.equal(cat.data.shop.saleEnabled,false);
+  assert.equal(cat.data.shop.rentalEnabled,true);assert.equal(cat.data.shop.id,shopId);
+  assert.deepEqual(cat.data.items,[]);
+  assert.equal((await call('/storefront-rental.js')).status,200);
+  assert.equal((await call('/api/auth/me')).handled,false);
+  assert.equal((await call('/api/auth/me')).portal,'photographer');
+  assert.equal((await call('/api/customer/equipment-rental/items?shopId='+shopId)).handled,false);
+  assert.equal((await call('/api/customer/equipment-rental/items?shopId='+other)).status,404);
+  assert.equal((await call('/api/customer/equipment-rental/shops')).status,404);
+  assert.equal((await call('/api/customer/equipment-rental/bookings')).handled,false);
+  assert.equal((await call('/api/customer/equipment-rental/bookings','POST','https://shop.example.com')).handled,false);
+  assert.equal((await call('/api/customer/equipment-rental/bookings','POST','https://evil.example.com')).status,403);
+  assert.equal((await call('/api/auth/customer-login','POST','https://shop.example.com')).handled,false);
+  assert.equal((await call('/api/auth/customer-login','POST','https://evil.example.com')).status,403);
+  assert.equal((await call('/api/rental/storefront/items')).status,404);
+  assert.equal((await call('/api/admin/users')).status,404);
+  assert.equal((await call('/api/album-asset/a.b')).status,404);
+  assert.equal((await call('/api/auth/admin-login','POST','https://shop.example.com')).status,404);
+  assert.equal((await call('/api/storefront/orders','POST','https://shop.example.com')).status,403);
+  await assert.rejects(createPublicOrder(db,{shop:{id:shopId,sale_enabled:false},hostname:'shop.example.com',body:{}}),/store_sales_unavailable/);
+  assert.equal(equipmentPhotographerRoute({method:'GET',headers:{}},new URL('/api/auth/me','https://shop.example.com'),{rental_enabled:true,business_category:'frame_chassis'}),false);
+  assert.equal(equipmentPhotographerRoute({method:'GET',headers:{authorization:'Bearer test'}},new URL('/api/auth/me','https://shop.example.com'),{rental_enabled:true,business_category:'equipment_rental_sale'}),false);
  }finally{await db.close();}
 });
 test('domain registration requires platform administrator and same origin',async()=>{const db=await fixture();try{assert.equal((await management(db,'/api/admin/storefront/domains','GET',null,{})).status,403);assert.equal((await management(db,'/api/admin/storefront/domains','POST',{hostname:'new.example.com',shopId},{platformRole:'platform_admin'})).status,201);assert.equal((await management(db,'/api/admin/storefront/domains','POST',{hostname:'new.example.com',shopId:other},{platformRole:'platform_admin'})).status,409);const res={};await(await mod()).handleStorefrontManagement({method:'POST',headers:{origin:'https://evil.com'},body:{}},res,new URL('https://photobridge.ir/api/admin/storefront/domains'),{platformRole:'platform_admin'},deps(db));assert.equal(res.status,403);}finally{await db.close();}});

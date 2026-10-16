@@ -9,13 +9,15 @@
   <link rel="preload" href="/assets/photobridge-handover-vazirmatn.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/storefront.css?v=r1259">
   <script defer src="/photobridge-r1207-frame-catalog.js?v=r1260"></script>
-  <script defer src="/storefront.js?v=r1260"></script>
+  <script defer src="/storefront-rental.js?v=r1262"></script>
+  <script defer src="/storefront.js?v=r1262"></script>
 </head>
 <body class="publicStorefront">
   <a class="skipLink" href="#products">رفتن به محصولات</a>
   <header class="storeHeader">
     <nav class="storeLinks" aria-label="بخش‌های فروشگاه">
-      <a class="active" href="#catalog">محصولات</a>
+      <a class="active" href="#catalog" id="salesNav">فروش محصولات</a>
+      <a id="rentalNav" hidden href="#rentalSection">آفیش تجهیزات</a>
       <a href="#storeAbout">معرفی فروشگاه</a>
     </nav>
     <a class="storeIdentity" href="/" aria-label="صفحه اصلی فروشگاه">
@@ -31,7 +33,8 @@
     <section class="storeIntro" aria-labelledby="title">
       <div class="introMark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><rect x="10" y="8" width="44" height="48" rx="5" stroke="currentColor" stroke-width="2"/><rect x="17" y="15" width="30" height="34" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="m18 43 9-11 7 7 5-5 8 9M26 24h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div><span class="eyebrow">خرید مستقیم از فروشگاه</span><h1 id="title">در حال دریافت فروشگاه…</h1><p id="about"></p></div>
-      <a class="browseLink" href="#catalog">مشاهده محصولات <span aria-hidden="true">←</span></a>
+      <a class="browseLink" href="#catalog" id="salesTopLink">مشاهده محصولات <span aria-hidden="true">←</span></a>
+      <a class="browseLink rentalTopLink" id="rentalTopLink" href="#rentalSection" hidden>ورود عکاس و ثبت آفیش ←</a>
     </section>
     <div id="previewNotice" class="notice" hidden>پیش‌نمایش سایت اختصاصی — ثبت سفارش در این حالت غیرفعال است.</div>
     <section id="catalog" class="catalogSection" aria-labelledby="catalogTitle">
@@ -41,6 +44,31 @@
       </div>
       <p id="error" class="message" role="alert"></p>
       <div id="products" class="products salesCatalog" aria-live="polite"><p class="empty">در حال دریافت کالاها…</p></div>
+    </section>
+    <section id="rentalSection" class="rentalSection" hidden aria-labelledby="rentalTitle">
+      <div class="rentalSectionHead"><span class="eyebrow">ویژه عکاسان</span><h2 id="rentalTitle">رزرو و آفیش تجهیزات عکاسی و فیلم‌برداری</h2><p>با حساب عکاسی فوتوبریج وارد شوید؛ انتخاب تجهیزات، قیمت اجاره، ثبت آفیش و تأیید فروشگاه در همین سایت انجام می‌شود.</p></div>
+      <p id="rentalMessage" class="rentalMessage" role="status" aria-live="polite"></p>
+      <form id="rentalLogin" class="rentalLogin" autocomplete="on" hidden>
+        <h3>ورود عکاس</h3><div class="rentalFields">
+          <label>شماره موبایل عکاس<input name="photographerMobile" type="tel" inputmode="tel" autocomplete="username" required placeholder="09xxxxxxxxx" dir="ltr"></label>
+          <label>رمز عبور حساب فوتوبریج<input name="password" type="password" autocomplete="current-password" required></label>
+        </div><button type="submit" class="btn">ورود و مشاهده تجهیزات</button>
+        <p class="muted">حساب عکاسی ندارید؟ <a id="rentalSignup" href="/photographer/signup" rel="noopener">ثبت‌نام عکاس در فوتوبریج</a></p>
+      </form>
+      <div id="rentalSignedIn" class="rentalSignedIn" hidden><span>حساب عکاس: <b id="rentalSignedInName"></b></span><button id="rentalLogout" type="button">خروج از حساب</button></div>
+      <div id="rentalCollaboration" class="rentalCollaboration" hidden><p>برای ثبت آفیش، عضویت تأییدشده در همین فروشگاه لازم است. می‌توانید درخواست همکاری ارسال کنید.</p><button type="button">درخواست همکاری با فروشگاه</button></div>
+      <form id="rentalBookingForm" hidden>
+        <div class="rentalDates">
+          <label>تاریخ شروع آفیش<input id="rentalFrom" type="date" required></label>
+          <label>تاریخ پایان آفیش<input id="rentalTo" type="date" required></label>
+          <span id="rentalDateLabels" class="muted"></span>
+        </div>
+        <h3>تجهیزات قابل انتخاب</h3><div id="rentalItems" class="rentalItems"></div>
+        <div class="rentalActionRow"><button type="submit" id="rentalCheck" class="btn">بررسی قیمت و موجودی</button><div id="rentalQuote" class="rentalQuote" hidden></div><button type="button" id="rentalConfirm" class="btn" disabled>ثبت نهایی آفیش</button></div>
+        <p class="notice">ثبت درخواست، به معنی تأیید نهایی فروشگاه نیست. بعد از تأیید، وضعیت پرداخت و تحویل از طریق حساب عکاس پیگیری می‌شود.</p>
+        <p id="rentalProfileHelp" class="notice" hidden>مشخصات عضویت شما ناقص است. <a id="rentalProfileLink" href="/photographer">تکمیل اطلاعات در فوتوبریج</a></p>
+        <h3>آفیش‌های من در این فروشگاه</h3><div id="rentalBookings" class="rentalBookings"></div>
+      </form>
     </section>
     <section id="tracking" aria-label="پیگیری سفارش"></section>
     <section id="storeAbout" class="aboutStore" aria-labelledby="aboutTitle"><div><span class="eyebrow">آشنایی بیشتر</span><h2 id="aboutTitle">درباره فروشگاه</h2><p id="storeDescription"></p><div id="contactDetails" class="contactDetails"></div></div><div class="shoppingSteps"><h3>مراحل خرید از فروشگاه</h3><ol><li><span>۱</span><div><b>انتخاب محصول</b><small>مدل و مشخصات دلخواه را انتخاب کنید.</small></div></li><li><span>۲</span><div><b>ثبت سفارش و پرداخت</b><small>مشخصات را ثبت و رسید واریز را ارسال کنید.</small></div></li><li><span>۳</span><div><b>پیگیری تا تحویل</b><small>وضعیت سفارش را با لینک اختصاصی دنبال کنید.</small></div></li></ol></div></section>

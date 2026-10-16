@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff} from '../dist/api/equipment-office-handoff.js';
+import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,equipmentHandoffOriginAllowed} from '../dist/api/equipment-office-handoff.js';
 import {renderEquipmentPage} from '../dist/api/equipment-site-content.js';
 const uuid='10000000-0000-4000-8000-000000000001',userId='20000000-0000-4000-8000-000000000001',host='store.example.test';
 test('single-use store handoff retains source shop, does not store raw grant, cannot be replayed',async()=>{
@@ -29,7 +29,8 @@ test('public equipment site keeps local login and no first-party credential scre
  assert.doesNotMatch(page,/pbOfficeLogin=1/);
  assert.match(page,/equipment-site.js\?v=r1280/);
  const guide=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:host,pathname:'/rental-equipment'}).html;
- assert.match(guide,/data-open-equipment-login/);
+ assert.match(guide,/id="equipmentOfficePageLogin"/);
+ assert.doesNotMatch(guide,/data-open-equipment-login/);
 });
 test('discount displays newest price first, previous price below, no percent badge',()=>{
  const web=readFileSync('dist/web/storefront.js','utf8'),portal=readFileSync('dist/api/equipment-rental-book.html','utf8');
@@ -46,4 +47,20 @@ test('cross-domain exchange sends only the short-lived ticket as a POST, never a
  assert.match(js,/handoff\.method='POST'/);
  assert.match(js,/handoff\.submit\(\)/);
  assert.doesNotMatch(js,/password.*handoff\.appendChild/);
+});
+
+test('cross-site POST with Origin null is allowed only through a valid origin-bound ticket',()=>{
+ assert.equal(equipmentHandoffOriginAllowed('null','https://store.example.test'),true);
+ assert.equal(equipmentHandoffOriginAllowed(undefined,'https://store.example.test'),true);
+ assert.equal(equipmentHandoffOriginAllowed('https://store.example.test','https://store.example.test'),true);
+ assert.equal(equipmentHandoffOriginAllowed('https://attacker.test','https://store.example.test'),false);
+ assert.equal(equipmentHandoffOriginAllowed('https://photobridge.ir','https://store.example.test'),false);
+});
+test('only the native login form is used on the office page, and brand header controls retain contrast',()=>{
+ const css=readFileSync('dist/web/equipment-site.css','utf8');
+ const js=readFileSync('dist/web/equipment-site.js','utf8');
+ assert.match(js,/#equipmentHeaderLogin,#equipmentOfficePageLogin/);
+ assert.match(css,/data-equipment-page='\/rental-equipment'/);
+ assert.match(css,/\.photographer-dropdown\[open\]>summary\.equipment-office-entry/);
+ assert.match(css,/\-webkit-text-fill-color:#fff/);
 });

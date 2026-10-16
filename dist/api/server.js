@@ -14404,7 +14404,7 @@ async function api(req, res, url) {
             return sendJson(res, 503, { error: 'upload_not_configured' });
         const b = await bodyJson(req);
         const token = String(b.uploadToken || '');
-        const oq = await pool.query(`SELECT o.id,o.lab_id,o.customer_id,l.active,l.active_until,l.walkin_enabled,l.crop_delegation_enabled FROM orders o JOIN labs l ON l.id=o.lab_id WHERE o.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2`, [publicWalkinPresign[1], tokenHash(token)]);
+        const oq = await pool.query(`SELECT o.id,o.lab_id,o.customer_id,l.active,l.active_until,l.walkin_enabled,l.crop_delegation_enabled FROM orders o JOIN labs l ON l.id=o.lab_id WHERE o.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2 AND ($3::uuid IS NULL OR o.lab_id=$3)`, [publicWalkinPresign[1], tokenHash(token),req.labDomainId||null]);
         if (!oq.rowCount)
             return sendJson(res, 403, { error: 'invalid_upload_token' });
         const order = oq.rows[0];
@@ -14436,7 +14436,7 @@ async function api(req, res, url) {
         if (!LOCAL_UPLOAD_FALLBACK)
             return sendJson(res, 503, { error: 'local_upload_disabled' });
         const token = String(url.searchParams.get('token') || '');
-        const q = await pool.query(`SELECT f.id,f.object_key,f.bytes FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2 AND f.original_state='pending'`, [publicWalkinLocal[1], tokenHash(token)]);
+        const q = await pool.query(`SELECT f.id,f.object_key,f.bytes FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2 AND f.original_state='pending' AND ($3::uuid IS NULL OR o.lab_id=$3)`, [publicWalkinLocal[1], tokenHash(token),req.labDomainId||null]);
         if (!q.rowCount || !String(q.rows[0].object_key || '').startsWith('local/'))
             return sendJson(res, 403, { error: 'invalid_upload_token' });
         const target = localPathForKey(q.rows[0].object_key);
@@ -14462,7 +14462,7 @@ async function api(req, res, url) {
     if (req.method === 'POST' && url.pathname === '/api/public/walkin/uploads/complete') {
         const b = await bodyJson(req);
         const token = String(b.uploadToken || '');
-        const q = await pool.query(`SELECT f.* FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2`, [String(b.fileId || ''), tokenHash(token)]);
+        const q = await pool.query(`SELECT f.* FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2 AND ($3::uuid IS NULL OR o.lab_id=$3)`, [String(b.fileId || ''), tokenHash(token),req.labDomainId||null]);
         if (!q.rowCount)
             return sendJson(res, 403, { error: 'invalid_upload_token' });
         const row = q.rows[0];
@@ -14494,7 +14494,7 @@ async function api(req, res, url) {
     if (publicWalkinSubmit && req.method === 'POST') {
         const b = await bodyJson(req);
         const token = String(b.uploadToken || '');
-        const q = await pool.query(`SELECT o.*,u.name customer_name FROM orders o JOIN users u ON u.id=o.customer_id WHERE o.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2`, [publicWalkinSubmit[1], tokenHash(token)]);
+        const q = await pool.query(`SELECT o.*,u.name customer_name FROM orders o JOIN users u ON u.id=o.customer_id WHERE o.id=$1 AND o.source='walkin' AND o.status='uploading' AND o.public_upload_token_hash=$2 AND ($3::uuid IS NULL OR o.lab_id=$3)`, [publicWalkinSubmit[1], tokenHash(token),req.labDomainId||null]);
         if (!q.rowCount)
             return sendJson(res, 403, { error: 'invalid_upload_token' });
         const order = q.rows[0];

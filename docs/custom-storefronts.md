@@ -33,3 +33,13 @@ For equipment stores with rental enabled, the domain exposes an **آفیش تج�
 Public visitors cannot create a rental office or use photographer-only rental prices; the guest site offers only the separate website-channel retail catalog. Retail never uses photographers' wallets. The signed image URLs for items on merchant domains refer to the canonical PhotoBridge asset origin.
 
 Security release gate: this changes the hostname boundary of authenticated photographer endpoints. As specified by AGENTS.md, do not automatically merge/deploy; review auth scope, CSRF origin protection, shop scoping, and first-party cookies, and run CI before manual approval.
+
+## Laboratory domains (r1264)
+
+In `/admin/storefront`, the institution selector now has shops and laboratories. Attach the hostname and HTTPS to this same Liara application, select the laboratory, and register the domain. The existing automatic HTTPS proof and single retry button apply. A hostname has exactly one owner, enforced by migration `183_lab_custom_domains.sql`; existing shop assignments remain intact.
+
+The laboratory homepage uses the existing PhotoBridge font and palette, its saved name and location, and two entry points:
+- Photographers open the canonical PhotoBridge `/photographer` portal. Existing login, membership, pricing, upload, finance, and other capabilities remain authoritative. The custom host does not create or expand photographer access.
+- Public customers stay on the laboratory hostname at `/walkin/<slug>`. This is the existing full public print interface, including image upload and preparation, print sizes/materials, available add-ons, and submission. It reuses `walkin_prices` and creates ordinary `source=walkin` orders in that lab's existing order queue and accounting flow. No duplicate tariff, order or financial system is introduced. Enable public intake and configure its prices in the laboratory's existing walk-in settings; a disabled intake is shown as unavailable.
+
+Custom hosts expose only their own walk-in slug and static client assets. Each token-authorized order/upload query is additionally scoped to the hostname's lab ID. Other laboratories, authenticated portal routes, and admin APIs are blocked. Domain writes remain platform-admin-only. The informational homepage does not fabricate address, contact details, or service claims.

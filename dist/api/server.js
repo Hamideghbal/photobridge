@@ -1,3 +1,4 @@
+import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
 import {handleLabSiteManagement,getLabSiteState} from './lab-site-management.js';
@@ -11913,10 +11914,23 @@ async function cleanupExpiredClientGalleries() {
     await maintainGalleryLifetime(pool,deleteStoredKeyBestEffort,async(owner,notice)=>sendWebPushToRecipient('customer',owner,notice,'gallery.expiring',notice.metadata));
 }
 const storefrontRateBuckets=new Map();
-function storefrontDependencies(){return {pool,sendJson,bodyJson,sharp,currentShop:equipmentRentalCurrentShop,requireRole,audit,publicItem:equipmentItemPublic,readObject:readAiObject,deleteObject:deleteStoredKeyBestEffort,webRoot:path.join(DIST_ROOT,'web'),primaryHostname:new URL(PUBLIC_APP_URL).hostname,platformHosts:String(process.env.STOREFRONT_PLATFORM_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),publicOrigin:new URL(PUBLIC_APP_URL).origin,
+function storefrontDependencies(){return {pool,sendJson,bodyJson,sharp,auth,currentShop:equipmentRentalCurrentShop,requireRole,audit,publicItem:equipmentItemPublic,readObject:readAiObject,deleteObject:deleteStoredKeyBestEffort,webRoot:path.join(DIST_ROOT,'web'),primaryHostname:new URL(PUBLIC_APP_URL).hostname,platformHosts:String(process.env.STOREFRONT_PLATFORM_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),publicOrigin:new URL(PUBLIC_APP_URL).origin,
  rateAllowed:(req,host)=>{const key=host+':'+requestIpHash(req),now=Date.now();if(storefrontRateBuckets.size>5000)for(const [k,v]of storefrontRateBuckets)if(v.until<now)storefrontRateBuckets.delete(k);if(storefrontRateBuckets.size>=10000&&!storefrontRateBuckets.has(key))return false;let entry=storefrontRateBuckets.get(key);if(!entry||entry.until<now){entry={count:0,until:now+60000};storefrontRateBuckets.set(key,entry);}return ++entry.count<=30;},
  storeReceipt:async(shopId,orderId,receiptId,buffer)=>{const rel=`storefront-receipts/${shopId}/${orderId}/${receiptId}.jpg`;if(storageConfigured&&s3){const key=storageKey(rel);await s3.send(new PutObjectCommand({Bucket:S3_BUCKET,Key:key,Body:buffer,ContentType:'image/jpeg'}));return key;}if(LOCAL_UPLOAD_FALLBACK){const key=localStorageObjectKey(rel),file=localPathForKey(key);await fs.promises.mkdir(path.dirname(file),{recursive:true});await fs.promises.writeFile(file,buffer);return key;}throw Object.assign(new Error('storage_not_configured'),{status:503});}};}
 async function api(req, res, url) {
+    // Store photographer enters credentials on their shop hostname. Exchange an
+    // expiring, one-use, shop-scoped grant for a first-party HTTP-only session.
+    if(req.method==='POST'&&url.pathname==='/api/auth/equipment-site-handoff'){
+        const form=await readEquipmentHandoffPost(req);
+        // A top-level cross-site form POST sends the *shop's* Origin, not PhotoBridge's.
+        // Match it to the claimed source, which must also match the one-use grant.
+        if(req.headers.origin&&req.headers.origin!==form?.origin)return sendJson(res,403,{error:'invalid_origin'});
+        const grant=form&&await consumeEquipmentStoreHandoff(pool,form);
+        if(!grant){res.writeHead(303,{location:'/photographer?login_error=office_handoff','cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;}
+        await createSession(grant.userId,res,'photographer');
+        const next='/equipment-rental/book?panel=rental&pbDirectShop='+encodeURIComponent(grant.shopId);
+        res.writeHead(303,{location:next,'cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;
+    }
     // v790: country check for the Iran-focused mobile app. Prefer trusted proxy/CDN
     // country headers; use a short-lived IP geolocation fallback only when absent.
     if (req.method === 'GET' && url.pathname === '/api/network/country') {

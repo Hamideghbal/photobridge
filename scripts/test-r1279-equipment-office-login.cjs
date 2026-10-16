@@ -65,7 +65,7 @@ for(const width of [390,1440])test('cross-domain office entry authenticates only
 
 test('public equipment site never embeds the user password in redirect links',async()=>{
  const src=fs.readFileSync('dist/api/equipment-site-content.js','utf8');
- assert(!src.includes('id="equipmentHeaderLogin"'));
- assert(src.includes('pbOfficeLogin=1'));
+ assert(src.includes('id="equipmentHeaderLogin"'));
+ assert(src.includes('equipmentHeaderLogin'));
  assert(!src.includes('password='));
 });

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import https from 'node:https';
 import {domainToASCII} from 'node:url';
-import {resolveTxt,resolve4} from 'node:dns/promises';
+import {resolve4} from 'node:dns/promises';
 import {isIP} from 'node:net';
 import {channelItem,channelPrice,normalizeChannelPricing} from './storefront-pricing.js';
 import {isProductionShop} from './frame-production.js';
@@ -16,7 +16,12 @@ export function publicIPv4(value){if(isIP(value)!==4)return false;const [a,b,c]=
 async function bounded(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('verification_timeout')),8000);timer.unref?.();})]);}finally{clearTimeout(timer);}}
 export const pinnedStoreLookup=address=>(_host,options,callback)=>options?.all?callback(null,[{address,family:4}]):callback(null,address,4);
 export async function routingProof(host,token,{resolve=resolve4,get=https.get}={}){const ips=await bounded(resolve(host));if(!ips.length||ips.some(ip=>!publicIPv4(ip)))return false;return await new Promise(resolve=>{const req=get({hostname:host,path:'/.well-known/photobridge-storefront',timeout:8000,lookup:pinnedStoreLookup(ips[0])},res=>{let text='';res.on('data',x=>{text+=x;if(text.length>1024)req.destroy();});res.on('end',()=>resolve(res.statusCode===200&&text.trim()===token));});req.on('timeout',()=>req.destroy());req.on('error',()=>resolve(false));});}
-export async function verifyStoreDomain(domain,{txt=resolveTxt,probe=routingProof}={}){let owned=false;try{owned=(await bounded(txt('_photobridge.'+domain.hostname))).some(parts=>parts.join('')===domain.verification_token);}catch{}if(!owned)return {owned:false,routed:false};return {owned:true,routed:await bounded(Promise.resolve().then(()=>probe(domain.hostname,domain.verification_token))).catch(()=>false)};}
+// Only platform admins assign a hostname to a shop. A TLS-verified response from
+// that exact hostname containing its registered proof establishes the connection;
+// a second, manual TXT challenge adds no requirement to this admin-managed flow.
+export async function verifyStoreDomain(domain,{probe=routingProof}={}){const routed=await bounded(Promise.resolve().then(()=>probe(domain.hostname,domain.verification_token))).catch(()=>false);return {owned:Boolean(routed),routed:Boolean(routed)};}
+async function activateStoreDomain(d,domain){const result=await (d.verifyDomain||verifyStoreDomain)(domain);if(result.routed)await d.pool.query('UPDATE equipment_store_domains SET verified_at=now(),routed_at=now(),active=true,updated_at=now() WHERE hostname=$1',[domain.hostname]);return {...result,status:result.routed?'active':'pending_hosting'};}
+
 export function publicOrderTransition(current,action,production){const allowed={awaiting_receipt:{cancel:'cancelled'},pending_review:{approve:production?'in_production':'confirmed',reject:'awaiting_receipt',cancel:'cancelled'},in_production:{ready:'ready',cancel:'cancelled'},confirmed:{ready:'ready',cancel:'cancelled'},ready:{deliver:'delivered',cancel:'cancelled'}};const next=allowed[current]?.[action];if(!next)fail('invalid_store_order_transition',409);return next;}
 export async function createPublicOrder(db,{shop,hostname,body}){
  if(!/^[A-Za-z0-9_-]{43}$/.test(String(body.accessToken||'')))fail('invalid_order_token');
@@ -47,12 +52,12 @@ export async function handleStorefrontManagement(req,res,url,a,d){
  const shop=manager?await d.currentShop(a):null;if(admin&&!d.requireRole(a,'platform_admin')||manager&&!shop)return reply(403,{error:'forbidden'});
  if(admin&&url.pathname==='/api/admin/storefront/domains'){
   if(req.method==='GET'){const domains=(await d.pool.query('SELECT d.*,s.name shop_name FROM equipment_store_domains d JOIN equipment_rental_shops s ON s.id=d.shop_id ORDER BY d.created_at DESC')).rows;return reply(200,{domains,dnsTarget:d.primaryHostname});}
-  if(req.method==='POST'){const b=await d.bodyJson(req,10000),hostname=normalizeStoreDomain(b.hostname);if(hostname===d.primaryHostname||hostname.endsWith('.'+d.primaryHostname))fail('reserved_store_domain');if(!uuid(b.shopId))fail('invalid_shop');const exists=(await d.pool.query('SELECT id FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL',[b.shopId])).rows[0];if(!exists)fail('shop_not_found',404);const token='photobridge-'+crypto.randomBytes(24).toString('hex');await d.pool.query('INSERT INTO equipment_store_domains(hostname,shop_id,verification_token,created_by) VALUES($1,$2,$3,$4)',[hostname,b.shopId,token,a.userId]);await d.audit(a.userId,undefined,'storefront.domain_add','equipment_rental_shop',b.shopId,{hostname});return reply(201,{hostname,txtName:'_photobridge.'+hostname,txtValue:token,dnsTarget:d.primaryHostname,status:'pending_verification'});}
+  if(req.method==='POST'){const b=await d.bodyJson(req,10000),hostname=normalizeStoreDomain(b.hostname);if(hostname===d.primaryHostname||hostname.endsWith('.'+d.primaryHostname))fail('reserved_store_domain');if(!uuid(b.shopId))fail('invalid_shop');const exists=(await d.pool.query('SELECT id FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL',[b.shopId])).rows[0];if(!exists)fail('shop_not_found',404);const token='photobridge-'+crypto.randomBytes(24).toString('hex');await d.pool.query('INSERT INTO equipment_store_domains(hostname,shop_id,verification_token,created_by) VALUES($1,$2,$3,$4)',[hostname,b.shopId,token,a.userId]);await d.audit(a.userId,undefined,'storefront.domain_add','equipment_rental_shop',b.shopId,{hostname});const result=await activateStoreDomain(d,{hostname,verification_token:token});return reply(201,{hostname,...result});}
  }
  const domainRoute=url.pathname.match(/^\/api\/admin\/storefront\/domains\/([^/]+)(?:\/(verify))?$/);
  if(admin&&domainRoute){const hostname=normalizeStoreDomain(decodeURIComponent(domainRoute[1])),domain=(await d.pool.query('SELECT * FROM equipment_store_domains WHERE hostname=$1',[hostname])).rows[0];if(!domain)fail('domain_not_found',404);
   if(req.method==='DELETE'){await d.pool.query('UPDATE equipment_store_domains SET active=false,updated_at=now() WHERE hostname=$1',[hostname]);await d.audit(a.userId,undefined,'storefront.domain_disable','equipment_rental_shop',domain.shop_id,{hostname});return reply(200,{ok:true});}
-  if(req.method==='POST'&&domainRoute[2]){const result=await verifyStoreDomain(domain);await d.pool.query('UPDATE equipment_store_domains SET verified_at=CASE WHEN $2 THEN now() ELSE NULL END,routed_at=CASE WHEN $3 THEN now() ELSE NULL END,active=$3,updated_at=now() WHERE hostname=$1',[hostname,result.owned,result.routed]);await d.audit(a.userId,undefined,'storefront.domain_verify','equipment_rental_shop',domain.shop_id,{hostname,...result});return reply(200,{...result,status:result.routed?'active':result.owned?'pending_hosting':'pending_dns'});}
+  if(req.method==='POST'&&domainRoute[2]){const result=await activateStoreDomain(d,domain);await d.audit(a.userId,undefined,'storefront.domain_verify','equipment_rental_shop',domain.shop_id,{hostname,...result});return reply(200,result);}
  }
  if(manager&&url.pathname==='/api/rental/storefront/bank'){
  if(req.method==='GET')return reply(200,{bank:frameBankDetails(shop)});

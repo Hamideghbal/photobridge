@@ -4,14 +4,15 @@ Platform admins open the main admin فروشگاه‌ها list → دامنه و
 
 Managers open Settings → سایت اختصاصی، قیمت‌ها و سفارش‌های عمومی (`/rental/storefront`). Existing SKUs remain shared. Each SKU has independent enabled/price/percentage-discount values for PhotoBridge and website in `variant_specs.salesChannels`. Existing products retain their PhotoBridge price and start unpublished on the website. Prices and availability are enforced on the server. Native product edits preserve channel settings. `/rental/storefront-preview` previews published website items; checkout is disabled on preview.
 
-## Domain setup and activation
+## Domain setup and activation (simplified in r1258)
 
-1. Apply migration `182_custom_storefronts.sql` through the normal migration startup.
-2. In Liara, attach the registered hostname to this application's ingress, follow its DNS instructions, and enable HTTPS. This release does **not** provision Liara ingress or certificates through its API. No Liara API credentials are currently configured.
-3. Add the ownership TXT record displayed by the admin, at `_photobridge.<hostname>`.
-4. Click بررسی و فعال‌سازی. The server checks TXT ownership and a TLS-verified HTTPS proof served by the application on that hostname. It pins requests to resolved public IPv4 addresses, rejects private/reserved addresses, does not follow redirects, and uses an eight-second timeout. Pending domains cannot serve catalog or checkout. IPv6-only hosting needs an A record for this verification implementation.
+1. In Liara, attach the hostname to the **same application as PhotoBridge**, follow its DNS instructions, and enable HTTPS. Liara ingress/certificates remain managed by the platform administrator; this release does not provision them through a provider API.
+2. In PhotoBridge's admin shop list, choose **دامنه و سایت**, select the shop and register its domain. Registration immediately checks the connection and activates a ready domain. No extra PhotoBridge TXT record or copied verification code is needed.
+3. If Liara is not ready yet, finish that setup and click **بررسی مجدد اتصال**. Existing pending domains use this same one-button path. Previously-added TXT records can remain; they are no longer consulted.
 
-DNS and HTTPS cannot be supplied merely by inserting a domain into the database. The admin shows pending DNS/hosting until these external prerequisites are complete. Domain deactivation immediately blocks public storefront/catalog/order tracking. Reverify to reactivate.
+Only a platform admin can assign a domain to a shop. Activation requires a valid, TLS-verified HTTPS response from that exact hostname containing its registered proof. The server pins connections to resolved public IPv4 addresses, rejects private/reserved addresses, follows no redirects, and bounds DNS/probe work. The main app/admin/auth routes remain inaccessible on custom storefront hosts. Pending domains cannot serve catalog or checkout. IPv6-only hosting needs an A record for this verification implementation.
+
+Domain deactivation blocks storefront/catalog/order tracking and is not undone by merely opening the domain list or visiting the public site; explicitly check the connection to reactivate it. No migration is required for r1258, beyond the original `182_custom_storefronts.sql`. The retained `verified_at` field now records successful HTTPS proof rather than a separate TXT challenge. Failed rechecks do not take an already-active shop offline.
 
 `PUBLIC_APP_URL` must be the canonical HTTPS PhotoBridge origin. Optional `STOREFRONT_PLATFORM_HOSTS` is a comma-separated list of additional trusted platform/health hostnames that must continue serving the main application (for example the existing Liara application hostname). `www.<canonical hostname>`, localhost and 127.0.0.1 are preserved. All other unregistered hosts return 404; registered storefront domains cannot access the main app, authentication, photographer or admin routes.
 

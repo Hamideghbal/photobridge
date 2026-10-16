@@ -27,9 +27,12 @@ test('public equipment site keeps local login and no first-party credential scre
  assert.match(page,/name="mobile"/);
  assert.match(page,/name="password"/);
  assert.doesNotMatch(page,/pbOfficeLogin=1/);
- assert.match(page,/equipment-site.js\?v=r1280/);
+ assert.match(page,/equipment-site.js\?v=r1281/);
  const guide=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:host,pathname:'/rental-equipment'}).html;
- assert.match(guide,/data-open-equipment-login/);
+ assert.match(guide,/id="equipmentOfficePageLogin"/);
+ assert.match(guide,/id="equipmentOfficePageMessage"/);
+ assert.doesNotMatch(guide,/data-open-equipment-login/);
+ assert.doesNotMatch(guide,/class="equipment-office-cta"/);
 });
 test('discount displays newest price first, previous price below, no percent badge',()=>{
  const web=readFileSync('dist/web/storefront.js','utf8'),portal=readFileSync('dist/api/equipment-rental-book.html','utf8');

@@ -11921,8 +11921,10 @@ async function api(req, res, url) {
     // Store photographer enters credentials on their shop hostname. Exchange an
     // expiring, one-use, shop-scoped grant for a first-party HTTP-only session.
     if(req.method==='POST'&&url.pathname==='/api/auth/equipment-site-handoff'){
-        if(req.headers.origin&&req.headers.origin!==new URL(PUBLIC_APP_URL).origin)return sendJson(res,403,{error:'invalid_origin'});
         const form=await readEquipmentHandoffPost(req);
+        // A top-level cross-site form POST sends the *shop's* Origin, not PhotoBridge's.
+        // Match it to the claimed source, which must also match the one-use grant.
+        if(req.headers.origin&&req.headers.origin!==form?.origin)return sendJson(res,403,{error:'invalid_origin'});
         const grant=form&&await consumeEquipmentStoreHandoff(pool,form);
         if(!grant){res.writeHead(303,{location:'/photographer?login_error=office_handoff','cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;}
         await createSession(grant.userId,res,'photographer');

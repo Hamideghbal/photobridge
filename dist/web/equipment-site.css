@@ -67,3 +67,11 @@ body.equipment-site{height:100dvh;min-height:0;overflow:hidden;display:flex;flex
  .equipment-site .equipment-catalog .storeHeader{top:0}
  .equipment-site>.equipment-page-scroll{scrollbar-gutter:auto}
 }
+
+/* R1279: direct, one-time first-party equipment-office entry. */
+.equipment-site .equipment-office-entry{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;background:#15263d;color:#fff!important;border:1px solid #15263d;border-radius:24px;gap:9px;padding:9px 15px;font-size:calc(12px * var(--site-scale,1));font-weight:750;text-decoration:none;box-shadow:0 3px 10px #15263d12}
+.equipment-site .equipment-office-entry:hover,.equipment-site .equipment-office-entry:focus-visible{background:#243a54;border-color:#243a54}
+.equipment-site .equipment-office-cta{max-width:660px;display:grid;gap:14px;padding:22px 0 36px}
+.equipment-site .equipment-office-cta>p{font-size:calc(14px * var(--site-scale,1));line-height:2;color:var(--muted);margin:0}
+.equipment-site .equipment-office-cta .primary{width:fit-content}
+@media(max-width:760px){.equipment-site .equipment-office-entry{font-size:11px;padding:7px 10px}}

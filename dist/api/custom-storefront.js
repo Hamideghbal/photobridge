@@ -1,4 +1,5 @@
 import {handleLabDomain} from './lab-storefront.js';
+import {mergeStoreSite,normalizeStoreSite} from './store-site-content.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -61,7 +62,7 @@ function storefrontItemImages(item,origin){
  }
  return out;
 }
-async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled===true&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
+async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;const site=isProductionShop(shop)?null:mergeStoreSite(shop,(await db.query('SELECT config FROM equipment_store_site_content WHERE shop_id=$1',[shop.id])).rows[0]?.config||{});return {site,shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled===true&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
 export async function handleStorefrontManagement(req,res,url,a,d){
  const admin=url.pathname.startsWith('/api/admin/storefront/'),manager=url.pathname.startsWith('/api/rental/storefront/');if(!admin&&!manager)return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
@@ -81,6 +82,25 @@ export async function handleStorefrontManagement(req,res,url,a,d){
  if(manager&&url.pathname==='/api/rental/storefront/bank'){
  if(req.method==='GET')return reply(200,{bank:frameBankDetails(shop)});
  if(req.method==='PUT'){const bank=normalizeFrameBank(await d.bodyJson(req,10000));await d.pool.query('UPDATE equipment_rental_shops SET payment_card_number=$2,payment_iban=$3,payment_account_holder=$4,updated_at=now() WHERE id=$1',[shop.id,bank.cardNumber||null,bank.iban||null,bank.accountHolder||null]);await d.audit(a.userId,undefined,'storefront.bank_settings','equipment_rental_shop',shop.id,{hasCard:Boolean(bank.cardNumber),hasIban:Boolean(bank.iban)});return reply(200,{ok:true});}
+ }
+ if(manager&&url.pathname==='/api/rental/storefront/site'){
+  if(isProductionShop(shop))return reply(404,{error:'not_found'});
+  if(req.method==='GET'){
+   const row=(await d.pool.query('SELECT config,revision FROM equipment_store_site_content WHERE shop_id=$1',[shop.id])).rows[0];
+   const domains=(await d.pool.query('SELECT hostname,active FROM equipment_store_domains WHERE shop_id=$1 AND released_at IS NULL ORDER BY created_at',[shop.id])).rows;
+   return reply(200,{shop:{id:shop.id,name:shop.name},config:mergeStoreSite(shop,row?.config||{}),revision:row?.revision||0,domains});
+  }
+  if(req.method==='PUT'){
+   const input=await d.bodyJson(req,1800000);
+   if(!Number.isInteger(input.revision)||input.revision<0)fail('invalid_site_revision');
+   const current=(await d.pool.query('SELECT revision FROM equipment_store_site_content WHERE shop_id=$1',[shop.id])).rows[0];
+   if(input.revision!==(current?.revision||0))fail('site_revision_conflict',409);
+   const saved=await normalizeStoreSite(input.config,d.sharp);
+   const row=(await d.pool.query('INSERT INTO equipment_store_site_content(shop_id,config,revision,updated_by) VALUES($1,$2::jsonb,1,$3) ON CONFLICT(shop_id) DO UPDATE SET config=EXCLUDED.config,revision=equipment_store_site_content.revision+1,updated_by=EXCLUDED.updated_by,updated_at=now() WHERE equipment_store_site_content.revision=$4 RETURNING revision,config',[shop.id,JSON.stringify(saved),a.userId,input.revision])).rows[0];
+   if(!row)fail('site_revision_conflict',409);
+   await d.audit(a.userId,undefined,'storefront.site_update','equipment_rental_shop',shop.id,{revision:row.revision,fields:Object.keys(saved)});
+   return reply(200,{revision:row.revision,config:mergeStoreSite(shop,row.config)});
+  }
  }
  if(manager&&url.pathname==='/api/rental/storefront/items'&&req.method==='GET')return reply(200,{items:(await d.pool.query('SELECT id,title,model,sale_price,variant_specs FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows});
  if(manager&&url.pathname==='/api/rental/storefront/preview'&&req.method==='GET')return reply(200,{...await catalog(d.pool,shop,d.publicItem,d.publicOrigin),preview:true});
@@ -115,7 +135,7 @@ export async function handleCustomStorefront(req,res,url,d){
  if(domain.lab_id)return handleLabDomain(req,res,url,domain,d);
  const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND (COALESCE(sale_enabled,false)=true OR COALESCE(rental_enabled,false)=true) AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
- const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};
+ const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2'],'/equipment-demo/canon-r6ii.png':['equipment-demo/canon-r6ii.png','image/png'],'/equipment-demo/sony-a7iv.png':['equipment-demo/sony-a7iv.png','image/png'],'/equipment-demo/dji-rs3pro.png':['equipment-demo/dji-rs3pro.png','image/png']};
  if(req.method==='GET'&&Object.hasOwn(assets,url.pathname)){const [file,contentType]=assets[url.pathname],body=fs.readFileSync(path.join(d.webRoot,file));res.writeHead(200,{'content-type':contentType,'content-security-policy':"default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"});res.end(body);return true;}
  if(req.method==='GET'&&url.pathname==='/api/storefront/catalog')return reply(200,await catalog(d.pool,shop,d.publicItem,d.publicOrigin));
  // Only these existing photographer API actions may run on equipment-shop hosts.

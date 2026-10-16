@@ -1,0 +1,21 @@
+/* R1282: fill the mobile viewport up to the real dock, never leave a
+   hard-coded 70/94px blank strip. The dock stays visible above the content. */
+@media(max-width:820px){
+  html body.rentalPhotographerMode #storePhotographerWorkspace.storePhotographerWorkspace{
+    height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+  html body.rentalPhotographerMode #storePhotographerWorkspace>.shell{
+    bottom:var(--pb1282-mobile-dock-space,70px)!important;
+    margin-bottom:0!important;
+    min-height:0!important;
+    box-sizing:border-box!important;
+    overscroll-behavior-y:contain!important;
+  }
+  html body.rentalPhotographerMode #storePhotographerWorkspace>.shell>#app{
+    min-height:100%!important;
+  }
+  html body.rentalPhotographerMode.frameCustomerStore #photographerStoreHeaderName{
+    animation:none!important;transition:none!important;
+  }
+}

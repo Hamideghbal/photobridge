@@ -59,7 +59,7 @@ function storefrontItemImages(item,origin){
  }
  return out;
 }
-async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled!==false&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
+async function catalog(db,shop,publicItem,publicOrigin){const rows=shop.sale_enabled===false?[]:(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop),rentalEnabled:shop.rental_enabled===true&&!isProductionShop(shop),saleEnabled:shop.sale_enabled!==false,platformOrigin:publicOrigin},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
 export async function handleStorefrontManagement(req,res,url,a,d){
  const admin=url.pathname.startsWith('/api/admin/storefront/'),manager=url.pathname.startsWith('/api/rental/storefront/');if(!admin&&!manager)return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};

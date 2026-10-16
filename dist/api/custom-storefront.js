@@ -43,7 +43,22 @@ export async function createPublicOrder(db,{shop,hostname,body}){
  await db.query('COMMIT');return {id,accessToken:token,totalAmount:total,bankDetails:bank,status:'awaiting_receipt'};
  }catch(e){await db.query('ROLLBACK');throw e;}
 }
-async function catalog(db,shop,publicItem){const rows=(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop)},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(publicItem)};}
+// Images are served by the canonical PhotoBridge origin. On a merchant's own
+// hostname, relative signed album-asset links otherwise hit the restricted
+// storefront router and return 404. Do not expose main-app media routes there.
+function storefrontImageUrl(url,origin){
+ if(typeof url!=='string'||!/^\/(?:api\/album-asset(?:-preview)?\/|equipment-demo\/)/.test(url))return url;
+ return new URL(url,origin).href;
+}
+function storefrontItemImages(item,origin){
+ const out={...item};
+ for(const key of ['image_url','thumbnail_url'])out[key]=storefrontImageUrl(out[key],origin);
+ for(const key of ['image_urls','thumbnail_urls','color_image_urls','pricing_image_urls']){
+  if(Array.isArray(out[key]))out[key]=out[key].map(url=>storefrontImageUrl(url,origin));
+ }
+ return out;
+}
+async function catalog(db,shop,publicItem,publicOrigin){const rows=(await db.query('SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND active=true AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows;return {shop:{id:shop.id,name:shop.name,description:shop.description,phone:shop.phone,address:shop.address,production:isProductionShop(shop)},items:rows.filter(row=>isProductionShop(shop)||Number(row.stock_total)>0).map(row=>channelItem(row,'website')).filter(Boolean).map(row=>storefrontItemImages(publicItem(row),publicOrigin))};}
 export async function handleStorefrontManagement(req,res,url,a,d){
  const admin=url.pathname.startsWith('/api/admin/storefront/'),manager=url.pathname.startsWith('/api/rental/storefront/');if(!admin&&!manager)return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
@@ -64,7 +79,7 @@ export async function handleStorefrontManagement(req,res,url,a,d){
  if(req.method==='PUT'){const bank=normalizeFrameBank(await d.bodyJson(req,10000));await d.pool.query('UPDATE equipment_rental_shops SET payment_card_number=$2,payment_iban=$3,payment_account_holder=$4,updated_at=now() WHERE id=$1',[shop.id,bank.cardNumber||null,bank.iban||null,bank.accountHolder||null]);await d.audit(a.userId,undefined,'storefront.bank_settings','equipment_rental_shop',shop.id,{hasCard:Boolean(bank.cardNumber),hasIban:Boolean(bank.iban)});return reply(200,{ok:true});}
  }
  if(manager&&url.pathname==='/api/rental/storefront/items'&&req.method==='GET')return reply(200,{items:(await d.pool.query('SELECT id,title,model,sale_price,variant_specs FROM equipment_sale_items WHERE shop_id=$1 AND deleted_at IS NULL ORDER BY title,id',[shop.id])).rows});
- if(manager&&url.pathname==='/api/rental/storefront/preview'&&req.method==='GET')return reply(200,{...await catalog(d.pool,shop,d.publicItem),preview:true});
+ if(manager&&url.pathname==='/api/rental/storefront/preview'&&req.method==='GET')return reply(200,{...await catalog(d.pool,shop,d.publicItem,d.publicOrigin),preview:true});
  const itemRoute=url.pathname.match(/^\/api\/rental\/storefront\/items\/([0-9a-f-]{36})$/i);
  if(manager&&itemRoute&&req.method==='PUT'){const b=await d.bodyJson(req,10000),c=await d.pool.connect();try{await c.query('BEGIN');const item=(await c.query('SELECT * FROM equipment_sale_items WHERE id=$1 AND shop_id=$2 AND deleted_at IS NULL FOR UPDATE',[itemRoute[1],shop.id])).rows[0];if(!item)fail('sale_item_not_found',404);const pricing=normalizeChannelPricing(b.salesChannels,item.variant_specs?.salesChannels,item.sale_price);await c.query("UPDATE equipment_sale_items SET variant_specs=jsonb_set(COALESCE(variant_specs,'{}'::jsonb),'{salesChannels}',$3::jsonb),updated_at=now() WHERE id=$1 AND shop_id=$2",[item.id,shop.id,JSON.stringify(pricing)]);await c.query('COMMIT');return reply(200,{ok:true});}catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}}
  if(manager&&url.pathname==='/api/rental/storefront/orders'&&req.method==='GET')return reply(200,{orders:(await d.pool.query('SELECT id,hostname,customer_name,customer_mobile,delivery_method,delivery_address,items,total_amount,status,receipt_submitted_at,review_note,created_at FROM equipment_store_public_orders WHERE shop_id=$1 ORDER BY created_at DESC LIMIT 150',[shop.id])).rows});

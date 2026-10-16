@@ -168,3 +168,5 @@ await import("./enable-r1273-text-editor.mjs");
 await import("./enable-r1274-equipment-layout.mjs");
 
 await import("./enable-r1275-site-position.mjs");
+
+await import("./enable-r1276-equipment-reviews.mjs");

@@ -36,6 +36,8 @@ test('standalone manager-mobile patch updates only manager_mobile, never trigger
 test('invalid manager mobile rejected and unrelated form change falls through',async()=>{
  const invalid=await exec({managerMobile:'1111'});
  assert.equal(invalid.results[0].status,400);assert.equal(invalid.calls.length,0);
+ const textMobile=await exec({managerMobile:'شماره نامعتبر'});
+ assert.equal(textMobile.results[0].status,400);assert.equal(textMobile.calls.length,0);
  const unchanged=await exec({managerMobile:'09123456789',name:'edited'});
  assert.equal(unchanged.results.length,0);assert.equal(unchanged.calls.length,0);
 });

@@ -1,1 +1,1 @@
-2026-10-16-r1255-store-profile-fields-and-photographer-deposit
+2026-10-16-r1256-custom-storefront-domains-public-orders

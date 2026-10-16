@@ -1,3 +1,4 @@
+import {channelItem} from './storefront-pricing.js';
 import crypto from 'node:crypto';
 export const isProductionShop=shop=>['frame','chassis','frame_chassis'].includes(shop?.business_category);
 const fail=(error,status=409)=>{throw Object.assign(new Error(error),{status});};
@@ -39,7 +40,7 @@ export async function createProductionOrders(db,{shop,userId,items,body,price}){
  const byId=new Map(q.rows.map(x=>[String(x.id),x])),quantities=new Map();
  for(const x of items){const quantity=Number(x.quantity);if(!Number.isInteger(quantity)||quantity<1||quantity>99)fail('invalid_quantity',400);quantities.set(String(x.itemId),(quantities.get(String(x.itemId))||0)+quantity);}
  if([...quantities.values()].some(n=>n>99))fail('invalid_quantity',400);
- const lines=[];for(const id of sorted){const item=byId.get(id),quantity=quantities.get(id),p=await price(db,shop,userId,Number(item.sale_price)*quantity);lines.push({item,quantity,p});}
+ const lines=[];for(const id of sorted){const item=channelItem(byId.get(id),'photobridge');if(!item)fail('sale_cart_changed');const quantity=quantities.get(id),p=await price(db,shop,userId,Number(item.sale_price)*quantity);lines.push({item,quantity,p});}
  const u=(await db.query(`SELECT u.name,u.mobile,COALESCE(pp.studio_name,u.name) studio_name,COALESCE(NULLIF(BTRIM(pp.location_address),''),NULLIF(BTRIM(u.location_address),'')) saved_delivery_address,COALESCE(pp.location_lat,u.location_lat) saved_lat,COALESCE(pp.location_lng,u.location_lng) saved_lng FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE u.id=$1 AND u.active=true`,[userId])).rows[0];if(!u)fail('photographer_auth_required',401);
  const address=body.deliveryMethod==='courier'?String(u.saved_delivery_address||'').trim().slice(0,1000):'';
  if(body.deliveryMethod==='courier'&&!address)fail('photographer_delivery_address_unavailable',400);

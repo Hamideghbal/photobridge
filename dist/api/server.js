@@ -1,3 +1,5 @@
+import {handleCustomStorefront,handleStorefrontManagement} from './custom-storefront.js';
+import {channelItem,channelPrice} from './storefront-pricing.js';
 import { shopSmsTestRecipient, productionOrderSms } from './store-order-sms.js';
 import {handleFramePayments,frameBankDetails} from './frame-payments.js';
 import {saveFrameModel,deleteFrameModel} from './frame-model-catalog.js';
@@ -9737,7 +9739,7 @@ function frameVariant(shop,b,current=null){
  const number=k=>{const raw=b[k];if(raw===undefined)return old[k.replace('variant','').replace(/^./,c=>c.toLowerCase())]??null;if(raw===null||String(raw).trim()==='')return null;const n=Number(normalizeDigits(String(raw)).replace('٫','.'));return Number.isFinite(n)&&n>0&&n<=10000?n:NaN;};
  const widthCm=number('variantWidthCm'),heightCm=number('variantHeightCm'),diameterCm=number('variantDiameterCm'),thicknessMm=number('variantThicknessMm');
  if(!model||!material||material.length>80||!color||color.length>40||![widthCm,heightCm,diameterCm,thicknessMm].every(n=>n===null||Number.isFinite(n))||(!diameterCm&&(!widthCm||!heightCm))||(diameterCm&&(widthCm||heightCm)))return {error:'frame_variant_specs_required'};
- const specs={baseModel:model,material,color,widthCm,heightCm,diameterCm,thicknessMm};const size=diameterCm?'قطر '+diameterCm+' سانتی‌متر':widthCm+'×'+heightCm+' سانتی‌متر';
+ const specs={baseModel:model,material,color,widthCm,heightCm,diameterCm,thicknessMm,...(old.salesChannels?{salesChannels:old.salesChannels}:{})};const size=diameterCm?'قطر '+diameterCm+' سانتی‌متر':widthCm+'×'+heightCm+' سانتی‌متر';
  return {specs,model:[model,'جنس '+material,size,thicknessMm?'قطر / ضخامت '+thicknessMm+' میلی‌متر':'','رنگ '+color].filter(Boolean).join(' · ')};
 }
 const frameDefaultSeeds=new Map();
@@ -11906,6 +11908,10 @@ async function galleryPublicContent(row) {
 async function cleanupExpiredClientGalleries() {
     await maintainGalleryLifetime(pool,deleteStoredKeyBestEffort,async(owner,notice)=>sendWebPushToRecipient('customer',owner,notice,'gallery.expiring',notice.metadata));
 }
+const storefrontRateBuckets=new Map();
+function storefrontDependencies(){return {pool,sendJson,bodyJson,sharp,currentShop:equipmentRentalCurrentShop,requireRole,audit,publicItem:equipmentItemPublic,readObject:readAiObject,deleteObject:deleteStoredKeyBestEffort,webRoot:path.join(DIST_ROOT,'web'),primaryHostname:new URL(PUBLIC_APP_URL).hostname,platformHosts:String(process.env.STOREFRONT_PLATFORM_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),publicOrigin:new URL(PUBLIC_APP_URL).origin,
+ rateAllowed:(req,host)=>{const key=host+':'+requestIpHash(req),now=Date.now();if(storefrontRateBuckets.size>5000)for(const [k,v]of storefrontRateBuckets)if(v.until<now)storefrontRateBuckets.delete(k);if(storefrontRateBuckets.size>=10000&&!storefrontRateBuckets.has(key))return false;let entry=storefrontRateBuckets.get(key);if(!entry||entry.until<now){entry={count:0,until:now+60000};storefrontRateBuckets.set(key,entry);}return ++entry.count<=30;},
+ storeReceipt:async(shopId,orderId,receiptId,buffer)=>{const rel=`storefront-receipts/${shopId}/${orderId}/${receiptId}.jpg`;if(storageConfigured&&s3){const key=storageKey(rel);await s3.send(new PutObjectCommand({Bucket:S3_BUCKET,Key:key,Body:buffer,ContentType:'image/jpeg'}));return key;}if(LOCAL_UPLOAD_FALLBACK){const key=localStorageObjectKey(rel),file=localPathForKey(key);await fs.promises.mkdir(path.dirname(file),{recursive:true});await fs.promises.writeFile(file,buffer);return key;}throw Object.assign(new Error('storage_not_configured'),{status:503});}};}
 async function api(req, res, url) {
     // v790: country check for the Iran-focused mobile app. Prefer trusted proxy/CDN
     // country headers; use a short-lived IP geolocation fallback only when absent.
@@ -12128,6 +12134,7 @@ async function api(req, res, url) {
         }
     }
     const a = await auth(req);
+    if(await handleStorefrontManagement(req,res,url,a,storefrontDependencies()))return;
     /* PB_R1099_PHOTOGRAPHER_TABS */
     if (await handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit})) return;
     if (url.pathname === '/api/admin/maintenance' && req.method === 'GET') {
@@ -16596,7 +16603,7 @@ ${inviteUrl}`;
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});
         await ensureEquipmentRentalV663Schema();await ensureEquipmentGlobalCatalogV827Schema();const shopId=String(url.searchParams.get('shopId')||'');if(!/^[0-9a-f-]{36}$/i.test(shopId))return sendJson(res,400,{error:'invalid_shop'});if(!(await equipmentRentalPhotographerCanAccessShop(pool,a.userId,shopId,'sale')))return sendJson(res,403,{error:'rental_shop_scope_forbidden'});
         const [q,sq]=await Promise.all([pool.query(`SELECT i.*,s.name shop_name,gp.image_urls catalog_image_urls,COALESCE(c.name,i.category) category_label FROM equipment_sale_items i JOIN equipment_rental_shops s ON s.id=i.shop_id LEFT JOIN equipment_catalog_categories c ON c.shop_id=i.shop_id AND c.code=i.category LEFT JOIN equipment_global_products gp ON gp.id=i.catalog_product_id AND gp.active=true AND gp.deleted_at IS NULL WHERE i.shop_id=$1 AND i.active=true AND i.deleted_at IS NULL AND (i.stock_total>0 OR s.business_category IN ('frame','chassis','frame_chassis')) AND (i.sku IS NULL OR i.sku NOT ILIKE 'SOFIA-DEMO-%') AND s.active=true AND COALESCE(s.suspended,false)=false AND (s.active_from IS NULL OR s.active_from<=now()) AND (s.active_until IS NULL OR s.active_until>=now()) ORDER BY COALESCE(c.sort_order,9999),i.title`,[shopId]),pool.query(`SELECT id,name,business_category,sales_wallet_checkout_enabled,payment_card_number,payment_iban,payment_account_holder FROM equipment_rental_shops WHERE id=$1 LIMIT 1`,[shopId])]);
-        const production=isProductionShop(sq.rows[0]);return sendJson(res,200,{items:q.rows.map(equipmentItemPublic),shop:{id:shopId,name:sq.rows[0]?.name||null,production,walletCheckoutEnabled:!production&&Boolean(sq.rows[0]?.sales_wallet_checkout_enabled),...(production?{paymentSettings:frameBankDetails(sq.rows[0])}:{})}});
+        const production=isProductionShop(sq.rows[0]);return sendJson(res,200,{items:q.rows.map(item=>channelItem(item,'photobridge')).filter(Boolean).map(equipmentItemPublic),shop:{id:shopId,name:sq.rows[0]?.name||null,production,walletCheckoutEnabled:!production&&Boolean(sq.rows[0]?.sales_wallet_checkout_enabled),...(production?{paymentSettings:frameBankDetails(sq.rows[0])}:{})}});
     }
     if (req.method === 'GET' && url.pathname === '/api/customer/equipment-rental/sale-orders') {
         if (!a || a.labRole !== 'customer') return sendJson(res,401,{error:'photographer_auth_required'});await ensureEquipmentRentalV654Schema();const q=await pool.query(`SELECT o.*,fp.status receipt_status,fp.review_note receipt_review_note,equipment_rental_display_name(i.category,i.brand,i.model,i.title,i.shop_id) item_title,s.name shop_name FROM equipment_sale_orders o JOIN equipment_sale_items i ON i.id=o.sale_item_id JOIN equipment_rental_shops s ON s.id=o.shop_id LEFT JOIN equipment_frame_payments fp ON fp.id=o.frame_payment_id WHERE o.buyer_user_id=$1 ORDER BY o.created_at DESC LIMIT 100`,[a.userId]);return sendJson(res,200,{orders:q.rows});
@@ -16616,7 +16623,7 @@ ${inviteUrl}`;
             if(!(await equipmentRentalPhotographerCanAccessShop(c,a.userId,item.shop_id,'sale'))){await c.query('ROLLBACK');return sendJson(res,403,{error:'rental_shop_scope_forbidden'});}
             if(Number(item.stock_total||0)<quantity){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient'});}
             const uq=await c.query(`SELECT u.name,u.mobile,COALESCE(pp.studio_name,u.name) photographer_name FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE u.id=$1 LIMIT 1`,[a.userId]),u=uq.rows[0]||{};
-            const id=crypto.randomUUID(),unit=Number(item.sale_price||0),price=await equipmentSalePrice(c,{...item,id:item.shop_id},a.userId,unit*quantity),total=price.totalAmount,walletCheckout=Boolean(item.sales_wallet_checkout_enabled);
+            const channel=channelPrice(item,'photobridge');if(!channel){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_item_unavailable'});}const id=crypto.randomUUID(),unit=channel.price,price=await equipmentSalePrice(c,{...item,id:item.shop_id},a.userId,unit*quantity),total=price.totalAmount,walletCheckout=Boolean(item.sales_wallet_checkout_enabled);
             let pay={buyerTx:null,shopTx:null,buyerBalanceAfter:null};
             if(walletCheckout){pay=await equipmentSaleDebitBuyerAndCreditShop(c,{orderId:id,shopId:item.shop_id,buyerUserId:a.userId,amount:total,itemTitle:String(item.title||'تجهیز'),quantity});await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total-$2,active=CASE WHEN stock_total-$2<=0 THEN false ELSE active END,updated_at=now() WHERE id=$1`,[item.id,quantity]);}
             await c.query(`INSERT INTO equipment_sale_orders(id,shop_id,sale_item_id,buyer_user_id,buyer_name,buyer_mobile,quantity,unit_price,total_amount,status,payment_status,buyer_wallet_transaction_id,shop_wallet_transaction_id,paid_at,notes,created_by,gross_amount,discount_percent,discount_amount,discount_reason)
@@ -16659,7 +16666,7 @@ ${inviteUrl}`;
             const iq=await c.query(`SELECT * FROM equipment_sale_items WHERE shop_id=$1 AND id=ANY($2::uuid[]) AND active=true AND deleted_at IS NULL AND (sku IS NULL OR sku NOT ILIKE 'SOFIA-DEMO-%') ORDER BY id FOR UPDATE`,[shopId,ids]);
             if(iq.rowCount!==ids.length){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_cart_changed'});}
             const byId=new Map(iq.rows.map(x=>[String(x.id),x]));let total=0;const lines=[];
-            for(const row of cart){const item=byId.get(row.itemId);if(!item||Number(item.stock_total||0)<row.quantity){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient',itemId:row.itemId});}const price=await equipmentSalePrice(c,shop,a.userId,Number(item.sale_price||0)*row.quantity);total+=price.totalAmount;lines.push({item,quantity:row.quantity,lineTotal:price.totalAmount,price});}
+            for(const row of cart){const item=channelItem(byId.get(row.itemId),'photobridge');if(!item||Number(item.stock_total||0)<row.quantity){await c.query('ROLLBACK');return sendJson(res,409,{error:'sale_stock_insufficient',itemId:row.itemId});}const price=await equipmentSalePrice(c,shop,a.userId,Number(item.sale_price||0)*row.quantity);total+=price.totalAmount;lines.push({item,quantity:row.quantity,lineTotal:price.totalAmount,price});}
             const uq=await c.query(`SELECT u.name,u.mobile,COALESCE(pp.studio_name,u.name) photographer_name FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE u.id=$1 LIMIT 1`,[a.userId]),u=uq.rows[0]||{};
             const walletCheckout=Boolean(shop.sales_wallet_checkout_enabled),cartId=crypto.randomUUID();let pay={buyerTx:null,shopTx:null,buyerBalanceAfter:null};
             if(walletCheckout){const summary=lines.map(x=>`${x.quantity}× ${x.item.title}`).join('، ').slice(0,350);pay=await equipmentSaleDebitBuyerAndCreditShop(c,{orderId:cartId,shopId,buyerUserId:a.userId,amount:total,itemTitle:summary||'سبد تجهیزات',quantity:lines.reduce((n,x)=>n+x.quantity,0)});for(const x of lines)await c.query(`UPDATE equipment_sale_items SET stock_total=stock_total-$2,active=CASE WHEN stock_total-$2<=0 THEN false ELSE active END,updated_at=now() WHERE id=$1`,[x.item.id,x.quantity]);}
@@ -26033,9 +26040,18 @@ async function bootstrap() {
                 }
             }
         }
+        if(await handleCustomStorefront(req,res,url,storefrontDependencies()))return;
         if (url.pathname.startsWith('/api/'))
             return await api(req, res, url);
         // v857: the photographer store is live. Never allow the legacy SPA Coming Soon route to render.
+        if(req.method==='GET'&&['/rental/storefront','/admin/storefront'].includes(url.pathname)){
+            const actor=await auth(req);if(url.pathname.startsWith('/admin/')?!requireRole(actor,'platform_admin'):!await equipmentRentalCurrentShop(actor))return sendJson(res,403,{error:'forbidden'});
+            const html=fs.readFileSync(path.join(DIST_ROOT,'web','storefront-management.html'));res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex'});res.end(html);return;
+        }
+        if(req.method==='GET'&&url.pathname==='/rental/storefront-preview'){
+            const actor=await auth(req),shop=await equipmentRentalCurrentShop(actor);if(!shop)return sendJson(res,403,{error:'forbidden'});
+            const html=fs.readFileSync(path.join(DIST_ROOT,'web','storefront.html'));res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex'});res.end(html);return;
+        }
         if (req.method === 'GET' && /^\/photographer\/store\/?$/.test(url.pathname)) {
             res.statusCode = 302;
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');

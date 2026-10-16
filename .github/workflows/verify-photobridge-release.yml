@@ -127,7 +127,7 @@ jobs:
           node --test scripts/test-r1242-frame-payments.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1169-store-categories.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1256-storefront.cjs
-          node --test scripts/test-r1256-storefront-browser.cjs scripts/test-r1259-storefront-design.cjs scripts/test-r1260-sample-preview.cjs scripts/test-r1260-editor-pricing.cjs scripts/test-r1262-equipment-domain-office.cjs scripts/test-r1264-lab-storefront.cjs scripts/test-r1267-lab-site.cjs scripts/test-r1268-equipment-site.cjs
+          node --test scripts/test-r1256-storefront-browser.cjs scripts/test-r1259-storefront-design.cjs scripts/test-r1260-sample-preview.cjs scripts/test-r1260-editor-pricing.cjs scripts/test-r1262-equipment-domain-office.cjs scripts/test-r1264-lab-storefront.cjs scripts/test-r1267-lab-site.cjs scripts/test-r1268-equipment-site.cjs scripts/test-r1273-text-style.cjs
           node --test scripts/test-r1172-production.cjs scripts/test-r1250-store-order-sms.cjs
           node --test scripts/test-r1207-frame-model-ui.cjs scripts/test-r1207-frame-store.cjs scripts/test-r1208-frame-material.cjs scripts/test-r1209-independent-colors.cjs scripts/test-r1210-frame-owner-card.cjs scripts/test-r1210-model-delete.cjs scripts/test-r1214-frame-customer.cjs scripts/test-r1219-frame-orders.cjs scripts/test-r1222-mobile-brand.cjs scripts/test-r1225-mobile-store-chooser.cjs
           node --check dist/web/photobridge-r1207-frame-store.js

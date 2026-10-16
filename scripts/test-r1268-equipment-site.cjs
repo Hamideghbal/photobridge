@@ -18,12 +18,13 @@ const stableHeader=await page.locator('.site-header').evaluate(el=>({height:el.g
 assert.equal(await page.locator('#equipmentPageScroll').evaluate(el=>getComputedStyle(el).overflowY),'auto');
 assert.equal(page.url(),startUrl);
 await page.locator('.hero .primary').click();assert.equal(new URL(page.url()).pathname,'/products');await page.locator('.product').waitFor();assert.equal(await page.locator('.equipment-product').count(),1,'API equipment items render independently of frame scripts');const layout=await page.evaluate(()=>({header:document.querySelector('.site-header').getBoundingClientRect().toJSON(),tools:document.querySelector('.storeHeader').getBoundingClientRect().toJSON(),cart:document.querySelector('#cartButton').getBoundingClientRect().toJSON(),links:document.querySelector('.storeLinks').getBoundingClientRect().toJSON(),title:document.querySelector('.equipment-products-heading').getBoundingClientRect().toJSON()}));assert(Math.abs(layout.tools.top-layout.header.bottom)<2,'toolbar sits directly below main header');assert(layout.cart.right<=layout.links.left,'cart stays at the left edge');assert(layout.title.top>=layout.tools.bottom,'title follows toolbar');assert.equal(await page.locator('#rentalSection').isVisible(),false,'products do not stack rental content');await page.evaluate(()=>scrollTo(0,250));const stuck=await page.evaluate(()=>({header:document.querySelector('.site-header').getBoundingClientRect().bottom,tools:document.querySelector('.storeHeader').getBoundingClientRect().top}));assert(Math.abs(stuck.tools-stuck.header)<2,'catalogue bar sticks below main header while scrolling');await page.evaluate(()=>scrollTo(0,0));assert.equal(await page.locator('h1').count(),1);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.locator('[data-add]').first().click();await page.locator('#cartButton').click();assert((await page.locator('#cartCount').textContent()).includes('۱'));await page.locator('#closeCart').click();await page.goto(site.origin+'/rental-equipment');
-await page.locator('.equipment-office-cta').waitFor();
+await page.locator('#equipmentOfficePageLogin').waitFor({state:'visible'});
 assert.equal(await page.locator('#catalog,#rentalSection,#rentalLogin,#rentalBookingForm').count(),0);
-assert.equal(await page.locator('.equipment-office-cta a').getAttribute('data-open-equipment-login'),'');
-await page.locator('.equipment-office-cta a').click();
-await page.locator('#equipmentHeaderLogin').waitFor({state:'visible'});
-await page.locator('.photographer-close').click();
+assert.equal(await page.locator('.equipment-office-cta,[data-open-equipment-login]').count(),0,'office page has no secondary login button');
+assert.equal(await page.locator('#equipmentOfficePageLogin [name=mobile]').count(),1);
+assert.equal(await page.locator('#equipmentOfficePageLogin [name=password]').count(),1);
+assert(await page.locator('.equipment-office-login-card').isVisible());
+assert(await page.locator('#equipmentOfficePageLogin [type=submit]').isVisible());
 const rentalLayout=await page.locator('.site-footer').evaluate(el=>({bottom:el.getBoundingClientRect().bottom,height:innerHeight}));
 assert(Math.abs(rentalLayout.bottom-rentalLayout.height)<2,'short office guidance footer stays at viewport bottom');
 await page.screenshot({path:'work/r1280-office-guide-'+width+'.png',fullPage:true});

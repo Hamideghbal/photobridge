@@ -1,5 +1,6 @@
 import {publicSiteReviews,manageSiteReviews} from './store-site-reviews.js';
 import {handleEquipmentSite} from './equipment-site.js';
+import {equipmentStorefrontLoginHandoff} from './equipment-storefront-handoff.js';
 import {handleEquipmentSiteManagement} from './equipment-site-management.js';
 import {handleLabDomain} from './lab-storefront.js';
 import crypto from 'node:crypto';
@@ -112,7 +113,7 @@ export function equipmentPhotographerRoute(req,url,shop){
  return false;
 }
 export async function handleCustomStorefront(req,res,url,d){
- const raw=String(req.headers.host||'').toLowerCase(),host=raw.replace(/:\d+$/,'');if(host===d.primaryHostname||host==='www.'+d.primaryHostname||(d.platformHosts||[]).includes(host)||host==='localhost'||host==='127.0.0.1')return false;
+ const raw=String(req.headers.host||'').toLowerCase(),host=raw.replace(/:\d+$/,'');if(host===d.primaryHostname){if(await equipmentStorefrontLoginHandoff(req,res,url,null,host,d))return true;return false;}if(host==='www.'+d.primaryHostname||(d.platformHosts||[]).includes(host)||host==='localhost'||host==='127.0.0.1')return false;
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
  try{
  const domain=(await d.pool.query('SELECT * FROM equipment_store_domains WHERE hostname=$1 AND released_at IS NULL',[host])).rows[0];if(!domain)return reply(404,{error:'unknown_store_domain'});
@@ -121,6 +122,7 @@ export async function handleCustomStorefront(req,res,url,d){
  if(domain.lab_id)return handleLabDomain(req,res,url,domain,d);
  const shop=(await d.pool.query("SELECT * FROM equipment_rental_shops WHERE id=$1 AND active=true AND (COALESCE(sale_enabled,false)=true OR COALESCE(rental_enabled,false)=true) AND COALESCE(suspended,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now()) AND deleted_at IS NULL",[domain.shop_id])).rows[0];if(!shop)return reply(404,{error:'store_unavailable'});
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
+ if(await equipmentStorefrontLoginHandoff(req,res,url,shop,host,d))return true;
  if(await publicSiteReviews(req,res,url,shop,host,d))return true;
  if(!isProductionShop(shop)&&await handleEquipmentSite(req,res,url,domain,shop,d))return true;
  const assets={'/':['storefront.html','text/html; charset=utf-8'],'/storefront.js':['storefront.js','application/javascript; charset=utf-8'],'/storefront.css':['storefront.css','text/css; charset=utf-8'],'/storefront-rental.js':['storefront-rental.js','application/javascript; charset=utf-8'],'/photobridge-r1207-frame-catalog.js':['photobridge-r1207-frame-catalog.js','application/javascript; charset=utf-8'],'/assets/photobridge-handover-vazirmatn.woff2':['assets/photobridge-handover-vazirmatn.woff2','font/woff2']};

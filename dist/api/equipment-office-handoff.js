@@ -48,3 +48,11 @@ export async function readEquipmentHandoffPost(req){
  const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
  return params.size===2?{ticket:params.get('ticket'),origin:params.get('origin')}:null;
 }
+
+/** A restrictive no-referrer policy can serialize Origin as "null".
+ *  A valid single-use ticket is independently tied to the claimed, verified
+ *  shop hostname; a concrete mismatching browser Origin still fails closed. */
+export function equipmentHandoffOriginAllowed(browserOrigin,claimedOrigin){
+ const origin=String(browserOrigin||'');
+ return !origin||origin==='null'||origin===claimedOrigin;
+}

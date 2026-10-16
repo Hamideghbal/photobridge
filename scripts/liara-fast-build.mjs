@@ -18,6 +18,11 @@ try {
 }
 
 const required = [
+  'dist/web/storefront.html',
+  'dist/web/storefront.js',
+  'dist/web/storefront.css',
+  'dist/web/photobridge-r1207-frame-catalog.js',
+  'dist/web/assets/photobridge-handover-vazirmatn.woff2',
   'dist/api/server.js',
   'dist/api/faceDetectorWorker.js',
   'dist/api/stage4CompositeWorker.js',

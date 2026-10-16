@@ -40,6 +40,10 @@ jobs:
           node --check dist/web/photobridge-r1126-desktop-navigation.js
           node --check dist/web/lab-site-editor.js
           node --test scripts/test-r1278-equipment-site.mjs
+          node --test scripts/test-r1280-equipment-local-login-prices.mjs
+          node --check dist/api/equipment-office-handoff.js
+          node --check dist/web/equipment-site.js
+          node --check dist/web/storefront.js
       - name: Run production build
         run: npm run build
       - name: Verify cross-device automatic commitment print receiver

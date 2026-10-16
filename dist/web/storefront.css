@@ -48,3 +48,11 @@ main{width:100%;margin:0 auto;padding:24px 24px 40px}.storeIntro{display:flex;ga
 .storeIntro .rentalTopLink{color:#244fb4;background:#fff}
 @media(max-width:900px){.rentalItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:639px){.rentalSection{padding:12px;margin:12px 0 25px}.rentalSectionHead{padding:13px}.rentalSectionHead h2{font-size:calc(16px * var(--site-scale,1))}.rentalFields,.rentalDates{grid-template-columns:1fr}.rentalItems,.rentalBookings{grid-template-columns:1fr}.rentalProductImage{height:185px}.rentalActionRow>.btn{flex:1}.storeIntro .rentalTopLink{display:inline-flex;font-size:calc(10px * var(--site-scale,1));white-space:nowrap;align-items:center;margin-inline-start:auto}.storeIntro:has(.rentalTopLink:not([hidden])){flex-wrap:wrap}}
+
+/* r1280 – same discounted price hierarchy on public custom-domain cards. */
+.publicStorefront .frameProductCard .saleItemPrice,
+.publicStorefront .equipment-product .saleItemPrice{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important;min-height:40px!important;white-space:normal!important}
+.publicStorefront .saleItemPrice .pbSalePriceStack{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:1px!important;line-height:1.55!important}
+.publicStorefront .saleItemPrice .pbSalePriceNew{color:#12865b!important;font-weight:900!important;font-size:calc(14px * var(--site-scale,1))!important}
+.publicStorefront .saleItemPrice .pbSalePriceOld{color:#98a2b3!important;font-weight:500!important;font-size:calc(10px * var(--site-scale,1))!important;text-decoration:line-through!important}
+.publicStorefront .frameDiscountBadge{display:none!important}

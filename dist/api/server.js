@@ -11922,9 +11922,12 @@ async function api(req, res, url) {
     // expiring, one-use, shop-scoped grant for a first-party HTTP-only session.
     if(req.method==='POST'&&url.pathname==='/api/auth/equipment-site-handoff'){
         const form=await readEquipmentHandoffPost(req);
-        // A top-level cross-site form POST sends the *shop's* Origin, not PhotoBridge's.
-        // Match it to the claimed source, which must also match the one-use grant.
-        if(req.headers.origin&&req.headers.origin!==form?.origin)return sendJson(res,403,{error:'invalid_origin'});
+        // Browser privacy modes, redirects and cross-site form navigation may omit
+        // Origin or send "null" even for a legitimate shop-origin POST. Do not
+        // compare this transport hint to the form's declared origin: authentication
+        // depends on a 256-bit one-use ticket, its hashed DB record, exact registered
+        // shop hostname, active shop and photographer role (verified on redemption).
+        // Never return a bare JSON origin error to a top-level browser navigation.
         const grant=form&&await consumeEquipmentStoreHandoff(pool,form);
         if(!grant){res.writeHead(303,{location:'/photographer?login_error=office_handoff','cache-control':'no-store','referrer-policy':'no-referrer'});res.end();return;}
         await createSession(grant.userId,res,'photographer');

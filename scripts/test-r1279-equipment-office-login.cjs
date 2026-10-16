@@ -49,7 +49,9 @@ for(const width of [390,1440])test('cross-domain office entry authenticates only
   await page.locator('[name=mobile]').fill('09121234567');
   await page.locator('[name=password]').fill('bad');
   await page.locator('#equipmentOfficeLogin button').click();
-  await page.getByText('شماره موبایل یا رمز عبور صحیح نیست.',{exact:true}).waitFor();
+  await page.waitForFunction(()=>Boolean(document.getElementById('equipmentOfficeLoginMessage')?.textContent.trim()),{timeout:5000}).catch(()=>{});
+  const loginMessage=await page.locator('#equipmentOfficeLoginMessage').textContent();
+  assert.equal(loginMessage,'شماره موبایل یا رمز عبور صحیح نیست.',JSON.stringify({posts,seenPasswords,errors,url:page.url(),loginMessage}));
   assert.equal(posts,1);
   await page.locator('[name=password]').fill('valid-password');
   await page.locator('#equipmentOfficeLogin button').click();

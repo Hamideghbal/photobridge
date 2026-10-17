@@ -1,3 +1,4 @@
+import {addHandoverStaff,listHandoverInvites,cancelHandoverInvite,inspectHandoverInvite,activateHandoverInvite} from './handover-staff-onboarding.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
@@ -12157,6 +12158,19 @@ async function api(req, res, url) {
             return sendJson(res, 503, { error: 'desktop_ui_manifest_invalid' });
         }
     }
+    // Public endpoints require an unguessable, short-lived SMS invitation token.
+    // Do not require an existing account/session for first-time staff activation.
+    if (req.method === 'GET' && url.pathname === '/api/rental/handover-staff/activation') {
+        try { return sendJson(res,200,await inspectHandoverInvite(pool,url.searchParams.get('token'))); }
+        catch(e) { return sendJson(res,e.status||500,{error:e.status?e.message:'internal_error'}); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/rental/handover-staff/activate') {
+        try {
+            const b=await bodyJson(req,3000);
+            const result=await activateHandoverInvite({pool,token:b.token,password:b.password,confirmPassword:b.confirmPassword,passwordHash});
+            return sendJson(res,200,result);
+        } catch(e) { return sendJson(res,e.status||500,{error:e.status?e.message:'internal_error'}); }
+    }
     const a = await auth(req);
     if(await handleStorefrontManagement(req,res,url,a,storefrontDependencies()))return;
     /* PB_R1099_PHOTOGRAPHER_TABS */
@@ -14947,33 +14961,38 @@ async function api(req, res, url) {
     if(req.method==='GET'&&url.pathname==='/api/rental/desktop-ui-manifest'){const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});return sendJson(res,200,JSON.parse(fs.readFileSync(path.join(process.cwd(),'dist/web/desktop-ui/manifest.json'),'utf8')));}
     if (url.pathname.startsWith('/api/rental/desktop/') && await storeDesktopSync(req,res,url,a)) return;
     const rentalHandoverStaffRoute=url.pathname.match(/^\/api\/rental\/handover-staff(?:\/([0-9a-f-]{36}))?$/i);
+    const rentalHandoverInviteDelete=url.pathname.match(/^\/api\/rental\/handover-staff\/invitations\/([0-9a-f-]{36})$/i);
     if(req.method==='GET'&&url.pathname==='/api/rental/handover-staff'){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
         const q=await pool.query(`SELECT m.id,m.user_id,m.active,m.created_at,u.name,u.mobile,(SELECT max(s.created_at) FROM sessions s WHERE s.user_id=u.id) last_login_at FROM equipment_rental_shop_memberships m JOIN users u ON u.id=m.user_id WHERE m.shop_id=$1 AND m.role='handover_staff' ORDER BY m.active DESC,m.created_at DESC`,[shop.id]);
-        return sendJson(res,200,{staff:q.rows});
+        const pendingInvites=await listHandoverInvites(pool,shop.id);
+        return sendJson(res,200,{staff:q.rows,pendingInvites});
     }
     if(req.method==='POST'&&url.pathname==='/api/rental/handover-staff'){
         const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
         const b=await bodyJson(req,50000),mobile=normalizeMobile(String(b.mobile||'')),name=String(b.name||'پرسنل تحویل تجهیزات').trim().slice(0,120)||'پرسنل تحویل تجهیزات';
-        if(!/^09\d{9}$/.test(mobile))return sendJson(res,400,{error:'invalid_mobile'});
-        const c=await pool.connect();let userId='',temporaryPassword='',created=false,isPlatformAdmin=false;
-        try{await c.query('BEGIN');const q=await c.query(`SELECT id,name,mobile,platform_role FROM users WHERE active=true AND right(regexp_replace(coalesce(mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) ORDER BY CASE WHEN platform_role='platform_admin' THEN 0 ELSE 1 END,created_at LIMIT 5`,[mobile]);
-          const adminRow=q.rows.find(x=>String(x.platform_role)==='platform_admin');
-          if(q.rowCount>1&&!adminRow){await c.query('ROLLBACK');return sendJson(res,409,{error:'mobile_ambiguous'})}
-          const picked=adminRow||q.rows[0];
-          if(picked){userId=String(picked.id);isPlatformAdmin=String(picked.platform_role)==='platform_admin';if(name&&(!picked.name||String(picked.name).startsWith('پرسنل تحویل')))await c.query(`UPDATE users SET name=$2,updated_at=now() WHERE id=$1`,[userId,name]);}
-          else{temporaryPassword=crypto.randomBytes(7).toString('base64url');const uq=await c.query(`INSERT INTO users(name,mobile,password_hash,platform_role,active,mobile_verified_at) VALUES($1,$2,$3,'user',true,now()) RETURNING id`,[name,mobile,passwordHash(temporaryPassword)]);userId=String(uq.rows[0].id);created=true;}
-          const access=await c.query(`SELECT shop_id,role FROM equipment_rental_shop_memberships WHERE user_id=$1 AND active=true AND role IN ('shop_admin','handover_staff')`,[userId]);
-          const conflicting=isPlatformAdmin?access.rows.find(x=>String(x.role)==='handover_staff'&&String(x.shop_id)!==String(shop.id)):access.rows.find(x=>String(x.shop_id)!==String(shop.id)||String(x.role)==='shop_admin');
-          if(conflicting){await c.query('ROLLBACK');return sendJson(res,409,{error:'staff_already_assigned'})}
-          await c.query(`INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'handover_staff',true,now()) ON CONFLICT(shop_id,user_id,role) DO UPDATE SET active=true,updated_at=now()`,[shop.id,userId]);await c.query('COMMIT');
-        }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e}finally{c.release()}
-        let smsSent=false;if(created&&temporaryPassword){try{await sendSms({mobile,message:`PhotoBridge: دسترسی پرسنل تحویل فروشگاه «${String(shop.name||'تجهیزات')}» فعال شد. رمز ورود موقت: ${temporaryPassword}`,purpose:'rental_handover_staff_invite',eventKey:'handover_staff_invite',referenceId:userId,metadata:{shopId:shop.id}});smsSent=true}catch{}}
-        await audit(a.userId,undefined,'equipment_rental.handover_staff_add','equipment_rental_shop',shop.id,{userId,mobile,created,smsSent}).catch(()=>{});
-        return sendJson(res,201,{ok:true,userId,mobile,name,created,smsSent,platformAdmin:isPlatformAdmin,temporaryPassword:created?temporaryPassword:null});
+        try {
+            const result=await addHandoverStaff({pool,shop,mobile,name,sendSms,publicAppUrl:PUBLIC_APP_URL});
+            await audit(a.userId,undefined,'equipment_rental.handover_staff_add','equipment_rental_shop',shop.id,{userId:result.userId||null,mobile,pending:result.pending,inviteSent:result.inviteSent||false}).catch(()=>{});
+            return sendJson(res,result.pending?202:201,result);
+        } catch(e) {
+            return sendJson(res,e.status||500,{error:e.status?e.message:'internal_error'});
+        }
+    }
+    if(req.method==='DELETE'&&rentalHandoverInviteDelete){
+        const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+        const id=rentalHandoverInviteDelete[1],removed=await cancelHandoverInvite(pool,shop.id,id);
+        if(!removed)return sendJson(res,404,{error:'handover_invitation_not_found'});
+        await audit(a.userId,undefined,'equipment_rental.handover_staff_invite_cancel','equipment_rental_shop',shop.id,{invitationId:id}).catch(()=>{});
+        return sendJson(res,200,{ok:true});
     }
     if(req.method==='DELETE'&&rentalHandoverStaffRoute?.[1]){
-        const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});const id=rentalHandoverStaffRoute[1];const q=await pool.query(`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE id=$1 AND shop_id=$2 AND role='handover_staff' RETURNING id,user_id`,[id,shop.id]);if(!q.rowCount)return sendJson(res,404,{error:'handover_staff_not_found'});await audit(a.userId,undefined,'equipment_rental.handover_staff_remove','equipment_rental_shop',shop.id,{membershipId:id,userId:q.rows[0].user_id}).catch(()=>{});return sendJson(res,200,{ok:true});
+        const shop=await equipmentRentalCurrentShop(a);if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+        const id=rentalHandoverStaffRoute[1];
+        const q=await pool.query(`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE id=$1 AND shop_id=$2 AND role='handover_staff' RETURNING id,user_id`,[id,shop.id]);
+        if(!q.rowCount)return sendJson(res,404,{error:'handover_staff_not_found'});
+        await audit(a.userId,undefined,'equipment_rental.handover_staff_remove','equipment_rental_shop',shop.id,{membershipId:id,userId:q.rows[0].user_id}).catch(()=>{});
+        return sendJson(res,200,{ok:true});
     }
     // Store image uses existing settings storage; no schema changes are required.
     if (url.pathname === '/api/rental/profile-image' && ['GET', 'PUT'].includes(req.method)) {
@@ -26108,6 +26127,8 @@ async function bootstrap() {
             return serveEquipmentRentalPage(res, 'equipment-rental-register.html', 'noindex, follow');
         if (req.method === 'GET' && url.pathname === '/equipment-rental/book')
             return serveEquipmentRentalPage(res, 'equipment-rental-book.html');
+        if (req.method === 'GET' && url.pathname === '/rental/staff-activate')
+            return serveEquipmentRentalPage(res,'equipment-handover-activate.html');
         if (req.method === 'GET' && (/^\/rental(?:\/(?:equipment|sales|catalog|bookings|photographers|accounting|sms|subscription|settings))?\/?$/.test(url.pathname)))
             return serveEquipmentRentalPage(res, 'equipment-rental-portal.html');
         return serveWeb(req, res, url.pathname);

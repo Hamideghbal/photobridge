@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>فعال‌سازی پرسنل تحویل تجهیزات | PhotoBridge</title>
+<style>
+  *{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;margin:0;background:linear-gradient(145deg,#eaf1ff,#f5f8fc 65%);color:#152744;min-height:100dvh;display:grid;place-items:center;padding:20px}
+  main{max-width:460px;width:100%;background:white;padding:30px 25px;border-radius:20px;box-shadow:0 10px 35px #20497616}
+  h1{font-size:21px;margin:0 0 12px}p{line-height:1.85;color:#455672}label{display:block;margin:14px 0 6px;font-weight:600;font-size:14px}
+  input{width:100%;padding:13px 14px;border:1px solid #d1dae6;border-radius:11px;font:inherit;direction:ltr;outline-offset:3px}
+  button{width:100%;padding:13px;border:0;border-radius:11px;background:#1456a4;color:white;font:inherit;cursor:pointer;margin-top:18px}
+  button:disabled{opacity:.6;cursor:default}.status{margin-top:15px;line-height:1.9;font-size:14px}.error{color:#b42318}.ok{color:#17744b}
+  a{color:#1456a4}small{display:block;color:#66758b;line-height:1.8;margin-top:12px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>فعال‌سازی حساب پرسنل تحویل تجهیزات</h1>
+  <p id="description">در حال بررسی دعوت‌نامه…</p>
+  <form id="form" hidden>
+    <label for="password">رمز عبور جدید (حداقل ۸ کاراکتر)</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+    <label for="confirmPassword">تکرار رمز عبور</label>
+    <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+    <button id="submit" type="submit">ساخت حساب و فعال‌سازی دسترسی</button>
+    <small>این حساب فقط به تحویل و دریافت تجهیزات فروشگاه دعوت‌کننده دسترسی خواهد داشت؛ حساب عکاسی برای شما الزامی نیست.</small>
+  </form>
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+  <p id="go" hidden><a href="/rental">ورود به پنل فروشگاه با شماره موبایل و رمز عبور</a></p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const get=id=>document.getElementById(id);
+  const token=new URLSearchParams(location.search).get('token')||'';
+  if(token) history.replaceState(null,'',location.pathname);
+  const description=get('description'),status=get('status'),form=get('form'),submit=get('submit');
+  const invalid=message=>{description.textContent=message;form.hidden=true;status.textContent='';};
+  if(!/^[A-Za-z0-9_-]{43}$/.test(token)){invalid('لینک دعوت معتبر نیست. از مدیر فروشگاه بخواهید دعوت‌نامه جدیدی بفرستد.');return;}
+  fetch('/api/rental/handover-staff/activation?token='+encodeURIComponent(token),{credentials:'omit',cache:'no-store'})
+    .then(async r=>{const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||'expired');return data;})
+    .then(data=>{description.textContent='دعوت از فروشگاه «'+data.shopName+'» برای «'+data.name+'» با شماره '+data.mobileMasked+' معتبر است. برای ورود به فوتوبریج رمز خود را انتخاب کنید.';form.hidden=false;})
+    .catch(()=>invalid('لینک دعوت منقضی شده یا لغو شده است. از مدیر فروشگاه بخواهید دوباره دعوت کند.'));
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    const password=get('password').value,confirmPassword=get('confirmPassword').value;
+    if(password.length<8||password.length>128||password!==confirmPassword){status.className='status error';status.textContent='رمز عبور باید حداقل ۸ کاراکتر و با تکرار رمز برابر باشد.';return;}
+    submit.disabled=true;status.className='status';status.textContent='در حال فعال‌سازی حساب…';
+    try{
+      const response=await fetch('/api/rental/handover-staff/activate',{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',body:JSON.stringify({token,password,confirmPassword})});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok)throw Error(result.error||'failed');
+      form.hidden=true;get('go').hidden=false;status.className='status ok';
+      status.textContent=result.existingAccount?'دسترسی اضافه شد. این شماره قبلاً حساب داشته است؛ با رمز فعلی حساب خود وارد شوید.':'حساب شما فعال شد. با همین شماره موبایل و رمز جدید وارد شوید.';
+      get('password').value='';get('confirmPassword').value='';
+    }catch(e){status.className='status error';status.textContent=['staff_invite_expired','staff_invite_invalid'].includes(e.message)?'این لینک دیگر معتبر نیست. برای دعوت جدید با مدیر فروشگاه تماس بگیرید.':e.message==='account_suspended'?'حساب مرتبط با این شماره غیرفعال است.':'فعال‌سازی انجام نشد؛ لطفاً دوباره تلاش کنید.';}
+    finally{submit.disabled=false;}
+  });
+})();
+</script>
+</body>
+</html>

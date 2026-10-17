@@ -1,1 +1,1 @@
-2026-10-17-r1288-mobile-account-header-parity-no-wash
+2026-10-17-r1289-equipment-desktop-header-restore

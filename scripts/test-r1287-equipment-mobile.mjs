@@ -6,7 +6,7 @@ import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 import {renderEquipmentPage} from '../dist/api/equipment-site-content.js';
 const shop={id:'test',name:'هنر هفتم',rental_enabled:true,sale_enabled:true};
-for(const width of [320,390,1280])test(`equipment identity and home sections at ${width}`,async()=>{
+for(const width of [320,390,1024,1280,1440])test(`equipment identity and home sections at ${width}`,async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
  try{
  const page=await browser.newPage({viewport:{width,height:900},isMobile:width<760});
@@ -15,10 +15,10 @@ for(const width of [320,390,1280])test(`equipment identity and home sections at 
  const file=path.join(process.cwd(),'dist/web',u.pathname);
  return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});});
  await page.goto('https://equipment.test/');
- assert.equal(await page.locator('.site-header .equipment-logo').count(),0);
+ assert.equal(await page.locator('.site-header .equipment-logo').isVisible(),width>760);assert.equal(await page.locator('.site-header .desktop-nav').isVisible(),width>760);assert.equal(await page.locator('.site-header .mobile-menu').isVisible(),width<=760);
  assert.equal(await page.locator('.equipment-brand-category').textContent(),'فروشگاه تجهیزات عکاسی و فیلم‌برداری');
  assert.equal(await page.locator('.equipment-mobile-home-sections').isVisible(),width<=760);
- {
+ if(width<=760){
  const bounds=await page.evaluate(()=>Object.fromEntries(['brand','mobile-menu','photographer-dropdown'].map(c=>[c,document.querySelector('.site-header .'+c).getBoundingClientRect().toJSON()])));
  assert(bounds['photographer-dropdown'].right<=bounds.brand.left+1,'login on the left');
  assert(bounds.brand.right<=bounds['mobile-menu'].left+1,'menu on the right');

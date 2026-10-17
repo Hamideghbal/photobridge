@@ -14762,6 +14762,16 @@ async function api(req, res, url) {
         else if (wantsRental) {
             await ensureEquipmentRentalV727Schema();
             const credentialMatches = mobileMatches.filter((r) => r.active && passwordVerify(password, r.password_hash));
+            // Staff can keep their existing photographer password even when the
+            // photographer profile hash differs from users.password_hash.
+            // Never extend that alternate password to shop-manager access.
+            for(const candidate of mobileMatches){
+                if(!candidate.active||candidate.platform_role==='platform_admin'||!candidate.photographer_enabled||!candidate.photographer_password_hash)continue;
+                if(credentialMatches.some(x=>String(x.id)===String(candidate.id)))continue;
+                if(!passwordVerify(password,candidate.photographer_password_hash))continue;
+                const staffPass=await pool.query(`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='handover_staff' AND active=true LIMIT 1`,[candidate.id]);
+                if(staffPass.rowCount)credentialMatches.push(candidate);
+            }
             if (!credentialMatches.length) {
                 const suspended = mobileMatches.find((r) => !r.active && passwordVerify(password, r.password_hash));
                 if (suspended) return sendJson(res, 403, { error: 'account_suspended', message: 'این حساب توسط ادمین PhotoBridge غیرفعال شده است.' });

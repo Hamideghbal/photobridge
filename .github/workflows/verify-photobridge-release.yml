@@ -44,6 +44,10 @@ jobs:
           node --check dist/api/equipment-office-handoff.js
           node --check dist/web/equipment-site.js
           node --check dist/web/storefront.js
+      - name: Verify secure handover staff invitation and account reuse
+        run: |
+          node --check dist/api/handover-staff-onboarding.js
+          node --test scripts/test-r1290-handover-staff-onboarding.mjs
       - name: Run production build
         run: npm run build
       - name: Verify cross-device automatic commitment print receiver

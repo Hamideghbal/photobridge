@@ -8,6 +8,8 @@
   let lastFrameName='',lastFrameElement=null;
   function fit(){
     if(!mobile())return;
+    // The shared header owns equipment typography too; never compete with its fitter.
+    if(window.PBStorePhotographerHeaderCore?.version==='R100F44'&&!document.body.classList.contains('frameCustomerStore'))return;
     const h=document.querySelector('#photographerStoreRoleHeader .workspaceIdentityCopy>h1');
     if(!h)return;
     // R1222: the legacy frame-only branch forced a single-line ellipsis

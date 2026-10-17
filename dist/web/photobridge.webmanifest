@@ -13,18 +13,18 @@
     "minimal-ui"
   ],
   "orientation": "any",
-  "background_color": "#071426",
-  "theme_color": "#071426",
+  "background_color": "#040e1a",
+  "theme_color": "#040e1a",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/photobridge-icon-192-r1278.png",
+      "src": "/photobridge-original-192-r1284.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/photobridge-icon-512-r1278.png",
+      "src": "/photobridge-original-512-r1284.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -33,9 +33,9 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://photobridge.ir/photobridge.webmanifest?v=r1278",
+      "url": "https://photobridge.ir/photobridge.webmanifest?v=r1284",
       "id": "https://photobridge.ir/photobridge-pwa"
     }
   ],
-  "_legacy_splash_icon": "/photobridge-icon-512-r1278.png"
+  "_legacy_splash_icon": "/photobridge-original-512-r1284.png"
 }

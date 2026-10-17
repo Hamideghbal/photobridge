@@ -171,4 +171,4 @@ await import("./enable-r1275-site-position.mjs");
 
 await import("./enable-r1276-equipment-reviews.mjs");
 
-await import("./enable-r1278-mobile-launch.mjs");
+await import("./enable-r1284-original-launch.mjs");

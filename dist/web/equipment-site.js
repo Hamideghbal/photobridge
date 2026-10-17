@@ -6,6 +6,13 @@ if(header){
  const measure=()=>document.documentElement.style.setProperty('--equipment-header-height',Math.round(header.getBoundingClientRect().height)+'px');
  if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(header);measure();
 }
+// Mobile section links stay on the home page, and dismiss the menu on selection.
+document.querySelectorAll('.mobile-menu-links a').forEach(link=>link.addEventListener('click',()=>{const menu=link.closest('details');if(menu)menu.open=false;}));
+const homeSections=matchMedia('(max-width:760px)');
+const sectionLinks=[...document.querySelectorAll('.mobile-menu-links a')].filter(a=>['/#equipment-services','/#equipment-guides'].includes(a.getAttribute('href'))).map(a=>({a,home:a.getAttribute('href'),page:a.hash==='#equipment-services'?'/equipment':'/guides'}));
+const syncSections=()=>sectionLinks.forEach(({a,home,page})=>{a.href=homeSections.matches?home:page;});syncSections();homeSections.addEventListener('change',syncSections);
+const guideLink=document.querySelector('.hero .actions .secondary');
+if(guideLink){const media=matchMedia('(max-width:760px)');const sync=()=>{guideLink.href=media.matches?'/#equipment-guides':'/guides';};sync();media.addEventListener('change',sync);}
 const dialog=document.querySelector('.photographer-dropdown');
 const forms=[...document.querySelectorAll('#equipmentHeaderLogin,#equipmentOfficePageLogin')];
 if(!forms.length)return;

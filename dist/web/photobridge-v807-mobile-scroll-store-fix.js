@@ -75,7 +75,7 @@
     root.style.setProperty('--pb876-selected-ink',contrast(selected),'important');
     const meta=qs('meta[name="theme-color"]');if(meta)meta.content=top;
     const h=qs('#photographerStoreRoleHeader');if(h instanceof HTMLElement){h.style.setProperty('background',header,'important');h.style.setProperty('background-color',header,'important');h.style.setProperty('color',contrast(header),'important')}
-    const bar=qs('#photographerStoreIdentityBar');if(bar instanceof HTMLElement){const bg=matchMedia('(max-width:820px)').matches?header:'#ffffff';bar.style.setProperty('background',bg,'important');bar.style.setProperty('background-color',bg,'important');bar.style.setProperty('color',contrast(bg),'important')}
+    const bar=qs('#photographerStoreIdentityBar');if(bar instanceof HTMLElement&&!matchMedia('(max-width:820px)').matches){const bg='#ffffff';bar.style.setProperty('background',bg,'important');bar.style.setProperty('background-color',bg,'important');bar.style.setProperty('color',contrast(bg),'important')}
     /* R100F24: section nav surface is owned by final Store CSS; do not inline-paint it. */
     try{localStorage.setItem('photobridge:appearance:all',JSON.stringify({topColor:top,headerColor:header,subbarColor:subbar,selectedColor:selected}));localStorage.setItem('photobridge:appearance:top',top)}catch{}
   }

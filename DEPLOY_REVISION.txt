@@ -1,1 +1,1 @@
-2026-10-17-r1284-original-launch-mobile-name-layout
+2026-10-17-r1285-mobile-inline-identity-stable-header-brand

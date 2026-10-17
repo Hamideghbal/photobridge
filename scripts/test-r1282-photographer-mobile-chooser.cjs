@@ -71,5 +71,6 @@ test('both entry points load new versioned asset; dock uses measured viewport sp
   assert.match(script,/window\.innerHeight-rect\.top/);
   assert.match(script,/shell\.style\.setProperty\('bottom',px,'important'\)/);
   assert.match(CSS,/100dvh/);
-  assert.match(read('DEPLOY_REVISION.txt'),/r1282/);
+  // New releases retain this patch while advancing the deployment cache barrier.
+  assert.match(read('DEPLOY_REVISION.txt'),/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+\s*$/);
 });

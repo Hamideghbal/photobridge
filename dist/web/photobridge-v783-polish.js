@@ -31,8 +31,8 @@
       const h=qs('h1',copy),sub=qs(':scope > small',copy);
       const studio=String(me.user.photographerName||h?.textContent||me.user.name||'').trim();
       const owner=String(me.user.name||'').trim();
-      if(h)h.textContent=studioTitle(studio);
-      if(sub)sub.textContent=owner?`مدیریت ${owner}`:'مدیریت عکاسی';
+      if(h&&h.textContent!==studioTitle(studio))h.textContent=studioTitle(studio);
+      const manager=owner?`مدیریت ${owner}`:'مدیریت عکاسی';if(sub&&sub.textContent!==manager)sub.textContent=manager;
     });
   }
 

@@ -40,9 +40,9 @@
     const header=qs('#photographerStoreRoleHeader'),headerColor=matchMedia('(max-width:820px)').matches?'#ffffff':a.headerColor;
     if(header instanceof HTMLElement){header.style.setProperty('background',headerColor,'important');header.style.setProperty('background-color',headerColor,'important');header.style.setProperty('color',contrast(headerColor),'important')}
 
-    /* Mobile identity continues the account header; desktop stays neutral. */
+    /* Mobile identity is owned by the final layout; desktop stays neutral. */
     const identity=qs('#photographerStoreIdentityBar');
-    if(identity instanceof HTMLElement){const bg=matchMedia('(max-width:820px)').matches?a.headerColor:'#ffffff';identity.style.setProperty('background',bg,'important');identity.style.setProperty('background-color',bg,'important');identity.style.setProperty('color',contrast(bg),'important')}
+    if(identity instanceof HTMLElement&&!matchMedia('(max-width:820px)').matches){const bg='#ffffff';identity.style.setProperty('background',bg,'important');identity.style.setProperty('background-color',bg,'important');identity.style.setProperty('color',contrast(bg),'important')}
 
     /* R100F24: primary Store tabs use stable CSS-owned colors; avoid inline repaints/flicker. */
 

@@ -18,13 +18,13 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/photobridge-original-192-r1284.png",
+      "src": "/photobridge-native-192-r1285.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/photobridge-original-512-r1284.png",
+      "src": "/photobridge-native-512-r1285.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -33,9 +33,9 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://photobridge.ir/photobridge.webmanifest?v=r1284",
+      "url": "https://photobridge.ir/photobridge.webmanifest?v=r1285",
       "id": "https://photobridge.ir/photobridge-pwa"
     }
   ],
-  "_legacy_splash_icon": "/photobridge-original-512-r1284.png"
+  "_legacy_splash_icon": "/photobridge-native-512-r1285.png"
 }

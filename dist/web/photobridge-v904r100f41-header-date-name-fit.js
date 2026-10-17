@@ -4,6 +4,7 @@
   'use strict';
   if(window.PBStorePhotographerHeaderCore?.version==='R100F44') return;
 
+  const setText=(el,value)=>{if(el&&el.textContent!==value)el.textContent=value;};
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const txt=n=>String(n?.textContent||'').replace(/\s+/g,' ').trim();
@@ -108,7 +109,7 @@
     return h;
   }
   function ensureSub(){let s=$('#pbF37Subheader');if(s)return s;s=document.createElement('section');s.id='pbF37Subheader';s.innerHTML='<div id="pbF37ContextTitle"><b id="pbF37ContextText"></b><span id="pbF37ContextMeta" hidden></span></div><nav id="pbF37Tabs" aria-label="دکمه‌های بخش"></nav>';document.body.appendChild(s);$('#pbF37Tabs').addEventListener('click',e=>{const b=e.target.closest('[data-f37-source]');if(!b)return;sourceMap.get(b.dataset.f37Source)?.click();schedule(60)});return s}
-  function clockBadge(){const d=$('#pbF37Date'),t=$('#pbF37Time'),bd=$('#pbF37MenuBadge');if(d)d.textContent=pdate();if(t)t.textContent=ptime();const b=badgeText();if(bd){bd.hidden=!b;if(b)bd.textContent=b}void syncNotificationBadge()}
+  function clockBadge(){const d=$('#pbF37Date'),t=$('#pbF37Time'),bd=$('#pbF37MenuBadge');setText(d,pdate());setText(t,ptime());const b=badgeText();if(bd){bd.hidden=!b;if(b)bd.textContent=b}void syncNotificationBadge()}
   function fitHeaderName(root){
     const n=root?.querySelector?.('#pbF37StudioName,.workspaceIdentityCopy>h1');if(!n)return;
     const len=[...txt(n)].length;
@@ -160,8 +161,8 @@
     }
     storeHeader?.classList.remove('pbF37CoreHeader');
     ensureHeader();ensureSub();ensureMenu();
-    $('#pbF37StudioName').textContent=studioName();$('#pbF37Manager').textContent=managerName();clockBadge();fitHeaderName($('#pbF37PhotographerHeader'));paintAvatar();
-    const info=context(m);$('#pbF37ContextText').textContent=info.title;const meta=$('#pbF37ContextMeta');meta.hidden=!info.meta;if(info.meta)meta.textContent=info.meta;
+    setText($('#pbF37StudioName'),studioName());setText($('#pbF37Manager'),managerName());clockBadge();fitHeaderName($('#pbF37PhotographerHeader'));paintAvatar();
+    const info=context(m);setText($('#pbF37ContextText'),info.title);const meta=$('#pbF37ContextMeta');meta.hidden=!info.meta;if(info.meta)setText(meta,info.meta);
     if(galleryManager){
       let back=$('#pb1156GalleryBack');
       if(!back){back=document.createElement('button');back.id='pb1156GalleryBack';back.type='button';back.textContent='→ بازگشت';back.onclick=()=>$('.clientGalleryManagerTop>.backBtn')?.click();$('#pbF37ContextTitle').appendChild(back);}

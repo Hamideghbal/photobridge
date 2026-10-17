@@ -181,10 +181,11 @@ body.equipment-site[data-equipment-page='/rental-equipment']{background:#fff!imp
 }
 
 /* R1287: a centered shop identity and home sections for mobile visitors. */
-.equipment-site .equipment-brand-copy{display:grid;gap:2px;min-width:0}
+.equipment-site .equipment-brand-copy{display:contents;min-width:0}
 .equipment-site .equipment-brand-copy>[data-site-field]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.equipment-site .equipment-brand-category{font-size:10px;line-height:1.5;font-weight:500;color:#66758b;white-space:normal}
+.equipment-site .equipment-brand-category{display:none;font-size:10px;line-height:1.5;font-weight:500;color:#66758b;white-space:normal}
 .equipment-mobile-home-sections{display:none}
+@media(max-width:760px){
 .equipment-site>.site-header .header-inner{display:grid!important;grid-template-columns:minmax(86px,1fr) minmax(0,2fr) minmax(86px,1fr)!important;direction:rtl}
 .equipment-site .site-header .desktop-nav{display:none!important}
 .equipment-site .site-header .mobile-menu{display:block!important;grid-column:1;grid-row:1;justify-self:start}
@@ -194,17 +195,30 @@ body.equipment-site[data-equipment-page='/rental-equipment']{background:#fff!imp
 .equipment-site .site-header .brand{grid-column:2;grid-row:1;justify-self:center;text-align:center;max-width:100%!important;display:block!important;margin:0!important}
 .equipment-site .site-header .photographer-dropdown,.equipment-site .site-header .header-inner>.header-login{grid-column:3;grid-row:1;justify-self:end;margin:0!important}
 
+}
 @media(max-width:760px){
  .equipment-site>.site-header .header-inner{display:grid!important;grid-template-columns:86px minmax(0,1fr) 86px!important;gap:7px!important;direction:rtl;padding-inline:12px!important}
  .equipment-site .site-header .mobile-menu-links{width:100%;box-sizing:border-box}
  .equipment-site .site-header .mobile-menu{grid-column:1;grid-row:1;justify-self:start}
  .equipment-site .site-header .brand{grid-column:2;grid-row:1;justify-self:center;text-align:center;width:100%;max-width:100%!important;display:block!important;margin:0!important}
- .equipment-site .equipment-brand-copy{white-space:normal!important;text-align:center}
+ .equipment-site .equipment-brand-copy{display:grid;gap:2px;white-space:normal!important;text-align:center}
  .equipment-site .equipment-brand-copy>[data-site-field]{font-size:13px;line-height:1.5}
- .equipment-site .equipment-brand-category{font-size:8.5px;line-height:1.5;text-align:center}
+ .equipment-site .equipment-brand-category{display:block;font-size:8.5px;line-height:1.5;text-align:center}
  .equipment-site .site-header .photographer-dropdown,.equipment-site .site-header .header-inner>.header-login{grid-column:3;grid-row:1;justify-self:end;margin:0!important}
  .equipment-site .site-header .header-login{font-size:10px!important;padding:6px!important;white-space:nowrap}
  .equipment-site .equipment-mobile-home-sections{display:block}
  .equipment-site #equipment-services,.equipment-site #equipment-guides{scroll-margin-top:16px}
  .equipment-site .equipment-mobile-home-sections .service-grid{grid-template-columns:1fr}
+}
+
+/* R1289: only mobile uses the hamburger layout; desktop retains its original rail. */
+@media(max-width:760px){.equipment-site .site-header .equipment-logo{display:none!important}}
+@media(min-width:761px){
+ .equipment-site .site-header .mobile-menu{display:none!important}
+ .equipment-site .site-header .desktop-nav{display:flex!important}
+}
+@media(min-width:761px) and (max-width:1230px){
+ .equipment-site .site-header .header-inner{gap:10px;padding-inline:12px}
+ .equipment-site .site-header .brand{max-width:160px}
+ .equipment-site .site-header .desktop-nav{gap:12px;overflow-x:auto;justify-content:flex-start;font-size:11px}
 }

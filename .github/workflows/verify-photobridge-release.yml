@@ -128,7 +128,7 @@ jobs:
       - name: Verify photo print quantities, filename and mobile navigation
         run: node --test scripts/test-r1132-photo-print-copies.cjs
       - name: Verify photographer mobile bottom navigation never wraps into two rows
-        run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs
+        run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium

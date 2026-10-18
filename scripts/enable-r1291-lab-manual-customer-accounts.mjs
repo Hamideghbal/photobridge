@@ -22,4 +22,4 @@ if(!html.includes('/photobridge-r1291-lab-account-picker.css'))
 fs.writeFileSync(htmlPath,html);
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','dist/web/photobridge-r1137-lab-local-intake.js'],{stdio:'inherit'});
-execFileSync(process.execPath,['--test','scripts/test-r1291-lab-manual-customer-accounts.cjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['--test','scripts/test-r1291-lab-manual-customer-accounts.cjs','scripts/test-r1294-lab-intake-account-picker.cjs','scripts/test-r1295-lab-intake-build-cache.cjs'],{stdio:'inherit'});

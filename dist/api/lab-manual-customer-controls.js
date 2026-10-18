@@ -33,26 +33,25 @@ async function handleSelectedCustomerAccount(ctx){
  if(!idPattern.test(customerId)||action==='account-summary'&&req.method!=='GET'||action==='adjust-initial-debt'&&req.method!=='POST'){
   sendJson(res,400,{error:'invalid_customer_account_request'});return true;
  }
+ if(a?.labRole!=='lab_admin'||a.labId!==labId){sendJson(res,403,{error:'forbidden'});return true;}
  if(!await requireLocalIntakePrimary())return true;
- const member=await pool.query("SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer'",[labId,customerId]);
+ const member=await pool.query("SELECT active FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer'",[labId,customerId]);
  if(!member.rowCount){sendJson(res,404,{error:'lab_customer_not_found'});return true;}
  if(action==='account-summary'){
   const [balance,initialDebt,invoiceQ,settings]=await Promise.all([
    readBalance(pool,labId,customerId),readInitialDebt(pool,labId,customerId),
    pool.query(`SELECT id,number,total,issued_at FROM invoices
       WHERE lab_id=$1 AND customer_id=$2 ORDER BY issued_at DESC,id DESC LIMIT 5`,[labId,customerId]),
-   pool.query(`SELECT (created_by=$2) AS can_edit,sms_customer_notifications_allowed AS sms_enabled
-      FROM labs WHERE id=$1`,[labId,a.userId])
+   pool.query(`SELECT sms_customer_notifications_allowed AS sms_enabled
+      FROM labs WHERE id=$1`,[labId])
   ]);
   const invoices=invoiceQ.rows.map(r=>({id:r.id,number:r.number,total:Number(r.total),issuedAt:r.issued_at}));
   sendJson(res,200,{ok:true,...balance,initialDebt,
    invoices,hasInvoice:invoices.length>0,
-   canEditInitialDebt:Boolean(settings.rows[0]?.can_edit)&&invoices.length===0,
+   canEditInitialDebt:member.rows[0]?.active===false&&invoices.length===0,
    smsEnabled:Boolean(settings.rows[0]?.sms_enabled)});
   return true;
  }
- const owner=await pool.query('SELECT 1 FROM labs WHERE id=$1 AND created_by=$2',[labId,a.userId]);
- if(!owner.rowCount){sendJson(res,403,{error:'lab_owner_only'});return true;}
  const body=await bodyJson(req),target=integer(body.initialDebt),expected=integer(body.expectedInitialDebt);
  const note=String(body.note||'').trim();
  if(target===null||target<0||expected===null||expected<0||note.length<3||note.length>500){
@@ -62,6 +61,10 @@ async function handleSelectedCustomerAccount(ctx){
  try{
   await client.query('BEGIN');
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',[labId,customerId]);
+  const membership=await client.query("SELECT active FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' FOR UPDATE",[labId,customerId]);
+  if(membership.rows[0]?.active!==false){
+   await client.query('ROLLBACK');sendJson(res,409,{error:'customer_not_pending'});return true;
+  }
   // Never change the opening amount once even one invoice has been issued.
   const invoiced=await client.query('SELECT 1 FROM invoices WHERE lab_id=$1 AND customer_id=$2 LIMIT 1',[labId,customerId]);
   if(invoiced.rowCount){
@@ -194,3 +197,4 @@ export async function handleLabManualCustomerAccounts(ctx) {
     sendJson(res,502,{error:'invoice_sms_failed'});return true;
   }
 }
+

@@ -181,3 +181,5 @@ await import('./enable-r1296-lab-settings.mjs');
 await import('./enable-r1297-lab-settings-speed.mjs');
 
 await import('./enable-r1298-lab-header-navigation.mjs');
+
+await import('./enable-r1299-lab-initial-debt.mjs');

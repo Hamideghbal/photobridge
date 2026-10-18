@@ -13,7 +13,10 @@ async function pb1183PreviewFile(fileId){
 }
 async function pb1183Ky(fileId){
  const bearer=Sr();
- const res=await fetch('/api/lab/order-files/'+fileId+'/content?download=1',{credentials:'include',headers:bearer?{authorization:'Bearer '+bearer}:{}});
+ // The authenticated direct stream needs the same primary-device binding as Me().
+ const deviceId=Uc();
+ const headers={...(bearer?{authorization:'Bearer '+bearer}:{}),'x-photobridge-portal':'lab','x-photobridge-device-id':deviceId};
+ const res=await fetch('/api/lab/order-files/'+fileId+'/content?download=1',{credentials:'include',cache:'no-store',headers});
  if(!res.ok){const body=await res.json().catch(()=>({}));throw new Error(String(body.error||'download_http_'+res.status))}
  const encoded=res.headers.get('x-pb-file-name')||'';
  let filename='';try{filename=decodeURIComponent(encoded)}catch{}

@@ -46,6 +46,8 @@ jobs:
           node --check dist/web/storefront.js
       - name: Run production build
         run: npm run build
+      - name: Verify primary-device binding in laboratory internet downloads
+        run: node --test scripts/test-r1290-lab-online-download-primary.cjs
       - name: Verify cross-device automatic commitment print receiver
         run: |
           node --check dist/web/photobridge-r1087-commitment-autoprint.js

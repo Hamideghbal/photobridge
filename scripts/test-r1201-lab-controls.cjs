@@ -33,8 +33,13 @@ test('both photo and album intake display a cancellable, immediate dialog before
  assert(intake.includes('async function open(mode="print")'));
  assert(intake.includes("const intakeTitle=albumMode?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری'"));
  const shown=intake.indexOf('prep.showModal()');
- const bootstrap=intake.indexOf("await Promise.all([api('/api/lab/download-device')");
+ // The R1294 intake checks a recently verified primary device first and can
+ // request a smaller print-only bootstrap. It must still start only after the
+ // immediate cancellable loading dialog is visible.
+ const bootstrap=intake.indexOf("const [primary,root,data]=await Promise.all([");
  assert(shown>0&&bootstrap>shown);
+ assert(intake.includes("cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device')"));
+ assert(intake.includes("api('/api/lab/delegated-orders/bootstrap'+"));
  assert(intake.includes('prep.addEventListener(\'cancel\''));
  assert(intake.includes('if(prepCancelled)return;'));
  assert(intake.includes('prep.remove();opening=false'));

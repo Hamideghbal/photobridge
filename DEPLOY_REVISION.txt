@@ -1,1 +1,1 @@
-2026-10-18-r1296-lab-settings-native-alerts
+2026-10-19-r1297-immediate-lab-settings-navigation

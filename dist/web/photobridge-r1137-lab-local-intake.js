@@ -6,38 +6,62 @@ let active=null,opening=false;
 const q=(s,r=document)=>r.querySelector(s);
 function node(tag,text,cls){const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
 const storage=()=>window.pbLabLocalIntakeStorage;
-const errors={customer_temporary_name_required:'نام موقت مشتری را وارد کنید.',customer_already_registered:'این شماره قبلاً عضو مجموعه شما شده است. از فهرست مشتری‌ها انتخابش کنید.',customer_already_preregistered:'این شماره قبلاً پیش‌ثبت‌نام شده است. از فهرست مشتری‌ها انتخابش کنید یا دعوت‌نامه را مجدداً ارسال کنید.',invalid_initial_debt:'مبلغ بدهی قبلی معتبر نیست.',initial_debt_already_recorded:'بدهی قبلی این مشتری قبلاً ثبت شده است؛ مبلغ بدهی قبلی را صفر کن و دوباره ثبت کن.',invalid_print_copies:'تعداد چاپ باید بین ۱ تا ۹۹ باشد.',download_device_not_registered:'کامپیوتر اصلی لابراتوار هنوز مشخص نشده است.',not_primary_download_device:'ثبت حضوری فقط روی کامپیوتر اصلی ذخیرهٔ فایل‌های لابراتوار انجام می‌شود.',files_not_ready:'فایل‌ها هنوز آماده نیستند.',print_selection_required:'سایز و نوع چاپ را انتخاب کن.',invalid_delegated_order:'اطلاعات مشتری کامل نیست.',stock_unavailable:'موجودی شاسی یا قاب کافی نیست.'};
+const errors={customer_temporary_name_required:'نام موقت مشتری را وارد کنید.',customer_already_registered:'این شماره قبلاً عضو مجموعه شما شده است. از فهرست مشتری‌ها انتخابش کنید.',customer_already_preregistered:'این شماره قبلاً پیش‌ثبت‌نام شده است. از فهرست مشتری‌ها انتخابش کنید یا دعوت‌نامه را مجدداً ارسال کنید.',invalid_initial_debt:'مبلغ بدهی قبلی معتبر نیست.',initial_debt_already_recorded:'بدهی قبلی این مشتری قبلاً ثبت شده است؛ مبلغ بدهی قبلی را صفر کن و دوباره ثبت کن.',initial_debt_locked_after_invoice:'برای این مشتری فاکتور صادر شده و بدهی اولیه دیگر قابل تغییر نیست.',initial_debt_changed:'بدهی اولیه تغییر کرده؛ اطلاعات حساب را دوباره بررسی کن.',invalid_print_copies:'تعداد چاپ باید بین ۱ تا ۹۹ باشد.',download_device_not_registered:'کامپیوتر اصلی لابراتوار هنوز مشخص نشده است.',not_primary_download_device:'ثبت حضوری فقط روی کامپیوتر اصلی ذخیرهٔ فایل‌های لابراتوار انجام می‌شود.',files_not_ready:'فایل‌ها هنوز آماده نیستند.',print_selection_required:'سایز و نوع چاپ را انتخاب کن.',invalid_delegated_order:'اطلاعات مشتری کامل نیست.',stock_unavailable:'موجودی شاسی یا قاب کافی نیست.'};
 async function api(url,body){try{return await storage().request(url,{...(body?{method:'POST',body:JSON.stringify(body)}:{})});}catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]||'ثبت سفارش انجام نشد. دوباره تلاش کن.');}}
 
 function field(parent,label,input){if(['INPUT','SELECT','TEXTAREA'].includes(input.tagName))input.setAttribute('aria-label',label);const wrapper=node('label');wrapper.append(node('span',label),input);parent.append(wrapper);return input;}
 function select(options){const el=node('select');for(const [value,label] of options){const o=node('option',label);o.value=value;el.append(o);}return el;}
-function customerMenu(parent,customers,registerCustomer,resendInvitation,accountData,adjustBalance,sendInvoiceSms){
+function customerMenu(parent,customers,registerCustomer,resendInvitation,accountSummary,adjustInitialDebt,sendInvoiceSms){
  const wrapper=node('div',null,'pb1139Customer');wrapper.append(node('span','عکاس / مشتری'));
  const button=node('button');button.type='button';
- const selectionValue=node('span','انتخاب عکاس','pb1179CustomerValue'),selectionChevron=node('span','▾','pb1179CustomerChevron');
- button.append(selectionValue,selectionChevron);button.setAttribute('aria-label','عکاس / مشتری');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+ const selectionValue=node('span','انتخاب عکاس','pb1179CustomerValue');
+ const selectionChevron=node('span','▾','pb1179CustomerChevron');
+ button.append(selectionValue,selectionChevron);button.setAttribute('aria-label','عکاس / مشتری');
+ button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
  const menu=node('div',null,'pb1139PickerMenu');menu.hidden=true;
- const search=node('input');search.type='search';search.placeholder='جستجوی نام یا موبایل';search.setAttribute('aria-label','جستجوی عکاس');search.autocomplete='off';
- const list=node('div',null,'pb1139PickerOptions');list.setAttribute('role','listbox');list.setAttribute('aria-label','انتخاب عکاس');
+ const search=node('input');search.type='search';search.placeholder='جستجوی شماره یا نام';
+ search.setAttribute('aria-label','جستجوی عکاس');search.autocomplete='off';
+ const list=node('div',null,'pb1139PickerOptions');list.setAttribute('role','listbox');
+ list.setAttribute('aria-label','انتخاب عکاس');
  const panel=node('section',null,'pb1143NewCustomer');panel.hidden=true;
- const newTitle=node('strong','پیش‌ثبت‌نام مشتری');panel.append(newTitle);
+ panel.append(node('strong','پیش‌ثبت‌نام مشتری'));
  const fields=node('div',null,'pb1143NewGrid');panel.append(fields);
- const temporaryName=field(fields,'نام موقت مشتری',node('input'));temporaryName.autocomplete='off';temporaryName.maxLength=140;temporaryName.placeholder='نام مشتری یا آتلیه';
- const number=field(fields,'شماره موبایل',node('input'));number.inputMode='tel';number.dir='ltr';number.placeholder='09xxxxxxxxx';number.autocomplete='off';
- const debt=field(fields,'بدهی قبلی (تومان)',node('input'));debt.type='text';debt.inputMode='numeric';debt.dir='ltr';debt.value='0';debt.autocomplete='off';
+ const temporaryName=field(fields,'نام موقت مشتری',node('input'));
+ temporaryName.autocomplete='off';temporaryName.maxLength=140;temporaryName.placeholder='نام مشتری یا آتلیه';
+ const number=field(fields,'شماره موبایل',node('input'));
+ number.inputMode='tel';number.dir='ltr';number.placeholder='09xxxxxxxxx';number.autocomplete='off';
+ const debt=field(fields,'بدهی اولیه (تومان)',node('input'));
+ debt.type='text';debt.inputMode='numeric';debt.dir='ltr';debt.value='0';debt.autocomplete='off';
  const actions=node('div',null,'pb1143NewActions');panel.append(actions);
  const smsLabel=field(actions,'ارسال پیامک دعوتنامه',node('input'));smsLabel.type='checkbox';
  const addCustomer=node('button','افزودن','pb1143CustomerAdd');addCustomer.type='button';actions.append(addCustomer);
  const back=node('button','← بازگشت به فهرست','pb1144PickerBack');back.type='button';back.hidden=true;
- const notice=node('p',null,'pb1143PickerNotice');notice.setAttribute('role','status');menu.append(back,search,list,panel,notice);
+ const notice=node('p',null,'pb1143PickerNotice');notice.setAttribute('role','status');
+ menu.append(back,search,list,panel,notice);
+ wrapper.append(button,menu);parent.append(wrapper);
+ const details=node('section',null,'pb1294SelectedDetails');details.hidden=true;
+ details.setAttribute('aria-label','اطلاعات حساب مشتری انتخاب‌شده');
+ parent.append(details);
+ const model={value:'',button},digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
+ const normalize=text=>digits(text).toLocaleLowerCase('fa-IR');
+ const mobileValue=text=>{let d=digits(text).replace(/\D/g,'');if(d.startsWith('0098'))d='0'+d.slice(4);else if(d.startsWith('98')&&d.length===12)d='0'+d.slice(2);else if(/^9\d{9}$/.test(d))d='0'+d;return d;};
+ const moneyValue=text=>digits(text).replace(/[^0-9]/g,'');
+ const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
+ const money=n=>Number(n||0).toLocaleString('fa-IR')+' تومان';
+ const date=value=>{if(!value)return 'ثبت نشده';const d=new Date(value);return Number.isNaN(d.getTime())?'ثبت نشده':new Intl.DateTimeFormat('fa-IR',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Tehran'}).format(d);};
+ const itemLabel=c=>[c.mobile,c.name!==c.mobile?c.name:null,c.registrationPending?'پیش‌عضویت':'عضویت کامل'].filter(Boolean).join(' · ');
+ debt.oninput=()=>{debt.value=formatMoney(debt.value);};
+ let selected=null,selectionVersion=0;
  function positionMenu(){
-  if(menu.hidden)return;const r=button.getBoundingClientRect(),width=Math.min(435,innerWidth-24);
-  const availableBelow=innerHeight-r.bottom-14,availableAbove=r.top-14;
-  const estimated=panel.hidden?320:260,above=availableBelow<estimated&&availableAbove>availableBelow;
-  menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(innerWidth-width-12,r.right-width))+'px';
+  if(menu.hidden)return;
+  const r=button.getBoundingClientRect(),width=Math.min(365,innerWidth-24);
+  const below=innerHeight-r.bottom-14,aboveSpace=r.top-14;
+  const above=below<(panel.hidden?260:290)&&aboveSpace>below;
+  menu.style.width=width+'px';
+  menu.style.left=Math.max(12,Math.min(innerWidth-width-12,r.right-width))+'px';
   menu.style.top=above?'auto':Math.max(8,r.bottom+5)+'px';
   menu.style.bottom=above?Math.max(8,innerHeight-r.top+5)+'px':'auto';
-  menu.style.maxHeight=Math.max(145,Math.min(520,(above?availableAbove:availableBelow)-12))+'px';
+  menu.style.maxHeight=Math.max(145,Math.min(520,(above?aboveSpace:below)-12))+'px';
  }
  function showNew(value){
   panel.hidden=!value;search.hidden=value;list.hidden=value;back.hidden=!value;
@@ -46,101 +70,152 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
   positionMenu();
  }
  back.onclick=()=>{showNew(false);render();};
- wrapper.append(button,menu);parent.append(wrapper);
- const model={value:'',button};
- const digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
- const normalize=text=>digits(text).toLocaleLowerCase('fa-IR');
- const mobileValue=text=>{let d=digits(text).replace(/\D/g,'');if(d.startsWith('0098'))d='0'+d.slice(4);else if(d.startsWith('98')&&d.length===12)d='0'+d.slice(2);else if(/^9\d{9}$/.test(d))d='0'+d;return d;};
- const moneyValue=text=>digits(text).replace(/[^0-9]/g,'');
- const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
- debt.oninput=()=>{debt.value=formatMoney(debt.value);};
- const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':'عضویت کامل'].filter(Boolean).join(' · ');
- const balances=new Map((accountData.balances||[]).map(x=>[String(x.id),x]));
- const invoices=new Map();
- for(const invoice of accountData.invoices||[]){const key=String(invoice.customerId);if(!invoices.has(key))invoices.set(key,[]);invoices.get(key).push(invoice);}
- const date=value=>{if(!value)return 'ثبت نشده';const d=new Date(value);return Number.isNaN(d.getTime())?'ثبت نشده':new Intl.DateTimeFormat('fa-IR',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Tehran'}).format(d);};
- const balanceOf=c=>Number(balances.get(String(c.id))?.balance||0);
- const balanceMeta=c=>'مانده بدهی: '+balanceOf(c).toLocaleString('fa-IR')+' تومان · آخرین تغییر: '+date(balances.get(String(c.id))?.balanceUpdatedAt);
- const canEdit=accountData.canEdit===true;
- function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;selectionValue.textContent=itemLabel(c);showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';model.onChange?.(c);}
+ function showDetails(c,data,message=''){
+  if(!selected||selected.id!==c.id)return;
+  details.replaceChildren();
+  const summary=node('div',null,'pb1294AccountSummary');
+  const addMeta=(label,text,cls='')=>{const cell=node('div',null,'pb1294Meta '+cls);cell.append(node('span',label),node('strong',text));summary.append(cell);};
+  addMeta('مانده بدهی',money(data.balance),'pb1294Balance');
+  addMeta('آخرین تغییر',date(data.balanceUpdatedAt));
+  const recent=(data.invoices||[])[0];
+  addMeta('آخرین فاکتور',recent?'شماره '+recent.number+' · '+date(recent.issuedAt):'فاکتوری صادر نشده');
+  addMeta('بدهی اولیه عضویت',money(data.initialDebt));
+  details.append(summary);
+  const controls=node('div',null,'pb1294AccountActions');
+  const localNotice=node('span',message,'pb1294ActionNotice');
+  localNotice.setAttribute('role','status');
+  if(c.registrationPending){
+   const resend=node('button','ارسال مجدد دعوت‌نامه','pb1294Resend');resend.type='button';
+   resend.onclick=async()=>{
+    resend.disabled=true;localNotice.textContent='در حال ارسال دعوت‌نامه…';
+    try{const r=await resendInvitation(c.id);localNotice.textContent=r.invitationSmsSent?'دعوت‌نامه ارسال شد.':'ارسال دعوت‌نامه انجام نشد.';}
+    catch(e){localNotice.textContent=e.message;}finally{resend.disabled=false;}
+   };controls.append(resend);
+  }
+  if(data.canEditInitialDebt){
+   const toggle=node('button','اصلاح بدهی اولیه','pb1294Edit');toggle.type='button';
+   const editPanel=node('div',null,'pb1294InitialEdit');editPanel.hidden=true;
+   const amount=node('input');amount.type='text';amount.inputMode='numeric';amount.dir='ltr';
+   amount.value=Number(data.initialDebt||0).toLocaleString('en-US');amount.setAttribute('aria-label','مبلغ بدهی اولیه عضویت');
+   amount.oninput=()=>{amount.value=formatMoney(amount.value);};
+   const reason=node('input');reason.maxLength=500;reason.placeholder='دلیل اصلاح بدهی اولیه';
+   reason.setAttribute('aria-label','دلیل اصلاح بدهی اولیه');
+   const save=node('button','ثبت اصلاح');save.type='button';
+   const cancel=node('button','انصراف');cancel.type='button';cancel.onclick=()=>{editPanel.hidden=true;};
+   toggle.onclick=()=>{editPanel.hidden=!editPanel.hidden;};
+   save.onclick=async()=>{
+    const raw=moneyValue(amount.value),target=Number(raw);
+    if(!raw||!Number.isSafeInteger(target)||target>1_000_000_000_000){localNotice.textContent='مبلغ معتبر وارد کن.';return;}
+    if(reason.value.trim().length<3){localNotice.textContent='دلیل اصلاح را وارد کن.';return;}
+    if(!confirm('بدهی اولیه '+c.name+' به '+money(target)+' تغییر کند؟'))return;
+    save.disabled=true;localNotice.textContent='در حال ثبت اصلاح بدهی اولیه…';
+    try{
+     const result=await adjustInitialDebt(c.id,{initialDebt:target,expectedInitialDebt:data.initialDebt,note:reason.value.trim()});
+     await refreshDetails(c,result.balanceUpdatedAt?'اصلاح بدهی اولیه ثبت شد.':'بدهی اولیه به‌روز شد.');
+    }catch(e){localNotice.textContent=e.message;if(/فاکتور|invoice|تغییر/.test(e.message))refreshDetails(c,e.message);}
+    finally{save.disabled=false;}
+   };
+   editPanel.append(amount,reason,save,cancel);
+   controls.append(toggle,editPanel);
+  }else if(data.hasInvoice){controls.append(node('small','پس از صدور اولین فاکتور، بدهی اولیه قابل تغییر نیست.','pb1294LockHint'));}
+  const smsArea=node('div',null,'pb1294SmsArea');
+  const checkboxLabel=node('label',null,'pb1294SmsChoice');
+  const checkbox=node('input');checkbox.type='checkbox';checkbox.setAttribute('aria-label','ارسال پیامک فاکتور');
+  checkboxLabel.append(checkbox,node('span','پیامک فاکتور'));
+  const invoiceChoice=node('select');invoiceChoice.setAttribute('aria-label','انتخاب فاکتور برای پیامک');
+  const invoices=data.invoices||[];
+  if(!invoices.length){const o=node('option','فاکتوری موجود نیست');o.value='';invoiceChoice.append(o);}
+  else for(const inv of invoices){
+   const option=node('option','فاکتور '+inv.number+' · '+money(inv.total));option.value=inv.id;invoiceChoice.append(option);
+  }
+  const send=node('button','ارسال پیامک','pb1294SendSms');send.type='button';
+  checkbox.disabled=!invoices.length||!data.smsEnabled;
+  invoiceChoice.disabled=!invoices.length||!data.smsEnabled;
+  send.disabled=true;
+  checkbox.onchange=()=>{send.disabled=!checkbox.checked||!invoiceChoice.value;};
+  send.onclick=async()=>{
+   const chosen=invoices.find(x=>x.id===invoiceChoice.value);
+   if(!checkbox.checked||!chosen||!confirm('پیامک فاکتور '+chosen.number+' به '+c.mobile+' ارسال شود؟'))return;
+   send.disabled=true;localNotice.textContent='در حال ارسال پیامک فاکتور…';
+   try{const result=await sendInvoiceSms(c.id,{invoiceId:chosen.id});localNotice.textContent=result.smsSent?'پیامک فاکتور ارسال شد.':'پیامک ارسال نشد.';checkbox.checked=false;}
+   catch(e){localNotice.textContent=e.message;}finally{send.disabled=!checkbox.checked;}
+  };
+  smsArea.append(checkboxLabel,invoiceChoice,send);
+  if(!data.smsEnabled&&invoices.length)smsArea.append(node('small','ارسال پیامک این لابراتوار غیرفعال است.'));
+  controls.append(smsArea,localNotice);details.append(controls);
+ }
+ async function refreshDetails(c,message=''){
+  if(!c||selected?.id!==c.id)return;
+  const token=++selectionVersion;
+  details.hidden=false;details.replaceChildren(node('span','در حال دریافت اطلاعات حساب…','pb1294Loading'));
+  try{
+   const data=await accountSummary(c.id);
+   if(token===selectionVersion&&selected?.id===c.id)showDetails(c,data,message);
+  }catch(e){
+   if(token===selectionVersion&&selected?.id===c.id){
+    details.replaceChildren(node('p','اطلاعات حساب در دسترس نیست: '+e.message,'pb1294ActionNotice'));
+   }
+  }
+ }
+ function selectCustomer(c){
+  selected=c;model.value=c.id;model.registrationPending=!!c.registrationPending;
+  selectionValue.textContent=itemLabel(c);showNew(false);menu.hidden=true;
+  button.setAttribute('aria-expanded','false');notice.textContent='';
+  model.onChange?.(c);refreshDetails(c);
+ }
  function render(){
   list.replaceChildren();const term=normalize(search.value.trim());
-  for(const c of customers){if(term&&!normalize(itemLabel(c)).includes(term))continue;
+  for(const c of customers){
+   if(term&&!normalize(itemLabel(c)).includes(term))continue;
    const row=node('div',null,'pb1143ChoiceRow');
-   const option=node('button',itemLabel(c));option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(model.value===c.id));option.onclick=()=>selectCustomer(c);row.append(option);
-   const meta=node('small',balanceMeta(c),'pb1291BalanceMeta');row.append(meta);
-   const availableInvoices=invoices.get(String(c.id))||[];
-   const latest=availableInvoices[0];
-   const invoiceMeta=node('small',latest?'آخرین فاکتور: '+String(latest.number)+' · '+date(latest.issuedAt):'فاکتور صادرشده‌ای موجود نیست','pb1291InvoiceMeta');row.append(invoiceMeta);
-   if(canEdit){
-    const edit=node('button','اصلاح بدهی','pb1291BalanceEdit');edit.type='button';row.append(edit);
-    const editPanel=node('div',null,'pb1291BalanceEditPanel');editPanel.hidden=true;
-    const amount=node('input');amount.type='text';amount.inputMode='numeric';amount.value=balanceOf(c).toLocaleString('en-US');amount.setAttribute('aria-label','بدهی اصلاح‌شده '+c.mobile);
-    const why=node('input');why.maxLength=500;why.placeholder='دلیل اصلاح بدهی';why.setAttribute('aria-label','دلیل اصلاح بدهی '+c.mobile);
-    const save=node('button','ثبت اصلاح');save.type='button';
-    const cancel=node('button','انصراف');cancel.type='button';cancel.onclick=()=>{editPanel.hidden=true;positionMenu();};
-    edit.onclick=()=>{editPanel.hidden=!editPanel.hidden;amount.value=balanceOf(c).toLocaleString('en-US');positionMenu();};
-    save.onclick=async()=>{
-      const raw=moneyValue(amount.value),value=Number(raw);
-      if(!raw||!Number.isSafeInteger(value)||value>1_000_000_000_000){notice.textContent='مبلغ معتبر وارد کن.';return;}
-      if(why.value.trim().length<3){notice.textContent='دلیل اصلاح مانده را وارد کن.';return;}
-      if(!confirm('مانده بدهی '+c.name+' به '+value.toLocaleString('fa-IR')+' تومان تغییر کند؟'))return;
-      save.disabled=true;notice.textContent='در حال ثبت سند اصلاح مانده…';
-      try{const result=await adjustBalance(c.id,{balance:value,expectedBalance:balanceOf(c),note:why.value.trim()});
-        balances.set(String(c.id),{balance:result.balance,balanceUpdatedAt:result.balanceUpdatedAt});
-        notice.textContent='مانده بدهی با سند حسابداری اصلاح شد.';render();if(model.value===c.id)selectionValue.textContent=itemLabel(c);
-      }catch(e){notice.textContent=e.message;}finally{save.disabled=false;}
-    };
-    editPanel.append(amount,why,save,cancel);row.append(editPanel);
-   }
-   if(latest){
-    const sendInvoice=node('button','پیامک فاکتور','pb1291InvoiceSms');sendInvoice.type='button';row.append(sendInvoice);
-    const invoicePanel=node('div',null,'pb1291InvoicePanel');invoicePanel.hidden=true;
-    const invoiceChoice=node('select');invoiceChoice.setAttribute('aria-label','انتخاب فاکتور '+c.mobile);
-    availableInvoices.forEach(inv=>{const o=node('option','فاکتور '+inv.number+' · '+Number(inv.total).toLocaleString('fa-IR')+' تومان');o.value=inv.id;invoiceChoice.append(o);});
-    const confirmSms=node('button','ارسال پیامک');confirmSms.type='button';
-    const dismiss=node('button','انصراف');dismiss.type='button';dismiss.onclick=()=>{invoicePanel.hidden=true;positionMenu();};
-    sendInvoice.onclick=()=>{invoicePanel.hidden=!invoicePanel.hidden;positionMenu();};
-    confirmSms.onclick=async()=>{
-      const selected=availableInvoices.find(x=>x.id===invoiceChoice.value);
-      if(!selected||!confirm('پیامک فاکتور '+selected.number+' به '+c.mobile+' ارسال شود؟'))return;
-      confirmSms.disabled=true;notice.textContent='در حال ارسال پیامک فاکتور…';
-      try{const response=await sendInvoiceSms(c.id,{invoiceId:selected.id});notice.textContent=response.smsSent?'پیامک فاکتور ارسال شد.':'پیامک فاکتور ارسال نشد.';invoicePanel.hidden=true;}
-      catch(e){notice.textContent=e.message;}finally{confirmSms.disabled=false;}
-    };
-    invoicePanel.append(invoiceChoice,confirmSms,dismiss);row.append(invoicePanel);
-   }
-   if(c.registrationPending){const resend=node('button','ارسال مجدد','pb1143Resend');resend.type='button';resend.setAttribute('aria-label','ارسال مجدد دعوت‌نامه برای '+c.mobile);resend.title='ارسال مجدد دعوت‌نامه';resend.onclick=async()=>{
-    resend.disabled=true;notice.textContent='در حال ارسال دعوت‌نامه…';
-    try{const response=await resendInvitation(c.id);notice.textContent=response.invitationSmsSent?'پیامک دعوت‌نامه مجدداً ارسال شد.':'ارسال پیامک انجام نشد.';}
-    catch(e){notice.textContent=e.message;}finally{resend.disabled=false;}
-   };row.append(resend);}
-   list.append(row);
+   const option=node('button',itemLabel(c),'pb1294SimpleChoice');option.type='button';
+   option.setAttribute('role','option');option.setAttribute('aria-selected',String(model.value===c.id));
+   option.onclick=()=>selectCustomer(c);row.append(option);list.append(row);
   }
-  const newRow=node('button','＋ مشتری جدید');newRow.type='button';newRow.setAttribute('role','option');newRow.onclick=()=>{showNew(true);notice.textContent='';};list.append(newRow);
+  const newRow=node('button','＋ مشتری جدید');newRow.type='button';
+  newRow.setAttribute('role','option');newRow.onclick=()=>{showNew(true);notice.textContent='';};
+  list.append(newRow);
  }
  addCustomer.onclick=async()=>{
-  const name=temporaryName.value.trim().replace(/\s+/g,' '),mobile=mobileValue(number.value),rawDebt=moneyValue(debt.value),openingDebt=Number(rawDebt||0);
+  const name=temporaryName.value.trim().replace(/\s+/g,' '),mobile=mobileValue(number.value);
+  const rawDebt=moneyValue(debt.value),openingDebt=Number(rawDebt||0);
   if(!name){notice.textContent='نام موقت مشتری را وارد کنید.';return;}
   if(!/^09\d{9}$/.test(mobile)){notice.textContent='شماره موبایل ۱۱ رقمی معتبر وارد کن.';return;}
-  if(!Number.isSafeInteger(openingDebt)||openingDebt<0||openingDebt>1_000_000_000_000){notice.textContent='مبلغ بدهی قبلی معتبر نیست.';return;}
+  if(!Number.isSafeInteger(openingDebt)||openingDebt<0||openingDebt>1_000_000_000_000){notice.textContent='مبلغ بدهی اولیه معتبر نیست.';return;}
   addCustomer.disabled=true;notice.textContent='در حال افزودن مشتری…';
   try{
    const created=await registerCustomer({name,mobile,initialDebt:openingDebt,sendInvitation:smsLabel.checked});
    const c=created.customer;if(!c?.id)throw Error('ثبت مشتری انجام نشد.');
    const previous=customers.findIndex(x=>x.id===c.id);
    if(previous>=0)customers[previous]=c;else customers.push(c);
-   balances.set(String(c.id),{balance:openingDebt,balanceUpdatedAt:openingDebt?new Date().toISOString():null});
    search.value='';render();selectCustomer(c);
    if(smsLabel.checked&&c.registrationPending&&!created.invitationSmsSent){
-    menu.hidden=false;button.setAttribute('aria-expanded','true');notice.textContent='مشتری اضافه شد اما پیامک ارسال نشد. از گزینهٔ «ارسال مجدد» استفاده کن.';
+    menu.hidden=false;button.setAttribute('aria-expanded','true');
+    notice.textContent='مشتری اضافه شد اما پیامک ارسال نشد؛ گزینهٔ ارسال مجدد زیر مشخصات مشتری قرار دارد.';
    }
   }catch(e){notice.textContent=e.message;}finally{addCustomer.disabled=false;}
  };
- button.onclick=()=>{menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));if(!menu.hidden){showNew(false);render();positionMenu();}else showNew(false);};
- search.oninput=render;search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();list.querySelector('[role=option]')?.click();}});
- wrapper.addEventListener('keydown',e=>{if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){const options=[...list.querySelectorAll('[role=option]')];if(!options.length)return;e.preventDefault();const index=options.indexOf(document.activeElement);const current=index<0?(e.key==='ArrowDown'?-1:0):index;options[(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}if(e.key==='Escape'&&!menu.hidden){e.preventDefault();e.stopPropagation();menu.hidden=true;showNew(false);button.setAttribute('aria-expanded','false');button.focus();}});
- parent.closest('dialog').addEventListener('click',e=>{if(!wrapper.contains(e.target)){menu.hidden=true;showNew(false);button.setAttribute('aria-expanded','false');}});
+ button.onclick=()=>{
+  menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));
+  if(!menu.hidden){showNew(false);render();positionMenu();}else showNew(false);
+ };
+ search.oninput=render;
+ search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();list.querySelector('[role=option]')?.click();}});
+ wrapper.addEventListener('keydown',e=>{
+  if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){
+   const options=[...list.querySelectorAll('[role=option]')];if(!options.length)return;
+   e.preventDefault();const index=options.indexOf(document.activeElement);
+   const current=index<0?(e.key==='ArrowDown'?-1:0):index;
+   options[(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();
+  }
+  if(e.key==='Escape'&&!menu.hidden){
+   e.preventDefault();e.stopPropagation();menu.hidden=true;showNew(false);
+   button.setAttribute('aria-expanded','false');button.focus();
+  }
+ });
+ parent.closest('dialog').addEventListener('click',e=>{
+  if(!wrapper.contains(e.target)){menu.hidden=true;showNew(false);button.setAttribute('aria-expanded','false');}
+ });
  return model;
 }
 async function open(){
@@ -149,7 +224,13 @@ async function open(){
  const launch=document.getElementById('pb1137LocalIntakeButton');if(launch){launch.disabled=true;launch.textContent='در حال آماده‌سازی…';}
  const provider=storage();let directory,bootstrap,loadError;
  try{
-  const [primary,root,data]=await Promise.all([api('/api/lab/download-device'),provider.root(),api('/api/lab/delegated-orders/bootstrap')]);
+  // The toolbar already checked this device. Reuse the recent result instead of a second network round-trip.
+  const cachedPrimary=primaryState===true&&Date.now()-primaryCheckedAt<45000;
+  const [primary,root,data]=await Promise.all([
+    cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device'),
+    provider.root(),api('/api/lab/delegated-orders/bootstrap')
+  ]);
+  primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();
   if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);
   if(!root)throw Error('مسیر همیشگی ذخیره هنوز تنظیم نشده است. آن را در تنظیمات «ذخیره روی هارد» لابراتوار مشخص کن.');
   directory=root;bootstrap=data;
@@ -173,14 +254,12 @@ async function open(){
  const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);
  if(loadError){error.textContent=loadError.message;modal.showModal();return;}
  const settings=node('div',null,'pb1137Settings pb1139EntryRow');editor.append(settings);
- let accountData={canEdit:false,balances:[],invoices:[]};
- try{accountData=await api('/api/lab/delegated-customers/balances');}
- catch(e){console.warn('lab customer account summary unavailable',e);}
- const customers=customerMenu(settings,[...(bootstrap.customers||[])],
+ // Opening the order form must not wait for a lab-wide accounting aggregation.
+ const customers=customerMenu(settings,bootstrap.customers||(bootstrap.customers=[]),
   payload=>api('/api/lab/delegated-customers',payload),
   customerId=>api('/api/lab/delegated-customers/'+customerId+'/resend-invitation',{}),
-  accountData,
-  (customerId,payload)=>api('/api/lab/delegated-customers/'+customerId+'/adjust-balance',payload),
+  customerId=>api('/api/lab/delegated-customers/'+customerId+'/account-summary'),
+  (customerId,payload)=>api('/api/lab/delegated-customers/'+customerId+'/adjust-initial-debt',payload),
   (customerId,payload)=>api('/api/lab/delegated-customers/'+customerId+'/send-invoice-sms',payload));
  const sizes=(bootstrap.printSizes||[]).map(s=>[s.id,s.label]);
  const defaultSize=field(settings,'سایز چاپ',select([['','انتخاب سایز'],...sizes]));
@@ -299,9 +378,9 @@ function mount(){
  if(old){if(old.parentElement!==target)target.append(old);return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;
  target.append(button);
 }
-let primaryState=null,checking=false;
-async function checkPrimary(){if(checking)return;checking=true;try{const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;}catch{primaryState=false;}finally{checking=false;schedule();}}
-window.addEventListener('photobridge-auth-session-changed',()=>{primaryState=null;schedule();});
+let primaryState=null,checking=false,primaryCheckedAt=0;
+async function checkPrimary(){if(checking)return;checking=true;try{const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();}catch{primaryState=false;}finally{checking=false;schedule();}}
+window.addEventListener('photobridge-auth-session-changed',()=>{primaryState=null;primaryCheckedAt=0;schedule();});
 let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;mount();});}
 function boot(){mount();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',schedule);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();

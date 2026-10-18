@@ -19628,7 +19628,10 @@ ${inviteUrl}`;
                     ORDER BY s.width_cm,s.height_cm,s.label`, [labId]),
                 pool.query('SELECT id,name,album_enabled FROM labs WHERE id=$1', [labId])
             ]);
-            const album = lab.rows[0]?.album_enabled ? await albumCatalogForLab(labId, false) : { enabled: false };
+            // A print-only intake never needs to construct the separate album catalog.
+            const printOnlyBootstrap = url.searchParams.get('mode') === 'print';
+            const album = !printOnlyBootstrap && lab.rows[0]?.album_enabled
+                ? await albumCatalogForLab(labId, false) : { enabled: false };
             return sendJson(res, 200, { lab: lab.rows[0], customers: customers.rows,
                 printSizes: sizes.rows, album, cachedAt: new Date().toISOString() });
         }

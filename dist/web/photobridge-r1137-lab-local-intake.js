@@ -228,7 +228,7 @@ async function open(){
   const cachedPrimary=primaryState===true&&Date.now()-primaryCheckedAt<45000;
   const [primary,root,data]=await Promise.all([
     cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device'),
-    provider.root(),api('/api/lab/delegated-orders/bootstrap?mode=print')
+    provider.root(),api('/api/lab/delegated-orders/bootstrap'+(/^\/lab\/album(?:s|[-/]|$)/.test(location.pathname)?'':'?mode=print'))
   ]);
   primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();
   if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);

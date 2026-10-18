@@ -5,6 +5,9 @@ on:
     paths:
       - "desktop-sources/**"
       - "apps/store-desktop/**"
+      - "apps/lab-desktop/**"
+      - "scripts/enable-r1296-native-alerts.mjs"
+      - "scripts/test-r1296-native-alerts.cjs"
       - "scripts/enable-r1263-desktop-frame-orders.mjs"
       - ".github/workflows/build-windows-desktop-candidate.yml"
   workflow_dispatch:
@@ -51,5 +54,42 @@ jobs:
         with:
           name: photobridge-store-r1089-windows-test-installer
           path: apps/store-desktop/release/*Setup*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+
+  lab-windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore lab native sources and preserve current overlay
+        shell: pwsh
+        run: |
+          Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
+          Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -DestinationPath . -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
+      - name: Integrate automatic background Windows notifications
+        run: node scripts/enable-r1296-native-alerts.mjs
+      - name: Verify integrated notification behavior
+        run: node --test scripts/test-r1296-native-alerts.cjs
+      - name: Prepare current lab UI
+        run: node scripts/prepare-lab-desktop-ui.mjs
+      - name: Test and package native lab app
+        shell: pwsh
+        run: |
+          Push-Location apps/lab-desktop
+          npm ci --no-audit --no-fund
+          npm test
+          npm run dist:unsigned
+          Pop-Location
+      - name: Publish lab Windows installer candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: photobridge-lab-r1296-windows-test-installer
+          path: apps/lab-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14

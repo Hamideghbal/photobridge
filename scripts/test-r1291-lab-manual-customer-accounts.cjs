@@ -17,7 +17,7 @@ test('R1294 keeps authenticated customer-account endpoints and moves details bel
  assert(ui.includes('adjust-initial-debt'));
  assert(ui.includes('pb1294SelectedDetails'));
  assert(ui.includes('آخرین تغییر'));
- assert(ui.includes('invoiceChoice'));
+ assert(!ui.includes('invoiceChoice'));
  assert(server.includes('handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson'));
  assert(server.includes("from './lab-manual-customer-controls.js'"));
  assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
@@ -90,3 +90,4 @@ test('explicit invoice SMS works for a preregistered lab member, with rate limit
  await handleLabManualCustomerAccounts(throttled.ctx);
  assert.equal(throttled.answers.at(-1).status,429);assert.equal(throttled.sms.length,0);
 });
+

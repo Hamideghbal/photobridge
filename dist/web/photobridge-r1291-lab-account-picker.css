@@ -61,3 +61,15 @@
  .pb1294AccountSummary{grid-template-columns:1fr}
  .pb1137Intake .pb1294SmsArea select{flex:1 1 100%}
 }
+
+
+/* R1296 compact selected-account strip */
+.pb1137Settings .pb1294SelectedDetails{padding:7px 9px;border-radius:9px}
+.pb1294AccountSummary{gap:5px}
+.pb1294Meta{background:transparent;border:0;border-inline-start:1px solid #dce5ef;border-radius:0;padding:2px 7px;gap:1px}
+.pb1294Meta:first-child{border-inline-start:0}
+.pb1294Meta>span{font-size:10px}
+.pb1294Meta>strong{font-size:11px;line-height:1.45}
+.pb1294AccountActions{gap:6px;margin-top:5px}
+.pb1137Intake .pb1294AccountActions>button{height:29px;min-height:29px;font-size:11px;padding:3px 8px}
+@media(max-width:420px){.pb1294AccountSummary{grid-template-columns:repeat(2,minmax(0,1fr))}}

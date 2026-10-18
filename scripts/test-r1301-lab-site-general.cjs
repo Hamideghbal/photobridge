@@ -1,0 +1,6 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),header=fs.readFileSync('dist/web/photobridge-r1147-lab-admin-header.js','utf8');
+const begin=ui.indexOf('E=[',ui.indexOf('function Nj(')),end=ui.indexOf('];E.flatMap',begin),groups=vm.runInNewContext('('+ui.slice(begin+2,end+1)+')');
+const categories=vm.runInNewContext(header.match(/categories=(\[.*\]);\n/)[1]);
+test('General always contains Site, with no standalone category shifting primary destinations',()=>{assert.equal(groups[0].key,'general');assert.equal(groups.filter(g=>g.key==='site').length,0);const general=groups.find(g=>g.key==='general');assert(general.items.some(([key,label])=>key==='site'&&label==='سایت اختصاصی'));for(const key of ['general','hours','site'])assert.equal(groups.find(g=>g.items.some(([id])=>id===key)).key,'general');});
+test('the four primary lab header buttons retain stable labels/routes; Site selects General',()=>{assert.deepEqual(Array.from(categories,c=>c[1]),['/lab/settings','/lab/settings/customers','/lab/settings/prices','/lab/settings/local']);assert(categories[0][2].includes('site'));assert(header.includes('button.onclick=()=>navigate(path);'));assert(!header.includes("labSettingsCategoryTabs>button')[index]"));});

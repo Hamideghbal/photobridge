@@ -14,10 +14,12 @@ if(!src.includes('handleLabManualCustomerAccounts({req,url,res,')){
  fs.writeFileSync(file,src);
 }
 const htmlPath='dist/web/index.html';let html=fs.readFileSync(htmlPath,'utf8');
-html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?v=)[^"']+/g,'$1r1291');
+// Earlier build stages deliberately reset the local-intake cache token to r1184/r1186.
+// Restore the latest shipped picker version after every build; preserve &site query flags.
+html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?v=)[^"'&\s]+/g,'$1r1294');
 if(!html.includes('/photobridge-r1291-lab-account-picker.css'))
  html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1291-lab-account-picker.css?v=r1291">\n</head>');
 fs.writeFileSync(htmlPath,html);
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','dist/web/photobridge-r1137-lab-local-intake.js'],{stdio:'inherit'});
-execFileSync(process.execPath,['--test','scripts/test-r1291-lab-manual-customer-accounts.cjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['--test','scripts/test-r1291-lab-manual-customer-accounts.cjs','scripts/test-r1294-lab-intake-account-picker.cjs','scripts/test-r1295-lab-intake-build-cache.cjs'],{stdio:'inherit'});

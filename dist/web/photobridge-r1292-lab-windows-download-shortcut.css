@@ -1,9 +1,0 @@
-/* R1292 — account-level lab Windows app download shortcut; no other page styles changed. */
-.pb1292LabWindowsShortcut{direction:rtl;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 14px;margin:10px 14px 12px;padding:10px 14px;border-radius:13px;border:1px solid #c9ddeb;background:#eff8fe;color:#163651;font-family:inherit}
-.pb1292LabWindowsText{display:flex;flex-direction:column;line-height:1.6;gap:2px;min-width:160px}
-.pb1292LabWindowsText strong{font-size:13px;font-weight:800;color:#16527c}
-.pb1292LabWindowsText span{font-size:11px;color:#58758a}
-.pb1292LabWindowsLink{display:inline-flex;justify-content:center;align-items:center;white-space:nowrap;min-height:36px;padding:6px 14px;border:0;border-radius:9px;background:#176ca7;color:#fff!important;font-size:12px;font-weight:800;text-decoration:none!important;line-height:1.5}
-.pb1292LabWindowsLink:hover{background:#105586;color:#fff!important}
-.pb1292LabWindowsLink:focus-visible{outline:3px solid #ffb45c;outline-offset:3px}
-@media(max-width:500px){.pb1292LabWindowsShortcut{padding:11px;margin:8px 10px}.pb1292LabWindowsText{flex:1 1 100%}.pb1292LabWindowsLink{flex:1 1 100%}}

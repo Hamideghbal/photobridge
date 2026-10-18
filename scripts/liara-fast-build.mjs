@@ -172,3 +172,5 @@ await import("./enable-r1275-site-position.mjs");
 await import("./enable-r1276-equipment-reviews.mjs");
 
 await import("./enable-r1284-original-launch.mjs");
+
+await import('./enable-r1291-lab-manual-customer-accounts.mjs');

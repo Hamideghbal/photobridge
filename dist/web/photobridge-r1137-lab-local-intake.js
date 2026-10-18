@@ -11,7 +11,7 @@ async function api(url,body){try{return await storage().request(url,{...(body?{m
 
 function field(parent,label,input){if(['INPUT','SELECT','TEXTAREA'].includes(input.tagName))input.setAttribute('aria-label',label);const wrapper=node('label');wrapper.append(node('span',label),input);parent.append(wrapper);return input;}
 function select(options){const el=node('select');for(const [value,label] of options){const o=node('option',label);o.value=value;el.append(o);}return el;}
-function customerMenu(parent,customers,registerCustomer,resendInvitation){
+function customerMenu(parent,customers,registerCustomer,resendInvitation,accountData,adjustBalance,sendInvoiceSms){
  const wrapper=node('div',null,'pb1139Customer');wrapper.append(node('span','عکاس / مشتری'));
  const button=node('button');button.type='button';
  const selectionValue=node('span','انتخاب عکاس','pb1179CustomerValue'),selectionChevron=node('span','▾','pb1179CustomerChevron');
@@ -54,13 +54,62 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
  const moneyValue=text=>digits(text).replace(/[^0-9]/g,'');
  const formatMoney=text=>{const x=moneyValue(text);return x?Number(x).toLocaleString('en-US'):'0';};
  debt.oninput=()=>{debt.value=formatMoney(debt.value);};
- const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':null].filter(Boolean).join(' · ');
+ const itemLabel=c=>[c.name!==c.mobile?c.name:null,c.mobile,c.registrationPending?'پیش‌ثبت‌نام':'عضویت کامل'].filter(Boolean).join(' · ');
+ const balances=new Map((accountData.balances||[]).map(x=>[String(x.id),x]));
+ const invoices=new Map();
+ for(const invoice of accountData.invoices||[]){const key=String(invoice.customerId);if(!invoices.has(key))invoices.set(key,[]);invoices.get(key).push(invoice);}
+ const date=value=>{if(!value)return 'ثبت نشده';const d=new Date(value);return Number.isNaN(d.getTime())?'ثبت نشده':new Intl.DateTimeFormat('fa-IR',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Tehran'}).format(d);};
+ const balanceOf=c=>Number(balances.get(String(c.id))?.balance||0);
+ const balanceMeta=c=>'مانده بدهی: '+balanceOf(c).toLocaleString('fa-IR')+' تومان · آخرین تغییر: '+date(balances.get(String(c.id))?.balanceUpdatedAt);
+ const canEdit=accountData.canEdit===true;
  function selectCustomer(c){model.value=c.id;model.registrationPending=!!c.registrationPending;selectionValue.textContent=itemLabel(c);showNew(false);menu.hidden=true;button.setAttribute('aria-expanded','false');notice.textContent='';model.onChange?.(c);}
  function render(){
   list.replaceChildren();const term=normalize(search.value.trim());
   for(const c of customers){if(term&&!normalize(itemLabel(c)).includes(term))continue;
    const row=node('div',null,'pb1143ChoiceRow');
    const option=node('button',itemLabel(c));option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(model.value===c.id));option.onclick=()=>selectCustomer(c);row.append(option);
+   const meta=node('small',balanceMeta(c),'pb1291BalanceMeta');row.append(meta);
+   const availableInvoices=invoices.get(String(c.id))||[];
+   const latest=availableInvoices[0];
+   const invoiceMeta=node('small',latest?'آخرین فاکتور: '+String(latest.number)+' · '+date(latest.issuedAt):'فاکتور صادرشده‌ای موجود نیست','pb1291InvoiceMeta');row.append(invoiceMeta);
+   if(canEdit){
+    const edit=node('button','اصلاح بدهی','pb1291BalanceEdit');edit.type='button';row.append(edit);
+    const editPanel=node('div',null,'pb1291BalanceEditPanel');editPanel.hidden=true;
+    const amount=node('input');amount.type='text';amount.inputMode='numeric';amount.value=balanceOf(c).toLocaleString('en-US');amount.setAttribute('aria-label','بدهی اصلاح‌شده '+c.mobile);
+    const why=node('input');why.maxLength=500;why.placeholder='دلیل اصلاح بدهی';why.setAttribute('aria-label','دلیل اصلاح بدهی '+c.mobile);
+    const save=node('button','ثبت اصلاح');save.type='button';
+    const cancel=node('button','انصراف');cancel.type='button';cancel.onclick=()=>{editPanel.hidden=true;positionMenu();};
+    edit.onclick=()=>{editPanel.hidden=!editPanel.hidden;amount.value=balanceOf(c).toLocaleString('en-US');positionMenu();};
+    save.onclick=async()=>{
+      const raw=moneyValue(amount.value),value=Number(raw);
+      if(!raw||!Number.isSafeInteger(value)||value>1_000_000_000_000){notice.textContent='مبلغ معتبر وارد کن.';return;}
+      if(why.value.trim().length<3){notice.textContent='دلیل اصلاح مانده را وارد کن.';return;}
+      if(!confirm('مانده بدهی '+c.name+' به '+value.toLocaleString('fa-IR')+' تومان تغییر کند؟'))return;
+      save.disabled=true;notice.textContent='در حال ثبت سند اصلاح مانده…';
+      try{const result=await adjustBalance(c.id,{balance:value,expectedBalance:balanceOf(c),note:why.value.trim()});
+        balances.set(String(c.id),{balance:result.balance,balanceUpdatedAt:result.balanceUpdatedAt});
+        notice.textContent='مانده بدهی با سند حسابداری اصلاح شد.';render();if(model.value===c.id)selectionValue.textContent=itemLabel(c);
+      }catch(e){notice.textContent=e.message;}finally{save.disabled=false;}
+    };
+    editPanel.append(amount,why,save,cancel);row.append(editPanel);
+   }
+   if(latest){
+    const sendInvoice=node('button','پیامک فاکتور','pb1291InvoiceSms');sendInvoice.type='button';row.append(sendInvoice);
+    const invoicePanel=node('div',null,'pb1291InvoicePanel');invoicePanel.hidden=true;
+    const invoiceChoice=node('select');invoiceChoice.setAttribute('aria-label','انتخاب فاکتور '+c.mobile);
+    availableInvoices.forEach(inv=>{const o=node('option','فاکتور '+inv.number+' · '+Number(inv.total).toLocaleString('fa-IR')+' تومان');o.value=inv.id;invoiceChoice.append(o);});
+    const confirmSms=node('button','ارسال پیامک');confirmSms.type='button';
+    const dismiss=node('button','انصراف');dismiss.type='button';dismiss.onclick=()=>{invoicePanel.hidden=true;positionMenu();};
+    sendInvoice.onclick=()=>{invoicePanel.hidden=!invoicePanel.hidden;positionMenu();};
+    confirmSms.onclick=async()=>{
+      const selected=availableInvoices.find(x=>x.id===invoiceChoice.value);
+      if(!selected||!confirm('پیامک فاکتور '+selected.number+' به '+c.mobile+' ارسال شود؟'))return;
+      confirmSms.disabled=true;notice.textContent='در حال ارسال پیامک فاکتور…';
+      try{const response=await sendInvoiceSms(c.id,{invoiceId:selected.id});notice.textContent=response.smsSent?'پیامک فاکتور ارسال شد.':'پیامک فاکتور ارسال نشد.';invoicePanel.hidden=true;}
+      catch(e){notice.textContent=e.message;}finally{confirmSms.disabled=false;}
+    };
+    invoicePanel.append(invoiceChoice,confirmSms,dismiss);row.append(invoicePanel);
+   }
    if(c.registrationPending){const resend=node('button','ارسال مجدد','pb1143Resend');resend.type='button';resend.setAttribute('aria-label','ارسال مجدد دعوت‌نامه برای '+c.mobile);resend.title='ارسال مجدد دعوت‌نامه';resend.onclick=async()=>{
     resend.disabled=true;notice.textContent='در حال ارسال دعوت‌نامه…';
     try{const response=await resendInvitation(c.id);notice.textContent=response.invitationSmsSent?'پیامک دعوت‌نامه مجدداً ارسال شد.':'ارسال پیامک انجام نشد.';}
@@ -81,6 +130,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation){
    const c=created.customer;if(!c?.id)throw Error('ثبت مشتری انجام نشد.');
    const previous=customers.findIndex(x=>x.id===c.id);
    if(previous>=0)customers[previous]=c;else customers.push(c);
+   balances.set(String(c.id),{balance:openingDebt,balanceUpdatedAt:openingDebt?new Date().toISOString():null});
    search.value='';render();selectCustomer(c);
    if(smsLabel.checked&&c.registrationPending&&!created.invitationSmsSent){
     menu.hidden=false;button.setAttribute('aria-expanded','true');notice.textContent='مشتری اضافه شد اما پیامک ارسال نشد. از گزینهٔ «ارسال مجدد» استفاده کن.';
@@ -123,9 +173,15 @@ async function open(){
  const closeModal=()=>{previews.forEach(url=>URL.revokeObjectURL(url));modal.close();modal.remove();active=null;};close.onclick=closeModal;modal.addEventListener('cancel',e=>{if(form.dataset.busy){e.preventDefault();return;}previews.forEach(url=>URL.revokeObjectURL(url));active=null;modal.remove();});document.body.append(modal);
  if(loadError){error.textContent=loadError.message;modal.showModal();return;}
  const settings=node('div',null,'pb1137Settings pb1139EntryRow');editor.append(settings);
+ let accountData={canEdit:false,balances:[],invoices:[]};
+ try{accountData=await api('/api/lab/delegated-customers/balances');}
+ catch(e){console.warn('lab customer account summary unavailable',e);}
  const customers=customerMenu(settings,[...(bootstrap.customers||[])],
   payload=>api('/api/lab/delegated-customers',payload),
-  customerId=>api('/api/lab/delegated-customers/'+customerId+'/resend-invitation',{}));
+  customerId=>api('/api/lab/delegated-customers/'+customerId+'/resend-invitation',{}),
+  accountData,
+  (customerId,payload)=>api('/api/lab/delegated-customers/'+customerId+'/adjust-balance',payload),
+  (customerId,payload)=>api('/api/lab/delegated-customers/'+customerId+'/send-invoice-sms',payload));
  const sizes=(bootstrap.printSizes||[]).map(s=>[s.id,s.label]);
  const defaultSize=field(settings,'سایز چاپ',select([['','انتخاب سایز'],...sizes]));
  const paperOptions=[['luster','لاستر'],['silk','سیلک'],['metallic','متالیک']];

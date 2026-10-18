@@ -12,9 +12,89 @@ async function readBalance(db, labId, customerId) {
     WHERE e.customer_id=$2`,[labId,customerId]);
   return {balance:Number(r.rows[0]?.balance||0),balanceUpdatedAt:r.rows[0]?.updated_at||null};
 }
+async function readInitialDebt(db,labId,customerId){
+ const result=await db.query(`SELECT COALESCE(SUM(e.debit-e.credit),0)::bigint AS initial_debt
+    FROM finance_entries e
+    JOIN finance_transactions t ON t.id=e.transaction_id AND t.lab_id=$1
+    JOIN finance_accounts fa ON fa.id=e.account_id AND fa.lab_id=$1 AND fa.system_key='receivable'
+    WHERE e.customer_id=$2 AND (
+      (t.reference_type='lab_delegated_opening_debt' AND t.reference_id=$2)
+      OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment')
+    )`,[labId,customerId]);
+ return Number(result.rows[0]?.initial_debt||0);
+}
+
+async function handleSelectedCustomerAccount(ctx){
+ const {req,url,res,pool,labId,a,bodyJson,sendJson,crypto,requireLocalIntakePrimary,
+  ensureFinanceAccounts,postBalancedFinanceTransaction,audit}=ctx;
+ const match=url.pathname.match(/^\/api\/lab\/delegated-customers\/([0-9a-f-]{36})\/(account-summary|adjust-initial-debt)$/i);
+ if(!match||!['GET','POST'].includes(req.method))return false;
+ const customerId=match[1],action=match[2];
+ if(!idPattern.test(customerId)||action==='account-summary'&&req.method!=='GET'||action==='adjust-initial-debt'&&req.method!=='POST'){
+  sendJson(res,400,{error:'invalid_customer_account_request'});return true;
+ }
+ if(!await requireLocalIntakePrimary())return true;
+ const member=await pool.query("SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer'",[labId,customerId]);
+ if(!member.rowCount){sendJson(res,404,{error:'lab_customer_not_found'});return true;}
+ if(action==='account-summary'){
+  const [balance,initialDebt,invoiceQ,settings]=await Promise.all([
+   readBalance(pool,labId,customerId),readInitialDebt(pool,labId,customerId),
+   pool.query(`SELECT id,number,total,issued_at FROM invoices
+      WHERE lab_id=$1 AND customer_id=$2 ORDER BY issued_at DESC,id DESC LIMIT 5`,[labId,customerId]),
+   pool.query(`SELECT (created_by=$2) AS can_edit,sms_customer_notifications_allowed AS sms_enabled
+      FROM labs WHERE id=$1`,[labId,a.userId])
+  ]);
+  const invoices=invoiceQ.rows.map(r=>({id:r.id,number:r.number,total:Number(r.total),issuedAt:r.issued_at}));
+  sendJson(res,200,{ok:true,...balance,initialDebt,
+   invoices,hasInvoice:invoices.length>0,
+   canEditInitialDebt:Boolean(settings.rows[0]?.can_edit)&&invoices.length===0,
+   smsEnabled:Boolean(settings.rows[0]?.sms_enabled)});
+  return true;
+ }
+ const owner=await pool.query('SELECT 1 FROM labs WHERE id=$1 AND created_by=$2',[labId,a.userId]);
+ if(!owner.rowCount){sendJson(res,403,{error:'lab_owner_only'});return true;}
+ const body=await bodyJson(req),target=integer(body.initialDebt),expected=integer(body.expectedInitialDebt);
+ const note=String(body.note||'').trim();
+ if(target===null||target<0||expected===null||expected<0||note.length<3||note.length>500){
+  sendJson(res,400,{error:'invalid_initial_debt_correction'});return true;
+ }
+ const client=await pool.connect();let result;
+ try{
+  await client.query('BEGIN');
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',[labId,customerId]);
+  // Never change the opening amount once even one invoice has been issued.
+  const invoiced=await client.query('SELECT 1 FROM invoices WHERE lab_id=$1 AND customer_id=$2 LIMIT 1',[labId,customerId]);
+  if(invoiced.rowCount){
+   await client.query('ROLLBACK');sendJson(res,409,{error:'initial_debt_locked_after_invoice'});return true;
+  }
+  const current=await readInitialDebt(client,labId,customerId);
+  if(current!==expected){
+   await client.query('ROLLBACK');sendJson(res,409,{error:'initial_debt_changed',initialDebt:current});return true;
+  }
+  const delta=target-current;
+  if(delta){
+   await ensureFinanceAccounts(client,labId);
+   const lines=delta>0
+    ? [{accountKey:'receivable',customerId,debit:delta,note},{accountKey:'opening_balance_equity',customerId,credit:delta,note}]
+    : [{accountKey:'receivable',customerId,credit:-delta,note},{accountKey:'opening_balance_equity',customerId,debit:-delta,note}];
+   await postBalancedFinanceTransaction(client,{labId,actorId:a.userId,
+    referenceType:'lab_manual_customer_initial_debt_adjustment',referenceId:crypto.randomUUID(),
+    description:'اصلاح بدهی اولیه مشتری حضوری: '+note,lines});
+  }
+  const balance=await readBalance(client,labId,customerId);
+  result={ok:true,initialDebt:target,...balance};
+  await client.query('COMMIT');
+ }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e;}
+ finally{client.release();}
+ await audit(a.userId,labId,'lab_customer.initial_debt_correction','user',customerId,
+  {from:expected,to:target,note}).catch(()=>{});
+ sendJson(res,200,result);return true;
+}
+
 export async function handleLabManualCustomerAccounts(ctx) {
   const {req,url,res,pool,labId,a,bodyJson,sendJson,crypto,sendSms,
     ensureFinanceAccounts,postBalancedFinanceTransaction,requireLocalIntakePrimary,audit}=ctx;
+  if(await handleSelectedCustomerAccount(ctx))return true;
   if (url.pathname === '/api/lab/delegated-customers/balances' && req.method === 'GET') {
     if(!await requireLocalIntakePrimary()) return true;
     const [amounts,invoices,owner] = await Promise.all([

@@ -1,3 +1,4 @@
+import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
@@ -19598,6 +19599,9 @@ ${inviteUrl}`;
             if (!fs.existsSync(manifestPath)) return sendJson(res, 503, { error: 'desktop_ui_unavailable' });
             return sendJson(res, 200, JSON.parse(fs.readFileSync(manifestPath, 'utf8')));
         }
+        // R1294: lab-scoped customer detail, initial-debt correction and invoice SMS.
+        if(await handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson,crypto,sendSms,
+            ensureFinanceAccounts,postBalancedFinanceTransaction,requireLocalIntakePrimary,audit})) return;
         if (req.method === 'GET' && url.pathname === '/api/lab/delegated-orders/bootstrap') {
             const [customers, sizes, lab] = await Promise.all([
                 pool.query(`SELECT u.id,
@@ -19624,7 +19628,10 @@ ${inviteUrl}`;
                     ORDER BY s.width_cm,s.height_cm,s.label`, [labId]),
                 pool.query('SELECT id,name,album_enabled FROM labs WHERE id=$1', [labId])
             ]);
-            const album = lab.rows[0]?.album_enabled ? await albumCatalogForLab(labId, false) : { enabled: false };
+            // A print-only intake never needs to construct the separate album catalog.
+            const printOnlyBootstrap = url.searchParams.get('mode') === 'print';
+            const album = !printOnlyBootstrap && lab.rows[0]?.album_enabled
+                ? await albumCatalogForLab(labId, false) : { enabled: false };
             return sendJson(res, 200, { lab: lab.rows[0], customers: customers.rows,
                 printSizes: sizes.rows, album, cachedAt: new Date().toISOString() });
         }

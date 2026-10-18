@@ -17,6 +17,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
    if(url.pathname.endsWith('/presign')){fileId=body.clientFileId;registered.push(body);return route.fulfill({json:{fileId,storageMode:mode==='remote'?'object':'device-local',uploadUrl:mode==='remote'?'https://upload.test/photo':null}});}
    if(url.pathname==='/api/lab/delegated-customers')return route.fulfill({json:{customer:{id:'new-customer',name:'09120000001',mobile:'09120000001',registrationPending:true},invitationSmsSent:true}});
    if(url.pathname.endsWith('/resend-invitation'))return route.fulfill({json:{invitationSmsSent:true}});
+   if(url.pathname.endsWith('/account-summary'))return route.fulfill({json:{balance:50000,balanceUpdatedAt:'2026-10-18T12:00:00Z',initialDebt:50000,invoices:[],hasInvoice:false,canEditInitialDebt:true,smsEnabled:true}});
    if(url.pathname==='/api/lab/orders/order')return route.fulfill({json:{order:{id:'order',number:42,mode:'print',customer_name:'Customer'},files:registered.map(x=>({id:x.clientFileId,original_name:x.printCopies>1?x.name.replace(/(\.[^.]+)$/, ' = '+x.printCopies+'$1'):x.name,print_size_id:x.printSizeId,size_label:x.printSizeId==='size'?'10×15':'20×30',print_type:x.printType,bytes:x.bytes}))}});
    if(url.pathname.endsWith('/submit'))return route.fulfill({json:{order:{id:'order'},invoice:{number:42}}});
    return route.fulfill({json:{orderId:'order',orderNumber:42}});
@@ -49,13 +50,11 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
    assert.equal(await page.locator('.pb1139PickerOptions [role=option]:visible').count(),0,'customer rows hidden while adding');
    await page.getByLabel('نام موقت مشتری',{exact:true}).fill('آتلیه آزمایشی');
    await page.getByLabel('شماره موبایل',{exact:true}).fill('09120000001');
-   await page.getByLabel('بدهی قبلی (تومان)').fill('50000');
-   assert.equal(await page.getByLabel('بدهی قبلی (تومان)').inputValue(),'50,000');
+   await page.getByLabel('بدهی اولیه (تومان)').fill('50000');
+   assert.equal(await page.getByLabel('بدهی اولیه (تومان)').inputValue(),'50,000');
    await page.getByLabel('ارسال پیامک دعوتنامه').check();
    await page.getByRole('button',{name:'افزودن',exact:true}).click();
-   await page.getByRole('button',{name:'عکاس / مشتری'}).click();
-   await page.getByRole('button',{name:'ارسال مجدد دعوت‌نامه برای 09120000001'}).click();
-   await page.getByRole('button',{name:'عکاس / مشتری'}).click();
+   await page.getByRole('button',{name:'ارسال مجدد دعوت‌نامه',exact:true}).click();
    assert.equal(await page.getByLabel('نام مشتری / عکاسی').count(),0);
   }else await page.getByRole('option',{name:/Display Studio/}).click();
   await page.getByLabel('سایز چاپ',{exact:true}).selectOption('size');
@@ -63,7 +62,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
   const row=await page.locator('.pb1139EntryRow>.pb1139Customer>button,.pb1139EntryRow>label>select,.pb1139EntryRow>label>button').evaluateAll(items=>items.map(x=>x.getBoundingClientRect().y));
   assert.equal(row.length,5);assert(Math.max(...row)-Math.min(...row)<2,'all entry controls share one aligned row');
   await page.locator('form>input[type=file]').setInputFiles({name:'Photo.JPG',mimeType:'image/jpeg',buffer:Buffer.from('abc')});
-  await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
+  await page.getByRole('button',{name:'ثبت سفارش و ذخیره پیش‌فاکتور'}).click();
   assert.equal(calls.filter(x=>x.body&&x.url.includes('/delegated-orders')).length,0,'unadded files cannot be silently omitted from final registration');
   await page.getByRole('button',{name:'افزودن گروه عکس',exact:true}).click();
   await page.locator('.pb1139Group').first().waitFor();assert.equal(await page.locator('.pb1139Group').count(),1);
@@ -88,7 +87,7 @@ for(const mode of ['success','disk','remote','secondary','no-folder','new-custom
    await group.locator('input[type=file]').setInputFiles({name:'Extra.JPG',mimeType:'image/jpeg',buffer:Buffer.from('extra')});
    await page.waitForFunction(()=>document.querySelector('.pb1139Group')?.querySelectorAll('figure').length===2);assert.equal(await group.locator('figure').count(),2);await group.locator('figure').last().getByRole('button',{name:'حذف عکس'}).click();assert.equal(await group.locator('figure').count(),1);
   }
-  await page.getByRole('button',{name:'ثبت سفارش و صدور فاکتور'}).click();
+  await page.getByRole('button',{name:'ثبت سفارش و ذخیره پیش‌فاکتور'}).click();
   if(mode==='remote'){await page.getByRole('status').filter({hasText:'هیچ عکسی به سرور ارسال نشد'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')));}
   else if(mode==='disk'){await page.getByRole('status').filter({hasText:'disk full'}).waitFor();assert(!calls.some(x=>x.url.endsWith('/submit')),'an unfinished draft must never become an invoiced order');}
   else if(mode==='new-customer'){await page.getByText('سفارش شمارهٔ 42 ثبت شد.').waitFor();const reg=calls.find(x=>x.url==='/api/lab/delegated-customers');assert.equal(reg.body.mobile,'09120000001');assert.equal(reg.body.name,'آتلیه آزمایشی');assert.equal(reg.body.initialDebt,50000);assert.equal(reg.body.sendInvitation,true);assert(calls.some(x=>x.url.endsWith('/resend-invitation')));const create=calls.find(x=>x.url==='/api/lab/delegated-orders');assert.equal(create.body.customerId,'new-customer');assert.equal(create.body.initialDebt,undefined);assert.equal(create.body.mobile,undefined);}

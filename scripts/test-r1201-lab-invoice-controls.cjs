@@ -52,8 +52,9 @@ test('birthday entry is only inside general settings; both walk-in modes show lo
  assert(birthday.includes('window.pb774OpenBirthdayCampaign=open;'));
  assert(!birthday.includes('setInterval(mount,900);mount();'));
  assert(intake.includes('pb1201IntakeLoading'));
- const i=intake.indexOf('prep.showModal()'),j=intake.indexOf("api('/api/lab/delegated-orders/bootstrap')",i);
+ const i=intake.indexOf('prep.showModal()'),j=intake.indexOf("api('/api/lab/delegated-orders/bootstrap'+",i);
  assert(i>0&&j>i);
+ assert(intake.includes("const [primary,root,data]=await Promise.all(["));
  assert(html.includes('/photobridge-r1201-lab-invoice-export.js?v=r1201'));
  assert(html.includes('/photobridge-r1201-lab-finance-invoice.css?v=r1201'));
 });

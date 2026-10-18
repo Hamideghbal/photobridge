@@ -6,20 +6,22 @@ const {pathToFileURL}=require('node:url');
 const path=require('node:path');
 const importHandler=()=>import(pathToFileURL(path.resolve('dist/api/lab-manual-customer-controls.js')).href);
 
-test('R1291 build keeps the existing lab picker and adds scoped endpoints',()=>{
+test('R1294 keeps authenticated customer-account endpoints and moves details below the compact picker',()=>{
  const ui=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
  const server=fs.readFileSync('dist/api/server.js','utf8');
  const html=fs.readFileSync('dist/web/index.html','utf8');
  assert(ui.includes('registrationPending'));
  assert(ui.includes('resend-invitation'));
  assert(ui.includes('send-invoice-sms'));
- assert(ui.includes('expectedBalance:balanceOf(c)'));
- assert(ui.includes('آخرین تغییر:'));
+ assert(ui.includes('account-summary'));
+ assert(ui.includes('adjust-initial-debt'));
+ assert(ui.includes('pb1294SelectedDetails'));
+ assert(ui.includes('آخرین تغییر'));
  assert(ui.includes('invoiceChoice'));
  assert(server.includes('handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson'));
  assert(server.includes("from './lab-manual-customer-controls.js'"));
  assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
- assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1291'));
+ assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1294'));
 });
 function setup({owner=true,balance=50000,smsRecent=false,member=true,primary=true,invoiceFound=true}={}){
  let current=balance;const calls=[],answers=[],journals=[],sms=[];

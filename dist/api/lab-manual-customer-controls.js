@@ -35,7 +35,7 @@ export async function handleLabManualCustomerAccounts(ctx) {
       invoices:invoices.rows.map(r=>({id:r.id,customerId:r.customer_id,number:r.number,total:Number(r.total),issuedAt:r.issued_at}))});
     return true;
   }
-  const m=url.pathname.match(/^\\/api\\/lab\\/delegated-customers\\/([0-9a-f-]{36})\\/(adjust-balance|send-invoice-sms)$/i);
+  const m=url.pathname.match(/^\/api\/lab\/delegated-customers\/([0-9a-f-]{36})\/(adjust-balance|send-invoice-sms)$/i);
   if(!m || req.method !== 'POST')return false;
   if(!idPattern.test(m[1])){sendJson(res,400,{error:'invalid_customer_id'});return true;}
   if(!await requireLocalIntakePrimary())return true;
@@ -84,8 +84,8 @@ export async function handleLabManualCustomerAccounts(ctx) {
       WHERE i.id=$1 AND i.lab_id=$2 AND i.customer_id=$3`,[invoiceId,labId,customerId]);
   if(!invoiceQ.rowCount){sendJson(res,404,{error:'invoice_not_found'});return true;}
   const invoice=invoiceQ.rows[0];
-  const mobile=digits(invoice.mobile).replace(/\\D/g,'');
-  if(!/^09\\d{9}$/.test(mobile)){sendJson(res,409,{error:'customer_mobile_invalid'});return true;}
+  const mobile=digits(invoice.mobile).replace(/\D/g,'');
+  if(!/^09\d{9}$/.test(mobile)){sendJson(res,409,{error:'customer_mobile_invalid'});return true;}
   if(!invoice.sms_customer_notifications_allowed){sendJson(res,403,{error:'lab_sms_disabled'});return true;}
   const client=await pool.connect();let sendId;
   try {
@@ -102,7 +102,7 @@ export async function handleLabManualCustomerAccounts(ctx) {
   }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e;}finally{client.release();}
   try{
     const balance=await readBalance(pool,labId,customerId);
-    const message=`PhotoBridge\\nلابراتوار ${invoice.lab_name}\\nفاکتور شماره ${invoice.number}\\nمبلغ: ${money(invoice.total)} تومان\\nمانده حساب: ${money(balance.balance)} تومان`;
+    const message=`PhotoBridge\nلابراتوار ${invoice.lab_name}\nفاکتور شماره ${invoice.number}\nمبلغ: ${money(invoice.total)} تومان\nمانده حساب: ${money(balance.balance)} تومان`;
     const sms=await sendSms({mobile,message,purpose:'lab_manual_invoice',eventKey:'manual_invoice',
       labId,metadata:{customerId,invoiceId}});
     await pool.query(`UPDATE lab_manual_invoice_sms_sends SET status='sent',sms_reference=$2,sent_at=now()

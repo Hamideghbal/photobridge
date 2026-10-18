@@ -120,6 +120,7 @@ jobs:
           node --test scripts/test-r1148-lab-profile-image.cjs
           node --test scripts/test-r1138-primary-intake-api.cjs scripts/test-r1142-intake-copies-customer.cjs
           node --test scripts/test-r1143-inline-customer-preregistration.cjs
+          node --test scripts/test-r1291-lab-manual-customer-accounts.cjs scripts/test-r1294-lab-intake-account-picker.cjs
           node --check dist/web/photobridge-r1144-lab-invite-existing.js
           node --test scripts/test-r1144-lab-invite-existing.cjs
           node --test scripts/test-r1145-local-folder-primary-auto.cjs

@@ -118,31 +118,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
    editPanel.append(amount,reason,save,cancel);
    controls.append(toggle,editPanel);
   }else if(data.hasInvoice){controls.append(node('small','پس از صدور اولین فاکتور، بدهی اولیه قابل تغییر نیست.','pb1294LockHint'));}
-  const smsArea=node('div',null,'pb1294SmsArea');
-  const checkboxLabel=node('label',null,'pb1294SmsChoice');
-  const checkbox=node('input');checkbox.type='checkbox';checkbox.setAttribute('aria-label','ارسال پیامک فاکتور');
-  checkboxLabel.append(checkbox,node('span','پیامک فاکتور'));
-  const invoiceChoice=node('select');invoiceChoice.setAttribute('aria-label','انتخاب فاکتور برای پیامک');
-  const invoices=data.invoices||[];
-  if(!invoices.length){const o=node('option','فاکتوری موجود نیست');o.value='';invoiceChoice.append(o);}
-  else for(const inv of invoices){
-   const option=node('option','فاکتور '+inv.number+' · '+money(inv.total));option.value=inv.id;invoiceChoice.append(option);
-  }
-  const send=node('button','ارسال پیامک','pb1294SendSms');send.type='button';
-  checkbox.disabled=!invoices.length||!data.smsEnabled;
-  invoiceChoice.disabled=!invoices.length||!data.smsEnabled;
-  send.disabled=true;
-  checkbox.onchange=()=>{send.disabled=!checkbox.checked||!invoiceChoice.value;};
-  send.onclick=async()=>{
-   const chosen=invoices.find(x=>x.id===invoiceChoice.value);
-   if(!checkbox.checked||!chosen||!confirm('پیامک فاکتور '+chosen.number+' به '+c.mobile+' ارسال شود؟'))return;
-   send.disabled=true;localNotice.textContent='در حال ارسال پیامک فاکتور…';
-   try{const result=await sendInvoiceSms(c.id,{invoiceId:chosen.id});localNotice.textContent=result.smsSent?'پیامک فاکتور ارسال شد.':'پیامک ارسال نشد.';checkbox.checked=false;}
-   catch(e){localNotice.textContent=e.message;}finally{send.disabled=!checkbox.checked;}
-  };
-  smsArea.append(checkboxLabel,invoiceChoice,send);
-  if(!data.smsEnabled&&invoices.length)smsArea.append(node('small','ارسال پیامک این لابراتوار غیرفعال است.'));
-  controls.append(smsArea,localNotice);details.append(controls);
+  controls.append(localNotice);details.append(controls);
  }
  async function refreshDetails(c,message=''){
   if(!c||selected?.id!==c.id)return;
@@ -385,3 +361,4 @@ let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;reque
 function boot(){mount();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',schedule);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
+

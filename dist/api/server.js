@@ -9024,7 +9024,7 @@ function requestPortal(req) {
     const pathname = String(req.url || '').split('?')[0];
     if (pathname.startsWith('/api/admin/') || pathname === '/api/auth/admin-login' || pathname === '/admin' || pathname.startsWith('/admin/'))
         return 'admin';
-    if (pathname.startsWith('/api/lab/') || pathname === '/api/auth/lab-login')
+    if (pathname.startsWith('/api/lab/') || pathname === '/api/auth/lab-login' || pathname === '/lab/site-editor' || pathname === '/lab/site-preview')
         return 'lab';
     if (pathname.startsWith('/api/customer/') || pathname === '/api/auth/customer-login')
         return 'photographer';
@@ -19665,7 +19665,7 @@ ${inviteUrl}`;
             if (!reserved.rowCount)
                 return { invitationSmsSent: false, invitationSmsError: 'invitation_sms_rate_limited' };
             try {
-                const message = `سلام ${invite.target_name || ''}\nلابراتوار «${invite.lab_name || 'PhotoBridge'}» شما را برای همکاری دعوت کرده است.\nلینک تکمیل عضویت: ${PUBLIC_APP_URL}/invite/${invite.token}`;
+                const message = `سلام ${invite.target_name || ''}\nکار شما در لابراتوار «${invite.lab_name || 'PhotoBridge'}» در حال انجام است.\nبرای مشاهده مراحل انجام کار و پیگیری سفارش، عضویت خود را در لابراتوار تکمیل کنید.\nلینک عضویت: ${PUBLIC_APP_URL}/invite/${invite.token}`;
                 const sms = await sendSms({ mobile: invite.target_mobile, message, purpose: 'lab_invitation',
                     eventKey: 'delegated_customer_pre_registration', labId,
                     metadata: { invitationId, customerId } });

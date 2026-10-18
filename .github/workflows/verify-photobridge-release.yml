@@ -44,6 +44,8 @@ jobs:
           node --check dist/api/equipment-office-handoff.js
           node --check dist/web/equipment-site.js
           node --check dist/web/storefront.js
+      - name: Test integrated lab alerts and settings
+        run: node --test scripts/test-r1296-native-alerts.cjs scripts/test-r1296-lab-settings.cjs
       - name: Run production build
         run: npm run build
       - name: Verify primary-device binding in laboratory internet downloads
@@ -269,4 +271,5 @@ jobs:
           }
           throw Error('Live publication was not confirmed: '+last);
           NODE
+
 

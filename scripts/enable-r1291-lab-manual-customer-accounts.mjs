@@ -14,9 +14,9 @@ if(!src.includes('handleLabManualCustomerAccounts({req,url,res,')){
  fs.writeFileSync(file,src);
 }
 const htmlPath='dist/web/index.html';let html=fs.readFileSync(htmlPath,'utf8');
-html=html.replace(/(photobridge-r1137-lab-local-intake\\.js\\?v=)[^"']+/g,'$1r1291');
+html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?v=)[^"']+/g,'$1r1291');
 if(!html.includes('/photobridge-r1291-lab-account-picker.css'))
- html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1291-lab-account-picker.css?v=r1291">\\n</head>');
+ html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1291-lab-account-picker.css?v=r1291">\n</head>');
 fs.writeFileSync(htmlPath,html);
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','dist/web/photobridge-r1137-lab-local-intake.js'],{stdio:'inherit'});

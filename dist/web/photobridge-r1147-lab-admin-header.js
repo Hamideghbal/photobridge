@@ -36,7 +36,7 @@ function secondary(h){
     if(changed&&!location.pathname.startsWith('/lab/settings')&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
      requestAnimationFrame(()=>requestAnimationFrame(()=>{
       const panel=document.querySelector('.labRolePageScrollArea .stageQueueWorkspace,.labRolePageScrollArea .settingsBody,.labRolePageScrollArea .financePage')||document.querySelector('.labRolePageScrollArea');
-      panel?.animate?.([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+      /* PB1188 fixed scroll viewport; only the selected tab animates */
      }));
     }
     schedule();
@@ -138,7 +138,7 @@ function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!
   for(const [title,selector]of [['سفارش چاپ','.labPrintTopNav'],['سفارش آلبوم','.albumTopNav'],['آرشیو','.labArchiveHeaderBtn'],['مالی','.labFinanceHeaderBtn']]){if(!h.querySelector(selector))continue;if(selector==='.labArchiveHeaderBtn'&&nav.children.length){const line=document.createElement('span');line.className='pb1147Divider';line.setAttribute('aria-hidden','true');nav.append(line);}const button=document.createElement('button');button.type='button';const label=document.createElement('span');label.className='pb1149NavLabel';label.textContent=title;button.append(label);button.dataset.source=selector;button.onclick=()=>h.querySelector(selector)?.click();nav.append(button);}
   const divider=document.createElement('span');divider.className='pb1147Divider';divider.setAttribute('aria-hidden','true');nav.append(divider);
   categories.forEach(([title,path],index)=>{const button=document.createElement('button');button.type='button';const label=document.createElement('span');label.className='pb1149NavLabel';label.textContent=title;button.append(label);button.dataset.category=index;button.onclick=()=>navigate(path);nav.append(button);});
-  h.append(nav);
+  /* PB1188 no animation on the full laboratory scroll viewport */h.append(nav);
  }
  const section=location.pathname.split('/')[3]||'general';nav.querySelectorAll('button').forEach(button=>{const original=button.dataset.source&&h.querySelector(button.dataset.source);const active=original?original.classList.contains('active'):button.dataset.category!==undefined&&(location.pathname.startsWith('/lab/settings')||location.pathname==='/lab/wallet')&&categories[Number(button.dataset.category)][2].includes(location.pathname==='/lab/wallet'?'wallet':section);button.classList.toggle('active',!!active);button.setAttribute('aria-current',active?'page':'false');});
 }

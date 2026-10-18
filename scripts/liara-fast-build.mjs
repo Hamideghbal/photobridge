@@ -179,3 +179,5 @@ await import('./enable-r1291-lab-manual-customer-accounts.mjs');
 await import('./enable-r1296-lab-settings.mjs');
 
 await import('./enable-r1297-lab-settings-speed.mjs');
+
+await import('./enable-r1298-lab-header-navigation.mjs');

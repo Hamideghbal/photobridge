@@ -19,7 +19,7 @@ async function readInitialDebt(db,labId,customerId){
     JOIN finance_accounts fa ON fa.id=e.account_id AND fa.lab_id=$1 AND fa.system_key='receivable'
     WHERE e.customer_id=$2 AND (
       (t.reference_type='lab_delegated_opening_debt' AND t.reference_id=$2)
-      OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment','lab_manual_customer_balance_correction')
+      OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment')
     )`,[labId,customerId]);
  return Number(result.rows[0]?.initial_debt||0);
 }

@@ -7,7 +7,9 @@ const listener=src.indexOf("nav.addEventListener('click',e=>{");
 if(listener>=0){const end=src.indexOf('h.append(nav);',listener);if(end<0||end-listener>1000)throw Error('R1298 header animation anchor changed');src=src.slice(0,listener)+'/* PB1188 no animation on the full laboratory scroll viewport */'+src.slice(end);}
 const oldCategories="['مسیر ذخیره روی هارد','/lab/settings/local',['local']]];";
 const newCategories="['مسیر ذخیره روی هارد','/lab/settings/local',['local']],['سایت اختصاصی','/lab/settings/site',['site']]];";
-if(src.includes(oldCategories))src=src.replace(oldCategories,newCategories);else if(!src.includes(newCategories))throw Error('R1298 site header category anchor changed');
+// Site is a secondary option of General, never a shifted fifth primary tab.
+if(src.includes(newCategories))src=src.replace(newCategories,oldCategories);
+src=src.replace("['general','hours','sms','windowsAlert','snappbox']","['general','hours','site','sms','windowsAlert','snappbox']");
 // Settings content remains still; retain the lightweight button feedback.
 const motion="if(changed&&!matchMedia('(prefers-reduced-motion:reduce)').matches){\n     requestAnimationFrame";
 src=src.replace(motion,"if(changed&&!location.pathname.startsWith('/lab/settings')&&!matchMedia('(prefers-reduced-motion:reduce)').matches){\n     requestAnimationFrame");

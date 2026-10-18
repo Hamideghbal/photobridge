@@ -10,3 +10,10 @@ if(!src.includes("require('./native-alerts.cjs')")){
  replace("else{void primeCache();void sync.run()}","else{nativeAlerts.start();void primeCache();void sync.run()}");
  fs.writeFileSync(file,src);
 }
+// New native behavior requires a distinguishable installer version.
+for(const filename of ['apps/lab-desktop/package.json','apps/lab-desktop/package-lock.json']){
+ if(!fs.existsSync(filename))continue;
+ const pkg=JSON.parse(fs.readFileSync(filename,'utf8'));
+ pkg.version='1.0.15';if(pkg.packages?.[''])pkg.packages[''].version='1.0.15';
+ fs.writeFileSync(filename,JSON.stringify(pkg,null,2)+'\n');
+}

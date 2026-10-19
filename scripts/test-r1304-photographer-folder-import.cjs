@@ -65,3 +65,63 @@ test('large folder limits mounted photo cards while keeping every source for upl
  assert.ok(bundle.includes('previewUrl:URL.createObjectURL(b)'));
  assert.ok(bundle.includes('function zs(t){'));
 });
+
+test('choosing a print size never opens the Windows file picker automatically',()=>{
+ const from=bundle.indexOf('Pe=ue=>{',bundle.indexOf('function ej({'));
+ const to=bundle.indexOf(',d=async ue=>',from);
+ assert.ok(from>0&&to>from,'print size selection handlers found');
+ const handlers=bundle.slice(from,to).replace('Pe=','Pe:').replace(',je=',',je:');
+ const calls=[];
+ const picker={current:{click:()=>{throw Error('native picker opened without permission')}}};
+ const actions=new Function('w','L','_e','m','return ({'+handlers+'})')(
+  value=>calls.push(['size',value]),
+  value=>calls.push(['custom',value]),
+  size=>{calls.push(['group',size]);return 'size-id';},
+  picker
+ );
+ actions.Pe('10x15');
+ actions.Pe('__custom__');
+ actions.je({widthCm:12,heightCm:18});
+ assert.deepEqual(calls,[
+  ['size','10x15'],['group','10x15'],
+  ['size','__custom__'],['custom',true],
+  ['group','__custom__'],['size','__custom__']
+ ]);
+});
+
+test('dropped Windows folders are scanned without a native dialog and preserve relative paths',async()=>{
+ const begin=bundle.indexOf('const pb1305DroppedPaths=');
+ const finish=bundle.indexOf('function ej({',begin);
+ assert.ok(begin>0&&finish>begin,'drop helper present');
+ const helpers=new Function(bundle.slice(begin,finish)+
+  ';return {pb1305ReadDroppedPhotos,pb1305DroppedPaths}')();
+ const photo={name:'p1.jpg',size:600,type:'image/jpeg'};
+ const psd={name:'p2.psd',size:1500,type:''};
+ const textFile={name:'notes.txt',size:10,type:'text/plain'};
+ const entry=file=>({isFile:true,file:ok=>ok(file)});
+ let first=true;
+ const folder={isDirectory:true,name:'shoot',createReader:()=>({
+  readEntries:ok=>ok(first?(first=false,[entry(photo),entry(textFile),entry(psd)]):[])
+ })};
+ const accepted=await helpers.pb1305ReadDroppedPhotos({
+  items:[{kind:'file',webkitGetAsEntry:()=>folder}]
+ });
+ assert.equal(accepted.length,2);
+ assert.equal(accepted[0],photo,'keeps the original file');
+ assert.equal(accepted[1],psd);
+ assert.equal(helpers.pb1305DroppedPaths.get(photo),'shoot/p1.jpg');
+ assert.equal(helpers.pb1305DroppedPaths.get(psd),'shoot/p2.psd');
+ const direct=await helpers.pb1305ReadDroppedPhotos({files:[photo,textFile]});
+ assert.deepEqual(direct,[photo]);
+ assert.ok(bundle.includes('relativePath:String(pb1305DroppedPaths.get(b)||b.webkitRelativePath||b.name)'));
+});
+
+test('each size has an independent drag-drop zone and an optional Windows picker button',()=>{
+ assert.ok(bundle.includes('className:"pb1305PrintDropArea "'));
+ assert.ok(bundle.includes('onDrop:async Be=>{Be.preventDefault();if(W||ie)return;'));
+ assert.ok(bundle.includes('await pb1305ReadDroppedPhotos(Be.dataTransfer)'));
+ assert.ok(bundle.includes('انتخاب فایل با پنجره ویندوز'));
+ assert.ok(bundle.includes('m.current&&m.current.click()'),'native picker can still be opened after explicit click');
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ assert.ok(html.includes('/photobridge-r1305-print-native-picker.css?v=r1305'));
+});

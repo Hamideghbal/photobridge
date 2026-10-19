@@ -1,0 +1,19 @@
+/* Only the mobile gallery list expands: help/summary cards keep their layout. */
+@media(max-width:820px){
+ html body #root .clientGalleryWorkspace>.clientGalleryCards{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-column:1/-1!important;width:100%!important;max-width:none!important;min-width:0!important;padding-inline:0!important;box-sizing:border-box!important}
+ html body #root .clientGalleryCards>.clientGalleryCard{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important;grid-column:1/-1!important}
+}
+/* Mobile photographer print orders: enlarge the information that has room. */
+@media(max-width:820px){
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .customerOrderHead small{font-size:11px!important;line-height:1.6!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .customerOrderHead b{font-size:18px!important;line-height:1.4!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .customerOrderFacts b{font-size:14px!important;line-height:1.5!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .customerOrderFacts small{font-size:11px!important;line-height:1.5!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .customerOrderFoot{font-size:11px!important;line-height:1.6!important;flex-wrap:wrap}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerOrderCard .orderStatus{font-size:11px!important;line-height:1.5!important;white-space:normal!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerInvoiceStrip b{font-size:14px!important;line-height:1.5!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerInvoiceStrip small{font-size:11px!important;line-height:1.5!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerInvoiceStrip button{font-size:12px!important;min-height:36px!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerFixNotice b{font-size:12px!important}
+ html body #root .photographerPrintWorkspace .liveCustomerOrders .customerFixNotice span{font-size:11px!important}
+}

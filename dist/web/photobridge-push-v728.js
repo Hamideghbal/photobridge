@@ -7,7 +7,7 @@
   window.__PB_PUSH_V782__=true;
   window.__PB_PUSH_V783__=true;
 
-  const SW='/photobridge-sw-v710.js';
+  const SW='/photobridge-sw-v710.js?gallery=r1318';
   const PROMPT_ID='pbPushEnableV728';
   const LAST_SYNC='photobridge:push:last-sync:v783';
   const nativeFetch=window.fetch.bind(window);
@@ -96,7 +96,7 @@
   window.PB782SyncPush=()=>syncSubscription(true);
   function maybePrompt(){if(!supported())return;if(role()==='rental'&&window.__PB_RENTAL_PORTAL_AUTH_READY__!==true){hidePrompt();return}if(Notification.permission==='granted'){void syncSubscription(false);void syncAppBadge();hidePrompt();return}if(Notification.permission==='default'){let dismissed=false;try{dismissed=sessionStorage.getItem('photobridge:push:prompt-dismissed')==='1'}catch{}if(!dismissed)setTimeout(showPrompt,900)}else hidePrompt()}
 
-  navigator.serviceWorker?.addEventListener?.('message',e=>{if(e?.data?.type!=='PB_PUSH_FOREGROUND')return;const payload=e.data.payload||{},tag=String(payload.tag||'');if(tag&&tag===lastForegroundTag&&Date.now()-lastForegroundAt<5000)return;lastForegroundTag=tag;lastForegroundAt=Date.now();void setAppBadge(Number(payload.unreadCount||1));playForegroundSound();showToast(payload)});
+  navigator.serviceWorker?.addEventListener?.('message',e=>{if(e?.data?.type!=='PB_PUSH_FOREGROUND')return;const payload=e.data.payload||{},tag=String(payload.tag||'');if(tag&&tag===lastForegroundTag&&Date.now()-lastForegroundAt<5000)return;lastForegroundTag=tag;lastForegroundAt=Date.now();void setAppBadge(Number(payload.unreadCount||1));playForegroundSound();showToast(payload);if(role()==='customer'&&['client_gallery_finalized','client_gallery_approved'].includes(payload.event)&&payload.notificationId)void api('/api/customer/notifications/delivered',{method:'POST',body:JSON.stringify({id:payload.notificationId})}).catch(()=>{})});
   document.addEventListener('click',e=>{const bell=e.target?.closest?.('.systemNotificationBell,.mobileNotificationBell');if(!bell||!supported())return;if(Notification.permission==='default')void enable(true);else if(Notification.permission==='granted')void syncSubscription(true)},true);
   window.addEventListener('photobridge-notifications-read-lab',()=>{if(role()==='lab')void syncAppBadge()});
   window.addEventListener('photobridge-notifications-read-customer',()=>{if(role()==='customer')void syncAppBadge()});

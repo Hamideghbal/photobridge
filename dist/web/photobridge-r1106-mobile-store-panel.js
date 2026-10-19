@@ -78,7 +78,7 @@ window.addEventListener('click',e=>{
  if(selected)close(); // Other sections keep their normal React navigation.
 },true);
 window.addEventListener('popstate',()=>{const kind=restoreKind();if(kind)open(kind,false);else close()});
-window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;return}if(!authenticated)return;authenticated=false;close();for(const p of panels.values())p.remove();panels.clear()});
+window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;sync();return;}if(authenticated)close();else{selected=null;document.body.classList.remove('pb1106PanelOpen');mark();}authenticated=false;for(const p of panels.values())p.remove();panels.clear();dockState.clear();dockObserver?.disconnect();dock=null;});
 function init(){sync();new MutationObserver(sync).observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

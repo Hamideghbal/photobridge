@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const keys=['ai','album','instagram'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام'};
-let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false;
+let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false,sessionEpoch=0;
 const previousDisplay=new WeakMap();
 const admin=()=>location.pathname.startsWith('/admin');
 const photographer=()=>location.pathname.startsWith('/photographer')||location.pathname==='/equipment-rental/book';
@@ -29,6 +29,7 @@ function currentFeature(){
 }
 function apply(){
  if(!settings||!photographer())return;
+ if(matchMedia('(max-width:820px)').matches){const docks=[...document.querySelectorAll('.photographerBottomAppNav')],current=[...docks].reverse().find(el=>el.closest('#root'))||docks.at(-1);for(const el of docks){if(el===current){if(el.hasAttribute('data-pb1318-stale'))el.removeAttribute('data-pb1318-stale');}else if(!el.hasAttribute('data-pb1318-stale'))el.setAttribute('data-pb1318-stale','1');}}
  for(const el of document.querySelectorAll('.photographerHeaderNav button,.photographerHeaderNav a,.photographerHomeModeNav button,.photographerHomeModeNav a,.photographerBottomAppNav button,.photographerBottomAppNav a,#pbHomeMobileMenu button,#pbHomeMobileMenu a')){
   const key=feature(el);if(!key)continue;
   if(settings.tabs[key]===false){
@@ -51,7 +52,7 @@ function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=
 function installStyle(){
  if(document.querySelector('#pb1099TabsStyle'))return;
  const style=document.createElement('style');style.id='pb1099TabsStyle';
- style.textContent='[data-pb1099-hidden="1"]{display:none!important}html body #photographerStoreBottomNav .photographerBottomAppNavGrid[data-pb1099-grid],html body .photographerBottomAppNav .photographerBottomAppNavGrid[data-pb1099-grid]{grid-template-columns:repeat(var(--pb1099-tabs,6),minmax(0,1fr))!important}.pb1099TabsDialog{border:1px solid #dce3f0;border-radius:20px;padding:22px;width:min(430px,calc(100vw - 40px));font-family:inherit;direction:rtl;color:#24334d;background:#fff}.pb1099TabsDialog::backdrop{background:#16234088}.pb1099TabsDialog h3{margin:0 0 10px}.pb1099TabsDialog p{font-size:13px;line-height:1.8}.pb1099TabsDialog label{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:16px}.pb1099TabsDialog input{width:20px;height:20px;accent-color:#315cff}.pb1099TabsActions{display:flex;gap:10px;margin-top:16px}.pb1099TabsActions button{font:inherit;padding:10px 18px;border:1px solid #dce3f0;border-radius:10px;cursor:pointer;background:#fff}.pb1099TabsActions button[type=submit]{background:#315cff;color:#fff}.pb1099TabsMessage{min-height:22px;color:#b42318}';
+ style.textContent='@media(max-width:820px){html body .photographerBottomAppNav[data-pb1318-stale]{display:none!important}html[data-pb1106-tabs-pending] .photographerBottomAppNav{visibility:hidden!important;pointer-events:none!important}body.pbAuthenticatedPhotographerPortal :is(.pbHomeMobileAccountBar,.adminBottomAppNav,.labBottomAppNav){display:none!important}}[data-pb1099-hidden="1"]{display:none!important}html body #photographerStoreBottomNav .photographerBottomAppNavGrid[data-pb1099-grid],html body .photographerBottomAppNav .photographerBottomAppNavGrid[data-pb1099-grid]{grid-template-columns:repeat(var(--pb1099-tabs,6),minmax(0,1fr))!important}.pb1099TabsDialog{border:1px solid #dce3f0;border-radius:20px;padding:22px;width:min(430px,calc(100vw - 40px));font-family:inherit;direction:rtl;color:#24334d;background:#fff}.pb1099TabsDialog::backdrop{background:#16234088}.pb1099TabsDialog h3{margin:0 0 10px}.pb1099TabsDialog p{font-size:13px;line-height:1.8}.pb1099TabsDialog label{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:16px}.pb1099TabsDialog input{width:20px;height:20px;accent-color:#315cff}.pb1099TabsActions{display:flex;gap:10px;margin-top:16px}.pb1099TabsActions button{font:inherit;padding:10px 18px;border:1px solid #dce3f0;border-radius:10px;cursor:pointer;background:#fff}.pb1099TabsActions button[type=submit]{background:#315cff;color:#fff}.pb1099TabsMessage{min-height:22px;color:#b42318}';
  document.head.append(style);
 }
 function mountAdmin(){
@@ -69,13 +70,13 @@ async function openAdmin(){
  try{const d=await api('/api/admin/photographer-tabs');for(const key of keys)dialog.querySelector('[name='+key+']').checked=d.tabs[key]!==false;dialog.querySelector('[role=status]').textContent='';dialog.querySelector('[type=submit]').disabled=false}catch{dialog.querySelector('[role=status]').textContent='دریافت تنظیمات انجام نشد.'}
 }
 async function load(){
- if(!photographer()||inFlight)return;inFlight=true;loadedPath=location.pathname;
- try{settings=await api('/api/photographer/navigation-tabs');if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{inFlight=false}
+ if(!photographer()||inFlight)return;const epoch=sessionEpoch;inFlight=true;loadedPath=location.pathname;
+ try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch)inFlight=false}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
-window.addEventListener('photobridge-auth-session-changed',()=>void load());
+window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;document.documentElement.dataset.pb1106TabsPending='1';void load();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

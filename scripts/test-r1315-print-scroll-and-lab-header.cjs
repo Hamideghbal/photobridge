@@ -3,10 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{exe
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'pb1315-'));
 const dir=path.join(temp,'dist/web');
 fs.mkdirSync(dir,{recursive:true});
-const files=['photobridge-r1126-desktop-navigation.js','photobridge-r1126-desktop-navigation.css','photobridge-r1310-layout.js','photobridge-r1310-layout.css','photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store-header-core.js','photobridge-v904r100f38-header-route-isolation.js','photobridge-v904r100f39-print-actions-cleanup.js',...['v813-finance-parity','v814-finance-store-print-polish','v815-print-finance-tabs','v816-finance-unify','v817-print-header-stability','v818-print-finance-composer-fix','v821-store-print-finance-fix','v822-direct-ui-fix'].map(n=>'photobridge-'+n+'.js')];
-files[files.indexOf('photobridge-v816-finance-unify.js')]='photobridge-v816-finance-unify.js'; // retained for explicit file list
-// The legacy actual asset has "print" in its name.
-files[files.indexOf('photobridge-v816-finance-unify.js')]='photobridge-v816-print-finance-unify.js';
+const files=['photobridge-r1126-desktop-navigation.js','photobridge-r1126-desktop-navigation.css','photobridge-r1310-layout.js','photobridge-r1310-layout.css','photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store-header-core.js','photobridge-v904r100f38-header-route-isolation.js','photobridge-v904r100f39-print-actions-cleanup.js',...['v813-finance-parity','v814-finance-store-print-polish','v815-print-finance-tabs','v816-print-finance-unify','v817-print-header-stability','v818-print-finance-composer-fix','v821-store-print-finance-fix','v822-direct-ui-fix'].map(n=>'photobridge-'+n+'.js')];
 for(const name of files)fs.copyFileSync(path.join('dist/web',name),path.join(dir,name));
 fs.writeFileSync(path.join(dir,'index.html'),'<head><link href="/photobridge-r1126-desktop-navigation.css?v=1"><script src="/photobridge-r1126-desktop-navigation.js?v=1"></script><script src="/photobridge-ui-fixes-v765.js?v=1"></script></head>');
 function patch(name){execFileSync(process.execPath,[path.resolve('scripts/enable-'+name+'.mjs')],{cwd:temp,stdio:'pipe'});}

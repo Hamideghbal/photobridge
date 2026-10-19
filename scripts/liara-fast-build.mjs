@@ -187,3 +187,5 @@ await import('./enable-r1299-lab-initial-debt.mjs');
 await import('./enable-r1301-lab-site-general.mjs');
 await import('./enable-r1302-mobile-login.mjs');
 
+
+await import('./enable-r1307-desktop-print-controls.mjs');

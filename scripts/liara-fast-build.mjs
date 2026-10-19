@@ -222,6 +222,12 @@ const { execFileSync: runR1314 } = await import("node:child_process");
 runR1314(process.execPath, ["--test", "scripts/test-r1314-print-workspace.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1314 regression tests");
 
+// Keep the scroll/header fix after R1314 and block an invalid production payload.
+await deployStep("./enable-r1315-print-scroll-and-lab-header.mjs");
+console.log("[PhotoBridge Docker build] START R1315 regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1315-print-scroll-and-lab-header.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1315 regression tests");
+
 
 // Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
 // Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.

@@ -1,3 +1,4 @@
+import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
@@ -5749,9 +5750,10 @@ async function reconcilePhotographerReferralHistoryForIssuer(issuerUserId) {
         console.error('[photographer-invite:history-reconcile-skipped]', { issuerUserId, code: String(e?.code || ''), message: String(e?.message || '') });
     }
 }
-function inviteIssuerScope(a) {
+function inviteIssuerScope(a,portal = '') {
     if (!a)
         return null;
+    if(portal==='photographer'&&a.labRole==='customer')return {type:'photographer',labId:null};
     if (a.platformRole === 'platform_admin')
         return { type: 'admin', labId: null };
     if (a.rentalRole === 'shop_admin' && a.rentalShopId)
@@ -7159,6 +7161,8 @@ function customerEventNotificationCopy(event, data) {
         return { title: 'وضعیت پیک به‌روزرسانی شد', message: `وضعیت پیک سفارش${notificationOrderNo(data)} تغییر کرد${data?.driverName ? ` · راننده: ${data.driverName}` : ''}.` };
     if (event === 'invoice_pricing_ready')
         return { title: 'مبلغ سفارش آماده پرداخت است', message: `مبلغ سفارش${notificationOrderNo(data)} محاسبه شد${data?.total ? ` · ${Number(data.total).toLocaleString('fa-IR')} تومان` : ''} و برای پرداخت آماده است.` };
+    if (event === 'client_gallery_approved')
+        return {title:'عکس‌ها تأیید شدند',message:`${data?.customerName||'مشتری'} عکس‌های گالری «${data?.galleryTitle||'گالری'}» را تأیید کرد.`};
     if (event === 'client_gallery_finalized')
         return { title: 'انتخاب مشتری نهایی شد', message: `${data?.customerName || 'مشتری'} انتخاب گالری «${data?.galleryTitle || 'گالری'}» را نهایی کرد${Number(data?.selectedCount||0)>0 ? ` · ${Number(data.selectedCount).toLocaleString('fa-IR')} عکس` : ''}${Number(data?.total||0)>0 ? ` · ${Number(data.total).toLocaleString('fa-IR')} تومان` : ''}.` };
     if (event === 'equipment_rental_request')
@@ -7201,12 +7205,12 @@ function webPushTargetUrl(kind, event, data) {
     if (event === 'equipment_collaboration_request') return '/rental/photographers';
     if (event === 'equipment_collaboration_review') return '/equipment-rental/book';
     if (event === 'equipment_rental_status' || event === 'equipment_sale_status') return '/equipment-rental/book';
-    if (event === 'client_gallery_finalized' || event === 'gallery.expiring') return '/photographer/gallery';
+    if (event === 'client_gallery_finalized' || event === 'client_gallery_approved' || event === 'gallery.expiring') return '/photographer/gallery';
     if ((event === 'invoice_ready' || event === 'invoice_pricing_ready') && data?.invoiceId) return `/photographer/finance/invoices?workspace=print&invoice=${encodeURIComponent(String(data.invoiceId))}`;
     return '/photographer/orders/flow?workspace=print';
 }
 async function sendWebPushToRecipient(kind, recipientId, notificationRow, event, data) {
-    if (!notificationRow || !recipientId) return;
+    if (!notificationRow || !recipientId) return {accepted:0};
     try {
         await ensureWebPushVapid();
         const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';
@@ -7214,7 +7218,7 @@ async function sendWebPushToRecipient(kind, recipientId, notificationRow, event,
             pool.query(`SELECT id,endpoint,p256dh,auth FROM web_push_subscriptions WHERE ${col}=$1 ORDER BY updated_at DESC LIMIT 12`, [recipientId]).catch(() => ({ rows: [] })),
             pool.query(`SELECT count(*)::int AS count FROM system_notifications WHERE ${col}=$1 AND read_at IS NULL`, [recipientId]).catch(() => ({ rows: [{ count: 1 }] }))
         ]);
-        if (!q.rows.length) return;
+        if (!q.rows.length) return {accepted:0};
         const unreadCount = Math.max(0, Number(unreadQ.rows[0]?.count || 0));
         const targetUrl = webPushTargetUrl(kind, event, data);
         const payload = JSON.stringify({
@@ -7232,9 +7236,11 @@ async function sendWebPushToRecipient(kind, recipientId, notificationRow, event,
             actionLabel: event === 'invoice_ready' || event === 'invoice_pricing_ready' ? 'مشاهده فاکتور' : 'مشاهده',
             metadata: data && typeof data === 'object' ? data : {}
         });
+        let accepted=0;
         await Promise.all(q.rows.map(async (sub) => {
             try {
-                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload, { TTL: 24 * 60 * 60, urgency: 'high' });
+                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload, { TTL: ['client_gallery_finalized','client_gallery_approved'].includes(event) ? 60 : 24 * 60 * 60, urgency: 'high' });
+                accepted++;
                 await pool.query(`UPDATE web_push_subscriptions SET last_seen_at=now() WHERE id=$1`, [sub.id]).catch(() => { });
             }
             catch (e) {
@@ -7243,8 +7249,9 @@ async function sendWebPushToRecipient(kind, recipientId, notificationRow, event,
                 else console.warn('[web-push] delivery failed', { kind, recipientId, status, message: String(e?.message || e).slice(0, 180) });
             }
         }));
+        return {accepted};
     }
-    catch (e) { console.warn('[web-push] unavailable', String(e?.message || e).slice(0, 180)); }
+    catch (e) { console.warn('[web-push] unavailable', String(e?.message || e).slice(0, 180));return {accepted:0}; }
 }
 async function storeLabSystemNotification(labId, event, data) {
     const copy = labEventNotificationCopy(event, data); if (!copy) return null;
@@ -7256,6 +7263,10 @@ async function storeCustomerSystemNotification(customerId, event, data, labId = 
     const metadata = { ...(data && typeof data === 'object' ? data : {}), labId: labId || undefined };
     const q = await pool.query(`INSERT INTO system_notifications(recipient_user_id,event_key,title,message,metadata) VALUES($1,$2,$3,$4,$5::jsonb) RETURNING *`, [customerId, event, copy.title, copy.message, JSON.stringify(metadata)]).catch(() => ({ rows: [] }));
     const row = q.rows[0] || null; if (row) void sendWebPushToRecipient('customer', customerId, row, event, metadata); return row;
+}
+async function notifyGalleryOwner(ownerId,event,data,labId){
+ try{await queueGalleryOwnerNotification({pool,ownerId,event,data,labId,copy:customerEventNotificationCopy(event,data),push:sendWebPushToRecipient});await deliverGallerySmsFallbacks({pool,sendSms});}
+ catch(e){console.error('[gallery-owner-delivery]',String(e?.message||e));}
 }
 function customerEventKey(labId, customerId) { return `${labId}:${customerId}`; }
 function publishCustomerEvent(labId, customerId, event, data) {
@@ -12526,7 +12537,7 @@ async function api(req, res, url) {
         }
     }
     if (req.method === 'GET' && url.pathname === '/api/photographer-invites') {
-        const scope = inviteIssuerScope(a);
+        const scope = inviteIssuerScope(a,requestPortal(req));
         if (!scope)
             return sendJson(res, 403, { error: 'forbidden' });
         if (scope.type === 'photographer')
@@ -12550,7 +12561,7 @@ async function api(req, res, url) {
         return sendJson(res, 200, { ok: true, settings: value });
     }
     if (req.method === 'POST' && url.pathname === '/api/photographer-invites') {
-        const scope = inviteIssuerScope(a);
+        const scope = inviteIssuerScope(a,requestPortal(req));
         if (!scope)
             return sendJson(res, 403, { error: 'forbidden' });
         const b = await bodyJson(req);
@@ -12640,7 +12651,7 @@ async function api(req, res, url) {
         return sendJson(res, 201, { invite: photographerInvitePublicView(full), reused: false });
     }
     if (req.method === 'POST' && url.pathname === '/api/photographer-invites/send-sms') {
-        const scope = inviteIssuerScope(a);
+        const scope = inviteIssuerScope(a,requestPortal(req));
         if (!scope)
             return sendJson(res, 403, { error: 'forbidden' });
         const b = await bodyJson(req), mobile = normalizeMobile(String(b.mobile || '')), inviteId = String(b.inviteId || '').trim();
@@ -12753,7 +12764,7 @@ async function api(req, res, url) {
     }
     const photographerInvitePatch = url.pathname.match(/^\/api\/photographer-invites\/([0-9a-f-]+)$/i);
     if (req.method === 'PATCH' && photographerInvitePatch) {
-        const scope = inviteIssuerScope(a);
+        const scope = inviteIssuerScope(a,requestPortal(req));
         if (!scope)
             return sendJson(res, 403, { error: 'forbidden' });
         const b = await bodyJson(req);
@@ -13889,7 +13900,7 @@ async function api(req, res, url) {
             await audit(undefined, row.lab_id, action === 'finalize' ? 'client_gallery.order_finalized' : 'client_gallery.order_saved', 'photographer_gallery_order', order.id, { galleryId: row.id, total, itemCount: normalized.length }).catch(() => { });
             if (action === 'finalize') {
                 const selectedCount = normalized.filter((x) => x.kind === 'selection').length;
-                void storeCustomerSystemNotification(row.owner_id, 'client_gallery_finalized', { galleryId: row.id, galleryTitle: row.title, customerName: customerName || row.customer_name || 'مشتری', orderId: order.id, orderNumber: order.number, selectedCount, total }, row.lab_id);
+                void notifyGalleryOwner(row.owner_id, 'client_gallery_finalized', { galleryId: row.id, galleryTitle: row.title, customerName: customerName || row.customer_name || 'مشتری', orderId: order.id, orderNumber: order.number, selectedCount, total }, row.lab_id);
             }
             return sendJson(res, 200, { order: { id: order.id, number: order.number, status: order.status, total: Number(order.total || 0), createdAt: order.created_at, updatedAt: order.updated_at, itemCount: normalized.length } });
         }
@@ -13951,6 +13962,7 @@ async function api(req, res, url) {
             }
             await c.query('COMMIT');
             await audit(undefined, row.lab_id, decision === 'approve' ? 'client_gallery.retouch_approved' : 'client_gallery.retouch_changes_requested', 'photographer_gallery_order', order.id, { galleryId: row.id, revisions: decision === 'changes' ? requested.length : 0 }).catch(() => { });
+            if(decision==='approve')void notifyGalleryOwner(row.owner_id,'client_gallery_approved',{galleryId:row.id,galleryTitle:row.title,customerName:row.customer_name||order.customer_name||'مشتری',orderId:order.id,orderNumber:order.number},row.lab_id);
             return sendJson(res, 200, { ok: true, status: decision === 'approve' ? 'completed' : 'retouching' });
         }
         catch (e) {
@@ -24115,6 +24127,13 @@ ${inviteUrl}`;
         }
     }
     // Photographer / customer
+        if(req.method==='POST'&&url.pathname==='/api/customer/notifications/delivered'){
+            if(!a||a.labRole!=='customer')return sendJson(res,403,{error:'forbidden'});
+            const b=await bodyJson(req),id=String(b.id||'');
+            if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))return sendJson(res,400,{error:'invalid_notification_id'});
+            await acknowledgeGalleryDelivery(pool,a.userId,id);
+            return sendJson(res,200,{ok:true});
+        }
     if (url.pathname.startsWith('/api/customer/')) {
         if (!requireRole(a, 'customer') || !a?.labId)
             return sendJson(res, 403, { error: 'forbidden' });
@@ -26051,6 +26070,8 @@ async function bootstrap() {
     setInterval(() => cleanupExpiredRetouchOutputs().catch(console.error), 60 * 1000).unref();
     setInterval(() => cleanupExpiredClientGalleries().catch(console.error), 30 * 60 * 1000).unref();
     setInterval(() => publicAiProcessingSweep().catch(console.error), 4 * 1000).unref();
+    setInterval(() => deliverGallerySmsFallbacks({pool,sendSms}).catch(console.error), 15 * 1000).unref();
+    setTimeout(() => deliverGallerySmsFallbacks({pool,sendSms}).catch(console.error), 5 * 1000).unref();
     setInterval(() => publicAiReadyDeliverySweep().catch(console.error), 15 * 1000).unref();
     setInterval(() => equipmentRentalBirthdaySmsSweep().catch(console.error), 6 * 60 * 60 * 1000).unref();
     setInterval(() => labBirthdaySmsSweep().catch(console.error), 6 * 60 * 60 * 1000).unref();

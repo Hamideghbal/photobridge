@@ -3,7 +3,7 @@
  'use strict';
  if(!window.matchMedia('(min-width:821px)').matches)return;
  const svgPower='<svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M6.5 5.8a9 9 0 1 0 11 0"/></svg>';
- let frame=0;
+ let frame=0,updatedAvatar=null;
  const find=(root,selector)=>root?.querySelector(selector)||null;
  const title=el=>[el?.getAttribute('title'),el?.getAttribute('aria-label'),el?.textContent].filter(Boolean).join(' ');
  const nativeHeader=()=>document.getElementById('photographerRoleHeaderV710');
@@ -18,16 +18,17 @@
    button=document.createElement('button');button.type='button';button.className='pb1163ProfileButton';
    button.title='عکس پروفایل';button.setAttribute('aria-label','انتخاب عکس پروفایل عکاسی');
    button.addEventListener('click',()=>{
-    const avatar=document.getElementById('pbF37AvatarBtn');
-    const input=document.getElementById('pbF37AvatarInput');
+    const avatar=(document.getElementById('pbF37AvatarBtn')||document.getElementById('pbR100F25AvatarBtn'));
+    const input=(document.getElementById('pbF37AvatarInput')||document.getElementById('pbR100F25AvatarInput'));
     if(avatar)avatar.click();
     else if(input)input.click();
+    else window.PBPhotographerAvatarInput?.().click();
    });
    identity.prepend(button);
   }
-  const native=document.getElementById('pbF37AvatarBtn');
+  const native=(document.getElementById('pbF37AvatarBtn')||document.getElementById('pbR100F25AvatarBtn'));
   const source=native?.querySelector('img')||nativeHeader()?.querySelector('.pb1124Avatar img');
-  const image=source?.getAttribute('src')||'';
+  const image=updatedAvatar??source?.getAttribute('src')??'';
   if(button.dataset.image===image)return;
   button.dataset.image=image;
   button.replaceChildren();
@@ -163,6 +164,8 @@
   new MutationObserver(schedule).observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-selected']});
   new MutationObserver(schedule).observe(document.body,{subtree:false,childList:true});
   const check=setInterval(()=>{if(document.getElementById('pb1126DesktopHeader')){clearInterval(check);const chrome=document.getElementById('pb1126DesktopHeader');new MutationObserver(schedule).observe(chrome,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-selected']});schedule();}},150);
+  window.addEventListener('photobridge-profile-avatar-updated',e=>{updatedAvatar=String(e.detail?.imageData||'');schedule();});
+  window.addEventListener('photobridge-auth-session-changed',()=>{updatedAvatar=null;schedule();});
   window.addEventListener('popstate',schedule);window.addEventListener('pageshow',schedule);
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});

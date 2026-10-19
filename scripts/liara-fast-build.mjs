@@ -244,3 +244,5 @@ console.log("[PhotoBridge Docker build] OK R1317 regression tests");
 // Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
 // Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.
 console.log('[PhotoBridge Docker build] R1312 temporarily disabled; retaining R1311 desktop panels.');
+
+await deployStep("./enable-r1318-photographer-gallery.mjs");

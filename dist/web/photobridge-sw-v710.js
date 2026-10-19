@@ -53,6 +53,7 @@ self.addEventListener('push',event=>{
       actions:[{action:'open',title:pb783Rtl(data.actionLabel||'مشاهده')}],
       data:{url,event:data.event||'',notificationId:data.notificationId||null,unreadCount:Number(data.unreadCount||0),metadata:data.metadata||{}}
     });
+    if(['client_gallery_finalized','client_gallery_approved'].includes(data.event)&&data.notificationId){try{await fetch('/api/customer/notifications/delivered',{method:'POST',credentials:'include',headers:{'content-type':'application/json','x-photobridge-portal':'photographer'},body:JSON.stringify({id:data.notificationId})});}catch{}}
   })());
 });
 

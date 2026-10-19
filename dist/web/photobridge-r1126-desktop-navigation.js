@@ -45,6 +45,19 @@
    requestAnimationFrame(()=>{if(indicator.isConnected)indicator.style.removeProperty('transition');});
   }
  }
+ function pb1306PrintControlFingerprint(button){
+  return [String(button.className||'').split(/\s+/).filter(name=>name&&!['active','loading','pressed'].includes(name)).join(' '),String(button.textContent||'').replace(/\s+/g,' ').trim()].join('|');
+ }
+ function pb1306NeedsPrintHeaderSync(records){
+  const selector='#photographerRoleHeaderV710,#photographerStoreRoleHeader,#pbR99LabChooser,.photographerPrintModeNav,.photographerPrintModeUtilityCluster';
+  return records.some(record=>{
+   const target=record.target;
+   if(!target||target.nodeType!==1)return false;
+   if(record.type==='attributes')return (target.matches?.('body')&&record.attributeName==='class')||!!target.closest?.(selector);
+   if(target.closest?.(selector))return true;
+   return [...record.addedNodes||[],...record.removedNodes||[]].some(node=>node.nodeType===1&&(node.matches?.(selector)||node.querySelector?.(selector)));
+  });
+ }
  function render(){
   scheduled=false;if(!document.body)return;
   if(!/^\/photographer(?:\/|$)/.test(location.pathname)||/^\/photographer\/(login|signup|register|invite)(?:\/|$)/.test(location.pathname)){chrome?.parentElement.remove();chrome=null;closePanels();document.documentElement.classList.remove('pb1126Desktop');return;}
@@ -122,7 +135,7 @@
   const cameraStoreControls=cameraStore?visible.filter(el=>el.dataset.storePanel!=='salesPanel'):[];
   const frameStoreControls=frameStore?[...frameStore.querySelectorAll('button[data-frame-customer-view],button[data-frame-customer-history],button[data-frame-customer-cart]')].filter(el=>getComputedStyle(el).display!=='none'):[];
   const headerControls=frameStore?frameStoreControls:cameraStore?cameraStoreControls:[];
-  const signature=active+'|'+choosing+'|'+(storeHeader?'store:'+frameStoreName+headerControls.map(el=>el.outerHTML).join('')+(cameraCart?.outerHTML||''):visible.map(el=>el.outerHTML).join(''));
+  const signature=active+'|'+choosing+'|'+(storeHeader?'store:'+frameStoreName+headerControls.map(el=>el.outerHTML).join('')+(cameraCart?.outerHTML||''):active==='print'?visible.map(pb1306PrintControlFingerprint).join('||'):visible.map(el=>el.outerHTML).join(''));
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
    if(storeHeader){
@@ -167,8 +180,9 @@
    }
    let modes,utilities;
    if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
-   for(const original of storeHeader?[]:visible){
+   for(const [sourceIndex,original] of (storeHeader?[]:visible).entries()){
     const copy=cleanClone(original);copy.style.removeProperty('display');
+    if(active==='print')copy.dataset.pb1306PrintSourceIndex=String(sourceIndex);
     copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
     if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
     if(copy.classList.contains('archive'))copy.textContent='آرشیو';
@@ -177,6 +191,25 @@
    }
    if(utilities){for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}
    row.dataset.source=signature;
+  }
+  // In print mode the active state and React-generated element references may
+  // change without altering the tab structure. Preserve cloned DOM nodes so
+  // archive/finance buttons never restart their enter animations on refresh.
+  if(active==='print'&&!choosing){
+   visible.forEach((original,index)=>{
+    const copy=row.querySelector('[data-pb1306-print-source-index="'+index+'"]');
+    if(!copy)return;
+    copy.classList.toggle('active',original.classList.contains('active'));
+    copy.disabled=Boolean(original.disabled);
+    for(const attr of ['aria-current','aria-selected','aria-pressed']){
+     const next=original.getAttribute(attr);
+     if(next==null)copy.removeAttribute(attr);
+     else if(copy.getAttribute(attr)!==next)copy.setAttribute(attr,next);
+    }
+    // React can replace the original button during a data refresh. Always
+    // bind to its latest instance, without recreating the visible button.
+    copy.onclick=()=>{press(copy);if(original.isConnected)original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
+   });
   }
  }
  const pressTimers=new WeakMap();
@@ -199,7 +232,7 @@
    panel=document.createElement('section');panel.className='pb1126ContentPanel';panel.dataset.panel=key;
    const loading=document.createElement('div');loading.className='pb1126Loading';loading.textContent='در حال دریافت…';loading.setAttribute('role','status');
    const frame=document.createElement('iframe');frame.title=key==='store'?'فروشگاه':'چاپ';
-   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
+   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(records=>{if(key!=='print'||pb1306NeedsPrintHeaderSync(records))schedule();}).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
    const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
   }

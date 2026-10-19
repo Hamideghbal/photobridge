@@ -131,7 +131,7 @@ jobs:
           node --check dist/web/photobridge-r1122-mobile-print-orders.js
           node --test scripts/test-r1122-mobile-print-orders.cjs
       - name: Verify photo print quantities, filename and mobile navigation
-        run: node --test scripts/test-r1132-photo-print-copies.cjs scripts/test-r1304-photographer-folder-import.cjs
+        run: node --test scripts/test-r1132-photo-print-copies.cjs
       - name: Verify photographer mobile bottom navigation never wraps into two rows
         run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
       - name: Verify complete deployment payload

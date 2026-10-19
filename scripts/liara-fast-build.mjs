@@ -246,3 +246,5 @@ console.log("[PhotoBridge Docker build] OK R1317 regression tests");
 console.log('[PhotoBridge Docker build] R1312 temporarily disabled; retaining R1311 desktop panels.');
 
 await deployStep("./enable-r1318-photographer-gallery.mjs");
+
+await deployStep("./enable-r1322-mobile-print-cards.mjs");

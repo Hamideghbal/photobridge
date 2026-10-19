@@ -3,6 +3,10 @@ import {execFileSync} from 'node:child_process';
 const path='dist/web/assets/index-UIRefine-v655-r84.js';
 let source=fs.readFileSync(path,'utf8');
 if(!source.includes('pb1177LedgerDetails')){
+ // R1303: R1301 prebuilt bundles already include Site under General. The
+ // legacy stage needs its original shape; R1301 restores Site after grouping.
+ source=source.replace('items:[["general","عمومی و اعلان‌ها"],["hours","ساعت کاری"],["site","سایت اختصاصی"]]',
+  'items:[["general","عمومی و اعلان‌ها"],["hours","ساعت کاری"]]');
  const replace=(old,next)=>{
   const n=source.split(old).length-1;
   if(n!==1)throw Error('R1177 expected one match, found '+n+' for '+old.slice(0,110));
@@ -36,3 +40,4 @@ html=html.replace(/(&finance=)r\d+/,'$1r1177');
 fs.writeFileSync(htmlFile,html);
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 execFileSync(process.execPath,['--test','scripts/test-r1177-lab-settings-finance.cjs'],{stdio:'inherit'});
+

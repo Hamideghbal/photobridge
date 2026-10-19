@@ -1,1 +1,1 @@
-2026-10-19-r1302-mobile-login-viewport
+2026-10-19-r1303-settings-build-compatibility

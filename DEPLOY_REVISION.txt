@@ -1,1 +1,1 @@
-2026-10-20-r1318-gallery-delivery-invites-profile
+2026-10-19-r1319-stable-print-header-inset

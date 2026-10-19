@@ -1,1 +1,1 @@
-2026-10-19-r1304-settings-build-regression
+2026-10-19-r1304-photographer-folder-import-freeze-fix

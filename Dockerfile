@@ -24,9 +24,13 @@ FROM deps AS runtime
 ENV PORT=3000
 COPY . ./
 RUN echo "[PhotoBridge Docker] deploy revision: $(cat DEPLOY_REVISION.txt)" \
+    && echo "[PhotoBridge Docker] START prebuilt payload build" \
     && node scripts/liara-fast-build.mjs \
+    && echo "[PhotoBridge Docker] OK prebuilt payload build" \
+    && echo "[PhotoBridge Docker] START runtime cleanup" \
     && find scripts -type f ! -name migrate.mjs ! -name ensure-sofia-demo.sql -delete \
-    && rm -rf apps/store-desktop apps/lab-desktop .npmrc /tmp/npm-cache /root/.npm /tmp/*
+    && rm -rf apps/store-desktop apps/lab-desktop .npmrc /tmp/npm-cache /root/.npm /tmp/* \
+    && echo "[PhotoBridge Docker] OK runtime cleanup"
 
 EXPOSE 3000
 STOPSIGNAL SIGTERM

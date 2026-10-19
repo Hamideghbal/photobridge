@@ -2,6 +2,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { deduplicateOnnxRuntime } from './deduplicate-onnx-runtime.mjs';
 
+
+// Emit the exact stage name before execution so truncated Liara logs still
+// identify the last attempted patch. Re-throw on failures; never hide exit codes.
+async function deployStep(specifier) {
+  const started = Date.now();
+  console.log(`[PhotoBridge Docker build] START ${specifier}`);
+  try {
+    await import(specifier);
+  } catch (error) {
+    console.error(`[PhotoBridge Docker build] FAIL ${specifier} after ${Date.now() - started}ms`);
+    console.error(error?.stack || error);
+    throw error;
+  }
+  console.log(`[PhotoBridge Docker build] OK ${specifier} (${Date.now() - started}ms)`);
+}
+
 // R89: expose the npm jsQR browser bundle as a first-party static asset for mobile equipment scanning.
 try {
   const jsqrSrc = path.join('node_modules','jsqr','dist','jsQR.js');
@@ -74,130 +90,132 @@ deduplicateOnnxRuntime();
 
 console.log('[PhotoBridge Liara Fast Build] R100 prebuilt dist accepted; mobile blue chrome + lean desktop UI regeneration.');
 
-await import('./enable-r1094-windows-print-handovers.mjs');
-await import('./enable-r1087-commitment-autoprint.mjs');
-await import('./remove-r1092-legacy-windows-alert-panel.mjs');
-await import('./fix-r1093-inventory-visibility.mjs');
-await import('./enable-r1095-customer-rental-stock-modes.mjs');
-await import('./enable-r1095-stock-mode-ui.mjs');
-await import('./enable-r1096-photographer-store-ui.mjs');
-await import('./enable-r1097-store-readability.mjs');
-await import('./enable-r1098-stock-privacy.mjs');
-await import('./enable-r1099-photographer-tabs.mjs');
-await import('./enable-r1105-lab-origin-release.mjs');
-await import('./enable-r1106-test-account-visibility.mjs');
-await import('./enable-r1106-mobile-store-panel.mjs');
-await import('./enable-r1108-gallery-trial.mjs');
-await import('./enable-r1109-gallery-lifetime.mjs');
-await import('./enable-r1112-gallery-single-form.mjs');
-await import('./enable-r1113-gallery-text-dialogs.mjs');
-await import('./enable-r1118-lab-finance.mjs');
-await import('./enable-r1119-mobile-chat.mjs');
-await import('./enable-r1120-gallery-controls.mjs');
-await import('./enable-r1121-print-orders.mjs');
-await import('./enable-r1124-photographer-desktop-header.mjs');
-await import('./enable-r1138-primary-lab-intake.mjs');
-await import('./enable-r1142-intake-copies-customer.mjs');
-await import('./enable-r1143-folder-storage.mjs');
-await import('./enable-r1148-lab-profile-image.mjs');
-await import('./enable-r1147-lab-admin-header.mjs');
-await import('./enable-r1151-lab-mobile-print-navigation.mjs');
-await import('./enable-r1152-gallery-layout-prices.mjs');
-await import('./enable-r1155-gallery-pinned-filters.mjs');
-await import('./enable-r1158-gallery-compact-cards.mjs');
-await import('./prepare-store-desktop-ui.mjs');
-await import('./prepare-lab-desktop-ui.mjs');
-await import('./reassemble-r1091-store-installer.mjs');
-await import('./create-r1092-windows-installer-zip.mjs');
-await import('./enable-r1132-final-assets.mjs');
-await import('./enable-r1159-gallery-intro-cards.mjs');
-await import('./enable-r1160-gallery-card-actions.mjs');
-await import('./enable-r1162-gallery-header-delete.mjs');
-await import('./enable-r1163-photographer-gallery-header.mjs');
-await import('./enable-r1164-gallery-tariff-photos.mjs');
-await import('./enable-r1176-lab-finance.mjs');
-await import('./enable-r1177-lab-settings-finance.mjs');
-await import('./enable-r1178-release.mjs');
-await import('./enable-r1179-lab-walkin-invoice-view.mjs');
-await import('./enable-r1180-lab-order-details.mjs');
-await import('./enable-r1181-server.mjs');
-await import('./enable-r1181-lab-photo-controls.mjs');
-await import('./enable-r1182-lab-file-availability.mjs');
-await import('./enable-r1182-lab-download-client.mjs');
-await import('./enable-r1183-lab-direct-stream.mjs');
-await import('./enable-r1183-lab-image-ui.mjs');
-await import('./enable-r1183-finalize.mjs');
-await import('./enable-r1184-lab-walkin-album.mjs');
-await import('./enable-r1184-finalize.mjs');
-await import('./enable-r1185-lab-desktop-statement-layout.mjs');
-await import('./enable-r1186-lab-walkin-button.mjs');
-await import('./enable-r1187-photo-tab-jitter.mjs');
-await import('./enable-r1188-lab-browser-tabs.mjs');
-await import('./enable-r1189-lab-queue-stability.mjs');
-await import('./enable-r1190-desktop-tab-speed.mjs');
-await import('./enable-r1192-mobile-pwa-tabs.mjs');
-await import('./enable-r1193-photographer-stable-tabs.mjs');
-await import('./enable-r1194-gallery-create-dialog.mjs');
-await import('./enable-r1195-gallery-create-compact.mjs');
-await import('./enable-r1196-gallery-field-align.mjs');
-await import('./enable-r1197-gallery-create-four-fields.mjs');
-await import('./enable-r1201-lab-controls.mjs');
-await import('./enable-r1202-lab-invoice-preview-counters.mjs');
+await deployStep("./enable-r1094-windows-print-handovers.mjs");
+await deployStep("./enable-r1087-commitment-autoprint.mjs");
+await deployStep("./remove-r1092-legacy-windows-alert-panel.mjs");
+await deployStep("./fix-r1093-inventory-visibility.mjs");
+await deployStep("./enable-r1095-customer-rental-stock-modes.mjs");
+await deployStep("./enable-r1095-stock-mode-ui.mjs");
+await deployStep("./enable-r1096-photographer-store-ui.mjs");
+await deployStep("./enable-r1097-store-readability.mjs");
+await deployStep("./enable-r1098-stock-privacy.mjs");
+await deployStep("./enable-r1099-photographer-tabs.mjs");
+await deployStep("./enable-r1105-lab-origin-release.mjs");
+await deployStep("./enable-r1106-test-account-visibility.mjs");
+await deployStep("./enable-r1106-mobile-store-panel.mjs");
+await deployStep("./enable-r1108-gallery-trial.mjs");
+await deployStep("./enable-r1109-gallery-lifetime.mjs");
+await deployStep("./enable-r1112-gallery-single-form.mjs");
+await deployStep("./enable-r1113-gallery-text-dialogs.mjs");
+await deployStep("./enable-r1118-lab-finance.mjs");
+await deployStep("./enable-r1119-mobile-chat.mjs");
+await deployStep("./enable-r1120-gallery-controls.mjs");
+await deployStep("./enable-r1121-print-orders.mjs");
+await deployStep("./enable-r1124-photographer-desktop-header.mjs");
+await deployStep("./enable-r1138-primary-lab-intake.mjs");
+await deployStep("./enable-r1142-intake-copies-customer.mjs");
+await deployStep("./enable-r1143-folder-storage.mjs");
+await deployStep("./enable-r1148-lab-profile-image.mjs");
+await deployStep("./enable-r1147-lab-admin-header.mjs");
+await deployStep("./enable-r1151-lab-mobile-print-navigation.mjs");
+await deployStep("./enable-r1152-gallery-layout-prices.mjs");
+await deployStep("./enable-r1155-gallery-pinned-filters.mjs");
+await deployStep("./enable-r1158-gallery-compact-cards.mjs");
+await deployStep("./prepare-store-desktop-ui.mjs");
+await deployStep("./prepare-lab-desktop-ui.mjs");
+await deployStep("./reassemble-r1091-store-installer.mjs");
+await deployStep("./create-r1092-windows-installer-zip.mjs");
+await deployStep("./enable-r1132-final-assets.mjs");
+await deployStep("./enable-r1159-gallery-intro-cards.mjs");
+await deployStep("./enable-r1160-gallery-card-actions.mjs");
+await deployStep("./enable-r1162-gallery-header-delete.mjs");
+await deployStep("./enable-r1163-photographer-gallery-header.mjs");
+await deployStep("./enable-r1164-gallery-tariff-photos.mjs");
+await deployStep("./enable-r1176-lab-finance.mjs");
+await deployStep("./enable-r1177-lab-settings-finance.mjs");
+await deployStep("./enable-r1178-release.mjs");
+await deployStep("./enable-r1179-lab-walkin-invoice-view.mjs");
+await deployStep("./enable-r1180-lab-order-details.mjs");
+await deployStep("./enable-r1181-server.mjs");
+await deployStep("./enable-r1181-lab-photo-controls.mjs");
+await deployStep("./enable-r1182-lab-file-availability.mjs");
+await deployStep("./enable-r1182-lab-download-client.mjs");
+await deployStep("./enable-r1183-lab-direct-stream.mjs");
+await deployStep("./enable-r1183-lab-image-ui.mjs");
+await deployStep("./enable-r1183-finalize.mjs");
+await deployStep("./enable-r1184-lab-walkin-album.mjs");
+await deployStep("./enable-r1184-finalize.mjs");
+await deployStep("./enable-r1185-lab-desktop-statement-layout.mjs");
+await deployStep("./enable-r1186-lab-walkin-button.mjs");
+await deployStep("./enable-r1187-photo-tab-jitter.mjs");
+await deployStep("./enable-r1188-lab-browser-tabs.mjs");
+await deployStep("./enable-r1189-lab-queue-stability.mjs");
+await deployStep("./enable-r1190-desktop-tab-speed.mjs");
+await deployStep("./enable-r1192-mobile-pwa-tabs.mjs");
+await deployStep("./enable-r1193-photographer-stable-tabs.mjs");
+await deployStep("./enable-r1194-gallery-create-dialog.mjs");
+await deployStep("./enable-r1195-gallery-create-compact.mjs");
+await deployStep("./enable-r1196-gallery-field-align.mjs");
+await deployStep("./enable-r1197-gallery-create-four-fields.mjs");
+await deployStep("./enable-r1201-lab-controls.mjs");
+await deployStep("./enable-r1202-lab-invoice-preview-counters.mjs");
 
 
 
-await import('./enable-r1208-frame-palette.mjs');
-await import('./generate-r1222-brand-icons.mjs');
-await import('./enable-r1250-store-order-sms.mjs');
-await import('./enable-r1252-frame-customer-layout.mjs');
+await deployStep("./enable-r1208-frame-palette.mjs");
+await deployStep("./generate-r1222-brand-icons.mjs");
+await deployStep("./enable-r1250-store-order-sms.mjs");
+await deployStep("./enable-r1252-frame-customer-layout.mjs");
 
-await import('./enable-r1267-lab-site.mjs');
+await deployStep("./enable-r1267-lab-site.mjs");
 
-await import('./enable-r1268-equipment-site.mjs');
+await deployStep("./enable-r1268-equipment-site.mjs");
 
-await import("./enable-r1269-equipment-navigation.mjs");
+await deployStep("./enable-r1269-equipment-navigation.mjs");
 
-await import("./enable-r1270-equipment-pages.mjs");
+await deployStep("./enable-r1270-equipment-pages.mjs");
 
-await import("./enable-r1271-equipment-collections.mjs");
+await deployStep("./enable-r1271-equipment-collections.mjs");
 
-await import("./enable-r1272-site-typography.mjs");
+await deployStep("./enable-r1272-site-typography.mjs");
 
-await import("./enable-r1273-text-editor.mjs");
+await deployStep("./enable-r1273-text-editor.mjs");
 
-await import("./enable-r1274-equipment-layout.mjs");
+await deployStep("./enable-r1274-equipment-layout.mjs");
 
-await import("./enable-r1275-site-position.mjs");
+await deployStep("./enable-r1275-site-position.mjs");
 
-await import("./enable-r1276-equipment-reviews.mjs");
+await deployStep("./enable-r1276-equipment-reviews.mjs");
 
-await import("./enable-r1284-original-launch.mjs");
+await deployStep("./enable-r1284-original-launch.mjs");
 
-await import('./enable-r1291-lab-manual-customer-accounts.mjs');
-
-
-await import('./enable-r1296-lab-settings.mjs');
-
-await import('./enable-r1297-lab-settings-speed.mjs');
-
-await import('./enable-r1298-lab-header-navigation.mjs');
-
-await import('./enable-r1299-lab-initial-debt.mjs');
-
-await import('./enable-r1301-lab-site-general.mjs');
-await import('./enable-r1302-mobile-login.mjs');
+await deployStep("./enable-r1291-lab-manual-customer-accounts.mjs");
 
 
-await import('./enable-r1307-desktop-print-controls.mjs');
+await deployStep("./enable-r1296-lab-settings.mjs");
 
-await import('./enable-r1308-finance-and-entry.mjs');
+await deployStep("./enable-r1297-lab-settings-speed.mjs");
 
-await import('./enable-r1309-single-desktop-header.mjs');
+await deployStep("./enable-r1298-lab-header-navigation.mjs");
 
-await import('./enable-r1310-gallery-mobile-layout.mjs');
+await deployStep("./enable-r1299-lab-initial-debt.mjs");
+
+await deployStep("./enable-r1301-lab-site-general.mjs");
+await deployStep("./enable-r1302-mobile-login.mjs");
 
 
-await import('./enable-r1311-panel-session-refresh.mjs');
+await deployStep("./enable-r1307-desktop-print-controls.mjs");
+
+await deployStep("./enable-r1308-finance-and-entry.mjs");
+
+await deployStep("./enable-r1309-single-desktop-header.mjs");
+
+await deployStep("./enable-r1310-gallery-mobile-layout.mjs");
 
 
-await import('./enable-r1312-desktop-panel-flow.mjs');
+await deployStep("./enable-r1311-panel-session-refresh.mjs");
+
+
+// Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
+// Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.
+console.log('[PhotoBridge Docker build] R1312 temporarily disabled; retaining R1311 desktop panels.');

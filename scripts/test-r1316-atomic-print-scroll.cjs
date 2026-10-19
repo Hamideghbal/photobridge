@@ -33,6 +33,27 @@ async function main(){
   stage('r1316-atomic-print-scroll');
   assert.deepEqual([fs.readFileSync(path.join(dir,files[0]),'utf8'),fs.readFileSync(path.join(dir,files[1]),'utf8'),fs.readFileSync(path.join(dir,'index.html'),'utf8')],snapshot,'repeat build is idempotent');
   console.log('PASS R1316 syntax, atomic row, order+album card CSS, cache versions and idempotence');
+  // This wheel behavior test runs in every production build, without JSDOM.
+  const from=nav.indexOf("  const pb1316Wheel=e=>{"),to=nav.indexOf("  addEventListener('wheel',pb1316Wheel",from);
+  assert(from>=0&&to>from,'embedded wheel handler must be emitted');
+  const handlerSource=nav.slice(from,to);
+  let frame=null;
+  const sc={clientHeight:420,scrollHeight:1400,scrollTop:0,isConnected:true,contains:()=>true};
+  const root={querySelector:()=>sc,contains:()=>true};
+  const card={nodeType:1,parentElement:sc,closest:()=>null};
+  sc.parentElement=root;
+  const handler=new Function('document','matchMedia','requestAnimationFrame',handlerSource+'\nreturn pb1316Wheel;')(
+   {querySelector:()=>root},()=>({matches:true}),fn=>{frame=fn;}
+  );
+  handler({deltaY:160,deltaMode:0,ctrlKey:false,shiftKey:false,target:card});
+  assert(typeof frame==='function','a failed native wheel schedules a non-intercepting fallback');
+  frame();assert.equal(sc.scrollTop,160,'wheel fallback moves the order-card scroll container');
+  handler({deltaY:120,deltaMode:0,ctrlKey:false,shiftKey:false,target:card});
+  sc.scrollTop=210;frame();assert.equal(sc.scrollTop,210,'native scrolling is never doubled');
+  handler({deltaY:180,deltaMode:0,ctrlKey:true,shiftKey:false,target:card});
+  assert.equal(sc.scrollTop,210,'browser zoom gestures are not intercepted');
+  console.log('PASS wheel fallback scrolls blocked cards without double-scrolling working native wheels');
+
 
   let JSDOM;
   try{({JSDOM}=require(process.env.PB_JSDOM_PATH||'jsdom'));}

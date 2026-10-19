@@ -61,6 +61,24 @@ async function main(){
    assert.equal(panel.style.top,'114px','Print panel adjusts on header geometry changes');
    console.log('PASS measured-header Print panel follows actual 138px then 114px boundaries');
   }finally{d.window.close();}
+  const phone=new JSDOM('<body><div id="root"><main class="photographerMain photographerPrintWorkspace"><header class="photographerPrintModeHeader"><nav class="photographerPrintModeNav"></nav></header><section class="photographerRolePageScrollArea"><div class="ordersWorkspace liveCustomerOrders">کارت سفارش</div></section><nav class="photographerBottomAppNav">پایین صفحه</nav></main></div></body>',{url:'https://photobridge.ir/photographer/orders/flow',runScripts:'outside-only',pretendToBeVisual:true});
+  try{
+   const w=phone.window;
+   Object.defineProperty(w,'innerHeight',{value:844,writable:true});
+   w.matchMedia=()=>({matches:true});
+   const h=w.document.querySelector('.photographerPrintModeHeader'),dock=w.document.querySelector('.photographerBottomAppNav'),sc=w.document.querySelector('.photographerRolePageScrollArea');
+   let dockTop=789;
+   const rect=(top,height)=>({top,bottom:top+height,width:390,height,left:0,right:390});
+   h.getBoundingClientRect=()=>rect(0,140);
+   dock.getBoundingClientRect=()=>rect(dockTop,844-dockTop);
+   w.eval(mobile);await sleep(45);
+   assert.equal(sc.style.inset,'140px 0px 55px 0px','mobile Print fills until the actual bottom dock');
+   dockTop=804;
+   w.dispatchEvent(new w.Event('resize'));await sleep(45);
+   assert.equal(sc.style.inset,'140px 0px 40px 0px','mobile inset follows a smaller bottom nav without leaving a 78px strip');
+   console.log('PASS measured mobile Print dock and reactive full-height scrollport');
+  }finally{phone.window.close();}
+
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;fs.rmSync(tmp,{recursive:true,force:true});});

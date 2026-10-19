@@ -1,1 +1,1 @@
-2026-10-19-r1310-gallery-mobile-layout
+2026-10-19-r1311-panel-session-refresh

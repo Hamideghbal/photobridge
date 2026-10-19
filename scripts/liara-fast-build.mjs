@@ -195,3 +195,6 @@ await import('./enable-r1308-finance-and-entry.mjs');
 await import('./enable-r1309-single-desktop-header.mjs');
 
 await import('./enable-r1310-gallery-mobile-layout.mjs');
+
+
+await import('./enable-r1311-panel-session-refresh.mjs');

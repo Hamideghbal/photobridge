@@ -198,3 +198,6 @@ await import('./enable-r1310-gallery-mobile-layout.mjs');
 
 
 await import('./enable-r1311-panel-session-refresh.mjs');
+
+
+await import('./enable-r1312-desktop-panel-flow.mjs');

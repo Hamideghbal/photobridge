@@ -1,1 +1,1 @@
-2026-10-19-r1319-stable-print-header-inset
+2026-10-20-r1320-print-below-last-visible-header

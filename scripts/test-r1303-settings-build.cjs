@@ -20,6 +20,14 @@ for(const variant of ['legacy','site'])test('actual R1176 → R1177 → R1301 bu
  run('enable-r1177-lab-settings-finance.mjs',files);
  assert(files.get(bundle).includes('pb1177LedgerDetails'));
  assert(files.get(bundle).includes('["sms","پیامک مشتریان"],["windowsAlert","هشدار ویندوز"],["snappbox","اسنپ و ارسال"]]'));
+ // Execute the build-stage regression suite too, including the actual current header.
+ const os=require('node:os'),path=require('node:path'),cp=require('node:child_process');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb-settings-build-'));
+ try{
+  const fixture=[bundle,page,'dist/web/photobridge-r1147-lab-admin-header.js','dist/web/photobridge-r1176-lab-finance.js','dist/web/photobridge-r1177-lab-finance-layout.css','scripts/liara-fast-build.mjs','scripts/test-r1177-lab-settings-finance.cjs'];
+  for(const p of fixture){const target=path.join(dir,p);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,files.has(p)?files.get(p):fs.readFileSync(p));}
+  cp.execFileSync(process.execPath,['--test','scripts/test-r1177-lab-settings-finance.cjs'],{cwd:dir,stdio:'pipe'});
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
  run('enable-r1301-lab-site-general.mjs',files);
  const result=files.get(bundle);
  assert(result.includes('["snappbox","اسنپ و ارسال"],["site","سایت اختصاصی"]]'));

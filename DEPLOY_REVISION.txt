@@ -1,1 +1,1 @@
-2026-10-19-r1303-settings-build-compatibility
+2026-10-19-r1304-settings-build-regression

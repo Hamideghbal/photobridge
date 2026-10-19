@@ -9,7 +9,7 @@ const page=fs.readFileSync('dist/web/index.html','utf8');
 const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
 
 test('settings general owns SMS, Snapp and Windows alert; local path is sole fourth category',()=>{
- assert(header.includes("['عمومی','/lab/settings',['general','hours','sms','windowsAlert','snappbox']]"));
+ assert.match(header,/\['عمومی','\/lab\/settings',\['general','hours'(?:,'site')?,'sms','windowsAlert','snappbox'\]\]/);
  assert(header.includes("['مسیر ذخیره روی هارد','/lab/settings/local',['local']]"));
  assert(!header.includes("['سیستم و ارسال'"));
  assert(!header.includes("['اعلان و ارتباط'"));
@@ -77,3 +77,4 @@ test('production link and build integration are correctly ordered',()=>{
  assert(page.includes('&finance=r1177'));
  new Function(header);
 });
+

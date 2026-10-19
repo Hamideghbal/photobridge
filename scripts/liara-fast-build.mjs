@@ -215,6 +215,13 @@ await deployStep("./enable-r1310-gallery-mobile-layout.mjs");
 
 await deployStep("./enable-r1311-panel-session-refresh.mjs");
 
+// R1314 runs after session reset; a failing regression test blocks the Docker image.
+await deployStep("./enable-r1314-print-workspace.mjs");
+console.log("[PhotoBridge Docker build] START R1314 regression tests");
+const { execFileSync: runR1314 } = await import("node:child_process");
+runR1314(process.execPath, ["--test", "scripts/test-r1314-print-workspace.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1314 regression tests");
+
 
 // Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
 // Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.

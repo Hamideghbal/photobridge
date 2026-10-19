@@ -20,7 +20,7 @@ if(!nav.includes('/* PB1314 print workspace */')){
   "   try{if(parent!==window)parent.dispatchEvent(new parent.CustomEvent('photobridge-panel-ready',{detail:{frame:window.frameElement}}));}catch{}",
   "  };",
   "  const pb1314Watch=()=>{if(!document.body)return;pb1314Observer=new MutationObserver(pb1314Signal);pb1314Observer.observe(document.body,{subtree:true,childList:true});pb1314Signal();};",
-  "  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pb1314Watch,{once:true});else queueMicrotask(pb1314Watch);"
+  "  if(query.get('pbUtilityWindow')!=='1'&&/^\/(?:photographer\/orders|equipment-rental\/book)/.test(location.pathname)){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pb1314Watch,{once:true});else queueMicrotask(pb1314Watch);}"
  ].join('\n');
  replace(" if(query.get('pbDesktopContent')==='1'){",embedded);
  // R1311 owns document lifetime. Suppress chrome unless session is ready.

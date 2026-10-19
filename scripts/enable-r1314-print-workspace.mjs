@@ -20,7 +20,7 @@ if(!nav.includes('/* PB1314 print workspace */')){
   "   try{if(parent!==window)parent.dispatchEvent(new parent.CustomEvent('photobridge-panel-ready',{detail:{frame:window.frameElement}}));}catch{}",
   "  };",
   "  const pb1314Watch=()=>{if(!document.body)return;pb1314Observer=new MutationObserver(pb1314Signal);pb1314Observer.observe(document.body,{subtree:true,childList:true});pb1314Signal();};",
-  "  if(query.get('pbUtilityWindow')!=='1'&&/^\/(?:photographer\/orders|equipment-rental\/book)/.test(location.pathname)){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pb1314Watch,{once:true});else queueMicrotask(pb1314Watch);}"
+  "  if(query.get('pbUtilityWindow')!=='1'&&(location.pathname.startsWith('/photographer/orders')||location.pathname.startsWith('/equipment-rental/book'))){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pb1314Watch,{once:true});else queueMicrotask(pb1314Watch);}"
  ].join('\n');
  replace(" if(query.get('pbDesktopContent')==='1'){",embedded);
  // R1311 owns document lifetime. Suppress chrome unless session is ready.
@@ -83,7 +83,7 @@ let css=fs.readFileSync(cssFile,'utf8');
 if(!css.includes('/* PB1314 print workspace layout */')){
  css+=[
   "",
-  "/* PB1314 print workspace layout: separate embedded desktop scroll container. */",
+  "/* PB1314 print workspace layout */",
   "@media(min-width:821px){",
   " html.pb1126Embedded body #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{",
   "  position:fixed!important;inset:0!important;top:0!important;bottom:0!important;width:100%!important;",

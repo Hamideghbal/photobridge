@@ -189,3 +189,5 @@ await import('./enable-r1302-mobile-login.mjs');
 
 
 await import('./enable-r1307-desktop-print-controls.mjs');
+
+await import('./enable-r1308-finance-and-entry.mjs');

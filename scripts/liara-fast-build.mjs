@@ -228,6 +228,12 @@ console.log("[PhotoBridge Docker build] START R1315 regression tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1315-print-scroll-and-lab-header.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1315 regression tests");
 
+// R1316: wait for both Print controls before revealing the second header row.
+await deployStep("./enable-r1316-atomic-print-scroll.mjs");
+console.log("[PhotoBridge Docker build] START R1316 regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1316-atomic-print-scroll.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1316 regression tests");
+
 
 // Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
 // Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.

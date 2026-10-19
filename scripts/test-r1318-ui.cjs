@@ -20,21 +20,29 @@ test('embedded desktop Print stays below visible third header while all legacy w
  const p=await b.newPage({viewport:{width:1366,height:900}});
  await p.setContent('<html class="pb1126Embedded"><body style="margin:0"><main class="photographerPrintWorkspace"><header class="photographerPrintModeHeader" style="height:42px">mirrored actions</header><div class="photographerLabContextRail" style="height:42px">source rail</div><div class="photographerRolePageScrollArea" style="position:fixed;top:0;bottom:0;overflow:auto"><div style="height:2000px">orders</div></div></main></body></html>');
  await p.addScriptTag({path:'dist/web/photobridge-r1318-print-insets.js'});
- const cleaners=['37-store-header-core','38-header-route-isolation','39-print-actions-cleanup'].map(name=>{
- const source=fs.readFileSync('dist/web/photobridge-v904r100f'+name+'.js','utf8');
- const start=source.indexOf('  function clearPrint(){'),end=source.indexOf('\n  function render()',start);
- assert(start>=0&&end>start);return source.slice(start,end);
- });
- const writers=['photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store-header-core.js','photobridge-v904r100f38-header-route-isolation.js','photobridge-v904r100f39-print-actions-cleanup.js'].map(name=>{const source=fs.readFileSync('dist/web/'+name,'utf8');const expression=source.match(/pb1310=(window\.pb1310PrintGeometry[\s\S]*?\}:null\))/)?.[1];assert(expression,name+' embedded geometry');return expression;});
- const result=await p.evaluate(async ({cleaners,writers})=>{
+ const legacy=[];
+ for(const name of ['photobridge-ui-fixes-v765.js',...['37-store-header-core','38-header-route-isolation','39-print-actions-cleanup','40-mobile-polish','41-header-date-name-fit'].map(n=>'photobridge-v904r100f'+n+'.js')]){
+  const source=fs.readFileSync('dist/web/'+name,'utf8');
+  for(const fn of ['syncGeometry','resetScrollGeometry','fixPrint','clearPrint']){
+   const start=source.indexOf('  function '+fn+'(');if(start<0)continue;
+   const closing=source.indexOf('\n  }',start)+4,next=source.indexOf('\n  function ',start+3);const end=next>start&&next<closing?next:closing;assert(end>start,name+' '+fn);
+   legacy.push({name,fn,source:source.slice(start,end)});
+  }
+ }
+ assert(legacy.some(x=>x.name.includes('41-header')&&x.fn==='clearPrint'),'execute the F41 writer loaded by index.html');
+ const result=await p.evaluate(async legacy=>{
  const area=document.querySelector('.photographerRolePageScrollArea');await new Promise(requestAnimationFrame);area.scrollTop=200;
- const fns=cleaners.map(source=>new Function(source+';return clearPrint')());const bounds=writers.map(source=>new Function('w','return '+source));const tops=[];
- for(let i=0;i<30;i++){fns.forEach(fn=>fn());bounds.forEach(fn=>area.style.setProperty('top',fn(area.parentElement).top+'px','important'));document.body.classList.toggle('test-refresh');await new Promise(requestAnimationFrame);tops.push(area.getBoundingClientRect().top);}
+ const $=(selector,root=document)=>root.querySelector(selector),no=()=>false;
+ const fns=legacy.map(({source})=>new Function('$','printComposer','orderComposer','ensureComposerActions','printCreate','albumCreate','return ('+source+')')($,no,no,()=>{},no,no));const tops=[];
+ for(let i=0;i<60;i++){
+  fns.forEach(fn=>{fn(area.parentElement);tops.push(area.getBoundingClientRect().top)});
+  document.body.classList.toggle('test-refresh');await new Promise(requestAnimationFrame);tops.push(area.getBoundingClientRect().top);
+ }
  return {tops,scroll:area.scrollTop,inset:window.pb1318PrintInset()};
- },{cleaners,writers});
+ },legacy);
  assert.deepEqual([...new Set(result.tops)],[84]);assert.equal(result.scroll,200);assert.equal(result.inset,84);
  await p.locator('.photographerPrintModeHeader,.photographerLabContextRail').evaluateAll(nodes=>nodes.forEach(el=>el.hidden=true));await p.waitForFunction(()=>document.querySelector('.photographerRolePageScrollArea').getBoundingClientRect().top===0);
- for(const name of ['photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store-header-core.js','photobridge-v904r100f38-header-route-isolation.js','photobridge-v904r100f39-print-actions-cleanup.js'])assert(fs.readFileSync('dist/web/'+name,'utf8').includes('?{top:window.pb1318PrintInset?.()||0,bottom:0}:null'),name+' shares the measured iframe inset');
+
  }finally{await b.close()}
 });
 

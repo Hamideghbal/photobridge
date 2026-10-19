@@ -185,3 +185,5 @@ await import('./enable-r1298-lab-header-navigation.mjs');
 await import('./enable-r1299-lab-initial-debt.mjs');
 
 await import('./enable-r1301-lab-site-general.mjs');
+await import('./enable-r1302-mobile-login.mjs');
+

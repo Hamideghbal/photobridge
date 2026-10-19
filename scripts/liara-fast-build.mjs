@@ -193,3 +193,5 @@ await import('./enable-r1307-desktop-print-controls.mjs');
 await import('./enable-r1308-finance-and-entry.mjs');
 
 await import('./enable-r1309-single-desktop-header.mjs');
+
+await import('./enable-r1310-gallery-mobile-layout.mjs');

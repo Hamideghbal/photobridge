@@ -21,6 +21,7 @@ try{
  assert(css.includes('/* PB1314 print workspace layout */'));
  assert(css.includes('overflow-y:auto!important;overscroll-behavior-y:contain!important'),'embedded print can scroll');
  assert(css.includes('min-height:100%!important;max-height:none!important'),'photo/album card regions grow naturally');
+ assert(css.includes('.photographerRolePageScrollArea.photographerRolePageScrollArea>:is(.simplePrintPilot.simplePrintPilot,.albumOrderWorkspace.albumOrderWorkspace)'), 'mobile overrides stale R1310 fixed-height rule');
  assert(html.includes('printWorkspace=r1314'),'JS and CSS cache refreshed');
  execFileSync(process.execPath,['--check',path.join(dist,files[0])]);
  const snapshot=[nav,css,html];patch('r1314-print-workspace');
@@ -50,6 +51,11 @@ try{
    assert.equal(w.document.querySelectorAll('.pb1126ContentPanel').length,0,'logout clears stale panels');
    await sleep(35);
    assert.equal(w.document.querySelector('#pb1126ChromeHost'),null,'stale React header never regenerates chrome');
+   w.document.body.classList.add('pbAuthenticatedPhotographerPortal');
+   w.dispatchEvent(new w.CustomEvent('photobridge-auth-session-changed',{detail:{labRole:'customer'}}));
+   await sleep(35);
+   assert(w.document.querySelector('#pb1126ChromeHost'),'fresh login restores single authenticated header');
+   assert.equal(w.document.querySelectorAll('#pb1126ChromeHost').length,1,'only one header after login');
    w.close();console.log('PASS Print chooser, early loading release, logout/session isolation');
   })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>fs.rmSync(temp,{recursive:true,force:true}));
  }catch(err){

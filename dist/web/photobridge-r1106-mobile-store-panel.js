@@ -51,9 +51,22 @@ function mark(){
  }
  if(!selected)dockState.clear();
 }
-function showChooser(panel){const frame=panel?.querySelector('iframe');if(!frame)return;const show=()=>{try{const button=frame.contentDocument?.querySelector('[data-store-home]');if(button){button.click();return true;}}catch{}return false;};if(!show())frame.addEventListener('load',show,{once:true});}
+function showChooser(panel,kind){
+ const frame=panel?.querySelector('iframe');if(!frame)return;
+ const show=()=>{try{
+  const doc=frame.contentDocument,w=frame.contentWindow;if(!doc?.body||w.location.href==='about:blank')return false;
+  if(kind==='print'){
+   if(doc.getElementById('pbR99LabChooser'))return true;
+   const url=new URL('/photographer/orders/flow',location.origin);url.searchParams.set('workspace','print');url.searchParams.set('pbLabChooser','1');url.searchParams.set('pbEmbeddedStore','1');
+   w.history.pushState(null,'',url);w.dispatchEvent(new w.PopStateEvent('popstate'));return true;
+  }
+  if(doc.body.classList.contains('pbR96ChoosingStore'))return true;
+  const button=doc.querySelector('[data-store-home]');if(button){button.click();return true;}
+ }catch{}return false;};
+ if(!show())frame.addEventListener('load',show,{once:true});
+}
 function open(kind,push=true,choose=false){
- if(selected===kind){if(choose&&kind==='store')showChooser(panels.get(kind));return;}
+ if(selected===kind){if(choose)showChooser(panels.get(kind),kind);return;}
  for(const p of panels.values())p.hidden=true;
  let panel=panels.get(kind);
  if(!panel){
@@ -64,7 +77,7 @@ function open(kind,push=true,choose=false){
   panel.append(frame,loading);panels.set(kind,panel);document.body.append(panel);
   const q=new URLSearchParams(kind==='store'?(choose?'':initialQuery.get('pbStoreQuery')||''):'workspace=print&pbLabChooser=1');q.set('pbEmbeddedStore','1');frame.src=(kind==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
  }
- if(choose&&kind==='store')showChooser(panel);panel.hidden=false;selected=kind;document.body.classList.add('pb1106PanelOpen');mark();
+ if(choose)showChooser(panel,kind);panel.hidden=false;selected=kind;document.body.classList.add('pb1106PanelOpen');mark();
  if(push){const u=new URL(location.href);u.searchParams.set('pbStorePanel',kind);history.pushState({pb1106Panel:kind},'',u)}size();
 }
 function close(){
@@ -74,7 +87,7 @@ function close(){
 // Head registration precedes both old full-document Store and Print click handlers.
 window.addEventListener('click',e=>{
  const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNav a,.photographerHomeModeNav button,.photographerStoreEntry,.photographerStoreMobileNav');if(!el)return;
- const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind,true,kind==='store');return}
+ const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind,true,true);return}
  if(selected)close(); // Other sections keep their normal React navigation.
 },true);
 window.addEventListener('popstate',()=>{const kind=restoreKind();if(kind)open(kind,false);else close()});

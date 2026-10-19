@@ -66,3 +66,26 @@ test('disabling the underlying AI route while Store is open keeps Store and its 
  await page.waitForFunction(()=>document.querySelector('.photographerBottomAppNavGrid')?.style.getPropertyValue('--pb1099-tabs')==='3');assert(await page.locator('#pb1106StorePanel').isVisible());assert(new URL(page.url()).searchParams.has('pbStorePanel'));await page.close();
  }finally{await browser.close()}
 });
+
+test('mobile dock reopens the lab chooser on repeated Print clicks without reloading the outer page',async()=>{
+ const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});await serve(p,{delay:0});await p.goto('https://panel.test/photographer/gallery');
+ const nav=p.locator('.photographerBottomAppNav');await nav.getByRole('button',{name:'چاپ',exact:true}).click();await p.waitForSelector('#pb1106PrintPanel',{state:'visible'});
+ const handle=await p.locator('#pb1106PrintPanel iframe').elementHandle(),frame=await handle.contentFrame();await frame.waitForSelector('#pbR99LabChooser');
+ // Simulate entering a lab, preserving the actual chooser's route listeners.
+ await frame.evaluate(()=>{history.replaceState(null,'','/photographer/orders/flow?workspace=print&pbEmbeddedStore=1');document.querySelector('#pbR99LabChooser')?.remove();});
+ await nav.getByRole('button',{name:'چاپ',exact:true}).click();await frame.waitForSelector('#pbR99LabChooser');assert(new URL(frame.url()).searchParams.get('pbLabChooser')==='1');assert.equal(new URL(p.url()).pathname,'/photographer/gallery');
+ await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();await p.waitForSelector('#pb1106StorePanel',{state:'visible'});await nav.getByRole('button',{name:'چاپ',exact:true}).click();await p.waitForSelector('#pb1106PrintPanel',{state:'visible'});assert(await frame.locator('#pbR99LabChooser').isVisible());
+ }finally{await b.close()}
+});
+
+test('mobile Store and Lab chooser introductions share padding, fonts and top spacing',async()=>{
+ const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});await serve(p,{delay:0});await p.goto('https://panel.test/photographer/gallery');const nav=p.locator('.photographerBottomAppNav');
+ await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();const sh=await p.locator('#pb1106StorePanel iframe').elementHandle(),sf=await sh.contentFrame();await sf.waitForSelector('.pbR96StoreChooserHead',{state:'visible'});
+ const measure=el=>{const s=getComputedStyle(el),h=el.querySelector('h1,h2'),t=getComputedStyle(h);return {top:el.getBoundingClientRect().top,padding:s.padding,font:t.fontSize,line:t.lineHeight,bg:s.backgroundImage,radius:s.borderRadius}};
+ await sf.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));const store=await sf.locator('.pbR96StoreChooserHead').evaluate(measure);
+ await nav.getByRole('button',{name:'چاپ',exact:true}).click();const lh=await p.locator('#pb1106PrintPanel iframe').elementHandle(),lf=await lh.contentFrame();await lf.waitForSelector('.pbR99LabIntro',{state:'visible'});const lab=await lf.locator('.pbR99LabIntro').evaluate(measure);
+ assert.deepEqual({...store,top:0},{...lab,top:0});assert(store.top>=14,'Store introduction has space above it');assert(Math.abs(store.top-lab.top)<=2,'both introductions start at the same vertical offset: '+JSON.stringify({store,lab}));
+ }finally{await b.close()}
+});

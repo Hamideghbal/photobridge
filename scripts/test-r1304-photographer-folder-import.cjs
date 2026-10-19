@@ -58,7 +58,7 @@ test('large folder limits mounted photo cards while keeping every source for upl
  assert.ok(bundle.includes('ue.files.slice(0,pbVisibleCount[ue.id]||48).map(Be=>'));
  assert.ok(bundle.includes('pbSetVisibleCount(prev=>({...prev,[ue.id]:(prev[ue.id]||48)+48}))'));
  assert.ok(bundle.includes('pbProcessed.done'));
- assert.ok(bundle.includes('className:"simplePrintPilotPrimaryAdd",disabled:W||ie||c'));
+ assert.ok(bundle.includes('className:"primary simplePrintPilotPrimaryAdd",disabled:W||ie||c'));
  assert.ok(bundle.includes('D=ue=>{if(ie)return;'));
  assert.ok(bundle.includes('name:tt.file.name,printCopies:pbPrintCopies(tt)'));
  assert.ok(bundle.includes('await rs(Gt.uploadUrl,tt.file,'));

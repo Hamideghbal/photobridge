@@ -26,9 +26,15 @@
     if(!url||url===currentUrl()||!/^(?:\/photographer\/)/.test(url)||/\/photographer\/finance/.test(url))return '/photographer/orders/flow?workspace=print';
     return url;
   }
-  function restoreInvoiceButton(btn){
+  // DOMTokenList.add/remove can notify MutationObserver even for unchanged tokens.
+  function addClasses(el,...names){for(const name of names)if(!el.classList.contains(name))el.classList.add(name)}
+  function removeClasses(el,...names){for(const name of names)if(el.classList.contains(name))el.classList.remove(name)}
+  function setHtml(el,html){if(el.innerHTML!==html)el.innerHTML=html}
+
+  function restoreInvoiceButton(btn,hidden=false){
     if(!btn)return;
-    btn.classList.remove('pb795FinanceBack','pb795InvoiceHidden');
+    removeClasses(btn,'pb795FinanceBack');
+    btn.classList.toggle('pb795InvoiceHidden',hidden);
     btn.setAttribute('aria-label','فاکتور');btn.setAttribute('title','فاکتور');
     if(btn.dataset.pb795Converted==='1'){btn.innerHTML='<span aria-hidden="true">▤</span><em>فاکتور</em>';btn.dataset.pb795Converted='0'}
   }
@@ -42,23 +48,23 @@
     const back=qs(':scope>.photographerPrintModeBack',cluster);
 
     // Old context-level finance controls caused the second invoice action in mobile print.
-    qsa('.photographerContextAction.financeAction,.photographerLabContextActions .financeAction',main).forEach(el=>el.classList.add('pb795LowerFinanceHidden'));
+    qsa('.photographerContextAction.financeAction,.photographerLabContextActions .financeAction',main).forEach(el=>addClasses(el,'pb795LowerFinanceHidden'));
 
     if(uploadMode()){
-      restoreInvoiceButton(invoice);invoice?.classList.add('pb795InvoiceHidden');back?.classList.remove('pb795DuplicateBackHidden');
+      restoreInvoiceButton(invoice,true);if(back)removeClasses(back,'pb795DuplicateBackHidden');
       return;
     }
     if(financeMode()){
       if(invoice){
-        invoice.classList.remove('pb795InvoiceHidden');invoice.classList.add('pb795FinanceBack');invoice.dataset.pb795Converted='1';
+        removeClasses(invoice,'pb795InvoiceHidden');addClasses(invoice,'pb795FinanceBack');invoice.dataset.pb795Converted='1';
         invoice.setAttribute('aria-label','بازگشت به صفحه قبل');invoice.setAttribute('title','بازگشت');
-        invoice.innerHTML='<span aria-hidden="true">←</span><em>بازگشت</em>';
+        setHtml(invoice,'<span aria-hidden="true">←</span><em>بازگشت</em>');
       }
       // Exactly one Back action is shown in the invoice view, at the same slot where Invoice was.
-      back?.classList.add('pb795DuplicateBackHidden');
+      if(back)addClasses(back,'pb795DuplicateBackHidden');
       return;
     }
-    restoreInvoiceButton(invoice);back?.classList.remove('pb795DuplicateBackHidden');
+    restoreInvoiceButton(invoice);if(back)removeClasses(back,'pb795DuplicateBackHidden');
   }
 
   function localInstalled(){
@@ -71,8 +77,8 @@
   }
   function strongInstalled(){return standalone()||localInstalled()||root.classList.contains('pb710Installed')||root.classList.contains('pb711Installed')}
   function markInstalled(){
-    root.classList.add('pb795Installed','pb710Installed','pb711Installed');
-    root.classList.remove('pb710InstallReady','pb711InstallReady','pb771InstallChecking');
+    addClasses(root,'pb795Installed','pb710Installed','pb711Installed');
+    removeClasses(root,'pb710InstallReady','pb711InstallReady','pb771InstallChecking');
     try{localStorage.setItem('photobridge:pwa-installed','1');localStorage.setItem('photobridge:pwa-installed-v713',String(Date.now()))}catch{}
     qsa('.mobileHeaderInstall,.pb710InstallButton').forEach(el=>{el.hidden=true;el.setAttribute('aria-hidden','true')});
   }
@@ -125,3 +131,4 @@
   sync();setTimeout(sync,150);setTimeout(sync,800);
   console.info('[PhotoBridge] v795 runtime active');
 })();
+

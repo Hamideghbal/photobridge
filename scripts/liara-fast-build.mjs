@@ -234,6 +234,12 @@ console.log("[PhotoBridge Docker build] START R1316 regression tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1316-atomic-print-scroll.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1316 regression tests");
 
+// R1317: use measured viewport bounds and settle Lab readiness on actual content.
+await deployStep("./enable-r1317-print-viewport-fast-lab.mjs");
+console.log("[PhotoBridge Docker build] START R1317 regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1317-print-viewport-fast-lab.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1317 regression tests");
+
 
 // Safe rollback: Liara v1765-v1768 failed after this stage was introduced.
 // Keep R1312 source untouched for isolated diagnosis; retain working R1311 output.

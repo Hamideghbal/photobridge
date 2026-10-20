@@ -17,3 +17,14 @@
  html body #root .photographerPrintWorkspace .liveCustomerOrders .customerFixNotice b{font-size:12px!important}
  html body #root .photographerPrintWorkspace .liveCustomerOrders .customerFixNotice span{font-size:11px!important}
 }
+
+
+/* R1328: Desktop gallery cards fill available width independently of compact controls. */
+@media (min-width:821px){
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace{width:100%!important;max-width:none!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important}
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace>.clientGalleryIntro,
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace>.clientGalleryPolicyLine,
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace>.clientGalleryListHead{width:100%!important;max-width:760px!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important}
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace>.clientGalleryCards{width:100%!important;max-width:none!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))!important;gap:16px!important;box-sizing:border-box!important;padding:0!important}
+ html.pb1310GalleryHome body #root .clientGalleryWorkspace>.clientGalleryCards>.clientGalleryCard{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+}

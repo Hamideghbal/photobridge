@@ -1,0 +1,28 @@
+/* Keep the existing Print photo-card composition at a smaller desktop scale. */
+@media(min-width:821px){
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;align-items:stretch!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCard{min-width:0!important;width:100%!important;padding:6px!important;gap:5px!important;border-radius:10px!important;box-sizing:border-box!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCard>.simplePrintThumb{height:auto!important;min-height:0!important;max-height:110px!important;aspect-ratio:4/3!important;border-radius:7px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoInfo>b{font-size:10px!important;line-height:1.4!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoInfo>small{font-size:9px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCopies{gap:3px!important;padding:3px!important;border-radius:6px!important;min-width:0!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCopies>span{font-size:8.5px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCopyStepper{grid-template-columns:18px minmax(18px,auto) 18px!important;gap:2px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCopyStepper>button{width:18px!important;min-width:18px!important;height:23px!important;min-height:23px!important;border-radius:5px!important;font-size:13px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCopyStepper>output{min-width:18px!important;font-size:10px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoPaperRow{grid-template-columns:minmax(0,1fr) minmax(42px,auto)!important;gap:4px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoCard :is(.pbSelectTrigger,.pbSelectButton){min-height:25px!important;height:25px!important;padding:2px 4px!important;font-size:9px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoChassisInline{min-width:42px!important;min-height:25px!important;height:25px!important;padding:2px 3px!important;gap:2px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoChassisInline input{width:12px!important;height:12px!important;flex-basis:12px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot :is(.simplePrintPhotoChassisInline,.simplePrintPhotoAddonCheck) span{font-size:8px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoActions{gap:4px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoActions>button{min-width:0!important;min-height:25px!important;height:25px!important;padding:2px 4px!important;font-size:9px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoAddCard{min-width:0!important;min-height:110px!important;border-radius:10px!important;font-size:10px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoAddonOverrides{min-width:0!important;gap:3px!important;flex-wrap:nowrap!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoAddonOverrides .simplePrintPhotoAddonCheck{width:auto!important;min-width:0!important;min-height:25px!important;height:25px!important;padding:0 2px!important;gap:2px!important;border-radius:5px!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoAddonCheck input{width:11px!important;min-width:11px!important;height:11px!important;min-height:11px!important;flex:0 0 11px!important;margin:0!important}
+
+}
+@media(min-width:1280px){
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilot .simplePrintPhotoGrid{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}

@@ -73,3 +73,15 @@ test('desktop cards span page width but compact header remains bounded',()=>{
   assert.equal(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),
    '2026-10-20-r1329-photographer-gallery-invite-chooser');
 });
+
+test('mobile chooser hides the stray receipt but retains the primary bottom dock',()=>{
+  const chooser=fs.readFileSync('dist/web/photobridge-v904r99-lab-chooser.js','utf8');
+  const page=fs.readFileSync('dist/web/index.html','utf8');
+  const build=fs.readFileSync('scripts/enable-r1318-photographer-gallery.mjs','utf8');
+  assert(chooser.includes('body.pbR100F14ChoosingLab #root{visibility:hidden!important;pointer-events:none!important}'));
+  assert(chooser.includes('body.pbR100F14ChoosingLab #root .photographerBottomAppNav *{visibility:visible!important;pointer-events:auto!important}'));
+  assert(chooser.includes('.prepayOrderCard,.prepayUploadBox,.prepayUploadRow'));
+  assert(chooser.includes("document.body.classList.remove('pbR100F14ChoosingLab')"));
+  assert(page.includes('photobridge-v904r99-lab-chooser.js?v=r1329'));
+  assert(build.includes('lab-chooser\\.js'));
+});

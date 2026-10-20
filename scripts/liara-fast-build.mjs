@@ -250,3 +250,5 @@ await deployStep("./enable-r1318-photographer-gallery.mjs");
 await deployStep("./enable-r1322-mobile-print-cards.mjs");
 
 await deployStep("./enable-r1325-desktop-avatar-print-grid.mjs");
+
+await deployStep("./enable-r1326-archive-preview.mjs");

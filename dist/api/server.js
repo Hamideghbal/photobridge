@@ -12687,8 +12687,11 @@ async function api(req, res, url) {
                 return sendJson(res, 200, { ok: true, reused, invite: photographerInvitePublicView(full), sms: { sent: true, reference: out?.reference || null } });
             }
             catch (e) {
-                const code = String(e?.message || 'sms_send_failed'), status = code === 'sms_not_configured' ? 503 : code === 'invalid_sms_mobile' ? 400 : 502;
-                return sendJson(res, status, { error: code });
+                const code = String(e?.message || 'sms_send_failed'), status = code === 'sms_not_configured' ? 503 : code === 'invalid_sms_mobile' ? 400 : code === 'service_wallet_insufficient' ? 402 : code === 'service_disabled' ? 409 : 502;
+                console.error('[photographer-invite:sms-delivery-failed]', { code, status, providerStatus: e?.status || null, inviteId: inv.id });
+                // Keep the mobile-bound invite available for a safe retry. Do not disclose raw provider responses.
+                return sendJson(res, status, { error: code, inviteCreated: true, canRetry: true,
+                    providerStatus: Number.isInteger(e?.status) ? e.status : null });
             }
         }
         if (scope.type !== 'lab' || !scope.labId)

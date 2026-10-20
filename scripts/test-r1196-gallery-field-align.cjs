@@ -14,7 +14,7 @@ test('the first row places every required/optional badge NEXT TO its field title
   const start=modal.indexOf(fragment);
   assert(modal.slice(start,start+450).includes('value:'+value),title+' actual field binding unchanged');
  }
- assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,4,'title, customer, mobile and private access captions remain present');
+ assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,3,'title, customer and mobile captions remain present; private access remains a separate label');
  assert(modal.includes('children:["رمز ورود خصوصی"'),'private access remains a visible field caption');
  assert(modal.includes('headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
 });

@@ -1,1 +1,1 @@
-2026-10-20-r1327-collapsed-print-size-groups-desktop-mobile
+2026-10-20-r1328-gallery-width-lab-chooser-isolation

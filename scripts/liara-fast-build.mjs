@@ -248,3 +248,5 @@ console.log('[PhotoBridge Docker build] R1312 temporarily disabled; retaining R1
 await deployStep("./enable-r1318-photographer-gallery.mjs");
 
 await deployStep("./enable-r1322-mobile-print-cards.mjs");
+
+await deployStep("./enable-r1325-desktop-avatar-print-grid.mjs");

@@ -18,6 +18,7 @@
    button=document.createElement('button');button.type='button';button.className='pb1163ProfileButton';
    button.title='عکس پروفایل';button.setAttribute('aria-label','انتخاب عکس پروفایل عکاسی');
    button.addEventListener('click',()=>{
+    if(window.PBDesktopPhotographerAvatarInput){window.PBDesktopPhotographerAvatarInput().click();return;}
     const avatar=(document.getElementById('pbF37AvatarBtn')||document.getElementById('pbR100F25AvatarBtn'));
     const input=(document.getElementById('pbF37AvatarInput')||document.getElementById('pbR100F25AvatarInput'));
     if(avatar)avatar.click();

@@ -1,1 +1,1 @@
-2026-10-20-r1324-mobile-print-card-layout
+2026-10-20-r1325-desktop-avatar-print-grid

@@ -71,5 +71,5 @@ test('desktop cards span page width but compact header remains bounded',()=>{
   assert(a.includes('gallery-cards.css?v=r1328') || a.includes('css}?v=r1328'));
   assert(b.includes('layout.css?v=r1328'));
   assert.equal(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),
-   '2026-10-20-r1328-photographer-gallery-width-invite-sms-diagnostics');
+   '2026-10-20-r1329-photographer-gallery-invite-chooser');
 });

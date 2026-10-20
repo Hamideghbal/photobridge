@@ -95,17 +95,20 @@ bundle=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
 if(!bundle.includes('function pb1326FileGroups('))bundle=bundle.replace('function yv(',fs.readFileSync('scripts/patches/r1326-mobile-files.inc','utf8')+'function yv(');
 const detailStart=bundle.indexOf('function jv('),detailEnd=bundle.indexOf('function ',detailStart+15);
 let detail=bundle.slice(detailStart,detailEnd);
-if(!detail.includes('pb1326mobile')){
- detail=detail.replace('function jv({order:t,onClose:a}){','function jv({order:t,onClose:a}){const pb1326mobile=pb1326UseMobile();');
- detail=detail.replace('g.length?e.jsx("div",{className:"customerOrderDetailFiles"','g.length?(pb1326mobile?e.jsx(pb1326GroupedFiles,{files:g,onOpen:m}):e.jsx("div",{className:"customerOrderDetailFiles"');
- detail=detail.replace(']},f.id))}):e.jsx(zn,',' ]},f.id))})):e.jsx(zn,');
- if(!detail.includes('pb1326GroupedFiles'))throw new Error('R1326 detail grouping anchor');
- bundle=bundle.slice(0,detailStart)+detail+bundle.slice(detailEnd);
-}
+// R1327: shared collapsed size groups on desktop and mobile; statistics stay inline with the timestamp.
+const headStart=detail.indexOf('e.jsxs("div",{className:"customerOrderDetailHead'),headEnd=detail.indexOf('o?e.jsx("div",{className:"alert error"',headStart);
+if(headStart<0||headEnd<0)throw new Error('R1327 details header missing');
+detail=detail.slice(0,headStart)+'e.jsxs("div",{className:"customerOrderDetailHead pb1327DetailHeader",children:[e.jsx("span",{className:"pb1327DetailDate",children:vn(p.created_at)+" · "+Yi(p.created_at)}),e.jsx("span",{className:"pb1327DetailStats",title:V(g.length)+" فایل · "+pb1326FileGroups(g).map(group=>group.label+": "+V(group.count)+" چاپ").join(" · "),children:V(g.length)+" فایل · "+pb1326FileGroups(g).map(group=>group.label+": "+V(group.count)+" چاپ").join(" · ")})]}),'+detail.slice(headEnd);
+const metaStart=detail.indexOf('e.jsxs("div",{className:"customerOrderDetailMeta"');
+if(metaStart>=0){const metaEnd=detail.indexOf('p.mode==="album"&&',metaStart);if(metaEnd<0)throw new Error('R1327 metadata end missing');detail=detail.slice(0,metaStart)+detail.slice(metaEnd);}
+const filesStart=detail.indexOf('g.length?'),filesEnd=detail.indexOf(':e.jsx(zn,{text:"فایلی برای این سفارش ثبت نشده است."})',filesStart);
+if(filesStart<0||filesEnd<0)throw new Error('R1327 files section missing');
+detail=detail.slice(0,filesStart)+'g.length?e.jsx(pb1326GroupedFiles,{files:g,onOpen:m})'+detail.slice(filesEnd);
+bundle=bundle.slice(0,detailStart)+detail+bundle.slice(detailEnd);
 bundle=bundle.replace('e.jsx("div",{className:"customerOrderDetailThumbs",children:(m.files||[]).map((file,index)=>e.jsx(yv,{file,onOpen:()=>S({index})},file.id))})','e.jsx(pb1326GroupedFiles,{files:m.files||[],onOpen:index=>S({index})})');
 fs.writeFileSync('dist/web/assets/index-UIRefine-v655-r84.js',bundle);
 // Keep cached bundles distinct without changing the original generator version.
-function cache(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=dir+'/'+item.name;if(item.isDirectory()){cache(file);continue;}if(!item.name.endsWith('.html'))continue;let s=fs.readFileSync(file,'utf8');s=s.replace(/(index-UIRefine-v655-r84\.js)([^"'<>\s]*)/g,(_,name,q)=>{const clean=q.replace(/[?&]archive=r1326/g,'');return name+clean+(clean.includes('?')?'&':'?')+'archive=r1326'});if(s.includes('photobridge-r1126-desktop-navigation.js')&&!s.includes('photobridge-r1326-print-details.css')){const prefix=s.match(/src=["']([^"']*)photobridge-r1126-desktop-navigation\.js/)?.[1]??'/';s=s.replace('</head>',`<link rel="stylesheet" href="${prefix}photobridge-r1326-print-details.css?v=r1326"></head>`);if(prefix==='./'||prefix===''){const dest=dir+'/photobridge-r1326-print-details.css';if(dest!=='dist/web/photobridge-r1326-print-details.css')fs.copyFileSync('dist/web/photobridge-r1326-print-details.css',dest);}}fs.writeFileSync(file,s);}}
+function cache(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=dir+'/'+item.name;if(item.isDirectory()){cache(file);continue;}if(!item.name.endsWith('.html'))continue;let s=fs.readFileSync(file,'utf8');s=s.replace(/(index-UIRefine-v655-r84\.js)([^"'<>\s]*)/g,(_,name,q)=>{const clean=q.replace(/[?&]archive=r132[67]/g,'');return name+clean+(clean.includes('?')?'&':'?')+'archive=r1327'});if(s.includes('photobridge-r1126-desktop-navigation.js')&&!s.includes('photobridge-r1326-print-details.css')){const prefix=s.match(/src=["']([^"']*)photobridge-r1126-desktop-navigation\.js/)?.[1]??'/';s=s.replace('</head>',`<link rel="stylesheet" href="${prefix}photobridge-r1326-print-details.css?v=r1327"></head>`);if(prefix==='./'||prefix===''){const dest=dir+'/photobridge-r1326-print-details.css';if(dest!=='dist/web/photobridge-r1326-print-details.css')fs.copyFileSync('dist/web/photobridge-r1326-print-details.css',dest);}}fs.writeFileSync(file,s);}}
 cache('dist/web');cache('dist/api');
 for(const file of ['dist/api/server.js','dist/web/assets/index-UIRefine-v655-r84.js'])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 console.log('[R1326] Permanent upload thumbnails, hourly retention, populated archive and compact grouped mobile details.');

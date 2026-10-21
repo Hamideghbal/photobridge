@@ -13933,7 +13933,7 @@ async function api(req, res, url) {
             return sendJson(res, 403, { error: 'gallery_code_invalid' });
         if (!['approve', 'changes'].includes(decision))
             return sendJson(res, 400, { error: 'invalid_gallery_approval' });
-        const requested = Array.isArray(b.revisions) ? b.revisions.map((x) => ({ mediaId: String(x?.mediaId || ''), note: String(x?.note || '').trim().slice(0, 1000) })).filter((x) => x.mediaId && x.note) : [];
+        const requested = Array.isArray(b.revisions) ? b.revisions.map((x) => ({ mediaId: String(x?.mediaId || ''), note: String(x?.note || '').trim().slice(0, 1000) })).filter((x) => x.mediaId) : [];
         const c = await pool.connect();
         try {
             await c.query('BEGIN');

@@ -7,7 +7,7 @@ const html=fs.readFileSync('dist/web/index.html','utf8');
 
 test('gallery detail is not unmounted on same-gallery upload reload',()=>{
  assert(bundle.includes('String(o?.gallery?.id||"")!==String(L)&&l(null),l(await Me('));
- assert(!bundle.includes('l(null),l(await Me('));
+ assert(!bundle.includes('}catch{}l(null),l(await Me('));
  assert(bundle.includes('onReload:()=>I(s)'));
 });
 

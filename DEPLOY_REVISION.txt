@@ -1,1 +1,1 @@
-2026-10-21-r1342-lab-desktop-update-status
+2026-10-21-r1343-lab-installer-build-ready

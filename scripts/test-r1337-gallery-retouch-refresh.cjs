@@ -41,5 +41,5 @@ test('R1337 versioned script and CSS bypass stale browser cache',()=>{
  assert(/retouchReload=r(?:1340|1344)/.test(html));
  assert(html.includes('index-UIRefine-v655-r84.js'));
  assert.equal((html.match(/retouchReload=r(?:1340|1344)/g)||[]).length,2);
- assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r(?:1340|1341|1342|1343|1344)-/);
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r(?:1340|1341|1342|1343|1344|1345)-/);
 });

@@ -30,6 +30,13 @@ for(const [width,existing] of [[320,false],[390,false],[390,true],[1366,true]])t
  assert.equal(boxes.length,4);
  if(width<820){assert(Math.abs(boxes[0].top-boxes[1].top)<3);assert(Math.abs(boxes[2].top-boxes[3].top)<3);assert(boxes[2].top>boxes[0].top+30);assert(boxes.every(b=>b.width>(width<350?100:120)));assert.equal(await form.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);}
  else assert(Math.max(...boxes.map(b=>b.top))-Math.min(...boxes.map(b=>b.top))<3);
+ if(width<820){
+ const rest=await form.evaluate(el=>[...el.children].filter(n=>!n.matches('.pb1344Project,.pb1344Password,.grid2:has(.pb1344Name)')&&n.getBoundingClientRect().height>0).map(n=>({name:n.className,width:n.getBoundingClientRect().width,form:el.clientWidth})));
+ assert(rest.every(n=>n.width>=n.form-2),'all other form sections must span the full width: '+JSON.stringify(rest));
+ const fields=form.locator('.pb1344Project,.pb1344Name,.pb1344Mobile,.pb1344Password');
+ assert.deepEqual(await fields.evaluateAll(ns=>ns.map(n=>getComputedStyle(n.querySelector('.pb1196FieldCaption small')).display)),['none','none','none','none']);
+ assert((await fields.evaluateAll(ns=>ns.map(n=>parseFloat(getComputedStyle(n.querySelector('input')).fontSize)))).every(n=>n<=14));
+ }
  await form.locator('.pb1344Project input').fill('پروژه آزمایشی');await form.locator('.pb1344Name input').fill('مشتری');await form.locator('.pb1344Password input').fill('123456');
  const toggle=form.locator('.clientGalleryOrderingToggle input');await toggle.click();
  const prices=page.locator('.globalModalLayer').filter({hasText:'مدیریت تعرفه چاپ گالری'});await prices.waitFor();assert.equal(calls.length,0);assert.equal(await toggle.isChecked(),false);

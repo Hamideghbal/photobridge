@@ -30,6 +30,7 @@ test('photo status, retouch preview label and upload completion are visible',()=
  assert(bundle.includes('آخرین بارگذاری: '));
  assert(bundle.includes('children:Ee.revisionUploaded?"نسخه اصلاح‌شده جدید":"نسخه روتوش"'));
  assert(bundle.includes('PB1337setUploads(prev=>'));
+ assert(bundle.includes('await o(),PB1338setProgress(100),PB1338setStage("تکمیل شد")'));
  assert(bundle.includes('Ee.openRevision&&!Ee.revisionUploaded?"needsRevision":Ee.revisionUploaded?"revisionUploaded":""'));
  assert(css.includes('.clientGalleryRetouchCard.revisionUploaded'));
  assert(css.includes('.pb1337RetouchUploadState.isUpdated'));
@@ -40,5 +41,5 @@ test('R1337 versioned script and CSS bypass stale browser cache',()=>{
  assert(html.includes('retouchReload=r1338'));
  assert(html.includes('index-UIRefine-v655-r84.js'));
  assert.equal((html.match(/retouchReload=r1338/g)||[]).length,2);
- assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r1338-/);
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r1339-/);
 });

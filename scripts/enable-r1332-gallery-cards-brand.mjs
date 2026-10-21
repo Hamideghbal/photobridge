@@ -20,6 +20,9 @@ if(!source.includes('clientGalleryCard card pb1332Card')){
  e.jsxs("div",{className:"pb1332SecondaryRow",children:[e.jsx("button",{className:"pbActionButton secondaryAction",disabled:!!PB1112publishing,onClick:()=>PB1112publish(L),children:PB1112publishing===L.id?"در حال ذخیره…":L.status==="published"?"غیرفعال کردن":"فعال کردن"}),e.jsx("button",{className:"pbActionButton secondaryAction",onClick:async()=>{await bh(L.share_url),window.pb1113GalleryNotice("لینک خصوصی کپی شد.")},children:"کپی لینک"}),${deleteNode}]})]})]})]},L.id)`;
  source=source.slice(0,start)+card+source.slice(end);fs.writeFileSync(file,source);
 }
+// Short labels and an accessible full amount keep the denser summary readable.
+source=source.replace('children:["مهلت گالری تا ",','children:["مهلت: ",').replace('e.jsx("b",{children:vi(L.ordered_total)})','e.jsx("b",{title:vi(L.ordered_total),children:vi(L.ordered_total)})');
+fs.writeFileSync(file,source);
 // Renewal stays next to its deadline; it must not create a third row of card actions.
 const runtime='dist/web/photobridge-v791-runtime-fix.js';let js=fs.readFileSync(runtime,'utf8');
 js=js.replace("let renew=qs('.pb792RenewGallery',actions);","let renew=qs('.pb792RenewGallery',card);").replace("actions.appendChild(renew)","(qs('.pb1332CardExpiry',card)||actions).appendChild(renew)");fs.writeFileSync(runtime,js);
@@ -28,8 +31,9 @@ function walk(dir){if(!fs.existsSync(dir))return;for(const item of fs.readdirSyn
  const target=path.join(dir,item.name);if(item.isDirectory()){walk(target);continue;}if(!item.name.endsWith('.html'))continue;
  let html=fs.readFileSync(target,'utf8');if(!html.includes('photobridge-r1126-desktop-navigation.js'))continue;
  const prefix=html.match(/src=["']([^"']*)photobridge-r1126-desktop-navigation\.js/)?.[1]??'/';
- if(!html.includes(asset))html=html.replace('</head>',`<link rel="stylesheet" href="${prefix}${asset}?v=r1332"></head>`);
- for(const [name,param] of [[bundle,'cards'],['photobridge-v791-runtime-fix.js','cards']])html=html.replaceAll(new RegExp('('+name.replaceAll('.','\\.')+')([^"\'<>\\s]*)','g'),(_,n,q)=>n+q.replace(new RegExp('[?&]'+param+'=[^&]*','g'),'')+(q.includes('?')?'&':'?')+param+'=r1332');
+ if(!html.includes(asset))html=html.replace('</head>',`<link rel="stylesheet" href="${prefix}${asset}?v=r1333"></head>`);
+ for(const [name,param] of [[bundle,'cards'],['photobridge-v791-runtime-fix.js','cards']])html=html.replaceAll(new RegExp('('+name.replaceAll('.','\\.')+')([^"\'<>\\s]*)','g'),(_,n,q)=>n+q.replace(new RegExp('[?&]'+param+'=[^&]*','g'),'')+(q.includes('?')?'&':'?')+param+'=r1333');
+ html=html.replace(/(photobridge-r1332-gallery-cards\.css)\?v=r\d+/g,'$1?v=r1333');
  fs.writeFileSync(target,html);
  if(prefix==='./'||prefix===''){
   for(const name of [asset,'photobridge-v791-runtime-fix.js'])fs.copyFileSync('dist/web/'+name,path.join(dir,name));

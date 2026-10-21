@@ -289,3 +289,8 @@ console.log("[R1340] OK correction-only retouch UI tests");
 await deployStep("./enable-r1341-compact-retouch-cards.mjs");
 
 await deployStep("./enable-r1344-gallery-create-pricing.mjs");
+
+await deployStep("./enable-r1346-gallery-tariff-compact.mjs");
+console.log("[R1346] START compact gallery tariff regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1346-gallery-tariff-compact.cjs"], { stdio: "inherit" });
+console.log("[R1346] OK compact gallery tariff regression tests");

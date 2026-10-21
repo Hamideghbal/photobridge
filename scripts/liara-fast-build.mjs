@@ -269,3 +269,8 @@ await deployStep("./enable-r1335-retouch-optional-note.mjs");
 await deployStep("./enable-r1336-gallery-feedback.mjs");
 
 await deployStep("./enable-r1334-login-width.mjs");
+
+await deployStep("./enable-r1337-gallery-retouch-refresh.mjs");
+console.log("[R1337] START gallery retouch upload regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1337-gallery-retouch-refresh.cjs"], { stdio: "inherit" });
+console.log("[R1337] OK gallery retouch upload regression tests");

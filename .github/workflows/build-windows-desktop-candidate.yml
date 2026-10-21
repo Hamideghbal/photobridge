@@ -7,6 +7,9 @@ on:
       - "apps/store-desktop/**"
       - "apps/lab-desktop/**"
       - "scripts/enable-r1296-native-alerts.mjs"
+      - "scripts/enable-r1342-lab-ui-update.mjs"
+      - "scripts/test-r1342-lab-ui-update.cjs"
+      - "scripts/test-r1342-native-integration.cjs"
       - "scripts/test-r1296-native-alerts.cjs"
       - "scripts/enable-r1263-desktop-frame-orders.mjs"
       - ".github/workflows/build-windows-desktop-candidate.yml"
@@ -70,10 +73,16 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
+          Copy-Item apps/lab-desktop/ui-update.cjs "$env:RUNNER_TEMP/lab-ui-update.cjs"
           Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -DestinationPath . -Force
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-ui-update.cjs" apps/lab-desktop/ui-update.cjs -Force
       - name: Integrate automatic background Windows notifications
         run: node scripts/enable-r1296-native-alerts.mjs
+      - name: Integrate resumable lab UI updates
+        run: node scripts/enable-r1342-lab-ui-update.mjs
+      - name: Verify lab UI download and resume behavior
+        run: node --test scripts/test-r1342-lab-ui-update.cjs scripts/test-r1342-native-integration.cjs
       - name: Verify integrated notification behavior
         run: node --test scripts/test-r1296-native-alerts.cjs
       - name: Prepare current lab UI

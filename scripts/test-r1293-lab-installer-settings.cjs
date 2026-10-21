@@ -22,7 +22,7 @@ test('Existing native installer is not bypassed; status page does not fake downl
  const page=fs.readFileSync('dist/web/lab-windows-download.html','utf8');
  const bundle=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
  assert(bundle.includes('"/api/lab/desktop-installer/status"'));
- assert(bundle.includes('disabled:!(v!=null&&v.available)'));
+ assert(bundle.includes('disabled:!(v!=null&&v.available)')||bundle.includes('disabled:!t?.available'));
  assert(bundle.includes('onClick:()=>location.assign("/api/lab/desktop-installer")'));
  assert(page.includes('/api/lab/desktop-installer/status'));
  assert(page.includes('if(info.available===true)'));

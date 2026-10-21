@@ -50,7 +50,7 @@ test('oversize previews are recompressed before a bounded server upload',()=>{
 test('R1337 behavior and R1338 cache versions remain intact',()=>{
  assert(bundle.includes('String(o?.gallery?.id||"")!==String(L)&&l(null)'));
  assert(bundle.includes('revisionUploaded:!!('));
- assert(html.includes('retouchReload=r1340'));
- assert.equal((html.match(/retouchReload=r1340/g)||[]).length,2);
- assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r(?:1340|1341|1342|1343)-/);
+ assert(/retouchReload=r(?:1340|1344)/.test(html));
+ assert.equal((html.match(/retouchReload=r(?:1340|1344)/g)||[]).length,2);
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r(?:1340|1341|1342|1343|1344)-/);
 });

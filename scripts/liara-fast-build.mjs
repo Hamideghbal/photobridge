@@ -263,3 +263,5 @@ await deployStep("./enable-r1330-home-gallery-polish.mjs");
 await deployStep("./enable-r1331-gallery-retouch-sms.mjs");
 
 await deployStep("./enable-r1332-gallery-cards-brand.mjs");
+
+await deployStep("./enable-r1334-login-width.mjs");

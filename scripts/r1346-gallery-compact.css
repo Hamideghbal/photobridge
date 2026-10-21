@@ -1,0 +1,39 @@
+/* R1346: each print size has exactly two price rows (three papers, then chassis/frame). */
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ gap:7px 8px!important;min-width:0!important;width:100%!important;
+ box-sizing:border-box!important;border:1px solid #d9e4f1!important;
+ border-radius:14px!important;padding:10px 12px!important;margin-bottom:9px!important;background:#fff!important;
+}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices.priced{border-color:#a9c9e8!important}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffSizeIdentity{
+ grid-column:1/-1!important;display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:4px 9px!important;
+ min-width:0!important;padding:0 0 6px!important;margin:0 0 1px!important;border-bottom:1px solid #e7edf5!important;
+}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffSizeIdentity b{font-size:13px!important}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffSizeIdentity small{font-size:11px!important}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell{
+ display:grid!important;align-content:start!important;gap:3px!important;min-width:0!important;width:100%!important;margin:0!important;
+}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell:nth-child(2),
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell:nth-child(3),
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell:nth-child(4){grid-column:span 2!important}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell:nth-child(5),
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell:nth-child(6){grid-column:span 3!important}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell small{
+ display:block!important;font-size:11px!important;font-weight:800!important;line-height:1.5!important;
+}
+html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell input{
+ display:block!important;min-width:0!important;width:100%!important;box-sizing:border-box!important;
+ height:38px!important;min-height:38px!important;padding:5px 6px!important;
+ font-size:14px!important;text-align:center!important;direction:ltr!important;
+}
+@media(max-width:820px){
+ html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important;padding:9px!important;
+ }
+ html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell input{
+  font-size:13px!important;height:36px!important;min-height:36px!important;padding:4px 2px!important;
+ }
+ html body .clientGalleryTariffModal.clientGalleryTariffTableModal .clientGalleryTariffPriceGrid.pb1346CompactPrices>.clientGalleryTariffPriceCell small{font-size:10px!important}
+}

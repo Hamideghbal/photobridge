@@ -52,5 +52,5 @@ test('R1337 behavior and R1338 cache versions remain intact',()=>{
  assert(bundle.includes('revisionUploaded:!!('));
  assert(html.includes('retouchReload=r1338'));
  assert.equal((html.match(/retouchReload=r1338/g)||[]).length,2);
- assert.equal(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),'2026-10-21-r1338-retouch-upload-progress');
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r1339-/);
 });

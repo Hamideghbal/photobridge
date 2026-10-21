@@ -8,7 +8,7 @@ const html=fs.readFileSync('dist/web/index.html','utf8');
 test('gallery detail is not unmounted on same-gallery upload reload',()=>{
  assert(bundle.includes('String(o?.gallery?.id||"")!==String(L)&&l(null),l(await Me('));
  assert(!bundle.includes('}catch{}l(null),l(await Me('));
- assert(bundle.includes('onReload:()=>I(s)'));
+ assert(bundle.includes('onReload:async()=>{const detail=await Me(`'));
 });
 
 test('new revision is identified from real proof timestamp, not old existing retouch',()=>{
@@ -25,10 +25,11 @@ test('new revision is identified from real proof timestamp, not old existing ret
 });
 
 test('photo status, retouch preview label and upload completion are visible',()=>{
- assert(bundle.includes('className:"pb1337RetouchUploadState "'));
- assert(bundle.includes('نسخه اصلاح‌شده جدید بارگذاری شد'));
- assert(bundle.includes('این عکس منتظر آپلود اصلاحیه است'));
+ assert(bundle.includes('className:"pb1337RetouchStatus"'));
+ assert(bundle.includes('نسخهٔ اصلاحی روتوش بارگذاری شد'));
+ assert(bundle.includes('آخرین بارگذاری: '));
  assert(bundle.includes('children:Ee.revisionUploaded?"نسخه اصلاح‌شده جدید":"نسخه روتوش"'));
+ assert(bundle.includes('PB1337setUploads(prev=>'));
  assert(bundle.includes('await o(),PB1338setProgress(100),PB1338setStage("تکمیل شد")'));
  assert(bundle.includes('Ee.openRevision&&!Ee.revisionUploaded?"needsRevision":Ee.revisionUploaded?"revisionUploaded":""'));
  assert(css.includes('.clientGalleryRetouchCard.revisionUploaded'));
@@ -40,5 +41,5 @@ test('R1337 versioned script and CSS bypass stale browser cache',()=>{
  assert(html.includes('retouchReload=r1338'));
  assert(html.includes('index-UIRefine-v655-r84.js'));
  assert.equal((html.match(/retouchReload=r1338/g)||[]).length,2);
- assert.equal(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),'2026-10-21-r1338-retouch-upload-progress');
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r1339-/);
 });

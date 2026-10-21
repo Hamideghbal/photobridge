@@ -18,8 +18,8 @@ apply(
  'optional progress callback'
 );
 apply(
- '[F,M]=x.useState(""),[B,L]=x.useState(!1)',
- '[F,M]=x.useState(""),[PB1338progress,PB1338setProgress]=x.useState(0),[PB1338stage,PB1338setStage]=x.useState(""),[B,L]=x.useState(!1)',
+ '[F,M]=x.useState(""),[PB1337uploads,PB1337setUploads]=x.useState({}),[B,L]=x.useState(!1)',
+ '[F,M]=x.useState(""),[PB1337uploads,PB1337setUploads]=x.useState({}),[PB1338progress,PB1338setProgress]=x.useState(0),[PB1338stage,PB1338setStage]=x.useState(""),[B,L]=x.useState(!1)',
  'per-photo progress state'
 );
 apply(
@@ -33,8 +33,8 @@ apply(
  'real network upload progress'
 );
 apply(
- 'await o(),window.pb1113GalleryNotice("✓ نمونه روتوش جدید بارگذاری شد و پیش‌نمایش به‌روز شد.")}catch(z){window.pb1113GalleryNotice(((H=z==null?void 0:z.data)==null?void 0:H.error)==="gallery_retouch_preview_too_large"?"نمونه روتوش هنوز حجم بالایی دارد.":"آپلود نمونه روتوش انجام نشد.")}finally{M("")}',
- 'await o(),PB1338setProgress(100),PB1338setStage("تکمیل شد"),window.pb1113GalleryNotice("✓ نمونه روتوش جدید بارگذاری شد و پیش‌نمایش به‌روز شد.")}catch(z){const code=String(z?.data?.error||z?.message||"upload_failed");const msg=code==="gallery_retouch_preview_too_large"?"حجم نمونه روتوش از یک مگابایت بیشتر است؛ عکس کم‌حجم‌تری انتخاب کن.":code==="gallery_image_decode_failed"||code==="gallery_preview_encode_failed"?"خواندن یا فشرده‌سازی عکس انجام نشد؛ عکس JPG یا PNG دیگری انتخاب کن.":code==="unsupported_image_type"?"فرمت عکس باید JPG، PNG یا WEBP باشد.":code==="upload_not_configured"||code==="local_upload_disabled"?"فضای ذخیره‌سازی آپلود در سرور فعال نیست.":code==="gallery_order_media_not_found"||code==="gallery_order_invalid_state"?"وضعیت سفارش برای روتوش جدید معتبر نیست؛ صفحه را بررسی کن.":code==="upload_missing"||code==="size_mismatch"?"فایل به‌صورت کامل به سرور نرسید؛ دوباره تلاش کن.":code.startsWith("upload_http_")?"ارسال فایل با خطای سرور ("+code.slice(12)+") انجام نشد.":code==="upload_failed"||code==="upload_network_error"?"انتقال فایل قطع شد؛ اتصال اینترنت را بررسی و دوباره تلاش کن.":"آپلود روتوش ناموفق بود ("+code+").";PB1338setStage("خطا"),window.pb1113GalleryNotice(msg)}finally{M(""),PB1338setProgress(0),PB1338setStage("")}',
+ 'await o()}catch(z){window.pb1113GalleryNotice(((H=z==null?void 0:z.data)==null?void 0:H.error)==="gallery_retouch_preview_too_large"?"نمونه روتوش هنوز حجم بالایی دارد.":"آپلود نمونه روتوش انجام نشد.")}finally{M("")}',
+ 'await o(),PB1338setProgress(100),PB1338setStage("تکمیل شد")}catch(z){const code=String(z?.data?.error||z?.message||"upload_failed");const msg=code==="gallery_retouch_preview_too_large"?"حجم نمونه روتوش از یک مگابایت بیشتر است؛ عکس کم‌حجم‌تری انتخاب کن.":code==="gallery_image_decode_failed"||code==="gallery_preview_encode_failed"?"خواندن یا فشرده‌سازی عکس انجام نشد؛ عکس JPG یا PNG دیگری انتخاب کن.":code==="unsupported_image_type"?"فرمت عکس باید JPG، PNG یا WEBP باشد.":code==="upload_not_configured"||code==="local_upload_disabled"?"فضای ذخیره‌سازی آپلود در سرور فعال نیست.":code==="gallery_order_media_not_found"||code==="gallery_order_invalid_state"?"وضعیت سفارش برای روتوش جدید معتبر نیست؛ صفحه را بررسی کن.":code==="upload_missing"||code==="size_mismatch"?"فایل به‌صورت کامل به سرور نرسید؛ دوباره تلاش کن.":code.startsWith("upload_http_")?"ارسال فایل با خطای سرور ("+code.slice(12)+") انجام نشد.":code==="upload_failed"||code==="upload_network_error"?"انتقال فایل قطع شد؛ اتصال اینترنت را بررسی و دوباره تلاش کن.":"آپلود روتوش ناموفق بود ("+code+").";PB1338setStage("خطا"),window.pb1113GalleryNotice(msg)}finally{M(""),PB1338setProgress(0),PB1338setStage("")}',
  'success and explicit errors'
 );
 apply(
@@ -44,7 +44,7 @@ apply(
 );
 apply(
  'children:[F===Ee.mediaId?"در حال آپلود…":Ee.retouch?"تعویض نمونه روتوش":"بارگذاری نمونه روتوش",e.jsx("input",{type:"file"',
- 'children:[e.jsx("span",{className:"pb1338UploadFill",style:{width:F===Ee.mediaId?PB1338progress+"%":"0%"}}),e.jsx("span",{className:"pb1338UploadText",children:F===Ee.mediaId?PB1338stage+" · "+V(PB1338progress)+"٪":Ee.retouch?"تعویض نمونه روتوش":"بارگذاری نمونه روتوش"}),e.jsx("input",{type:"file"',
+ 'children:[e.jsx("span",{className:"pb1338UploadFill",style:{width:F===Ee.mediaId?PB1338progress+"%":"0%"}}),e.jsx("span",{className:"pb1338UploadText",role:F===Ee.mediaId?"progressbar":void 0,"aria-label":F===Ee.mediaId?"انتقال عکس روتوش":void 0,"aria-valuemin":0,"aria-valuemax":100,"aria-valuenow":PB1338progress,children:F===Ee.mediaId?PB1338stage+" · "+V(PB1338progress)+"٪":Ee.retouch?"تعویض نمونه روتوش":"بارگذاری نمونه روتوش"}),e.jsx("input",{type:"file"',
  'in-button progress bar'
 );
 fs.writeFileSync(bundle,js);

@@ -287,3 +287,5 @@ runR1314(process.execPath, ["--test", "scripts/test-r1340-retouch-correction-onl
 console.log("[R1340] OK correction-only retouch UI tests");
 
 await deployStep("./enable-r1341-compact-retouch-cards.mjs");
+
+await deployStep("./enable-r1344-gallery-create-pricing.mjs");

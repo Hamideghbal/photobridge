@@ -200,9 +200,9 @@
         const deadline=g.cleanup_after||g.expires_at||'';
         const renewReady=Boolean(deadline&&renewalEligible(deadline));
         card.classList.toggle('pb792Renewable',renewReady);
-        let renew=qs('.pb792RenewGallery',actions);
+        let renew=qs('.pb792RenewGallery',card);
         if(renewReady){
-          if(!renew){renew=document.createElement('button');renew.type='button';renew.className='pbActionButton secondaryAction pb792RenewGallery';renew.textContent='تمدید گالری';renew.addEventListener('click',()=>renewGallery(g,qs('.pb791GalleryLifetime',cover||card),renew));actions.appendChild(renew)}
+          if(!renew){renew=document.createElement('button');renew.type='button';renew.className='pbActionButton secondaryAction pb792RenewGallery';renew.textContent='تمدید گالری';renew.addEventListener('click',()=>renewGallery(g,qs('.pb791GalleryLifetime',cover||card),renew));(qs('.pb1332CardExpiry',card)||actions).appendChild(renew)}
         }else renew?.remove();
         if(!qs('.pb791DeleteGallery',actions)){
           const del=document.createElement('button');del.type='button';del.className='pbActionButton dangerSoft pb791DeleteGallery';del.textContent='حذف گالری';

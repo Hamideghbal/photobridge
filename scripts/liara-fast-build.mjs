@@ -271,6 +271,10 @@ await deployStep("./enable-r1336-gallery-feedback.mjs");
 await deployStep("./enable-r1334-login-width.mjs");
 
 await deployStep("./enable-r1337-gallery-retouch-refresh.mjs");
+await deployStep("./enable-r1338-retouch-upload-progress.mjs");
 console.log("[R1337] START gallery retouch upload regression tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1337-gallery-retouch-refresh.cjs"], { stdio: "inherit" });
 console.log("[R1337] OK gallery retouch upload regression tests");
+console.log("[R1338] START retouch progress regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1338-retouch-upload-progress.cjs"], { stdio: "inherit" });
+console.log("[R1338] OK retouch progress regression tests");

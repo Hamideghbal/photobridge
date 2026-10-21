@@ -22,7 +22,7 @@ apply(
 );
 apply(
  'Ke=async(Ee,we)=>{var H;if(!(!we||!O)){M(Ee);try{const z=await zf(we,{maxEdge:1280,quality:58,watermarkEnabled:!1,watermarkText:""}),q=await Me(',
- 'Ke=async(Ee,we)=>{var H;if(!(!we||!O)){M(Ee),PB1338setProgress(2),PB1338setStage("آماده‌سازی");try{if(!["image/jpeg","image/png","image/webp"].includes(String(we.type||"").toLowerCase()))throw new Error("unsupported_image_type");const z=await zf(we,{maxEdge:1280,quality:58,watermarkEnabled:!1,watermarkText:""});PB1338setProgress(7),PB1338setStage("دریافت مجوز");const q=await Me(',
+ 'Ke=async(Ee,we)=>{var H;if(!(!we||!O)){M(Ee),PB1338setProgress(2),PB1338setStage("آماده‌سازی");try{if(!["image/jpeg","image/png","image/webp"].includes(String(we.type||"").toLowerCase()))throw new Error("unsupported_image_type");let z=await zf(we,{maxEdge:1280,quality:58,watermarkEnabled:!1,watermarkText:""});for(let round=0;z.size>980*1024&&round<3;round++)z=await zf(z,{maxEdge:1000-round*50,quality:48-round*3,watermarkEnabled:!1,watermarkText:""});if(z.size>1024*1024)throw Object.assign(new Error("gallery_retouch_preview_too_large"),{data:{error:"gallery_retouch_preview_too_large"}});PB1338setProgress(7),PB1338setStage("دریافت مجوز");const q=await Me(',
  'retouch upload stage init'
 );
 apply(

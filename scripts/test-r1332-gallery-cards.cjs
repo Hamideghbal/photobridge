@@ -6,7 +6,7 @@ for(const width of [320,375,1366,1920])test(`${width}px: gallery cards stay comp
  try{
  const p=await browser.newPage({viewport:{width,height:950},serviceWorkers:'block'}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  let removed=0,patches=[];
- const gallery={id:gid,title:'پرتره خانوادگی',customer_name:'خانواده محمدی',customer_mobile:'09123456789',status:'published',current_order_status:'submitted',photo_count:64,photo_limit:100,ordered_total:1200000,expires_at:new Date(Date.now()+86400000).toISOString(),share_url:'https://panel.test/g/test-gallery'};
+ const gallery={id:gid,title:'پرتره خانوادگی',customer_name:'خانواده محمدی',customer_mobile:'09123456789',status:'published',current_order_status:'retouching',pending_revision_count:2,photo_count:64,photo_limit:100,ordered_total:1200000,expires_at:new Date(Date.now()+86400000).toISOString(),share_url:'https://panel.test/g/test-gallery'};
  let galleries=[gallery,{...gallery,id:'22222222-2222-4222-8222-222222222222',status:'draft',current_order_status:null,title:'یک عنوان بسیار طولانی برای بررسی چیدمان کارت گالری مشتری',customer_name:'یک نام طولانی برای مشتری گالری',expires_at:new Date(Date.now()+20*86400000).toISOString()},{...gallery,id:'33333333-3333-4333-8333-333333333333',status:'closed',current_order_status:'completed',title:'پرتره اختصاصی',expires_at:null}];
  await p.route('**/*',async route=>{
  const req=route.request(),u=new URL(req.url());
@@ -28,7 +28,7 @@ for(const width of [320,375,1366,1920])test(`${width}px: gallery cards stay comp
  return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});
  });
  await p.goto('https://panel.test/photographer/gallery');await p.locator('.pb1332Card').first().waitFor();
- const card=p.locator('.pb1332Card').first();await card.locator('.pb792RenewGallery').waitFor();
+ const card=p.locator('.pb1332Card').first();assert.match(await card.locator('.pb1336NeedsRevision').innerText(),/درخواست اصلاح مشتری/);await card.locator('.pb792RenewGallery').waitFor();
  assert.equal(await p.locator('.pb1332Card').count(),3);
  const layout=await card.evaluate(el=>({width:el.getBoundingClientRect().width,overflow:el.scrollWidth>el.clientWidth+1,bg:getComputedStyle(el).backgroundColor,title:getComputedStyle(el.querySelector('h3')).whiteSpace,rows:[...new Set([...el.querySelectorAll('.pb1332Actions button')].filter(b=>b.offsetWidth).map(b=>Math.round(b.getBoundingClientRect().top)))],renewInExpiry:!!el.querySelector('.pb1332CardExpiry .pb792RenewGallery'),renewCount:el.querySelectorAll('.pb792RenewGallery').length,height:el.getBoundingClientRect().height,topBorder:getComputedStyle(el).borderTopColor,customer:el.querySelector('.pb1332Customer').getBoundingClientRect().toJSON(),phone:el.querySelector('.pb1332Customer>bdi').getBoundingClientRect().toJSON(),name:el.querySelector('.pb1332Customer>span').getBoundingClientRect().toJSON(),metrics:el.querySelector('.clientGalleryMetrics').getBoundingClientRect().toJSON(),state:el.querySelector('.clientGalleryOrderState').getBoundingClientRect().toJSON(),expiry:el.querySelector('.pb1332CardExpiry').getBoundingClientRect().toJSON()}));
  assert.equal(layout.bg,'rgb(255, 255, 255)');assert.equal(layout.overflow,false);assert.equal(layout.rows.length,2);assert.equal(layout.title,'nowrap');assert(layout.renewInExpiry);assert.equal(layout.renewCount,1);

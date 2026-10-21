@@ -196,6 +196,9 @@
       .albumDesignMobileCatalogPickerChoices>button{justify-items:start!important;align-content:center!important;pointer-events:auto!important}
       .albumDesignMobileCatalogPickerChoices>button b,.albumDesignMobileCatalogPickerChoices>button small{width:100%!important;text-align:right!important;direction:rtl!important}
 
+        body.pbHomePublicRoute #root .pbMobileInstallHomeAction{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:44px!important;padding:10px 17px!important;border:1px solid #aebfff!important;border-radius:12px!important;background:linear-gradient(135deg,#315efb,#4f46e5)!important;color:#fff!important;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;font-size:12px!important;font-weight:900!important;line-height:1.35!important;box-shadow:0 8px 22px rgba(49,94,251,.18)!important;cursor:pointer!important}
+        body.pbHomePublicRoute #root .pbMobileInstallHomeAction::before{content:"↓";font-size:16px;line-height:1}
+        html.pb711Installed .pbMobileInstallHomeAction,html.pb711Installed .pbMobileInstallMenuButton,html.pb710Installed .pbMobileInstallHomeAction,html.pb710Installed .pbMobileInstallMenuButton{display:none!important}
       @media(max-width:820px){
         html.pbAiViewportLock,html.pbAiViewportLock body,body.pbAiViewportLock #root,body.pbAiViewportLock #root>.publicAiPage{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
         body.pbAiViewportLock #root .publicAiHeroPremium,body.pbAiViewportLock #root .publicAiPricingSection,body.pbAiViewportLock #root .publicAiOriginalBanner,body.pbAiViewportLock #root .publicAiSamplesSection,body.pbAiViewportLock #root .publicAiBenefitStrip,body.pbAiViewportLock #root .publicAiHowSection,body.pbAiViewportLock #root .publicAiPremiumCheckout,body.pbAiViewportLock #root .publicAiFaqSection{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
@@ -236,9 +239,6 @@
         #pbCanonicalHeaderV624 .pbMobileInfoLinks a.active{color:#315efb!important;font-weight:900!important}
         #pbCanonicalHeaderV624 .pbMobileInfoLinks .pbMobileInstallMenuButton{display:flex!important;align-items:center!important;justify-content:flex-start!important;direction:rtl!important;width:100%!important;min-height:38px!important;padding:8px 4px 8px 2px!important;border:0!important;border-bottom:1px solid #f0f2f5!important;border-radius:0!important;background:transparent!important;color:#315efb!important;font-family:inherit!important;font-size:10.4px!important;font-weight:900!important;text-align:right!important;line-height:1.55!important;cursor:pointer!important}
         #pbCanonicalHeaderV624 .pbMobileInfoLinks .pbMobileInstallMenuButton::after{content:"↓";display:grid;place-items:center;width:23px;height:23px;margin-right:auto!important;margin-left:0!important;border-radius:8px;background:#eef3ff;color:#315efb;font-size:14px;font-weight:900}
-        body.pbHomePublicRoute #root .pbMobileInstallHomeAction{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:44px!important;padding:10px 17px!important;border:1px solid #aebfff!important;border-radius:12px!important;background:linear-gradient(135deg,#315efb,#4f46e5)!important;color:#fff!important;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;font-size:12px!important;font-weight:900!important;line-height:1.35!important;box-shadow:0 8px 22px rgba(49,94,251,.18)!important;cursor:pointer!important}
-        body.pbHomePublicRoute #root .pbMobileInstallHomeAction::before{content:"↓";font-size:16px;line-height:1}
-        html.pb711Installed .pbMobileInstallHomeAction,html.pb711Installed .pbMobileInstallMenuButton,html.pb710Installed .pbMobileInstallHomeAction,html.pb710Installed .pbMobileInstallMenuButton{display:none!important}
         #pbCanonicalHeaderV624 .pb599MobileSessionCard{display:grid!important;gap:7px!important;padding:9px!important;border:1px solid #dce6ff!important;border-radius:14px!important;background:linear-gradient(135deg,#f8fbff,#eef4ff)!important}
         #pbCanonicalHeaderV624 .pb599MobileSessionCard[hidden]{display:none!important}
         #pbCanonicalHeaderV624 .pb599MobileSessionIdentity{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;direction:rtl!important}
@@ -463,6 +463,7 @@
       var p=card.querySelector('p');var copy='عضویت عکاس در PhotoBridge فقط از طریق لینک دعوت انجام می‌شود. اگر دعوتنامه دریافت کرده‌ای، فعال‌سازی را از همان لینک انجام بده؛ حساب‌های فعال از اینجا وارد می‌شوند.';if(p&&p.textContent!==copy)p.textContent=copy;
       var login=card.querySelector('.audienceActions a[href="/photographer"]');if(login){if(login.textContent!=='ورود به حساب عکاس')login.textContent='ورود به حساب عکاس';login.classList.add('primary')}
     }
+    if(heroActions&&document.getElementById('pbCanonicalHeaderV624'))document.documentElement.classList.remove('pb1330HomePending');
   }
   function observeHomePhotographerAccess(){
     if(normalize(location.pathname)!=='/'||typeof MutationObserver==='undefined')return;

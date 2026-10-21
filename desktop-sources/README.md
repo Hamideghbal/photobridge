@@ -27,3 +27,11 @@ Source snapshot SHA-256: `49788a4b7db76696742a9ebdfc054b71029993c76677fcf5da95d9
 The Windows source archive does not change the deployed website. CI can create an **unsigned test installer** as a restricted GitHub Actions artifact, but a signed production EXE must pass Windows validation, be signed, and be uploaded to the existing authenticated store installer distribution route. **Never claim an unsigned Actions artifact is a production-ready installer.** Preserve local SQLite data during upgrades.
 
 This source is also backed up in the user's ChatGPT Library folder `/PhotoBridge Desktop Sources/`.
+
+## R1342 laboratory update fixes
+
+The current tracked `apps/lab-desktop/ui-update.cjs` replaces the archive's sequential updater. Preserve it alongside `desktop-overlay.js` before extracting the archive and restore both afterward. Then run `node scripts/enable-r1296-native-alerts.mjs` and `node scripts/enable-r1342-lab-ui-update.mjs` from the repository root. The laboratory candidate version becomes **1.0.16**. The Windows workflow performs these steps automatically.
+
+Run `node --test scripts/test-r1342-lab-ui-update.cjs scripts/test-r1342-native-integration.cjs` after integration. Downloads use at most four workers, reuse hash-verified partial downloads after interruption, and verify every manifest file before activation. The manual UI-update command runs from the native tray menu and asks before reloading a visible workspace. No additional local HTTP command is exposed. Native SQLite records, order files and sync queues are unchanged.
+
+These changes update the native application engine and require a newly built installer. Publishing website assets alone cannot replace `main.cjs`, `host.cjs` or `ui-update.cjs` in an older installed application. An unsigned Actions candidate is still not a production release; Windows validation and signing are required before activating the authenticated laboratory download. An existing signed installer can be uploaded in the platform administrator's laboratory desktop release section. The installed program on a user's computer is not accessible from the repository/cloud workspace.

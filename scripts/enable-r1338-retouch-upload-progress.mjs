@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 const bundle='dist/web/assets/index-UIRefine-v655-r84.js';
 const cssFile='dist/web/photobridge-r1332-gallery-cards.css';
 let js=fs.readFileSync(bundle,'utf8');
@@ -55,4 +57,36 @@ if(!css.includes('/* R1338 in-button upload progress */')){
  +'.clientGalleryRetouchUpload.disabled{pointer-events:none!important;opacity:1!important}\n';
 }
 fs.writeFileSync(cssFile,css);
+
+function refreshHtml(dir){
+ if(!fs.existsSync(dir))return;
+ for(const item of fs.readdirSync(dir,{withFileTypes:true})){
+  const file=path.join(dir,item.name);
+  if(item.isDirectory()){refreshHtml(file);continue;}
+  if(!file.endsWith('.html'))continue;
+  const before=fs.readFileSync(file,'utf8');
+  if(!before.includes('retouchReload=r1337'))continue;
+  fs.writeFileSync(file,before.replaceAll('retouchReload=r1337','retouchReload=r1338'));
+ }
+}
+refreshHtml('dist/web');
+refreshHtml('dist/api');
+for(const channel of ['desktop-ui','lab-desktop-ui']){
+ const root=path.resolve('dist/web',channel);
+ const bundleDest=path.join(root,'assets/index-UIRefine-v655-r84.js');
+ const cssDest=path.join(root,'photobridge-r1332-gallery-cards.css');
+ if(fs.existsSync(bundleDest))fs.copyFileSync(bundle,bundleDest);
+ if(fs.existsSync(cssDest))fs.copyFileSync(cssFile,cssDest);
+ const manifestPath=path.join(root,'manifest.json');
+ if(!fs.existsSync(manifestPath))continue;
+ const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+ for(const entry of manifest.files){
+  const file=path.resolve(root,entry.name);
+  if(!file.startsWith(root+path.sep))throw Error('R1338 invalid desktop package entry');
+  entry.sha256=crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+ }
+ manifest.build=crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex');
+ fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n');
+}
+
 console.log('[R1338] Safe retouch upload events, stage-aware progress bar and precise failure messages.');

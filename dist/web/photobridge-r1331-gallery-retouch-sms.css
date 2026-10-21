@@ -1,0 +1,13 @@
+/* Gallery consent and the route back to the existing retouch uploader. */
+html body #root .pb1331GallerySms{margin:12px 0;padding:14px 16px;border:1px solid #d5dff2;border-radius:16px;background:#f6f9ff;color:#344054;font:500 13px/1.85 Vazirmatn,Tahoma,sans-serif;display:grid;gap:9px;min-width:0}
+html body #root .pb1331GallerySms header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+html body #root .pb1331GallerySms strong{font-size:15px}
+html body #root .pb1331GallerySms small{font-size:12px;line-height:1.8;color:#667085}
+html body #root .pb1331GallerySms label{display:flex;align-items:center;gap:9px;margin:0;cursor:pointer}
+html body #root .pb1331GallerySms input[type=checkbox]{width:19px!important;height:19px!important;flex:0 0 19px;accent-color:#315efb;box-shadow:none!important}
+html body #root .pb1331GallerySms p{margin:0;font-size:12px}
+html body #root .pb1331SmsActions{display:flex;gap:8px;flex-wrap:wrap}
+html body #root .pb1331GallerySms button{min-height:40px;padding:7px 12px;border:1px solid #b9c9ee;border-radius:10px;background:#fff;color:#244fc7;font:700 12px/1.6 Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+html body #root .pb1331GallerySms button:disabled{opacity:.5;cursor:default}
+html body #root .pb1331RetouchEntry{padding:7px 12px;border:1px solid #b9c9ee;border-radius:10px;background:#eef3ff;color:#244fc7;font:700 12px/1.7 Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+@media(max-width:820px){html body #root .pb1331GallerySms{padding:12px;font-size:12px}html body #root .pb1331SmsActions>button{flex:1 1 150px}}

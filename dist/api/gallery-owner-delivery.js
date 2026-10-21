@@ -21,8 +21,8 @@ export async function deliverGallerySmsFallbacks({pool,sendSms}){
   const row=q.rows[0];if(!row)return;
   try{
    const user=await pool.query('SELECT mobile FROM users WHERE id=$1 LIMIT 1',[row.recipient_user_id]);
-   await sendSms({mobile:user.rows[0]?.mobile,message:`PhotoBridge\n${row.message}\nگالری: https://photobridge.ir/photographer/gallery`,purpose:'gallery_owner_notification',eventKey:row.event_key,userId:row.recipient_user_id,referenceId:row.id,metadata:{galleryId:row.metadata?.galleryId,notificationId:row.id,fallback:true}});
-   await pool.query(`UPDATE system_notifications SET metadata=jsonb_set(metadata,'{galleryDelivery,state}','"sms_sent"'::jsonb) WHERE id=$1`,[row.id]);
+   const result=await sendSms({mobile:user.rows[0]?.mobile,message:`PhotoBridge\n${row.message}\nگالری: https://photobridge.ir/photographer/gallery`,purpose:'gallery_owner_notification',eventKey:row.event_key,userId:row.recipient_user_id,referenceId:row.id,metadata:{galleryId:row.metadata?.galleryId,notificationId:row.id,fallback:true}});
+   await pool.query(`UPDATE system_notifications SET metadata=jsonb_set(metadata,'{galleryDelivery,state}',$2::jsonb) WHERE id=$1`,[row.id,JSON.stringify(result?.skipped?'sms_disabled':'sms_sent')]);
   }catch(error){
    await pool.query(`UPDATE system_notifications SET metadata=jsonb_set(metadata,'{galleryDelivery}',COALESCE(metadata->'galleryDelivery','{}'::jsonb)||$2::jsonb) WHERE id=$1`,[row.id,JSON.stringify({state:'sms_failed',error:String(error?.message||error).slice(0,180)})]);
    console.warn('[gallery-owner-sms]',row.id,String(error?.message||error));

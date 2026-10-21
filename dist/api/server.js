@@ -1,3 +1,4 @@
+import {createGalleryMessaging} from './gallery-messaging.js';
 import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
@@ -1070,6 +1071,7 @@ async function reservePhotographerWalletCharge(args) {
         }
         ;
         const amount = Math.max(0, Math.round(Number(service.effective_price || 0)));
+        if(args.expectedAmount !== undefined && amount !== Number(args.expectedAmount))throw new Error('gallery_sms_price_changed');
         if (amount === 0) {
             await c.query('COMMIT');
             return null;
@@ -5294,6 +5296,10 @@ async function sendSms(args) {
             throw e;
         }
     }
+    else if (args.chargePhotographerId && args.serviceKey) {
+        charge = await reservePhotographerWalletCharge({userId:args.chargePhotographerId,serviceKey:args.serviceKey,expectedAmount:args.quotedAmount,referenceType:'gallery_sms',referenceId:args.referenceId,metadata:{purpose:args.purpose,eventKey:args.eventKey,mobile,...args.metadata}});
+        if(charge)charge.photographerId=args.chargePhotographerId;
+    }
     else if (args.chargeLabId && args.serviceKey) {
         try {
             charge = await reserveServiceWalletCharge({ labId: args.chargeLabId, serviceKey: args.serviceKey, note: `هزینه ${args.purpose}`, referenceType: 'sms', metadata: { purpose: args.purpose, eventKey: args.eventKey, mobile } });
@@ -5311,6 +5317,7 @@ async function sendSms(args) {
     catch (e) {
         if (charge) {
             if (charge.rentalShopId) await refundEquipmentRentalSmsCharge(charge, String(e?.message || 'sms_failed'));
+            else if(charge.photographerId) await refundPhotographerWalletCharge(charge, String(e?.message || 'sms_failed'));
             else await refundServiceWalletCharge(charge, String(e?.message || 'sms_failed'));
         }
         await logSms({ provider: cfg.provider, purpose: args.purpose, eventKey: args.eventKey, mobile, userId: args.userId, labId: args.labId, status: 'failed', errorCode: String(e?.message || 'sms_failed'), responseText: e?.responseText || null, metadata: { ...(args.metadata || {}), serviceKey: args.serviceKey || null, refunded: Boolean(charge) } });
@@ -7264,8 +7271,9 @@ async function storeCustomerSystemNotification(customerId, event, data, labId = 
     const q = await pool.query(`INSERT INTO system_notifications(recipient_user_id,event_key,title,message,metadata) VALUES($1,$2,$3,$4,$5::jsonb) RETURNING *`, [customerId, event, copy.title, copy.message, JSON.stringify(metadata)]).catch(() => ({ rows: [] }));
     const row = q.rows[0] || null; if (row) void sendWebPushToRecipient('customer', customerId, row, event, metadata); return row;
 }
+const galleryMessaging=createGalleryMessaging({pool,sendSms,price:(userId,key)=>photographerEffectivePrice(pool,userId,key),configured:async()=>!!(await resolvedSMSSettings()).configured,normalizeMobile,publicAppUrl:PUBLIC_APP_URL});
 async function notifyGalleryOwner(ownerId,event,data,labId){
- try{await queueGalleryOwnerNotification({pool,ownerId,event,data,labId,copy:customerEventNotificationCopy(event,data),push:sendWebPushToRecipient});await deliverGallerySmsFallbacks({pool,sendSms});}
+ try{await queueGalleryOwnerNotification({pool,ownerId,event,data,labId,copy:customerEventNotificationCopy(event,data),push:sendWebPushToRecipient});await deliverGallerySmsFallbacks({pool,sendSms:galleryMessaging.owner});}
  catch(e){console.error('[gallery-owner-delivery]',String(e?.message||e));}
 }
 function customerEventKey(labId, customerId) { return `${labId}:${customerId}`; }
@@ -24533,6 +24541,21 @@ ${inviteUrl}`;
                 c.release();
             }
         }
+        const gallerySmsRoute=url.pathname.match(/^\/api\/customer\/client-galleries\/([0-9a-f-]+)\/sms(?:\/(settings|send))?$/);
+        if(gallerySmsRoute){
+            try{
+                if(req.method==='GET'&&!gallerySmsRoute[2])return sendJson(res,200,await galleryMessaging.snapshot(gallerySmsRoute[1],a.userId));
+                if(req.method==='PUT'&&gallerySmsRoute[2]==='settings')return sendJson(res,200,await galleryMessaging.save(gallerySmsRoute[1],a.userId,await bodyJson(req)));
+                if(req.method==='POST'&&gallerySmsRoute[2]==='send'){
+                    const b=await bodyJson(req);
+                    return sendJson(res,200,await galleryMessaging.customer(gallerySmsRoute[1],a.userId,{kind:b.kind,requestId:b.requestId,quotedPrice:b.quotedPrice}));
+                }
+                return sendJson(res,405,{error:'method_not_allowed'});
+            }catch(error){
+                const code=String(error.message||'gallery_sms_failed');
+                return sendJson(res,error.status||(code==='service_wallet_insufficient'?402:503),{error:code,balance:error.balance,required:error.required});
+            }
+        }
         const customerGalleryDetail = url.pathname.match(/^\/api\/customer\/client-galleries\/([0-9a-f-]+)$/);
         if (customerGalleryDetail && req.method === 'DELETE') {
             const galleryId = customerGalleryDetail[1];
@@ -24826,8 +24849,12 @@ ${inviteUrl}`;
                 if (Number(pq.rows[0]?.c || 0) < Number(neededQ.rows[0]?.c || 0))
                     return sendJson(res, 409, { error: 'gallery_retouch_proof_required', required: Number(neededQ.rows[0]?.c || 0), uploaded: Number(pq.rows[0]?.c || 0) });
                 await pool.query(`UPDATE photographer_gallery_revision_requests SET resolved_at=COALESCE(resolved_at,now()) WHERE order_id=$1`, [o.id]).catch(() => { });
-                await pool.query(`UPDATE photographer_gallery_orders SET status='awaiting_approval',retouch_sent_at=now(),revision_note=NULL,updated_at=now() WHERE id=$1`, [o.id]);
-                return sendJson(res, 200, { ok: true, status: 'awaiting_approval' });
+                const sent=await pool.query(`UPDATE photographer_gallery_orders SET status='awaiting_approval',retouch_sent_at=now(),revision_note=NULL,updated_at=now() WHERE id=$1 AND status IN ('submitted','retouching') RETURNING retouch_sent_at`, [o.id]);
+                if(!sent.rowCount)return sendJson(res,409,{error:'gallery_order_invalid_state'});
+                let sms;
+                try{sms=await galleryMessaging.customer(galleryOrderAction[1],a.userId,{kind:'approval',requestId:`approval:${o.id}:${new Date(sent.rows[0].retouch_sent_at).getTime()}`,automatic:true});}
+                catch(error){sms={sent:false,error:String(error.message||'gallery_sms_failed')};}
+                return sendJson(res, 200, { ok: true, status: 'awaiting_approval',sms });
             }
             return sendJson(res, 400, { error: 'invalid_gallery_order_action' });
         }
@@ -26073,8 +26100,8 @@ async function bootstrap() {
     setInterval(() => cleanupExpiredRetouchOutputs().catch(console.error), 60 * 1000).unref();
     setInterval(() => cleanupExpiredClientGalleries().catch(console.error), 30 * 60 * 1000).unref();
     setInterval(() => publicAiProcessingSweep().catch(console.error), 4 * 1000).unref();
-    setInterval(() => deliverGallerySmsFallbacks({pool,sendSms}).catch(console.error), 15 * 1000).unref();
-    setTimeout(() => deliverGallerySmsFallbacks({pool,sendSms}).catch(console.error), 5 * 1000).unref();
+    setInterval(() => deliverGallerySmsFallbacks({pool,sendSms:galleryMessaging.owner}).catch(console.error), 15 * 1000).unref();
+    setTimeout(() => deliverGallerySmsFallbacks({pool,sendSms:galleryMessaging.owner}).catch(console.error), 5 * 1000).unref();
     setInterval(() => publicAiReadyDeliverySweep().catch(console.error), 15 * 1000).unref();
     setInterval(() => equipmentRentalBirthdaySmsSweep().catch(console.error), 6 * 60 * 60 * 1000).unref();
     setInterval(() => labBirthdaySmsSweep().catch(console.error), 6 * 60 * 60 * 1000).unref();

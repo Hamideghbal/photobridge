@@ -30,6 +30,11 @@ changeOnce(
   'correction timestamp'
 );
 changeOnce(
+  'className:"clientGalleryRetouchCard clientGalleryRetouchCardV409 "+(Ee.openRevision?"needsRevision":"")',
+  'className:"clientGalleryRetouchCard clientGalleryRetouchCardV409 "+(Ee.openRevision&&!Ee.revisionUploaded?"needsRevision":Ee.revisionUploaded?"revisionUploaded":"")',
+  'corrected card highlight'
+);
+changeOnce(
   'e.jsx("figcaption",{children:"نسخه روتوش"})',
   'e.jsx("figcaption",{children:Ee.revisionUploaded?"نسخه اصلاح‌شده جدید":"نسخه روتوش"})',
   'correction caption'
@@ -51,7 +56,8 @@ if(!css.includes('/* R1337 gallery retouch upload feedback */')){
   css+='\n/* R1337 gallery retouch upload feedback */\n'
   +'.clientGalleryRetouchMeta .pb1337RetouchUploadState{display:inline-flex;align-items:center;width:fit-content;max-width:100%;margin:8px 0;padding:5px 10px;border-radius:9px;border:1px solid #cbd5e1;background:#f8fafc;color:#475467;font:700 12px/1.9 Vazirmatn,Tahoma,sans-serif;white-space:normal}\n'
   +'.clientGalleryRetouchMeta .pb1337RetouchUploadState.needsUpdate{background:#fff5eb;border-color:#fed7aa;color:#9a3412}\n'
-  +'.clientGalleryRetouchMeta .pb1337RetouchUploadState.isUpdated{background:#ecfdf3;border-color:#abefc6;color:#067647}\n';
+  +'.clientGalleryRetouchMeta .pb1337RetouchUploadState.isUpdated{background:#ecfdf3;border-color:#abefc6;color:#067647}\n'
+  +'.clientGalleryRetouchCard.revisionUploaded{border-color:#abefc6!important;box-shadow:0 0 0 1px #abefc644!important}\n';
 }
 fs.writeFileSync(cssPath,css);
 

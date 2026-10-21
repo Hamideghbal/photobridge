@@ -261,3 +261,5 @@ console.log("[R1328] OK gallery / invite regression tests");
 await deployStep("./enable-r1330-home-gallery-polish.mjs");
 
 await deployStep("./enable-r1331-gallery-retouch-sms.mjs");
+
+await deployStep("./enable-r1332-gallery-cards-brand.mjs");

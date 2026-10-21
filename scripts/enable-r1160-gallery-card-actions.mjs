@@ -2,10 +2,10 @@
 import fs from 'node:fs';
 const bundle='dist/web/assets/index-UIRefine-v655-r84.js';
 const ui=fs.readFileSync(bundle,'utf8');
-if(!ui.includes('className:"clientGalleryCardActions pb1160GalleryActions"') ||
+const legacyRows=ui.includes('className:"clientGalleryCardActions pb1160GalleryActions"')&&ui.includes('className:"pb1161GalleryTopRow"')&&ui.includes('className:"pb1161GalleryBottomRow"');
+const refinedRows=ui.includes('className:"clientGalleryCardActions pb1160GalleryActions pb1332Actions"')&&ui.includes('className:"pb1332PrimaryRow"')&&ui.includes('className:"pb1332SecondaryRow"');
+if(!(legacyRows||refinedRows) ||
    !ui.includes('className:"pbActionButton pb1160GalleryDelete"') ||
-   !ui.includes('className:"pb1161GalleryTopRow"') ||
-   !ui.includes('className:"pb1161GalleryBottomRow"') ||
    !ui.includes('await Me(`/api/customer/client-galleries/${L.id}`,{method:"DELETE"})') ||
    !ui.includes('await window.pb1113GalleryConfirm(`گالری «${L.title}»'))
  throw Error('R1161 gallery-card actions or delete confirmation are missing');

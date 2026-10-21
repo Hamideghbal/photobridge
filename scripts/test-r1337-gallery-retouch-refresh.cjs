@@ -30,6 +30,8 @@ test('photo status, retouch preview label and upload completion are visible',()=
  assert(bundle.includes('این عکس منتظر آپلود اصلاحیه است'));
  assert(bundle.includes('children:Ee.revisionUploaded?"نسخه اصلاح‌شده جدید":"نسخه روتوش"'));
  assert(bundle.includes('await o(),window.pb1113GalleryNotice("✓ نمونه روتوش جدید بارگذاری شد'));
+ assert(bundle.includes('Ee.openRevision&&!Ee.revisionUploaded?"needsRevision":Ee.revisionUploaded?"revisionUploaded":""'));
+ assert(css.includes('.clientGalleryRetouchCard.revisionUploaded'));
  assert(css.includes('.pb1337RetouchUploadState.isUpdated'));
  assert(css.includes('.pb1337RetouchUploadState.needsUpdate'));
 });

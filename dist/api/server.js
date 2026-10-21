@@ -7168,6 +7168,8 @@ function customerEventNotificationCopy(event, data) {
         return { title: 'وضعیت پیک به‌روزرسانی شد', message: `وضعیت پیک سفارش${notificationOrderNo(data)} تغییر کرد${data?.driverName ? ` · راننده: ${data.driverName}` : ''}.` };
     if (event === 'invoice_pricing_ready')
         return { title: 'مبلغ سفارش آماده پرداخت است', message: `مبلغ سفارش${notificationOrderNo(data)} محاسبه شد${data?.total ? ` · ${Number(data.total).toLocaleString('fa-IR')} تومان` : ''} و برای پرداخت آماده است.` };
+    if (event === 'client_gallery_changes_requested')
+        return {title:'درخواست اصلاح روتوش',message:`${data?.customerName||'مشتری'} برای ${Number(data?.revisionCount||0).toLocaleString('fa-IR')} عکس گالری «${data?.galleryTitle||'گالری'}» درخواست اصلاح ثبت کرد.`};
     if (event === 'client_gallery_approved')
         return {title:'عکس‌ها تأیید شدند',message:`${data?.customerName||'مشتری'} عکس‌های گالری «${data?.galleryTitle||'گالری'}» را تأیید کرد.`};
     if (event === 'client_gallery_finalized')
@@ -7212,7 +7214,7 @@ function webPushTargetUrl(kind, event, data) {
     if (event === 'equipment_collaboration_request') return '/rental/photographers';
     if (event === 'equipment_collaboration_review') return '/equipment-rental/book';
     if (event === 'equipment_rental_status' || event === 'equipment_sale_status') return '/equipment-rental/book';
-    if (event === 'client_gallery_finalized' || event === 'client_gallery_approved' || event === 'gallery.expiring') return '/photographer/gallery';
+    if (event === 'client_gallery_finalized' || event === 'client_gallery_approved' || event === 'client_gallery_changes_requested' || event === 'gallery.expiring') return '/photographer/gallery';
     if ((event === 'invoice_ready' || event === 'invoice_pricing_ready') && data?.invoiceId) return `/photographer/finance/invoices?workspace=print&invoice=${encodeURIComponent(String(data.invoiceId))}`;
     return '/photographer/orders/flow?workspace=print';
 }
@@ -7246,7 +7248,7 @@ async function sendWebPushToRecipient(kind, recipientId, notificationRow, event,
         let accepted=0;
         await Promise.all(q.rows.map(async (sub) => {
             try {
-                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload, { TTL: ['client_gallery_finalized','client_gallery_approved'].includes(event) ? 60 : 24 * 60 * 60, urgency: 'high' });
+                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload, { TTL: ['client_gallery_finalized','client_gallery_approved','client_gallery_changes_requested'].includes(event) ? 60 : 24 * 60 * 60, urgency: 'high' });
                 accepted++;
                 await pool.query(`UPDATE web_push_subscriptions SET last_seen_at=now() WHERE id=$1`, [sub.id]).catch(() => { });
             }
@@ -7273,7 +7275,7 @@ async function storeCustomerSystemNotification(customerId, event, data, labId = 
 }
 const galleryMessaging=createGalleryMessaging({pool,sendSms,price:(userId,key)=>photographerEffectivePrice(pool,userId,key),configured:async()=>!!(await resolvedSMSSettings()).configured,normalizeMobile,publicAppUrl:PUBLIC_APP_URL});
 async function notifyGalleryOwner(ownerId,event,data,labId){
- try{await queueGalleryOwnerNotification({pool,ownerId,event,data,labId,copy:customerEventNotificationCopy(event,data),push:sendWebPushToRecipient});await deliverGallerySmsFallbacks({pool,sendSms:galleryMessaging.owner});}
+ try{await queueGalleryOwnerNotification({pool,ownerId,event,data,labId,copy:customerEventNotificationCopy(event,data),push:sendWebPushToRecipient,smsIndependent:true});await deliverGallerySmsFallbacks({pool,sendSms:galleryMessaging.owner});}
  catch(e){console.error('[gallery-owner-delivery]',String(e?.message||e));}
 }
 function customerEventKey(labId, customerId) { return `${labId}:${customerId}`; }
@@ -13973,7 +13975,7 @@ async function api(req, res, url) {
             }
             await c.query('COMMIT');
             await audit(undefined, row.lab_id, decision === 'approve' ? 'client_gallery.retouch_approved' : 'client_gallery.retouch_changes_requested', 'photographer_gallery_order', order.id, { galleryId: row.id, revisions: decision === 'changes' ? requested.length : 0 }).catch(() => { });
-            if(decision==='approve')void notifyGalleryOwner(row.owner_id,'client_gallery_approved',{galleryId:row.id,galleryTitle:row.title,customerName:row.customer_name||order.customer_name||'مشتری',orderId:order.id,orderNumber:order.number},row.lab_id);
+            await notifyGalleryOwner(row.owner_id,decision==='approve'?'client_gallery_approved':'client_gallery_changes_requested',{galleryId:row.id,galleryTitle:row.title,customerName:row.customer_name||order.customer_name||'مشتری',orderId:order.id,orderNumber:order.number,revisionCount:requested.length},row.lab_id);
             return sendJson(res, 200, { ok: true, status: decision === 'approve' ? 'completed' : 'retouching' });
         }
         catch (e) {
@@ -24398,7 +24400,7 @@ ${inviteUrl}`;
         if (req.method === 'GET' && url.pathname === '/api/customer/client-galleries') {
             const [billing, galleries, sizes] = await Promise.all([
                 photographerGalleryBillingSnapshot(a.userId),
-                pool.query(`SELECT g.id,g.title,g.customer_name,g.customer_mobile,g.public_token,g.status,g.digital_price,g.note,${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after,g.lifetime_days_snapshot,g.post_completion_days_snapshot,g.photo_limit,g.creation_fee,g.selection_enabled,g.watermark_enabled,g.watermark_text,g.created_at,g.updated_at,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active') media_count,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active' AND m.media_type='photo') photo_count,(SELECT count(*)::int FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.status<>'cancelled') order_count,COALESCE((SELECT sum(o.total)::bigint FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true AND o.status<>'cancelled'),0)::bigint ordered_total,(SELECT o.status FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true LIMIT 1) current_order_status FROM photographer_client_galleries g WHERE g.owner_id=$1 ORDER BY g.created_at DESC`, [a.userId]),
+                pool.query(`SELECT g.id,g.title,g.customer_name,g.customer_mobile,g.public_token,g.status,g.digital_price,g.note,${galleryExpirySql('g')} AS expires_at,NULL::timestamptz AS cleanup_after,g.lifetime_days_snapshot,g.post_completion_days_snapshot,g.photo_limit,g.creation_fee,g.selection_enabled,g.watermark_enabled,g.watermark_text,g.created_at,g.updated_at,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active') media_count,(SELECT count(*)::int FROM photographer_gallery_media m WHERE m.gallery_id=g.id AND m.active=true AND m.upload_state='active' AND m.media_type='photo') photo_count,(SELECT count(*)::int FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.status<>'cancelled') order_count,COALESCE((SELECT sum(o.total)::bigint FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true AND o.status<>'cancelled'),0)::bigint ordered_total,(SELECT o.status FROM photographer_gallery_orders o WHERE o.gallery_id=g.id AND o.is_current=true LIMIT 1) current_order_status,(SELECT count(*)::int FROM photographer_gallery_revision_requests rr JOIN photographer_gallery_orders ro ON ro.id=rr.order_id WHERE ro.gallery_id=g.id AND ro.is_current=true AND rr.resolved_at IS NULL) pending_revision_count FROM photographer_client_galleries g WHERE g.owner_id=$1 ORDER BY g.created_at DESC`, [a.userId]),
                 pool.query(`SELECT s.id,s.label,s.width_cm,s.height_cm FROM print_sizes s WHERE s.active=true AND (s.owner_lab_id IS NULL OR s.owner_lab_id=$1) AND NOT EXISTS (SELECT 1 FROM lab_hidden_print_sizes h WHERE h.lab_id=$1 AND h.size_id=s.id) ORDER BY s.width_cm,s.height_cm,s.label`, [labId])
             ]);
             return sendJson(res, 200, { billing, galleries: galleries.rows.map((x) => ({ ...x, digital_price: Number(x.digital_price || 0), photo_limit: Number(x.photo_limit || 0), creation_fee: Number(x.creation_fee || 0), media_count: Number(x.media_count || 0), photo_count: Number(x.photo_count || 0), order_count: Number(x.order_count || 0), ordered_total: Number(x.ordered_total || 0), share_url: `${PUBLIC_APP_URL}/g/${x.public_token}` })), printSizes: sizes.rows, uploadAvailable, storageMode: storageConfigured ? 'object' : LOCAL_UPLOAD_FALLBACK ? 'local' : 'none' });

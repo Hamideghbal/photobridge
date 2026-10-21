@@ -66,10 +66,12 @@
    const avatar=identity.querySelector('.pb1124Avatar img')?.getAttribute('src')||'';
    const signature=JSON.stringify([name,subtitle,date,avatar]);
    if(target.dataset.source!==signature){
-    const photo=document.createElement('span');photo.className='pb1124Avatar';photo.setAttribute('aria-label','عکس پروفایل عکاسی');
-    if(avatar){const img=document.createElement('img');img.src=avatar;img.alt='عکس پروفایل عکاسی';photo.append(img);}else photo.textContent=name[0]||'ع';
-    const copy=document.createElement('div');copy.className='workspaceIdentityCopy';
-    const title=document.createElement('h1');title.textContent=name;const role=document.createElement('small');role.textContent=subtitle;const clock=document.createElement('p');clock.className='photographerIdentityDateOnly';clock.textContent=date;copy.append(title,role,clock);target.replaceChildren(photo,copy);target.dataset.source=signature;
+    // Preserve the decoded profile photo while the clock or identity text updates.
+    let photo=target.querySelector('.pb1124Avatar');if(!photo){photo=document.createElement('span');photo.className='pb1124Avatar';photo.setAttribute('aria-label','عکس پروفایل عکاسی');target.prepend(photo);}
+    if(avatar){let img=photo.querySelector('img');if(!img){img=document.createElement('img');img.alt='عکس پروفایل عکاسی';photo.replaceChildren(img);}if(img.getAttribute('src')!==avatar)img.src=avatar;}else if(photo.textContent!==(name[0]||'ع'))photo.textContent=name[0]||'ع';
+    let copy=target.querySelector('.workspaceIdentityCopy');if(!copy){copy=document.createElement('div');copy.className='workspaceIdentityCopy';copy.innerHTML='<h1></h1><small></small><p class="photographerIdentityDateOnly"></p>';target.append(copy);}
+    for(const [selector,value] of [['h1',name],['small',subtitle],['.photographerIdentityDateOnly',date]]){const node=copy.querySelector(selector);if(node&&node.textContent!==value)node.textContent=value;}
+    target.dataset.source=signature;
    }
    target.dataset.pb1168Ready=(nativeHeader(document)||native)?.dataset.pb1168IdentityReady==='1'?'1':'0';
   }

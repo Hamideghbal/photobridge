@@ -10,7 +10,7 @@ for(const width of [390,1366])test(`${width}px: finalized selections open retouc
  const state={prefs:{ownerEnabled:false,customerEnabled:false},balance:2000,status:'submitted',proof:false,send:[],uploads:0,actions:[],saveFails:false};
  await page.route('**/*',async route=>{
   const req=route.request(),u=new URL(req.url()),p=u.pathname;
-  if(p==='/test-upload')return route.fulfill({status:200,body:''});
+  if(p==='/test-upload'){await new Promise(resolve=>setTimeout(resolve,600));return route.fulfill({status:200,body:''});}
   if(p.startsWith('/api/')){
    if(p==='/api/auth/me')return route.fulfill({json:{user:{id,userId:id,name:'عکاس',labRole:'customer',platformRole:'user',photographerName:'آتلیه'}}});
    if(p==='/api/photographer/navigation-tabs')return route.fulfill({json:{tabs:{ai:false,album:false,instagram:false},adminBypass:false}});
@@ -19,10 +19,10 @@ for(const width of [390,1366])test(`${width}px: finalized selections open retouc
    if(p.endsWith('/sms/settings')){if(state.saveFails)return route.fulfill({status:503,json:{error:'save_failed'}});state.prefs=req.postDataJSON();return route.fulfill({json:{preferences:state.prefs}})}
    if(p.endsWith('/sms/send')){state.send.push(req.postDataJSON());state.balance-=500;return route.fulfill({json:{sent:true,chargedAmount:500,walletBalance:state.balance}})}
    if(p.endsWith('/sms'))return route.fulfill({json:{available:true,serviceEnabled:true,configured:true,unitPrice:500,balance:state.balance,preferences:state.prefs,customerMobile:gallery.customer_mobile,published:true}});
-   if(p.endsWith('/retouch/presign')){state.uploads++;return route.fulfill({json:{retouchId:'proof-id',uploadUrl:'https://panel.test/test-upload'}})}
+   if(p.endsWith('/retouch/presign')){state.uploads++;return route.fulfill({json:{proofId:'proof-id',uploadUrl:'https://panel.test/test-upload'}})}
    if(p.includes('/retouch/')&&p.endsWith('/complete')){state.proof=true;state.status='retouching';return route.fulfill({json:{ok:true}})}
    if(p.endsWith('/action')){const action=req.postDataJSON().action;state.actions.push(action);if(action==='send_approval')state.status='awaiting_approval';return route.fulfill({json:{ok:true,status:state.status,sms:{sent:true}}})}
-   if(p===`/api/customer/client-galleries/${id}`)return route.fulfill({json:{gallery,media:[{id:mediaId,media_type:'photo',active:true,upload_state:'active',original_name:'photo.jpg',url:pixel}],branding:{},printSizes:[],profilePrintTariffs:[],galleryPrintTariffStates:[],orders:[],currentOrder:{id:orderId,number:1,status:state.status,total:0,finalized_at:new Date().toISOString(),items:[{id:'item',media_id:mediaId,item_type:'selection',original_name:'photo.jpg',media_url:pixel,retouch:state.proof?{url:pixel}:null}]}}});
+   if(p===`/api/customer/client-galleries/${id}`)return route.fulfill({json:{gallery,media:[{id:mediaId,media_type:'photo',active:true,upload_state:'active',original_name:'photo.jpg',url:pixel}],branding:{},printSizes:[],profilePrintTariffs:[],galleryPrintTariffStates:[],orders:[],currentOrder:{id:orderId,number:1,status:state.status,total:0,finalized_at:new Date().toISOString(),items:[{id:'item',media_id:mediaId,item_type:'selection',original_name:'photo.jpg',media_url:pixel,retouch:state.proof?{id:'proof-'+state.uploads,url:pixel,created_at:new Date().toISOString()}:null}]}}});
    return route.fulfill({json:{items:[],notifications:[],labs:[],shops:[],settings:{},balance:state.balance}});
   }
   const file=path.join(process.cwd(),'dist/web',p.startsWith('/photographer')?'index.html':p.slice(1));
@@ -33,9 +33,11 @@ for(const width of [390,1366])test(`${width}px: finalized selections open retouc
  await page.locator('.clientGalleryManager.view-selected').waitFor();
  assert(await page.locator('.clientGalleryOrderWorkflow').isVisible());
  const upload=page.locator('.clientGalleryRetouchUpload input');assert.equal(await upload.count(),1);
+ await page.evaluate(()=>{window.pb1337Manager=document.querySelector('.clientGalleryManager');window.pb1337Scroll=document.querySelector('.clientGalleryManager').scrollTop});
  await upload.setInputFiles({name:'retouched.png',mimeType:'image/png',buffer:Buffer.from(pixel.split(',')[1],'base64')});
  await page.waitForFunction(()=>!!document.querySelector('.clientGalleryRetouchCompare img[alt="نسخه روتوش"]'));
- assert.equal(state.uploads,1);
+ assert.equal(state.uploads,1);assert.equal(await page.evaluate(()=>window.pb1337Manager===document.querySelector('.clientGalleryManager')),true,'upload must preserve mounted manager');await page.locator('.pb1337RetouchStatus').getByText('✓ نسخهٔ روتوش بارگذاری شد',{exact:true}).waitFor();
+ await upload.setInputFiles({name:'corrected.png',mimeType:'image/png',buffer:Buffer.from(pixel.split(',')[1],'base64')});await page.getByRole('progressbar',{name:'انتقال عکس روتوش'}).waitFor();await page.locator('.pb1337RetouchStatus').getByText('✓ نسخهٔ اصلاحی روتوش بارگذاری شد',{exact:true}).waitFor();assert.equal(state.uploads,2);assert.equal(await page.evaluate(()=>window.pb1337Manager===document.querySelector('.clientGalleryManager')),true,'replacement must preserve manager and its state');
  const panel=page.locator('.pb1331GallerySms');await panel.waitFor();
  state.saveFails=true;await panel.getByLabel('اطلاع به من بعد از ثبت انتخاب‌ها یا تأیید نهایی مشتری').click();
  await panel.getByRole('status').filter({hasText:'تنظیم پیامک ذخیره نشد'}).waitFor();assert.equal(await panel.getByLabel('اطلاع به من بعد از ثبت انتخاب‌ها یا تأیید نهایی مشتری').isChecked(),false);state.saveFails=false;

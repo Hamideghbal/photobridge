@@ -268,4 +268,6 @@ await deployStep("./enable-r1335-retouch-optional-note.mjs");
 
 await deployStep("./enable-r1336-gallery-feedback.mjs");
 
+await deployStep("./enable-r1337-retouch-refresh.mjs");
+
 await deployStep("./enable-r1334-login-width.mjs");

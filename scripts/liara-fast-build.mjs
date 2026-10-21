@@ -257,3 +257,5 @@ await deployStep("./refresh-r1328-lab-desktop-manifest.mjs");
 console.log("[R1328] START gallery / invite regression tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1328-gallery-invite.cjs"], { stdio: "inherit" });
 console.log("[R1328] OK gallery / invite regression tests");
+
+await deployStep("./enable-r1330-home-gallery-polish.mjs");

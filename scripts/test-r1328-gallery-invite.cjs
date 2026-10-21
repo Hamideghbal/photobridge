@@ -70,8 +70,8 @@ test('desktop cards span page width but compact header remains bounded',()=>{
   assert(layout.includes('.clientGalleryWorkspace{width:100%!important;max-width:none!important'));
   assert(a.includes('gallery-cards.css?v=r1328') || a.includes('css}?v=r1328'));
   assert(b.includes('layout.css?v=r1328'));
-  assert.equal(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),
-   '2026-10-20-r1329-photographer-gallery-invite-chooser');
+  assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),
+   /^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/, 'release revision remains valid across later UI releases');
 });
 
 test('mobile chooser hides the stray receipt but retains the primary bottom dock',()=>{

@@ -37,8 +37,8 @@ test('photo status, retouch preview label and upload completion are visible',()=
 });
 
 test('R1337 versioned script and CSS bypass stale browser cache',()=>{
- assert(html.includes('retouchReload=r1337'));
+ assert(html.includes('retouchReload=r1338'));
  assert(html.includes('index-UIRefine-v655-r84.js'));
- assert.equal((html.match(/retouchReload=r1337/g)||[]).length,2);
+ assert.equal((html.match(/retouchReload=r1338/g)||[]).length,2);
  assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r1338-/);
 });

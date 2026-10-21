@@ -67,12 +67,13 @@ function walk(dir){
     if(!html.includes(bundle))continue;
     html=html.replace(/(index-UIRefine-v655-r84\.js)([^"'<>\s]*)/g,(_,name,q)=>{
       const clean=q.replace(/[?&]retouchReload=[^&]*/g,'').replace(/[?&]$/,'');
-      return name+clean+(clean.includes('?')?'&':'?')+'retouchReload=r1337';
+      return name+clean+(clean.includes('?')?'&':'?')+'retouchReload=r1338';
     });
     html=html.replace(/(photobridge-r1332-gallery-cards\.css)([^"'<>\s]*)/g,(_,name,q)=>{
       const clean=q.replace(/[?&]retouchReload=[^&]*/g,'').replace(/[?&]$/,'');
-      return name+clean+(clean.includes('?')?'&':'?')+'retouchReload=r1337';
+      return name+clean+(clean.includes('?')?'&':'?')+'retouchReload=r1338';
     });
+    html=html.replace(/(photobridge-r1126-desktop-navigation\.js)([^"'<>\s]*)/g,(_,name,q)=>{const clean=q.replace(/[?&]uploadRefresh=[^&]*/g,'').replace(/[?&]$/,'');return name+clean+(clean.includes('?')?'&':'?')+'uploadRefresh=r1338';});
     fs.writeFileSync(file,html);
     if(html.includes(cssName)){
       const dest=path.join(path.dirname(file),cssName);

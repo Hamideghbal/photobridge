@@ -285,3 +285,5 @@ console.log("[R1338] OK retouch progress regression tests");
 console.log("[R1340] START correction-only retouch UI tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1340-retouch-correction-only.cjs"], { stdio: "inherit" });
 console.log("[R1340] OK correction-only retouch UI tests");
+
+await deployStep("./enable-r1341-compact-retouch-cards.mjs");

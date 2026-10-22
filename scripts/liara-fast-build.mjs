@@ -293,5 +293,8 @@ await deployStep("./enable-r1344-gallery-create-pricing.mjs");
 // The R1328 manifest refresh runs BEFORE the late R1330–R1344 UI patches.
 // Rebuild the LAB payload at the very end; otherwise Windows downloads
 // a valid but OLD snapshot while the website shows the new layout.
-await deployStep("./prepare-lab-desktop-ui.mjs");
+// The same module was imported earlier in this Node process. ESM caches it by
+// module URL, so importing the identical specifier a second time is a NO-OP.
+// Use a distinct module URL to force regenerating the final, patched web UI.
+await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");

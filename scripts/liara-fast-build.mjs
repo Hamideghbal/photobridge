@@ -311,6 +311,10 @@ await deployStep("./enable-r1359-mobile-blue-launch.mjs");
 console.log("[R1359] START mobile PWA blue brand regression tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1359-mobile-blue-launch.cjs", "scripts/test-r1222-mobile-brand.cjs"], { stdio: "inherit" });
 console.log("[R1359] OK mobile PWA blue brand regression tests");
+await deployStep("./enable-r1361-mobile-startup-caption.mjs");
+console.log("[R1361] START readable mobile launch tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1361-mobile-startup-caption.cjs"], { stdio: "inherit" });
+console.log("[R1361] OK readable mobile launch tests");
 
 // Native Lab UI stays unobstructed. Run the minimal overlay regression
 // BEFORE regenerating the final website UI package consumed by Windows.

@@ -8,6 +8,8 @@ on:
       - "apps/lab-desktop/**"
       - "scripts/enable-r1296-native-alerts.mjs"
       - "scripts/enable-r1342-lab-ui-update.mjs"
+      - "scripts/enable-r1348-lab-presence-online-only.mjs"
+      - "scripts/test-r1348-lab-presence-sync.cjs"
       - "scripts/prepare-lab-installer-assets.mjs"
       - "scripts/test-r1343-lab-installer-build.cjs"
       - "scripts/test-r1342-lab-ui-update.cjs"
@@ -92,6 +94,10 @@ jobs:
         run: node scripts/enable-r1296-native-alerts.mjs
       - name: Integrate resumable lab UI updates
         run: node scripts/enable-r1342-lab-ui-update.mjs
+      - name: Never persist transient presence heartbeat operations
+        run: node scripts/enable-r1348-lab-presence-online-only.mjs
+      - name: Verify presence queue regression
+        run: node --test scripts/test-r1348-lab-presence-sync.cjs
       - name: Verify lab UI download and resume behavior
         run: node --test scripts/test-r1342-lab-ui-update.cjs scripts/test-r1342-native-integration.cjs
       - name: Verify integrated notification behavior

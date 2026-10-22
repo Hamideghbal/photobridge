@@ -203,7 +203,8 @@ await deployStep("./enable-r1276-equipment-reviews.mjs");
 
 await deployStep("./enable-r1284-original-launch.mjs");
 await deployStep("./enable-r1360-blue-white-app-brand.mjs");
-runR1314(process.execPath, ["--test","scripts/test-r1360-blue-white-app-brand.cjs"], {stdio:"inherit"});
+const {execFileSync: runR1360Test}=await import("node:child_process");
+runR1360Test(process.execPath, ["--test","scripts/test-r1360-blue-white-app-brand.cjs"], {stdio:"inherit"});
 
 await deployStep("./enable-r1291-lab-manual-customer-accounts.mjs");
 

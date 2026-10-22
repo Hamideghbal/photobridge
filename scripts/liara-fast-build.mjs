@@ -317,6 +317,9 @@ await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 // or year-long cached fixed-name images. This patch is a build-time transform
 // of the shipped server and does not touch data, sync state, or auth.
 await deployStep("./enable-r1351-lab-ui-exact-byte-serving.mjs");
+console.log("[PhotoBridge Docker build] START R1354 patch-on-import regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1354-lab-ui-patch-import.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1354 patch-on-import regression tests");
 console.log("[PhotoBridge Docker build] START R1351 lab UI wire-byte integrity tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1351-lab-ui-exact-byte-serving.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1351 lab UI wire-byte integrity tests");

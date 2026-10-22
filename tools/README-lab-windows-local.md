@@ -41,3 +41,30 @@ This build script **does not** upload anything to the website. Only after valida
 The site's existing protected laboratory download endpoint then serves that active release. Never upload the unsigned test artifact as a production-signed installer. Older installed native versions will need the new EXE installed once; later website UI updates can use the built-in updater.
 
 **Important:** Preparing the source and passing cross-platform tests does not prove that the Windows executable has been built or tested on real Windows.
+
+### After seeing many "بررسی اختلاف" rows on an already installed Windows app
+
+The user reported ~4,600 queued operations, with screenshots showing repeated
+`POST /api/lab/print-alert/presence` entries. The integration script
+`scripts/enable-r1348-lab-presence-online-only.mjs` now keeps transient printer
+presence heartbeats out of the offline queue. Existing heartbeat rows are
+**preserved** inside SQLite, excluded from active synchronization, and counted
+as ignored telemetry. Business orders and financial operations are not excluded.
+Four local native regression cases were executed on the saved R1089 source and
+passed (offline heartbeat, live HTTP status, legacy pending/conflict preservation,
+and business queue synchronization). This does not prove all existing queued
+operations on the user's PC are heartbeat records.
+
+**No additional backups are required once both original AppData folders have
+been safely copied**. Keep the backup untouched. Completely quit PhotoBridge Lab
+from the Windows tray before installing a new candidate over the previous app.
+Do not manually delete SQLite/outbox/cache or use "کنار گذاشتن عملیات محلی" on
+unverified records. The user-facing Windows build must be rebuilt after this
+PR is updated; an already installed EXE will not acquire new native host/store
+code from a website-only deployment.
+
+The local build now runs the full PhotoBridge website build **before** embedding
+its initial UI, preventing the earlier stale raw `dist/web` install payload.
+A separate website PR #452 rebuilds the remotely served Lab UI manifest after
+all website patches. Do not call the installed UI up-to-date until both the
+updated server UI and Windows candidate are verified.

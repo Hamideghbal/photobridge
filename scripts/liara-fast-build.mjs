@@ -331,6 +331,8 @@ console.log("[PhotoBridge Docker build] OK R1356 quiet Lab overlay tests");
 // R1363 must run after older Lab CSS patches and before the final Windows UI snapshot.
 await deployStep("./enable-r1363-lab-queue.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1363-single-order-alarm.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1364-lab-tabs.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1364-lab-tabs.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

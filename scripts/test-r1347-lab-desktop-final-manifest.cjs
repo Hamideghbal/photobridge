@@ -33,8 +33,11 @@ test('new website JS created after payload build must also fail',async()=>{
 });
 test('production build regenerates lab manifest after the last UI mutation and verifies it',()=>{
  const code=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
- assert(code.lastIndexOf('await deployStep("./prepare-lab-desktop-ui.mjs")')>code.lastIndexOf('await deployStep("./enable-r1344-gallery-create-pricing.mjs")'));
- assert(code.lastIndexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")')>code.lastIndexOf('await deployStep("./prepare-lab-desktop-ui.mjs")'));
+ const early=code.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs")');
+ const late=code.lastIndexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")');
+ assert(early>=0&&late>early,'The final import must have a distinct ESM URL to bypass module caching');
+ assert(late>code.lastIndexOf('await deployStep("./enable-r1344-gallery-create-pricing.mjs")'));
+ assert(code.lastIndexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")')>late);
 });
 
 test('actual bundled payload generator regenerates the late-modified website',async()=>{
@@ -53,5 +56,30 @@ test('actual bundled payload generator regenerates the late-modified website',as
   const parsed=verifyLabDesktopUiFreshness(root);
   assert.equal(parsed.files,3);
   assert.equal(fs.readFileSync(path.join(web,'lab-desktop-ui','styles.css'),'utf8'),'body{color:#new}');
+ }finally{f.close();}
+});
+
+test('Node ESM cache prevents same-URL reexecution; final query forces the real generator to rerun',async()=>{
+ const {spawnSync}=require('node:child_process');
+ const {verifyLabDesktopUiFreshness}=await import('./verify-lab-desktop-ui-freshness.mjs');
+ const f=fixture();
+ try{
+  fs.mkdirSync(path.join(f.root,'scripts'),{recursive:true});
+  fs.copyFileSync(path.join(__dirname,'prepare-lab-desktop-ui.mjs'),path.join(f.root,'scripts/prepare-lab-desktop-ui.mjs'));
+  const runner=String.raw`
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import {pathToFileURL} from 'node:url';
+    const url=pathToFileURL(path.resolve('scripts/prepare-lab-desktop-ui.mjs')).href;
+    await import(url);
+    fs.writeFileSync('dist/web/styles.css','body{color:orange}');
+    await import(url);
+    if(fs.readFileSync('dist/web/lab-desktop-ui/styles.css','utf8')==='body{color:orange}')throw Error('Same import unexpectedly reran');
+    await import(url+'?final-after-r1344');
+    if(fs.readFileSync('dist/web/lab-desktop-ui/styles.css','utf8')!=='body{color:orange}')throw Error('Final fresh import did not rerun');
+  `;
+  const run=spawnSync(process.execPath,['--input-type=module','-e',runner],{cwd:f.root,encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr||run.stdout);
+  assert.equal(verifyLabDesktopUiFreshness(f.root).files,3);
  }finally{f.close();}
 });

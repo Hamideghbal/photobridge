@@ -17,5 +17,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo Report created: %CD%\Lab-Sync-Diagnostic.txt
-echo This report contains NO order bodies, session cookies or customer names.
+echo This report does not include operation payloads, session cookies or auth tokens.
 pause

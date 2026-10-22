@@ -90,6 +90,15 @@ deduplicateOnnxRuntime();
 
 console.log('[PhotoBridge Liara Fast Build] R100 prebuilt dist accepted; mobile blue chrome + lean desktop UI regeneration.');
 
+// Fail fast if a regression test pins an obsolete release token; this guard
+// used to fail much later after most UI patch stages had already run.
+console.log('[PhotoBridge Docker build] START deployment revision compatibility tests');
+const {execFileSync: checkRevisionCompat} = await import('node:child_process');
+checkRevisionCompat(process.execPath, ['--test','scripts/test-r1350-deploy-revision-compat.cjs'], {stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK deployment revision compatibility tests');
+
+
+
 await deployStep("./enable-r1094-windows-print-handovers.mjs");
 await deployStep("./enable-r1087-commitment-autoprint.mjs");
 await deployStep("./remove-r1092-legacy-windows-alert-panel.mjs");

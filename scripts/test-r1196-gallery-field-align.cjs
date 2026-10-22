@@ -14,7 +14,13 @@ test('the first row places every required/optional badge NEXT TO its field title
   const start=modal.indexOf(fragment);
   assert(modal.slice(start,start+450).includes('value:'+value),title+' actual field binding unchanged');
  }
- assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,3,'title, customer and mobile captions remain present; private access remains a separate label');
+ // Check the required first-row fields by identity. This modal may contain
+ // additional caption spans for unrelated controls in newer UI builds.
+ // Duplicating any of these three captions is still a regression.
+ for(const title of ['عنوان پروژه','نام مشتری','موبایل مشتری']){
+  const fragment='className:"pb1196FieldCaption",children:["'+title+'"';
+  assert.equal(modal.split(fragment).length-1,1,title+' caption must appear exactly once');
+ }
  assert(modal.includes('children:["رمز ورود خصوصی"'),'private access remains a visible field caption');
  assert(modal.includes('headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
 });

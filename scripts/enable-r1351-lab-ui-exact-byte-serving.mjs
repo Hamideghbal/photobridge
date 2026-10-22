@@ -19,6 +19,10 @@ export function patchLabDesktopStaticBytes(root=path.resolve(path.dirname(fileUR
    "cacheControl = isLabDesktopUiAsset ? 'no-store, max-age=0, must-revalidate' : (isIndex || isRetouchAccount || isBuildMarker) ?"
   ],
   [
+   "        const raw = fs.readFileSync(full, 'utf8');",
+   "        const raw = fs.readFileSync(full, isLabDesktopUiAsset ? undefined : 'utf8');"
+  ],
+  [
    "        const html = seoInjectHtml(raw, pathname);\n        res.writeHead(200, { ...common, 'content-length': Buffer.byteLength(html),",
    "        const html = isLabDesktopUiAsset ? raw : seoInjectHtml(raw, pathname);\n        res.writeHead(200, { ...common, 'content-length': Buffer.byteLength(html),"
   ],

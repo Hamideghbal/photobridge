@@ -12,13 +12,13 @@ test('lab intake picker has only customer identity/status while account summary 
  assert(picker.includes("node('button',itemLabel(c),'pb1294SimpleChoice')"));
  assert(!picker.includes('balanceMeta(c)'));
  assert(!picker.includes('invoiceMeta'));
- assert(ui.includes("parent.append(details)"));
+ assert(ui.includes("accountRow.append(wrapper,details)"));
  assert(ui.includes("account-summary"));
  assert(ui.includes("adjust-initial-debt"));
  assert(!ui.includes("api('/api/lab/delegated-customers/balances')"));
  assert(ui.includes('cachedPrimary?Promise.resolve'));
  assert(html.includes('photobridge-r1291-lab-account-picker.css?v=r1294'));
- assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1294'));
+ assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1365'));
 });
 
 function setup({owner=true,member=true,invoiced=false,opening=25000,pending=true,actorRole='lab_admin',completeDuringSave=false}={}){
@@ -109,3 +109,4 @@ test('completion during edit and cross-lab actors cannot change initial debt',as
  const {handleLabManualCustomerAccounts}=await handler();const s=setup({completeDuringSave:true});s.ctx.req.method='POST';s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');s.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی اولیه'});await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,409);assert.equal(s.postings.length,0);
  const other=setup();other.ctx.a.labId='other-lab';await handleLabManualCustomerAccounts(other.ctx);assert.equal(other.responses.at(-1).status,403);assert.equal(other.queries.length,0);
 });
+

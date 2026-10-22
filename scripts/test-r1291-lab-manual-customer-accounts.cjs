@@ -6,7 +6,7 @@ const {pathToFileURL}=require('node:url');
 const path=require('node:path');
 const importHandler=()=>import(pathToFileURL(path.resolve('dist/api/lab-manual-customer-controls.js')).href);
 
-test('R1294 keeps authenticated customer-account endpoints and moves details below the compact picker',()=>{
+test('R1294 keeps authenticated customer-account endpoints and keeps details beside the compact picker',()=>{
  const ui=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
  const server=fs.readFileSync('dist/api/server.js','utf8');
  const html=fs.readFileSync('dist/web/index.html','utf8');
@@ -21,7 +21,7 @@ test('R1294 keeps authenticated customer-account endpoints and moves details bel
  assert(server.includes('handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson'));
  assert(server.includes("from './lab-manual-customer-controls.js'"));
  assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
- assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1294'));
+ assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1365'));
 });
 function setup({owner=true,balance=50000,smsRecent=false,member=true,primary=true,invoiceFound=true}={}){
  let current=balance;const calls=[],answers=[],journals=[],sms=[];
@@ -90,4 +90,5 @@ test('explicit invoice SMS works for a preregistered lab member, with rate limit
  await handleLabManualCustomerAccounts(throttled.ctx);
  assert.equal(throttled.answers.at(-1).status,429);assert.equal(throttled.sms.length,0);
 });
+
 

@@ -1,0 +1,27 @@
+/* One account row; print controls retain their existing row underneath. */
+.pb1137Intake .pb1137Settings.pb1139EntryRow>.pb1365CustomerAccountRow{grid-column:1/-1!important;display:flex!important;align-items:center!important;gap:12px;min-width:0;width:100%}
+.pb1137Intake .pb1365CustomerAccountRow>.pb1139Customer{flex:0 1 320px;min-width:200px;margin:0!important}
+.pb1137Intake .pb1365CustomerAccountRow>.pb1294SelectedDetails{display:flex;flex:1 1 auto;align-items:center;gap:12px;min-width:0;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountSummary{display:flex;align-items:center;gap:14px;min-width:0}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta{display:flex;align-items:center;gap:5px;border:0;background:transparent;padding:0;white-space:nowrap}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions{display:flex;align-items:center;gap:8px;margin:0;position:relative}
+.pb1137Intake .pb1365SmsChoice{display:flex!important;align-items:center;gap:5px;margin:0!important;white-space:nowrap;color:#344054;font-size:11px}
+.pb1137Intake .pb1365SmsChoice input{appearance:auto!important;width:16px!important;height:16px!important;min-width:16px!important;margin:0!important;accent-color:#245fd3}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:20;width:min(470px,75vw);box-shadow:0 6px 18px #172b4314}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294ActionNotice:not(:empty){position:absolute;top:calc(100% + 6px);inset-inline-end:0;z-index:21;padding:5px 8px;border-radius:6px;background:#fff;box-shadow:0 2px 8px #172b4314;max-width:340px;width:max-content;white-space:normal}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit:not([hidden])~.pb1294ActionNotice:not(:empty){top:calc(100% + 95px)}
+@media(max-width:820px){.pb1137Intake .pb1365CustomerAccountRow{flex-wrap:wrap;gap:7px}.pb1137Intake .pb1365CustomerAccountRow>.pb1139Customer{flex-basis:100%;min-width:0}.pb1137Intake .pb1365CustomerAccountRow>.pb1294SelectedDetails{flex-wrap:wrap;gap:7px}.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta{font-size:10px}}
+/* Only the viewport scrolls; nested settings bodies must not create inset scrollbars. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>.labSettingsWorkspace{display:block!important;width:100%!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea .labSettingsWorkspace>.settingsBody{display:block!important;flex:none!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;scrollbar-gutter:auto!important;padding:0!important;margin:0!important}
+}
+/* The credit shortcut has a light background in every selected/pressed state. */
+html body #root .labRoleWorkspace :is(.labHeaderCenter,.labSingleHeader) .headerWalletBadge:is(button,a),
+html body #root .labRoleWorkspace :is(.labHeaderCenter,.labSingleHeader) .headerWalletBadge:is(button,a):is(:hover,:active,:focus,.active,[aria-current]){background:#f1f5fb!important;color:#234566!important;-webkit-text-fill-color:#234566!important;border-color:#d7e2ef!important}
+html body #root .labRoleWorkspace .headerWalletBadge :is(span,b,strong,small){color:inherit!important;-webkit-text-fill-color:currentColor!important}
+.pb1365FeaturePanel{margin-block:12px}.pb1365FeatureRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e6edf4}.pb1365FeatureRow:last-child{border-bottom:0}.pb1365FeatureCopy{display:grid;gap:4px}.pb1365FeatureCopy small{color:#667085}.pb1365FeatureRow button,.pb1365FeatureRow a{flex:none}.pb1365FeatureRow [disabled]{opacity:.65;cursor:default}.pb1365FeatureStatus{color:#53677e;font-size:12px}
+html body #root .labRoleWorkspace :is(.labSettingsSectionTabs,.labSettingsCategoryTabs) button.active,
+html body #root .labRoleWorkspace .mobileHeaderWallet.active,
+html body #root .labRoleWorkspace :is(a,button)[data-category="subscription"].active{color:#245b91!important;-webkit-text-fill-color:#245b91!important;background:#edf3fb!important}
+html body #root .labRoleWorkspace :is(.labSettingsSectionTabs,.labSettingsCategoryTabs) button.active *{color:inherit!important;-webkit-text-fill-color:currentColor!important}

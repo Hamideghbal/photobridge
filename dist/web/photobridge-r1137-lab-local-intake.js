@@ -41,7 +41,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
  wrapper.append(button,menu);parent.append(wrapper);
  const details=node('section',null,'pb1294SelectedDetails');details.hidden=true;
  details.setAttribute('aria-label','اطلاعات حساب مشتری انتخاب‌شده');
- parent.append(details);
+ const accountRow=node('div',null,'pb1365CustomerAccountRow');wrapper.replaceWith(accountRow);accountRow.append(wrapper,details);
  const model={value:'',button},digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
  const normalize=text=>digits(text).toLocaleLowerCase('fa-IR');
  const mobileValue=text=>{let d=digits(text).replace(/\D/g,'');if(d.startsWith('0098'))d='0'+d.slice(4);else if(d.startsWith('98')&&d.length===12)d='0'+d.slice(2);else if(/^9\d{9}$/.test(d))d='0'+d;return d;};
@@ -75,24 +75,27 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
   details.replaceChildren();
   const summary=node('div',null,'pb1294AccountSummary');
   const addMeta=(label,text,cls='')=>{const cell=node('div',null,'pb1294Meta '+cls);cell.append(node('span',label),node('strong',text));summary.append(cell);};
-  addMeta('مانده بدهی',money(data.balance),'pb1294Balance');
-  addMeta('آخرین تغییر',date(data.balanceUpdatedAt));
   const recent=(data.invoices||[])[0];
-  addMeta('آخرین فاکتور',recent?'شماره '+recent.number+' · '+date(recent.issuedAt):'فاکتوری صادر نشده');
-  addMeta('بدهی اولیه عضویت',money(data.initialDebt));
+  addMeta('مانده',money(data.balance),'pb1294Balance');
+  summary.title='آخرین تغییر: '+date(data.balanceUpdatedAt)+' · '+(recent?'آخرین فاکتور: '+recent.number+' · '+date(recent.issuedAt):'فاکتوری صادر نشده');
+  addMeta('بدهی اولیه',money(data.initialDebt));
   details.append(summary);
   const controls=node('div',null,'pb1294AccountActions');
   const localNotice=node('span',message,'pb1294ActionNotice');
   localNotice.setAttribute('role','status');
-  if(c.registrationPending){
-   const resend=node('button','ارسال مجدد دعوت‌نامه','pb1294Resend');resend.type='button';
-   resend.onclick=async()=>{
-    resend.disabled=true;localNotice.textContent='در حال ارسال دعوت‌نامه…';
-    try{const r=await resendInvitation(c.id);localNotice.textContent=r.invitationSmsSent?'دعوت‌نامه ارسال شد.':'ارسال دعوت‌نامه انجام نشد.';}
-    catch(e){localNotice.textContent=e.message;}finally{resend.disabled=false;}
-   };controls.append(resend);
-  }
-  if(c.registrationPending&&data.canEditInitialDebt){
+  const smsChoice=node('label',null,'pb1365SmsChoice'),sms=node('input');sms.type='checkbox';
+  sms.setAttribute('aria-label',recent?'ارسال پیامک آخرین فاکتور':'ارسال پیامک دعوت‌نامه');
+  sms.disabled=!data.smsEnabled||(!recent&&!c.registrationPending);
+  smsChoice.title=!data.smsEnabled?'ارسال پیامک برای این لابراتوار غیرفعال است':recent?'ارسال پیامک فاکتور شماره '+recent.number:c.registrationPending?'ارسال مجدد دعوت‌نامه':'پس از صدور فاکتور، پیامک آن قابل ارسال است';
+  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);
+  sms.onchange=async()=>{
+   if(!sms.checked)return;sms.disabled=true;localNotice.textContent='در حال ارسال پیامک…';
+   try{const result=recent?await sendInvoiceSms(c.id,{invoiceId:recent.id}):await resendInvitation(c.id);
+    if(!(recent?result.smsSent:result.invitationSmsSent))throw Error('ارسال پیامک انجام نشد.');
+    localNotice.textContent='پیامک ارسال شد.';
+   }catch(e){localNotice.textContent=e.message;sms.checked=false;sms.disabled=false;}
+  };
+  if(data.canEditInitialDebt){
    const toggle=node('button','اصلاح بدهی اولیه','pb1294Edit');toggle.type='button';
    const editPanel=node('div',null,'pb1294InitialEdit');editPanel.hidden=true;
    const amount=node('input');amount.type='text';amount.inputMode='numeric';amount.dir='ltr';
@@ -117,7 +120,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
    };
    editPanel.append(amount,reason,save,cancel);
    controls.append(toggle,editPanel);
-  }else if(data.hasInvoice){controls.append(node('small','پس از صدور اولین فاکتور، بدهی اولیه قابل تغییر نیست.','pb1294LockHint'));}
+  }else if(data.hasInvoice){summary.title+=' · بدهی اولیه پس از صدور فاکتور قفل است';}
   controls.append(localNotice);details.append(controls);
  }
  async function refreshDetails(c,message=''){
@@ -361,4 +364,5 @@ let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;reque
 function boot(){mount();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',schedule);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
+
 

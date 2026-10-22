@@ -23,12 +23,21 @@ test('download check does not falsely test only the original when print-ready ex
 });
 test('preview uses real image MIME and recovers stored original when print derivative disappeared',()=>{
  const r=region('const labFilePreview =','const labFileDownload =');
- assert.match(r,/SELECT object_key,print_object_key,original_name,print_name,content_type,print_content_type/);
- assert.match(r,/chosen = await pb1182Choose\(row\)/);
- assert.match(r,/chosen.fallback\?row.content_type:/);
- assert.match(r,/key: chosen.key/);
- assert.match(r,/name: fileName/);
- assert.match(r,/contentType: fileType/);
+ // R1326 extended this authenticated preview to read the whole file row
+ // because thumbnail generation needs the original-state/thumbnail metadata.
+ // Retain a strict scoped SQL check, plus all fallback/MIME/key assertions.
+ const older= /SELECT object_key,print_object_key,original_name,print_name,content_type,print_content_type/.test(r);
+ const thumbnail= /SELECT \\* FROM order_files WHERE id=\\$1 AND lab_id=\\$2 \\/\\* R1326 preview \\*\\//.test(r);
+ assert(older||thumbnail,'preview query must select the real source/print fields, scoped to this file and laboratory');
+ if(thumbnail){
+   assert.match(r,/bestEffortPrintThumbnail\\(row\\)/,'must prefer a genuine retained thumbnail');
+   assert.match(r,/row.original_state==='deleted'/,'do not claim the expired original exists');
+ }
+ assert.match(r,/(?:chosen = await pb1182Choose\\(row\\)|typeof pb1182Choose==='function' \\? await pb1182Choose\\(row\\))/);
+ assert.match(r,/chosen\\.fallback\\?row\\.content_type:/);
+ assert.match(r,/key:\\s*chosen\\.key/);
+ assert.match(r,/name:\\s*fileName/);
+ assert.match(r,/contentType:\\s*fileType/);
  assert.match(r,/error:'file_not_found'/);
 });
 test('actual download uses same selected key and gives accurate name to lab workstation',()=>{

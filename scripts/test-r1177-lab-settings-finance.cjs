@@ -16,7 +16,7 @@ test('settings general owns SMS, Snapp and Windows alert; local path is sole fou
  // Local builders can start with a prepatched R1301 bundle, whose Site
  // entry is already in General. R1177 must preserve every real settings
  // control; only tolerate the extra Site entry in either known position.
- assert.match(bundle,/items:\\[\\["general","عمومی و اعلان‌ها"\\],\\["hours","ساعت کاری"\\](?:,\\["site","سایت اختصاصی"\\])?,\\["sms","پیامک مشتریان"\\],\\["windowsAlert","هشدار ویندوز"\\],\\["snappbox","اسنپ و ارسال"\\](?:,\\["site","سایت اختصاصی"\\])?\\]/,'General must keep SMS, Windows alerts, Snapp and optional Site together');
+ assert.match(bundle,/items:\[\["general","عمومی و اعلان‌ها"\],\["hours","ساعت کاری"\](?:,\["site","سایت اختصاصی"\])?,\["sms","پیامک مشتریان"\],\["windowsAlert","هشدار ویندوز"\],\["snappbox","اسنپ و ارسال"\](?:,\["site","سایت اختصاصی"\])?\]/,'General must keep SMS, Windows alerts, Snapp and optional Site together');
  assert(bundle.includes('{key:"local",label:"مسیر ذخیره روی هارد",hint:"ذخیره فایل",items:[["local","مسیر ذخیره روی هارد"]]}'));
  assert(!bundle.includes('{key:"notifications",label:"اعلان و ارتباط"'));
  assert(!bundle.includes('{key:"system",label:"سیستم و ارسال"'));

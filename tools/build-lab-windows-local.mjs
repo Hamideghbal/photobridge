@@ -85,8 +85,11 @@ function main() {
   npm(['test']);
   npm(['run', signed ? 'dist' : 'dist:unsigned']);
   const release = path.join(app, 'release');
-  const installers = fs.existsSync(release) ? fs.readdirSync(release).filter(name => /^PhotoBridge-Lab-Setup-1\.0\.16-x64\.exe$/i.test(name)) : [];
-  if (installers.length !== 1) throw Error('Expected PhotoBridge-Lab-Setup-1.0.18-x64.exe was not produced. Check the logs above.');
+  const version = JSON.parse(fs.readFileSync(path.join(app, 'package.json'), 'utf8')).version;
+  if (version !== '1.0.18') throw Error('Unexpected Lab installer version: ' + version);
+  const expectedName = `PhotoBridge-Lab-Setup-${version}-x64.exe`;
+  const installers = fs.existsSync(release) ? fs.readdirSync(release).filter(name => name === expectedName) : [];
+  if (installers.length !== 1) throw Error('Expected ' + expectedName + ' was not produced. Check the logs above.');
   const output = path.join(release, installers[0]);
   const size = fs.statSync(output).size;
   if (size < 10_000_000) throw Error('Installer is suspiciously small; refusing to report success');

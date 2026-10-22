@@ -23,7 +23,7 @@ export function verifyLabDesktopUiFreshness(root = path.resolve(path.dirname(fil
       if (excluded.has(ent.name)) continue;
       const name = path.posix.join(relative, ent.name), full = path.join(directory, ent.name);
       if (ent.isDirectory()) walk(full, name);
-      else if (ent.isFile() && allowed.test(name) && ent.name !== 'manifest.json') {
+      else if (ent.isFile() && allowed.test(name)) {
         if (fs.statSync(full).size <= 20e6) expected.set(name, full);
       }
     }

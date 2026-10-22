@@ -328,6 +328,9 @@ console.log("[PhotoBridge Docker build] OK R1356 quiet Lab overlay tests");
 // The same module was imported earlier in this Node process. ESM caches it by
 // module URL, so importing the identical specifier a second time is a NO-OP.
 // Use a distinct module URL to force regenerating the final, patched web UI.
+// R1363 must run after older Lab CSS patches and before the final Windows UI snapshot.
+await deployStep("./enable-r1363-lab-queue.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1363-single-order-alarm.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

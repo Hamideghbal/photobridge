@@ -1,1 +1,1 @@
-2026-10-22-r1350-liara-revision-check-compat
+2026-10-22-r1351-lab-ui-exact-static-bytes

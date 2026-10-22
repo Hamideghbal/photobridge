@@ -11,6 +11,9 @@ if errorlevel 1 (
 node tools\build-lab-windows-local.mjs %*
 set "RESULT=%errorlevel%"
 if not "%RESULT%"=="0" echo [PhotoBridge Lab] Build failed. See the error above.
-if "%RESULT%"=="0" echo [PhotoBridge Lab] Installer output: apps\lab-desktop\release\
+if "%RESULT%"=="0" (
+  echo [PhotoBridge Lab] Setup file created in: apps\lab-desktop\release\
+  start "" "%~dp0apps\lab-desktop\release"
+)
 pause
 exit /b %RESULT%

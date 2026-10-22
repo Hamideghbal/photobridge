@@ -10,6 +10,8 @@ const script=fs.readFileSync(path.join(root,'tools/build-lab-windows-local.mjs')
 test('local lab builder is not dependent on GitHub Actions or a fake EXE',()=>{
   assert.match(script,/desktop-sources.*PhotoBridge-Desktop-Sources-R1089\.zip/);
   assert.match(script,/archiveSha256/);
+  assert.match(script,/npm\(\['install', '--no-package-lock', '--no-audit', '--no-fund'\], root\)/);
+  assert.match(script,/Sharp native image dependency is ready/);
   assert.match(script,/desktop-overlay\.js.*ui-update\.cjs/s);
   assert.match(script,/enable-r1342-lab-ui-update\.mjs/);
   assert.match(script,/enable-r1348-lab-presence-online-only\.mjs/);
@@ -29,6 +31,14 @@ function fixture(){
   for(const directory of ['tools','desktop-sources','apps/lab-desktop','dist/web','scripts'])fs.mkdirSync(path.join(temp,directory),{recursive:true});
   fs.copyFileSync(path.join(root,'tools/build-lab-windows-local.mjs'),path.join(temp,'tools/build-lab-windows-local.mjs'));
   fs.copyFileSync(path.join(root,'desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip'),path.join(temp,'desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip'));
+  fs.writeFileSync(path.join(temp,'package.json'),JSON.stringify({name:'pb-lab-local-fixture',version:'1.0.0'}));
+  // The real repo has no root lockfile. Simulate offline npm and a resolved sharp module.
+  const bin=path.join(temp,'fake-bin');
+  fs.mkdirSync(bin,{recursive:true});
+  fs.writeFileSync(path.join(bin,'npm'),'#!/bin/sh\\nprintf "%s\\n" "$*" >> "$PB_FIXTURE_NPM_LOG"\\nexit 0\\n',{mode:0o755});
+  fs.mkdirSync(path.join(temp,'node_modules/sharp'),{recursive:true});
+  fs.writeFileSync(path.join(temp,'node_modules/sharp/package.json'),JSON.stringify({name:'sharp',version:'0.0.0',main:'index.cjs'}));
+  fs.writeFileSync(path.join(temp,'node_modules/sharp/index.cjs'),'module.exports=function sharpFixture(){};');
   fs.writeFileSync(path.join(temp,'scripts/liara-fast-build.mjs'),"console.log('fixture website build passed')");
   fs.writeFileSync(path.join(temp,'dist/web/index.html'),'<html>new lab UI</html>');
   fs.writeFileSync(path.join(temp,'apps/lab-desktop/desktop-overlay.js'),'LATEST OVERLAY');
@@ -40,7 +50,7 @@ function fixture(){
     fs.writeFileSync(path.join(temp,'scripts',name),patch);
   }
   for(const name of ['test-r1296-native-alerts.cjs','test-r1342-lab-ui-update.cjs','test-r1342-native-integration.cjs','test-r1343-lab-installer-build.cjs','test-r1348-lab-presence-sync.cjs'])fs.writeFileSync(path.join(temp,'scripts',name),"require('node:test')('placeholder fixture',()=>{});");
-  return {temp,run:()=>spawnSync(process.execPath,['tools/build-lab-windows-local.mjs','--prepare-only'],{cwd:temp,encoding:'utf8'}),close:()=>fs.rmSync(temp,{recursive:true,force:true})};
+  return {temp,run:()=>spawnSync(process.execPath,['tools/build-lab-windows-local.mjs','--prepare-only'],{cwd:temp,encoding:'utf8',env:{...process.env,PATH:path.join(temp,'fake-bin')+path.delimiter+process.env.PATH,PB_FIXTURE_NPM_LOG:path.join(temp,'npm-invocations.txt')}}),close:()=>fs.rmSync(temp,{recursive:true,force:true})};
 }
 test('offline preparation restores canonical lab source without overwriting newer updater or store',()=>{
   if(process.platform==='win32')return;
@@ -50,6 +60,7 @@ test('offline preparation restores canonical lab source without overwriting newe
     assert.equal(fs.readFileSync(path.join(app,'desktop-overlay.js'),'utf8'),'LATEST OVERLAY');
     assert.equal(fs.readFileSync(path.join(app,'ui-update.cjs'),'utf8'),'LATEST UPDATER');
     assert.equal(JSON.parse(fs.readFileSync(path.join(app,'package.json'),'utf8')).version,'1.0.18');
+    assert.match(fs.readFileSync(path.join(f.temp,'npm-invocations.txt'),'utf8'),/install --no-package-lock --no-audit --no-fund/);
     assert(fs.existsSync(path.join(app,'main.cjs')));
     assert(!fs.existsSync(path.join(app,'release')));
     assert(!fs.existsSync(path.join(f.temp,'apps/store-desktop')));

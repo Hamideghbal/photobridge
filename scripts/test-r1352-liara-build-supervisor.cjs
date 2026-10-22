@@ -4,13 +4,13 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {runBuild}=require('./liara-build-supervisor.cjs');
 
-async function fixture(source){
+async function fixture(source,{intervalMs=12000}={}){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb-liara-supervisor-'));
  const file=path.join(dir,'runner.cjs');
  fs.writeFileSync(file,source);
  const logs=[],errs=[];
  try {
-  const code=await runBuild({command:process.execPath,args:[file],cwd:dir,progress:x=>logs.push(x),error:x=>errs.push(x),intervalMs:20});
+  const code=await runBuild({command:process.execPath,args:[file],cwd:dir,progress:x=>logs.push(x),error:x=>errs.push(x),intervalMs});
   return {code,logs,errs};
  } finally {fs.rmSync(dir,{recursive:true,force:true});}
 }
@@ -31,7 +31,7 @@ test('test failure still aborts build and outputs precise failing TAP details',a
  assert(r.errs.some(x=>x.includes('suspect-stage')));
 });
 test('periodic progress heartbeat prevents complete log silence on slow stages',async()=>{
- const r=await fixture(`console.log('[PhotoBridge Docker build] START slow-step');setTimeout(()=>{console.log('[PhotoBridge Docker build] OK slow-step')},110)`);
+ const r=await fixture(`console.log('[PhotoBridge Docker build] START slow-step');setTimeout(()=>{console.log('[PhotoBridge Docker build] OK slow-step')},110)`,{intervalMs:20});
  assert.equal(r.code,0);
  assert(r.logs.some(x=>x.includes('running ')));
 });

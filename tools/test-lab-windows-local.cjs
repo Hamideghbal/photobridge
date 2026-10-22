@@ -12,6 +12,7 @@ test('local lab builder is not dependent on GitHub Actions or a fake EXE',()=>{
   assert.match(script,/archiveSha256/);
   assert.match(script,/desktop-overlay\.js.*ui-update\.cjs/s);
   assert.match(script,/enable-r1342-lab-ui-update\.mjs/);
+  assert.match(script,/enable-r1348-lab-presence-online-only\.mjs/);
   assert(script.indexOf("run(process.execPath, ['scripts/liara-fast-build.mjs'])") < script.indexOf('  restore();'));
   assert(script.includes("run(process.execPath, ['scripts/liara-fast-build.mjs'])"));
   assert.match(script,/run\('cmd\.exe', \['\/d', '\/s', '\/c', 'npm'/);
@@ -32,13 +33,13 @@ function fixture(){
   fs.writeFileSync(path.join(temp,'dist/web/index.html'),'<html>new lab UI</html>');
   fs.writeFileSync(path.join(temp,'apps/lab-desktop/desktop-overlay.js'),'LATEST OVERLAY');
   fs.writeFileSync(path.join(temp,'apps/lab-desktop/ui-update.cjs'),'LATEST UPDATER');
-  for(const name of ['enable-r1296-native-alerts.mjs','enable-r1342-lab-ui-update.mjs','prepare-lab-desktop-ui.mjs','prepare-lab-installer-assets.mjs']){
+  for(const name of ['enable-r1296-native-alerts.mjs','enable-r1342-lab-ui-update.mjs','enable-r1348-lab-presence-online-only.mjs','prepare-lab-desktop-ui.mjs','prepare-lab-installer-assets.mjs']){
     const patch = name==='enable-r1342-lab-ui-update.mjs'
       ? "import fs from 'node:fs';let file='apps/lab-desktop/package.json';let p=JSON.parse(fs.readFileSync(file,'utf8'));p.version='1.0.16';fs.writeFileSync(file,JSON.stringify(p));"
       : "console.log('stub step passed')";
     fs.writeFileSync(path.join(temp,'scripts',name),patch);
   }
-  for(const name of ['test-r1296-native-alerts.cjs','test-r1342-lab-ui-update.cjs','test-r1342-native-integration.cjs','test-r1343-lab-installer-build.cjs'])fs.writeFileSync(path.join(temp,'scripts',name),"require('node:test')('placeholder fixture',()=>{});");
+  for(const name of ['test-r1296-native-alerts.cjs','test-r1342-lab-ui-update.cjs','test-r1342-native-integration.cjs','test-r1343-lab-installer-build.cjs','test-r1348-lab-presence-sync.cjs'])fs.writeFileSync(path.join(temp,'scripts',name),"require('node:test')('placeholder fixture',()=>{});");
   return {temp,run:()=>spawnSync(process.execPath,['tools/build-lab-windows-local.mjs','--prepare-only'],{cwd:temp,encoding:'utf8'}),close:()=>fs.rmSync(temp,{recursive:true,force:true})};
 }
 test('offline preparation restores canonical lab source without overwriting newer updater or store',()=>{

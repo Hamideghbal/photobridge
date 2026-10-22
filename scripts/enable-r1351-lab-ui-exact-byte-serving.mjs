@@ -41,4 +41,7 @@ export function patchLabDesktopStaticBytes(root=path.resolve(path.dirname(fileUR
  fs.writeFileSync(serverFile,code);
  console.log('[R1351] Lab Desktop UI assets served byte-exact, uncached, and never as HTML fallbacks.');
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))patchLabDesktopStaticBytes();
+// The Liara build loads patch modules using dynamic import(), not via `node file.mjs`.
+// Run on import, as the other build-time patch modules do. Otherwise the
+// integrity checks run against the unmodified server and the build fails.
+patchLabDesktopStaticBytes();

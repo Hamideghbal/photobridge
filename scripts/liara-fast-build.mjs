@@ -304,6 +304,12 @@ await deployStep("./enable-r1341-compact-retouch-cards.mjs");
 
 await deployStep("./enable-r1344-gallery-create-pricing.mjs");
 
+// Native Lab UI stays unobstructed. Run the minimal overlay regression
+// BEFORE regenerating the final website UI package consumed by Windows.
+console.log("[PhotoBridge Docker build] START R1356 quiet Lab overlay tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1356-lab-overlay-minimal.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1356 quiet Lab overlay tests");
+
 // The R1328 manifest refresh runs BEFORE the late R1330–R1344 UI patches.
 // Rebuild the LAB payload at the very end; otherwise Windows downloads
 // a valid but OLD snapshot while the website shows the new layout.

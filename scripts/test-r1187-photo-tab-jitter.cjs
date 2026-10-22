@@ -32,13 +32,23 @@ test('lab orders and top-level tabs keep scrollable content stationary',()=>{
  assert(!lab.includes("transform:'translateY(5px)'"));
  assert(lab.includes("const intake=document.getElementById('pb1137LocalIntakeButton')"));
 });
-test('updated photo tab JS receives new URL query parameters',()=>{
+// R1193/R1252/R1298 can append more cache busters after R1187.
+// Parse the real src query instead of incorrectly requiring motion to be last.
+function assertMotionMarker(page,name){
+ const srcPattern=new RegExp(name+'\\.js\\?([^"\\s]+)"','g');
+ const urls=[...page.matchAll(srcPattern)];
+ assert.equal(urls.length,1,name+' should be loaded exactly once');
+ const params=new URLSearchParams(urls[0][1]);
+ assert.deepEqual(params.getAll('motion'),['r1187'],name+' must have exactly one R1187 cache marker');
+}
+test('updated photo tab JS receives a unique motion cache token regardless of later version params',()=>{
  for(const name of [
   'photobridge-r1126-desktop-navigation',
   'photobridge-r1163-desktop-gallery-header',
   'photobridge-r1147-lab-admin-header'
- ]){
-  assert.match(html,new RegExp(name+'\\.js\\?v=[^"\\s]+&motion=r1187"'));
- }
- assert.match(embedded,/photobridge-r1126-desktop-navigation\.js\?v=[^"\s]+&motion=r1187"/);
+ ])assertMotionMarker(html,name);
+ assertMotionMarker(embedded,'photobridge-r1126-desktop-navigation');
+});
+test('newer cache params after motion do not invalidate the R1187 token',()=>{
+ assertMotionMarker('<script src="/photobridge-r1126-desktop-navigation.js?v=r1249&motion=r1187&orders=r1250&layout=r1252"></script>','photobridge-r1126-desktop-navigation');
 });

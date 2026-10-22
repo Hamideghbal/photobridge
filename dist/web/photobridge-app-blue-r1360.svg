@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PhotoBridge">
+  <!-- Brand blue canvas; all foreground artwork is white and within the maskable safe area. -->
+  <rect width="512" height="512" fill="#315efb"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <!-- The existing PhotoBridge bridge mark, enlarged without changing its shape. -->
+    <path d="M104 268 Q256 102 408 268" stroke-width="29"/>
+    <path d="M145 272 H367" stroke-width="25"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="104" cy="268" r="20"/>
+    <circle cx="408" cy="268" r="20"/>
+    <circle cx="256" cy="171" r="19"/>
+  </g>
+  <!-- Plain, single-line wordmark. No calligraphic font or vertical scaling. -->
+  <text x="256" y="396" text-anchor="middle" fill="#ffffff" font-family="Arial,DejaVu Sans,sans-serif" font-size="53" font-weight="700" letter-spacing="-.3">PhotoBridge</text>
+</svg>

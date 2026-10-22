@@ -58,7 +58,7 @@ function main() {
   need(path.join(root, 'dist/web/index.html'));
   need(path.join(app, 'desktop-overlay.js'));
   need(path.join(app, 'ui-update.cjs'));
-  for (const name of ['enable-r1296-native-alerts.mjs', 'enable-r1342-lab-ui-update.mjs', 'prepare-lab-desktop-ui.mjs', 'prepare-lab-installer-assets.mjs']) need(path.join(root, 'scripts', name));
+  for (const name of ['enable-r1296-native-alerts.mjs', 'enable-r1342-lab-ui-update.mjs', 'prepare-lab-desktop-ui.mjs', 'prepare-lab-installer-assets.mjs', 'enable-r1348-lab-presence-online-only.mjs']) need(path.join(root, 'scripts', name));
   if (hash(archive) !== archiveSha256) throw Error('Saved lab source archive does not match its verified SHA-256');
   if (signed && !(process.env.CSC_LINK || process.env.WIN_CSC_LINK)) throw Error('Signed release requires the configured Windows code-signing certificate');
   if (!prepareOnly && process.platform !== 'win32') throw Error('An actual Windows installer must be built on Windows x64 (run with --prepare-only to inspect source on another OS)');
@@ -71,9 +71,10 @@ function main() {
   restore();
   run(process.execPath, ['scripts/enable-r1296-native-alerts.mjs']);
   run(process.execPath, ['scripts/enable-r1342-lab-ui-update.mjs']);
+  run(process.execPath, ['scripts/enable-r1348-lab-presence-online-only.mjs']);
   run(process.execPath, ['scripts/prepare-lab-desktop-ui.mjs']);
   run(process.execPath, ['scripts/prepare-lab-installer-assets.mjs']);
-  run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs']);
+  run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs', 'scripts/test-r1348-lab-presence-sync.cjs']);
   console.log('[PhotoBridge Lab] Local source and UI updater checks passed');
   if (prepareOnly) {console.log('[PhotoBridge Lab] --prepare-only complete; no Windows installer was created.'); return;}
   // Install all dependencies locally; no GitHub Actions Windows runner required.

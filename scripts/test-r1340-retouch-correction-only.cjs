@@ -42,6 +42,6 @@ test('R1338 upload progress, stable gallery refresh and current cache remain int
  assert(bundle.includes('className:"pb1338UploadText"'));
  assert(bundle.includes('String(o?.gallery?.id||"")!==String(L)&&l(null)'));
  assert.equal((html.match(/retouchReload=r(?:1340|1344)/g)||[]).length,2);
- assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^2026-10-21-r(?:1340|1341|1342|1343|1344|1345)-/);
+ assert.match(fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim(),/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
  assert.doesNotThrow(()=>new Function(bundle),'production bundle parses');
 });

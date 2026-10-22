@@ -75,16 +75,18 @@ function main() {
     : run('npm', args, cwd);
   console.log('[PhotoBridge Lab] Verified precompiled web UI; standalone installer does not rerun Liara migrations.');
   run(process.execPath, ['tools/verify-lab-prebuilt-ui.mjs']);
+ run(process.execPath, ['scripts/enable-r1362-lab-folder-runtime.mjs']);
   run(process.execPath, ['--test', 'tools/test-verify-lab-prebuilt-ui.cjs']);
   console.log('[PhotoBridge Lab] Restore editable native sources from verified archive');
   restore();
   run(process.execPath, ['scripts/enable-r1296-native-alerts.mjs']);
   run(process.execPath, ['scripts/enable-r1342-lab-ui-update.mjs']);
   run(process.execPath, ['scripts/enable-r1348-lab-presence-online-only.mjs']);
+ run(process.execPath, ['scripts/enable-r1362-lab-native-folder.mjs']);
   run(process.execPath, ['scripts/prepare-lab-desktop-ui.mjs']);
   run(process.execPath, ['scripts/verify-lab-desktop-ui-freshness.mjs']);
   run(process.execPath, ['scripts/prepare-lab-installer-assets.mjs']);
-  run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs', 'scripts/test-r1348-lab-presence-sync.cjs']);
+  run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs', 'scripts/test-r1348-lab-presence-sync.cjs','scripts/test-r1362-lab-folder.cjs']);
   console.log('[PhotoBridge Lab] Local source and UI updater checks passed');
   if (prepareOnly) {console.log('[PhotoBridge Lab] --prepare-only complete; no Windows installer was created.'); return;}
   // Electron and NSIS are installed and built on the user's Windows computer.
@@ -93,7 +95,7 @@ function main() {
   npm(['run', signed ? 'dist' : 'dist:unsigned'], app);
   const release = path.join(app, 'release');
   const version = JSON.parse(fs.readFileSync(path.join(app, 'package.json'), 'utf8')).version;
-  if (version !== '1.0.18') throw Error('Unexpected Lab installer version: ' + version);
+  if (version !== '1.0.19') throw Error('Unexpected Lab installer version: ' + version);
   const expectedName = `PhotoBridge-Lab-Setup-${version}-x64.exe`;
   const installers = fs.existsSync(release) ? fs.readdirSync(release).filter(name => name === expectedName) : [];
   if (installers.length !== 1) throw Error('Expected ' + expectedName + ' was not produced. Check the logs above.');

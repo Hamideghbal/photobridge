@@ -1,1 +1,1 @@
-2026-10-22-r1349-liara-final-ui-esm-cache-rebuild
+2026-10-22-r1350-liara-revision-check-compat

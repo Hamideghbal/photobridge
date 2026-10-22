@@ -42,6 +42,13 @@ test('Electron re-installs picker guard when a new site UI release downloads',as
  const p1=window.showDirectoryPicker(),p2=window.showDirectoryPicker();assert.equal(count,1);
  resolve(dir);assert.equal(await p1,dir);assert.equal(await p2,dir);
 });
+test('R1342 status diagnostic fixture and assertions use the same native 1.0.19 version',()=>{
+ const source=fs.readFileSync('scripts/test-r1342-native-integration.cjs','utf8');
+ assert(source.includes("nativeVersion:'1.0.19'"),'status mock must not report old 1.0.18');
+ assert(source.includes("assert.equal(status.nativeVersion,'1.0.19')"),'status contract still checked');
+ assert(source.includes("assert.equal(pkg.version,'1.0.19')"),'package version still checked');
+ assert(!source.includes("nativeVersion:'1.0.18'"),'old fixture version must not be left behind');
+});
 test('native 1.0.19 package version and lockfile match without deleting user state',()=>{
  const pkg=JSON.parse(fs.readFileSync('apps/lab-desktop/package.json','utf8'));
  const lock=JSON.parse(fs.readFileSync('apps/lab-desktop/package-lock.json','utf8'));

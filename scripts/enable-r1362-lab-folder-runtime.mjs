@@ -8,7 +8,7 @@ if(!src.includes(mark)){
  if(start<0||end<0||src.indexOf('async function no(){',start+1)>=0)throw Error('R1362 unexpected folder picker source');
  const old=src.slice(start,end);
  if(!old.includes('await window.showDirectoryPicker({mode:"readwrite"})')||!old.includes('await Oy(handle)')||!old.includes('return handle}'))throw Error('R1362 folder permission/persistence source changed');
- const body=old.slice('async function no(){'.length,-1);
+ const body=old.trimEnd().slice('async function no(){'.length,-1);
  const wrapper=mark+'let pb1362FolderPickerPending=null;async function no(){if(pb1362FolderPickerPending)return pb1362FolderPickerPending;const selected=(async()=>{'+body+'})();pb1362FolderPickerPending=selected;try{return await selected}finally{if(pb1362FolderPickerPending===selected)pb1362FolderPickerPending=null}}\n';
  src=src.slice(0,start)+wrapper+src.slice(end);fs.writeFileSync(file,src);
  console.log('[R1362] One user-initiated folder picker per window; persisted handles preserved');

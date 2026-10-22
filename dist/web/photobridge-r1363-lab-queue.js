@@ -10,7 +10,7 @@
  function same(a,b){return a.length===b.length&&a.every((value,i)=>value===b[i])}
  function measure(){
   scheduled=false;
-  const main=document.querySelector('.labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader.labPrimaryConnectorMode');
+  const main=document.querySelector('.labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader');
   const active=Boolean(media.matches&&main?.querySelector(':scope>.labRolePageScrollArea'));
   document.documentElement.classList.toggle('pb1363OrderQueue',active);
   const root=main?.closest('.labRoleWorkspace');

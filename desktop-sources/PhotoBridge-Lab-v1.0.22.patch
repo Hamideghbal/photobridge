@@ -1,0 +1,237 @@
+--- a/BUILD-WINDOWS.cmd
++++ b/BUILD-WINDOWS.cmd
+@@ -8,7 +8,7 @@
+ call npm run dist:unsigned
+ if errorlevel 1 goto :failed
+ echo.
+-echo SUCCESS: release\PhotoBridge-Lab-Setup-1.0.21-x64.exe
++echo SUCCESS: release\PhotoBridge-Lab-Setup-1.0.22-x64.exe
+ pause
+ exit /b 0
+ :failed
+--- a/README-FA.md
++++ b/README-FA.md
+@@ -1,4 +1,12 @@
+-# PhotoBridge Lab 1.0.21 — مسیر بومی ذخیره و اعلان کوچک‌تر
++# PhotoBridge Lab 1.0.22 — پیام‌ها در پنجرهٔ آلارم
++
++پیام‌های جدید عکاسان و پشتیبانی، حتی وقتی پنجره اصلی بسته است، در همان آلارم سفارش نمایش داده می‌شوند و تا تأیید باقی می‌مانند. متن کامل است؛ عکس دارای نشانی HTTPS قابل نمایش است. پیوست‌هایی که فقط کلید ذخیره دارند برای مشاهده در گفتگو مشخص می‌شوند.
++در اولین اجرای این نسخه، گفتگوهای قدیمی دوباره اعلان نمی‌شوند. از آن پس پیام‌های جدید پس از قطع اینترنت و اجرای دوباره پیگیری می‌شوند.
++این بسته سورس نسخهٔ جدید است؛ با BUILD-WINDOWS.cmd روی ویندوز نصب‌کننده را بسازید. ساخت فایل نصب ویندوز در این محیط انجام نشده است.
++اسکرول همهٔ تب‌های لابراتوار و سایه‌های ملایم‌تر از انتشار وب R1364 دریافت می‌شود.
++۴۱ تست Node پاس شده است.
++
++# PhotoBridge Lab 1.0.22 — پیام‌ها در پنجرهٔ آلارم
+ 
+ این بسته سورس مستقل برنامه ویندوز است، نه فایل نصب آماده و نه بسته انتشار سایت.
+ تغییرات جدید نسبت به 1.0.20 در ادامه آمده‌اند.
+--- a/SOURCE-PROVENANCE.json
++++ b/SOURCE-PROVENANCE.json
+@@ -1,16 +1,18 @@
+ {
+-  "version": "1.0.21",
+-  "derivedFrom": "PhotoBridge-Lab-Source-v1.0.20.zip",
++  "version": "1.0.22",
++  "derivedFrom": "PhotoBridge-Lab-Source-v1.0.21.zip",
+   "changes": [
+     "native OS directory picker and account-scoped SQLite path persistence",
+     "confined native streamed disk storage with atomic finalization",
+     "confirmed primary device registration via POST plus independent GET",
+     "installed adapter applied in memory to verified website; incompatible updates rejected",
+     "compact adaptive alert popup with bundled original Vazirmatn font",
+-    "NSIS per-monitor DPI and Segoe UI; post-build PE-resource verification"
++    "NSIS per-monitor DPI and Segoe UI; post-build PE-resource verification",
++    "durable photographer and platform chat alerts in the existing native window",
++    "full multiline messages and HTTPS image previews with attachment fallback"
+   ],
+   "validation": {
+-    "nodeTests": "35 passing",
++    "nodeTests": "41 passing",
+     "realDiskWriteAndRead": true,
+     "actualWebsiteBundleAdapter": "verified",
+     "actualWindowsPicker": "not run",
+--- a/alert-content.cjs
++++ b/alert-content.cjs
+@@ -0,0 +1,11 @@
++'use strict';
++function imageUrl(value){
++ if(typeof value!=='string'||value.length>4096)return null;
++ try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null}catch{return null}
++}
++function alertContent(n){
++ const meta=n.metadata&&typeof n.metadata==='object'?n.metadata:{};
++ const image=imageUrl(n.image_url||n.imageUrl||meta.image_url||meta.imageUrl||meta.attachmentUrl);
++ return {id:String(n.id),title:String(n.title||'اعلان جدید'),message:String(n.message||''),...(image?{image}:{}),...(n.attachment_key?{hasAttachment:true}:{} )};
++}
++module.exports={imageUrl,alertContent};
+--- a/alert-renderer.js
++++ b/alert-renderer.js
+@@ -25,7 +25,7 @@
+   $('hint').textContent=state.items.length?'برای قطع هشدار، «دیدم» یا «باز کردن لابراتوار» را بزنید.':'حتی وقتی پنجرهٔ اصلی بسته است، اعلان سفارش فعال می‌ماند.';
+   if(state.settingsOnly)$('preferences').open=true;else if(fresh&&!hadItems)$('preferences').open=false;
+   $('orders').hidden=!state.items.length;$('items').replaceChildren();
+-  for(const n of state.items){const row=document.createElement('div');row.className='order';const title=document.createElement('strong'),body=document.createElement('span');title.textContent=n.title;body.textContent=n.message;row.append(title,body);$('items').append(row);played.add(n.id)}
++  for(const n of state.items){const row=document.createElement('div');row.className='order';const title=document.createElement('strong'),body=document.createElement('span');title.textContent=n.title;body.textContent=n.message;row.append(title,body);if(n.image){const img=document.createElement('img');img.src=n.image;img.alt='عکس پیوست پیام';img.referrerPolicy='no-referrer';img.addEventListener('load',fit);img.addEventListener('error',()=>{img.remove();const hint=document.createElement('small');hint.textContent='عکس دریافت نشد؛ اتصال اینترنت را بررسی کنید.';row.append(hint);fit()});row.append(img)}else if(n.hasAttachment){const hint=document.createElement('small');hint.textContent='این پیام پیوست دارد؛ در گفتگو مشاهده کنید.';row.append(hint)}$('items').append(row);played.add(n.id)}
+   fit();if(fresh)void chime();if(!state.items.length)stop();else schedule();
+  }catch{status('دریافت تنظیمات اعلان انجام نشد. دوباره پنجره را باز کنید.')}
+ }
+--- a/alert-window.cjs
++++ b/alert-window.cjs
+@@ -15,7 +15,7 @@
+  state(){return {items:this.items,settings:normalizeSettings(this.store.get(this.settingsKey())),settingsOnly:this.settingsOnly};}
+  ensure(){
+   if(this.window&&!this.window.isDestroyed())return this.window;
+-  const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان سفارش · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
++  const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
+   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+   win.webContents.on('will-navigate',e=>e.preventDefault());
+   win.on('close',e=>{e.preventDefault();if(this.items.length){win.show();win.focus()}else win.hide()});
+--- a/alert.html
++++ b/alert.html
+@@ -1,8 +1,8 @@
+-<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; font-src 'self'; style-src 'unsafe-inline'"><title>اعلان سفارش · فوتوبریج</title>
++<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; font-src 'self'; img-src https:; style-src 'unsafe-inline'"><title>اعلان‌ها · فوتوبریج</title>
+ <style>
+ @font-face{font-family:Vazirmatn;src:url('assets/photobridge-vazirmatn.woff2') format('woff2');font-style:normal;font-weight:400;font-display:block}
+-*{box-sizing:border-box}html{background:#fff}body{margin:0;padding:20px 22px 14px;color:#172b43;font:13px/1.75 Vazirmatn,sans-serif}button,select,input{font:inherit}button,summary,select{cursor:pointer}header{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:42px;height:42px;border:1px solid #dce8fd;background:#edf4ff;color:#245fd3;border-radius:13px;flex:none}.brand{font-size:10px;color:#8390a2;letter-spacing:1.5px;line-height:1.4;font-family:Vazirmatn,sans-serif;direction:ltr;text-align:right}h1{font-size:17px;line-height:1.7;font-weight:700;margin:2px 0 0}#hint{font-size:11px;color:#7b8798;margin:10px 0 0}#items{margin:12px 0;max-height:115px;overflow:auto;overscroll-behavior:contain}.order{padding:10px 12px;background:#f7f9fc;border:1px solid #e8edf5;border-radius:10px;margin:7px 0}.order strong{display:block;font-size:12px;font-weight:700;overflow-wrap:anywhere}.order span{display:block;color:#64748b;font-size:11px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.actions{display:flex;gap:8px;margin-top:12px}button{border:1px solid #dce3ee;border-radius:9px;padding:9px 14px;background:white;color:#3d4e66;font-size:12px;min-height:38px;transition:background .15s}button:hover{background:#f7f9fc}button.primary{background:#245fd3;color:#fff;border-color:#245fd3;flex:1}button.primary:hover{background:#1e51b5}button:disabled{opacity:.55;cursor:wait}button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #a6c6ff;outline-offset:2px}details{border-top:1px solid #e8edf4;margin-top:16px;padding-top:9px}summary{color:#68788f;font-size:11px;list-style:none;display:flex;align-items:center;gap:6px;width:fit-content;user-select:none}summary::-webkit-details-marker{display:none}summary::after{content:'⌄';font:14px sans-serif;margin-right:3px}details[open] summary::after{content:'⌃'}details[open] summary{color:#245fd3;margin-bottom:8px}.setting-fields{padding:2px 0 0}label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;color:#4e5d73;font-size:12px}select{max-width:210px;width:194px;background:#fafbfe;color:#263c59;border:1px solid #dfe6ef;border-radius:8px;padding:6px 8px;outline:none}input[type=range]{width:140px;accent-color:#245fd3;vertical-align:middle}output{font-size:11px;color:#6d7e94;display:inline-block;min-width:32px}.settings-footer{display:flex;align-items:center;gap:10px;margin-top:14px}#test{font-size:11px;padding:5px 12px;min-height:30px;background:#f6f9fe}small{font-size:10px;color:#8b96a6}#status{color:#b54838;font-size:11px;line-height:1.8;overflow-wrap:anywhere}#status:not(:empty){margin-top:9px}[hidden]{display:none!important}
+-</style>
++*{box-sizing:border-box}html{background:#fff}body{margin:0;padding:20px 22px 14px;color:#172b43;font:13px/1.75 Vazirmatn,sans-serif}button,select,input{font:inherit}button,summary,select{cursor:pointer}header{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:42px;height:42px;border:1px solid #dce8fd;background:#edf4ff;color:#245fd3;border-radius:13px;flex:none}.brand{font-size:10px;color:#8390a2;letter-spacing:1.5px;line-height:1.4;font-family:Vazirmatn,sans-serif;direction:ltr;text-align:right}h1{font-size:17px;line-height:1.7;font-weight:700;margin:2px 0 0}#hint{font-size:11px;color:#7b8798;margin:10px 0 0}#items{margin:12px 0;max-height:300px;overflow:auto;overscroll-behavior:contain}.order{padding:10px 12px;background:#f7f9fc;border:1px solid #e8edf5;border-radius:10px;margin:7px 0}.order strong{display:block;font-size:12px;font-weight:700;overflow-wrap:anywhere}.order span{display:block;color:#64748b;font-size:11px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:unset;-webkit-box-orient:vertical;overflow:hidden}.actions{display:flex;gap:8px;margin-top:12px}button{border:1px solid #dce3ee;border-radius:9px;padding:9px 14px;background:white;color:#3d4e66;font-size:12px;min-height:38px;transition:background .15s}button:hover{background:#f7f9fc}button.primary{background:#245fd3;color:#fff;border-color:#245fd3;flex:1}button.primary:hover{background:#1e51b5}button:disabled{opacity:.55;cursor:wait}button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #a6c6ff;outline-offset:2px}details{border-top:1px solid #e8edf4;margin-top:16px;padding-top:9px}summary{color:#68788f;font-size:11px;list-style:none;display:flex;align-items:center;gap:6px;width:fit-content;user-select:none}summary::-webkit-details-marker{display:none}summary::after{content:'⌄';font:14px sans-serif;margin-right:3px}details[open] summary::after{content:'⌃'}details[open] summary{color:#245fd3;margin-bottom:8px}.setting-fields{padding:2px 0 0}label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;color:#4e5d73;font-size:12px}select{max-width:210px;width:194px;background:#fafbfe;color:#263c59;border:1px solid #dfe6ef;border-radius:8px;padding:6px 8px;outline:none}input[type=range]{width:140px;accent-color:#245fd3;vertical-align:middle}output{font-size:11px;color:#6d7e94;display:inline-block;min-width:32px}.settings-footer{display:flex;align-items:center;gap:10px;margin-top:14px}#test{font-size:11px;padding:5px 12px;min-height:30px;background:#f6f9fe}small{font-size:10px;color:#8b96a6}#status{color:#b54838;font-size:11px;line-height:1.8;overflow-wrap:anywhere}#status:not(:empty){margin-top:9px}[hidden]{display:none!important}
++.order img{display:block;width:100%;max-height:180px;object-fit:contain;border-radius:7px;margin-top:8px;background:#f1f4f8}.order span{white-space:pre-wrap}#items{scrollbar-width:thin;scrollbar-color:#91a2ba #edf2f7}</style>
+ <header><div class="mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 21h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="19" cy="4" r="3" fill="#245fd3" stroke="white" stroke-width="1.7"/></svg></div><div><div class="brand">PHOTOBRIDGE LAB</div><h1 id="title">سفارش چاپ جدید</h1></div></header>
+ <p id="hint">این اعلان تا تأیید شما باز می‌ماند.</p><section id="orders"><div id="items" aria-live="polite"></div><div class="actions"><button class="primary" id="open">باز کردن لابراتوار</button><button id="ack">دیدم؛ قطع هشدار</button></div></section>
+ <details id="preferences"><summary>تنظیم صدای اعلان</summary><div class="setting-fields"><label>حالت صدا<select id="mode"><option value="silent">بی‌صدا</option><option value="gentle">آرام و یک‌باره</option><option value="repeat">تکرار تا تأیید</option></select></label><label>نوع صدا<select id="tone"><option value="bell">زنگ</option><option value="soft">ملایم</option><option value="beep">بوق کوتاه</option></select></label><label>بلندی صدا<span><input id="volume" type="range" min="0" max="100" value="50" aria-label="بلندی صدا"><output id="volumeText">۵۰٪</output></span></label><label id="intervalRow">فاصلهٔ تکرار<select id="interval"><option value="5">۵ ثانیه</option><option value="10">۱۰ ثانیه</option><option value="30">۳۰ ثانیه</option><option value="60">۱ دقیقه</option></select></label><div class="settings-footer"><button id="test">تست صدا</button><small>تغییرات خودکار ذخیره می‌شوند</small></div></div></details><div id="status" role="status"></div><script src="alert-renderer.js"></script></html>
+--- a/chat-alerts.cjs
++++ b/chat-alerts.cjs
+@@ -0,0 +1,19 @@
++'use strict';
++const {alertContent}=require('./alert-content.cjs');
++// Chat requests use the existing authenticated request helper, including while hidden.
++async function collectChatAlerts({store,request,account,userId,now}){
++ const key='nativeChatChecked:'+account;
++ const since=store.get(key);
++ if(!since){store.set(key,now);return {items:[],checkpoint:now,key}}
++ const json=async path=>{const r=await request(path);if(!r.ok)throw Error('chat_poll_failed');return r.json()};
++ const [platform,contacts]=await Promise.all([json('/api/lab/platform-chat'),json('/api/lab/chat/contacts')]);
++ const items=[];
++ function add(messages,contact){for(const m of messages||[]){const time=Date.parse(m.created_at);if(!m.id||!Number.isFinite(time)||time<since||m.sender_id===userId)continue;if(contact&&m.sender_id!==contact.id)continue;items.push(alertContent({...m,id:'chat:'+m.id,title:contact?'پیام از '+contact.name:'پیام از '+(m.sender_name||'پشتیبانی'),imageUrl:m.image_url||m.imageUrl}));}}
++ add(platform.messages);
++ for(const contact of contacts.contacts||[]){
++  if(!/^[0-9a-f-]{36}$/i.test(String(contact.id))||Date.parse(contact.last_message_at)<since)continue;
++  const data=await json('/api/lab/chat/'+encodeURIComponent(contact.id));add(data.messages,contact);
++ }
++ return {items,key,checkpoint:now};
++}
++module.exports={collectChatAlerts};
+--- a/main.cjs
++++ b/main.cjs
+@@ -4,7 +4,7 @@
+ async function start(){app.setAppUserModelId('ir.photobridge.lab');const dir=app.getPath('userData');fs.mkdirSync(dir,{recursive:true});store=new LabStore(path.join(dir,'lab.sqlite'));store.set('nativeVersion',app.getVersion());const bundled=app.isPackaged?path.join(process.resourcesPath,'runtime'):path.join(__dirname,'runtime');const {validateNativeUi}=require('./verify-native-ui.cjs');let activeUiRoot=store.get('uiRoot');let applyingUi=null;let base=store.get('serverUrl')||'https://photobridge.ir';let authEpoch=0;
+  async function request(p,options={}){if(!p.startsWith('/')||p.startsWith('//'))throw Error('invalid_remote_path');const {anonymous=false,...fetchOptions}=options,epoch=authEpoch;let cookie='';const saved=anonymous?null:store.get('cookie');if(saved){if(!safeStorage.isEncryptionAvailable())throw Error('secure_storage_unavailable');cookie=safeStorage.decryptString(Buffer.from(saved,'base64'))}const r=await net.fetch(base+p,{...fetchOptions,headers:{'Accept':'application/json','x-photobridge-portal':'lab','x-photobridge-device-id':'pblab-'+store.get('deviceId'),...(fetchOptions.body&&!fetchOptions.headers?.['Content-Type']?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...fetchOptions.headers},redirect:'error',signal:fetchOptions.signal||AbortSignal.timeout(30000)});if(!anonymous){const values=r.headers.getSetCookie?.()||[];if(values.length&&epoch===authEpoch){if(!safeStorage.isEncryptionAvailable())throw Error('secure_storage_unavailable');const pairs=Object.fromEntries(cookie.split(';').filter(Boolean).map(x=>x.trim().split(/=(.*)/s).slice(0,2)));for(const value of values){const pair=value.split(';')[0],i=pair.indexOf('=');if(i>0)pairs[pair.slice(0,i)]=pair.slice(i+1)}store.set('cookie',safeStorage.encryptString(Object.entries(pairs).map(([k,v])=>k+'='+v).join('; ')).toString('base64'))}}return r}
+  const {NativeStorage,installStorageIPC}=require('./native-storage.cjs');const nativeStorage=new NativeStorage({store,request,getAccount:()=>store.get('auth')?store.get('labId'):null,selectDirectory:()=>dialog.showOpenDialog(win,{title:'انتخاب مسیر ذخیرهٔ عکس‌های لابراتوار',buttonLabel:'انتخاب این پوشه',properties:['openDirectory','createDirectory'],defaultPath:store.get('nativeStorageRoot:'+store.get('labId'))?.path})});const removeStorageIPC=installStorageIPC({ipcMain,storage:nativeStorage,getWindow:()=>win,getOrigin:()=>origin});app.on('before-quit',removeStorageIPC);
+- const {AlertWindow}=require('./alert-window.cjs');const alertWindow=new AlertWindow({BrowserWindow,ipcMain,store,getWorkArea:()=>screen.getDisplayMatching(win?.getBounds()||{x:0,y:0,width:420,height:300}).workArea,getAccount:()=>store.get('auth')?store.get('labId'):null,open:()=>show()});const {NativeAlerts}=require('./native-alerts.cjs');const nativeAlerts=new NativeAlerts({store,request,getAccount:()=>store.get('auth')?store.get('labId'):null,notify:(...args)=>alertWindow.present(...args),open:()=>show(),dismiss:()=>alertWindow.dismiss()});app.on('before-quit',()=>{nativeAlerts.stop();alertWindow.destroy()});sync=new Sync({store,request,isOnline:()=>net.isOnline()});const token=crypto.randomBytes(32).toString('hex');server=createHost({store,sync,request,token,roots:()=>[activeUiRoot,bundled].filter(Boolean),onLogin:async()=>{const r=await request('/api/auth/me');if(!r.ok)throw Error('login_failed');const auth=await r.json();if(auth?.user?.labRole!=='lab_admin'||!auth?.lab?.id)throw Error('lab_admin_required');store.set('labId',auth.lab.id);store.set('auth',auth);nativeAlerts.start();sync.resume();sync.online=true;await primeCache();await sync.run()},onLogout:async()=>{nativeAlerts.stop();await nativeStorage.reset();authEpoch++;return require('./session.cjs').logout(store,sync)}});await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(43761,'127.0.0.1',()=>{server.off('error',reject);resolve()})});origin='http://127.0.0.1:'+server.address().port;
++ const {AlertWindow}=require('./alert-window.cjs');const alertWindow=new AlertWindow({BrowserWindow,ipcMain,store,getWorkArea:()=>screen.getDisplayMatching(win?.getBounds()||{x:0,y:0,width:420,height:300}).workArea,getAccount:()=>store.get('auth')?store.get('labId'):null,open:()=>show()});const {NativeAlerts}=require('./native-alerts.cjs');const nativeAlerts=new NativeAlerts({store,request,getUserId:()=>store.get('auth')?.user?.userId,getAccount:()=>store.get('auth')?store.get('labId'):null,notify:(...args)=>alertWindow.present(...args),open:()=>show(),dismiss:()=>alertWindow.dismiss()});app.on('before-quit',()=>{nativeAlerts.stop();alertWindow.destroy()});sync=new Sync({store,request,isOnline:()=>net.isOnline()});const token=crypto.randomBytes(32).toString('hex');server=createHost({store,sync,request,token,roots:()=>[activeUiRoot,bundled].filter(Boolean),onLogin:async()=>{const r=await request('/api/auth/me');if(!r.ok)throw Error('login_failed');const auth=await r.json();if(auth?.user?.labRole!=='lab_admin'||!auth?.lab?.id)throw Error('lab_admin_required');store.set('labId',auth.lab.id);store.set('auth',auth);nativeAlerts.start();sync.resume();sync.online=true;await primeCache();await sync.run()},onLogout:async()=>{nativeAlerts.stop();await nativeStorage.reset();authEpoch++;return require('./session.cjs').logout(store,sync)}});await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(43761,'127.0.0.1',()=>{server.off('error',reject);resolve()})});origin='http://127.0.0.1:'+server.address().port;
+  win=new BrowserWindow({width:1440,height:950,minWidth:1000,minHeight:650,backgroundColor:'#f5f7fb',title:'PhotoBridge Lab',icon:path.join(__dirname,'assets','photobridge.png'),show:false,webPreferences:{preload:path.join(__dirname,'main-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,spellcheck:false}});win.removeMenu();win.once('ready-to-show',()=>{if(!process.argv.includes('--background'))win.show()});win.on('close',e=>{if(!quitting){e.preventDefault();win.hide()}});win.on('hide',()=>{if(!quitting&&store.get('uiRoot')&&store.get('uiRoot')!==activeUiRoot)void applyUi(false).catch(()=>{});});win.webContents.on('will-navigate',(e,url)=>{if(!url.startsWith(origin+'/')){e.preventDefault();if(url.startsWith('https://'))void shell.openExternal(url)}});win.webContents.setWindowOpenHandler(({url})=>url==='about:blank'?{action:'allow',overrideBrowserWindowOptions:{webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}}}:(url.startsWith('https://')&&void shell.openExternal(url),{action:'deny'}));win.webContents.session.setPermissionRequestHandler((_wc,_p,cb)=>cb(false));win.webContents.session.setPermissionCheckHandler(()=>false);
+  win.webContents.on('did-finish-load',()=>{if(win.webContents.getURL().startsWith(origin+'/'))win.webContents.setZoomFactor(1)});
+  tray=new Tray(path.join(__dirname,'assets','photobridge.png'));tray.setToolTip('PhotoBridge Lab · فعال در پس‌زمینه');tray.on('click',()=>void show().catch(e=>dialog.showErrorBox('PhotoBridge Lab',String(e.message||e))));tray.on('double-click',()=>void show().catch(e=>dialog.showErrorBox('PhotoBridge Lab',String(e.message||e))));tray.setContextMenu(Menu.buildFromTemplate([{label:'باز کردن فوتوبریج',click:show},{label:'تنظیم صدای اعلان سفارش',click:()=>alertWindow.showSettings()},{label:'بررسی و اعمال به‌روزرسانی ظاهر',click:async()=>{await updateUi(true);const pending=store.get('uiRoot')&&store.get('uiRoot')!==activeUiRoot;if(pending){const answer=await dialog.showMessageBox(win,{type:'question',title:'به‌روزرسانی ظاهر PhotoBridge',message:'نسخهٔ جدید ظاهر برنامه آماده است. اکنون اعمال شود؟',detail:'پیش از ادامه، فرم‌های باز و کارهای در حال انجام را ذخیره کن. سفارش‌ها و فایل‌های ذخیره‌شدهٔ محلی حفظ می‌شوند.',buttons:['بعداً','اعمال نسخهٔ جدید'],defaultId:0,cancelId:0});if(answer.response===1)await applyUi(false);}else if(store.get('updateError'))dialog.showMessageBox(win,{type:'warning',title:'به‌روزرسانی ظاهر',message:'دریافت نسخهٔ جدید انجام نشد. اتصال اینترنت را بررسی کن.',detail:String(store.get('updateError'))});else new Notification({title:'PhotoBridge Lab',body:'آخرین نسخهٔ ظاهر برنامه فعال است.'}).show();}},{type:'separator'},{label:'خروج کامل',click:()=>{quitting=true;app.quit()}}]));
+--- a/native-alerts.cjs
++++ b/native-alerts.cjs
+@@ -1,7 +1,9 @@
+ 'use strict';
++const {alertContent}=require('./alert-content.cjs');
++const {collectChatAlerts}=require('./chat-alerts.cjs');
+ // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
+ class NativeAlerts {
+- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{}}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss});this.epoch=0;this.busy=false;this.timer=null;}
++ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,now});this.epoch=0;this.busy=false;this.timer=null;}
+  start(){this.stop();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
+  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
+  key(account){return 'nativeAlertsPending:'+account;}
+@@ -12,7 +14,7 @@
+  }
+  async poll(){
+   const account=this.getAccount();if(this.busy||!account||!this.isSupported())return;
+-  const epoch=this.epoch;this.busy=true;
++  const epoch=this.epoch,checkedAt=this.now();this.busy=true;
+   try{
+    let pending=this.store.get(this.key(account))||[];
+    await this.present(account,pending,epoch);
+@@ -20,13 +22,18 @@
+    const data=await response.json();if(epoch!==this.epoch||this.getAccount()!==account)return;
+    const key='nativeAlertsSeen:'+account,seen=new Set(this.store.get(key)||[]);
+    const items=Array.isArray(data.notifications)?data.notifications:[];
+-   const fresh=items.filter(n=>n.id&&!n.read_at&&!seen.has(n.id));
++   const fresh=items.filter(n=>n.id&&!n.read_at&&!seen.has(n.id)).map(alertContent);
++   let chat=null;
++   if(this.getUserId())try{chat=await collectChatAlerts({store:this.store,request:this.request,account,userId:this.getUserId(),now:checkedAt});}catch{}
++   if(epoch!==this.epoch||this.getAccount()!==account)return;
++   if(chat)for(const n of chat.items)if(!seen.has(n.id))fresh.push(n);
+    // Re-read after the request: the operator may have acknowledged a popup meanwhile.
+    pending=this.store.get(this.key(account))||[];
+    const ids=new Set(pending.map(n=>n.id));
+-   for(const n of fresh)if(!ids.has(n.id)){pending.push({id:n.id,title:String(n.title||'اعلان جدید'),message:String(n.message||'')});ids.add(n.id);}
++   for(const n of fresh)if(!ids.has(n.id)){pending.push(n);ids.add(n.id);}
+    this.store.set(this.key(account),pending);
+-   for(const n of items)if(n.id)seen.add(n.id);
++   for(const n of [...items,...fresh])if(n.id)seen.add(n.id);
++   if(chat)this.store.set(chat.key,chat.checkpoint);
+    this.store.set(key,[...seen].slice(-1000));
+    if(fresh.length)await this.present(account,pending,epoch);
+   }catch{/* Pending alerts stay durable; the next poll retries. */}finally{this.busy=false;}
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "photobridge-lab-desktop",
+-  "version": "1.0.21",
++  "version": "1.0.22",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "photobridge-lab-desktop",
+-      "version": "1.0.21",
++      "version": "1.0.22",
+       "dependencies": {
+         "electron-updater": "6.8.9"
+       },
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "photobridge-lab-desktop",
+-  "version": "1.0.21",
++  "version": "1.0.22",
+   "private": true,
+   "description": "PhotoBridge Lab — offline-first Windows workspace",
+   "main": "main.cjs",
+--- a/test/automatic-ui.test.cjs
++++ b/test/automatic-ui.test.cjs
+@@ -74,7 +74,7 @@
+  assert.match(updater,/\.partial/,'download staging maintained');
+  assert.match(native,/lab\.sqlite/,'existing offline database preserved');
+  assert.equal(pkg.build.nsis.deleteAppDataOnUninstall,false);
+- assert.equal(pkg.version,'1.0.21');
++ assert.equal(pkg.version,'1.0.22');
+ });
+ test('later server updates are automatically downloaded, verified and never overwrite the fallback bundle',async()=>{
+  const f=setup(),origin=await f.listen();try{
+--- a/test/chat-alerts.test.cjs
++++ b/test/chat-alerts.test.cjs
+@@ -0,0 +1,17 @@
++'use strict';
++const {test}=require('node:test'),assert=require('node:assert/strict');
++const {NativeAlerts}=require('../native-alerts.cjs');
++const {alertContent}=require('../alert-content.cjs');
++const contact='11111111-1111-1111-1111-111111111111';
++function setup(){const data=new Map([['nativeChatChecked:A',1000]]),shown=[];let account='A',offline=false,messages=[],platform=[],clock=2000;
++const store={get:k=>data.get(k),set:(k,v)=>data.set(k,v)};
++const request=async path=>{if(offline)throw Error('offline');let value;if(path.startsWith('/api/lab/notifications'))value={notifications:[]};else if(path==='/api/lab/platform-chat')value={messages:platform};else if(path==='/api/lab/chat/contacts')value={contacts:[{id:contact,name:'عکاس',last_message_at:new Date(clock).toISOString()}]};else value={messages};return {ok:true,json:async()=>value}};
++const make=()=>new NativeAlerts({store,request,getAccount:()=>account,getUserId:()=> 'operator',now:()=>clock,notify:(n,open,ack)=>shown.push({n,ack}),open:()=>{}});
++return {store,data,shown,make,messages:x=>messages=x,platform:x=>platform=x,offline:x=>offline=x,account:x=>account=x};}
++const msg=(id,extra={})=>({id,sender_id:contact,message:'سلام\nپیام کامل',created_at:new Date(1500).toISOString(),...extra});
++test('incoming photographer and platform messages share the durable order alarm; own messages do not',async()=>{const s=setup();s.messages([msg('photo',{image_url:'https://photobridge.ir/photo.jpg'}),msg('own',{sender_id:'operator'})]);s.platform([msg('admin',{sender_name:'پشتیبانی'})]);await s.make().poll();assert.deepEqual(s.shown.at(-1).n.items.map(x=>x.id),['chat:admin','chat:photo']);assert.equal(s.shown.at(-1).n.items[1].image,'https://photobridge.ir/photo.jpg');s.offline(true);await s.make().poll();assert.equal(s.shown.at(-1).n.items.length,2);s.shown.at(-1).ack(['chat:photo']);assert.deepEqual(s.store.get('nativeAlertsPending:A').map(x=>x.id),['chat:admin']);});
++test('successful restart and next poll do not re-alert acknowledged messages',async()=>{const s=setup();s.messages([msg('one')]);await s.make().poll();s.shown.at(-1).ack(['chat:one']);s.shown.length=0;await s.make().poll();assert.equal(s.shown.length,0);});
++test('failed chat polling does not advance the checkpoint',async()=>{const s=setup(),a=s.make(),request=a.request;a.request=p=>p.includes('chat')?Promise.reject(Error('offline')):request(p);await a.poll();assert.equal(s.store.get('nativeChatChecked:A'),1000);s.messages([msg('retry')]);await s.make().poll();assert.equal(s.shown.at(-1).n.items[0].id,'chat:retry');});
++test('switching accounts during a chat request cannot publish or checkpoint stale data',async()=>{const s=setup(),a=s.make(),request=a.request;let release,started;const ready=new Promise(r=>started=r);a.request=async p=>{if(p==='/api/lab/platform-chat'){started();return new Promise(r=>release=()=>r({ok:true,json:async()=>({messages:[msg('stale')]})}))}return request(p)};const task=a.poll();await ready;s.account('B');a.stop();release();await task;assert.equal(s.shown.length,0);assert.equal(s.store.get('nativeChatChecked:A'),1000);assert.equal(s.store.get('nativeAlertsPending:B'),undefined);});
++test('a first chat poll establishes a baseline without replaying historical conversations',async()=>{const s=setup();s.data.delete('nativeChatChecked:A');s.messages([msg('old')]);await s.make().poll();assert.equal(s.shown.length,0);assert.equal(s.store.get('nativeChatChecked:A'),2000);});
++test('alarm content preserves text and rejects executable/local image URLs',()=>{for(const imageUrl of ['javascript:alert(1)','file:///C:/secret.png','http://localhost/private','data:image/svg+xml,test','https://user:pass@example.com/a'])assert.equal(alertContent({id:'x',message:'<script>hello</script>',metadata:{imageUrl}}).image,undefined);assert.equal(alertContent({id:'x',message:'hello\nworld',metadata:{imageUrl:'https://photobridge.ir/a.jpg'}}).message,'hello\nworld');});

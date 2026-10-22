@@ -304,6 +304,14 @@ await deployStep("./enable-r1341-compact-retouch-cards.mjs");
 
 await deployStep("./enable-r1344-gallery-create-pricing.mjs");
 
+// Generate fresh OS-owned PWA branding AFTER the last mobile UI patch,
+// BEFORE the final Lab UI snapshot. No duplicate HTML splash and no changes
+// to the desktop Electron icon.
+await deployStep("./enable-r1359-mobile-blue-launch.mjs");
+console.log("[R1359] START mobile PWA blue brand regression tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1359-mobile-blue-launch.cjs", "scripts/test-r1222-mobile-brand.cjs"], { stdio: "inherit" });
+console.log("[R1359] OK mobile PWA blue brand regression tests");
+
 // Native Lab UI stays unobstructed. Run the minimal overlay regression
 // BEFORE regenerating the final website UI package consumed by Windows.
 console.log("[PhotoBridge Docker build] START R1356 quiet Lab overlay tests");

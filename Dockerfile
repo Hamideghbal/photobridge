@@ -25,7 +25,8 @@ ENV PORT=3000
 COPY . ./
 RUN echo "[PhotoBridge Docker] deploy revision: $(cat DEPLOY_REVISION.txt)" \
     && echo "[PhotoBridge Docker] START prebuilt payload build" \
-    && node scripts/liara-fast-build.mjs \
+    && node --test scripts/test-r1352-liara-build-supervisor.cjs \
+    && node scripts/liara-build-supervisor.cjs \
     && echo "[PhotoBridge Docker] OK prebuilt payload build" \
     && echo "[PhotoBridge Docker] START runtime cleanup" \
     && find scripts -type f ! -name migrate.mjs ! -name ensure-sofia-demo.sql -delete \

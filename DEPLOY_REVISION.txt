@@ -1,1 +1,1 @@
-2026-10-22-r1355-liara-supervisor-test-timing-stability
+2026-10-22-r1356-quiet-lab-native-status-overlay

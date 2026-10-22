@@ -10,7 +10,7 @@ const script=fs.readFileSync(path.join(root,'tools/build-lab-windows-local.mjs')
 test('local lab builder is not dependent on GitHub Actions or a fake EXE',()=>{
   assert.match(script,/desktop-sources.*PhotoBridge-Desktop-Sources-R1089\.zip/);
   assert.match(script,/archiveSha256/);
-  assert.match(script,/npm\(\['install', '--no-package-lock', '--no-audit', '--no-fund'\], root\)/);
+  assert.match(script,/npm\(\['install', '--no-package-lock', '--include=optional', '--no-audit', '--no-fund'\], root\)/);
   assert.match(script,/Sharp native image dependency is ready/);
   assert.match(script,/desktop-overlay\.js.*ui-update\.cjs/s);
   assert.match(script,/enable-r1342-lab-ui-update\.mjs/);
@@ -60,7 +60,7 @@ test('offline preparation restores canonical lab source without overwriting newe
     assert.equal(fs.readFileSync(path.join(app,'desktop-overlay.js'),'utf8'),'LATEST OVERLAY');
     assert.equal(fs.readFileSync(path.join(app,'ui-update.cjs'),'utf8'),'LATEST UPDATER');
     assert.equal(JSON.parse(fs.readFileSync(path.join(app,'package.json'),'utf8')).version,'1.0.18');
-    assert.match(fs.readFileSync(path.join(f.temp,'npm-invocations.txt'),'utf8'),/install --no-package-lock --no-audit --no-fund/);
+    assert.match(fs.readFileSync(path.join(f.temp,'npm-invocations.txt'),'utf8'),/install --no-package-lock --include=optional --no-audit --no-fund/);
     assert(fs.existsSync(path.join(app,'main.cjs')));
     assert(!fs.existsSync(path.join(app,'release')));
     assert(!fs.existsSync(path.join(f.temp,'apps/store-desktop')));

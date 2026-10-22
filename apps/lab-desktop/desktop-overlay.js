@@ -2,44 +2,27 @@
  'use strict';
  if(window.__PB_LAB_DESKTOP_OVERLAY__)return;
  window.__PB_LAB_DESKTOP_OVERLAY__=true;
- // No permanent floating status/sync/update bar over the native Lab UI.
+ // All sync/update information stays in the optional diagnostics dialog and Windows tray.
  // Windows tray contains manual sync/update; Ctrl+Shift+S/U offer optional status.
  const style=document.createElement('style');
  style.textContent=`
- #pbLabDesktopConflictFlag{position:fixed;left:12px;top:74px;z-index:2147483000;
-   min-width:28px;height:28px;padding:0 7px;border-radius:999px;border:1px solid #f0c8bc;
-   background:#fff8f5;color:#aa4328;box-shadow:0 3px 14px rgba(0,0,0,.08);
-   font:bold 12px Tahoma;cursor:pointer}
- #pbLabDesktopConflictFlag[hidden]{display:none!important}
  .pbLabDesktopConflicts{position:fixed;inset:12%;z-index:2147483646;overflow:auto;
    background:#fff;border:1px solid #d0d5dd;border-radius:16px;padding:20px;
    direction:rtl;font:12px/1.9 Vazirmatn,Tahoma;color:#344054;
    box-shadow:0 15px 60px rgba(0,0,0,.14)}
  .pbLabDesktopConflicts button{margin:4px;border:0;border-radius:8px;padding:6px 10px;
    background:#eef2ff;color:#315efb;font:inherit;cursor:pointer}
- .pbLabDesktopConflicts button:focus-visible,#pbLabDesktopConflictFlag:focus-visible{outline:2px solid #315efb}
+ .pbLabDesktopConflicts button:focus-visible{outline:2px solid #315efb}
  `;
  document.head.append(style);
- const indicator=document.createElement('button');
- indicator.id='pbLabDesktopConflictFlag';indicator.type='button';
- indicator.textContent='!';indicator.hidden=true;
- indicator.setAttribute('aria-label','بررسی اختلاف‌های همگام‌سازی');
- indicator.title='اختلاف‌های همگام‌سازی — Ctrl+Shift+S';
- document.body.append(indicator);
  let state=null,loading=false,busy=false;
  const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';
- function refreshIndicator(){
-   const n=Array.isArray(state?.conflicts)?state.conflicts.length:0;
-   indicator.hidden=!state?.signedIn||!n;
-   indicator.textContent=n>99?'99+':String(n||'!');
-   indicator.title=n+' اختلاف همگام‌سازی — Ctrl+Shift+S';
- }
  async function refresh(){
    if(loading)return state;loading=true;
    try{
      const response=await fetch('/desktop/status',{cache:'no-store'});
      if(response.ok)state=await response.json();
-   }catch{}finally{loading=false;refreshIndicator()}
+   }catch{}finally{loading=false}
    return state;
  }
  function element(tag,value,parent){const node=document.createElement(tag);node.textContent=value;parent.append(node);return node}
@@ -98,7 +81,6 @@
    const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
    link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
  }
- indicator.addEventListener('click',openSync);
  document.addEventListener('keydown',event=>{
    if(!event.ctrlKey||!event.shiftKey||event.altKey||event.metaKey)return;
    if(event.key.toLowerCase()==='s'){event.preventDefault();void openSync()}

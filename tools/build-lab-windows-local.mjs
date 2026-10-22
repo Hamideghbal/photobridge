@@ -16,6 +16,7 @@ const archive = path.join(root, 'desktop-sources', 'PhotoBridge-Desktop-Sources-
 const archiveSha256 = '49788a4b7db76696742a9ebdfc054b71029993c76677fcf5da95d94085f2dad0';
 const prepareOnly = process.argv.includes('--prepare-only');
 const signed = process.argv.includes('--signed');
+const rebuildWebsite=process.argv.includes('--rebuild-website');
 const run = (program, args, cwd=root) => {
   const result = spawnSync(program, args, {cwd, stdio: 'inherit', shell: false, env: process.env});
   if (result.error) throw result.error;
@@ -63,39 +64,36 @@ function main() {
   if (hash(archive) !== archiveSha256) throw Error('Saved lab source archive does not match its verified SHA-256');
   if (signed && !(process.env.CSC_LINK || process.env.WIN_CSC_LINK)) throw Error('Signed release requires the configured Windows code-signing certificate');
   if (!prepareOnly && process.platform !== 'win32') throw Error('An actual Windows installer must be built on Windows x64 (run with --prepare-only to inspect source on another OS)');
-  // A downloaded GitHub source ZIP does not contain node_modules.
-  // Resolve pinned website dependencies locally; this never consumes GitHub Actions minutes.
+  // Only the optional full-site rebuild needs root npm + sharp. Local Windows
+  // builds normally consume the VERSIONED CHECKED-IN site files. Replaying
+  // the whole Liara history over those assets caused stale-test failures at
+  // R1177/R1182/R1187 (and would keep breaking on subsequent old anchors).
+  // The native runtime safely refreshes its UI from the signed-by-hash server
+  // manifest when the user opens the app, independently of this installer.
   const npm = (args, cwd=root) => process.platform === 'win32'
     ? run('cmd.exe', ['/d', '/s', '/c', 'npm', ...args], cwd)
     : run('npm', args, cwd);
-  // Some source snapshots deliberately ship without a root package-lock.json.
-  // Skipping npm in that case leaves sharp (used by R1222 icon generation) absent.
-  need(path.join(root, 'package.json'));
-  console.log('[PhotoBridge Lab] Install website build dependencies on this computer');
-  if (fs.existsSync(path.join(root, 'package-lock.json'))) {
-    npm(['ci', '--no-audit', '--no-fund'], root);
-  } else {
-    npm(['install', '--no-package-lock', '--include=optional', '--no-audit', '--no-fund'], root);
-  }
-  // Fail here with an actionable diagnostic instead of deep in Liara's build.
-  try {
+  if (rebuildWebsite) {
+    need(path.join(root, 'package.json'));
+    console.log('[PhotoBridge Lab] Explicit --rebuild-website: running full Liara transformation and tests');
+    if (fs.existsSync(path.join(root, 'package-lock.json')))
+      npm(['ci', '--no-audit', '--no-fund'], root);
+    else npm(['install', '--no-package-lock', '--include=optional', '--no-audit', '--no-fund'], root);
     const sharp = createRequire(path.join(root, 'package.json'))('sharp');
-    if (typeof sharp !== 'function') throw Error('sharp API unavailable');
-    console.log('[PhotoBridge Lab] Sharp native image dependency is ready');
-  } catch (error) {
-    throw Error('Required sharp dependency is unavailable after npm install; verify your Node.js version, internet and npm output. ' + String(error?.message || error));
+    if (typeof sharp !== 'function') throw Error('Sharp native build dependency missing');
+    run(process.execPath, ['scripts/liara-fast-build.mjs']);
+  } else {
+    console.log('[PhotoBridge Lab] Using verified prebuilt UI; NOT replaying Liara web migrations');
+    run(process.execPath, ['tools/verify-lab-prebuilt-ui.mjs']);
+    run(process.execPath, ['--test', 'tools/test-verify-lab-prebuilt-ui.cjs']);
   }
-  // Bake the same *final* HTML/CSS/JS as the deployed website. Using the
-  // checkout's raw dist/web without running Liara's site patches can package
-  // an old interface even though the EXE itself is new.
-  console.log('[PhotoBridge Lab] Build current website UI before packaging');
-  run(process.execPath, ['scripts/liara-fast-build.mjs']);
   console.log('[PhotoBridge Lab] Restore editable native sources from verified archive');
   restore();
   run(process.execPath, ['scripts/enable-r1296-native-alerts.mjs']);
   run(process.execPath, ['scripts/enable-r1342-lab-ui-update.mjs']);
   run(process.execPath, ['scripts/enable-r1348-lab-presence-online-only.mjs']);
   run(process.execPath, ['scripts/prepare-lab-desktop-ui.mjs']);
+  run(process.execPath, ['scripts/verify-lab-desktop-ui-freshness.mjs']);
   run(process.execPath, ['scripts/prepare-lab-installer-assets.mjs']);
   run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs', 'scripts/test-r1348-lab-presence-sync.cjs']);
   console.log('[PhotoBridge Lab] Local source and UI updater checks passed');

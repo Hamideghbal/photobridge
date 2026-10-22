@@ -24,7 +24,6 @@ await sharp(data,{raw:{width:info.width,height:info.height,channels:4}}).png({co
 
 const file=base+'index.html';
 let html=fs.readFileSync(file,'utf8');
-if(!html.includes('<body><div id="root"></div>'))throw Error('[R1361] expected single React root not found');
 if(html.includes('<div id="pbAppSplashV780"'))throw Error('[R1361] legacy duplicate splash is back');
 const styleId='pbR1361MobileSplashStyle';
 const style=`<style id="${styleId}">
@@ -48,6 +47,7 @@ html.pbR1361Embedded #pbR1361MobileSplash{display:none!important}
 const markup=`<div id="pbR1361MobileSplash" role="status" aria-label="در حال آماده‌سازی PhotoBridge"><img src="/${symbol}" alt="" width="920" height="${artHeight}"><span>PhotoBridge</span></div>`;
 html=html.replace(/<style id="pbR1361MobileSplashStyle">[\s\S]*?<\/style><script id="pbR1361StandaloneBoot">[\s\S]*?<\/script>/g,'');
 html=html.replace(/<div id="pbR1361MobileSplash"[\s\S]*?<\/div>/g,'');
+if(!html.includes('<body><div id="root"></div>'))throw Error('[R1361] expected single React root not found');
 html=html.replace('</head>',style+'</head>');
 html=html.replace('<body><div id="root"></div>','<body>'+markup+'<div id="root"></div>');
 if((html.match(/id="pbR1361MobileSplash"/g)||[]).length!==1)throw Error('[R1361] duplicate startup handoff');

@@ -12,6 +12,8 @@ test('local lab builder is not dependent on GitHub Actions or a fake EXE',()=>{
   assert.match(script,/archiveSha256/);
   assert.match(script,/desktop-overlay\.js.*ui-update\.cjs/s);
   assert.match(script,/enable-r1342-lab-ui-update\.mjs/);
+  assert(script.indexOf("run(process.execPath, ['scripts/liara-fast-build.mjs'])") < script.indexOf('  restore();'));
+  assert(script.includes("run(process.execPath, ['scripts/liara-fast-build.mjs'])"));
   assert.match(script,/run\('cmd\.exe', \['\/d', '\/s', '\/c', 'npm'/);
   assert.match(script,/dist:unsigned/);
   assert.match(script,/--signed/);
@@ -26,6 +28,7 @@ function fixture(){
   for(const directory of ['tools','desktop-sources','apps/lab-desktop','dist/web','scripts'])fs.mkdirSync(path.join(temp,directory),{recursive:true});
   fs.copyFileSync(path.join(root,'tools/build-lab-windows-local.mjs'),path.join(temp,'tools/build-lab-windows-local.mjs'));
   fs.copyFileSync(path.join(root,'desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip'),path.join(temp,'desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip'));
+  fs.writeFileSync(path.join(temp,'scripts/liara-fast-build.mjs'),"console.log('fixture website build passed')");
   fs.writeFileSync(path.join(temp,'dist/web/index.html'),'<html>new lab UI</html>');
   fs.writeFileSync(path.join(temp,'apps/lab-desktop/desktop-overlay.js'),'LATEST OVERLAY');
   fs.writeFileSync(path.join(temp,'apps/lab-desktop/ui-update.cjs'),'LATEST UPDATER');

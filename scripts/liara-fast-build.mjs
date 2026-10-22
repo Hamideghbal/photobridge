@@ -5,6 +5,7 @@ import { deduplicateOnnxRuntime } from './deduplicate-onnx-runtime.mjs';
 
 // Emit the exact stage name before execution so truncated Liara logs still
 // identify the last attempted patch. Re-throw on failures; never hide exit codes.
+let completedDeploySteps = 0;
 async function deployStep(specifier) {
   const started = Date.now();
   console.log(`[PhotoBridge Docker build] START ${specifier}`);
@@ -16,6 +17,10 @@ async function deployStep(specifier) {
     throw error;
   }
   console.log(`[PhotoBridge Docker build] OK ${specifier} (${Date.now() - started}ms)`);
+  // In the Liara worker, ESM modules and large patched assets accumulate over
+  // 100+ stages. Opportunistic GC keeps peak memory lower without changing
+  // file output or weakening any regression tests.
+  if (global.gc && ++completedDeploySteps % 8 === 0) global.gc();
 }
 
 // R89: expose the npm jsQR browser bundle as a first-party static asset for mobile equipment scanning.

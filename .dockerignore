@@ -1,5 +1,7 @@
 # Only the production payload enters the build context. COPY . ./ preserves paths.
 **
+# Required by the R1352 build supervisor regression suite inside Docker.
+!Dockerfile
 !package.json
 !.npmrc
 !DEPLOY_REVISION.txt

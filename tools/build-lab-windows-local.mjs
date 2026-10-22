@@ -62,6 +62,15 @@ function main() {
   if (hash(archive) !== archiveSha256) throw Error('Saved lab source archive does not match its verified SHA-256');
   if (signed && !(process.env.CSC_LINK || process.env.WIN_CSC_LINK)) throw Error('Signed release requires the configured Windows code-signing certificate');
   if (!prepareOnly && process.platform !== 'win32') throw Error('An actual Windows installer must be built on Windows x64 (run with --prepare-only to inspect source on another OS)');
+  // A downloaded GitHub source ZIP does not contain node_modules.
+  // Resolve pinned website dependencies locally; this never consumes GitHub Actions minutes.
+  const npm = (args, cwd=root) => process.platform === 'win32'
+    ? run('cmd.exe', ['/d', '/s', '/c', 'npm', ...args], cwd)
+    : run('npm', args, cwd);
+  if (fs.existsSync(path.join(root, 'package-lock.json'))) {
+    console.log('[PhotoBridge Lab] Install website build dependencies on this computer');
+    npm(['ci', '--no-audit', '--no-fund'], root);
+  }
   // Bake the same *final* HTML/CSS/JS as the deployed website. Using the
   // checkout's raw dist/web without running Liara's site patches can package
   // an old interface even though the EXE itself is new.
@@ -77,13 +86,10 @@ function main() {
   run(process.execPath, ['--test', 'scripts/test-r1296-native-alerts.cjs', 'scripts/test-r1342-lab-ui-update.cjs', 'scripts/test-r1342-native-integration.cjs', 'scripts/test-r1343-lab-installer-build.cjs', 'scripts/test-r1348-lab-presence-sync.cjs']);
   console.log('[PhotoBridge Lab] Local source and UI updater checks passed');
   if (prepareOnly) {console.log('[PhotoBridge Lab] --prepare-only complete; no Windows installer was created.'); return;}
-  // Install all dependencies locally; no GitHub Actions Windows runner required.
-  // On Windows, npm.cmd is a batch script; Node.js spawn with shell:false cannot execute it directly.
-  // Call cmd.exe explicitly so paths with spaces are handled by the Windows command interpreter.
-  const npm = args => run('cmd.exe', ['/d', '/s', '/c', 'npm', ...args], app);
-  npm(['ci', '--no-audit', '--no-fund']);
-  npm(['test']);
-  npm(['run', signed ? 'dist' : 'dist:unsigned']);
+  // Electron and NSIS are installed and built on the user's Windows computer.
+  npm(['ci', '--no-audit', '--no-fund'], app);
+  npm(['test'], app);
+  npm(['run', signed ? 'dist' : 'dist:unsigned'], app);
   const release = path.join(app, 'release');
   const version = JSON.parse(fs.readFileSync(path.join(app, 'package.json'), 'utf8')).version;
   if (version !== '1.0.18') throw Error('Unexpected Lab installer version: ' + version);

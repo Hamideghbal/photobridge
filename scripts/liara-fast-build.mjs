@@ -289,3 +289,9 @@ console.log("[R1340] OK correction-only retouch UI tests");
 await deployStep("./enable-r1341-compact-retouch-cards.mjs");
 
 await deployStep("./enable-r1344-gallery-create-pricing.mjs");
+
+// The R1328 manifest refresh runs BEFORE the late R1330–R1344 UI patches.
+// Rebuild the LAB payload at the very end; otherwise Windows downloads
+// a valid but OLD snapshot while the website shows the new layout.
+await deployStep("./prepare-lab-desktop-ui.mjs");
+await deployStep("./verify-lab-desktop-ui-freshness.mjs");

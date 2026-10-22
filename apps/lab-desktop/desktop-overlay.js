@@ -1,1 +1,110 @@
-(()=>{'use strict';if(window.__PB_LAB_DESKTOP_OVERLAY__)return;window.__PB_LAB_DESKTOP_OVERLAY__=true;const s=document.createElement('style');s.textContent=`#pbLabDesktopState{position:fixed;left:14px;bottom:14px;z-index:2147483000;direction:rtl;display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #d0d5dd;border-radius:12px;background:rgba(255,255,255,.96);box-shadow:0 8px 28px rgba(15,23,42,.10);font:10px/1.7 Vazirmatn,Tahoma;color:#475467}#pbLabDesktopState[hidden]{display:none!important}#pbLabDesktopState i{width:7px;height:7px;border-radius:50%;background:#98a2b3}#pbLabDesktopState.online i{background:#12b76a}#pbLabDesktopState.pending i{background:#f79009}#pbLabDesktopState.error i{background:#f04438}#pbLabDesktopState button{border:0;background:transparent;color:#315efb;font:inherit;font-weight:800;cursor:pointer}.pbLabDesktopConflicts{position:fixed;inset:12%;z-index:2147483646;overflow:auto;background:#fff;border:1px solid #d0d5dd;border-radius:16px;padding:20px;direction:rtl;font:12px/1.9 Vazirmatn,Tahoma}.pbLabDesktopConflicts button{margin:4px;border:0;border-radius:8px;padding:6px 10px;background:#eef2ff;color:#315efb;font:inherit}`;document.head.append(s);const bar=document.createElement('div');bar.id='pbLabDesktopState';bar.innerHTML='<i></i><span>در حال بررسی…</span><button type="button">همگام‌سازی</button><button type="button" hidden>بررسی اختلاف</button>';document.body.append(bar);bar.hidden=true;const conflictFlag=document.createElement('button');conflictFlag.id='pbLabSyncAlert';conflictFlag.type='button';conflictFlag.hidden=true;conflictFlag.setAttribute('aria-label','بررسی خطاهای همگام‌سازی');conflictFlag.title='اختلاف‌های همگام‌سازی (Ctrl+Shift+S)';conflictFlag.style.cssText='position:fixed;top:74px;left:12px;z-index:2147483000;width:30px;height:30px;border:1px solid #e9b9a5;border-radius:50%;background:#fff8f5;color:#9d3427;font:bold 13px Tahoma;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.08)';document.body.append(conflictFlag);let state=null,busy=false;const label=()=>{bar.hidden=true;conflictFlag.hidden=!state?.signedIn||!state?.conflicts?.length;conflictFlag.textContent=String(state?.conflicts?.length||'!');bar.className=state?.error?'error':state?.syncing||state?.pending||state?.conflicts?.length?'pending':state?.online?'online':'';bar.children[1].textContent=state?.syncing?'در حال همگام‌سازی…':state?.error==='internet_offline'?'آفلاین · اطلاعات محلی فعال است':state?.error==='login_required'?'نیاز به ورود دوباره':state?.conflicts?.length?`${state.conflicts.length.toLocaleString('fa-IR')} مورد نیازمند بررسی`:state?.pending?`${state.pending.toLocaleString('fa-IR')} تغییر در صف`:state?.online?'متصل به سرور':'در حال بررسی ارتباط';bar.children[3].hidden=!state?.conflicts?.length};async function refresh(){try{const r=await fetch('/desktop/status',{cache:'no-store'});state=await r.json();label()}catch{bar.className='error';bar.children[1].textContent='پایگاه محلی در دسترس نیست'}}async function sync(){if(busy)return;busy=true;try{await fetch('/desktop/sync',{method:'POST'});await refresh()}finally{busy=false}}bar.children[2].onclick=sync;bar.children[3].onclick=()=>{if(!state?.conflicts?.length)return;const p=document.createElement('section');p.className='pbLabDesktopConflicts';const close=document.createElement('button');close.textContent='بستن';close.onclick=()=>p.remove();p.append(close);for(const x of state.conflicts){const h=document.createElement('h3');h.textContent='عملیات نیازمند بررسی';const d=document.createElement('div');d.textContent=`${x.method} ${x.url} — ${x.error?.message||x.error?.error||'اختلاف با سرور'}`;const retry=document.createElement('button');retry.textContent='ارسال دوباره';retry.onclick=async()=>{await fetch('/desktop/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});p.remove();sync()};const discard=document.createElement('button');discard.textContent='کنار گذاشتن عملیات محلی';discard.onclick=async()=>{if(!confirm('این تغییر محلی کنار گذاشته شود؟'))return;await fetch('/desktop/discard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});p.remove();refresh()};p.append(h,d,retry,discard)}document.body.append(p)};const updateButton=document.createElement('button');updateButton.type='button';updateButton.textContent='به‌روزرسانی ظاهر';bar.append(updateButton);updateButton.onclick=async()=>{await refresh();const panel=document.createElement('section');panel.className='pbLabDesktopConflicts';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','به‌روزرسانی ظاهر برنامه');const title=document.createElement('h3');title.textContent='به‌روزرسانی ظاهر برنامه';panel.append(title);const date=value=>value?new Date(value).toLocaleString('fa-IR'):'ثبت نشده';for(const text of ['نسخهٔ برنامه: '+(state?.nativeVersion||'در این نسخه گزارش نمی‌شود'),'آخرین بررسی: '+date(state?.uiLastCheckedAt),'آخرین دریافت: '+date(state?.uiDownloadedAt),'آخرین اعمال: '+date(state?.uiAppliedAt)]){const row=document.createElement('p');row.textContent=text;panel.append(row);}const message=document.createElement('p');message.setAttribute('role','status');message.textContent=state?.updateError?'به‌روزرسانی کامل نشده است. اتصال اینترنت را بررسی و دوباره تلاش کن.':state?.uiDownloadedAt&&(!state?.uiAppliedAt||new Date(state.uiDownloadedAt)>new Date(state.uiAppliedAt))?'نسخهٔ جدید دریافت شده و منتظر اعمال است.':'ظاهر برنامه از بستهٔ نصب یا آخرین نسخهٔ دریافت‌شده اجرا می‌شود.';panel.append(message);if(state?.updateError){const details=document.createElement('small');details.textContent='جزئیات خطا: '+state.updateError;panel.append(details);}const hint=document.createElement('p');hint.textContent=state?.uiTrayUpdateSupported?'برای بررسی دستی، روی آیکون PhotoBridge کنار ساعت ویندوز راست‌کلیک کن و «بررسی و اعمال به‌روزرسانی ظاهر» را بزن. اعمال نسخه پس از تأیید تو انجام می‌شود.':'این نسخه بررسی دستی از منوی برنامه ندارد. پنجره را ببند و از کنار ساعت ویندوز دوباره باز کن تا به‌روزرسانی بررسی و اعمال شود. اگر خطا تکرار شد، نسخهٔ جدید برنامه لازم است.';panel.append(hint);const download=document.createElement('a');download.href='https://photobridge.ir/lab-windows-download.html';download.textContent='صفحهٔ دانلود برنامهٔ ویندوز لابراتوار';download.target='_blank';download.rel='noopener noreferrer';panel.append(download);const close=document.createElement('button');close.type='button';close.textContent='بستن';close.onclick=()=>panel.remove();panel.append(close);document.body.append(panel);};conflictFlag.onclick=()=>{if(state?.conflicts?.length)bar.children[3].onclick()};document.addEventListener('keydown',event=>{if(!event.ctrlKey||!event.shiftKey||event.altKey||event.metaKey)return;const key=event.key.toLowerCase();if(key==='u'){event.preventDefault();void updateButton.onclick();}if(key==='s'){event.preventDefault();void refresh().then(()=>{if(state?.conflicts?.length){conflictFlag.onclick();return;}const panel=document.createElement('section');panel.className='pbLabDesktopConflicts';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','وضعیت همگام‌سازی لابراتوار');const title=document.createElement('h3');title.textContent='وضعیت همگام‌سازی لابراتوار';panel.append(title);for(const value of ['عملیات در صف: '+Number(state?.pending||0).toLocaleString('fa-IR'),'آخرین همگام‌سازی: '+(state?.lastSync||'ثبت نشده'),'وضعیت اتصال: '+(state?.error||'در حال بررسی')]){const p=document.createElement('p');p.textContent=value;panel.append(p)}const run=document.createElement('button');run.type='button';run.textContent='بررسی همگام‌سازی';run.onclick=async()=>{await sync();panel.remove()};panel.append(run);const close=document.createElement('button');close.type='button';close.textContent='بستن';close.onclick=()=>panel.remove();panel.append(close);document.body.append(panel)})}});window.addEventListener('online',sync);window.addEventListener('offline',refresh);refresh();setInterval(refresh,10000)})();
+(()=>{
+ 'use strict';
+ if(window.__PB_LAB_DESKTOP_OVERLAY__)return;
+ window.__PB_LAB_DESKTOP_OVERLAY__=true;
+ // No permanent floating status/sync/update bar over the native Lab UI.
+ // Windows tray contains manual sync/update; Ctrl+Shift+S/U offer optional status.
+ const style=document.createElement('style');
+ style.textContent=`
+ #pbLabDesktopConflictFlag{position:fixed;left:12px;top:74px;z-index:2147483000;
+   min-width:28px;height:28px;padding:0 7px;border-radius:999px;border:1px solid #f0c8bc;
+   background:#fff8f5;color:#aa4328;box-shadow:0 3px 14px rgba(0,0,0,.08);
+   font:bold 12px Tahoma;cursor:pointer}
+ #pbLabDesktopConflictFlag[hidden]{display:none!important}
+ .pbLabDesktopConflicts{position:fixed;inset:12%;z-index:2147483646;overflow:auto;
+   background:#fff;border:1px solid #d0d5dd;border-radius:16px;padding:20px;
+   direction:rtl;font:12px/1.9 Vazirmatn,Tahoma;color:#344054;
+   box-shadow:0 15px 60px rgba(0,0,0,.14)}
+ .pbLabDesktopConflicts button{margin:4px;border:0;border-radius:8px;padding:6px 10px;
+   background:#eef2ff;color:#315efb;font:inherit;cursor:pointer}
+ .pbLabDesktopConflicts button:focus-visible,#pbLabDesktopConflictFlag:focus-visible{outline:2px solid #315efb}
+ `;
+ document.head.append(style);
+ const indicator=document.createElement('button');
+ indicator.id='pbLabDesktopConflictFlag';indicator.type='button';
+ indicator.textContent='!';indicator.hidden=true;
+ indicator.setAttribute('aria-label','بررسی اختلاف‌های همگام‌سازی');
+ indicator.title='اختلاف‌های همگام‌سازی — Ctrl+Shift+S';
+ document.body.append(indicator);
+ let state=null,loading=false,busy=false;
+ const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';
+ function refreshIndicator(){
+   const n=Array.isArray(state?.conflicts)?state.conflicts.length:0;
+   indicator.hidden=!state?.signedIn||!n;
+   indicator.textContent=n>99?'99+':String(n||'!');
+   indicator.title=n+' اختلاف همگام‌سازی — Ctrl+Shift+S';
+ }
+ async function refresh(){
+   if(loading)return state;loading=true;
+   try{
+     const response=await fetch('/desktop/status',{cache:'no-store'});
+     if(response.ok)state=await response.json();
+   }catch{}finally{loading=false;refreshIndicator()}
+   return state;
+ }
+ function element(tag,value,parent){const node=document.createElement(tag);node.textContent=value;parent.append(node);return node}
+ function button(value,parent,action){const b=element('button',value,parent);b.type='button';b.onclick=action;return b}
+ function dialog(title){
+   document.querySelectorAll('.pbLabDesktopConflicts').forEach(p=>p.remove());
+   const panel=document.createElement('section');panel.className='pbLabDesktopConflicts';
+   panel.setAttribute('role','dialog');panel.setAttribute('aria-label',title);
+   panel.tabIndex=-1;
+   element('h3',title,panel);
+   button('بستن',panel,()=>panel.remove());
+   document.body.append(panel);panel.focus();return panel;
+ }
+ async function syncNow(){
+   if(busy)return;busy=true;
+   try{await fetch('/desktop/sync',{method:'POST'});}
+   catch{}finally{busy=false;await refresh()}
+ }
+ async function openSync(){
+   await refresh();const panel=dialog('وضعیت همگام‌سازی لابراتوار');
+   const s=state||{};
+   element('p',s.signedIn?'اتصال و همگام‌سازی در پس‌زمینه بررسی می‌شود.':'برای همگام‌سازی ابتدا وارد حساب لابراتوار شوید.',panel);
+   element('p','عملیات در صف: '+Number(s.pending||0).toLocaleString('fa-IR'),panel);
+   element('p','موارد نیازمند بررسی: '+Number(s.conflicts?.length||0).toLocaleString('fa-IR'),panel);
+   element('p','آخرین همگام‌سازی: '+date(s.lastSync),panel);
+   if(s.error)element('p','خطای اتصال: '+s.error,panel);
+   if(s.report)element('p','آخرین تلاش: '+date(s.report.finishedAt)+' · ارسال موفق: '+Number(s.report.sent||0).toLocaleString('fa-IR'),panel);
+   if(s.signedIn)button('بررسی همگام‌سازی',panel,async()=>{await syncNow();if(panel.isConnected){panel.remove();void openSync()}});
+   for(const x of (s.conflicts||[]).slice(0,20)){
+     const area=document.createElement('div');panel.append(area);
+     element('strong','عملیات نیازمند بررسی',area);
+     element('p',String(x.method||'')+' '+String(x.url||'')+' — '+String(x.error?.message||x.error?.error||'اختلاف با سرور'),area);
+     button('ارسال مجدد با تأیید',area,async()=>{
+       if(!confirm('ممکن است این عملیات قبلاً به سرور رسیده باشد. ابتدا وضعیت سفارش یا پرداخت را بررسی کرده‌ای؟'))return;
+       await fetch('/desktop/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
+       panel.remove();await refresh();void openSync();
+     });
+     button('کنار گذاشتن عملیات محلی',area,async()=>{
+       if(!confirm('این تغییر محلی دیگر ارسال نمی‌شود. فقط وقتی از ثبت آن در سرور مطمئن هستی ادامه بده.'))return;
+       await fetch('/desktop/discard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
+       panel.remove();await refresh();void openSync();
+     });
+   }
+   if((s.conflicts||[]).length>20)element('p','۲۰ مورد اول نمایش داده شده است.',panel);
+ }
+ async function openUpdate(){
+   await refresh();const s=state||{};const panel=dialog('به‌روزرسانی ظاهر برنامه');
+   for(const line of [
+     'نسخهٔ برنامه: '+(s.nativeVersion||'در این نسخه گزارش نمی‌شود'),
+     'آخرین بررسی: '+date(s.uiLastCheckedAt),
+     'آخرین دریافت: '+date(s.uiDownloadedAt),
+     'آخرین اعمال: '+date(s.uiAppliedAt)
+   ])element('p',line,panel);
+   element('p',s.updateError?'به‌روزرسانی کامل نشده است: '+s.updateError:'بررسی و دریافت تغییرات ظاهر خودکار انجام می‌شود.',panel);
+   element('p','برای بررسی دستی از منوی آیکون PhotoBridge کنار ساعت ویندوز استفاده کن.',panel);
+   const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
+   link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
+ }
+ indicator.addEventListener('click',openSync);
+ document.addEventListener('keydown',event=>{
+   if(!event.ctrlKey||!event.shiftKey||event.altKey||event.metaKey)return;
+   if(event.key.toLowerCase()==='s'){event.preventDefault();void openSync()}
+   else if(event.key.toLowerCase()==='u'){event.preventDefault();void openUpdate()}
+ });
+ window.addEventListener('online',()=>{void syncNow()});
+ window.addEventListener('offline',()=>{void refresh()});
+ void refresh();setInterval(()=>void refresh(),10000);
+})();

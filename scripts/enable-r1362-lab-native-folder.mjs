@@ -26,6 +26,14 @@ const packages=['apps/lab-desktop/package.json','apps/lab-desktop/package-lock.j
 for(const p of packages){if(!fs.existsSync(p))continue;const obj=JSON.parse(fs.readFileSync(p,'utf8'));if(!['1.0.18','1.0.19'].includes(obj.version))throw Error('[R1362] unexpected native app version '+obj.version);}
 const testFile='scripts/test-r1342-native-integration.cjs';
 let test=fs.readFileSync(testFile,'utf8');
+// The diagnostic fixture and its expected native version MUST agree. R1342
+// supplied a hard-coded 1.0.18 fixture; update it when building 1.0.19.
+const staleFixture="nativeVersion:'1.0.18'",currentFixture="nativeVersion:'1.0.19'";
+if(!test.includes(currentFixture)){
+ if(test.split(staleFixture).length!==2)throw Error('[R1362] unexpected diagnostic nativeVersion fixture');
+ test=test.replace(staleFixture,currentFixture);
+}
+
 for(const [before,after] of [
  ["assert.equal(status.nativeVersion,'1.0.18')","assert.equal(status.nativeVersion,'1.0.19')"],
  ["assert.equal(pkg.version,'1.0.18')","assert.equal(pkg.version,'1.0.19')"]

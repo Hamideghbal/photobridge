@@ -1,3 +1,4 @@
+import {requireLabSiteAccess} from './lab-optional-features.js';
 import {normalizeSiteLayout} from './site-layout.js';
 import {normalizeTextStyles} from './site-text-style.js';
 import {defaultLabSite,mergeLabSite,SITE_FIELDS,SITE_IMAGES,SITE_SECTIONS} from './lab-site-content.js';
@@ -21,6 +22,7 @@ export async function normalizeLabSite(input,sharp,allowedImages=SITE_IMAGES){
  }}return out;
 }
 export async function getLabSiteState(pool,labId){
+ await requireLabSiteAccess(pool,labId);
  const lab=(await pool.query('SELECT id,name,slug,province,city,walkin_enabled,walkin_show_prices FROM labs WHERE id=$1',[labId])).rows[0];
  if(!lab)fail('lab_not_found',404);
  const row=(await pool.query('SELECT config,revision FROM lab_public_site_content WHERE lab_id=$1',[labId])).rows[0];
@@ -33,6 +35,7 @@ export async function handleLabSiteManagement(req,res,url,actor,d){
  try{
  if(req.method==='GET'){const state=await getLabSiteState(d.pool,actor.labId),domains=(await d.pool.query('SELECT hostname,active FROM equipment_store_domains WHERE lab_id=$1 AND released_at IS NULL ORDER BY created_at',[actor.labId])).rows;return reply(200,{...state,domains});}
  if(req.method==='PUT'){
+  await requireLabSiteAccess(d.pool,actor.labId);
   if(req.headers.origin!==d.publicOrigin)return reply(403,{error:'invalid_origin'});
   const body=await d.bodyJson(req,3500000);if(!body||!Number.isInteger(body.revision)||body.revision<0)fail('invalid_site_revision');
   const current=(await d.pool.query('SELECT revision FROM lab_public_site_content WHERE lab_id=$1',[actor.labId])).rows[0];if(!current&&body.revision!==0)fail('site_revision_conflict',409);
@@ -48,3 +51,4 @@ export async function handleLabSiteManagement(req,res,url,actor,d){
  return reply(405,{error:'method_not_allowed'});
  }catch(e){if(e.status)return reply(e.status,{error:e.message});throw e;}
 }
+

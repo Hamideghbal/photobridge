@@ -32,10 +32,24 @@ test('Ctrl+Shift+S opens status without posting, replaying or discarding any ope
  assert(f.elements.some(el=>el.attributes.role==='dialog'&&el.attributes['aria-label']==='وضعیت همگام‌سازی لابراتوار'));
  assert(f.requests.every(r=>r.url==='/desktop/status'));
 });
-test('real conflicts show only a small corner indicator instead of a large overlay',async()=>{
+test('real conflicts stay available in on-demand diagnostics, without a permanent corner badge',async()=>{
  const f=fakeEnvironment([{id:'x',method:'PUT',url:'/api/lab/orders/example',error:{error:'invoice_pricing_required'}}]);await wait();
- const indicator=f.elements.find(el=>el.id==='pbLabDesktopConflictFlag');
- assert(indicator&&!indicator.hidden);
- assert.equal(indicator.textContent,'1');
+ // R1357 deliberately removed the always-visible conflict flag, even for real
+ // conflicts. Keep the safety signal in the user-opened status dialog instead.
+ assert(!f.elements.some(el=>el.id==='pbLabDesktopConflictFlag'));
  assert(!f.elements.some(el=>el.id==='pbLabDesktopState'));
+ assert(f.requests.every(r=>r.url==='/desktop/status'),'polling must stay read-only');
+ f.listeners.keydown({ctrlKey:true,shiftKey:true,altKey:false,metaKey:false,key:'s',preventDefault(){}});await wait();
+ const panel=f.elements.find(el=>el.isConnected&&el.attributes.role==='dialog'&&el.attributes['aria-label']==='وضعیت همگام‌سازی لابراتوار');
+ assert(panel,'Ctrl+Shift+S must still reveal real conflicts on demand');
+ assert(f.elements.some(el=>el.textContent==='موارد نیازمند بررسی: ۱'),'real conflict count must remain accessible');
+ assert(f.elements.some(el=>el.textContent.includes('PUT /api/lab/orders/example')&&el.textContent.includes('invoice_pricing_required')),'conflict details must remain accessible');
+ const retry=f.elements.find(el=>el.tagName==='button'&&el.textContent==='ارسال مجدد با تأیید');
+ const discard=f.elements.find(el=>el.tagName==='button'&&el.textContent==='کنار گذاشتن عملیات محلی');
+ assert(retry&&discard,'explicit recovery options must be available for actual conflicts');
+ // The test environment declines both confirmation prompts. Neither action is
+ // allowed to mutate, resend, or discard a queued order without consent.
+ await retry.onclick();
+ await discard.onclick();
+ assert(f.requests.every(r=>r.url==='/desktop/status'),'diagnostics may not replay or discard operations without explicit confirmation');
 });

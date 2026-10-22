@@ -36,3 +36,22 @@ test('production build regenerates lab manifest after the last UI mutation and v
  assert(code.lastIndexOf('await deployStep("./prepare-lab-desktop-ui.mjs")')>code.lastIndexOf('await deployStep("./enable-r1344-gallery-create-pricing.mjs")'));
  assert(code.lastIndexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")')>code.lastIndexOf('await deployStep("./prepare-lab-desktop-ui.mjs")'));
 });
+
+test('actual bundled payload generator regenerates the late-modified website',async()=>{
+ const {spawnSync}=require('node:child_process');
+ const {verifyLabDesktopUiFreshness}=await import('./verify-lab-desktop-ui-freshness.mjs');
+ const f=fixture();
+ try{
+  const {root,web}=f;
+  fs.mkdirSync(path.join(root,'scripts'),{recursive:true});
+  fs.copyFileSync(path.join(__dirname,'prepare-lab-desktop-ui.mjs'),path.join(root,'scripts/prepare-lab-desktop-ui.mjs'));
+  // An earlier release with old CSS must not be accepted after the last site patch.
+  fs.writeFileSync(path.join(web,'styles.css'),'body{color:#new}');
+  assert.throws(()=>verifyLabDesktopUiFreshness(root),/older than website file: styles.css/);
+  const result=spawnSync(process.execPath,[path.join(root,'scripts/prepare-lab-desktop-ui.mjs')],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr||result.stdout);
+  const parsed=verifyLabDesktopUiFreshness(root);
+  assert.equal(parsed.files,3);
+  assert.equal(fs.readFileSync(path.join(web,'lab-desktop-ui','styles.css'),'utf8'),'body{color:#new}');
+ }finally{f.close();}
+});

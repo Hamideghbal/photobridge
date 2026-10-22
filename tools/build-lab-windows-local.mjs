@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 
@@ -67,9 +68,22 @@ function main() {
   const npm = (args, cwd=root) => process.platform === 'win32'
     ? run('cmd.exe', ['/d', '/s', '/c', 'npm', ...args], cwd)
     : run('npm', args, cwd);
+  // Some source snapshots deliberately ship without a root package-lock.json.
+  // Skipping npm in that case leaves sharp (used by R1222 icon generation) absent.
+  need(path.join(root, 'package.json'));
+  console.log('[PhotoBridge Lab] Install website build dependencies on this computer');
   if (fs.existsSync(path.join(root, 'package-lock.json'))) {
-    console.log('[PhotoBridge Lab] Install website build dependencies on this computer');
     npm(['ci', '--no-audit', '--no-fund'], root);
+  } else {
+    npm(['install', '--no-package-lock', '--no-audit', '--no-fund'], root);
+  }
+  // Fail here with an actionable diagnostic instead of deep in Liara's build.
+  try {
+    const sharp = createRequire(path.join(root, 'package.json'))('sharp');
+    if (typeof sharp !== 'function') throw Error('sharp API unavailable');
+    console.log('[PhotoBridge Lab] Sharp native image dependency is ready');
+  } catch (error) {
+    throw Error('Required sharp dependency is unavailable after npm install; verify your Node.js version, internet and npm output. ' + String(error?.message || error));
   }
   // Bake the same *final* HTML/CSS/JS as the deployed website. Using the
   // checkout's raw dist/web without running Liara's site patches can package

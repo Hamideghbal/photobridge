@@ -35,7 +35,7 @@ function fixture(){
   // The real repo has no root lockfile. Simulate offline npm and a resolved sharp module.
   const bin=path.join(temp,'fake-bin');
   fs.mkdirSync(bin,{recursive:true});
-  fs.writeFileSync(path.join(bin,'npm'),'#!/bin/sh\\nprintf "%s\\n" "$*" >> "$PB_FIXTURE_NPM_LOG"\\nexit 0\\n',{mode:0o755});
+  fs.writeFileSync(path.join(bin,'npm'),['#!/bin/sh','echo "$*" >> "$PB_FIXTURE_NPM_LOG"','exit 0',''].join('\n'),{mode:0o755});
   fs.mkdirSync(path.join(temp,'node_modules/sharp'),{recursive:true});
   fs.writeFileSync(path.join(temp,'node_modules/sharp/package.json'),JSON.stringify({name:'sharp',version:'0.0.0',main:'index.cjs'}));
   fs.writeFileSync(path.join(temp,'node_modules/sharp/index.cjs'),'module.exports=function sharpFixture(){};');

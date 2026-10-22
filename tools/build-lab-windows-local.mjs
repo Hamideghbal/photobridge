@@ -75,7 +75,7 @@ function main() {
   if (fs.existsSync(path.join(root, 'package-lock.json'))) {
     npm(['ci', '--no-audit', '--no-fund'], root);
   } else {
-    npm(['install', '--no-package-lock', '--no-audit', '--no-fund'], root);
+    npm(['install', '--no-package-lock', '--include=optional', '--no-audit', '--no-fund'], root);
   }
   // Fail here with an actionable diagnostic instead of deep in Liara's build.
   try {

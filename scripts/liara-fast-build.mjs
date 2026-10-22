@@ -307,3 +307,12 @@ await deployStep("./enable-r1344-gallery-create-pricing.mjs");
 // Use a distinct module URL to force regenerating the final, patched web UI.
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
+
+// Serve the manifest's actual immutable-by-hash bytes, never SEO-mutated HTML
+// or year-long cached fixed-name images. This patch is a build-time transform
+// of the shipped server and does not touch data, sync state, or auth.
+await deployStep("./enable-r1351-lab-ui-exact-byte-serving.mjs");
+console.log("[PhotoBridge Docker build] START R1351 lab UI wire-byte integrity tests");
+runR1314(process.execPath, ["--test", "scripts/test-r1351-lab-ui-exact-byte-serving.cjs"], { stdio: "inherit" });
+console.log("[PhotoBridge Docker build] OK R1351 lab UI wire-byte integrity tests");
+

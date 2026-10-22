@@ -12,7 +12,7 @@ test('local lab builder is not dependent on GitHub Actions or a fake EXE',()=>{
   assert.match(script,/archiveSha256/);
   assert.match(script,/desktop-overlay\.js.*ui-update\.cjs/s);
   assert.match(script,/enable-r1342-lab-ui-update\.mjs/);
-  assert.match(script,/npm\.cmd/);
+  assert.match(script,/run\('cmd\.exe', \['\/d', '\/s', '\/c', 'npm'/);
   assert.match(script,/dist:unsigned/);
   assert.match(script,/--signed/);
   assert.match(script,/process\.platform !== 'win32'/);

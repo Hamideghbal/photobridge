@@ -62,6 +62,11 @@ function main() {
   if (hash(archive) !== archiveSha256) throw Error('Saved lab source archive does not match its verified SHA-256');
   if (signed && !(process.env.CSC_LINK || process.env.WIN_CSC_LINK)) throw Error('Signed release requires the configured Windows code-signing certificate');
   if (!prepareOnly && process.platform !== 'win32') throw Error('An actual Windows installer must be built on Windows x64 (run with --prepare-only to inspect source on another OS)');
+  // Bake the same *final* HTML/CSS/JS as the deployed website. Using the
+  // checkout's raw dist/web without running Liara's site patches can package
+  // an old interface even though the EXE itself is new.
+  console.log('[PhotoBridge Lab] Build current website UI before packaging');
+  run(process.execPath, ['scripts/liara-fast-build.mjs']);
   console.log('[PhotoBridge Lab] Restore editable native sources from verified archive');
   restore();
   run(process.execPath, ['scripts/enable-r1296-native-alerts.mjs']);

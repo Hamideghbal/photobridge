@@ -18,6 +18,10 @@ const limited=`/* PB1362 local-only filesystem access, deny all other Electron p
  win.webContents.session.setPermissionRequestHandler((wc,p,cb,details)=>cb(pb1362NativeFilePermission(wc,p,details?.requestingUrl)));
  win.webContents.session.setPermissionCheckHandler((wc,p,requestingOrigin)=>pb1362NativeFilePermission(wc,p,requestingOrigin));`;
 patch(deny,limited,'file-system permission');
+// Guard even when a newer hash-verified website UI supersedes the bundled JS.
+const loadAnchor='win.webContents.session.setPermissionCheckHandler((wc,p,requestingOrigin)=>pb1362NativeFilePermission(wc,p,requestingOrigin));';
+const nativePickerGuard=`win.webContents.on('dom-ready',()=>{if(!win.webContents.getURL().startsWith(origin+'/'))return;void win.webContents.executeJavaScript(\`(()=>{if(window.__pb1362NativePickerGuard||typeof window.showDirectoryPicker!=='function')return;const original=window.showDirectoryPicker.bind(window);let pending=null;window.showDirectoryPicker=(...args)=>{if(pending)return pending;const call=original(...args);pending=Promise.resolve(call).finally(()=>{pending=null});return pending};window.__pb1362NativePickerGuard=true})()\`).catch(()=>{})});`;
+patch(loadAnchor,loadAnchor+'\n '+nativePickerGuard,'single-flight directory selection after website UI updates');
 const packages=['apps/lab-desktop/package.json','apps/lab-desktop/package-lock.json'];
 for(const p of packages){if(!fs.existsSync(p))continue;const obj=JSON.parse(fs.readFileSync(p,'utf8'));if(!['1.0.18','1.0.19'].includes(obj.version))throw Error('[R1362] unexpected native app version '+obj.version);}
 const testFile='scripts/test-r1342-native-integration.cjs';

@@ -72,9 +72,12 @@ function main() {
   console.log('[PhotoBridge Lab] Local source and UI updater checks passed');
   if (prepareOnly) {console.log('[PhotoBridge Lab] --prepare-only complete; no Windows installer was created.'); return;}
   // Install all dependencies locally; no GitHub Actions Windows runner required.
-  run('npm.cmd', ['ci', '--no-audit', '--no-fund'], app);
-  run('npm.cmd', ['test'], app);
-  run('npm.cmd', ['run', signed ? 'dist' : 'dist:unsigned'], app);
+  // On Windows, npm.cmd is a batch script; Node.js spawn with shell:false cannot execute it directly.
+  // Call cmd.exe explicitly so paths with spaces are handled by the Windows command interpreter.
+  const npm = args => run('cmd.exe', ['/d', '/s', '/c', 'npm', ...args], app);
+  npm(['ci', '--no-audit', '--no-fund']);
+  npm(['test']);
+  npm(['run', signed ? 'dist' : 'dist:unsigned']);
   const release = path.join(app, 'release');
   const installers = fs.existsSync(release) ? fs.readdirSync(release).filter(name => /^PhotoBridge-Lab-Setup-1\.0\.16-x64\.exe$/i.test(name)) : [];
   if (installers.length !== 1) throw Error('Expected PhotoBridge-Lab-Setup-1.0.16-x64.exe was not produced. Check the logs above.');

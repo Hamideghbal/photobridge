@@ -103,7 +103,7 @@ function main() {
   const size = fs.statSync(output).size;
   if (size < 10_000_000) throw Error('Installer is suspiciously small; refusing to report success');
   const checksum = hash(output);
-  const info = {name: installers[0], version: '1.0.18', signed, size, sha256: checksum, createdAt: new Date().toISOString()};
+  const info = {name: installers[0], version, signed, size, sha256: checksum, createdAt: new Date().toISOString()};
   fs.writeFileSync(path.join(release, 'lab-installer-build.json'), JSON.stringify(info, null, 2) + '\n');
   console.log('\n[PhotoBridge Lab] Local Windows installer candidate created:', output);
   console.log('[PhotoBridge Lab] SHA-256:', checksum);

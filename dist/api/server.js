@@ -8506,6 +8506,8 @@ async function orderInvoicePriceRequirements(c, labId, orderId) {
             const needPrint = pricing.manualPrintRequired == null ? true : Boolean(pricing.manualPrintRequired);
             const needBinding = pricing.manualBindingRequired == null ? legacyCustom : Boolean(pricing.manualBindingRequired);
             const needCover = pricing.manualCoverRequired == null ? legacyCustom : Boolean(pricing.manualCoverRequired);
+            const needPackage = pricing.manualPackageRequired === true;
+            const packagePrice = pricing.manualPackagePrice == null ? null : Number(pricing.manualPackagePrice);
             const printPrice = pricing.manualPrintPrice == null ? null : Number(pricing.manualPrintPrice), bindingPrice = pricing.manualBindingPrice == null ? null : Number(pricing.manualBindingPrice), coverPrice = pricing.manualCoverPrice == null ? null : Number(pricing.manualCoverPrice);
             const baseLabel = `آلبوم ${ad?.size?.custom ? 'سایز آزاد ' : ''}${String(ad?.size?.label || '').trim()}`.trim(), rows = [];
             if (needPrint)
@@ -8514,6 +8516,8 @@ async function orderInvoicePriceRequirements(c, labId, orderId) {
                 rows.push({ key: 'album-custom-binding', sizeId: 'album-custom', sizeLabel: baseLabel, printType: 'album_custom_binding', printTypeLabel: `هزینه صحافی · هر صفحه`, quantity: spreads, unitPrice: bindingPrice, resolved: bindingPrice != null && Number.isFinite(bindingPrice) });
             if (needCover)
                 rows.push({ key: 'album-custom-cover', sizeId: 'album-custom', sizeLabel: `جلد ${String(ad?.cover?.name || baseLabel).trim()}`, printType: 'album_custom_cover', printTypeLabel: 'هزینه جلد · کل آلبوم', quantity: 1, unitPrice: coverPrice, resolved: coverPrice != null && Number.isFinite(coverPrice) });
+            if (needPackage)
+                rows.push({ key: 'album-custom-package', sizeId: 'album-custom', sizeLabel: `کیف / باکس ${String(ad?.package?.customRequest || '').slice(0, 140)}`, printType: 'album_custom_package', printTypeLabel: 'قیمت کیف / باکس سفارشی · کل آلبوم', quantity: 1, unitPrice: packagePrice, resolved: packagePrice != null && Number.isFinite(packagePrice) });
             return rows;
         }
         return [];
@@ -8616,7 +8620,7 @@ async function createOrGetInvoice(c, labId, orderId) {
             if (coverUnit > 0 || ad?.cover?.name || needManualCover)
                 items.push({ kind: 'album_cover', description: coverDesc, quantity: 1, unitPrice: coverUnit, lineTotal: coverUnit });
             if (ad?.package)
-                items.push({ kind: 'album_package', description: `کیف / باکس آلبوم · ${String(ad.package.modelName || '').trim()} · ${String(ad.package.sizeLabel || ad?.size?.label || '').trim()}`.replace(/ · $/, ''), quantity: 1, unitPrice: Number(pricing.packagePrice ?? ad.package.price ?? 0), lineTotal: Number(pricing.packagePrice ?? ad.package.price ?? 0) });
+                items.push({ kind: 'album_package', description: `کیف / باکس آلبوم · ${String(ad.package.modelName || '').trim()} · ${String(ad.package.sizeLabel || ad?.size?.label || '').trim()}`.replace(/ · $/, ''), quantity: 1, unitPrice: Number(pricing.manualPackageRequired ? pricing.manualPackagePrice : (pricing.packagePrice ?? ad.package.price ?? 0)), lineTotal: Number(pricing.manualPackageRequired ? pricing.manualPackagePrice : (pricing.packagePrice ?? ad.package.price ?? 0)) });
         }
         for (const x of Array.isArray(ad.extras) ? ad.extras : [])
             items.push({ kind: 'album_extra', description: String(x.name || 'خدمت جانبی آلبوم'), quantity: Number(x.quantity || 1), unitPrice: Number(x.unitPrice || 0), lineTotal: Number(x.lineTotal || 0) });
@@ -10997,7 +11001,9 @@ async function albumCatalogForLab(labId, includeInactive = false) {
     const packages = pkgq.rows.map((r) => ({ id: String(r.id), modelId: String(r.model_group_id || r.id), sizeId: String(r.size_id), sizeLabel: r.size_label || '', kind: 'package', modelName: r.model_name || '', imageData: r.image_data || '', colorName: r.color_name || r.color_value || '#64748B', colorValue: r.color_value || '#64748B', price: Number(r.price || 0), active: Boolean(r.active), sortOrder: Number(r.sort_order || 0) }));
     const labPreferences = lq.rows[0]?.ui_preferences && typeof lq.rows[0].ui_preferences === 'object' ? lq.rows[0].ui_preferences : {};
     const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;
-    return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled, resolutionMin: Number(lq.rows[0]?.resolution_min || 240), resolutionTarget: Number(lq.rows[0]?.resolution_target || 300), sizes: sq.rows.map((r) => ({
+    const packageCatalogEnabled = labPreferences.albumPackageCatalogEnabled !== false;
+    const extrasCatalogEnabled = labPreferences.albumExtrasCatalogEnabled !== false;
+    return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled, packageCatalogEnabled, extrasCatalogEnabled, resolutionMin: Number(lq.rows[0]?.resolution_min || 240), resolutionTarget: Number(lq.rows[0]?.resolution_target || 300), sizes: sq.rows.map((r) => ({
             id: r.id, printSizeId: r.print_size_id || null, label: r.label, widthCm: Number(r.width_cm || 0), heightCm: Number(r.height_cm || 0),
             basePrice: 0, printPrice: 0, perSpreadPrice: 0, bindingPrice: Number(r.binding_price || 0),
             luster: r.luster == null ? null : Number(r.luster), silk: r.silk == null ? null : Number(r.silk), metallic: r.metallic == null ? null : Number(r.metallic),
@@ -11071,11 +11077,13 @@ async function albumOrderSnapshot(labId, input) {
         }
     }
 
-    const requestedExtras = [...new Set((Array.isArray(input?.extraIds) ? input.extraIds : []).map(String))];
+    const requestedExtras = catalog.extrasCatalogEnabled === false ? [] : [...new Set((Array.isArray(input?.extraIds) ? input.extraIds : []).map(String))];
     // Extras are optional and may be disabled/removed by the lab while a photographer has a paused draft.
     // Keep valid selections and silently discard stale ids so resume never fails with album_extra_invalid.
     const extras = requestedExtras.map(id => catalog.extras.find((x) => String(x.id) === id)).filter(Boolean);
-    const packageId = String(input?.packageId || '').trim();
+    const packageCatalogEnabled = catalog.packageCatalogEnabled !== false;
+    const packageRequest = packageCatalogEnabled ? '' : String(input?.packageRequest || '').trim().slice(0, 1200);
+    const packageId = packageCatalogEnabled ? String(input?.packageId || '').trim() : '';
     if (customSize && packageId)
         throw Object.assign(new Error('album_package_custom_size_unavailable'), { status: 400 });
     const albumPackage = packageId ? (catalog.packages || []).find((x) => String(x.id) === packageId && String(x.sizeId) === String(size.id)) : null;
@@ -11090,7 +11098,7 @@ async function albumOrderSnapshot(labId, input) {
     const coverText = String(input?.coverText || '').trim().slice(0, 160);
     const extraLines = extras.map((x) => ({ id: x.id, name: x.name, unitPrice: albumMoney(x.price), pricingMode: x.pricingMode, quantity: x.pricingMode === 'per_spread' ? spreads : 1, lineTotal: albumMoney(x.price) * (x.pricingMode === 'per_spread' ? spreads : 1) }));
     const extrasTotal = extraLines.reduce((n, x) => n + x.lineTotal, 0);
-    const snapshotPackage = albumPackage ? { id: albumPackage.id, modelId: albumPackage.modelId || null, kind: 'package', kindLabel: 'کیف / باکس آلبوم', modelName: albumPackage.modelName, imageData: albumPackage.imageData || '', colorName: albumPackage.colorName || albumPackage.colorValue || null, colorValue: albumPackage.colorValue || null, sizeId: albumPackage.sizeId, sizeLabel: albumPackage.sizeLabel, price: albumMoney(albumPackage.price) } : null;
+    const snapshotPackage = albumPackage ? { id: albumPackage.id, modelId: albumPackage.modelId || null, kind: 'package', kindLabel: 'کیف / باکس آلبوم', modelName: albumPackage.modelName, imageData: albumPackage.imageData || '', colorName: albumPackage.colorName || albumPackage.colorValue || null, colorValue: albumPackage.colorValue || null, sizeId: albumPackage.sizeId, sizeLabel: albumPackage.sizeLabel, price: albumMoney(albumPackage.price) } : packageRequest ? { id: null, modelId: null, kind: 'package', kindLabel: 'کیف / باکس سفارشی', modelName: packageRequest, customRequest: packageRequest, sizeId: customSize ? null : size.id, sizeLabel: size.label, price: null } : null;
 
     const manualPrintRequired = Boolean(missingPaperTariff);
     const manualBindingRequired = Boolean(customSize);
@@ -11101,9 +11109,10 @@ async function albumOrderSnapshot(labId, input) {
     const coverPriceNumber = coverPriceRaw == null || String(coverPriceRaw).trim() === '' ? NaN : Number(coverPriceRaw);
     const missingCoverTariff = !customCover && (!Number.isFinite(coverPriceNumber) || coverPriceNumber <= 0);
     const manualCoverRequired = Boolean(customSize || customCover || missingCoverTariff);
-    const manualRequired = manualPrintRequired || manualBindingRequired || manualCoverRequired;
+    const manualPackageRequired = Boolean(packageRequest);
+    const manualRequired = manualPrintRequired || manualBindingRequired || manualCoverRequired || manualPackageRequired;
     const bindingPrice = customSize ? null : albumMoney(size.bindingPrice), bindingTotal = bindingPrice == null ? null : bindingPrice * spreads;
-    const coverPrice = manualCoverRequired ? null : albumMoney(coverPriceRaw), packagePrice = customSize ? 0 : Number(snapshotPackage?.price || 0);
+    const coverPrice = manualCoverRequired ? null : albumMoney(coverPriceRaw), packagePrice = manualPackageRequired ? null : customSize ? 0 : Number(snapshotPackage?.price || 0);
     const total = manualRequired ? null : knownPrintTotal + Number(bindingTotal || 0) + Number(coverPrice || 0) + packagePrice + extrasTotal;
     const coverSnapshot = customCover ? { id: null, name: 'جلد سفارشی', materialName: 'سفارشی', modelName: 'توضیح آزاد', sizeId: customSize ? null : size.id, sizeLabel: size.label, colorId: null, colorName: null, colorValue: null, text: coverText, customRequest: coverRequest } : { id: cover.id, name: cover.name, materialName: cover.materialName || cover.name, modelName: cover.modelName || 'استاندارد', sizeId: customSize ? null : (cover.sizeId || size.id), sizeLabel: size.label, colorId: color?.id || null, colorName: color?.name || null, colorValue: color?.colorValue || null, text: coverText };
     return {
@@ -11116,9 +11125,9 @@ async function albumOrderSnapshot(labId, input) {
         printOrder: { mode: printOrderMode, label: printOrderMode === 'backprint' ? 'بک‌پرینت' : 'ترتیب دستی', notes: printOrderMode === 'manual' ? printOrderNotes : '' },
         generalNotes,
         pricing: {
-            manualRequired, manualReason: customSize ? 'custom_size' : customCover ? 'custom_cover' : missingCoverTariff ? 'missing_cover_tariff' : missingPaperTariff ? 'missing_print_tariff' : null,
-            manualPrintRequired, manualBindingRequired, manualCoverRequired,
-            manualAlbumPrice: null, manualPrintPrice: null, manualBindingPrice: null, manualCoverPrice: null,
+            manualRequired, manualReason: customSize ? 'custom_size' : customCover ? 'custom_cover' : missingCoverTariff ? 'missing_cover_tariff' : manualPackageRequired ? 'custom_package' : missingPaperTariff ? 'missing_print_tariff' : null,
+            manualPrintRequired, manualBindingRequired, manualCoverRequired, manualPackageRequired,
+            manualAlbumPrice: null, manualPrintPrice: null, manualBindingPrice: null, manualCoverPrice: null, manualPackagePrice: null,
             basePrice: 0, printPrice: paperBreakdown.length === 1 ? paperBreakdown[0].unitPrice : null,
             printTotal: manualPrintRequired ? null : knownPrintTotal, perSpreadPrice: paperBreakdown.length === 1 ? paperBreakdown[0].unitPrice : null, spreadTotal: manualPrintRequired ? null : knownPrintTotal,
             bindingPrice, bindingTotal, coverPrice, packagePrice, extrasTotal, total
@@ -21213,6 +21222,7 @@ ${inviteUrl}`;
               (CASE WHEN COALESCE((NULLIF(o.album_data->'pricing'->>'manualPrintRequired',''))::boolean,true) AND NULLIF(o.album_data->'pricing'->>'manualPrintPrice','') IS NULL THEN 1 ELSE 0 END)
               + (CASE WHEN COALESCE((NULLIF(o.album_data->'pricing'->>'manualBindingRequired',''))::boolean,COALESCE((o.album_data->'size'->>'custom')::boolean,false)) AND NULLIF(o.album_data->'pricing'->>'manualBindingPrice','') IS NULL THEN 1 ELSE 0 END)
               + (CASE WHEN COALESCE((NULLIF(o.album_data->'pricing'->>'manualCoverRequired',''))::boolean,COALESCE((o.album_data->'size'->>'custom')::boolean,false)) AND NULLIF(o.album_data->'pricing'->>'manualCoverPrice','') IS NULL THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE((NULLIF(o.album_data->'pricing'->>'manualPackageRequired',''))::boolean,false) AND NULLIF(o.album_data->'pricing'->>'manualPackagePrice','') IS NULL THEN 1 ELSE 0 END)
             END ELSE 0 END
         ELSE
           (SELECT count(DISTINCT (f.print_size_id||'|'||COALESCE(f.print_type,'')))::int
@@ -22866,6 +22876,8 @@ ${inviteUrl}`;
                                 currentPricing.manualBindingPrice = rounded;
                             if (requirement.key === 'album-custom-cover')
                                 currentPricing.manualCoverPrice = rounded;
+                            if (requirement.key === 'album-custom-package')
+                                currentPricing.manualPackagePrice = rounded;
                         }
                         currentPricing.manualAlbumPrice = null;
                         const spreads = Math.max(1, Number((order.album_data || {}).spreads || 1));
@@ -22881,6 +22893,8 @@ ${inviteUrl}`;
                         }
                         if (currentPricing.manualCoverPrice != null)
                             currentPricing.coverPrice = Number(currentPricing.manualCoverPrice);
+                        if (currentPricing.manualPackagePrice != null)
+                            currentPricing.packagePrice = Number(currentPricing.manualPackagePrice);
                     }
                     const nextAlbumData = { ...(order.album_data || {}), pricing: currentPricing };
                     const uq = await c.query(`UPDATE orders SET album_data=$3::jsonb,updated_at=now() WHERE id=$1 AND lab_id=$2 RETURNING *`, [orderId, labId, JSON.stringify(nextAlbumData)]);
@@ -23728,7 +23742,9 @@ ${inviteUrl}`;
             try {
                 await c.query('BEGIN');
                 const coverCatalogEnabled = b.coverCatalogEnabled !== false;
-                await c.query(`UPDATE labs SET album_enabled=$2,ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{albumCoverCatalogEnabled}',$3::jsonb,true),updated_at=now() WHERE id=$1`, [labId, b.enabled === true, JSON.stringify(coverCatalogEnabled)]);
+                const packageCatalogEnabled = b.packageCatalogEnabled !== false;
+                const extrasCatalogEnabled = b.extrasCatalogEnabled !== false;
+                await c.query(`UPDATE labs SET album_enabled=$2,ui_preferences=COALESCE(ui_preferences,'{}'::jsonb)||jsonb_build_object('albumCoverCatalogEnabled',$3::boolean,'albumPackageCatalogEnabled',$4::boolean,'albumExtrasCatalogEnabled',$5::boolean),updated_at=now() WHERE id=$1`, [labId, b.enabled === true, coverCatalogEnabled, packageCatalogEnabled, extrasCatalogEnabled]);
                 await c.query(`DELETE FROM lab_album_extras WHERE lab_id=$1`, [labId]);
                 await c.query(`DELETE FROM lab_album_packages WHERE lab_id=$1`, [labId]);
                 await c.query(`DELETE FROM lab_album_package_models WHERE lab_id=$1`, [labId]);
@@ -23771,7 +23787,7 @@ ${inviteUrl}`;
                             throw Object.assign(new Error('album_cover_variant_reference_invalid'), { status: 400 });
                         const vq = await c.query(`INSERT INTO lab_album_cover_variants(lab_id,material_id,type_id,active,sort_order) VALUES($1,$2,$3,$4,$5) RETURNING id`, [labId, materialId, typeId, raw.active !== false, sort++]);
                         const variantId = String(vq.rows[0].id);
-                        const chosen = [...new Set((Array.isArray(raw.colorIds) ? raw.colorIds : []).map(String))];
+                        const chosen = [...new Set([...(Array.isArray(raw.colorIds) ? raw.colorIds : []), ...(Array.isArray(raw.attachedColorIds) ? raw.attachedColorIds : [])].map(String))];
                         const priceRows = Array.isArray(raw.prices) ? raw.prices : [];
                         const attached = [...new Set([...(Array.isArray(raw.attachedColorIds) ? raw.attachedColorIds : []).map(String), ...chosen, ...priceRows.map((p) => String(p.colorId || '')).filter(Boolean)])];
                         let colorSort = 0;
@@ -23789,7 +23805,7 @@ ${inviteUrl}`;
                         }
                         const material = materialById.get(String(raw.materialId)), type = typeById.get(String(raw.typeId)), materialName = cleanText(material?.name, 100), typeName = cleanText(type?.name, 100), variantActive = raw.active !== false && material?.active !== false && type?.active !== false, imageData = String(type?.imageData || '').trim();
                         for (const [sizeLabel, sizeId] of sizeIdsByLabel.entries()) {
-                            const available = chosen.map(draftColorId => { const pr = priceRows.find((p) => String(p.colorId) === draftColorId && cleanText(p.sizeLabel) === sizeLabel); const col = colorById.get(draftColorId); return pr && col ? { draftColorId, col, price: albumMoney(pr.price) } : null; }).filter(Boolean);
+                            const available = chosen.map(draftColorId => { const pr = priceRows.find((p) => String(p.colorId) === draftColorId && cleanText(p.sizeLabel) === sizeLabel); const col = colorById.get(draftColorId); return col ? { draftColorId, col, price: pr ? albumMoney(pr.price) : 0 } : null; }).filter(Boolean);
                             if (!available.length)
                                 continue;
                             const coverPrice = Math.min(...available.map(x => x.price));

@@ -1,10 +1,10 @@
-// Optional services are lab-scoped. Payment eligibility comes only from verified renewals.
+// Admin grants are lab-scoped and independent of payment. Self-service requests require a verified renewal.
 const uuid=x=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(x));
 export const labFeatureKey=id=>'lab_optional_features:'+id;
 export function labFeatureState(lab,settings={}){
  const paid=lab?.paid_subscription===true;
  return {desktopEnabled:settings.desktopEnabled===true,siteEnabled:settings.siteEnabled===true,
-  siteAvailable:settings.siteEnabled===true&&paid,paidSubscription:paid,
+  siteAvailable:settings.siteEnabled===true,paidSubscription:paid,
   siteRequestedAt:settings.siteRequestedAt||null,activeUntil:lab?.active_until||null};
 }
 export async function getLabFeatures(pool,labId){
@@ -19,7 +19,7 @@ export async function getLabFeatures(pool,labId){
 }
 export async function requireLabSiteAccess(pool,labId){
  const features=await getLabFeatures(pool,labId);
- if(!features?.siteAvailable)throw Object.assign(new Error(features?.paidSubscription?'lab_site_not_enabled':'paid_subscription_required'),{status:features?.paidSubscription?403:402});
+ if(!features?.siteAvailable)throw Object.assign(new Error('lab_site_not_enabled'),{status:403});
  return features;
 }
 export async function handleLabOptionalFeatures({req,res,url,a,pool,bodyJson,sendJson,audit,publicOrigin}){
@@ -40,7 +40,7 @@ export async function handleLabOptionalFeatures({req,res,url,a,pool,bodyJson,sen
   await pool.query(`INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now())
    ON CONFLICT(key) DO UPDATE SET value=platform_settings.value||EXCLUDED.value,updated_at=now()`,[labFeatureKey(labId),JSON.stringify(body)]);
   await audit(a.userId,labId,'platform_admin.lab_optional_features','lab',labId,body);
-  return reply(200,{features:{...state,...body,siteAvailable:body.siteEnabled&&state.paidSubscription}});
+  return reply(200,{features:{...state,...body,siteAvailable:body.siteEnabled}});
  }
  if(request&&req.method==='POST'){
   if(!state.paidSubscription)return reply(402,{error:'paid_subscription_required',renewUrl:'/lab/settings/subscription'});

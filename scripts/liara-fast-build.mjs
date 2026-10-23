@@ -335,6 +335,10 @@ await deployStep("./enable-r1364-lab-tabs.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1364-lab-tabs.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1365-lab-options.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1365-lab-options.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1367-admin-grants.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1367-admin-grants.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1367-intake-invoice-sms.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1367-intake-invoice-sms.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

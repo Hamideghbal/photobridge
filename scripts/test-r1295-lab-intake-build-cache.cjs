@@ -14,7 +14,7 @@ test('last Liara build stage restores R1365 local-intake cache key without delet
  const pattern=eval(match[1]);
  const output=before.replace(pattern,'$1r1365');
  assert(output.includes('local-intake.js?v=r1365&site=r1188'));
- assert(html.includes('local-intake.js?v=r1365'));
+ assert.match(html,/local-intake\.js\?v=r(?:1365|1367)/);
 });
 test('album intake keeps the album catalog while print orders request the lean bootstrap',()=>{
  const intake=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');

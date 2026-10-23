@@ -357,6 +357,8 @@ await deployStep("./enable-r1379-album-matrix.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1379-album-matrix.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1380-flat-album-editor.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1380-album-editor.cjs", "scripts/test-r1381-inline-menu.cjs", "scripts/test-r1382-compact-colors.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1383-album-images.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1383-album-images.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

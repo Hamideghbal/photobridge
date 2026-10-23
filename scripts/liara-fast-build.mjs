@@ -343,6 +343,8 @@ await deployStep("./enable-r1372-third-header.mjs");
 await deployStep("./enable-r1373-installer-domains.mjs");
 await deployStep("./enable-r1374-domain-payment.mjs");
 await deployStep("./enable-r1376-invite-actions.mjs");
+await deployStep("./enable-r1377-domain-gateway.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1377-domain-gateway.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1376-invite-actions.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1374-domain-orders.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1373-installer-domains.cjs"], { stdio: "inherit" });

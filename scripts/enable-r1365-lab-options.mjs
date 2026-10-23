@@ -30,3 +30,8 @@ for(const name of ['photobridge-r1137-lab-local-intake.js','photobridge-r1363-la
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.replace(/&labOptions=[^&"']*/g,'')+'&labOptions=r1365');
 if(!html.includes('/photobridge-r1365-lab-polish.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1365-lab-polish.css?v=r1365">\n</head>');
 fs.writeFileSync('dist/web/index.html',html);
+
+// Refresh the installer presentation after its component and stylesheet change.
+html=html.replace(/(photobridge-r1365-lab-polish\.css\?v=r1365)(?:&installer=r1369)*/g,"$1&installer=r1369");
+html=html.replace(/&installerUi=r1369/g,'').replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&installerUi=r1369');
+fs.writeFileSync('dist/web/index.html',html);

@@ -1,1 +1,1 @@
-2026-10-23-r1368-grouped-settings-build-fix
+2026-10-23-r1369-installer-upload-and-download-ui

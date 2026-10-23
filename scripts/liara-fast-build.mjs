@@ -334,7 +334,7 @@ runR1314(process.execPath, ["--test", "scripts/test-r1363-single-order-alarm.cjs
 await deployStep("./enable-r1364-lab-tabs.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1364-lab-tabs.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1365-lab-options.mjs");
-runR1314(process.execPath, ["--test", "scripts/test-r1365-lab-options.cjs"], { stdio: "inherit" });
+runR1314(process.execPath, ["--test", "scripts/test-r1365-lab-options.cjs", "scripts/test-r1369-installer-upload.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1367-admin-grants.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1367-admin-grants.cjs", "scripts/test-r1368-menu-build.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1367-intake-invoice-sms.mjs");

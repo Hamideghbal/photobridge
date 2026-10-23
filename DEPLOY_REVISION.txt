@@ -1,1 +1,1 @@
-2026-10-23-r1367-admin-grants-order-invoice-sms
+2026-10-23-r1368-grouped-settings-build-fix

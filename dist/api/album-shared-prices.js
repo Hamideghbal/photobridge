@@ -1,0 +1,7 @@
+// New catalog saves use one explicit price per type/size; never silently pick among old color prices.
+export function normalizeSharedAlbumPrices(body){
+ if(body.sharedAlbumPricing!==true)return;
+ const fail=()=>{throw Object.assign(Error('album_shared_price_conflict'),{status:400})};
+ for(const variant of body.coverCatalog?.variants||[]){if(variant.active===false)continue;const groups=new Map();for(const row of variant.prices||[]){if(!groups.has(row.sizeLabel))groups.set(row.sizeLabel,[]);groups.get(row.sizeLabel).push(row)}for(const [size,rows] of groups){const prices=[...new Set(rows.map(r=>Number(r.price)))];if(prices.length!==1||!Number.isSafeInteger(prices[0])||prices[0]<0||prices[0]>9000000000)fail();const ids=[...new Set([...(variant.attachedColorIds||[]),...(variant.colorIds||[])])];variant.prices=variant.prices.filter(r=>r.sizeLabel!==size).concat(ids.map(colorId=>({colorId,sizeLabel:size,price:prices[0]})));}}
+ for(const model of body.packageCatalog?.models||[]){if(model.active===false)continue;const sizes=new Set((model.colors||[]).flatMap(c=>Object.keys(c.prices||{})));for(const size of sizes){const values=(model.colors||[]).map(c=>c.prices?.[size]).filter(v=>v!=null&&String(v).trim()!=='');const prices=[...new Set(values.map(Number))];if(prices.length!==1||!Number.isSafeInteger(prices[0])||prices[0]<0||prices[0]>9000000000)fail();for(const color of model.colors||[])color.prices={...color.prices,[size]:prices[0]};}}
+}

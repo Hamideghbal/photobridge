@@ -13,8 +13,8 @@ test('admin toggles are explicit booleans, reject cross-origin writes and preser
 test('actual installer route protects GET, HEAD and status with the per-lab download grant',async()=>{
  const source=fs.readFileSync('dist/api/server.js','utf8'),a=source.indexOf("if (url.pathname === '/api/lab/desktop-installer'"),b=source.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/desktop-ui-manifest')",a),section=source.slice(a,b);
  for(const enabled of [true,false])for(const [path,method] of [['/api/lab/desktop-installer','GET'],['/api/lab/desktop-installer','HEAD'],['/api/lab/desktop-installer/status','GET']]){
-  let status,releaseReads=0;const context={req:{method},url:{pathname:path},pool:{query:async()=>({rowCount:1})},labId:id,a:{userId:'owner'},getLabFeatures:async()=>({desktopEnabled:enabled}),sendJson:(_,s)=>status=s,res:{writeHead:s=>status=s,end(){}},labDesktopReleaseSetting:async()=>{releaseReads++;return {objectKey:'private/installer.exe',version:'1.0.22'}},storageConfigured:true,storagePresign:async()=> 'https://downloads.example/verified.exe'};
-  await vm.runInNewContext('(async()=>{'+section+'})()',context);assert.equal(status,enabled?(path.endsWith('/status')?200:302):403);assert.equal(releaseReads,enabled?1:0);
+  let status,releaseReads=0;const streamed=section.includes('serveLabInstaller');const context={req:{method},url:{pathname:path},pool:{query:async()=>({rowCount:1})},labId:id,a:{userId:'owner'},getLabFeatures:async()=>({desktopEnabled:enabled}),sendJson:(_,s)=>status=s,res:{writeHead:s=>status=s,end(){}},labDesktopReleaseSetting:async()=>{releaseReads++;return {objectKey:'private/installer.exe',version:'1.0.22'}},storageConfigured:true,storageStat:async()=>({ContentLength:123}),serveLabInstaller:async()=>{status=200},storagePresign:async()=> 'https://downloads.example/verified.exe'};
+  await vm.runInNewContext('(async()=>{'+section+'})()',context);assert.equal(status,enabled?(streamed||path.endsWith('/status')?200:302):403);assert.equal(releaseReads,enabled?1:0);
  }
 });
 test('invoice issuance takes the same customer lock as initial-debt correction before calculating an invoice',async()=>{

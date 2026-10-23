@@ -363,6 +363,8 @@ await deployStep("./enable-r1384-album-galleries.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1384-album-galleries.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1385-album-save.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1385-album-save.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1386-storage-target.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1386-storage-target.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

@@ -1,0 +1,21 @@
+# R1386 site-defined Windows storage target
+
+The site sets one existing absolute local Windows folder for the lab. The Windows panel displays that server path read-only and offers explicit activation, not another directory picker. Older installed engines show an upgrade requirement. Archive duration and manual dated-folder cleanup remain available in the native panel.
+
+GET/PUT /api/lab/storage-target and POST /api/lab/storage-target/activate run inside existing lab authentication/suspension checks and additionally require lab_admin. Configuration lives in existing labs.ui_preferences; no schema migration. Invalid/relative/root/UNC/reserved paths are rejected. A changed path creates a fresh revision and clears primary download registration until explicit activation; saving the same path preserves activation. Activation locks the lab row, checks the exact revision and native identity, and requires explicit confirmation to replace another active device. Mutations are audited without logging the path.
+
+Native 1.0.23 reads the authenticated server target, rejects links in its ancestors, checks canonical location and directory status, and performs an exclusive create/write/sync/delete probe. It then requests activation and independently confirms the server response before replacing the prior local root. Offline/queued/stale/conflicting answers do not falsely succeed. An acknowledged local root is retained across restart and offline work. When a changed server revision/active system is observed, access to the old root is blocked until reactivation. Existing atomic writes, IPC origin/frame boundaries and account guards are preserved. Browser and app are not identified as the same physical machine by IP or fingerprint; the explicit activation binds the installed app's persistent device ID.
+
+Website activation requires the native capability, never a browser directory handle. The local host forwards path operations directly online, bypassing the business outbox and cached successes.
+
+## Native build
+
+Use the tracked PhotoBridge-Lab-Source-v1.0.22.zip (SHA-256 5fcd7e991f6f95008f375ac10ff036ea3abd89997118738e325d67a8c0df89aa, git blob a1b41dbec532f42e30ba6415864b2e23bf20c6b6). Restore it to an isolated directory and run `node scripts/integrate-r1386-native-storage.cjs <source-directory>` from the repository root. The integrator installs the tested configured-storage module, extends the existing trusted IPC/renderer bridge, keeps configuration requests online-only and bumps package/lock/build instructions to 1.0.23. It is idempotent and fails on changed anchors. Source 1.0.22 and its original user-data location are retained as the upgrade base; no SQLite/photo deletion or reset.
+
+The Windows candidate workflow now restores this current source (instead of the older 1.0.14 archive), verifies the archive hash, integrates the feature, and builds an unsigned test installer. On Windows, run npm ci, npm test and npm run dist:unsigned, or the signed build when signing credentials are available. The existing prepare-assets script embeds the live hash-verified UI; the server UI must be deployed before the new panel becomes available. Publishing website assets cannot replace an installed native engine.
+
+## Validation and rollout
+
+89 tests passed locally: 34 existing website/editor regressions on fresh transforms; 6 storage API/UI/build tests; 7 native integration/disk/host tests; one real PostgreSQL transaction test; 41 existing native tests after integration. Coverage includes an actual atomic photo write to a temp directory, restart/offline access, account isolation, queue bypass, stale revisions, missing/unwritable/link paths and activation conflicts. Windows drive paths were mapped to a real temp directory for Linux tests. Generated server and website JS syntax checks passed, and native integration ran twice successfully.
+
+Actual Windows permissions/UI, NSIS packaging/signing and a full production Docker build were not executed locally. No installer is claimed to have been produced. Review the Windows workflow result and test the EXE on Windows before distribution. Keep the PR draft under AGENTS.md security/data-integrity stop conditions; no production merge/deploy yet.

@@ -338,6 +338,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1365-lab-options.cjs", "scr
 await deployStep("./enable-r1367-admin-grants.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1367-admin-grants.cjs", "scripts/test-r1368-menu-build.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1367-intake-invoice-sms.mjs");
+await deployStep("./enable-r1370-installer-zip.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1370-installer-zip.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1367-intake-invoice-sms.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");

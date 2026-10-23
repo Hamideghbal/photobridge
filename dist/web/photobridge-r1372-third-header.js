@@ -44,7 +44,7 @@ function render(){queued=false;const root=document.querySelector('.labRoleWorksp
    const live=source.querySelector('input[type=checkbox]');
    input.checked=!!live?.checked;input.disabled=!!live?.disabled;
    label.querySelector('span').textContent=source.querySelector('span')?.textContent||'';
-   label.querySelector('small').textContent=input.checked?'منوی انتخاب':'توضیح آزاد';
+   label.querySelector('small').textContent=input.checked?'منوی انتخاب':((source.querySelector('span')?.textContent||'').includes('خدمات جانبی')?'غیرفعال':'توضیح آزاد');
   });
  }else if(mirror)mirror.remove();
  const fontButton=second.querySelector(':scope>button[data-pb1173-index]');if(fontButton&&typeof getComputedStyle==='function'){const font=getComputedStyle(fontButton).font;if(font&&row.style.getPropertyValue('--pb1375-tab-font')!==font)row.style.setProperty('--pb1375-tab-font',font)}

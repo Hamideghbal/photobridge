@@ -351,6 +351,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1373-installer-domains.cjs"
 runR1314(process.execPath, ["--test", "scripts/test-r1372-third-header.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1370-installer-zip.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1367-intake-invoice-sms.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1378-lab-fixes.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1378-lab-fixes.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

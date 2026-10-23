@@ -37,3 +37,6 @@ Admin SMS reuses the configured active platform-admin mobile and SMS provider. I
 Direct-bank rejection is not a wallet refund. It marks bank refund pending; admin must perform the banking refund externally and record its reference before the application marks refunded. Old wallet-paid orders retain their original transactional wallet-refund behavior. New checkout credits no wallet balance.
 
 The inactive Windows/site cards now explain the local workflow, stored information during temporary disconnection, selected file path, custom domain, online orders and payment activation. Existing free-trial wording and entitlement gates remain.
+
+## R1378 — انصراف از درخواست
+درخواست پرداخت‌نشده در وضعیت pending، reviewing یا quoted از پنل لابراتوار قابل حذف است. عملیات با قفل سطر و در محدوده همان لابراتوار انجام می‌شود. وجود هر وضعیت پرداخت، شناسه تراکنش یا رزرو درگاه، حذف را مسدود می‌کند. حذف درخواست به اتصال دامنه، پرداخت و سوابق بانکی دست نمی‌زند. مسیر POST /api/lab/domain-requests/zibal/remove با همان کنترل نقش، دسترسی سایت و مبدا درخواست اجرا می‌شود؛ بخش zibal آن را در میزبان‌های ویندوز نصب‌شده از صف آفلاین خارج نگه می‌دارد.

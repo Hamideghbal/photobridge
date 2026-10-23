@@ -1,0 +1,41 @@
+/* R1379: three independent album catalogue controls and price-by-size tables. */
+#root .labRoleWorkspace .pb1379SectionToggles{display:flex;align-items:center;gap:9px;flex-wrap:wrap;direction:rtl;margin-inline-start:auto}
+#root .labRoleWorkspace .pb1379SectionSwitch{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border:1px solid #d7e1ec;border-radius:9px;background:#f8fafc;color:#32465c;font:750 11px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+#root .labRoleWorkspace .pb1379SectionSwitch input{accent-color:#3567a2;cursor:pointer;width:14px;height:14px}
+#root .labRoleWorkspace .pb1379SectionSwitch em{font-style:normal;color:#667d92;font-size:9px;font-weight:650}
+#root .labRoleWorkspace .pb1379AlbumServiceNotice{display:flex;align-items:center;gap:10px;color:#ad5b22;font-size:11px;font-weight:700}
+#root .labRoleWorkspace .pb1379AlbumServiceNotice button{border:1px solid #d2e1f2;border-radius:9px;background:#edf5ff;color:#32577e;padding:6px 10px;font:inherit;cursor:pointer}
+#root .labRoleWorkspace .pb1379MatrixPanel{margin:16px 0 22px;padding:14px;border:1px solid #d7e3ef;border-radius:14px;background:#fff;direction:rtl;box-shadow:0 6px 20px rgba(48,87,122,.05);min-width:0}
+#root .labRoleWorkspace .pb1379MatrixHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;margin-bottom:12px}
+#root .labRoleWorkspace .pb1379MatrixHead b{font-size:13px;color:#293e54}
+#root .labRoleWorkspace .pb1379MatrixHead small{font-size:10px;color:#697f96}
+#root .labRoleWorkspace .pb1379MatrixScroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #e0e9f1;border-radius:10px}
+#root .labRoleWorkspace .pb1379MatrixScroll table{border-collapse:collapse;min-width:100%;width:max-content;table-layout:auto;direction:rtl}
+#root .labRoleWorkspace .pb1379MatrixScroll th,#root .labRoleWorkspace .pb1379MatrixScroll td{border-inline-end:1px solid #e0e9f1;border-bottom:1px solid #e7edf3;padding:8px 10px;text-align:center;min-width:168px}
+#root .labRoleWorkspace .pb1379MatrixScroll thead th{background:#edf3f9;color:#314b63;font:800 11px Vazirmatn,Tahoma,sans-serif;position:sticky;top:0}
+#root .labRoleWorkspace .pb1379MatrixScroll th:first-child{position:sticky;right:0;z-index:2;min-width:120px;background:#f7fafc;color:#314b63}
+#root .labRoleWorkspace .pb1379MatrixScroll thead th:first-child{z-index:3;background:#e7f0f9}
+#root .labRoleWorkspace .pb1379MatrixScroll tr:last-child td,#root .labRoleWorkspace .pb1379MatrixScroll tr:last-child th{border-bottom:none}
+#root .labRoleWorkspace .pb1379MatrixScroll td label{display:flex;align-items:center;gap:6px;justify-content:center;direction:rtl}
+#root .labRoleWorkspace .pb1379MatrixScroll td input{width:106px;height:34px;max-width:100%;padding:5px 7px;border:1px solid #d7e1ed;border-radius:8px;background:#fff;color:#21384b;font:750 12px Vazirmatn,Tahoma,sans-serif;text-align:center;direction:ltr;outline-offset:2px}
+#root .labRoleWorkspace .pb1379MatrixScroll td input:focus{border-color:#729dcc}
+#root .labRoleWorkspace .pb1379MatrixScroll td input:disabled{background:#f5f7fa;color:#8693a2}
+#root .labRoleWorkspace .pb1379MatrixScroll td span{font-size:9px;color:#6e8191}
+#root .labRoleWorkspace .pb1379EmptyMatrix{font-size:11px;color:#61788b;text-align:center;padding:12px;margin:0}
+#root .labRoleWorkspace .albumCoverModelPriceButtonV407{display:none!important}
+.albumCustomCoverRequest .albumCustomCoverToggle{display:none!important}
+.pb1379PackageRequest{display:grid;gap:10px}
+.pb1379PackageRequest textarea{min-height:82px;width:100%;padding:10px 12px;border:1px solid #cad8e4;border-radius:10px;font:inherit;resize:vertical}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .albumSettingsTopRow>.pb1379SectionToggles{display:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1379ThirdToggles{margin-inline-start:auto;display:flex;align-items:center;gap:9px;direction:rtl;flex:none}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1379ThirdSwitch{display:flex;align-items:center;gap:5px;min-height:28px;padding:4px 9px;border:1px solid #d9e3ef;border-radius:8px;background:#f8fbfe;color:#38536c;font:750 10px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1379ThirdSwitch input{width:14px;height:14px;accent-color:#34689e;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1379ThirdSwitch small{font-size:9px;color:#718297}
+}
+@media(max-width:820px){
+ #root .labRoleWorkspace .pb1379SectionToggles{width:100%;justify-content:flex-start}
+ #root .labRoleWorkspace .pb1379SectionSwitch{font-size:10px}
+ #root .labRoleWorkspace .pb1379MatrixPanel{padding:10px;margin:12px 0}
+ #root .labRoleWorkspace .pb1379MatrixScroll th,#root .labRoleWorkspace .pb1379MatrixScroll td{min-width:145px;padding:7px}
+}

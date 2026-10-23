@@ -11109,7 +11109,7 @@ async function albumOrderSnapshot(labId, input) {
     const coverPriceNumber = coverPriceRaw == null || String(coverPriceRaw).trim() === '' ? NaN : Number(coverPriceRaw);
     const missingCoverTariff = !customCover && (!Number.isFinite(coverPriceNumber) || coverPriceNumber <= 0);
     const manualCoverRequired = Boolean(customSize || customCover || missingCoverTariff);
-    const manualPackageRequired = Boolean(packageRequest);
+    const manualPackageRequired = Boolean(packageRequest || (albumPackage && Number(albumPackage.price || 0) <= 0));
     const manualRequired = manualPrintRequired || manualBindingRequired || manualCoverRequired || manualPackageRequired;
     const bindingPrice = customSize ? null : albumMoney(size.bindingPrice), bindingTotal = bindingPrice == null ? null : bindingPrice * spreads;
     const coverPrice = manualCoverRequired ? null : albumMoney(coverPriceRaw), packagePrice = manualPackageRequired ? null : customSize ? 0 : Number(snapshotPackage?.price || 0);
@@ -23855,9 +23855,10 @@ ${inviteUrl}`;
                         const colorValue = cleanText(color.colorValue || color.name, 40).toUpperCase(), colorName = cleanText(color.name || colorValue, 80) || colorValue, rawPrices = color?.prices && typeof color.prices === 'object' && !Array.isArray(color.prices) ? color.prices : {};
                         await c.query(`INSERT INTO lab_album_package_model_colors(model_id,color_name,color_value,active,sort_order) VALUES($1,$2,$3,$4,$5)`, [groupId, colorName, colorValue, color.active !== false, colorSort]);
                         let sizeSort = 0;
-                        for (const [rawSizeLabel, rawPrice] of Object.entries(rawPrices)) {
-                            if (String(rawPrice ?? '').trim() === '')
-                                continue;
+                        // A model/color is selectable at every active binding size, even before its tariff is entered.
+                        // Price 0 means unpriced and is always resolved by the lab before invoicing.
+                        for (const rawSizeLabel of sizeIdsByLabel.keys()) {
+                            const rawPrice = rawPrices[rawSizeLabel];
                             const sizeLabel = cleanText(rawSizeLabel, 90), sizeId = sizeIdsByLabel.get(sizeLabel);
                             if (!sizeId)
                                 throw Object.assign(new Error('album_package_invalid'), { status: 400 });

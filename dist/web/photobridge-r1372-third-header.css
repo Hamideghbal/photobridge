@@ -1,7 +1,7 @@
 @media(min-width:821px) and (hover:hover) and (pointer:fine){
- html body #root .labRoleWorkspace .pb1372ThirdHeader{position:fixed;inset-inline:0;z-index:139;display:flex;align-items:center;justify-content:center;gap:18px;min-height:44px;height:44px;box-sizing:border-box;padding:4px 18px;background:#fff;overflow-x:auto;white-space:nowrap;box-shadow:0 5px 12px -9px #283f5624;font-family:inherit}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{position:fixed;inset-inline:0;z-index:139;display:flex;align-items:center;justify-content:flex-start;direction:rtl;text-align:right;gap:18px;min-height:44px;height:44px;box-sizing:border-box;padding:4px 18px;background:#fff;overflow-x:auto;white-space:nowrap;box-shadow:0 5px 12px -9px #283f5624;font-family:inherit}
  html body #root .labRoleWorkspace .pb1372ThirdHeader::before{content:'';position:absolute;top:0;inset-inline:18px;height:1px;background:linear-gradient(90deg,transparent,#d4dce6 15%,#d4dce6 85%,transparent)}
- html body #root .labRoleWorkspace .pb1372ThirdHeader button{position:relative;flex:none;padding:8px 5px;min-height:32px;border:0;border-radius:0;background:transparent;box-shadow:none;font:600 12px/1.4 Vazirmatn,Tahoma,sans-serif;color:#53677e;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button{position:relative;flex:none;padding:8px 5px;min-height:32px;border:0;border-radius:0;background:transparent;box-shadow:none;font:var(--pb1375-tab-font,800 11px/1.35 Vazirmatn,Tahoma,sans-serif)!important;color:#53677e;cursor:pointer}
  html body #root .labRoleWorkspace .pb1372ThirdHeader button.active{color:#315f9d}.pb1372ThirdHeader button.active::after{content:'';position:absolute;inset-inline:5px;bottom:1px;height:2px;background:#7397be;border-radius:2px}
  html body #root .labRoleWorkspace .pb1372ThirdHeader button:focus-visible{outline:2px solid #91acc9;outline-offset:-2px}html body #root .labRoleWorkspace .pb1372ThirdHeader button:disabled{opacity:.5;cursor:default}
  html body #root .labRoleWorkspace .pb1372Title{font-size:12px;color:#34465b;margin-inline-end:8px}
@@ -15,4 +15,13 @@
  html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader .albumSettingsWorkspace>.albumAdminSection{width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;box-sizing:border-box!important}
  html.pb1363OrderQueue body #root .labRoleWorkspace .albumSettingsWorkspace .albumSettingsCompactHead{position:static!important;height:auto!important;max-height:none!important;overflow:visible!important}
  html.pb1363OrderQueue body #root .labRoleWorkspace .albumSettingsWorkspace .albumSettingsTopRow{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px!important;min-width:0!important}
+}
+
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1148SecondaryHeader{box-shadow:none!important}
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1148SecondaryHeader::after{display:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{box-shadow:0 6px 16px -8px rgba(70,103,221,.108)!important}
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1175HeaderFade{display:block!important;position:fixed!important;top:var(--pb1375-fade-top,164px)!important;inset-inline:0!important;height:16px!important;background:linear-gradient(to bottom,rgba(70,103,221,.072),rgba(70,103,221,.021) 55%,transparent)!important;pointer-events:none!important;z-index:138!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;direction:rtl}
+ html body #root .labRoleWorkspace .pb1375TabCount{display:inline-flex;align-items:center;justify-content:center;flex:none;width:21px;height:21px;border-radius:50%;background:#edf3fa;color:#526e91;font:800 10px/1 Vazirmatn,Tahoma,sans-serif}
 }

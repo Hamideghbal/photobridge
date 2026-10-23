@@ -20,4 +20,5 @@ if(!q.includes('.pb1372ThirdHeader')){const before=".labSingleHeader,.pb1148Seco
 const file='dist/web/index.html';let html=fs.readFileSync(file,'utf8');
 for(const name of ['photobridge-r1147-lab-admin-header.js','photobridge-r1363-lab-queue.js'])html=html.replace(new RegExp('('+name.replaceAll('.','\\.')+'\\?[^"\']*)','g'),u=>u.replace(/&thirdHeader=[^&"']*/g,'')+'&thirdHeader=r1372');
 if(!html.includes('/photobridge-r1372-third-header.js'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1372-third-header.css?v=r1372">\n<script defer src="/photobridge-r1372-third-header.js?v=r1372"></script>\n</head>');
+html=html.replace(/(photobridge-r1372-third-header\.(?:js|css)\?v=)r1372/g,'$1r1375');
 fs.writeFileSync(file,html);

@@ -25,3 +25,12 @@
  html body #root .labRoleWorkspace .pb1372ThirdHeader button{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;direction:rtl}
  html body #root .labRoleWorkspace .pb1375TabCount{display:inline-flex;align-items:center;justify-content:center;flex:none;width:21px;height:21px;border-radius:50%;background:#edf3fa;color:#526e91;font:800 10px/1 Vazirmatn,Tahoma,sans-serif}
 }
+
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow{justify-content:flex-end!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button{border:1px solid #d2deeb!important;border-radius:8px!important;background:#f3f7fb!important;color:#365a7d!important;padding:6px 13px!important;min-height:30px!important;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button:last-child{background:#345e88!important;color:#fff!important;border-color:#345e88!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button::after{display:none!important}
+}

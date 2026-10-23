@@ -13,6 +13,7 @@ function render(){queued=false;const root=document.querySelector('.labRoleWorksp
  data.source.classList.add('pb1372Source');if(data.kind==='customers')data.source.closest('.labCustomerSectionMenu')?.classList.add('pb1372RetiredBox');
  if(data.kind==='finance'){root.querySelector('.financeTopline')?.classList.add('pb1372RetiredBox');root.querySelector('.financeNavDock')?.classList.add('pb1372RetiredBox');}
  let row=root.querySelector('.pb1372ThirdHeader');if(!row){row=document.createElement('nav');row.className='pb1372ThirdHeader';row.setAttribute('aria-label','زیرگزینه‌های بخش');second.after(row)}
+ row.classList.toggle('pb1376ActionRow',data.kind==='pricing');
  const originals=[...data.source.querySelectorAll(data.selector)];if(data.kind==='finance')originals.push(...root.querySelectorAll('.financeSectionTools>button'));
  const previous=row._originals||[];
  if(row._kind!==data.kind||previous.length!==originals.length||originals.some((n,i)=>n!==previous[i])){

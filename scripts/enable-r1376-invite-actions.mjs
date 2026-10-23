@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const server='dist/api/server.js';let s=fs.readFileSync(server,'utf8');
+if(!s.includes('/* PB1376 canonical invite URL */')){
+ const a=s.indexOf('function photographerInvitePublicView('),b=s.indexOf('async function photographerInviteByCode(',a);if(a<0||b<a)throw Error('R1376 missing invite public view');let view=s.slice(a,b);const anchor='return { id: r.id, code: r.code,';if(view.split(anchor).length!==2)throw Error('R1376 changed invite view');view=view.replace(anchor,"/* PB1376 canonical invite URL */\n    return { shareUrl: new URL('/photographer/signup?invite='+encodeURIComponent(String(r.code||'')),PUBLIC_APP_URL).href, id: r.id, code: r.code,");s=s.slice(0,a)+view+s.slice(b);fs.writeFileSync(server,s);
+}
+const file='dist/web/assets/index-UIRefine-v655-r84.js';let ui=fs.readFileSync(file,'utf8');
+if(!ui.includes('/* PB1376 invite sharing */')){
+ const old='He=A=>`${location.origin}/photographer/signup?invite=${encodeURIComponent(A.code)}`';if(ui.split(old).length!==2)throw Error('R1376 changed invite URL helper');ui=ui.replace(old,'He=A=>PB1376InviteUrl(A)');
+ const copy='De=async A=>{const D=He(A);try{await navigator.clipboard.writeText(D),alert("لینک دعوت کپی شد.")}catch{prompt("لینک دعوت:",D)}}';if(ui.split(copy).length!==2)throw Error('R1376 changed copy handler');ui=ui.replace(copy,'De=async A=>{const D=He(A),ok=await PB1376CopyInvite(D);g(ok?"لینک دعوت کپی شد.":"کپی خودکار ممکن نیست؛ لینک دعوت را از کادر زیر انتخاب و کپی کنید.")}');
+ const shareStart=ui.indexOf('pt=async A=>'),shareEnd=ui.indexOf(',ot=async()=>',shareStart);if(shareStart<0||shareEnd<shareStart)throw Error('R1376 changed share handler');
+ ui=ui.slice(0,shareStart)+'pt=async A=>{const D=He(A),de="دعوت همکار عکاس به PhotoBridge";try{if(navigator.share){await navigator.share({title:"PhotoBridge",text:de,url:D});return}}catch{}const ok=await PB1376CopyInvite(de+"\\n"+D);g(ok?"متن و لینک دعوت کپی شد.":"کپی خودکار ممکن نیست؛ لینک دعوت را از کادر زیر کپی کنید.")}' +ui.slice(shareEnd);
+ const item='e.jsx("button",{onClick:()=>De(A),children:"کپی لینک"})';if(ui.split(item).length!==2)throw Error('R1376 changed share actions');ui=ui.replace(item,'e.jsx("a",{className:"pbActionButton secondary",href:He(A),target:"_blank",rel:"noopener noreferrer",children:"باز کردن لینک دعوت"}),'+item);
+ const card='children:[e.jsxs("div",{className:"photographerInviteMain",children:';if(ui.split(card).length!==2)throw Error('R1376 changed invite card');ui=ui.replace(card,'children:[e.jsx("label",{className:"pb1376InviteLink",children:e.jsx("input",{type:"text",readOnly:!0,dir:"ltr",value:He(A),"aria-label":"لینک دعوت قابل اشتراک",onFocus:v=>v.target.select(),onClick:v=>v.target.select()})}),e.jsxs("div",{className:"photographerInviteMain",children:');
+ ui+='\n/* PB1376 invite sharing */\n'+fs.readFileSync('scripts/r1376-invite-helpers.js','utf8');fs.writeFileSync(file,ui);
+}
+const p='dist/web/index.html';let html=fs.readFileSync(p,'utf8');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&inviteShare=')?u.replace(/&inviteShare=[^&"']*/g,'&inviteShare=r1376'):u+'&inviteShare=r1376');html=html.replace(/(photobridge-r1372-third-header\.(?:js|css)\?v=)r(?:1372|1375)/g,'$1r1376');fs.writeFileSync(p,html);

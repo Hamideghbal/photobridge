@@ -341,6 +341,8 @@ await deployStep("./enable-r1367-intake-invoice-sms.mjs");
 await deployStep("./enable-r1370-installer-zip.mjs");
 await deployStep("./enable-r1372-third-header.mjs");
 await deployStep("./enable-r1373-installer-domains.mjs");
+await deployStep("./enable-r1374-domain-payment.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1374-domain-orders.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1373-installer-domains.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1372-third-header.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1370-installer-zip.cjs"], { stdio: "inherit" });

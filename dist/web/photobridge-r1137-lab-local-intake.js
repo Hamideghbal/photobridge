@@ -42,7 +42,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
  const details=node('section',null,'pb1294SelectedDetails');details.hidden=true;
  details.setAttribute('aria-label','اطلاعات حساب مشتری انتخاب‌شده');
  const accountRow=node('div',null,'pb1365CustomerAccountRow');wrapper.replaceWith(accountRow);accountRow.append(wrapper,details);
- const model={value:'',button},digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
+ const model={value:'',button,sendInvoiceSms:false},digits=text=>String(text||'').replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x))).replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)));
  const normalize=text=>digits(text).toLocaleLowerCase('fa-IR');
  const mobileValue=text=>{let d=digits(text).replace(/\D/g,'');if(d.startsWith('0098'))d='0'+d.slice(4);else if(d.startsWith('98')&&d.length===12)d='0'+d.slice(2);else if(/^9\d{9}$/.test(d))d='0'+d;return d;};
  const moneyValue=text=>digits(text).replace(/[^0-9]/g,'');
@@ -84,17 +84,11 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
   const localNotice=node('span',message,'pb1294ActionNotice');
   localNotice.setAttribute('role','status');
   const smsChoice=node('label',null,'pb1365SmsChoice'),sms=node('input');sms.type='checkbox';
-  sms.setAttribute('aria-label',recent?'ارسال پیامک آخرین فاکتور':'ارسال پیامک دعوت‌نامه');
-  sms.disabled=!data.smsEnabled||(!recent&&!c.registrationPending);
-  smsChoice.title=!data.smsEnabled?'ارسال پیامک برای این لابراتوار غیرفعال است':recent?'ارسال پیامک فاکتور شماره '+recent.number:c.registrationPending?'ارسال مجدد دعوت‌نامه':'پس از صدور فاکتور، پیامک آن قابل ارسال است';
+  sms.setAttribute('aria-label','ارسال پیامک فاکتور همین سفارش');
+  sms.checked=model.sendInvoiceSms===true;sms.disabled=!data.smsEnabled;
+  smsChoice.title=data.smsEnabled?'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.':'ارسال پیامک برای این لابراتوار غیرفعال است';
   smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);
-  sms.onchange=async()=>{
-   if(!sms.checked)return;sms.disabled=true;localNotice.textContent='در حال ارسال پیامک…';
-   try{const result=recent?await sendInvoiceSms(c.id,{invoiceId:recent.id}):await resendInvitation(c.id);
-    if(!(recent?result.smsSent:result.invitationSmsSent))throw Error('ارسال پیامک انجام نشد.');
-    localNotice.textContent='پیامک ارسال شد.';
-   }catch(e){localNotice.textContent=e.message;sms.checked=false;sms.disabled=false;}
-  };
+  sms.onchange=()=>{model.sendInvoiceSms=sms.checked;};
   if(data.canEditInitialDebt){
    const toggle=node('button','اصلاح بدهی اولیه','pb1294Edit');toggle.type='button';
    const editPanel=node('div',null,'pb1294InitialEdit');editPanel.hidden=true;
@@ -137,6 +131,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
   }
  }
  function selectCustomer(c){
+  if(selected?.id!==c.id)model.sendInvoiceSms=false;
   selected=c;model.value=c.id;model.registrationPending=!!c.registrationPending;
   selectionValue.textContent=itemLabel(c);showNew(false);menu.hidden=true;
   button.setAttribute('aria-expanded','false');notice.textContent='';
@@ -170,7 +165,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
    search.value='';render();selectCustomer(c);
    if(smsLabel.checked&&c.registrationPending&&!created.invitationSmsSent){
     menu.hidden=false;button.setAttribute('aria-expanded','true');
-    notice.textContent='مشتری اضافه شد اما پیامک ارسال نشد؛ گزینهٔ ارسال مجدد زیر مشخصات مشتری قرار دارد.';
+    notice.textContent='مشتری اضافه شد اما پیامک دعوت‌نامه ارسال نشد؛ از بخش دعوت‌نامه‌ها دوباره ارسال کنید.';
    }
   }catch(e){notice.textContent=e.message;}finally{addCustomer.disabled=false;}
  };
@@ -336,8 +331,10 @@ async function open(){
    for(const item of entries){const file=detail.files.find(f=>f.id===item.fileId);if(!file)throw Error('اطلاعات عکس در سفارش پیدا نشد.');const target=await provider.target(directory,detail,file);const key=target.dir.name+'/'+provider.fileName(file.original_name,'file');if(names.has(key))throw Error('نام دو عکس در مسیر چاپ یکسان است. نام فایل‌ها را متفاوت انتخاب کن.');names.add(key);targets.push({item,file,target});}
    for(const {item,file,target} of targets){if(item.saved)continue;const saved=await provider.write(target.dir,file.original_name,item.file);item.saved=true;item.localName=saved.name;}
    provider.saveResume(order.orderId,{startedAt,done:entries.length,total:entries.length,loadedBytes:entries.reduce((n,x)=>n+x.file.size,0),totalBytes:entries.reduce((n,x)=>n+x.file.size,0),completedIds:entries.map(x=>x.fileId),remaining:0,lastError:null,localComplete:true});
-   const result=await api('/api/lab/delegated-orders/'+order.orderId+'/submit',{});
+   const result=await api('/api/lab/delegated-orders/'+order.orderId+'/submit',{sendInvoiceSms:customers.sendInvoiceSms===true});
    form.replaceChildren(node('h3','سفارش شمارهٔ '+order.orderNumber+' ثبت شد.'),node('p','عکس‌ها در مسیر سفارش روی هارد ثبت شدند. وضعیت سفارش دانلودشده است؛ پیش‌فاکتور تا زمان «آماده تحویل» قطعی نمی‌شود.'));
+   const smsResult=result.invoiceSms;
+   if(smsResult?.requested)form.append(node('p',smsResult.status==='sent'?'پیامک فاکتور همین سفارش ارسال شد.':smsResult.status==='failed'?'سفارش ثبت شد، اما پیامک فاکتور ارسال نشد؛ وضعیت پیامک را بررسی کنید.':smsResult.status==='dispatching'?'سفارش ثبت شد؛ نتیجهٔ ارسال پیامک هنوز در حال بررسی است.':'درخواست پیامک ذخیره شد؛ پس از صدور فاکتور همین سفارش ارسال می‌شود.','pb1367InvoiceSmsResult'));
    const done=node('button','نمایش سفارش');done.type='button';done.onclick=()=>{closeModal();location.assign('/lab/orders');};form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;
   }catch(e){busy(false);error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':e.message;}
  };

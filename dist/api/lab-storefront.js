@@ -7,7 +7,7 @@ export function labHomepage(lab,origin,saved={},options={}){return renderLabPage
 export async function handleLabDomain(req,res,url,domain,d){
  const reply=(status,body)=>{d.sendJson(res,status,body);return true;};
  try{await requireLabSiteAccess(d.pool,domain.lab_id)}catch(e){if(e.status)return reply(e.status,{error:e.message});throw e;}
- const lab=(await d.pool.query('SELECT id,name,slug,province,city,walkin_enabled,walkin_show_prices FROM labs WHERE id=$1 AND active=true AND COALESCE(suspended,false)=false AND COALESCE(service_only,false)=false AND (active_from IS NULL OR active_from<=now()) AND (active_until IS NULL OR active_until>=now())',[domain.lab_id])).rows[0];
+ const lab=(await d.pool.query('SELECT id,name,slug,province,city,walkin_enabled,walkin_show_prices FROM labs WHERE id=$1 AND active=true AND COALESCE(suspended,false)=false AND COALESCE(service_only,false)=false AND (active_from IS NULL OR active_from<=now())',[domain.lab_id])).rows[0];
  if(!lab)return reply(404,{error:'lab_unavailable'});
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  if(req.method==='GET'&&url.pathname==='/robots.txt'){res.writeHead(200,{'content-type':'text/plain; charset=utf-8'});res.end('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /walkin/\nSitemap: https://'+domain.hostname+'/sitemap.xml\n');return true;}

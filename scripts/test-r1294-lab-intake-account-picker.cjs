@@ -18,7 +18,7 @@ test('lab intake picker has only customer identity/status while account summary 
  assert(!ui.includes("api('/api/lab/delegated-customers/balances')"));
  assert(ui.includes('cachedPrimary?Promise.resolve'));
  assert(html.includes('photobridge-r1291-lab-account-picker.css?v=r1294'));
- assert(html.includes('photobridge-r1137-lab-local-intake.js?v=r1365'));
+ assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r(?:1365|1367)/);
 });
 
 function setup({owner=true,member=true,invoiced=false,opening=25000,pending=true,actorRole='lab_admin',completeDuringSave=false}={}){

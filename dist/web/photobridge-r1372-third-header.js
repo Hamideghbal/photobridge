@@ -20,6 +20,33 @@ function render(){queued=false;const root=document.querySelector('.labRoleWorksp
   row.replaceChildren();row._kind=data.kind;row._originals=originals;
   originals.forEach((_,index)=>{const button=document.createElement('button');button.type='button';button.dataset.index=String(index);button.onclick=()=>{const live=row._originals[index];if(live?.isConnected&&!live.disabled)live.click();schedule()};row.append(button)});
  }
+ const catalogSource=root.querySelector('.pb1379SectionToggles');
+ let mirror=row.querySelector('.pb1379ThirdToggles');
+ if(data.kind==='album'&&catalogSource){
+  if(!mirror){mirror=document.createElement('div');mirror.className='pb1379ThirdToggles';row.append(mirror)}
+  const labels=[...catalogSource.querySelectorAll('label.pb1379SectionSwitch')];
+  if(mirror.children.length!==labels.length){
+   mirror.replaceChildren();
+   labels.forEach((source,index)=>{
+    const label=document.createElement('label');label.className='pb1379ThirdSwitch';
+    const input=document.createElement('input');input.type='checkbox';input.setAttribute('aria-label','فعال‌سازی '+(source.querySelector('span')?.textContent||''));
+    input.addEventListener('change',()=>{
+     const live=[...root.querySelectorAll('.pb1379SectionToggles label.pb1379SectionSwitch')][index]?.querySelector('input[type=checkbox]');
+     if(live&&!live.disabled&&live.checked!==input.checked)live.click();else schedule();
+    });
+    const name=document.createElement('span');const state=document.createElement('small');
+    label.append(input,name,state);mirror.append(label);
+   });
+  }
+  [...mirror.children].forEach((label,index)=>{
+   const source=labels[index],input=label.querySelector('input');
+   if(!source||!input)return;
+   const live=source.querySelector('input[type=checkbox]');
+   input.checked=!!live?.checked;input.disabled=!!live?.disabled;
+   label.querySelector('span').textContent=source.querySelector('span')?.textContent||'';
+   label.querySelector('small').textContent=input.checked?'منوی انتخاب':'توضیح آزاد';
+  });
+ }else if(mirror)mirror.remove();
  const fontButton=second.querySelector(':scope>button[data-pb1173-index]');if(fontButton&&typeof getComputedStyle==='function'){const font=getComputedStyle(fontButton).font;if(font&&row.style.getPropertyValue('--pb1375-tab-font')!==font)row.style.setProperty('--pb1375-tab-font',font)}
  [...row.querySelectorAll('button')].forEach((button,i)=>{const original=originals[i],raw=original.textContent.trim();let count='',label=raw;
  if(data.kind==='customers'){label=original.querySelector('span')?.textContent.trim()||raw;const suffix=original.querySelector('small')?.textContent.trim()||'';count=suffix.match(/[0-9۰-۹٠-٩]+/)?.[0]||'';if(!original.querySelector('span'))label=raw.replace(/[0-9۰-۹٠-٩]+\s*(?:عضو|جدید)/g,'').trim();}

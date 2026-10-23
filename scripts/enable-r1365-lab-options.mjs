@@ -32,6 +32,6 @@ if(!html.includes('/photobridge-r1365-lab-polish.css'))html=html.replace('</head
 fs.writeFileSync('dist/web/index.html',html);
 
 // Refresh the installer presentation after its component and stylesheet change.
-html=html.replace(/(photobridge-r1365-lab-polish\.css\?v=r1365)(?:&installer=r(?:1369|1370))*/g,"$1&installer=r1370");
-html=html.replace(/&installerUi=r(?:1369|1370)/g,'').replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&installerUi=r1370');
+html=html.replace(/(photobridge-r1365-lab-polish\.css\?v=r1365)(?:&installer=r(?:1369|1370|1371))*/g,"$1&installer=r1371");
+html=html.replace(/&installerUi=r(?:1369|1370|1371)/g,'').replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&installerUi=r1371');
 fs.writeFileSync('dist/web/index.html',html);

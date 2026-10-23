@@ -1,1 +1,1 @@
-2026-10-23-r1379-album-shared-size-tariffs
+2026-10-23-r1380-flat-album-models-independent-extras

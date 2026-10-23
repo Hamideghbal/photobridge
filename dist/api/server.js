@@ -23788,8 +23788,21 @@ ${inviteUrl}`;
                         const vq = await c.query(`INSERT INTO lab_album_cover_variants(lab_id,material_id,type_id,active,sort_order) VALUES($1,$2,$3,$4,$5) RETURNING id`, [labId, materialId, typeId, raw.active !== false, sort++]);
                         const variantId = String(vq.rows[0].id);
                         const chosen = [...new Set([...(Array.isArray(raw.colorIds) ? raw.colorIds : []), ...(Array.isArray(raw.attachedColorIds) ? raw.attachedColorIds : [])].map(String))];
-                        const priceRows = Array.isArray(raw.prices) ? raw.prices : [];
-                        const attached = [...new Set([...(Array.isArray(raw.attachedColorIds) ? raw.attachedColorIds : []).map(String), ...chosen, ...priceRows.map((p) => String(p.colorId || '')).filter(Boolean)])];
+                        const originalPriceRows = Array.isArray(raw.prices) ? raw.prices : [];
+                        const attached = [...new Set([...(Array.isArray(raw.attachedColorIds) ? raw.attachedColorIds : []).map(String), ...chosen, ...originalPriceRows.map((p) => String(p.colorId || '')).filter(Boolean)])];
+                        // A cover model's price is set once per binding size; colors are visual choices.
+                        // Upgrade existing color-specific prices by taking the first positive tariff.
+                        const sharedCoverPrices = new Map();
+                        for (const pr of originalPriceRows) {
+                            const sizeLabel = cleanText(pr.sizeLabel);
+                            if (Number(pr.price) > 0 && !sharedCoverPrices.has(sizeLabel))
+                                sharedCoverPrices.set(sizeLabel, albumMoney(pr.price));
+                        }
+                        const priceRows = sharedCoverPrices.size
+                            ? attached.flatMap(colorId => [...sharedCoverPrices].map(([sizeLabel, price]) => ({ colorId, sizeLabel, price })))
+                            : originalPriceRows;
+                        if (priceRows.length > 12000)
+                            throw Object.assign(new Error('album_settings_too_large'), { status: 400 });
                         let colorSort = 0;
                         for (const draftColorId of attached) {
                             const colorId = colorDb.get(draftColorId);
@@ -23843,6 +23856,19 @@ ${inviteUrl}`;
                         }
                     }
                 }
+                // A package type/material is priced by size, not per color. Reuse the same
+                // stored tariff for new colors or duplicate image models of the same type.
+                const sharedPackagePrices = new Map();
+                for (const model of packageModels) {
+                    const modelKey = cleanText(model.materialName || 'کیف / باکس', 100) + '::' + cleanText(model.modelName, 100);
+                    for (const color of Array.isArray(model.colors) ? model.colors : []) {
+                        for (const [sizeLabel, amount] of Object.entries(color.prices || {})) {
+                            const key = modelKey + '::' + cleanText(sizeLabel, 90);
+                            if (!sharedPackagePrices.has(key) && String(amount ?? '').trim() !== '' && Number(amount) > 0)
+                                sharedPackagePrices.set(key, albumMoney(amount));
+                        }
+                    }
+                }
                 sort = 0;
                 for (const raw of packageModels) {
                     const modelName = cleanText(raw.modelName, 100);
@@ -23862,7 +23888,8 @@ ${inviteUrl}`;
                             const sizeLabel = cleanText(rawSizeLabel, 90), sizeId = sizeIdsByLabel.get(sizeLabel);
                             if (!sizeId)
                                 throw Object.assign(new Error('album_package_invalid'), { status: 400 });
-                            await c.query(`INSERT INTO lab_album_packages(lab_id,size_id,kind,model_group_id,model_name,color_name,color_value,price,active,sort_order) VALUES($1,$2,'box',$3,$4,$5,$6,$7,$8,$9)`, [labId, sizeId, groupId, modelName, colorName, colorValue, albumMoney(rawPrice), modelActive && color.active !== false, sort * 10000 + colorSort * 100 + sizeSort++]);
+                            const commonPrice = sharedPackagePrices.get(cleanText(raw.materialName || 'کیف / باکس', 100) + '::' + modelName + '::' + sizeLabel);
+                            await c.query(`INSERT INTO lab_album_packages(lab_id,size_id,kind,model_group_id,model_name,color_name,color_value,price,active,sort_order) VALUES($1,$2,'box',$3,$4,$5,$6,$7,$8,$9)`, [labId, sizeId, groupId, modelName, colorName, colorValue, commonPrice ?? albumMoney(rawPrice), modelActive && color.active !== false, sort * 10000 + colorSort * 100 + sizeSort++]);
                         }
                         colorSort++;
                     }

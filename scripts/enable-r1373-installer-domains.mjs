@@ -14,4 +14,4 @@ if(!s.includes('/* PB1373 installer stream:')){
  s=s.replace(admin,"if(url.pathname.startsWith('/api/admin/labs/')&&url.pathname.includes('/domain-requests')){if(await handleLabDomainRequests({req,res,url,a,pool,bodyJson,sendJson,audit,publicOrigin:new URL(PUBLIC_APP_URL).origin}))return;}\n    "+admin);
  fs.writeFileSync(file,s);
 }
-const path='dist/web/index.html';let html=fs.readFileSync(path,'utf8');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.replace(/&domainRequest=[^&"']*/g,'')+'&domainRequest=r1373');fs.writeFileSync(path,html);
+const path='dist/web/index.html';let html=fs.readFileSync(path,'utf8');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&domainRequest=')?u.replace(/&domainRequest=[^&"']*/g,'&domainRequest=r1373'):u+'&domainRequest=r1373');fs.writeFileSync(path,html);

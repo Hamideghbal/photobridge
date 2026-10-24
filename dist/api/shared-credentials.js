@@ -1,0 +1,26 @@
+import crypto from 'node:crypto';
+const fail=(code,status=409)=>Object.assign(Error(code),{status});
+export function sharedMobile(value){let s=String(value||'').replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))).replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/\D/g,'');if(s.startsWith('0098'))s='0'+s.slice(4);else if(s.startsWith('98')&&s.length===12)s='0'+s.slice(2);else if(s.length===10&&s.startsWith('9'))s='0'+s;return /^09\d{9}$/.test(s)?s:'';}
+const mobileSql="right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=right($1,10)";
+export async function credentialRows(db,mobile,lock=false){mobile=sharedMobile(mobile);if(!mobile)throw fail('invalid_mobile',400);if(lock)await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',['photobridge.account:'+mobile]);const q=await db.query(`SELECT u.id,u.mobile,u.password_hash,u.active,u.photographer_enabled,u.platform_role,pp.password_hash photographer_password_hash FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE ${mobileSql} ORDER BY u.created_at,u.id${lock?' FOR UPDATE OF u':''}`,[mobile]);if(lock&&q.rows.length)await db.query('SELECT user_id FROM photographer_profiles WHERE user_id=ANY($1::uuid[]) ORDER BY user_id FOR UPDATE',[q.rows.map(r=>r.id)]);return q.rows;}
+const verify=(fn,p,h)=>{try{return Boolean(h&&fn(p,String(h)))}catch{return false}};
+export function matchesBusinessPassword(row,password,fn){return row.active===true&&(verify(fn,password,row.password_hash)||Boolean(row.photographer_enabled)&&verify(fn,password,row.photographer_password_hash));}
+export function businessLoginState(rows,password,fn){const active=rows.filter(r=>r.active===true),matched=active.some(r=>matchesBusinessPassword(r,password,fn));return {matched,needsUnification:matched&&active.some(r=>!verify(fn,password,r.password_hash)||(r.photographer_enabled&&r.photographer_password_hash&&!verify(fn,password,r.photographer_password_hash)))};}
+const snapshot=rows=>crypto.createHash('sha256').update(JSON.stringify(rows.map(r=>[String(r.id),String(r.password_hash||''),String(r.photographer_password_hash||''),Boolean(r.active)]).sort((a,b)=>a[0].localeCompare(b[0])))).digest('hex');
+export async function prepareSignupCredential(db,{kind,mobile,payload,password,verifyPassword}){
+ if(!['lab_trial','equipment_rental_trial','photographer','invite'].includes(kind))return payload;
+ const rows=await credentialRows(db,mobile),linkOnly=['photographer','invite'].includes(kind)&&payload.existingAccount===true;
+ // Joining another lab/shop as an already enrolled photographer is not a password change.
+ if(linkOnly)return {...payload,sharedCredential:null};
+ if(rows.length&&!rows.some(r=>matchesBusinessPassword(r,password,verifyPassword)))throw fail('existing_account_password_invalid');
+ return {...payload,sharedCredential:{mobile:sharedMobile(mobile),snapshot:rows.length?snapshot(rows):null,revokeSessions:businessLoginState(rows,password,verifyPassword).needsUnification}};
+}
+export async function lockSignupCredential(db,challenge){const proof=challenge.payload?.sharedCredential;if(!proof)return;const mobile=sharedMobile(challenge.mobile);if(mobile!==proof.mobile)throw fail('existing_account_invalid');const rows=await credentialRows(db,mobile,true);if(!proof.snapshot&&rows.length)throw fail('duplicate_mobile');if(proof.snapshot&&snapshot(rows)!==proof.snapshot)throw fail('existing_account_invalid');}
+export async function setSharedPassword(db,userId,passwordHash,{proof=false,mobile:expectedMobile,expectedHash,revokeSessions=true}={}){
+ if(!/^[0-9a-f]{32}:[0-9a-f]{128}$/i.test(String(passwordHash||'')))throw fail('invalid_password_hash',400);
+ const u=(await db.query('SELECT id,mobile FROM users WHERE id=$1',[userId])).rows[0];if(!u)throw fail('user_not_found',404);const mobile=sharedMobile(u.mobile);if(!mobile||expectedMobile&&sharedMobile(expectedMobile)!==mobile)throw fail('existing_account_invalid');const rows=await credentialRows(db,mobile,true);const owner=rows.find(r=>String(r.id)===String(userId));if(!owner||expectedHash&&owner.password_hash!==expectedHash)throw fail('existing_account_invalid');
+ if(!proof){const hashes=new Set(rows.filter(r=>r.active).flatMap(r=>[r.password_hash,...(r.photographer_enabled&&r.photographer_password_hash?[r.photographer_password_hash]:[])]));if(hashes.size!==1)throw fail('account_password_unification_required');}
+ const ids=rows.map(r=>r.id);await db.query('UPDATE users SET password_hash=$2,force_password_change=false,mobile_verified_at=CASE WHEN $3 THEN COALESCE(mobile_verified_at,now()) ELSE mobile_verified_at END,updated_at=now() WHERE id=ANY($1::uuid[])',[ids,passwordHash,proof]);await db.query('UPDATE photographer_profiles SET password_hash=$2,updated_at=now() WHERE user_id=ANY($1::uuid[])',[ids,passwordHash]);if(revokeSessions)await db.query('DELETE FROM sessions WHERE user_id=ANY($1::uuid[])',[ids]);return ids;
+}
+export async function finishSignupCredential(db,userId,challenge){if(challenge.payload?.sharedCredential)await setSharedPassword(db,userId,String(challenge.password_hash),{proof:true,mobile:challenge.mobile,revokeSessions:challenge.payload.sharedCredential.revokeSessions!==false});}
+export async function sharedResetIdentity(db,mobile){const rows=await credentialRows(db,mobile);return rows.find(r=>r.active===true)||null;}

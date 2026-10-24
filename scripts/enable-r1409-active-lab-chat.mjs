@@ -21,7 +21,7 @@ if(!ui.includes(mark)){
  ui=ui.slice(0,p)+photographer+ui.slice(q);
  const start=ui.indexOf('function aw('),end=ui.indexOf('function iw(',start);let chat=ui.slice(start,end);
  chat=once(chat,'M=`lablink_chat_seen_${t}_${a.user.userId}`',
-  'M=`lablink_chat_seen_${t}_${a.user.userId}_${t==="customer"?(a.lab?.id||a.user.labId||""):""}`');
+  'M=`lablink_chat_seen_${t}_${a.user.userId}${t==="customer"?"_"+(a.lab?.id||a.user.labId||""):""}`');
  chat=once(chat,'x.useEffect(()=>{ae().catch(()=>{}),$().catch(()=>{});const ie=setInterval(()=>$().catch(()=>{}),5e3);return()=>clearInterval(ie)},[t,s,pbAccount])',
   'x.useEffect(()=>{const check=()=>{if(t!=="customer"||s)$().catch(()=>{})};const startup=setTimeout(check,t==="lab"?650:0),ie=setInterval(check,t==="lab"&&s?12e3:5e3);return()=>{clearTimeout(startup);clearInterval(ie)}},[t,s,pbAccount])');
  ui=ui.slice(0,start)+chat+ui.slice(end)+'\n'+mark+'\n';

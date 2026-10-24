@@ -1,0 +1,10 @@
+html body #root .labRoleWorkspace .pb1420Payments .financeRecordRows>div{display:grid!important;grid-template-columns:minmax(160px,1fr) minmax(110px,.45fr) minmax(90px,.35fr) minmax(100px,.4fr) 72px!important;align-items:center;gap:12px}
+html body #root .labRoleWorkspace .pb1420Payments .pb1420PaymentColumns{padding:10px 12px;border-bottom:1px solid #dce4ef;background:#f5f8fc;color:#475467}
+html body #root .labRoleWorkspace .pb1420PaymentDate{white-space:nowrap;font:inherit;font-weight:700;direction:rtl}
+html body #root .labRoleWorkspace .pb1420Payments{overflow-x:auto}
+html body #root .labRoleWorkspace .pb1420Payments .financeRecordRows{min-width:650px}
+html body #root .labRoleWorkspace .labRolePageScrollArea>.pb1420ArchivePage{display:flex!important;flex-direction:column!important;min-height:100%!important;width:100%!important;max-width:1600px!important;margin:0 auto!important;box-sizing:border-box!important}
+html body #root .labRoleWorkspace .pb1420ArchivePage>:not(.pb1420ArchiveFooter){flex:1 0 auto!important;min-width:0!important;width:100%!important}
+html body #root .labRoleWorkspace .pb1420ArchivePage>.pb1420ArchiveFooter{position:static!important;inset:auto!important;transform:none!important;order:1!important;flex:0 0 auto!important;width:100%!important;margin:20px 0 0!important;padding:12px 0!important;text-align:center!important;grid-column:1/-1!important}
+
+html body #root .labRoleWorkspace .pb1420ArchivePage>.labArchiveWorkspace{height:auto!important;max-height:none!important;overflow:visible!important}

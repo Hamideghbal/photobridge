@@ -22,7 +22,7 @@ if(!ui.includes(marker)){
  form=once(form,statusAnchor,history+statusAnchor);
  ui=ui.slice(0,start)+form+ui.slice(end);
  const badge='e.jsx("span",{className:"accountingConnectionBadge "+(h.accounting_connected?"connected":"disconnected"),children:h.accounting_connected?"✓ متصل به حسابداری":"بدون اتصال حسابداری"})';
- ui=once(ui,','+badge+',',',');
+ ui=once(ui,','+badge+']',']');
  fs.writeFileSync(uiPath,ui+'\n'+marker+'\n');
 }
 const apiPath='dist/api/server.js',serverMarker='/* PB1410 scoped SMS history */';

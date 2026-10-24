@@ -380,6 +380,8 @@ await deployStep("./enable-r1395-storage-pair.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1395-storage-pair.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1396-alert-spacing.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1396-alert-spacing.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1397-notice-flow.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1397-notice-flow.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

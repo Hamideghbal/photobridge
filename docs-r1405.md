@@ -1,0 +1,7 @@
+# R1405 lab chat inbox and contact picker
+
+Lab chat defaults to photographer conversations with unread incoming latest messages, plus compact Choose photographer / Support controls. A native modal dialog offers name/mobile search (Persian/Arabic digit normalization), 60 rows at a time and Load more. Inline unread rows are limited to 30; remaining unread conversations are reachable through an unread-only picker. Selecting opens the existing thread. No server API or permission changes.
+
+Read state is local per user/lab/conversation, inheriting the old global baseline for pre-update history. Only a successfully loaded selected thread in a visible focused window advances its own watermark, through the latest received message timestamp in that snapshot. Opening the dock doesn't mark every photographer read. Other conversations retain unread markers. Ref/sequence checks reject stale thread/contact/badge responses. Account/lab-keyed remount clears old account UI state. Failed requests don't advance read state. This local read state is not cross-device synchronized.
+
+Six behavioral tests pass: selected-thread marking, collapsed/hidden non-marking, stale thread response, later arrival after a loaded snapshot, 2,000-contact bounded picker/search/selection, and built component/account scope. Build transform run twice and generated JS syntax passes. Full Liara build and real-browser visual/modal QA not executed. Existing Windows 1.0.30 gets the interface via website UI updates; no native rebuild.

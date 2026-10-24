@@ -34,7 +34,7 @@
     const oa=old.existingAccount&&typeof old.existingAccount==='object'?old.existingAccount:{},na=x.existingAccount&&typeof x.existingAccount==='object'?x.existingAccount:{};
     const mergedAccount={...oa,...Object.fromEntries(Object.entries(na).filter(([,v])=>v!==null&&v!==undefined&&v!==''))};
     next.existingAccount=Object.keys(mergedAccount).length?mergedAccount:null;
-    next.invite={...(old.invite||{}),...(x.invite||{})};
+    const previousInvite=old.invite||{},incomingInvite=x.invite||{};next.invite={...previousInvite,...incomingInvite};for(const field of ['issuerRentalShopName','issuerName','issuerLabName']){const fresh=String(incomingInvite[field]??'').trim();if((!fresh||fresh==='فروشگاه')&&previousInvite[field])next.invite[field]=previousInvite[field]}
     const op=old.membershipProfile||{},np=x.membershipProfile||{};
     next.membershipProfile={...op,...Object.fromEntries(Object.entries(np).filter(([,v])=>v!==null&&v!==undefined&&v!==''))};
     if(!Object.keys(next.membershipProfile).length) next.membershipProfile=null;
@@ -69,6 +69,7 @@
   const required=()=>({...normalizeReq(state.ctx?.membershipRequiredFields||{}),birthDate:isExisting()&&!hasProfileValue('birthJalali')});
   const isRental=()=>state.ctx?.invite?.issuerType==='rental'||state.ctx?.invite?.issuer_type==='rental'||Object.values(required()).some(Boolean);
   const isExisting=()=>Boolean(state.ctx?.existingAccount?.exists||state.ctx?.existingAccount);
+  function PB1411RentalShopName(invite){const item=invite||{};const options=[item.issuerRentalShopName,item.issuer_rental_shop_name,item.issuerName,item.issuer_name];return options.map(value=>String(value||'').trim()).find(value=>value&&value!=='فروشگاه'&&value!=='PhotoBridge')||'';}
   const hasProfileValue=k=>Boolean(String((state.ctx?.membershipProfile||{})[k]||'').trim());
   function hideLabel(label){label.classList.add('pbR94BaseHidden');label.querySelectorAll('input,select,button').forEach(el=>{if('required' in el)el.required=false;el.tabIndex=-1})}
   function hideBase(form){
@@ -200,7 +201,7 @@
     const p=state.ctx?.membershipProfile||{},sig=JSON.stringify({req,existing:isExisting(),birth:p.birthJalali||'',national:p.nationalId||'',certificate:p.birthCertificateNo||'',license:p.businessLicenseNo||'',image:Boolean(p.businessLicenseImage)});
     if(box&&box.dataset.sig===sig){placeRequiredBox(form,box);return}
     if(!box){box=document.createElement('section');box.id='pbR94InviteRequired';box.className='pbR94Required'}
-    box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=String(state.ctx?.invite?.issuerRentalShopName||state.ctx?.invite?.issuerName||'فروشگاه').trim()||'فروشگاه';box.replaceChildren();const title=document.createElement('b');title.textContent=`اطلاعات درخواستی فروشگاه ${shopName}`;box.append(title);
+    box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=PB1411RentalShopName(state.ctx?.invite);box.replaceChildren();const title=document.createElement('b');title.textContent=shopName?'اطلاعات درخواستی فروشگاه «'+shopName+'»':'اطلاعات درخواستی فروشگاه';box.append(title);
     if(req.birthDate&&isExisting())box.append(birthField());if(req.nationalId)box.append(textField('کد ملی','nationalId',{numeric:true}));if(req.birthCertificateNo)box.append(textField('شماره شناسنامه','birthCertificateNo',{numeric:true}));if(req.businessLicenseNo)box.append(textField('شماره جواز / پرونده','businessLicenseNo'));if(req.businessLicenseImage)box.append(imageField());
     placeRequiredBox(form,box);
   }
@@ -255,11 +256,11 @@
   }
   function decorateRentalIntro(){
     if(!isRental())return;
-    const shopName=String(state.ctx?.invite?.issuerRentalShopName||state.ctx?.invite?.issuerName||'فروشگاه').trim()||'فروشگاه';
+    const shopName=PB1411RentalShopName(state.ctx?.invite);
     const intro=document.querySelector('.photographerSignupIntro');if(!intro)return;
     const h=intro.querySelector('h1'),p=intro.querySelector('p');
-    if(h)h.textContent=`به فروشگاه «${shopName}» خوش آمدید`;
-    if(p)p.textContent=isExisting()?`با تأیید این دعوت، حساب فعلی شما به ${shopName} متصل می‌شود و آفیش، رزرو تجهیزات و پیگیری همکاری را آنلاین انجام می‌دهید.`:`با عضویت در ${shopName}، آفیش و رزرو تجهیزات را غیرحضوری دریافت می‌کنید و مراحل همکاری را آنلاین در PhotoBridge پیگیری می‌کنید.`;
+    if(h)h.textContent=shopName?'به فروشگاه «'+shopName+'» خوش آمدید':'به فروشگاه تجهیزات خوش آمدید';
+    if(p){const name=shopName?'فروشگاه «'+shopName+'»':'فروشگاه دعوت‌کننده';p.textContent=isExisting()?'با تأیید این دعوت، حساب فعلی شما به '+name+' متصل می‌شود و آفیش، رزرو تجهیزات و پیگیری همکاری را آنلاین انجام می‌دهید.':'با عضویت در '+name+'، آفیش و رزرو تجهیزات را غیرحضوری دریافت می‌کنید و مراحل همکاری را آنلاین در PhotoBridge پیگیری می‌کنید.'}
     const facts=[...intro.querySelectorAll('.trialFacts span')],labels=['آفیش غیرحضوری','رزرو آنلاین تجهیزات','پیگیری آنلاین همکاری'];facts.forEach((x,i)=>{if(labels[i])x.textContent=labels[i]});
   }
   function tweakButton(form){
@@ -310,17 +311,58 @@
     // this avoids the scroll-lock/performance regression of the old invite observer.
     formObserver.observe(form,{childList:true});
   }
-  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
+  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;document.documentElement.classList.toggle('pbR1411ExistingRentalInvite',isExisting()&&String(state.ctx?.invite?.issuerType||state.ctx?.invite?.issuer_type)==='rental');watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
   function schedule(){if(state.raf)return;state.raf=requestAnimationFrame(render)}
   let settleTimers=[];function scheduleSeries(){schedule();settleTimers.forEach(clearTimeout);settleTimers=[80,220,600,1400,3000,6000,10000].map(ms=>setTimeout(schedule,ms))}
-  async function bootstrap(){if(state.loading||state.contextReady)return;state.loading=true;let accepted=false;try{
-    const ir=await nativeFetch('/api/public/photographer-invites/'+encodeURIComponent(inviteCode),{credentials:'same-origin',cache:'no-store'});if(ir.ok){const j=await ir.json();if(j.signupContext)mergeCtx(j.signupContext);if(j.invite)mergeCtx({invite:j.invite})}
-    const resolvedMobile=mobile||String(state.ctx?.mobile||state.ctx?.invite?.targetMobile||state.ctx?.invite?.target_mobile||'').trim();
-    const query='?invite='+encodeURIComponent(inviteCode)+'&mobile='+encodeURIComponent(resolvedMobile)+(mb?'&mb='+encodeURIComponent(mb):'');
-    for(const endpoint of ['/api/public/photographer-signup/context-fast','/api/public/photographer-signup/context']){
-      try{const cr=await nativeFetch(endpoint+query,{credentials:'same-origin',cache:'no-store'});if(!cr.ok)continue;const data=await cr.json();if(acceptSignupContext(data)){accepted=true;break}}catch{}
+  async function bootstrap(){
+    if(state.loading||state.contextReady)return;
+    state.loading=true;
+    let accepted=false,validInvite=false;
+    const opts={credentials:'same-origin',cache:'no-store'};
+    const normalizeMobile=value=>{
+      const digitsOnly=digits(value||'').replace(/\D/g,'');
+      if(/^09\d{9}$/.test(digitsOnly))return digitsOnly;
+      if(/^989\d{9}$/.test(digitsOnly))return '0'+digitsOnly.slice(2);
+      if(/^9\d{9}$/.test(digitsOnly))return '0'+digitsOnly;
+      return '';
+    };
+    const getInvite=async()=>{
+      const res=await nativeFetch('/api/public/photographer-invites/'+encodeURIComponent(inviteCode),opts);
+      if(!res.ok)return null;
+      const json=await res.json();
+      return json&&json.invite?json:null;
+    };
+    const checkAccount=async number=>{
+      if(!number)return false;
+      const params='?invite='+encodeURIComponent(inviteCode)+'&mobile='+encodeURIComponent(number)+(mb?'&mb='+encodeURIComponent(mb):'');
+      const res=await nativeFetch('/api/public/photographer-signup/context-fast'+params,opts);
+      if(!res.ok)return false;
+      return acceptSignupContext(await res.json());
+    };
+    try{
+      const initialMobile=normalizeMobile(mobile);
+      // A URL containing a mobile can load its invitation and account context in parallel.
+      const [inviteResult,contextResult]=await Promise.allSettled([
+        getInvite(),initialMobile?checkAccount(initialMobile):Promise.resolve(false)
+      ]);
+      if(inviteResult.status==='fulfilled'&&inviteResult.value){
+        validInvite=true;
+        if(inviteResult.value.invite)mergeCtx({invite:inviteResult.value.invite});
+        if(inviteResult.value.signupContext)acceptSignupContext(inviteResult.value.signupContext);
+      }
+      accepted=state.contextReady||(contextResult.status==='fulfilled'&&contextResult.value===true);
+      if(!accepted&&!state.contextReady){
+        const boundMobile=normalizeMobile(state.ctx?.invite?.targetMobile||state.ctx?.invite?.target_mobile);
+        if(boundMobile&&boundMobile!==initialMobile)accepted=await checkAccount(boundMobile).catch(()=>false);
+      }
+      // A generic link has no known member until a mobile is entered; show the form now.
+      if(!accepted&&!state.contextReady&&validInvite&&!initialMobile&&!normalizeMobile(state.ctx?.invite?.targetMobile))releaseContextGate();
+    }catch{}finally{
+      state.loading=false;
+      if(!accepted&&!state.contextReady)showContextRetry();
+      scheduleSeries();
     }
-  }catch{}finally{state.loading=false;if(!accepted&&!state.contextReady)showContextRetry();scheduleSeries()}}
+  }
   window.fetch=async function(input,init={}){
     const raw=typeof input==='string'?input:(input?.url||'');let url;try{url=new URL(raw,location.origin)}catch{return nativeFetch(input,init)}const method=String(init?.method||'GET').toUpperCase();
     if(url.origin===location.origin&&url.pathname==='/api/public/photographer-signup'&&method==='POST'&&typeof init.body==='string'){
@@ -339,3 +381,5 @@
   document.addEventListener('DOMContentLoaded',()=>{enableInviteScroll();bootstrap();scheduleSeries()},{once:true});
   enableInviteScroll();bootstrap();scheduleSeries();
 })();
+
+/* PB1411 existing rental invitation */

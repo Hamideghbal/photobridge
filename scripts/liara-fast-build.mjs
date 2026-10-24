@@ -394,6 +394,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1402-chat-voice.cjs"], { st
 await deployStep("./enable-r1403-independent-lab-roles.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1403-build.cjs"], { stdio: "inherit" });
 runR1314(process.execPath, ["--test", "scripts/test-r1404-chat-style.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1405-chat-picker.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1405-chat-picker.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

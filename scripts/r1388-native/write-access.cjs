@@ -1,6 +1,6 @@
 'use strict';
 const MESSAGE='اعتبار استفاده از برنامه فعال نیست یا قابل تأیید نیست؛ مشاهده و چاپ سوابق در دسترس است. برای کار جدید اعتبار را بررسی یا تمدید کنید.';
-const exempt=(method,url)=>['GET','HEAD','OPTIONS'].includes(method)||!new URL(url,'http://localhost').pathname.startsWith('/api/lab/')||/^\/api\/lab\/subscription(?:\/|$)/.test(new URL(url,'http://localhost').pathname)||['/api/lab/download-device','/api/lab/storage-target','/api/lab/activation-request','/api/lab/print-alert/presence','/api/lab/storage-target/hello','/api/lab/storage-target/activate'].includes(new URL(url,'http://localhost').pathname);
+const exempt=(method,url)=>['GET','HEAD','OPTIONS'].includes(method)||!new URL(url,'http://localhost').pathname.startsWith('/api/lab/')||/^\/api\/lab\/subscription(?:\/|$)/.test(new URL(url,'http://localhost').pathname)||['/api/lab/storage-picker','/api/lab/download-device','/api/lab/storage-target','/api/lab/activation-request','/api/lab/print-alert/presence','/api/lab/storage-target/hello','/api/lab/storage-target/activate'].includes(new URL(url,'http://localhost').pathname);
 async function checkWriteAccess(store,request){
  const labId=store.get('labId'),now=Date.now();let saved=store.get('writeAccess:'+labId);
  try{
@@ -18,3 +18,4 @@ async function checkWriteAccess(store,request){
  return {allowed:true};
 }
 module.exports={exempt,checkWriteAccess,MESSAGE};
+

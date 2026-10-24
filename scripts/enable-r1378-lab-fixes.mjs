@@ -29,4 +29,4 @@ if(!s.includes('/* PB1378 public invite mobile entry */')){
   document.addEventListener('submit',event=>{if(state.awaitingMobile&&event.target.matches?.('.photographerSignupForm')){event.preventDefault();event.stopImmediatePropagation()}},true);
 `+end);fs.writeFileSync(invite,s);
 }
-const p='dist/web/index.html';let html=fs.readFileSync(p,'utf8');html=html.replace(/(photobridge-v904r98-invite-stable\.js\?v=)[^"']+/,'$1r1378');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&labFixes=')?u:u+'&labFixes=r1378');fs.writeFileSync(p,html);
+const p='dist/web/index.html';let html=fs.readFileSync(p,'utf8');html=html.replace(/(photobridge-v904r98-invite-stable\.js\?v=)([^"'&\s]+)/,(_full,prefix,version)=>{const n=/^r(\d+)$/.exec(version);return prefix+(n&&Number(n[1])>=1378?version:'r1378')});html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&labFixes=')?u:u+'&labFixes=r1378');fs.writeFileSync(p,html);

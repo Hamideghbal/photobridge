@@ -12,5 +12,6 @@ export function labWriteAccess(lab, now=Date.now()) {
 export function labWriteExempt(method, pathname){
  if(['GET','HEAD','OPTIONS'].includes(method))return true;
  // Account renewal and local-device presence are not new lab business.
- return /^\/api\/lab\/subscription(?:\/|$)/.test(pathname)||['/api/lab/download-device','/api/lab/storage-target','/api/lab/activation-request','/api/lab/print-alert/presence','/api/lab/storage-target/hello','/api/lab/storage-target/activate'].includes(pathname);
+ return /^\/api\/lab\/subscription(?:\/|$)/.test(pathname)||['/api/lab/storage-picker','/api/lab/download-device','/api/lab/storage-target','/api/lab/activation-request','/api/lab/print-alert/presence','/api/lab/storage-target/hello','/api/lab/storage-target/activate'].includes(pathname);
 }
+

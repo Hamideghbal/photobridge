@@ -62,3 +62,14 @@
 }
 
 /* PB1364 softer blue shadows */
+
+
+/* R1396: notices reserve their own space under the complete header stack. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace .labCollaborationAlert{
+  position:fixed!important;top:var(--pb1396-alert-top,128px)!important;
+  inset-inline:12px!important;bottom:auto!important;width:auto!important;
+  height:auto!important;max-height:none!important;margin:0!important;
+  box-sizing:border-box!important;z-index:138!important;
+ }
+}

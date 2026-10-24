@@ -14,16 +14,23 @@
   const active=Boolean(media.matches&&main?.querySelector(':scope>.labRolePageScrollArea'));
   document.documentElement.classList.toggle('pb1363OrderQueue',active);
   const root=main?.closest('.labRoleWorkspace');
-  const headers=active?[...root.querySelectorAll('.labSingleHeader,.pb1148SecondaryHeader,.pb1151PrintModes')].filter(node=>node.getClientRects().length&&getComputedStyle(node).visibility!=='hidden'):[];
-  if(!same(headers,observed)){
-   observer?.disconnect();observed=headers;
+  const visible=node=>node.getClientRects().length&&getComputedStyle(node).visibility!=='hidden';
+  const headers=active?[...root.querySelectorAll('.labSingleHeader,.pb1148SecondaryHeader,.pb1151PrintModes,.pb1372ThirdHeader')].filter(visible):[];
+  const alert=active?root.querySelector('.labCollaborationAlert'):null;
+  const watched=alert&&visible(alert)?[...headers,alert]:headers;
+  if(!same(watched,observed)){
+   observer?.disconnect();observed=watched;
    if(typeof ResizeObserver!=='undefined'){
     observer||=new ResizeObserver(schedule);
-    headers.forEach(node=>observer.observe(node));
+    watched.forEach(node=>observer.observe(node));
    }
   }
   if(!active)return;
-  const edge=Math.ceil(Math.max(0,...headers.map(node=>node.getBoundingClientRect().bottom)));
+  let edge=Math.ceil(Math.max(0,...headers.map(node=>node.getBoundingClientRect().bottom)));
+  // R1396: reserve the notice's actual wrapped height below every visible header.
+  const alertTop=edge+8+'px';
+  if(root.style.getPropertyValue('--pb1396-alert-top')!==alertTop)root.style.setProperty('--pb1396-alert-top',alertTop);
+  if(alert&&visible(alert))edge+=8+Math.ceil(alert.getBoundingClientRect().height)+8;
   if(edge<=0||edge>=innerHeight-100)return;
   const value=edge+'px';
   if(main.style.getPropertyValue('--pb1363-order-top')!==value)main.style.setProperty('--pb1363-order-top',value);
@@ -38,3 +45,4 @@
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
+

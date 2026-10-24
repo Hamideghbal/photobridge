@@ -1,1 +1,1 @@
-2026-10-24-r1401-native-quick-reply-source
+2026-10-24-r1402-chat-voice

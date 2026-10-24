@@ -1,1 +1,1 @@
-2026-10-25-r1415-lab-invitation-copy-desktop-columns
+2026-10-25-r1416-invitation-build-guard-compat

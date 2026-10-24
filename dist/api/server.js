@@ -7876,7 +7876,7 @@ async function postInvoiceFinance(c, invoice, actorId) {
     });
 }
 async function recordInvoicePayment(c, args) {
-    const iq = await c.query(`SELECT i.*,u.name customer_name,COALESCE((SELECT sum(p.amount) FROM finance_payments p WHERE p.invoice_id=i.id),0)::bigint paid
+    const iq = await c.query(`SELECT i.*,${labFinanceCustomerNameSql()} customer_name,COALESCE((SELECT sum(p.amount) FROM finance_payments p WHERE p.invoice_id=i.id),0)::bigint paid
     FROM invoices i JOIN users u ON u.id=i.customer_id WHERE i.id=$1 AND i.lab_id=$2 FOR UPDATE OF i`, [args.invoiceId, args.labId]);
     if (!iq.rowCount)
         throw new Error('invoice_not_found');
@@ -8089,7 +8089,7 @@ async function financeDocumentsForCustomer(c, labId, customerId) {
         adjParams.push(customerId);
         adjCustomerWhere = ' AND x.customer_id=$2';
     }
-    const adjQ = await c.query(`SELECT x.*,u.name customer_name,l.name lab_name
+    const adjQ = await c.query(`SELECT x.*,${labFinanceCustomerNameSql()} customer_name,l.name lab_name
     FROM finance_customer_adjustments x JOIN users u ON u.id=x.customer_id JOIN labs l ON l.id=x.lab_id
     WHERE x.lab_id=$1${adjCustomerWhere} AND x.kind='discount' ORDER BY x.adjusted_at DESC LIMIT 1000`, adjParams);
     const corrParams = [labId];
@@ -8098,7 +8098,7 @@ async function financeDocumentsForCustomer(c, labId, customerId) {
         corrParams.push(customerId);
         corrCustomerWhere = ' AND i.customer_id=$2';
     }
-    const corrQ = await c.query(`SELECT fc.*,i.customer_id,u.name customer_name,l.name lab_name,i.number source_invoice_number
+    const corrQ = await c.query(`SELECT fc.*,i.customer_id,${labFinanceCustomerNameSql()} customer_name,l.name lab_name,i.number source_invoice_number
     FROM finance_corrections fc JOIN invoices i ON fc.target_type='invoice' AND i.id=fc.target_id
     JOIN users u ON u.id=i.customer_id JOIN labs l ON l.id=fc.lab_id
     WHERE fc.lab_id=$1${corrCustomerWhere} ORDER BY fc.created_at DESC LIMIT 1000`, corrParams);
@@ -8198,7 +8198,7 @@ async function accountingMappingBundle(c, labId, softwareValue) {
     const [customers, mq, pq, hq] = await Promise.all([
         accountingLabCustomers(c, labId),
         c.query(`SELECT m.customer_id::text,m.external_party_id::text,m.external_code,m.external_name,m.external_mobile,m.mapping_source,m.connected_at,m.updated_at,m.source_resolved_at,
-      u.name customer_name,u.mobile customer_mobile,
+      ${labFinanceCustomerNameSql()} customer_name,u.mobile customer_mobile,
       ob.amount opening_balance,ob.initialized_at opening_balance_initialized_at,ob.updated_at opening_balance_updated_at,
       COALESCE((SELECT count(*) FROM accounting_opening_balance_changes ch WHERE ch.opening_balance_id=ob.id),0)::int opening_balance_change_count,
       COALESCE((SELECT count(DISTINCT t.id) FROM finance_entries e JOIN finance_transactions t ON t.id=e.transaction_id
@@ -8379,7 +8379,7 @@ async function accountingExportDocuments(c, args) {
         vals.push(args.to);
         where += ` AND i.issued_at::date <= $${vals.length}::date`;
     }
-    const iq = await c.query(`SELECT i.*,u.name customer_name,u.mobile customer_mobile,l.name lab_name,o.number order_number
+    const iq = await c.query(`SELECT i.*,${labFinanceCustomerNameSql()} customer_name,u.mobile customer_mobile,l.name lab_name,o.number order_number
     FROM invoices i JOIN users u ON u.id=i.customer_id JOIN labs l ON l.id=i.lab_id JOIN orders o ON o.id=i.order_id
     WHERE ${where} ORDER BY i.issued_at,i.number`, vals);
     const docs = iq.rows.map((x) => ({ ...x, document_type: 'invoice', document_number: x.number, date_value: x.issued_at, note_value: '' }));
@@ -8398,7 +8398,7 @@ async function accountingExportDocuments(c, args) {
             av.push(args.to);
             aw += ` AND x.adjusted_at::date <= $${av.length}::date`;
         }
-        const aq = await c.query(`SELECT x.*,u.name customer_name,u.mobile customer_mobile,l.name lab_name FROM finance_customer_adjustments x JOIN users u ON u.id=x.customer_id JOIN labs l ON l.id=x.lab_id WHERE ${aw} AND x.kind='discount' ORDER BY x.adjusted_at`, av);
+        const aq = await c.query(`SELECT x.*,${labFinanceCustomerNameSql()} customer_name,u.mobile customer_mobile,l.name lab_name FROM finance_customer_adjustments x JOIN users u ON u.id=x.customer_id JOIN labs l ON l.id=x.lab_id WHERE ${aw} AND x.kind='discount' ORDER BY x.adjusted_at`, av);
         for (const x of aq.rows)
             docs.push({ ...x, document_type: 'discount', document_number: x.document_number, date_value: x.adjusted_at, total: -Math.abs(Number(x.amount || 0)), paid_total: 0, balance: 0, order_number: null, note_value: x.note || 'تخفیف حساب' });
         const cv = [args.labId];
@@ -8415,7 +8415,7 @@ async function accountingExportDocuments(c, args) {
             cv.push(args.to);
             cw += ` AND fc.created_at::date <= $${cv.length}::date`;
         }
-        const cq = await c.query(`SELECT fc.*,i.customer_id,u.name customer_name,u.mobile customer_mobile,l.name lab_name,i.number source_invoice_number FROM finance_corrections fc JOIN invoices i ON fc.target_type='invoice' AND i.id=fc.target_id JOIN users u ON u.id=i.customer_id JOIN labs l ON l.id=fc.lab_id WHERE ${cw} ORDER BY fc.created_at`, cv);
+        const cq = await c.query(`SELECT fc.*,i.customer_id,${labFinanceCustomerNameSql()} customer_name,u.mobile customer_mobile,l.name lab_name,i.number source_invoice_number FROM finance_corrections fc JOIN invoices i ON fc.target_type='invoice' AND i.id=fc.target_id JOIN users u ON u.id=i.customer_id JOIN labs l ON l.id=fc.lab_id WHERE ${cw} ORDER BY fc.created_at`, cv);
         for (const x of cq.rows)
             docs.push({ ...x, document_type: 'correction', document_number: x.document_number, date_value: x.created_at, total: x.correction_kind === 'invoice_decrease' ? -Math.abs(Number(x.amount || 0)) : Math.abs(Number(x.amount || 0)), paid_total: 0, balance: 0, order_number: x.source_invoice_number, note_value: x.note || 'اصلاحیه فاکتور' });
     }
@@ -8566,7 +8566,7 @@ function invoicePricingRequiredError(requirements) {
     return Object.assign(new Error('invoice_pricing_required'), { code: 'invoice_pricing_required', status: 409, missingPricing: missing, pricingRequirements: requirements });
 }
 async function createOrGetInvoice(c, labId, orderId) {
-    const existing = await c.query(`SELECT i.*,l.name lab_name,u.name customer_name,o.number order_number,o.created_at order_created_at
+    const existing = await c.query(`SELECT i.*,l.name lab_name,${labFinanceCustomerNameSql()} customer_name,o.number order_number,o.created_at order_created_at
     FROM invoices i JOIN labs l ON l.id=i.lab_id JOIN users u ON u.id=i.customer_id JOIN orders o ON o.id=i.order_id
     WHERE i.order_id=$1 AND i.lab_id=$2`, [orderId, labId]);
     if (existing.rowCount) {
@@ -8584,7 +8584,7 @@ async function createOrGetInvoice(c, labId, orderId) {
         }
         return { ...row, customer_total_debt: Math.max(0, Number(row.account_balance_at_issue ?? 0)) };
     }
-    const oq = await c.query(`SELECT o.*,u.name customer_name,l.name lab_name
+    const oq = await c.query(`SELECT o.*,${labFinanceCustomerNameSql()} customer_name,l.name lab_name
     FROM orders o JOIN users u ON u.id=o.customer_id JOIN labs l ON l.id=o.lab_id
     WHERE o.id=$1 AND o.lab_id=$2 FOR UPDATE`, [orderId, labId]);
     if (!oq.rowCount)
@@ -11312,6 +11312,21 @@ async function auth(req) {
 function requireRole(a, role) { if (!a)
     return false; if (role === 'platform_admin')
     return a.platformRole === 'platform_admin'; return a.labRole === role; }
+
+// Financial display only: never rename the shared identity or alter posted documents.
+// A suspended photographer still has a profile and must not be called deleted.
+function labFinanceCustomerNameSql() {
+    return `CASE WHEN u.account_deleted_at IS NOT NULL OR (
+      NOT EXISTS (SELECT 1 FROM photographer_profiles fp WHERE fp.user_id=u.id)
+      AND EXISTS (SELECT 1 FROM audit_log ad WHERE ad.entity_type='user'
+        AND ad.entity_id::text=u.id::text AND ad.action='platform_admin.photographer_delete')
+    ) THEN COALESCE((SELECT NULLIF(ad.data->>'name','') FROM audit_log ad
+      WHERE ad.entity_type='user' AND ad.entity_id::text=u.id::text
+        AND ad.action='platform_admin.photographer_delete' ORDER BY ad.created_at DESC LIMIT 1),
+      NULLIF(u.name,''),'عکاس') || ' (حساب حذف‌شده)'
+      ELSE u.name END`;
+}
+
 async function audit(actor, labId, action, entityType, entityId, data) { await pool.query('INSERT INTO audit_log(actor_id,lab_id,action,entity_type,entity_id,data) VALUES($1,$2,$3,$4,$5,$6)', [actor || null, labId || null, action, entityType || null, entityId || null, data ? JSON.stringify(data) : null]); }
 function mime(f) { const e = path.extname(f).toLowerCase(); return { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.m4v': 'video/x-m4v', '.mov': 'video/quicktime', '.webm': 'video/webm', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8' }[e] || 'application/octet-stream'; }
 const SEO_SITE_ORIGIN = 'https://photobridge.ir';
@@ -21872,7 +21887,7 @@ ${inviteUrl}`;
             UNION
             SELECT i.customer_id id FROM invoices i WHERE i.lab_id=$1
           )
-          SELECT u.id,u.name,u.mobile,u.email,
+          SELECT u.id,${labFinanceCustomerNameSql()} name,u.mobile,u.email,
           COALESCE((SELECT sum(i.total) FROM invoices i WHERE i.lab_id=$1 AND i.customer_id=u.id),0)::bigint invoiced,
           COALESCE((SELECT sum(p.amount) FROM finance_payments p WHERE p.lab_id=$1 AND p.customer_id=u.id),0)::bigint paid,
           COALESCE((SELECT sum(x.amount) FROM finance_customer_adjustments x WHERE x.lab_id=$1 AND x.customer_id=u.id),0)::bigint discounts,
@@ -21892,7 +21907,7 @@ ${inviteUrl}`;
                 }, customers: customers.rows });
         }
         if (req.method === 'GET' && url.pathname === '/api/lab/finance/payments') {
-            const q = await pool.query(`SELECT p.*,i.number invoice_number,u.name customer_name,o.number order_number,
+            const q = await pool.query(`SELECT p.*,i.number invoice_number,${labFinanceCustomerNameSql()} customer_name,o.number order_number,
         (SELECT count(*)::int FROM finance_corrections fc WHERE fc.lab_id=p.lab_id AND fc.target_type='payment' AND fc.target_id=p.id) correction_count
         FROM finance_payments p LEFT JOIN invoices i ON i.id=p.invoice_id JOIN users u ON u.id=p.customer_id LEFT JOIN orders o ON o.id=i.order_id
         WHERE p.lab_id=$1 ORDER BY p.paid_at DESC LIMIT 1000`, [labId]);
@@ -21913,7 +21928,7 @@ ${inviteUrl}`;
                 if(desktopOp?.replayed){await c.query('ROLLBACK');return sendJson(res,desktopOp.status,desktopOp.response);}
                 let customer = null, inv = null, available = 0;
                 if (invoiceId) {
-                    const iq = await c.query(`SELECT i.*,u.name customer_name,COALESCE((SELECT sum(p.amount) FROM finance_payments p WHERE p.invoice_id=i.id),0)::bigint paid
+                    const iq = await c.query(`SELECT i.*,${labFinanceCustomerNameSql()} customer_name,COALESCE((SELECT sum(p.amount) FROM finance_payments p WHERE p.invoice_id=i.id),0)::bigint paid
             FROM invoices i JOIN users u ON u.id=i.customer_id WHERE i.id=$1 AND i.lab_id=$2 FOR UPDATE OF i`, [invoiceId, labId]);
                     if (!iq.rowCount) {
                         await c.query('ROLLBACK');
@@ -21969,7 +21984,7 @@ ${inviteUrl}`;
             const to = String(url.searchParams.get('to') || '').trim() || null;
             if (!customerId)
                 return sendJson(res, 400, { error: 'customer_required' });
-            const cq = await pool.query(`SELECT u.id,u.name,u.mobile,u.email FROM users u WHERE u.id=$2 AND (EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=$1 AND m.user_id=u.id AND m.role='customer') OR EXISTS(SELECT 1 FROM invoices i WHERE i.lab_id=$1 AND i.customer_id=u.id)) LIMIT 1`, [labId, customerId]);
+            const cq = await pool.query(`SELECT u.id,${labFinanceCustomerNameSql()} name,u.mobile,u.email FROM users u WHERE u.id=$2 AND (EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=$1 AND m.user_id=u.id AND m.role='customer') OR EXISTS(SELECT 1 FROM invoices i WHERE i.lab_id=$1 AND i.customer_id=u.id)) LIMIT 1`, [labId, customerId]);
             if (!cq.rowCount)
                 return sendJson(res, 404, { error: 'customer_not_found' });
             // Self-heal pending automatic discounts before rendering the sub-ledger.

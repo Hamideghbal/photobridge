@@ -5600,9 +5600,19 @@ async function ensurePhotographerProfile(db, args) {
       ON CONFLICT(user_id) DO NOTHING RETURNING *`, [args.userId, studioName, passwordHashValue, String(args.province || '').trim().slice(0, 100), String(args.city || '').trim().slice(0, 100), args.lat ?? null, args.lng ?? null, String(args.locationAddress || '').trim().slice(0, 500)]);
     return q.rows[0] || await photographerProfileByUserId(db, args.userId);
 }
+async function ensureCustomerLabMembership(c, labId, userId, prepaid = false) {
+    // Customer enrollment must never replace or reactivate an administrative membership.
+    const q = await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active${prepaid ? ',settlement_mode' : ''})
+        VALUES($1,$2,'customer',true${prepaid ? ",'prepaid'" : ''})
+        ON CONFLICT(lab_id,user_id) DO UPDATE SET active=true${prepaid ? ",settlement_mode='prepaid'" : ''}
+        WHERE lab_memberships.role='customer'
+        RETURNING id`, [labId, userId]);
+    if (!q.rowCount)
+        throw Object.assign(new Error('lab_admin_customer_role_conflict'), { status: 409 });
+}
 async function ensureStandalonePhotographerMembership(c, userId) {
     const standalone = await ensureStandalonePhotographerLab(c), standaloneId = String(standalone.id);
-    await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active) VALUES($1,$2,'customer',true) ON CONFLICT(lab_id,user_id) DO UPDATE SET role='customer',active=true`, [standaloneId, userId]);
+    await ensureCustomerLabMembership(c, standaloneId, userId);
     return standaloneId;
 }
 async function ensurePhotographerCoreAccount(c, args) {
@@ -5614,7 +5624,7 @@ async function ensurePhotographerCoreAccount(c, args) {
             throw Object.assign(new Error('invite_lab_unavailable'), { status: 409 });
         activeLabId = String(lq.rows[0].id);
         activeLabServiceOnly = Boolean(lq.rows[0].service_only);
-        await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active) VALUES($1,$2,'customer',true) ON CONFLICT(lab_id,user_id) DO UPDATE SET role='customer',active=true`, [activeLabId, args.userId]);
+        await ensureCustomerLabMembership(c, activeLabId, args.userId);
     }
     // Photographer enrollment is role-scoped. Do not change users.active here: that flag belongs to the
     // underlying identity and may also serve public-retouch/admin/lab/store roles.
@@ -5627,7 +5637,7 @@ async function provisionPhotographerOptionalServices(userId, welcomeCredit) {
     try {
         await c.query('BEGIN');
         const standalone = await ensureStandalonePhotographerLab(c);
-        await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active) VALUES($1,$2,'customer',true) ON CONFLICT(lab_id,user_id) DO UPDATE SET role='customer',active=true`, [standalone.id, userId]);
+        await ensureCustomerLabMembership(c, standalone.id, userId);
         const wq = await c.query(`INSERT INTO photographer_service_wallets(user_id,balance,updated_at) VALUES($1,$2,now()) ON CONFLICT(user_id) DO NOTHING RETURNING user_id`, [userId, welcomeCredit]);
         if (wq.rowCount && welcomeCredit > 0)
             await c.query(`INSERT INTO photographer_service_wallet_transactions(user_id,kind,amount,balance_after,reference_type,reference_key,note,metadata) VALUES($1,'credit',$2,$2,'standalone_welcome_credit',$3,'اعتبار شروع عضویت عکاس',$4::jsonb) ON CONFLICT DO NOTHING`, [userId, welcomeCredit, `standalone-welcome:${userId}`, JSON.stringify({ gift: true, inviteOnly: true })]);
@@ -20241,7 +20251,7 @@ ${inviteUrl}`;
                 }
                 else {
                     const discount = Math.max(0, Math.min(100, Number(row.photographer_join_discount_percent || 0)));
-                    await c.query(`INSERT INTO lab_memberships(lab_id,user_id,role,active,settlement_mode) VALUES($1,$2,'customer',true,'prepaid') ON CONFLICT(lab_id,user_id) DO UPDATE SET role='customer',active=true,settlement_mode='prepaid'`, [labId, row.photographer_id]);
+                    await ensureCustomerLabMembership(c, labId, row.photographer_id, true);
                     const photographerAccount = (await c.query(`SELECT name,mobile FROM users WHERE id=$1`, [row.photographer_id])).rows[0];
                     if (photographerAccount)
                         await accountingAttachCustomerByPolicy(c, { labId, customerId: String(row.photographer_id), name: String(photographerAccount.name || 'عکاس'), mobile: photographerAccount.mobile || null, actorId: a.userId });

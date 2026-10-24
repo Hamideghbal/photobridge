@@ -19,9 +19,9 @@ if(!server.includes('/* PB1402 chat voice */')){
 let ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
 if(!ui.includes('/* PB1402 chat voice */')){
  const from=ui.indexOf('function aw('),to=ui.indexOf('function iw(',from);if(from<0||to<0)throw Error('R1402 missing chat');let chat=ui.slice(from,to);
- chat=once(chat,'e.jsx("p",{children:ie.message})','ie.voiceUrl?e.jsx("audio",{controls:true,preload:"none",src:ie.voiceUrl,"aria-label":"پیام صوتی"}):e.jsx("p",{children:ie.message})');
+ chat=once(chat,'e.jsx("p",{children:ie.message})','ie.voiceUrl?e.jsx(PB1404Audio,{src:ie.voiceUrl,label:"پیام صوتی"},ie.id):e.jsx("p",{children:ie.message})');
  const composer='e.jsxs("div",{className:"chatComposer",children:[';
  chat=once(chat,composer,composer+'!g&&(t==="customer"||c)&&e.jsx(PB1402Voice,{api:t==="customer"?"/api/customer/chat":`/api/lab/chat/${c.id}`,onSent:async()=>{await v();await ae();L()}},`${a.user.userId}:${a.lab?.id||""}:${t}:${c?.id||""}`),');
  ui=ui.slice(0,from)+chat+ui.slice(to)+'\n/* PB1402 chat voice */\n'+fs.readFileSync('scripts/r1402-voice-ui.js','utf8');fs.writeFileSync('dist/web/assets/index-UIRefine-v655-r84.js',ui);
 }
-const file='dist/web/index.html';if(fs.existsSync(file)){let html=fs.readFileSync(file,'utf8');if(!html.includes('/photobridge-r1402-voice.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1402-voice.css?v=r1402"></head>');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.replace(/&voiceChat=[^&"']*/g,'')+'&voiceChat=r1402');fs.writeFileSync(file,html)}
+const file='dist/web/index.html';if(fs.existsSync(file)){let html=fs.readFileSync(file,'utf8');if(!html.includes('/photobridge-r1402-voice.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1402-voice.css?v=r1404"></head>');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.replace(/&voiceChat=[^&"']*/g,'')+'&voiceChat=r1404');fs.writeFileSync(file,html)}

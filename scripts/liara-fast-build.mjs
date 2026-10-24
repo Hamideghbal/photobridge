@@ -402,6 +402,8 @@ await deployStep("./enable-r1407-chat-behavior.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1407-chat-behavior.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1409-active-lab-chat.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1409-active-lab-chat.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1410-invite-flow.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1410-invite-flow.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

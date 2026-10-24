@@ -6,6 +6,9 @@ on:
       - "desktop-sources/**"
       - "apps/store-desktop/**"
       - "apps/lab-desktop/**"
+      - "scripts/integrate-r1386-native-storage.cjs"
+      - "scripts/test-r1386-*.cjs"
+      - "dist/api/lab-storage-target.js"
       - "scripts/enable-r1296-native-alerts.mjs"
       - "scripts/enable-r1342-lab-ui-update.mjs"
       - "scripts/prepare-lab-installer-assets.mjs"
@@ -80,22 +83,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Restore lab native sources and preserve current overlay
+      - name: Restore current lab source and integrate configured storage
         shell: pwsh
         run: |
           Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
           Copy-Item apps/lab-desktop/ui-update.cjs "$env:RUNNER_TEMP/lab-ui-update.cjs"
-          Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Desktop-Sources-R1089.zip -DestinationPath . -Force
+          $sourceHash=(Get-FileHash desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sourceHash -ne '5fcd7e991f6f95008f375ac10ff036ea3abd89997118738e325d67a8c0df89aa') { throw "Unexpected laboratory source checksum" }
+          Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -DestinationPath "$env:RUNNER_TEMP/lab-current" -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-current/PhotoBridge-Lab-Source-v1.0.22/*" apps/lab-desktop -Recurse -Force
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
           Copy-Item "$env:RUNNER_TEMP/lab-ui-update.cjs" apps/lab-desktop/ui-update.cjs -Force
-      - name: Integrate automatic background Windows notifications
-        run: node scripts/enable-r1296-native-alerts.mjs
-      - name: Integrate resumable lab UI updates
-        run: node scripts/enable-r1342-lab-ui-update.mjs
-      - name: Verify lab UI download and resume behavior
-        run: node --test scripts/test-r1342-lab-ui-update.cjs scripts/test-r1342-native-integration.cjs
-      - name: Verify integrated notification behavior
-        run: node --test scripts/test-r1296-native-alerts.cjs
+          node scripts/integrate-r1386-native-storage.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Native storage integration failed" }
+      - name: Verify configured-path activation
+        run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
       - name: Prepare current lab UI
         run: node scripts/prepare-lab-desktop-ui.mjs
       - name: Prepare missing installer icons from existing PhotoBridge artwork
@@ -113,7 +115,7 @@ jobs:
       - name: Publish lab Windows installer candidate
         uses: actions/upload-artifact@v4
         with:
-          name: photobridge-lab-r1296-windows-test-installer
+          name: photobridge-lab-1.0.24-windows-test-installer
           path: apps/lab-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14

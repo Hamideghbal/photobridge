@@ -407,6 +407,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1410-invite-flow.cjs"], { s
 runR1314(process.execPath, ["--test", "scripts/test-r1411-existing-invite.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1418-finance-presentation.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1418-finance-presentation.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1419-finance-footer.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1419-finance-footer.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

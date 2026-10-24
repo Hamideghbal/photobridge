@@ -409,6 +409,8 @@ await deployStep("./enable-r1418-finance-presentation.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1418-finance-presentation.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1419-finance-footer.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1419-finance-footer.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1420-payment-list.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1420-payment-list.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

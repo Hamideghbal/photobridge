@@ -17,6 +17,7 @@ if(!ui.includes('/* PB1421 compact sticky finance toolbars */')){
  ui=ui.slice(0,a)+part+ui.slice(b)+'\n/* PB1421 compact sticky finance toolbars */\n';fs.writeFileSync(file,ui);
 }
 let html=fs.readFileSync('dist/web/index.html','utf8');
-if(!html.includes('/photobridge-r1421-finance-toolbar.css'))html=once(html,'</head>','<link rel="stylesheet" href="/photobridge-r1421-finance-toolbar.css?v=r1421"></head>');
+if(!html.includes('/photobridge-r1421-finance-toolbar.css'))html=once(html,'</head>','<link rel="stylesheet" href="/photobridge-r1421-finance-toolbar.css?v=r1422"></head>');
 html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,link=>link.includes('&financeToolbar=')?link:link+'&financeToolbar=r1421');
+html=html.replace(/(photobridge-r1421-finance-toolbar\\.css\\?v=)r\\d+/g,'$1r1422');
 fs.writeFileSync('dist/web/index.html',html);

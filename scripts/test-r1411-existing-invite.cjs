@@ -30,7 +30,7 @@ test('existing rental user only gets side-by-side controls on Windows desktop',(
  assert.match(css,/\.photographerSignupShell > #pbR94InviteRequired \{/);
  assert.match(css,/grid-column: 2 !important/);
  assert.match(css,/\.photographerSignupShell > \.photographerSignupForm \{/);
- assert.match(css,/grid-row: 3 !important/);
+ assert.match(css,/grid-row: 2 !important/);
  assert.match(css,/@media \(max-width: 900px\)/);
  assert.match(css,/grid-template-columns: minmax\(0,1fr\) !important/);
 });
@@ -61,8 +61,8 @@ test('invite and account data fetch concurrently when number is known',()=>{
 });
 
 test('CSS and JS cache revisions load on the real signup page',()=>{
- assert.match(html,/photobridge-r1411-existing-invite\.css\?v=r1412/);
- assert.match(html,/photobridge-v904r98-invite-stable\.js\?v=r1412/);
+ assert.match(html,/photobridge-r1411-existing-invite\.css\?v=r1417/);
+ assert.match(html,/photobridge-v904r98-invite-stable\.js\?v=r1417/);
  assert.equal(ui.split('/* PB1411 existing rental invitation */').length-1,1);
  assert.match(html,/photobridge-r1144-lab-invite-existing\.css/);
 });

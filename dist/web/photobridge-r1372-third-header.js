@@ -28,9 +28,10 @@ function render(){queued=false;const root=document.querySelector('.labRoleWorksp
  button.disabled=original.disabled;const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
  const top=Math.ceil(second.getBoundingClientRect().bottom);if(row.style.top!==top+'px')row.style.top=top+'px';root.classList.add('pb1372HasThird');
  const edge=Math.ceil(row.getBoundingClientRect().bottom)+'px';if(root.style.getPropertyValue('--pb1375-fade-top')!==edge)root.style.setProperty('--pb1375-fade-top',edge);
- const main=root.querySelector('main.appWorkspacePage.pbFixedRoleHeader');if(main){if(main.style.getPropertyValue('--pb1363-order-top')!==edge)main.style.setProperty('--pb1363-order-top',edge)}
+ // R1396: the scroll viewport owner measures all headers plus the collaboration notice.
  if(typeof ResizeObserver!=='undefined'){resize||=new ResizeObserver(schedule);if(resize._second!==second||resize._row!==row){resize.disconnect();resize.observe(second);resize.observe(row);resize._second=second;resize._row=row}}
 }
 function schedule(){if(!queued){queued=true;requestAnimationFrame(render)}}
 function start(){new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','aria-selected']});addEventListener('popstate',schedule);addEventListener('resize',schedule);addEventListener('photobridge-auth-session-changed',schedule);media.addEventListener('change',schedule);schedule()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();
+

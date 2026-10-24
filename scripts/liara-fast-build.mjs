@@ -378,6 +378,8 @@ await deployStep("./enable-r1394-collaboration-feedback.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1394-collaboration-feedback.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1395-storage-pair.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1395-storage-pair.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1396-alert-spacing.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1396-alert-spacing.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
@@ -391,6 +393,7 @@ console.log("[PhotoBridge Docker build] OK R1354 patch-on-import regression test
 console.log("[PhotoBridge Docker build] START R1351 lab UI wire-byte integrity tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1351-lab-ui-exact-byte-serving.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1351 lab UI wire-byte integrity tests");
+
 
 
 

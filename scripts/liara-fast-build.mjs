@@ -374,6 +374,8 @@ await deployStep("./enable-r1391-lab-existing-account.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1391-lab-existing-account.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1393-shared-account.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1393-shared-account.cjs", "scripts/test-r1393-reset-guard.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1394-collaboration-feedback.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1394-collaboration-feedback.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

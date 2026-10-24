@@ -64,12 +64,11 @@
 /* PB1364 softer blue shadows */
 
 
-/* R1396: notices reserve their own space under the complete header stack. */
-@media (min-width:821px) and (hover:hover) and (pointer:fine){
- html.pb1363OrderQueue body #root .labRoleWorkspace .labCollaborationAlert{
-  position:fixed!important;top:var(--pb1396-alert-top,128px)!important;
-  inset-inline:12px!important;bottom:auto!important;width:auto!important;
-  height:auto!important;max-height:none!important;margin:0!important;
-  box-sizing:border-box!important;z-index:138!important;
- }
+/* R1397: the notice is a real first row inside the content viewport on every screen. */
+html body #root .labRoleWorkspace .labRolePageScrollArea>.labCollaborationAlert,
+html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea>.labCollaborationAlert{
+ position:static!important;inset:auto!important;transform:none!important;
+ width:100%!important;height:auto!important;max-height:none!important;
+ margin:0 auto 12px!important;box-sizing:border-box!important;
+ flex:0 0 auto!important;grid-column:1/-1!important;z-index:auto!important;
 }

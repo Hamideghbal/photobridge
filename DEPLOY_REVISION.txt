@@ -1,1 +1,1 @@
-2026-10-25-r1412-liara-npm-mirror-progress-timeouts
+2026-10-25-r1413-invite-bootstrap-build-compat

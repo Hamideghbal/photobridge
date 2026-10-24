@@ -8,10 +8,23 @@ if(!ui.includes('/* PB1378 finance guide */')){
 }
 const invite='dist/web/photobridge-v904r98-invite-stable.js';let s=fs.readFileSync(invite,'utf8');
 if(!s.includes('/* PB1378 public invite mobile entry */')){
- const anchor="    const query='?invite='+encodeURIComponent(inviteCode)";if(s.split(anchor).length!==2)throw Error('R1378 invite bootstrap changed');
- s=s.replace(anchor,"    /* PB1378 public invite mobile entry */\n    if(!resolvedMobile&&state.ctx?.invite?.active){state.awaitingMobile=true;accepted=true;clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.getElementById('pbInviteContextRetry')?.remove();document.documentElement.classList.remove('pbR100F7InviteBootPending');scheduleSeries();return;}\n"+anchor);
+ const anchor='      if(!accepted&&!state.contextReady&&validInvite&&!initialMobile&&!normalizeMobile(state.ctx?.invite?.targetMobile))releaseContextGate();';
+ if(s.split(anchor).length!==2)throw Error('R1378 invite bootstrap changed: R1411 fast/context gate');
+ s=s.replace(anchor,`      if(!accepted&&!state.contextReady&&validInvite&&!initialMobile&&!normalizeMobile(state.ctx?.invite?.targetMobile)){
+        if(state.ctx?.invite?.active){
+          /* PB1378 public invite mobile entry */
+          state.awaitingMobile=true;
+          accepted=true;
+          clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);
+          document.getElementById('pbInviteContextRetry')?.remove();
+          document.documentElement.classList.remove('pbR100F7InviteBootPending');
+          scheduleSeries();
+        }else{
+          releaseContextGate();
+        }
+      }`);
  s=s.replace('    mergeCtx(x);\n    releaseContextGate();','    state.awaitingMobile=false;document.querySelector(".photographerSignupForm")?.classList.remove("pb1378AwaitMobile");\n    mergeCtx(x);\n    releaseContextGate();');
- const render="if(!form||!state.ctx||!state.contextReady)return;";if(s.split(render).length!==2)throw Error('R1378 invite render changed');s=s.replace(render,'if(!form||!state.ctx)return;if(state.awaitingMobile){form.classList.add("pb1378AwaitMobile");return}if(!state.contextReady)return;');
+ const render="if(!form||!state.ctx||!state.contextReady)return;";if(s.split(render).length!==2)throw Error('R1378 invite render changed');s=s.replace(render,'if(!form||!state.ctx)return;if(state.awaitingMobile){form.classList.add("pb1378AwaitMobile");return}form.classList.remove("pb1378AwaitMobile");if(!state.contextReady)return;');
  const end='  enableInviteScroll();bootstrap();scheduleSeries();\n})();';if(s.split(end).length!==2)throw Error('R1378 invite end changed');s=s.replace(end,`  const mobileStyle=document.createElement('style');mobileStyle.textContent='.pb1378AwaitMobile label:not(:has(input[inputmode="tel"])),.pb1378AwaitMobile .iranLocationFields,.pb1378AwaitMobile .photographerSignupLocationPicker,.pb1378AwaitMobile button:not([type="button"]){display:none!important}';document.head.append(mobileStyle);
   document.addEventListener('submit',event=>{if(state.awaitingMobile&&event.target.matches?.('.photographerSignupForm')){event.preventDefault();event.stopImmediatePropagation()}},true);
 `+end);fs.writeFileSync(invite,s);

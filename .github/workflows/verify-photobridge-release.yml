@@ -157,6 +157,8 @@ jobs:
           node --check dist/web/photobridge-r1207-frame-store.js
           node --check dist/web/photobridge-r1172-production-owner.js
           node --check dist/api/frame-production.js
+      - name: Verify lab manager role is preserved during customer enrollment
+        run: PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-lab-admin-role-preservation.cjs
       - name: Save frame editor screenshots
         if: always()
         uses: actions/upload-artifact@v4

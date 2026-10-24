@@ -1,0 +1,4 @@
+# R1404 chat voice appearance
+Microphone is a fixed-size SVG overlaid inside the textarea's grid cell with reserved text padding, rather than a separate idle row. Recording/preview controls remain available below while active. Sent voice messages and previews share a compact RTL player with SVG play/pause, duration, seek and visible errors. Player retains its active URL during polling; on playback fetch error it adopts a newer signed URL for manual retry, avoiding periodic playback resets. No API, microphone permission or database changes.
+
+Eight tests pass: six existing voice behavior/security tests plus player control/seek/source-retention and rendered-bundle/style checks. Build transform and generated JS syntax pass. Real-browser visual QA and actual audio-device playback not performed. Web UI auto-update supplies these styles to existing Windows 1.0.30; no native rebuild needed.

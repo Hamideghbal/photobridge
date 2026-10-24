@@ -393,6 +393,7 @@ await deployStep("./enable-r1402-chat-voice.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1402-chat-voice.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1403-independent-lab-roles.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1403-build.cjs"], { stdio: "inherit" });
+runR1314(process.execPath, ["--test", "scripts/test-r1404-chat-style.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

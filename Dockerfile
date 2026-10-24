@@ -8,12 +8,15 @@ ENV NODE_ENV=production \
     NPM_CONFIG_AUDIT=false \
     NPM_CONFIG_FUND=false \
     NPM_CONFIG_UPDATE_NOTIFIER=false \
-    NPM_CONFIG_CACHE=/tmp/npm-cache
+    NPM_CONFIG_CACHE=/tmp/npm-cache \
+    NPM_CONFIG_REGISTRY=https://package-mirror.liara.ir/repository/npm/ \
+    ONNXRUNTIME_NODE_INSTALL=skip
 
 # Keep dependency installation in its own cacheable layer.
 COPY package.json .npmrc ./
 COPY scripts/install-docker-dependencies.mjs scripts/prune-onnx-platforms.mjs scripts/deduplicate-onnx-runtime.mjs ./scripts/
-RUN node scripts/install-docker-dependencies.mjs \
+RUN echo "[PhotoBridge Docker deps] registry: $(npm config get registry)" \
+    && node scripts/install-docker-dependencies.mjs \
     && node scripts/prune-onnx-platforms.mjs \
     && rm -rf /tmp/npm-cache /root/.npm scripts package-lock.json .npmrc
 

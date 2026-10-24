@@ -67,7 +67,8 @@
     if(!state.values.businessLicenseImage&&p.businessLicenseImage) state.values.businessLicenseImage=p.businessLicenseImage;
   }
   const required=()=>({...normalizeReq(state.ctx?.membershipRequiredFields||{}),birthDate:isExisting()&&!hasProfileValue('birthJalali')});
-  const isRental=()=>state.ctx?.invite?.issuerType==='rental'||state.ctx?.invite?.issuer_type==='rental'||Object.values(required()).some(Boolean);
+  function PB1412IsRental(invite,fields){const item=invite||{},type=String(item.issuerType||item.issuer_type||'');if(type==='lab'||item.issuerLabName||item.issuer_lab_name)return false;if(type==='rental')return true;return Object.values(normalizeReq(fields||{})).some(Boolean);}
+  const isRental=()=>PB1412IsRental(state.ctx?.invite,state.ctx?.membershipRequiredFields);
   const isExisting=()=>Boolean(state.ctx?.existingAccount?.exists||state.ctx?.existingAccount);
   function PB1411RentalShopName(invite){const item=invite||{};const options=[item.issuerRentalShopName,item.issuer_rental_shop_name,item.issuerName,item.issuer_name];return options.map(value=>String(value||'').trim()).find(value=>value&&value!=='فروشگاه'&&value!=='PhotoBridge')||'';}
   const hasProfileValue=k=>Boolean(String((state.ctx?.membershipProfile||{})[k]||'').trim());
@@ -196,12 +197,12 @@
   }
   function requiredBox(form){
     let box=document.getElementById('pbR94InviteRequired');
-    if(!isRental()){if(box)box.classList.add('pbR94BaseHidden');return}
+    
     const allReq=required(),req=Object.fromEntries(Object.entries(allReq).map(([key,value])=>[key,value&&(!isExisting()||!hasProfileValue(key==='birthDate'?'birthJalali':key))]));const hasExtras=Object.values(req).some(Boolean);if(!hasExtras){if(box)box.classList.add('pbR94BaseHidden');return}
     const p=state.ctx?.membershipProfile||{},sig=JSON.stringify({req,existing:isExisting(),birth:p.birthJalali||'',national:p.nationalId||'',certificate:p.birthCertificateNo||'',license:p.businessLicenseNo||'',image:Boolean(p.businessLicenseImage)});
     if(box&&box.dataset.sig===sig){placeRequiredBox(form,box);return}
     if(!box){box=document.createElement('section');box.id='pbR94InviteRequired';box.className='pbR94Required'}
-    box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=PB1411RentalShopName(state.ctx?.invite);box.replaceChildren();const title=document.createElement('b');title.textContent=shopName?'اطلاعات درخواستی فروشگاه «'+shopName+'»':'اطلاعات درخواستی فروشگاه';box.append(title);
+    box.classList.remove('pbR94BaseHidden');box.dataset.sig=sig;const shopName=PB1411RentalShopName(state.ctx?.invite);box.replaceChildren();const title=document.createElement('b');title.textContent=shopName?'اطلاعات درخواستی فروشگاه «'+shopName+'»':'اطلاعات درخواستی فروشگاه';if(!isRental()){const labName=PB1412LabName(state.ctx?.invite);title.textContent=labName?'اطلاعات درخواستی لابراتوار «'+labName+'»':'اطلاعات درخواستی لابراتوار';}box.append(title);
     if(req.birthDate&&isExisting())box.append(birthField());if(req.nationalId)box.append(textField('کد ملی','nationalId',{numeric:true}));if(req.birthCertificateNo)box.append(textField('شماره شناسنامه','birthCertificateNo',{numeric:true}));if(req.businessLicenseNo)box.append(textField('شماره جواز / پرونده','businessLicenseNo'));if(req.businessLicenseImage)box.append(imageField());
     placeRequiredBox(form,box);
   }
@@ -254,8 +255,9 @@
       if(/تأیید موبایل و فعال.?سازی عکاس|ارسال کد تأیید/.test(t))removeLegacyNode(form,x);
     });
   }
+  function PB1412LabName(invite){const item=invite||{};return [item.issuerLabName,item.issuer_lab_name,item.issuerName,item.issuer_name].map(value=>String(value||'').trim()).find(value=>value&&!['فروشگاه','لابراتوار','PhotoBridge'].includes(value))||'';}
   function decorateRentalIntro(){
-    if(!isRental())return;
+    if(!isRental()){const intro=document.querySelector('.photographerSignupIntro');if(!intro)return;const name=PB1412LabName(state.ctx?.invite),lab=name?'لابراتوار «'+name+'»':'لابراتوار عکاسی';const h=intro.querySelector('h1'),p=intro.querySelector('p');if(h)h.textContent='به '+lab+' خوش آمدید';if(p)p.textContent=isExisting()?'با تأیید این دعوت، حساب فعلی شما به '+lab+' متصل می‌شود و سفارش چاپ، آلبوم و پیگیری همکاری را آنلاین انجام می‌دهید.':'با عضویت در '+lab+'، سفارش چاپ و آلبوم را آنلاین ثبت و پیگیری می‌کنید.';const labels=['سفارش چاپ عکس','سفارش آلبوم','پیگیری آنلاین سفارش'];[...intro.querySelectorAll('.trialFacts span')].forEach((x,i)=>{if(labels[i])x.textContent=labels[i]});return;}
     const shopName=PB1411RentalShopName(state.ctx?.invite);
     const intro=document.querySelector('.photographerSignupIntro');if(!intro)return;
     const h=intro.querySelector('h1'),p=intro.querySelector('p');
@@ -297,7 +299,7 @@
       },true);
     }
     const text=String(b.textContent||'').trim();
-    if(!/کد|در حال/.test(text))b.textContent='تأیید اطلاعات و اتصال به فروشگاه';
+    if(!/کد|در حال/.test(text))b.textContent=isRental()?'تأیید اطلاعات و اتصال به فروشگاه':'تأیید اطلاعات و اتصال به لابراتوار';
     b.classList.remove('pbR94BaseHidden','pbR100F3LegacyInviteTail');
     b.removeAttribute('aria-hidden'); if('inert' in b)b.inert=false; b.tabIndex=0;
     return b;
@@ -311,7 +313,7 @@
     // this avoids the scroll-lock/performance regression of the old invite observer.
     formObserver.observe(form,{childList:true});
   }
-  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;document.documentElement.classList.toggle('pbR1411ExistingRentalInvite',isExisting()&&String(state.ctx?.invite?.issuerType||state.ctx?.invite?.issuer_type)==='rental');watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
+  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;document.documentElement.classList.toggle('pbR1411ExistingRentalInvite',isExisting()&&Boolean(state.ctx?.invite));watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
   function schedule(){if(state.raf)return;state.raf=requestAnimationFrame(render)}
   let settleTimers=[];function scheduleSeries(){schedule();settleTimers.forEach(clearTimeout);settleTimers=[80,220,600,1400,3000,6000,10000].map(ms=>setTimeout(schedule,ms))}
   async function bootstrap(){

@@ -9,7 +9,10 @@ if(!server.includes('/* PB1402 chat voice */')){
  const customerAnchor="        if (req.method === 'GET' && url.pathname === '/api/customer/chat') {";
  server=once(server,customerAnchor,"        if(req.method==='POST'&&url.pathname==='/api/customer/chat/voice')return pb1402Voice(req,res,labId,a.userId,a.userId);\n"+customerAnchor);
  for(const anchor of ["        if (labChat && req.method === 'GET') {",customerAnchor]){
-  const from=server.indexOf(anchor),to=server.indexOf('return sendJson(res, 200, { messages: q.rows });',from);if(to<0||to-from>1600)throw Error('R1402 changed chat read');server=server.slice(0,to)+server.slice(to).replace('return sendJson(res, 200, { messages: q.rows });','return sendJson(res, 200, { messages: voiceRows(q.rows,issueStoredPreviewUrl) });');
+  const from=server.indexOf(anchor),end=server.indexOf(anchor.includes("labChat")?"        if (labChat && req.method === 'POST') {":"        if (req.method === 'POST' && url.pathname === '/api/customer/chat') {",from+anchor.length);if(from<0||end<0)throw Error('R1402 changed chat route');
+  const section=server.slice(from,end),pattern=/return sendJson\(res, 200, \{ messages: (q\.rows(?:\.reverse\(\))?) \}\);/g;
+  const matches=[...section.matchAll(pattern)];if(matches.length!==1)throw Error('R1402 changed chat read');
+  server=server.slice(0,from)+section.replace(pattern,(_,rows)=>'return sendJson(res, 200, { messages: voiceRows('+rows+',issueStoredPreviewUrl) });')+server.slice(end);
  }
  fs.writeFileSync('dist/api/server.js',server);
 }

@@ -1,0 +1,13 @@
+# R1403 independent lab memberships and R1402 deploy repair
+
+The attached production build fails inside R1402 because R1364 latestLabChats has already changed the lab GET response from q.rows to q.rows.reverse(). The old exact-string search rejects that valid route. R1402 now scopes replacement to each GET route, accepts both validated forms and projects voice URLs around the existing order expression. Unknown formats still fail closed. A behavioral build test executes the actual transformed GET and verifies chronological output from newest-first SQL.
+
+Migration 193 changes uniqueness of lab_memberships from (lab_id,user_id) to (lab_id,user_id,role) without replacing rows or user identities. Existing IDs, administrative active flags, customer settlement and tariff state remain independent. ensureCustomerLabMembership upserts only the customer role. Both intake lookups are explicitly customer-scoped, preventing accidental reading of the manager row. Authentication already selects the portal-specific role; its real LATERAL SQL is exercised against a dual-role fixture. Existing customer update/removal queries remain role-scoped. No phone or password changes, automatic enrollment or production database edits.
+
+Validation: 7 PGlite integration tests (approval, discount, rejection/duplicate, tenant isolation, same-user approval and independent customer deactivation/deletion, repeatable non-destructive migration/per-role uniqueness, actual portal auth SQL); 2 production build regression tests; 6 existing voice tests. Transform order latestLabChats -> R1402 -> R1403, repeated R1402/R1403 application, and resulting JS syntax checked. API helper modules were inspected for membership queries; their relevant queries already bind roles.
+
+The DB test uses the existing repository collaboration schema fixture plus migration 193 and adds the production suspended column absent from that older fixture. PGlite is a local test dependency only; the Docker pipeline runs only the two dependency-free build tests, not the DB test. No package changes. Full Docker/Liara build and actual production accounts are not verified here.
+
+Draft: AGENTS.md stop conditions database schema or migration changes and authentication/authorization/security-sensitive changes apply. Publication requires explicit user authorization. No new Windows binary/source version is needed for these server/build changes.
+
+Rollout: migration 193 removes the old pair-only unique constraint. Old application versions using ON CONFLICT(lab_id,user_id) are incompatible once it runs; coordinated rollout is needed if old replicas remain active. Do not roll back only the app image after dual-role rows exist. No automatic down-migration/deletion of memberships is supplied.

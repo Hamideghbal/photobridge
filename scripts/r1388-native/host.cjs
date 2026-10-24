@@ -1,0 +1,117 @@
+'use strict';
+const http=require('node:http');
+const {exempt,checkWriteAccess}=require('./write-access.cjs');
+const fs=require('node:fs');
+const path=require('node:path');
+const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
+const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
+function createHost({store,sync,request,roots,token,onLogin,onLogout}){
+  const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
+  const server=http.createServer(async(req,res)=>{
+    try{
+      const origin='http://127.0.0.1:'+server.address().port;
+      if(req.headers.host!=='127.0.0.1:'+server.address().port)return json(res,403,{error:'invalid_host'});
+      const url=new URL(req.url,origin);
+      if(url.pathname==='/start'&&url.searchParams.get('token')===token){res.writeHead(302,{'Set-Cookie':'desktop='+token+'; HttpOnly; SameSite=Strict; Path=/','Location':'/lab'});return res.end()}
+      if(!String(req.headers.cookie||'').split(';').some(x=>x.trim()==='desktop='+token))return json(res,403,{error:'desktop_locked'});
+      if(req.headers.origin&&req.headers.origin!==origin)return json(res,403,{error:'invalid_origin'});
+
+      if(url.pathname==='/desktop/status'){const state=store.get('auth')?sync.status():{signedIn:false,online:false,syncing:false,pending:0,conflicts:[]};return json(res,200,{...state,uiTrayUpdateSupported:true,nativeVersion:store.get('nativeVersion')||null,uiKnownGoodBuild:store.get('uiKnownGoodBuild')||null,uiBuild:store.get('uiBuild')||null,uiLastCheckedAt:store.get('uiLastCheckedAt')||null,uiDownloadedAt:store.get('uiDownloadedAt')||null,uiAppliedAt:store.get('uiAppliedAt')||null,updateError:store.get('updateError')||null})}
+      if(url.pathname==='/desktop/sync'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});return json(res,200,await sync.run())}
+      if(url.pathname==='/desktop/retry'&&req.method==='POST'){const p=await readJson(req);store.retry(String(p.id||''));void sync.run();return json(res,200,{ok:true})}
+      if(url.pathname==='/desktop/discard'&&req.method==='POST'){const p=await readJson(req);store.discard(String(p.id||''));return json(res,200,{ok:true})}
+
+      const {bytes,contentType}=await readBody(req);
+      if(url.pathname==='/api/auth/lab-login'&&req.method==='POST'){
+        const previous=store.get('cookie');
+        try{
+          const up=await request(url.pathname,{method:'POST',body:bytes.toString(),headers:{'Content-Type':contentType||'application/json'}});
+          const data=await up.json().catch(()=>({}));
+          if(up.ok)await onLogin(data);else store.set('cookie',previous);
+          return json(res,up.status,data);
+        }catch(e){store.set('cookie',previous);throw e}
+      }
+      if(url.pathname==='/api/auth/logout'&&req.method==='POST'){const out=await onLogout();return json(res,200,{ok:true,...out})}
+      if(url.pathname==='/api/auth/me'&&store.get('auth'))return json(res,200,store.get('auth'));
+
+      if(url.pathname.startsWith('/api/')){
+        if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
+        if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,request);if(!access.allowed)return json(res,403,access)}
+        // Workstation registration needs a live answer, never a queued success.
+        /* R1386 live storage target */if((url.pathname==='/api/lab/download-device'||url.pathname==='/api/lab/storage-target'||url.pathname==='/api/lab/storage-target/activate'||url.pathname==='/api/lab/storage-target/hello')&&['GET','PUT','POST'].includes(req.method)){
+          try{
+            const up=await request(req.url,{method:req.method,...(['POST','PUT'].includes(req.method)?{body:bytes,headers:{'Content-Type':'application/json'}}:{})});
+            const body=Buffer.from(await up.arrayBuffer());res.writeHead(up.status,{'Content-Type':up.headers.get('content-type')||'application/json','Cache-Control':'no-store'});return res.end(body);
+          }catch{return json(res,503,{error:'download_device_registration_offline',message:'ثبت یا بررسی سیستم اصلی به اتصال اینترنت نیاز دارد. پوشهٔ انتخاب‌شده حفظ می‌شود؛ پس از اتصال دوباره تلاش کنید.'})}
+        }
+        if(['GET','HEAD'].includes(req.method)){
+          try{
+            const up=await request(req.url,{method:req.method});
+            const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/octet-stream';
+            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6)store.cache(req.url,up.status,mime,body.toString('base64'));
+            res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});
+            return req.method==='HEAD'?res.end():res.end(body);
+          }catch{
+            const cached=store.cached(req.url);
+            if(cached){res.writeHead(cached.status,{'Content-Type':cached.mime,'Cache-Control':'no-store','X-PhotoBridge-Offline':'1'});return res.end(Buffer.from(cached.body,'base64'))}
+            return json(res,503,{error:'online_connection_required',message:'این بخش هنوز در این دستگاه ذخیره نشده است.'});
+          }
+        }
+        // Print-alert presence is a *transient heartbeat*, not an order or
+        // customer edit. Never enqueue it when offline or the server is slow.
+        // Unlike business mutations, a failed presence request may safely be
+        // retried by the live page on its next poll, without preserving history.
+        if(req.method==='POST'&&url.pathname==='/api/lab/print-alert/presence'){
+          try{
+            const up=await request(req.url,{method:req.method,body:bytes,headers:{'Content-Type':contentType||'application/json'}});
+            const response=Buffer.from(await up.arrayBuffer());
+            res.writeHead(up.status,{'Content-Type':up.headers.get('content-type')||'application/json','Cache-Control':'no-store'});
+            return res.end(response);
+          }catch{return json(res,503,{error:'online_connection_required',message:'ارتباط اعلان چاپ موقتاً در دسترس نیست.'})}
+        }
+        if(contentType.startsWith('multipart/form-data')||OFFLINE_BLOCK.test(url.pathname)){
+          try{
+            const up=await request(req.url,{method:req.method,body:bytes,headers:{'Content-Type':contentType}});
+            const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/json';
+            res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});return res.end(body);
+          }catch{return json(res,503,{error:'online_connection_required',message:'این عملیات به اینترنت نیاز دارد.'})}
+        }
+        let payload={};
+        try{payload=bytes.length?JSON.parse(bytes.toString()):{}}catch{return json(res,400,{error:'invalid_json'})}
+        if(!store.rows().length){
+          try{
+            const up=await request(req.url,{method:req.method,body:JSON.stringify(payload)}),data=await up.json().catch(()=>({}));
+            if(up.ok){void sync.run();return json(res,up.status,data)}
+            if(up.status<500)return json(res,up.status,data);
+          }catch{}
+        }
+        const queued=store.enqueue(req.method,req.url,payload);void sync.run();
+        return json(res,202,{ok:true,...queued,message:'تغییر در برنامه ذخیره شد و پس از اتصال همگام می‌شود.'});
+      }
+
+      let name=decodeURIComponent(url.pathname).replace(/^\/+/, '');
+      const ext=path.extname(name);if(!name||!ext)name='index.html';
+      if(name.includes('..')||name.includes('\\'))return json(res,403,{});
+      // Native bridge assets are pinned to this installed app, even after UI updates.
+      if(['native-storage.js'].includes(name)){res.writeHead(200,{'Content-Type':MIME['.js'],'Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,name)))}
+      for(const root of roots()){
+        const file=path.resolve(root,name),resolvedRoot=path.resolve(root);
+        if(!file.startsWith(resolvedRoot+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())continue;
+        const type=MIME[path.extname(file)]||'application/octet-stream';
+        res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-cache'});
+        if(name==='index.html'){
+          let html=fs.readFileSync(file,'utf8');html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');const end=html.toLowerCase().lastIndexOf('</body>');
+          html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
+          return res.end(html);
+        }
+        if(name==='assets/index-UIRefine-v655-r84.js')return res.end(require('./storage-bundle.cjs').patchStorageBundle(fs.readFileSync(file,'utf8')));
+        return fs.createReadStream(file).pipe(res);
+      }
+      return json(res,404,{error:'not_found'});
+    }catch(e){return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}
+  });
+  return server;
+}
+async function readBody(req){if(['GET','HEAD'].includes(req.method))return{bytes:Buffer.alloc(0),contentType:''};const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>50e6)throw Object.assign(Error('request_too_large'),{status:413});chunks.push(c)}return{bytes:Buffer.concat(chunks),contentType:String(req.headers['content-type']||'')}}
+async function readJson(req){const{bytes}=await readBody(req);try{return bytes.length?JSON.parse(bytes.toString()):{}}catch{return{}}}
+module.exports={createHost};

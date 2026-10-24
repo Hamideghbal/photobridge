@@ -365,6 +365,8 @@ await deployStep("./enable-r1385-album-save.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1385-album-save.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1386-storage-target.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1386-storage-target.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1388-lab-expiry.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1388-lab-expiry.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
@@ -378,6 +380,7 @@ console.log("[PhotoBridge Docker build] OK R1354 patch-on-import regression test
 console.log("[PhotoBridge Docker build] START R1351 lab UI wire-byte integrity tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1351-lab-ui-exact-byte-serving.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1351 lab UI wire-byte integrity tests");
+
 
 
 

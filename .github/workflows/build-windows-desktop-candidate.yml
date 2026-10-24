@@ -95,6 +95,8 @@ jobs:
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
           Copy-Item "$env:RUNNER_TEMP/lab-ui-update.cjs" apps/lab-desktop/ui-update.cjs -Force
           node scripts/integrate-r1386-native-storage.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Storage integration failed" }
+          node scripts/integrate-r1388-lab-expiry.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Native storage integration failed" }
       - name: Verify configured-path activation
         run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
@@ -115,7 +117,8 @@ jobs:
       - name: Publish lab Windows installer candidate
         uses: actions/upload-artifact@v4
         with:
-          name: photobridge-lab-1.0.24-windows-test-installer
+          name: photobridge-lab-1.0.25-windows-test-installer
           path: apps/lab-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14
+

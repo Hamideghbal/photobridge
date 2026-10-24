@@ -7,3 +7,9 @@
 .pb1397ReviewDialog .pb1397ReviewActions{display:flex;justify-content:flex-end;margin-top:18px}
 .pb1397ReviewDialog button{font:700 12px/1.5 Vazirmatn,Tahoma,sans-serif;border:1px solid #236947;border-radius:9px;padding:8px 19px;background:#236947;color:#fff;cursor:pointer}
 .pb1397ReviewDialog button:focus-visible{outline:3px solid #afd1bc;outline-offset:3px}
+
+.pb1397ReviewDialog{direction:rtl!important;text-align:right!important}
+.pb1397ReviewDialog .pb1397ReviewActions{gap:8px}
+.pb1397ReviewDialog button.pb1399DialogCancel{background:#fff;color:#455564;border-color:#d8e0e6}
+
+.pb1397ReviewDialog.pb1399ConfirmReview .pb1397ReviewActions>button:last-child{background:#a84339;border-color:#a84339}

@@ -1,1 +1,1 @@
-2026-10-24-r1407-chat-header-collapse-shared-composer
+2026-10-24-r1408-fix-chat-chevron-test

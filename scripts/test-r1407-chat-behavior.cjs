@@ -30,7 +30,7 @@ test('outside pointerdown collapses an open chat, not clicks inside or an open p
 
 test('clear left-pointing chevron replaces text glyph without breaking collapse button',()=>{
  assert.match(chat,/className:"chatCloseButton",onClick:\(\)=>r\(!0\)/);
- assert.match(chat,/aria-label:"جمع کردن گفتگو"/);
+ assert.match(chat,/"aria-label":"جمع کردن گفتگو"/);
  assert.match(chat,/strokeWidth:2\.8/);
  assert.match(chat,/d:"m15 18-6-6 6-6"/);
  assert.match(css,/color: #1c4e79 !important/);

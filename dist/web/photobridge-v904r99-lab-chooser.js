@@ -4,7 +4,7 @@
   const ROOT_ID='pbR99LabChooser';
   const SESSION_KEY='photobridge:r99:selected-lab';
   const CACHE_KEY='photobridge:r100f14:lab-chooser';
-  let running=false,lastPath='',runEpoch=0;
+  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isPhotographerRoute=()=>/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register)(?:\/|$)/.test(location.pathname);
   const isPrintRoute=()=>{if(!isPhotographerRoute())return false;const q=new URLSearchParams(location.search);return q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(location.pathname)};
@@ -68,6 +68,7 @@
     document.documentElement.style.overflow='';document.body.style.overflow='';
   }
   function paint(data){
+    currentData=data;
     const root=ensureRoot();window.__pbR100F5PrimaryLab=String(data.primaryLabId||'');
     const memberships=(Array.isArray(data.memberships)?data.memberships:[]).filter(x=>x&&x.active!==false&&!x.service_only);
     const membershipIds=new Set(memberships.map(x=>String(x.id)));
@@ -87,13 +88,13 @@
     const sel=e.target.closest('[data-select]');if(sel){const id=sel.dataset.select;sel.disabled=true;try{try{sessionStorage.setItem('photobridge:r100f37:lab-enter-pending',String(Date.now()))}catch{}document.documentElement.classList.add('pbR100F37LabEnterBoot');await api('/api/customer/labs/'+encodeURIComponent(id)+'/select',{method:'POST',body:'{}'});sessionStorage.setItem(SESSION_KEY,id);cleanup();const u=new URL(location.href);u.searchParams.delete('pbLabChooser');u.searchParams.set('pbEntryDone','lab');location.replace(u.pathname+'?'+u.searchParams.toString())}catch(err){try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{}document.documentElement.classList.remove('pbR100F37LabEnterBoot');sel.disabled=false;toast(err.status===403?'دسترسی این لابراتوار برای حساب شما فعال نیست.':'انتخاب لابراتوار انجام نشد؛ دوباره تلاش کن.')}return}
     const req=e.target.closest('[data-request]');if(req){const id=req.dataset.request;req.disabled=true;try{await api('/api/customer/labs/'+encodeURIComponent(id)+'/request',{method:'POST',body:'{}'});req.textContent='در انتظار تأیید';toast('درخواست همکاری برای لابراتوار ارسال شد.')}catch(err){req.disabled=false;toast(err.status===409?'قبلاً به این لابراتوار متصل هستی.':'ارسال درخواست همکاری انجام نشد.')}}
   }
-  async function run(force=false){
+  async function run(force=false,refresh=false){
     force=force||new URLSearchParams(location.search).get('pbLabChooser')==='1';
     if(!isPrintRoute()){cleanup();return}
-    if(running)return;
-    const path=location.pathname+location.search;if(!force&&path===lastPath&&document.getElementById(ROOT_ID))return;lastPath=path;running=true;
+    if(running){if(refresh)refreshQueued=true;return;}
+    const path=location.pathname+location.search;if(!force&&!refresh&&path===lastPath&&document.getElementById(ROOT_ID))return;lastPath=path;running=true;
     const epoch=runEpoch;
-    if(force){
+    if(force&&!refresh){
       ensureRoot();
       try{const c=JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null');if(c?.data&&epoch===runEpoch&&isPrintRoute())paint(c.data)}catch{}
     }
@@ -110,7 +111,7 @@
       if(epoch!==runEpoch||!isPrintRoute())return;
       if(e.status===401||e.status===403){cleanup();return}
       console.warn('[PhotoBridge R100F20 lab chooser]',e);paintError('دریافت فهرست لابراتوارها انجام نشد. دوباره تلاش کن.');
-    }finally{running=false}
+    }finally{running=false;if(refreshQueued){refreshQueued=false;queueMicrotask(()=>run(false,true))}}
   }
   function onRoute(){
     if(!isPrintRoute()){cleanup();return}
@@ -145,5 +146,16 @@
     location.assign(u.pathname+'?'+u.searchParams.toString());
   },true);
   for(const k of ['pushState','replaceState']){const old=history[k];history[k]=function(...a){const r=old.apply(this,a);queueMicrotask(onRoute);return r}}
+  /* R1400: this chooser owns separate DOM/cache from the React lab directory. */
+  addEventListener('photobridge-collaboration-review',event=>{
+    if(!isPrintRoute()||!document.getElementById(ROOT_ID))return;
+    const review=event.detail||{},id=String(review.labId||review.lab_id||'');
+    if(!id||!['approved','rejected','cancelled'].includes(review.status))return;
+    runEpoch++;if(currentData)paint({...currentData,labs:(currentData.labs||[]).map(lab=>String(lab.id)===id?({...lab,request_status:review.status,connected:review.status==='approved'}):lab)});
+    void run(false,true);
+  });
+  addEventListener('focus',()=>{if(isPrintRoute()&&document.getElementById(ROOT_ID))void run(false,true)});
+  setInterval(()=>{if(!document.hidden&&isPrintRoute()&&document.getElementById(ROOT_ID))void run(false,true)},8000);
   addEventListener('popstate',onRoute);addEventListener('pageshow',onRoute);document.addEventListener('DOMContentLoaded',onRoute,{once:true});if(document.readyState!=='loading')onRoute();
 })();
+

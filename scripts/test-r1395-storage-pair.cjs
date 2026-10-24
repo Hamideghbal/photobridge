@@ -1,0 +1,37 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
+const browser='browser-12345678901234567890',native='pblab-12345678901234567890';
+const folderA=crypto.randomUUID(),folderB=crypto.randomUUID();
+async function fixture(){
+ const api=await import('../dist/api/lab-storage-pair.js');let row={ui_preferences:{preserved:'yes'},primary_download_device_id:'old'};
+ const connection={async query(sql,args){if(sql.startsWith('SELECT'))return {rows:[structuredClone(row)]};if(sql.startsWith('UPDATE')){row={...row,ui_preferences:{...row.ui_preferences,...JSON.parse(args[1])},primary_download_device_id:args[2]};}return {rows:[]}},release(){}};
+ return {...api,get row(){return row},select:(deviceId,id,user={labRole:'lab_admin'})=>api.selectStoragePair({pool:{connect:async()=>connection},labId:'lab-a',deviceId,user,body:{pairFolderId:id,name:'Photos'}})};
+}
+test('browser then native, same folder keeps both active and preserves unrelated settings',async()=>{const f=await fixture();const first=await f.select(browser,folderA),second=await f.select(native,folderA);assert.equal(first.revision,second.revision);assert.ok(f.storageDeviceAllowed(f.row,browser));assert.ok(f.storageDeviceAllowed(f.row,native));assert.equal(f.row.ui_preferences.preserved,'yes')});
+test('native then browser, same folder preserves both',async()=>{const f=await fixture();await f.select(native,folderA);await f.select(browser,folderA);assert.ok(f.storageDeviceAllowed(f.row,browser));assert.ok(f.storageDeviceAllowed(f.row,native))});
+test('native changes folder: browser blocked with explicit message, reselect rejoins',async()=>{const f=await fixture();await f.select(browser,folderA);await f.select(native,folderA);await f.select(native,folderB);assert.equal(f.storageDeviceAllowed(f.row,browser),false);assert.match(f.pairedTarget(f.row,browser).message,/مسیرها را یکسان/);await f.select(browser,folderB);assert.ok(f.storageDeviceAllowed(f.row,native));assert.ok(f.storageDeviceAllowed(f.row,browser))});
+test('browser changes folder: native blocked, returning to original invalidates new folder',async()=>{const f=await fixture();await f.select(native,folderA);await f.select(browser,folderB);assert.equal(f.storageDeviceAllowed(f.row,native),false);await f.select(native,folderA);assert.equal(f.storageDeviceAllowed(f.row,browser),false)});
+test('role, missing device and malformed folder identity cannot enroll',async()=>{const f=await fixture();await assert.rejects(f.select(browser,folderA,{labRole:'customer'}),{status:403});await assert.rejects(f.select('',folderA),{status:400});await assert.rejects(f.select(browser,'Photos'),{status:400});assert.equal(f.row.primary_download_device_id,'old')});
+test('unknown devices and stale primary column cannot bypass paired membership',async()=>{const f=await fixture();await f.select(browser,folderA);const row=structuredClone(f.row);row.primary_download_device_id=native;assert.equal(f.storageDeviceAllowed(row,native),false);assert.equal(f.storageDeviceAllowed(row,''),false)});
+test('legacy devices continue to work until paired selection',async()=>{const f=await fixture();assert.ok(f.storageDeviceAllowed(f.row,'old'));assert.equal(f.storageDeviceAllowed(f.row,browser),false)});
+test('marker is stable in same folder, distinct in different folders, malformed never overwritten',async()=>{
+ const context={crypto,PB1395Marker:undefined};vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/r1395-storage-panel.js','utf8'),context);
+ const root=()=>{let value;return {async getFileHandle(name,options){if(value===undefined&&!options?.create)throw Object.assign(Error(),{name:'NotFoundError'});return {async createWritable(){return {async write(text){value=text},async close(){},async abort(){}}},async getFile(){return {size:value.length,async text(){return value}}}}},set value(x){value=x}}};
+ const a=root(),b=root(),id=await context.pb1395FolderId(a,true);assert.equal(await context.pb1395FolderId(a,true),id);assert.notEqual(await context.pb1395FolderId(b,true),id);a.value='{}';await assert.rejects(context.pb1395FolderId(a,true));
+});
+test('paired native status validates local marker, blocks stale folder, preserves root for display',async()=>{
+ const {installConfiguredStorage}=require('../apps/lab-desktop/configured-storage.cjs');let saved={id:'root',path:'/tmp/photos'},folderId=folderA;
+ const storage={account:()=> 'lab',checkAccount(){},key:()=> 'key',store:{get:()=>saved,set:(k,v)=>{saved=v}},fs:{readFile:async()=>JSON.stringify({id:folderId})},record:async()=>saved,status:async()=>({root:{name:'photos'},permission:'granted'}),descriptor:()=>({name:'photos'}),request:async()=>({ok:true,json:async()=>({paired:true,folderId:folderA,isThisDevice:true})})};
+ installConfiguredStorage(storage);assert.equal((await storage.status()).permission,'granted');folderId=folderB;assert.equal((await storage.status()).permission,'denied');await assert.rejects(storage.record(),{code:'storage_activation_required'});
+});
+test('browser selection enrolls the marker identity and persists the handle only after confirmation',async()=>{
+ const id=crypto.randomUUID();let saved=false,body;const root={name:'Photos',getFileHandle:async()=>({getFile:async()=>({size:80,text:async()=>JSON.stringify({version:1,id})})})};
+ const context={crypto,window:{showDirectoryPicker:async()=>root},Vs:async()=>true,Uc(){},Me:async(url,options)=>{body=JSON.parse(options.body);return {paired:true,isThisDevice:true,folderId:id}},Oy:async handle=>{assert.equal(handle,root);saved=true}};vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/r1395-storage-panel.js','utf8'),context);await context.pb1395Choose();assert.ok(saved);assert.equal(body.pairFolderId,id);assert.equal(body.kind,'browser');
+});
+test('cancelled picker and unsupported native version never enroll or replace a handle',async()=>{
+ let calls=0;const context={window:{showDirectoryPicker:async()=>{throw Object.assign(Error('cancel'),{name:'AbortError'})}},Me:async()=>{calls++},Oy:async()=>{calls++}};vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/r1395-storage-panel.js','utf8'),context);await assert.rejects(context.pb1395Choose(),{name:'AbortError'});context.window.pbNativeFolder={announce:async()=>({})};await assert.rejects(context.pb1395Choose(),/۱.۰.۲۷/);assert.equal(calls,0);
+});
+test('actual download-device GET reports both paired identities active',async()=>{
+ const api=await import('../dist/api/lab-storage-pair.js');const source=fs.readFileSync('dist/api/server.js','utf8'),start=source.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/download-device')"),end=source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/download-device')",start);assert.ok(start>=0&&end>start);
+ const row={ui_preferences:{storageFolderPair:{folderId:folderA,revision:'rev',name:'Photos',devices:{[browser]:{folderId:folderA},[native]:{folderId:folderA}}}},primary_download_device_id:native};
+ for(const id of [browser,native,'unknown']){let result;const run=vm.runInNewContext('(async()=>{'+source.slice(start,end)+'})',{req:{method:'GET'},url:{pathname:'/api/lab/download-device'},pool:{query:async()=>({rows:[row]})},labId:'lab',requestDeviceId:id,pairedTarget:api.pairedTarget,res:{},sendJson:(res,status,value)=>{result=value}});await run();assert.equal(result.isThisDevice,id!=='unknown')}
+});

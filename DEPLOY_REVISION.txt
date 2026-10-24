@@ -1,1 +1,1 @@
-2026-10-24-r1409-active-lab-chat-faster-entry
+2026-10-24-r1410-lab-chat-invite-status-birth-ui

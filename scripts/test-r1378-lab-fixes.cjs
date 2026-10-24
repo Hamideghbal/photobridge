@@ -48,9 +48,14 @@ test('legacy R1378 transform preserves R1411 and later invitation asset revision
  const sample=v=>'<script defer src="/photobridge-v904r98-invite-stable.js?v='+v+'"></script>';
  assert.equal(normalize(sample('r1411')),sample('r1411'));
  assert.equal(normalize(sample('r1420')),sample('r1420'));
+ for(const version of ['r1412','r1415','r1500'])assert.equal(normalize(sample(version)),sample(version));
  assert.equal(normalize(sample('r1377')),sample('r1378'));
  assert.equal(normalize(normalize(sample('r1411'))),sample('r1411'));
- assert.match(fs.readFileSync('dist/web/index.html','utf8'),/photobridge-v904r98-invite-stable\.js\?v=r1411/);
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const version=/photobridge-v904r98-invite-stable\.js\?v=r(\d+)(?=[&"'\s>])/.exec(html);
+ assert.ok(version,'invitation script must have a numbered cache revision');
+ assert.ok(Number(version[1])>=1411,'invitation cache must retain R1411 or a later revision');
+ assert.equal(normalize(html),html,'legacy transform must preserve the actual invitation revision');
 });
 test('finance pin removed, contextual help retained and updated; transform idempotent',()=>{const paths=['dist/web/assets/index-UIRefine-v655-r84.js','dist/web/index.html','dist/web/photobridge-v904r98-invite-stable.js'];const ui=fs.readFileSync(paths[0],'utf8');assert.ok(!ui.includes('className:"financeQuickPin '));assert.ok(ui.includes('className:"financeHelpButton"'));assert.ok(ui.includes('فاکتور سفارش چاپ و آلبوم هنگام «آماده تحویل»'));const before=paths.map(p=>fs.readFileSync(p,'utf8'));execFileSync(process.execPath,['scripts/enable-r1378-lab-fixes.mjs']);paths.forEach((p,i)=>assert.equal(fs.readFileSync(p,'utf8'),before[i]));});
 test('domain panel renders remove only for unpaid unreserved candidates and sends online removal endpoint',()=>{const s=fs.readFileSync('scripts/r1365-components.js','utf8');const a=s.indexOf('function PB1373DomainPanel(');let calls=0;const data={requests:[{domain:'remove.ir',status:'quoted'},{domain:'paid.ir',status:'paid_pending_registration',paymentStatus:'paid'},{domain:'pending.ir',status:'quoted',gatewayCheckoutId:'track'}],pricing:{prices:{ir:99000},url:'https://example.com'},domains:[]};const jsx=(type,props)=>({type,...props});const fn=vm.runInNewContext('('+s.slice(a).trim()+')',{x:{useState:v=>[calls++===0?data:v,()=>{}],useEffect(){}},e:{jsx,jsxs:jsx},location:{search:''},URLSearchParams,Me(){},PB1370InstallerVersion:String});const tree=fn({}),found=[];function visit(x){if(Array.isArray(x))return x.forEach(visit);if(x&&typeof x==='object'){if(x['aria-label']?.startsWith('حذف درخواست'))found.push(x['aria-label']);visit(x.children)}}visit(tree);assert.deepEqual(found,['حذف درخواست remove.ir']);assert.ok(s.includes("kind==='remove'?'/zibal/remove'"));});

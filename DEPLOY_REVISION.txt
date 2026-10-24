@@ -1,1 +1,1 @@
-2026-10-24-r1408-fix-chat-chevron-test
+2026-10-24-r1410-lab-chat-invite-status-birth-ui

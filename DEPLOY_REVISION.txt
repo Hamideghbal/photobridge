@@ -1,1 +1,1 @@
-2026-10-25-r1416-invitation-build-guard-compat
+2026-10-25-r1417-invitation-alignment-year-select

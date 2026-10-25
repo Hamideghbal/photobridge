@@ -1,1 +1,1 @@
-2026-10-25-r1424-invoice-toolbar-build-test
+2026-10-25-r1425-finance-second-row

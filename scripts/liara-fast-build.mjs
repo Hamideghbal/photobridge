@@ -416,6 +416,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1421-finance-toolbar.cjs"],
 await deployStep("./enable-r1423-finance-bars.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1423-finance-bars.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1425-finance-second-row.mjs");
+await deployStep("./enable-r1427-invoice-customer.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1427-invoice-customer.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

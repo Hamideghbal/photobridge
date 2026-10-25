@@ -7,7 +7,7 @@ const child=page.frames().find(f=>f.parentFrame()===page.mainFrame());
 for(const width of [1920,1366,1024,821]){
  await page.setViewportSize({width,height:900});
  const geometry=await page.evaluate(()=>{const h=document.querySelector('#pb1126DesktopHeader'),m=h.querySelector('.pb1127PrintModes').getBoundingClientRect(),u=h.querySelector('.pb1127PrintUtilities').getBoundingClientRect();return {m:m.toJSON(),u:u.toJSON(),identity:getComputedStyle(h.querySelector('.photographerHeaderIdentity')).display,underline:getComputedStyle(h.querySelector('.photographerPrintPhotoTab'),'::after').height}});
- assert.equal(geometry.identity,'none');assert(geometry.m.x>geometry.u.x+geometry.u.width-1,'mode tabs sit right of utilities');assert(geometry.m.x+geometry.m.width<=width&&geometry.u.x>=0,'controls stay in viewport');assert.equal(geometry.underline,'3px');
+ assert.notEqual(geometry.identity,'none');assert(geometry.m.x>geometry.u.x+geometry.u.width-1,'mode tabs sit right of utilities');assert(geometry.m.x+geometry.m.width<=width&&geometry.u.x>=0,'controls stay in viewport');assert.equal(geometry.underline,'3px');
  await page.locator('.pb1127PrintModes .photographerPrintAlbumTab').click();
  await page.waitForFunction(()=>document.querySelector('.pb1127PrintModes .photographerPrintAlbumTab.active'));
  await page.locator('.pb1127PrintModes .photographerPrintPhotoTab').click();
@@ -19,8 +19,8 @@ assert((await child.evaluate(()=>clicked)).includes('تعرفه‌های لاب�
 await child.evaluate(()=>{const b=document.querySelector('.pb1458LabPrices'),next=b.cloneNode(true);next.onclick=()=>clicked.push('fresh-prices');b.replaceWith(next)});
 await page.locator('.pb1127PrintUtilities .pb1458LabPrices').click();assert((await child.evaluate(()=>clicked)).includes('fresh-prices'));
 assert.equal(await child.locator('.simplePrintPilotHeaderActions .pb1178LabPrices').isVisible(),false);
-const center=await child.locator('.simplePrintPilotPrimaryAdd').evaluate(el=>{const r=el.getBoundingClientRect(),p=el.parentElement.getBoundingClientRect();return Math.abs((r.left+r.right)-(p.left+p.right))/2});assert(center<2,'size/file action centered');
+const right=await child.locator('.simplePrintPilotPrimaryAdd').evaluate(el=>{const r=el.getBoundingClientRect(),p=el.parentElement.getBoundingClientRect();return Math.abs(r.right-p.right)});assert(right<2,'R1459 size/file action at right');
 await page.setViewportSize({width:1366,height:900});await page.screenshot({path:'/tmp/r1458-print-toolbar.png'});
 await page.locator('[data-pb1126-kind=gallery]').click();await page.locator('#pb1126DesktopHeader>.photographerHeaderIdentity').waitFor({state:'visible'});
 await page.setViewportSize({width:390,height:800});await page.goto('https://panel.test/photographer/orders/flow?workspace=print');assert.equal(await page.locator('.pb1458LabPrices').isVisible(),false);assert(await page.locator('.pb1178LabPrices').isVisible(),'mobile keeps original tariff action');
-assert.equal(errors.length,0);console.log('PASS right aligned underlined print modes at four desktop widths, tariffs and live node replacement, centered intake, gallery identity and unchanged mobile');}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
+assert.equal(errors.length,0);console.log('PASS right aligned underlined print modes at four desktop widths, tariffs and live node replacement, right-aligned intake, restored identity and unchanged mobile');}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

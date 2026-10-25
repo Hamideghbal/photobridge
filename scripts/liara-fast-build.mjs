@@ -438,6 +438,8 @@ await deployStep("./enable-r1437-finance-details.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1437-finance-details.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1438-photographer-controls.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1438-photographer-controls.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1439-finance-toolbar-parity.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1439-finance-toolbar-parity.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

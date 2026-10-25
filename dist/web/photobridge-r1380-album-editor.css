@@ -12,3 +12,10 @@
 
 /* R1385: wrap color tiles instead of a horizontal scroller. */
 .pb1380AlbumEditor .pb1381CatalogRow{flex-wrap:wrap;align-items:flex-start}.pb1380AlbumEditor .pb1381InlineColors{display:flex;flex-wrap:wrap;overflow:visible;flex:1 1 220px;min-width:0;max-width:100%;align-items:flex-start}.pb1380AlbumEditor .pb1383ColorTile{max-width:100%;box-sizing:border-box}.pb1380AlbumEditor .pb1383ColorTools{flex-wrap:wrap;max-width:100%;box-sizing:border-box}@media(max-width:650px){.pb1380AlbumEditor .pb1381InlineColors{flex-basis:100%}}
+
+/* PB1434 album guidance */
+.pb1434PhotoHintText{position:fixed;z-index:2147483500;width:260px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:10px 12px;border:1px solid #526078;border-radius:9px;background:#243746;color:#fff;font:500 11px/1.9 Vazirmatn,Tahoma,sans-serif;direction:rtl;text-align:right;white-space:normal;pointer-events:none;box-shadow:0 5px 16px #17203324}
+.pb1380AlbumEditor .pb1434BindingRequired{display:grid;gap:10px;padding:18px;border:1px solid #ccdbea;border-radius:12px;background:#f5f9ff;color:#344054;line-height:1.9}
+.pb1380AlbumEditor .pb1434BindingRequired h3{margin:0;font-size:14px}
+.pb1380AlbumEditor .pb1434BindingRequired p{margin:0;font-size:12px}
+.pb1380AlbumEditor .pb1434BindingRequired a{justify-self:start;color:#315f9d;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}

@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),{pathToFileURL}=require('node:url'),{execFileSync}=require('node:child_process');
 const source=fs.readFileSync('scripts/r1380-album-editor.js','utf8'),jsx=(type,props)=>({nodeType:type,...props});
-const helpers=()=>vm.runInNewContext(source+';({PB1380Models,PB1380Payload,PB1381CatalogRow,PB1383ModelPhoto,PB1383ColorTile})',{e:{jsx,jsxs:jsx},x:{useState:()=>['',()=>{}]},confirm:()=>true});
+const helpers=()=>vm.runInNewContext(source+';({PB1380Models,PB1380Payload,PB1381CatalogRow,PB1383ModelPhoto,PB1383ColorTile})',{e:{jsx,jsxs:jsx},x:{useState:()=>['',()=>{}],useRef:()=>({current:null}),useEffect(){}},confirm:()=>true});
 const png='data:image/png;base64,iVBORw0KGgo=',jpeg='data:image/jpeg;base64,/9j/';
 const api=()=>import(pathToFileURL(require('node:path').resolve('dist/api/album-color-images.js')));
 test('sanitizer validates raster signatures, bounds and isolated model maps',async()=>{const {sanitizeAlbumColorImages:s}=await api();const result=s({cover:{model:{'#ff0000':png}},package:{}});assert.equal(result.cover.model['#FF0000'],png);assert.equal(Object.getPrototypeOf(result.cover),null);for(const bad of [{cover:[]},{package:'bad'},{cover:{m:{'#000000':'data:image/svg+xml;base64,PHN2Zz4='}}},{cover:{m:{'#000000':'data:image/png;base64,YmFk'}}},{cover:{m:{'#000000':png+'A'.repeat(200000)}}}])assert.throws(()=>s(bad),/album_color_images/);});

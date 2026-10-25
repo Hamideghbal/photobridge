@@ -1,1 +1,1 @@
-2026-10-25-r1445-lab-wallet-pending-invites
+2026-10-25-r1446-sms-rate-prereg-archive-subscription

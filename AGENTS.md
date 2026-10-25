@@ -3,14 +3,14 @@
 These instructions apply to Codex tasks in this repository.
 
 ## Default workflow
-- Work on a dedicated branch; do not make direct code changes on `main`.
+- Work on a dedicated branch; do not make direct code changes on `aaa-liara-release`.
 - Keep changes narrowly scoped to the user's request.
 - Run the relevant build and tests before publishing changes.
 - If build/tests pass, commit and push the branch.
-- Create a Pull Request targeting `main`.
+- Create a Pull Request targeting `aaa-liara-release`.
 - For routine, low-risk changes (UI/CSS/JS text/layout/routing/cache/versioning and similarly bounded fixes), merge the PR automatically after successful tests.
-- After merge, verify that the merged commit is present on `main`.
-- Liara Auto Deploy is connected to `main`; do not run a manual production deploy unless explicitly requested.
+- After merge, verify that the merged commit is present on `aaa-liara-release`.
+- Liara Auto Deploy is connected to `aaa-liara-release`; do not run a manual production deploy unless explicitly requested.
 
 ## Liara deploy revision
 - Any task that changes production-delivered files or runtime behavior must also update `DEPLOY_REVISION.txt` in the same branch before the final commit. This includes changes under `dist/`, `apps/web/public/`, production `scripts/`, `migrations/`, `Dockerfile`, or other files copied into the production image.
@@ -19,8 +19,8 @@ These instructions apply to Codex tasks in this repository.
 - Do not bump `DEPLOY_REVISION.txt` for documentation-only changes that cannot affect the deployed application.
 
 ## Merge conflicts
-- If the branch is behind or conflicts with `main`, update the branch from current `main`, resolve conflicts while preserving current production behavior and the requested fix, then rerun build/tests before merging.
-- Never drop newer `main` changes just to make the branch mergeable.
+- If the branch is behind or conflicts with `aaa-liara-release`, update the branch from current `aaa-liara-release`, resolve conflicts while preserving current production behavior and the requested fix, then rerun build/tests before merging.
+- Never drop newer `aaa-liara-release` changes just to make the branch mergeable.
 
 ## Stop conditions
 Do not auto-merge. Stop and report clearly if any of these apply:
@@ -43,4 +43,4 @@ At the end of a successful task, report:
 - build/test result;
 - PR number;
 - merge commit SHA;
-- whether Auto Deploy should now have been triggered from `main`.
+- whether Auto Deploy should now have been triggered from `aaa-liara-release`.

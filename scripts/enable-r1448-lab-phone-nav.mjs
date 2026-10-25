@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const htmlPath='dist/web/index.html';
+let html=fs.readFileSync(htmlPath,'utf8');
+const css='<link rel="stylesheet" href="/photobridge-r1448-lab-phone-nav.css?v=r1448">';
+const js='<script defer src="/photobridge-r1448-lab-phone-nav.js?v=r1448"></script>';
+if(!html.includes(css))html=html.replace('</head>',css+'\n'+js+'\n</head>');
+else if(!html.includes(js))throw new Error('R1448 JS asset missing');
+fs.writeFileSync(htmlPath,html);
+const mobile=fs.readFileSync('dist/web/photobridge-r1448-lab-phone-nav.js','utf8');
+const styles=fs.readFileSync('dist/web/photobridge-r1448-lab-phone-nav.css','utf8');
+if(!mobile.includes('pb1448LabPhoneMode')||!styles.includes('html.pb1448LabPhoneMode'))throw Error('R1448 gated phone assets missing');

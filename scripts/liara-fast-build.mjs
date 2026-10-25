@@ -467,6 +467,11 @@ console.log("[PhotoBridge Docker build] OK R1354 patch-on-import regression test
 console.log("[PhotoBridge Docker build] START R1351 lab UI wire-byte integrity tests");
 runR1314(process.execPath, ["--test", "scripts/test-r1351-lab-ui-exact-byte-serving.cjs"], { stdio: "inherit" });
 console.log("[PhotoBridge Docker build] OK R1351 lab UI wire-byte integrity tests");
+// Phone-only interface ships AFTER the Windows/Lab UI snapshot and byte-integrity checks.
+// This ensures existing Electron/Windows layout and UI packages remain unchanged.
+await deployStep("./enable-r1448-lab-phone-nav.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1448-lab-phone-nav.cjs"], { stdio: "inherit" });
+
 
 
 

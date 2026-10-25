@@ -434,6 +434,8 @@ await deployStep("./enable-r1435-finance-row-actions.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1435-finance-row-actions.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1436-settings-invites.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1436-settings-invites.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1437-finance-details.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1437-finance-details.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

@@ -422,6 +422,8 @@ await deployStep("./enable-r1428-finance-header.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1428-finance-header.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1429-header-order.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1429-header-order.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1430-finance-alignment.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1430-finance-alignment.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

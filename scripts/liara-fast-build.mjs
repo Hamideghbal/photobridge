@@ -448,6 +448,8 @@ await deployStep("./enable-r1442-store-finance.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1442-store-finance.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1443-lab-layout-polish.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1443-lab-layout-polish.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1444-order-labels-settlement.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1444-order-labels-settlement.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

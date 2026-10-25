@@ -1,0 +1,46 @@
+.pb1423OtherInvoiceToolbar{display:contents}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace){padding-top:0!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea:has(.financeWorkspace)::-webkit-scrollbar-track{margin-top:52px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea>.pb1419FinancePage,
+ html body #root .labRoleWorkspace .labRolePageScrollArea .pb1419FinancePage>.financeWorkspace{width:100%!important;max-width:none!important;margin-inline:0!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar){
+  --pb1423-gutter:clamp(12px,1.6vw,24px);
+  position:sticky!important;top:0!important;z-index:80!important;display:flex!important;
+  flex-flow:row nowrap!important;align-items:center!important;justify-content:flex-start!important;
+  height:52px!important;min-height:52px!important;max-height:52px!important;
+  width:calc(100% + 2 * var(--pb1423-gutter))!important;max-width:none!important;
+  margin:0 calc(-1 * var(--pb1423-gutter)) 10px!important;padding:8px 12px!important;
+  gap:6px!important;box-sizing:border-box!important;align-self:start!important;
+  background:#f8faff!important;border:0!important;border-bottom:1px solid #dce5f0!important;
+  border-radius:0!important;box-shadow:0 4px 8px -7px #52607855!important;overflow:visible!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .invoiceTableCard:has(.pb1423InvoiceToolbar){
+  padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace:has(.pb1423InvoiceToolbar)>.financeSummary{display:none!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar>:is(.invoiceListToolbar,.invoiceRangeToolbar){display:contents!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .financeInvoiceSearch{
+  flex:1 1 230px!important;width:auto!important;min-width:140px!important;max-width:320px!important;margin:0!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .financeInvoiceSearch input{
+  width:100%!important;height:34px!important;min-height:34px!important;padding:5px 9px!important;font-size:11px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .invoiceRangeToolbar>label{
+  display:block!important;flex:0 0 116px!important;width:116px!important;min-width:0!important;height:34px!important;margin:0!important;padding:0!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .persianDateField{width:100%!important;min-width:0!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .persianDateTrigger{
+  width:100%!important;height:32px!important;min-height:32px!important;padding:5px 8px!important;font-size:10.5px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .invoiceRangeToolbar>button{
+  order:0!important;flex:0 0 auto!important;min-width:48px!important;width:auto!important;height:32px!important;min-height:32px!important;margin:0!important;padding:4px 9px!important;white-space:nowrap!important;font-size:10.5px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>select{height:34px!important;min-height:34px!important;flex:0 1 220px!important;min-width:150px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>button{height:32px!important;min-height:32px!important;padding:4px 9px!important;white-space:nowrap!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>.pb1177PaymentMetrics{
+  flex:1 1 260px!important;min-width:0!important;height:34px!important;padding:2px 3px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics small{font-size:8px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics b{font-size:10px!important}
+}

@@ -67,5 +67,6 @@ test('CSS cache and JavaScript bundle parse after patch',()=>{
   assert(html.includes('labCorrections=r1446'));
   assert(ui.includes('/* PB1446 lab wallet and registration corrections */'));
   new vm.Script(ui.replace(/^import[^;]+;/gm,''));
-  new vm.Script(server.replace(/^import[^;]+;/gm,''));
+  // The API server is an ES module (top-level module syntax). Its syntax is already
+  // verified separately by `node --check dist/api/server.js` in the release workflow.
 });

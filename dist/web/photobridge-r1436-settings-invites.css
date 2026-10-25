@@ -1,0 +1,22 @@
+.pb1436LabInvites{direction:rtl;display:block;min-width:0;width:100%;position:relative}
+.pb1436InviteControls{position:sticky;top:0;z-index:35;background:#fff;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 5px 14px #315efb0a;display:grid;gap:8px}
+.pb1436InviteLink{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.pb1436InviteSend{display:grid;grid-template-columns:minmax(150px,1fr) minmax(170px,1fr) auto;gap:8px;align-items:center}
+.pb1436InviteControls input{box-sizing:border-box;width:100%;min-width:0;height:36px;padding:7px 10px;border:1px solid #d0d5dd;border-radius:7px;font:inherit;font-size:12px;background:#fff;color:#344054}
+.pb1436InviteControls button,.pb1436InviteTable button{min-height:34px;padding:5px 12px;white-space:nowrap;font:inherit;font-size:11px;border:1px solid #cbd5e1;border-radius:7px}
+.pb1436PreviousDebt{color:#854d0e}
+.pb1436InviteTableWrap{overflow-x:auto;margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+.pb1436InviteTable{border-collapse:collapse;width:100%;min-width:700px;font-size:12px}
+.pb1436InviteTable th,.pb1436InviteTable td{padding:12px 10px;border-bottom:1px solid #e2e8f0;text-align:center;vertical-align:middle}
+.pb1436InviteTable th{background:#f8fafc;color:#475569;font-weight:800}.pb1436InviteTable td:first-child{text-align:right}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:first-child{direction:rtl!important;text-align:right!important;align-items:flex-start!important;justify-content:flex-start!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:first-child>*{text-align:right!important}
+html body .pb1436CorrectionBack{position:fixed!important;inset:0!important;z-index:2147483000!important;background:#10182888!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:20px!important}
+html body .pb1436CorrectionBack .pb1436CorrectionDocument{display:block!important;width:min(680px,100%)!important;max-height:90dvh!important;overflow:auto!important;padding:20px!important;box-sizing:border-box!important;background:#fff!important;color:#1e293b!important;direction:rtl!important;border-radius:14px!important}
+html body .pb1436CorrectionDocument .pb1435CorrectionDetails{display:grid!important;grid-template-columns:130px minmax(0,1fr)!important;gap:14px!important;padding:14px 0!important}
+html body .pb1436CorrectionDocument dd{margin:0!important;overflow-wrap:anywhere!important}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinUnifiedPriceGrid{display:grid!important;grid-template-columns:minmax(140px,1.2fr) repeat(5,minmax(95px,1fr))!important;min-width:720px!important;align-items:center!important}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinUnifiedPriceGrid>*{text-align:center!important;min-width:0!important}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinUnifiedPriceGrid input{width:100%!important;box-sizing:border-box!important;text-align:center!important}
+@media(max-width:600px){.pb1436InviteSend{grid-template-columns:minmax(0,1fr) auto}.pb1436InviteDebt{grid-column:1/-1;grid-row:2}.pb1436InviteControls{padding:10px}.pb1436InviteControls input{font-size:11px}html body .pb1436CorrectionDocument .pb1435CorrectionDetails{grid-template-columns:100px minmax(0,1fr)!important}}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:first-child:not(.pb1431ReceiptActions){text-align:right!important;direction:rtl!important;align-items:flex-start!important;justify-content:flex-start!important}

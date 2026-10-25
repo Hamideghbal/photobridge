@@ -12,6 +12,7 @@ if(!ui.includes('/* PB1423 uniform finance control rows */')){
  ui=ui.slice(0,a)+part+ui.slice(b)+'\n/* PB1423 uniform finance control rows */\n';fs.writeFileSync(file,ui);
 }
 let html=fs.readFileSync('dist/web/index.html','utf8');
-if(!html.includes('/photobridge-r1423-finance-bars.css'))html=once(html,'</head>','<link rel="stylesheet" href="/photobridge-r1423-finance-bars.css?v=r1423"></head>');
+if(!html.includes('/photobridge-r1423-finance-bars.css'))html=once(html,'</head>','<link rel="stylesheet" href="/photobridge-r1423-finance-bars.css?v=r1424"></head>');
 html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,link=>link.includes('&invoiceToolbar=')?link:link+'&invoiceToolbar=r1423');
+html=html.replace(/(photobridge-r1423-finance-bars\\.css\\?v=)r\\d+/g,'$1r1424');
 fs.writeFileSync('dist/web/index.html',html);

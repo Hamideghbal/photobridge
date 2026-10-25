@@ -460,6 +460,8 @@ await deployStep("./enable-r1450-download-workflow.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1450-download-workflow.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1451-retention-storage-archive.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1451-retention-storage-archive.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1452-retention-archive-ui.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1452-retention-archive-ui.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

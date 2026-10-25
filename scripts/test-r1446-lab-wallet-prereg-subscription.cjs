@@ -35,9 +35,17 @@ test('pre-registration tag is in identity column, only for pending memberships',
 
 test('pending detection normalizes SMS numbers, accounts for expired invitations but excludes accepted ones',()=>{
   assert(server.includes('/* PB1446 pending lab invitation detection */'));
-  const a=server.indexOf('AS "registrationPending"');
-  assert(a>0);
-  const fragment=server.slice(a-1100,a);
+  // This alias also appears in the delegated-customer bootstrap. Inspect only
+  // the dashboard's own photographer-membership SQL; a global indexOf() silently
+  // targeted that earlier query and produced a false failure during Liara build.
+  const dashboardStart=server.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/dashboard')");
+  assert(dashboardStart>0);
+  const queryStart=server.indexOf('pool.query(`SELECT u.id,COALESCE(pp.studio_name,u.name)',dashboardStart);
+  assert(queryStart>dashboardStart);
+  const queryEnd=server.indexOf('ORDER BY m.created_at DESC',queryStart);
+  assert(queryEnd>queryStart);
+  const fragment=server.slice(queryStart,queryEnd);
+  assert(fragment.includes('AS "registrationPending"'));
   assert(fragment.includes('pending_invite.uses=0'));
   assert(fragment.includes('accepted_invite.uses>0'));
   assert(fragment.includes("regexp_replace(COALESCE(u.mobile,''),'[^0-9]','','g')"));

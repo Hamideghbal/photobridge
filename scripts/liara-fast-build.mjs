@@ -466,6 +466,8 @@ await deployStep("./enable-r1453-browser-folder-help.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1453-browser-folder-help.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1454-admin-album-samples.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1454-admin-album-samples.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1455-visible-gallery-recovery.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1455-visible-gallery-recovery.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

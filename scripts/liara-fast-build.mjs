@@ -430,6 +430,8 @@ await deployStep("./enable-r1433-header-settling.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1433-header-settling.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1434-album-guidance.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1434-album-guidance.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1435-finance-row-actions.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1435-finance-row-actions.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

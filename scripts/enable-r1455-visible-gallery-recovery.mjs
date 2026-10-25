@@ -1,0 +1,11 @@
+import fs from 'node:fs';import {execFileSync} from 'node:child_process';
+const file='dist/web/assets/index-UIRefine-v655-r84.js';let ui=fs.readFileSync(file,'utf8');
+const once=(a,b)=>{if(ui.split(a).length!==2)throw Error('R1455 anchor '+a.slice(0,110));ui=ui.replace(a,b)};
+if(!ui.includes('/* PB1455 gallery recovery */')){
+ once("children:open?'بستن نمونه‌های فوتوبریج':'انتخاب از نمونه‌های فوتوبریج'", "children:open?'بستن گالری فوتوبریج':'انتخاب از گالری فوتوبریج'");
+ once("e.jsx(PB1454SampleChooser,{disabled:loading||photos.length>=12", "e.jsx(PB1455GalleryRecovery,{photos,title}),e.jsx(PB1454SampleChooser,{disabled:loading||photos.length>=12");
+ once("className:'albumSettingsWorkspace pb1380AlbumEditor',children:[", "className:'albumSettingsWorkspace pb1380AlbumEditor',children:[e.jsx(PB1455GalleryRecovery,{}),");
+ ui+='\n/* PB1455 gallery recovery */\n'+fs.readFileSync('scripts/r1455-album-gallery-recovery.js','utf8');fs.writeFileSync(file,ui);
+}
+let html=fs.readFileSync('dist/web/index.html','utf8');html=html.replaceAll('downloadRepair=r1454','downloadRepair=r1455');if(!html.includes('pb1455RecoveryStyles'))html=html.replace('</head>',`<style id="pb1455RecoveryStyles">.pb1455RecoveryTools{font:inherit;margin:10px 0}.pb1455RecoveryTools>button{font:inherit;font-size:12px;color:#315d8e;background:#edf5ff;border:1px solid #c9ddf4;border-radius:9px;padding:9px 12px;cursor:pointer}.pb1455RecoveryTools>p{font-size:12px;line-height:1.9}.pb1455RecoveryChoices{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-height:50vh;overflow:auto;padding:8px}.pb1455RecoveryChoices label{display:grid;grid-template-columns:auto 1fr;gap:8px;border:1px solid #dce5f0;border-radius:10px;padding:10px;font-size:12px}.pb1455RecoveryChoices img{width:100%;height:110px;object-fit:contain;grid-column:1/-1}.pb1455RecoveryChoices select{grid-column:1/-1;font:inherit;font-size:12px;padding:6px;border:1px solid #dce5f0;border-radius:7px}.pb1455RecoveryChoices input[type=checkbox]{width:18px;height:18px}.pb1455RecoveryTools [role=alert]{color:#a23226;white-space:pre-wrap}</style></head>`);fs.writeFileSync('dist/web/index.html',html);
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});console.log('[R1455] Explicit shared-gallery selection and admin-only lab photo copy prepared.');

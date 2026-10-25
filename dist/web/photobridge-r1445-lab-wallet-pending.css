@@ -1,0 +1,29 @@
+/* R1445: balance and online top-up share the same first row; all wallet history uses full width. */
+html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab{min-width:0!important;width:100%!important;max-width:none!important}
+html body #root .labRoleWorkspace .serviceWalletLab>.pb1445WalletBalanceCard{display:flex!important;flex-direction:column!important;justify-content:center!important;min-height:0!important;box-sizing:border-box!important}
+html body #root .labRoleWorkspace .pb1445WalletBalanceCard .walletBalanceHero{margin:0!important;min-height:0!important;width:100%!important;display:block!important}
+html body #root .labRoleWorkspace .pb1445WalletBalanceCard .walletBalanceHero>div{width:100%!important;min-width:0!important}
+html body #root .labRoleWorkspace .serviceWalletLab>.walletHistoryCard{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+html body #root .labRoleWorkspace .serviceWalletLab>.walletHistoryCard>.tableScroll{width:100%!important;max-width:100%!important}
+html body #root .labRoleWorkspace .labPhotographerCard>.pb1443PhotographerStatus{justify-self:start!important;min-width:0!important}
+html body #root .labRoleWorkspace .labPhotographerCard .pb1443Preregistered{font-weight:800!important;white-space:normal!important;line-height:1.5!important;font-size:10px!important}
+html body #root .labRoleWorkspace .labPhotographerCard .pb1443PendingInvite{min-width:145px!important;max-width:170px!important}
+html body #root .labRoleWorkspace .labPhotographerCard .pb1443PendingInvite button{white-space:normal!important;line-height:1.4!important;min-height:30px!important;padding:5px 8px!important}
+html body #root .labRoleWorkspace .labPhotographerCard .labPhotographerActions button:disabled{opacity:.55!important;cursor:not-allowed!important}
+@media(min-width:1000px){
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:stretch!important;grid-auto-flow:row!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.pb1445WalletBalanceCard{grid-column:1!important;grid-row:1!important;margin:0!important;height:100%!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.walletOnlineTopup{grid-column:2!important;grid-row:1!important;margin:0!important;height:100%!important;box-sizing:border-box!important;align-self:stretch!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.walletHistoryCard{grid-column:1/-1!important;grid-row:auto!important;margin:0!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.alert{grid-column:1/-1!important;grid-row:1!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab:has(>.alert)>.pb1445WalletBalanceCard,
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab:has(>.alert)>.walletOnlineTopup{grid-row:2!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard{grid-template-columns:minmax(180px,1fr) 145px 210px 145px minmax(310px,auto)!important;min-width:1070px!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard>.labPhotographerActions{width:310px!important;min-width:0!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+}
+@media(max-width:999px){
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.pb1445WalletBalanceCard,
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.walletOnlineTopup,
+  html body #root .labRoleWorkspace .labRolePageScrollArea .serviceWalletLab>.walletHistoryCard{grid-column:1!important;grid-row:auto!important;width:100%!important;max-width:none!important;height:auto!important;margin:0!important}
+}

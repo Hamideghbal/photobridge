@@ -36,5 +36,5 @@ if(!css.includes('/* PB1425 finance second row */'))fs.appendFileSync(cssFile,`
 }
 `);
 let html=fs.readFileSync('dist/web/index.html','utf8');
-html=html.replace(/(photobridge-r1372-third-header\\.(?:js|css))(?:\\?[^"'<>\\s]*)?/g,'$1?v=r1425');
+html=html.replace(/(photobridge-r1372-third-header\.(?:js|css))(?:\?[^"'<>\s]*)?/g,'$1?v=r1425');
 fs.writeFileSync('dist/web/index.html',html);

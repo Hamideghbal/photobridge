@@ -44,3 +44,8 @@
  html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics small{font-size:8px!important}
  html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics b{font-size:10px!important}
 }
+
+/* Older build stages append these duplicate invoice controls. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar :is(.pb1201InvoiceCounts,.pb1201InvoiceToday){display:none!important}
+}

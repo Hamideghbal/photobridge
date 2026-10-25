@@ -1,0 +1,11 @@
+@media(min-width:821px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar>.pb1126Secondary.pb1127PrintRow{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;align-items:center!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintModes{grid-column:1;grid-row:1;justify-self:start;max-width:100%}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintUtilities{grid-column:3;grid-row:1;justify-self:end;max-width:100%}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1459LabContext{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;min-width:0;width:clamp(100px,20vw,260px);max-width:100%;font:800 12px/1.5 Vazirmatn,Tahoma,sans-serif;color:#344054}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1459LabContext strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%}
+ html body #pb1126ChromeHost #pb1126DesktopHeader .pb1459LabSelect{font:inherit;color:inherit;min-width:0;max-width:100%;width:100%;height:32px;padding:3px 7px;background:#fff;border:1px solid #dce4f2;border-radius:8px;direction:rtl;text-align:center;text-overflow:ellipsis}
+ html body #root .simplePrintPilotHeaderActions{justify-content:flex-start!important;width:100%!important;direction:rtl!important}
+ html body #root .simplePrintPilotHeaderActions>.simplePrintPilotPrimaryAdd{margin-inline:0!important;order:-1!important}
+ html body #root .simplePrintPilotHeaderActions>:is(.simplePrintPilotLabStatic,.simplePrintPilotLabSelect){display:none!important}
+}

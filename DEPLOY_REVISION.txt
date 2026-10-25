@@ -1,1 +1,1 @@
-2026-10-25-r1439-finance-toolbar-parity
+2026-10-25-r1440-storage-layout

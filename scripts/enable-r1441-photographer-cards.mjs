@@ -1,0 +1,14 @@
+import fs from 'node:fs';const file='dist/web/assets/index-UIRefine-v655-r84.js';let ui=fs.readFileSync(file,'utf8');
+if(!ui.includes('/* PB1441 compact photographer cards */')){
+ const start=ui.indexOf('function Kj('),end=ui.indexOf('function wb(',start);if(start<0||end<start)throw Error('R1441 photographer component');let part=ui.slice(start,end);
+ const old='e.jsx(wn,{value:h.settlement_mode||"ledger",options:[{value:"ledger",label:"حساب دفتری"},{value:"prepaid",label:"قبل از چاپ"}],onChange:async y=>{await Me(`/api/lab/customers/${h.id}`,{method:"PATCH",body:JSON.stringify({settlementMode:y})}),o()}})';
+ if(part.split(old).length!==2)throw Error('R1441 settlement control');part=part.replace(old,'e.jsx(PB1441SettlementChoice,{value:h.settlement_mode||"ledger",onChange:async y=>{await Me(`/api/lab/customers/${h.id}`,{method:"PATCH",body:JSON.stringify({settlementMode:y})});await o()}})');ui=ui.slice(0,start)+part+ui.slice(end);
+ const once=(a,b)=>{if(ui.split(a).length!==2)throw Error('R1441 finance anchor '+a.slice(0,80));ui=ui.replace(a,b)};
+ once('onClick:()=>T(-1),children:"›"','onClick:()=>T(-1),"aria-label":"ماه قبل",children:"‹"');
+ once('onClick:()=>T(1),children:"‹"','onClick:()=>T(1),"aria-label":"ماه بعد",children:"›"');
+ const rowStart=ui.indexOf('Pt.map((Je,Ot)=>e.jsxs("tr",'),rowEnd=ui.indexOf(',t==="lab"&&pb1418DateOrder===',rowStart);if(rowStart<0||rowEnd<rowStart)throw Error('R1441 inline statement rows');
+ let rows=ui.slice(rowStart,rowEnd);rows=rows.replace('Pt.map((Je,Ot)=>e.jsxs("tr",','Pt.flatMap((Je,Ot)=>[e.jsxs("tr",');if(!rows.endsWith(']},Je.id))'))throw Error('R1441 row end');rows=rows.slice(0,-10)+']},Je.id),t==="lab"&&_pb1177StmtMode==="detailed"&&Je.reference_type==="invoice"?e.jsx(PB1441StatementDetail,{row:Je,invoices:r},Je.id+"-items"):null])';ui=ui.slice(0,rowStart)+rows+ui.slice(rowEnd);
+ const oldStart=ui.indexOf(',t==="lab"&&_pb1177StmtMode==="detailed"&&e.jsxs("section",{className:"card pb1177LedgerDetails"'),oldEnd=ui.indexOf(',t==="lab"&&e.jsxs("section",{className:"card customerDiscountSettings"',oldStart);if(oldStart<0||oldEnd<oldStart)throw Error('R1441 old detailed section');ui=ui.slice(0,oldStart)+ui.slice(oldEnd);
+ ui+='\n/* PB1441 compact photographer cards */\n'+fs.readFileSync('scripts/r1441-settlement-choice.js','utf8')+'\n'+fs.readFileSync('scripts/r1441-statement-detail.js','utf8');fs.writeFileSync(file,ui);
+}
+let html=fs.readFileSync('dist/web/index.html','utf8');if(!html.includes('photobridge-r1441-photographer-cards.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1441-photographer-cards.css?v=r1441" /></head>');html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&photographerCards=')?url:url+'&photographerCards=r1441');fs.writeFileSync('dist/web/index.html',html);

@@ -420,6 +420,8 @@ await deployStep("./enable-r1427-invoice-customer.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1427-invoice-customer.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1428-finance-header.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1428-finance-header.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1429-header-order.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1429-header-order.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

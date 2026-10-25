@@ -442,6 +442,8 @@ await deployStep("./enable-r1439-finance-toolbar-parity.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1439-finance-toolbar-parity.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1440-storage-layout.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1440-storage-layout.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1441-photographer-cards.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1441-photographer-cards.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

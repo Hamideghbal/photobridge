@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const file='dist/web/assets/index-UIRefine-v655-r84.js';let ui=fs.readFileSync(file,'utf8');
+if(!ui.includes('/* PB1440 open storage settings */')){
+ const a=ui.indexOf('function PB1395StoragePanel('),b=ui.indexOf('\nasync function pb1395GuardRoot',a);if(a<0||b<a)throw Error('R1440 storage panel');let part=ui.slice(a,b);
+ const old="root&&e.jsx('button',{type:'button',disabled:busy,onClick:async()=>{await Vs(root);await refresh()},children:'تأیید دسترسی'}),e.jsx('button',{type:'button',disabled:busy,onClick:refresh,children:'بازخوانی'})";if(part.split(old).length!==2)throw Error('R1440 storage buttons');part=part.replace(','+old,'');
+ part=part.replace('پوشه در دسترس نیست؛ دسترسی را تأیید یا مسیر را دوباره انتخاب کنید.','پوشه در دسترس نیست؛ مسیر ذخیره‌سازی را دوباره انتخاب کنید.').replace('دسترسی پوشه را دوباره تأیید کنید.','برای دریافت دسترسی پوشه، مسیر ذخیره‌سازی را دوباره انتخاب کنید.');ui=ui.slice(0,a)+part+ui.slice(b);
+ const start=ui.indexOf('function PB1386ArchiveSettings('),end=ui.indexOf('\n\n/* R1391',start);if(start<0||end<start)throw Error('R1440 archive settings');part=ui.slice(start,end);
+ part=part.replace("e.jsxs('details',{children:[e.jsx('summary',{children:'آرشیو محلی'}),","e.jsxs('section',{className:'pb1440ArchiveSettings',children:[e.jsx('h3',{children:'آرشیو محلی'}),e.jsx('p',{className:'pb1440ArchiveDescription',children:'تعداد روز مشخص می‌کند پوشه‌های تاریخ‌دار سفارش‌ها چه مدت روی هارد این سیستم نگهداری شوند. هنگام پاک‌سازی، پوشه‌های قدیمی‌تر از این مدت از مسیر فعال حذف می‌شوند تا فضای هارد آزاد شود؛ فایل‌های فضای ابری تغییر نمی‌کنند.'}),");
+ part=part.replace("e.jsxs('label',{children:['نگهداری سفارش‌ها (روز)'","e.jsxs('label',{className:'pb1440ArchiveDays',children:['مدت نگهداری (روز)'");ui=ui.slice(0,start)+part+ui.slice(end)+'\n/* PB1440 open storage settings */\n';fs.writeFileSync(file,ui);
+}
+let html=fs.readFileSync('dist/web/index.html','utf8');if(!html.includes('photobridge-r1440-storage-layout.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1440-storage-layout.css?v=r1440" /></head>');html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&storageLayout=')?url:url+'&storageLayout=r1440');fs.writeFileSync('dist/web/index.html',html);

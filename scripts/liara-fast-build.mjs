@@ -444,6 +444,8 @@ await deployStep("./enable-r1440-storage-layout.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1440-storage-layout.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1441-photographer-cards.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1441-photographer-cards.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1442-store-finance.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1442-store-finance.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

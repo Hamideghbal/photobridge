@@ -1,0 +1,14 @@
+.pb1458LabPrices{display:none!important}
+@media(min-width:821px){
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar>.photographerHeaderIdentity{display:none!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar>.pb1126Secondary.pb1127PrintRow{display:flex;justify-content:space-between!important;direction:rtl;gap:12px!important;overflow:hidden;padding-inline:14px!important;box-sizing:border-box}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintModes{justify-content:flex-start!important;direction:rtl;gap:8px;min-width:0;flex:0 0 auto}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintUtilities{position:static!important;direction:rtl!important;min-width:0;flex:0 1 auto;gap:8px!important;overflow-x:auto;scrollbar-width:thin}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintModes>button{position:relative!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;white-space:nowrap!important;min-height:38px!important;height:38px!important;padding:6px 12px!important;animation:none!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintModes>button::after{content:none!important}
+ html body #pb1126ChromeHost #pb1126DesktopHeader.pb1458PrintToolbar .pb1127PrintModes>button.active::after{content:""!important;position:absolute!important;left:10px!important;right:10px!important;bottom:0!important;height:3px!important;border-radius:2px!important;background:#315efb!important}
+ html body .photographerPrintModeUtilityCluster>.pb1458LabPrices,html body #pb1126ChromeHost #pb1126DesktopHeader .pb1127PrintUtilities>.pb1458LabPrices{display:inline-flex!important}
+ html body #root .simplePrintPilotHeaderActions>.pb1178LabPrices{display:none!important}
+ html body #root .simplePrintPilotHeaderActions{justify-content:center!important}
+ html body #root .simplePrintPilotHeaderActions>.simplePrintPilotPrimaryAdd{margin-inline:auto!important}
+}

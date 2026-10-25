@@ -456,6 +456,8 @@ await deployStep("./enable-r1446-lab-wallet-prereg-subscription.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1446-lab-wallet-prereg-subscription.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1445-download-repair.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1445-download-repair.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1450-download-workflow.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1450-download-workflow.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

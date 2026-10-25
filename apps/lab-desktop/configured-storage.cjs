@@ -7,7 +7,30 @@ function installConfiguredStorage(storage){
  storage.record=async function(id){const result=await record(id);if(result.configurationBlocked)throw fail('storage_activation_required','مسیر سایت یا سیستم فعال تغییر کرده است؛ ذخیره‌سازی را دوباره فعال کنید.',409);return result};
  storage.announce=async function(){const account=this.account();const r=await this.request('/api/lab/storage-target/hello',{method:'POST',body:JSON.stringify({label:require('node:os').hostname().slice(0,100),folderPicker:typeof this.pollSitePicker==='function'})});const value=await r.json();this.checkAccount(account);if(!r.ok)throw fail(value.error||'storage_hello_failed',value.display||'سایت هنوز از اتصال مشترک ذخیره‌سازی پشتیبانی نمی‌کند.',r.status);return {...value,pairSupport:true}};
  storage.target=async function(){const account=this.account();let response;try{response=await this.request('/api/lab/storage-target')}catch{throw fail('storage_offline','دریافت مسیر سایت به اینترنت نیاز دارد.',503)}const value=await response.json();this.checkAccount(account);if(!response.ok)throw Object.assign(fail(value.error||'storage_target_failed',value.display||'دریافت مسیر انجام نشد.',response.status),{data:value});return value};
- storage.status=async function(){const account=this.account(),saved=this.store.get(this.key(account));try{const target=await this.target();this.checkAccount(account);if(target.paired){const matches=Boolean(saved&&target.isThisDevice&&await this.fs.readFile(path.join(saved.path,'.photobridge-folder-id.json'),'utf8').then(text=>JSON.parse(text).id===target.folderId).catch(()=>false));this.checkAccount(account);if(saved)this.store.set(this.key(account),{...saved,configurationBlocked:!matches});if(!matches)return {root:saved?this.descriptor(saved):null,permission:'denied',message:target.message};return status()}if(target.configured){const matches=saved&&saved.configurationRevision===target.revision&&saved.configuredPath===target.path&&target.active&&target.isThisDevice;if(saved&&Boolean(saved.configurationBlocked)===Boolean(matches))this.store.set(this.key(account),{...saved,configurationBlocked:!matches});if(!matches)return {root:null,permission:'denied',configuredPath:target.path,message:'مسیر سایت تعیین شده است؛ فعال‌سازی ذخیره‌سازی را بزنید.'}}}catch(e){this.checkAccount(account);if(e.code!=='storage_offline')throw e}return status()};
+ // R1451: a status read must never persist a root captured before a new selection.
+ storage.status=async function(attempt=0){
+  const account=this.account(),saved=this.store.get(this.key(account));
+  const current=()=>{const value=this.store.get(this.key(account));return value?.id===saved?.id&&value?.path===saved?.path};
+  const retry=()=>{if(attempt>=2)throw fail('storage_busy','مسیر در حال تغییر است؛ دوباره بازخوانی کنید.',409);return this.status(attempt+1)};
+  try{
+   const target=await this.target();this.checkAccount(account);
+   if(!current())return retry();
+   if(target.paired){
+    const matches=Boolean(saved&&target.isThisDevice&&await this.fs.readFile(path.join(saved.path,'.photobridge-folder-id.json'),'utf8').then(text=>JSON.parse(text).id===target.folderId).catch(()=>false));
+    this.checkAccount(account);if(!current())return retry();
+    if(saved)this.store.set(this.key(account),{...saved,configurationBlocked:!matches});
+    if(!matches)return {root:saved?this.descriptor(saved):null,permission:'denied',message:target.message};
+    return status();
+   }
+   if(target.configured){
+    const matches=saved&&saved.configurationRevision===target.revision&&saved.configuredPath===target.path&&target.active&&target.isThisDevice;
+    if(!current())return retry();
+    if(saved&&Boolean(saved.configurationBlocked)===Boolean(matches))this.store.set(this.key(account),{...saved,configurationBlocked:!matches});
+    if(!matches)return {root:null,permission:'denied',configuredPath:target.path,message:'مسیر سایت تعیین شده است؛ فعال‌سازی ذخیره‌سازی را بزنید.'};
+   }
+  }catch(e){this.checkAccount(account);if(e.code!=='storage_offline')throw e}
+  return status();
+ };
  storage.activateConfigured=async function(force=false,revision){if(this.selection)throw fail('storage_busy','عملیات تعیین مسیر در حال انجام است.');this.selection=this.activateConfiguredOnce(force,revision).finally(()=>{this.selection=null});return this.selection};
  storage.activateConfiguredOnce=async function(force=false,revision){const account=this.account();if(this.writers.size)throw fail('download_busy','ابتدا منتظر پایان ذخیرهٔ سفارش جاری بمانید.');const target=await this.target();if(!target.configured)throw fail('storage_not_configured','ابتدا مسیر ذخیره‌سازی را در سایت مشخص کنید.');if(!target.isSelectedDevice)throw fail('not_selected_storage_device','این کامپیوتر سیستم اصلی انتخاب‌شده در سایت نیست؛ فعال‌سازی مجاز نیست.',403);if(!revision||revision!==target.revision)throw fail('storage_target_changed','مسیر سایت تغییر کرده است؛ آن را بازخوانی و دوباره فعال کنید.',409);const folder=configuredPath(target.path);let canonical;
  try{let current=folder.slice(0,3);for(const part of folder.slice(3).split('\\')){current=path.win32.join(current,part);if((await this.fs.lstat(current)).isSymbolicLink())throw fail('unsafe_link','پوشهٔ سایت شامل میان‌بر یا پیوند است؛ یک پوشهٔ واقعی مشخص کنید.')}canonical=await this.fs.realpath(folder);if(path.win32.normalize(canonical).toLowerCase()!==folder.toLowerCase()||!(await this.fs.stat(canonical)).isDirectory())throw fail('storage_folder_changed','پوشهٔ سایت معتبر نیست.');const probe=path.join(canonical,'.photobridge-check-'+crypto.randomUUID());let handle;try{handle=await this.fs.open(probe,'wx');await handle.writeFile('PhotoBridge');await handle.sync()}finally{await handle?.close();await this.fs.unlink(probe).catch(()=>{})}}catch(e){if(e.code==='unsafe_link')throw e;throw fail('folder_not_writable','پوشهٔ تعیین‌شده در سایت موجود نیست، هارد متصل نیست یا دسترسی نوشتن ندارد. آدرس سایت و دسترسی ویندوز را بررسی کنید.')}

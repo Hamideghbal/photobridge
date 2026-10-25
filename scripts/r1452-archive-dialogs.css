@@ -1,0 +1,8 @@
+.pb1452ArchiveDialog{box-sizing:border-box;width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:0;border:1px solid #dce5f1;border-radius:20px;color:#17283e;background:#fff;box-shadow:0 20px 75px #18334c30;font-family:inherit;text-align:right;overflow:auto;overscroll-behavior:contain}
+.pb1452ArchiveDialog::backdrop{background:#14283c69;backdrop-filter:blur(3px)}
+.pb1452ArchiveDialog header{height:auto;position:static;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px 16px;border-bottom:1px solid #e8eef6;background:#f5f9ff}
+.pb1452ArchiveDialog header small{display:block;font-size:11px;color:#60758e;margin-bottom:5px}.pb1452ArchiveDialog h3{font-family:inherit;font-size:18px;line-height:1.7;margin:0;font-weight:700}
+.pb1452ArchiveDialog button{font-family:inherit;cursor:pointer;min-height:40px;padding:8px 18px;border:1px solid #dbe4ef;border-radius:10px;background:#fff;color:#233f5a;font-size:13px}.pb1452ArchiveDialog button:focus-visible{outline:3px solid #91bcf7;outline-offset:3px}
+.pb1452ArchiveDialog .pb1452DialogClose{min-width:34px;min-height:34px;padding:0;font-size:24px;line-height:1;background:transparent;border:0;color:#62778b}
+.pb1452ArchiveDialog .pb1452DialogMessage{padding:22px 24px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:2;font-size:14px}
+.pb1452ArchiveDialog footer{display:flex;justify-content:flex-end;gap:10px;padding:0 24px 20px}.pb1452ArchiveDialog button.primary{color:white;background:#2471c8;border-color:#2471c8}.pb1452ArchiveDialog[data-tone="error"] header{background:#fff6f3}

@@ -482,6 +482,8 @@ await deployStep("./enable-r1462-print-actions.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1462-print-actions.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1463-photographer-header-finish.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1463-photographer-header-finish.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1464-photographer-album-layout.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1464-photographer-album-layout.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

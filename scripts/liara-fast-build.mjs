@@ -497,6 +497,8 @@ await deployStep("./enable-r1471-app-updates.mjs");
 await deployStep("./enable-r1472-live-finance.mjs");
 await deployStep("./enable-r1473-debt-modal.mjs");
 await deployStep("./enable-r1475-installed-download.mjs");
+await deployStep("./enable-r1476-shared-alerts.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1476-shared-alerts.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1475-installed-download.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1473-debt-modal.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1472-live-finance.cjs"],{stdio:"inherit"});

@@ -543,3 +543,7 @@ runR1314(process.execPath, ["--test", "scripts/test-r1448-lab-phone-nav.cjs"], {
 
 
 
+
+// R1482 replaces the old phone dock after all immutable desktop snapshots.
+await deployStep("./enable-r1482-lab-mobile.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1482-lab-mobile.cjs"],{stdio:"inherit"});

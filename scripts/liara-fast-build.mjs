@@ -499,6 +499,8 @@ await deployStep("./enable-r1473-debt-modal.mjs");
 await deployStep("./enable-r1475-installed-download.mjs");
 await deployStep("./enable-r1476-shared-alerts.mjs");
 await deployStep("./enable-r1477-lab-notices.mjs");
+await deployStep("./enable-r1478-entry-startup.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1478-entry-startup.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1477-lab-notices.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1476-shared-alerts.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1475-installed-download.cjs"],{stdio:"inherit"});

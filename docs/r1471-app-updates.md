@@ -1,0 +1,11 @@
+# Native Lab updates (1.0.32+)
+
+Install 1.0.32 manually once. Earlier unsigned 1.0.31 installs do not have this updater. On authenticated startup/login and every six hours, the installed app checks the existing desktop access gate for a newer stable version, downloads the EXE in the background, verifies publisher approval and the full installer hash, and offers Later / Install and restart. The tray menu has an explicit program update action. No installation occurs on ordinary window close, logout, or shutdown. Open dialogs, native photo writers and active synchronization block installation.
+
+Publish each release by building on Windows with BUILD-WINDOWS.cmd. The build creates the EXE and PhotoBridge-Lab-Update-VERSION.json in release. In the admin installer panel select the EXE and the matching JSON and publish. Server completion verifies the signature and streams the uploaded object to verify its size/hash before replacing the release. Uploading a legacy EXE/ZIP without JSON remains a manual-download release and cannot trigger automatic execution.
+
+This uses an Ed25519 publisher key pinned in update-trust.cjs; it does not disable Authenticode checks in electron-updater or pretend the EXE is Windows-code-signed. The existing generic updater is replaced with this specific authenticated channel. Requests stay on the configured server path, reject redirects, and preserve account/feature gates. Invalid, tampered, old and rollback releases are refused. Cached files are rehashed before execution. NSIS uses --updated /S --force-run only after user consent. Existing app ID, install/data retention settings and file storage paths are retained.
+
+The owner's full 1.0.32 source bundle includes .publisher/update-private.pem. Keep this directory backed up on the publishing computer and carry the same key into future source releases; it is excluded from the customer installer by build.files. Distribute the built installer to customers, never the publisher source/key bundle. The key is not committed to GitHub or uploaded to the site. No paid certificate is required for this approval scheme; Windows/antivirus reputation is a separate matter.
+
+Windows build and actual NSIS upgrade were not executed in this Linux workspace. Source tests simulate installer launch and use synthetic files; runtime installation remains to be verified on Windows.

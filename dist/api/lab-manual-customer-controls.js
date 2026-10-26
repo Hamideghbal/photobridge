@@ -52,8 +52,8 @@ async function handleSelectedCustomerAccount(ctx){
   return true;
  }
  const body=await bodyJson(req),target=integer(body.initialDebt),expected=integer(body.expectedInitialDebt);
- const note=String(body.note||'').trim();
- if(target===null||target<0||expected===null||expected<0||note.length<3||note.length>500){
+ const note=String(body.note||'').trim()||'اصلاح بدهی اولیه';
+ if(target===null||target<0||expected===null||expected<0||note.length>500){
   sendJson(res,400,{error:'invalid_initial_debt_correction'});return true;
  }
  const client=await pool.connect();let result;
@@ -128,7 +128,7 @@ export async function handleLabManualCustomerAccounts(ctx) {
   if(!member.rowCount){sendJson(res,404,{error:'lab_customer_not_found'});return true;}
   if(action==='adjust-balance') {
     const target=integer(body.balance),expected=integer(body.expectedBalance),note=String(body.note||'').trim();
-    if(target===null||target<0||expected===null||note.length<3||note.length>500) {
+    if(target===null||target<0||expected===null||note.length>500) {
       sendJson(res,400,{error:'invalid_balance_correction'});return true;
     }
     const client=await pool.connect();let outcome;

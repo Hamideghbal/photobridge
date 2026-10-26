@@ -560,3 +560,6 @@ runR1314(process.execPath,["--test","scripts/test-r1485-mobile-finance.cjs"],{st
 
 await deployStep("./enable-r1486-mobile-calendar.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1486-mobile-calendar.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1487-mobile-pickers.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1487-mobile-pickers.cjs"],{stdio:"inherit"});

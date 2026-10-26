@@ -551,3 +551,6 @@ runR1314(process.execPath,["--test","scripts/test-r1482-lab-mobile.cjs"],{stdio:
 // Public phone refinements only; do not alter or rebuild the frozen Windows UI.
 await deployStep("./enable-r1483-lab-mobile.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1483-lab-mobile.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1484-mobile-taps.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1484-mobile-taps.cjs"],{stdio:"inherit"});

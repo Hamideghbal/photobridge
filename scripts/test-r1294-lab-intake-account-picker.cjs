@@ -118,3 +118,4 @@ test('account correction from invitations does not require the file-storage comp
  await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,200);assert.equal(s.responses.at(-1).body.initialDebt,0);assert.equal(s.postings[0].lines.find(x=>x.accountKey==='receivable').credit,25000);
 });
 
+test('blank correction note is optional while the balanced ledger retains a useful audit description',async()=>{const {handleLabManualCustomerAccounts}=await handler();const s=setup();s.ctx.req.method='POST';s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');s.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:''});await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,200);assert.equal(s.postings.length,1);assert(s.postings[0].lines.every(line=>line.note==='اصلاح بدهی اولیه'));});

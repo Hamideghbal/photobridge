@@ -8,6 +8,9 @@
   const rail=main.querySelector(':scope>.photographerLabContextRail');
   const orders=/^\/photographer\/orders\//.test(location.pathname)&&!!rail?.querySelector('.photographerContextAction.primary');
   main.classList.toggle('pb1461Orders',orders);
+  const album=/^\/photographer\/album\/?$/.test(location.pathname)&&!!rail?.querySelector('#photographer-album-status-desktop-slot');
+  main.classList.toggle('pb1464Album',album);
+  for(const grid of main.querySelectorAll('.simplePrintPhotoGrid')){const width=grid.getBoundingClientRect().width;if(width>0){const columns=width>=980?6:width>=720?5:4,next='repeat('+columns+', minmax(0, 1fr))';if(grid.style.getPropertyValue('grid-template-columns')!==next)grid.style.setProperty('grid-template-columns',next,'important')}}
   try{
    if(parent===window||!window.frameElement?.closest('.pb1126ContentPanel[data-panel="print"]:not([hidden])'))return;
    if(document.querySelector('#pbR99LabChooser')||!document.querySelector('.photographerPrintModeNav'))return;

@@ -511,6 +511,8 @@ runR1314(process.execPath,["--test","scripts/test-r1470-intake-sources.cjs"],{st
 runR1314(process.execPath, ["--test", "scripts/test-r1468-intake-file-actions.cjs"], {stdio:"inherit"});
 await deployStep("./enable-r1479-approved-launch.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1479-approved-launch.cjs"],{stdio:"inherit"});
+await deployStep("./enable-r1480-launch-icon.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1480-launch-icon.cjs"],{stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

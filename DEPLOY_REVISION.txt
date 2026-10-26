@@ -1,1 +1,1 @@
-2026-10-26-r1476-shared-alert-read
+2026-10-26-r1477-gentle-alarm-subscription-notices

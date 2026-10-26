@@ -19,3 +19,15 @@ test('denied or unavailable file deletion never silently becomes a move or delet
 test('the manual form exposes copy/move directly and removes the intermediate source-directory dialog',()=>{
  const intake=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8'),helper=fs.readFileSync('scripts/r1466-intake-move.js','utf8');assert(intake.includes("choose.setAttribute('aria-label','کپی عکس')"));assert(intake.includes("movePhotos.setAttribute('aria-label','انتقال عکس')"));assert(intake.includes("choose.onclick=()=>selectPhotos('copy');movePhotos.onclick=()=>selectPhotos('move')"));assert(!helper.includes('showDirectoryPicker('));assert(!helper.includes('روش ذخیرهٔ عکس‌های انتخاب‌شده'));assert(helper.includes('await group.source.handle.remove({recursive:false})'));
 });
+
+test('native ENOENT destination checks allow a new file but all other disk failures stop intake',async()=>{
+ for(const error of [Object.assign(Error('missing'),{code:'ENOENT'}),Object.assign(Error('missing'),{name:'ENOENT'}),Error("ENOENT: no such file or directory, lstat 'D:\\Orders\\Photo.jpg'")]){
+  const s=harness(),files=await s.move.pick('copy');let reads=0;const t={item:{file:files[0]},file:{original_name:'Photo.jpg'},target:{dir:{async getFileHandle(){reads++;throw error}}}};
+  await s.move.prepare([t]);assert.equal(reads,1);assert(!s.events.includes('remove'));
+  await assert.rejects(s.move.verify([t]));
+ }
+ for(const code of ['EACCES','EPERM','ENOSPC','EIO']){
+  const s=harness(),files=await s.move.pick('copy'),error=Object.assign(Error(code),{code});
+  await assert.rejects(s.move.prepare([{item:{file:files[0]},file:{original_name:'Photo.jpg'},target:{dir:{async getFileHandle(){throw error}}}}]),e=>e===error);
+ }
+});

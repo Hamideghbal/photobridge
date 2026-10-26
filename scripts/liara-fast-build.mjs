@@ -547,3 +547,7 @@ runR1314(process.execPath, ["--test", "scripts/test-r1448-lab-phone-nav.cjs"], {
 // R1482 replaces the old phone dock after all immutable desktop snapshots.
 await deployStep("./enable-r1482-lab-mobile.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1482-lab-mobile.cjs"],{stdio:"inherit"});
+
+// Public phone refinements only; do not alter or rebuild the frozen Windows UI.
+await deployStep("./enable-r1483-lab-mobile.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1483-lab-mobile.cjs"],{stdio:"inherit"});

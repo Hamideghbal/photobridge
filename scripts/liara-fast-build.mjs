@@ -569,3 +569,7 @@ runR1314(process.execPath,["--test","scripts/test-r1488-phone-finance.cjs"],{std
 
 await deployStep("./enable-r1489-unified-phone-picker.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1489-unified-phone-picker.cjs"],{stdio:"inherit"});
+
+// Additional lab-phone-only archive and tariff layout; Windows UI snapshots remain frozen.
+await deployStep("./enable-r1490-mobile-archive-settings.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1490-mobile-archive-settings.cjs"],{stdio:"inherit"});

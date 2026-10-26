@@ -496,6 +496,8 @@ await deployStep("./enable-r1470-native-intake.mjs");
 await deployStep("./enable-r1471-app-updates.mjs");
 await deployStep("./enable-r1472-live-finance.mjs");
 await deployStep("./enable-r1473-debt-modal.mjs");
+await deployStep("./enable-r1475-installed-download.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1475-installed-download.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1473-debt-modal.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1472-live-finance.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1471-app-updates.cjs"],{stdio:"inherit"});

@@ -488,6 +488,8 @@ await deployStep("./enable-r1465-lab-manual-live.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1465-lab-manual-live.cjs"], {stdio:"inherit"});
 await deployStep("./enable-r1466-intake-move.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1466-intake-move.cjs"], {stdio:"inherit"});
+await deployStep("./enable-r1467-lab-switch-intake.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1467-lab-switch-intake.cjs"], {stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

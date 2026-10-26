@@ -1,1 +1,1 @@
-2026-10-26-r1488-phone-finance-stable-refresh
+2026-10-27-r1489-phone-finance-picker-parity

@@ -566,3 +566,6 @@ runR1314(process.execPath,["--test","scripts/test-r1487-mobile-pickers.cjs"],{st
 
 await deployStep("./enable-r1488-phone-finance.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1488-phone-finance.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1489-unified-phone-picker.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1489-unified-phone-picker.cjs"],{stdio:"inherit"});

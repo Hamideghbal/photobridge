@@ -1,0 +1,7 @@
+# R1489 — one phone photographer picker and styled selection prompt
+
+The invoice and statement phone pickers inherited old native-select frame styles because their project picker wrappers still carried native-select class names. The receipt picker did not, so equal nominal widths were insufficient. Replace only the three phone wrapper class names with one common class; keep the same existing project picker, menu, values and state-reset callbacks. Desktop/native selects remain unchanged. Normalize the three toolbar borders and padding to the receipt row, and apply the same width, 40px trigger, border, font and RTL alignment to all three. Long labels may occupy two lines; the full name remains visible in the menu.
+
+In the payment/discount customer prompt, use the existing project picker on phones and retain the native select on desktop. Add a phone-only dialog class with RTL Vazirmatn styles. Continue remains disabled until selection; selection and payment/discount callbacks are unchanged.
+
+Validation: four focused tests exercise actual component construction for payment and discount, selected/unselected and desktop paths; confirm identical phone wrappers and every frozen Windows manifest hash. Six preceding phone build transforms and all their tests pass (37 tests total). No authenticated real-phone visual testing was available. The build stage runs after the frozen Windows snapshot; native source/settings and backend are untouched.

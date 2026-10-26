@@ -17,9 +17,9 @@
    return files;
   }
   const unavailable='این نسخهٔ برنامه اجازهٔ انتقال مستقیم عکس‌ها را نمی‌دهد. از دکمهٔ «کپی عکس» استفاده کنید؛ فایل‌های مبدأ حذف نمی‌شوند.';
-  if(typeof window.showOpenFilePicker!=='function')throw Error(unavailable);
+  const nativePicker=window.pbNativeFolder?.pickPhotos;if(!nativePicker&&typeof window.showOpenFilePicker!=='function')throw Error(unavailable);
   try{
-   const handles=await window.showOpenFilePicker({multiple:true,mode:'readwrite',id:'photobridge-intake-photos',types:[{description:'عکس‌های سفارش',accept:{'image/jpeg':['.jpg','.jpeg'],'image/png':['.png'],'image/tiff':['.tif','.tiff'],'image/webp':['.webp']}}]});
+   const handles=nativePicker?await nativePicker():await window.showOpenFilePicker({multiple:true,mode:'readwrite',id:'photobridge-intake-photos',types:[{description:'عکس‌های سفارش',accept:{'image/jpeg':['.jpg','.jpeg'],'image/png':['.png'],'image/tiff':['.tif','.tiff'],'image/webp':['.webp']}}]});
    const selected=[];
    for(const handle of handles){
     if(!/\.(jpe?g|png|tiff?|webp)$/i.test(handle.name))continue;

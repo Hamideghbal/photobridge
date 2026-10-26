@@ -57,7 +57,7 @@
  }
  async function prepare(targets){
   const selected=groups(targets);
-  for(const group of selected){const hash=await original(group);for(const target of group.targets){let existing;try{existing=await target.target.dir.getFileHandle(window.pbLabLocalIntakeStorage.fileName(target.file.original_name,'file'));}catch(e){if(e.name!=='NotFoundError')throw e;}
+  for(const group of selected){const hash=await original(group);for(const target of group.targets){let existing;try{existing=await target.target.dir.getFileHandle(window.pbLabLocalIntakeStorage.fileName(target.file.original_name,'file'));}catch(e){if(e.name!=='NotFoundError'&&e.code!=='ENOENT'&&e.name!=='ENOENT'&&!/^ENOENT: no such file or directory, lstat ['"].+['"]$/.test(e.message||''))throw e;}
     if(existing){for(const other of selected)if(other.source.handle&&await existing.isSameEntry(other.source.handle))throw fail('same_file');if(await digest(await existing.getFile())!==hash)throw fail('destination_exists');}
   }}
  }

@@ -1,0 +1,19 @@
+/* Only opt-in lab phones, including body-portalled menus and dialogs. */
+@media(max-width:820px){
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .financeWorkspace .pb1487CustomerPicker{width:100%!important;min-width:0!important;height:auto!important;min-height:38px!important;padding:0!important;margin:0!important;font-family:Vazirmatn,Tahoma,sans-serif!important;direction:rtl!important;text-align:right!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .pb1487CustomerPicker .pbSelectTrigger{width:100%!important;min-width:0!important;min-height:38px!important;height:auto!important;padding:6px!important;font-family:Vazirmatn,Tahoma,sans-serif!important;font-size:11px!important;direction:rtl!important;text-align:right!important;justify-content:space-between!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .pb1487CustomerPicker .pbSelectTrigger>span{white-space:normal!important;text-align:right!important;overflow-wrap:anywhere!important;line-height:1.6!important;font-family:inherit!important}
+html.pb1482LabPhoneMode body>.pbSelectMenuPortal.pb1487CustomerMenu{font-family:Vazirmatn,Tahoma,sans-serif!important;direction:rtl!important;text-align:right!important}
+html.pb1482LabPhoneMode body>.pbSelectMenuPortal.pb1487CustomerMenu>button{font-family:Vazirmatn,Tahoma,sans-serif!important;direction:rtl!important;text-align:right!important;justify-content:space-between!important;min-height:42px!important;font-size:12px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+html.pb1482LabPhoneMode body>.pbSelectMenuPortal.pb1487CustomerMenu>button>span{flex:1!important;text-align:right!important;direction:rtl!important;font-family:inherit!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions>.pb1487ReceiptPicker{grid-column:1!important;grid-row:1!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .financeWorkspace .customerStatementWorkspace .statementFilters{grid-template-columns:minmax(0,1.8fr) minmax(0,.8fr) minmax(0,.8fr)!important;gap:4px!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .statementFilters .statementDateLabel .persianDateTrigger{font-size:9px!important;padding:4px 2px!important;min-height:38px!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog{direction:rtl!important;text-align:right!important;font-family:Vazirmatn,Tahoma,sans-serif!important;width:min(360px,calc(100vw - 32px))!important;box-sizing:border-box!important;border:1px solid #dce5f3!important;border-radius:16px!important;padding:0!important;box-shadow:0 18px 60px #17376930!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog header{display:flex!important;justify-content:space-between!important;align-items:flex-start!important;padding:16px!important;background:#f5f8ff!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog h3{font-family:inherit!important;text-align:right!important;font-size:16px!important;line-height:1.7!important;margin:4px 0 0!important;color:#213751!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog small{font-family:inherit!important;font-size:10px!important;color:#71809a!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog .pb1452DialogMessage{font-family:inherit!important;text-align:right!important;padding:16px!important;font-size:13px!important;line-height:1.9!important;white-space:pre-wrap!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog footer{padding:0 16px 16px!important;display:flex!important;justify-content:flex-end!important}
+html.pb1482LabPhoneMode body>dialog.pb1452ArchiveDialog button{font-family:inherit!important;min-height:40px!important;border-radius:9px!important;font-size:12px!important}
+}

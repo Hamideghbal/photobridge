@@ -11,13 +11,13 @@ for(const width of [1920,1366,1100,821]){
  await page.setViewportSize({width,height:900});
  const bounds=await child.evaluate(()=>{const h=document.querySelector('#simple-print-pilot-mobile-header-slot .simplePrintPilotHeader').getBoundingClientRect(),q=document.querySelector('.simplePrintPilotQuote').getBoundingClientRect();return{h:h.toJSON(),q:q.toJSON(),width:innerWidth,height:innerHeight}});
  assert(Math.abs(bounds.h.x)<1&&Math.abs(bounds.h.width-bounds.width)<1,JSON.stringify(bounds));assert(bounds.q.top>=bounds.h.bottom+6,'quote below toolbar '+JSON.stringify(bounds));assert.equal(bounds.q.width,280);assert(bounds.q.height<500,'empty quote has compact natural height');assert(bounds.q.bottom<=bounds.height,'quote fits viewport');
- assert(await header.locator('.simplePrintPilotHeaderSubmitMobile').isVisible());assert(await header.locator('.simplePrintPilotHeaderSubmitMobile').isDisabled());
+ assert.equal(await header.locator('.simplePrintPilotHeaderSubmitMobile').isVisible(),false);assert(await child.locator('.simplePrintPilotQuoteSubmit').isVisible());assert(await child.locator('.simplePrintPilotQuoteSubmit').isDisabled());
 }
 await page.setViewportSize({width:1366,height:900});
 await header.locator('.simplePrintPilotPrimaryAdd').click();await child.locator('.uploadChoiceModal').waitFor();
 const chooser=page.waitForEvent('filechooser');await child.locator('.uploadChoiceGrid>button').first().click();
 const image=await require('sharp')({create:{width:1200,height:1800,channels:3,background:'#d7e4ee'}}).jpeg().toBuffer();await(await chooser).setFiles({name:'print-sample.jpg',mimeType:'image/jpeg',buffer:image});
-await child.locator('.simplePrintPhotoCard').waitFor();await page.waitForFunction(()=>{const f=document.querySelector('.pb1126ContentPanel[data-panel=print]>iframe');return f?.contentDocument?.querySelector('#simple-print-pilot-mobile-header-slot .simplePrintPilotHeaderSubmitMobile')?.disabled===false});
+await child.locator('.simplePrintPhotoCard').waitFor();await page.waitForFunction(()=>{const f=document.querySelector('.pb1126ContentPanel[data-panel=print]>iframe');return f?.contentDocument?.querySelector('.simplePrintPilotQuoteSubmit')?.disabled===false});
 assert((await child.locator('.simplePrintQuoteTotal').innerText()).includes('۱٬۰۰۰'),'quote reflects original pricing calculation');
 await child.locator('.simplePrintQuoteRows>button').first().click();
 await child.evaluate(()=>{const rows=document.querySelector('.simplePrintPilotQuote .simplePrintQuoteRows'),first=rows.firstElementChild;for(let i=0;i<30;i++)rows.append(first.cloneNode(true))});

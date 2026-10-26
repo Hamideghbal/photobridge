@@ -1,0 +1,7 @@
+# R1488 — stable phone dashboard refresh and consistent customer picker
+
+Lab phones keep the finance dashboard mounted while an applied range is fetched. A per-component in-flight guard prevents duplicate clicks; the button exposes busy state. On a successful response the existing summary/customer state is updated and the phone scroller's current position is restored in a layout effect. If the user scrolls while waiting, the position immediately before the response is the one preserved. Failed requests leave existing figures in place and show a styled error. A late response after unmount does not update the screen. Desktop/Windows retain their original loading behavior.
+
+The dashboard Apply button is 36px high and at least 68px wide. In invoices, receipts and account statements, the same RTL picker occupies the first grid column with width min(42vw, 150px), matching font, padding and alignment. Existing values, options and financial operations remain unchanged.
+
+Validation: six focused tests exercise the real range callback, pending/error/unmount/duplicate and desktop paths, scroll restoration, phone layout, and every frozen Windows manifest hash. Previous R1483–R1487 phone build transforms and their 27 tests also pass (33 total). No authenticated real-phone visual test was available. The public transform runs after the frozen Windows snapshot; native files, settings and backend are untouched.

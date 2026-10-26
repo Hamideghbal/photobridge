@@ -19,7 +19,7 @@ async function readInitialDebt(db,labId,customerId){
     JOIN finance_accounts fa ON fa.id=e.account_id AND fa.lab_id=$1 AND fa.system_key='receivable'
     WHERE e.customer_id=$2 AND (
       (t.reference_type='lab_delegated_opening_debt' AND t.reference_id=$2)
-      OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment')
+      OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment','accounting_opening_balance_change')
     )`,[labId,customerId]);
  return Number(result.rows[0]?.initial_debt||0);
 }
@@ -34,7 +34,6 @@ async function handleSelectedCustomerAccount(ctx){
   sendJson(res,400,{error:'invalid_customer_account_request'});return true;
  }
  if(a?.labRole!=='lab_admin'||a.labId!==labId){sendJson(res,403,{error:'forbidden'});return true;}
- if(!await requireLocalIntakePrimary())return true;
  const member=await pool.query("SELECT active FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer'",[labId,customerId]);
  if(!member.rowCount){sendJson(res,404,{error:'lab_customer_not_found'});return true;}
  if(action==='account-summary'){
@@ -48,7 +47,7 @@ async function handleSelectedCustomerAccount(ctx){
   const invoices=invoiceQ.rows.map(r=>({id:r.id,number:r.number,total:Number(r.total),issuedAt:r.issued_at}));
   sendJson(res,200,{ok:true,...balance,initialDebt,
    invoices,hasInvoice:invoices.length>0,
-   canEditInitialDebt:member.rows[0]?.active===false&&invoices.length===0,
+   canEditInitialDebt:invoices.length===0,
    smsEnabled:Boolean(settings.rows[0]?.sms_enabled)});
   return true;
  }
@@ -62,8 +61,8 @@ async function handleSelectedCustomerAccount(ctx){
   await client.query('BEGIN');
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',[labId,customerId]);
   const membership=await client.query("SELECT active FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' FOR UPDATE",[labId,customerId]);
-  if(membership.rows[0]?.active!==false){
-   await client.query('ROLLBACK');sendJson(res,409,{error:'customer_not_pending'});return true;
+  if(!membership.rowCount){
+   await client.query('ROLLBACK');sendJson(res,404,{error:'lab_customer_not_found'});return true;
   }
   // Never change the opening amount once even one invoice has been issued.
   const invoiced=await client.query('SELECT 1 FROM invoices WHERE lab_id=$1 AND customer_id=$2 LIMIT 1',[labId,customerId]);

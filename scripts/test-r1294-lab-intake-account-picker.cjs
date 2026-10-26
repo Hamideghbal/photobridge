@@ -97,16 +97,24 @@ test('initial debt is immutable after any invoice and restricted to authenticate
 });
 
 
-test('any authorized lab manager can edit pending customer opening debt without an invoice; completed membership is locked',async()=>{
+test('any authorized lab manager can edit pending customer opening debt without an invoice; completed membership remains editable before invoicing',async()=>{
  const {handleLabManualCustomerAccounts}=await handler();
  const manager=setup({owner:false});manager.ctx.req.method='POST';manager.ctx.url.pathname=manager.ctx.url.pathname.replace('account-summary','adjust-initial-debt');manager.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی پیش عضویت'});
  await handleLabManualCustomerAccounts(manager.ctx);assert.equal(manager.responses.at(-1).status,200);assert.equal(manager.postings.length,1);
- const complete=setup({pending:false});await handleLabManualCustomerAccounts(complete.ctx);assert.equal(complete.responses.at(-1).body.canEditInitialDebt,false);
- complete.ctx.req.method='POST';complete.ctx.url.pathname=complete.ctx.url.pathname.replace('account-summary','adjust-initial-debt');complete.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی عضویت'});await handleLabManualCustomerAccounts(complete.ctx);assert.equal(complete.responses.at(-1).status,409);assert.equal(complete.postings.length,0);
+ const complete=setup({pending:false});await handleLabManualCustomerAccounts(complete.ctx);assert.equal(complete.responses.at(-1).body.canEditInitialDebt,true);
+ complete.ctx.req.method='POST';complete.ctx.url.pathname=complete.ctx.url.pathname.replace('account-summary','adjust-initial-debt');complete.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی عضویت'});await handleLabManualCustomerAccounts(complete.ctx);assert.equal(complete.responses.at(-1).status,200);assert.equal(complete.postings.length,1);
 });
 
-test('completion during edit and cross-lab actors cannot change initial debt',async()=>{
- const {handleLabManualCustomerAccounts}=await handler();const s=setup({completeDuringSave:true});s.ctx.req.method='POST';s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');s.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی اولیه'});await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,409);assert.equal(s.postings.length,0);
+test('completion during edit preserves eligibility and cross-lab actors cannot change initial debt',async()=>{
+ const {handleLabManualCustomerAccounts}=await handler();const s=setup({completeDuringSave:true});s.ctx.req.method='POST';s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');s.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح بدهی اولیه'});await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,200);assert.equal(s.postings.length,1);
  const other=setup();other.ctx.a.labId='other-lab';await handleLabManualCustomerAccounts(other.ctx);assert.equal(other.responses.at(-1).status,403);assert.equal(other.queries.length,0);
+});
+
+test('account correction from invitations does not require the file-storage computer',async()=>{
+ const {handleLabManualCustomerAccounts}=await handler(),s=setup({pending:false});
+ s.ctx.requireLocalIntakePrimary=async()=>{throw Error('file-storage permission must not gate account correction');};
+ await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).body.canEditInitialDebt,true);
+ s.ctx.req.method='POST';s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');s.ctx.bodyJson=async()=>({initialDebt:0,expectedInitialDebt:25000,note:'تسویه مانده اولیه'});
+ await handleLabManualCustomerAccounts(s.ctx);assert.equal(s.responses.at(-1).status,200);assert.equal(s.responses.at(-1).body.initialDebt,0);assert.equal(s.postings[0].lines.find(x=>x.accountKey==='receivable').credit,25000);
 });
 

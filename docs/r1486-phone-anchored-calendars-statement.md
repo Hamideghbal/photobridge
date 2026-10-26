@@ -1,0 +1,7 @@
+# R1486 — anchored phone calendars and statement controls
+
+Public phone financial UI only. Keep the previously approved exclusive React date toggles, but replace the R1485 positioning script so only one positioner runs. Calendar width is capped at 300px with at least 24px side margins. It always opens six pixels below its trigger, never flips over the field. If necessary, opening scrolls the field into available room once; later user scrolling only repositions the popup. Available height is bounded by the visible viewport/dock and the calendar can scroll internally. Outside pointer taps close open calendars through their original trigger; taps inside leave them open.
+
+Enlarge day numbers and dashboard Apply, compact its three neighboring controls. Override the actual legacy accounting-mark selector (which enforced 30px height and 116px maximum width) so all invoice actions stay 44px high and fill their cells. In account statements, put photographer/from/to together, hide date-clear crosses and stretch summary/detail/print across the full row.
+
+Validation: five new tests cover anchor geometry, side margins, outside dismissal, one-time scroll alignment, Windows exclusion, matching frozen manifest hashes and targeted layout rules. Nine previous phone click/date regressions also pass (14 total). The build transform and script syntax checks pass. No authenticated real-phone visual test has been performed. No backend, native source/settings or Windows bundle modifications; the transform runs after the frozen snapshot.

@@ -1,0 +1,4 @@
+import crypto from 'node:crypto';
+import trust from './lab-update-trust.cjs';
+export function cleanUpdate(value,release,key){if(!trust.valid(value,key)||value.version!==release.version||value.size!==release.bytes||!/\.exe$/i.test(release.name))return null;return {protocol:1,version:value.version,size:value.size,sha256:value.sha256,signature:value.signature};}
+export async function validateLabUpdate(value,release,getObject,key){const update=cleanUpdate(value,release,key);if(!update)throw Error('invalid_update_manifest');const object=await getObject(release.objectKey);let size=0;const hash=crypto.createHash('sha256');for await(const bytes of object.Body){size+=bytes.length;if(size>update.size)throw Error('update_size_mismatch');hash.update(bytes);}if(size!==update.size||hash.digest('hex')!==update.sha256)throw Error('update_hash_mismatch');return update;}

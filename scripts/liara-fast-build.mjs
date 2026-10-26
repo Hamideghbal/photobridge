@@ -493,6 +493,8 @@ runR1314(process.execPath, ["--test", "scripts/test-r1467-lab-switch-intake.cjs"
 await deployStep("./enable-r1468-intake-file-actions.mjs");
 await deployStep("./enable-r1469-intake-native-errors.mjs");
 await deployStep("./enable-r1470-native-intake.mjs");
+await deployStep("./enable-r1471-app-updates.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1471-app-updates.cjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1470-intake-sources.cjs"],{stdio:"inherit"});
 runR1314(process.execPath, ["--test", "scripts/test-r1468-intake-file-actions.cjs"], {stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");

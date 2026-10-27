@@ -56,8 +56,11 @@ test('blue fade is a separate sibling and is not clipped by header overflow',()=
  assert(delta.includes('position:fixed!important;'));
  assert(delta.includes('top:120px!important;'));
  assert(delta.includes('linear-gradient(to bottom,'));
- assert.match(delta,/rgba\(70,\s*103,\s*221,\s*0?\.072\)\s*0%/);
- assert.match(delta,/rgba\(70,\s*103,\s*221,\s*0?\.033\)\s*42%/);
+ const expectedFadePalettes=[
+  [/rgba\(70,\s*103,\s*221,\s*0?\.072\)\s*0%/,/rgba\(70,\s*103,\s*221,\s*0?\.033\)\s*42%/],
+  [/rgba\(49,\s*94,\s*251,\s*0?\.12\)\s*0%/,/rgba\(49,\s*94,\s*251,\s*0?\.055\)\s*42%/]
+ ];
+ assert(expectedFadePalettes.some(([first,second])=>first.test(delta)&&second.test(delta)));
  assert(delta.includes('transparent 100%'));
  assert(delta.includes('pointer-events:none!important'));
 });

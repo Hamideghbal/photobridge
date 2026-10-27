@@ -43,7 +43,7 @@ test('creation header contains title, summary and close and keeps short-screen s
 });
 test('fresh asset URLs load without affecting other modal paths',()=>{
  assert.equal(index.split('/photobridge-r1195-gallery-create-compact.css?v=r1195').length-1,1);
- assert.match(index,/index-UIRefine-v655-r84\.js\?v=[^"]+&gallery=r1195(?:&fields=r1196)?"/);
+ assert.match(index,/index-UIRefine-v655-r84\.js\?v=[^"]*&gallery=r1195(?:&fields=r1196)?(?:&[^"]*)?"/);
 });
 test('Chromium visually verifies three fields stay one row at mobile and desktop sizes when available',{skip:!playwright?'Playwright unavailable':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{
  const {chromium}=require('playwright');

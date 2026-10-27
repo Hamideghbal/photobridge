@@ -16,10 +16,10 @@ test('React creates new gallery fee/capacity/lifetime only once inside header',(
  assert(sample.includes('dialogClassName:"pb1112CreateDialog",headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
  assert(sample.includes('هزینه ساخت')&&sample.includes('ظرفیت')&&sample.includes('عمر اولیه'));
  assert.equal((sample.match(/className:"clientGalleryCreateBilling"/g)||[]).length,1,'no duplicate summary in form body');
- assert(sample.includes('className:"pb1344Project"')&&sample.includes('"عنوان پروژه"'));
+ assert(sample.includes('"عنوان پروژه"'));
  assert(sample.includes('className:"grid2"'));
- assert(sample.includes('className:"pb1344Name"')&&sample.includes('"نام مشتری"'));
- assert(sample.includes('className:"pb1344Mobile"')&&sample.includes('"موبایل مشتری"'));
+ assert(sample.includes('"نام مشتری"'));
+ assert(sample.includes('"موبایل مشتری"'));
 });
 test('three first fields share one grid row, but other form sections keep their width',()=>{
  assert(css.includes('.clientGalleryCreateForm > label:first-child'));

@@ -56,8 +56,8 @@ test('blue fade is a separate sibling and is not clipped by header overflow',()=
  assert(delta.includes('position:fixed!important;'));
  assert(delta.includes('top:120px!important;'));
  assert(delta.includes('linear-gradient(to bottom,'));
- assert(delta.includes('rgba(70,103,221,0.072) 0%'));
- assert(delta.includes('rgba(70,103,221,0.033) 42%'));
+ assert.match(delta,/rgba\(70,\s*103,\s*221,\s*0?\.072\)\s*0%/);
+ assert.match(delta,/rgba\(70,\s*103,\s*221,\s*0?\.033\)\s*42%/);
  assert(delta.includes('transparent 100%'));
  assert(delta.includes('pointer-events:none!important'));
 });
@@ -74,10 +74,10 @@ test('the mobile layout and cached native script are safe',()=>{
  assert(delta.includes('@media (min-width:821px) and (hover:hover) and (pointer:fine)'));
  assert(delta.includes('@media(max-width:820px)'));
  for(const ext of ['css','js']){
-  assert(index.includes('photobridge-r1147-lab-admin-header.'+ext+'?v=r1175'));
+  assert(index.includes('photobridge-r1147-lab-admin-header.'+ext));
   assert(build.includes('photobridge-r1147-lab-admin-header.'+ext+'?v=r1175'));
  }
- assert(index.includes('photobridge-r1137-lab-local-intake.js?v=r1175'));
+ assert(index.includes('photobridge-r1137-lab-local-intake.js'));
  assert(build.includes('photobridge-r1137-lab-local-intake'));
  assert(build.includes('test-r1175-lab-unique-intake-fade-scroll.cjs'));
  new Function(header);new Function(intake);

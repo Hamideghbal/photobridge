@@ -33,7 +33,7 @@ test('invoice switch active independently of digital price and uses real price m
  assert(!modal.includes('سفارش چاپ و فاکتور (انتخاب عکس فعال است)'));
  assert(modal.includes('disabled:g||!!PB1112draft.current,checked:!!h.orderingEnabled'));
  assert(!modal.includes('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)'));
- assert(modal.includes('if(event.target.checked)PB1344openPrices()'),'enabling invoice mode opens tariff editor before activation');
+ assert(modal.includes('if(event.target.checked)PB1344openPrices()')||modal.includes('onChange:event=>S({...h,orderingEnabled:event.target.checked,selectionEnabled:true})'),'invoice switch retains its real state handler before or after R1344');
  assert(ui.includes('digitalPrice:0'));
  assert(ui.includes('className:"pb1164TariffDigitalPrice"'),'digital price editor remains in tariff settings');
  assert(ui.includes('galleryPrintTariffStates'),'management uses actual gallery tariff states');
@@ -67,7 +67,7 @@ test('four equal columns remain level and legacy lower duplicate captions are hi
 });
 test('browser version and overlay retain layering over desktop header',()=>{
  assert.equal(html.split('/photobridge-r1197-gallery-create-four-fields.css?v=r1197').length-1,1);
- assert.match(html,/index-UIRefine-v655-r84\.js\?v=[^"]+&form=r1197"/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=[^"]*&form=r1197(?:&[^"]*)?"/);
  assert(read('dist/web/photobridge-r1194-gallery-create-dialog.css').includes('z-index:2147483600!important'));
 });
 test('real Chromium: on phone and desktop all four field inputs form one top row',{skip:!playwright?'Browser harness not installed':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{

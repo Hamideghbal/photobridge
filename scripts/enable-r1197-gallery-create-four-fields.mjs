@@ -28,7 +28,7 @@ once('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)',
 ui=ui.slice(0,start)+modal+ui.slice(end);
 const digitalPayload='orderingEnabled:false,selectionEnabled:true,digitalPrice:Number(h.digitalPrice||0)';
 if(ui.split(digitalPayload).length===2)ui=ui.replace(digitalPayload,'orderingEnabled:false,selectionEnabled:true,digitalPrice:0');
-else if(!ui.includes('orderingEnabled:false,selectionEnabled:true,digitalPrice:0'))throw Error('[R1197] create payload digital price missing');
+else if(!ui.includes('orderingEnabled:false,selectionEnabled:true,digitalPrice:0')&&!ui.includes('JSON.stringify({...h,selectionEnabled:true,digitalPrice:0})'))throw Error('[R1197] create payload digital price missing');
 
 const serverFile='dist/api/server.js';
 let server=fs.readFileSync(serverFile,'utf8');

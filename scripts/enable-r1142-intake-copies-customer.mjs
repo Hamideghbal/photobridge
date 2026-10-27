@@ -1,6 +1,16 @@
 import fs from 'node:fs';
 const file='dist/api/server.js';let source=fs.readFileSync(file,'utf8');
 function patchSection(start,end,changes){const a=source.indexOf(start),b=source.indexOf(end,a);if(a<0||b<0)throw Error('R1142 intake section missing');let part=source.slice(a,b);for(const [before,after]of changes){if(part.includes(after))continue;if(part.split(before).length!==2)throw Error('R1142 intake patch mismatch: '+before);part=part.replace(before,after);}source=source.slice(0,a)+part+source.slice(b);}
+const r1142Markers=[
+ '// PB1142 optional mobile-only customer, opening debt and invitation',
+ 'print_copies,original_state',
+ 'COALESCE(SUM(print_copies) FILTER(WHERE chassis),0)::int chassis_qty',
+ 'COALESCE(SUM(print_copies) FILTER(WHERE frame),0)::int frame_qty',
+];
+// Later intake routes can wrap or extend the original endpoint anchor. When a
+// prebuilt dist already contains every R1142 change, repeating these patches is
+// unnecessary; a partial application still fails closed in patchSection below.
+if (!r1142Markers.every(marker=>source.includes(marker))) {
 patchSection("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')",'const delegatedFiles =',[ 
  ["const studioName = String(b.studioName || '').trim().slice(0, 140);","const studioName = String(b.studioName || b.mobile || '').trim().slice(0, 140);"],
  ["const mode = String(b.mode || 'print');","// PB1142 optional mobile-only customer, opening debt and invitation\n            const initialDebt = Number(b.initialDebt ?? 0);\n            if (!Number.isSafeInteger(initialDebt) || initialDebt < 0 || initialDebt > 1_000_000_000_000 || (existingCustomerId && initialDebt)) return sendJson(res,400,{error:'invalid_initial_debt'});\n            const mode = String(b.mode || 'print');"],
@@ -25,4 +35,5 @@ patchSection("if (req.method === 'POST' && submitDelegatedOrder)","if (req.metho
  ["count(*) FILTER(WHERE chassis)::int chassis_qty,", "COALESCE(SUM(print_copies) FILTER(WHERE chassis),0)::int chassis_qty,"],
  ["count(*) FILTER(WHERE frame)::int frame_qty", "COALESCE(SUM(print_copies) FILTER(WHERE frame),0)::int frame_qty"],
 ]);
+}
 fs.writeFileSync(file,source);

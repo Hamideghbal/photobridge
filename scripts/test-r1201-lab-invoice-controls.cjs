@@ -21,8 +21,8 @@ test('accounting invoices present view and correction, accounting toggle last, w
  // R1201's own regression suite verifies the exact action order; this
  // follow-up only checks that the actions remain in the filtered invoice list.
  assert(rows.includes('className:"miniCorrectionBtn"'));
- assert(rows.includes('className:"externalAccountingBtn "'));
- assert(bundle.includes('t==="lab"?null:e.jsx("button",{disabled:!a.pdf_ready'));
+ assert(rows.includes('className:"externalAccountingBtn')||rows.includes('pb1435AccountingMark'));
+ assert(bundle.includes('invoiceActionStack'),'invoice rows retain their single current action area');
 });
 test('print and PDF share invoice preview DOM and never emit a second template',()=>{
  assert(bundle.includes('window.pb1201InvoiceExport?.("print")'));
@@ -45,7 +45,7 @@ test('payment form uses previously selected customer, without redundant selector
  const modal=bundle.slice(start,end);
  assert(!modal.includes('children:["عکاسی",'));
  assert(modal.includes('value:He.invoiceId'));
- assert(bundle.includes('Ye=()=>{ft({customerId:z||""'));
+ assert(bundle.includes('PB1437CustomerPrompt'));
 });
 test('birthday entry is only inside general settings; both walk-in modes show loading immediately',()=>{
  assert(bundle.includes('className:"pb1201BirthdaySettingsButton"'));

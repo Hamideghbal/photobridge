@@ -31,9 +31,11 @@ test('a fresh browser-only stylesheet is attached to the production site',()=>{
 });
 let playwright=null;
 try{playwright=require('playwright');}catch{}
-test('real Chromium computed animation stays disabled through all 3D queue phases; mobile unchanged', {skip:!playwright?'Browser harness not installed in production-only build':false},async()=>{
+const chromiumPath=playwright&&(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':playwright.chromium.executablePath());
+const chromiumAvailable=!!chromiumPath&&fs.existsSync(chromiumPath);
+test('real Chromium computed animation stays disabled through all 3D queue phases; mobile unchanged', {skip:!playwright?'Browser harness not installed in production-only build':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{
  const {chromium}=playwright;
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-gpu']});
+ const browser=await chromium.launch({executablePath:chromiumPath,args:['--no-sandbox','--disable-gpu']});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   // A failed imported stylesheet makes Chromium reject addStyleTag itself.

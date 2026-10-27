@@ -7,6 +7,7 @@ function once(path,before,after,label){
  const source=fs.readFileSync(path,'utf8');
  const count=source.split(before).length-1;
  if(count===1){fs.writeFileSync(path,source.replace(before,after));return;}
+ if(count===0&&label==='active route queue source'&&source.includes('/* PB1188 prefer active queue tabs in browser */'))return;
  if(count===0&&source.includes(after))return;
  throw Error('[R1188] unexpected '+label+' occurrence count '+count+' in '+path);
 }

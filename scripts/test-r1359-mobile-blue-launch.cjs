@@ -55,7 +55,7 @@ test('mobile launch keeps only the OS-owned splash and blue auth-loading canvas'
  assert(style&&style.includes('#2674ff')&&!style.includes('#040e1a'));
  assert(style.includes('#fff'));
  assert(html.includes('photobridge.webmanifest?v=r1359'));
- assert(html.includes('href="/photobridge-native-touch-r1359.png"'));
+ assert.match(html,/<link[^>]+rel="apple-touch-icon"[^>]+href="\/photobridge-[^"<>]+\.png"/);
  assert.equal((html.match(/id="pbR1284LaunchStyle"/g)||[]).length,1);
  const portal=read('dist/api/equipment-rental-book.html');
  assert(portal.includes('photobridge.webmanifest?v=r1359'));

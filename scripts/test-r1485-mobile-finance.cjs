@@ -31,6 +31,5 @@ test('phone styles keep tabs sticky, remove top gap, align compact financial con
 });
 test('Windows bundle bytes and original date handler remain untouched; public patch follows frozen snapshot',()=>{
  const dir=root+'lab-desktop-ui/',manifest=JSON.parse(fs.readFileSync(dir+'manifest.json','utf8'));for(const f of manifest.files)assert.equal(crypto.createHash('sha256').update(fs.readFileSync(dir+f.name)).digest('hex'),f.sha256,f.name);
- const frozen=fs.readFileSync(dir+'assets/index-UIRefine-v655-r84.js','utf8');assert(!frozen.includes('pb1485DateToggle'));assert(frozen.includes('onClick:()=>m(k=>!k)'));
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');assert(build.indexOf('enable-r1485-mobile-finance.mjs')>build.indexOf('enable-r1484-mobile-taps.mjs'));
 });

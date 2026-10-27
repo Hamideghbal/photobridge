@@ -51,6 +51,23 @@ if(!server.includes('/* PB1451 first download retention */')){
  server=server.slice(0,getStart)+get+server.slice(getEnd);
  fs.writeFileSync(serverFile,server);
 }
+// Repair partial/stale bundles where the R1451 marker exists but the retention
+// scheduler was later overwritten by an older staging step.
+server=fs.readFileSync(serverFile,'utf8');
+if(!server.includes('CASE WHEN o.downloaded_at IS NULL THEN NULL')){
+ const a=server.indexOf('async function reschedulePendingOriginalCleanup(days) {'),b=server.indexOf('function tehranDateKey',a);
+ if(a<0||b<0)throw Error('R1451 retention scheduler');
+ server=server.slice(0,a)+`async function reschedulePendingOriginalCleanup(days) {
+    await pool.query(\`UPDATE order_files f SET original_delete_after=CASE WHEN o.downloaded_at IS NULL THEN NULL ELSE
+    GREATEST(o.downloaded_at,COALESCE(o.printed_at,
+    (SELECT min(e.created_at) FROM order_status_events e WHERE e.order_id=o.id AND e.status IN ('ready','printed')),
+    (SELECT min(i.issued_at) FROM invoices i WHERE i.order_id=o.id),o.updated_at))
+    + make_interval(secs => $1::double precision * 86400) END
+    FROM orders o WHERE o.id=f.order_id AND f.original_state='ready_for_deletion'\`, [days]);
+}
+`+server.slice(b);
+ fs.writeFileSync(serverFile,server);
+}
 let ui=fs.readFileSync(uiFile,'utf8');
 if(!ui.includes('/* PB1451 storage and archive flow */')){
  const change=(a,b)=>{ui=once(ui,a,b)};

@@ -21,6 +21,13 @@ const labels=[
 for(const [name,key,badge] of labels){
  const before='e.jsxs("label",{children:["'+name+'",e.jsx("input",{';
  const after='e.jsxs("label",{children:[e.jsxs("span",{className:"pb1196FieldCaption",children:["'+name+'",e.jsx("small",{"aria-hidden":!0,children:"'+badge+'"})]}),e.jsx("input",{';
+ // Later gallery revisions attach stable field classes and captions before
+ // R1196 runs. The actual caption/badge structure is already present there.
+ const modern=modal.includes('className:"pb1196FieldCaption",children:["'+name+'"');
+ if(modern){
+  if(!modal.includes('value:'+key))throw Error('[R1196] input state missing '+name);
+  continue;
+ }
  if(modal.includes(after)){
   if(!modal.includes('value:'+key))throw Error('[R1196] input state missing '+name);
   continue;

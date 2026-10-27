@@ -42,16 +42,16 @@ patchOnce(gallery,
  "target.click();\n        if(animate&&window.__PB_ALLOW_WHOLE_PAGE_MOTION__===true){\n          // React commits",
  'gallery manager full media panel flash');
 
-// Keep old version tokens used by existing safeguards; insert before last
-// legacy &motion=r1187 tag rather than replacing other release stamps.
+// Keep every existing version token and add the photographer cache token once,
+// regardless of where later release query parameters appear.
 for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let html=fs.readFileSync(path,'utf8');
  for(const name of ['photobridge-r1126-desktop-navigation','photobridge-r1163-desktop-gallery-header']){
-  const rx=new RegExp('('+name+'\\.js\\?v=[^"\\s]*?)(?:&photographer=r1193)?(&motion=r1187")','g');
+  const rx=new RegExp(name+'\\.js\\?v=[^"\\s]+','g');
   const matches=[...html.matchAll(rx)];
   if(path==='dist/web/index.html'&&matches.length!==1)throw Error('[R1193] expected 1 '+name+' in site');
   if(matches.length>1)throw Error('[R1193] duplicate '+name+' in '+path);
-  html=html.replace(rx,'$1&photographer=r1193$2');
+  if(matches.length===1&&!matches[0][0].includes('&photographer=r1193'))html=html.replace(rx,value=>value+'&photographer=r1193');
  }
  if(path==='dist/web/index.html'){
   const re=/(index-UIRefine-v655-r84\.js\?v=[^"']+?)(?:&photographer=r1193)?(&touch=r1192")/g;

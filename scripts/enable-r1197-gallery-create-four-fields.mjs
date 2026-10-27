@@ -13,7 +13,7 @@ function once(needle,replacement,label) {
  if(count!==1)throw Error('[R1197] '+label+': expected once, got '+count);
  modal=modal.replace(needle,replacement);
 }
-once('e.jsxs("label",{children:["رمز ورود خصوصی",e.jsx("input",{',
+if(!modal.includes('className:"pb1196FieldCaption",children:["رمز ورود خصوصی"')) once('e.jsxs("label",{children:["رمز ورود خصوصی",e.jsx("input",{',
  'e.jsxs("label",{children:[e.jsxs("span",{className:"pb1196FieldCaption",children:["رمز ورود خصوصی",e.jsx("small",{"aria-hidden":!0,children:"اجباری"})]}),e.jsx("input",{',
  'password caption');
 const digitalStart=modal.indexOf('e.jsxs("label",{children:["قیمت فایل دیجیتال (اختیاری · تومان)"');
@@ -26,9 +26,9 @@ once('"سفارش چاپ و فاکتور (انتخاب عکس فعال است)"'
 once('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)',
  'disabled:g||!!PB1112draft.current','invoice checkbox enabling');
 ui=ui.slice(0,start)+modal+ui.slice(end);
-const digitalPayload='digitalPrice:Number(h.digitalPrice||0)';
-if(ui.split(digitalPayload).length===2)ui=ui.replace(digitalPayload,'digitalPrice:0');
-else if(!ui.includes('digitalPrice:0'))throw Error('[R1197] single create payload digital price missing');
+const digitalPayload='orderingEnabled:false,selectionEnabled:true,digitalPrice:Number(h.digitalPrice||0)';
+if(ui.split(digitalPayload).length===2)ui=ui.replace(digitalPayload,'orderingEnabled:false,selectionEnabled:true,digitalPrice:0');
+else if(!ui.includes('orderingEnabled:false,selectionEnabled:true,digitalPrice:0'))throw Error('[R1197] create payload digital price missing');
 
 const serverFile='dist/api/server.js';
 let server=fs.readFileSync(serverFile,'utf8');

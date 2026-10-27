@@ -13,7 +13,7 @@ test('PhotoBridge PWA keeps all icon sizes as original bridge/aperture brand ass
  assert(fs.existsSync('dist/web/photobridge-brand-script-r1285.png'),'authentic PhotoBridge logo required');
 });
 test('installed app preserves its original logo without a second web splash',()=>{
- const home=read('dist/web/index.html');assert(!home.includes('id="pbAppSplashV780"'));assert(!home.includes('src="/photobridge-script-r1278.svg"'));assert(home.includes('id="pbR1284LaunchStyle"'));assert(home.includes('/photobridge.webmanifest?v=r1359'));assert(home.includes('/photobridge-native-touch-r1359.png'));
+ const home=read('dist/web/index.html');assert(!home.includes('id="pbAppSplashV780"'));assert(!home.includes('src="/photobridge-script-r1278.svg"'));assert(home.includes('id="pbR1284LaunchStyle"'));assert(home.includes('/photobridge.webmanifest?v=r1359'));assert.match(home,/<link[^>]+rel="apple-touch-icon"[^>]+href="\/photobridge-[^"<>]+\.png"/);
 });
 test('PWA header normalization is idempotent to prevent MutationObserver flashing',()=>{
  const pwa=read('dist/web/photobridge-pwa-v703.js');

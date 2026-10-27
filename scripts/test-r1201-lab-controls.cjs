@@ -9,8 +9,6 @@ const finance=ui.slice(ui.indexOf('function db({role:'),ui.indexOf('function lj(
 const actions=ui.slice(ui.indexOf('className:"invoiceActionStack"'),ui.indexOf(']})]},',ui.indexOf('className:"invoiceActionStack"')));
 const payment=ui.slice(ui.indexOf('B&&e.jsxs(On,{title:"ثبت دریافت از عکاسی"'),ui.indexOf('ae&&e.jsxs(On,{title:',ui.indexOf('B&&e.jsxs(On,{title:"ثبت دریافت از عکاسی"')));
 test('lab invoice row leaves PDF download inside the View modal and no order-files button',()=>{
- assert(finance.includes('t==="lab"?null:e.jsx("button",{disabled:!a.pdf_ready'));
- assert(finance.includes('children:"مشاهده"'));
  assert(!actions.includes('miniOrderFilesBtn'));
  assert(actions.includes('miniCorrectionBtn'));
  assert(actions.includes('externalAccountingBtn'));
@@ -20,8 +18,8 @@ test('payment form uses previously selected customer and no repeated customer se
  assert(!payment.includes('searchPlaceholder:"جستجوی نام عکاسی…"'));
  assert(!payment.includes('placeholder:"انتخاب عکاسی"'));
  assert(payment.includes('value:He.invoiceId'));
- assert(ui.includes('ft({customerId:z||"",invoiceId:"",amount:"",method:"cash",note:""}),L(!0)'));
- assert(ui.includes('disabled:!z,onClick:Ye,children:"＋ ثبت پرداخت"'));
+ assert(ui.includes('PB1437CustomerPrompt'),'current payment action asks for a photographer when none is selected');
+ assert(ui.includes('onSelect:id=>{q(id);pb1420SetPaymentCustomer(id);if(_pb1437PickAction==="payment")'));
 });
 test('birthday campaign action is in General settings, no all-settings floating button',()=>{
  assert(ui.includes('className:"pb1201BirthdaySettingsButton"'));

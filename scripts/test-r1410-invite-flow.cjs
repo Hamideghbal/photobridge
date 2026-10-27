@@ -57,7 +57,7 @@ test('photographer list no longer has obsolete accounting link badge',()=>{
  assert.doesNotMatch(ui,/accountingConnectionBadge/);
  assert.match(ui,/className:"labPhotographerIdentityCopy"/);
  assert.match(ui,/children:h\.mobile\|\|"بدون شماره موبایل"/);
- assert.match(ui,/ok:h\.active,children:h\.active\?"فعال":"غیرفعال"/);
+ assert.match(ui,/ok:h\.active,children:h\.registrationPending\?"در انتظار تأیید عضویت":h\.active\?"فعال":"غیرفعال"/);
 });
 
 test('only missing birthday field and calendar become compact in invite signup',()=>{

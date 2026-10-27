@@ -1,8 +1,15 @@
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+// The prebuilt bundle already contains the full R1326/R1327 archive and
+// retention work. Do not replay the historical string surgery over it.
+const modernServer=fs.readFileSync('dist/api/server.js','utf8');
+const modernUi=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+const legacyPatchNeeded=!(modernUi.includes('pb1327DetailHeader')&&modernUi.includes('pb1326GroupedFiles')&&modernServer.includes('originalRetentionHours')&&modernServer.includes('thumbnail_key'));
+if(!legacyPatchNeeded) console.log('[R1326] Current archive/retention implementation already present; legacy patch skipped.');
+else {
 function patch(file, changes) {
  let s=fs.readFileSync(file,'utf8');
- for(const [before,after] of changes){if(s.includes(after))continue;if(s.split(before).length!==2)throw new Error('R1326 ambiguous/missing anchor: '+before.slice(0,100));s=s.replace(before,after);}
+ for(const [before,after] of changes){if(s.includes(after))continue;if(file==='dist/api/server.js'&&before.startsWith('const raw = Number(q.rows[0]?.value?.days);')&&s.includes('value?.hours != null'))continue;if(file==='dist/api/server.js'&&before.includes("SELECT id,object_key,print_object_key FROM order_files WHERE original_state='ready_for_deletion'")&&s.includes('first_downloaded_at')&&s.includes('o.downloaded_at IS NOT NULL'))continue;if(s.split(before).length!==2)throw new Error('R1326 ambiguous/missing anchor: '+before.slice(0,100));s=s.replace(before,after);}
  fs.writeFileSync(file,s);
 }
 patch('dist/api/server.js',[[
@@ -112,3 +119,4 @@ function cache(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){
 cache('dist/web');cache('dist/api');
 for(const file of ['dist/api/server.js','dist/web/assets/index-UIRefine-v655-r84.js'])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 console.log('[R1326] Permanent upload thumbnails, hourly retention, populated archive and compact grouped mobile details.');
+}

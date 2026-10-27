@@ -46,6 +46,8 @@ test('mobile PWA and desktop site CSS only targets photographer page content',()
  assert(site.includes('/photobridge-r1193-photographer-stable-tabs.css?v=r1193'));
  assert.match(site,/index-UIRefine-v655-r84\.js\?v=[^"]+&photographer=r1193&touch=r1192"/);
  for(const f of ['photobridge-r1126-desktop-navigation','photobridge-r1163-desktop-gallery-header']){
-  assert.match(site,new RegExp(f+'\\.js\\?v=[^"]+&photographer=r1193&motion=r1187"'));
+  const tag=site.match(new RegExp(f+'\\.js\\?v=[^"]+'))?.[0]||'';
+  assert(tag.includes('&photographer=r1193'));
+  assert(tag.includes('&motion=r1187'));
  }
 });

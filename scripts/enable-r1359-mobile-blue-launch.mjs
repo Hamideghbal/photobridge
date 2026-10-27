@@ -59,7 +59,7 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html','
   if(!style.test(html))throw Error('[R1359] OS-managed launch guard missing');
   html=html.replace(style,block=>block.replace(/#040e1a/gi,brand).replace(/#9fb5ce/gi,'#fff'));
   if(html.includes('<div id="pbAppSplashV780"'))throw Error('[R1359] duplicate web splash would appear after native launch');
-  if(!html.includes('href="/photobridge-native-touch-r1359.png"'))throw Error('[R1359] Apple touch icon is not linked');
+  if(!/<link[^>]+rel="apple-touch-icon"[^>]+href="\/photobridge-[^"<>]+\.png"/.test(html))throw Error('[R1359] Apple touch icon is not linked');
  }
  fs.writeFileSync(file,html);
 }

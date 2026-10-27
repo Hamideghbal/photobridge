@@ -4,6 +4,10 @@ const ui=read('dist/web/assets/index-UIRefine-v655-r84.js');
 const server=read('dist/api/server.js');
 const css=read('dist/web/photobridge-r1197-gallery-create-four-fields.css');
 const html=read('dist/web/index.html');
+let playwright=null;
+try{playwright=require('playwright')}catch{}
+const chromiumPath=playwright&&(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':playwright.chromium.executablePath());
+const chromiumAvailable=!!chromiumPath&&fs.existsSync(chromiumPath);
 const a=ui.indexOf('c&&e.jsx(On,{title:"گالری خصوصی جدید"'),b=ui.indexOf('function PBClientGalleryCompare(',a);
 const modal=ui.slice(a,b);
 test('new gallery top row has four real inputs, four inline required/optional captions, no duplicate price',()=>{
@@ -29,7 +33,7 @@ test('invoice switch active independently of digital price and uses real price m
  assert(!modal.includes('سفارش چاپ و فاکتور (انتخاب عکس فعال است)'));
  assert(modal.includes('disabled:g||!!PB1112draft.current,checked:!!h.orderingEnabled'));
  assert(!modal.includes('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)'));
- assert(modal.includes('orderingEnabled:event.target.checked,selectionEnabled:true'));
+ assert(modal.includes('if(event.target.checked)PB1344openPrices()'),'enabling invoice mode opens tariff editor before activation');
  assert(ui.includes('digitalPrice:0'));
  assert(ui.includes('className:"pb1164TariffDigitalPrice"'),'digital price editor remains in tariff settings');
  assert(ui.includes('galleryPrintTariffStates'),'management uses actual gallery tariff states');
@@ -66,9 +70,9 @@ test('browser version and overlay retain layering over desktop header',()=>{
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=[^"]+&form=r1197"/);
  assert(read('dist/web/photobridge-r1194-gallery-create-dialog.css').includes('z-index:2147483600!important'));
 });
-test('real Chromium: on phone and desktop all four field inputs form one top row',{skip:(()=>{try{require.resolve('playwright');return false}catch{return 'Browser harness not installed'}})()},async()=>{
+test('real Chromium: on phone and desktop all four field inputs form one top row',{skip:!playwright?'Browser harness not installed':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{
  const {chromium}=require('playwright');
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:chromiumPath,args:['--no-sandbox','--disable-gpu']});
  try{
   for(const width of [320,390,1366]){
    const page=await browser.newPage({viewport:{width,height:740}});

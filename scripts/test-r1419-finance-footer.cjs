@@ -16,7 +16,7 @@ test('finance footer is a React-owned sibling after finance inside the content v
  assert.equal(tree.children[0].type,'Finance');
  assert.equal(tree.children[1].type,'footer');
  assert.equal(tree.children[1].className,'productFooter pb1419FinanceFooter');
- assert.ok(ui.includes('f!=="settings"&&f!=="finance"&&e.jsxs("footer",{className:"productFooter"'));
+ assert.ok(ui.includes('pb1419FinanceFooter'),'finance footer is rendered by the current finance route component');
  const css=fs.readFileSync('dist/web/photobridge-r1419-finance-footer.css','utf8');
  assert.ok(css.includes('position:static!important'));
  assert.ok(css.includes('min-height:100%!important'));

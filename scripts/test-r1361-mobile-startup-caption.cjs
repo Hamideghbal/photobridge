@@ -10,16 +10,21 @@ test('mobile-only launch preserves native splash and uses a readable white Photo
  assert(generator.includes('photobridge-brand-script-r1285.png'),'icon MUST come from the authentic bridge/aperture brand');
  assert(!generator.includes('photobridge-icon-blue-r1359.svg'),'reject invented replacement logo');
  assert(!html.includes('<div id="pbAppSplashV780"'),'legacy splash is still removed');
- assert.match(html,/<div id="pbR1361MobileSplash" role="status"[^>]+><img src="\/photobridge-mobile-launch-symbol-r1361\.png"[^>]*><span>PhotoBridge<\/span><\/div>/);
- assert.match(html,/<style id="pbR1361MobileSplashStyle">[\s\S]+<\/style>/);
- assert.equal((html.match(/id="pbR1361MobileSplash"/g)||[]).length,1);
- assert(html.includes('html:has(#root:empty) #pbR1361MobileSplash{display:flex}'),'shows only while mobile PWA is waiting for app mount');
- assert(html.includes('html.pbR1361IosStandalone:has(#root:empty)'),'supports iOS installed app');
- assert(html.includes('html.pbR1361Embedded #pbR1361MobileSplash{display:none!important}'),'must not cover embedded content');
- assert(html.includes('font-stretch:normal'),'no vertically stretched wordmark');
- assert(html.includes('font-family:Arial,Helvetica,system-ui,sans-serif'),'real text instead of distorted raster letters');
- assert(html.includes('font-size:clamp(25px,7vw,34px)'),'caption readable on narrow mobile screens');
- assert(html.includes('width:min(84vw,360px)'),'mark larger than earlier 68%-padded OS icon');
+ if(html.includes('pb1479Identity')){
+  assert(html.includes('photobridge-launch-mark-r1479.png')&&html.includes('pb1479Name')&&html.includes('pb1479Tagline'),'newer mobile launch handoff retains the brand mark, name and Persian tagline');
+  assert(!html.includes('<div id="pbAppSplashV780"'));
+ }else{
+  assert.match(html,/<div id="pbR1361MobileSplash" role="status"[^>]+><img src="\/photobridge-mobile-launch-symbol-r1361\.png"[^>]*><span>PhotoBridge<\/span><\/div>/);
+  assert.match(html,/<style id="pbR1361MobileSplashStyle">[\s\S]+<\/style>/);
+  assert.equal((html.match(/id="pbR1361MobileSplash"/g)||[]).length,1);
+  assert(html.includes('html:has(#root:empty) #pbR1361MobileSplash{display:flex}'));
+  assert(html.includes('html.pbR1361IosStandalone:has(#root:empty)'));
+  assert(html.includes('html.pbR1361Embedded #pbR1361MobileSplash{display:none!important}'));
+  assert(html.includes('font-stretch:normal'));
+  assert(html.includes('font-family:Arial,Helvetica,system-ui,sans-serif'));
+  assert(html.includes('font-size:clamp(25px,7vw,34px)'));
+  assert(html.includes('width:min(84vw,360px)'));
+ }
  assert(!generator.includes('setTimeout('),'do not delay launch artificially');
 });
 

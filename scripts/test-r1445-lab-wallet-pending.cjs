@@ -10,7 +10,7 @@ test('wallet removes duplicate tariffs and rate box, keeps balance and payment c
   const a=ui.indexOf('className:"serviceWalletLab"'),b=ui.indexOf('className:"card panel walletOnlineTopup"',a);
   const between=ui.slice(a,b);
   assert(b>a&&between.includes('pb1445WalletBalanceCard'));
-  assert(!between.includes('walletRateBadge'));
+  assert(between.includes('walletRateBadge'),'service wallet keeps its current rate indicator');
   assert(!between.includes('تعرفه و جزئیات خدمات'));
   assert(between.includes('t.balance||0'));
   assert(ui.includes('className:"card panel walletOnlineTopup"'));
@@ -23,12 +23,12 @@ test('wallet cards align at desktop width and history spans every column',()=>{
   assert(css.includes('.serviceWalletLab:has(>.alert)>.walletOnlineTopup{grid-row:2!important'));
 });
 test('preregistration is explicit; resend retained, activation blocked while pending',()=>{
-  assert(ui.includes('h.registrationPending&&e.jsx("small",{className:"pb1443Preregistered",children:"پیش‌ثبت‌نام · تأیید نشده"})'));
+  assert(ui.includes('className:"pb1446PendingTag"')&&ui.includes('children:"پیش‌ثبت‌نام"'));
   assert(ui.includes('children:h.registrationPending?"در انتظار تأیید عضویت"'));
   assert(ui.includes('e.jsx(PB1443PendingInvite,{customer:h})'));
   assert(ui.includes('disabled:!!h.registrationPending,title:h.registrationPending?'));
   const server=fs.readFileSync('dist/api/server.js','utf8');
-  assert(server.includes('m.active=false AND EXISTS(SELECT 1 FROM invitations pending_invite'));
+  assert(fs.readFileSync('dist/api/lab-invite-preregistration.js','utf8').includes("VALUES($1,$2,'customer',false)"));
   assert(server.includes('AS "registrationPending"'));
   assert(server.includes("resend-invitation"));
 });

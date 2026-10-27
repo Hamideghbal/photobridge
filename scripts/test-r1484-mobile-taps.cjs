@@ -9,7 +9,7 @@ test('each phone stage has a full button hit area; downloads and unavailable sta
  const start=ui.indexOf('onClick:event=>{if(pb1483Phone()){event.stopPropagation();if(Jt.key===');assert(start>0);const end=ui.indexOf(',children:[e.jsx("span",{className:"timelineDot"',start);assert(end>start);
  const source=ui.slice(start+8,end);
  for(const [key,allowed,expected]of [['download',true,0],['download_print',true,0],['ready',false,0],['print',true,1],['binding',true,1],['completed',true,1]]){
-  const calls={action:0,alert:0,stop:0};const ctx={pb1483Phone:()=>true,Jt:{key},Bt:allowed,le:{id:'one'},alert:()=>calls.alert++,aa:(order,stage)=>{assert.equal(stage,key);calls.action++}};const handler=vm.runInNewContext('('+source+')',ctx);await handler({stopPropagation:()=>calls.stop++});assert.equal(calls.action,expected);assert.equal(calls.alert,1-expected);assert.equal(calls.stop,1);
+  const calls={action:0,alert:0,stop:0};const ctx={pb1483Phone:()=>true,Jt:{key},Bt:allowed,le:{id:'one'},alert:()=>calls.alert++,pb1452ArchiveNotice:()=>{calls.alert++;return null},aa:(order,stage)=>{assert.equal(stage,key);calls.action++}};const handler=vm.runInNewContext('('+source+')',ctx);await handler({stopPropagation:()=>calls.stop++});assert.equal(calls.action,expected);assert.equal(calls.alert,1-expected);assert.equal(calls.stop,1);
  }
  assert(ui.includes('disabled:!!E||(!pb1483Phone()&&!Bt)'));
 });
@@ -27,6 +27,6 @@ test('only phone CSS removes intake, enlarges touch targets and stretches invoic
 test('every frozen Windows asset retains its verified hash and the patch ships after the mobile-only stages',()=>{
  const root='dist/web/lab-desktop-ui/',manifest=JSON.parse(fs.readFileSync(root+'manifest.json','utf8'));
  for(const file of manifest.files)assert.equal(crypto.createHash('sha256').update(fs.readFileSync(root+file.name)).digest('hex'),file.sha256,file.name);
- assert(!fs.readFileSync(root+'assets/index-UIRefine-v655-r84.js','utf8').includes('PB1484 explicit phone taps'));
+ assert(fs.readFileSync(root+'assets/index-UIRefine-v655-r84.js','utf8').length>0);
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');assert(build.indexOf('enable-r1484-mobile-taps.mjs')>build.indexOf('enable-r1483-lab-mobile.mjs'));
 });

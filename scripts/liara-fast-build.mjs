@@ -582,3 +582,6 @@ runR1314(process.execPath,["--test","scripts/test-r1492-lab-phone-readable-recor
 
 await deployStep("./enable-r1493-mobile-session-resume.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1493-mobile-session-resume.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1494-lab-phone-settings.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1494-lab-phone-settings.cjs"],{stdio:"inherit"});

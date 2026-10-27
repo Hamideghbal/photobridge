@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
 const root='dist/web/',css=fs.readFileSync('scripts/r1491-mobile-archive-action-grid.css','utf8'),index=fs.readFileSync(root+'index.html','utf8');
 test('archive card actions stay grouped at the physical left edge on phones',()=>{
- assert(css.includes('.archiveInvoice .archiveRowActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,max-content))'));
+ assert(css.includes('.archiveInvoice .archiveRowActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))'));
  assert(css.includes('justify-content:start!important'));
  assert(css.includes('width:max-content!important;max-width:100%!important;margin:8px auto 0 0!important;direction:ltr!important'));
  assert(css.includes('.archiveInvoice .archiveRowActions>.invoiceActionMini{grid-column:1/-1!important;display:grid!important'));

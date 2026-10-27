@@ -1,1 +1,1 @@
-2026-10-27-r1496-gallery-build-stage-fix
+2026-10-27-r1497-original-gallery-payload-fix

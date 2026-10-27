@@ -4,7 +4,7 @@ test('archive card actions stay grouped at the physical left edge on phones',()=
  assert(css.includes('.archiveInvoice .archiveRowActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))'));
  assert(css.includes('justify-content:start!important'));
  assert(css.includes('width:max-content!important;max-width:100%!important;margin:8px auto 0 0!important;direction:ltr!important'));
- assert(css.includes('.archiveInvoice .archiveRowActions>.invoiceActionMini{grid-column:1/-1!important;display:grid!important'));
+ assert(css.includes('.archiveInvoice .archiveRowActions>.invoiceActionMini{grid-column:1/-1!important;display:grid!important;direction:ltr!important'));
  assert(index.includes('photobridge-r1491-mobile-archive-action-grid.css?v=r1491'));
  const ui=fs.readFileSync(root+'assets/index-UIRefine-v655-r84.js','utf8');assert(ui.includes('فایل‌ها / چاپ مجدد'));assert(ui.includes('مشاهده فاکتور'));
 });

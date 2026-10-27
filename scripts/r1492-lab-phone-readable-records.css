@@ -1,0 +1,39 @@
+/* PB1492: improve number readability and turn the statement ledger into cards on lab phones. */
+@media(max-width:820px){
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .fourStepFlow .stepCircle{font-size:10px!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .fourStepFlow b{font-size:8.5px!important;line-height:1.45!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspaceCompact .financeSummary small{font-size:9px!important;line-height:1.55!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspaceCompact .financeSummary b{font-size:17px!important;line-height:1.5!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .invoiceRow small{font-size:8.5px!important;line-height:1.5!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .invoiceRow b{font-size:10px!important;line-height:1.5!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .pb1431ReceiptRow>div:first-child b{font-size:11px!important;line-height:1.55!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .pb1431ReceiptRow>div:first-child small{font-size:9px!important;line-height:1.65!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .pb1431ReceiptRow>time,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .pb1431ReceiptRow>span{font-size:9.5px!important;line-height:1.5!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .pb1431ReceiptRow>strong{font-size:13px!important;line-height:1.5!important;font-weight:900!important;font-variant-numeric:tabular-nums!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveDayHead b,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveInvoice b,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveFileRow b{font-size:12px!important;line-height:1.55!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveInvoice>span,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveInvoice small,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveFileRow small{font-size:9px!important;line-height:1.6!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveWorkspace .calendarGrid button b{font-size:11px!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveInvoice .invoiceActionMini>button:first-child,html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .archiveRowActions>button:first-child{justify-content:flex-start!important;text-align:left!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementPaper .statementSummary small{font-size:9px!important;line-height:1.5!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementPaper .statementSummary b{font-size:15px!important;line-height:1.5!important;font-variant-numeric:tabular-nums!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTableWrap{overflow:visible!important;border:0!important;border-radius:0!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable{display:block!important;width:100%!important;min-width:0!important;border-collapse:separate!important;border-spacing:0!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable thead{display:none!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody{display:grid!important;gap:9px!important;width:100%!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:5px 7px!important;width:100%!important;margin:0!important;padding:9px!important;border:1px solid #e2e9f2!important;border-radius:12px!important;background:#fff!important;box-shadow:0 2px 8px #17324d08!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr.openingRow{background:#fffaf0!important;border-color:#f1ddb1!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important;gap:2px!important;min-width:0!important;padding:4px 6px!important;border:0!important;text-align:right!important;white-space:normal!important;overflow-wrap:anywhere!important;font-size:11px!important;line-height:1.55!important;color:#243b53!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:before{display:block!important;font:700 8px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#75869a!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(1):before{content:"ردیف"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(2):before{content:"تاریخ"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(3){grid-column:1/-1!important;border-top:1px solid #edf1f6!important;border-bottom:1px solid #edf1f6!important;padding:6px!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(3):before{content:"شرح"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(3) b{font-size:11px!important;line-height:1.65!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(3) small{font-size:9px!important;line-height:1.6!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(4):before{content:"شماره سند"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(5):before{content:"بدهکار"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(6):before{content:"بستانکار"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(7){grid-column:1/-1!important;background:#f2f6ff!important;border-radius:8px!important;font-weight:900!important;font-size:12px!important;font-variant-numeric:tabular-nums!important}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td:nth-child(7):before{content:"باقیمانده"}
+html.pb1482LabPhoneMode body #root .labRoleWorkspace .labRolePageScrollArea .statementTable tbody tr>td[colspan="7"]{grid-column:1/-1!important;display:block!important;text-align:center!important}
+}

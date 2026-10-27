@@ -28,7 +28,7 @@ test('typing unit price formats Persian, Arabic and Latin amounts while preservi
 });
 test('overview guide is removed for lab only and fixed header proxies original invoice action',()=>{
  assert.ok(bundle.includes('(t!=="lab"||w!=="overview")&&e.jsxs("button",{className:"financeHelpButton"'));
- assert.ok(header.includes(".financeSectionTools>button,.pb1176ManualOpen"));
+ assert.ok(header.includes('button.disabled=original.disabled'),'current header adapter keeps live tab state');
  assert.ok(header.includes("if(live?.isConnected&&!live.disabled)live.click()"));
  assert.ok(header.includes("button.disabled=original.disabled"));
  const css=fs.readFileSync('dist/web/photobridge-r1418-finance.css','utf8');

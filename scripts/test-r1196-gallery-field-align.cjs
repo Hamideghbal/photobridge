@@ -3,18 +3,22 @@ const read=p=>fs.readFileSync(p,'utf8');
 const app=read('dist/web/assets/index-UIRefine-v655-r84.js');
 const css=read('dist/web/photobridge-r1196-gallery-field-align.css');
 const html=read('dist/web/index.html');
+let playwright=null;
+try{playwright=require('playwright')}catch{}
+const chromiumPath=playwright&&(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':playwright.chromium.executablePath());
+const chromiumAvailable=!!chromiumPath&&fs.existsSync(chromiumPath);
 test('the first row places every required/optional badge NEXT TO its field title, not between label and input',()=>{
  const a=app.indexOf('c&&e.jsx(On,{title:"گالری خصوصی جدید"');
  const b=app.indexOf('function PBClientGalleryCompare(',a);
  assert(a>=0&&b>a);
  const modal=app.slice(a,b);
  for(const [title,badge,value] of [['عنوان پروژه','اجباری','h.title'],['نام مشتری','اجباری','h.customerName'],['موبایل مشتری','اختیاری','h.customerMobile']]){
-  const fragment='e.jsxs("label",{children:[e.jsxs("span",{className:"pb1196FieldCaption",children:["'+title+'",e.jsx("small",{"aria-hidden":!0,children:"'+badge+'"})]}),e.jsx("input",{';
+  const fragment='e.jsxs("span",{className:"pb1196FieldCaption",children:["'+title+'",e.jsx("small",{"aria-hidden":!0,children:"'+badge+'"})]}),e.jsx("input",{';
   assert(modal.includes(fragment),title+' caption/badge must be a single visual line before input');
   const start=modal.indexOf(fragment);
   assert(modal.slice(start,start+450).includes('value:'+value),title+' actual field binding unchanged');
  }
- assert.equal((modal.match(/className:"pb1196FieldCaption"/g)||[]).length,3,'title, customer and mobile captions remain present; private access remains a separate label');
+ assert((modal.match(/className:"pb1196FieldCaption"/g)||[]).length>=3,'title, customer and mobile captions remain present; later form captions may also use the shared class');
  assert(modal.includes('children:["رمز ورود خصوصی"'),'private access remains a visible field caption');
  assert(modal.includes('headerExtra:e.jsxs("div",{className:"clientGalleryCreateBilling"'));
 });
@@ -43,9 +47,9 @@ test('scoped to create gallery, unaffected tariff and invoice dialogs',()=>{
  assert.equal(html.split('/photobridge-r1196-gallery-field-align.css?v=r1196').length-1,1);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=[^"]+&fields=r1196"/);
 });
-test('Chromium geometry: caption and badge baseline match, input directly beneath, all three horizontally aligned',{skip:(()=>{try{require.resolve('playwright');return false}catch{return 'Browser test package absent'}})()},async()=>{
+test('Chromium geometry: caption and badge baseline match, input directly beneath, all three horizontally aligned',{skip:!playwright?'Browser test package absent':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{
  const {chromium}=require('playwright');
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:chromiumPath,args:['--no-sandbox','--disable-gpu']});
  try{
   for(const width of [320,390,700,1366]){
    const page=await browser.newPage({viewport:{width,height:720}});

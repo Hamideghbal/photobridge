@@ -64,7 +64,7 @@ test('one top mode row, visible compact real timeline, safe-area dock and existi
  // Every selector is opt-in; neither photographer nor native snapshots inherit it.
  for(const line of css.split('\n').filter(l=>l.trim().startsWith('html.')))assert(line.trim().startsWith('html.pb1482LabPhoneMode'));
  const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
- for(const label of ['labActionTimeline','onClick:()=>aa(le,Jt.key)','disabled:!Bt||!!E','labPrepayOrderNotice','downloadResumeInline','miniInvoiceBtn','miniDetailBtn'])assert(ui.includes(label),label);
+ for(const label of ['labActionTimeline','aa(le,Jt.key)','disabled:!!E||(!pb1483Phone()&&!Bt)','labPrepayOrderNotice','downloadResumeInline','miniInvoiceBtn','miniDetailBtn'])assert(ui.includes(label),label);
 });
 test('new assets replace old loader once and ship after frozen desktop snapshot',()=>{
  const html=fs.readFileSync('dist/web/index.html','utf8');

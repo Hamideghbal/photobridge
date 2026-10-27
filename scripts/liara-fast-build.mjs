@@ -585,3 +585,6 @@ runR1314(process.execPath,["--test","scripts/test-r1493-mobile-session-resume.cj
 
 await deployStep("./enable-r1494-lab-phone-settings.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1494-lab-phone-settings.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1495-mobile-tariff-editing.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1495-mobile-tariff-editing.cjs"],{stdio:"inherit"});

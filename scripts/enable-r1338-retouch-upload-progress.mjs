@@ -5,6 +5,7 @@ const bundle='dist/web/assets/index-UIRefine-v655-r84.js';
 const cssFile='dist/web/photobridge-r1332-gallery-cards.css';
 let js=fs.readFileSync(bundle,'utf8');
 function apply(before,after,name){
+ if(js.includes('PB1338stage'))return;
  if(js.includes(after))return;
  const hits=js.split(before).length-1;
  if(hits!==1)throw new Error('R1338 '+name+' expected one anchor, found '+hits);

@@ -14,4 +14,15 @@ if(!ui.includes('/* PB1487 phone photographer pickers */')){
  once("alert(error?.message||'بررسی وضعیت سفارش انجام نشد؛ دوباره تلاش کنید.'); return false;","await pb1452ArchiveNotice(error?.message||'بررسی وضعیت سفارش انجام نشد؛ دوباره تلاش کنید.',{title:'امکان تغییر مرحله نیست',brandLabel:'فوتوبریج · لابراتوار',tone:'error'}); return false;");
  ui+='\nfunction pb1487PhonePicker(){return !window.pbNativeStorage&&!/Windows|Electron/i.test(navigator.userAgent||"")&&/Android|iPhone|iPod|iPad/i.test(navigator.userAgent||"")&&window.matchMedia("(max-width:820px)").matches}\n/* PB1487 phone photographer pickers */\n';fs.writeFileSync(asset,ui);
 }
+ui=fs.readFileSync(asset,'utf8');
+if(ui.includes('/* PB1487 phone photographer pickers */')){
+ const picker=(cls,value,change,all,label)=>`e.jsx(wn,{className:"${cls} pb1487CustomerPicker",menuClassName:"pb1487CustomerMenu",ariaLabel:"انتخاب عکاسی",value:${value},onChange:value=>{${change}},options:[{value:"",label:"${all}"},...E.map(Je=>({value:String(Je.id),label:${label}}))]})`;
+ const patches=[
+ ['e.jsxs("select",{className:"pb1427InvoiceCustomerSelect","aria-label":"انتخاب عکاسی",value:pb1427InvoiceCustomer,onChange:Je=>{pb1427SetInvoiceCustomer(Je.target.value);Ie(1)},children:[e.jsx("option",{value:"",children:"همهٔ عکاسی‌ها"}),E.map(Je=>e.jsx("option",{value:String(Je.id),children:Je.name||Je.mobile||"عکاسی"},Je.id))]})',picker('pb1427InvoiceCustomerSelect','pb1427InvoiceCustomer','pb1427SetInvoiceCustomer(value);Ie(1)','همهٔ عکاسی‌ها','Je.name||Je.mobile||"عکاسی"')],
+ ['e.jsx("select",{value:pb1420PaymentCustomer,onChange:Je=>{pb1420SetPaymentCustomer(Je.target.value);q(Je.target.value)},children:[e.jsx("option",{value:"",children:"همهٔ عکاسی‌ها"}),...E.map(Je=>e.jsx("option",{value:String(Je.id),children:String(Je.name||"عکاسی")},Je.id))]})',picker('pb1487ReceiptPicker','pb1420PaymentCustomer','pb1420SetPaymentCustomer(value);q(value)','همهٔ عکاسی‌ها','String(Je.name||"عکاسی")')],
+ ['e.jsxs("select",{className:"pb1421CustomerSelect",value:z,"aria-label":"انتخاب عکاسی",onChange:Je=>{q(Je.target.value);A(null);Re(1)},children:[e.jsx("option",{value:"",children:"انتخاب عکاسی"}),...E.map(Je=>e.jsx("option",{value:String(Je.id),children:String(Je.name||"عکاسی")},Je.id))]})',picker('pb1421CustomerSelect','z','q(value);A(null);Re(1)','انتخاب عکاسی','String(Je.name||"عکاسی")')]
+ ];
+ for(const [old,next] of patches)if(!ui.includes(next)){if(!ui.includes(old))throw Error('R1487 picker partial state');ui=ui.replace(old,'(pb1487PhonePicker()?'+next+':'+old+')')}
+ fs.writeFileSync(asset,ui);
+}
 fs.copyFileSync('scripts/r1487-mobile-pickers.css',root+'photobridge-r1487-mobile-pickers.css');let html=fs.readFileSync(root+'index.html','utf8');const tag='<link rel="stylesheet" href="/photobridge-r1487-mobile-pickers.css?v=r1487">';if(!html.includes(tag))html=html.replace('</head>',tag+'\n</head>');fs.writeFileSync(root+'index.html',html);

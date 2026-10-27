@@ -14,7 +14,7 @@ test('payment selector starts with all customers independently of the statement 
  assert.ok(ui.includes('if(w==="payments")pb1420SetPaymentCustomer("")'));
  assert.ok(ui.includes('value:pb1420PaymentCustomer,onChange:Je=>{pb1420SetPaymentCustomer(Je.target.value);q(Je.target.value)}'));
  assert.ok(ui.includes('children:"همهٔ عکاسی‌ها"'));
- assert.ok(ui.includes('disabled:!pb1420PaymentCustomer,onClick:Ye'));
+ assert.ok(ui.includes('onClick:()=>pb1420PaymentCustomer?Ye():_setPb1437PickAction("payment")'),'when no photographer is selected, open the current chooser first');
 });
 test('receipt list evaluates to a separate Date column and only selected rows',()=>{
  const start=ui.indexOf('w==="payments"&&e.jsx("div",{className:"card financeListCard pb1420Payments"'),end=ui.indexOf(',w==="statement"&&',start);

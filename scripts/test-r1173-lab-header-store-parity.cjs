@@ -19,7 +19,8 @@ test('secondary lab tabs have neither background panels nor border even when sel
  assert.match(rule,/color:#315efb!important/);
  assert.match(rule,/button:hover/);
  assert.match(override,/\.pb1148SecondaryHeader::after/);
- assert.match(override,/linear-gradient\(to bottom,rgba\(49,94,251,\.12\)/);
+ // The desktop fade was moved out of the scrollable header in R1175; that
+ // stage owns the current fade-color and clipping regression assertions.
 });
 test('tab counts are circular and underline slides between retained buttons',()=>{
  assert.match(override,/\.pb1173TabCount/);

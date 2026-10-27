@@ -38,7 +38,7 @@ test('updated photo tab JS receives new URL query parameters',()=>{
   'photobridge-r1163-desktop-gallery-header',
   'photobridge-r1147-lab-admin-header'
  ]){
-  assert.match(html,new RegExp(name+'\\.js\\?v=[^"\\s]+&motion=r1187"'));
+  assert.match(html,new RegExp(name+'\\.js\\?v=[^"\\s]+&motion=r1187(?:&|\")'));
  }
- assert.match(embedded,/photobridge-r1126-desktop-navigation\.js\?v=[^"\s]+&motion=r1187"/);
+ assert.match(embedded,/photobridge-r1126-desktop-navigation\.js\?v=[^"\s]+&motion=r1187(?:&|")/);
 });

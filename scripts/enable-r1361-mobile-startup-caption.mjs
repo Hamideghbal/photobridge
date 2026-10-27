@@ -24,6 +24,9 @@ await sharp(data,{raw:{width:info.width,height:info.height,channels:4}}).png({co
 
 const file=base+'index.html';
 let html=fs.readFileSync(file,'utf8');
+if(html.includes('pb1479Identity')&&html.includes('photobridge-launch-mark-r1479.png')){
+ console.log('[R1361] Current branded mobile startup handoff already present; older splash patch skipped.');
+} else {
 if(html.includes('<div id="pbAppSplashV780"'))throw Error('[R1361] legacy duplicate splash is back');
 const styleId='pbR1361MobileSplashStyle';
 const style=`<style id="${styleId}">
@@ -53,3 +56,4 @@ html=html.replace('<body><div id="root"></div>','<body>'+markup+'<div id="root">
 if((html.match(/id="pbR1361MobileSplash"/g)||[]).length!==1)throw Error('[R1361] duplicate startup handoff');
 fs.writeFileSync(file,html);
 console.log('[R1361] Mobile standalone startup uses enlarged original PhotoBridge mark and a separate white, un-stretched caption.');
+}

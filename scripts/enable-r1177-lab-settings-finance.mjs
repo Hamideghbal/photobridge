@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/web/assets/index-UIRefine-v655-r84.js';
 let source=fs.readFileSync(path,'utf8');
-if(!source.includes('pb1177LedgerDetails')){
+const modernFinance=source.includes('pb1437PickAction')&&source.includes('PB1441StatementDetail');
+if(!source.includes('pb1177LedgerDetails')&&!modernFinance){
  // R1303: R1301 prebuilt bundles already include Site under General. The
  // legacy stage needs its original shape; R1301 restores Site after grouping.
  source=source.replace('items:[["general","عمومی و اعلان‌ها"],["hours","ساعت کاری"],["site","سایت اختصاصی"]]',

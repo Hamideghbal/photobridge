@@ -7,7 +7,7 @@ export function latestLabChats(server){
   const a=server.indexOf(start),b=server.indexOf(end,a);
   if(a<0||b<0)throw Error('R1364 chat route missing');
   const section=server.slice(a,b);
-  if(section.includes(after)&&section.includes('messages: q.rows.reverse()'))continue;
+  if(section.includes(after)&&(section.includes('messages: q.rows.reverse()')||section.includes('messages: voiceRows(q.rows.reverse()')) )continue;
   if(section.split(before).length!==2||section.split('messages: q.rows').length!==2)throw Error('R1364 chat query changed');
   server=server.slice(0,a)+section.replace(before,after).replace('messages: q.rows','messages: q.rows.reverse()')+server.slice(b);
  }

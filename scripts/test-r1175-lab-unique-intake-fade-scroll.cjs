@@ -56,7 +56,8 @@ test('blue fade is a separate sibling and is not clipped by header overflow',()=
  assert(delta.includes('position:fixed!important;'));
  assert(delta.includes('top:120px!important;'));
  assert(delta.includes('linear-gradient(to bottom,'));
- assert(delta.includes('rgba(49,94,251,.12) 0%'));
+ assert(delta.includes('rgba(70,103,221,0.072) 0%'));
+ assert(delta.includes('rgba(70,103,221,0.033) 42%'));
  assert(delta.includes('transparent 100%'));
  assert(delta.includes('pointer-events:none!important'));
 });

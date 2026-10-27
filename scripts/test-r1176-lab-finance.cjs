@@ -14,9 +14,11 @@ test('lab invoice summary is limited to overview and hidden on invoice tab',()=>
  assert(bundle.includes('financeSummary'));
  assert(css.includes('.financeWorkspace:has(.invoiceTableCard)>.financeSummary{display:none!important}'));
 });
-test('today dates are default using Tehran calendar and one-click today exists',()=>{
- assert(bundle.includes('[_pbInvFrom,_setPbInvFrom]=x.useState(()=>t==="lab"?$s(new Date()):"")'));
- assert(bundle.includes('[_pbInvAppliedFrom,_setPbInvAppliedFrom]=x.useState(()=>t==="lab"?$s(new Date()):"")'));
+test('invoice date range uses the current-month default and keeps one-click today',()=>{
+ // Later finance revisions use the current month as the default range; the
+ // original R1176 one-click today action remains available.
+ assert(bundle.includes('Ce=Pf("this_month")'));
+ assert(bundle.includes('[Le,Ge]=x.useState(Ce.from),[Ke,Ze]=x.useState(Ce.to)'));
  assert(bundle.includes('className:"pb1176Today "'));
  assert(bundle.includes('children:"امروز"'));
  assert(bundle.includes('_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day)'));
@@ -62,7 +64,7 @@ test('recorded accounting mark is prominent green and discount documents neutral
 });
 test('files loaded with bumped cache and existing lab header unaffected',()=>{
  assert.match(page,/\/photobridge-r1176-lab-finance\.css\?v=r117[67]/);
- assert.match(page,/\/photobridge-r1176-lab-finance\.js\?v=r117[67]/);
+ assert.match(page,/\/photobridge-r1176-lab-finance\.js\?v=(?:r117[67]|r1437)/);
  assert.match(page,/index-UIRefine-v655-r84\.js\?v=[^"']*finance=r117[67]/);
  assert(page.includes('/photobridge-r1201-lab-invoice-export.js?v=r1201'));
  assert.match(page,/photobridge-r1147-lab-admin-header\.js\?v=(?:r1175|r1186)/);

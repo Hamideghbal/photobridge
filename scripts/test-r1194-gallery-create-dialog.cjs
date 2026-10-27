@@ -39,9 +39,13 @@ test('the late stylesheet is linked once in the real website with its release to
  assert.equal(index.split(tag).length-1,1);
  assert(index.includes('<link rel="stylesheet" href="'+tag+'">'));
 });
-test('computed overlay stacking and containment when a local Chromium harness is installed', {skip:(()=>{try{require.resolve('playwright');return false}catch{return 'Playwright unavailable in production-only build'}})()},async()=>{
+let playwright=null;
+try{playwright=require('playwright')}catch{}
+const chromiumPath=playwright&&(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':playwright.chromium.executablePath());
+const chromiumAvailable=!!chromiumPath&&fs.existsSync(chromiumPath);
+test('computed overlay stacking and containment when a local Chromium harness is installed', {skip:!playwright?'Playwright unavailable in production-only build':!chromiumAvailable?'Chromium executable not installed in this build environment':false},async()=>{
  const {chromium}=require('playwright');
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-gpu']});
+ const browser=await chromium.launch({executablePath:chromiumPath,args:['--no-sandbox','--disable-gpu']});
  try{
   for(const width of [390,1366]){
    const page=await browser.newPage({viewport:{width,height:740},isMobile:width<=820,hasTouch:width<=820});

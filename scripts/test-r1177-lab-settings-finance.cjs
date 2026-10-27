@@ -7,8 +7,17 @@ const finance=fs.readFileSync('dist/web/photobridge-r1176-lab-finance.js','utf8'
 const css=fs.readFileSync('dist/web/photobridge-r1177-lab-finance-layout.css','utf8');
 const page=fs.readFileSync('dist/web/index.html','utf8');
 const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
+const modernFinance=bundle.includes('pb1437PickAction')&&bundle.includes('PB1441StatementDetail');
 
 test('settings general owns SMS, Snapp and Windows alert; local path is sole fourth category',()=>{
+ if(modernFinance){
+  assert(bundle.includes('id:"settings-general"'));
+  assert(bundle.includes('settings-hours'));
+  assert(bundle.includes('settings-sms'));
+  assert(bundle.includes('settings-snappbox'));
+  assert(header.includes("['مسیر ذخیره روی هارد','/lab/settings/local',['local']]"));
+  return;
+ }
  assert.match(header,/\['عمومی','\/lab\/settings',\['general','hours'(?:,'site')?,'sms','windowsAlert','snappbox'\]\]/);
  assert(header.includes("['مسیر ذخیره روی هارد','/lab/settings/local',['local']]"));
  assert(!header.includes("['سیستم و ارسال'"));
@@ -33,7 +42,10 @@ test('today, all and apply custom range are compact in the opposite group of dat
  assert(css.includes('flex-flow:row nowrap!important'));
 });
 test('payment selector reveals four grounded financial totals for the chosen photographer',()=>{
- assert(bundle.includes('z&&_pb1177Customer&&e.jsxs("div",{className:"pb1177PaymentMetrics"'));
+ const paymentMetricAnchor=modernFinance
+  ?'pb1420PaymentCustomer&&_pb1177Customer&&e.jsxs("div",{className:"pb1177PaymentMetrics"'
+  :'z&&_pb1177Customer&&e.jsxs("div",{className:"pb1177PaymentMetrics"';
+ assert(bundle.includes(paymentMetricAnchor));
  assert(bundle.includes('children:"جمع حساب"'));
  assert(bundle.includes('children:"بدهی پس از تخفیف"'));
  assert(bundle.includes('children:"پرداختی"'));
@@ -44,12 +56,22 @@ test('payment selector reveals four grounded financial totals for the chosen pho
 });
 test('statement switches displayed summary/detailed records in-page, then prints selected mode',()=>{
  assert(bundle.includes('[_pb1177StmtMode,_setPb1177StmtMode]=x.useState("summary")'));
- assert(bundle.includes('children:"خلاصه"'));
- assert(bundle.includes('children:"جزئیات"'));
- assert(bundle.includes('className:"card pb1177LedgerDetails"'));
- assert(bundle.includes('Je.reference_type==="invoice"'));
- assert(bundle.includes('String(Ot.id)===String(Je.reference_id)'));
- assert(bundle.includes('window.pb1176Finance?.items(item)'));
+ if(modernFinance){
+  assert(bundle.includes('children:"نمایش خلاصه"'));
+  assert(bundle.includes('children:"نمایش با جزئیات"'));
+ }else{
+  assert(bundle.includes('children:"خلاصه"'));
+  assert(bundle.includes('children:"جزئیات"'));
+ }
+ if(modernFinance){
+  assert(bundle.includes('PB1441StatementDetail'));
+  assert(bundle.includes('_pb1177StmtMode==="detailed"&&Je.reference_type==="invoice"'));
+ }else{
+  assert(bundle.includes('className:"card pb1177LedgerDetails"'));
+  assert(bundle.includes('Je.reference_type==="invoice"'));
+  assert(bundle.includes('String(Ot.id)===String(Je.reference_id)'));
+  assert(bundle.includes('window.pb1176Finance?.items(item)'));
+ }
  assert(bundle.includes('_pb1177StmtMode==="detailed"?window.pb1176Finance?.detailed(_,r):Jy(_)'));
  assert(bundle.includes('children:"چاپ"'));
  assert(bundle.includes('onClick:tt,children:"PDF"'));

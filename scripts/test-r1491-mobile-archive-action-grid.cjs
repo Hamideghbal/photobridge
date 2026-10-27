@@ -9,7 +9,7 @@ test('archive card actions stay grouped at the physical left edge on phones',()=
  const ui=fs.readFileSync(root+'assets/index-UIRefine-v655-r84.js','utf8');assert(ui.includes('فایل‌ها / چاپ مجدد'));assert(ui.includes('مشاهده فاکتور'));
 });
 test('archive action styles are isolated to lab phones and frozen Windows assets are intact',()=>{
- for(const line of css.split('\\n').filter(v=>v.startsWith('html.')))assert(line.startsWith('html.pb1482LabPhoneMode body '));
+ for(const line of css.split(String.fromCharCode(10)).filter(v=>v.startsWith('html.')))assert(line.startsWith('html.pb1482LabPhoneMode body '));
  const manifest=JSON.parse(fs.readFileSync(root+'lab-desktop-ui/manifest.json','utf8'));
  for(const f of manifest.files)assert.equal(crypto.createHash('sha256').update(fs.readFileSync(root+'lab-desktop-ui/'+f.name)).digest('hex'),f.sha256,f.name);
 });

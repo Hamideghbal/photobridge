@@ -26,6 +26,8 @@ once('"سفارش چاپ و فاکتور (انتخاب عکس فعال است)"'
 once('disabled:g||!!PB1112draft.current||!Number(h.digitalPrice)',
  'disabled:g||!!PB1112draft.current','invoice checkbox enabling');
 ui=ui.slice(0,start)+modal+ui.slice(end);
+const initialPayload='JSON.stringify({...h,selectionEnabled:true,digitalPrice:Number(h.digitalPrice||0)})';
+if(ui.split(initialPayload).length===2)ui=ui.replace(initialPayload,'JSON.stringify({...h,selectionEnabled:true,digitalPrice:0})');
 const digitalPayload='orderingEnabled:false,selectionEnabled:true,digitalPrice:Number(h.digitalPrice||0)';
 if(ui.split(digitalPayload).length===2)ui=ui.replace(digitalPayload,'orderingEnabled:false,selectionEnabled:true,digitalPrice:0');
 else if(!ui.includes('orderingEnabled:false,selectionEnabled:true,digitalPrice:0')&&!ui.includes('JSON.stringify({...h,selectionEnabled:true,digitalPrice:0})'))throw Error('[R1197] create payload digital price missing');

@@ -576,3 +576,6 @@ runR1314(process.execPath,["--test","scripts/test-r1490-mobile-archive-settings.
 
 await deployStep("./enable-r1491-mobile-archive-action-grid.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1491-mobile-archive-action-grid.cjs"],{stdio:"inherit"});
+
+await deployStep("./enable-r1492-lab-phone-readable-records.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1492-lab-phone-readable-records.cjs"],{stdio:"inherit"});

@@ -5,3 +5,5 @@ This change is scoped to the authenticated lab phone layout (`pb1482LabPhoneMode
 The patch runs after the frozen desktop/Windows UI snapshot. It changes no tariff values or APIs; existing save actions remain in place. `scripts/test-r1490-mobile-archive-settings.cjs` checks phone-only scope and verifies the frozen Windows files against their manifest hashes.
 
 R1491 adds a separate two-row grid for archive cards: file/reprint and invoice actions keep matching widths and touch heights despite being rendered in nested components.
+
+R1492 enlarges finance/archive figures on lab phones and presents account-statement entries as labeled, two-column transaction cards. The archive invoice-view action is left-aligned within its touch target.

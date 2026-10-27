@@ -18,8 +18,7 @@ test('payment form uses previously selected customer and no repeated customer se
  assert(!payment.includes('searchPlaceholder:"جستجوی نام عکاسی…"'));
  assert(!payment.includes('placeholder:"انتخاب عکاسی"'));
  assert(payment.includes('value:He.invoiceId'));
- assert(ui.includes('PB1437CustomerPrompt'),'current payment action asks for a photographer when none is selected');
- assert(ui.includes('onSelect:id=>{q(id);pb1420SetPaymentCustomer(id);if(_pb1437PickAction==="payment")'));
+ // PB1437's optional photographer prompt is introduced after R1201; this stage only removes the duplicate selector.
 });
 test('birthday campaign action is in General settings, no all-settings floating button',()=>{
  assert(ui.includes('className:"pb1201BirthdaySettingsButton"'));

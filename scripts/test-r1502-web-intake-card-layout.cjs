@@ -12,8 +12,8 @@ test('browser-only manual intake cards keep image, paper, action badge and quant
   const css=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
   for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','PB1510 orderly manual-order photo rows','grid-template-columns:repeat(auto-fill,minmax(188px,200px))!important','max-height:none!important;overflow:visible!important','grid-template-rows:auto auto auto auto!important','left:7px!important;right:auto!important','left:41px!important;right:auto!important','grid-template-columns:minmax(0,1fr) 68px!important','height:31px!important;min-height:31px!important;max-height:31px!important','grid-row:4!important','grid-template-columns:36px 26px 38px 26px!important','grid-template-columns:repeat(2,minmax(0,1fr))!important','height:104px!important','overflow-wrap:anywhere!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1518-native-card-polish/);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1518-native-card-polish/);
+	  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1519-copy-cut-tags/);
+	  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1519-copy-cut-tags/);
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const finalCss=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   assert.equal(finalCss.split('PB1502 browser-only manual intake card layout').length-1,1);

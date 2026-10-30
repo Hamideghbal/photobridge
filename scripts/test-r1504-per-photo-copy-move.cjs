@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function harness(){
  const bytes=Buffer.from('verified photo bytes'),file=new File([bytes],'Photo.jpg',{type:'image/jpeg',lastModified:7}),events=[];let permission='prompt',removed=0;
  const handle={kind:'file',name:file.name,async getFile(){events.push('read');return file;},async queryPermission(){events.push('query');return permission;},async requestPermission(){events.push('permission');permission='granted';return permission;},async isSameEntry(other){return other===this;},async remove(options){assert.equal(options.recursive,false);events.push('remove');removed++;}};
- const window={pbLabLocalIntakeStorage:{fileName:name=>name},async showOpenFilePicker(options){events.push('picker');assert.equal(options.multiple,true);assert.equal(options.mode,'read');return[handle];}};
+ const window={pbLabLocalIntakeStorage:{fileName:name=>name},async showOpenFilePicker(options){events.push('picker');assert.equal(options.multiple,true);assert.equal(options.mode,'readwrite');return[handle];}};
  vm.runInNewContext(fs.readFileSync('scripts/r1466-intake-move.js','utf8'),{window,crypto:crypto.webcrypto,Uint8Array,WeakMap,Map,Error,File});
  const item={file,sourceAction:'move',copies:1};
  const target={item,file:{original_name:file.name},target:{dir:{async getFileHandle(){return{async getFile(){return file;},async isSameEntry(){return false;}};}}}};
@@ -12,7 +12,7 @@ function harness(){
 }
 
 test('Windows transfer removes the original only after the saved order copy is verified',async()=>{
- const h=harness(),files=await h.select();assert.equal(files.length,1);assert.equal(files[0],h.item.file);assert.deepEqual(h.events,['picker','read']);
+ const h=harness(),files=await h.select();assert.equal(files.length,1);assert.equal(files[0],h.item.file);assert.deepEqual(h.events,['picker','query','permission','read']);
  await h.setMode('move');const result=await h.finish();assert.equal(result.removed,1,JSON.stringify(result));assert.equal(h.removed,1);assert(h.events.indexOf('remove')>h.events.lastIndexOf('read'));
 });
 

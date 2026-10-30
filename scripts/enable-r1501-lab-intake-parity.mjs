@@ -42,21 +42,20 @@ if (!js.includes('PB1501 per-photo action labels')) {
     ["if(!files?.length)return;busy(true);await appendFiles(group,files,group.size,group.paper);", "if(!files?.length)return;busy(true);await appendFiles(group,files,group.size,group.paper,mode);"],
     ["try{await appendFiles(group,input.files,group.size,group.paper);", "try{await appendFiles(group,input.files,group.size,group.paper,'copy');"],
   ];
-  const duplicateAnchors = [
-    "if(item){if(albumMode)throw Error('این فایل قبلاً به لت‌های آلبوم اضافه شده است.');additions.push({existing:item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1,chassis:false});",
-    "if(item){if(albumMode)throw Error('این فایل قبلاً به لت‌های آلبوم اضافه شده است.');additions.push({existing:item.existing||item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1,chassis:false});",
-    "if(item){additions.push({existing:item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1,chassis:false});",
-    "if(item){additions.push({existing:item.existing||item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1,chassis:false});",
-  ];
   for (const [before, after] of replacements) {
     const count = js.split(before).length - 1;
     if (count !== 1) throw new Error(`R1501 expected one JS anchor, found ${count}: ${before.slice(0,90)}`);
     js = js.replace(before, after);
   }
-  const duplicateMatch = duplicateAnchors.filter(before => js.split(before).length - 1 === 1);
-  if (duplicateMatch.length !== 1) throw new Error(`R1501 expected one duplicate-photo anchor, found ${duplicateMatch.length}`);
-  const chassis = duplicateMatch[0].includes('chassis:false') ? ',chassis:false' : '';
-  js = js.replace(duplicateMatch[0], `if(item){additions.push({existing:item.existing||item,sourceFile:file,sourceAction});}else additions.push({file,hash,size,paper,copies:1${chassis},sourceActions:[sourceAction]});`);
+  const existingAnchor = /additions\.push\(\{existing:(?:item\.existing\|\|)?item,sourceFile:file\}\);/g;
+  const existingMatches = [...js.matchAll(existingAnchor)];
+  if (existingMatches.length !== 1) throw new Error(`R1501 expected one duplicate-existing photo insertion, found ${existingMatches.length}`);
+  js = js.replace(existingAnchor, 'additions.push({existing:item.existing||item,sourceFile:file,sourceAction});');
+  const newItemAnchor = /additions\.push\(\{file,hash,size,paper,copies:1([^}]*)\}\);/g;
+  const newItemMatches = [...js.matchAll(newItemAnchor)];
+  if (newItemMatches.length !== 1) throw new Error(`R1501 expected one new-photo insertion, found ${newItemMatches.length}`);
+  const remainingFields = newItemMatches[0][1] || '';
+  js = js.replace(newItemAnchor, `additions.push({file,hash,size,paper,copies:1${remainingFields},sourceActions:[sourceAction]});`);
   const quantityAnchors = [
     "quantity.append(minus,count,plus);if(!albumMode)photo.append(quantity);",
     "quantity.append(minus,count,plus);photo.append(quantity);",

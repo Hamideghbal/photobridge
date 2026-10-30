@@ -43,17 +43,10 @@ if(!intake.includes('/* PB1515 recoverable stock retry and shared confirmation *
   intake=once(
     intake,
     "form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;",
-    "form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;pb1515ShowIntakeConfirmation({number:order.orderNumber,message:albumMode?'سفارش آلبوم با موفقیت ثبت شد.':'سفارش عکس با موفقیت ثبت شد.',onOpen:done.onclick});",
-    'shared success confirmation'
+    "form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;modal.classList.add('pb1519IntakeComplete');",
+    'compact completed intake'
   );
-  intake+=`\nfunction pb1515ShowIntakeConfirmation({number,message,onOpen}){
- const old=document.querySelector('.pb1515IntakeConfirmation');old?.remove();
- const box=node('dialog',null,'pb1515IntakeConfirmation');box.setAttribute('dir','rtl');box.setAttribute('aria-label','تأیید ثبت سفارش');
- const mark=node('span','✓','pb1515ConfirmMark'),title=node('h3','سفارش شمارهٔ '+number+' ثبت شد.'),text=node('p',message);
- const actions=node('div',null,'pb1515ConfirmActions'),stay=node('button','بستن'),open=node('button','نمایش سفارش');
- stay.type='button';open.type='button';stay.onclick=()=>{box.close();box.remove();};open.onclick=()=>{box.close();box.remove();onOpen();};
- actions.append(stay,open);box.append(mark,title,text,actions);document.body.append(box);box.addEventListener('cancel',event=>{event.preventDefault();stay.click();});box.showModal();
-}\n/* PB1515 recoverable stock retry and shared confirmation */\n`;
+  intake+='\n/* PB1515 recoverable stock retry and shared confirmation */\n';
   fs.writeFileSync(intakeFile,intake);
 }
 
@@ -78,17 +71,16 @@ if(!server.includes('/* PB1515 delegated draft metadata replay */')){
 }
 
 const css=`<style>/* PB1515 shared intake confirmation */
-.pb1515IntakeConfirmation{box-sizing:border-box!important;position:fixed!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;width:min(360px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 32px)!important;margin:0!important;padding:18px!important;overflow:auto!important;border:1px solid #dce6f2!important;border-radius:10px!important;background:#fff!important;color:#26364a!important;text-align:center!important;font-family:Vazirmatn,Tahoma,sans-serif!important;box-shadow:0 18px 55px #10233d38!important}
-.pb1515IntakeConfirmation::backdrop{background:#10233d73}
-.pb1515ConfirmMark{display:grid;width:40px;height:40px;margin:0 auto 10px;place-items:center;border-radius:50%;background:#e9f8ef;color:#087443;font-size:22px;font-weight:900}
-.pb1515IntakeConfirmation h3{margin:0;font-size:16px}.pb1515IntakeConfirmation p{margin:7px 0 16px;color:#667085;font-size:12px}
-.pb1515ConfirmActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pb1515ConfirmActions button{min-height:42px;border:1px solid #d6e1f0;border-radius:8px;background:#fff;color:#344054;font:800 13px Vazirmatn,Tahoma,sans-serif}
-.pb1515ConfirmActions button:last-child{border-color:#315efb;background:#315efb;color:#fff}
+.pb1137Intake.pb1519IntakeComplete{box-sizing:border-box!important;position:fixed!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;width:min(420px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 32px)!important;margin:0!important;padding:18px!important;overflow:auto!important;border-radius:10px!important}
+.pb1137Intake.pb1519IntakeComplete>header{min-height:40px!important;padding:0 0 10px!important}.pb1137Intake.pb1519IntakeComplete>header h2{font-size:15px!important}
+.pb1137Intake.pb1519IntakeComplete>p{display:none!important}.pb1137Intake.pb1519IntakeComplete form{display:grid!important;gap:10px!important;min-height:0!important;height:auto!important;overflow:visible!important;margin:0!important;text-align:center!important}
+.pb1137Intake.pb1519IntakeComplete form h3{margin:4px 0 0!important;font-size:17px!important}.pb1137Intake.pb1519IntakeComplete form p{margin:0!important;color:#667085!important;font-size:12px!important;line-height:1.8!important}
+.pb1137Intake.pb1519IntakeComplete form>button{width:100%!important;min-height:40px!important;margin:4px 0 0!important;border:0!important;border-radius:8px!important;background:#315efb!important;color:#fff!important;font-weight:800!important}
 </style>`;
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   let html=fs.readFileSync(file,'utf8');
   if(!html.includes('PB1515 shared intake confirmation'))html=html.replace('</head>',css+'</head>');
-  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1518')?url:url.replace(/&intakeRetry=r151[57]/g,'')+'&intakeRetry=r1518');
+  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1519')?url:url.replace(/&intakeRetry=r151[578]/g,'')+'&intakeRetry=r1519');
   fs.writeFileSync(file,html);
 }
 for(const file of [intakeFile,serverFile])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

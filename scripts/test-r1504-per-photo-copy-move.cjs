@@ -25,9 +25,9 @@ test('manual-order cards default to transfer in Windows and right-click changes 
  assert(script.includes("defaultPhotoAction=()=> 'move'"));
  assert(script.includes("photo.addEventListener('contextmenu',event=>{event.preventDefault();void setPhotoAction('copy');})"));
  assert(script.includes('window.pb1466IntakeMove.track(item,item.file,sourceAction)'));
- assert(script.includes("actionBadge=node('button',item.sourceAction==='copy'?'کپی ✓':'کپی'"));
+	 assert(script.includes("actionBadge=node('button',item.sourceAction==='copy'?'کپی':'برش'"));
  assert(script.includes("actionBadge.onclick=()=>setPhotoAction(item.sourceAction==='copy'?'move':'copy')"));
- assert(!script.includes("actionBadge=node('button',item.sourceAction==='move'?'انتقال':'کپی'"));
+	 assert(!script.includes("کپی ✓"));
  assert(helper.includes('async function setMode(item,action)'));assert(helper.includes("source.action!=='move'||source.copyOnly"));assert(helper.includes("group.source.action!=='move'"));
  assert(script.includes('.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{position:absolute!important'));
 });
@@ -39,7 +39,7 @@ test('card layout is part of the same verified Windows/site UI snapshot',()=>{
  const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
  assert(r1504>0&&r1502>r1504&&snapshot>r1502&&verify>snapshot);assert(pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502)<snapshot);
- assert.equal(revision,'2026-10-31-r1518-native-card-polish');
+ assert.equal(revision,'2026-10-31-r1519-copy-cut-tags');
 });
 
 test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu, and is idempotent',()=>{
@@ -71,7 +71,7 @@ test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu
   // Match Liara's actual order: the fixture above contains the post-R1501 JS.
   cp.execFileSync(process.execPath,['scripts/enable-r1504-per-photo-copy-move.mjs'],{cwd:root});
   const html=fs.readFileSync(path.join(root,'dist/web/index.html'),'utf8'),js=fs.readFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.js'),'utf8'),css=fs.readFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.css'),'utf8');
-  assert.equal((html.match(/r1504-per-photo-mode/g)||[]).length,3);assert(js.includes("defaultPhotoAction=()=> 'move'"));assert(js.includes("actionBadge=node('button',item.sourceAction==='copy'?'کپی ✓':'کپی'"));assert(!js.includes("actionBadge=node('button',item.sourceAction==='move'?'انتقال':'کپی'"));assert(js.includes("event.preventDefault();void setPhotoAction('copy')"));assert.equal((js.match(/PB1504 per-photo copy\/move/g)||[]).length,1);assert(css.includes('PB1504 per-photo copy/move'));
+	  assert.equal((html.match(/r1504-per-photo-mode/g)||[]).length,3);assert(js.includes("defaultPhotoAction=()=> 'move'"));assert(js.includes("actionBadge=node('button',item.sourceAction==='copy'?'کپی':'برش'"));assert(!js.includes("کپی ✓"));assert(js.includes("actionBadge.onclick=()=>setPhotoAction(item.sourceAction==='copy'?'move':'copy')"));assert(js.includes("event.preventDefault();void setPhotoAction('copy')"));assert.equal((js.match(/PB1504 per-photo copy\/move/g)||[]).length,1);assert(css.includes('PB1504 per-photo copy/move'));
   cp.execFileSync(process.execPath,['scripts/enable-r1504-per-photo-copy-move.mjs'],{cwd:root});assert.equal(fs.readFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.js'),'utf8').split('PB1504 per-photo copy/move').length-1,1);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });

@@ -215,6 +215,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1518-native-card-polish"`);
+  html = html.replace(re, `$1?v=r1519-copy-cut-tags"`);
 }
 fs.writeFileSync(indexFile, html);

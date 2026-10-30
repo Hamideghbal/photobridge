@@ -207,6 +207,29 @@ if (!css.includes(orderlyMarker)) {
   fs.writeFileSync(cssFile, css);
 }
 
+const controlPolishMarker = '/* PB1520 compact intake header and readable card controls */';
+if (!css.includes(controlPolishMarker)) {
+  css += `\n${controlPolishMarker}
+@media (min-width:761px){
+ .pb1137Intake>header{box-sizing:border-box!important;min-height:42px!important;height:42px!important;padding:3px 0 7px!important;gap:12px!important}
+ .pb1137Intake>header>h2{margin:0!important;padding:0!important;font-size:16px!important;line-height:1.4!important}
+ .pb1137Intake>header>.pb1469IntakeClose{flex:0 0 32px!important;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;font-size:21px!important;border-radius:8px!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame>.pb1501ActionBadge:not(.pb1504ActionToggle){display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{left:41px!important;right:auto!important;width:58px!important;min-width:58px!important;max-width:58px!important;padding:2px 5px!important;font-size:10px!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle::before,
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle::after{display:none!important;content:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{grid-template-columns:minmax(0,1fr) 54px!important;gap:4px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{padding:3px 5px!important;font-size:10px!important;text-overflow:ellipsis!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{width:54px!important;padding:0 3px!important;gap:3px!important;font-size:9px!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{flex:0 0 14px!important;width:14px!important;min-width:14px!important;height:14px!important;min-height:14px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{grid-template-columns:46px 24px 38px 24px!important;gap:3px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{width:46px!important;min-width:46px!important;font-size:10px!important;white-space:nowrap!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:24px!important;min-width:24px!important;max-width:24px!important}
+`;
+  fs.writeFileSync(cssFile, css);
+}
+
 let html = fs.readFileSync(indexFile, 'utf8');
 for (const [name, kind] of [
   ['photobridge-r1137-lab-local-intake.css', 'stylesheet'],
@@ -215,6 +238,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1519-copy-cut-tags"`);
+  html = html.replace(re, `$1?v=r1520-readable-intake-controls"`);
 }
 fs.writeFileSync(indexFile, html);

@@ -71,8 +71,8 @@ if(!server.includes('/* PB1515 delegated draft metadata replay */')){
 }
 
 const css=`<style>/* PB1515 shared intake confirmation */
-.pb1137Intake.pb1519IntakeComplete{box-sizing:border-box!important;position:fixed!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;width:min(420px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 32px)!important;margin:0!important;padding:18px!important;overflow:auto!important;border-radius:10px!important}
-.pb1137Intake.pb1519IntakeComplete>header{min-height:40px!important;padding:0 0 10px!important}.pb1137Intake.pb1519IntakeComplete>header h2{font-size:15px!important}
+.pb1137Intake.pb1519IntakeComplete{box-sizing:border-box!important;position:fixed!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;width:min(420px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 32px)!important;margin:0!important;padding:0 18px 18px!important;overflow:auto!important;border-radius:10px!important}
+.pb1137Intake.pb1519IntakeComplete>header{box-sizing:border-box!important;position:relative!important;display:grid!important;place-items:center!important;width:calc(100% + 36px)!important;min-height:48px!important;height:48px!important;margin:0 -18px 12px!important;padding:8px 18px!important;gap:0!important}.pb1137Intake.pb1519IntakeComplete>header h2{width:100%!important;margin:0!important;padding:0 40px!important;text-align:center!important;font:800 14px/1.4 Vazirmatn,Tahoma,sans-serif!important}.pb1137Intake.pb1519IntakeComplete>header>.pb1469IntakeClose{position:absolute!important;left:18px!important;top:8px!important;right:auto!important;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;margin:0!important;padding:0!important;font-size:20px!important}
 .pb1137Intake.pb1519IntakeComplete>p{display:none!important}.pb1137Intake.pb1519IntakeComplete form{display:grid!important;gap:10px!important;min-height:0!important;height:auto!important;overflow:visible!important;margin:0!important;text-align:center!important}
 .pb1137Intake.pb1519IntakeComplete form h3{margin:4px 0 0!important;font-size:17px!important}.pb1137Intake.pb1519IntakeComplete form p{margin:0!important;color:#667085!important;font-size:12px!important;line-height:1.8!important}
 .pb1137Intake.pb1519IntakeComplete form>button{width:100%!important;min-height:40px!important;margin:4px 0 0!important;border:0!important;border-radius:8px!important;background:#315efb!important;color:#fff!important;font-weight:800!important}
@@ -80,7 +80,7 @@ const css=`<style>/* PB1515 shared intake confirmation */
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   let html=fs.readFileSync(file,'utf8');
   if(!html.includes('PB1515 shared intake confirmation'))html=html.replace('</head>',css+'</head>');
-  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1519')?url:url.replace(/&intakeRetry=r151[578]/g,'')+'&intakeRetry=r1519');
+  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1521')?url:url.replace(/&intakeRetry=r151[5789]|&intakeRetry=r1520/g,'')+'&intakeRetry=r1521');
   fs.writeFileSync(file,html);
 }
 for(const file of [intakeFile,serverFile])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

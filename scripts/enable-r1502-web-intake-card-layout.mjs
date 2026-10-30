@@ -230,6 +230,22 @@ if (!css.includes(controlPolishMarker)) {
   fs.writeFileSync(cssFile, css);
 }
 
+const finalReadabilityMarker = '/* PB1521 edge-to-edge intake header and native label reset */';
+if (!css.includes(finalReadabilityMarker)) {
+  css += `\n${finalReadabilityMarker}
+@media (min-width:761px){
+ .pb1137Intake>header{position:relative!important;display:grid!important;place-items:center!important;width:calc(100% + 24px)!important;min-height:46px!important;height:46px!important;margin:-9px -12px 0!important;padding:7px 12px!important;gap:0!important}
+ .pb1137Intake>header>h2{width:100%!important;margin:0!important;padding:0 42px!important;text-align:center!important;font:800 14px/1.4 Vazirmatn,Tahoma,sans-serif!important}
+ .pb1137Intake>header>.pb1469IntakeClose{position:absolute!important;left:12px!important;top:7px!important;right:auto!important;bottom:auto!important;margin:0!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge:not(.pb1504ActionToggle){display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{font:700 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{font:600 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{font:700 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+`;
+  fs.writeFileSync(cssFile, css);
+}
+
 let html = fs.readFileSync(indexFile, 'utf8');
 for (const [name, kind] of [
   ['photobridge-r1137-lab-local-intake.css', 'stylesheet'],
@@ -238,6 +254,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1520-readable-intake-controls"`);
+  html = html.replace(re, `$1?v=r1521-final-intake-alignment"`);
 }
 fs.writeFileSync(indexFile, html);

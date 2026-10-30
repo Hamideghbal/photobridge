@@ -246,6 +246,23 @@ if (!css.includes(finalReadabilityMarker)) {
   fs.writeFileSync(cssFile, css);
 }
 
+const nativeFinalMarker = '/* PB1522 native single action and contained controls */';
+if (!css.includes(nativeFinalMarker)) {
+  css += `\n${nativeFinalMarker}
+@media (min-width:761px){
+ .pb1137Intake[open]{padding-top:0!important}
+ .pb1137Intake>header{width:calc(100% + 24px)!important;margin:0 -12px!important;padding:7px 12px!important;background:#fff!important;border-radius:0!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge{display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{display:inline-flex!important;left:auto!important;right:7px!important;width:58px!important;min-width:58px!important;max-width:58px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{box-sizing:border-box!important;width:calc(100% - 8px)!important;max-width:calc(100% - 8px)!important;justify-self:center!important;grid-template-columns:42px 23px 36px 23px!important;gap:3px!important;padding:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{width:42px!important;min-width:42px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:36px!important;min-width:36px!important;max-width:36px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:23px!important;min-width:23px!important;max-width:23px!important}
+`;
+  fs.writeFileSync(cssFile, css);
+}
+
 let html = fs.readFileSync(indexFile, 'utf8');
 for (const [name, kind] of [
   ['photobridge-r1137-lab-local-intake.css', 'stylesheet'],
@@ -254,6 +271,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1521-final-intake-alignment"`);
+  html = html.replace(re, `$1?v=r1522-native-single-action"`);
 }
 fs.writeFileSync(indexFile, html);

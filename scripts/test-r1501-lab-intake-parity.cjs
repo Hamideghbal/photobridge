@@ -5,7 +5,7 @@ const jsSource=`let entries=[],groups=[],pendingFiles=[],order=null,submitting=f
 if(files?.length){pendingFiles=files;choose.textContent='کپی عکس';
 fileInput.onchange=()=>{pendingFiles=[...fileInput.files];choose.textContent=pendingFiles.length?;
 async function appendFiles(group,files,size,paper){
-if(item){if(albumMode)throw Error('این فایل قبلاً به لت‌های آلبوم اضافه شده است.');additions.push({existing:item.existing||item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1});
+if(item){if(albumMode)throw Error('این فایل قبلاً به لت‌های آلبوم اضافه شده است.');additions.push({existing:item,sourceFile:file});}else additions.push({file,hash,size,paper,copies:1});
 item.existing.copies++;continue;}item.id=crypto.randomUUID();
 const photo=node('figure');const frame=node('div',null,'pb1181IntakeFrame');const image=node('img');image.src=item.preview;image.alt=item.file.name;frame.append(image);photo.append(frame,node('figcaption',item.file.name));
 await appendFiles(group,files,group.size,group.paper);syncEntries();renderGroups();

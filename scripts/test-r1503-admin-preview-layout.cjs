@@ -18,11 +18,11 @@ test('admin lab preview stays compact in document flow and suppresses full-scree
 });
 test('admin-preview stylesheet runs after the frozen Windows snapshot and remains website-only',()=>{
  const pipeline=fs.readFileSync(path.resolve(__dirname,'liara-fast-build.mjs'),'utf8');
- const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")');
+ const r1502=pipeline.indexOf('await deployStep("./enable-r1502-web-intake-card-layout.mjs")');
+ const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
- const r1502=pipeline.indexOf('await deployStep("./enable-r1502-web-intake-card-layout.mjs")',verify);
- const webOnly=pipeline.indexOf('await deployStep("./enable-r1503-admin-preview-layout.mjs")',r1502);
- assert.ok(snapshot>=0&&verify>snapshot&&r1502>verify&&webOnly>r1502);
+ const webOnly=pipeline.indexOf('await deployStep("./enable-r1503-admin-preview-layout.mjs")',verify);
+ assert.ok(r1502>=0&&snapshot>r1502&&verify>snapshot&&webOnly>verify);
  const source=fs.readFileSync(path.resolve(__dirname,'enable-r1503-admin-preview-layout.mjs'),'utf8');
  assert.ok(source.includes("const cssPath = 'dist/web/photobridge-r1503-admin-preview-layout.css'"));
  assert.ok(source.includes("const htmlPath = 'dist/web/index.html'"));

@@ -529,6 +529,9 @@ await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 // Browser-only manual intake card layout runs after the immutable Windows UI snapshot.
 await deployStep("./enable-r1502-web-intake-card-layout.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.cjs"],{stdio:"inherit"});
+// Admin preview layout is website-only and runs after the frozen Windows UI snapshot.
+await deployStep("./enable-r1503-admin-preview-layout.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1503-admin-preview-layout.cjs"],{stdio:"inherit"});
 
 // Serve the manifest's actual immutable-by-hash bytes, never SEO-mutated HTML
 // or year-long cached fixed-name images. This patch is a build-time transform

@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function harness(){
  const bytes=Buffer.from('verified photo bytes'),file=new File([bytes],'Photo.jpg',{type:'image/jpeg',lastModified:7}),events=[];let permission='prompt',removed=0;
  const handle={kind:'file',name:file.name,async getFile(){events.push('read');return file;},async queryPermission(){events.push('query');return permission;},async requestPermission(){events.push('permission');permission='granted';return permission;},async isSameEntry(other){return other===this;},async remove(options){assert.equal(options.recursive,false);events.push('remove');removed++;}};
- const window={pbLabLocalIntakeStorage:{fileName:name=>name},async showOpenFilePicker(options){events.push('picker');assert.equal(options.multiple,true);assert.equal(options.mode,'read');return[handle];}};
+ const window={pbLabLocalIntakeStorage:{fileName:name=>name},async showOpenFilePicker(options){events.push('picker');assert.equal(options.multiple,true);assert.equal(options.mode,'readwrite');return[handle];}};
  vm.runInNewContext(fs.readFileSync('scripts/r1466-intake-move.js','utf8'),{window,crypto:crypto.webcrypto,Uint8Array,WeakMap,Map,Error,File});
  const item={file,sourceAction:'move',copies:1};
  const target={item,file:{original_name:file.name},target:{dir:{async getFileHandle(){return{async getFile(){return file;},async isSameEntry(){return false;}};}}}};
@@ -12,7 +12,7 @@ function harness(){
 }
 
 test('Windows transfer removes the original only after the saved order copy is verified',async()=>{
- const h=harness(),files=await h.select();assert.equal(files.length,1);assert.equal(files[0],h.item.file);assert.deepEqual(h.events,['picker','read']);
+ const h=harness(),files=await h.select();assert.equal(files.length,1);assert.equal(files[0],h.item.file);assert.deepEqual(h.events,['picker','query','permission','read']);
  await h.setMode('move');const result=await h.finish();assert.equal(result.removed,1,JSON.stringify(result));assert.equal(h.removed,1);assert(h.events.indexOf('remove')>h.events.lastIndexOf('read'));
 });
 
@@ -37,7 +37,7 @@ test('card layout is part of the same verified Windows/site UI snapshot',()=>{
  const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
  assert(r1504>0&&r1502>r1504&&snapshot>r1502&&verify>snapshot);assert(pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502)<snapshot);
- assert.equal(revision,'2026-10-30-r1507-r1504-paper-matcher');
+ assert.equal(revision,'2026-10-30-r1508-r1504-build-fix');
 });
 
 test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu, and is idempotent',()=>{

@@ -99,9 +99,9 @@ for (const route of ['/api/health', '/api/lab/desktop-ui-manifest', '/api/lab/de
   assert(server.includes(route), `Deployment route missing: ${route}`);
 }
 const inviteUi = fs.readFileSync('dist/web/photobridge-v904r98-invite-stable.js', 'utf8');
-assert(html.includes('/photobridge-v904r98-invite-stable.js?v=904r1047'), 'Rental invite UI must use the current cache-busted release');
+assert(html.includes('/photobridge-v904r98-invite-stable.js?v=r1417'), 'Rental invite UI must use the current cache-busted release');
 assert(html.includes('pbInviteContextRetry') && !html.includes('remove(\'pbR100F7InviteBootPending\'),6500'), 'Invite registration must stay gated until account lookup completes');
-for (const marker of ['contextReady:false', 'state.contextReady=true', 'acceptSignupContext(data)', 'showContextRetry()', 'addEventListener(\'click\'', 'birthJalali']) {
+for (const marker of ['contextReady:false', 'state.contextReady=true', 'acceptSignupContext(await res.json())', 'showContextRetry()', 'addEventListener(\'click\'', 'birthJalali']) {
   assert(inviteUi.includes(marker), `Rental invite registration guard missing: ${marker}`);
 }
 assert(inviteUi.includes('const legacyCards=') && inviteUi.includes('if(box)box.remove();'), 'Existing account invite must not show duplicate stored-profile cards');
@@ -119,7 +119,7 @@ const depsStage = docker.split('FROM deps AS runtime')[0];
 assert(depsStage.includes('node scripts/prune-onnx-platforms.mjs'), 'Native runtime must be prepared in the cached dependency stage');
 assert(!depsStage.includes('COPY dist') && !depsStage.includes('COPY DEPLOY_REVISION') && !depsStage.includes('COPY .'), 'Application changes must not invalidate dependency preparation');
 assert(docker.includes('FROM deps AS runtime'), 'Runtime must inherit verified dependency layers');
-assert(docker.includes('COPY . ./') && docker.includes('node scripts/liara-fast-build.mjs'), 'Runtime must prepare validated application assets in place');
+assert(docker.includes('COPY . ./') && docker.includes('node scripts/liara-build-supervisor.cjs'), 'Runtime must prepare validated application assets in place');
 assert(!docker.includes('COPY --from=') && docker.match(/^COPY \. \.\/$/gm)?.length===1, 'Application payload must be copied only once');
 const dockerIgnore=fs.readFileSync('.dockerignore','utf8');
 assert(dockerIgnore.split('\n').includes('**'), 'Whole-context COPY requires a default-deny build context');

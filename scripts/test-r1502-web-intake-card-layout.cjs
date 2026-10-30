@@ -11,21 +11,22 @@ test('browser-only manual intake cards keep image, paper, action badge and quant
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const css=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
-  for(const token of ['PB1502 browser-only manual intake card layout','grid-template-columns:repeat(auto-fill,minmax(168px,1fr))','height:118px!important','-webkit-line-clamp:2!important','grid-template-columns:minmax(0,1fr) 30px 44px 30px!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1502-browser-card-layout/);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1502-browser-card-layout/);
+  for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','grid-template-columns:repeat(auto-fill,minmax(168px,1fr))','grid-template-columns:repeat(auto-fill,minmax(190px,1fr))','height:150px!important','overflow-wrap:anywhere!important','grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important','grid-template-columns:minmax(0,1fr) 30px 44px 30px!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1505-shared-card-layout/);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1505-shared-card-layout/);
   cp.execFileSync(process.execPath,[script],{cwd:root});
   assert.equal(fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8').split('PB1502 browser-only manual intake card layout').length-1,1);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });
-test('the browser layout patch runs after the immutable Windows UI snapshot',()=>{
+test('the shared manual-order layout is included before the immutable Windows UI snapshot',()=>{
  const pipeline=fs.readFileSync(path.resolve(__dirname,'liara-fast-build.mjs'),'utf8');
- const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")');
+ const r1502=pipeline.indexOf('await deployStep("./enable-r1502-web-intake-card-layout.mjs")');
+ const test=pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502);
+ const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',test);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
- const webOnly=pipeline.indexOf('await deployStep("./enable-r1502-web-intake-card-layout.mjs")',verify);
- assert.ok(snapshot>=0&&verify>snapshot&&webOnly>verify);
+ assert.ok(r1502>=0&&test>r1502&&snapshot>test&&verify>snapshot);
  const script=fs.readFileSync(path.resolve(__dirname,'enable-r1502-web-intake-card-layout.mjs'),'utf8');
  assert.ok(script.includes("const cssFile = 'dist/web/photobridge-r1137-lab-local-intake.css'"));
  assert.ok(script.includes("const indexFile = 'dist/web/index.html'"));
- assert.ok(!script.includes('desktop-ui')&&!script.includes('lab-desktop-ui'));
+ assert.ok(script.includes('PB1505 shared web and Windows manual-order card layout'));
 });

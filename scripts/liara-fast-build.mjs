@@ -526,12 +526,12 @@ runR1314(process.execPath,["--test","scripts/test-r1501-lab-intake-parity.cjs"],
 // Per-photo copy/move controls are shared by the website and frozen desktop UI.
 await deployStep("./enable-r1504-per-photo-copy-move.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1504-per-photo-copy-move.cjs"],{stdio:"inherit"});
+await deployStep("./enable-r1502-web-intake-card-layout.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.cjs"],{stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
 // Browser-only manual intake card layout runs after the immutable Windows UI snapshot.
-await deployStep("./enable-r1502-web-intake-card-layout.mjs");
-runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.cjs"],{stdio:"inherit"});
 // Admin preview layout is website-only and runs after the frozen Windows UI snapshot.
 await deployStep("./enable-r1503-admin-preview-layout.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1503-admin-preview-layout.cjs"],{stdio:"inherit"});

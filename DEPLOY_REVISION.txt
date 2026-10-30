@@ -1,1 +1,1 @@
-2026-10-30-r1504-build-anchor
+2026-10-30-r1505-shared-intake-ui

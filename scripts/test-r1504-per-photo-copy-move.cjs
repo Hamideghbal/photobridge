@@ -37,14 +37,14 @@ test('card layout is part of the same verified Windows/site UI snapshot',()=>{
  const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
  assert(r1504>0&&r1502>r1504&&snapshot>r1502&&verify>snapshot);assert(pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502)<snapshot);
- assert.equal(revision,'2026-10-30-r1505-shared-intake-ui');
+ assert.equal(revision,'2026-10-30-r1506-r1504-post-r1501-anchor');
 });
 
 test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu, and is idempotent',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-r1504-'));
  try{
   for(const dir of ['dist/web','dist/api','scripts'])fs.mkdirSync(path.join(root,dir),{recursive:true});
-  const intake=[
+  let intake=[
    "const choose=node('button','انتخاب عکس‌ها');choose.type='button';choose.setAttribute('aria-label','انتخاب عکس‌ها');field(settings,'عکس‌ها',choose);choose.textContent='کپی عکس';choose.setAttribute('aria-label','کپی عکس');const movePhotos=node('button','انتقال عکس');movePhotos.type='button';movePhotos.setAttribute('aria-label','انتقال عکس');const fileActions=node('div',null,'pb1468FileActions');choose.replaceWith(fileActions);fileActions.append(choose,movePhotos);const selectPhotos=async mode=>{if(locked||submitting)return;error.textContent='';try{const files=await window.pb1466IntakeMove.pick(mode);if(files?.length){pendingFiles=files;pendingAction=mode;choose.textContent='کپی عکس';movePhotos.textContent='انتقال عکس';error.textContent=files.length.toLocaleString('fa-IR')+' عکس برای '+(mode==='move'?'انتقال':'کپی')+' انتخاب شد؛ «افزودن» را بزنید.';}}catch(e){error.textContent=e.message;}};choose.onclick=()=>selectPhotos('copy');movePhotos.onclick=()=>selectPhotos('move');",
    "const more=node('button','افزودن عکس');more.type='button';more.textContent='کپی عکس';const moveMore=node('button','انتقال عکس');moveMore.type='button';const addMore=async mode=>{if(locked||submitting)return;try{const files=await window.pb1466IntakeMove.pick(mode);if(!files?.length)return;busy(true);await appendFiles(group,files,group.size,group.paper,mode);syncEntries();renderGroups();error.textContent='';}catch(e){error.textContent=e.message;}finally{busy(false);}};more.onclick=()=>addMore('copy');moveMore.onclick=()=>addMore('move');head.append(moveMore);input.onchange=async()=>{if(locked||submitting)return;busy(true);try{await appendFiles(group,input.files,group.size,group.paper,'copy');syncEntries();renderGroups();error.textContent='';}catch(e){error.textContent=e.message;}finally{busy(false);}};head.append(more,input);",
    "async function appendFiles(group,files,size,paper,sourceAction='copy'){",
@@ -54,6 +54,11 @@ test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu
    "item.id=crypto.randomUUID();item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);",
    "const photo=node('figure');const frame=node('div',null,'pb1181IntakeFrame');const image=node('img');image.src=item.preview;image.alt=item.file.name;frame.append(image);const modes=[...new Set(item.sourceActions||['copy'])];const modeLabel=modes.includes('copy')&&modes.includes('move')?'کپی و انتقال':modes.includes('move')?'انتقال':'کپی';const actionBadge=node('span',modeLabel,'pb1501ActionBadge');actionBadge.dataset.action=modes.length>1?'both':modes[0];photo.append(frame,node('figcaption',item.file.name),actionBadge);"
   ].join('\n');
+  // R1501 has already made duplicate identity sensitive to paper and the
+  // selected per-photo action before R1504 enters the release pipeline.
+  intake=intake
+   .replace("const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);","const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction));")
+   .replace("item.id=crypto.randomUUID();item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);","item.id=crypto.randomUUID();item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);");
   fs.writeFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.js'),intake);
   fs.writeFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.css'),'/* base */');
   fs.copyFileSync('scripts/r1466-intake-move.js',path.join(root,'scripts/r1466-intake-move.js'));
@@ -61,6 +66,7 @@ test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu
   fs.writeFileSync(path.join(root,'dist/web/photobridge-r1466-intake-move.js'),fs.readFileSync('scripts/r1466-intake-move.js','utf8'));
   fs.writeFileSync(path.join(root,'dist/web/index.html'),'<head><script src="/photobridge-r1137-lab-local-intake.js?v=old"></script><link href="/photobridge-r1137-lab-local-intake.css?v=old"><script src="/photobridge-r1466-intake-move.js?v=old"></script></head>');
   fs.writeFileSync(path.join(root,'dist/api/equipment-rental-book.html'),fs.readFileSync(path.join(root,'dist/web/index.html'),'utf8'));
+  // Match Liara's actual order: the fixture above contains the post-R1501 JS.
   cp.execFileSync(process.execPath,['scripts/enable-r1504-per-photo-copy-move.mjs'],{cwd:root});
   const html=fs.readFileSync(path.join(root,'dist/web/index.html'),'utf8'),js=fs.readFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.js'),'utf8'),css=fs.readFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.css'),'utf8');
   assert.equal((html.match(/r1504-per-photo-mode/g)||[]).length,3);assert(js.includes("defaultPhotoAction=()=>window.pbNativeFolder?.pickPhotos?'move':'copy'"));assert(js.includes("event.preventDefault();void setPhotoAction('copy')"));assert.equal((js.match(/PB1504 per-photo copy\/move/g)||[]).length,1);assert(css.includes('PB1504 per-photo copy/move'));

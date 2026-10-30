@@ -88,6 +88,58 @@ if (!css.includes(marker)) {
   fs.writeFileSync(cssFile, css);
 }
 
+const sharedMarker = '/* PB1505 shared web and Windows manual-order card layout */';
+if (!css.includes(sharedMarker)) {
+  css += `\n${sharedMarker}
+.pb1137Intake .pb1139GroupPhotos{
+ grid-template-columns:repeat(auto-fill,minmax(190px,1fr))!important;gap:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos figure{
+ max-width:260px!important;min-width:0!important;gap:7px!important;padding:9px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+ height:150px!important;min-height:150px!important;max-height:150px!important
+}
+.pb1137Intake .pb1139GroupPhotos figcaption{
+ min-height:32px!important;overflow-wrap:anywhere!important;white-space:normal!important;line-height:1.5!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+ grid-template-columns:minmax(0,1fr)!important;gap:7px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
+ width:100%!important;height:40px!important;min-height:40px!important;padding:6px 10px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
+ min-height:28px!important;gap:8px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{
+ flex-basis:18px!important;width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+ grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important;gap:4px!important;min-height:38px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{
+ min-width:38px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+ width:42px!important;min-width:42px!important;max-width:42px!important;height:34px!important;min-height:34px!important;font-size:14px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+ width:28px!important;min-width:28px!important;max-width:28px!important;height:34px!important;min-height:34px!important
+}
+@media(max-width:520px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .pb1137Intake .pb1139GroupPhotos figure{max-width:none!important;padding:7px!important;gap:6px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(110px,34vw,145px)!important;min-height:clamp(110px,34vw,145px)!important;max-height:clamp(110px,34vw,145px)!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{grid-template-columns:minmax(36px,1fr) 24px 40px 24px!important;gap:3px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{min-width:36px!important;font-size:11px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:40px!important;min-width:40px!important;max-width:40px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:24px!important;min-width:24px!important;max-width:24px!important}
+}
+`;
+  fs.writeFileSync(cssFile, css);
+}
+
 let html = fs.readFileSync(indexFile, 'utf8');
 for (const [name, kind] of [
   ['photobridge-r1137-lab-local-intake.css', 'stylesheet'],
@@ -96,6 +148,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1502-browser-card-layout"`);
+  html = html.replace(re, `$1?v=r1505-shared-card-layout"`);
 }
 fs.writeFileSync(indexFile, html);

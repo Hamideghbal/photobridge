@@ -528,6 +528,8 @@ await deployStep("./enable-r1504-per-photo-copy-move.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1504-per-photo-copy-move.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1502-web-intake-card-layout.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.cjs"],{stdio:"inherit"});
+await deployStep("./enable-r1515-intake-retry-confirmation.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1515-intake-retry-confirmation.cjs"],{stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

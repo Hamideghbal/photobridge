@@ -143,42 +143,51 @@ if (!css.includes(sharedMarker)) {
 const orderlyMarker = '/* PB1510 orderly manual-order photo rows */';
 if (!css.includes(orderlyMarker)) {
   css += `\n${orderlyMarker}
-@media(min-width:761px){
- .pb1137Intake .pb1139GroupPhotos{
-  grid-template-columns:minmax(0,1fr)!important;gap:10px!important;
-  max-height:min(430px,54dvh)!important;padding:10px!important
- }
- .pb1137Intake .pb1139GroupPhotos figure{
-  display:grid!important;grid-template-columns:180px minmax(0,1fr)!important;
-  grid-template-rows:auto auto auto!important;column-gap:14px!important;row-gap:8px!important;
-  align-items:start!important;width:100%!important;max-width:none!important;min-height:170px!important;
-  padding:10px!important;border-radius:10px!important
- }
- .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
-  grid-column:1!important;grid-row:1 / span 3!important;
-  width:180px!important;height:150px!important;min-height:150px!important;max-height:150px!important
- }
- .pb1137Intake .pb1139GroupPhotos figcaption{
-  grid-column:2!important;grid-row:1!important;align-self:center!important;
-  justify-self:start!important;width:min(100%,520px)!important;min-height:24px!important;
-  text-align:right!important;-webkit-line-clamp:1!important;font-size:12px!important
- }
- .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
-  grid-column:2!important;grid-row:2!important;display:grid!important;
-  grid-template-columns:minmax(220px,320px) 150px!important;justify-content:start!important;
-  justify-self:start!important;width:min(100%,520px)!important;gap:10px!important;align-items:center!important
- }
- .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{height:38px!important;min-height:38px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{justify-self:start!important;min-height:38px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
-  grid-column:2!important;grid-row:3!important;justify-self:start!important;
-  width:min(100%,520px)!important;grid-template-columns:46px 32px 46px 32px!important;
-  justify-content:start!important;gap:5px!important
- }
+.pb1137Intake .pb1139GroupPhotos{
+ grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;gap:12px!important;
+ max-height:min(460px,56dvh)!important;padding:10px!important
+}
+.pb1137Intake .pb1139GroupPhotos figure{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;
+ align-content:start!important;align-items:stretch!important;width:100%!important;min-width:0!important;max-width:none!important;
+ gap:7px!important;margin:0!important;padding:9px!important;border-radius:10px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+ grid-column:1!important;grid-row:1!important;width:100%!important;
+ height:160px!important;min-height:160px!important;max-height:160px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay,
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{
+ top:7px!important;height:28px!important;min-height:28px!important;margin:0!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay{
+ left:7px!important;right:auto!important;width:28px!important;min-width:28px!important;max-width:28px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{
+ left:41px!important;right:auto!important;min-width:68px!important;max-width:88px!important;padding:3px 10px!important
+}
+.pb1137Intake .pb1139GroupPhotos figcaption{
+ grid-column:1!important;grid-row:2!important;width:100%!important;min-height:22px!important;
+ text-align:center!important;-webkit-line-clamp:1!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+ grid-column:1!important;grid-row:3!important;display:grid!important;
+ grid-template-columns:minmax(0,1fr) auto!important;width:100%!important;gap:7px!important;align-items:center!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
+ width:100%!important;height:38px!important;min-height:38px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
+ justify-self:stretch!important;min-width:84px!important;min-height:38px!important;height:38px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+ grid-column:1!important;grid-row:4!important;display:grid!important;
+ grid-template-columns:46px 32px 46px 32px!important;justify-content:center!important;
+ width:100%!important;min-height:36px!important;gap:5px!important
 }
 @media(max-width:760px){
  .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:6px!important}
- .pb1137Intake .pb1139GroupPhotos figure{max-width:none!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(120px,34vw,160px)!important;min-height:clamp(120px,34vw,160px)!important;max-height:clamp(120px,34vw,160px)!important}
 }
 @media(max-width:390px){
  .pb1137Intake .pb1139GroupPhotos{grid-template-columns:minmax(0,1fr)!important}
@@ -195,6 +204,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1510-orderly-photo-rows"`);
+  html = html.replace(re, `$1?v=r1512-stacked-photo-cards"`);
 }
 fs.writeFileSync(indexFile, html);

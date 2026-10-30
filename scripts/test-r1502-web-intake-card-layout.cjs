@@ -11,9 +11,9 @@ test('browser-only manual intake cards keep image, paper, action badge and quant
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const css=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
-  for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','PB1510 orderly manual-order photo rows','grid-template-columns:minmax(0,1fr)!important','grid-template-columns:180px minmax(0,1fr)!important','grid-row:1 / span 3!important','width:min(100%,520px)!important','grid-template-columns:minmax(220px,320px) 150px!important','grid-template-columns:46px 32px 46px 32px!important','grid-template-columns:repeat(2,minmax(0,1fr))!important','height:150px!important','overflow-wrap:anywhere!important','grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important','grid-template-columns:minmax(0,1fr) 30px 44px 30px!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1510-orderly-photo-rows/);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1510-orderly-photo-rows/);
+  for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','PB1510 orderly manual-order photo rows','grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important','grid-template-rows:auto auto auto auto!important','left:7px!important;right:auto!important','left:41px!important;right:auto!important','grid-template-columns:minmax(0,1fr) auto!important','grid-row:3!important','grid-row:4!important','grid-template-columns:46px 32px 46px 32px!important','grid-template-columns:repeat(2,minmax(0,1fr))!important','height:160px!important','overflow-wrap:anywhere!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1512-stacked-photo-cards/);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1512-stacked-photo-cards/);
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const finalCss=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   assert.equal(finalCss.split('PB1502 browser-only manual intake card layout').length-1,1);

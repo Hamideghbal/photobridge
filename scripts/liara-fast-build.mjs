@@ -526,6 +526,10 @@ runR1314(process.execPath,["--test","scripts/test-r1501-lab-intake-parity.cjs"],
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
+// Browser-only manual intake card layout runs after the immutable Windows UI snapshot.
+await deployStep("./enable-r1502-web-intake-card-layout.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.cjs"],{stdio:"inherit"});
+
 // Serve the manifest's actual immutable-by-hash bytes, never SEO-mutated HTML
 // or year-long cached fixed-name images. This patch is a build-time transform
 // of the shipped server and does not touch data, sync state, or auth.

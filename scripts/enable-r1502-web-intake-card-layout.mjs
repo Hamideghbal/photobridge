@@ -140,6 +140,50 @@ if (!css.includes(sharedMarker)) {
   fs.writeFileSync(cssFile, css);
 }
 
+const orderlyMarker = '/* PB1510 orderly manual-order photo rows */';
+if (!css.includes(orderlyMarker)) {
+  css += `\n${orderlyMarker}
+@media(min-width:761px){
+ .pb1137Intake .pb1139GroupPhotos{
+  grid-template-columns:minmax(0,1fr)!important;gap:10px!important;
+  max-height:min(430px,54dvh)!important;padding:10px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos figure{
+  display:grid!important;grid-template-columns:180px minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto!important;column-gap:14px!important;row-gap:8px!important;
+  align-items:start!important;width:100%!important;max-width:none!important;min-height:170px!important;
+  padding:10px!important;border-radius:10px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+  grid-column:1!important;grid-row:1 / span 3!important;
+  width:180px!important;height:150px!important;min-height:150px!important;max-height:150px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos figcaption{
+  grid-column:2!important;grid-row:1!important;align-self:center!important;
+  min-height:24px!important;text-align:right!important;-webkit-line-clamp:1!important;font-size:12px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+  grid-column:2!important;grid-row:2!important;display:grid!important;
+  grid-template-columns:minmax(180px,1fr) minmax(110px,auto)!important;gap:10px!important;align-items:center!important
+ }
+ .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{height:38px!important;min-height:38px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{justify-self:start!important;min-height:38px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+  grid-column:2!important;grid-row:3!important;justify-self:start!important;
+  width:min(100%,280px)!important;grid-template-columns:minmax(46px,1fr) 32px 46px 32px!important;gap:5px!important
+ }
+}
+@media(max-width:760px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:6px!important}
+ .pb1137Intake .pb1139GroupPhotos figure{max-width:none!important}
+}
+@media(max-width:390px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:minmax(0,1fr)!important}
+}
+`;
+  fs.writeFileSync(cssFile, css);
+}
+
 let html = fs.readFileSync(indexFile, 'utf8');
 for (const [name, kind] of [
   ['photobridge-r1137-lab-local-intake.css', 'stylesheet'],
@@ -148,6 +192,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1505-shared-card-layout"`);
+  html = html.replace(re, `$1?v=r1510-orderly-photo-rows"`);
 }
 fs.writeFileSync(indexFile, html);

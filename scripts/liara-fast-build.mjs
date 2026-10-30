@@ -495,6 +495,8 @@ await deployStep("./enable-r1469-intake-native-errors.mjs");
 await deployStep("./enable-r1470-native-intake.mjs");
 await deployStep("./enable-r1471-app-updates.mjs");
 await deployStep("./enable-r1472-live-finance.mjs");
+await deployStep("./enable-r1498-manual-paper-identity.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1498-manual-paper-identity.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1473-debt-modal.mjs");
 await deployStep("./enable-r1475-installed-download.mjs");
 await deployStep("./enable-r1476-shared-alerts.mjs");

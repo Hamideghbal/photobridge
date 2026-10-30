@@ -160,17 +160,20 @@ if (!css.includes(orderlyMarker)) {
  }
  .pb1137Intake .pb1139GroupPhotos figcaption{
   grid-column:2!important;grid-row:1!important;align-self:center!important;
-  min-height:24px!important;text-align:right!important;-webkit-line-clamp:1!important;font-size:12px!important
+  justify-self:start!important;width:min(100%,520px)!important;min-height:24px!important;
+  text-align:right!important;-webkit-line-clamp:1!important;font-size:12px!important
  }
  .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
   grid-column:2!important;grid-row:2!important;display:grid!important;
-  grid-template-columns:minmax(180px,1fr) minmax(110px,auto)!important;gap:10px!important;align-items:center!important
+  grid-template-columns:minmax(220px,320px) 150px!important;justify-content:start!important;
+  justify-self:start!important;width:min(100%,520px)!important;gap:10px!important;align-items:center!important
  }
  .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{height:38px!important;min-height:38px!important}
  .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{justify-self:start!important;min-height:38px!important}
  .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
   grid-column:2!important;grid-row:3!important;justify-self:start!important;
-  width:min(100%,280px)!important;grid-template-columns:minmax(46px,1fr) 32px 46px 32px!important;gap:5px!important
+  width:min(100%,520px)!important;grid-template-columns:46px 32px 46px 32px!important;
+  justify-content:start!important;gap:5px!important
  }
 }
 @media(max-width:760px){

@@ -24,9 +24,21 @@ if(!intake.includes('/* PB1515 recoverable stock retry and shared confirmation *
   );
   intake=once(
     intake,
+    'const clientOrderId=crypto.randomUUID();',
+    'let committed=false;const clientOrderId=crypto.randomUUID();',
+    'commit state'
+  );
+  intake=once(
+    intake,
+    "const result=await api('/api/lab/delegated-orders/'+order.orderId+'/submit',{sendInvoiceSms:customers.sendInvoiceSms===true});",
+    "const result=await api('/api/lab/delegated-orders/'+order.orderId+'/submit',{sendInvoiceSms:customers.sendInvoiceSms===true});committed=true;",
+    'commit confirmation'
+  );
+  intake=once(
+    intake,
     "}catch(e){busy(false);error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':e.message;}",
-    "}catch(e){if(e.code==='stock_unavailable')locked=false;busy(false);error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':e.message;}",
-    'stock retry unlock'
+    "}catch(e){if(!committed)locked=false;busy(false);const missing=e.name==='NotFoundError'||e.code==='ENOENT'||/requested file or directory could not be found/i.test(e.message||'');error.textContent=e.name==='NotAllowedError'?'اجازهٔ ذخیره روی هارد داده نشد؛ سفارش ارسال نشد.':missing?'فایل یا پوشه پیدا نشد؛ عکس را حذف و دوباره انتخاب کنید یا مسیر ذخیره‌سازی را بررسی کنید، سپس دوباره ثبت کنید.':e.message;}",
+    'pre-commit retry unlock'
   );
   intake=once(
     intake,
@@ -76,7 +88,7 @@ const css=`<style>/* PB1515 shared intake confirmation */
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   let html=fs.readFileSync(file,'utf8');
   if(!html.includes('PB1515 shared intake confirmation'))html=html.replace('</head>',css+'</head>');
-  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1515')?url:url+'&intakeRetry=r1515');
+  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1517')?url:url.replace(/&intakeRetry=r1515/g,'')+'&intakeRetry=r1517');
   fs.writeFileSync(file,html);
 }
 for(const file of [intakeFile,serverFile])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

@@ -1,7 +1,7 @@
-# PhotoBridge Lab 1.0.54 updater debug build
+# PhotoBridge Lab 1.0.55 updater debug build
 
-Download all five `.001` through `.005` files and `PhotoBridge-Lab-1.0.54-join.cmd` into one folder. Run the CMD file to create `PhotoBridge-Lab-1.0.54-portable-debug.zip`, extract it, then run `PhotoBridge Lab.exe` from `win-unpacked`.
+Download all five `.001` through `.005` files and `PhotoBridge-Lab-1.0.55-join.cmd` into one folder. Run the CMD file to create `PhotoBridge-Lab-1.0.55-portable-debug.zip`, extract it, then run `PhotoBridge Lab.exe` from `win-unpacked`.
 
 SHA-256 of the reconstructed ZIP:
 
-`1ddffb0129fd410f620013f7977ad4065fc45aeabc92e7f38e04e40b3860b5e9`
+`b7e4de6ee5da41a0c36ca4e07904424bfcc0c40f7fbde33d7957ca086e544345`

@@ -11,11 +11,13 @@ test('browser-only manual intake cards keep image, paper, action badge and quant
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const css=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
   const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
-  for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','grid-template-columns:repeat(auto-fill,minmax(168px,1fr))','grid-template-columns:repeat(auto-fill,minmax(190px,1fr))','height:150px!important','overflow-wrap:anywhere!important','grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important','grid-template-columns:minmax(0,1fr) 30px 44px 30px!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1505-shared-card-layout/);
-  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1505-shared-card-layout/);
+  for(const token of ['PB1502 browser-only manual intake card layout','PB1505 shared web and Windows manual-order card layout','PB1510 orderly manual-order photo rows','grid-template-columns:minmax(0,1fr)!important','grid-template-columns:180px minmax(0,1fr)!important','grid-row:1 / span 3!important','width:min(100%,280px)!important','grid-template-columns:repeat(2,minmax(0,1fr))!important','height:150px!important','overflow-wrap:anywhere!important','grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important','grid-template-columns:minmax(0,1fr) 30px 44px 30px!important','overflow-x:hidden!important;overflow-y:auto!important'])assert.ok(css.includes(token),`missing CSS rule: ${token}`);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.css\?v=r1510-orderly-photo-rows/);
+  assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r1510-orderly-photo-rows/);
   cp.execFileSync(process.execPath,[script],{cwd:root});
-  assert.equal(fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8').split('PB1502 browser-only manual intake card layout').length-1,1);
+  const finalCss=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
+  assert.equal(finalCss.split('PB1502 browser-only manual intake card layout').length-1,1);
+  assert.equal(finalCss.split('PB1510 orderly manual-order photo rows').length-1,1);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });
 test('the shared manual-order layout is included before the immutable Windows UI snapshot',()=>{

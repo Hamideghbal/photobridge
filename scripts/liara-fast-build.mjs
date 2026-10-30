@@ -517,6 +517,8 @@ await deployStep("./enable-r1480-launch-icon.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1480-launch-icon.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1481-icon-insets.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1481-icon-insets.cjs"],{stdio:"inherit"});
+await deployStep("./enable-r1499-lab-desktop-invoice-errors.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1499-lab-desktop-invoice-errors.cjs"],{stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

@@ -1,9 +1,13 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 
-test('stock failure unlocks the existing draft and retries current per-photo settings',()=>{
+test('every pre-commit failure unlocks the existing draft and retries current per-photo settings',()=>{
  const patch=fs.readFileSync('scripts/enable-r1515-intake-retry-confirmation.mjs','utf8');
- assert.ok(patch.includes("if(e.code==='stock_unavailable')locked=false"));
+ assert.ok(patch.includes('let committed=false;const clientOrderId'));
+ assert.ok(patch.includes("/submit',{sendInvoiceSms:customers.sendInvoiceSms===true});committed=true;"));
+ assert.ok(patch.includes('if(!committed)locked=false'));
+ assert.ok(patch.includes("e.name==='NotFoundError'||e.code==='ENOENT'"));
+ assert.ok(patch.includes('فایل یا پوشه پیدا نشد؛ عکس را حذف و دوباره انتخاب کنید'));
  assert.ok(patch.includes('for(const item of entries){const result=await api('));
  assert.ok(patch.includes('UPDATE order_files SET print_size_id=$4,print_type=$5,chassis=$6,frame=$7,print_copies=$8'));
  assert.ok(patch.includes("WHERE id=$1 AND lab_id=$2 AND order_id=$3"));
@@ -12,6 +16,7 @@ test('stock failure unlocks the existing draft and retries current per-photo set
  assert.ok(r1467.includes('/* PB1467 live intake requests */'));
  assert.ok(patch.includes("catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]"));
  assert.ok(!patch.includes('async function api(url,body){try{return await storage().request'));
+ assert.ok(patch.includes("intakeRetry=r1517"));
 });
 
 test('browser and Windows use one shared post-submit confirmation dialog',()=>{

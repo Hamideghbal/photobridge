@@ -1,1 +1,1 @@
-2026-10-30-r1500-lab-intake-quantity-updater
+2026-10-30-r1501-manual-intake-parity

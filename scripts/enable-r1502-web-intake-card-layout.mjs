@@ -144,18 +144,18 @@ const orderlyMarker = '/* PB1510 orderly manual-order photo rows */';
 if (!css.includes(orderlyMarker)) {
   css += `\n${orderlyMarker}
 .pb1137Intake .pb1139GroupPhotos{
- grid-template-columns:repeat(auto-fill,minmax(210px,220px))!important;justify-content:start!important;
- gap:10px!important;max-height:none!important;overflow:visible!important;padding:8px!important
+ grid-template-columns:repeat(auto-fill,minmax(188px,200px))!important;justify-content:start!important;
+ gap:8px!important;max-height:none!important;overflow:visible!important;padding:7px!important
 }
 .pb1137Intake .pb1139GroupPhotos figure{
  display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;
  align-content:start!important;align-items:stretch!important;width:100%!important;min-width:0!important;max-width:none!important;
  box-sizing:border-box!important;height:auto!important;min-height:0!important;max-height:none!important;
- gap:5px!important;margin:0!important;padding:8px!important;overflow:hidden!important;border-radius:10px!important
+ gap:4px!important;margin:0!important;padding:7px!important;overflow:hidden!important;border-radius:9px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
  grid-column:1!important;grid-row:1!important;width:100%!important;
- height:120px!important;min-height:120px!important;max-height:120px!important
+ height:104px!important;min-height:104px!important;max-height:104px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay,
 .pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{
@@ -169,36 +169,36 @@ if (!css.includes(orderlyMarker)) {
 }
 .pb1137Intake .pb1139GroupPhotos figcaption{
  grid-column:1!important;grid-row:2!important;width:100%!important;min-height:19px!important;max-height:19px!important;
- text-align:center!important;-webkit-line-clamp:1!important;font-size:11px!important;line-height:19px!important
+ text-align:center!important;-webkit-line-clamp:1!important;font-size:10px!important;line-height:19px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
  grid-column:1!important;grid-row:3!important;display:grid!important;
- grid-template-columns:minmax(0,1fr) 76px!important;width:100%!important;gap:6px!important;align-items:center!important;
- height:34px!important;min-height:34px!important;max-height:34px!important;margin:0!important;overflow:visible!important
+ grid-template-columns:minmax(0,1fr) 68px!important;width:100%!important;gap:5px!important;align-items:center!important;
+ height:31px!important;min-height:31px!important;max-height:31px!important;margin:0!important;overflow:visible!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
- width:100%!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:4px 7px!important
+ width:100%!important;height:31px!important;min-height:31px!important;max-height:31px!important;padding:3px 6px!important;font-size:10px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
- box-sizing:border-box!important;justify-self:stretch!important;min-width:0!important;width:76px!important;
- min-height:34px!important;height:34px!important;max-height:34px!important;padding:0 5px!important
+ box-sizing:border-box!important;justify-self:stretch!important;min-width:0!important;width:68px!important;
+ min-height:31px!important;height:31px!important;max-height:31px!important;padding:0 4px!important;font-size:10px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
  grid-column:1!important;grid-row:4!important;display:grid!important;
- grid-template-columns:40px 28px 42px 28px!important;justify-content:center!important;align-items:center!important;
- box-sizing:border-box!important;width:100%!important;height:34px!important;min-height:34px!important;max-height:34px!important;
- gap:4px!important;margin:0!important;padding:0!important;overflow:visible!important
+ grid-template-columns:36px 26px 38px 26px!important;justify-content:center!important;align-items:center!important;
+ box-sizing:border-box!important;width:100%!important;height:31px!important;min-height:31px!important;max-height:31px!important;
+ gap:3px!important;margin:0!important;padding:0!important;overflow:visible!important
 }
-.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{min-width:0!important;font-size:11px!important;text-align:center!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{min-width:0!important;font-size:10px!important;text-align:center!important}
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
- width:42px!important;min-width:42px!important;max-width:42px!important;height:30px!important;min-height:30px!important;max-height:30px!important
+ width:38px!important;min-width:38px!important;max-width:38px!important;height:28px!important;min-height:28px!important;max-height:28px!important;font-size:11px!important
 }
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
- width:28px!important;min-width:28px!important;max-width:28px!important;height:30px!important;min-height:30px!important;max-height:30px!important
+ width:26px!important;min-width:26px!important;max-width:26px!important;height:28px!important;min-height:28px!important;max-height:28px!important;font-size:12px!important
 }
 @media(max-width:760px){
  .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:6px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(96px,28vw,120px)!important;min-height:clamp(96px,28vw,120px)!important;max-height:clamp(96px,28vw,120px)!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(88px,25vw,104px)!important;min-height:clamp(88px,25vw,104px)!important;max-height:clamp(88px,25vw,104px)!important}
 }
 @media(max-width:390px){
  .pb1137Intake .pb1139GroupPhotos{grid-template-columns:minmax(0,1fr)!important}
@@ -215,6 +215,6 @@ for (const [name, kind] of [
   const re = new RegExp(`(${kind === 'stylesheet' ? 'href' : 'src'}="/${name.replaceAll('.', '\\.')})\\?v=[^"]+"`, 'g');
   const matches = [...html.matchAll(re)];
   if (matches.length !== 1) throw new Error(`R1502 expected one browser intake ${kind} reference; found ${matches.length}`);
-  html = html.replace(re, `$1?v=r1514-compact-photo-cards"`);
+  html = html.replace(re, `$1?v=r1518-native-card-polish"`);
 }
 fs.writeFileSync(indexFile, html);

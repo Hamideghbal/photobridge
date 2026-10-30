@@ -16,12 +16,13 @@ test('every pre-commit failure unlocks the existing draft and retries current pe
  assert.ok(r1467.includes('/* PB1467 live intake requests */'));
  assert.ok(patch.includes("catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]"));
  assert.ok(!patch.includes('async function api(url,body){try{return await storage().request'));
- assert.ok(patch.includes("intakeRetry=r1517"));
+ assert.ok(patch.includes("intakeRetry=r1518"));
 });
 
 test('browser and Windows use one shared post-submit confirmation dialog',()=>{
  const patch=fs.readFileSync('scripts/enable-r1515-intake-retry-confirmation.mjs','utf8');
  for(const token of ['pb1515ShowIntakeConfirmation','pb1515IntakeConfirmation','تأیید ثبت سفارش',"سفارش شمارهٔ '+number+' ثبت شد.",'pb1515ConfirmActions','box.showModal()'])assert.ok(patch.includes(token),token);
+ for(const token of ['width:min(360px,calc(100vw - 32px))!important','inset:50% auto auto 50%!important','height:auto!important','max-height:calc(100dvh - 32px)!important'])assert.ok(patch.includes(token),token);
  assert.ok(!patch.includes('__PB_NATIVE_ORDER_ALERTS__'));
  const pipeline=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  const r1502=pipeline.indexOf('await deployStep("./enable-r1502-web-intake-card-layout.mjs")');

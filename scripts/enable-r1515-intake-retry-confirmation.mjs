@@ -78,17 +78,17 @@ if(!server.includes('/* PB1515 delegated draft metadata replay */')){
 }
 
 const css=`<style>/* PB1515 shared intake confirmation */
-.pb1515IntakeConfirmation{box-sizing:border-box;width:min(430px,calc(100vw - 28px));padding:24px;border:1px solid #dce6f2;border-radius:12px;background:#fff;color:#26364a;text-align:center;font-family:Vazirmatn,Tahoma,sans-serif;box-shadow:0 22px 70px #10233d38}
+.pb1515IntakeConfirmation{box-sizing:border-box!important;position:fixed!important;inset:50% auto auto 50%!important;transform:translate(-50%,-50%)!important;width:min(360px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 32px)!important;margin:0!important;padding:18px!important;overflow:auto!important;border:1px solid #dce6f2!important;border-radius:10px!important;background:#fff!important;color:#26364a!important;text-align:center!important;font-family:Vazirmatn,Tahoma,sans-serif!important;box-shadow:0 18px 55px #10233d38!important}
 .pb1515IntakeConfirmation::backdrop{background:#10233d73}
-.pb1515ConfirmMark{display:grid;width:48px;height:48px;margin:0 auto 12px;place-items:center;border-radius:50%;background:#e9f8ef;color:#087443;font-size:26px;font-weight:900}
-.pb1515IntakeConfirmation h3{margin:0;font-size:18px}.pb1515IntakeConfirmation p{margin:8px 0 20px;color:#667085;font-size:13px}
+.pb1515ConfirmMark{display:grid;width:40px;height:40px;margin:0 auto 10px;place-items:center;border-radius:50%;background:#e9f8ef;color:#087443;font-size:22px;font-weight:900}
+.pb1515IntakeConfirmation h3{margin:0;font-size:16px}.pb1515IntakeConfirmation p{margin:7px 0 16px;color:#667085;font-size:12px}
 .pb1515ConfirmActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pb1515ConfirmActions button{min-height:42px;border:1px solid #d6e1f0;border-radius:8px;background:#fff;color:#344054;font:800 13px Vazirmatn,Tahoma,sans-serif}
 .pb1515ConfirmActions button:last-child{border-color:#315efb;background:#315efb;color:#fff}
 </style>`;
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   let html=fs.readFileSync(file,'utf8');
   if(!html.includes('PB1515 shared intake confirmation'))html=html.replace('</head>',css+'</head>');
-  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1517')?url:url.replace(/&intakeRetry=r1515/g,'')+'&intakeRetry=r1517');
+  html=html.replace(/(photobridge-r1137-lab-local-intake\.js\?[^"'\s]*)/g,url=>url.includes('intakeRetry=r1518')?url:url.replace(/&intakeRetry=r151[57]/g,'')+'&intakeRetry=r1518');
   fs.writeFileSync(file,html);
 }
 for(const file of [intakeFile,serverFile])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

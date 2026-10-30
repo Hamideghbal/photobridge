@@ -6,6 +6,13 @@ const once=(source,before,after)=>{
   if(count!==1)throw Error(`R1504 expected one post-R1501 anchor, found ${count}: ${before.slice(0,100)}`);
   return source.replace(before,after);
 };
+const onceOrAlready=(source,before,after,already,label)=>{
+  const count=source.split(before).length-1;
+  if(count===1)return source.replace(before,after);
+  const alreadyCount=source.split(already).length-1;
+  if(count===0&&alreadyCount===1)return source;
+  throw Error(`R1504 expected one ${label} anchor or its post-R1501 form; found ${count} and ${alreadyCount}`);
+};
 
 const intakeFile='dist/web/photobridge-r1137-lab-local-intake.js';
 let intake=fs.readFileSync(intakeFile,'utf8');
@@ -20,25 +27,33 @@ if(!intake.includes('/* PB1504 per-photo copy/move */')){
     "const more=node('button','افزودن عکس');more.type='button';const addMore=async()=>{if(locked||submitting)return;try{const files=await window.pb1466IntakeMove.pick('select');if(!files?.length)return;busy(true);await appendFiles(group,files,group.size,group.paper,defaultPhotoAction());syncEntries();renderGroups();error.textContent='';}catch(e){error.textContent=e.message;}finally{busy(false);}};more.onclick=addMore;input.onchange=async()=>{if(locked||submitting)return;busy(true);try{await appendFiles(group,input.files,group.size,group.paper,'copy');syncEntries();renderGroups();error.textContent='';}catch(e){error.textContent=e.message;}finally{busy(false);}};head.append(more,input);"
   );
 
-  intake=once(intake,
+  intake=onceOrAlready(intake,
     "const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);",
-    "const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction));"
+    "const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction));",
+    "const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction));",
+    'photo identity matcher'
   );
   intake=once(intake,
     "async function appendFiles(group,files,size,paper,sourceAction='copy'){",
     "function sameIntakeCopyTarget(a,b,isAlbum,fallbackPaper='',sourceAction='copy'){return Boolean(a&&b&&a.hash===b.hash&&String(a.sourceAction||'copy')===String(sourceAction||'copy')&&(isAlbum||String(a.paper||fallbackPaper)===String(b.paper||fallbackPaper)));}\n async function appendFiles(group,files,size,paper,sourceAction='copy'){"
   );
-  intake=once(intake,
+  intake=onceOrAlready(intake,
     "}else additions.push({file,hash,size,paper,copies:1,sourceActions:[sourceAction]});}",
-    "}else additions.push({file,hash,size,paper,copies:1,sourceAction,sourceActions:[sourceAction]});}"
+    "}else additions.push({file,hash,size,paper,copies:1,sourceAction,sourceActions:[sourceAction]});}",
+    "}else additions.push({file,hash,size,paper,copies:1,sourceAction,sourceActions:[sourceAction]});}",
+    'new photo source action'
   );
-  intake=once(intake,
+  intake=onceOrAlready(intake,
     "window.pb1466IntakeMove.track(item.existing,item.sourceFile);item.existing.copies++;item.existing.sourceActions ||= [];",
-    "window.pb1466IntakeMove.track(item.existing,item.sourceFile,item.sourceAction);item.existing.copies++;item.existing.sourceActions ||= [];"
+    "window.pb1466IntakeMove.track(item.existing,item.sourceFile,item.sourceAction);item.existing.copies++;item.existing.sourceActions ||= [];",
+    "window.pb1466IntakeMove.track(item.existing,item.sourceFile,item.sourceAction);item.existing.copies++;item.existing.sourceActions ||= [];",
+    'duplicate source tracking'
   );
-  intake=once(intake,
+  intake=onceOrAlready(intake,
     "item.id=crypto.randomUUID();item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);",
-    "item.id=crypto.randomUUID();item.sourceAction=sourceAction;item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);window.pb1466IntakeMove.track(item,item.file,sourceAction);"
+    "item.id=crypto.randomUUID();item.sourceAction=sourceAction;item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);window.pb1466IntakeMove.track(item,item.file,sourceAction);",
+    "item.id=crypto.randomUUID();item.sourceAction=sourceAction;item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);window.pb1466IntakeMove.track(item,item.file,sourceAction);",
+    'new photo source tracking'
   );
   intake=once(intake,
     "const photo=node('figure');const frame=node('div',null,'pb1181IntakeFrame');const image=node('img');image.src=item.preview;image.alt=item.file.name;frame.append(image);const modes=[...new Set(item.sourceActions||['copy'])];const modeLabel=modes.includes('copy')&&modes.includes('move')?'کپی و انتقال':modes.includes('move')?'انتقال':'کپی';const actionBadge=node('span',modeLabel,'pb1501ActionBadge');actionBadge.dataset.action=modes.length>1?'both':modes[0];photo.append(frame,node('figcaption',item.file.name),actionBadge);",

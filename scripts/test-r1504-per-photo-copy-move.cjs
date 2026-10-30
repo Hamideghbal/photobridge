@@ -32,8 +32,8 @@ test('the manual form has one file-picker action and puts the copy/move control 
 test('shared site and desktop UI receive the same change before the desktop snapshot, with cache-busted assets',()=>{
  const pipeline=fs.readFileSync('scripts/liara-fast-build.mjs','utf8'),script=fs.readFileSync('scripts/enable-r1504-per-photo-copy-move.mjs','utf8'),revision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
  const stage=pipeline.indexOf('await deployStep("./enable-r1504-per-photo-copy-move.mjs")'),snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")');
- assert(stage>0&&snapshot>stage);assert(pipeline.indexOf('scripts/test-r1504-per-photo-copy-move.cjs',stage)>stage);assert.equal(revision,'2026-10-30-r1504-per-photo-copy-move');
- assert(script.includes("dist/web/photobridge-r1137-lab-local-intake.js"));assert(script.includes("dist/web/photobridge-r1466-intake-move.js"));assert(script.includes('r1504-per-photo-mode'));
+ assert(stage>0&&snapshot>stage);assert(pipeline.indexOf('scripts/test-r1504-per-photo-copy-move.cjs',stage)>stage);assert.equal(revision,'2026-10-30-r1504-build-anchor');
+ assert(script.includes("dist/web/photobridge-r1137-lab-local-intake.js"));assert(script.includes("dist/web/photobridge-r1466-intake-move.js"));assert(script.includes("appendFiles(group,input.files,group.size,group.paper,'copy')"),'R1504 must match the post-R1501 browser-file handler');assert(script.includes('r1504-per-photo-mode'));
 });
 
 test('build patch is idempotent on the generated shared UI files',()=>{

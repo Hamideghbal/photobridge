@@ -100,6 +100,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Native storage integration failed" }
           node scripts/integrate-r1390-site-picker.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Site picker integration failed" }
+          node scripts/integrate-r1395-paired-storage.cjs apps/lab-desktop
+          node scripts/integrate-r1398-cooperation-alerts.cjs apps/lab-desktop
+          node scripts/integrate-r1401-quick-reply.cjs apps/lab-desktop
+          node scripts/integrate-r1402-chat-voice.cjs apps/lab-desktop
+          node scripts/integrate-r1470-intake-sources.cjs apps/lab-desktop
+          node scripts/integrate-r1471-app-updates.cjs apps/lab-desktop
+          node scripts/integrate-r1472-live-finance.cjs apps/lab-desktop
+          node scripts/integrate-r1474-update-message.cjs apps/lab-desktop
+          node scripts/integrate-r1476-shared-alerts.cjs apps/lab-desktop
+          node scripts/integrate-r1477-gentle-default.cjs apps/lab-desktop
+          node scripts/integrate-r1478-fast-entry.cjs apps/lab-desktop
+          node scripts/integrate-r1524-updater-exit.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Current native integration failed" }
       - name: Verify configured-path activation
         run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
       - name: Prepare current lab UI
@@ -114,12 +127,12 @@ jobs:
           Push-Location apps/lab-desktop
           npm ci --no-audit --no-fund
           npm test
-          npm run dist:unsigned
+          npx electron-builder --win nsis --x64 --config.win.forceCodeSigning=false
           Pop-Location
       - name: Publish lab Windows installer candidate
         uses: actions/upload-artifact@v4
         with:
-          name: photobridge-lab-1.0.26-windows-test-installer
+          name: photobridge-lab-1.0.39-windows-test-installer
           path: apps/lab-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14

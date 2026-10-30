@@ -1,1 +1,1 @@
-2026-10-31-r1523-updater-exit-timeout
+2026-10-31-r1524-windows-1-0-39

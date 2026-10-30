@@ -8,6 +8,10 @@ test('stock failure unlocks the existing draft and retries current per-photo set
  assert.ok(patch.includes('UPDATE order_files SET print_size_id=$4,print_type=$5,chassis=$6,frame=$7,print_copies=$8'));
  assert.ok(patch.includes("WHERE id=$1 AND lab_id=$2 AND order_id=$3"));
  assert.ok(patch.includes("problem.code=code"));
+ const r1467=fs.readFileSync('scripts/enable-r1467-lab-switch-intake.mjs','utf8');
+ assert.ok(r1467.includes('/* PB1467 live intake requests */'));
+ assert.ok(patch.includes("catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]"));
+ assert.ok(!patch.includes('async function api(url,body){try{return await storage().request'));
 });
 
 test('browser and Windows use one shared post-submit confirmation dialog',()=>{

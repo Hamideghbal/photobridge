@@ -12,8 +12,8 @@ let intake=fs.readFileSync(intakeFile,'utf8');
 if(!intake.includes('/* PB1515 recoverable stock retry and shared confirmation */')){
   intake=once(
     intake,
-    "async function api(url,body){try{return await storage().request(url,{...(body?{method:'POST',body:JSON.stringify(body)}:{})});}catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]||'ثبت سفارش انجام نشد. دوباره تلاش کن.');}}",
-    "async function api(url,body){try{return await storage().request(url,{...(body?{method:'POST',body:JSON.stringify(body)}:{})});}catch(e){const code=e.data?.error||e.message,problem=Error(e.data?.message||errors[code]||'ثبت سفارش انجام نشد. دوباره تلاش کن.');problem.code=code;problem.data=e.data;throw problem;}}",
+    "catch(e){throw Error(e.data?.message||errors[e.data?.error||e.message]||'ثبت سفارش انجام نشد. دوباره تلاش کن.');}",
+    "catch(e){const code=e.data?.error||e.message,problem=Error(e.data?.message||errors[code]||'ثبت سفارش انجام نشد. دوباره تلاش کن.');problem.code=code;problem.data=e.data;throw problem;}",
     'structured API error'
   );
   intake=once(

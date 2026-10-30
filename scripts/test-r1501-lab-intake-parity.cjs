@@ -15,11 +15,13 @@ input.onchange=async()=>{try{await appendFiles(group,input.files,group.size,grou
 await appendFiles(group,pendingFiles,defaultSize.value,defaultPaper.value);
 quantity.append(minus,count,plus);photo.append(quantity);`;
 test('manual-order photo-action badges, visible quantities and paper controls are bundled to browser and desktop UI',()=>{
+ const sourceVariants=[jsSource,jsSource.replace('existing:item,sourceFile:file','existing:item.existing||item,sourceFile:file').replace(',chassis:false','')];
+ for(const source of sourceVariants){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-r1501-'));
  try{
   const web=path.join(root,'dist/web');fs.mkdirSync(web,{recursive:true});
   fs.writeFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'.pb1137Intake .pb1139GroupPhotos{overflow-y:hidden}\n');
-  fs.writeFileSync(path.join(web,'photobridge-r1137-lab-local-intake.js'),jsSource);
+  fs.writeFileSync(path.join(web,'photobridge-r1137-lab-local-intake.js'),source);
   fs.writeFileSync(path.join(web,'index.html'),'<link rel="stylesheet" href="/photobridge-r1137-lab-local-intake.css?v=r1500-manual-order-quantity"><script src="/photobridge-r1137-lab-local-intake.js?v=r1470-native-intake"></script>');
   cp.execFileSync(process.execPath,[script],{cwd:root});
   const css=fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8');
@@ -44,4 +46,5 @@ test('manual-order photo-action badges, visible quantities and paper controls ar
   assert.equal(fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.css'),'utf8').split('PB1501 manual-order parity').length-1,1);
   assert.equal(fs.readFileSync(path.join(web,'photobridge-r1137-lab-local-intake.js'),'utf8').split('PB1501 per-photo action labels').length-1,1);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
+ }
 });

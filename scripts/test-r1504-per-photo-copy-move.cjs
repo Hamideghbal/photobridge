@@ -37,7 +37,7 @@ test('card layout is part of the same verified Windows/site UI snapshot',()=>{
  const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
  assert(r1504>0&&r1502>r1504&&snapshot>r1502&&verify>snapshot);assert(pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502)<snapshot);
- assert.equal(revision,'2026-10-30-r1506-r1504-post-r1501-anchor');
+ assert.equal(revision,'2026-10-30-r1507-r1504-paper-matcher');
 });
 
 test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu, and is idempotent',()=>{
@@ -57,7 +57,7 @@ test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu
   // R1501 has already made duplicate identity sensitive to paper and the
   // selected per-photo action before R1504 enters the release pipeline.
   intake=intake
-   .replace("const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);","const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper,sourceAction},albumMode,group.paper,sourceAction));")
+   .replace("const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);","const item=group.items.find(x=>sameIntakeCopyTarget(x,{hash,paper},albumMode,group.paper))||additions.find(x=>sameIntakeCopyTarget(x.existing||x,{hash,paper},albumMode,group.paper));")
    .replace("item.id=crypto.randomUUID();item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);","item.id=crypto.randomUUID();item.sourceActions ||= [sourceAction];item.preview=URL.createObjectURL(item.file);previews.push(item.preview);group.items.push(item);");
   fs.writeFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.js'),intake);
   fs.writeFileSync(path.join(root,'dist/web/photobridge-r1137-lab-local-intake.css'),'/* base */');

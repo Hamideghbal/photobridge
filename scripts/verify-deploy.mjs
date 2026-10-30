@@ -119,7 +119,7 @@ const depsStage = docker.split('FROM deps AS runtime')[0];
 assert(depsStage.includes('node scripts/prune-onnx-platforms.mjs'), 'Native runtime must be prepared in the cached dependency stage');
 assert(!depsStage.includes('COPY dist') && !depsStage.includes('COPY DEPLOY_REVISION') && !depsStage.includes('COPY .'), 'Application changes must not invalidate dependency preparation');
 assert(docker.includes('FROM deps AS runtime'), 'Runtime must inherit verified dependency layers');
-assert(docker.includes('COPY . ./') && docker.includes('node scripts/liara-fast-build.mjs'), 'Runtime must prepare validated application assets in place');
+assert(docker.includes('COPY . ./') && docker.includes('node scripts/liara-build-supervisor.cjs'), 'Runtime must prepare validated application assets in place');
 assert(!docker.includes('COPY --from=') && docker.match(/^COPY \. \.\/$/gm)?.length===1, 'Application payload must be copied only once');
 const dockerIgnore=fs.readFileSync('.dockerignore','utf8');
 assert(dockerIgnore.split('\n').includes('**'), 'Whole-context COPY requires a default-deny build context');

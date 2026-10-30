@@ -531,7 +531,6 @@ runR1314(process.execPath,["--test","scripts/test-r1502-web-intake-card-layout.c
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
-// Browser-only manual intake card layout runs after the immutable Windows UI snapshot.
 // Admin preview layout is website-only and runs after the frozen Windows UI snapshot.
 await deployStep("./enable-r1503-admin-preview-layout.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1503-admin-preview-layout.cjs"],{stdio:"inherit"});

@@ -6,6 +6,6 @@ function imageUrl(value){
 function alertContent(n){
  const meta=n.metadata&&typeof n.metadata==='object'?n.metadata:{};
  const image=imageUrl(n.image_url||n.imageUrl||meta.image_url||meta.imageUrl||meta.attachmentUrl);
- return {id:String(n.id),title:String(n.title||'اعلان جدید'),message:String(n.message||''),...(image?{image}:{}),...(n.attachment_key?{hasAttachment:true}:{} )};
+ return {created_at:n.created_at||null,id:String(n.id),title:String(n.title||'اعلان جدید'),message:String(n.message||''),...(image?{image}:{}),...(n.attachment_key?{hasAttachment:true}:{} )};
 }
 module.exports={imageUrl,alertContent};

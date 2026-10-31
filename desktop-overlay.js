@@ -97,7 +97,11 @@
  indicator.setAttribute('aria-label','بررسی همگام‌سازی سفارش‌ها و اطلاعات مالی');
  indicator.title='بررسی وضعیت سفارش‌ها و امور مالی — Ctrl+Shift+S';
  document.body.append(indicator);
- let state=null,loading=false,busy=false;
+ let state=null,loading=false,busy=false,lastOrderRevision=null,orderRefreshTimer=null;
+ function refreshOrders(){clearTimeout(orderRefreshTimer);orderRefreshTimer=setTimeout(()=>window.dispatchEvent(new CustomEvent('photobridge-lab-orders-changed')),100);}
+ const connection=document.createElement('span');connection.id='pbLabDesktopConnection';connection.setAttribute('role','status');connection.style.cssText='font:700 12px Vazirmatn,Tahoma;white-space:nowrap;padding:6px 10px;border-radius:9px;margin:4px;flex-shrink:0';
+ function showConnection(){const header=document.querySelector('.labSingleHeader,.pb1148SecondaryHeader');if(header&&!connection.isConnected)header.append(connection);const connected=state?.internetConnected;const label='PhotoBridge Lab '+(state?.nativeVersion||'')+' · '+(connected===true?'آنلاین · متصل به اینترنت':connected===false?'آفلاین · بدون اتصال به اینترنت':'در حال بررسی اتصال');if(connection.textContent!==label)connection.textContent=label;connection.style.background=connected?'#e8f7ee':'#fff3e7';connection.style.color=connected?'#17653b':'#9a4700';}
+ new MutationObserver(showConnection).observe(document.body,{childList:true,subtree:true});
  const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';
  function refreshIndicator(){
    const n=(state?.conflicts?.length||0)+(state?.localOrders?.length||0)+(state?.pending||0)+(state?.localBusiness?.pending||0);
@@ -109,7 +113,7 @@
    if(loading)return state;loading=true;
    try{
      const response=await fetch('/desktop/status',{cache:'no-store'});
-     if(response.ok)state=await response.json();
+     if(response.ok){state=await response.json();const revision=String(state.revision??'')+'|'+String(state.report?.finishedAt||'');if(lastOrderRevision!==null&&revision!==lastOrderRevision)refreshOrders();lastOrderRevision=revision;showConnection();}
    }catch{}finally{loading=false;refreshIndicator()}
    return state;
  }
@@ -223,7 +227,7 @@
    const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
    link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
  }
- window.addEventListener('photobridge-local-committed',()=>{document.getElementById('pbOfflinePendingNotice')?.remove();void refresh();});
+ window.addEventListener('photobridge-local-committed',event=>{document.getElementById('pbOfflinePendingNotice')?.remove();if(/\/api\/lab\/(?:delegated-orders|orders)(?:\/|$)/.test(event.detail?.url||''))refreshOrders();void refresh();});
  window.addEventListener('photobridge-native-pending',()=>{
    let notice=document.getElementById('pbOfflinePendingNotice');if(!notice){notice=element('button','روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور — مشاهده',document.body);notice.id='pbOfflinePendingNotice';notice.type='button';notice.style.cssText='position:fixed;bottom:72px;left:20px;max-width:calc(100vw - 40px);z-index:2147483000;padding:12px 16px;border:1px solid #bcd0fa;border-radius:12px;background:#eef3ff;color:#254bc5;font:700 12px Vazirmatn,Tahoma;direction:rtl;cursor:pointer';notice.onclick=()=>{notice.remove();void openSync();};}void refresh();
  });
@@ -235,5 +239,5 @@
  });
  window.addEventListener('online',()=>{void syncNow()});
  window.addEventListener('offline',()=>{void refresh()});
- void refresh();setInterval(()=>void refresh(),10000);
+ void refresh();setInterval(()=>void refresh(),3000);
 })();

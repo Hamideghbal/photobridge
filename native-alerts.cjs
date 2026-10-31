@@ -45,11 +45,16 @@ class NativeAlerts {
  async present(account,pending,epoch){
   if(epoch!==this.epoch||this.getAccount()!==account)return;
   if(!pending.length){this.dismiss();return;}
+  const key='nativeAlertsPresented:'+account,delivered=new Set(this.store.get(key)||[]);
+  const fresh=pending.filter(n=>!delivered.has(n.id)).sort((a,b)=>(Date.parse(b.created_at)||b.chatTime||0)-(Date.parse(a.created_at)||a.chatTime||0)||String(b.id).localeCompare(String(a.id)));if(!fresh.length)return;
+  pending=fresh;
   await this.notify({title:pending.length>1?'PhotoBridge Lab · '+pending.length+' اعلان جدید':String(pending[0].title||'PhotoBridge Lab'),body:pending.slice(0,3).map(n=>String(n.message||n.title||'اعلان جدید')).join(' · '),silent:true,items:pending},()=>this.open(),ids=>this.acknowledge(account,ids),account);
+  if(epoch===this.epoch&&this.getAccount()===account){for(const n of fresh)delivered.add(n.id);this.store.set(key,[...delivered]);}
  }
  async poll(){
   const account=this.getAccount();if(this.busy||!account||!this.isSupported())return;
   initializeSettings(this.store,account);
+  if(!this.store.get('nativeAlertsPresented:'+account))this.store.set('nativeAlertsPresented:'+account,this.store.get('nativeAlertsSeen:'+account)||[]);
   const epoch=this.epoch,checkedAt=this.now();this.busy=true;
   try{
    await this.flushReceipts(account).catch(()=>{});

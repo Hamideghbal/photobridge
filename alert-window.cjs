@@ -8,9 +8,9 @@ class AlertWindow {
   ipcMain.handle('lab-alert-layout',(event,height)=>{if(!valid(event))throw Error('invalid_sender');const area=this.getWorkArea(),h=Math.max(220,Math.min(640,area.height-80,Number(height)||300)),w=Math.min(420,area.width-40);this.window.setContentSize?.(w,Math.ceil(h));const bounds=this.window.getBounds?.();if(bounds)this.window.setPosition?.(Math.max(area.x+8,area.x+area.width-bounds.width-20),Math.max(area.y+8,area.y+area.height-bounds.height-20));return h});
   ipcMain.handle('lab-alert-state',event=>{if(!valid(event))throw Error('invalid_sender');return this.state()});
   ipcMain.handle('lab-alert-save',(event,value)=>{if(!valid(event))throw Error('invalid_sender');initializeSettings(store,this.getAccount()||'default');const settings=normalizeSettings(value);store.set(this.settingsKey(),settings);return settings});
-  ipcMain.handle('lab-alert-ack',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(this.items.map(n=>n.id),false)});
+  ipcMain.handle('lab-alert-ack',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(ids,false)});
   ipcMain.handle('lab-alert-reply',(event,value)=>{if(!valid(event))throw Error('invalid_sender');return this.sendReply(value)});
-  ipcMain.handle('lab-alert-open',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(this.items.map(n=>n.id),true)});
+  ipcMain.handle('lab-alert-open',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(ids,true)});
  }
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}
  state(){return {items:this.items,settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
@@ -19,7 +19,7 @@ class AlertWindow {
   const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',e=>e.preventDefault());
-  win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide()});
+  win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide();void this.accept(this.items.map(n=>n.id),false).catch(()=>{})});
   win.once('ready-to-show',()=>{if(!this.hiddenByUser&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
   win.loadFile(path.join(__dirname,'alert.html')).catch(()=>{if(this.window===win)this.window=null;win.destroy()});
   return win;

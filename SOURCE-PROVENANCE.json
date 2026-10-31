@@ -5,5 +5,6 @@
   "nativeSource": "Extracted unchanged from 1.0.55 app.asar; package/build scripts restored from archived source v1.0.22",
   "uiBuild": "4300c9a4817b99da2343d0ccfe27e301ab64609fae1b04584949bca48368c73f",
   "privateSigningKeyIncluded": false,
-  "followupFix": "UPD-02: default updater confirmations use native Electron dialogs without renderer IPC; append sanitized stage/error diagnostics to userData/updater-debug.log."
+  "followupFix": "UPD-02: default updater confirmations use native Electron dialogs without renderer IPC; append sanitized stage/error diagnostics to userData/updater-debug.log.",
+  "confirmationUi": "Static RTL Vazirmatn confirmation windows with native fallback; download/install logic unchanged."
 }

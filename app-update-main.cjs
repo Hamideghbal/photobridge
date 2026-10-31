@@ -1,11 +1,11 @@
 'use strict';
 const path=require('node:path'),{spawn}=require('node:child_process');
 const {AppUpdate}=require('./app-update.cjs');
-const {NativeUpdateProgress}=require('./native-update-progress.cjs');
+const {UpdateConfirmation}=require('./update-confirmation.cjs');
 
 function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
  let updater;
- const progress=providedProgress||new NativeUpdateProgress({app,dialog,getParent:getWindow});
+ const progress=providedProgress||new UpdateConfirmation({app,dialog,getParent:getWindow,BrowserWindow});
  let prompting=false,readyAnnounced=null,downloadInProgress=false,checking=false,lastSuccessfulCheck=0,retryTimer=null;
  updater=new Updater({
   version:app.getVersion(),directory:path.join(app.getPath('userData'),'program-updates'),request,

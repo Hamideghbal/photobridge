@@ -10,7 +10,7 @@ async function main(){
  if(!fs.existsSync(keyFile))throw Error('Publisher key missing. Copy your ORIGINAL .publisher/update-private.pem into this folder, or set PB_UPDATE_SIGNING_KEY to its path. The existing 1.0.54 updater requires the matching original key.');
  const key=crypto.createPrivateKey(fs.readFileSync(keyFile));if(crypto.createPublicKey(key).export({type:'spki',format:'pem'})!==require('./update-trust.cjs').PUBLIC_KEY)throw Error('Wrong publisher key: it does not match the installed updater.');
  for(const name of ['package.json','package-lock.json']){const p=path.join(root,name),v=JSON.parse(fs.readFileSync(p));v.version=version;if(v.packages?.[''])v.packages[''].version=version;fs.writeFileSync(p,JSON.stringify(v,null,2)+'\n');}
- run('npm',['ci']);run(process.execPath,['--test','test/updater.test.cjs','test/progress.test.cjs','test/native-progress.test.cjs']);run('npm',['run',process.env.CSC_LINK||process.env.WIN_CSC_LINK?'dist':'dist:unsigned']);
+ run('npm',['ci']);run(process.execPath,['--test','test/updater.test.cjs','test/progress.test.cjs','test/native-progress.test.cjs','test/confirmation.test.cjs']);run('npm',['run',process.env.CSC_LINK||process.env.WIN_CSC_LINK?'dist':'dist:unsigned']);
  const manifest=await require('./create-update-release.cjs').create({root,keyFile});
  console.log('\nSUCCESS\nInstaller: '+path.join(root,'release',`PhotoBridge-Lab-Setup-${version}-x64.exe`)+'\nJSON: '+manifest);
 }

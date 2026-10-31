@@ -9,7 +9,7 @@ const patches=[
  ['async function vc(t=!1){','async function vc(t=!1){if(!window.pbNativeFolder)throw new Error("ارتباط ذخیره‌سازی با برنامه برقرار نشد.");return await window.pbNativeFolder.register(t);']
 ];
 function patchStorageBundle(source){
- if(!source.includes("window.addEventListener('photobridge-lab-orders-changed',refresh)"))throw Error('native_orders_refresh_ui_incompatible');
+ source=require('./live-order-patch.cjs').patchOrderLive(source);
  if(source.includes('/* PB native disk bridge v1 */'))return source;
  for(const [before] of patches)if(source.split(before).length!==2)throw Error('native_storage_ui_incompatible:'+before);
  for(const [before,after] of patches)source=source.replace(before,after);

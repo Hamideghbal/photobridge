@@ -11,7 +11,7 @@
   "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons.",
   "desktopLayoutFix": "RTL styled sync/archive dialogs; bottom-left conflict flag hidden during intake; remove native duplicate copy badge; contain photo quantity controls.",
   "offlineDeviceFix": "Reuse last successful same-account same-device primary confirmation on transport failure; never offline force registration or cross-account approval.",
-  "packageVersion": "1.0.59",
+  "packageVersion": "1.0.60",
   "offlineOrders": "Durable per-account local-only intake drafts and proforma; disk-verified files; stable client IDs and server reconciliation; pending invoice actions offline; no offline source deletion.",
   "localBusiness": "Independent SQLite order/invoice/payment/expense/discount/correction processing with durable device-scoped document numbers and balanced journal; local storage activation; background idempotent sync and conflict preservation.",
   "validation": "Core domain and authenticated HTTP tests; Chromium actual intake and manual-invoice forms with upstream disconnected, disk writes, receipt/expense/delivery and Persian PDF. Windows install and live server still require validation."

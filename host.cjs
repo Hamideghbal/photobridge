@@ -40,10 +40,14 @@ function createHost({store,sync,request,roots,token,onLogin,onLogout}){
         if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,request);if(!access.allowed)return json(res,403,access)}
         // Workstation registration needs a live answer, never a queued success.
         /* R1386 live storage target */if((url.pathname==='/api/lab/download-device'||url.pathname==='/api/lab/storage-target'||url.pathname==='/api/lab/storage-target/activate'||url.pathname==='/api/lab/storage-target/hello'||url.pathname==='/api/lab/storage-picker')&&['GET','PUT','POST'].includes(req.method)){
+          const storageAccount=store.get('labId'),storageDevice=store.get('deviceId');
           try{
             const up=await request(req.url,{method:req.method,...(['POST','PUT'].includes(req.method)?{body:bytes,headers:{'Content-Type':'application/json'}}:{})});
-            const body=Buffer.from(await up.arrayBuffer());res.writeHead(up.status,{'Content-Type':up.headers.get('content-type')||'application/json','Cache-Control':'no-store'});return res.end(body);
-          }catch{return json(res,503,{error:'download_device_registration_offline',message:'ثبت یا بررسی سیستم اصلی به اتصال اینترنت نیاز دارد. پوشهٔ انتخاب‌شده حفظ می‌شود؛ پس از اتصال دوباره تلاش کنید.'})}
+            const body=Buffer.from(await up.arrayBuffer());
+            if(store.get('labId')!==storageAccount||store.get('deviceId')!==storageDevice)return json(res,401,{error:'account_changed'});
+            if(url.pathname==='/api/lab/download-device'&&req.method==='GET'&&up.ok){try{require('./offline-device.cjs').saveDevice(store,JSON.parse(body.toString('utf8')))}catch{}}
+            res.writeHead(up.status,{'Content-Type':up.headers.get('content-type')||'application/json','Cache-Control':'no-store'});return res.end(body);
+          }catch{if(store.get('labId')!==storageAccount||store.get('deviceId')!==storageDevice)return json(res,401,{error:'account_changed'});if(url.pathname==='/api/lab/download-device'&&req.method==='GET'){const saved=require('./offline-device.cjs').offlineDevice(store);if(saved)return json(res,200,saved)}return json(res,503,{error:'download_device_registration_offline',message:'ثبت یا بررسی سیستم اصلی به اتصال اینترنت نیاز دارد. پوشهٔ انتخاب‌شده حفظ می‌شود؛ پس از اتصال دوباره تلاش کنید.'})}
         }
         /* R1472 confirmed financial writes */if(await require('./live-finance.cjs').forwardLiveFinance({req,res,bytes,contentType,store,request,json,sync}))return;
         if(['GET','HEAD'].includes(req.method)){

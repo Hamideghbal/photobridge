@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,isOnline=()=>true}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,isOnline=()=>true}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
@@ -18,13 +18,16 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(!String(req.headers.cookie||'').split(';').some(x=>x.trim()==='desktop='+token))return json(res,403,{error:'desktop_locked'});
       if(req.headers.origin&&req.headers.origin!==origin)return json(res,403,{error:'invalid_origin'});
 
-      if(url.pathname==='/desktop/status'){const state=store.get('auth')?sync.status():{signedIn:false,online:false,syncing:false,pending:0,conflicts:[]};return json(res,200,{...state,uiTrayUpdateSupported:true,nativeVersion:store.get('nativeVersion')||null,uiKnownGoodBuild:store.get('uiKnownGoodBuild')||null,uiBuild:store.get('uiBuild')||null,uiLastCheckedAt:store.get('uiLastCheckedAt')||null,uiDownloadedAt:store.get('uiDownloadedAt')||null,uiAppliedAt:store.get('uiAppliedAt')||null,updateError:store.get('updateError')||null})}
+      if(url.pathname==='/desktop/status'){const state=store.get('auth')?sync.status():{signedIn:false,online:false,syncing:false,pending:0,conflicts:[]};return json(res,200,{...state,localBusiness:store.get('auth')&&store.get('localBusinessActive:'+store.get('labId'))?(store.get('localBusiness:v1:'+store.get('labId'))?new (require('./local-business.cjs').LocalBusiness)(store).status():{enabled:true,initialized:false,pending:0,conflicts:[],syncIssues:[]}):null,uiTrayUpdateSupported:true,nativeVersion:store.get('nativeVersion')||null,uiKnownGoodBuild:store.get('uiKnownGoodBuild')||null,uiBuild:store.get('uiBuild')||null,uiLastCheckedAt:store.get('uiLastCheckedAt')||null,uiDownloadedAt:store.get('uiDownloadedAt')||null,uiAppliedAt:store.get('uiAppliedAt')||null,updateError:store.get('updateError')||null})}
       if(url.pathname==='/desktop/sync'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});return json(res,200,await sync.run())}
+      if(url.pathname==='/desktop/local-business/retry'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});const input=await readJson(req);if(input.reviewed!==true)return json(res,400,{error:'review_required'});const engine=new (require('./local-business.cjs').LocalBusiness)(store);const changed=store.transaction(()=>{const state=engine.state();if(String(input.id).startsWith('auto:')){const adjustment=state.adjustments[String(input.id).slice(5)];if(!adjustment?.auto_discount||adjustment.serverId)return false;delete adjustment.syncError;store.set(engine.key(),state);return true;}const event=state.events.find(e=>e.id===input.id&&e.state!=='synced');if(!event)return false;event.state='pending';delete event.error;store.set(engine.key(),state);return true;});if(!changed)return json(res,404,{error:'local_event_not_found'});void sync.run();return json(res,200,{ok:true});}
       if(url.pathname==='/desktop/retry'&&req.method==='POST'){const p=await readJson(req);store.retry(String(p.id||''));void sync.run();return json(res,200,{ok:true})}
       if(url.pathname==='/desktop/archive-conflict'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});const p=await readJson(req);if(p.reviewed!==true)return json(res,400,{error:'review_required'});if(!store.archiveConflict(String(p.id||'')))return json(res,409,{error:'conflict_not_found'});return json(res,200,{ok:true})}
       if(url.pathname==='/desktop/discard'&&req.method==='POST'){const p=await readJson(req);store.discard(String(p.id||''));return json(res,200,{ok:true})}
 
       const {bytes,contentType}=await readBody(req);
+      if(await require('./local-files-host.cjs').localFilesHost({req,res,url,store,nativeStorage,offline:connectionOffline(),json}))return;
+      if(url.pathname.startsWith('/desktop/local-invoices/')&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request}))return;
       if(url.pathname==='/api/auth/lab-login'&&req.method==='POST'){
         const previous=store.get('cookie');
         try{
@@ -39,7 +42,9 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
-        if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:request);if(!access.allowed)return json(res,403,access)}
+        if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
+        if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(3500)}));if(!access.allowed)return json(res,403,access)}
+        if(await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request}))return;
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
         const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
@@ -59,6 +64,8 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         // Workstation registration needs a live answer, never a queued success.
         /* R1386 live storage target */if((url.pathname==='/api/lab/download-device'||url.pathname==='/api/lab/storage-target'||url.pathname==='/api/lab/storage-target/activate'||url.pathname==='/api/lab/storage-target/hello'||url.pathname==='/api/lab/storage-picker')&&['GET','PUT','POST'].includes(req.method)){
           const storageAccount=store.get('labId'),storageDevice=store.get('deviceId');
+          if(nativeStorage&&req.method==='GET'&&url.pathname==='/api/lab/download-device'&&store.get('nativeStorageRoot:'+storageAccount)?.localStandalone)return json(res,200,await nativeStorage.device());
+          if(connectionOffline()&&nativeStorage){if(url.pathname==='/api/lab/download-device'&&req.method==='GET'){try{return json(res,200,await nativeStorage.device())}catch{}}if(url.pathname==='/api/lab/download-device'&&req.method==='POST'){try{const body=JSON.parse(bytes.toString()||'{}');return json(res,200,await nativeStorage.register(body.force===true))}catch{}}if(url.pathname==='/api/lab/storage-target'&&req.method==='GET'){try{const current=await nativeStorage.status();if(current.root&&current.permission==='granted')return json(res,200,{configured:true,active:true,isThisDevice:true,isSelectedDevice:true,path:current.root.displayPath,offline:true,localOnly:true});}catch{}}}
           try{
             const up=await request(req.url,{method:req.method,...(['POST','PUT'].includes(req.method)?{body:bytes,headers:{'Content-Type':'application/json'}}:{})});
             const body=Buffer.from(await up.arrayBuffer());

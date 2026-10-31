@@ -46,5 +46,11 @@
  });};
 })();
 
-// Surface local acknowledgements without presenting them as server confirmation.
-(()=>{const original=window.fetch.bind(window);window.fetch=async(...args)=>{const response=await original(...args);const url=typeof args[0]==='string'?args[0]:args[0]?.url;if(url&&new URL(url,location.href).origin===location.origin&&response.headers.get('content-type')?.includes('application/json')){try{const data=await response.clone().json();if(data.desktopPending)window.dispatchEvent(new CustomEvent('photobridge-native-pending',{detail:{message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'}}));}catch{}}return response;};})();
+// Local operation IDs survive a lost localhost response; they never become cloud authority.
+(()=>{if(window.__pbLocalFetchWrapped)return;window.__pbLocalFetchWrapped=true;const original=window.fetch.bind(window),pending=new Map();window.fetch=async(input,options={})=>{
+ const url=typeof input==='string'?input:input?.url,same=url&&new URL(url,location.href).origin===location.origin,method=String(options.method||input?.method||'GET').toUpperCase();let key;
+ if(same&&['POST','PUT','PATCH'].includes(method)&&typeof options.body==='string'){key=method+' '+url+' '+options.body;const headers=new Headers(options.headers||{});if(!headers.has('x-photobridge-local-operation')){let existing;try{existing=JSON.parse(options.body).desktopOperationId}catch{}if(typeof existing==='string'&&/^[0-9a-f-]{36}$/i.test(existing))headers.set('x-photobridge-local-operation',existing);else{if(!pending.has(key))pending.set(key,crypto.randomUUID());headers.set('x-photobridge-local-operation',pending.get(key));}}options={...options,headers};}
+ const response=await original(input,options);
+ if(same&&response.headers.get('content-type')?.includes('application/json')){try{const data=await response.clone().json();if(key&&response.status<500)pending.delete(key);if(data.offline)window.__PB_NATIVE_OFFLINE=true;else if(response.ok)window.__PB_NATIVE_OFFLINE=false;if(data.localCommitted)window.dispatchEvent(new CustomEvent('photobridge-local-committed',{detail:{}}));if(data.desktopPending)window.dispatchEvent(new CustomEvent('photobridge-native-pending',{detail:{message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'}}));}catch{}}
+ return response;
+};})();

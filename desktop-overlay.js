@@ -83,9 +83,9 @@
  },true);
  document.addEventListener('click',async event=>{
    const control=event.target?.closest?.('button');
-   if(navigator.onLine!==false||!window.pbNativeFolder||!control||!/^انتخاب مسیر$|^تغییر مسیر$/.test(control.textContent.trim()))return;
+   if(!window.pbNativeFolder||!control||!/^انتخاب مسیر$|^تغییر مسیر$/.test(control.textContent.trim()))return;
    event.preventDefault();event.stopImmediatePropagation();
-   try{const root=await window.pbNativeFolder.choose();const panel=dialog('پوشهٔ محلی ذخیره شد');element('p',root.displayPath||root.name,panel);element('p','این مسیر روی همین دستگاه ذخیره شد. ثبت یا تغییر سیستم اصلی سایت پس از اتصال انجام می‌شود.',panel);}
+   try{const root=await window.pbNativeFolder.choose();document.querySelectorAll('span,p,small').forEach(el=>{if(el.childElementCount===0&&/هنوز پوشه.*انتخاب نشده/.test(el.textContent))el.textContent=root.displayPath||root.name;if(el.childElementCount===0&&el.textContent.trim()==='download_device_registration_offline'){el.textContent='مسیر محلی فعال است.';el.style.color='#18875a';}});const panel=dialog('پوشهٔ محلی ذخیره شد');element('p',root.displayPath||root.name,panel);element('p','مسیر محلی فعال است و همین حالا برای ذخیرهٔ عکس‌ها قابل استفاده است. تنظیم سیستم اصلی سایت مستقل از کار محلی است.',panel);}
    catch(error){if(error.name!=='AbortError'){const panel=dialog('انتخاب پوشه انجام نشد');element('p',error.message,panel);}}
  },true);
  const intakeObserver=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes||[]){if(node.nodeType===1)decorateIntake(node)}decorateIntake();});
@@ -100,7 +100,7 @@
  let state=null,loading=false,busy=false;
  const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';
  function refreshIndicator(){
-   const n=(state?.conflicts?.length||0)+(state?.localOrders?.length||0)+(state?.pending||0);
+   const n=(state?.conflicts?.length||0)+(state?.localOrders?.length||0)+(state?.pending||0)+(state?.localBusiness?.pending||0);
    indicator.hidden=!state?.signedIn||!n;
    indicator.textContent='بررسی همگام‌سازی';
    indicator.title=n.toLocaleString('fa-IR')+' تغییر سفارش یا مالی نیازمند بررسی — Ctrl+Shift+S';
@@ -169,15 +169,18 @@
  async function openSync(){
    await refresh();const panel=dialog('وضعیت سفارش‌ها و همگام‌سازی');
    const s=state||{},conflicts=Array.isArray(s.conflicts)?s.conflicts:[];
-   element('p','این پنجره فقط تغییرهای سفارش و مالی را نشان می‌دهد که سرور هنوز نتیجه‌شان را تأیید نکرده است. تغییرهای معمولی در صورت قطع اینترنت در برنامه می‌مانند و با برگشت اینترنت خودکار ارسال می‌شوند. اعلان‌ها و بررسی‌های داخلی برنامه اینجا نمایش داده نمی‌شوند.',panel).className='pbSyncIntro';
-   element('p',s.pending?Number(s.pending).toLocaleString('fa-IR')+' تغییر منتظر اتصال است؛ برنامه خودش دوباره تلاش می‌کند.':'تغییر منتظر اتصالی وجود ندارد.',panel);
+   if(s.localBusiness){element('p','حالت کار محلی فعال است. سفارش‌ها و فاکتورها روی دستگاه ثبت و قابل استفاده‌اند؛ '+Number(s.localBusiness.pending||0).toLocaleString('fa-IR')+' عملیات هنوز با سایت همگام نشده است.',panel).className='pbSyncIntro';
+    for(const event of s.localBusiness.syncIssues||s.localBusiness.conflicts||[]){const area=element('section','',panel);area.className='pbSyncConflict';const c=event.context||{};element('strong',(c.title||'سند محلی')+(c.number?' · '+c.number:''),area);if(c.customer)element('p','طرف حساب: '+c.customer,area);if(c.amount!=null)element('p','مبلغ: '+Number(c.amount).toLocaleString('fa-IR')+' تومان',area);const code=event.error?.code||'sync_failed';element('p',code==='invoice_amount_conflict'?'مبلغ سند محلی با فاکتور سایت تفاوت دارد. هر دو را بررسی کنید؛ ثبت محلی تغییر نکرده است.':['download_device_not_registered','not_primary_download_device'].includes(code)?'برای همگام‌سازی، این کامپیوتر را آنلاین به‌عنوان سیستم اصلی سایت ثبت کنید. کار محلی متوقف نیست.':'همگام‌سازی این مورد انجام نشد؛ سند محلی معتبر و قابل استفاده است.',area);element('p','جزئیات ارتباط با سایت: '+code,area);const link=element('a','بازکردن بخش مربوط در سایت برای مقایسه',area);link.href='https://photobridge.ir'+(c.section||'/lab');link.target='_blank';link.rel='noopener noreferrer';button('سایت را بررسی کردم؛ تلاش دوباره',area,async()=>{const r=await fetch('/desktop/local-business/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:event.id,reviewed:true})});if(r.ok){panel.remove();await refresh();void openSync();}else element('p','تلاش دوباره ثبت نشد؛ دوباره وارد حساب شوید.',area);});}
+   }
+   if(!s.localBusiness)element('p','این پنجره فقط تغییرهای سفارش و مالی را نشان می‌دهد که سرور هنوز نتیجه‌شان را تأیید نکرده است. تغییرهای معمولی در صورت قطع اینترنت در برنامه می‌مانند و با برگشت اینترنت خودکار ارسال می‌شوند. اعلان‌ها و بررسی‌های داخلی برنامه اینجا نمایش داده نمی‌شوند.',panel).className='pbSyncIntro';
+   if(!s.localBusiness)element('p',s.pending?Number(s.pending).toLocaleString('fa-IR')+' تغییر منتظر اتصال است؛ برنامه خودش دوباره تلاش می‌کند.':'تغییر منتظر اتصالی وجود ندارد.',panel);
    element('p','آخرین همگام‌سازی موفق: '+date(s.lastSync),panel);
    const syncError=s.report?.error||s.error;if(syncError)element('p',syncErrorText(syncError),panel);
    if(s.report?.finishedAt)element('p','نتیجهٔ آخرین تلاش: '+date(s.report.finishedAt)+(Number.isFinite(Number(s.report.pulledCount))?' · دریافت '+Number(s.report.pulledCount).toLocaleString('fa-IR')+' بخش':''),panel);
    if(s.report&&Number(s.report.sent||0))element('p','در آخرین تلاش '+Number(s.report.sent).toLocaleString('fa-IR')+' تغییر با موفقیت ارسال شد.',panel);
    for(const item of s.localOrders||[]){const area=element('section','',panel);area.className='pbSyncConflict';element('strong','سفارش '+item.number+' — در انتظار تأیید سرور',area);element('p','عکس‌ها: '+Number(item.files).toLocaleString('fa-IR')+' · زمان: '+date(item.createdAt),area);element('p',item.state==='editing'?'ذخیرهٔ عکس‌ها یا تکمیل سفارش هنوز تمام نشده؛ این مورد خودکار ارسال نمی‌شود.':item.state==='conflict'?'سرور این سفارش را نپذیرفته؛ عکس‌های محلی حفظ شده‌اند.':'سفارش و عکس‌ها روی دستگاه نگهداری می‌شوند؛ پس از اتصال برای تأیید سرور ارسال می‌شوند.',area);if(item.proforma){element('p','پیش‌فاکتور محلی (قطعی نیست): '+String(item.proforma.customer||''),area);element('p',String(item.proforma.rows||''),area);element('p',String(item.proforma.total||''),area);}if(item.error)element('p','جزئیات ارسال: '+item.error.code,area);}
    for(const item of s.pendingOperations||[]){const area=element('section','',panel);area.className='pbSyncConflict';element('strong',(item.context?.title||'تغییر سفارش')+' — در انتظار تأیید سرور',area);for(const f of item.context?.fields||[])element('p',f.label+': '+f.value,area);}
-   if(!conflicts.length)element('p','موردی که نیاز به تصمیم شما داشته باشد وجود ندارد.',panel);
+   if(!conflicts.length&&!s.localBusiness?.syncIssues?.length)element('p','موردی که نیاز به تصمیم شما داشته باشد وجود ندارد.',panel);
    if(s.signedIn)button('تلاش دوباره برای همگام‌سازی',panel,async()=>{await syncNow();if(panel.isConnected){panel.remove();void openSync()}});
    for(const x of conflicts.slice(0,20)){
      const area=document.createElement('section');area.className='pbSyncConflict';panel.append(area);
@@ -220,6 +223,7 @@
    const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
    link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
  }
+ window.addEventListener('photobridge-local-committed',()=>{document.getElementById('pbOfflinePendingNotice')?.remove();void refresh();});
  window.addEventListener('photobridge-native-pending',()=>{
    let notice=document.getElementById('pbOfflinePendingNotice');if(!notice){notice=element('button','روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور — مشاهده',document.body);notice.id='pbOfflinePendingNotice';notice.type='button';notice.style.cssText='position:fixed;bottom:72px;left:20px;max-width:calc(100vw - 40px);z-index:2147483000;padding:12px 16px;border:1px solid #bcd0fa;border-radius:12px;background:#eef3ff;color:#254bc5;font:700 12px Vazirmatn,Tahoma;direction:rtl;cursor:pointer';notice.onclick=()=>{notice.remove();void openSync();};}void refresh();
  });

@@ -47,5 +47,5 @@ async function syncLocalOrders(store,request,verifyLocalFiles){
  }
  return sent;
 }
-function pendingOrders(store){return list(store).filter(x=>x.state!=='synced').map(x=>({id:x.id,number:x.number,customerId:x.body.customerId,state:x.state,createdAt:x.createdAt,files:x.files.length,mode:x.body.mode,error:x.error||null,serverNumber:x.serverNumber||null,proforma:x.proforma||null}));}
+function pendingOrders(store){return list(store).filter(x=>!['synced','adopted'].includes(x.state)).map(x=>({id:x.id,number:x.number,customerId:x.body.customerId,state:x.state,createdAt:x.createdAt,files:x.files.length,mode:x.body.mode,error:x.error||null,serverNumber:x.serverNumber||null,proforma:x.proforma||null}));}
 module.exports={localRequest,syncLocalOrders,pendingOrders,canonical};

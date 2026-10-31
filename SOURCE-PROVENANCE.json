@@ -10,5 +10,7 @@
   "syncConflictManagement": "Explicit reviewed archival of active-account conflicts, retaining local payload/error without retry; show timestamps and diagnostic codes.",
   "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons.",
   "desktopLayoutFix": "RTL styled sync/archive dialogs; bottom-left conflict flag hidden during intake; remove native duplicate copy badge; contain photo quantity controls.",
-  "offlineDeviceFix": "Reuse last successful same-account same-device primary confirmation on transport failure; never offline force registration or cross-account approval."
+  "offlineDeviceFix": "Reuse last successful same-account same-device primary confirmation on transport failure; never offline force registration or cross-account approval.",
+  "packageVersion": "1.0.56",
+  "offlineOrders": "Durable per-account local-only intake drafts and proforma; disk-verified files; stable client IDs and server reconciliation; pending invoice actions offline; no offline source deletion."
 }

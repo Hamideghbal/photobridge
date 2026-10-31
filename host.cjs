@@ -5,7 +5,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request,roots,token,onLogin,onLogout}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,isOnline=()=>true}){
+  let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
+  const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
     try{
@@ -37,7 +39,23 @@ function createHost({store,sync,request,roots,token,onLogin,onLogout}){
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
-        if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,request);if(!access.allowed)return json(res,403,access)}
+        if(!exempt(req.method,req.url)){const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:request);if(!access.allowed)return json(res,403,access)}
+        let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
+        const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
+        const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
+        if(connectionOffline()||existingLocal){
+          if(req.method==='POST'&&/\/delegated-orders\/[0-9a-f-]+\/submit(?:\/download)?$/.test(url.pathname)){
+            const files=localBody().desktopLocalFiles,expected=localOrders.pendingOrders(store).find(x=>req.url.includes(x.id))?.files;if(!nativeStorage||!Array.isArray(files)||!files.length||files.length!==expected||new Set(files.map(f=>JSON.stringify([f.rootId,f.parts]))).size!==files.length)return json(res,409,{error:'local_files_not_verified'});
+            for(const file of files)file.sha256=await require('./local-file-proof.cjs').fileProof(nativeStorage,file);
+          }
+          const local=localOrders.localRequest(store,req.method,req.url,localBody());
+          if(local)return json(res,200,local);
+          if(connectionOffline()&&require('./live-finance.cjs').invoiceAction(req.method,logicalUrl,localBody())){
+            const duplicate=store.rows().find(x=>x.state==='pending'&&x.url===logicalUrl&&JSON.stringify(x.body)===JSON.stringify(localBody()));
+            const queued=duplicate?{id:duplicate.id}:store.enqueue(req.method,logicalUrl,localBody());
+            return json(res,202,{ok:true,desktopPending:true,offline:true,operationId:queued.id,message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'});
+          }
+        }
         // Workstation registration needs a live answer, never a queued success.
         /* R1386 live storage target */if((url.pathname==='/api/lab/download-device'||url.pathname==='/api/lab/storage-target'||url.pathname==='/api/lab/storage-target/activate'||url.pathname==='/api/lab/storage-target/hello'||url.pathname==='/api/lab/storage-picker')&&['GET','PUT','POST'].includes(req.method)){
           const storageAccount=store.get('labId'),storageDevice=store.get('deviceId');
@@ -112,6 +130,7 @@ function createHost({store,sync,request,roots,token,onLogin,onLogout}){
           html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
           return res.end(html);
         }
+        if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
         if(name==='assets/index-UIRefine-v655-r84.js')return res.end(require('./storage-bundle.cjs').patchStorageBundle(fs.readFileSync(file,'utf8')));
         return fs.createReadStream(file).pipe(res);
       }

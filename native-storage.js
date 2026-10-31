@@ -45,3 +45,6 @@
   };
  });};
 })();
+
+// Surface local acknowledgements without presenting them as server confirmation.
+(()=>{const original=window.fetch.bind(window);window.fetch=async(...args)=>{const response=await original(...args);const url=typeof args[0]==='string'?args[0]:args[0]?.url;if(url&&new URL(url,location.href).origin===location.origin&&response.headers.get('content-type')?.includes('application/json')){try{const data=await response.clone().json();if(data.desktopPending)window.dispatchEvent(new CustomEvent('photobridge-native-pending',{detail:{message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'}}));}catch{}}return response;};})();

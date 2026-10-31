@@ -1,0 +1,2 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');const {fileProof,verifyFiles}=require('../local-file-proof.cjs');
+test('same-size modified photo cannot be sent as verified',async()=>{let bytes=Buffer.from('photo');const storage={operation:async action=>action==='stat'?{size:bytes.length,lastModified:1}:bytes};const file={bytes:5};file.sha256=await fileProof(storage,file);await verifyFiles(storage,[file]);bytes=Buffer.from('other');await assert.rejects(verifyFiles(storage,[file]),/local_file_hash_mismatch/);});

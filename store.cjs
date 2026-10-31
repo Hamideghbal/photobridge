@@ -21,6 +21,6 @@ class LabStore{
  retry(id){this.db.prepare("UPDATE outbox SET state='pending',error=NULL,updated_at=? WHERE id=?").run(now(),id)}
  discard(id){this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=?").run(now(),id)}
  archiveConflict(id){const lab=this.get('labId');if(!lab)return false;const result=this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=? AND lab=? AND state='conflict'").run(now(),id,lab);return result.changes===1;}
- status(){const rows=this.rows();return{labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error,createdAt:x.created_at,updatedAt:x.updated_at,context:describeConflict(x,this)})),lastSync:this.get('lastSync')}}
+ status(){const rows=this.rows();return{localOrders:require('./offline-orders.cjs').pendingOrders(this),pendingOperations:rows.filter(x=>x.state==='pending').map(x=>({id:x.id,context:describeConflict(x,this)})),labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error,createdAt:x.created_at,updatedAt:x.updated_at,context:describeConflict(x,this)})),lastSync:this.get('lastSync')}}
 }
 module.exports={LabStore};

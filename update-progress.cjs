@@ -27,6 +27,7 @@ class UpdateProgress{
   current.webContents.on?.('will-navigate',(event,url)=>{if(url!==page)event.preventDefault();});
   current.on('close',event=>{if(this.window!==current)return;if(this.state?.state==='installing'){event.preventDefault();return;}if(this.state?.state==='downloading')this.onCancel?.();this.resolve('later');});
   current.on('closed',()=>{if(this.window===current){this.window=null;this.rendererReady=false;}});
+  current.webContents.on?.('did-stop-loading',()=>{if(this.window===current)this.sendState();});
   current.webContents.on?.('did-finish-load',()=>{if(this.window!==current)return;this.sendState();current.show();current.focus?.();});
   current.webContents.on?.('did-fail-load',(_event,_code,_description,_url,isMainFrame)=>{if(isMainFrame)this.failRenderer(current);});
   void current.loadFile(path.join(__dirname,'update-progress.html')).catch(()=>this.failRenderer(current));
@@ -34,7 +35,7 @@ class UpdateProgress{
  }
  failRenderer(window){if(this.window!==window||this.rendererReady||this.rendererFailed)return;this.rendererFailed=true;clearTimeout(this.rendererTimer);this.rendererTimer=null;this.resolve('ui_unavailable');this.close();}
  resolve(action){const resolve=this.resolveAction;this.resolveAction=null;resolve?.(action);}
- sendState(){if(!this.window||this.window.isDestroyed()||!this.window.webContents.isLoading?.())this.window?.webContents.send?.('pb-update-progress-state',this.state);}
+ sendState(){const win=this.window;if(!win||win.isDestroyed()||!this.rendererReady)return;win.webContents.send('pb-update-progress-state',this.state);}
  ask(state){
   this.state={...state};if(this.rendererFailed)return Promise.resolve('ui_unavailable');const answer=new Promise(resolve=>{this.resolveAction=resolve;});
   const win=this.ensureWindow();this.sendState();

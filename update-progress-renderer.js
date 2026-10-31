@@ -5,7 +5,7 @@
  const fa=n=>Math.max(0,Number(n)||0).toLocaleString('fa-IR');
  function size(value){const n=Math.max(0,Number(value)||0);if(n<1024)return fa(n)+' بایت';if(n<1048576)return (n/1024).toLocaleString('fa-IR',{maximumFractionDigits:1})+' کیلوبایت';return (n/1048576).toLocaleString('fa-IR',{maximumFractionDigits:1})+' مگابایت';}
  function setState(next){
-  if(!next||typeof next!=='object')return;current=next;const stage=String(next.state||'available');
+  if(!next||typeof next!=='object')return;current=next;primary.disabled=false;later.disabled=false;const stage=String(next.state||'available');
   version.hidden=!next.version;version.textContent=next.version?'نسخهٔ '+next.version:'';
   const stepStage=stage==='verifying'?'downloading':stage;
   document.querySelectorAll('[data-step]').forEach(el=>{const name=el.dataset.step;el.classList.toggle('done',stepStage==='downloading'?name==='available':stepStage==='ready'?name==='available'||name==='downloading':stepStage==='installing'?name!=='ready':stepStage==='error'&&next.retryStage==='install'?name==='available'||name==='downloading':false);el.classList.toggle('active',name===stepStage||stepStage==='error'&&name===(next.retryStage==='install'?'ready':'downloading'));});

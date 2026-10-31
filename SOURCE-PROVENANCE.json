@@ -8,5 +8,6 @@
   "followupFix": "UPD-02: default updater confirmations use native Electron dialogs without renderer IPC; append sanitized stage/error diagnostics to userData/updater-debug.log.",
   "confirmationUi": "Static RTL Vazirmatn confirmation windows with native fallback; download/install logic unchanged.",
   "syncConflictManagement": "Explicit reviewed archival of active-account conflicts, retaining local payload/error without retry; show timestamps and diagnostic codes.",
-  "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons."
+  "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons.",
+  "desktopLayoutFix": "RTL styled sync/archive dialogs; bottom-left conflict flag hidden during intake; remove native duplicate copy badge; contain photo quantity controls."
 }

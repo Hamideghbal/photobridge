@@ -7,15 +7,15 @@
  // available, and only actual conflict records surface a small corner flag.
  const style=document.createElement('style');
  style.textContent=`
- #pbLabDesktopConflictFlag{position:fixed;left:12px;top:74px;z-index:2147483000;
+ #pbLabDesktopConflictFlag{position:fixed;left:20px;bottom:20px;top:auto;z-index:2147483000;
    min-width:48px;height:28px;padding:0 9px;border-radius:999px;border:1px solid #f0c8bc;
    background:#fff8f5;color:#aa4328;box-shadow:0 3px 14px rgba(0,0,0,.08);
-   font:bold 12px Tahoma;cursor:pointer}
+   font:700 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
  #pbLabDesktopConflictFlag[hidden]{display:none!important}
  .pbLabDesktopConflicts{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2147483646;
    width:min(760px,calc(100vw - 40px));max-height:min(78dvh,700px);box-sizing:border-box;overflow:auto;
    background:#fff;border:1px solid #d0d5dd;border-radius:16px;padding:22px;
-   direction:ltr;font:13px/1.9 Vazirmatn,Tahoma;color:#344054;text-align:right;
+   direction:rtl;font:13px/1.9 Vazirmatn,Tahoma,sans-serif;color:#344054;text-align:right;
    box-shadow:0 15px 60px rgba(0,0,0,.18)}
  .pbLabDesktopConflicts>*{direction:rtl;text-align:right}
  .pbLabDesktopConflicts h3{margin:0 0 8px;font-size:18px;color:#1d2939}
@@ -25,20 +25,25 @@
  .pbLabDesktopConflicts button{margin:4px;border:0;border-radius:8px;padding:8px 12px;
    background:#eef2ff;color:#315efb;font:inherit;cursor:pointer}
  .pbLabDesktopConflicts button:focus-visible,#pbLabDesktopConflictFlag:focus-visible{outline:2px solid #315efb}
- /* Make the manual-order photo and paper controls legible on the Windows app. */
- .pb1137Intake .pb1139GroupPhotos{gap:10px!important;padding:10px!important}
- .pb1137Intake .pb1139GroupPhotos{max-height:min(340px,42dvh)!important;overflow-x:auto!important;overflow-y:auto!important;scrollbar-width:thin!important;align-items:flex-start!important}
- .pb1137Intake .pb1139GroupPhotos figure{flex-basis:150px!important;width:150px!important}
- .pb1137Intake .pb1181IntakeFrame{height:148px!important;min-height:148px!important;flex:none!important}
- .pb1137Intake .pb1181IntakeFrame img{width:100%!important;height:100%!important;object-fit:contain!important}
- .pb1137Intake .pb1141PhotoActions{height:auto!important;min-height:34px!important;max-height:none!important;gap:6px!important;align-items:center!important}
- .pb1137Intake .pb1141PhotoActions>.pb1180IntakePaper{height:34px!important;min-height:34px!important;max-height:34px!important;font-size:11px!important;padding:4px 6px!important}
- .pb1137Intake .pb1141PhotoActions>.pb1181ChassisToggle{height:32px!important;min-height:32px!important;max-height:32px!important;padding-inline:6px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{display:flex!important;visibility:visible!important;opacity:1!important;position:static!important;flex:0 0 36px!important;min-height:36px!important;height:36px!important;margin:2px 0 0!important;overflow:visible!important;align-items:center!important;justify-content:center!important;gap:5px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:46px!important;min-width:46px!important;height:30px!important;min-height:30px!important;font-size:12px!important}
- .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:28px!important;min-width:28px!important;height:30px!important;min-height:30px!important;flex:0 0 28px!important;font-size:15px!important;padding:0!important}
- .pb1137Intake .pbLabIntakeActionBadge{position:absolute!important;z-index:3;top:6px;right:6px;max-width:calc(100% - 42px);padding:3px 9px;border:1px solid #d7e2f5;border-radius:999px;background:#fffef2eF;color:#1d4d80;box-shadow:0 2px 7px #162b4a24;font:800 11px/1.5 Vazirmatn,Tahoma,sans-serif;white-space:nowrap}
- .pb1137Intake .pbLabIntakeActionBadge[data-mode="move"]{background:#e7f8ee;border-color:#9bd8af;color:#16703a}
+ .pbLabDesktopConflicts{padding:0 22px 22px;border-color:#e1e7f2;background:#fff;isolation:isolate}
+ .pbLabDesktopConflicts .pbSyncHeader{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;padding:18px 0 14px;border-bottom:1px solid #edf0f6;margin-bottom:14px}
+ .pbLabDesktopConflicts .pbSyncHeader h3{margin:0;font-weight:800}
+ .pbLabDesktopConflicts .pbSyncConflict{padding:18px;margin-top:16px;overflow-wrap:anywhere}
+ .pbLabDesktopConflicts .pbSyncConflict strong{font-size:15px;color:#213451}
+ .pbLabDesktopConflicts .pbSyncActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #e7edf7}
+ .pbLabDesktopConflicts .pbSyncActions button{margin:0;min-height:40px;padding:9px 14px}
+ .pbSyncArchiveConfirm{direction:rtl;text-align:right;font:13px/2 Vazirmatn,Tahoma,sans-serif;color:#243650;width:min(480px,calc(100vw - 32px));border:1px solid #e1e7f2;border-radius:20px;padding:24px;box-shadow:0 24px 80px #162b4a30}
+ .pbSyncArchiveConfirm::backdrop{background:#12233f66;backdrop-filter:blur(3px)}
+ .pbSyncArchiveConfirm h3{margin:0 0 12px;font-size:18px}.pbSyncArchiveConfirm p{color:#65758e;margin:8px 0}
+ .pbSyncArchiveConfirm footer{display:flex;gap:10px;margin-top:22px}.pbSyncArchiveConfirm button{flex:1;font:700 13px Vazirmatn,Tahoma,sans-serif;border:0;border-radius:11px;min-height:44px;padding:8px 12px;cursor:pointer;background:#f0f3f9;color:#53647e}.pbSyncArchiveConfirm .primary{background:#315efb;color:#fff}
+ body:has(.pb1137Intake) #pbLabDesktopConflictFlag,body:has(.pbLabDesktopConflicts) #pbLabDesktopConflictFlag{display:none!important}
+ /* Keep the website's photo-card controls; only constrain the native layout. */
+ .pb1137Intake .pb1139GroupPhotos figure{box-sizing:border-box!important;min-width:0!important}
+ .pb1137Intake .pb1142Quantity{display:flex!important;align-items:center!important;gap:4px!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ .pb1137Intake .pb1142Quantity>span{flex:1 1 auto!important;min-width:0!important}
+ .pb1137Intake .pb1142Quantity input{flex:0 1 44px!important;width:44px!important;min-width:24px!important;box-sizing:border-box!important}
+ .pb1137Intake .pb1142Quantity button{flex:0 0 28px!important;width:28px!important;min-width:28px!important;padding:0!important;box-sizing:border-box!important}
+ .pbLabIntakeActionBadge{display:none!important}
  .pb1137Intake.pbLabDesktopIntakeDone{width:min(540px,calc(100vw - 32px))!important;height:auto!important;max-height:78dvh!important;min-height:0!important;overflow:auto!important;padding:16px!important;gap:8px!important;background:#fff!important;border-radius:16px!important}
  .pb1137Intake.pbLabDesktopIntakeDone>header{padding-bottom:8px!important}
  .pb1137Intake.pbLabDesktopIntakeDone>p,.pb1137Intake.pbLabDesktopIntakeDone .pb1178IntakeWorkspace{display:none!important}
@@ -68,10 +73,7 @@
    installIntakePicker();
    for(const modal of root.querySelectorAll?.('.pb1137Intake')||[]){
      if(modal.querySelector('form>h3'))modal.classList.add('pbLabDesktopIntakeDone');
-     for(const figure of modal.querySelectorAll('.pb1139GroupPhotos figure')){
-       const frame=figure.querySelector('.pb1181IntakeFrame'),image=frame?.querySelector('img');if(!frame||!image||frame.querySelector('.pbLabIntakeActionBadge'))continue;
-       const mode=previewModes.get(image.src)||'copy';const badge=document.createElement('span');badge.className='pbLabIntakeActionBadge';badge.dataset.mode=mode;badge.textContent=mode==='move'?'انتقال':'کپی';badge.setAttribute('aria-label',mode==='move'?'این عکس منتقل می‌شود':'این عکس کپی می‌شود');frame.append(badge);
-     }
+     modal.querySelectorAll('.pbLabIntakeActionBadge').forEach(badge=>badge.remove());
    }
  }
  document.addEventListener('click',event=>{
@@ -84,7 +86,7 @@
  decorateIntake();
  const indicator=document.createElement('button');
  indicator.id='pbLabDesktopConflictFlag';indicator.type='button';
- indicator.textContent='بررسی';indicator.hidden=true;
+ indicator.textContent='بررسی همگام‌سازی';indicator.hidden=true;
  indicator.setAttribute('aria-label','بررسی همگام‌سازی سفارش‌ها و اطلاعات مالی');
  indicator.title='بررسی وضعیت سفارش‌ها و امور مالی — Ctrl+Shift+S';
  document.body.append(indicator);
@@ -93,7 +95,7 @@
  function refreshIndicator(){
    const n=Array.isArray(state?.conflicts)?state.conflicts.length:0;
    indicator.hidden=!state?.signedIn||!n;
-   indicator.textContent='بررسی';
+   indicator.textContent='بررسی همگام‌سازی';
    indicator.title=n.toLocaleString('fa-IR')+' تغییر سفارش یا مالی نیازمند بررسی — Ctrl+Shift+S';
  }
  async function refresh(){
@@ -111,9 +113,25 @@
    const panel=document.createElement('section');panel.className='pbLabDesktopConflicts';
    panel.setAttribute('role','dialog');panel.setAttribute('aria-label',title);
    panel.tabIndex=-1;
-   element('h3',title,panel);
-   button('بستن',panel,()=>panel.remove());
+   const header=element('header','',panel);header.className='pbSyncHeader';
+   element('h3',title,header);
+   button('بستن',header,()=>panel.remove());
    document.body.append(panel);panel.focus();return panel;
+ }
+ function confirmArchive(context){
+   return new Promise(resolve=>{
+     const previous=document.activeElement,modal=document.createElement('dialog');modal.className='pbSyncArchiveConfirm';modal.setAttribute('aria-labelledby','pbSyncArchiveTitle');
+     element('h3','بایگانی مورد بررسی‌شده',modal).id='pbSyncArchiveTitle';
+     element('p',context?.title||'تغییر سفارش یا امور مالی',modal);
+     element('p','آیا نتیجهٔ این تغییر را در صفحهٔ مربوط بررسی کرده‌اید؟',modal);
+     element('p','این کار فقط هشدار را بایگانی می‌کند؛ سابقه حفظ می‌شود و هیچ تغییری روی سرور ثبت یا لغو نمی‌شود. اگر تغییر ثبت نشده، آن را از صفحهٔ مربوط دوباره انجام دهید.',modal);
+     const footer=element('footer','',modal);let settled=false;
+     const finish=value=>{if(settled)return;settled=true;modal.close();modal.remove();previous?.focus?.();resolve(value);};
+     button('بله، بررسی کردم؛ بایگانی',footer,()=>finish(true)).className='primary';
+     const cancel=button('بازگشت',footer,()=>finish(false));
+     modal.addEventListener('cancel',event=>{event.preventDefault();finish(false);});
+     document.body.append(modal);modal.showModal();cancel.focus();
+   });
  }
  async function syncNow(){
    if(busy)return;busy=true;
@@ -167,12 +185,13 @@
      element('p','زمان تغییر: '+date(x.createdAt)+' · شناسهٔ پیگیری: '+String(x.id||'').slice(0,8),area);
      const details=document.createElement('details');area.append(details);element('summary','جزئیات خطا',details);
      element('p','کد پاسخ سرور: '+(x.error?.httpStatus||'پاسخی دریافت نشد')+' · کد خطا: '+String(x.error?.error||'نامشخص'),details);
-     button('بررسی کردم؛ بایگانی این مورد',area,async()=>{
-       if(!window.confirm('آیا وضعیت این تغییر را در صفحهٔ سفارش یا امور مالی بررسی کرده‌اید؟\nاین کار فقط هشدار را از فهرست فعال خارج می‌کند و سابقهٔ محلی را نگه می‌دارد؛ هیچ تغییری روی سرور ثبت یا لغو نمی‌شود. اگر تغییر ثبت نشده، باید آن را از صفحهٔ مربوط دوباره انجام دهید.'))return;
+     const actions=element('div','',area);actions.className='pbSyncActions';
+     button('بررسی کردم؛ بایگانی این مورد',actions,async()=>{
+       if(!await confirmArchive(x.context))return;
        try{const response=await fetch('/desktop/archive-conflict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,reviewed:true})});if(!response.ok)throw Error('archive_failed');panel.remove();await refresh();void openSync();}
        catch{element('p','بایگانی انجام نشد. وارد حساب شوید و دوباره وضعیت را بررسی کنید.',area);}
      });
-     if(retryIsSafe(x))button('تلاش دوباره امن',area,async()=>{
+     if(retryIsSafe(x))button('تلاش دوباره امن',actions,async()=>{
        await fetch('/desktop/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
        panel.remove();await refresh();void openSync();
      });

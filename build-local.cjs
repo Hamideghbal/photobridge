@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const root=__dirname;process.chdir(root);
 function run(command,args){const r=spawnSync(command,args,{cwd:root,stdio:'inherit',shell:process.platform==='win32'&&command==='npm'});if(r.error)throw r.error;if(r.status!==0)throw Error(command+' failed: '+r.status)}
 async function main(){
- const version=process.argv[2]||'1.0.58';if(!['1.0.54','1.0.55','1.0.56','1.0.58'].includes(version))throw Error('unsupported_version');
+ const version=process.argv[2]||'1.0.59';if(!['1.0.54','1.0.55','1.0.56','1.0.59'].includes(version))throw Error('unsupported_version');
  if(process.platform!=='win32')throw Error('Run this build on Windows x64 with Node.js 22 or newer.');
  if(Number(process.versions.node.split('.')[0])<22)throw Error('Node.js 22 or newer is required.');
  const keyFile=process.env.PB_UPDATE_SIGNING_KEY||path.join(root,'.publisher','update-private.pem');

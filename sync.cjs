@@ -9,7 +9,7 @@ const PULL=[
 const isIdempotent=(m,u)=>IDEMPOTENT.some(([mm,re])=>m===mm&&re.test(u));
 const SAFE_CONFLICT_RETRY_MS=5*60*1000;
 class Sync{
- constructor({store,request,isOnline=()=>true,verifyLocalFiles}){Object.assign(this,{store,request,isOnline,verifyLocalFiles});this.running=false;this.online=false;this.paused=false;this.lastError=null;this.flight=null;this.phase='idle';this.revision=0;this.report=null;}
+ constructor({store,request,isOnline=()=>true,verifyLocalFiles,repairLocalStorage}){Object.assign(this,{store,request,isOnline,verifyLocalFiles,repairLocalStorage});this.running=false;this.online=false;this.paused=false;this.lastError=null;this.flight=null;this.phase='idle';this.revision=0;this.report=null;}
  async pause(){this.paused=true;if(this.flight)await this.flight} resume(){this.paused=false}
  run(){if(this.flight)return this.flight;if(this.paused||!this.store.get('labId'))return Promise.resolve({ok:false,error:'login_required',pulled:false,sent:0});this.running=true;this.flight=this.perform().catch(error=>this.failedRun(error)).finally(()=>{this.running=false;this.phase='idle';this.flight=null});return this.flight}
  failedRun(error){this.online=false;this.lastError='sync_internal_error';const now=new Date().toISOString();let state={pending:0,conflicts:[]};try{state=this.store.status()}catch{}this.report={ok:false,pulled:false,pulledCount:0,failedPulls:PULL.length,sent:0,pending:state.pending||0,conflicts:state.conflicts?.length||0,error:this.lastError,startedAt:now,finishedAt:now};try{this.store.set('lastSyncReport',this.report)}catch{}return this.report}
@@ -33,6 +33,7 @@ class Sync{
    if([401,403].includes(response.status)){this.lastError='login_required';break}
    this.lastError=data.error||'server_error';break;
   }
+  if(this.repairLocalStorage)await this.repairLocalStorage();
   this.phase='download';
   if(this.lastError!=='login_required'){
    try{

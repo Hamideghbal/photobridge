@@ -5,5 +5,5 @@
   "nativeSource": "Extracted unchanged from 1.0.55 app.asar; package/build scripts restored from archived source v1.0.22",
   "uiBuild": "4300c9a4817b99da2343d0ccfe27e301ab64609fae1b04584949bca48368c73f",
   "privateSigningKeyIncluded": false,
-  "followupFix": "Deliver updater state on renderer-ready even while Electron reports loading; resend after did-stop-loading; reset action buttons for each state."
+  "followupFix": "UPD-02: default updater confirmations use native Electron dialogs without renderer IPC; append sanitized stage/error diagnostics to userData/updater-debug.log."
 }

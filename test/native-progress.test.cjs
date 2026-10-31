@@ -1,0 +1,8 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{EventEmitter}=require('node:events'),os=require('node:os'),fs=require('node:fs'),path=require('node:path');
+const {installAppUpdates}=require('../app-update-main.cjs');
+test('default updater downloads and installs through native dialogs without BrowserWindow or IPC',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb-native-')),app=new EventEmitter(),events=[],messages=[],values=new Map();Object.assign(app,{isPackaged:true,getVersion:()=> '1.0.54',getPath:()=>dir,quit:()=>events.push('quit'),exit(){}});
+ class Updater{constructor(o){this.options=o;}async check(){if(!await this.options.confirmDownload({version:'1.0.55'}))return{state:'available'};events.push('download');this.options.onState({state:'downloading',version:'1.0.55',percent:50});this.ready={version:'1.0.55'};return{state:'ready'};}async install(){events.push('install');await this.options.quit();}}
+ const controller=installAppUpdates({app,dialog:{showMessageBox:async(...args)=>{messages.push(args.at(-1));return{response:1}}},store:{get:k=>values.get(k),set:(k,v)=>values.set(k,v)},request:async()=>{},getWindow:()=>null,show:async()=>{},canInstall:async()=>true,beforeQuit:async()=>{},platform:'win32',Updater});
+ try{await controller.check();assert.deepEqual(events,['download','install','quit']);assert.equal(messages.length,2);assert(messages.every(x=>x.title.includes('UPD-02')));const log=fs.readFileSync(path.join(dir,'updater-debug.log'),'utf8');assert(log.includes('controller_started'));assert(log.includes('prepare_install'));}finally{app.emit('before-quit');fs.rmSync(dir,{recursive:true,force:true});}
+});

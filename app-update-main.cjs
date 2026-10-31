@@ -1,11 +1,11 @@
 'use strict';
 const path=require('node:path'),{spawn}=require('node:child_process');
 const {AppUpdate}=require('./app-update.cjs');
-const {UpdateProgress}=require('./update-progress.cjs');
+const {NativeUpdateProgress}=require('./native-update-progress.cjs');
 
 function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
  let updater;
- const progress=providedProgress||new UpdateProgress({BrowserWindow,ipcMain,getParent:getWindow,onCancel:()=>updater?.cancelDownload?.()});
+ const progress=providedProgress||new NativeUpdateProgress({app,dialog,getParent:getWindow});
  let prompting=false,readyAnnounced=null,downloadInProgress=false,checking=false,lastSuccessfulCheck=0,retryTimer=null;
  updater=new Updater({
   version:app.getVersion(),directory:path.join(app.getPath('userData'),'program-updates'),request,
@@ -62,7 +62,7 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,b
     await dialog.showMessageBox(getWindow(),{type:'info',title:'به‌روزرسانی برنامه',message:result.state==='current'?'آخرین نسخهٔ برنامه نصب است.':result.state==='login_required'?'برای دریافت نسخهٔ جدید وارد حساب لابراتوار شوید.':'هنوز نسخهٔ جدیدی برای دریافت منتشر نشده است.'});
    }
   }catch(error){
-   getWindow()?.setProgressBar?.(-1);store.set('nativeUpdateError',error.message);
+   getWindow()?.setProgressBar?.(-1);store.set('nativeUpdateError',error.message);progress.log?.('error',{code:String(error.message)});
    const failedDownload=downloadInProgress;downloadInProgress=false;
    if(error.message==='update_cancelled'){progress.close();store.set('nativeUpdateError',null);return;}
    scheduleRetry();

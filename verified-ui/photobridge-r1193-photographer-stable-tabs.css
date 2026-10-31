@@ -1,0 +1,19 @@
+/* R1193 — photographer website and PWA: keep the content stationary
+   while native tab buttons and moving underline retain their feedback. */
+html body #root .photographerMain>.photographerRolePageScrollArea,
+html body #root .photographerMain>.rolePageScrollArea,
+html body #root .photographerMain .clientGalleryWorkspace,
+html body #root .photographerMain .clientGalleryManager,
+html body #root .photographerMain .clientGalleryMediaPanel,
+html body #root .photographerMain .simplePrintPilot,
+html body #root .photographerMain .photographerAlbumStandalone {
+  animation:none!important;
+  view-transition-name:none!important;
+  will-change:auto!important;
+}
+html body #root .photographerMain>.photographerRolePageScrollArea,
+html body #root .photographerMain>.rolePageScrollArea {
+  overflow-anchor:none!important;
+}
+
+/* PB1364 softer blue shadows */

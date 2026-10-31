@@ -1,0 +1,17 @@
+.pb1397ReviewDialog{width:min(430px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;box-sizing:border-box;padding:22px;border:1px solid #dce5e0;border-radius:16px;background:#fff;color:#243746;text-align:right;font:400 13px/1.9 Vazirmatn,Tahoma,sans-serif;box-shadow:0 18px 65px #142b3026}
+.pb1397ReviewDialog::backdrop{background:#10232e66;backdrop-filter:blur(3px)}
+.pb1397ReviewDialog .pb1397ReviewEyebrow{display:block;color:#527769;font-size:11px;font-weight:600;margin-bottom:3px}
+.pb1397ReviewDialog h2{font:800 17px/1.7 Vazirmatn,Tahoma,sans-serif;margin:0 0 14px;color:#203e32}
+.pb1397ReviewDialog .pb1397ReviewBody{padding:12px 14px;border:1px solid #deeee5;border-radius:10px;background:#f5faf7}
+.pb1397ReviewDialog p{margin:0;overflow-wrap:anywhere}.pb1397ReviewDialog p+p{margin-top:10px;color:#63717c;font-size:12px}
+.pb1397ReviewDialog .pb1397ReviewActions{display:flex;justify-content:flex-end;margin-top:18px}
+.pb1397ReviewDialog button{font:700 12px/1.5 Vazirmatn,Tahoma,sans-serif;border:1px solid #236947;border-radius:9px;padding:8px 19px;background:#236947;color:#fff;cursor:pointer}
+.pb1397ReviewDialog button:focus-visible{outline:3px solid #afd1bc;outline-offset:3px}
+
+.pb1397ReviewDialog{direction:rtl!important;text-align:right!important}
+.pb1397ReviewDialog .pb1397ReviewActions{gap:8px}
+.pb1397ReviewDialog button.pb1399DialogCancel{background:#fff;color:#455564;border-color:#d8e0e6}
+
+.pb1397ReviewDialog.pb1399ConfirmReview .pb1397ReviewActions>button:last-child{background:#a84339;border-color:#a84339}
+
+/* PB1364 softer blue shadows */

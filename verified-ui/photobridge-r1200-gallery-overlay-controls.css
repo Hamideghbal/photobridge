@@ -1,0 +1,20 @@
+/* R1200 gallery: display-only watermark and compact controls */
+.clientGalleryCreateForm>.pb1200WatermarkLine{grid-column:1/-1!important}
+.clientGalleryCreateForm .pb1200WatermarkLine,.clientGallerySettings .pb1200WatermarkLine{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(150px,46%)!important;align-items:center!important;gap:8px!important;min-width:0!important}
+.pb1200WatermarkLine:not(:has(.pb1200WatermarkInput)){grid-template-columns:1fr!important}
+.pb1200WatermarkLine>.clientGalleryWatermarkToggle{min-width:0!important;min-height:45px!important;padding:7px 9px!important;margin:0!important}
+.pb1200WatermarkLine .clientGalleryWatermarkToggle>span{min-width:0!important}
+.pb1200WatermarkLine .clientGalleryWatermarkToggle small{font-size:9px!important;margin:0!important}
+.clientGalleryCreateForm .pb1200WatermarkInput,.clientGallerySettings .pb1200WatermarkInput{width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;padding:6px 8px!important;box-sizing:border-box!important;font:600 12px Vazirmatn,Tahoma,sans-serif!important}
+.clientGalleryCreateForm .pb1200UploadSummary{display:block!important;min-height:20px!important;margin:4px 0!important}
+.clientGalleryCreateForm .pb1112CreateMedia>ul{display:none!important}
+.clientGallerySettings .pb1200OrderingRow{display:flex;gap:8px;align-items:stretch;min-width:0}
+.clientGallerySettings .pb1200OrderingRow>.clientGalleryOrderingToggle{flex:1 1 auto;min-width:0;margin:0!important}
+.clientGallerySettings .pb1200PriceLink{flex:0 0 auto;align-self:center;border:1px solid #93b4ff;border-radius:9px;background:#f0f5ff;color:#2454b9;padding:9px 11px;cursor:pointer;font:800 11px Vazirmatn,Tahoma,sans-serif;white-space:nowrap}
+.pb1200GalleryWatermark{position:absolute!important;inset:0!important;z-index:2!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:1px;align-items:center;justify-items:center;overflow:hidden!important;pointer-events:none!important;user-select:none!important;-webkit-user-select:none!important}
+.pb1200GalleryWatermark>span{display:block;max-width:95%;color:rgba(255,255,255,.44);text-shadow:0 1px 2px rgba(0,0,0,.63);font:800 clamp(10px,1.6vw,28px)/1.4 Arial,Tahoma,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:rotate(-24deg);text-align:center}
+.clientGalleryViewer>.pb1200ViewerImage{position:relative;display:flex;align-items:center;justify-content:center;width:fit-content;max-width:min(94vw,1500px);max-height:92vh;min-width:0;overflow:hidden}
+.clientGalleryViewer>.pb1200ViewerImage>img{display:block;max-width:100%;max-height:92vh;object-fit:contain}
+.clientGalleryViewer .pb1200GalleryWatermark>span{font-size:clamp(12px,2vw,29px)}
+@media(max-width:760px){.clientGalleryCreateForm .pb1200WatermarkLine,.clientGallerySettings .pb1200WatermarkLine{grid-template-columns:minmax(0,1fr) minmax(115px,42%)!important;gap:5px!important}.pb1200WatermarkLine>.clientGalleryWatermarkToggle{padding:5px!important;gap:5px!important}.pb1200WatermarkLine .clientGalleryWatermarkToggle small{font-size:8px!important}.clientGalleryCreateForm .pb1200WatermarkInput,.clientGallerySettings .pb1200WatermarkInput{font-size:11px!important;padding:4px 6px!important}.clientGallerySettings .pb1200OrderingRow{flex-wrap:wrap}.clientGallerySettings .pb1200PriceLink{width:100%}.clientGalleryViewer>.pb1200ViewerImage{max-width:96vw;max-height:94vh}.clientGalleryViewer>.pb1200ViewerImage>img{max-height:94vh}.pb1200GalleryWatermark>span{font-size:clamp(9px,2vw,17px)}}
+/* PB1364 softer blue shadows */

@@ -1,0 +1,178 @@
+/* PhotoBridge v766 — requested mobile print micro-polish. */
+@media (max-width:820px){
+  :root{
+    /* The second/context header must be exactly the same surface as the main photographer header. */
+    --pb718-subbar:var(--pb718-header,#dff2f6)!important;
+    --pb718-subbar-text:#101828!important;
+  }
+
+  /* Lab/context strip: same color as the primary header on every photographer tab.
+     Keep the familiar separator shadow between the two header layers. */
+  html body #pb711PhotographerContextBar,
+  html body #pb698PhotographerContextBar,
+  html body #pb673PhotographerLabIdentityBar,
+  html body #photographerStoreIdentityBar.photographerStoreIdentityBar,
+  html body .photographerMain>.photographerLabContextRail,
+  html body .photographerMain .photographerCreateContextBar,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLab{
+    background:var(--pb718-header,#dff2f6)!important;
+    background-color:var(--pb718-header,#dff2f6)!important;
+    background-image:none!important;
+    color:#101828!important;
+    box-shadow:inset 0 9px 13px -13px rgba(33,75,96,.62),0 2px 6px rgba(33,75,96,.09)!important;
+  }
+  html body #pb711PhotographerContextBar *,
+  html body #pb698PhotographerContextBar *,
+  html body #pb673PhotographerLabIdentityBar *,
+  html body #photographerStoreIdentityBar.photographerStoreIdentityBar *,
+  html body .photographerMain>.photographerLabContextRail *,
+  html body .photographerMain .photographerCreateContextBar *,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLab *{
+    color:#101828!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLab{
+    position:relative!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectButton{
+    color:#101828!important;
+    background:transparent!important;
+    border-color:rgba(16,24,40,.16)!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectTrigger>span,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLabSelect .pbSelectButton>span,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintTopLabStatic{
+    color:#101828!important;
+  }
+
+  /* Back is physically inside the lab strip; it is slightly raised and wider with a text label. */
+  html body .photographerMain.photographerPrintWorkspace.pb765Composing .photographerPrintTopLab #pb765-back,
+  html body .photographerMain.photographerPrintWorkspace.pb765Composing .photographerPrintTopLab #pb766-back{
+    display:inline-flex!important;
+    position:absolute!important;
+    left:8px!important;right:auto!important;top:47%!important;
+    transform:translateY(-50%)!important;
+    z-index:20!important;
+    align-items:center!important;justify-content:center!important;gap:6px!important;
+    width:86px!important;min-width:86px!important;max-width:86px!important;
+    height:31px!important;min-height:31px!important;max-height:31px!important;
+    margin:0!important;padding:0 10px!important;box-sizing:border-box!important;
+    border:1px solid rgba(16,24,40,.16)!important;border-radius:9px!important;
+    background:rgba(255,255,255,.58)!important;color:#101828!important;
+    font-family:inherit!important;font-size:10.5px!important;font-weight:900!important;line-height:1!important;
+    white-space:nowrap!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace.pb765Composing .photographerPrintTopLab #pb765-back>span:first-child,
+  html body .photographerMain.photographerPrintWorkspace.pb765Composing .photographerPrintTopLab #pb766-back>span:first-child{
+    font-size:15px!important;line-height:1!important;transform:translateY(-.5px)!important;
+  }
+  html body #pb765-back:focus-visible,
+  html body #pb766-back:focus-visible{
+    outline:3px solid #ffcf53!important;outline-offset:2px!important;
+  }
+
+  /* A short transition makes + feel like page navigation instead of an abrupt DOM swap. */
+  html body .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    transition:opacity .16s ease,transform .16s ease!important;
+    will-change:opacity,transform;
+  }
+  html body .photographerMain.photographerPrintWorkspace.pb766PageLeaving>.photographerRolePageScrollArea{
+    opacity:.16!important;transform:translateX(-14px)!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace.pb766ComposerEnter>.photographerRolePageScrollArea{
+    animation:pb766ComposerEnter .24s cubic-bezier(.2,.8,.2,1) both!important;
+  }
+  @keyframes pb766ComposerEnter{
+    from{opacity:.2;transform:translateX(16px)}
+    to{opacity:1;transform:translateX(0)}
+  }
+
+  /* Print draft records: physical left = trash/open controls; physical right = size/paper.
+     The add-on column is always reserved, so missing chassis/frame never shifts the other fields. */
+  html body .simplePrintPilot .simplePrintSizeCardHead{
+    direction:ltr!important;
+    display:grid!important;
+    grid-template-columns:62px 88px 88px minmax(0,1fr)!important;
+    grid-template-areas:"actions addons paper size"!important;
+    grid-template-rows:32px auto!important;
+    column-gap:5px!important;row-gap:4px!important;
+    align-items:center!important;
+    width:100%!important;box-sizing:border-box!important;text-align:right!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeToggle{
+    grid-area:size!important;direction:rtl!important;
+    min-width:0!important;width:100%!important;
+    justify-self:stretch!important;justify-content:flex-start!important;text-align:right!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeToggle>div,
+  html body .simplePrintPilot .simplePrintSizeToggle b,
+  html body .simplePrintPilot .simplePrintSizeToggle small{
+    direction:rtl!important;min-width:0!important;text-align:right!important;
+    justify-content:flex-start!important;align-items:flex-start!important;
+  }
+  html body .simplePrintPilot .simplePrintCardPaper{
+    grid-area:paper!important;direction:rtl!important;
+    width:88px!important;min-width:88px!important;max-width:88px!important;
+    justify-self:stretch!important;text-align:right!important;
+  }
+  html body .simplePrintPilot .simplePrintCardPaper>span{text-align:right!important}
+  html body .simplePrintPilot .simplePrintCardPaper .pbSelect,
+  html body .simplePrintPilot .simplePrintCardPaper .pbSelectButton,
+  html body .simplePrintPilot .simplePrintCardPaper .pbSelectTrigger{
+    direction:rtl!important;width:100%!important;min-width:0!important;margin:0!important;
+    text-align:right!important;justify-content:flex-start!important;
+  }
+  html body .simplePrintPilot .simplePrintCardAddons{
+    grid-area:addons!important;direction:rtl!important;
+    width:88px!important;min-width:88px!important;max-width:88px!important;
+    justify-self:stretch!important;justify-content:flex-start!important;
+    overflow:visible!important;gap:3px!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeCardHead .simplePrintCardAddonCheck{
+    width:42px!important;min-width:42px!important;max-width:42px!important;
+    height:30px!important;min-height:30px!important;
+    padding:0 4px!important;gap:3px!important;border-radius:8px!important;
+    font-size:8px!important;box-sizing:border-box!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeCardHead .simplePrintCardAddonCheck input{
+    width:14px!important;height:14px!important;min-width:14px!important;min-height:14px!important;
+    flex:0 0 14px!important;margin:0!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeHeadActions{
+    grid-area:actions!important;direction:ltr!important;
+    width:62px!important;min-width:62px!important;max-width:62px!important;
+    justify-self:start!important;justify-content:flex-start!important;
+    margin:0!important;gap:4px!important;
+  }
+  html body .simplePrintPilot .simplePrintSizeHeadActions .simplePrintGroupDelete,
+  html body .simplePrintPilot .simplePrintSizeHeadActions .simplePrintSizeChevron{
+    width:29px!important;min-width:29px!important;max-width:29px!important;
+    height:29px!important;min-height:29px!important;max-height:29px!important;
+  }
+  html body .simplePrintPilot .simplePrintGroupTransfer{
+    grid-column:1/-1!important;grid-row:2!important;direction:rtl!important;
+  }
+}
+
+@media (max-width:370px){
+  html body .simplePrintPilot .simplePrintSizeCardHead{
+    grid-template-columns:60px 82px 82px minmax(0,1fr)!important;
+    column-gap:4px!important;
+  }
+  html body .simplePrintPilot .simplePrintCardPaper{width:82px!important;min-width:82px!important;max-width:82px!important}
+  html body .simplePrintPilot .simplePrintCardAddons{width:82px!important;min-width:82px!important;max-width:82px!important}
+  html body .simplePrintPilot .simplePrintSizeCardHead .simplePrintCardAddonCheck{width:39px!important;min-width:39px!important;max-width:39px!important;font-size:7.2px!important}
+  html body .simplePrintPilot .simplePrintSizeHeadActions{width:60px!important;min-width:60px!important;max-width:60px!important;gap:3px!important}
+  html body .simplePrintPilot .simplePrintSizeHeadActions .simplePrintGroupDelete,
+  html body .simplePrintPilot .simplePrintSizeHeadActions .simplePrintSizeChevron{
+    width:28px!important;min-width:28px!important;max-width:28px!important;
+    height:28px!important;min-height:28px!important;max-height:28px!important;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  html body .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{transition:none!important}
+  html body .photographerMain.photographerPrintWorkspace.pb766ComposerEnter>.photographerRolePageScrollArea{animation:none!important}
+}
+
+/* PB1364 softer blue shadows */

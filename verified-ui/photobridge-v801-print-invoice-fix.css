@@ -1,0 +1,32 @@
+/* PhotoBridge v801 — deterministic mobile print invoice/back/plus visibility. */
+@media (max-width:820px){
+  /* v783 floating invoice shortcut duplicated the native header Invoice button. */
+  html body:has(.photographerMain.photographerPrintWorkspace) #pb783FinanceShortcut,
+  html body #pb783FinanceShortcut.pb801LegacyInvoiceHidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+  .photographerMain.photographerPrintWorkspace .pb801LegacyInvoiceHidden,
+  .photographerMain.photographerPrintWorkspace .pb801InvoiceHidden,
+  .photographerMain.photographerPrintWorkspace .pb801NativeBackHidden,
+  .photographerMain.photographerPrintWorkspace .pb801ComposerBackHidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+  /* Invoice page: same top header slot becomes Back, never a second lower Back. */
+  .photographerMain.photographerPrintWorkspace.pb801FinanceMode .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance.pb801InvoiceAsBack{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;
+    width:auto!important;min-width:68px!important;max-width:none!important;height:31px!important;
+    padding:0 8px!important;gap:5px!important;border-color:#c7d7fe!important;
+    background:#f5f8ff!important;color:#244ea2!important
+  }
+  .photographerMain.photographerPrintWorkspace.pb801FinanceMode .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance.pb801InvoiceAsBack>span{font-size:16px!important;line-height:1!important}
+  .photographerMain.photographerPrintWorkspace.pb801FinanceMode .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance.pb801InvoiceAsBack>em{display:inline!important;font-style:normal!important;font-size:9.5px!important;font-weight:900!important;white-space:nowrap!important}
+
+  /* New-order plus is intentionally absent from the invoice page. */
+  html.pb801PrintFinance body #pb765-add,
+  .photographerMain.photographerPrintWorkspace.pb801FinanceMode ~ #pb765-add,
+  html body #pb765-add.pb801PlusHidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+  /* Photo-selection/upload mode: there is no Invoice action; the native Back remains. */
+  .photographerMain.photographerPrintWorkspace.pb801UploadMode .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  .photographerMain.photographerPrintWorkspace.pb801UploadMode .photographerPrintModeUtilityCluster>.photographerPrintModeBack{display:flex!important;visibility:visible!important;pointer-events:auto!important}
+}
+
+/* PB1364 softer blue shadows */

@@ -1,0 +1,12 @@
+html body #root .labRoleWorkspace .labRolePageScrollArea>.pb1419FinancePage{
+ display:flex!important;flex-direction:column!important;min-height:100%!important;
+ width:100%!important;max-width:1600px!important;margin:0 auto!important;box-sizing:border-box!important;
+}
+html body #root .labRoleWorkspace .pb1419FinancePage>.financeWorkspace{flex:1 0 auto!important;min-width:0!important;width:100%!important}
+html body #root .labRoleWorkspace .pb1419FinancePage>.pb1419FinanceFooter{
+ position:static!important;inset:auto!important;transform:none!important;order:1!important;
+ flex:0 0 auto!important;width:100%!important;margin:20px 0 0!important;padding:12px 0!important;
+ text-align:center!important;grid-column:1/-1!important;
+}
+
+/* PB1364 softer blue shadows */

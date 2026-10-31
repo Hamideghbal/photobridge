@@ -1,0 +1,104 @@
+/* R1411 — Existing photographer accepting a rental-store invitation on desktop.
+   Signup remains owned by React; reflow its siblings instead of moving submit controls. */
+@media (min-width: 901px) {
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell {
+   display: grid !important;
+   grid-template-columns: minmax(0, 1.04fr) minmax(320px, .88fr) !important;
+   grid-template-rows: min-content min-content !important;
+   align-content: start !important;
+   align-items: start !important;
+   gap: 10px 18px !important;
+   max-width: 1100px !important;
+   margin-top: 18px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell > .photographerSignupIntro {
+   grid-column: 1 !important; /* first RTL column: right */
+   grid-row: 1 / span 2 !important;
+   min-height: 248px !important;
+   max-height: none !important;
+   height: auto !important;
+   align-self: start !important;
+   padding: 24px 22px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell > #pbR94ExistingIdentity {
+   grid-column: 2 !important;
+   grid-row: 1 !important;
+   justify-self: stretch !important;
+   margin: 0 !important;
+   width: 100% !important;
+   max-width: 100% !important;
+   padding: 10px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell > #pbR94InviteRequired {
+   grid-column: 2 !important; /* second RTL column: left */
+   grid-row: 1 !important;
+   justify-self: stretch !important;
+   align-self: start !important;
+   margin: 0 !important;
+   width: 100% !important;
+   max-width: 100% !important;
+   min-width: 0 !important;
+   padding: 11px 12px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell > .photographerSignupForm {
+   grid-column: 2 !important;
+   grid-row: 2 !important;
+   justify-self: stretch !important;
+   align-self: start !important;
+   margin: 0 !important;
+   width: 100% !important;
+   max-width: 100% !important;
+   min-width: 0 !important;
+   padding: 14px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell #pbR94InviteRequired .pbR94ReqField:has(.pbR95BirthInput) {
+   width: min(100%, 320px) !important;
+   max-width: 320px !important;
+   margin: 0 !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell #pbR94InviteRequired .pbR95BirthInput {
+   max-width: 320px !important;
+   min-height: 38px !important;
+   height: 38px !important;
+   font-size: 12px !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupForm > button[type="button"],
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupForm > button[type="submit"] {
+   max-width: 100% !important;
+   min-height: 39px !important;
+ }
+}
+/* Keep the established vertical flow on mobile/tablets, with no overlapping grid rows. */
+@media (max-width: 900px) {
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell {
+   grid-template-columns: minmax(0,1fr) !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell > :is(.photographerSignupIntro,#pbR94ExistingIdentity,#pbR94InviteRequired,.photographerSignupForm) {
+   grid-column: 1 !important;
+   grid-row: auto !important;
+   max-width: 100% !important;
+ }
+}
+
+@media (min-width: 901px) {
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell {
+   grid-template-rows: min-content min-content !important;
+ }
+ html.pbR1411ExistingRentalInvite body #root .photographerSignupShell:not(:has(> #pbR94InviteRequired:not(.pbR94BaseHidden))) > .photographerSignupForm {
+   grid-row: 1 !important;
+ }
+}
+#pbR95JalaliPopover .jalaliCalendarTitle {
+ display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0;
+}
+#pbR95JalaliPopover .jalaliCalendarTitle select {
+ box-sizing: border-box; min-width: 0; width: auto; flex: 1;
+ min-height: 36px; padding: 4px 8px; border: 1px solid #d0d5dd;
+ border-radius: 9px; background: #fff; color: #18243b;
+ font: inherit; font-size: 14px; cursor: pointer;
+}
+#pbR95JalaliPopover .pbR1417YearSelect:focus-visible {
+ outline: 2px solid #315cff; outline-offset: 2px;
+}
+
+/* PB1364 softer blue shadows */

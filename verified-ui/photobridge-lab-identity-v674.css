@@ -1,0 +1,36 @@
+/* PhotoBridge v0.17.674 — lab identity directly below compact print header; large print tabs below it */
+#pb674PhotographerLabIdentityBar{display:none}
+@media(max-width:820px){
+  .photographerMain.pb674HasLabIdentityBar.pbFixedRoleHeader{
+    padding-top:calc(var(--pb674-lab-header-bottom,64px) + 108px)!important;
+  }
+  .photographerMain.pb674HasLabIdentityBar>.photographerPrintModeHeader.roleHeaderReflow{
+    grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"identity"!important;grid-template-rows:auto!important;row-gap:0!important;min-height:0!important;height:auto!important;
+  }
+  #pb674PhotographerLabIdentityBar{
+    position:fixed!important;left:0!important;right:0!important;height:42px!important;min-height:42px!important;z-index:520!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;padding:6px 12px!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;color:#fff!important;border-bottom:1px solid rgba(255,255,255,.18)!important;
+    box-shadow:0 7px 20px rgba(45,70,154,0.096)!important;direction:rtl!important;pointer-events:none!important;box-sizing:border-box!important
+  }
+  #pb674PhotographerLabIdentityBar span{font-size:9px!important;font-weight:850!important;opacity:.82!important;white-space:nowrap!important}
+  #pb674PhotographerLabIdentityBar b{max-width:76vw!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:13px!important;line-height:1!important;font-weight:950!important;text-align:center!important}
+
+  /* Lab name is shown once, in the blue identity strip. */
+  .photographerMain.pb674HasLabIdentityBar .photographerPrintModeHeader .photographerPrintTopLab{display:none!important}
+
+  /* The existing print destinations are detached from the header and sit immediately under the lab strip. */
+  .photographerMain.pb674HasLabIdentityBar .photographerPrintModeHeader .photographerPrintModeNav{
+    position:fixed!important;left:0!important;right:0!important;top:calc(var(--pb674-lab-header-bottom,64px) + 42px)!important;z-index:510!important;
+    width:100%!important;min-width:0!important;max-width:none!important;height:58px!important;min-height:58px!important;margin:0!important;padding:7px 10px!important;
+    display:flex!important;grid-area:unset!important;grid-template-columns:none!important;align-items:center!important;justify-content:stretch!important;gap:8px!important;overflow:visible!important;
+    background:rgba(248,250,252,.99)!important;border:0!important;border-bottom:1px solid #dfe5ee!important;border-radius:0!important;
+    box-shadow:0 5px 14px rgba(15,23,42,.055)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;transform:none!important
+  }
+  .photographerMain.pb674HasLabIdentityBar .photographerPrintModeHeader .photographerPrintModeNav>.rolePrimaryAction{
+    flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;margin:0!important;
+    padding:7px 10px!important;border-radius:11px!important;font:950 12px/1.2 Vazirmatn,Tahoma,Arial,sans-serif!important;justify-content:center!important
+  }
+}
+
+/* PB1364 softer blue shadows */

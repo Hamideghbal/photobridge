@@ -1,0 +1,34 @@
+/* R100F10 — compact, in-bounds admin photographer list + membership-origin grouping */
+.adminPhotographersTable{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important}
+.adminPhotographersTable table{width:100%!important;max-width:100%!important;min-width:0!important;table-layout:fixed!important}
+.adminPhotographersTable th,.adminPhotographersTable td{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.adminPhotographersTable th:nth-child(1){width:17%!important}.adminPhotographersTable th:nth-child(2){width:12%!important}.adminPhotographersTable th:nth-child(3){width:23%!important}.adminPhotographersTable th:nth-child(4){width:13%!important}.adminPhotographersTable th:nth-child(5){width:12%!important}.adminPhotographersTable th:nth-child(6){width:23%!important}
+.adminPhotographersTable .adminRowActions{width:100%!important;max-width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;min-width:0!important}
+.adminPhotographersTable .adminRowActions button{width:100%!important;min-width:0!important;max-width:100%!important;white-space:normal!important;line-height:1.45!important;padding:5px 6px!important;overflow-wrap:anywhere!important}
+.adminPhotographersTable tr[data-pb-source-start="1"] td{border-top-width:2px!important;border-top-color:#dbe5ff!important}
+.adminPhotographersTable tr[data-pb-source-start="1"] td:first-child::before{content:attr(data-pb-source-title);display:inline-flex;max-width:100%;margin:0 0 5px;padding:3px 7px;border-radius:999px;background:#eef4ff;color:#315efb;font-size:7.5px;font-weight:900;white-space:normal}
+.adminPhotographersTable tr[data-pb-membership-source="site"] .pbR100F10OriginCell b{color:#475467!important}
+.adminPhotographersTable tr[data-pb-membership-source="photographer"] .pbR100F10OriginCell b{color:#7c3aed!important}
+.adminPhotographersTable tr[data-pb-membership-source="lab"] .pbR100F10OriginCell b{color:#1565c0!important}
+.adminPhotographersTable tr[data-pb-membership-source="rental"] .pbR100F10OriginCell b{color:#027a48!important}
+.adminPhotographersTable tr[data-pb-membership-source="admin"] .pbR100F10OriginCell b{color:#b54708!important}
+@media(max-width:1100px) and (min-width:901px){.adminPhotographersTable tbody td{padding:9px 7px!important;font-size:9.5px!important}.adminPhotographersTable .adminRowActions{grid-template-columns:1fr!important}.adminPhotographersTable .adminRowActions button{min-height:29px!important;font-size:7.8px!important}}
+@media(max-width:900px){
+ .adminPhotographersTable{margin:0!important;padding:0!important;overflow:hidden!important}.adminPhotographersTable table,.adminPhotographersTable tbody{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important}
+ .adminPhotographersTable tbody tr{display:block!important;width:calc(100% - 2px)!important;max-width:calc(100% - 2px)!important;min-width:0!important;margin:0 1px 9px!important;padding:7px 8px!important;overflow:hidden!important;box-sizing:border-box!important}
+ .adminPhotographersTable tbody td{display:grid!important;grid-template-columns:78px minmax(0,1fr)!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:6px!important;padding:7px 0!important;overflow:visible!important;text-overflow:clip!important}
+ .adminPhotographersTable tbody td:nth-child(3):before{content:'منشأ عضویت'!important}
+ .adminPhotographersTable tbody td>*{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+ .adminPhotographersTable .adminRowActions{display:grid!important;grid-template-columns:1fr!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:6px!important}
+ .adminPhotographersTable .adminRowActions button{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}
+ .adminPhotographersTable tr[data-pb-source-start="1"] td:first-child::before{grid-column:1/-1;margin-bottom:5px!important}
+}
+
+/* R100F11 tighter admin photographer table */
+.adminPhotographersTable th,.adminPhotographersTable td{padding:8px 7px!important;font-size:9px!important}
+.adminPhotographersTable td small{font-size:7.4px!important;line-height:1.45!important}
+.adminPhotographersTable .adminRowActions{gap:4px!important}
+.adminPhotographersTable .adminRowActions button{min-height:27px!important;font-size:7.5px!important;padding:4px 5px!important}
+@media(max-width:900px){.adminPhotographersTable tbody tr{padding:6px 7px!important;margin-bottom:7px!important}.adminPhotographersTable tbody td{grid-template-columns:70px minmax(0,1fr)!important;padding:5px 0!important;font-size:8.8px!important}.adminPhotographersTable .adminRowActions button{min-height:31px!important}}
+
+/* PB1364 softer blue shadows */

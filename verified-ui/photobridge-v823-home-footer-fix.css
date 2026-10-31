@@ -1,0 +1,38 @@
+/* PhotoBridge v823 — mobile home footer stays after the complete home content. */
+@media (max-width:760px){
+  body.pbHomePublicRoute.pbCanonicalFooterMounted{
+    min-height:100dvh!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  body.pbHomePublicRoute #pbCanonicalHeaderV624{
+    flex:0 0 auto!important;
+  }
+  body.pbHomePublicRoute #pbCanonicalHeaderSpacerV624{
+    flex:0 0 auto!important;
+    width:100%!important;
+  }
+  body.pbHomePublicRoute #root{
+    order:2!important;
+    flex:1 0 auto!important;
+    width:100%!important;
+    min-height:calc(100dvh - var(--pb-canonical-header-height,72px))!important;
+    display:block!important;
+  }
+  body.pbHomePublicRoute #root>.publicHome{
+    width:100%!important;
+    min-height:100%!important;
+    flex:none!important;
+  }
+  body.pbHomePublicRoute #pbCanonicalFooterV624{
+    order:3!important;
+    position:relative!important;
+    inset:auto!important;
+    flex:0 0 auto!important;
+    margin-top:auto!important;
+    width:100%!important;
+    clear:both!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

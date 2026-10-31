@@ -1,0 +1,43 @@
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{position:fixed;inset-inline:0;z-index:139;display:flex;align-items:center;justify-content:flex-start;direction:rtl;text-align:right;gap:18px;min-height:44px;height:44px;box-sizing:border-box;padding:4px 18px;background:#fff;overflow-x:auto;white-space:nowrap;box-shadow:0 5px 12px -9px #283f5624;font-family:inherit}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader::before{content:'';position:absolute;top:0;inset-inline:18px;height:1px;background:linear-gradient(90deg,transparent,#d4dce6 15%,#d4dce6 85%,transparent)}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button{position:relative;flex:none;padding:8px 5px;min-height:32px;border:0;border-radius:0;background:transparent;box-shadow:none;font:var(--pb1375-tab-font,800 11px/1.35 Vazirmatn,Tahoma,sans-serif)!important;color:#53677e;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button.active{color:#315f9d}.pb1372ThirdHeader button.active::after{content:'';position:absolute;inset-inline:5px;bottom:1px;height:2px;background:#7397be;border-radius:2px}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button:focus-visible{outline:2px solid #91acc9;outline-offset:-2px}html body #root .labRoleWorkspace .pb1372ThirdHeader button:disabled{opacity:.5;cursor:default}
+ html body #root .labRoleWorkspace .pb1372Title{font-size:12px;color:#34465b;margin-inline-end:8px}
+ html body #root .labRoleWorkspace :is(.pb1372Source,.pb1372RetiredBox){display:none!important}
+}
+/* Album settings share the full viewport and the single outer page scrollbar. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>.labSettingsWorkspace.albumSettingsFocus,
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader .albumSettingsFocus>.settingsBody,
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader .albumSettingsWorkspace{display:block!important;position:static!important;inset:auto!important;width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;box-sizing:border-box!important;flex:none!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader .albumSettingsWorkspace>.albumAdminSection{width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;box-sizing:border-box!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace .albumSettingsWorkspace .albumSettingsCompactHead{position:static!important;height:auto!important;max-height:none!important;overflow:visible!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace .albumSettingsWorkspace .albumSettingsTopRow{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px!important;min-width:0!important}
+}
+
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1148SecondaryHeader{box-shadow:none!important}
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1148SecondaryHeader::after{display:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{box-shadow:0 6px 16px -8px rgba(85,110,199,0.065)!important}
+ html body #root .labRoleWorkspace.pb1372HasThird .pb1175HeaderFade{display:block!important;position:fixed!important;top:var(--pb1375-fade-top,164px)!important;inset-inline:0!important;height:16px!important;background:linear-gradient(to bottom,rgba(85,110,199,0.043),rgba(85,110,199,0.013) 55%,transparent)!important;pointer-events:none!important;z-index:138!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader button{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;direction:rtl}
+ html body #root .labRoleWorkspace .pb1375TabCount{display:inline-flex;align-items:center;justify-content:center;flex:none;width:21px;height:21px;border-radius:50%;background:#edf3fa;color:#526e91;font:800 10px/1 Vazirmatn,Tahoma,sans-serif}
+}
+
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .pb1372ThirdHeader{overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow{justify-content:flex-end!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button{border:1px solid #d2deeb!important;border-radius:8px!important;background:#f3f7fb!important;color:#365a7d!important;padding:6px 13px!important;min-height:30px!important;cursor:pointer}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button:last-child{background:#345e88!important;color:#fff!important;border-color:#345e88!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1376ActionRow>button::after{display:none!important}
+}
+
+/* PB1364 softer blue shadows */
+
+/* PB1425 finance second row */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1425PromotedSecond :is(.pb1148SecondaryHeader,.labCustomerSectionMenu){display:none!important}
+}

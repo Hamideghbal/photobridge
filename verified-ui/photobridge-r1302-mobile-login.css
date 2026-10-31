@@ -1,0 +1,28 @@
+/* Mobile login follows the visible viewport, including browsers that overlay keyboards. */
+@media(max-width:767px){
+ html body #root .unifiedLoginPage,
+ html body.pbR100F28PortalLogin #loginView.rentalLoginOverlay,
+ html body.pbR100F28PortalLogin .authBg{
+  position:fixed!important;inset:auto 0 auto!important;top:var(--pb-login-top,0px)!important;
+  height:var(--pb-login-height,100dvh)!important;min-height:0!important;
+  max-height:var(--pb-login-height,100dvh)!important;
+  overflow-y:auto!important;align-items:flex-start!important;justify-content:flex-start!important;
+  flex-direction:column!important;scroll-padding:8px!important;
+ }
+ html body #root .unifiedLoginPage .unifiedLoginShell,
+ html body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell{
+  flex-shrink:0!important;margin:auto!important;
+ }
+ html.pbR1302LoginFocus body #root .unifiedLoginPage .unifiedLoginShell,
+ html.pbR1302LoginFocus body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell{
+  margin:0 auto!important;
+ }
+ html body #root .unifiedLoginPage input,
+ html body.pbR100F28PortalLogin #loginView input{font-size:16px!important}
+ html.pbR1302LoginFocus .unifiedLoginBrand,
+ html.pbR1302LoginFocus .authTitle p{display:none!important}
+ html.pbR1302LoginFocus form.unifiedLoginCard,
+ html.pbR1302LoginFocus form.rentalUnifiedLogin{padding:8px 12px!important;gap:5px!important}
+}
+
+/* PB1364 softer blue shadows */

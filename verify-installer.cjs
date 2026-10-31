@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+function resources(bytes,type){
+ const need=(offset,size)=>{if(offset<0||offset+size>bytes.length)throw Error('invalid_pe_resource')};
+ need(0,64);if(bytes.toString('ascii',0,2)!=='MZ')throw Error('not_windows_executable');const pe=bytes.readUInt32LE(60);need(pe,24);if(bytes.toString('ascii',pe,pe+4)!=='PE\0\0')throw Error('invalid_pe_header');const count=bytes.readUInt16LE(pe+6),opt=pe+24,optSize=bytes.readUInt16LE(pe+20);need(opt,optSize);const magic=bytes.readUInt16LE(opt),data=opt+(magic===0x20b?112:magic===0x10b?96:0);if(data===opt)throw Error('unsupported_pe_header');const rva=bytes.readUInt32LE(data+16);if(!rva)return[];const sectionBase=opt+optSize;
+ function offset(value){for(let i=0;i<count;i++){const s=sectionBase+i*40;need(s,40);const start=bytes.readUInt32LE(s+12),size=Math.max(bytes.readUInt32LE(s+8),bytes.readUInt32LE(s+16));if(value>=start&&value<start+size){const result=bytes.readUInt32LE(s+20)+value-start;need(result,1);return result}}throw Error('unmapped_pe_resource')}
+ const base=offset(rva),result=[];
+ function walk(relative,depth,selected){if(depth>5)throw Error('invalid_resource_tree');const dir=base+relative;need(dir,16);const n=bytes.readUInt16LE(dir+12)+bytes.readUInt16LE(dir+14);for(let i=0;i<n;i++){const e=dir+16+i*8;need(e,8);const id=bytes.readUInt32LE(e),child=bytes.readUInt32LE(e+4),match=depth===0?id===type:selected;if(depth===0&&!match)continue;if(child&0x80000000)walk(child&0x7fffffff,depth+1,match);else if(match){const entry=base+child;need(entry,16);const at=offset(bytes.readUInt32LE(entry)),size=bytes.readUInt32LE(entry+4);need(at,size);result.push(bytes.subarray(at,at+size));}}}
+ walk(0,0,false);return result;
+}
+function verify(file){const bytes=fs.readFileSync(file),manifests=resources(bytes,24).map(x=>x.toString('utf8')),dialogs=resources(bytes,5);if(!manifests.some(x=>/<dpiAware(?:\s[^>]*)?>\s*true(?:\/pm)?\s*<\/dpiAware>/i.test(x)&&/<dpiAwareness(?:\s[^>]*)?>[^<]*PerMonitorV2/i.test(x)))throw Error('installer_missing_per_monitor_dpi_manifest');if(!dialogs.some(x=>x.includes(Buffer.from('Segoe UI\0','utf16le'))))throw Error('installer_missing_segoe_ui_dialog_font');return true;}
+if(require.main===module){const file=process.argv[2]||path.join(__dirname,'release','PhotoBridge-Lab-Setup-'+require('./package.json').version+'-x64.exe');try{verify(file);console.log('Installer verified: PerMonitorV2 DPI manifest and native Segoe UI dialog font')}catch(e){console.error('STOP: installer display verification failed:',e.message);process.exitCode=1}}
+module.exports={resources,verify};

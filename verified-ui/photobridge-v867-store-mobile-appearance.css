@@ -1,0 +1,55 @@
+/* PhotoBridge v867 — store mobile appearance and header geometry parity. */
+@media (max-width:820px){
+  :root{--pb867-store-header-h:var(--pb710-header-h,90px)}
+
+  /* Phone system/status backdrop follows the Admin topColor. */
+  html:has(#storePhotographerWorkspace),
+  html:has(#storePhotographerWorkspace) body.rentalPhotographerMode{
+    background:var(--pb771-top,var(--pb718-header,#dff2f6))!important;
+    background-color:var(--pb771-top,var(--pb718-header,#dff2f6))!important;
+  }
+
+  /* Exact same main-header height and theme as normal photographer pages. */
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    height:var(--pb867-store-header-h)!important;
+    min-height:var(--pb867-store-header-h)!important;
+    max-height:var(--pb867-store-header-h)!important;
+    flex-basis:var(--pb867-store-header-h)!important;
+    padding:8px 10px!important;
+    margin:0!important;
+    background:var(--pb718-header,#dff2f6)!important;
+    background-color:var(--pb718-header,#dff2f6)!important;
+    color:var(--pb769-header-ink,#101828)!important;
+    border:0!important;
+    outline:0!important;
+    box-shadow:0 8px 13px -11px rgba(33,75,96,.55)!important;
+    box-sizing:border-box!important;
+  }
+
+  /* The thin strip(s) below the main header use the Admin subbarColor. */
+  html body #storePhotographerWorkspace>#storeSectionNavV673{
+    background:var(--pb718-subbar,#dff2f6)!important;
+    background-color:var(--pb718-subbar,#dff2f6)!important;
+    color:var(--pb718-subbar-text,var(--pb769-subbar-ink,#101828))!important;
+    border-color:color-mix(in srgb,currentColor 16%,transparent)!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar *{
+    color:inherit!important;
+  }
+
+  /* Geometry is deterministic from first paint; no 64px fallback jump. */
+  html body #storePhotographerWorkspace.storePhotographerWorkspace{
+    --pb-store-role-header-h:var(--pb867-store-header-h)!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    top:var(--pb867-store-header-h)!important;
+  }
+  html body #storePhotographerWorkspace>#storeSectionNavV673{
+    top:calc(var(--pb867-store-header-h) + var(--pb-store-identity-h,46px))!important;
+  }
+  html body #storePhotographerWorkspace>.shell{
+    top:calc(var(--pb867-store-header-h) + var(--pb-store-identity-h,46px) + var(--pb-store-section-nav-h,44px))!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

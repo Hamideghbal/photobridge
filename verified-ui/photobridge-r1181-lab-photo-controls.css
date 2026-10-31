@@ -1,0 +1,52 @@
+/* PB1181: identical low-height controls for walk-in and print-order photo cards. */
+.pb1137Intake .pb1181IntakeFrame,.orderFilesCard .pb1181PhotoFrame{position:relative;overflow:hidden;border-radius:9px;background:#f2f4f7}
+.pb1137Intake .pb1181IntakeFrame{width:100%;height:64px;min-height:64px}
+.pb1137Intake .pb1181IntakeFrame img{display:block;width:100%!important;height:100%!important;object-fit:contain!important;margin:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay,
+.orderFilesCard .pb1181PhotoFrame .pb1181DeleteOverlay{
+ position:absolute!important;z-index:4;top:4px;left:4px;right:auto;
+ display:flex!important;align-items:center;justify-content:center;
+ height:23px!important;width:23px!important;min-width:23px!important;
+ max-width:23px!important;min-height:23px!important;
+ margin:0!important;padding:3px!important;border:0!important;
+ background:rgba(255,255,255,.94)!important;color:#b42318!important;
+ border-radius:7px!important;box-shadow:0 1px 5px #0002!important;
+ cursor:pointer!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay svg{width:16px!important;height:16px!important;display:block}
+.pb1137Intake .pb1141PhotoActions,
+.orderFilesCard .pb1180PhotoTools{display:flex!important;flex-direction:row!important;align-items:center!important;gap:4px!important;height:28px!important;min-height:28px!important;max-height:28px!important;margin:3px 0 0!important}
+.pb1137Intake .pb1141PhotoActions>.pb1180IntakePaper,
+.orderFilesCard .pb1180PhotoTools>.pb1180Paper{flex:1 1 auto!important;min-width:0!important;width:1px!important;height:28px!important;min-height:28px!important;max-height:28px!important;box-sizing:border-box!important}
+.pb1137Intake .pb1141PhotoActions>.pb1181ChassisToggle,
+.orderFilesCard .pb1180PhotoTools>.pb1181ChassisToggle{
+ flex:0 0 auto!important;display:inline-flex!important;flex-direction:row!important;
+ align-items:center!important;justify-content:center!important;gap:3px!important;
+ height:27px!important;min-height:27px!important;max-height:27px!important;
+ padding:0 5px!important;margin:0!important;white-space:nowrap!important;
+ border:1px solid #d9e3ef!important;border-radius:7px!important;
+ background:#f7f9fd!important;color:#344054!important;
+ font-size:10px!important;font-weight:700!important;cursor:pointer!important
+}
+.pb1137Intake .pb1181ChassisToggle input,
+.orderFilesCard .pb1181ChassisToggle input{
+ width:14px!important;height:14px!important;min-height:14px!important;min-width:14px!important;
+ flex:0 0 14px!important;margin:0!important;padding:0!important;accent-color:#315efb!important
+}
+.pb1137Intake .pb1181ChassisToggle span,.orderFilesCard .pb1181ChassisToggle span{font-size:10px!important;line-height:1!important}
+.pb1137Intake .pb1142Quantity,.orderFilesCard .pb1180Quantity{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ gap:4px!important;margin:2px 0 0!important;padding:0!important;
+ min-height:26px!important;height:26px!important
+}
+.pb1137Intake .pb1142Quantity button,
+.orderFilesCard .pb1180Quantity button{width:25px!important;height:26px!important;min-height:26px!important;flex:0 0 25px!important;padding:0!important}
+.pb1137Intake .pb1142Quantity input,
+.orderFilesCard .pb1180Quantity input{width:42px!important;min-width:38px!important;height:26px!important;min-height:26px!important;margin:0!important;padding:1px!important;text-align:center!important}
+.pb1137Intake .pb1139GroupPhotos figure,.orderFilesCard .pb1180Photo{gap:2px!important}
+@media(max-width:760px){
+ .pb1137Intake .pb1181IntakeFrame{height:62px;min-height:62px}
+ .pb1137Intake .pb1181ChassisToggle,.orderFilesCard .pb1181ChassisToggle{padding-inline:3px!important}
+}
+
+/* PB1364 softer blue shadows */

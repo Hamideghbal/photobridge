@@ -1,0 +1,483 @@
+/* PhotoBridge R100F40 — mobile print/modal/tab/subheader polish. */
+html.pbR100F37LabEnterBoot body::before{
+  content:"";position:fixed;inset:0;z-index:2147483645;background:#f5faff;pointer-events:auto
+}
+html.pbR100F37LabEnterBoot body::after{
+  content:"";position:fixed;z-index:2147483646;left:50%;top:48%;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid #dbe8fb;border-top-color:#315efb;border-radius:50%;animation:pbF37Spin .72s linear infinite;pointer-events:none
+}
+html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
+@keyframes pbF37Spin{to{transform:rotate(360deg)}}
+
+@media(max-width:820px){
+  :root{
+    --pb-f37-account-h:90px;
+    --pb-f37-title-h:42px;
+    --pb-f37-tab-gap:7px;
+    --pb-f37-tabs-h:42px;
+    --pb-f37-title-bottom:132px;
+    --pb-f37-full-top:181px;
+    --pb-f37-content-top:181px;
+  }
+  body.pbF37UnifiedActive{--pb-role-header-h:90px!important;--pb-store-role-header-h:90px!important}
+
+  /* Native app headers are sources only. Store keeps its native header because this same core owns it there. */
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #photographerRoleHeaderV710,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) .photographerMain>.photographerPrintModeHeader,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb711PhotographerContextBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb698PhotographerContextBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb697PhotographerContextBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb696PhotographerContextBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb695PhotographerContextBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb698PrintBarActions,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb697PrintBarActions,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb696PrintBarActions,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #pb695PrintBarActions{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+
+  /* R100F38: stale Store/Lab DOM can remain mounted for a frame during SPA tab switches.
+     Only the authoritative section may own a header/workspace. */
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #photographerStoreRoleHeader,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #photographerStoreIdentityBar,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #storeSectionNavV673,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #photographerStoreBottomNav,
+  body.pbF37UnifiedActive:not(.pbF37StoreMode) #storePhotographerWorkspace{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+  body.pbF37UnifiedActive:not(.pbF37PrintMode) .photographerMain>.photographerPrintModeHeader,
+  body.pbF37UnifiedActive:not(.pbF37PrintMode) .photographerMain>.photographerLabContextRail{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+
+  /* No separator shadow between the account header and the section row. */
+  body.pbF37UnifiedActive #pbF37PhotographerHeader,
+  body.pbF37UnifiedActive #pbF37Subheader,
+  body.pbF37UnifiedActive #pbF37ContextTitle,
+  body.pbF37UnifiedActive #pbF37Tabs,
+  body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader,
+  body.pbF37StoreMode #storeSectionNavV673{
+    box-shadow:none!important;filter:none!important;border-bottom-color:transparent!important;
+  }
+
+  /* File selection/composer uses the two inline actions; remove the old round floating plus. */
+  body.pbF37PrintComposer #pb762-add,
+  body.pbF37PrintComposer #pb765-add,
+  body.pbF37PrintComposer #pb737-mobile-print-dock .pb737DockAdd{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+
+  /* Exact Store-header account geometry — shared by Store and every other photographer tab. */
+  #pbF37PhotographerHeader,
+  #photographerStoreRoleHeader.pbF37CoreHeader{
+    position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:2147481500!important;
+    width:100%!important;min-width:100%!important;max-width:none!important;height:90px!important;min-height:90px!important;max-height:90px!important;
+    margin:0!important;padding:8px 10px 8px 68px!important;box-sizing:border-box!important;overflow:visible!important;
+    direction:rtl!important;background:var(--pb718-header,var(--pb771-top,#dff2f6))!important;background-image:none!important;color:#101828!important;border:0!important;box-shadow:none!important;filter:none!important;
+    font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
+  }
+  #pbF37PhotographerHeader .pbF37Identity,
+  #photographerStoreRoleHeader.pbF37CoreHeader>.workspaceIdentity,
+  #photographerStoreRoleHeader.pbF37CoreHeader>.photographerHeaderIdentity{
+    width:100%!important;max-width:100%!important;min-width:0!important;height:74px!important;min-height:74px!important;max-height:74px!important;
+    margin:0!important;padding:0!important;display:flex!important;align-items:center!important;gap:10px!important;overflow:visible!important;direction:rtl!important;
+  }
+  #pbF37PhotographerHeader .pbF37IdentityCopy,
+  #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy{
+    flex:1 1 auto!important;width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;min-height:54px!important;margin:0!important;padding:0!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;align-content:center!important;align-items:center!important;column-gap:8px!important;row-gap:3px!important;overflow:visible!important;
+  }
+  #pbF37PhotographerHeader .pbF37IdentityCopy>h1,
+  #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy>h1{
+    grid-column:1/-1!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;
+    font:950 14.2px/1.32 Vazirmatn,Tahoma,sans-serif!important;color:#101828!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  }
+  #pbF37PhotographerHeader .pbF37Manager,
+  #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy>small{
+    grid-column:1!important;grid-row:2!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important;
+    font:750 8.7px/1.3 Vazirmatn!important;color:#667085!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  #pbF37PhotographerHeader .pbF37DateWrap,
+  #photographerStoreRoleHeader.pbF37CoreHeader .photographerIdentityDateOnly{
+    grid-column:2!important;grid-row:2!important;width:auto!important;min-width:max-content!important;max-width:none!important;margin:0!important;padding:0!important;align-self:center!important;justify-content:flex-end!important;overflow:visible!important;
+  }
+  #pbF37PhotographerHeader .pbF37DateWrap{display:flex!important;align-items:center!important;gap:4px!important;color:#667085!important;font:800 8.4px/1.2 Vazirmatn!important;white-space:nowrap!important}
+  #pbF37PhotographerHeader .pbF37Time{color:#344054!important;font-weight:900!important;font-size:8.2px!important}
+  /* Match Store's stacked studio, manager and calendar lines. */
+  #pbF37PhotographerHeader .pbF37IdentityCopy{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important;gap:3px!important}
+  #pbF37PhotographerHeader .pbF37DateWrap{justify-content:flex-start!important}
+
+  #pbF37AvatarBtn,
+  #photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25AvatarBtn{
+    order:-1!important;flex:0 0 52px!important;width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;max-width:52px!important;max-height:52px!important;
+    border:1px solid #dce3ee!important;border-radius:15px!important;background:#f8fafc!important;padding:0!important;display:grid!important;place-items:center!important;overflow:visible!important;position:relative!important;box-shadow:0 2px 7px rgba(15,23,42,.06)!important;color:#315efb!important;font:950 18px/1 Vazirmatn!important;
+  }
+  #pbF37AvatarBtn img,#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25AvatarBtn img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:14px!important}
+  #pbF37AvatarBtn::after,#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25AvatarBtn::after{
+    content:"+"!important;position:absolute!important;left:-3px!important;bottom:-3px!important;width:17px!important;height:17px!important;border-radius:6px!important;background:#315efb!important;color:#fff!important;border:2px solid #fff!important;display:grid!important;place-items:center!important;font:950 11px/1 Arial!important;
+  }
+
+  /* Menu is a body-level fixed control: RTL cannot move it to the right. */
+  #pbF37MenuBtn,
+  #photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25MenuBtn{
+    position:fixed!important;left:10px!important;right:auto!important;top:20px!important;bottom:auto!important;inset:20px auto auto 10px!important;inset-inline-start:10px!important;inset-inline-end:auto!important;
+    z-index:2147481700!important;width:50px!important;min-width:50px!important;max-width:50px!important;height:50px!important;min-height:50px!important;max-height:50px!important;
+    margin:0!important;padding:0!important;border:1px solid #d7deea!important;border-radius:14px!important;background:#fff!important;color:#344054!important;box-shadow:0 2px 7px rgba(15,23,42,.06)!important;
+    display:grid!important;place-items:center!important;transform:none!important;float:none!important;direction:ltr!important;
+  }
+  #pbF37MenuBtn svg,#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25MenuBtn svg{display:block!important;width:25px!important;height:25px!important;stroke:currentColor!important;fill:none!important;stroke-width:2.1!important;stroke-linecap:round!important}
+  #pbF37MenuBadge,#pbR100F25MenuBadge,#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25MenuBadge{
+    position:absolute!important;top:-10px!important;right:-10px!important;left:auto!important;bottom:auto!important;transform:none!important;min-width:30px!important;height:30px!important;padding:0 8px!important;box-sizing:border-box!important;
+    border-radius:999px!important;background:#ef4444!important;color:#fff!important;border:2px solid #fff!important;display:grid!important;place-items:center!important;font:950 13px/1 Vazirmatn!important;box-shadow:0 3px 10px rgba(239,68,68,.3)!important;white-space:nowrap!important;
+  }
+  #pbF37MenuBadge[hidden],#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25MenuBadge[hidden]{display:none!important}
+
+  /* Store-format title and tab rows. */
+  #pbF37Subheader{position:fixed!important;left:0!important;right:0!important;top:90px!important;z-index:2147481490!important;width:100%!important;height:91px!important;background:transparent!important;direction:rtl!important;font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;pointer-events:none!important}
+  #pbF37ContextTitle{height:42px!important;min-height:42px!important;max-height:42px!important;padding:5px 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;background:linear-gradient(180deg,#eaf6ff 0%,#eff8ff 100%)!important;color:#173b6c!important;border:0!important;box-shadow:none!important;pointer-events:auto!important}
+  #pbF37ContextTitle b{min-width:0!important;max-width:82vw!important;font:950 13px/1.25 Vazirmatn!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #pbF37ContextMeta{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:22px!important;padding:0 8px!important;border:1px solid #d7deea!important;border-radius:999px!important;background:#fff!important;color:#667085!important;font:850 8px/1 Vazirmatn!important;white-space:nowrap!important}
+  #pbF37ContextMeta[hidden]{display:none!important}
+  #pbF37Tabs{position:absolute!important;top:49px!important;left:9px!important;right:9px!important;height:42px!important;min-height:42px!important;max-height:42px!important;padding:3px 0!important;gap:5px!important;display:grid!important;grid-template-columns:repeat(var(--pb-f37-tabs,4),minmax(0,1fr))!important;align-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:auto!important}
+  #pbF37Tabs[hidden]{display:none!important}
+  #pbF37Tabs button{height:36px!important;min-height:36px!important;max-height:36px!important;margin:0!important;padding:0 5px!important;border:1px solid #d7deea!important;border-radius:9px!important;background:#fff!important;color:#475467!important;box-shadow:none!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;font:950 12.6px/1.1 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #pbF37Tabs button.active{background:#1677ff!important;border-color:#1677ff!important;color:#fff!important;box-shadow:0 2px 7px rgba(70,103,221,0.084)!important}
+
+  #pbF37MenuPanel{position:fixed!important;top:82px!important;left:8px!important;right:auto!important;z-index:2147481800!important;width:min(296px,calc(100vw - 18px))!important;padding:9px!important;border:1px solid #e4e7ec!important;border-radius:17px!important;background:rgba(255,255,255,.99)!important;box-shadow:0 18px 48px rgba(15,23,42,.18)!important;display:grid!important;gap:4px!important;direction:rtl!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateY(-8px) scale(.975)!important;transform-origin:top left!important;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s!important}
+  #pbF37MenuPanel.open{opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translateY(0) scale(1)!important;transition-delay:0s!important}
+  #pbF37MenuPanel button{width:100%!important;min-height:49px!important;padding:9px 11px!important;border:0!important;border-radius:11px!important;background:#fff!important;color:#344054!important;display:grid!important;grid-template-columns:31px minmax(0,1fr)!important;gap:9px!important;align-items:center!important;text-align:right!important;font-family:inherit!important}
+  #pbF37MenuPanel button:active{background:#f2f4f7!important}
+  #pbF37MenuPanel button.danger{color:#b42318!important}
+  #pbF37MenuPanel .pbF37MenuIcon{width:31px!important;height:31px!important;border-radius:9px!important;background:#f2f4f7!important;display:grid!important;place-items:center!important;font-size:15px!important}
+  #pbF37MenuPanel .pbF37MenuText{min-width:0!important;display:grid!important;gap:2px!important}
+  #pbF37MenuPanel .pbF37MenuText b{font:900 12.4px/1.35 Vazirmatn!important}
+  #pbF37MenuPanel .pbF37MenuText small{font:750 9.3px/1.45 Vazirmatn!important;color:#98a2b3!important}
+
+  /* F37 owns viewport placement. Nothing is measured from hidden native headers. */
+  html body.pbF37UnifiedActive:not(.pbF37StoreMode) #root .photographerMain.pbFixedRoleHeader{padding-top:var(--pb-f37-content-top)!important;box-sizing:border-box!important}
+  html body.pbF37UnifiedActive:not(.pbF37StoreMode) #root .photographerMain.pbFixedRoleHeader>.photographerRolePageScrollArea{
+    position:fixed!important;top:var(--pb-f37-content-top)!important;left:0!important;right:0!important;bottom:78px!important;inset:var(--pb-f37-content-top) 0 78px 0!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding-top:10px!important;box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;scroll-padding-top:10px!important;transition:none!important;animation:none!important;transform:none!important;opacity:1!important;visibility:visible!important
+  }
+  body.pbF37UnifiedActive.pbF37NoTabs{--pb-f37-content-top:132px!important}
+  body.pbF37NoTabs #pbF37Subheader{height:42px!important}
+  body.pbF37UnifiedActive.pbF37HasTabs{--pb-f37-content-top:181px!important}
+
+  /* Print: old top bars/loaders never compete with the shared Store-format chrome. */
+  body.pbF37PrintMode #pb742-print-actions,
+  body.pbF37PrintMode #pb697PageLoader,
+  body.pbF37PrintMode #pb698PageLoader,
+  body.pbF37PrintMode .simplePrintPilotMobileHeaderHost,
+  body.pbF37PrintMode .simplePrintPilotMobileInlineActions,
+  body.pbF37PrintComposer .simplePrintPilot .simplePrintPilotHeader,
+  body.pbF37PrintComposer #pb737-mobile-print-dock,
+  body.pbF37PrintMode .photographerPrintModeHeader,
+  body.pbF37PrintMode .photographerPrintModeNav,
+  body.pbF37PrintMode .photographerLabContextRail,
+  body.pbF37PrintMode #pb761-mode-actions,
+  body.pbF37PrintMode #pb765-back{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+  body.pbF37PrintMode #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{top:181px!important;inset:181px 0 78px 0!important;padding-top:10px!important;transition:none!important;animation:none!important}
+  body.pbF37PrintMode.pbF37PrintComposer #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{top:241px!important;inset:241px 0 78px 0!important}
+  body.pbF37PrintMode .photographerMain.photographerPrintWorkspace.pb766PageLeaving>.photographerRolePageScrollArea,
+  body.pbF37PrintMode .photographerMain.photographerPrintWorkspace.pb766ComposerEnter>.photographerRolePageScrollArea,
+  body.pbF37PrintMode .photographerMain.photographerPrintWorkspace.pb767ComposerEnter>.photographerRolePageScrollArea,
+  body.pbF37PrintMode .photographerMain.photographerPrintWorkspace.pb768ComposerEnter>.photographerRolePageScrollArea{opacity:1!important;transform:none!important;transition:none!important;animation:none!important}
+
+  #pbF37PrintComposerActions{position:fixed!important;top:185px!important;left:9px!important;right:9px!important;z-index:2147481485!important;height:50px!important;padding:4px 0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;background:#f5faff!important;border:0!important;box-shadow:none!important;direction:rtl!important}
+  #pbF37PrintComposerActions[hidden]{display:none!important}
+  #pbF37PrintComposerActions button{height:42px!important;min-height:42px!important;border:1px solid #d7deea!important;border-radius:10px!important;background:#fff!important;color:#344054!important;font:950 11.6px/1.2 Vazirmatn!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important}
+  #pbF37PrintComposerActions button.pbF37Send{background:#1677ff!important;border-color:#1677ff!important;color:#fff!important}
+  #pbF37PrintComposerActions button:disabled{opacity:.45!important}
+
+  /* Lab chooser intentionally has no account header. */
+  body.pbF37LabChooserVisible #pbF37PhotographerHeader,
+  body.pbF37LabChooserVisible #pbF37Subheader,
+  body.pbF37LabChooserVisible #pbF37MenuBtn,
+  body.pbF37LabChooserVisible #pbF37MenuPanel{display:none!important}
+  body.pbF37LabChooserVisible #pbR99LabChooser{top:0!important;inset:0 0 calc(72px + env(safe-area-inset-bottom,0px)) 0!important}
+}
+
+@media(max-width:390px){
+  #pbF37PhotographerHeader{padding-left:68px!important}
+  #pbF37AvatarBtn{flex-basis:49px!important;width:49px!important;height:49px!important;min-width:49px!important;min-height:49px!important;max-width:49px!important;max-height:49px!important}
+  #pbF37MenuBtn,#photographerStoreRoleHeader.pbF37CoreHeader #pbR100F25MenuBtn{left:10px!important;right:auto!important;top:20px!important;inset:20px auto auto 10px!important;width:47px!important;min-width:47px!important;max-width:47px!important;height:47px!important;min-height:47px!important;max-height:47px!important}
+  #pbF37PhotographerHeader .pbF37IdentityCopy>h1{font-size:13.2px!important}
+  #pbF37PhotographerHeader .pbF37Manager{font-size:8.1px!important}
+  #pbF37Tabs{left:7px!important;right:7px!important;gap:4px!important}
+  #pbF37Tabs button{font-size:11.8px!important;padding-inline:3px!important}
+}
+
+
+/* PhotoBridge R100F40 — authoritative mobile polish. */
+@media (max-width:820px){
+  /* 1) The only print composer actions are the shared F40 row above the page.
+     Kill every React/native copy inside the print composer, regardless of transient body class timing. */
+  body.pbF37PrintMode .simplePrintPilot .simplePrintPilotMobileInlineActions,
+  body.pbF37PrintMode .simplePrintPilot .simplePrintPilotHeader,
+  body.pbF37PrintMode .simplePrintPilot .simplePrintPilotHeaderActions{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  /* Old dock remains usable on overview, but never inside file-selection/composer. */
+  body.pbF37PrintComposer #pb737-mobile-print-dock{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+
+  /* 2) Confirmation/quote modal must sit above the account header, subheader, tabs and bottom nav. */
+  body.pbF37PrintMode .modalBack.globalModalLayer{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483600!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    box-sizing:border-box!important;
+    padding:max(12px,env(safe-area-inset-top,0px)) 12px max(12px,env(safe-area-inset-bottom,0px))!important;
+    overflow:auto!important;
+    overscroll-behavior:contain!important;
+  }
+  body.pbF37PrintMode .modalBack.globalModalLayer>.modal.card{
+    position:relative!important;
+    z-index:2147483601!important;
+    width:min(94vw,620px)!important;
+    max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;
+    margin:auto!important;
+    overflow:auto!important;
+  }
+
+  /* 3) The thin identity strip under the main header is the same header color.
+     Its blue depth starts at the lower edge and softly fades downward. */
+  #pbF37ContextTitle,
+  #photographerStoreIdentityBar{
+    position:relative!important;
+    background:var(--pb718-header,var(--pb771-top,#dff2f6))!important;
+    background-color:var(--pb718-header,var(--pb771-top,#dff2f6))!important;
+    background-image:none!important;
+    border:0!important;
+    filter:none!important;
+    box-shadow:0 10px 16px -12px rgba(50,122,224,0.492),
+               0 18px 28px -20px rgba(50,122,224,0.348)!important;
+  }
+
+  /* 4) Tab switching motion — same soft, tactile behavior across photographer/store surfaces. */
+  #pbF37Tabs button,
+  #storeSectionNavV673>button,
+  .photographerBottomAppNav button,
+  .photographerBottomAppNavGrid button,
+  .photographerContextStatusesMobile>button,
+  .albumHeaderStatuses>button,
+  .pbR67FinanceTabs button{
+    transition:
+      background-color .22s cubic-bezier(.2,.75,.25,1),
+      border-color .22s cubic-bezier(.2,.75,.25,1),
+      color .22s cubic-bezier(.2,.75,.25,1),
+      box-shadow .22s cubic-bezier(.2,.75,.25,1),
+      transform .22s cubic-bezier(.2,.75,.25,1)!important;
+    will-change:transform;
+  }
+  #pbF37Tabs button.active,
+  #storeSectionNavV673>button.active,
+  .photographerBottomAppNav button.active,
+  .photographerBottomAppNavGrid button.active,
+  .photographerContextStatusesMobile>button.active,
+  .albumHeaderStatuses>button.active,
+  .pbR67FinanceTabs button.active,
+  .photographerBottomAppNav button[aria-current="page"],
+  .photographerBottomAppNavGrid button[aria-current="page"]{
+    animation:pbF40TabActivate .24s cubic-bezier(.2,.8,.2,1);
+  }
+  #pbF37Tabs button:active,
+  #storeSectionNavV673>button:active,
+  .photographerBottomAppNav button:active,
+  .photographerBottomAppNavGrid button:active{
+    transform:scale(.965)!important;
+  }
+}
+
+@keyframes pbF40TabActivate{
+  0%{transform:scale(.94);filter:saturate(.9)}
+  58%{transform:scale(1.025);filter:saturate(1.06)}
+  100%{transform:scale(1);filter:saturate(1)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #pbF37Tabs button,
+  #storeSectionNavV673>button,
+  .photographerBottomAppNav button,
+  .photographerBottomAppNavGrid button,
+  .photographerContextStatusesMobile>button,
+  .albumHeaderStatuses>button,
+  .pbR67FinanceTabs button{
+    transition:none!important;
+    animation:none!important;
+  }
+}
+
+/* White mobile headers, with the blue fade beginning below the title strip. */
+@media(max-width:820px){
+  /* Keep the name at the top and the full date/time on the bottom row in both headers. */
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader .pbF37IdentityCopy,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader .workspaceIdentityCopy{
+    flex:1 1 0%!important;width:auto!important;max-width:none!important;min-width:0!important;
+    height:74px!important;min-height:74px!important;max-height:74px!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    align-content:center!important;align-items:center!important;justify-content:stretch!important;
+    row-gap:2px!important;overflow:visible!important;
+  }
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader .pbF37IdentityCopy>h1,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy>h1,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader .workspaceIdentityCopy>h1{
+    grid-column:1!important;grid-row:1!important;align-self:center!important;
+    font-size:13px!important;line-height:1.28!important;max-height:2.56em!important;
+    overflow:hidden!important;overflow-wrap:anywhere!important;text-overflow:ellipsis!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  }
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader .pbF37Manager,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader .workspaceIdentityCopy>small,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader .workspaceIdentityCopy>small{
+    grid-column:1!important;grid-row:2!important;align-self:center!important;
+    width:100%!important;min-width:0!important;font-size:8px!important;line-height:1.2!important;
+  }
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader .pbF37DateWrap,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader .photographerIdentityDateOnly,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader .photographerIdentityDateOnly{
+    grid-column:1!important;grid-row:3!important;align-self:start!important;
+    width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;
+    display:flex!important;align-items:center!important;justify-content:flex-start!important;
+    gap:3px!important;white-space:nowrap!important;overflow:visible!important;
+    font-size:8px!important;line-height:1.15!important;
+  }
+  html body.rentalPhotographerMode #photographerStoreRoleHeader{
+    box-sizing:border-box!important;
+  }
+  html body.rentalPhotographerMode #photographerStoreRoleHeader .workspaceIdentity{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    display:flex!important;align-items:center!important;gap:10px!important;
+  }
+  html body.rentalPhotographerMode:not(.pbF37StoreMode) #photographerStoreRoleHeader>.photographerHeaderIdentity{
+    padding-left:58px!important;box-sizing:border-box!important;
+  }
+  html body.rentalPhotographerMode:not(.pbF37StoreMode) #storePhotographerWorkspace #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    padding-left:58px!important;box-sizing:border-box!important;
+  }
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storePhotographerIdentityBar,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storePhotographerIdentityBar{
+    background:#fff!important;background-color:#fff!important;background-image:none!important;
+  }
+  html body.rentalPhotographerMode #storePhotographerWorkspace #photographerStoreRoleHeader.photographerHeaderRefined.roleHeaderReflow,
+  html body.pbF37StoreMode #storePhotographerWorkspace #photographerStoreRoleHeader.photographerHeaderRefined.roleHeaderReflow{
+    background:#fff!important;background-color:#fff!important;background-image:none!important;
+  }
+
+  /* Store tabs sit on the same open, pale-blue surface as the Lab tab row. */
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    background:linear-gradient(180deg,#e5f2ff 0%,#eaf5ff 62%,#f1f7ff 100%)!important;
+    background-color:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    outline:0!important;
+    backdrop-filter:none!important;
+  }
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after{
+    background:linear-gradient(180deg,rgba(234,245,255,.7),rgba(234,245,255,0))!important;
+  }
+
+  /* The legacy v729/v723 rules use a stronger selector and re-show these actions.
+     Hide their whole inline row in composer mode; F40 actions remain outside #root. */
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileInlineActions>.simplePrintPilotHeader,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotPrimaryAdd,
+  html body.pbF37PrintComposer #root .photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotHeaderSubmit{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  /* v723 gives the original header slot !important rules with an ID selector.
+     Outrank those rules inside the active composer while leaving the F40 proxy row intact. */
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost,
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost .simplePrintPilotHeader,
+  html body.pbF37PrintComposer #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderActions{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader,
+  html body.pbF37UnifiedActive #photographerStoreRoleHeader.pbF37CoreHeader,
+  html body.rentalPhotographerMode #photographerStoreRoleHeader,
+  html body.pbF37UnifiedActive #pbF37ContextTitle,
+  html body.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    background:#fff!important;
+    background-color:#fff!important;
+    background-image:none!important;
+  }
+  html body.pbF37UnifiedActive #pbF37Subheader{
+    background:linear-gradient(180deg,#fff 0 42px,#e3f1ff 42px,#eaf5ff 91px)!important;
+  }
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after{
+    display:none!important;content:none!important;background:none!important;
+  }
+
+  /* Keep print and binding dialogs above the fixed mobile chrome. */
+  html body.pbF37UnifiedActive>.modalBack.globalModalLayer,
+  html body.pbF37UnifiedActive>.uploadChoiceOverlay,
+  html body.pbF37UnifiedActive>.pb748ModalShade,
+  html body.pbF37UnifiedActive>.simplePrintPreviewOverlay,
+  html body.pbF37UnifiedActive>.albumCoverZoomOverlay{
+    position:fixed!important;inset:0!important;z-index:2147483000!important;
+    box-sizing:border-box!important;
+  }
+  html body.pbF37UnifiedActive>.pb748ModalShade{
+    display:flex!important;align-items:center!important;justify-content:center!important;padding:12px!important;
+  }
+  html body.pbF37UnifiedActive>.pb748ModalShade>.pb748Modal{
+    width:min(680px,100%)!important;max-height:calc(100dvh - 24px)!important;
+    margin:0!important;overflow:auto!important;
+  }
+
+  /* A faint separator fades toward both ends under the account header. */
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader::after,
+  html body.pbF37UnifiedActive #photographerStoreRoleHeader.pbF37CoreHeader::after{
+    content:""!important;position:absolute!important;left:0!important;right:0!important;top:auto!important;bottom:-1px!important;
+    display:block!important;width:100%!important;height:1px!important;min-height:1px!important;max-height:1px!important;
+    margin:0!important;padding:0!important;border:0!important;pointer-events:none!important;
+    background:linear-gradient(90deg,rgba(152,162,179,0) 0%,rgba(152,162,179,.22) 18%,rgba(152,162,179,.38) 50%,rgba(152,162,179,.22) 82%,rgba(152,162,179,0) 100%)!important;
+    box-shadow:none!important;opacity:1!important;z-index:1!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

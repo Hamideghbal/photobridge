@@ -1,0 +1,50 @@
+/* R1192: no whole-page animation when switching lab/store tabs on mobile,
+   touch PWA, embedded browser or desktop. Header indicators stay animated. */
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn,
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.forward,
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.backward,
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.out,
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.in,
+html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.idle {
+  animation:none!important;
+  transition:none!important;
+  transform:none!important;
+  translate:none!important;
+  filter:none!important;
+  opacity:1!important;
+  perspective:none!important;
+  backface-visibility:visible!important;
+  will-change:auto!important;
+}
+html body #root .labRoleWorkspace .labOrderScrollArea .labOrderCard.orderEnterFade {
+  animation:none!important;
+  opacity:1!important;
+}
+html body #root .labRoleWorkspace .labRolePageScrollArea,
+html body #root .labRoleWorkspace .rolePageScrollArea {
+  view-transition-name:none!important;
+  overflow-anchor:none!important;
+}
+html body.rentalAppReady #app>.panel.active,
+html body.rentalAppReady #app>.panel.active [data-pb842-pane].active,
+html body.rentalAppReady #app>.panel.active [data-pb843-office-pane].active {
+  animation:none!important;
+  transition:none!important;
+  transform:none!important;
+  translate:none!important;
+  filter:none!important;
+  opacity:1!important;
+  will-change:auto!important;
+}
+html body #storePhotographerWorkspace .rentalPanel.mobileActive {
+  animation:none!important;
+  transition:none!important;
+  transform:none!important;
+  translate:none!important;
+  filter:none!important;
+  opacity:1!important;
+  will-change:auto!important;
+}
+/* Deliberately exclude tab navigation indicators, button presses and modal sheets. */
+
+/* PB1364 softer blue shadows */

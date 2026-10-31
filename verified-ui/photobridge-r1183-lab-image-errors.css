@@ -1,0 +1,6 @@
+/* R1183 - display concrete file access errors instead of an empty thumbnail. */
+.orderFilesCard .pb1183PreviewMessage{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;text-align:center;padding:6px;min-height:64px;width:100%;background:#fff5f3;border:1px solid #ffd5cf;border-radius:8px;color:#9a3412;}
+.orderFilesCard .pb1183PreviewMessage small{font-size:10px;font-weight:600;line-height:1.5;white-space:normal;overflow-wrap:anywhere;}
+.orderFilesCard .pb1183PreviewMessage button{padding:3px 7px;border:1px solid #e1c6c0;background:white;border-radius:6px;color:#9a3412;cursor:pointer;font-size:10px}
+
+/* PB1364 softer blue shadows */

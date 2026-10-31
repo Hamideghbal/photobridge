@@ -1,0 +1,356 @@
+/* PhotoBridge v698 — hard mobile photographer chrome fix.
+   This file intentionally targets the real React DOM directly and does not depend on a helper class. */
+@media (max-width:820px){
+  :root{--pb698-header-h:72px;--pb698-context-h:42px;--pb698-wide:82px}
+
+  html,body,#root{height:100%!important;min-height:100%!important}
+  body:has(.photographerMain){overflow:hidden!important;overscroll-behavior:none!important}
+
+  /* One viewport, one scroller: header/context never move; only page body scrolls. */
+  .photographerMain.appWorkspacePage{
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    max-width:100vw!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    overscroll-behavior:none!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain.pbFixedRoleHeader>.unifiedRoleHeader.photographerHeaderRefined{
+    position:relative!important;
+    inset:auto!important;
+    flex:0 0 var(--pb698-header-h)!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:var(--pb698-header-h)!important;
+    min-height:var(--pb698-header-h)!important;
+    max-height:var(--pb698-header-h)!important;
+    margin:0!important;
+    padding:9px 10px 8px!important;
+    overflow:visible!important;
+    border:0!important;
+    border-bottom:1px solid #dfe5ee!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    z-index:800!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain.pb698ContextBarActive>.unifiedRoleHeader.photographerHeaderRefined{border-bottom:0!important}
+
+  /* Exact utility sequence from LEFT: bell, exit, settings, invite, credit. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions{
+    position:absolute!important;
+    left:8px!important;
+    right:auto!important;
+    top:10px!important;
+    display:flex!important;
+    flex-flow:row nowrap!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:4px!important;
+    direction:ltr!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    z-index:80!important;
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileNotificationBell{
+    order:1!important;flex:0 0 34px!important;width:34px!important;min-width:34px!important;max-width:34px!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderPower{
+    order:2!important;flex:0 0 32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderSettings{
+    order:3!important;display:inline-flex!important;flex:0 0 32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;border:1px solid #d8dee9!important;border-radius:9px!important;background:#fff!important;color:#475467!important;box-shadow:0 1px 2px rgba(16,24,40,.03)!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>#pb698HeaderInviteButton,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>#pb698HeaderInviteButton{
+    order:4!important;display:inline-flex!important;flex:0 0 var(--pb698-wide)!important;width:var(--pb698-wide)!important;min-width:var(--pb698-wide)!important;max-width:var(--pb698-wide)!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0 5px!important;align-items:center!important;justify-content:center!important;border:1px solid #d8dee9!important;border-radius:9px!important;background:#fff!important;color:#344054!important;box-shadow:0 1px 2px rgba(16,24,40,.03)!important;font-family:inherit!important;font-size:0!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important;direction:rtl!important;overflow:hidden!important;text-size-adjust:none!important;-webkit-text-size-adjust:none!important
+  }
+  /* Render the label ourselves at a guaranteed compact size. This avoids mobile text inflation
+     making the Persian label visually larger than its credit box. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after,
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>#pb698HeaderInviteButton::after,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>#pb698HeaderInviteButton::after{
+    content:"دعوت همکار"!important;display:block!important;max-width:100%!important;margin:0!important;padding:0!important;color:inherit!important;font-family:inherit!important;font-size:7px!important;font-weight:900!important;line-height:1!important;letter-spacing:-.2px!important;white-space:nowrap!important;transform:none!important;text-indent:0!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet{
+    order:5!important;display:inline-flex!important;flex:0 0 var(--pb698-wide)!important;width:var(--pb698-wide)!important;min-width:var(--pb698-wide)!important;max-width:var(--pb698-wide)!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0 5px!important;gap:3px!important;border-radius:9px!important;font-size:7.8px!important;direction:rtl!important;white-space:nowrap!important;overflow:hidden!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet>b{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:7.6px!important}
+  .photographerMobileAiInviteRow,#pb693GlobalInviteButton,#pb694HeaderInviteButton,#pb695HeaderInviteButton{display:none!important}
+
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    height:55px!important;min-height:55px!important;max-height:55px!important;padding-left:292px!important;box-sizing:border-box!important
+  }
+
+  /* Context strip is physically in flow, flush against the white header. */
+  #pb698PhotographerContextBar{
+    position:relative!important;
+    flex:0 0 var(--pb698-context-h)!important;
+    width:100vw!important;
+    min-width:100vw!important;
+    max-width:100vw!important;
+    height:var(--pb698-context-h)!important;
+    min-height:var(--pb698-context-h)!important;
+    max-height:var(--pb698-context-h)!important;
+    margin:-1px 0 0!important;
+    padding:5px 8px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    direction:rtl!important;
+    box-sizing:border-box!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;
+    color:#fff!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    z-index:790!important;
+  }
+  #pb698PhotographerContextBar .pb698ContextTitle{min-width:0!important;display:flex!important;align-items:center!important;gap:6px!important;overflow:hidden!important;text-align:right!important;white-space:nowrap!important}
+  #pb698PhotographerContextBar .pb698ContextTitle b{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#fff!important;font-size:11.5px!important;font-weight:950!important}
+  #pb698PhotographerContextBar .pb698ContextActions{flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:5px!important;direction:rtl!important}
+  #pb698PhotographerContextBar button,#pb698PrintBarActions button{
+    appearance:none!important;min-width:34px!important;height:30px!important;min-height:30px!important;margin:0!important;padding:0 8px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;border:1px solid rgba(255,255,255,.30)!important;border-radius:8px!important;background:rgba(255,255,255,.11)!important;color:#fff!important;box-shadow:none!important;font-family:inherit!important;font-size:9px!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important;box-sizing:border-box!important
+  }
+  #pb698PhotographerContextBar button.active,#pb698PrintBarActions button.active{background:#fff!important;border-color:#fff!important;color:#244fcf!important;box-shadow:0 2px 7px rgba(15,23,42,.12)!important}
+  #pb698PhotographerContextBar .pb698Square{width:30px!important;min-width:30px!important;max-width:30px!important;padding:0!important;font-size:15px!important}
+  #pb698PhotographerContextBar .pb698FilterButton svg{width:16px!important;height:16px!important;display:block!important;stroke:currentColor!important;fill:none!important}
+  #pb698PhotographerContextBar .pb698ModelCount{font-size:8px!important;opacity:.86!important;font-weight:850!important}
+  #pb698PhotographerContextBar .pb698FreeBadge{height:18px!important;padding:0 6px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border:1px solid rgba(255,255,255,.34)!important;border-radius:999px!important;background:rgba(255,255,255,.13)!important;color:#fff!important;font-size:7.5px!important;font-weight:950!important}
+
+  /* The only vertical scroll container. This is the part v695 did not actually enforce in deployed dist. */
+  .photographerMain>.photographerRolePageScrollArea{
+    position:relative!important;
+    flex:1 1 0!important;
+    min-height:0!important;
+    height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain!important;
+    touch-action:pan-y!important;
+    padding-top:12px!important;
+    scroll-padding-top:12px!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain>.photographerRolePageScrollArea>:first-child{margin-top:0!important}
+
+  /* Hide native secondary controls only after our blue strip is present. */
+  .photographerMain.pb698DesignContext .photographerAlbumDesignCatalog .albumDesignModelViewToolbar{position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important}
+  .photographerMain.pb698DesignContext .photographerAlbumDesignCatalog .albumDesignMobileCatalogHeader{display:none!important}
+  .photographerMain.pb698DesignContext .photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle{display:none!important}
+  .photographerMain.pb698AiContext .photographerAiSectionNav{display:none!important}
+  .photographerMain.pb698GalleryContext .clientGalleryListHead>button.primary{display:none!important}
+
+  /* Print: keep the white header same height; existing print selector/buttons live directly below it. */
+  .photographerMain.photographerPrintWorkspace.pbFixedRoleHeader>.unifiedRoleHeader.photographerPrintModeHeader{
+    flex:0 0 var(--pb698-header-h)!important;height:var(--pb698-header-h)!important;min-height:var(--pb698-header-h)!important;max-height:var(--pb698-header-h)!important;margin:0 0 104px!important;border-bottom:0!important;overflow:visible!important
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{top:calc(100% - 1px)!important}
+  .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode){padding-top:0!important;margin-top:0!important;border-top:0!important}
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode)>.photographerLabContextMain{row-gap:4px!important;gap:4px!important;padding-top:0!important;margin-top:0!important}
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions{margin-top:0!important;padding-top:0!important}
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions>.photographerContextAction.primary{margin-top:0!important}
+  /* Old active-tab pseudo background extended below the Print/Album cards and looked like a cropped white box. */
+  .photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction::before,
+  .photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction::after{content:none!important;display:none!important}
+  .photographerPrintModeUtilityCluster .photographerPrintCommonAction.archive,
+  .photographerPrintModeUtilityCluster .photographerPrintCommonAction.finance{visibility:hidden!important;pointer-events:none!important}
+  #pb698PrintBarActions{position:fixed!important;z-index:820!important;width:164px!important;min-width:164px!important;max-width:164px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;align-items:center!important;pointer-events:auto!important}
+  #pb698PrintBarActions button{width:100%!important;min-width:0!important;height:100%!important;min-height:28px!important;padding:0 7px!important}
+
+  /* v698 standalone Store: same fixed white header + in-flow blue strip; only .shell scrolls. */
+  .storePhotographerWorkspace>#photographerStoreIdentityBar{
+    position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+    flex:0 0 var(--pb698-context-h)!important;width:100vw!important;min-width:100vw!important;max-width:100vw!important;
+    height:var(--pb698-context-h)!important;min-height:var(--pb698-context-h)!important;max-height:var(--pb698-context-h)!important;
+    margin:-1px 0 0!important;padding:5px 8px!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:790!important;box-sizing:border-box!important
+  }
+  .storePhotographerWorkspace>.shell{
+    position:relative!important;flex:1 1 0!important;min-height:0!important;height:0!important;max-height:none!important;
+    overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
+    padding-top:10px!important;padding-bottom:96px!important;margin:0!important;box-sizing:border-box!important
+  }
+  .storePhotographerWorkspace>.unifiedRoleHeader.photographerHeaderRefined{border-bottom:0!important}
+
+  /* Explicit loading state and cheaper first paint for Instagram/album catalog. */
+  .photographerAlbumDesignCatalog .albumDesignSavedLoading,.pb698CatalogLoader{
+    min-height:62px!important;margin:8px 10px 12px!important;padding:11px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;border:1px solid #dbe5f4!important;border-radius:12px!important;background:rgba(255,255,255,.97)!important;color:#344054!important;box-shadow:0 4px 16px rgba(15,23,42,.055)!important;font-size:9.5px!important;font-weight:850!important;text-align:center!important;pointer-events:none!important;box-sizing:border-box!important
+  }
+  .photographerAlbumDesignCatalog .albumDesignSavedLoading::before,.pb698CatalogLoader::before{content:""!important;width:18px!important;height:18px!important;flex:0 0 18px!important;border:2px solid #dbe5ff!important;border-top-color:#315efb!important;border-radius:50%!important;animation:pb698Spin .72s linear infinite!important}
+  #pb698PageLoader{
+    position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;z-index:5200!important;
+    min-width:164px!important;max-width:min(82vw,280px)!important;min-height:52px!important;margin:0!important;padding:10px 14px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;direction:rtl!important;
+    border:1px solid #dbe5f4!important;border-radius:14px!important;background:rgba(255,255,255,.97)!important;color:#344054!important;
+    box-shadow:0 12px 34px rgba(15,23,42,.14)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;
+    font-family:inherit!important;font-size:10px!important;font-weight:900!important;line-height:1.35!important;text-align:center!important;pointer-events:none!important;box-sizing:border-box!important
+  }
+  #pb698PageLoader::before{content:""!important;width:19px!important;height:19px!important;flex:0 0 19px!important;border:2px solid #dbe5ff!important;border-top-color:#315efb!important;border-radius:50%!important;animation:pb698Spin .72s linear infinite!important}
+  #pb698PageLoader[hidden]{display:none!important}
+  @keyframes pb698Spin{to{transform:rotate(360deg)}}
+  .photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard{content-visibility:auto!important;contain:layout paint style!important;contain-intrinsic-size:260px 360px!important}
+  html.pb698FastNavigate .photographerAlbumDesignCatalog .albumDesignModelGrid{content-visibility:hidden!important;pointer-events:none!important}
+}
+@media(max-width:380px){:root{--pb698-wide:72px}.photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{padding-left:272px!important}#pb698PrintBarActions{width:150px!important}}
+@media(min-width:821px){#pb698PhotographerContextBar,#pb698PrintBarActions,#pb698HeaderInviteButton,#pb698HeaderSettingsButton,.pb698CatalogLoader,#pb698PageLoader{display:none!important}}
+
+
+/* ===== v698 reported-regression hard overrides ===== */
+/* PhotoBridge v698 — final mobile invite/header order + print overlap cleanup.
+   Loaded after v697 and intentionally overrides only the regressions reported after v697. */
+@media (max-width:820px){
+  :root{--pb698-wide:82px}
+
+  /* One exact quick-action geometry everywhere, including the standalone Store header. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions{
+    position:absolute!important;
+    inset:auto!important;
+    left:8px!important;
+    right:auto!important;
+    top:10px!important;
+    z-index:90!important;
+    display:flex!important;
+    flex-flow:row nowrap!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:4px!important;
+    direction:ltr!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    transform:none!important;
+    box-sizing:border-box!important;
+  }
+
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>button,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>button{
+    position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;float:none!important;
+    margin-top:0!important;margin-right:0!important;margin-bottom:0!important;margin-left:0!important;box-sizing:border-box!important
+  }
+
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileNotificationBell,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileNotificationBell{
+    order:1!important;flex:0 0 34px!important;width:34px!important;min-width:34px!important;max-width:34px!important;
+    height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;inset:auto!important;transform:none!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderPower,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderPower{
+    order:2!important;flex:0 0 32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;
+    height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0!important;inset:auto!important;transform:none!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderSettings,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderSettings{
+    order:3!important;display:inline-flex!important;flex:0 0 32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;
+    height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0!important;inset:auto!important;transform:none!important;
+    align-items:center!important;justify-content:center!important;border:1px solid #d8dee9!important;border-radius:9px!important;background:#fff!important;color:#475467!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.03)!important
+  }
+
+  /* Invite and credit are literally the same outer size. Text lives in its own span so no browser
+     text-autosizing or inherited button font can make it escape the box. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite{
+    order:4!important;display:inline-flex!important;flex:0 0 var(--pb698-wide)!important;width:var(--pb698-wide)!important;min-width:var(--pb698-wide)!important;max-width:var(--pb698-wide)!important;
+    height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0 4px!important;inset:auto!important;transform:none!important;
+    align-items:center!important;justify-content:center!important;border:1px solid #d8dee9!important;border-radius:9px!important;background:#fff!important;color:#344054!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.03)!important;font-size:0!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;
+    direction:rtl!important;text-size-adjust:none!important;-webkit-text-size-adjust:none!important;box-sizing:border-box!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::before,
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite::before,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after{
+    content:none!important;display:none!important
+  }
+  .mobileHeaderInvite>.pb698InviteLabel{
+    display:block!important;max-width:100%!important;margin:0!important;padding:0!important;color:inherit!important;
+    font-family:inherit!important;font-size:7px!important;font-weight:900!important;line-height:1!important;letter-spacing:-.15px!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;direction:rtl!important;
+    text-size-adjust:none!important;-webkit-text-size-adjust:none!important;transform:scale(.96)!important;transform-origin:center!important
+  }
+
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderWallet{
+    order:5!important;display:inline-flex!important;flex:0 0 var(--pb698-wide)!important;width:var(--pb698-wide)!important;min-width:var(--pb698-wide)!important;max-width:var(--pb698-wide)!important;
+    height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;padding:0 5px!important;inset:auto!important;transform:none!important;
+    align-items:center!important;justify-content:center!important;gap:3px!important;border-radius:9px!important;font-size:7.8px!important;line-height:1!important;
+    direction:rtl!important;white-space:nowrap!important;overflow:hidden!important;box-sizing:border-box!important
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet>b,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderWallet>b{
+    min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:7.6px!important;line-height:1!important
+  }
+
+  /* Kill every legacy second-row invite. */
+  .photographerMobileAiInviteRow,#pb693GlobalInviteButton,#pb694HeaderInviteButton,#pb695HeaderInviteButton,#pb696HeaderInviteButton,#pb697HeaderInviteButton{display:none!important}
+  /* The v698 canonical invite is the only exception. */
+  #pb698HeaderInviteButton{display:inline-flex!important}
+
+  /* Store had old physical/right placement rules. Force the same left row as all photographer tabs. */
+  #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    position:relative!important;inset:auto!important;width:100vw!important;max-width:100vw!important;min-width:100vw!important;
+    height:72px!important;min-height:72px!important;max-height:72px!important;margin:0!important;padding:9px 10px 8px!important;
+    border:0!important;border-bottom:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important;overflow:visible!important;box-sizing:border-box!important
+  }
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    height:55px!important;min-height:55px!important;max-height:55px!important;padding-left:292px!important;box-sizing:border-box!important
+  }
+
+  /* Print: v697 reserved 104px for a 115px absolute strip, so its bottom 11px painted over the
+     "چاپ عکس جدید" area. Make the strip exactly as tall as its actual rows and reserve the exact same amount. */
+  .photographerMain.photographerPrintWorkspace.pbFixedRoleHeader>.unifiedRoleHeader.photographerPrintModeHeader{
+    margin:0 0 107px!important
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    height:107px!important;min-height:107px!important;max-height:107px!important;
+    grid-template-rows:42px 58px!important;gap:7px!important;padding:0 9px!important;
+    background:transparent!important;border:0!important;border-bottom:0!important;box-shadow:none!important;overflow:visible!important;box-sizing:border-box!important
+  }
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav::before,
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav::after,
+  .photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction::before,
+  .photographerPrintWorkspace .photographerPrintModeNav>.rolePrimaryAction::after,
+  .photographerPrintWorkspace>.photographerLabContextRail::before,
+  .photographerPrintWorkspace>.photographerLabContextRail::after{
+    content:none!important;display:none!important;box-shadow:none!important
+  }
+  .photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode){margin-top:0!important;padding-top:0!important;border-top:0!important;box-shadow:none!important}
+}
+
+@media (max-width:380px){
+  :root{--pb698-wide:72px}
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{padding-left:272px!important}
+  .photographerMain.photographerPrintWorkspace.pbFixedRoleHeader>.unifiedRoleHeader.photographerPrintModeHeader{margin-bottom:103px!important}
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerPrintModeNav,
+  body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader>.photographerHeaderNav.photographerPrintModeNav{
+    height:103px!important;min-height:103px!important;max-height:103px!important;grid-template-rows:40px 56px!important;gap:7px!important;padding-bottom:0!important
+  }
+  .mobileHeaderInvite>.pb698InviteLabel{font-size:6.6px!important;letter-spacing:-.2px!important}
+}
+
+@media (min-width:821px){#pb698HeaderInviteButton{display:none!important}}
+
+/* PB1364 softer blue shadows */

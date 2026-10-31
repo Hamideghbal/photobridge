@@ -1,0 +1,44 @@
+/* PhotoBridge v701 — mobile invite second row only.
+   Deliberately scoped to the photographer mobile header so no other mobile UI changes. */
+@media (max-width:820px){
+  /* Keep the working v700 button size, but remove it from the first utility row.
+     This frees horizontal room for long photographer names and keeps credit beside the icons. */
+  .photographerMobileHeaderQuickActions.pb700MobileQuickActions>.mobileHeaderInvite,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions.pb700MobileQuickActions>.mobileHeaderInvite{
+    position:absolute!important;
+    left:0!important;
+    right:auto!important;
+    top:30px!important;
+    bottom:auto!important;
+    order:99!important;
+    flex:none!important;
+    width:var(--pb700-pill)!important;
+    min-width:var(--pb700-pill)!important;
+    max-width:var(--pb700-pill)!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    margin:0!important;
+    z-index:95!important;
+  }
+
+  /* With Invite out of the first row, reserve only the real first-row controls.
+     This is the only companion layout change and directly gives long names more room. */
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    padding-left:214px!important;
+  }
+}
+
+@media (max-width:380px){
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    padding-left:206px!important;
+  }
+}
+
+@media (min-width:821px){
+  .photographerMobileHeaderQuickActions.pb700MobileQuickActions>.mobileHeaderInvite{position:relative!important;left:auto!important;top:auto!important}
+}
+
+/* PB1364 softer blue shadows */

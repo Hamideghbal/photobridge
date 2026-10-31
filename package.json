@@ -1,0 +1,74 @@
+{
+  "name": "photobridge-lab-desktop",
+  "version": "1.0.55",
+  "private": true,
+  "description": "PhotoBridge Lab \u2014 offline-first Windows workspace",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "prepare:assets": "node prepare-assets.cjs",
+    "verify": "node prepare-assets.cjs && node verify-native-ui.cjs",
+    "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",
+    "dist:unsigned": "npm run verify && electron-builder --win nsis --x64 --publish never -c.win.forceCodeSigning=false -c.win.signExecutable=false && node verify-installer.cjs",
+    "release:json": "node create-update-release.cjs"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "ir.photobridge.lab",
+    "productName": "PhotoBridge Lab",
+    "asar": true,
+    "files": [
+      "*.cjs",
+      "*.js",
+      "assets/**/*",
+      "package.json",
+      "release-config.json",
+      "*.html"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "icon": "assets/photobridge.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "forceCodeSigning": true,
+      "artifactName": "PhotoBridge-Lab-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "assets/photobridge.ico",
+      "uninstallerIcon": "assets/photobridge.ico",
+      "shortcutName": "PhotoBridge Lab",
+      "include": "build-installer.nsh"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://photobridge.ir/downloads/lab-desktop/"
+    }
+  },
+  "author": "PhotoBridge"
+}

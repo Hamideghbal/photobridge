@@ -1,0 +1,41 @@
+
+/* PhotoBridge v781 — lab order size grouping + accounting photographer search */
+.labPrintSizeSummary{
+  display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px;padding:10px;
+  border:1px solid var(--line,#dfe4ea);border-radius:14px;background:var(--soft,#f7f9fb);
+  direction:rtl
+}
+.labPrintSizeSummary>span{
+  display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line,#dfe4ea);
+  border-radius:999px;background:var(--card,#fff);white-space:nowrap
+}
+.labPrintSizeSummary>span b{font-size:13px}
+.labPrintSizeSummary>span small{font-size:12px;opacity:.72}
+.labSizeGroupHeader{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;box-sizing:border-box;
+  margin:14px 0 7px;padding:9px 12px;border-radius:11px;border:1px solid var(--line,#dfe4ea);
+  background:var(--soft,#f7f9fb);direction:rtl
+}
+.labSizeGroupHeader b{font-size:14px}
+.labSizeGroupHeader span{font-size:12px;opacity:.7}
+.groupedLabFileCardGrid .cardGridGroupHeader,
+.labFileCardGrid .cardGridGroupHeader{grid-column:1/-1}
+.statementCustomerPicker{min-width:min(340px,100%);display:flex!important;flex-direction:column;gap:6px}
+.statementCustomerSearchWrap{position:relative;display:flex;align-items:center;width:100%}
+.statementCustomerSearchWrap input{
+  width:100%;min-height:39px;box-sizing:border-box;padding:8px 12px 8px 34px;
+  border:1px solid var(--line,#dfe4ea);border-radius:10px;background:var(--card,#fff);color:inherit;
+  font:inherit;text-align:right;direction:rtl;outline:none
+}
+.statementCustomerSearchWrap input:focus{border-color:var(--accent,#4773ff);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#4773ff) 13%,transparent)}
+.statementCustomerSearchWrap button{
+  position:absolute;left:7px;width:25px;height:25px;border:0;border-radius:50%;background:transparent;
+  color:inherit;opacity:.62;cursor:pointer;font-size:18px;line-height:1
+}
+.statementCustomerSearchWrap button:hover{opacity:1;background:var(--soft,#f1f4f7)}
+@media(max-width:720px){
+  .statementCustomerPicker{min-width:100%}
+  .labPrintSizeSummary{margin-inline:0}
+}
+
+/* PB1364 softer blue shadows */

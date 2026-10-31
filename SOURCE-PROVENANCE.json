@@ -1,0 +1,8 @@
+{
+  "recoveredFrom": "Hamideghbal/photobridge",
+  "commit": "1976d86b4801a3c1848309da34c6802bf7b36579",
+  "portableZipSha256": "b7e4de6ee5da41a0c36ca4e07904424bfcc0c40f7fbde33d7957ca086e544345",
+  "nativeSource": "Extracted unchanged from 1.0.55 app.asar; package/build scripts restored from archived source v1.0.22",
+  "uiBuild": "4300c9a4817b99da2343d0ccfe27e301ab64609fae1b04584949bca48368c73f",
+  "privateSigningKeyIncluded": false
+}

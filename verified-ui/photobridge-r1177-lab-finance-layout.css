@@ -1,0 +1,269 @@
+/* R1177 — laboratory finance: single-row controls and in-page statement modes. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .financeWorkspace>.financeSummary.accountingSummary{display:none!important}
+ html body #root .labRoleWorkspace .financeWorkspace:has(.financeDashboardWrap)>.financeSummary.accountingSummary{display:grid!important}
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar{
+  display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+  justify-content:flex-start!important;gap:7px!important;
+  width:100%!important;min-width:0!important;
+  padding:7px 9px!important;margin:5px 0 9px!important;
+  border:1px solid #e2e9f4!important;border-radius:11px!important;
+  background:#f8faff!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>label{
+  display:flex!important;align-items:center!important;gap:6px!important;
+  flex:0 1 174px!important;min-width:145px!important;width:auto!important;
+  margin:0!important;padding:0!important;white-space:nowrap!important;
+  font:800 10.5px Vazirmatn,Tahoma,sans-serif!important;color:#526078!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>label>div,
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>label input{
+  width:100%!important;min-width:0!important;max-width:142px!important;
+  min-height:32px!important;height:32px!important;
+  border-radius:8px!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>button{
+  flex:0 0 auto!important;width:auto!important;min-width:76px!important;
+  min-height:32px!important;height:32px!important;
+  margin:0!important;padding:5px 10px!important;
+  background:#fff!important;border:1px solid #d8e2f1!important;
+  border-radius:8px!important;box-shadow:none!important;
+  font:850 10.5px Vazirmatn,Tahoma,sans-serif!important;color:#475467!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>.invoiceRangeApply{
+  order:1!important;margin-inline-start:auto!important;background:#edf3ff!important;
+  color:#315efb!important;border-color:#c8d8fd!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>.invoiceRangeAll{
+  order:2!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>.pb1176Today{
+  order:3!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>.pb1176Today.active{
+  background:#315efb!important;color:white!important;border-color:#315efb!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceListToolbar{
+  display:flex!important;align-items:center!important;gap:8px!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceListToolbar .financeInvoiceSearch{
+  flex:0 1 270px!important;min-width:160px!important;margin-inline-start:auto!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceListToolbar .pb1176ManualOpen{
+  margin:0!important;flex:0 0 auto!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions{
+  display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+  gap:8px!important;padding:8px 10px!important;
+  margin:0 0 10px!important;min-height:54px!important;
+  background:#f8faff!important;border:1px solid #e2e9f4!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions>select{
+  flex:0 0 220px!important;width:220px!important;min-width:150px!important;
+  min-height:36px!important;font-size:11px!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions>button{
+  flex:0 0 auto!important;min-height:33px!important;padding:5px 10px!important;
+  white-space:nowrap!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementToolbar{
+  display:grid!important;gap:7px!important;padding:8px 10px!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters{
+  display:flex!important;flex-wrap:nowrap!important;gap:8px!important;
+  align-items:center!important;width:100%!important;min-width:0!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters>.statementCustomerPicker{
+  display:flex!important;flex:1 1 auto!important;min-width:320px!important;
+  align-items:center!important;gap:7px!important;
+  width:auto!important;max-width:none!important;white-space:nowrap!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementCustomerPicker>.statementCustomerSearchWrap{
+  display:block!important;order:2!important;flex:0 1 145px!important;
+  width:145px!important;min-width:110px!important;margin:0!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementCustomerPicker>.pb891SearchableCustomerSelect{
+  order:1!important;flex:1 1 190px!important;
+  min-width:160px!important;width:auto!important;max-width:none!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters>.statementDateLabel{
+  display:flex!important;align-items:center!important;gap:5px!important;
+  flex:0 1 160px!important;min-width:125px!important;width:auto!important;
+  white-space:nowrap!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters>.statementDateLabel>.statementDateControl{
+  flex:1!important;min-width:0!important;width:auto!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters>.primary{
+  flex:0 0 auto!important;min-width:95px!important;height:34px!important;
+  padding:5px 9px!important;margin:0!important;font-size:10.5px!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions{
+  display:flex!important;flex-flow:row nowrap!important;gap:7px!important;
+  align-items:center!important;width:100%!important;margin:0!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions>button{
+  flex:0 0 auto!important;width:auto!important;min-width:80px!important;
+  min-height:33px!important;height:33px!important;padding:5px 13px!important;
+  border:1px solid #d6e1ef!important;border-radius:8px!important;
+  background:#fff!important;color:#475467!important;box-shadow:none!important;
+  font:850 11px Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions>.pb1177ViewMode.active{
+  background:#e7eeff!important;color:#315efb!important;border-color:#b5ccff!important;
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions>.pb1177Print{
+  background:#315efb!important;color:#fff!important;border-color:#315efb!important;
+ }
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics{
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ gap:0!important;flex:1 1 360px!important;min-width:0!important;
+ align-items:center!important;background:#fff!important;
+ border:1px solid #e1e9f5!important;border-radius:9px!important;
+ padding:5px 3px!important;
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics>span{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ gap:1px!important;min-width:0!important;padding:0 5px!important;
+ border-inline-end:1px solid #e5ebf4!important;
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics>span:last-child{border:0!important}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics small{
+ color:#667085!important;font:750 9px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+ white-space:nowrap!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics b{
+ color:#344054!important;font:850 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+ font-variant-numeric:tabular-nums!important;white-space:nowrap!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics .pb1177Debt b{
+ color:#b54708!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerDetails{
+ padding:10px 12px!important;margin-top:9px!important;border:1px solid #dfe7f5!important;
+ background:#fff!important;border-radius:11px!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerDetails h3{
+ margin:0 0 9px!important;font-size:13px!important;color:#315efb!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice{
+ margin:0 0 8px!important;padding:9px!important;border:1px solid #e1e8f3!important;
+ border-radius:10px!important;background:#f9fbff!important;
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice header{
+ display:flex!important;align-items:center!important;gap:12px!important;
+ margin-bottom:7px!important;font-size:11px!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice header small{
+ flex:1!important;color:#667085!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice table{
+ border-collapse:collapse!important;width:100%!important;font-size:10.5px!important;
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice :is(td,th){
+ padding:5px 8px!important;border:1px solid #dce5f2!important;text-align:right!important;
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1177LedgerInvoice th{background:#edf3ff!important}
+html body .pb1176Backdrop{
+ width:min(880px,calc(100vw - 28px))!important;height:auto!important;
+ max-height:calc(100dvh - 26px)!important;padding:0!important;
+ overflow:visible!important;border-radius:17px!important;
+}
+.pb1176Backdrop .pb1176Form{
+ gap:8px!important;padding:12px 14px!important;overflow:visible!important;
+ max-height:calc(100dvh - 30px)!important;
+}
+.pb1176Backdrop .pb1176ModalHead{
+ padding-bottom:6px!important;border-bottom:1px solid #e7ecf5!important
+}
+.pb1176Backdrop .pb1176ModalHead h2{font-size:15px!important}
+.pb1176Backdrop .pb1176Close{
+ display:grid!important;place-items:center!important;
+ flex:0 0 32px!important;width:32px!important;height:32px!important;
+ border-radius:50%!important;border:1px solid #dbe3ef!important;
+ background:#f3f6fc!important;color:#475467!important;
+ box-shadow:0 2px 6px rgba(16,24,40,.045)!important;
+ padding:0!important;cursor:pointer!important
+}
+.pb1176Backdrop .pb1176Close:hover{background:#e7eeff!important;color:#315efb!important}
+.pb1176Backdrop .pb1176Close svg{display:block!important}
+.pb1176Backdrop .pb1176Help{font-size:10px!important;line-height:1.5!important}
+.pb1176Backdrop .pb1176CustomerGrid{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important
+}
+.pb1176Backdrop .pb1176Field{gap:2px!important;font-size:10.5px!important}
+.pb1176Backdrop .pb1176Field :is(input,select,textarea){
+ min-height:32px!important;height:33px!important;
+ padding:5px 8px!important;font-size:11px!important
+}
+.pb1176Backdrop .pb1176Field textarea{height:34px!important;resize:none!important}
+.pb1176Backdrop .pb1176ManualRows{
+ max-height:calc(100dvh - 360px)!important;min-height:0!important;
+ overflow-y:auto!important;scrollbar-gutter:auto!important;
+}
+.pb1176Backdrop .pb1176ManualRow{
+ grid-template-columns:126px minmax(135px,1fr) 60px 132px 30px!important;
+ gap:6px!important
+}
+.pb1176Backdrop .pb1176ManualRow :is(input,select,button){
+ min-height:31px!important;height:32px!important;font-size:10.5px!important;
+}
+.pb1176Backdrop .pb1176Add{padding:5px 10px!important;font-size:10.5px!important}
+.pb1176Backdrop .pb1176Totals{padding:7px 10px!important;font-size:11px!important}
+.pb1176Backdrop .pb1176ModalActions{margin:0!important;gap:6px!important}
+.pb1176Backdrop .pb1176ModalActions button{min-height:33px!important;padding:6px 10px!important;font-size:10.5px!important}
+@media (max-width:1120px){
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters{flex-wrap:wrap!important}
+ html body #root .labRoleWorkspace .financeWorkspace .statementFilters>.statementCustomerPicker{min-width:min(100%,360px)!important}
+ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions{flex-wrap:wrap!important}
+ html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics{flex-basis:100%!important}
+}
+@media(max-width:820px){
+ html body #root .labRoleWorkspace .financeWorkspace .financeSummary.accountingSummary{display:none!important}
+ html body #root .labRoleWorkspace .financeWorkspace:has(.financeDashboardWrap)>.financeSummary.accountingSummary{display:grid!important}
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px!important;padding:8px!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>label{
+  min-width:0!important;width:100%!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar>button{
+  width:auto!important;min-width:0!important;min-height:32px!important;
+  margin:0!important;padding:5px 8px!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:5px!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementActions>button{
+  min-width:0!important;width:100%!important;font-size:10px!important;
+  padding:5px 4px!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .statementCustomerPicker>.statementCustomerSearchWrap{
+  width:45%!important;min-width:0!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions{flex-wrap:wrap!important}
+ html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;flex-basis:100%!important;
+ }
+ .pb1176Backdrop .pb1176CustomerGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .pb1176Backdrop .pb1176ManualRows{max-height:calc(100dvh - 400px)!important}
+ .pb1176Backdrop .pb1176ManualRow{
+  grid-template-columns:90px minmax(85px,1fr) 48px 95px 27px!important
+ }
+}
+@media(max-width:570px){
+ .pb1176Backdrop .pb1176CustomerGrid{grid-template-columns:1fr 1fr!important}
+ .pb1176Backdrop .pb1176ManualRow{grid-template-columns:1fr 1fr 30px!important}
+ .pb1176Backdrop .pb1176ManualRow select{grid-column:1}
+ .pb1176Backdrop .pb1176ManualRow input:nth-child(2){grid-column:2}
+ .pb1176Backdrop .pb1176ManualRow input:nth-child(3){grid-column:1}
+ .pb1176Backdrop .pb1176ManualRow input:nth-child(4){grid-column:2}
+ .pb1176Backdrop .pb1176ManualRow .pb1176Remove{grid-column:3;grid-row:1/span 2;height:100%!important}
+ html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics small{font-size:8px!important}
+ html body #root .labRoleWorkspace .financeWorkspace .pb1177PaymentMetrics b{font-size:9.3px!important}
+}
+
+/* PB1364 softer blue shadows */

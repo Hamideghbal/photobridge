@@ -1,0 +1,74 @@
+/* PhotoBridge v893 — account statement geometry guard (mobile) */
+@media (max-width: 820px){
+  html body #root .labRolePageScrollArea .financeWorkspace,
+  html body #root .labRolePageScrollArea .financeWorkspace .customerStatementWorkspace,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementToolbar,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementFilters,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementActions,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementPaper{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .customerStatementWorkspace{
+    display:block!important;overflow-x:hidden!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementToolbar{
+    display:block!important;overflow:visible!important;padding:10px!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementFilters{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;align-items:stretch!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementFilters>label,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementDateLabel,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker>.pbSelect,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchShell,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementDateControl,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementDateControl .persianDateField,
+  html body #root .labRolePageScrollArea .financeWorkspace .statementDateControl .persianDateTrigger{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px!important;overflow:visible!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker>.statementCustomerSearchWrap{
+    display:none!important;width:0!important;height:0!important;min-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchShell{
+    display:grid!important;grid-template-columns:minmax(0,1fr) 42px!important;overflow:hidden!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchInput{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementFilters>.primary{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementActions{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;margin-top:8px!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementActions>button{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementPaper{
+    overflow:hidden!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementTableWrap{
+    display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;box-sizing:border-box!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementTable{
+    width:700px!important;min-width:700px!important;max-width:none!important;margin:0!important;
+  }
+}
+@media (max-width:820px){
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchShell{
+    grid-template-columns:minmax(0,1fr) 36px!important;min-height:38px!important;height:38px!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchInput{
+    min-height:38px!important;height:38px!important;padding:6px 9px!important;font-size:11px!important;line-height:1.4!important;
+  }
+  html body #root .labRolePageScrollArea .financeWorkspace .statementCustomerPicker .pbSelectSearchArrow{
+    width:36px!important;min-width:36px!important;height:38px!important;min-height:38px!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

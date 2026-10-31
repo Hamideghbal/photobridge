@@ -1,0 +1,130 @@
+/* R1407: keep the laboratory chat fully below the visible first header. */
+@media (min-width: 821px) {
+  html body #root .labRoleWorkspace > .chatDock:not(.collapsed) {
+    top: var(--pb1407-lab-chat-top, 82px) !important;
+    bottom: 8px !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  html body.pbAdminImpersonating #root .labRoleWorkspace > .chatDock:not(.collapsed) {
+    top: max(132px, calc(var(--pb1407-lab-chat-top, 82px) + 44px)) !important;
+  }
+}
+/* Use an actual LEFT pointing SVG for the fold button, with a readable contrast. */
+html body #root .roleWorkspace > .chatDock:not(.collapsed) .chatCloseButton {
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 4px !important;
+  background: #e3f0fb !important;
+  color: #1c4e79 !important;
+  border: 1px solid #90b6d5 !important;
+  border-radius: 9px !important;
+  cursor: pointer !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) .chatCloseButton:hover {
+  background: #cfe3f5 !important;
+  color: #103d67 !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) .chatCloseButton:focus-visible {
+  outline: 2px solid #225f91 !important;
+  outline-offset: 2px !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) .chatCloseButton svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  transform: none !important;
+}
+/* One shared chat composer for photographer and lab: identical grid/controls. */
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer:has(.pb1402Voice) {
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 6px !important;
+  padding: 6px 7px !important;
+  align-items: center !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea {
+  box-sizing: border-box !important;
+  grid-area: 1 / 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0 !important;
+  padding: 7px 9px !important;
+  padding-inline-end: 43px !important;
+  line-height: 20px !important;
+  font-size: 12px !important;
+  border-radius: 9px !important;
+  resize: none !important;
+  overflow-y: auto !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > button.primary {
+  box-sizing: border-box !important;
+  grid-area: 1 / 2 !important;
+  display: grid !important;
+  place-items: center !important;
+  align-self: center !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > .pb1402Voice[data-phase=idle] {
+  grid-area: 1 / 1 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  position: relative !important;
+  align-self: end !important;
+  z-index: 2 !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer .pb1402Voice[data-phase=idle] .pb1404Mic {
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  position: absolute !important;
+  inset-inline-end: 4px !important;
+  bottom: 3px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 5px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+}
+html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer .pb1402Voice[data-phase=idle] .pb1404Mic svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+@media (max-width: 820px) {
+  html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea,
+  html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > button.primary {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+  html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea {
+    font-size: 16px !important;
+    line-height: 24px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+  }
+  html body #root .roleWorkspace > .chatDock:not(.collapsed) > .chatComposer .pb1402Voice[data-phase=idle] .pb1404Mic {
+    bottom: 5px !important;
+  }
+}
+
+/* PB1364 softer blue shadows */

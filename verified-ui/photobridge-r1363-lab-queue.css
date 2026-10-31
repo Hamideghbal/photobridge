@@ -1,0 +1,74 @@
+/* All Lab tabs have one full-width scroll viewport, below both headers. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue,
+ html.pb1363OrderQueue body{
+  overflow:hidden!important;scrollbar-gutter:auto!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace,
+ html.pb1363OrderQueue body #root .labRoleWorkspace>.workspaceContent{
+  width:100%!important;min-width:0!important;scrollbar-gutter:auto!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader{
+  padding-inline:0!important;margin-inline:0!important;width:100%!important;
+  max-width:none!important;box-sizing:border-box!important;
+ }
+ /* Retired quick-access markup must reserve no horizontal space. */
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labQuickSideMenu{
+  display:none!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea{
+  position:fixed!important;top:var(--pb1363-order-top,120px)!important;
+  bottom:0!important;inset-inline:0!important;
+  width:auto!important;max-width:none!important;height:auto!important;
+  min-height:0!important;max-height:none!important;margin:0!important;
+  padding:12px clamp(12px,1.6vw,24px) 24px!important;
+  box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;
+  scrollbar-gutter:auto!important;scrollbar-width:thin!important;
+  scrollbar-color:#91a2ba #edf2f7!important;scroll-padding-top:12px!important;
+  view-transition-name:none!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea::-webkit-scrollbar{
+  display:block!important;width:10px!important;height:10px!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea::-webkit-scrollbar-track{
+  background:#edf2f7!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea::-webkit-scrollbar-thumb{
+  background:#91a2ba!important;border:2px solid #edf2f7!important;border-radius:8px!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>.stageQueueWorkspace.compactStageQueue{
+  width:100%!important;max-width:1600px!important;margin:0 auto!important;
+  padding-top:0!important;height:auto!important;max-height:none!important;
+  min-height:0!important;overflow:visible!important;box-sizing:border-box!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea .labOrderScrollArea{
+  width:100%!important;max-width:none!important;height:auto!important;
+  max-height:none!important;min-height:0!important;overflow:visible!important;
+  margin-inline:0!important;padding-inline:0!important;scrollbar-gutter:auto!important;
+ }
+}
+
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>*{
+  max-width:1600px!important;min-width:0!important;box-sizing:border-box!important;margin-inline:auto!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea>:is(.financeWorkspace,.labSettingsWorkspace,.labArchiveWorkspace){
+  width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;
+ }
+ /* Tables retain horizontal scrolling; dialogs and combobox lists keep their own scroll. */
+ html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea :is(.statementTableWrap,.tableWrap){
+  scrollbar-width:thin!important;scrollbar-color:#91a2ba #edf2f7!important;
+ }
+}
+
+/* PB1364 softer blue shadows */
+
+
+/* R1397: the notice is a real first row inside the content viewport on every screen. */
+html body #root .labRoleWorkspace .labRolePageScrollArea>.labCollaborationAlert,
+html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea>.labCollaborationAlert{
+ position:static!important;inset:auto!important;transform:none!important;
+ width:100%!important;height:auto!important;max-height:none!important;
+ margin:0 auto 12px!important;box-sizing:border-box!important;
+ flex:0 0 auto!important;grid-column:1/-1!important;z-index:auto!important;
+}

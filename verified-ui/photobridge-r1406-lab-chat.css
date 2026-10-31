@@ -1,0 +1,165 @@
+/* R1406 — laboratory chat: one-row composer, more usable thread space. */
+/* Preserve the full-screen mobile chat and the independent photographer/admin docks. */
+@media (min-width: 821px) {
+  html body #root .labRoleWorkspace > .chatDock:not(.collapsed) {
+    position: fixed !important;
+    top: 64px !important; /* just below the first laboratory header */
+    bottom: 8px !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  body.pbAdminImpersonating #root .labRoleWorkspace > .chatDock:not(.collapsed) {
+    top: 116px !important; /* retain impersonation warning bar */
+  }
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatHeader {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 6px 9px !important;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatThreadHead {
+  min-height: 36px !important;
+  padding: 5px 8px !important;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .pb1405Inbox {
+  flex: 0 0 auto !important;
+  padding: 5px 8px !important;
+  max-height: min(122px, 24dvh) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+.labRoleWorkspace .pb1405Tools {
+  display: flex;
+  justify-content: flex-start;
+}
+.labRoleWorkspace .pb1405Tools > button {
+  min-height: 27px !important;
+  padding: 4px 9px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+.labRoleWorkspace .pb1405UnreadTitle,
+.labRoleWorkspace .pb1405Empty {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.labRoleWorkspace .pb1405UnreadList {
+  max-height: 66px !important;
+  overflow-y: auto !important;
+}
+.labRoleWorkspace .pb1405UnreadList .pb1405Contact {
+  min-height: 31px;
+  padding: 4px 5px !important;
+  gap: 5px;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatMessages {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer {
+  padding: 5px 7px !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea {
+  box-sizing: border-box !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0 !important;
+  padding: 7px 42px 7px 9px !important;
+  line-height: 20px !important;
+  resize: none !important;
+  overflow-y: auto !important;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer > button.primary {
+  box-sizing: border-box !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  align-self: center !important;
+}
+html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer .pb1402Voice[data-phase=idle] .pb1404Mic {
+  bottom: 3px !important;
+  inset-inline-end: 5px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+}
+/* A voice bubble is a slender player, not a two-line attachment card. */
+.chatDock .pb1404Audio {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 6px !important;
+  width: min(198px, 100%) !important;
+  min-height: 32px !important;
+  border-radius: 10px !important;
+  flex-wrap: nowrap !important;
+}
+.chatDock .pb1404Audio .pb1404Play {
+  width: 26px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  flex: 0 0 26px !important;
+  padding: 4px !important;
+}
+.chatDock .pb1404Audio .pb1404Play svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+.chatDock .pb1404AudioBody {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+.chatDock .pb1404AudioLabel {
+  display: none !important; /* descriptive aria-label remains on the play control */
+}
+.chatDock .pb1404AudioBody input[type=range] {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 30px !important;
+  height: 8px !important;
+}
+.chatDock .pb1404AudioBody > small {
+  flex: 0 0 auto !important;
+  font-size: 9px !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+.chatDock .chatMessages .bubble:has(.pb1404Audio) {
+  padding: 4px 5px !important;
+  max-width: 95% !important;
+}
+@media (max-width: 820px) {
+  html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea,
+  html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer > button.primary {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+  html body .labRoleWorkspace > .chatDock:not(.collapsed) > .chatComposer > textarea {
+    font-size: 16px !important; /* avoid iOS zooming the conversation */
+    line-height: 24px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+  }
+  .labRoleWorkspace .pb1405Inbox {
+    max-height: min(118px, 22dvh) !important;
+  }
+}
+
+/* PB1364 softer blue shadows */

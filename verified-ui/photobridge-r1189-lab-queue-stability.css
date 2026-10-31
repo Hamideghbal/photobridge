@@ -1,0 +1,43 @@
+/* R1189 — Windows browser: keep the whole laboratory order list stationary.
+   The React queue mounts `queuePageTurn {out|in} {forward|backward}`.
+   The base bundle moves it ~106vw with rotateY/filter, which produces the
+   full-content shaking reported on desktop monitors.  Never animate it. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+  html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn,
+  html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.out.forward,
+  html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.out.backward,
+  html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.in.forward,
+  html body #root .labRoleWorkspace .labOrderScrollArea.queuePageTurn.in.backward {
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+    filter:none!important;
+    opacity:1!important;
+    perspective:none!important;
+    backface-visibility:visible!important;
+    will-change:auto!important;
+  }
+
+  /* Old per-card reveal also faded every order in again when changing status. */
+  html body #root .labRoleWorkspace .labOrderScrollArea .labOrderCard.orderEnterFade {
+    animation:none!important;
+    opacity:1!important;
+  }
+
+  /* The original base CSS assigns a view-transition to the ENTIRE viewport.
+     Disable only that viewport, preserving the native tab button animation. */
+  html body #root .labRoleWorkspace .labRolePageScrollArea,
+  html body #root .labRoleWorkspace .rolePageScrollArea {
+    view-transition-name:none!important;
+    overflow-anchor:none!important;
+  }
+
+  /* Changing queue filter/header state must never animate the wrapper's
+     padding/top/grid dimensions. */
+  html body #root .labRoleWorkspace .stageQueueWorkspace.compactStageQueue,
+  html body #root .labRoleWorkspace .stageQueueWorkspace.compactStageQueue>.labQueueStickyBar {
+    transition:none!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

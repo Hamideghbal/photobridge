@@ -1,0 +1,128 @@
+/* PhotoBridge v789 — final shipped-runtime mobile finance + gallery corrections. */
+
+/* Uniform gallery option controls in both Create and Manage screens. */
+.clientGalleryCreateForm .pb787WorkflowToggle,
+.clientGalleryCreateForm .clientGalleryWatermarkToggle,
+.clientGallerySettings .pb787WorkflowToggle,
+.clientGallerySettings .clientGalleryOrderingToggle,
+.clientGallerySettings .clientGalleryWatermarkToggle,
+.clientGalleryCreateForm .clientGalleryOptionToggle,
+.clientGallerySettings .clientGalleryOptionToggle{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
+  width:100%!important;min-height:66px!important;margin:0!important;padding:11px 12px!important;
+  border:1px solid #dfe5ef!important;border-radius:12px!important;background:#f8fafc!important;box-shadow:none!important;
+  transform:none!important;box-sizing:border-box!important
+}
+.clientGalleryCreateForm .pb787WorkflowToggle>span,
+.clientGalleryCreateForm .clientGalleryWatermarkToggle>span,
+.clientGallerySettings .pb787WorkflowToggle>span,
+.clientGallerySettings .clientGalleryOrderingToggle>span,
+.clientGallerySettings .clientGalleryWatermarkToggle>span,
+.clientGalleryCreateForm .clientGalleryOptionToggle>span,
+.clientGallerySettings .clientGalleryOptionToggle>span{display:grid!important;gap:3px!important;min-width:0!important;flex:1 1 auto!important}
+.clientGalleryCreateForm .pb787WorkflowToggle b,
+.clientGalleryCreateForm .clientGalleryWatermarkToggle b,
+.clientGallerySettings .pb787WorkflowToggle b,
+.clientGallerySettings .clientGalleryOrderingToggle b,
+.clientGallerySettings .clientGalleryWatermarkToggle b,
+.clientGalleryCreateForm .clientGalleryOptionToggle b,
+.clientGallerySettings .clientGalleryOptionToggle b{font-size:13px!important;line-height:1.45!important;font-weight:900!important;color:#101828!important}
+.clientGalleryCreateForm .pb787WorkflowToggle small,
+.clientGalleryCreateForm .clientGalleryWatermarkToggle small,
+.clientGallerySettings .pb787WorkflowToggle small,
+.clientGallerySettings .clientGalleryOrderingToggle small,
+.clientGallerySettings .clientGalleryWatermarkToggle small,
+.clientGalleryCreateForm .clientGalleryOptionToggle small,
+.clientGallerySettings .clientGalleryOptionToggle small{font-size:10px!important;line-height:1.65!important;color:#667085!important}
+.clientGalleryCreateForm label input[type="checkbox"],
+.clientGallerySettings label input[type="checkbox"]{
+  appearance:auto!important;-webkit-appearance:checkbox!important;
+  flex:0 0 22px!important;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;max-width:22px!important;max-height:22px!important;
+  margin:0!important;padding:0!important;border-radius:4px!important;box-shadow:none!important;outline-offset:2px!important;transform:none!important;accent-color:#315efb!important
+}
+.clientGalleryCreateForm label:has(>input[type="checkbox"]),
+.clientGallerySettings label:has(>input[type="checkbox"]){font-size:13px!important}
+
+/* Tariff modal: exactly one scrolling body and a footer that can never fall below the viewport. */
+.globalModalLayer>.modal[data-pb789-tariff="1"]{height:min(92dvh,860px)!important;max-height:min(92dvh,860px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.globalModalLayer>.modal>.modalContent[data-pb789-tariff="1"]{flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.clientGalleryTariffModal[data-pb789-tariff="1"]{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.clientGalleryTariffModal[data-pb789-tariff="1"] .clientGalleryTariffTableScroller{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
+.clientGalleryTariffModal[data-pb789-tariff="1"] .clientGalleryTariffTableFoot{position:relative!important;bottom:auto!important;flex:0 0 auto!important;z-index:15!important;margin:8px 0 0!important;padding:9px 0 max(8px,env(safe-area-inset-bottom))!important;background:#fff!important;border-top:1px solid #e4e7ec!important}
+
+/* Public customer gallery: controls are under the image, never on top of a small thumbnail. */
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryMobileSingleViewHint{display:none!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicMedia.pb789PhotoCard{overflow:visible!important;display:flex!important;flex-direction:column!important;align-items:stretch!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicMediaView{order:1!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPhotoInteraction.pb789PhotoActionsUnder{
+  order:2!important;position:static!important;inset:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important;
+  width:100%!important;margin:6px 0 0!important;padding:0!important;background:transparent!important;box-shadow:none!important;pointer-events:auto!important
+}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPhotoNote{order:3!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction{display:block!important;grid-column:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction>label{
+  width:100%!important;height:38px!important;min-height:38px!important;margin:0!important;padding:0 9px!important;border:1px solid #cbd5e1!important;border-radius:10px!important;
+  background:#fff!important;color:#344054!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-shadow:none!important
+}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction>label.picked{background:#eef4ff!important;border-color:#9eb3f4!important;color:#244fcf!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction input{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;margin:0!important;accent-color:#315efb!important;display:inline-block!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction span{display:inline!important;font-size:10.5px!important;font-weight:900!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionAction b{display:none!important}
+.publicClientGalleryPage.pb789CustomerGallery .pb789PrintOrderButton{
+  grid-column:auto!important;width:100%!important;height:38px!important;min-height:38px!important;margin:0!important;padding:0 9px!important;border:1px solid #315efb!important;border-radius:10px!important;background:#315efb!important;color:#fff!important;font-size:10.5px!important;font-weight:950!important;box-shadow:none!important
+}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPrintPanel{display:none!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicMedia.pb789OrderOpen .clientGalleryPrintPanel{
+  display:flex!important;position:fixed!important;z-index:2147483202!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;
+  width:min(440px,calc(100vw - 26px))!important;max-height:min(78dvh,650px)!important;overflow:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;
+  flex-direction:column!important;gap:10px!important;margin:0!important;padding:48px 14px 16px!important;border:1px solid #e4e7ec!important;border-radius:18px!important;background:#fff!important;box-shadow:0 30px 90px rgba(15,23,42,.3)!important;pointer-events:auto!important
+}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicMedia.pb789OrderOpen .clientGalleryPrintPanel::before{content:"سفارش چاپ";position:absolute;top:15px;right:16px;font-size:16px;font-weight:950;color:#101828}
+.pb789OrderBackdrop{position:fixed!important;inset:0!important;z-index:2147483200!important;border:0!important;background:rgba(15,23,42,.58)!important;padding:0!important;margin:0!important}
+.pb789OrderClose{position:fixed!important;z-index:2147483204!important;top:calc(11dvh + 7px)!important;left:calc(50% - min(220px,calc(50vw - 13px)) + 12px)!important;width:32px!important;height:32px!important;border:1px solid #e4e7ec!important;border-radius:9px!important;background:#f8fafc!important;color:#344054!important;font-size:22px!important;line-height:1!important}
+
+/* Layout switch belongs to the LEFT of the public header; brand/customer identity stays on the right. */
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header{direction:ltr!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding-top:8px!important;padding-bottom:8px!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child{direction:rtl!important;order:2!important;min-width:0!important;align-self:center!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeaderRight{direction:rtl!important;order:1!important;margin:0!important;align-self:center!important;display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important;justify-content:flex-start!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child>div{display:grid!important;gap:1px!important;align-content:center!important;padding-block:3px!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child span,
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child h1,
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child p{margin:0!important;padding:0!important;line-height:1.35!important}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child span{font-size:11px!important}.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child h1{font-size:18px!important}.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPublicHeader.pb789Header>div:first-child p{font-size:11px!important}
+.pb789GalleryCart{height:36px!important;min-height:36px!important;border:1px solid #cbd5e1!important;border-radius:10px!important;background:#fff!important;color:#344054!important;display:inline-flex!important;align-items:center!important;gap:5px!important;padding:0 8px!important;font-size:9.5px!important;font-weight:900!important;white-space:nowrap!important}
+.pb789GalleryCart i{min-width:19px;height:19px;border-radius:999px;background:#315efb;color:#fff;display:grid;place-items:center;font-style:normal;font-size:9px}
+
+/* Cart mirrors the real React order state and delegates finalization to the real app action. */
+.pb789CartLayer{position:fixed!important;inset:0!important;z-index:2147483300!important;background:rgba(15,23,42,.58)!important;display:grid!important;place-items:center!important;padding:12px!important;direction:rtl!important}
+.pb789CartCard{width:min(520px,100%)!important;max-height:min(86dvh,720px)!important;background:#fff!important;border-radius:20px!important;box-shadow:0 30px 90px rgba(15,23,42,.32)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.pb789CartCard>header{height:auto!important;position:static!important;padding:14px 15px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;background:#fff!important;border-bottom:1px solid #eaecf0!important}
+.pb789CartCard>header>div{display:grid!important;gap:3px!important}.pb789CartCard>header b{font-size:16px!important}.pb789CartCard>header small{font-size:10px!important;color:#667085!important}.pb789CartClose{width:34px!important;height:34px!important;border:1px solid #e4e7ec!important;border-radius:9px!important;background:#f8fafc!important;font-size:22px!important}
+.pb789CartRows{flex:1 1 auto!important;min-height:0!important;overflow:auto!important;padding:10px!important;display:grid!important;gap:8px!important;-webkit-overflow-scrolling:touch!important}
+.pb789CartRow{display:grid!important;grid-template-columns:56px minmax(0,1fr) auto!important;gap:9px!important;align-items:center!important;padding:8px!important;border:1px solid #eaecf0!important;border-radius:12px!important}.pb789CartRow img{width:56px!important;height:56px!important;object-fit:cover!important;border-radius:9px!important}.pb789CartRow>div{display:grid!important;gap:3px!important;min-width:0!important}.pb789CartRow b{font-size:11px!important}.pb789CartRow small{font-size:9px!important;color:#667085!important;line-height:1.6!important}.pb789CartRow button{height:32px!important;border:1px solid #cbd5e1!important;border-radius:8px!important;background:#fff!important;font-size:9px!important;font-weight:900!important}.pb789CartEmpty{padding:28px 12px!important;text-align:center!important;color:#667085!important;font-size:11px!important}.pb789CartCard>footer{display:grid!important;grid-template-columns:1fr 1.4fr!important;gap:8px!important;padding:10px 12px max(10px,env(safe-area-inset-bottom))!important;border-top:1px solid #eaecf0!important;background:#fff!important}.pb789CartCard>footer button{min-height:42px!important;border-radius:10px!important;font-size:10.5px!important;font-weight:950!important}.pb789CartContinue{border:1px solid #cbd5e1!important;background:#fff!important;color:#344054!important}
+
+@media(max-width:820px){
+  /* Finance/Invoice opened from Print: the fixed print viewport itself is the ONLY scroll owner. */
+  html body .photographerMain[data-pb789-finance="1"]>.photographerRolePageScrollArea[data-pb789-finance="1"]{
+    min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;pointer-events:auto!important;scroll-behavior:auto!important
+  }
+  html body .photographerMain[data-pb789-finance="1"] .financeWorkspace[data-pb789-finance="1"]{
+    height:auto!important;min-height:calc(100% + 1px)!important;max-height:none!important;overflow:visible!important;touch-action:pan-y!important;padding-bottom:calc(90px + env(safe-area-inset-bottom))!important
+  }
+  html body .photographerMain[data-pb789-finance="1"] .financeNavDock,
+  html body .photographerMain[data-pb789-finance="1"] .financeSectionTabs{height:auto!important;max-height:none!important;overflow:visible!important;touch-action:auto!important}
+  html body .photographerMain[data-pb789-finance="1"] .financeSectionTabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  html body .photographerMain[data-pb789-finance="1"] .financeSectionPicker{display:none!important}
+
+  /* Gallery manager gets one normal vertical scroller. */
+  html body .photographerMain>.photographerRolePageScrollArea[data-pb789-gallery="1"]{min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important}
+
+  .globalModalLayer>.modal[data-pb789-tariff="1"]{height:calc(100dvh - 12px)!important;max-height:calc(100dvh - 12px)!important;width:calc(100vw - 12px)!important;padding:10px!important}
+  .clientGalleryTariffModal[data-pb789-tariff="1"] .clientGalleryTariffTableFoot .modalActions{display:grid!important;grid-template-columns:1fr 1.4fr!important;width:100%!important;gap:7px!important}
+  .clientGalleryTariffModal[data-pb789-tariff="1"] .clientGalleryTariffTableFoot .modalActions>button{width:100%!important;min-height:40px!important}
+  .publicClientGalleryPage.pb789CustomerGallery .clientGallerySelectionStatus{display:flex!important;position:sticky!important;top:64px!important;z-index:40!important}
+}
+.publicClientGalleryPage.pb789CustomerGallery .clientGalleryPhotoInteraction.pb789PhotoActionsUnder:not(:has(.pb789PrintOrderButton)){grid-template-columns:minmax(0,1fr)!important}
+
+/* PB1364 softer blue shadows */

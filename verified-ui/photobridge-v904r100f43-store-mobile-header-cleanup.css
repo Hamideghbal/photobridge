@@ -1,0 +1,168 @@
+/* PhotoBridge R100F43 — mobile Store header/background cleanup + larger badge number. */
+@media(max-width:820px){
+  /* Slightly larger unread number while keeping Codex's 30px badge geometry. */
+  html body #pbF37MenuBadge,
+  html body #pbR100F25MenuBadge,
+  html body #photographerStoreRoleHeader #pbR100F25MenuBadge{
+    font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
+    font-size:14.4px!important;
+    font-weight:950!important;
+    line-height:1!important;
+  }
+
+  /* Store page itself: remove the pale-blue wash and use the normal page surface. */
+  html body #storePhotographerWorkspace,
+  html body #storePhotographerWorkspace>.shell{
+    background:var(--pb-r100-page,#f7f8fb)!important;
+    background-color:var(--pb-r100-page,#f7f8fb)!important;
+    background-image:none!important;
+  }
+
+  /* The Store identity strip is neutral; only its soft top divider remains. */
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar,
+  html body.pbF37StoreMode #storePhotographerWorkspace>#photographerStoreIdentityBar,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    position:relative!important;
+    background:#fff!important;
+    background-color:#fff!important;
+    background-image:none!important;
+    border:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar::before,
+  html body.pbF37StoreMode #storePhotographerWorkspace>#photographerStoreIdentityBar::before,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#photographerStoreIdentityBar::before{
+    content:""!important;
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    width:min(86vw,520px)!important;
+    height:1px!important;
+    transform:translateX(-50%)!important;
+    z-index:5!important;
+    pointer-events:none!important;
+    background:linear-gradient(
+      90deg,
+      rgba(70,120,175,0) 0%,
+      rgba(70,120,175,.10) 10%,
+      rgba(70,120,175,.28) 28%,
+      rgba(58,108,168,.56) 50%,
+      rgba(70,120,175,.28) 72%,
+      rgba(70,120,175,.10) 90%,
+      rgba(70,120,175,0) 100%
+    )!important;
+    box-shadow:0 1px 4px rgba(92,137,185,0.06)!important;
+  }
+
+  /* No blue panel behind Rent / Buy / Office / Finance / Photographers tabs. */
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav,
+  html body.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav,
+  html body.rentalPhotographerMode #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav{
+    background:transparent!important;
+    background-color:transparent!important;
+    background-image:none!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+    backdrop-filter:none!important;
+    outline:0!important;
+  }
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::before,
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav::after{
+    content:none!important;
+    display:none!important;
+    background:none!important;
+    box-shadow:none!important;
+  }
+
+  /* Full photographer/studio identity in Store: no ellipsis or clipping. */
+  html body #photographerStoreRoleHeader .workspaceIdentity,
+  html body #photographerStoreRoleHeader .photographerHeaderIdentity{
+    min-width:0!important;
+    overflow:visible!important;
+  }
+  html body #photographerStoreRoleHeader .workspaceIdentityCopy{
+    flex:1 1 0%!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:74px!important;
+    max-height:74px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:stretch!important;
+    gap:2px!important;
+    overflow:visible!important;
+    direction:rtl!important;
+  }
+  html body #photographerStoreRoleHeader .workspaceIdentityCopy>h1{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:right!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+    -webkit-line-clamp:unset!important;
+    -webkit-box-orient:initial!important;
+    max-height:none!important;
+  }
+  html body #photographerStoreRoleHeader .workspaceIdentityCopy>small{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    font-size:8px!important;
+    line-height:1.15!important;
+  }
+
+  /* Full Persian date/time directly below the photographer name. */
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly,
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    align-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    gap:4px!important;
+    direction:rtl!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact span,
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly .todayStamp.compact b{
+    display:inline!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    font-size:8.2px!important;
+    line-height:1.15!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

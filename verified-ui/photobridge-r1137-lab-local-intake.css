@@ -1,0 +1,365 @@
+.pb1137Launch{font:800 12px Vazirmatn,Tahoma,sans-serif;border:1px solid #cbd8ff;border-radius:10px;background:#eef3ff;color:#315efb;padding:10px 14px;cursor:pointer}
+.pb1137Intake{width:min(850px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;border:1px solid #dce5f1;border-radius:20px;padding:20px;color:#344054;background:white;box-shadow:0 20px 70px #0f172a30;font:13px/1.8 Vazirmatn,Tahoma,sans-serif}
+.pb1137Intake::backdrop{background:#0f172a66}.pb1137Intake header{display:flex;align-items:center;justify-content:space-between;gap:12px}.pb1137Intake h2{font-size:20px;margin:0}.pb1137Intake button,.pb1137Intake input,.pb1137Intake select{font:inherit;box-sizing:border-box;border:1px solid #dce5f1;border-radius:9px;background:#fff;padding:9px;color:inherit;min-width:0;max-width:100%}.pb1137Intake button{cursor:pointer}.pb1137Intake button:disabled{opacity:.55;cursor:wait}.pb1137Settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.pb1137Settings[hidden]{display:none}.pb1137Intake label{display:grid;gap:4px;margin:8px 0}.pb1137File{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;border-bottom:1px solid #eef1f5;padding:10px 0}.pb1137File b{overflow-wrap:anywhere}.pb1137Intake .pb1137Submit{display:block;background:#315efb;color:white;width:100%;margin-top:18px;border-color:#315efb}.pb1137Error{color:#b54708;white-space:pre-wrap}.pb1137Intake form{margin-top:12px}@media(max-width:600px){.pb1137Settings{grid-template-columns:1fr}.pb1137File{grid-template-columns:1fr 1fr}.pb1137File b{grid-column:1/-1}}
+/* Same photo-card workspace proportions as the photographer print composer. */
+.pb1137Intake{width:min(1120px,calc(100vw - 32px));padding:22px;border-radius:22px;background:#f8faff}
+.pb1137Intake>header{padding-bottom:14px;border-bottom:1px solid #dce5f1}.pb1137Intake>p{color:#667085;font-size:12px;margin:10px 0}
+.pb1138SavePath{padding:9px 12px;border:1px solid #dce5f1;border-radius:12px;background:#eef3ff;color:#315efb;font-size:12px}
+.pb1137Settings{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 14px;background:white;border:1px solid #dce5f1;border-radius:16px}
+.pb1137Files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px;max-height:46dvh;overflow:auto;padding:2px}
+.pb1137File{grid-template-columns:1fr 1fr;border:1px solid #dce5f1;border-radius:16px;background:white;padding:12px;align-content:start}
+.pb1137File img{grid-column:1/-1;width:100%;height:140px;object-fit:contain;background:#f2f4f7;border-radius:10px}.pb1137File b{grid-column:1/-1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}.pb1137File select{font-size:12px}
+.pb1137Intake .pb1137Submit{position:sticky;bottom:0;min-height:44px;font-weight:850;border-radius:12px;box-shadow:0 4px 12px #315efb20}
+@media(max-width:760px){.pb1137Files{grid-template-columns:repeat(2,minmax(0,1fr))}.pb1137Settings{grid-template-columns:1fr 1fr}.pb1137Intake{padding:14px}}
+/* One entry row, then one complete card per added size/paper batch. */
+.pb1137Intake .pb1139EntryRow{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) auto;align-items:end;gap:10px}
+.pb1139EntryRow label{margin:0!important}.pb1139EntryRow button,.pb1139EntryRow select{height:42px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb1139Customer{position:relative;display:grid;gap:4px;min-width:0}.pb1139Customer>button{text-align:right}
+.pb1139PickerMenu{position:absolute;inset:calc(100% + 6px) 0 auto;z-index:10;border:1px solid #dce5f1;border-radius:14px;background:#fff;box-shadow:0 12px 32px #0f172a22;padding:10px;min-width:240px}.pb1139PickerMenu[hidden]{display:none}.pb1139PickerMenu input{width:100%;height:40px}.pb1139PickerOptions{max-height:220px;overflow:auto;margin-top:6px}.pb1139PickerOptions button{display:block;height:auto;min-height:40px;white-space:normal;border:0;text-align:right;border-radius:8px;padding:8px;width:100%}.pb1139PickerOptions button:hover,.pb1139PickerOptions button[aria-selected=true]{background:#eef3ff;color:#315efb}
+.pb1137Intake .pb1139Add{background:#315efb;border-color:#315efb;color:white;font-weight:850;padding-inline:16px}
+.pb1137Files.pb1139Groups{grid-template-columns:1fr;gap:12px}.pb1139Empty{text-align:center;border:1px dashed #cbd8ed;border-radius:14px;padding:28px 16px;color:#667085;font-size:12px}
+.pb1139Group{background:white;border:1px solid #dce5f1;border-radius:16px;overflow:hidden}.pb1139GroupHead{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#eef3ff;color:#244ea3}.pb1139GroupHead>b{flex:1}.pb1139GroupHead>span{font-size:12px;white-space:nowrap}.pb1139GroupHead button{padding:5px 9px!important;color:#b42318!important;background:#fff!important;font-size:11px!important}
+.pb1139GroupPhotos{display:flex;gap:10px;overflow:auto;padding:12px}.pb1139GroupPhotos figure{flex:0 0 120px;margin:0;min-width:0}.pb1139GroupPhotos img{width:120px;height:90px;object-fit:contain;border-radius:10px;background:#f2f4f7}.pb1139GroupPhotos figcaption{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;margin-top:4px}
+@media(max-width:760px){.pb1137Intake .pb1139EntryRow{grid-template-columns:1fr 1fr}.pb1139Customer{grid-column:1/-1}.pb1139EntryRow label:last-child{grid-column:2}.pb1139GroupHead{gap:6px;padding:8px}.pb1139GroupHead>b{font-size:12px}}
+/* Compact editable size cards; contents appear with the dialog, never after it. */
+.pb1137Intake{padding:14px}.pb1137Intake>header{padding-bottom:8px}.pb1137Intake>p{margin:4px 0}.pb1137Intake form{margin-top:4px}.pb1137Error:empty{display:none}.pb1137Settings{margin:6px 0;padding:8px 10px}.pb1137Files.pb1139Groups{max-height:60dvh;margin-top:8px;gap:8px}.pb1139Empty{padding:12px}.pb1139GroupHead{padding:6px 10px;gap:8px}.pb1139GroupPhotos{padding:8px;gap:8px}.pb1139GroupPhotos[hidden]{display:none}.pb1139GroupPhotos img{height:64px}.pb1139GroupPhotos label{margin:3px 0;gap:0}.pb1139GroupPhotos label>span{font-size:10px}.pb1139GroupPhotos select,.pb1139GroupPhotos button{width:100%;padding:3px;font-size:11px}.pb1139GroupHead button{color:#244ea3!important}.pb1139GroupHead button:last-child{color:#b42318!important}.mainQueueFilters>.pb1137Launch{margin-inline-start:auto;flex-shrink:0}
+/* Stable workspace dimensions and compact photo controls. */
+.pb1137Intake{width:min(1280px,calc(100vw - 24px));height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden}
+.pb1137Intake[open]{display:flex;flex-direction:column}.pb1137Intake>header,.pb1137Intake>p{flex-shrink:0}.pb1137Intake form{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto}.pb1137Intake form>.pb1137Settings,.pb1137Intake form>.pb1137Submit{flex-shrink:0}.pb1137Files.pb1139Groups{flex:1;min-height:80px;max-height:none;align-content:start}.pb1137Intake .pb1137Submit{position:static;margin-top:8px}.pb1141PhotoActions{display:flex;gap:4px;align-items:flex-end}.pb1141PhotoActions>label{flex:1;min-width:0}.pb1139GroupPhotos .pb1141DeletePhoto{width:28px;height:28px;flex:0 0 28px;padding:5px;color:#b42318}.pb1141DeletePhoto svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.pb1139GroupHead .pb1141Collapse{order:5;border:0;background:transparent!important;font-size:18px!important;min-width:28px;padding:0!important}.pb1139GroupHead>input[hidden]{display:none}
+.pb1142Quantity{display:flex;align-items:center;gap:3px;margin-top:4px}.pb1142Quantity>span{font-size:10px;white-space:nowrap}.pb1139GroupPhotos .pb1142Quantity input{width:38px;min-width:0;padding:3px;text-align:center;font-size:12px}.pb1139GroupPhotos .pb1142Quantity button{width:24px;height:27px;padding:0}.pb1142Quantity input::-webkit-inner-spin-button{appearance:none}.pb1137Settings input[type=checkbox]{width:20px;height:20px;justify-self:start}
+
+/* PB1143 - customer preregistration stays inside its searchable picker. */
+.pb1137Intake .pb1139PickerMenu{width:min(435px,calc(100vw - 55px));min-width:min(340px,calc(100vw - 55px));max-height:min(70dvh,520px);overflow-y:auto;overscroll-behavior:contain;z-index:50;text-align:right}
+.pb1137Intake .pb1139PickerOptions{max-height:180px}
+.pb1143ChoiceRow{display:flex;align-items:center;gap:6px;margin-block:3px}
+.pb1137Intake .pb1143ChoiceRow>[role=option]{flex:1;min-width:0;text-align:right}
+.pb1137Intake .pb1143ChoiceRow>.pb1143Resend{width:auto;flex:0 0 auto;height:32px;min-height:32px;white-space:nowrap;padding:4px 8px;border:1px solid #a9bffb;color:#315efb;border-radius:9px;background:#f3f6ff;font-weight:700}
+.pb1143NewCustomer{margin-top:8px;padding:10px;border-radius:12px;border:1px solid #cbd8ff;background:#f8faff}
+.pb1143NewCustomer[hidden]{display:none}
+.pb1143NewCustomer>strong{font-size:12px;color:#244ea3;display:block;margin-bottom:5px}
+.pb1143NewGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pb1137Intake .pb1143NewCustomer label{display:grid;gap:4px;margin:0;min-width:0;font-size:12px}
+.pb1137Intake .pb1143NewCustomer label input{width:100%;min-width:0;min-height:39px;height:39px;text-align:left}
+.pb1143NewActions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;margin-top:8px}
+.pb1137Intake .pb1143NewActions label{display:flex;flex-direction:row;align-items:center;gap:7px;white-space:nowrap}
+.pb1137Intake .pb1143NewActions input[type=checkbox]{height:19px;width:19px;min-height:19px;flex-shrink:0;accent-color:#315efb}
+.pb1137Intake .pb1143CustomerAdd{height:39px;width:auto;min-width:85px;padding-inline:15px;background:#315efb;border-color:#315efb;color:white;font-weight:850}
+.pb1137Intake .pb1143PickerNotice{font-size:11px;color:#b54708;margin:5px 0 0}
+.pb1143PickerNotice:empty{display:none}
+@media(max-width:540px){.pb1137Intake .pb1139PickerMenu{width:100%;min-width:0;max-width:100%}.pb1143NewGrid{gap:6px}.pb1137Intake .pb1143NewCustomer label{font-size:11px}.pb1143NewActions{gap:5px}.pb1137Intake .pb1143CustomerAdd{min-width:75px}}
+
+/* PB1144: the new-customer form takes over the picker; do not show search or customer rows behind it. */
+.pb1137Intake .pb1139PickerMenu{position:fixed;inset:auto;min-width:0;max-width:calc(100vw - 24px);box-sizing:border-box;z-index:100;overflow-y:auto}
+.pb1137Intake .pb1139PickerMenu>[hidden]{display:none!important}
+.pb1137Intake .pb1139PickerMenu.pb1144Creating{max-width:calc(100vw - 24px);box-shadow:0 15px 35px #0f172a26}
+.pb1137Intake .pb1144PickerBack{border:0;background:transparent;color:#315efb;width:100%;text-align:right;padding:5px 8px;font-size:12px;height:auto;min-height:29px}
+.pb1137Intake .pb1143NewCustomer{margin-top:4px;padding:12px}
+.pb1143NewGrid{grid-template-columns:1fr 1fr}
+.pb1143NewGrid>label:first-child{grid-column:1/-1}
+@media(max-width:540px){.pb1137Intake .pb1139PickerMenu{width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px);min-width:0}.pb1143NewGrid{gap:8px}.pb1137Intake .pb1143NewCustomer{padding:10px}}
+
+
+/* PB1178 – two-column desktop local photo intake with an always-visible proforma. */
+@media(min-width:900px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake[open]{
+  width:min(1440px,calc(100vw - 24px))!important;
+  height:min(900px,calc(100dvh - 22px))!important;max-height:calc(100dvh - 22px)!important;
+  overflow:hidden!important;display:flex!important;flex-direction:column!important;
+  border-radius:18px!important;background:#f7faff!important;padding:14px 16px!important;
+ }
+ .pb1137Intake>form{
+  flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;gap:7px!important;
+ }
+ .pb1137Intake .pb1178IntakeWorkspace{
+  flex:1 1 auto!important;min-height:0!important;min-width:0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-areas:"editor bill"!important;gap:13px!important;
+  direction:rtl!important;overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeEditor{
+  grid-area:editor!important;min-width:0!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeBill{
+  grid-area:bill!important;min-width:0!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;background:#fff!important;border:1px solid #dce5f4!important;
+  border-radius:14px!important;padding:13px!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px 9px!important;flex-shrink:0!important;margin:0 0 7px!important;
+  padding:9px!important;border-radius:12px!important;overflow:visible!important;
+  background:#fff!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer{
+  grid-column:1/-1!important;width:100%!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label{
+  width:100%!important;min-width:0!important;margin:0!important;
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  grid-column:auto!important;
+ }
+ .pb1137Intake .pb1137Settings :is(select,button){
+  height:35px!important;min-height:35px!important;padding:5px 10px!important;
+  border-radius:8px!important;font:750 11.5px Vazirmatn,Tahoma,sans-serif!important;
+ }
+ .pb1137Intake .pb1139Customer>button{
+  width:100%!important;min-height:38px!important;height:38px!important;
+  text-align:right!important;display:flex!important;align-items:center!important;
+  justify-content:space-between!important;gap:10px!important;
+  border:1px solid #cbd8f1!important;background:#fff!important;
+  padding:6px 12px!important;font-size:12px!important;
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain!important;scrollbar-gutter:stable!important;
+  display:flex!important;flex-direction:column!important;gap:8px!important;
+  padding:3px 7px 14px 2px!important;margin:0!important;
+ }
+ .pb1137Intake .pb1139Group{flex:0 0 auto!important}
+ .pb1137Intake form>.pb1137Submit{flex:0 0 44px!important;height:44px!important;margin:1px 0 0!important;position:static!important}
+}
+.pb1137Intake .pb1178BillTitle{
+ display:flex;flex-direction:column;gap:2px;padding:5px 2px 11px;
+ border-bottom:1px solid #e2e9f5
+}
+.pb1137Intake .pb1178BillTitle strong{font-size:16px;color:#234ba2}
+.pb1137Intake .pb1178BillTitle small{font-size:10px;color:#667085}
+.pb1137Intake .pb1178BillCustomer{font-weight:850!important;color:#334b77!important;margin:10px 0!important}
+.pb1137Intake .pb1178BillRows{
+ flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
+ padding:2px 4px 12px;scrollbar-gutter:stable
+}
+.pb1137Intake .pb1178BillRow{
+ display:grid;grid-template-columns:minmax(0,1fr) 75px 145px;align-items:center;
+ gap:8px;border-bottom:1px solid #eef1f6;padding:10px 5px;font-size:11px;
+}
+.pb1137Intake .pb1178BillRow b{font-size:11px;color:#475467}
+.pb1137Intake .pb1178BillRow span{color:#667085;text-align:center}
+.pb1137Intake .pb1178BillRow strong{color:#2351ac;text-align:left;font-size:11px}
+.pb1137Intake .pb1178BillEmpty{font-size:11px!important;color:#98a2b3!important}
+.pb1137Intake .pb1178BillFoot{padding:12px 8px 4px;border-top:1px solid #e2e9f5}
+.pb1137Intake .pb1178BillTotals{display:flex;flex-direction:column;gap:8px}
+.pb1137Intake .pb1178BillTotals span{font-size:11px;color:#667085}
+.pb1137Intake .pb1178BillTotals strong{font-size:18px;color:#234fba}
+.pb1137Intake .pb1178BillNotice{font-size:10px!important;line-height:1.6!important;margin:9px 0 0!important;color:#667085!important}
+.pb1137Intake .pb1139PickerMenu{z-index:10000!important}
+.pb1137Intake .pb1139Customer>button{font-size:12px!important}
+@media(max-width:899px){
+ .pb1137Intake[open]{
+  width:min(760px,calc(100vw - 12px))!important;height:calc(100dvh - 12px)!important;
+  display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  padding:10px!important;
+ }
+ .pb1137Intake>form{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+ .pb1137Intake .pb1178IntakeWorkspace{flex:1!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;gap:10px!important}
+ .pb1137Intake .pb1178IntakeEditor{flex:0 0 auto!important;min-height:270px!important}
+ .pb1137Intake .pb1137Files.pb1139Groups{overflow:auto!important;min-height:200px!important;max-height:43dvh!important}
+ .pb1137Intake .pb1178IntakeBill{flex:0 0 auto!important;min-height:150px!important;background:#fff!important;border:1px solid #e2e9f5!important;border-radius:12px!important;padding:10px!important}
+ .pb1137Intake form>.pb1137Submit{flex-shrink:0!important;position:static!important}
+ .pb1137Intake .pb1139Customer>button{width:100%!important;min-height:40px!important;height:40px!important;text-align:right!important}
+ .pb1137Intake .pb1178BillRows{max-height:32dvh;overflow:auto}
+}
+
+
+/* PB1179 – give the photo editor ~72% of the desktop width; compact real dropdown
+   and keep every added size reachable without scrolling the whole dialog. */
+@media (min-width:900px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake[open]{
+  height:min(960px,calc(100dvh - 14px))!important;
+  max-height:calc(100dvh - 14px)!important;
+  padding:9px 12px!important;
+  gap:3px!important;
+ }
+ .pb1137Intake>header{padding:0 0 5px!important;min-height:31px!important}
+ .pb1137Intake>header h2{font-size:16px!important;line-height:1.4!important}
+ .pb1137Intake>header button{
+  padding:5px 10px!important;min-height:27px!important;
+  font-size:10.5px!important
+ }
+ .pb1137Intake>p{margin:0 0 3px!important;font-size:10.5px!important}
+ .pb1137Intake>form{gap:4px!important;margin-top:0!important}
+ .pb1137Intake>form>.pb1137Error{margin:0!important;line-height:1.3!important}
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,2.35fr) minmax(285px,.93fr)!important;
+  gap:9px!important;overflow:hidden!important;
+ }
+ .pb1137Intake .pb1178IntakeEditor{gap:0!important;min-height:0!important}
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  grid-template-columns:minmax(165px,1.65fr) minmax(105px,.85fr)
+   minmax(83px,.67fr) minmax(117px,.97fr) minmax(85px,.75fr)!important;
+  display:grid!important;align-items:end!important;
+  gap:6px!important;min-width:0!important;
+  margin:0 0 4px!important;padding:6px 7px!important;
+  border-radius:10px!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  width:auto!important;min-width:0!important;
+  grid-column:auto!important;margin:0!important;
+ }
+ .pb1137Intake .pb1137Settings .pb1139Customer>span,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow label>span{
+  font:800 10px/1.45 Vazirmatn,Tahoma,sans-serif!important;
+  color:#667085!important;white-space:nowrap!important;
+ }
+ .pb1137Intake .pb1137Settings :is(button,select){
+  display:flex!important;align-items:center!important;
+  height:34px!important;min-height:34px!important;
+  line-height:1.4!important;font-size:10.5px!important;
+  padding:4px 7px!important;border-radius:8px!important;
+  min-width:0!important;width:100%!important;
+ }
+ .pb1137Intake .pb1137Settings select{display:block!important}
+ .pb1137Intake .pb1137Settings .pb1139Customer>button{
+  display:flex!important;gap:6px!important;
+  justify-content:space-between!important;
+  height:34px!important;min-height:34px!important;
+  padding:4px 9px!important;min-width:0!important;
+  border:1px solid #c9d8ec!important;font-size:11px!important;
+ }
+ .pb1137Intake .pb1179CustomerValue{
+  display:block!important;min-width:0!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  font:800 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ .pb1137Intake .pb1179CustomerChevron{
+  display:grid!important;place-items:center!important;
+  flex:0 0 18px!important;width:18px!important;height:22px!important;
+  font:900 15px/1 Vazirmatn,Tahoma,sans-serif!important;
+  color:#46669d!important;
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 0!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:auto!important;scrollbar-width:thin!important;
+  gap:5px!important;margin:0!important;padding:2px 5px 6px 1px!important;
+ }
+ .pb1137Intake .pb1139Group{
+  min-height:0!important;flex:0 0 auto!important;
+  border-radius:10px!important;
+ }
+ .pb1137Intake .pb1139GroupHead{
+  gap:5px!important;min-height:24px!important;
+  padding:3px 7px!important;
+ }
+ .pb1137Intake .pb1139GroupHead>b{
+  min-width:0!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;
+  font-size:10px!important
+ }
+ .pb1137Intake .pb1139GroupHead>span{font-size:9px!important}
+ .pb1137Intake .pb1139GroupHead button{
+  min-height:22px!important;height:24px!important;
+  padding:2px 6px!important;font-size:9px!important;
+  border-radius:6px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos{
+  display:flex!important;align-items:flex-start!important;
+  gap:6px!important;max-height:155px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  padding:5px 7px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos[hidden]{display:none!important}
+ .pb1137Intake .pb1139GroupPhotos figure{
+  flex:0 0 88px!important;width:88px!important;min-width:0!important;
+ }
+ .pb1137Intake .pb1139GroupPhotos img{
+  width:88px!important;height:49px!important;
+  border-radius:7px!important;object-fit:contain!important
+ }
+ .pb1137Intake .pb1139GroupPhotos figcaption{
+  font-size:9px!important;line-height:1.3!important;margin:2px 0!important
+ }
+ .pb1137Intake .pb1139GroupPhotos label{
+  min-width:0!important;margin:1px 0!important;gap:1px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos label>span,
+ .pb1137Intake .pb1142Quantity>span{font-size:9px!important}
+ .pb1137Intake .pb1139GroupPhotos :is(select,input,button){
+  min-height:23px!important;height:24px!important;
+  padding:2px 4px!important;font-size:9.5px!important;
+  border-radius:6px!important
+ }
+ .pb1137Intake .pb1142Quantity{gap:2px!important;margin-top:2px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+  width:31px!important;min-width:0!important;
+  font-size:10px!important
+ }
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+  flex:0 0 20px!important;width:20px!important;padding:0!important
+ }
+ .pb1137Intake .pb1178IntakeBill{
+  padding:8px 9px!important;border-radius:12px!important
+ }
+ .pb1137Intake .pb1178BillTitle{
+  padding:2px 0 6px!important;gap:0!important
+ }
+ .pb1137Intake .pb1178BillTitle strong{font-size:13px!important}
+ .pb1137Intake .pb1178BillTitle small{font-size:9px!important}
+ .pb1137Intake .pb1178BillCustomer{
+  margin:5px 0!important;font-size:11px!important
+ }
+ .pb1137Intake .pb1178BillRows{
+  overflow-y:auto!important;scrollbar-gutter:auto!important;
+  padding:0 1px 4px!important;min-height:0!important
+ }
+ .pb1137Intake .pb1178BillRow{
+  grid-template-columns:minmax(0,1fr) 47px 98px!important;
+  gap:4px!important;padding:6px 1px!important
+ }
+ .pb1137Intake .pb1178BillRow :is(b,span,strong){
+  font-size:9.5px!important;overflow-wrap:anywhere!important
+ }
+ .pb1137Intake .pb1178BillFoot{
+  padding:8px 2px 1px!important
+ }
+ .pb1137Intake .pb1178BillTotals{gap:3px!important}
+ .pb1137Intake .pb1178BillTotals span{font-size:10px!important}
+ .pb1137Intake .pb1178BillTotals strong{font-size:15px!important}
+ .pb1137Intake .pb1178BillNotice{
+  font-size:9px!important;line-height:1.5!important;margin:5px 0 0!important
+ }
+ .pb1137Intake form>.pb1137Submit{
+  flex:0 0 37px!important;min-height:37px!important;
+  height:37px!important;margin:3px 0 0!important;
+  font-size:12px!important;border-radius:9px!important
+ }
+}
+@media (min-width:900px) and (max-width:1250px) and (hover:hover) and (pointer:fine){
+ .pb1137Intake .pb1178IntakeWorkspace{
+  grid-template-columns:minmax(0,1.8fr) minmax(260px,.88fr)!important
+ }
+ .pb1137Intake .pb1137Settings.pb1139EntryRow{
+  grid-template-columns:minmax(135px,1.25fr) minmax(84px,.85fr)
+   minmax(74px,.65fr) minmax(93px,.9fr) minmax(74px,.7fr)!important;
+  column-gap:4px!important;
+ }
+ .pb1137Intake .pb1137Settings>.pb1139Customer,
+ .pb1137Intake .pb1137Settings.pb1139EntryRow>label:nth-last-child(-n+2){
+  grid-column:auto!important
+ }
+}
+@media(max-width:899px){
+ .pb1137Intake .pb1179CustomerValue{
+  min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis
+ }
+ .pb1137Intake .pb1179CustomerChevron{flex:0 0 18px;font-size:15px}
+ .pb1137Intake .pb1139Customer>button{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:7px!important;padding-inline:10px!important
+ }
+ .pb1137Intake .pb1137Files.pb1139Groups{
+  overscroll-behavior:contain!important;scrollbar-gutter:auto!important
+ }
+}
+
+/* PB1364 softer blue shadows */

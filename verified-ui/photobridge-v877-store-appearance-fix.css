@@ -1,0 +1,135 @@
+/* PhotoBridge v877 — authoritative Store appearance bridge.
+   This file targets the real standalone equipment storefront DOM. */
+:root{
+  --pb877-selected:var(--pb876-selected,#ffffff);
+  --pb877-selected-ink:var(--pb876-selected-ink,#101828);
+  --pb877-brand-bg:#ffffff;
+  --pb877-brand-ink:#182230;
+}
+
+/* Selected boxes: top Store section row + Store finance tabs. */
+#storePhotographerWorkspace #storeSectionNavV673>button.active,
+#storePhotographerWorkspace #storeSectionNavV673>[data-store-panel].active,
+#storePhotographerWorkspace #financePanel .financeTabsV811>button.active,
+#storePhotographerWorkspace #financePanel .financeTabsV813>button.active{
+  background:var(--pb876-selected,#fff)!important;
+  background-color:var(--pb876-selected,#fff)!important;
+  color:var(--pb876-selected-ink,#101828)!important;
+  border-color:color-mix(in srgb,var(--pb876-selected-ink,#101828) 18%,transparent)!important;
+  box-shadow:0 2px 8px color-mix(in srgb,var(--pb876-selected-ink,#101828) 12%,transparent)!important;
+}
+
+/* Category filters are the only catalog row that receives subbarColor. */
+#storePhotographerWorkspace #itemCategoryFilters.storeCategoryRowV809,
+#storePhotographerWorkspace #saleCategoryFilters.storeCategoryRowV809{
+  background:var(--pb718-subbar,#dff2f6)!important;
+  background-color:var(--pb718-subbar,#dff2f6)!important;
+  color:var(--pb718-subbar-text,var(--pb769-subbar-ink,#101828))!important;
+  border:1px solid color-mix(in srgb,currentColor 10%,transparent)!important;
+  border-radius:11px!important;
+  padding:7px 7px 6px!important;
+}
+#storePhotographerWorkspace #itemCategoryFilters .categoryChip,
+#storePhotographerWorkspace #saleCategoryFilters .categoryChip{
+  min-height:34px!important;
+  padding:6px 11px!important;
+  font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  line-height:1.15!important;
+  background:rgba(255,255,255,.84)!important;
+  color:#263445!important;
+  border-color:rgba(15,23,42,.14)!important;
+}
+#storePhotographerWorkspace #itemCategoryFilters .categoryChip.active,
+#storePhotographerWorkspace #saleCategoryFilters .categoryChip.active{
+  background:var(--pb876-selected,#fff)!important;
+  background-color:var(--pb876-selected,#fff)!important;
+  color:var(--pb876-selected-ink,#101828)!important;
+  border-color:color-mix(in srgb,var(--pb876-selected-ink,#101828) 22%,transparent)!important;
+}
+#storePhotographerWorkspace #itemCategoryFilters .categoryChip.active .pb868FilterCount,
+#storePhotographerWorkspace #saleCategoryFilters .categoryChip.active .pb868FilterCount{
+  background:color-mix(in srgb,var(--pb876-selected-ink,#101828) 10%,#fff)!important;
+  color:var(--pb876-selected-ink,#101828)!important;
+}
+
+/* The row directly below the main header is the store/brand identity row.
+   Keep it neutral; it must never inherit subbarColor. */
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+  background:var(--pb877-brand-bg,#fff)!important;
+  background-color:var(--pb877-brand-bg,#fff)!important;
+  color:var(--pb877-brand-ink,#182230)!important;
+  border-bottom-color:#e4e9f1!important;
+  box-shadow:none!important;
+}
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar .storeIdentityToggle,
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar .storeIdentityLabel,
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar #photographerStoreHeaderName{
+  color:var(--pb877-brand-ink,#182230)!important;
+}
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar .storeIdentityLabel,
+#storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar #photographerStoreHeaderName{
+  font-size:13px!important;
+  font-weight:950!important;
+}
+
+/* If a separate brand-filter row is present in newer catalog data, keep that row neutral too. */
+#storePhotographerWorkspace .storeBrandRow,
+#storePhotographerWorkspace .brandFilters,
+#storePhotographerWorkspace [id*="BrandFilters"],
+#storePhotographerWorkspace [id*="brandFilters"]{
+  background:#fff!important;
+  background-color:#fff!important;
+  color:#263445!important;
+}
+#storePhotographerWorkspace .storeBrandRow button,
+#storePhotographerWorkspace .brandFilters button,
+#storePhotographerWorkspace [id*="BrandFilters"] button,
+#storePhotographerWorkspace [id*="brandFilters"] button,
+#storePhotographerWorkspace [data-brand],
+#storePhotographerWorkspace [data-sale-brand],
+#storePhotographerWorkspace [data-rental-brand]{
+  font-size:12px!important;
+  font-weight:900!important;
+}
+
+/* Finance: three buttons need to be clearly readable. */
+#storePhotographerWorkspace #financePanel .financeTabsV811>button,
+#storePhotographerWorkspace #financePanel .financeTabsV813>button{
+  min-height:42px!important;
+  padding:8px 6px!important;
+  font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  line-height:1.2!important;
+}
+
+@media(max-width:820px){
+  html:has(#storePhotographerWorkspace),
+  html:has(#storePhotographerWorkspace) body,
+  body.rentalPhotographerMode{
+    background:var(--pb771-top,var(--pb718-header,#dff2f6))!important;
+    background-color:var(--pb771-top,var(--pb718-header,#dff2f6))!important;
+  }
+  /* Keep the real Store section strip on subbarColor. */
+  #storePhotographerWorkspace>#storeSectionNavV673{
+    background:var(--pb718-subbar,#dff2f6)!important;
+    background-color:var(--pb718-subbar,#dff2f6)!important;
+    color:var(--pb718-subbar-text,var(--pb769-subbar-ink,#101828))!important;
+  }
+  #storePhotographerWorkspace>#storeSectionNavV673>button{
+    font-size:13.5px!important;
+    font-weight:950!important;
+  }
+  #storePhotographerWorkspace #itemCategoryFilters .categoryChip,
+  #storePhotographerWorkspace #saleCategoryFilters .categoryChip{
+    font-size:12.5px!important;
+  }
+  #storePhotographerWorkspace #financePanel .financeTabsV811>button,
+  #storePhotographerWorkspace #financePanel .financeTabsV813>button{
+    font-size:13.5px!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

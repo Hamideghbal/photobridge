@@ -1,0 +1,113 @@
+/* R1176 – desktop laboratory finance clarity; responsive form remains mobile-safe. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .financeWorkspace:has(.invoiceTableCard)>.financeSummary{display:none!important}
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRow.discountInvoiceRow{
+  background:#fff!important;border-color:#e3e8f1!important;color:#344054!important;box-shadow:none!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRow.discountInvoiceRow :is(.discountAmount,.discountDocumentActions,.discountDocumentActions button){
+  color:#475467!important;background:#f8fafc!important;border-color:#e5e7eb!important;box-shadow:none!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceRow.externalAccountingRecordedInvoice{
+  background:#effdf4!important;border:1px solid #55c989!important;
+  box-shadow:0 0 0 1px rgba(22,163,74,.12)!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .externalAccountingRecordedBadge{
+  display:inline-flex!important;padding:3px 8px!important;background:#d1fae5!important;color:#166534!important;border-radius:8px!important;
+  font-size:10px!important;font-weight:900!important
+ }
+ html body #root .labRoleWorkspace .financeWorkspace .externalAccountingBtn.recorded{
+  background:#15803d!important;border-color:#15803d!important;color:#fff!important;
+  box-shadow:0 3px 8px rgba(21,128,61,.17)!important
+ }
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex-wrap:wrap!important;gap:5px!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack :is(.invoiceActionMini,.discountDocumentActions){
+ display:flex!important;align-items:center!important;gap:5px!important;width:auto!important;flex:0 0 auto!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack :is(button,.invoiceActionMini button,.discountDocumentActions button){
+ width:auto!important;min-width:0!important;min-height:29px!important;height:30px!important;
+ padding:4px 9px!important;white-space:nowrap!important;
+ font:800 10px/1.2 Vazirmatn,Tahoma,sans-serif!important;
+ border-radius:7px!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack .miniOrderFilesBtn{
+ background:#edf4ff!important;border:1px solid #cbdcfe!important;color:#2858a9!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack .externalAccountingBtn:not(.recorded){
+ background:#eef2ff!important;border:1px solid #c7d2fe!important;color:#3558bd!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack .miniCorrectionBtn{
+ background:#f8fafc!important;border:1px solid #dbe2eb!important;color:#475467!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .invoiceRangeToolbar .pb1176Today.active{
+ background:#315efb!important;color:#fff!important;border-color:#315efb!important
+}
+html body #root .labRoleWorkspace .financeWorkspace :is(.pb1176Today,.pb1176ManualOpen){
+ padding:7px 11px!important;min-height:33px!important;border:1px solid #d5dfed!important;border-radius:8px!important;
+ font:850 10.5px Vazirmatn,Tahoma,sans-serif!important;cursor:pointer
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1176ManualOpen{
+ background:#315efb!important;border-color:#315efb!important;color:#fff!important;white-space:nowrap!important
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions{
+ display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:10px;
+ border:1px solid #e3eaf5;border-radius:12px;background:#f8fafc
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions button{
+ min-height:34px;padding:5px 12px;border:1px solid #d3def2;border-radius:8px;background:#fff;color:#315efb;
+ font:850 11px Vazirmatn,Tahoma,sans-serif
+}
+html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions select{
+ min-height:34px;padding:5px 10px;min-width:160px;max-width:330px;
+ border:1px solid #d3def2;border-radius:8px;background:#fff;color:#344054;font:800 11px Vazirmatn,Tahoma,sans-serif
+}
+.pb1176Backdrop{
+ position:fixed;inset:0;margin:auto;max-width:none;max-height:none;border:0;padding:12px;
+ width:min(900px,calc(100vw - 32px));height:min(88dvh,840px);box-sizing:border-box;
+ background:transparent;overflow:visible;color:#344054
+}
+.pb1176Backdrop::backdrop{background:rgba(15,23,42,.5);backdrop-filter:blur(3px)}
+.pb1176Form{
+ display:flex;flex-direction:column;gap:13px;max-height:100%;overflow:auto;box-sizing:border-box;
+ border:1px solid #dce4ee;border-radius:18px;padding:16px 18px;background:#fff;
+ box-shadow:0 30px 70px rgba(15,23,42,.20);font:12px/1.7 Vazirmatn,Tahoma,sans-serif
+}
+.pb1176ModalHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pb1176ModalHead h2{font-size:17px;margin:0}.pb1176Close{font-size:20px!important;min-width:35px}
+.pb1176Help{font-size:11px;margin:0;color:#667085}
+.pb1176CustomerGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.pb1176Field{display:flex;flex-direction:column;gap:4px;min-width:0;font-weight:800}
+.pb1176Field input,.pb1176Field select,.pb1176Field textarea{
+ width:100%;min-width:0;min-height:36px;box-sizing:border-box;background:#fff;border:1px solid #d8e1f0;
+ padding:7px 10px;border-radius:8px;color:#273548;font:500 12px Vazirmatn,Tahoma,sans-serif
+}
+.pb1176Field input:disabled{background:#f3f4f6;opacity:.6}
+.pb1176ManualRows{display:grid;gap:7px}
+.pb1176ManualRow{display:grid;grid-template-columns:145px minmax(160px,1fr) 75px 160px 32px;gap:7px;align-items:center}
+.pb1176ManualRow :is(input,select,button){min-width:0;width:100%;min-height:37px;box-sizing:border-box;padding:5px 7px;border:1px solid #d8e1f0;border-radius:8px;background:#fff;color:#344054;font:800 11px Vazirmatn,Tahoma,sans-serif}
+.pb1176ManualRow .pb1176Remove{color:#b42318;font-size:18px}
+.pb1176Add{align-self:flex-start;padding:7px 12px;border:1px solid #cad8fc;border-radius:8px;background:#edf3ff;color:#315efb;font-weight:850;cursor:pointer}
+.pb1176Totals{font-weight:900;color:#214da7;background:#f1f5ff;padding:10px;border-radius:9px}
+.pb1176ModalActions{display:flex;justify-content:flex-end;gap:8px}
+.pb1176ModalActions button{padding:9px 14px;min-height:37px;border:1px solid #d5deed;background:#fff;border-radius:9px;font:800 11px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+.pb1176ModalActions .pb1176Submit{background:#315efb;border-color:#315efb;color:#fff}
+@media(max-width:820px){
+ .pb1176ManualRow{grid-template-columns:1fr 1fr 55px 1fr 32px}
+ .pb1176CustomerGrid{grid-template-columns:1fr}
+ .pb1176Backdrop{width:calc(100vw - 12px);height:92dvh;padding:4px}
+ .pb1176Form{padding:12px;gap:10px}
+ html body #root .labRoleWorkspace .financeWorkspace .invoiceActionStack{gap:5px!important}
+}
+@media(max-width:570px){
+ .pb1176ManualRow{grid-template-columns:1fr 1fr 32px}
+ .pb1176ManualRow select{grid-column:1}
+ .pb1176ManualRow input:nth-child(2){grid-column:2}
+ .pb1176ManualRow input:nth-child(3){grid-column:1}
+ .pb1176ManualRow input:nth-child(4){grid-column:2}
+ .pb1176ManualRow .pb1176Remove{grid-column:3;grid-row:1/span 2;height:100%}
+}
+
+/* PB1364 softer blue shadows */

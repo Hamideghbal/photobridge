@@ -1,0 +1,146 @@
+/* Office navigation: manager requests and calendar; operator calendar. */
+html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab]:not([data-pb843-office-tab="calendar"]):not([data-pb843-office-tab="pending"]):not([data-pb843-office-tab="returnShortages"]):not([data-pb843-office-tab="shortages"]),
+html body.rentalAppReady .pbR100F9StaffTabs>button:not([data-staff-mode="out"]){display:none!important}
+#pbR1073MobileOffice{display:none}
+@media(max-width:850px){
+ html body.rentalAppReady #rentalMobileBottomNav{grid-template-columns:repeat(var(--pb-office-nav-count,3),minmax(0,1fr))!important;justify-content:stretch!important;box-sizing:border-box!important}
+ html body.rentalAppReady #rentalMobileBottomNav>button{width:100%!important;min-width:0!important;justify-self:stretch!important;margin:0!important}
+ html body.rentalAppReady #rentalMobileBottomNav [data-rental-bottom-tab="photographers"]{display:none!important}
+ html body.rentalAppReady #bookings [data-pb843-office-pane="calendar"].active .pb843BookingCalendarBox{height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+ html body.rentalAppReady #bookings [data-pb843-office-pane="calendar"].active .pb904r2CalendarSplit,
+ html body.rentalAppReady #bookings [data-pb843-office-pane="calendar"].active .pb843CalendarToolbar,
+ html body.rentalAppReady #bookings [data-pb843-office-pane="calendar"].active #pb892CalendarBatchBar{display:none!important}
+ html body.rentalAppReady #pbR1073MobileOffice{display:block!important;min-width:0;width:100%;box-sizing:border-box}
+ html body.rentalAppReady #pbR1073OfficeRail,
+ html body.rentalAppReady #pbR100F9StaffDates{display:flex!important;flex-wrap:nowrap!important;direction:ltr!important;gap:6px!important;width:100%!important;box-sizing:border-box!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:none!important;overflow-anchor:none!important;padding:6px!important;background:#fff!important}
+ html body.rentalAppReady #pbR1073OfficeRail>button,
+ html body.rentalAppReady #pbR100F9StaffDates>button.pbR100F86Day{flex:0 0 148px!important;width:148px!important;min-width:148px!important;height:48px!important;min-height:48px!important;display:flex!important;flex-wrap:wrap!important;align-content:center!important;justify-content:center!important;gap:3px!important;padding:4px 6px!important;border-radius:13px!important;direction:rtl!important;border:1px solid #dbe4ff!important;background:#fff!important;color:#344054!important;font:500 12px/1.3 Vazirmatn,Tahoma!important}
+ html body.rentalAppReady #pbR1073OfficeRail>button.active,
+ html body.rentalAppReady #pbR100F9StaffDates>button.pbR100F86Day.active{background:#315efb!important;color:#fff!important}
+ #pbR1073OfficeRail strong{font-size:12px;white-space:nowrap}#pbR1073OfficeRail em{flex:0 0 100%;font-style:normal;font-size:11px}#pbR1073OfficeRail small{font-size:11px}
+ #pbR1073Register{display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:10px;background:#315efb;color:#fff;border:0;border-radius:10px;font:700 14px Vazirmatn,Tahoma;min-height:44px}#pbR1073Register:disabled{opacity:.5}
+ #pbR1073OfficeRows{display:grid;gap:8px;min-width:0;padding-bottom:12px}
+}
+
+/* R1075: fixed Office navigation and readable selected dates. */
+html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab="pending"]{display:flex!important}
+@media(max-width:850px){
+ html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs{display:flex!important;flex-wrap:nowrap!important;overflow:hidden!important;gap:8px!important;scroll-snap-type:none!important;touch-action:auto!important}
+ html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab="pending"],html body.rentalAppReady.pb899MainBookings #pb848BookingHeaderTabs>[data-pb843-office-tab="calendar"]{flex:1 1 0!important;min-width:0!important;width:auto!important;scroll-snap-align:none!important}
+ html body.rentalAppReady #pbR1073OfficeRail,html body.rentalAppReady #pbR100F9StaffDates{scrollbar-width:none!important;border-bottom:0!important;box-shadow:none!important}
+ #pbR1073OfficeRail::-webkit-scrollbar,#pbR100F9StaffDates::-webkit-scrollbar{display:none!important;height:0!important}
+ html body.rentalAppReady #pbR1073OfficeRail>button.active *,html body.rentalAppReady #pbR100F9StaffDates>button.pbR100F86Day.active *{color:#fff!important}
+}
+/* R1076: all mobile Office options fit without horizontal scrolling. */
+html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab="returnShortages"],html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab="shortages"]{display:flex!important}
+html body.rentalAppReady .pbR1076CardActions{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;min-width:0}
+html body.rentalAppReady .pbR1076CardActions>button{width:100%!important;box-sizing:border-box!important;margin:0!important;white-space:normal!important}
+@media(max-width:850px){
+ html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:4px!important;padding-inline:4px!important;overflow:hidden!important}
+ html body.rentalAppReady.pb899MainBookings #rentalHeaderFilterHost #pb848BookingHeaderTabs>[data-pb843-office-tab]{flex:1 1 0!important;width:0!important;min-width:0!important;padding:0 3px!important;gap:2px!important;font-size:11px!important}
+ html body.rentalAppReady #rentalHeaderFilterHost #pb848BookingHeaderTabs .pb854TabCount{position:static!important;min-width:14px!important;width:auto!important;font-size:9px!important;flex:0 0 auto!important}
+}
+#pbR1076Registration{position:fixed;inset:0;z-index:2147483400;background:#0f172a80;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;direction:rtl}
+#pbR1076Registration>section{width:min(420px,100%);max-height:calc(100dvh - 24px);overflow:auto;padding:14px;border-radius:16px;background:#fff;box-sizing:border-box;font:500 14px/1.7 Vazirmatn,Tahoma}
+#pbR1076Registration header,#pbR1076Registration footer,.pbR1076Month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#pbR1076Registration header b{font-size:16px}#pbR1076Registration p{margin:8px 0;font-size:13px}#pbR1076Registration [role=alert]{color:#b42318}
+#pbR1076Registration button{font:inherit;cursor:pointer;min-height:40px;border:1px solid #dbe4ff;border-radius:8px;background:#f6f8ff;color:#344054;padding:4px 8px;box-sizing:border-box}
+#pbR1076Registration button:disabled{opacity:.35;cursor:default}.pbR1076Month button{width:40px}
+.pbR1076Days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;margin:8px 0}.pbR1076Days button{padding:0!important}
+#pbR1076Registration [aria-pressed=true],#pbR1076Registration [data-register-next]{background:#315efb;color:#fff;border-color:#315efb}
+#pbR1076Registration footer{flex-wrap:wrap}#pbR1076Registration [data-register-count]{font-size:12px;width:100%}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActions{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;gap:8px!important}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActions>button{width:100%!important;max-width:none!important;min-width:0!important;align-self:stretch!important;margin:0!important}
+
+/* R1077: extension/edit are the final, equal-size mobile card actions. */
+@media(max-width:850px){
+ html body.rentalAppReady .pbR1076CardActions>button,
+ html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions .pbR1076CardActions>button{height:44px!important;min-height:44px!important;max-height:44px!important;font:700 12px/1.2 Vazirmatn,Tahoma,sans-serif!important;padding:6px 10px!important;border-radius:9px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+}
+
+/* R1078: compact, animated drawer and automatic mobile availability. */
+@media(max-width:850px){
+ html body.rentalAppReady #rentalMobileDrawer{display:block!important;bottom:auto!important;top:84px!important;box-sizing:border-box!important;max-height:min(60dvh,calc(100dvh - 170px))!important;visibility:hidden!important;opacity:0!important;transform:translateY(-10px)!important;pointer-events:none!important;transition:opacity .22s ease,transform .22s ease,visibility .22s!important}
+ html body.rentalAppReady #rentalMobileDrawer.open{display:block!important;visibility:visible!important;opacity:1!important;transform:translateY(0)!important;pointer-events:auto!important}
+ html body.rentalAppReady #rentalMobileDrawer .rentalMobileDrawerGrid>button{min-height:42px!important;font-size:13px!important}
+ #pbR1078DrawerSummary{border-top:1px solid #e4e7ec;padding-top:8px;color:#475467;font:500 12px/1.8 Vazirmatn,Tahoma}
+ #pbR1078DrawerSummary>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0}#pbR1078DrawerSummary b{color:#1849a9;font-size:12px}
+ #pbR1078DrawerSummary .pbR1078DrawerStats{padding-top:6px;font-size:11px}
+ html body #checkAvailability#checkAvailability#checkAvailability{display:none!important}
+ html body.rentalAppReady #pbR1073OfficeRail .pbR100F76TodayBadge,html body.rentalAppReady #pbR100F9StaffDates .pbR100F76TodayBadge{background:transparent!important;color:inherit!important;font:700 10px/1.3 Vazirmatn,Tahoma!important;padding:0 4px!important;position:static!important}
+ #pbR1076Registration [data-register-day]{height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;gap:2px}
+ #pbR1076Registration [data-register-day] small{font-size:9px;line-height:1;color:inherit}
+}
+@media(prefers-reduced-motion:reduce){html body.rentalAppReady #rentalMobileDrawer{transition:none!important}}
+
+/* R1079: operator Office and return shortages share a bottom navigation. */
+html body.rentalAppReady.pbR100F9StaffMode .pbR100F9StaffTabs>button[data-staff-mode="returnShortages"]{display:flex!important}
+html body.pbR100F9StaffMode .pbOfficeExtendButton{display:none!important}
+@media(max-width:850px){
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav{position:fixed;bottom:0;left:0;right:0;z-index:2147482400;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e4e7ec;box-sizing:border-box}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;margin:0!important;padding:0!important;gap:8px!important;background:transparent!important;overflow:hidden!important}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;height:48px!important;border-radius:12px!important;border:0!important;background:#f5f7ff!important;color:#475467!important;font:700 14px Vazirmatn,Tahoma!important;transition:background .18s,color .18s,transform .18s}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button.active{background:#315efb!important;color:#fff!important}
+ html body.rentalAppReady.pbR100F9StaffMode #pbR1079OperatorNav .pbR100F9StaffTabs>button:active{transform:scale(.97)}
+ html body.pbR100F9StaffMode .pbR100F9StaffShell{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))!important}
+}
+@media(prefers-reduced-motion:reduce){#pbR1079OperatorNav button{transition:none!important}}
+/* Mobile final registration row: notes and submit share the same size. */
+@media(max-width:850px){
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:center!important;gap:8px!important}
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.field,
+ html body #pb892ManualBackdrop #bookingForm>.pb920BookingFooter>.actions{width:100%!important;min-width:0!important;padding:0!important;margin:0!important;box-shadow:none!important;filter:none!important;background:transparent!important}
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter input[name="notes"],
+ html body #pb892ManualBackdrop #bookingForm .pb920BookingFooter>.actions>button:not(#checkAvailability){height:44px!important;min-height:44px!important;max-height:44px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;border-radius:9px!important;padding:0 8px!important;font:600 13px/1.4 Vazirmatn,Tahoma!important;box-shadow:none!important;filter:none!important;margin:0!important}
+}
+
+/* R1080: delivery and receiving remain visibly different for both roles. */
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.delivering,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Deliver{background:#315efb!important;color:#fff!important;border-color:#315efb!important}
+html body.rentalAppReady .pbR100F86SharedCard .pbR100F86Actions button.pbR100F86Operation.receiving,html body.pbR100F9StaffMode .pbR100F9StaffCard button.pbR1080Receive{background:#087f5b!important;color:#fff!important;border-color:#087f5b!important}
+
+/* R1081: desktop text stays right and compact actions stay left. */
+@media(min-width:851px){
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(150px,38%)!important;align-items:center!important;gap:10px!important;overflow:hidden!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking{flex:none!important;width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:break-word!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking small{font-size:12px!important;line-height:1.7!important;overflow-wrap:break-word!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:center!important;flex:none!important;width:100%!important;min-width:0!important;gap:5px!important}
+ html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pbR1052DayActions>button{flex:0 0 auto!important;width:100%!important;min-width:0!important;margin:0!important;min-height:32px!important;padding:4px 6px!important;font:700 11px/1.5 Vazirmatn,Tahoma!important;white-space:normal!important}
+}
+
+/* R1084: compact, readable store personnel and invitation credit explanation. */
+html body.rentalAppReady #pbR100F9StaffRows{display:grid!important;gap:8px!important}
+html body.rentalAppReady #pbR100F9StaffRows .pbR100F9StaffRow{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important;padding:12px!important;margin:0!important;width:100%!important;min-width:0!important;background:#fff!important;border:1px solid #e4e7ec!important;border-radius:12px!important}
+html body.rentalAppReady #pbR100F9StaffRows .pbR100F9StaffRow>div{display:grid!important;gap:4px!important;min-width:0!important;text-align:right!important}
+html body.rentalAppReady #pbR100F9StaffRows b{font-size:14px!important;line-height:1.6!important;overflow-wrap:break-word!important}
+html body.rentalAppReady #pbR100F9StaffRows small{display:block!important;font-size:13px!important;line-height:1.5!important;text-align:right!important;white-space:nowrap!important}
+html body.rentalAppReady #pbR100F9StaffRows button{width:auto!important;min-height:36px!important;padding:6px 9px!important;font:700 12px/1.5 Vazirmatn,Tahoma!important;white-space:nowrap!important;align-self:center!important}
+html body.rentalAppReady .pbR1084InviteCopy{display:block;min-width:0;white-space:normal}
+html body.rentalAppReady #smsInviteCreditHint{display:block!important;margin-top:4px!important;font-size:12px!important;line-height:1.7!important;color:#335c8e!important;white-space:normal!important}
+/* R1084: paged QR labels keep all unit actions in a compact, non-scrolling dialog. */
+html body .pbR1084AssetLabels{padding:10px!important;overflow:hidden!important;align-items:center!important}
+html body .pbR1084AssetLabels .pbR85ScanCard{width:min(940px,100%)!important;max-height:calc(100dvh - 20px)!important;padding:12px!important;overflow:hidden!important}
+html body .pbR1084AssetLabels .pbR85ScanHead{gap:8px!important;margin:0!important}
+html body .pbR1084AssetLabels .pbR85ScanHead>div{min-width:0}
+html body .pbR1084AssetLabels h2{font-size:15px!important;margin:0!important;line-height:1.5!important}
+html body .pbR1084AssetLabels .pbR85ScanHead p{font-size:11px!important;margin:4px 0!important;line-height:1.5!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html body .pbR1084AssetLabels .pbR85AssetGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin:8px 0!important}
+html body .pbR1084AssetLabels .pbR85AssetCard{padding:8px!important;box-shadow:none!important;min-width:0!important}
+html body .pbR1084AssetLabels .pbR85AssetName{font-size:11px!important;line-height:1.5!important;min-height:0!important}
+html body .pbR1084AssetLabels .pbR85AssetCode{font-size:14px!important;letter-spacing:1px!important}
+html body .pbR1084AssetLabels .pbR85AssetSerial{font-size:11px!important;margin:3px 0 6px!important;overflow-wrap:anywhere}
+html body .pbR1084AssetLabels .pbR85AssetButtons{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
+html body .pbR1084AssetLabels .pbR85Btn{font-size:11px!important;line-height:1.5!important;min-height:32px!important;height:auto!important;padding:5px 8px!important;box-shadow:none!important;width:auto!important}
+html body .pbR1084AssetLabels .pbR1082UnitActions{grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:6px!important}
+html body .pbR1084AssetLabels .pbR1082UnitActions span{grid-column:1/-1;font-size:11px!important}
+html body .pbR1084AssetLabels .pbR1082UnitReason,html body .pbR1084AssetLabels .pbR1058AssetHolder{font-size:11px!important;line-height:1.5!important;margin-top:4px!important}
+html body .pbR1084AssetLabels .pbR1084AssetPager{display:flex;align-items:center;justify-content:center;gap:12px;font-size:12px}
+html body .pbR1084AssetLabels .pbR85Actions{margin-top:8px!important;justify-content:center!important}
+@media(max-width:850px){html body .pbR1084AssetLabels .pbR85ScanCard{width:min(420px,100%)!important}html body .pbR1084AssetLabels .pbR85AssetGrid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-height:550px){html body .pbR1084AssetLabels .pbR85AssetCard{display:grid!important;grid-template-columns:76px minmax(0,1fr)!important;gap:3px 8px!important;align-items:center!important}html body .pbR1084AssetLabels .pbR85AssetQr{grid-column:1;grid-row:1/5;width:64px!important;height:64px!important;margin:auto!important}html body .pbR1084AssetLabels .pbR85AssetName,html body .pbR1084AssetLabels .pbR85AssetCode,html body .pbR1084AssetLabels .pbR85AssetSerial{grid-column:2!important}html body .pbR1084AssetLabels .pbR85AssetButtons,html body .pbR1084AssetLabels .pbR1082UnitActions,html body .pbR1084AssetLabels .pbR1082UnitReason,html body .pbR1084AssetLabels .pbR1058AssetHolder{grid-column:1/-1!important}}
+/* Fixed-height selected photographer; the full name remains in the selection menu. */
+html body #accountingForm .pb892Picker{min-width:0!important;max-width:100%!important}
+html body #accountingForm .pb892PickerButton{min-width:0!important;overflow:hidden!important;height:44px!important}
+html body #accountingForm .pb892PickerButton>span{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+@media(max-height:550px){html body .pbR1084AssetLabels .pbR85ScanCard{padding:8px!important}html body .pbR1084AssetLabels .pbR85AssetCard{padding:5px!important;row-gap:0!important}html body .pbR1084AssetLabels .pbR85AssetCode{margin:0!important;line-height:1.4!important}html body .pbR1084AssetLabels .pbR85AssetSerial{min-height:0!important;margin:0!important}html body .pbR1084AssetLabels .pbR85Btn{min-height:28px!important;padding:3px 6px!important}html body .pbR1084AssetLabels .pbR85Actions{margin:4px 0 0!important;gap:0!important}html body .pbR1084AssetLabels .pbR1082UnitActions{margin-top:2px!important;gap:2px 6px!important}html body .pbR1084AssetLabels .pbR85AssetButtons{margin:2px 0!important}html body .pbR1084AssetLabels .pbR85AssetGrid{margin:4px 0!important}}
+
+/* PB1364 softer blue shadows */

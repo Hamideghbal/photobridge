@@ -1,0 +1,11 @@
+/* A slightly narrower shared login frame; retain keyboard and form behavior. */
+html:root body #root .unifiedLoginPage .unifiedLoginShell,
+html:root body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell,
+html:root body:not(.rentalAppReady) #loginView:not(.hidden)>.authShell{
+ width:min(420px,calc(100% - 12px))!important;
+ max-width:420px!important;
+ min-width:0!important;
+ box-sizing:border-box!important;
+}
+
+/* PB1364 softer blue shadows */

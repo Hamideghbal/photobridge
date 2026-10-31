@@ -1,0 +1,5 @@
+html body #root .labRoleWorkspace .walkinPricingCard .pb1437WalkinGrid{display:grid!important;grid-template-columns:minmax(140px,1.2fr) repeat(8,minmax(95px,1fr))!important;min-width:1050px!important;align-items:center!important}
+html body #root .labRoleWorkspace .walkinPricingCard .pb1437WalkinGrid>*{text-align:center!important;min-width:0!important}
+html body #root .labRoleWorkspace .walkinPricingCard .pb1437WalkinGrid input{width:100%!important;box-sizing:border-box!important;text-align:center!important}
+
+/* PB1364 softer blue shadows */

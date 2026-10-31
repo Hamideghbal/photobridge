@@ -1,0 +1,88 @@
+/* R1410: lab invitation history and concise Jalali birthday prompt. */
+.labPermanentInviteSms .pb1410InviteHelp {
+  display:block;
+  margin: 4px 0 8px;
+  padding: 7px 10px;
+  border: 1px solid #bed7fb;
+  border-radius: 9px;
+  background: #f0f6ff;
+  font-size: 11px;
+  color: #285a86;
+}
+.labPermanentInviteSms .pb1410SmsHistory {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  border: 1px solid #e1e8f1;
+  background: #fafcff;
+  border-radius: 11px;
+  padding: 10px;
+}
+.labPermanentInviteSms .pb1410SmsHistory > b {font-size: 12px;color: #253958;}
+.labPermanentInviteSms .pb1410SmsHistory > small {font-size: 11px;color:#607088;}
+.labPermanentInviteSms .pb1410SmsRow {
+  display: grid;
+  grid-template-columns: minmax(100px, 1.1fr) minmax(110px, 1.6fr) minmax(85px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  background: white;
+  border: 1px solid #e6edf5;
+  border-radius: 9px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+.labPermanentInviteSms .pb1410SmsRow > span {font-weight: 700;direction: ltr;text-align: left;}
+.labPermanentInviteSms .pb1410SmsRow > small {font-size: 10px;color: #4b647f;}
+.labPermanentInviteSms .pb1410SmsRow > button {
+  font-size: 10px !important;
+  min-height: 28px !important;
+  padding: 3px 8px !important;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+ .labPermanentInviteSms .pb1410SmsRow {
+   grid-template-columns: minmax(110px,1fr) auto;
+   gap: 6px;
+ }
+ .labPermanentInviteSms .pb1410SmsRow > small:nth-of-type(2) {grid-column: 1 / 2;}
+}
+/* Scope to invitation's added missing-birthday field. Preserve other signup fields. */
+html body #pbR94InviteRequired:has(.pbR95BirthInput) {
+  box-sizing: border-box !important;
+  width: min(100%, 450px) !important;
+  max-width: 450px !important;
+  min-width: 0 !important;
+  padding: 12px !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+}
+html body #pbR94InviteRequired .pbR94ReqField:has(.pbR95BirthInput) {
+  box-sizing: border-box !important;
+  width: min(100%, 340px) !important;
+  max-width: 340px !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+}
+html body #pbR94InviteRequired .pbR95BirthInput {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 340px !important;
+  height: 39px !important;
+  min-height: 39px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+}
+html body #pbR95JalaliPopover {
+  width: min(304px, calc(100vw - 24px)) !important;
+  max-width: 304px !important;
+  max-height: min(400px, calc(100dvh - 24px)) !important;
+  overflow-y: auto !important;
+}
+@media (max-width: 500px) {
+ html body #pbR94InviteRequired:has(.pbR95BirthInput) {width:100% !important;max-width:100% !important;}
+ html body #pbR95JalaliPopover {width:min(304px,calc(100vw - 24px)) !important;max-height:calc(100dvh - 24px) !important;}
+}
+
+/* PB1364 softer blue shadows */

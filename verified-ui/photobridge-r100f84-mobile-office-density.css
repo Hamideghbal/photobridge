@@ -1,0 +1,89 @@
+/* R100F84 — store owner / manual office modal on phones. */
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq[hidden]{display:none!important}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq{
+  display:grid!important;grid-column:1/-1!important;gap:5px!important;min-width:0!important;
+  padding:7px!important;border:1px solid #dbe4f0!important;border-radius:10px!important;
+  background:#f8fafc!important;box-sizing:border-box!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq>strong{
+  font:850 10px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .pbR74OfficeReq{
+  margin:0!important;padding:0!important;border:0!important;background:transparent!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .pbR74OfficeReq>strong,
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .pbR74OfficeReq>small{
+  display:none!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks label{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:4px!important;min-width:0!important;min-height:35px!important;
+  margin:0!important;padding:5px!important;box-sizing:border-box!important;
+  border:1px solid #d9e1ec!important;border-radius:8px!important;
+  background:#fff!important;color:#344054!important;
+  font:750 9px/1.35 Vazirmatn,Tahoma,sans-serif!important;white-space:normal!important;
+}
+html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks input[type=checkbox]{
+  width:15px!important;min-width:15px!important;height:15px!important;
+  flex:0 0 15px!important;margin:0!important;padding:0!important;accent-color:#315efb!important;
+}
+@media(max-width:700px){
+  /* Remove the former 190px artificial blank area; preserve real device safe-area space. */
+  html body #pb892ManualBackdrop #pb892ManualBody #bookingForm{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)!important;
+    scroll-padding-bottom:20px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #bookingItems{
+    margin-top:2px!important;margin-bottom:3px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm>label.field{margin:2px 0!important}
+  html body #pb892ManualBackdrop #bookingForm>.actions{
+    margin-top:2px!important;margin-bottom:0!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras{
+    padding:6px!important;gap:4px!important;margin-top:3px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .pbR78OfficeReqTitle{
+    display:block!important;font-size:9px!important;line-height:1.45!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .pbR78OfficeReqTitle small{
+    display:none!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras>.field{
+    grid-template-columns:minmax(0,1fr) minmax(100px,1fr)!important;
+    align-items:center!important;gap:5px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras>.field input{
+    height:32px!important;min-height:32px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .settingsChecks,
+  html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks{
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .settingsChecks label,
+  html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks label{
+    grid-column:auto!important;min-width:0!important;min-height:35px!important;
+    padding:4px!important;gap:3px!important;
+    font-size:8.4px!important;line-height:1.35!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .settingsChecks label:last-child{
+    grid-column:auto!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .settingsChecks input[type=checkbox]{
+    width:14px!important;min-width:14px!important;height:14px!important;flex:0 0 14px!important;
+  }
+  html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq{
+    gap:4px!important;padding:6px!important;margin:2px 0!important;
+  }
+}
+@media(max-width:480px){
+  html body #pb892ManualBackdrop #bookingForm #pbR78OfficeExtras .settingsChecks,
+  html body #pb892ManualBackdrop #bookingForm #pbR100F84PendingOfficeReq .settingsChecks{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

@@ -1,0 +1,78 @@
+/* PhotoBridge v715 — cloud-blue mobile header + seamless system chrome + centered identity.
+   Reference color sampled from the supplied MyKindergarten screenshot: #DFF2F6. */
+@media (max-width:820px){
+  :root{
+    --pb715-cloud-header:#dff2f6;
+  }
+
+  /* Keep the app/header and the browser/PWA top chrome visually continuous. */
+  html{
+    background-color:var(--pb715-cloud-header)!important;
+  }
+
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined,
+  html body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader{
+    background:var(--pb715-cloud-header)!important;
+    background-color:var(--pb715-cloud-header)!important;
+    border-top:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+
+  /* Right-side studio identity: true vertical centering inside the same 74px header lane.
+     This keeps the empty space above and below the name/date visually balanced in every tab. */
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  html body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader>.photographerHeaderIdentity,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined>.workspaceIdentity,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity,
+  html body #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader>.workspaceIdentity,
+  html body #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader>.photographerHeaderIdentity{
+    align-items:center!important;
+  }
+
+  html body .photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy,
+  html body #photographerRoleHeaderV710 .photographerHeaderIdentity>.workspaceIdentityCopy,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined>.workspaceIdentity>.workspaceIdentityCopy,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy{
+    height:100%!important;
+    min-height:100%!important;
+    max-height:100%!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    box-sizing:border-box!important;
+    direction:rtl!important;
+    text-align:right!important;
+  }
+
+  html body #photographerRoleHeaderV710 .photographerIdentityDateOnly,
+  html body #photographerStoreRoleHeader .photographerIdentityDateOnly{
+    margin:2px 0 0!important;
+  }
+
+  /* v711 page-mode lock used to force the text back to the top; v715 intentionally wins. */
+  html.pb711ContextVisible body #photographerRoleHeaderV710 .photographerHeaderIdentity>.workspaceIdentityCopy{
+    height:100%!important;
+    min-height:100%!important;
+    max-height:100%!important;
+    padding:0!important;
+    justify-content:center!important;
+  }
+
+  /* No hairline/shadow between the system status area and our header. */
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::before,
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::after,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::before,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::after{
+    border:0!important;
+    box-shadow:none!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

@@ -1,0 +1,97 @@
+/* PhotoBridge v716 — unified cloud palette for every mobile header/sub-header. */
+@media (max-width:820px){
+  :root{
+    --pb716-header:#dff2f6;
+    --pb716-subbar:#a8d3e3;
+    --pb716-subbar-text:#214b60;
+  }
+
+  html{background:var(--pb716-header)!important;color-scheme:light!important}
+
+  /* Main photographer/store header: same color all the way to the system chrome. */
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined,
+  html body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body #photographerStoreRoleHeader.unifiedRoleHeader.photographerHeaderRefined.photographerSingleHeader,
+  html body .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerHeaderRefined.photographerPrintModeHeader{
+    background:var(--pb716-header)!important;
+    background-color:var(--pb716-header)!important;
+    border:0!important;
+    outline:0!important;
+  }
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::before,
+  html body .photographerMain>.unifiedRoleHeader.photographerHeaderRefined::after,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::before,
+  html body #photographerStoreRoleHeader.photographerHeaderRefined::after{
+    content:none!important;display:none!important;border:0!important;box-shadow:none!important
+  }
+
+  /* The secondary bars use the middle cloud from the supplied reference. */
+  html body #pb711PhotographerContextBar,
+  html body #pb698PhotographerContextBar,
+  html body .photographerMain.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab,
+  html body .photographerMain.pb676HasLabIdentityBar.photographerPrintWorkspace .photographerPrintModeHeader .photographerPrintTopLab,
+  html body #pb673PhotographerLabIdentityBar,
+  html body #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{
+    background:var(--pb716-subbar)!important;
+    background-color:var(--pb716-subbar)!important;
+    color:var(--pb716-subbar-text)!important;
+    border:0!important;
+    border-top:0!important;
+    border-bottom:0!important;
+    outline:0!important;
+    box-shadow:inset 0 9px 13px -13px rgba(33,75,96,.72),0 2px 6px rgba(33,75,96,.10)!important;
+  }
+
+  html body #pb711PhotographerContextBar .pb711ContextTitle>b,
+  html body #pb711PhotographerContextBar .pb711ContextMeta,
+  html body #pb711PhotographerContextBar .pb711ViewLabel,
+  html body #pb698PhotographerContextBar .pb698ContextTitle b,
+  html body #pb698PhotographerContextBar .pb698ModelCount,
+  html body #pb698PhotographerContextBar .pb698FreeBadge,
+  html body .photographerPrintWorkspace .photographerPrintTopLab,
+  html body .photographerPrintWorkspace .photographerPrintTopLab::before,
+  html body .photographerPrintWorkspace .photographerPrintTopLabStatic,
+  html body #photographerStoreIdentityBar .storeIdentityLabel,
+  html body #photographerStoreIdentityBar .storeIdentityToggle,
+  html body #photographerStoreIdentityBar span,
+  html body #photographerStoreIdentityBar b{
+    color:var(--pb716-subbar-text)!important;
+  }
+
+  html body #pb711PhotographerContextBar .pb711ContextMeta,
+  html body #pb698PhotographerContextBar .pb698FreeBadge{
+    border-color:rgba(33,75,96,.20)!important;background:rgba(255,255,255,.34)!important
+  }
+  html body #pb711PhotographerContextBar button,
+  html body #pb698PhotographerContextBar button,
+  html body #pb698PrintBarActions button{
+    border-color:rgba(33,75,96,.22)!important;
+    background:rgba(255,255,255,.34)!important;
+    color:var(--pb716-subbar-text)!important;
+  }
+  html body #pb711PhotographerContextBar button.active,
+  html body #pb698PhotographerContextBar button.active,
+  html body #pb698PrintBarActions button.active{
+    border-color:rgba(33,75,96,.16)!important;
+    background:#fff!important;
+    color:#315f75!important;
+    box-shadow:0 2px 7px rgba(33,75,96,.13)!important;
+  }
+  html body #photographerStoreIdentityBar .storeIdentityToggle.switchable{
+    background:rgba(255,255,255,.28)!important
+  }
+  html body #photographerStoreIdentityBar .storeIdentityToggle.switchable:hover{
+    background:rgba(255,255,255,.40)!important
+  }
+
+  /* A soft shadow from the main header falls onto the secondary strip. */
+  html.pb711ContextVisible body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined,
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    box-shadow:0 8px 13px -11px rgba(33,75,96,.58)!important;
+  }
+  html body #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{z-index:621!important}
+  html.pb711ContextVisible body #photographerRoleHeaderV710.unifiedRoleHeader.photographerHeaderRefined{z-index:800!important}
+}
+
+/* PB1364 softer blue shadows */

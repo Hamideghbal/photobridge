@@ -1,0 +1,155 @@
+.pb1423OtherInvoiceToolbar{display:contents}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace){padding-top:0!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace .labRolePageScrollArea:has(.financeWorkspace)::-webkit-scrollbar-track{margin-top:52px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea>.pb1419FinancePage,
+ html body #root .labRoleWorkspace .labRolePageScrollArea .pb1419FinancePage>.financeWorkspace{width:100%!important;max-width:none!important;margin-inline:0!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar){
+  --pb1423-gutter:clamp(12px,1.6vw,24px);
+  position:sticky!important;top:0!important;z-index:80!important;display:flex!important;
+  flex-flow:row nowrap!important;align-items:center!important;justify-content:flex-start!important;
+  height:52px!important;min-height:52px!important;max-height:52px!important;
+  width:calc(100% + 2 * var(--pb1423-gutter))!important;max-width:none!important;
+  margin:0 calc(-1 * var(--pb1423-gutter)) 10px!important;padding:8px 12px!important;
+  gap:6px!important;box-sizing:border-box!important;align-self:start!important;
+  background:#f8faff!important;border:0!important;border-bottom:1px solid #dce5f0!important;
+  border-radius:0!important;box-shadow:0 4px 8px -7px #52607855!important;overflow:visible!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .invoiceTableCard:has(.pb1423InvoiceToolbar){
+  padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace:has(.pb1423InvoiceToolbar)>.financeSummary{display:none!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar>:is(.invoiceListToolbar,.invoiceRangeToolbar){display:contents!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .financeInvoiceSearch{
+  flex:1 1 230px!important;width:auto!important;min-width:140px!important;max-width:320px!important;margin:0!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .financeInvoiceSearch input{
+  width:100%!important;height:34px!important;min-height:34px!important;padding:5px 9px!important;font-size:11px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .invoiceRangeToolbar>label{
+  display:block!important;flex:0 0 116px!important;width:116px!important;min-width:0!important;height:34px!important;margin:0!important;padding:0!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .persianDateField{width:100%!important;min-width:0!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .persianDateTrigger{
+  width:100%!important;height:32px!important;min-height:32px!important;padding:5px 8px!important;font-size:10.5px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .invoiceRangeToolbar>button{
+  order:0!important;flex:0 0 auto!important;min-width:48px!important;width:auto!important;height:32px!important;min-height:32px!important;margin:0!important;padding:4px 9px!important;white-space:nowrap!important;font-size:10.5px!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>select{height:34px!important;min-height:34px!important;flex:0 1 220px!important;min-width:150px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>button{height:32px!important;min-height:32px!important;padding:4px 9px!important;white-space:nowrap!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>.pb1177PaymentMetrics{
+  flex:1 1 260px!important;min-width:0!important;height:34px!important;padding:2px 3px!important;box-sizing:border-box!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics small{font-size:8px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1177PaymentMetrics b{font-size:10px!important}
+}
+
+/* Older build stages append these duplicate invoice controls. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar :is(.pb1201InvoiceCounts,.pb1201InvoiceToday){display:none!important}
+}
+
+/* PB1364 softer blue shadows */
+
+/* PB1427 invoice customer picker */
+.pb1427InvoiceCustomerSelect{width:100%;min-width:0;box-sizing:border-box}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .pb1427InvoiceCustomerSelect{
+ height:34px!important;min-height:34px!important;flex:0 1 220px!important;width:220px!important;min-width:150px!important;margin:0!important;padding:5px 9px!important;font:inherit;font-size:11px!important;
+ }
+}
+
+/* PB1428 finance third header */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>.pb1419FinancePage,
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea>.pb1419FinancePage>.financeWorkspace{max-width:none!important;width:100%!important;margin-inline:0!important}
+ html body #root .labRoleWorkspace:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar)) .pb1175HeaderFade{display:none!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar){
+ background:#fff!important;border:0!important;box-shadow:none!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar)::before{
+ content:''!important;display:block!important;position:absolute!important;top:0!important;inset-inline:18px!important;height:1px!important;
+ background:linear-gradient(90deg,transparent 0%,#d4dce6 15%,#d4dce6 85%,transparent 100%)!important;pointer-events:none!important;
+ }
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar)::after{
+ content:''!important;display:block!important;position:absolute!important;top:calc(100% - 1px)!important;inset-inline:0!important;height:17px!important;
+ background:linear-gradient(90deg,transparent 0%,#d4dce6 15%,#d4dce6 85%,transparent 100%) center top / calc(100% - 36px) 1px no-repeat,linear-gradient(to bottom,rgba(70,103,221,.072),rgba(70,103,221,.021) 55%,transparent) left 1px / 100% 16px no-repeat!important;
+ pointer-events:none!important;
+ }
+}
+
+/* PB1429 header order and single dividers */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1425PromotedSecond>.workspaceContent .pb1372ThirdHeader::before,
+ html body #root .labRoleWorkspace.pb1425PromotedSecond .pb1372ThirdHeader:not(.pb1429InlineActions)::before{display:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1429InlineActions{
+ position:static!important;inset:auto!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:40px!important;min-height:40px!important;margin-inline-start:auto!important;padding:0 0 0 2px!important;gap:10px!important;box-shadow:none!important;background:transparent!important;
+ }
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1429InlineActions::before{display:none!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar)){
+ top:calc(var(--pb1363-order-top,120px) + 52px)!important;padding-top:12px!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar))::-webkit-scrollbar-track{margin-top:0!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar)),
+ html body #root .labRoleWorkspace .labRolePageScrollArea :is(.pb1419FinancePage,.financeWorkspace,.customerStatementWorkspace,.invoiceTableCard){
+ transform:none!important;filter:none!important;perspective:none!important;contain:none!important;will-change:auto!important;
+ }
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar){
+ position:fixed!important;top:var(--pb1363-order-top,120px)!important;inset-inline:0!important;width:auto!important;max-width:none!important;margin:0!important;z-index:139!important;
+ }
+}
+
+/* PB1430 finance alignment */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1429InlineActions.pb1376ActionRow>button{height:26px!important;min-height:26px!important;padding:3px 9px!important;font-size:10.5px!important;line-height:18px!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace):not(:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar))){padding-top:12px!important}
+ html body #root .labRoleWorkspace{--pb1430-header-divider:linear-gradient(90deg,transparent 0%,#d4dce6 15%,#d4dce6 85%,transparent 100%)}
+ html body #root .labRoleWorkspace .labSingleHeader.pb1147LabAdminHeader::after,
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar)::before{
+ content:''!important;display:block!important;height:1px!important;inset-inline:18px!important;width:auto!important;background:var(--pb1430-header-divider)!important;opacity:1!important;border:0!important;box-shadow:none!important;transform:none!important;filter:none!important;pointer-events:none!important;
+ }
+}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div{
+ display:grid!important;grid-template-columns:minmax(160px,1fr) minmax(110px,.45fr) minmax(90px,.35fr) minmax(100px,.4fr) 72px!important;gap:12px!important;padding:10px 12px!important;align-items:center!important;
+}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:nth-child(1){grid-column:1!important;grid-row:1!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:nth-child(2){grid-column:2!important;grid-row:1!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:nth-child(3){grid-column:3!important;grid-row:1!important;display:block!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:nth-child(4){grid-column:4!important;grid-row:1!important;justify-self:stretch!important;width:100%!important;text-align:left!important;align-self:center!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div>:nth-child(5){grid-column:5!important;grid-row:1!important;width:auto!important}
+
+/* PB1431 finance document views */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar)){top:var(--pb1363-order-top,172px)!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions,.customerStatementWorkspace>.statementToolbar,.pb1423InvoiceToolbar){top:var(--pb1431-toolbar-top,120px)!important}
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace):not(:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar))){padding-top:20px!important}
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementActions>button.pb1177Print{margin-inline-start:auto!important}
+}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows{min-width:790px!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1420Payments .financeRecordRows>div{grid-template-columns:minmax(160px,1fr) minmax(110px,.45fr) minmax(90px,.35fr) minmax(100px,.4fr) 200px!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1431ReceiptActions{display:flex!important;gap:6px!important;align-items:center!important;justify-content:flex-end!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1431ReceiptActions button{font:inherit;font-size:10px!important;white-space:nowrap!important;padding:5px 8px!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .financeRecordRows>.pb1431RecordedReceipt{background:#ecfdf3!important;border-color:#95d5ad!important}
+html body #root .labRoleWorkspace .pb1431RecordedReceipt .pb1431ReceiptMark{background:#d1fadf!important;border-color:#95d5ad!important;color:#166534!important}
+
+/* PB1433 settled header boundaries and matching customer pickers */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea,
+ html.pb1363OrderQueue body #root .labRoleWorkspace main.appWorkspacePage.pbFixedRoleHeader>.labRolePageScrollArea:has(.financeWorkspace :is(.pb1176PaymentActions,.statementToolbar,.pb1423InvoiceToolbar)){
+ top:var(--pb1433-content-top,var(--pb1363-order-top,120px))!important;
+ }
+ html body #root .labRoleWorkspace .pb1372ThirdHeader.pb1433AlbumRow{
+ position:fixed!important;inset-inline:0!important;width:auto!important;height:44px!important;min-height:44px!important;margin:0!important;padding:4px 18px!important;background:#fff!important;
+ }
+ html body #root .labRoleWorkspace.pb1433AlbumThird .albumSettingsInnerTabs{display:none!important}
+}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1423InvoiceToolbar .pb1427InvoiceCustomerSelect,.pb1176PaymentActions>select){
+ box-sizing:border-box!important;min-height:34px!important;height:34px!important;padding:5px 10px!important;margin:0!important;
+ font:800 11px/1.35 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:normal!important;color:#344054!important;background:#fff!important;border:1px solid #d3def2!important;border-radius:8px!important;box-shadow:none!important;direction:rtl!important;text-align:start!important;appearance:auto!important;
+}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1423InvoiceToolbar .pb1427InvoiceCustomerSelect,.pb1176PaymentActions>select){
+ flex:0 1 220px!important;width:220px!important;min-width:150px!important;max-width:300px!important;
+ }
+}

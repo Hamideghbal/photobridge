@@ -1,0 +1,134 @@
+/* PhotoBridge R100F29 — one photographer header everywhere + compact store/lab chooser refinements. */
+@media(max-width:820px){
+  /* One shared photographer header geometry on every photographer section. */
+  html body .pbR100F29UnifiedHeader.unifiedRoleHeader.photographerHeaderRefined,
+  html body #photographerStoreRoleHeader.pbR100F29UnifiedHeader.photographerHeaderRefined{
+    position:fixed!important;
+    height:90px!important;
+    min-height:90px!important;
+    max-height:90px!important;
+    padding:8px 10px 8px 68px!important;
+    overflow:visible!important;
+    background:#fff!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  html body #storePhotographerWorkspace.storePhotographerWorkspace{
+    --pb-store-role-header-h:90px!important;
+    --pb-role-header-h:90px!important;
+  }
+  html body .pbR100F29UnifiedHeader>.photographerMobileHeaderQuickActions,
+  html body .pbR100F29UnifiedHeader .photographerMobileHeaderQuickActions,
+  html body .pbR100F29UnifiedHeader .mobileHeaderQuickActions,
+  html body .pbR100F29UnifiedHeader .photographerHeaderTools,
+  html body .pbR100F29UnifiedHeader .roleHeaderTools{
+    display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+  }
+  html body .pbR100F29UnifiedHeader>.photographerHeaderIdentity,
+  html body .pbR100F29UnifiedHeader>.workspaceIdentity,
+  html body .pbR100F29UnifiedHeader .photographerHeaderIdentity{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    height:74px!important;min-height:74px!important;max-height:74px!important;
+    margin:0!important;padding:0!important;display:flex!important;align-items:center!important;gap:10px!important;
+    overflow:visible!important;direction:rtl!important;
+  }
+  html body .pbR100F29UnifiedHeader .workspaceIdentityCopy{
+    flex:1 1 auto!important;width:auto!important;max-width:none!important;min-width:0!important;
+    height:auto!important;min-height:54px!important;margin:0!important;padding:0!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;
+    align-content:center!important;align-items:center!important;column-gap:8px!important;row-gap:3px!important;overflow:visible!important;
+  }
+  html body .pbR100F29UnifiedHeader .workspaceIdentityCopy>h1{
+    grid-column:1/-1!important;width:100%!important;max-width:none!important;min-width:0!important;
+    margin:0!important;padding:0!important;font-size:14.2px!important;font-weight:950!important;line-height:1.32!important;
+    white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  }
+  html body .pbR100F29UnifiedHeader .workspaceIdentityCopy>small{
+    grid-column:1!important;grid-row:2!important;width:100%!important;max-width:none!important;min-width:0!important;
+    margin:0!important;padding:0!important;font-size:8.7px!important;font-weight:750!important;line-height:1.3!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  html body .pbR100F29UnifiedHeader .photographerIdentityDateOnly{
+    grid-column:2!important;grid-row:2!important;width:auto!important;min-width:max-content!important;max-width:none!important;
+    margin:0!important;padding:0!important;align-self:center!important;justify-content:flex-end!important;overflow:visible!important;
+  }
+  html body .pbR100F29UnifiedHeader .photographerIdentityDateOnly .todayStamp.compact{
+    width:auto!important;max-width:none!important;margin:0!important;padding:0!important;gap:4px!important;background:transparent!important;
+    border:0!important;box-shadow:none!important;white-space:nowrap!important;overflow:visible!important;
+  }
+  html body .pbR100F29UnifiedHeader .photographerIdentityDateOnly .todayStamp.compact span{font-size:8.4px!important;line-height:1.2!important}
+  html body .pbR100F29UnifiedHeader .photographerIdentityDateOnly .todayStamp.compact b{font-size:8.2px!important;line-height:1.2!important}
+
+  #pbR100F25AvatarBtn{
+    order:-1!important;flex:0 0 52px!important;width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;
+    max-width:52px!important;max-height:52px!important;border-radius:15px!important;
+  }
+  #pbR100F25AvatarBtn::after{width:16px!important;height:16px!important;border-radius:6px!important;font-size:12px!important}
+  #pbR100F25MenuBtn{
+    left:10px!important;top:19px!important;width:50px!important;min-width:50px!important;max-width:50px!important;
+    height:50px!important;min-height:50px!important;max-height:50px!important;padding:0!important;border-radius:14px!important;gap:0!important;
+  }
+  #pbR100F25MenuBtn>span{display:none!important}
+  #pbR100F25MenuBtn svg{width:25px!important;height:25px!important;stroke-width:2.1!important}
+  #pbR100F25MenuPanel{top:86px!important;width:min(296px,calc(100vw - 18px))!important;padding:9px!important;border-radius:17px!important}
+  #pbR100F25MenuPanel button{min-height:49px!important;padding:9px 11px!important;border-radius:11px!important;font-size:12.4px!important}
+  #pbR100F25MenuPanel .pbF25MenuIcon{width:31px!important;height:31px!important;flex-basis:31px!important;font-size:15px!important}
+  #pbR100F25MenuPanel .pbF25MenuText b{font-size:12.4px!important;line-height:1.35!important}
+  #pbR100F25MenuPanel .pbF25MenuText small{font-size:9.3px!important;line-height:1.45!important}
+
+  /* Slightly larger Store navigation labels while keeping the current geometry. */
+  html body #storePhotographerWorkspace>#storeSectionNavV673.pb673StoreSectionNav>button{
+    font-size:12.6px!important;font-weight:950!important;
+  }
+  html body #storePhotographerWorkspace .storeFilterCompactButtonV809,
+  html body #storePhotographerWorkspace #saleCartBtn,
+  html body #storePhotographerWorkspace #itemCategoryBtnV809,
+  html body #storePhotographerWorkspace #itemBrandBtnV809,
+  html body #storePhotographerWorkspace #saleCategoryBtnV809,
+  html body #storePhotographerWorkspace #saleBrandBtnV809{
+    font-size:11.8px!important;font-weight:900!important;
+  }
+
+  /* Do not draw a visible scrollbar on Store entry/home; touch scrolling still works when content exceeds the viewport. */
+  html body #storePhotographerWorkspace>.shell,
+  html body.pbR96ChoosingStore #storePhotographerWorkspace>.shell,
+  html body #pbR99LabChooser{
+    scrollbar-width:none!important;-ms-overflow-style:none!important;
+  }
+  html body #storePhotographerWorkspace>.shell::-webkit-scrollbar,
+  html body.pbR96ChoosingStore #storePhotographerWorkspace>.shell::-webkit-scrollbar,
+  html body #pbR99LabChooser::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+
+  /* Lab chooser cards: identity/address/status on one compact row, action on the row below. */
+  html body #pbR99LabChooser .pbR99LabCard{
+    grid-template-columns:1fr!important;gap:8px!important;padding:10px 11px!important;border-radius:15px!important;
+  }
+  html body #pbR99LabChooser .pbR99LabInfo{
+    display:grid!important;grid-template-columns:minmax(76px,.85fr) minmax(0,1.25fr) auto!important;
+    align-items:center!important;gap:7px!important;min-width:0!important;
+  }
+  html body #pbR99LabChooser .pbR99LabInfo h3{
+    margin:0!important;font-size:11.7px!important;line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  html body #pbR99LabChooser .pbR99LabMeta{
+    margin:0!important;font-size:9.2px!important;line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  html body #pbR99LabChooser .pbR99LabBadge{
+    margin:0!important;padding:4px 7px!important;font-size:8.2px!important;line-height:1.1!important;white-space:nowrap!important;
+  }
+  html body #pbR99LabChooser .pbR99LabActions{width:100%!important;justify-content:stretch!important;gap:6px!important}
+  html body #pbR99LabChooser .pbR99LabBtn{flex:1!important;min-height:36px!important;font-size:9.8px!important;border-radius:10px!important}
+
+  .pbR96ChangeStore[hidden]{display:none!important}
+}
+
+@media(max-width:390px){
+  html body .pbR100F29UnifiedHeader .workspaceIdentityCopy>h1{font-size:13.2px!important}
+  html body .pbR100F29UnifiedHeader .workspaceIdentityCopy>small{font-size:8.1px!important}
+  #pbR100F25AvatarBtn{flex-basis:49px!important;width:49px!important;height:49px!important;min-width:49px!important;min-height:49px!important}
+  #pbR100F25MenuBtn{width:47px!important;min-width:47px!important;max-width:47px!important;height:47px!important;min-height:47px!important;max-height:47px!important;top:20px!important}
+  html body #pbR99LabChooser .pbR99LabInfo{grid-template-columns:minmax(68px,.8fr) minmax(0,1.15fr) auto!important;gap:5px!important}
+}
+
+/* PB1364 softer blue shadows */

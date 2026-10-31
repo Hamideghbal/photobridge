@@ -1,0 +1,253 @@
+/* PhotoBridge v699 — final mobile invite geometry + print CTA overlap + desktop store scroll + desktop guide layout. */
+
+@media (max-width:820px){
+  :root{--pb699-wide:90px}
+
+  /* Canonical mobile utility row: bell, exit, settings, invite, credit. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions{
+    display:flex!important;
+    flex-flow:row nowrap!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:4px!important;
+    direction:ltr!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    overflow:visible!important;
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileNotificationBell,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileNotificationBell{order:1!important}
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderPower,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderPower{order:2!important}
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderSettings,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderSettings{order:3!important}
+
+  /* Invite and credit are intentionally the same long rectangle. */
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  #pb699HeaderInviteButton{
+    order:4!important;
+    display:inline-flex!important;
+    flex:0 0 var(--pb699-wide)!important;
+    width:var(--pb699-wide)!important;
+    min-width:var(--pb699-wide)!important;
+    max-width:var(--pb699-wide)!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    padding:0 7px!important;
+    margin:0!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid #d8dee9!important;
+    border-radius:9px!important;
+    background:#fff!important;
+    color:#344054!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.03)!important;
+    font-size:0!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    direction:rtl!important;
+    text-size-adjust:none!important;
+    -webkit-text-size-adjust:none!important;
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::before,
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite::before,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after,
+  #pb699HeaderInviteButton::before,#pb699HeaderInviteButton::after{
+    content:none!important;
+    display:none!important;
+  }
+  .mobileHeaderInvite>.pb699InviteLabel,
+  .mobileHeaderInvite>.pb698InviteLabel.pb699InviteLabel{
+    display:block!important;
+    width:auto!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    color:inherit!important;
+    font-family:inherit!important;
+    font-size:8.25px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    letter-spacing:-.08px!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    direction:rtl!important;
+    transform:none!important;
+    text-indent:0!important;
+    text-size-adjust:none!important;
+    -webkit-text-size-adjust:none!important;
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderWallet{
+    order:5!important;
+    display:inline-flex!important;
+    flex:0 0 var(--pb699-wide)!important;
+    width:var(--pb699-wide)!important;
+    min-width:var(--pb699-wide)!important;
+    max-width:var(--pb699-wide)!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    margin:0!important;
+    padding:0 7px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    border-radius:9px!important;
+    font-size:8.35px!important;
+    font-weight:850!important;
+    line-height:1!important;
+    direction:rtl!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet>b,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderWallet>b{
+    min-width:0!important;
+    font-size:8.15px!important;
+    font-weight:950!important;
+    line-height:1!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /* Hide every retired invite instance. The canonical button is recreated by v699 runtime. */
+  .photographerMobileAiInviteRow,
+  #pb693GlobalInviteButton,#pb694HeaderInviteButton,#pb695HeaderInviteButton,#pb696HeaderInviteButton,#pb697HeaderInviteButton{
+    display:none!important;
+  }
+
+  /* Print: put the primary "چاپ عکس جدید" CTA visually ON the top background rail, not underneath it. */
+  .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode){
+    position:relative!important;
+    z-index:35!important;
+    overflow:visible!important;
+    border-top:0!important;
+    box-shadow:none!important;
+  }
+  .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions{
+    position:relative!important;
+    z-index:38!important;
+    overflow:visible!important;
+    transform:translateY(-10px)!important;
+    margin-bottom:-10px!important;
+  }
+  .photographerMain.photographerPrintWorkspace>.photographerLabContextRail:not(.photographerCreateContextMode) .photographerLabContextActions>.photographerContextAction.primary{
+    position:relative!important;
+    z-index:40!important;
+    isolation:isolate!important;
+  }
+}
+
+@media (max-width:360px){
+  :root{--pb699-wide:86px}
+  .mobileHeaderInvite>.pb699InviteLabel,
+  .mobileHeaderInvite>.pb698InviteLabel.pb699InviteLabel{font-size:7.9px!important}
+  .photographerMain>.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderWallet,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderWallet{font-size:8px!important}
+}
+
+/* Desktop/Windows store: page chrome stays fixed while the store body itself has the vertical scroller. */
+@media (min-width:821px){
+  html:has(#storePhotographerWorkspace),body.rentalPhotographerMode{
+    height:100%!important;
+    min-height:100%!important;
+    overflow:hidden!important;
+  }
+  #storePhotographerWorkspace.storePhotographerWorkspace{
+    position:fixed!important;
+    inset:0!important;
+    width:100%!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+  #storePhotographerWorkspace>.shell{
+    position:fixed!important;
+    top:calc(var(--pb-store-role-header-h,64px) + var(--pb-store-identity-h,42px))!important;
+    bottom:0!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+    width:min(1120px,calc(100% - 28px))!important;
+    max-width:1120px!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:18px 0 72px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    scrollbar-gutter:stable!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  #storePhotographerWorkspace>.shell>#app{min-height:max-content!important}
+
+  /* Windows print guides: real side buttons, not little squares inside print/album buttons. */
+  .photographerPrintWorkspace .photographerPrintModeNav.pb699DesktopGuideNav,
+  body .photographerPrintWorkspace .photographerHeaderNav.photographerPrintModeNav.pb699DesktopGuideNav{
+    display:grid!important;
+    grid-template-columns:auto auto auto auto!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+    direction:rtl!important;
+    overflow:visible!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeNav.pb699DesktopGuideNav>.pb569WorkflowGuideButton.pb699DesktopGuide{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    width:auto!important;
+    min-width:78px!important;
+    max-width:none!important;
+    height:36px!important;
+    min-height:36px!important;
+    margin:0!important;
+    padding:0 10px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    border:1px solid #b8c9f8!important;
+    border-radius:10px!important;
+    background:linear-gradient(180deg,#f7f9ff 0%,#edf3ff 100%)!important;
+    color:#3157c8!important;
+    box-shadow:0 2px 7px rgba(70,103,221,0.048)!important;
+    font-family:inherit!important;
+    font-size:9px!important;
+    font-weight:950!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    box-sizing:border-box!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeNav.pb699DesktopGuideNav>.pb699DesktopGuide .pb699GuideArrow{
+    display:inline-grid!important;
+    place-items:center!important;
+    width:15px!important;
+    height:15px!important;
+    font-size:14px!important;
+    line-height:1!important;
+    font-style:normal!important;
+  }
+  .photographerPrintWorkspace .photographerPrintModeNav.pb699DesktopGuideNav>.pb699DesktopGuide .pb569GuideLabel{
+    font-size:9px!important;
+    font-style:normal!important;
+    font-weight:950!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

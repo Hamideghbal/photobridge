@@ -1,0 +1,8 @@
+.labRoleWorkspace .pb1418DateSort{border:0;background:transparent;color:inherit;font:inherit;font-weight:800;padding:4px 6px;cursor:pointer;white-space:nowrap}
+.labRoleWorkspace .pb1418DateSort:focus-visible{outline:2px solid #315efb;outline-offset:2px;border-radius:4px}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1372HasThird .financeWorkspace .pb1176ManualOpen{display:none!important}
+ html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1418ManualInvoiceAction{margin-inline-start:auto;border:1px solid #315efb;border-radius:8px;background:#315efb;color:#fff;padding:6px 12px}
+}
+
+/* PB1364 softer blue shadows */

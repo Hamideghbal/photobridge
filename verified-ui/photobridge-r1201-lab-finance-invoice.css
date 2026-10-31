@@ -1,0 +1,102 @@
+/* R1201: laboratory invoices, instant walk-in feedback and compact accounting */
+.pb1137Intake.pb1201IntakeLoading{
+ width:min(460px,calc(100vw - 30px))!important;
+ min-height:136px!important;
+ max-height:200px!important;
+ display:grid!important;
+ place-content:center!important;
+ justify-items:center!important;
+ gap:10px!important;
+ padding:24px!important;
+ border-radius:18px!important;
+ text-align:center!important;
+ color:#1c3f78!important;
+ background:#fff!important;
+}
+.pb1201IntakeLoading strong{font:900 16px Vazirmatn,Tahoma,sans-serif}
+.pb1201IntakeLoading p{margin:0!important;font-size:12px;color:#667085}
+.pb1201IntakeLoading p:before{content:'◌';display:inline-block;margin-inline-end:9px;animation:pb1201Spin .75s linear infinite;font-size:21px;color:#315efb;vertical-align:middle}
+@keyframes pb1201Spin{to{transform:rotate(360deg)}}
+html body #root .labRolePageScrollArea .accountingInvoiceRows .externalAccountingRecordedBadge,
+html body #root .labRolePageScrollArea .accountingInvoiceRows .externalAccountingBtn{
+ white-space:nowrap!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+ max-width:100%!important;
+ overflow-wrap:normal!important;
+ line-height:1.2!important;
+}
+html body #root .labRolePageScrollArea .accountingInvoiceRows .invoiceRow>div:first-child{
+ min-width:0!important;
+}
+html body #root .labRolePageScrollArea .accountingInvoiceRows .invoiceRow>div:first-child .externalAccountingRecordedBadge{
+ display:inline-block!important;
+ width:max-content!important;
+ font-size:9px!important;
+ padding:2px 4px!important;
+}
+html body #root .labRolePageScrollArea .invoiceRangeToolbar{
+ grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto auto!important;
+}
+html body #root .labRolePageScrollArea .invoiceRangeToolbar .pb1201InvoiceToday{
+ min-height:40px!important;
+ height:40px!important;
+ white-space:nowrap!important;
+ background:#fff!important;
+ color:#315efb!important;
+ border:1px solid #b8c8f4!important;
+ border-radius:10px!important;
+ padding:0 13px!important;
+ font-weight:850!important;
+}
+html body #root .labRolePageScrollArea .invoiceRangeToolbar .pb1201InvoiceCounts{
+ grid-column:1/-1!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ flex-wrap:wrap!important;
+ gap:8px!important;
+ margin-top:2px!important;
+ padding:7px 10px!important;
+ background:#eef5ff!important;
+ border:1px solid #d4e2fa!important;
+ border-radius:9px!important;
+ font:800 11px/1.6 Vazirmatn,Tahoma,sans-serif!important;
+}
+.pb1201InvoiceCounts>span{
+ display:inline-flex!important;
+ align-items:center!important;
+ gap:5px!important;
+ padding:2px 7px!important;
+ background:#fff!important;
+ border:1px solid #dde6f6!important;
+ border-radius:7px!important;
+ white-space:nowrap!important;
+}
+.pb1201InvoiceCounts b{color:#244cca!important;font-weight:900!important}
+html body #root .labRolePageScrollArea .accountingInvoiceRows .invoiceActionMini{
+ grid-template-columns:minmax(0,1fr)!important;
+}
+html body .pb1201BirthdayRow{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ padding-block:9px!important;
+}
+@media(max-width:820px){
+ html body #root .labRolePageScrollArea .invoiceRangeToolbar{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ html body #root .labRolePageScrollArea .invoiceRangeToolbar .pb1201InvoiceCounts{
+  grid-column:1/-1!important;
+  align-items:stretch!important;
+  gap:5px!important;
+  font-size:10px!important;
+ }
+ .pb1201InvoiceCounts>span{white-space:normal!important}
+ html body #root .labRolePageScrollArea .accountingInvoiceRows .invoiceRow>div:first-child .externalAccountingRecordedBadge{
+  font-size:8px!important;
+ }
+}
+
+/* PB1364 softer blue shadows */

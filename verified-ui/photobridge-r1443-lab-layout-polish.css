@@ -1,0 +1,51 @@
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+html body #root .labRoleWorkspace:has(.pb1386StoragePanel) .pb1175HeaderFade{display:none!important}
+html body #root .labRoleWorkspace:has(.pb1386StoragePanel) main>.labRolePageScrollArea::before{content:''!important;display:block!important;position:fixed!important;top:var(--pb1363-order-top,72px)!important;inset-inline:0!important;height:21px!important;background:linear-gradient(#4667dd12,transparent)!important;z-index:139!important;pointer-events:none!important}
+}
+html body #root .labRoleWorkspace .pb1386StoragePanel{gap:4px!important}
+html body #root .labRoleWorkspace .pb1386StoragePanel>h2{margin:0 0 5px!important}
+html body #root .labRoleWorkspace .pb1386StoragePanel>p{margin:0!important;font-size:12px!important;line-height:1.7!important}
+html body #root .labRoleWorkspace .pb1386StoragePanel>.pb1443StoragePath{margin-top:5px!important;font-size:10px!important;color:#64748b!important;overflow-wrap:anywhere!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea :is(.labPrintPricingCard,.walkinPricingCard) .inventoryPriceGrid>:is(b,label,div){text-align:center!important;align-items:center!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea :is(.labPrintPricingCard,.walkinPricingCard) .inventoryPriceGrid input{text-align:center!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea :is(.labPrintPricingCard,.walkinPricingCard) .inventoryPriceGrid>:first-child{direction:rtl!important;text-align:right!important;align-items:start!important;justify-items:start!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea :is(.labPrintPricingCard,.walkinPricingCard) .inventoryPriceGrid>:first-child>*{text-align:right!important}
+/* Stable columns: identity, membership state, settlement, location, actions. */
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerList{display:block!important;overflow-x:auto!important;min-width:0!important;max-width:100%!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard{display:grid!important;grid-template-columns:minmax(170px,1fr) 105px 220px 165px 245px!important;min-width:965px!important;gap:12px!important;margin-bottom:8px!important;align-items:center!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard>.labPhotographerIdentity{grid-column:1!important;order:0!important;min-width:0!important;width:auto!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard>.pb1443PhotographerStatus{grid-column:2!important;display:grid!important;gap:5px!important;justify-items:start!important;font-size:10px!important}
+.pb1443Preregistered{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:6px;padding:3px 6px;white-space:nowrap}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard>.labPhotographerMeta{display:contents!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerMeta>.labPhotographerSettlement{grid-column:3!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerMeta>.labPhotographerLocation{grid-column:4!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labPhotographerCard>.labPhotographerActions{grid-column:5!important;order:0!important;margin:0!important;width:245px!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important}
+.pb1443PendingInvite{display:grid;gap:3px;min-width:0}.pb1443PendingInvite button{font-size:10px;white-space:nowrap;padding:5px 7px}.pb1443PendingInvite small{font-size:9px;line-height:1.5;max-width:160px}
+/* Keep the copy operation inside its URL field; a rule separates it from SMS. */
+html body #root .labRoleWorkspace .pb1436InviteControls{grid-template-columns:minmax(210px,1.4fr) 1px minmax(130px,.8fr) minmax(155px,.9fr) auto!important;column-gap:12px!important}
+.pb1443CopyField{position:relative;min-width:0;width:100%}
+html body #root .labRoleWorkspace .pb1443CopyField>input{padding-left:62px!important;min-width:0!important;width:100%!important}
+html body #root .labRoleWorkspace .pb1443CopyField>button{position:absolute!important;left:4px!important;top:4px!important;height:28px!important;min-height:28px!important;padding:3px 10px!important;margin:0!important;font-size:10px!important;border-radius:5px!important}
+.pb1443InviteDivider{display:block;width:1px;height:30px;background:#d3def2;align-self:center}
+/* Only secondary details collapse. Payment and upload callbacks remain intact. */
+html body #root .labRoleWorkspace :is(.serviceWalletLab,.labSubscriptionPanel){gap:10px!important;font-size:12px!important}
+html body #root .labRoleWorkspace .serviceWalletLab>.card,html body #root .labRoleWorkspace .labSubscriptionPanel{padding:12px!important}
+html body #root .labRoleWorkspace :is(.serviceWalletLab,.labSubscriptionPanel) :is(h2,h3){font-size:14px!important;margin:0!important;line-height:1.5!important}
+html body #root .labRoleWorkspace :is(.serviceWalletLab,.labSubscriptionPanel) :is(p,small){font-size:10px!important;line-height:1.6!important;margin:2px 0!important}
+html body #root .labRoleWorkspace .walletBalanceHero{padding:0!important;gap:10px!important;margin:0 0 8px!important;min-height:0!important}
+html body #root .labRoleWorkspace .walletBalanceHero h2{font-size:23px!important}
+html body #root .labRoleWorkspace :is(.walletTopupForm,.walletTopupFormAligned,.walletDiscountRedeemRow){gap:8px!important;margin-top:8px!important;padding:0!important}
+html body #root .labRoleWorkspace :is(.walletTopupForm,.walletDiscountRedeemRow) :is(input,button){min-height:34px!important;height:34px!important;font-size:11px!important}
+html body #root .labRoleWorkspace .pb1443Disclosure{display:block!important;padding:0!important;border:1px solid #dce5f0!important;border-radius:9px!important;background:#fff!important;margin:8px 0 0!important;width:100%!important;min-height:0!important;max-width:none!important}
+.pb1443Disclosure>summary{padding:9px 12px;font-size:11px;font-weight:800;cursor:pointer;color:#475569}.pb1443DisclosureBody{padding:10px 12px}.pb1443DisclosureBody>.panelHead,.pb1443DisclosureBody>.detailSectionTitle{display:none!important}.pb1443Disclosure.serviceCatalogGrid>.pb1443DisclosureBody{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+html body #root .labRoleWorkspace .labSubscriptionPanel :is(.subscriptionCurrent,.labPlanChoices,.zibalPayBox){padding:8px!important;gap:8px!important;margin:8px 0!important;min-height:0!important}
+html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices{display:flex!important;flex-wrap:wrap!important}
+html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button{min-height:0!important;padding:8px 12px!important;flex:1 1 130px!important;font-size:11px!important;gap:3px!important}
+html body #root .labRoleWorkspace .labSubscriptionPanel .manualReceiptDivider{display:none!important}
+html body #root .labRoleWorkspace .pb1443Disclosure.receiptSubmitBox>.pb1443DisclosureBody{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+@media(max-width:820px){html body #root .labRoleWorkspace .pb1436InviteControls{grid-template-columns:minmax(210px,1.4fr) 1px 135px 155px auto!important}}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labSettingsWorkspace:has(:is(.serviceWalletLab,.labSubscriptionPanel)){grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:none!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .labSettingsWorkspace>.settingsBody:has(:is(.serviceWalletLab,.labSubscriptionPanel)){grid-column:1/-1!important;width:100%!important;max-width:none!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea :is(.serviceWalletLab,.labSubscriptionPanel){width:100%!important;max-width:none!important;box-sizing:border-box!important}
+
+/* PB1364 softer blue shadows */

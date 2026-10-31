@@ -1,0 +1,99 @@
+/* PhotoBridge v708 — deterministic mobile header row geometry; React nodes are never reparented. */
+@media (max-width:820px){
+  :root{--pb708-header-h:120px;--pb708-row-left:8px;--pb708-row-top:61px;--pb708-row-total:206px;--pb708-invite-w:206px;--pb708-install-w:0px;--pb708-install-left:112px}
+
+  .photographerMain>.unifiedRoleHeader.photographerHeaderRefined,
+  #storePhotographerWorkspace>#photographerStoreRoleHeader.photographerHeaderRefined{
+    height:var(--pb708-header-h)!important;
+    min-height:var(--pb708-header-h)!important;
+    max-height:var(--pb708-header-h)!important;
+    flex-basis:var(--pb708-header-h)!important;
+    padding:10px 10px 12px!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    background:#f4f8ff!important;
+    border-bottom:1px solid #dce7fb!important;
+    box-shadow:0 2px 7px rgba(70,103,221,0.027)!important;
+  }
+  .photographerMain.photographerPrintWorkspace>.unifiedRoleHeader.photographerPrintModeHeader{
+    height:var(--pb708-header-h)!important;
+    min-height:var(--pb708-header-h)!important;
+    max-height:var(--pb708-header-h)!important;
+    flex-basis:var(--pb708-header-h)!important;
+    background:#f4f8ff!important;
+    border-bottom:1px solid #dce7fb!important;
+  }
+
+  .photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.workspaceIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    height:100px!important;min-height:100px!important;max-height:100px!important;
+    padding-left:220px!important;box-sizing:border-box!important
+  }
+
+  /* Primary row remains fully React-owned and in normal v704 geometry. */
+  .photographerHeaderRefined>.photographerMobileHeaderQuickActions{
+    position:absolute!important;left:8px!important;right:auto!important;top:10px!important;
+    height:34px!important;min-height:34px!important;max-height:34px!important;
+    display:flex!important;flex-flow:row nowrap!important;direction:ltr!important;
+    align-items:center!important;justify-content:flex-start!important;gap:4px!important;
+    margin:0!important;padding:0!important;overflow:visible!important;z-index:96!important
+  }
+
+  /* Invite is kept in its React parent but placed in the shared viewport coordinate system. */
+  .photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite,
+  #photographerStoreRoleHeader .photographerMobileHeaderQuickActions>.mobileHeaderInvite{
+    display:inline-flex!important;
+    position:fixed!important;
+    left:var(--pb708-row-left)!important;right:auto!important;
+    top:var(--pb708-row-top)!important;inset-block-start:var(--pb708-row-top)!important;
+    transform:none!important;
+    width:var(--pb708-invite-w)!important;min-width:var(--pb708-invite-w)!important;max-width:var(--pb708-invite-w)!important;
+    height:34px!important;min-height:34px!important;max-height:34px!important;
+    margin:0!important;padding:0 10px!important;
+    border:1px solid #d1dcf0!important;border-radius:9px!important;background:#fff!important;color:#344054!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.04)!important;
+    align-items:center!important;justify-content:center!important;gap:5px!important;
+    white-space:nowrap!important;overflow:hidden!important;
+    font:900 10.5px/1 Vazirmatn,Tahoma,sans-serif!important;
+    aspect-ratio:auto!important;box-sizing:border-box!important;z-index:9991!important
+  }
+  .photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::before,
+  .photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite::after{content:none!important;display:none!important}
+
+  /* Old secondary wrappers/old install controls stay disabled; v708 owns the single install CTA. */
+  .pb704MobileSecondaryActions,.photographerMobileHeaderQuickActions>.mobileHeaderInstall,#pb707InstallButton{display:none!important}
+
+  #pb708InstallButton{
+    position:fixed!important;
+    left:var(--pb708-install-left)!important;right:auto!important;
+    top:var(--pb708-row-top)!important;
+    width:var(--pb708-install-w)!important;min-width:var(--pb708-install-w)!important;max-width:var(--pb708-install-w)!important;
+    height:34px!important;min-height:34px!important;max-height:34px!important;
+    margin:0!important;padding:0 10px!important;
+    border:1px solid #c6d4f6!important;border-radius:9px!important;background:#f8faff!important;color:#244ea2!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.04)!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+    white-space:nowrap!important;overflow:hidden!important;
+    font:900 10.5px/1 Vazirmatn,Tahoma,sans-serif!important;
+    box-sizing:border-box!important;z-index:9992!important
+  }
+  #pb708InstallButton>span{display:inline-grid!important;place-items:center!important;width:16px!important;height:16px!important;flex:0 0 16px!important;border-radius:5px!important;background:#e7eeff!important;color:#315efb!important;font-size:12px!important;font-weight:950!important;line-height:1!important}
+  #pb708InstallButton>b{font:inherit!important}
+
+  #pb708InstallOverlay{position:fixed!important;inset:0!important;z-index:99990!important;padding:18px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;background:rgba(15,23,42,.42)!important;backdrop-filter:blur(3px)!important;-webkit-backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
+  #pb708InstallOverlay[hidden]{display:none!important}
+  #pb708InstallOverlay>section{width:min(100%,420px)!important;padding:14px!important;border:1px solid #e4e7ec!important;border-radius:18px!important;background:#fff!important;color:#344054!important;box-shadow:0 18px 48px rgba(15,23,42,.22)!important;direction:rtl!important;text-align:right!important;font-family:Vazirmatn,Tahoma,sans-serif!important}
+  .pb708InstallHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;margin-bottom:10px!important}.pb708InstallHead b{font-size:14px!important}.pb708InstallHead button{width:32px!important;height:32px!important;border:1px solid #e4e7ec!important;border-radius:9px!important;background:#fff!important;color:#667085!important;font-size:18px!important}.pb708InstallBody{font-size:11px!important;line-height:1.9!important;color:#475467!important}.pb708InstallOk{width:100%!important;height:40px!important;border:0!important;border-radius:10px!important;background:#315efb!important;color:#fff!important;font:900 11px/1 Vazirmatn,Tahoma,sans-serif!important}
+}
+
+@media (max-width:365px){
+  .photographerHeaderRefined>.photographerHeaderIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.workspaceIdentity,
+  #photographerStoreRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{padding-left:208px!important}
+  #pb708InstallButton,.photographerHeaderRefined .photographerMobileHeaderQuickActions>.mobileHeaderInvite{font-size:9.7px!important}
+}
+
+@media (min-width:821px){#pb708InstallButton,#pb708InstallOverlay{display:none!important}}
+
+/* PB1364 softer blue shadows */

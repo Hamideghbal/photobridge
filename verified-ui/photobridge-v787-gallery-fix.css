@@ -1,0 +1,68 @@
+/* PhotoBridge v787 — mobile gallery scroll, typography, customer selection UX */
+@media (max-width:820px){
+  html body .photographerMain>.photographerRolePageScrollArea{
+    min-height:0!important;height:auto!important;max-height:none!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;touch-action:pan-y!important;
+  }
+  html body .photographerMain.photographerGrayWorkspaceMode>.photographerRolePageScrollArea{
+    overflow-y:auto!important;touch-action:pan-y!important;
+  }
+  html body .photographerMain .clientGalleryWorkspace,
+  html body .photographerMain .clientGalleryManager{min-height:0!important;overflow:visible!important}
+  html body .clientGalleryManagerGrid,
+  html body .clientGallerySettingsStack,
+  html body .clientGalleryMediaPanel{overflow:visible!important;max-height:none!important}
+
+  /* Accounting/finance on photographer mobile: one page scroller; three choices stay visible. */
+  html body .photographerMain .financeWorkspace{overflow:visible!important;max-height:none!important}
+  html body .photographerMain .financeNavDock{overflow:visible!important;max-height:none!important}
+  html body .photographerMain .financeSectionTabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;overflow:visible!important;max-height:none!important;gap:6px!important}
+  html body .photographerMain .financeSectionPicker{display:none!important}
+  html body .photographerMain .financeSectionTabs button{min-width:0!important;white-space:normal!important;font-size:11px!important}
+
+  /* Gallery list readability. */
+  .clientGalleryIntroCopy h2{font-size:18px!important}
+  .clientGalleryIntroCopy p{font-size:12px!important;line-height:1.8!important}
+  .clientGalleryIntroFacts b{font-size:12px!important}.clientGalleryIntroFacts small{font-size:9.5px!important}
+  .clientGalleryListHead h2{font-size:17px!important}.clientGalleryListHead p{font-size:11px!important}
+  .clientGalleryCardBody h3{font-size:16px!important}.clientGalleryCardBody>p{font-size:11px!important;line-height:1.7!important}
+  .clientGalleryCardActions button{font-size:10.5px!important}
+
+  /* Public customer gallery: layout selector on left, larger copy. */
+  .clientGalleryPublicHeader{direction:ltr!important}
+  .clientGalleryPublicHeader>div:first-child{direction:rtl!important;order:2!important}
+  .clientGalleryPublicHeaderRight{direction:rtl!important;order:1!important;margin-right:0!important;margin-left:auto!important}
+  .clientGalleryPublicHeader h1{font-size:20px!important}.clientGalleryPublicHeader p{font-size:12px!important}.clientGalleryPublicHeader span{font-size:11px!important}
+  .clientGalleryCustomerNote{font-size:13px!important;line-height:1.9!important}
+  .clientGallerySelectionStatus b{font-size:12px!important}.clientGallerySelectionStatus small{font-size:10px!important}
+
+  /* Selection works in every grid mode; compact corner check instead of a text strip. */
+  .publicClientGalleryPage.unlocked .clientGalleryMobileSingleViewHint{display:none!important}
+  .publicClientGalleryPage.unlocked .clientGalleryPublicMedia{position:relative!important}
+  .publicClientGalleryPage.unlocked .clientGalleryPhotoInteraction{display:block!important;position:absolute!important;top:7px!important;right:7px!important;z-index:15!important;padding:0!important;background:transparent!important;pointer-events:none!important}
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection{display:block!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;pointer-events:auto!important}
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection label{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;border-radius:9px!important;padding:0!important;display:grid!important;place-items:center!important;background:rgba(255,255,255,.94)!important;border:1px solid rgba(15,23,42,.18)!important;box-shadow:0 3px 10px rgba(15,23,42,.18)!important}
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection label.picked{background:#315efb!important;border-color:#315efb!important}
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection label input{width:17px!important;height:17px!important;margin:0!important;accent-color:#fff!important}
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection label span,
+  .publicClientGalleryPage.unlocked .clientGalleryBaseSelection label b{display:none!important}
+  .publicClientGalleryPage.unlocked .clientGalleryOptionalOrdering{position:static!important;pointer-events:auto!important;margin-top:8px!important;background:#fff!important;border-radius:12px!important;padding:8px!important;box-shadow:0 6px 18px rgba(15,23,42,.12)!important}
+  .publicClientGalleryPage.unlocked .clientGalleryPhotoNote{font-size:11px!important}.publicClientGalleryPage.unlocked .clientGalleryPhotoNote span{font-size:11px!important}
+
+  /* Second status/action header stays visible in every layout. */
+  .publicClientGalleryPage.unlocked .clientGallerySelectionStatus{display:flex!important;position:sticky!important;top:65px!important;z-index:35!important}
+
+  /* Prevent double page + inner scrolling in gallery management/tariff view. */
+  .clientGalleryTariffModal{max-height:min(82dvh,760px)!important;overflow:hidden!important}
+  .clientGalleryTariffTableScroller{max-height:calc(82dvh - 190px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
+}
+
+.pb787WorkflowToggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid #dfe5ef;border-radius:12px;background:#f8fafc}
+.pb787WorkflowToggle>span{display:grid;gap:3px}.pb787WorkflowToggle b{font-size:12px}.pb787WorkflowToggle small{font-size:9px;color:#667085;line-height:1.6}.pb787WorkflowToggle input{width:20px;height:20px;accent-color:#315efb}
+.pb787Req{color:#b42318;font-size:9px;font-weight:900;margin-inline-start:5px}.pb787Opt{color:#667085;font-size:9px;font-weight:800;margin-inline-start:5px}
+.pb787InvoiceButton{min-height:38px;padding:0 13px;border:0;border-radius:10px;background:#315efb;color:#fff;font-weight:900;cursor:pointer}
+.pb787InvoiceOverlay{position:fixed;inset:0;z-index:2147483000;background:rgba(15,23,42,.54);display:grid;place-items:center;padding:18px;direction:rtl}
+.pb787InvoiceCard{width:min(440px,100%);background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(15,23,42,.28);display:grid;gap:12px}.pb787InvoiceCard h3{margin:0;font-size:18px}.pb787InvoiceCard p{margin:0;color:#667085}.pb787InvoiceCard .sum{font-size:22px;font-weight:950;color:#067647}.pb787InvoiceCard button{height:40px;border:0;border-radius:10px;background:#101828;color:#fff;font-weight:900}
+
+/* PB1364 softer blue shadows */

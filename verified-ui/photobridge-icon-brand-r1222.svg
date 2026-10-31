@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PhotoBridge">
+<defs><linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2674ff"/><stop offset=".55" stop-color="#3165ef"/><stop offset="1" stop-color="#35bada"/></linearGradient><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4fbff"/><stop offset="1" stop-color="#d9efff"/></linearGradient></defs>
+<rect width="512" height="512" rx="105" fill="url(#sky)"/>
+<rect x="63" y="58" width="386" height="394" rx="98" fill="url(#blue)"/>
+<circle cx="256" cy="222" r="138" fill="#ffffff" opacity=".075"/>
+<path d="M135 277Q256 132 377 277" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M167 281H345" fill="none" stroke="#ccf8ff" stroke-width="23" stroke-linecap="round"/>
+<circle cx="135" cy="277" r="20" fill="#bff8ff" stroke="#fff" stroke-width="7"/>
+<circle cx="377" cy="277" r="20" fill="#bff8ff" stroke="#fff" stroke-width="7"/>
+<circle cx="256" cy="190" r="17" fill="#fff"/>
+<g text-anchor="middle" font-family="Arial,DejaVu Sans,sans-serif" fill="#fff"><text x="256" y="353" font-size="27" font-weight="700" letter-spacing="8">PHOTO</text><text x="256" y="396" font-size="38" font-weight="900" letter-spacing="2.8">BRIDGE</text></g>
+</svg>

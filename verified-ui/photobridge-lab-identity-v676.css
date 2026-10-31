@@ -1,0 +1,38 @@
+/* PhotoBridge v0.17.676 — lab identity directly below the real role header; no viewport-bottom math */
+#pb676PhotographerLabIdentityBar{display:none}
+@media(max-width:820px){
+  .photographerMain.pb676HasLabIdentityBar>.photographerPrintModeHeader.roleHeaderReflow{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"identity"!important;
+    grid-template-rows:auto!important;
+    row-gap:0!important;
+    min-height:0!important;
+    height:auto!important;
+  }
+  #pb676PhotographerLabIdentityBar{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    top:var(--pb-role-header-h,64px)!important;
+    height:42px!important;
+    min-height:42px!important;
+    z-index:520!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    padding:6px 12px!important;
+    background:linear-gradient(100deg,#1d4ed8,#4338ca)!important;
+    color:#fff!important;
+    border-bottom:1px solid rgba(255,255,255,.18)!important;
+    box-shadow:0 7px 20px rgba(45,70,154,0.096)!important;
+    direction:rtl!important;
+    pointer-events:none!important;
+    box-sizing:border-box!important;
+  }
+  #pb676PhotographerLabIdentityBar span{font-size:9px!important;font-weight:850!important;opacity:.82!important;white-space:nowrap!important}
+  #pb676PhotographerLabIdentityBar b{max-width:76vw!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:13px!important;line-height:1!important;font-weight:950!important;text-align:center!important}
+  .photographerMain.pb676HasLabIdentityBar .photographerPrintModeHeader .photographerPrintTopLab{display:none!important}
+}
+
+/* PB1364 softer blue shadows */

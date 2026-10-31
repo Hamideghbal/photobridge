@@ -1,0 +1,17 @@
+/* All three tabs reserve the same picker box, including the same native appearance. */
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions>select,.customerStatementWorkspace>.statementToolbar>.statementFilters>.pb1421CustomerSelect,.pb1423InvoiceToolbar .pb1427InvoiceCustomerSelect){box-sizing:border-box!important;min-height:34px!important;height:34px!important;padding:5px 10px!important;margin:0!important;font:800 11px/1.35 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:normal!important;color:#344054!important;background:#fff!important;border:1px solid #d3def2!important;border-radius:8px!important;box-shadow:none!important;direction:rtl!important;text-align:start!important;appearance:auto!important}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace :is(.pb1176PaymentActions>select,.customerStatementWorkspace>.statementToolbar>.statementFilters>.pb1421CustomerSelect,.pb1423InvoiceToolbar .pb1427InvoiceCustomerSelect){flex:0 0 220px!important;width:220px!important;min-width:220px!important;max-width:220px!important;order:0!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>button{order:1!important;flex:0 0 auto!important;margin:0!important}
+html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb1176PaymentActions>.pb1177PaymentMetrics{order:2!important;flex:1 1 auto!important;margin:0!important;min-width:0!important}
+html body #root .labRoleWorkspace.pb1372HasThird .labRolePageScrollArea .financeWorkspace .pb1423InvoiceToolbar .invoiceListToolbar>.pb1176ManualOpen{display:inline-flex!important;align-items:center!important;justify-content:center!important;order:100!important;margin-inline-start:auto!important;flex:0 0 auto!important;height:34px!important;min-height:34px!important;padding:5px 12px!important;white-space:nowrap!important}
+}
+html body #root .labRoleWorkspace .pb1372ThirdHeader .pb1418ManualInvoiceAction{display:none!important}
+html body .pb1436CorrectionBack>.pb1436CorrectionDocument{width:min(520px,calc(100vw - 32px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 40px)!important;padding:16px!important;flex:none!important;gap:0!important;grid-template-rows:auto auto!important}
+html body .pb1436CorrectionBack>.pb1436CorrectionDocument>.invoicePreviewHead{min-height:0!important;height:auto!important;margin:0!important;padding:0 0 10px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important}
+html body .pb1436CorrectionBack>.pb1436CorrectionDocument>.invoicePreviewHead h3{font-size:15px!important;line-height:1.6!important;margin:0!important}
+html body .pb1436CorrectionBack>.pb1436CorrectionDocument>.pb1435CorrectionDetails{font-size:12px!important;line-height:1.7!important;grid-template-columns:115px minmax(0,1fr)!important;gap:8px 14px!important;padding:10px 0 0!important;margin:0!important}
+html body .modal.pb1439CorrectionForm{width:min(520px,calc(100vw - 32px))!important;min-height:0!important;height:auto!important;max-height:calc(100dvh - 32px)!important;padding:16px!important}
+html body .modal.pb1439CorrectionForm .modalContent{padding:12px 0 0!important;gap:10px!important;min-height:0!important}
+
+/* PB1364 softer blue shadows */

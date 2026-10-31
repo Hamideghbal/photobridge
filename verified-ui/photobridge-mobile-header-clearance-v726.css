@@ -1,0 +1,37 @@
+/* PhotoBridge v726 — structural mobile clearance for print/album order pages.
+   Fixes first-row clipping under the fixed print header without changing order flow. */
+@media (max-width:820px){
+  :root{--pb726-print-content-clearance:52px}
+
+  /* The order-list CTA was starting underneath the fixed print header stack.
+     Move the whole list down one full mobile header row so the top edge/corners
+     and the first order card are always visible. */
+  html body .photographerMain.photographerPrintWorkspace
+  >.photographerRolePageScrollArea
+  >.ordersWorkspace.liveCustomerOrders{
+    margin-top:var(--pb726-print-content-clearance)!important;
+    scroll-margin-top:var(--pb726-print-content-clearance)!important;
+  }
+
+  /* Same structural clearance for the album creation page.  This moves the real
+     file toolbar (Add file / Add folder) and section 1 below the fixed header;
+     no proxy/duplicate buttons are introduced. */
+  html body .photographerMain.photographerPrintWorkspace.photographerAlbumCreateWorkspaceMode
+  >.photographerRolePageScrollArea
+  >.photographerAlbumCreateFlush{
+    margin-top:var(--pb726-print-content-clearance)!important;
+    scroll-margin-top:var(--pb726-print-content-clearance)!important;
+  }
+
+  /* Neutralize legacy negative/zero top rules on the first real content surface. */
+  html body .photographerMain.photographerPrintWorkspace
+  >.photographerRolePageScrollArea
+  >.ordersWorkspace.liveCustomerOrders:first-child,
+  html body .photographerMain.photographerPrintWorkspace.photographerAlbumCreateWorkspaceMode
+  >.photographerRolePageScrollArea
+  >.photographerAlbumCreateFlush:first-child{
+    padding-top:0!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

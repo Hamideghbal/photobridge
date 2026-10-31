@@ -1,0 +1,17 @@
+/* PhotoBridge v876: final four-color appearance behavior. */
+:root{--pb876-selected:#fff;--pb876-selected-ink:#101828}
+.financeSectionTabs>button{font-size:15px!important;font-weight:900!important;line-height:1.35!important}
+.financeSectionTabs>button.active{background:var(--pb876-selected)!important;background-color:var(--pb876-selected)!important;color:var(--pb876-selected-ink)!important;border-color:color-mix(in srgb,var(--pb876-selected-ink) 20%,transparent)!important}
+#storeSectionNavV673 button.active,#storeSectionNavV673 [data-store-panel].active{background:var(--pb876-selected)!important;background-color:var(--pb876-selected)!important;color:var(--pb876-selected-ink)!important}
+@media(max-width:820px){
+ html:has(#storePhotographerWorkspace),html:has(#storePhotographerWorkspace) body,body.rentalPhotographerMode{background:var(--pb771-top)!important;background-color:var(--pb771-top)!important}
+ /* category row only */
+ #storePhotographerWorkspace>#storeSectionNavV673{background:var(--pb718-subbar)!important;background-color:var(--pb718-subbar)!important;color:var(--pb718-subbar-text)!important}
+ #storePhotographerWorkspace>#storeSectionNavV673 button{font-size:15px!important;font-weight:900!important;padding-block:8px!important}
+ /* store identity/brand row is deliberately independent from subheader color */
+ #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar{background:#fff!important;background-color:#fff!important;color:#182230!important}
+ #storePhotographerWorkspace>#photographerStoreIdentityBar.photographerStoreIdentityBar *{color:inherit!important}
+ #photographerStoreIdentityBar button,#photographerStoreIdentityBar b,#photographerStoreIdentityBar span{font-size:14px!important;font-weight:850!important}
+}
+
+/* PB1364 softer blue shadows */

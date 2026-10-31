@@ -1,0 +1,24 @@
+/* Existing laboratory invite needs only mobile OTP and no new-account form. */
+html.pb1144ExistingInvite body #root{display:none!important}
+html.pb1144ExistingInvite,html.pb1144ExistingInvite body{min-height:100%!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important}
+.pb1144InvitePage{position:relative;z-index:2147483000;min-height:100dvh;box-sizing:border-box;display:grid;place-items:center;padding:24px 14px;background:linear-gradient(180deg,#f3f7ff,#f9fbff);direction:rtl;font:14px/1.9 Vazirmatn,Tahoma,sans-serif;color:#243046}
+.pb1144InviteCard{width:min(450px,100%);box-sizing:border-box;background:#fff;border:1px solid #dce5f3;border-radius:20px;padding:26px;box-shadow:0 16px 45px rgba(25,37,59,0.06)}
+.pb1144Brand{font:800 12px Vazirmatn,Tahoma,sans-serif;color:#315efb}
+.pb1144InviteCard h1{font:900 22px Vazirmatn,Tahoma,sans-serif;margin:7px 0 10px}
+.pb1144InviteCard p{font-size:13px;color:#64748b;margin:10px 0}
+.pb1144Account{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;background:#eef3ff;padding:12px;border-radius:11px;border:1px solid #dbe5ff}
+.pb1144Account strong{font-size:14px;color:#244ea3;overflow-wrap:anywhere}
+.pb1144Account span{font-size:13px;direction:ltr;unicode-bidi:isolate}
+.pb1144InviteCard form{display:grid;gap:11px;margin-top:14px}
+.pb1144InviteCard button,.pb1144InviteCard input{font:inherit;box-sizing:border-box}
+.pb1144InviteCard button{min-height:44px;border:1px solid #ced9ef;border-radius:11px;cursor:pointer;font-weight:850;padding:9px}
+.pb1144InviteCard button:disabled{opacity:.55;cursor:wait}
+.pb1144InviteCard .pb1144Primary{background:#315efb;color:white;border-color:#315efb}
+.pb1144InviteCard .pb1144Repeat{background:white;color:#315efb}
+.pb1144InviteCard .pb1144CodeLabel{display:grid;gap:5px;font-size:12px;font-weight:850}
+.pb1144InviteCard [hidden]{display:none!important}
+.pb1144InviteCard input{width:100%;min-height:46px;border:1px solid #cfd8eb;border-radius:11px;background:#fff;text-align:center;letter-spacing:.24em;font-size:20px;padding:8px;max-width:100%}
+.pb1144Message{color:#b42318;font-size:12px;margin-top:10px;min-height:22px}
+@media(max-width:500px){.pb1144InviteCard{padding:18px;border-radius:17px}.pb1144InviteCard h1{font-size:19px}}
+
+/* PB1364 softer blue shadows */

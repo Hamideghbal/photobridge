@@ -1,0 +1,7 @@
+node_modules/
+release/
+runtime/
+.publisher/
+*.pem
+*.pfx
+*.p12

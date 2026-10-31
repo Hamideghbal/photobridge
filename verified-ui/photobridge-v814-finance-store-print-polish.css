@@ -1,0 +1,29 @@
+/* PhotoBridge v814 — print finance parity with store finance. */
+.pb814CustomerFinance{display:block!important}
+.pb814CustomerFinance .financeNavDock{display:block!important;margin:0 0 10px!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.pb814CustomerFinance .financeSectionPicker,.pb814CustomerFinance .financeSectionTools{display:none!important}
+.pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:1fr!important;grid-auto-flow:column!important;gap:6px!important;margin:0 0 12px!important;padding:5px!important;border-radius:13px!important;background:#f2f4f7!important;overflow:visible!important;width:100%!important}
+.pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs button{display:block!important;min-width:0!important;min-height:38px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#667085!important;padding:7px 8px!important;font-size:10.6px!important;font-weight:900!important;line-height:1.35!important;white-space:nowrap!important;box-shadow:none!important}
+.pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs button.active{background:#fff!important;color:#244fcf!important;box-shadow:0 2px 8px rgba(16,24,40,.08)!important}
+.pb814CustomerFinance .financeTopline{margin:0 0 10px!important;padding-top:0!important}
+.pb814CustomerFinance .financeTopline h2{font-size:15px!important;line-height:1.5!important}
+.pb814CustomerFinance .financeTopline p{font-size:9.5px!important;line-height:1.7!important}
+.pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:1fr!important;grid-auto-flow:column!important;gap:8px!important;margin:0 0 12px!important;width:100%!important}
+.pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary>div{min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;padding:12px 7px!important}
+.pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary small{font-size:10px!important;line-height:1.45!important;white-space:normal!important;text-align:center!important}
+.pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary b{font-size:13px!important;line-height:1.45!important;white-space:normal!important;text-align:center!important;overflow-wrap:anywhere!important}
+@media(max-width:700px){
+ .pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs{gap:6px!important;padding:5px!important}
+ .pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs button{min-height:38px!important;font-size:10px!important;padding:7px 4px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:1fr!important;gap:5px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary>div{padding:9px 3px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary small{font-size:8.9px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary b{font-size:10.8px!important}
+}
+@media(max-width:370px){
+ .pb814CustomerFinance .financeSectionTabs.pb814FinanceTabs button{font-size:9.3px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary small{font-size:8.2px!important}
+ .pb814CustomerFinance .financeSummary.accountingSummary.pb814FinanceSummary b{font-size:9.8px!important}
+}
+
+/* PB1364 softer blue shadows */

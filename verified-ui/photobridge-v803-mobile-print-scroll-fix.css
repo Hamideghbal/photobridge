@@ -1,0 +1,42 @@
+/* PhotoBridge v803 — one mobile Invoice/Back control; no leaked print scroll locks. */
+@media(max-width:820px){
+  /* In Print, the floating header control is the only Invoice control. */
+  .photographerMain.photographerPrintWorkspace .photographerPrintModeUtilityCluster>.photographerPrintCommonAction.finance,
+  .photographerMain.photographerPrintWorkspace .photographerContextAction.financeAction,
+  .photographerMain.photographerPrintWorkspace .photographerLabContextActions .financeAction,
+  .photographerMain.photographerPrintWorkspace .pb803Hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+  html.pb803PrintNormal body #pb783FinanceShortcut.pb803PrimaryInvoice,
+  html.pb803PrintFinance body #pb783FinanceShortcut.pb803PrimaryInvoice{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;
+    align-items:center!important;justify-content:center!important;gap:5px!important
+  }
+  html.pb803PrintUpload body #pb783FinanceShortcut,
+  html.pb803PrintUpload body #pb765-add,
+  html.pb803PrintUpload body #pb765-back,
+  html.pb803PrintFinance body #pb765-add,
+  html.pb803PrintFinance body #pb765-back,
+  html.pb803PrintFinance body #pb761-mode-actions,
+  html.pb803PrintFinance body .photographerPrintModeUtilityCluster>.photographerPrintModeBack{
+    display:none!important;visibility:hidden!important;pointer-events:none!important
+  }
+  #pb783FinanceShortcut.pb803ShortcutBack{background:#f5f8ff!important;border-color:#c7d7fe!important;color:#244ea2!important}
+
+  /* AI / Album Design / Instagram after leaving Print: the document owns vertical scrolling. */
+  html.pb803BodyScrollRecovery,
+  html.pb803BodyScrollRecovery body,
+  html.pb803BodyScrollRecovery body #root{
+    height:auto!important;min-height:100%!important;max-height:none!important;overflow-x:hidden!important;overflow-y:visible!important
+  }
+  html.pb803BodyScrollRecovery body #root .photographerMain{
+    position:relative!important;height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;touch-action:pan-y!important
+  }
+  html.pb803BodyScrollRecovery body #root .photographerMain>.photographerRolePageScrollArea{
+    position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;
+    overflow:visible!important;overflow-x:hidden!important;touch-action:pan-y!important;overscroll-behavior-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;scroll-behavior:auto!important;pointer-events:auto!important
+  }
+}
+
+/* PB1364 softer blue shadows */

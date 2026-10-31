@@ -1,0 +1,15 @@
+/* Photographer chat belongs to the selected lab, never the gallery or chooser. */
+@media(max-width:820px){
+ html:has(.clientGalleryIntroHeader) body .roleWorkspace:not(.labRoleWorkspace)>.chatDock{display:none!important}
+ html body .roleWorkspace:not(.labRoleWorkspace):not(:has(.photographerLabWorkspaceMode))>.chatDock,
+ html body.pbR100F14ChoosingLab .roleWorkspace:not(.labRoleWorkspace)>.chatDock,
+ html:has(#pbR99LabChooser) body .roleWorkspace:not(.labRoleWorkspace)>.chatDock,
+ html.pbR100F14LabChooserBoot body .roleWorkspace:not(.labRoleWorkspace)>.chatDock,
+ html body.pb1106PanelOpen .roleWorkspace:not(.labRoleWorkspace)>.chatDock{display:none!important}
+ html body.pbAuthenticatedPhotographerPortal .roleWorkspace:not(.labRoleWorkspace)>.chatDock:not(.collapsed){
+ position:fixed!important;top:12px!important;bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;left:8px!important;right:8px!important;
+ width:auto!important;height:auto!important;max-height:none!important;min-height:0!important;z-index:2147483600!important;isolation:isolate;
+ }
+}
+
+/* PB1364 softer blue shadows */

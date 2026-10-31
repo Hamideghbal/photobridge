@@ -1,0 +1,29 @@
+/* R1190 — Desktop website: fixed-position Store content and immediate
+   Lab/Store section response. Keep header button/underline animations intact.
+   The earlier Store panel animation translated every card in the active pane. */
+@media (min-width:851px) and (hover:hover) and (pointer:fine) {
+  html body.rentalAppReady #app>.panel.active,
+  html body.rentalAppReady #app>.panel.active[data-pb842-pane],
+  html body.rentalAppReady #app>.panel.active [data-pb842-pane].active,
+  html body.rentalAppReady #app>.panel.active [data-pb843-office-pane].active {
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+    translate:none!important;
+    filter:none!important;
+    opacity:1!important;
+    will-change:auto!important;
+  }
+  html body #storePhotographerWorkspace .rentalPanel.mobileActive {
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+    translate:none!important;
+    filter:none!important;
+    opacity:1!important;
+    will-change:auto!important;
+  }
+  /* The primary tab underline remains allowed to move, unlike the panel. */
+}
+
+/* PB1364 softer blue shadows */

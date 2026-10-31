@@ -1,0 +1,77 @@
+/* R1294 — quick customer chooser: mobile, name, membership status only.
+   Account information lives below the entire lab-intake form's picker row. */
+.pb1137Intake .pb1139PickerOptions{max-height:min(310px,48dvh)}
+.pb1137Intake .pb1139PickerOptions .pb1143ChoiceRow{display:block;min-width:0;margin:2px 0}
+.pb1137Intake .pb1139PickerOptions .pb1294SimpleChoice{
+  display:block;width:100%;height:auto;min-height:36px;padding:7px 9px;
+  overflow-wrap:anywhere;text-align:right;line-height:1.65;font-size:12px
+}
+.pb1137Settings .pb1294SelectedDetails{
+  grid-column:1/-1;min-width:0;padding:11px 12px;
+  border:1px solid #d8e4f0;background:#f8fbff;border-radius:12px
+}
+.pb1137Settings .pb1294SelectedDetails[hidden],
+.pb1137Intake .pb1294InitialEdit[hidden]{display:none!important}
+.pb1294AccountSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pb1294Meta{min-width:0;display:grid;gap:3px;border-radius:9px;background:#fff;border:1px solid #e6edf4;padding:6px 9px}
+.pb1294Meta>span{color:#667085;font-size:11px}
+.pb1294Meta>strong{color:#25425d;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.pb1294Meta.pb1294Balance>strong{color:#135a85}
+.pb1294AccountActions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:9px}
+.pb1137Intake .pb1294AccountActions>button,
+.pb1137Intake .pb1294InitialEdit button,
+.pb1137Intake .pb1294SmsArea button{
+  width:auto;flex:0 0 auto;height:35px;min-height:35px;
+  border:1px solid #c9d9e8;background:#fff;border-radius:9px;
+  color:#20547a;font-size:12px;padding:5px 11px
+}
+.pb1137Intake .pb1294AccountActions .pb1294SendSms{background:#e9f7f0;border-color:#b5dbc6;color:#17613e}
+.pb1294AccountActions .pb1294LockHint{color:#697386;font-size:11px}
+.pb1137Intake .pb1294InitialEdit{
+  order:10;display:flex;width:100%;flex-wrap:wrap;gap:8px;align-items:center;
+  background:#fff;border:1px solid #e1eaf3;border-radius:9px;padding:9px
+}
+.pb1137Intake .pb1294InitialEdit input{
+  flex:1 1 150px;width:auto;height:35px;padding:6px 9px;
+  border:1px solid #d0dae6;background:#fff;border-radius:8px
+}
+.pb1137Intake .pb1294SmsArea{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;
+}
+.pb1137Intake .pb1294SmsArea .pb1294SmsChoice{
+  display:flex;flex:0 0 auto;align-items:center;gap:6px;
+  white-space:nowrap;margin:0;font-size:12px
+}
+.pb1137Intake .pb1294SmsArea input[type=checkbox]{
+  width:17px;height:17px;min-width:17px;margin:0;accent-color:#1970a7
+}
+.pb1137Intake .pb1294SmsArea select{
+  flex:1 1 180px;width:auto;max-width:260px;height:35px;padding:5px 7px;
+  font-size:12px;text-overflow:ellipsis;background:#fff
+}
+.pb1294AccountActions .pb1294ActionNotice{font-size:11px;color:#235b88;line-height:1.8}
+.pb1294AccountActions .pb1294ActionNotice:empty{display:none}
+.pb1294Loading{font-size:12px;color:#58677c}
+@media(max-width:760px){
+ .pb1294AccountSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pb1294AccountActions .pb1294SmsArea{width:100%}
+ .pb1137Intake .pb1294SmsArea select{max-width:none}
+}
+@media(max-width:420px){
+ .pb1294AccountSummary{grid-template-columns:1fr}
+ .pb1137Intake .pb1294SmsArea select{flex:1 1 100%}
+}
+
+
+/* R1296 compact selected-account strip */
+.pb1137Settings .pb1294SelectedDetails{padding:7px 9px;border-radius:9px}
+.pb1294AccountSummary{gap:5px}
+.pb1294Meta{background:transparent;border:0;border-inline-start:1px solid #dce5ef;border-radius:0;padding:2px 7px;gap:1px}
+.pb1294Meta:first-child{border-inline-start:0}
+.pb1294Meta>span{font-size:10px}
+.pb1294Meta>strong{font-size:11px;line-height:1.45}
+.pb1294AccountActions{gap:6px;margin-top:5px}
+.pb1137Intake .pb1294AccountActions>button{height:29px;min-height:29px;font-size:11px;padding:3px 8px}
+@media(max-width:420px){.pb1294AccountSummary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* PB1364 softer blue shadows */

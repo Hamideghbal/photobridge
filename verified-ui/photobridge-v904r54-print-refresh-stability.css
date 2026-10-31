@@ -1,0 +1,306 @@
+/* PhotoBridge v904R54 — deterministic photographer print cards + refresh-safe UI. */
+
+/* Do not reserve a fake vertical scrollbar gutter in photographer print. */
+html body #root .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea{
+  scrollbar-gutter:auto!important;
+  overflow-x:hidden!important;
+}
+
+/* One order per row. Older stylesheets define this grid many times; this is the final authority. */
+html body #root .photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderGrid.liveOrderGrid,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderCard.liveOrderCard,
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderGrid.liveOrderGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-rows:max-content!important;
+  align-items:start!important;
+  gap:10px!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderCard.liveOrderCard{
+  display:block!important;
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:0!important;
+  padding:11px 12px!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+  position:relative!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow > *,
+html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure,
+html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickActions,
+html body #root .photographerMain.photographerPrintWorkspace .liveTimeline,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderFoot,
+html body #root .photographerMain.photographerPrintWorkspace .liveOrderExtras{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail{
+  margin:0!important;
+}
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead b,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead small,
+html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail span{
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+}
+
+/* Desktop / Windows: status timeline and order action buttons live in different rows. */
+@media (min-width:851px){
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+    display:grid!important;
+    grid-template-columns:minmax(155px,.62fr) minmax(230px,.92fr) minmax(245px,.90fr)!important;
+    grid-template-areas:
+      "head facts actions"
+      "details details details"!important;
+    align-items:center!important;
+    gap:9px 14px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead{
+    grid-area:head!important;
+    align-self:center!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts{
+    grid-area:facts!important;
+    align-self:center!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail.compactOrderActionRail{
+    grid-area:actions!important;
+    align-self:center!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail > span{
+    text-align:left!important;
+    font-size:8px!important;
+    color:#667085!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickActions{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    flex-wrap:wrap!important;
+    gap:5px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickActions > button{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    min-height:30px!important;
+    height:30px!important;
+    margin:0!important;
+    padding:0 9px!important;
+    flex:0 0 auto!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure{
+    grid-area:details!important;
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding-top:8px!important;
+    border-top:1px solid #eef1f5!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureToggle{
+    display:none!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    width:100%!important;
+    gap:7px!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline > div{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    min-width:0!important;
+    min-height:58px!important;
+    padding:7px 8px!important;
+    margin:0!important;
+    border:1px solid #e4e7ec!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline > div:before{
+    display:none!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline .timelineDot{
+    position:static!important;
+    transform:none!important;
+    margin:0 auto 3px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFoot{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    flex-wrap:wrap!important;
+    width:100%!important;
+  }
+}
+
+/* Mobile: every block gets its own row. No status/action overlap. */
+@media (max-width:850px){
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderCard.liveOrderCard{
+    padding:10px!important;
+    overflow:hidden!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .liveOrderMainRow{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:
+      "head"
+      "facts"
+      "actions"
+      "details"!important;
+    gap:8px!important;
+    align-items:start!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderHead{
+    grid-area:head!important;
+    width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts{
+    grid-area:facts!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFacts > span{
+    min-width:0!important;
+    width:auto!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail.compactOrderActionRail{
+    grid-area:actions!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+    padding:7px 0 0!important;
+    margin:0!important;
+    border-top:1px solid #eef1f5!important;
+    background:transparent!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickRail > span{
+    width:100%!important;
+    text-align:right!important;
+    font-size:8px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickActions{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderQuickActions > button{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:34px!important;
+    height:34px!important;
+    margin:0!important;
+    padding:0 7px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure{
+    grid-area:details!important;
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureToggle{
+    display:flex!important;
+    width:100%!important;
+    min-height:38px!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody{
+    display:none!important;
+    width:100%!important;
+    margin:0!important;
+    padding:8px 0 0!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosure.open > .mobileOrderDisclosureBody{
+    display:grid!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline > div{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    min-width:0!important;
+    margin:0!important;
+    overflow:hidden!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .mobileOrderDisclosureBody .liveTimeline > div:before{
+    display:none!important;
+  }
+  html body #root .photographerMain.photographerPrintWorkspace .customerOrderFoot{
+    width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:6px!important;
+    flex-wrap:wrap!important;
+    margin:0!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

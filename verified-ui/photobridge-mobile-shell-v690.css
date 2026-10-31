@@ -1,0 +1,255 @@
+/* PhotoBridge v0.17.689 / mobile shell v690 — canonical photographer header core.
+   One visual recipe now owns the common mobile photographer header in every destination,
+   including ordinary React tabs, Print and the standalone Store page.
+   Only destination-specific rows live outside this core (for example Print Archive/Invoice).
+   Passive CSS only: no observers, timers or delayed DOM patching. */
+
+@media (max-width:820px){
+  /*
+     IMPORTANT: :is() deliberately includes the Store header id. This gives this ONE
+     canonical rule enough specificity to override the old Print/Store one-off patches,
+     while the same declaration still applies to every .photographerHeaderRefined header.
+  */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity{
+    grid-area:identity!important;
+    width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:34px!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0 0 0 150px!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    gap:10px!important;
+    overflow:visible!important;
+    background:transparent!important;
+    text-align:right!important;
+    direction:rtl!important;
+    box-sizing:border-box!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy{
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    gap:0!important;
+    text-align:right!important;
+    direction:rtl!important;
+  }
+
+  /* Match the already-correct ordinary photographer tabs exactly. */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy>h1{
+    order:initial!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    float:none!important;
+    width:100%!important;
+    max-width:calc(100vw - 120px)!important;
+    margin:0!important;
+    padding:0!important;
+    font-size:15px!important;
+    font-weight:700!important;
+    line-height:1.2!important;
+    letter-spacing:normal!important;
+    color:#101828!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy>small{
+    order:initial!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    float:none!important;
+    display:block!important;
+    width:100%!important;
+    max-width:calc(100vw - 100px)!important;
+    margin:0!important;
+    padding:0!important;
+    font-size:9px!important;
+    font-weight:400!important;
+    line-height:1.55!important;
+    color:#667085!important;
+    text-align:right!important;
+    white-space:normal!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity .photographerIdentityDateOnly{
+    order:initial!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    float:none!important;
+    display:flex!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    margin:2px 0 0!important;
+    padding:0!important;
+    align-self:stretch!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    color:#667085!important;
+    opacity:1!important;
+    text-align:right!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity .photographerIdentityDateOnly>.todayStamp.compact{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    width:auto!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:4px 7px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:5px!important;
+  }
+
+  /* Ordinary tabs resolve to 9.4px here; Print/Store previously forced 9px. */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity .photographerIdentityDateOnly>.todayStamp.compact>span{
+    font-size:9.4px!important;
+    font-weight:850!important;
+    line-height:1.2!important;
+  }
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity .photographerIdentityDateOnly>.todayStamp.compact>b{
+    display:inline-block!important;
+    font-size:8.5px!important;
+    line-height:1.2!important;
+  }
+
+  /* One physical-left utility row in every photographer destination. */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions{
+    display:flex!important;
+    position:absolute!important;
+    inset-inline-start:auto!important;
+    left:10px!important;
+    right:auto!important;
+    top:10px!important;
+    z-index:30!important;
+    margin:0!important;
+    padding:0!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    direction:ltr!important;
+    flex-wrap:nowrap!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>button{
+    position:relative!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    padding:0!important;
+    border:1px solid #d8dee9!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    color:#475467!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    box-shadow:0 1px 2px rgba(16,24,40,.03)!important;
+    font:inherit!important;
+    flex:0 0 32px!important;
+  }
+
+  /* Bell is 34px wide in the already-correct ordinary tabs. Keep that exact geometry everywhere. */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileNotificationBell{
+    order:1!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    flex:0 0 34px!important;
+  }
+
+  /* Print/Store used to shrink Power to 30px; canonical photographer Power is 32px. */
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderPower{
+    order:2!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    flex:0 0 32px!important;
+    aspect-ratio:1/1!important;
+    border-radius:9px!important;
+    color:#b42318!important;
+  }
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderPower svg{
+    width:14px!important;
+    height:14px!important;
+    margin:0!important;
+    flex:0 0 14px!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderSettings{
+    order:3!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    flex:0 0 32px!important;
+    border-radius:9px!important;
+  }
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderSettings>span{
+    font-size:15px!important;
+    line-height:1!important;
+  }
+
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderWallet{
+    order:4!important;
+    width:auto!important;
+    min-width:74px!important;
+    max-width:112px!important;
+    height:30px!important;
+    min-height:30px!important;
+    max-height:30px!important;
+    padding:0 8px!important;
+    border-radius:9px!important;
+    gap:4px!important;
+    font-size:8.5px!important;
+    white-space:nowrap!important;
+    direction:rtl!important;
+    flex:0 1 auto!important;
+  }
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerMobileHeaderQuickActions>.mobileHeaderWallet>b{
+    font-size:8px!important;
+    font-weight:900!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+}
+
+@media (max-width:430px){
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy>h1{
+    font-size:14px!important;
+  }
+  .photographerMain>:is(#photographerStoreRoleHeader,.photographerHeaderRefined).unifiedRoleHeader.photographerHeaderRefined>.photographerHeaderIdentity>.workspaceIdentityCopy>small{
+    font-size:8.5px!important;
+  }
+}
+
+/* PB1364 softer blue shadows */

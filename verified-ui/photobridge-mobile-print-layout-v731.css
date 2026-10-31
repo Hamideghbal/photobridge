@@ -1,0 +1,198 @@
+/* PhotoBridge v731 — mobile print/album launch alignment + deterministic print composer actions.
+   Goals:
+   1) list-level Print and Album launch buttons sit the same small distance below the fixed header;
+   2) the real print composer controls are always visible in the page flow on phones;
+   3) no duplicate proxy controls are introduced. */
+
+@media (max-width:820px){
+  :root{--pb731-print-gap:12px}
+
+  /* PRINT LIST: remove the old 52px clearance that pushed «ارسال فایل» too far down. */
+  html body .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea > .ordersWorkspace.liveCustomerOrders{
+    margin-top:var(--pb731-print-gap)!important;
+    scroll-margin-top:var(--pb731-print-gap)!important;
+  }
+
+  /* ALBUM LIST: its orders list is nested, so give the wrapper real top padding.
+     This prevents the top edge of «ارسال آلبوم» from being clipped by the fixed header. */
+  html body .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea > .photographerAlbumListFlush{
+    box-sizing:border-box!important;
+    padding-top:var(--pb731-print-gap)!important;
+    margin-top:0!important;
+    overflow:visible!important;
+  }
+  html body .photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea > .photographerAlbumListFlush > .ordersWorkspace.liveCustomerOrders{
+    margin-top:0!important;
+    scroll-margin-top:var(--pb731-print-gap)!important;
+  }
+
+  /* PRINT COMPOSER: use the existing real React controls that already own the real handlers.
+     Scope directly to the composer instead of depending on a workspace class that can change
+     during route transitions. */
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    max-width:none!important;
+    min-height:0!important;
+    margin:var(--pb731-print-gap) 0 10px!important;
+    padding:0 12px!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    z-index:40!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions > .simplePrintPilotHeader{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    left:auto!important;
+    transform:none!important;
+    width:100%!important;
+    max-width:none!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    z-index:1!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions .simplePrintPilotHeaderActions{
+    display:grid!important;
+    visibility:visible!important;
+    opacity:1!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"add" "send"!important;
+    gap:8px!important;
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    direction:rtl!important;
+    align-items:stretch!important;
+    overflow:visible!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions .simplePrintPilotLabSelect,
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions .simplePrintPilotLabStatic{
+    display:none!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotPrimaryAdd{
+    grid-area:add!important;
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:46px!important;
+    height:46px!important;
+    margin:0!important;
+    padding:0 14px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+    border:1px solid #315efb!important;
+    border-radius:12px!important;
+    background:#315efb!important;
+    color:#fff!important;
+    box-shadow:0 5px 14px rgba(70,103,221,0.096)!important;
+    font-size:11.5px!important;
+    font-weight:950!important;
+    line-height:1.2!important;
+    text-align:center!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotPrimaryAdd:disabled{
+    opacity:.58!important;
+    pointer-events:none!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotPrimaryAdd > span{
+    display:grid!important;
+    place-items:center!important;
+    width:24px!important;
+    height:24px!important;
+    min-width:24px!important;
+    margin:0!important;
+    padding:0!important;
+    border-radius:7px!important;
+    background:rgba(255,255,255,.18)!important;
+    color:#fff!important;
+    font-size:16px!important;
+    line-height:1!important;
+    transform:none!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotHeaderSubmit{
+    grid-area:send!important;
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    height:44px!important;
+    margin:0!important;
+    padding:0 12px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+    border:1px solid #cfd8e6!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    color:#315efb!important;
+    box-shadow:none!important;
+    font-size:11px!important;
+    font-weight:950!important;
+    line-height:1.2!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotHeaderSubmit:disabled{
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:none!important;
+    background:#eef2f7!important;
+    border-color:#dce3ed!important;
+    color:#98a2b3!important;
+  }
+  html body .simplePrintPilot .simplePrintPilotMain > .simplePrintPilotMobileInlineActions button.simplePrintPilotHeaderCancel{
+    grid-column:1!important;
+    display:flex!important;
+    width:100%!important;
+    min-height:40px!important;
+    margin:0!important;
+  }
+
+  /* Keep the old mobile portal host out of the layout so there is exactly one set of controls. */
+  html body #simple-print-pilot-mobile-header-slot.simplePrintPilotMobileHeaderHost{
+    display:block!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    position:relative!important;
+    z-index:30!important;
+  }
+}
+
+@media (min-width:821px){
+  html body .simplePrintPilotMobileInlineActions{display:none!important}
+}
+
+/* PB1364 softer blue shadows */

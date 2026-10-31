@@ -19,6 +19,7 @@ function createHost({store,sync,request,roots,token,onLogin,onLogout}){
       if(url.pathname==='/desktop/status'){const state=store.get('auth')?sync.status():{signedIn:false,online:false,syncing:false,pending:0,conflicts:[]};return json(res,200,{...state,uiTrayUpdateSupported:true,nativeVersion:store.get('nativeVersion')||null,uiKnownGoodBuild:store.get('uiKnownGoodBuild')||null,uiBuild:store.get('uiBuild')||null,uiLastCheckedAt:store.get('uiLastCheckedAt')||null,uiDownloadedAt:store.get('uiDownloadedAt')||null,uiAppliedAt:store.get('uiAppliedAt')||null,updateError:store.get('updateError')||null})}
       if(url.pathname==='/desktop/sync'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});return json(res,200,await sync.run())}
       if(url.pathname==='/desktop/retry'&&req.method==='POST'){const p=await readJson(req);store.retry(String(p.id||''));void sync.run();return json(res,200,{ok:true})}
+      if(url.pathname==='/desktop/archive-conflict'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});const p=await readJson(req);if(p.reviewed!==true)return json(res,400,{error:'review_required'});if(!store.archiveConflict(String(p.id||'')))return json(res,409,{error:'conflict_not_found'});return json(res,200,{ok:true})}
       if(url.pathname==='/desktop/discard'&&req.method==='POST'){const p=await readJson(req);store.discard(String(p.id||''));return json(res,200,{ok:true})}
 
       const {bytes,contentType}=await readBody(req);

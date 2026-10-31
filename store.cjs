@@ -19,6 +19,7 @@ class LabStore{
  conflict(id,error){this.db.prepare("UPDATE outbox SET state='conflict',error=?,updated_at=? WHERE id=?").run(JSON.stringify(error||{}),now(),id)}
  retry(id){this.db.prepare("UPDATE outbox SET state='pending',error=NULL,updated_at=? WHERE id=?").run(now(),id)}
  discard(id){this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=?").run(now(),id)}
- status(){const rows=this.rows();return{labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error})),lastSync:this.get('lastSync')}}
+ archiveConflict(id){const lab=this.get('labId');if(!lab)return false;const result=this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=? AND lab=? AND state='conflict'").run(now(),id,lab);return result.changes===1;}
+ status(){const rows=this.rows();return{labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error,createdAt:x.created_at,updatedAt:x.updated_at})),lastSync:this.get('lastSync')}}
 }
 module.exports={LabStore};

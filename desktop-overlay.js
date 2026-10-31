@@ -156,6 +156,14 @@
      const area=document.createElement('section');area.className='pbSyncConflict';panel.append(area);
      element('strong',conflictTitle(x),area);
      element('p',conflictHelp(x),area);
+     element('p','زمان تغییر: '+date(x.createdAt)+' · شناسهٔ پیگیری: '+String(x.id||'').slice(0,8),area);
+     const details=document.createElement('details');area.append(details);element('summary','جزئیات خطا',details);
+     element('p','کد پاسخ سرور: '+(x.error?.httpStatus||'پاسخی دریافت نشد')+' · کد خطا: '+String(x.error?.error||'نامشخص'),details);
+     button('بررسی کردم؛ بایگانی این مورد',area,async()=>{
+       if(!window.confirm('آیا وضعیت این تغییر را در صفحهٔ سفارش یا امور مالی بررسی کرده‌اید؟\nاین کار فقط هشدار را از فهرست فعال خارج می‌کند و سابقهٔ محلی را نگه می‌دارد؛ هیچ تغییری روی سرور ثبت یا لغو نمی‌شود. اگر تغییر ثبت نشده، باید آن را از صفحهٔ مربوط دوباره انجام دهید.'))return;
+       try{const response=await fetch('/desktop/archive-conflict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,reviewed:true})});if(!response.ok)throw Error('archive_failed');panel.remove();await refresh();void openSync();}
+       catch{element('p','بایگانی انجام نشد. وارد حساب شوید و دوباره وضعیت را بررسی کنید.',area);}
+     });
      if(retryIsSafe(x))button('تلاش دوباره امن',area,async()=>{
        await fetch('/desktop/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
        panel.remove();await refresh();void openSync();

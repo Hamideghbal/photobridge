@@ -6,5 +6,6 @@
   "uiBuild": "4300c9a4817b99da2343d0ccfe27e301ab64609fae1b04584949bca48368c73f",
   "privateSigningKeyIncluded": false,
   "followupFix": "UPD-02: default updater confirmations use native Electron dialogs without renderer IPC; append sanitized stage/error diagnostics to userData/updater-debug.log.",
-  "confirmationUi": "Static RTL Vazirmatn confirmation windows with native fallback; download/install logic unchanged."
+  "confirmationUi": "Static RTL Vazirmatn confirmation windows with native fallback; download/install logic unchanged.",
+  "syncConflictManagement": "Explicit reviewed archival of active-account conflicts, retaining local payload/error without retry; show timestamps and diagnostic codes."
 }

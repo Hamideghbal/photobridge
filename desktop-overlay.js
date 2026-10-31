@@ -154,7 +154,15 @@
    if(s.signedIn)button('تلاش دوباره برای همگام‌سازی',panel,async()=>{await syncNow();if(panel.isConnected){panel.remove();void openSync()}});
    for(const x of conflicts.slice(0,20)){
      const area=document.createElement('section');area.className='pbSyncConflict';panel.append(area);
-     element('strong',conflictTitle(x),area);
+     element('strong',x.context?.title||conflictTitle(x),area);
+     if(x.context){
+       element('p','محل بررسی: '+x.context.section,area);
+       for(const field of x.context.fields||[])element('p',field.label+': '+field.value,area);
+       element('p','نتیجهٔ ارسال: '+x.context.reason,area);
+       element('p',x.context.instruction,area);
+       const link=element('a','رفتن به '+x.context.section,area);
+       if(/^\/lab(?:\/|$)/.test(x.context.href||''))link.href=x.context.href;
+     }
      element('p',conflictHelp(x),area);
      element('p','زمان تغییر: '+date(x.createdAt)+' · شناسهٔ پیگیری: '+String(x.id||'').slice(0,8),area);
      const details=document.createElement('details');area.append(details);element('summary','جزئیات خطا',details);

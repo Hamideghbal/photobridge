@@ -1,4 +1,5 @@
 'use strict';
+const {describeConflict}=require('./conflict-context.cjs');
 const {DatabaseSync}=require('node:sqlite'),crypto=require('node:crypto');const now=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
 class LabStore{
  constructor(file){this.db=new DatabaseSync(file);this.db.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');this.db.exec(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);CREATE TABLE IF NOT EXISTS cache(lab TEXT NOT NULL,url TEXT NOT NULL,status INTEGER NOT NULL,mime TEXT NOT NULL,body TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(lab,url));CREATE TABLE IF NOT EXISTS outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE NOT NULL,lab TEXT NOT NULL,method TEXT NOT NULL,url TEXT NOT NULL,body TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',error TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);`);if(!this.get('deviceId'))this.set('deviceId',uid())}
@@ -20,6 +21,6 @@ class LabStore{
  retry(id){this.db.prepare("UPDATE outbox SET state='pending',error=NULL,updated_at=? WHERE id=?").run(now(),id)}
  discard(id){this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=?").run(now(),id)}
  archiveConflict(id){const lab=this.get('labId');if(!lab)return false;const result=this.db.prepare("UPDATE outbox SET state='discarded',updated_at=? WHERE id=? AND lab=? AND state='conflict'").run(now(),id,lab);return result.changes===1;}
- status(){const rows=this.rows();return{labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error,createdAt:x.created_at,updatedAt:x.updated_at})),lastSync:this.get('lastSync')}}
+ status(){const rows=this.rows();return{labId:this.get('labId'),pending:rows.filter(x=>x.state==='pending').length,conflicts:rows.filter(x=>x.state==='conflict').map(x=>({id:x.id,method:x.method,url:x.url,error:x.error,createdAt:x.created_at,updatedAt:x.updated_at,context:describeConflict(x,this)})),lastSync:this.get('lastSync')}}
 }
 module.exports={LabStore};

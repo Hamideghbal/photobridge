@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+const {patchOrderLive}=createRequire(import.meta.url)('./r1467-live-order-patch.cjs');
+const file='dist/web/assets/index-UIRefine-v655-r84.js';
+fs.writeFileSync(file,patchOrderLive(fs.readFileSync(file,'utf8')));
+const index='dist/web/index.html';
+let html=fs.readFileSync(index,'utf8');
+html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&liveOrders=r1467')?url:url+'&liveOrders=r1467');
+fs.writeFileSync(index,html);
+console.log('R1467: visible order queues refresh every 3 seconds, on focus and after local changes.');

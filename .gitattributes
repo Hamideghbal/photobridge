@@ -1,0 +1,2 @@
+# The 734 server-pinned Lab UI files must retain their byte-identical SHA-256 across all Windows checkouts.
+verified-ui/** -text

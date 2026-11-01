@@ -27,25 +27,6 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Prepare integrity-checked Windows Access runtime
         run: node prepare-access-runtime.cjs
-      - name: Prepare diagnostic Java tools
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - name: Compile and validate Access helper from checked-in source
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path .access-build -Force | Out-Null
-          & javac --release 17 -encoding UTF-8 -cp "assets/access-libs/*" -d .access-build access-src/PhotoBridgeAccess.java
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & jar --create --file assets/photobridge-access-export.jar -C .access-build PhotoBridgeAccess.class
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $sha = (Get-FileHash assets/photobridge-access-export.jar -Algorithm SHA256).Hash.ToLowerInvariant()
-          Write-Host "PB_ACCESS_JAR_SHA256=$sha"
-          Set-Content -NoNewline -Path access-helper.sha256 -Value $sha
-          Write-Host PB_ACCESS_JAR_B64_START
-          node -p "require('node:fs').readFileSync('assets/photobridge-access-export.jar').toString('base64')"
-          Write-Host PB_ACCESS_JAR_B64_END
       - name: Run native regression tests on Windows
         shell: pwsh
         run: |

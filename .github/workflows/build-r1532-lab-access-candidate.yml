@@ -1,0 +1,81 @@
+name: Build R1532 lab Access backup candidate
+on:
+  pull_request:
+    paths:
+      - "apps/lab-desktop/**"
+      - "scripts/integrate-r1532-access-backup.cjs"
+      - "scripts/test-r1532-windows-access-backup.cjs"
+      - "tools/access-finance/**"
+      - ".github/workflows/build-r1532-lab-access-candidate.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lab-windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore current lab source and integrate configured storage
+        shell: pwsh
+        run: |
+          Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
+          Copy-Item apps/lab-desktop/ui-update.cjs "$env:RUNNER_TEMP/lab-ui-update.cjs"
+          $sourceHash=(Get-FileHash desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sourceHash -ne '5fcd7e991f6f95008f375ac10ff036ea3abd89997118738e325d67a8c0df89aa') { throw "Unexpected laboratory source checksum" }
+          Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -DestinationPath "$env:RUNNER_TEMP/lab-current" -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-current/PhotoBridge-Lab-Source-v1.0.22/*" apps/lab-desktop -Recurse -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-ui-update.cjs" apps/lab-desktop/ui-update.cjs -Force
+          node scripts/integrate-r1386-native-storage.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Storage integration failed" }
+          node scripts/integrate-r1388-lab-expiry.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Native storage integration failed" }
+          node scripts/integrate-r1390-site-picker.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Site picker integration failed" }
+          node scripts/integrate-r1395-paired-storage.cjs apps/lab-desktop
+          node scripts/integrate-r1398-cooperation-alerts.cjs apps/lab-desktop
+          node scripts/integrate-r1401-quick-reply.cjs apps/lab-desktop
+          node scripts/integrate-r1402-chat-voice.cjs apps/lab-desktop
+          node scripts/integrate-r1470-intake-sources.cjs apps/lab-desktop
+          Copy-Item apps/lab-desktop/app-update.cjs apps/lab-desktop/app-update.cjs -Force
+          Copy-Item apps/lab-desktop/update-trust.cjs apps/lab-desktop/update-trust.cjs -Force
+          Copy-Item apps/lab-desktop/create-update-release.cjs apps/lab-desktop/create-update-release.cjs -Force
+          node scripts/integrate-r1472-live-finance.cjs apps/lab-desktop
+          node scripts/integrate-r1474-update-message.cjs apps/lab-desktop
+          node scripts/integrate-r1476-shared-alerts.cjs apps/lab-desktop
+          node scripts/integrate-r1477-gentle-default.cjs apps/lab-desktop
+          node scripts/integrate-r1478-fast-entry.cjs apps/lab-desktop
+          node scripts/integrate-r1524-updater-exit.cjs apps/lab-desktop
+          node scripts/integrate-r1532-access-backup.cjs apps/lab-desktop
+          if ($LASTEXITCODE -ne 0) { throw "Current native integration failed" }
+      - name: Verify configured-path activation
+        run: node --test scripts/test-r1386-configured-native.cjs
+      - name: Prepare current lab UI
+        run: node scripts/prepare-lab-desktop-ui.mjs
+      - name: Prepare missing installer icons from existing PhotoBridge artwork
+        run: node scripts/prepare-lab-installer-assets.mjs
+      - name: Verify native installer readiness
+        run: node --test scripts/test-r1343-lab-installer-build.cjs
+      - name: Verify backup module and read-only Access forms
+        run: node --test scripts/test-r1532-windows-access-backup.cjs
+      - name: Test and package native lab app
+        shell: pwsh
+        run: |
+          Push-Location apps/lab-desktop
+          npm ci --no-audit --no-fund
+          npm test
+          npx electron-builder --win nsis --x64 --config.win.forceCodeSigning=false
+          Pop-Location
+      - name: Publish lab Windows installer candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: photobridge-lab-r1532-windows-access-candidate
+          path: apps/lab-desktop/release/*Setup*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+

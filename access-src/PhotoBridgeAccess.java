@@ -7,16 +7,17 @@ import com.healthmarketscience.jackcess.*;
 
 /** Creates a data-only Access snapshot: no attachments, macros or external links. */
 public final class PhotoBridgeAccess {
+  private static void emit(String json) throws IOException {System.out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));System.out.write('\n');System.out.flush();}
   private static String displayName(JsonObject value,String key,String fallback) throws IOException {String name=value.has(key)?value.get(key).getAsString():fallback;if(name.length()==0||name.length()>64||!name.equals(name.trim())||name.matches(".*[.\\[\\]!\\x00-\\x1f].*"))throw new IOException("invalid_access_display_name");return name;}
   public static void main(String[] args) throws Exception {
     if(args.length==2 && args[0].equals("--inspect")) {
       try(Database db=new DatabaseBuilder(new File(args[1])).setReadOnly(true).open()) {
         JsonObject out=new JsonObject();
         for(String name:db.getTableNames())out.addProperty(name,db.getTable(name).getRowCount());
-        System.out.println(out);
+        emit(out.toString());
       } return;
     }
-    if(args.length==3 && args[0].equals("--read")) {try(Database db=new DatabaseBuilder(new File(args[1])).setReadOnly(true).open()){List<Map<String,Object>> rows=new ArrayList<>();for(Row row:db.getTable(args[2].startsWith("b64:")?new String(Base64.getUrlDecoder().decode(args[2].substring(4)),java.nio.charset.StandardCharsets.UTF_8):args[2]))rows.add(new LinkedHashMap<>(row));System.out.println(new Gson().toJson(rows));}return;}
+    if(args.length==3 && args[0].equals("--read")) {try(Database db=new DatabaseBuilder(new File(args[1])).setReadOnly(true).open()){List<Map<String,Object>> rows=new ArrayList<>();for(Row row:db.getTable(args[2].startsWith("b64:")?new String(Base64.getUrlDecoder().decode(args[2].substring(4)),java.nio.charset.StandardCharsets.UTF_8):args[2]))rows.add(new LinkedHashMap<>(row));emit(new Gson().toJson(rows));}return;}
     if(args.length!=2)throw new IllegalArgumentException("input.json output.accdb required");
     Path output=Paths.get(args[1]);if(Files.exists(output))throw new IOException("output_exists");
     JsonObject model;try(Reader r=Files.newBufferedReader(Paths.get(args[0]),java.nio.charset.StandardCharsets.UTF_8)){model=JsonParser.parseReader(r).getAsJsonObject();}
@@ -39,7 +40,7 @@ public final class PhotoBridgeAccess {
       db.flush();
     }
     try(Database db=new DatabaseBuilder(output.toFile()).setReadOnly(true).open()){
-      JsonObject counts=new JsonObject();for(JsonElement element:model.getAsJsonArray("tables")){JsonObject spec=element.getAsJsonObject();String name=spec.get("name").getAsString();int expected=spec.getAsJsonArray("rows").size(),actual=db.getTable(displayName(spec,"title",name)).getRowCount();if(actual!=expected)throw new IOException("row_count_mismatch:"+name);counts.addProperty(name,actual);}System.out.println(counts);
+      JsonObject counts=new JsonObject();for(JsonElement element:model.getAsJsonArray("tables")){JsonObject spec=element.getAsJsonObject();String name=spec.get("name").getAsString();int expected=spec.getAsJsonArray("rows").size(),actual=db.getTable(displayName(spec,"title",name)).getRowCount();if(actual!=expected)throw new IOException("row_count_mismatch:"+name);counts.addProperty(name,actual);}emit(counts.toString());
     }
   }
 }

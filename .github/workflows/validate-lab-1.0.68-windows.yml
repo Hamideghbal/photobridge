@@ -14,6 +14,9 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 60
     steps:
+      - name: Preserve upstream UI assets without Windows line-ending conversion
+        shell: pwsh
+        run: git config --global core.autocrlf false
       - name: Checkout 1.0.68 source
         uses: actions/checkout@v4
       - name: Set up Node 22
@@ -38,6 +41,7 @@ jobs:
           & jar --create --file assets/photobridge-access-export.jar -C .access-build PhotoBridgeAccess.class
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $sha = (Get-FileHash assets/photobridge-access-export.jar -Algorithm SHA256).Hash.ToLowerInvariant()
+          Write-Host "PB_ACCESS_JAR_SHA256=$sha"
           Set-Content -NoNewline -Path access-helper.sha256 -Value $sha
           Write-Host PB_ACCESS_JAR_B64_START
           node -p "require('node:fs').readFileSync('assets/photobridge-access-export.jar').toString('base64')"
@@ -49,6 +53,10 @@ jobs:
           if ($testFiles.Count -eq 0) { throw 'No regression tests found' }
           & node --test @testFiles
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify every pinned Lab UI asset byte for byte
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs'),path=require('path'),crypto=require('crypto');const m=JSON.parse(fs.readFileSync('verified-ui/.pb-lab-bundle-manifest.json'));const bad=[];for(const e of m.files){const p=path.join('verified-ui',e.name);const buf=fs.readFileSync(p);const sha=crypto.createHash('sha256').update(buf).digest('hex');if(sha!==e.sha256)bad.push({name:e.name,actual:sha,expected:e.sha256,crlf:buf.includes(Buffer.from([13,10]))});}console.log('PB_UI_PIN_MISMATCHES='+JSON.stringify(bad.slice(0,12))+'; total='+bad.length);if(bad.length)process.exit(1)"
       - name: Build and verify unsigned Windows installer candidate
         run: npm run dist:unsigned
       - name: Upload test-only Windows installer

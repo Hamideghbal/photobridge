@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+const {patchSiteReadyInvoice,marker}=createRequire(import.meta.url)('./r1531-site-ready-invoice.cjs');
+const file='dist/web/assets/index-UIRefine-v655-r84.js';
+const original=fs.readFileSync(file,'utf8');
+const patched=patchSiteReadyInvoice(original);
+if(!patched.includes(marker))throw Error('r1531_website_invoice_patch_missing');
+if(patched!==original)fs.writeFileSync(file,patched);
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+const index='dist/web/index.html';
+let html=fs.readFileSync(index,'utf8');
+const asset=/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g;
+html=html.replace(asset,link=>link.includes('&siteInvoice=r1531')?link:link+'&siteInvoice=r1531');
+if(!html.includes('&siteInvoice=r1531'))throw Error('r1531_cache_version_missing');
+fs.writeFileSync(index,html);

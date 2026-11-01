@@ -1,0 +1,31 @@
+name: Verify website invoice R1531 and Access viewer
+on:
+  push:
+    branches:
+      - fix/site-ready-invoice-and-access-backup-r1531
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Build production payload and run integrated web and Windows regression suite
+        run: npm run build
+      - name: Check live website invoice fix and Access review package
+        run: |
+          node --test scripts/test-r1531-site-ready-invoice.cjs
+          node --check scripts/r1531-site-ready-invoice.cjs
+          node --check scripts/enable-r1531-site-ready-invoice.mjs
+          test -s tools/access-finance/BuildAccess.vbs
+          grep -Fq 'frmPBInvoices' tools/access-finance/BuildAccess.vbs
+          grep -Fq 'frmPBReceipts' tools/access-finance/BuildAccess.vbs
+          grep -Fq 'frmPBLedger' tools/access-finance/BuildAccess.vbs
+          grep -Fq '2026-11-01-r1531-site-ready-invoice-access-review' DEPLOY_REVISION.txt

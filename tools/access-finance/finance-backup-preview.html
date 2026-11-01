@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PhotoBridge — پیش‌نمایش فرم‌های مالی و پشتیبان</title>
+<style>
+:root{font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;color:#172d49;background:#f4f7fc;font-size:13px}*{box-sizing:border-box}
+body{margin:0;padding:20px 24px;line-height:1.8}main{margin:auto;max-width:1220px}
+header{display:flex;gap:14px;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e1e9f4;padding:12px 20px;border-radius:14px}
+.brand{display:flex;align-items:center;gap:12px}.brand b{display:block;font-size:16px}.brand span{color:#64809d;font-size:11px}
+.brand-logo{display:grid;place-items:center;background:#215be5;color:#fff;border-radius:11px;width:43px;height:43px;font-size:22px;font-weight:900}
+nav{display:flex;gap:9px;padding:15px 0;border-bottom:1px solid #d7e2ef;flex-wrap:wrap}
+button{font-family:inherit;cursor:pointer;border:1px solid #d7e1f0;background:#fff;color:#335477;padding:8px 15px;border-radius:9px;font-size:12px;font-weight:700}
+button[aria-selected=true]{background:#eaf1ff;color:#2453b8;border-color:#acc5fc}
+.panel{margin-top:17px;background:#fff;border:1px solid #e1e9f4;border-radius:13px;box-shadow:0 5px 26px #173e8410;overflow:hidden}
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;gap:12px;flex-wrap:wrap}
+.toolbar h2{font-size:15px;margin:0}.toolbar p{color:#6d829d;font-size:11px;margin:0}
+select,input{font-family:inherit;border:1px solid #d6e1ef;border-radius:8px;padding:7px 10px;background:#fff;color:#24405d}
+.tableWrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px;text-align:right}
+th{background:#f4f7fd;color:#48627e;font-size:11px;font-weight:800}td,th{padding:12px 15px;border-bottom:1px solid #ecf0f6}tbody tr:hover{background:#f7faff}
+.num{font-family:Tahoma,"Segoe UI",sans-serif;direction:ltr;text-align:center;font-variant-numeric:tabular-nums}
+.status{padding:4px 8px;border-radius:20px;background:#edf6ff;color:#245d9a;font-weight:700;font-size:10px}
+.muted{color:#6b84a0}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.action{border:none;background:#215be5;color:white}
+.backup{display:grid;grid-template-columns:1fr 1fr;gap:13px;padding:16px}.tile{border:1px solid #dce6f4;border-radius:12px;padding:16px;background:#fbfcff}
+.tile h3{margin:0 0 6px;font-size:14px;display:flex;gap:8px;align-items:center}
+.tile p{margin:5px 0 14px;color:#657f9b}.tile svg{width:19px;height:19px;stroke:#245fe2;fill:none;stroke-width:1.7}
+.notice{margin:12px 17px 17px;border-right:3px solid #e9af43;padding:10px 12px;background:#fff9ee;color:#755825;border-radius:5px}
+input[type=file]{width:100%;font-size:11px}#result{min-height:20px;font-size:12px;white-space:pre-line}
+footer{text-align:center;color:#99a9bc;margin-top:22px;font-size:11px}
+@media(max-width:760px){body{padding:9px}.backup{grid-template-columns:1fr}header{padding:10px}h2{font-size:13px}}
+</style></head>
+<body><main><header><div class="brand"><div class="brand-logo">P</div><div><b>PhotoBridge</b><span>نمای مالی و پشتیبان‌گیری — پیش‌نمایش آزمایشی</span></div></div><span class="muted">بدون اتصال به اطلاعات واقعی</span></header>
+<nav id="nav" aria-label="بخش‌های مالی">
+<button data-page="invoice" aria-selected="true">فاکتورها</button>
+<button data-page="payment" aria-selected="false">دریافتی‌ها</button>
+<button data-page="ledger" aria-selected="false">حساب معین</button>
+<button data-page="backup" aria-selected="false">پشتیبان‌گیری و بازیابی</button>
+</nav>
+<section class="panel" id="records">
+<div class="toolbar"><div><h2 id="heading">فاکتورها</h2><p>فیلدها و رکوردهای نمایشی — بدون امکان تغییر</p></div>
+<div class="actions"><label for="studio">عکاسی</label><select id="studio"><option value="">همه عکاسی‌ها</option><option>آتلیه نمونه الف</option><option>آتلیه نمونه ب</option></select><button id="exportCsv">خروجی CSV همین جدول</button></div></div>
+<div class="tableWrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</section>
+<section class="panel" id="backup" hidden><div class="toolbar"><h2>پشتیبان‌گیری و بازیابی</h2><p>ظاهر پیشنهادی هماهنگ با فوتوبریج؛ در این پیش‌نمایش اطلاعات سرور تغییر نمی‌کند</p></div>
+<div class="backup"><div class="tile"><h3><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg>خروجی مالی قابل‌خواندن</h3><p>دریافت CSV فقط برای بررسی فایل‌ها در Access یا Excel. این فایل، بکاپ قابل‌بازیابی سرور نیست.</p><button class="action" id="exportAll">خروجی سه جدول نمونه</button></div>
+<div class="tile"><h3><svg viewBox="0 0 24 24"><path d="M12 21V9m-4 4 4-4 4 4M4 8V4h16v4"/></svg>بازبینی فایل پشتیبان</h3><p>انتخاب فایل JSON، بررسی ساختار و تعداد رکوردها بدون بازگرداندن داده به برنامه.</p><input type="file" accept=".json,application/json" id="restoreFile" aria-label="انتخاب فایل پشتیبان"/><p id="result"></p></div></div>
+<div class="notice">بازیابی واقعی باید پس از اعتبارسنجی نسخه فایل، شناسه لابراتوار، صحت حساب‌ها و تأیید مدیر، در یک تراکنش ایمن سمت سرور انجام شود. این پیش‌نمایش عمداً هیچ دکمه بازنویسی دیتابیس ندارد.</div>
+</section>
+<footer>PhotoBridge · Financial Review Prototype · Read Only</footer></main>
+<script>
+const views={
+ invoice:{title:'فاکتورها',cols:['ردیف','شماره فاکتور','تاریخ','عکاسی','شرح','نوع سند','مبلغ (تومان)','ثبت در حسابداری'],rows:[[1,'PB-1001','1405/08/02','آتلیه نمونه الف','سفارش اینترنتی چاپ عکس','فاکتور',2400000,'ثبت نشده'],[2,'PB-1002','1405/08/04','آتلیه نمونه ب','چاپ عکس و آلبوم','فاکتور',5800000,'ثبت شده'],[3,'PB-C001','1405/08/05','آتلیه نمونه ب','اصلاحیه سند قبلی','اصلاحیه',-250000,'ثبت شده']]},
+ payment:{title:'دریافتی‌ها',cols:['ردیف','شماره رسید','تاریخ','عکاسی','شرح','نوع','روش دریافت','مبلغ (تومان)'],rows:[[1,'RC-1001','1405/08/03','آتلیه نمونه الف','بیعانه','پرداخت','کارتخوان',1200000],[2,'RC-1002','1405/08/05','آتلیه نمونه ب','واریز مشتری','پرداخت','انتقال بانکی',4000000]]},
+ ledger:{title:'حساب معین',cols:['ردیف','تاریخ','شماره سند','عکاسی','شرح سند','بدهکار','بستانکار','مانده'],rows:[[1,'1405/08/02','PB-1001','آتلیه نمونه الف','صدور فاکتور',2400000,0,2400000],[2,'1405/08/03','RC-1001','آتلیه نمونه الف','دریافت کارتخوان',0,1200000,1200000],[3,'1405/08/04','PB-1002','آتلیه نمونه ب','صدور فاکتور',5800000,0,5800000]]}
+};
+let active='invoice';const txt=x=>String(x??'');const fmt=x=>typeof x==='number'&&x>=1000?x.toLocaleString('fa-IR'):txt(x);
+function render(){const data=views[active],studio=document.getElementById('studio').value;
+ document.getElementById('heading').textContent=data.title;
+ document.getElementById('thead').replaceChildren(Object.assign(document.createElement('tr'),{}));
+ const tr=document.getElementById('thead').firstChild;for(const c of data.cols){const th=document.createElement('th');th.textContent=c;tr.append(th)}
+ const body=document.getElementById('tbody');body.replaceChildren();
+ for(const row of data.rows.filter(r=>!studio||r[3]===studio)){const node=document.createElement('tr');for(const cell of row){const td=document.createElement('td');td.textContent=fmt(cell);if(typeof cell==='number'||/^PB-|^RC-/.test(txt(cell)))td.className='num';node.append(td)}body.append(node)}
+}
+function saveCsv(name,data){const q=x=>'"'+txt(x).replaceAll('"','""')+'"';const lines=[data.cols,...data.rows].map(r=>r.map(q).join(',')).join('\r\n');const blob=new Blob(['\uFEFF'+lines],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+document.getElementById('nav').addEventListener('click',e=>{const button=e.target.closest('button[data-page]');if(!button)return;active=button.dataset.page;for(const b of document.querySelectorAll('#nav button'))b.setAttribute('aria-selected',String(b===button));document.getElementById('backup').hidden=active!=='backup';document.getElementById('records').hidden=active==='backup';if(active!=='backup')render()});
+document.getElementById('studio').addEventListener('change',render);
+document.getElementById('exportCsv').addEventListener('click',()=>saveCsv(active,views[active]));
+document.getElementById('exportAll').addEventListener('click',()=>{for(const [k,v]of Object.entries(views))saveCsv('PhotoBridge_'+k,v)});
+document.getElementById('restoreFile').addEventListener('change',async e=>{const result=document.getElementById('result');result.textContent='';const file=e.target.files?.[0];if(!file)return;if(file.size>5_000_000){result.textContent='فایل برای پیش‌نمایش بزرگ است.';return}try{const json=JSON.parse(await file.text());result.textContent='ساختار JSON خوانده شد.\nنسخه: '+txt(json.schemaVersion||json.version||'نامشخص')+'\nاین پیش‌نمایش هیچ داده‌ای را در سرور بازیابی نمی‌کند.';}catch{result.textContent='فایل JSON معتبر نیست.'}});
+render();
+</script></body></html>

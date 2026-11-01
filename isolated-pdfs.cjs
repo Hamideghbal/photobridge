@@ -14,10 +14,12 @@ async function uploadOfflinePdfs(store, request, render) {
       let pdf = store.db
         .prepare("SELECT bytes FROM local_invoice_pdf WHERE lab=? AND id=?")
         .get(lab, inv.id)?.bytes;
+      const displayed=engine.decorateInvoice(engine.state(),inv);
+      if(pdf&&render&&inv.pdfDisplayNumber!==displayed.number)pdf=null;
       if (!pdf && render) {
         pdf = await render(
           require("./local-invoice.cjs").invoiceHtml(
-            engine.decorateInvoice(engine.state(), inv),
+            displayed,
             engine.bootstrap().lab,
           ),
         );
@@ -25,6 +27,7 @@ async function uploadOfflinePdfs(store, request, render) {
         store.db
           .prepare("INSERT OR REPLACE INTO local_invoice_pdf VALUES(?,?,?)")
           .run(lab, inv.id, Buffer.from(pdf));
+        store.transaction(()=>{const state=engine.state();state.invoices[inv.id].pdfDisplayNumber=displayed.number;store.set(engine.key(),state);});
       }
       if (!pdf) continue;
       const response = await request(

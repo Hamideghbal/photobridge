@@ -11,10 +11,12 @@
   "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons.",
   "desktopLayoutFix": "RTL styled sync/archive dialogs; bottom-left conflict flag hidden during intake; remove native duplicate copy badge; contain photo quantity controls.",
   "offlineDeviceFix": "Reuse last successful same-account same-device primary confirmation on transport failure; never offline force registration or cross-account approval.",
-  "packageVersion": "1.0.63",
+  "packageVersion": "1.0.64",
   "offlineOrders": "Policy v1: shared documents are read-only offline; independent offline orders carry device-scoped OFF references until an atomic import is acknowledged. Ambiguous imports freeze their exact persisted snapshot.",
   "localBusiness": "Independent offline invoices, own receipts, expenses and corrections with a balanced SQLite journal. Shared mutations require live server acknowledgement. Migration 194 stores immutable import receipts and preserves historical prices, dates and offline references.",
-  "validation": "98 SQLite/HTTP tests passed, including silent-upstream timeout; real Chromium offline intake, disk photo, invoice, receipt and delivery without upstream requests; real frozen release finance UI with over 60 older invoices, polling without SSE, section-specific second header, and two-peer live stages. Windows installer build/install remains unverified.",
+  "validation": "98 native SQLite/HTTP tests passed; real Chromium quiet refresh, centered queue layout, offline order/invoice/payment/PDF; clean release build; PostgreSQL-compatible 50-document import, retry/rollback/isolation and real desktop corrections. Windows installer build/install unverified; server financial import awaits approval.",
   "financeLiveFix": "Fresh finance reads and missing-customer hydration; ordered read cache and confirmed-write barriers; lightweight live pulls independent of background transfers; centered normal-flow header status.",
-  "offlineIntakeFinanceFix": "1.0.63: known-offline device preflight validates local storage without upstream; bounded LAN-without-server preflight; no offline GET/SSE upstream attempts; invoices newest first; visible finance polling fallback; status only in second header of print/album/archive/finance."
+  "offlineIntakeFinanceFix": "1.0.64: known-offline device preflight validates local storage without upstream; bounded LAN-without-server preflight; no offline GET/SSE upstream attempts; invoices newest first; visible finance polling fallback; status only in second header of print/album/archive/finance.",
+  "quietFinanceAndLabels": "1.0.64: retain finance content after first load; center connection in queue second header with stages on the left; compact OFF-1 invoice/PDF labels while preserving device-scoped import references. Regenerate legacy cached offline PDFs before upload without changing financial facts.",
+  "offlineImportServerReview": "https://github.com/Hamideghbal/photobridge/pull/645 — release-based migration/import remains draft, not deployed."
 }

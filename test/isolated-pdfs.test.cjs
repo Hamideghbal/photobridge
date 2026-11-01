@@ -32,6 +32,7 @@ test("PDF failure never undoes imported financial facts; retry uploads the same 
   s.invoices[invoice.id].serverId = crypto.randomUUID();
   s.invoices[invoice.id].sharedAt = new Date().toISOString();
   store.set(engine.key(), s);
+  store.db.prepare('INSERT OR REPLACE INTO local_invoice_pdf VALUES(?,?,?)').run('A',invoice.id,Buffer.from('%PDF-old-long-label'));
   const journal = JSON.stringify(engine.state().journal),
     sent = [];
   let fail = true,
@@ -42,7 +43,7 @@ test("PDF failure never undoes imported financial facts; retry uploads the same 
     },
     render = async (html) => {
       rendered++;
-      assert(html.includes(invoice.number));
+      assert(html.includes(invoice.number));assert(!html.includes(s.invoices[invoice.id].number));
       return Buffer.from("%PDF-exact-offline-reference");
     };
   try {

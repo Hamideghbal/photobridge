@@ -34,7 +34,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    if(invoiceRoute){if(invoiceRoute[2]==='pdf-upload'){const raw=String(b.pdfBase64||'').replace(/^data:[^,]+,/,''),pdf=Buffer.from(raw,'base64');if(pdf.length<5||pdf.length>10e6||pdf.subarray(0,5).toString()!=='%PDF-')throw Object.assign(Error('فایل PDF معتبر نیست.'),{code:'invalid_invoice_pdf',status:400});store.db.prepare('INSERT OR REPLACE INTO local_invoice_pdf VALUES(?,?,?)').run(store.get('labId'),inv.id,pdf);}json(res,200,{invoice:inv,localCommitted:true});return true;}
    const html=require('./local-invoice.cjs').invoiceHtml(engine.decorateInvoice(s,inv),engine.bootstrap().lab);
    if(printRoute[2]==='print'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return true;}
-   let pdf=!inv.serverNumber&&store.db.prepare('SELECT bytes FROM local_invoice_pdf WHERE lab=? AND id=?').get(store.get('labId'),inv.id)?.bytes;
+   let pdf=(!inv.origin_offline||inv.pdfDisplayNumber===engine.decorateInvoice(s,inv).number)&&!inv.serverNumber&&store.db.prepare('SELECT bytes FROM local_invoice_pdf WHERE lab=? AND id=?').get(store.get('labId'),inv.id)?.bytes;
    if(!pdf){if(!pdfRenderer)throw Object.assign(Error('چاپ PDF در این محیط در دسترس نیست.'),{status:503});pdf=await pdfRenderer(html);same();}
    res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'inline; filename="invoice-'+inv.id+'.pdf"'});res.end(Buffer.from(pdf));return true;
   }

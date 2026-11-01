@@ -1,6 +1,6 @@
 {
   "name": "photobridge-lab-desktop",
-  "version": "1.0.74",
+  "version": "1.0.75",
   "private": true,
   "description": "PhotoBridge Lab — offline-first Windows workspace",
   "main": "main.cjs",
@@ -33,7 +33,8 @@
       "access-libraries.json",
       "access-helper.sha256",
       "THIRD-PARTY-ACCESS.txt",
-      "*.vbs"
+      "*.vbs",
+      "access-worker-owner.ps1"
     ],
     "extraResources": [
       {

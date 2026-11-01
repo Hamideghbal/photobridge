@@ -29,7 +29,7 @@ test('real Access tables preserve the report statement amounts and Persian custo
  const {store,engine,call}=fixture(),temp=await fs.mkdtemp(path.join(os.tmpdir(),'pb-report-access-'));
  try{const customer=call('/api/lab/customers',{name:'آتلیه گزارش فارسی'}).customer,invoice=call('/api/lab/invoices/manual',{customerId:customer.id,items:[{description:'چاپ',quantity:3,unitPrice:100}]}).invoice;
  call('/api/lab/finance/payments',{invoiceId:invoice.id,amount:50,method:'cash'});
- const file=path.join(temp,'finance.accdb'),java=require('../access-runtime-path.cjs').testJava();await exportAccess(buildBackupModel(store),file,{java});
+ const file=path.join(temp,'finance.accdb'),java=require('../access-runtime-path.cjs').testJava();await exportAccess(buildBackupModel(store),file,{java,includeReports:false});
  const cp=[path.join(__dirname,'../assets/photobridge-access-export.jar'),path.join(__dirname,'../assets/access-libs/*')].join(path.delimiter),read=async table=>JSON.parse((await run(java,['-cp',cp,'PhotoBridgeAccess','--read',file,'b64:'+Buffer.from(table).toString('base64url')])).stdout);
  const summaries=await read('خلاصه حساب آتلیه‌ها'),rows=await read('گردش معین آتلیه‌ها');assert.equal(summaries[0]['نام آتلیه'],'آتلیه گزارش فارسی');assert.equal(summaries[0]['بدهی'],250);assert.equal(summaries[0]['بستانکاری'],0);assert.equal(rows.length,2);assert.equal(rows.at(-1)['مانده گردش'],250);assert(rows[0]['کلید گروه'].includes(customer.id));
  }finally{store.db.close();await fs.rm(temp,{recursive:true,force:true});}

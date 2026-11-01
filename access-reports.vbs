@@ -1,14 +1,27 @@
 Option Explicit
 ' Read-only Access REPORTS. The sole form is an unbound report launcher.
 Const acForm=2, acReport=3, acTextBox=109, acLabel=100, acSaveYes=1
-Dim application, db, target, fso
+Dim application, db, target, fso, ownerFile, ownerScript, shell, command, code
 Set fso=CreateObject("Scripting.FileSystemObject")
 If WScript.Arguments.Count<1 Then WScript.Echo "missing_db_file":WScript.Quit 2
 target=WScript.Arguments(0)
+If WScript.Arguments.Count<3 Then WScript.Echo "missing_worker_owner":WScript.Quit 3
+ownerFile=WScript.Arguments(1):ownerScript=WScript.Arguments(2)
+Sub Stage(value)
+ Dim log
+ Set log=fso.OpenTextFile(ownerFile & ".progress",2,True,-1)
+ log.Write value:log.Close
+End Sub
+Stage "create_access"
 On Error Resume Next
 Set application=CreateObject("Access.Application")
 If Err.Number<>0 Then WScript.Echo "access_not_installed:" & Err.Description:WScript.Quit 4
 Err.Clear
+Set shell=CreateObject("WScript.Shell")
+command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File " & Chr(34) & ownerScript & Chr(34) & " -Action Record -OwnerFile " & Chr(34) & ownerFile & Chr(34) & " -WindowHandle " & CStr(application.hWndAccessApp)
+code=shell.Run(command,0,True)
+If Err.Number<>0 Or code<>0 Then WScript.Echo "access_instance_not_owned":WScript.Quit 7
+Stage "open_database"
 application.OpenCurrentDatabase target,False
 If Err.Number<>0 Then WScript.Echo "cannot_open_generated_access:" & Err.Description:application.Quit:WScript.Quit 5
 On Error GoTo 0
@@ -75,9 +88,11 @@ Sub PageStyle(r)
 End Sub
 Sub GroupedReport(name,title,sql,groupField,groupTitle,fields,widths,money,totals,totalLabels,opening,sortField)
  Dim r,temp,level,i,x,c,rs,sortLevel
+ Stage "query: " & name
  Set rs=db.OpenRecordset(sql)
  If rs.Fields.Count=0 Then Err.Raise 514,,"empty_query:" & name
  rs.Close
+ Stage "create_report: " & name
  Set r=application.CreateReport()
  temp=r.Name:r.Caption=title:r.RecordSource=sql:r.Width=15000
  PageStyle r
@@ -159,6 +174,7 @@ Sub BuildReports()
  Setting "AppTitle",10,"PhotoBridge | گزارش‌های مالی"
  For Each name In Array("معین آتلیه‌ها","فاکتورهای آتلیه‌ها","خلاصه بدهی آتلیه‌ها")
   If application.CurrentProject.AllReports(name).Name<>name Then Err.Raise 513,,"missing_report:" & name
+  Stage "validate_report: " & name
   application.DoCmd.OpenReport name,5
   Set check=application.Reports(name)
   If check.RecordSource="" Then Err.Raise 514,,"empty_report_source:" & name
@@ -173,6 +189,7 @@ If Err.Number<>0 Then
  WScript.Quit 6
 End If
 Err.Clear
+Stage "close_access"
 application.CloseCurrentDatabase
 application.Quit
 If Err.Number<>0 Then WScript.Echo "access_close_failed:" & Err.Description:WScript.Quit 9

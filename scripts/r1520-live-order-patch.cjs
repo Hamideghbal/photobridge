@@ -8,6 +8,8 @@ function patchOrderLive(source){
 }
 
 function upgradeFinanceLive(source){
+ const compact='const V=t=>{if(typeof t==="string"&&/^(?:OFF-|PB-)/.test(t))return t.replace(/^OFF-[A-F0-9]{32}-(?:INV|ORD|EXP|PAY|COR)-0*([1-9]\\d*|0)$/,"OFF-$1").replace(/^PB-[A-F0-9]{8}-(?:INV|ORD|EXP|PAY|COR|ADJ)-0*([1-9]\\d*|0)$/,"L-$1");return Number(t||0).toLocaleString("fa-IR")}';
+ for(const before of ['const V=t=>Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:PB-|OFF-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:OFF-|PB-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")'])source=source.replaceAll(before,compact);
  if(!source.includes('/* PB1526 quiet finance */')){
   const load='pb1472Load=async()=>{var Je;g(!0);try{const Ot=await Me(ke);';
   if(source.includes(load)){source=source.replace(load,'/* PB1526 quiet finance */pb1526Loaded=x.useRef(false),pb1472Load=async()=>{var Je;if(!pb1526Loaded.current)g(!0);try{const Ot=await Me(ke);pb1526Loaded.current=true;');}

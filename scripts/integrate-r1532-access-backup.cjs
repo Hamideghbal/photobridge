@@ -46,6 +46,8 @@ function integrate(root=path.resolve('apps/lab-desktop'),repo=path.resolve(__dir
  const packageFile=path.join(root,'package.json');
  if(fs.existsSync(packageFile)){
   const pkg=JSON.parse(fs.readFileSync(packageFile,'utf8'));
+  // The server's document policy requires native version 1.0.61 or later.
+  pkg.version='1.0.62';
   if(Array.isArray(pkg.build?.files)){
    for(const name of ['finance-backup.cjs','BuildFinancialBackup.vbs']){
     if(!pkg.build.files.some(entry=>entry===name||entry==='**/'+name))
@@ -53,6 +55,17 @@ function integrate(root=path.resolve('apps/lab-desktop'),repo=path.resolve(__dir
    }
    fs.writeFileSync(packageFile,JSON.stringify(pkg,null,2)+'\n');
   }
+  const lockFile=path.join(root,'package-lock.json');
+  if(fs.existsSync(lockFile)){
+   const lock=JSON.parse(fs.readFileSync(lockFile,'utf8'));
+   lock.version=pkg.version;
+   if(lock.packages?.[''])lock.packages[''].version=pkg.version;
+   fs.writeFileSync(lockFile,JSON.stringify(lock,null,2)+'\n');
+  }
+ }
+ for(const cmd of ['BUILD-WINDOWS.cmd','BUILD-WINDOWS-SIGNED.cmd']){
+  const target=path.join(root,cmd);
+  if(fs.existsSync(target))fs.writeFileSync(target,fs.readFileSync(target,'utf8').replace(/1\.0\.39/g,'1.0.62'));
  }
  fs.writeFileSync(original,main);
  return true;

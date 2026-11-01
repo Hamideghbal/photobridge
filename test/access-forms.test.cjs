@@ -42,9 +42,9 @@ test('Access missing or validation failure leaves original readable report byte-
   }finally{await fs.rm(dir,{recursive:true,force:true})}
  }
 });
-test('native 1.0.73 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
+test('native 1.0.74 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.73');
+ assert.equal(pkg.version,'1.0.74');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));
@@ -61,4 +61,10 @@ test('report failure exposes the COM diagnostic while keeping the original backu
   assert.equal(await fs.readFile(file,'utf8'),'original');
   assert.deepEqual(await fs.readdir(dir),['finance.accdb']);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
+test('wide report columns fit the landscape canvas and monetary display preserves four decimal places',async()=>{
+ const script=await fs.readFile(path.join(__dirname,'../access-reports.vbs'),'utf8');
+ const widths=[...script.matchAll(/Array\((\d+(?:,\d+){4,})\)/g)].map(m=>m[1].split(',').map(Number));assert.equal(widths.length,3);
+ for(const row of widths){assert(row.reduce((sum,width)=>sum+width,0)<=14800);assert(Math.min(...row)>=1500);}
+ assert(script.includes('r.Printer.Orientation=2'));assert(script.includes('r.Width=15000'));assert(script.includes('۰۱۲۳۴۵۶۷۸۹'));assert(script.includes('#,##0.####;(#,##0.####);0'));assert(script.includes('c.CanGrow=Not money'));
 });

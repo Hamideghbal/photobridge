@@ -142,6 +142,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
           html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
           return res.end(html);
         }
+        if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
         if(name==='assets/index-UIRefine-v655-r84.js')return res.end(require('./storage-bundle.cjs').patchStorageBundle(fs.readFileSync(file,'utf8')));

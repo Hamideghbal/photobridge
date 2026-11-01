@@ -34,3 +34,8 @@ test('real Access tables preserve the report statement amounts and Persian custo
  const summaries=await read('خلاصه حساب آتلیه‌ها'),rows=await read('گردش معین آتلیه‌ها');assert.equal(summaries[0]['نام آتلیه'],'آتلیه گزارش فارسی');assert.equal(summaries[0]['بدهی'],250);assert.equal(summaries[0]['بستانکاری'],0);assert.equal(rows.length,2);assert.equal(rows.at(-1)['مانده گردش'],250);assert(rows[0]['کلید گروه'].includes(customer.id));
  }finally{store.db.close();await fs.rm(temp,{recursive:true,force:true});}
 });
+test('readable report dates use the Persian calendar in Tehran and retain original invoice timestamps',()=>{
+ const {reportDate}=require('../access-report-model.cjs');assert.equal(reportDate('2026-11-01T10:00:00Z'),'۱۴۰۵/۰۸/۱۰');assert.equal(reportDate('2026-11-01T21:00:00Z'),'۱۴۰۵/۰۸/۱۱');assert.equal(reportDate(''),'');assert.equal(reportDate('unknown-date'),'unknown-date');
+ const {store,call}=fixture();try{const customer=call('/api/lab/customers',{name:'آتلیه تاریخ'}).customer;call('/api/lab/invoices/manual',{customerId:customer.id,issuedAt:'2026-11-01T10:00:00Z',items:[{description:'چاپ',unitPrice:500}]});const model=buildBackupModel(store),invoice=model.tables.find(t=>t.name==='Invoices').rows[0];assert.equal(invoice.IssuedAt,'2026-11-01T10:00:00.000Z');assert.equal(invoice.ReportDate,'۱۴۰۵/۰۸/۱۰');assert.equal(invoice.Total,500);
+ }finally{store.db.close();}
+});

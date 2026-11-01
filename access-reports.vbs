@@ -27,23 +27,48 @@ Sub Setting(name,kind,value)
   Err.Raise code,,detail
  End If
 End Sub
+Function PersianDigits(expression)
+ Dim result,i,q
+ q=Chr(34):result=expression
+ If Left(result,1)="=" Then result=Mid(result,2)
+ For i=0 To 9
+  result="Replace(" & result & "," & q & CStr(i) & q & "," & q & Mid("۰۱۲۳۴۵۶۷۸۹",i+1,1) & q & ")"
+ Next
+ PersianDigits="=" & result
+End Function
+Function PersianMoney(expression)
+ Dim q,value,whole,fraction
+ q=Chr(34)
+ If Left(expression,1)="=" Then expression=Mid(expression,2)
+ value="Nz(" & expression & ",0)"
+ whole="Format(" & value & "," & q & "#,##0;(#,##0);0" & q & ")"
+ fraction="Format(" & value & "," & q & "#,##0.####;(#,##0.####);0" & q & ")"
+ PersianMoney=PersianDigits("IIf(" & value & "=Fix(" & value & ")," & whole & "," & fraction & ")")
+End Function
 Sub Label(report,section,title,x,y,w,size)
  Dim c
  Set c=application.CreateReportControl(report.Name,acLabel,section,"","",x,y,w,420)
+ If title="تاریخ نمایشی" Then title="تاریخ"
  c.Caption=title:c.FontName="Tahoma":c.FontSize=size:c.TextAlign=3:c.ForeColor=RGB(49,80,148)
 End Sub
 Function Value(report,section,source,x,y,w,money)
  Dim c
- Set c=application.CreateReportControl(report.Name,acTextBox,section,"",source,x,y,w,400)
- c.FontName="Tahoma":c.FontSize=10:c.TextAlign=3:c.BorderStyle=0
- c.CanGrow=True
- If money Then c.Format="#,##0.####;[Red](#,##0.####)"
+ Set c=application.CreateReportControl(report.Name,acTextBox,section,"",source,x,y,w,460)
+ c.FontName="Tahoma":c.FontSize=11:c.TextAlign=3:c.BorderStyle=0
+ c.CanGrow=Not money
+ If money Then
+  c.ControlSource=PersianMoney(source)
+  c.ReadingOrder=1
+ ElseIf source="[شماره فاکتور]" Or InStr(source,"[Page]")>0 Then
+  c.ControlSource=PersianDigits(source)
+ End If
  Set Value=c
 End Function
 Sub PageStyle(r)
  ' Printing preferences alone may be unavailable on a machine without a printer.
  On Error Resume Next
- r.Printer.LeftMargin=500:r.Printer.RightMargin=500
+ r.Printer.PaperSize=9:r.Printer.Orientation=2
+ r.Printer.LeftMargin=432:r.Printer.RightMargin=432
  r.Printer.TopMargin=500:r.Printer.BottomMargin=500
  r.Orientation=1
  On Error GoTo 0
@@ -54,27 +79,27 @@ Sub GroupedReport(name,title,sql,groupField,groupTitle,fields,widths,money,total
  If rs.Fields.Count=0 Then Err.Raise 514,,"empty_query:" & name
  rs.Close
  Set r=application.CreateReport()
- temp=r.Name:r.Caption=title:r.RecordSource=sql:r.Width=10600
+ temp=r.Name:r.Caption=title:r.RecordSource=sql:r.Width=15000
  PageStyle r
  level=application.CreateGroupLevel(temp,"[" & groupField & "]",True,True)
  r.GroupLevel(level).SortOrder=False
  sortLevel=application.CreateGroupLevel(temp,"[" & sortField & "]",False,False)
  r.GroupLevel(sortLevel).SortOrder=False
  r.Section(3).Height=1720
- r.Section(0).Height=470:r.Section(0).CanGrow=True
+ r.Section(0).Height=600:r.Section(0).CanGrow=True
  r.Section(5+level*2).Height=1000:r.Section(5+level*2).RepeatSection=True
- r.Section(6+level*2).Height=1300:r.Section(6+level*2).KeepTogether=True
+ r.Section(6+level*2).Height=1500:r.Section(6+level*2).KeepTogether=True
  r.Section(5+level*2).BackColor=RGB(234,240,255)
  r.Section(6+level*2).BackColor=RGB(241,245,255)
- Label r,3,title,100,80,10400,17
- Label r,3,"PhotoBridge | تومان | داده‌های موجود روی این رایانه در لحظهٔ بکاپ",100,650,10400,10
- x=10400
+ Label r,3,title,100,80,14800,17
+ Label r,3,"PhotoBridge | مبالغ به تومان | اعداد داخل پرانتز، منفی هستند | داده‌های لحظهٔ بکاپ",100,650,14800,10
+ x=14800
  For i=0 To UBound(fields)
   x=x-widths(i)
   Label r,3,fields(i),x,1250,widths(i)-40,10
   Set c=Value(r,0,"[" & fields(i) & "]",x,30,widths(i)-40,InStr("|" & money & "|","|" & fields(i) & "|")>0)
  Next
- Set c=Value(r,5+level*2,groupTitle,100,80,10300,False):c.FontSize=14
+ Set c=Value(r,5+level*2,groupTitle,100,80,14700,False):c.FontSize=14
  If groupField="کلید گروه" Then
   Set c=Value(r,5+level*2,"[تلفن همراه]",100,530,3200,False)
  End If
@@ -83,12 +108,12 @@ Sub GroupedReport(name,title,sql,groupField,groupTitle,fields,widths,money,total
   Set c=Value(r,5+level*2,"[مانده آغازین]",3500,530,3300,True)
  End If
  For i=0 To UBound(totals)
-  x=10400-(i+1)*Int(10400/(UBound(totals)+1))
-  Label r,6+level*2,totalLabels(i),x,100,Int(10400/(UBound(totals)+1))-70,10
-  Set c=Value(r,6+level*2,totals(i),x,650,Int(10400/(UBound(totals)+1))-70,True):c.FontBold=True
+  x=14800-(i+1)*Int(14800/(UBound(totals)+1))
+  Label r,6+level*2,totalLabels(i),x,100,Int(14800/(UBound(totals)+1))-70,10
+  Set c=Value(r,6+level*2,totals(i),x,650,Int(14800/(UBound(totals)+1))-70,True):c.FontBold=True
  Next
  r.Section(4).Height=500
- Set c=Value(r,4,"=""صفحه "" & [Page] & "" از "" & [Pages]",100,40,10400,False)
+ Set c=Value(r,4,"=""صفحه "" & [Page] & "" از "" & [Pages]",100,40,14800,False)
  application.DoCmd.Close acReport,temp,acSaveYes
  application.DoCmd.Rename name,acReport,temp
 End Sub
@@ -123,9 +148,9 @@ Sub Home()
 End Sub
 Sub BuildReports()
  Dim name,check
- GroupedReport "معین آتلیه‌ها","معین به تفکیک آتلیه","SELECT * FROM [گردش معین آتلیه‌ها] ORDER BY [کلید گروه],[ردیف]","کلید گروه","[نام آتلیه]",Array("تاریخ","شماره فاکتور","شرح","بدهکار","بستانکار","مانده گردش"),Array(1500,1000,3000,1600,1600,1600),"بدهکار|بستانکار|مانده گردش",Array("=Sum([بدهکار])","=Sum([بستانکار])","=First([مانده پایان گردش])","=First([مانده فعلی حساب])"),Array("جمع بدهکار","جمع بستانکار","مانده پایان گردش","مانده فعلی حساب"),True,"ردیف"
- GroupedReport "فاکتورهای آتلیه‌ها","فاکتورها به تفکیک آتلیه","SELECT i.*,s.[تلفن همراه],i.[نام مشتری] AS [نام آتلیه],Left(i.[نام مشتری],180) & '|' & IIf(i.[شناسه مشتری]='',i.[شناسه فاکتور],i.[شناسه مشتری]) AS [کلید گروه],(i.[مبلغ کل]+i.[مبلغ اصلاحیه]) AS [مبلغ نهایی] FROM [فاکتورها] AS i LEFT JOIN [خلاصه حساب آتلیه‌ها] AS s ON i.[شناسه مشتری]=s.[شناسه مشتری] ORDER BY i.[نام مشتری],i.[شناسه مشتری],i.[تاریخ صدور],i.[شماره فاکتور]","کلید گروه","[نام آتلیه]",Array("تاریخ صدور","شماره فاکتور","منشأ فاکتور","مبلغ نهایی","مبلغ دریافت‌شده","مانده حساب"),Array(1800,1200,1000,2100,2100,2100),"مبلغ نهایی|مبلغ دریافت‌شده|مانده حساب",Array("=Sum([مبلغ نهایی])","=Sum([مبلغ دریافت‌شده])","=Sum([مانده حساب])"),Array("جمع فاکتورها با اصلاحیه","جمع دریافت فاکتورها","مانده فاکتورها"),False,"تاریخ صدور"
- GroupedReport "خلاصه بدهی آتلیه‌ها","خلاصه بدهی و بستانکاری آتلیه‌ها","SELECT s.*,'همه آتلیه‌ها' AS [گروه گزارش] FROM [خلاصه حساب آتلیه‌ها] AS s ORDER BY s.[نام آتلیه],s.[شناسه مشتری]","گروه گزارش","[گروه گزارش]",Array("نام آتلیه","تلفن همراه","بدهی","بستانکاری","مانده فعلی حساب"),Array(3000,2200,1700,1700,1700),"بدهی|بستانکاری|مانده فعلی حساب",Array("=Sum([بدهی])","=Sum([بستانکاری])","=Sum([مانده فعلی حساب])"),Array("مجموع بدهی آتلیه‌ها","مجموع بستانکاری","مانده خالص"),False,"نام آتلیه"
+ GroupedReport "معین آتلیه‌ها","معین به تفکیک آتلیه","SELECT * FROM [گردش معین آتلیه‌ها] ORDER BY [کلید گروه],[ردیف]","کلید گروه","[نام آتلیه]",Array("تاریخ نمایشی","شماره فاکتور","شرح","بدهکار","بستانکار","مانده گردش"),Array(2000,1600,4300,2200,2200,2200),"بدهکار|بستانکار|مانده گردش",Array("=Sum([بدهکار])","=Sum([بستانکار])","=First([مانده پایان گردش])","=First([مانده فعلی حساب])"),Array("جمع بدهکار","جمع بستانکار","مانده پایان گردش","مانده فعلی حساب"),True,"ردیف"
+ GroupedReport "فاکتورهای آتلیه‌ها","فاکتورها به تفکیک آتلیه","SELECT i.*,s.[تلفن همراه],i.[نام مشتری] AS [نام آتلیه],Left(i.[نام مشتری],180) & '|' & IIf(i.[شناسه مشتری]='',i.[شناسه فاکتور],i.[شناسه مشتری]) AS [کلید گروه],(i.[مبلغ کل]+i.[مبلغ اصلاحیه]) AS [مبلغ نهایی] FROM [فاکتورها] AS i LEFT JOIN [خلاصه حساب آتلیه‌ها] AS s ON i.[شناسه مشتری]=s.[شناسه مشتری] ORDER BY i.[نام مشتری],i.[شناسه مشتری],i.[تاریخ صدور],i.[شماره فاکتور]","کلید گروه","[نام آتلیه]",Array("تاریخ نمایشی","شماره فاکتور","منشأ فاکتور","مبلغ نهایی","مبلغ دریافت‌شده","مانده حساب"),Array(2200,1800,1500,3000,3000,3000),"مبلغ نهایی|مبلغ دریافت‌شده|مانده حساب",Array("=Sum([مبلغ نهایی])","=Sum([مبلغ دریافت‌شده])","=Sum([مانده حساب])"),Array("جمع فاکتورها با اصلاحیه","جمع دریافت فاکتورها","مانده فاکتورها"),False,"تاریخ صدور"
+ GroupedReport "خلاصه بدهی آتلیه‌ها","خلاصه بدهی و بستانکاری آتلیه‌ها","SELECT s.*,'همه آتلیه‌ها' AS [گروه گزارش] FROM [خلاصه حساب آتلیه‌ها] AS s ORDER BY s.[نام آتلیه],s.[شناسه مشتری]","گروه گزارش","[گروه گزارش]",Array("نام آتلیه","تلفن همراه","بدهی","بستانکاری","مانده فعلی حساب"),Array(4200,3000,2500,2500,2300),"بدهی|بستانکاری|مانده فعلی حساب",Array("=Sum([بدهی])","=Sum([بستانکاری])","=Sum([مانده فعلی حساب])"),Array("مجموع بدهی آتلیه‌ها","مجموع بستانکاری","مانده خالص"),False,"نام آتلیه"
  Home
  Setting "StartupForm",10,"گزارش‌های مالی"
  Setting "StartupShowDBWindow",1,True

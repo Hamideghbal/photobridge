@@ -29,3 +29,9 @@ test('a correctly hashed but incomplete automatic update cannot replace the curr
   assert.equal(store.get('uiRoot'),ui);assert.equal(store.get('uiBuild'),'known-complete');assert(!fs.existsSync(path.join(temp,manifest.build)));
  }finally{fs.rmSync(temp,{recursive:true,force:true});}
 });
+test('secondary and promoted navigation adapters are syntactically valid and idempotent',()=>{
+ const vm=require('node:vm'),{patchThirdNavigation}=require('../navigation-header-patch.cjs');
+ const first=patchNavigationHeader(fs.readFileSync(path.join(ui,'photobridge-r1147-lab-admin-header.js'),'utf8'));
+ const third=patchThirdNavigation(fs.readFileSync(path.join(ui,'photobridge-r1372-third-header.js'),'utf8'));
+ new vm.Script(first);new vm.Script(third);assert(third.includes('PB1574 active third navigation'));assert.equal(patchThirdNavigation(third),third);
+});

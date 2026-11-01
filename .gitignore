@@ -5,3 +5,5 @@ runtime/
 *.pem
 *.pfx
 *.p12
+access-runtime/
+.access-runtime-build-*/

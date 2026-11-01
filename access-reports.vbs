@@ -1,0 +1,154 @@
+Option Explicit
+' Read-only Access REPORTS. The sole form is an unbound report launcher.
+Const acForm=2, acReport=3, acTextBox=109, acLabel=100, acSaveYes=1
+Dim application, db, target, fso
+Set fso=CreateObject("Scripting.FileSystemObject")
+If WScript.Arguments.Count<1 Then WScript.Echo "missing_db_file":WScript.Quit 2
+target=WScript.Arguments(0)
+On Error Resume Next
+Set application=CreateObject("Access.Application")
+If Err.Number<>0 Then WScript.Echo "access_not_installed:" & Err.Description:WScript.Quit 4
+Err.Clear
+application.OpenCurrentDatabase target,False
+If Err.Number<>0 Then WScript.Echo "cannot_open_generated_access:" & Err.Description:application.Quit:WScript.Quit 5
+On Error GoTo 0
+Set db=application.CurrentDb
+Sub Setting(name,kind,value)
+ Dim prop,code,detail
+ On Error Resume Next
+ db.Properties(name)=value
+ code=Err.Number:detail=Err.Description
+ Err.Clear
+ On Error GoTo 0
+ If code=3270 Then
+  Set prop=db.CreateProperty(name,kind,value)
+  db.Properties.Append prop
+ ElseIf code<>0 Then
+  Err.Raise code,,detail
+ End If
+End Sub
+Sub Label(report,section,title,x,y,w,size)
+ Dim c
+ Set c=application.CreateReportControl(report.Name,acLabel,section,"","",x,y,w,420)
+ c.Caption=title:c.FontName="Tahoma":c.FontSize=size:c.TextAlign=3:c.ForeColor=RGB(49,80,148)
+End Sub
+Function Value(report,section,source,x,y,w,money)
+ Dim c
+ Set c=application.CreateReportControl(report.Name,acTextBox,section,"",source,x,y,w,400)
+ c.FontName="Tahoma":c.FontSize=10:c.TextAlign=3:c.BorderStyle=0
+ c.CanGrow=True
+ If money Then c.Format="#,##0.####;[Red](#,##0.####)"
+ Set Value=c
+End Function
+Sub PageStyle(r)
+ ' Printing preferences alone may be unavailable on a machine without a printer.
+ On Error Resume Next
+ r.Printer.LeftMargin=500:r.Printer.RightMargin=500
+ r.Printer.TopMargin=500:r.Printer.BottomMargin=500
+ r.Orientation=1
+ On Error GoTo 0
+End Sub
+Sub GroupedReport(name,title,sql,groupField,groupTitle,fields,widths,money,totals,totalLabels,opening,sortField)
+ Dim r,temp,level,i,x,c,rs,sortLevel
+ Set rs=db.OpenRecordset(sql)
+ If rs.Fields.Count=0 Then Err.Raise 514,,"empty_query:" & name
+ rs.Close
+ Set r=application.CreateReport()
+ temp=r.Name:r.Caption=title:r.RecordSource=sql:r.Width=10600
+ PageStyle r
+ level=application.CreateGroupLevel(temp,"[" & groupField & "]",True,True)
+ r.GroupLevel(level).SortOrder=False
+ sortLevel=application.CreateGroupLevel(temp,"[" & sortField & "]",False,False)
+ r.GroupLevel(sortLevel).SortOrder=False
+ r.Section(3).Height=1720
+ r.Section(0).Height=470:r.Section(0).CanGrow=True
+ r.Section(5+level*2).Height=1000:r.Section(5+level*2).RepeatSection=True
+ r.Section(6+level*2).Height=1300:r.Section(6+level*2).KeepTogether=True
+ r.Section(5+level*2).BackColor=RGB(234,240,255)
+ r.Section(6+level*2).BackColor=RGB(241,245,255)
+ Label r,3,title,100,80,10400,17
+ Label r,3,"PhotoBridge | تومان | داده‌های موجود روی این رایانه در لحظهٔ بکاپ",100,650,10400,10
+ x=10400
+ For i=0 To UBound(fields)
+  x=x-widths(i)
+  Label r,3,fields(i),x,1250,widths(i)-40,10
+  Set c=Value(r,0,"[" & fields(i) & "]",x,30,widths(i)-40,InStr("|" & money & "|","|" & fields(i) & "|")>0)
+ Next
+ Set c=Value(r,5+level*2,groupTitle,100,80,10300,False):c.FontSize=14
+ If groupField="کلید گروه" Then
+  Set c=Value(r,5+level*2,"[تلفن همراه]",100,530,3200,False)
+ End If
+ If opening Then
+  Label r,5+level*2,"مانده آغازین گردش:",7000,530,3300,10
+  Set c=Value(r,5+level*2,"[مانده آغازین]",3500,530,3300,True)
+ End If
+ For i=0 To UBound(totals)
+  x=10400-(i+1)*Int(10400/(UBound(totals)+1))
+  Label r,6+level*2,totalLabels(i),x,100,Int(10400/(UBound(totals)+1))-70,10
+  Set c=Value(r,6+level*2,totals(i),x,650,Int(10400/(UBound(totals)+1))-70,True):c.FontBold=True
+ Next
+ r.Section(4).Height=500
+ Set c=Value(r,4,"=""صفحه "" & [Page] & "" از "" & [Pages]",100,40,10400,False)
+ application.DoCmd.Close acReport,temp,acSaveYes
+ application.DoCmd.Rename name,acReport,temp
+End Sub
+Sub HomeLink(f,title,screen,y)
+ Dim c
+ Set c=application.CreateControl(f.Name,acLabel,0,"","",600,y,10800,700)
+ c.Caption=title:c.FontName="Tahoma":c.FontSize=14:c.TextAlign=3
+ c.BackStyle=1:c.BackColor=RGB(234,240,255):c.ForeColor=RGB(49,94,251)
+ c.HyperlinkSubAddress="Report " & screen
+ c.ControlTipText="مشاهدهٔ گزارش " & screen
+End Sub
+Sub Home()
+ Dim f,c,temp
+ Set f=application.CreateForm()
+ f.Caption="PhotoBridge | گزارش‌های مالی"
+ f.DefaultView=0:f.Width=12000:f.Section(0).Height=5700
+ f.AllowEdits=False:f.AllowAdditions=False:f.AllowDeletions=False
+ f.NavigationButtons=False:f.RecordSelectors=False
+ f.Section(0).BackColor=RGB(247,249,255)
+ Set c=application.CreateControl(f.Name,acLabel,0,"","",600,300,10800,650)
+ c.Caption="PhotoBridge · گزارش‌های مالی":c.FontName="Tahoma":c.FontSize=22:c.TextAlign=3
+ Set c=application.CreateControl(f.Name,acLabel,0,"","",600,1050,10800,600)
+ c.Caption="فقط مشاهده و چاپ؛ برای باز کردن گزارش، عنوان آن را انتخاب کنید.":c.FontName="Tahoma":c.FontSize=11:c.TextAlign=3
+ HomeLink f,"معین آتلیه‌ها  |  گردش و ماندهٔ هر آتلیه","معین آتلیه‌ها",1900
+ HomeLink f,"فاکتورهای آتلیه‌ها  |  فاکتورها و جمع هر آتلیه","فاکتورهای آتلیه‌ها",2800
+ HomeLink f,"خلاصه بدهی آتلیه‌ها  |  مجموع بدهی و بستانکاری","خلاصه بدهی آتلیه‌ها",3700
+ Set c=application.CreateControl(f.Name,acLabel,0,"","",600,4700,10800,800)
+ c.Caption="گزارش‌ها در بخش Reports اکسس نیز در دسترس‌اند. برای انتخاب آتلیه، گزارش را در Report View باز کنید و روی نام آتلیه راست‌کلیک و فیلتر کنید. فایل مربوط به لحظهٔ بکاپ است.":c.FontName="Tahoma":c.FontSize=10:c.TextAlign=3
+ temp=f.Name
+ application.DoCmd.Close acForm,temp,acSaveYes
+ application.DoCmd.Rename "گزارش‌های مالی",acForm,temp
+End Sub
+Sub BuildReports()
+ Dim name,check
+ GroupedReport "معین آتلیه‌ها","معین به تفکیک آتلیه","SELECT * FROM [گردش معین آتلیه‌ها] ORDER BY [کلید گروه],[ردیف]","کلید گروه","[نام آتلیه]",Array("تاریخ","شماره فاکتور","شرح","بدهکار","بستانکار","مانده گردش"),Array(1500,1000,3000,1600,1600,1600),"بدهکار|بستانکار|مانده گردش",Array("=Sum([بدهکار])","=Sum([بستانکار])","=First([مانده پایان گردش])","=First([مانده فعلی حساب])"),Array("جمع بدهکار","جمع بستانکار","مانده پایان گردش","مانده فعلی حساب"),True,"ردیف"
+ GroupedReport "فاکتورهای آتلیه‌ها","فاکتورها به تفکیک آتلیه","SELECT i.*,s.[تلفن همراه],i.[نام مشتری] AS [نام آتلیه],Left(i.[نام مشتری],180) & '|' & IIf(i.[شناسه مشتری]='',i.[شناسه فاکتور],i.[شناسه مشتری]) AS [کلید گروه],(i.[مبلغ کل]+i.[مبلغ اصلاحیه]) AS [مبلغ نهایی] FROM [فاکتورها] AS i LEFT JOIN [خلاصه حساب آتلیه‌ها] AS s ON i.[شناسه مشتری]=s.[شناسه مشتری] ORDER BY i.[نام مشتری],i.[شناسه مشتری],i.[تاریخ صدور],i.[شماره فاکتور]","کلید گروه","[نام آتلیه]",Array("تاریخ صدور","شماره فاکتور","منشأ فاکتور","مبلغ نهایی","مبلغ دریافت‌شده","مانده حساب"),Array(1800,1200,1000,2100,2100,2100),"مبلغ نهایی|مبلغ دریافت‌شده|مانده حساب",Array("=Sum([مبلغ نهایی])","=Sum([مبلغ دریافت‌شده])","=Sum([مانده حساب])"),Array("جمع فاکتورها با اصلاحیه","جمع دریافت فاکتورها","مانده فاکتورها"),False,"تاریخ صدور"
+ GroupedReport "خلاصه بدهی آتلیه‌ها","خلاصه بدهی و بستانکاری آتلیه‌ها","SELECT s.*,'همه آتلیه‌ها' AS [گروه گزارش] FROM [خلاصه حساب آتلیه‌ها] AS s ORDER BY s.[نام آتلیه],s.[شناسه مشتری]","گروه گزارش","[گروه گزارش]",Array("نام آتلیه","تلفن همراه","بدهی","بستانکاری","مانده فعلی حساب"),Array(3000,2200,1700,1700,1700),"بدهی|بستانکاری|مانده فعلی حساب",Array("=Sum([بدهی])","=Sum([بستانکاری])","=Sum([مانده فعلی حساب])"),Array("مجموع بدهی آتلیه‌ها","مجموع بستانکاری","مانده خالص"),False,"نام آتلیه"
+ Home
+ Setting "StartupForm",10,"گزارش‌های مالی"
+ Setting "StartupShowDBWindow",1,True
+ Setting "UseMDIMode",4,0
+ Setting "ShowDocumentTabs",1,True
+ Setting "AppTitle",10,"PhotoBridge | گزارش‌های مالی"
+ For Each name In Array("معین آتلیه‌ها","فاکتورهای آتلیه‌ها","خلاصه بدهی آتلیه‌ها")
+  If application.CurrentProject.AllReports(name).Name<>name Then Err.Raise 513,,"missing_report:" & name
+  application.DoCmd.OpenReport name,5
+  Set check=application.Reports(name)
+  If check.RecordSource="" Then Err.Raise 514,,"empty_report_source:" & name
+  application.DoCmd.Close acReport,name,2
+ Next
+End Sub
+On Error Resume Next
+BuildReports
+If Err.Number<>0 Then
+ WScript.Echo "access_report_build_failed:" & Err.Number & ":" & Err.Description
+ application.Quit 2
+ WScript.Quit 6
+End If
+Err.Clear
+application.CloseCurrentDatabase
+application.Quit
+If Err.Number<>0 Then WScript.Echo "access_close_failed:" & Err.Description:WScript.Quit 9
+WScript.Echo "reports_created"

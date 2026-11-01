@@ -7,11 +7,11 @@
   set('directory',state.settings.directory);
   if(!working&&!dirty){$('automatic').checked=state.settings.automatic;$('interval').value=String(state.settings.intervalHours);}
   const last=state.last;
-  const message=state.busy?'پشتیبان‌گیری در حال انجام است…':!last?'هنوز بکاپی تهیه نشده است.':last.error?'پشتیبان‌گیری انجام نشد: '+last.error:!last.finishedAt?'پشتیبان‌گیری در حال انجام است…':!last.ok?'بکاپ داده‌ها ذخیره شد؛ خروجی اکسس انجام نشد: '+(last.accessError||''):last.accessSaved&&!last.formsIncluded?'پشتیبان‌گیری کامل شد. جدول‌های اکسس ذخیره شدند؛ ساخت فرم انجام نشد: '+(last.formsError||'نسخهٔ کامل Microsoft Access لازم است.'):'پشتیبان‌گیری کامل شد.';
-  set('message',message);$('message').className='status-message '+(last?.error||last?.accessError||(last?.accessSaved&&!last?.formsIncluded)?'error':last?.ok?'ok':'');
+  const message=state.busy?'پشتیبان‌گیری در حال انجام است…':!last?'هنوز بکاپی تهیه نشده است.':last.error?'پشتیبان‌گیری انجام نشد: '+last.error:!last.finishedAt?'پشتیبان‌گیری در حال انجام است…':!last.ok?'بکاپ داده‌ها ذخیره شد؛ خروجی اکسس انجام نشد: '+(last.accessError||''):last.accessSaved&&!last.reportsIncluded?'پشتیبان‌گیری کامل شد. جدول‌های اکسس ذخیره شدند؛ ساخت گزارش انجام نشد: '+(last.reportsError||'نسخهٔ کامل Microsoft Access لازم است.'):'پشتیبان‌گیری کامل شد.';
+  set('message',message);$('message').className='status-message '+(last?.error||last?.accessError||(last?.accessSaved&&!last?.reportsIncluded)?'error':last?.ok?'ok':'');
   set('databaseState',!last?'—':last.databaseSaved?'ذخیره شد':'در این نوبت تهیه نشده');
   set('accessState',!last?'—':last.accessSaved?'ذخیره شد':'در این نوبت تهیه نشده');
-  set('formsState',!last?'—':last.formsIncluded?'فاکتورها و معین آماده‌اند':last.accessSaved?'ساخته نشد؛ توضیح بالا':'در این نوبت تهیه نشده');
+  set('reportsState',!last?'—':last.reportsIncluded?'معین و فاکتورهای آتلیه‌ها آماده‌اند':last.accessSaved?'ساخته نشد؛ توضیح بالا':'در این نوبت تهیه نشده');
   set('lastTime',date(last?.finishedAt));
   document.querySelectorAll('button').forEach(button=>button.disabled=working||state.busy);
  }

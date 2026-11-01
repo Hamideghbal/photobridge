@@ -23,5 +23,6 @@ function buildBackupModel(store,{createdAt=new Date().toISOString(),databasePath
  T('Ledger',{TransactionId:'text',Date:'text',Description:'memo',ReferenceType:'text',ReferenceId:'text'},journal.map(t=>({TransactionId:t.id||'',Date:t.txn_date||t.created_at||'',Description:t.description||t.title||'',ReferenceType:t.reference_type||'',ReferenceId:t.reference_id||''}))),
  T('LedgerEntries',{TransactionId:'text',RowNumber:'integer',Account:'text',CustomerId:'text',InvoiceId:'text',Debit:'decimal',Credit:'decimal'},entries),
  T('Corrections',{CorrectionId:'text',TargetType:'text',TargetId:'text',Kind:'text',Amount:'decimal',CreatedAt:'text',Note:'memo'},Object.values(s.corrections).map(c=>({CorrectionId:c.id,TargetType:c.target_type||'',TargetId:c.target_id||'',Kind:c.correction_kind||'',Amount:Number(c.amount||0),CreatedAt:c.created_at||'',Note:c.note||''})))
+ ,...require('./access-report-model.cjs').reportTables(engine,finance)
  ]};}
 module.exports={buildBackupModel};

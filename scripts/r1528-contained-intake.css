@@ -1,0 +1,8 @@
+
+/* PB1528 contained intake and right-edge launch */
+html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1526QueueHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch{grid-column:3!important;grid-row:1!important;justify-self:end!important;margin:0!important;order:0!important}
+html body .pb1137Intake,html body .pb1137Intake>form{box-sizing:border-box!important;min-width:0!important;overflow-x:hidden!important}
+html body .pb1137Intake>form{width:100%!important;max-width:100%!important}
+html body .pb1137Intake>header{box-sizing:border-box!important;width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important}
+html body .pb1137Intake :is(.pb1178IntakeWorkspace,.pb1178IntakeEditor,.pb1178IntakeBill,.pb1137Settings,.pb1139Group,.pb1139GroupPhotos){box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
+html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fill,minmax(min(176px,100%),1fr))!important;overflow-x:hidden!important}

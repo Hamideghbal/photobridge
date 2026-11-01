@@ -6,7 +6,8 @@ assert(start>=0&&end>start);
 const expression=source.slice(start,end).replace('const requireLocalIntakePrimary = ','').replace(/;\s*$/,'');
 for(const [primary,device,status] of [[null,'primary',409],['primary','other',403],['primary','',403],['primary','primary',null]])test(`local intake device binding: ${device||'missing'} / ${primary||'unregistered'}`,async()=>{
  const writes=[];const res={};const pool={query:async(sql,args)=>{assert.match(sql,/FROM labs WHERE id=\$1/);assert.deepEqual(args,['lab']);return{rows:[{primary_download_device_id:primary}]};}};
- const guard=Function('pool','labId','requestDeviceId','res','sendJson',`return (${expression})`)(pool,'lab',device,res,(r,s,b)=>writes.push({s,b}));
+ const {storageDeviceAllowed}=await import('../dist/api/lab-storage-pair.js');
+ const guard=Function('pool','labId','requestDeviceId','res','sendJson','storageDeviceAllowed',`return (${expression})`)(pool,'lab',device,res,(r,s,b)=>writes.push({s,b}),storageDeviceAllowed);
  assert.equal(await guard(),status===null);assert.equal(writes.length,status===null?0:1);if(status)assert.equal(writes[0].s,status);
 });
 test('create, metadata registration and final submit all apply primary binding for local intake',()=>{

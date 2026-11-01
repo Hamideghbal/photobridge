@@ -63,6 +63,7 @@ test('Windows native integration preserves SQLite backup and adds a manual tray 
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-native-r1532-'));
  try{
   fs.copyFileSync('scripts/r1478-native/main.cjs',path.join(root,'main.cjs'));
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({build:{files:['main.cjs']}}));
   assert.equal(integrate(root),true);
   assert.equal(integrate(root),false);
   const main=fs.readFileSync(path.join(root,'main.cjs'),'utf8');
@@ -72,6 +73,9 @@ test('Windows native integration preserves SQLite backup and adds a manual tray 
   assert(main.includes("sqliteFiles.slice(0,-14)"));
   assert(fs.existsSync(path.join(root,'BuildFinancialBackup.vbs')));
   assert(fs.existsSync(path.join(root,'finance-backup.cjs')));
+  const packageFiles=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).build.files;
+  assert(packageFiles.includes('finance-backup.cjs'));
+  assert(packageFiles.includes('BuildFinancialBackup.vbs'));
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 test('Access builder creates three native read-only forms and never overwrites an existing file',()=>{

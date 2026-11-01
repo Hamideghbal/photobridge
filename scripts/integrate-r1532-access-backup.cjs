@@ -43,6 +43,17 @@ function integrate(root=path.resolve('apps/lab-desktop'),repo=path.resolve(__dir
  for(const file of additions){
   fs.copyFileSync(path.join(repo,'apps/lab-desktop',file),path.join(root,file));
  }
+ const packageFile=path.join(root,'package.json');
+ if(fs.existsSync(packageFile)){
+  const pkg=JSON.parse(fs.readFileSync(packageFile,'utf8'));
+  if(Array.isArray(pkg.build?.files)){
+   for(const name of ['finance-backup.cjs','BuildFinancialBackup.vbs']){
+    if(!pkg.build.files.some(entry=>entry===name||entry==='**/'+name))
+      pkg.build.files.push(name);
+   }
+   fs.writeFileSync(packageFile,JSON.stringify(pkg,null,2)+'\n');
+  }
+ }
  fs.writeFileSync(original,main);
  return true;
 }

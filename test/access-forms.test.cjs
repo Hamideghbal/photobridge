@@ -5,10 +5,14 @@ test('Access form builder names the three data-bound forms and uses only read-on
  const script=await fs.readFile(path.join(__dirname,'../access-forms.vbs'),'utf8');
  for(const name of ['frmPBInvoices','frmPBReceipts','frmPBLedger'])assert(script.includes(name));
  for(const name of ['فاکتورها','دریافت‌ها','دفتر حسابداری','ردیف‌های حسابداری','بدهکار','بستانکار'])assert(script.includes(name));
- assert(script.includes('frm.AllowEdits=False'));
- assert(script.includes('frm.AllowAdditions=False'));
- assert(script.includes('frm.AllowDeletions=False'));
- assert(script.includes('frm.DefaultView=2'));
+ assert(script.includes('f.AllowEdits=False'));
+ assert(script.includes('f.AllowAdditions=False'));
+ assert(script.includes('f.AllowDeletions=False'));
+ assert(script.includes('NewForm(title,sql,2)'));
+ assert(script.includes('StartupForm'));
+ assert(script.includes('c.LinkMasterFields=master'));
+ assert(script.includes('c.PictureType=0'));
+ assert(script.includes('tabs.Pages(1)'));
 });
 test('native Windows Access forms replace only verified generated report, keep all backup data intact',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pb-forms-')),file=path.join(dir,'finance.accdb'),before=Buffer.from('original verified database');
@@ -37,13 +41,23 @@ test('Access missing or validation failure leaves original readable report byte-
   }finally{await fs.rm(dir,{recursive:true,force:true})}
  }
 });
-test('native 1.0.69 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
+test('native 1.0.70 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.69');
+ assert.equal(pkg.version,'1.0.70');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));
  assert(source.includes('verifyBackup(pending)'));
  assert(source.includes('accessFormsIncluded:result.formsIncluded===true'));
  assert((await fs.readFile(path.join(__dirname,'../main.cjs'),'utf8')).includes("require('./data-backups.cjs')"));
+});
+test('form failure exposes the COM diagnostic while keeping the original backup',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pb-forms-diagnostic-')),file=path.join(dir,'finance.accdb');
+ try{
+  await fs.writeFile(file,'original');
+  const result=await addForms(file,{platform:'win32',runner:async()=>{throw Object.assign(Error('Command failed'),{stdout:'access_form_build_failed:2465:Missing field'});}});
+  assert.equal(result.created,false);assert.equal(result.reason,'access_form_build_failed:2465:Missing field');
+  assert.equal(await fs.readFile(file,'utf8'),'original');
+  assert.deepEqual(await fs.readdir(dir),['finance.accdb']);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
 });

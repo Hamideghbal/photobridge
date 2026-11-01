@@ -152,8 +152,8 @@ function remoteRequest(store, url, body, target) {
   for (const key of ["customerId", "invoiceId", "targetId", "orderId"])
     if (maps.has(b[key])) b[key] = maps.get(b[key]);
   if (/^\/api\/lab\/orders\//.test(u.pathname)) {
-    if (target?.updated_at) b.expectedUpdatedAt = target.updated_at;
-    if (target?.document_revision != null)
+    if (b.expectedUpdatedAt==null&&target?.updated_at) b.expectedUpdatedAt = target.updated_at;
+    if (b.expectedRevision==null&&target?.document_revision != null)
       b.expectedRevision = target.document_revision;
   }
   return { url: u.pathname + u.search, body: b };

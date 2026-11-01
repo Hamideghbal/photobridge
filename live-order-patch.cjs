@@ -8,6 +8,7 @@ function patchOrderLive(source){
 }
 
 function upgradeFinanceLive(source){
+ source=require('./download-transition-patch.cjs').patchDownloadTransition(source);
  source=require('./document-ui-patch.cjs').patchDocumentUI(source);
  const compact='const V=t=>{if(typeof t==="string"&&/^(?:OFF-|PB-)/.test(t))return t.replace(/^OFF-[A-F0-9]{32}-(?:INV|ORD|EXP|PAY|COR)-0*([1-9]\\d*|0)$/,"OFF-$1").replace(/^PB-[A-F0-9]{8}-(?:INV|ORD|EXP|PAY|COR|ADJ)-0*([1-9]\\d*|0)$/,"L-$1");return Number(t||0).toLocaleString("fa-IR")}';
  for(const before of ['const V=t=>Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:PB-|OFF-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:OFF-|PB-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")'])source=source.replaceAll(before,compact);

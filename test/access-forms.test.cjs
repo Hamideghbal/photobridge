@@ -1,18 +1,23 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os');
 const {addForms}=require('../access-forms.cjs');
-test('Access form builder names the three data-bound forms and uses only read-only controls',async()=>{
+test('Access form builder names the flat data-bound screens and uses only read-only controls',async()=>{
  const script=await fs.readFile(path.join(__dirname,'../access-forms.vbs'),'utf8');
- for(const name of ['frmPBInvoices','frmPBReceipts','frmPBLedger'])assert(script.includes(name));
- for(const name of ['فاکتورها','دریافت‌ها','دفتر حسابداری','ردیف‌های حسابداری','بدهکار','بستانکار'])assert(script.includes(name));
+ for(const name of ['فاکتورها','معین مشتریان','مانده مشتریان','ردیف‌های فاکتور'])assert(script.includes(name));
+ for(const name of ['فاکتورها','دفتر حسابداری','ردیف‌های حسابداری','بدهکار','بستانکار'])assert(script.includes(name));
  assert(script.includes('f.AllowEdits=False'));
  assert(script.includes('f.AllowAdditions=False'));
  assert(script.includes('f.AllowDeletions=False'));
- assert(script.includes('NewForm(title,sql,2)'));
+ assert(script.includes('f.DefaultView=2'));
  assert(script.includes('StartupForm'));
- assert(script.includes('c.LinkMasterFields=master'));
- assert(script.includes('c.PictureType=0'));
- assert(script.includes('tabs.Pages(1)'));
+ assert(script.includes('c.HyperlinkSubAddress="Form " & screen'));
+ assert(script.includes('Setting "StartupForm",10,"شروع"'));
+ assert(!script.includes('acSubform'));
+ assert(!script.includes('acTabCtl'));
+ assert(script.includes('c.ColumnWidth=widths(i)'));
+ assert(script.includes('application.DoCmd.OpenForm temp,3'));
+ assert(script.includes('e.[شناسه مشتری]=c.[شناسه مشتری]'));
+ assert(script.includes('i.[شماره فاکتور]'));
 });
 test('native Windows Access forms replace only verified generated report, keep all backup data intact',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pb-forms-')),file=path.join(dir,'finance.accdb'),before=Buffer.from('original verified database');
@@ -41,9 +46,9 @@ test('Access missing or validation failure leaves original readable report byte-
   }finally{await fs.rm(dir,{recursive:true,force:true})}
  }
 });
-test('native 1.0.70 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
+test('native 1.0.71 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.70');
+ assert.equal(pkg.version,'1.0.71');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));

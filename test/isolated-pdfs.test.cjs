@@ -43,7 +43,7 @@ test("PDF failure never undoes imported financial facts; retry uploads the same 
     },
     render = async (html) => {
       rendered++;
-      assert(html.includes(invoice.number));assert(!html.includes(s.invoices[invoice.id].number));
+      assert(html.includes('آفلاین'));assert(!html.includes(invoice.number));assert(!html.includes(s.invoices[invoice.id].number));
       return Buffer.from("%PDF-exact-offline-reference");
     };
   try {

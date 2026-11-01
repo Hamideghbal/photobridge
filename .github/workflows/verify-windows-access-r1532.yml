@@ -1,0 +1,23 @@
+name: Verify R1532 Windows finance Access backup
+on:
+  push:
+    branches:
+      - feat/r1532-windows-access-finance-backup
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-finance-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate native integration syntax
+        run: |
+          node --check apps/lab-desktop/finance-backup.cjs
+          node --check scripts/integrate-r1532-access-backup.cjs
+      - name: Test scoped accounting export, SQLite preservation and native Access form definitions
+        run: node --test scripts/test-r1532-windows-access-backup.cjs

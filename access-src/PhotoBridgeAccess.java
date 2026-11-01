@@ -16,7 +16,7 @@ public final class PhotoBridgeAccess {
         System.out.println(out);
       } return;
     }
-    if(args.length==3 && args[0].equals("--read")) {try(Database db=new DatabaseBuilder(new File(args[1])).setReadOnly(true).open()){List<Map<String,Object>> rows=new ArrayList<>();for(Row row:db.getTable(args[2]))rows.add(new LinkedHashMap<>(row));System.out.println(new Gson().toJson(rows));}return;}
+    if(args.length==3 && args[0].equals("--read")) {try(Database db=new DatabaseBuilder(new File(args[1])).setReadOnly(true).open()){List<Map<String,Object>> rows=new ArrayList<>();for(Row row:db.getTable(args[2].startsWith("b64:")?new String(Base64.getUrlDecoder().decode(args[2].substring(4)),java.nio.charset.StandardCharsets.UTF_8):args[2]))rows.add(new LinkedHashMap<>(row));System.out.println(new Gson().toJson(rows));}return;}
     if(args.length!=2)throw new IllegalArgumentException("input.json output.accdb required");
     Path output=Paths.get(args[1]);if(Files.exists(output))throw new IOException("output_exists");
     JsonObject model;try(Reader r=Files.newBufferedReader(Paths.get(args[0]),java.nio.charset.StandardCharsets.UTF_8)){model=JsonParser.parseReader(r).getAsJsonObject();}

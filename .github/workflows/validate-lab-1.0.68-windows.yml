@@ -29,24 +29,19 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Inspect Java CLI entrypoint and arguments
+      - name: Compile and validate Access helper from checked-in source
         shell: pwsh
-        continue-on-error: true
         run: |
-          $jar = Join-Path (Get-Location) 'assets/photobridge-access-export.jar'
-          $libs = Join-Path (Get-Location) 'assets/access-libs/*'
-          & javap -c -classpath "$jar;$libs" PhotoBridgeAccess | Select-String -Pattern 'read|input.json|equals' -Context 2,2
-          'public class PBArgProbe { public static void main(String[] args) { System.out.println("COUNT="+args.length); for(int i=0;i<args.length;i++)System.out.println(i+"="+args[i]); } }' | Set-Content PBArgProbe.java
-          & javac PBArgProbe.java
-          & .\\access-runtime\\bin\\java.exe -cp . PBArgProbe --read 'Z:\\pb-never-exists.accdb' 'فاکتورها'
-      - name: Diagnose bundled Access Java --read on Windows
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $jar = Join-Path (Get-Location) 'assets/photobridge-access-export.jar'
-          $libs = Join-Path (Get-Location) 'assets/access-libs/*'
-          & .\\access-runtime\\bin\\java.exe -cp "$jar;$libs" PhotoBridgeAccess --read 'Z:\\pb-never-exists.accdb' 'فاکتورها'
-          Write-Host "Java --read diagnostic exit code: $LASTEXITCODE"
+          New-Item -ItemType Directory -Path .access-build -Force | Out-Null
+          & javac --release 17 -encoding UTF-8 -cp "assets/access-libs/*" -d .access-build access-src/PhotoBridgeAccess.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & jar --create --file assets/photobridge-access-export.jar -C .access-build PhotoBridgeAccess.class
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $sha = (Get-FileHash assets/photobridge-access-export.jar -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -NoNewline -Path access-helper.sha256 -Value $sha
+          Write-Host PB_ACCESS_JAR_B64_START
+          node -p "require('node:fs').readFileSync('assets/photobridge-access-export.jar').toString('base64')"
+          Write-Host PB_ACCESS_JAR_B64_END
       - name: Run native regression tests on Windows
         shell: pwsh
         run: |

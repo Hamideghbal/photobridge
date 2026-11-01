@@ -454,6 +454,8 @@ await deployStep("./enable-r1445-download-repair.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1445-download-repair.cjs"], { stdio: "inherit" });
 await deployStep("./enable-r1467-live-orders.mjs");
 runR1314(process.execPath, ["--test", "scripts/test-r1467-live-orders.cjs", "scripts/test-r1467-live-runtime.cjs"], { stdio: "inherit" });
+await deployStep("./enable-r1469-live-status.mjs");
+runR1314(process.execPath, ["--test", "scripts/test-r1469-live-status.cjs"], { stdio: "inherit" });
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

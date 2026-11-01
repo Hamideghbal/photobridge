@@ -46,9 +46,9 @@ test('Access missing or validation failure leaves original readable report byte-
   }finally{await fs.rm(dir,{recursive:true,force:true})}
  }
 });
-test('native 1.0.71 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
+test('native 1.0.72 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.71');
+ assert.equal(pkg.version,'1.0.72');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));

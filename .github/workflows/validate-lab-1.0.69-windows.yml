@@ -3,7 +3,7 @@ name: Validate PhotoBridge Lab 1.0.69 on Windows
 on:
   push:
     branches:
-      - build/lab-1.0.69-download-transition
+      - build/lab-1.0.69-access-forms
   workflow_dispatch:
 
 permissions:

@@ -54,3 +54,5 @@
  if(same&&response.headers.get('content-type')?.includes('application/json')){try{const data=await response.clone().json();if(key&&response.status<500)pending.delete(key);if(data.offline)window.__PB_NATIVE_OFFLINE=true;else if(response.ok)window.__PB_NATIVE_OFFLINE=false;if(data.localCommitted)window.dispatchEvent(new CustomEvent('photobridge-local-committed',{detail:{url,method}}));if(data.desktopPending)window.dispatchEvent(new CustomEvent('photobridge-native-pending',{detail:{message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'}}));}catch{}}
  return response;
 };})();
+
+window.pbDesktopEvents?.onChange(()=>{window.dispatchEvent(new CustomEvent('photobridge-lab-orders-changed'));window.dispatchEvent(new CustomEvent('photobridge-finance-changed'));});

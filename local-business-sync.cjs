@@ -1,6 +1,7 @@
 'use strict';
 const {LocalBusiness}=require('./local-business.cjs');
-async function syncBusiness(store,request,verifyFiles){
+async function syncBusiness(store,request,verifyFiles,renderOfflinePdf){
+ if(store.get('documentPolicy:'+store.get('labId'))){const result=await require('./isolated-sync.cjs').syncIsolated(store,request,verifyFiles);await require('./isolated-pdfs.cjs').uploadOfflinePdfs(store,request,renderOfflinePdf);return result;}
  const engine=new LocalBusiness(store),lab=store.get('labId');if(!store.get('localBusinessActive:'+lab)||!store.get('localBusiness:v1:'+lab))return{sent:0};let sent=0;
  const same=()=>{if(store.get('labId')!==lab)throw Error('account_changed');};
  const update=fn=>{same();return store.transaction(()=>{const s=engine.state(),out=fn(s);store.set(engine.key(),s);return out;});};

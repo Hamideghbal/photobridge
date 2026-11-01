@@ -4,16 +4,30 @@ function localActive(store){return!!store.get('localBusinessActive:'+store.get('
 async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request}){
  if(!store.get('auth')||!store.get('labId'))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
+ require('./document-policy.cjs').applyPolicy(store);
  const engine=new LocalBusiness(store),raw=url.pathname,p=canonical(req.url);let b={};try{b=bytes?.length?JSON.parse(bytes.toString()):{}}catch{}
  const isPrint=/^\/desktop\/local-invoices\//.test(raw);
- if(!offline&&!localActive(store)&&!isPrint)return false;
+ if(!offline&&!localActive(store)&&!isPrint&&['GET','HEAD'].includes(req.method))return false;
  const canRead=['/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/summary','/api/lab/finance/ledger','/api/lab/finance/customer-statement','/api/lab/delegated-orders/bootstrap'].includes(p)||/^\/api\/lab\/(orders\/[^/]+(?:\/invoice-pricing)?|delegated-customers\/[^/]+\/account-summary)$/.test(p);
  const invoiceRoute=raw.match(/^\/api\/lab\/invoices\/([^/]+)\/(download|preview|pdf-upload|pdf-complete)$/),printRoute=raw.match(/^\/desktop\/local-invoices\/([^/]+)\/(pdf|print)$/);
- if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute)return false;
+ const businessWrite=!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(p);if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute&&!businessWrite)return false;
  store.set('localBusinessActive:'+store.get('labId'),true);
  if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
- engine.state();for(const row of store.rows().filter(x=>x.state==='pending'&&(require('./live-finance.cjs').invoiceAction(x.method,x.url,x.body)||require('./live-finance.cjs').orderMutation(x.url)&&engine.supports(x.method,canonical(x.url))))){try{engine.handle(row.method,row.url,row.body,row.id);store.discard(row.id);}catch{}}
+ engine.state();
  try{
+  if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){
+   const orderId=p.split('/')[4],order=engine.state().orders[orderId],files=b.desktopLocalFiles;
+   if(!nativeStorage||!Array.isArray(files)||!files.length||files.length!==order?.files?.length||new Set(files.map(f=>JSON.stringify([f.rootId,f.parts]))).size!==files.length)throw Object.assign(Error('ذخیرهٔ عکس‌ها باید کامل و بررسی شود.'),{code:'local_files_not_verified',status:409});
+   for(const file of files){file.sha256=await require('./local-file-proof.cjs').fileProof(nativeStorage,file);same();}
+  }
+  const policy=require('./document-policy.cjs').routePolicy(store,req.method,req.url,b,offline);
+  const detailMatch=p.match(/^\/api\/lab\/orders\/([^/]+)(?:\/invoice-pricing)?$/);
+  if(req.method==='GET'&&detailMatch&&!offline){const state=engine.state(),doc=Object.values(state.orders).find(o=>o.id===detailMatch[1]||o.serverId===detailMatch[1]);if(!doc||require('./document-policy.cjs').shared(doc)){const forwarded=require('./document-policy.cjs').remoteRequest(store,req.url,{},doc),response=await request(forwarded.url);const data=await response.json();same();if(response.ok&&data.order){store.transaction(()=>{const live=engine.state();const old=doc||{};live.orders[old.id||data.order.id]={...data.order,...old,status:data.order.status??old.status,album_stage:data.order.album_stage??old.album_stage,updated_at:data.order.updated_at||old.updated_at,document_revision:data.order.document_revision??old.document_revision,remote:old.id?old.remote:true,files:old.files?.length?old.files.map(f=>{const remote=data.files?.find(r=>r.id===(f.serverId||f.id));return remote?{...f,...remote,id:f.id,serverId:f.serverId||remote.id}:f;}):data.files||[]};store.set(engine.key(),live);});}json(res,response.status,data);return true;}}
+  if(policy.kind==='remote'){
+   const forwarded=require('./document-policy.cjs').remoteRequest(store,req.url,b,policy.target);let response;
+   try{response=await request(forwarded.url,{method:req.method,headers:{'Content-Type':'application/json','x-photobridge-shared-policy':'1'},body:JSON.stringify({...forwarded.body,desktopOperationId:b.desktopOperationId||req.headers['x-photobridge-local-operation']})});}catch{throw Object.assign(Error('این تغییر آنلاین تأیید نشد؛ در صف آفلاین ثبت نشده است. پیش از تکرار، وضعیت سایت را بررسی کنید.'),{code:'shared_online_unconfirmed',status:503});}
+   const data=await response.json();same();if(response.ok&&policy.target&&data.order){store.transaction(()=>{const state=engine.state(),doc=state.orders[policy.target.id];if(doc){doc.status=data.order.status;doc.album_stage=data.order.album_stage;doc.updated_at=data.order.updated_at;doc.document_revision=data.order.document_revision;}store.set(engine.key(),state);});}json(res,response.status,data);return true;
+  }
   if(invoiceRoute||printRoute){engine.refreshInvoiceSnapshot();const invoiceId=(invoiceRoute||printRoute)[1],s=engine.state(),inv=Object.values(s.invoices).find(i=>i.id===invoiceId||i.serverId===invoiceId)||null;if(!inv){json(res,404,{error:'invoice_not_found',message:'فاکتور روی این دستگاه موجود نیست.'});return true;}
    if(invoiceRoute&&['download','preview'].includes(invoiceRoute[2])){json(res,200,{url:'/desktop/local-invoices/'+inv.id+'/pdf',localCommitted:true});return true;}
    if(invoiceRoute){if(invoiceRoute[2]==='pdf-upload'){const raw=String(b.pdfBase64||'').replace(/^data:[^,]+,/,''),pdf=Buffer.from(raw,'base64');if(pdf.length<5||pdf.length>10e6||pdf.subarray(0,5).toString()!=='%PDF-')throw Object.assign(Error('فایل PDF معتبر نیست.'),{code:'invalid_invoice_pdf',status:400});store.db.prepare('INSERT OR REPLACE INTO local_invoice_pdf VALUES(?,?,?)').run(store.get('labId'),inv.id,pdf);}json(res,200,{invoice:inv,localCommitted:true});return true;}
@@ -23,12 +37,8 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    if(!pdf){if(!pdfRenderer)throw Object.assign(Error('چاپ PDF در این محیط در دسترس نیست.'),{status:503});pdf=await pdfRenderer(html);same();}
    res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'inline; filename="invoice-'+inv.id+'.pdf"'});res.end(Buffer.from(pdf));return true;
   }
-  if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){
-   const orderId=p.split('/')[4],order=engine.state().orders[orderId],files=b.desktopLocalFiles;
-   if(!nativeStorage||!Array.isArray(files)||!files.length||files.length!==order?.files?.length||new Set(files.map(f=>JSON.stringify([f.rootId,f.parts]))).size!==files.length)throw Object.assign(Error('ذخیرهٔ عکس‌ها باید کامل و بررسی شود.'),{code:'local_files_not_verified',status:409});
-   for(const file of files){file.sha256=await require('./local-file-proof.cjs').fileProof(nativeStorage,file);same();}
-  }
-  same();const result=engine.handle(req.method,req.url,b,String(req.headers['x-photobridge-local-operation']||b.desktopOperationId||''));if(result===null)return false;
+
+  same();const result=engine.handle(req.method,req.url,b,String(req.headers['x-photobridge-local-operation']||b.desktopOperationId||''),{isolated:policy.kind==='local',offline});if(result===null)throw Object.assign(Error('این عملیات برای سند مستقل آفلاین پشتیبانی نمی‌شود.'),{code:'offline_operation_unsupported',status:409});
   json(res,200,result);return true;
  }catch(error){json(res,error.status||400,{error:error.code||error.message,message:error.message,...(error.missingPricing?{missingPricing:error.missingPricing,pricingRequirements:error.pricingRequirements}:{})});return true;}
 }

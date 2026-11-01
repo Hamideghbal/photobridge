@@ -6,6 +6,8 @@ on:
       - "desktop-sources/**"
       - "apps/store-desktop/**"
       - "apps/lab-desktop/**"
+      - "scripts/integrate-r1532-access-backup.cjs"
+      - "scripts/test-r1532-windows-access-backup.cjs"
       - "scripts/integrate-r1386-native-storage.cjs"
       - "scripts/test-r1386-*.cjs"
       - "dist/api/lab-storage-target.js"
@@ -112,6 +114,7 @@ jobs:
           node scripts/integrate-r1477-gentle-default.cjs apps/lab-desktop
           node scripts/integrate-r1478-fast-entry.cjs apps/lab-desktop
           node scripts/integrate-r1524-updater-exit.cjs apps/lab-desktop
+          node scripts/integrate-r1532-access-backup.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Current native integration failed" }
       - name: Verify configured-path activation
         run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
@@ -121,6 +124,8 @@ jobs:
         run: node scripts/prepare-lab-installer-assets.mjs
       - name: Verify native installer readiness
         run: node --test scripts/test-r1343-lab-installer-build.cjs
+      - name: Verify backup module and read-only Access forms
+        run: node --test scripts/test-r1532-windows-access-backup.cjs
       - name: Test and package native lab app
         shell: pwsh
         run: |

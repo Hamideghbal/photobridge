@@ -16,7 +16,7 @@ function run({mode='print',alreadyReady=false,invoiceRequired=true}={}){
    throw Error('unexpected_request');
   },
   Wu:async()=>{throw Error('stop_after_invoice_creation');},ai:()=>false,
-  t:{name:'Lab'},on(){},k(){},b(){},Ef(){},jc(){},FileReader:function(){}
+  t:{name:'Lab'},Qn:async()=>{},on(){},k(){},b(){},Ef(){},jc(){},FileReader:function(){}
  };
  const a=mode==='album'?source.indexOf(',Cn=async(le,nt)=>'):source.indexOf('un=async le=>');
  const b=mode==='album'?source.indexOf(',aa=async(le,nt)=>',a):source.indexOf(',Cn=async(le,nt)=>',a);

@@ -24,6 +24,21 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Prepare integrity-checked Windows Access runtime
         run: node prepare-access-runtime.cjs
+      - name: Prepare diagnostic Java tools
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Inspect Java CLI entrypoint and arguments
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $jar = Join-Path (Get-Location) 'assets/photobridge-access-export.jar'
+          $libs = Join-Path (Get-Location) 'assets/access-libs/*'
+          & javap -c -classpath "$jar;$libs" PhotoBridgeAccess | Select-String -Pattern 'read|input.json|equals' -Context 2,2
+          'public class PBArgProbe { public static void main(String[] args) { System.out.println("COUNT="+args.length); for(int i=0;i<args.length;i++)System.out.println(i+"="+args[i]); } }' | Set-Content PBArgProbe.java
+          & javac PBArgProbe.java
+          & .\\access-runtime\\bin\\java.exe -cp . PBArgProbe --read 'Z:\\pb-never-exists.accdb' 'فاکتورها'
       - name: Diagnose bundled Access Java --read on Windows
         shell: pwsh
         continue-on-error: true

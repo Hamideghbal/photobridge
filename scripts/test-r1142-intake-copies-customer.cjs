@@ -1,6 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
 const source=fs.readFileSync('dist/api/server.js','utf8');
-const create=source.slice(source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')"),source.indexOf('const delegatedFiles ='));
+const routeStart=source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')");
+const routeEnd=source.indexOf('const delegatedFiles =',routeStart);
+assert(routeStart>=0&&routeEnd>routeStart,'delegated-order request handler must be extracted forward from its own route');
+const create=source.slice(routeStart,routeEnd);
 for(const scenario of ['invitation','no-sms','replay','invalid-debt','existing-debt'])test(`mobile-only delegated customer: ${scenario}`,async()=>{
  const queries=[],ledger=[],sms=[],response=[];const customer='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
  const query=async(sql,args)=>{queries.push(sql);let rows=[];

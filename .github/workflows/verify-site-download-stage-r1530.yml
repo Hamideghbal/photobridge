@@ -1,0 +1,29 @@
+name: Verify website downloaded-order transition R1530
+
+on:
+  push:
+    branches:
+      - fix/site-verified-download-stage-r1530
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Run full PhotoBridge production build and bundled regression tests
+        run: npm run build
+      - name: Verify finalized release revision and site-only transition
+        run: |
+          node --test scripts/test-r1530-site-download-transition.cjs
+          grep -q '2026-11-01-r1530-site-verified-download-stage' DEPLOY_REVISION.txt
+          node --check dist/web/assets/index-UIRefine-v655-r84.js

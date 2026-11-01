@@ -610,3 +610,8 @@ runR1314(process.execPath,["--test","scripts/test-r1493-mobile-session-resume.cj
 
 await deployStep("./enable-r1494-lab-phone-settings.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1494-lab-phone-settings.cjs"],{stdio:"inherit"});
+ 
+// R1530: WEBSITE ONLY. Apply after the immutable Windows UI snapshot and all phone overlays.
+// A verified download must advance from the receipt's current order revision, never the stale card.
+await deployStep("./enable-r1530-site-download-transition.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1530-site-download-transition.cjs"],{stdio:"inherit"});

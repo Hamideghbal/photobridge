@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const {patchSiteDownloadTransition,marker}=require('./r1530-site-download-transition.cjs');
+const file='dist/web/assets/index-UIRefine-v655-r84.js';
+const original=fs.readFileSync(file,'utf8');
+const updated=patchSiteDownloadTransition(original);
+if(!updated.includes(marker))throw Error('r1530_site_patch_missing');
+if(updated!==original)fs.writeFileSync(file,updated);
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+const index='dist/web/index.html';
+let html=fs.readFileSync(index,'utf8');
+const asset=/assets\/index-UIRefine-v655-r84\.js\?[^"']*/g;
+if(!asset.test(html))throw Error('r1530_site_asset_cache_marker_missing');
+html=html.replace(asset,match=>match.includes('&siteDownload=r1530')?match:match+'&siteDownload=r1530');
+fs.writeFileSync(index,html);

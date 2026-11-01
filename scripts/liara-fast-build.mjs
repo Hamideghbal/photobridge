@@ -615,3 +615,7 @@ runR1314(process.execPath,["--test","scripts/test-r1494-lab-phone-settings.cjs"]
 // A verified download must advance from the receipt's current order revision, never the stale card.
 await deployStep("./enable-r1530-site-download-transition.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1530-site-download-transition.cjs"],{stdio:"inherit"});
+
+// R1531: website-only ready invoice preconditions; Windows UI snapshot remains unchanged.
+await deployStep("./enable-r1531-site-ready-invoice.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1531-site-ready-invoice.cjs"],{stdio:"inherit"});

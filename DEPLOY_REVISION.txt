@@ -1,1 +1,1 @@
-2026-10-31-r1524-windows-1-0-39
+2026-11-01-r1520-live-status-release

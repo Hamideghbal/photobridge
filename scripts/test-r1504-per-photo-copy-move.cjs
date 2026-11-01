@@ -41,7 +41,7 @@ test('card layout is part of the same verified Windows/site UI snapshot',()=>{
  const snapshot=pipeline.indexOf('await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344")',r1502);
  const verify=pipeline.indexOf('await deployStep("./verify-lab-desktop-ui-freshness.mjs")',snapshot);
  assert(r1504>0&&r1502>r1504&&snapshot>r1502&&verify>snapshot);assert(pipeline.indexOf('scripts/test-r1502-web-intake-card-layout.cjs',r1502)<snapshot);
-	 assert.equal(revision,'2026-10-31-r1522-native-single-action');
+	 assert.equal(revision,'2026-11-01-r1520-live-status-release');
 });
 
 test('build patch accepts the exact post-R1501 output, adds copy-on-context-menu, and is idempotent',()=>{

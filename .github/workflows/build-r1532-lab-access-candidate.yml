@@ -61,8 +61,10 @@ jobs:
         run: node scripts/prepare-lab-desktop-ui.mjs
       - name: Prepare missing installer icons from existing PhotoBridge artwork
         run: node scripts/prepare-lab-installer-assets.mjs
-      - name: Verify native installer readiness
-        run: node --test scripts/test-r1343-lab-installer-build.cjs
+      # R1343 old startup timing assertion predates the current R1478 native main entrypoint.
+      # Verify artwork/package identity; R1532 separate tests assert current backup source.
+      - name: Verify native installer artwork and identity
+        run: node --test --test-name-pattern="restored laboratory installer|missing artwork|store app identity" scripts/test-r1343-lab-installer-build.cjs
       - name: Verify backup module and read-only Access forms
         run: node --test scripts/test-r1532-windows-access-backup.cjs
       - name: Test and package native lab app

@@ -32,3 +32,15 @@ The R1531 website patch addresses missing concurrency preconditions on ready-sta
 ## RTL PhotoBridge visual preview
 
 Open `finance-backup-preview.html` directly in a desktop browser to inspect the RTL finance tab layout, PhotoBridge-like spacing, Vazirmatn/Tahoma typography and line icons. The backup page can export **sample** CSV rows and parse a local JSON file for inspection only. It cannot write to the site or restore anything. This preview has not been mounted into the production application's live navigation yet; do not call its JSON inspection a restore.
+
+## Windows Lab backup integration (R1532)
+
+This integrates with the **native Windows laboratory application**, not the PhotoBridge website and not the separate Windows photo-retouch application. The source integration runs **after** the existing native app integrations and **before** packaging the Windows installer.
+
+The original auto-backup `lab-<timestamp>.sqlite` is preserved. Each backup also attempts an authenticated live finance snapshot for the currently signed-in lab. It writes a matching `lab-<timestamp>-access` folder containing `Invoices.tsv`, `Receipts.tsv`, `Ledger.tsv`, `manifest.json`, and `BuildFinancialBackup.vbs`. If **Microsoft Access is installed locally**, it also creates `PhotoBridge_Finance.accdb` with three native read-only datasheet forms; the Access file contains current fetched data, not the demo records. The builder refuses to overwrite an existing Access file.
+
+A new Windows system-tray command **ساخت بکاپ همراه فرم‌های Access** allows manually requesting the same paired backup; daily automatic SQLite backups continue. The retention logic now prunes only dated SQLite backups and their corresponding Access export folders, keeping the newest 14.
+
+The finance view must be fetched online and scoped to the authenticated lab. If offline or logged out, **SQLite backup is still created** and no misleading or cross-account Access export is substituted from cache. If Microsoft Access is unavailable, TSV data and the builder are retained. The Access view is **not a restorable server backup**, and the displayed account ledger follows the limits and fields of the existing finance APIs; it is not an exhaustive accounting database dump.
+
+**Deployment limitation:** this is a **native main-process change** and requires a new Windows application installer. Website UI updates and Liara auto deploy alone do **not** deliver this functionality to an already-installed Windows application. Actual Windows COM form generation and installer operation must be validated on Windows before distribution.

@@ -2,12 +2,14 @@
 ' Creates a NEW .accdb only. Never overwrites an existing file.
 Option Explicit
 Const acForm=2,acTextBox=109,acLabel=100,acSaveYes=1
-Dim app,db,fs,out,folder
+Dim app,db,fs,out,folder,launch
 Set fs=CreateObject("Scripting.FileSystemObject")
 folder=fs.GetParentFolderName(WScript.ScriptFullName)
 out=fs.BuildPath(folder,"PhotoBridge_Finance_Review.accdb")
 If fs.FileExists(out) Then
- MsgBox "Review database already exists; rename it before creating another.",48,"PhotoBridge":WScript.Quit 1
+ Set launch=CreateObject("WScript.Shell")
+ launch.Run Chr(34) & out & Chr(34),1,False
+ WScript.Quit 0
 End If
 On Error Resume Next
 Set app=CreateObject("Access.Application")

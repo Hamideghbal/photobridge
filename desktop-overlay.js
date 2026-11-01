@@ -7,6 +7,14 @@
  // available, and only actual conflict records surface a small corner flag.
  const style=document.createElement('style');
  style.textContent=`
+/* PB1528 contained intake and right-edge launch */
+html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1526QueueHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch{grid-column:3!important;grid-row:1!important;justify-self:end!important;margin:0!important;order:0!important}
+html body .pb1137Intake,html body .pb1137Intake>form{box-sizing:border-box!important;min-width:0!important;overflow-x:hidden!important}
+html body .pb1137Intake>form{width:100%!important;max-width:100%!important}
+html body .pb1137Intake>header{box-sizing:border-box!important;width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important}
+html body .pb1137Intake :is(.pb1178IntakeWorkspace,.pb1178IntakeEditor,.pb1178IntakeBill,.pb1137Settings,.pb1139Group,.pb1139GroupPhotos){box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
+html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fill,minmax(min(176px,100%),1fr))!important;overflow-x:hidden!important}
+
  #pbLabDesktopConflictFlag{position:fixed;left:20px;bottom:20px;top:auto;z-index:2147483000;
    min-width:48px;height:28px;padding:0 9px;border-radius:999px;border:1px solid #f0c8bc;
    background:#fff8f5;color:#aa4328;box-shadow:0 3px 14px rgba(0,0,0,.08);

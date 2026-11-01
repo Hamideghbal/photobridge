@@ -7,7 +7,7 @@ function run({mode='print',alreadyReady=false,invoiceRequired=true}={}){
  const order={...le,status:alreadyReady?'ready':'printing',document_revision:27,updated_at:'2026-11-01T12:34:56Z',invoice_id:alreadyReady?'invoice-123':null};
  const calls=[],messages=[],invoice={id:'invoice-123',number:99,total:250000};
  const context={
-  C(){},ye:async()=>{},Gt:async()=>{},P:m=>messages.push(m),alert:m=>messages.push(m),V:String,
+  E:'',pb1450AllowStage:async()=>true,C(){},ye:async()=>{},Gt:async()=>{},P:m=>messages.push(m),alert:m=>messages.push(m),V:String,
   Me:async(path,opts)=>{
    calls.push({path,method:opts?.method||'GET',body:opts?.body?JSON.parse(opts.body):null});
    if(path==='/api/lab/orders/'+le.id&&(!opts||!opts.method))return{order};

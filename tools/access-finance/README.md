@@ -28,3 +28,7 @@ Implement a separate, authenticated, admin-only and lab-isolated `backup/export`
 ## Website-only invoice fix
 
 The R1531 website patch addresses missing concurrency preconditions on ready-state invoice issuance for internet print and album orders. It executes only after the Windows desktop UI snapshot. Both document creation and PDF upload have separate failure cases: the status transition must succeed before generating the PDF; PDF upload failure must not cause a duplicate invoice. The fix does not alter Windows application code.
+
+## RTL PhotoBridge visual preview
+
+Open `finance-backup-preview.html` directly in a desktop browser to inspect the RTL finance tab layout, PhotoBridge-like spacing, Vazirmatn/Tahoma typography and line icons. The backup page can export **sample** CSV rows and parse a local JSON file for inspection only. It cannot write to the site or restore anything. This preview has not been mounted into the production application's live navigation yet; do not call its JSON inspection a restore.

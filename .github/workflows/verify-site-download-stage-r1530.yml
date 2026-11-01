@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install production dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --omit=dev --no-audit --no-fund
       - name: Run full PhotoBridge production build and bundled regression tests
         run: npm run build
       - name: Verify finalized release revision and site-only transition

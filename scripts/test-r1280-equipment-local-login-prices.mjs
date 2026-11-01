@@ -27,7 +27,7 @@ test('public equipment site keeps local login and no first-party credential scre
  assert.match(page,/name="mobile"/);
  assert.match(page,/name="password"/);
  assert.doesNotMatch(page,/pbOfficeLogin=1/);
- assert.match(page,/equipment-site.js\?v=r1281/);
+ assert.match(page,/equipment-site\.js\?v=r\d+/,'public equipment site loads the versioned live login bundle');
  const guide=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:host,pathname:'/rental-equipment'}).html;
  assert.match(guide,/id="equipmentOfficePageLogin"/);
  assert.doesNotMatch(guide,/data-open-equipment-login/);

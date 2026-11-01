@@ -24,6 +24,9 @@ jobs:
         run: |
           Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
           Copy-Item apps/lab-desktop/ui-update.cjs "$env:RUNNER_TEMP/lab-ui-update.cjs"
+          Copy-Item apps/lab-desktop/app-update.cjs "$env:RUNNER_TEMP/lab-app-update.cjs"
+          Copy-Item apps/lab-desktop/update-trust.cjs "$env:RUNNER_TEMP/lab-update-trust.cjs"
+          Copy-Item apps/lab-desktop/create-update-release.cjs "$env:RUNNER_TEMP/lab-create-update.cjs"
           $sourceHash=(Get-FileHash desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($sourceHash -ne '5fcd7e991f6f95008f375ac10ff036ea3abd89997118738e325d67a8c0df89aa') { throw "Unexpected laboratory source checksum" }
           Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -DestinationPath "$env:RUNNER_TEMP/lab-current" -Force
@@ -41,9 +44,9 @@ jobs:
           node scripts/integrate-r1401-quick-reply.cjs apps/lab-desktop
           node scripts/integrate-r1402-chat-voice.cjs apps/lab-desktop
           node scripts/integrate-r1470-intake-sources.cjs apps/lab-desktop
-          Copy-Item apps/lab-desktop/app-update.cjs apps/lab-desktop/app-update.cjs -Force
-          Copy-Item apps/lab-desktop/update-trust.cjs apps/lab-desktop/update-trust.cjs -Force
-          Copy-Item apps/lab-desktop/create-update-release.cjs apps/lab-desktop/create-update-release.cjs -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-app-update.cjs" apps/lab-desktop/app-update.cjs -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-update-trust.cjs" apps/lab-desktop/update-trust.cjs -Force
+          Copy-Item "$env:RUNNER_TEMP/lab-create-update.cjs" apps/lab-desktop/create-update-release.cjs -Force
           node scripts/integrate-r1472-live-finance.cjs apps/lab-desktop
           node scripts/integrate-r1474-update-message.cjs apps/lab-desktop
           node scripts/integrate-r1476-shared-alerts.cjs apps/lab-desktop

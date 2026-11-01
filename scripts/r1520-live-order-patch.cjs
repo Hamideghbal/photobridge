@@ -8,6 +8,11 @@ function patchOrderLive(source){
 }
 
 function upgradeFinanceLive(source){
+ if(!source.includes('/* PB1526 quiet finance */')){
+  const load='pb1472Load=async()=>{var Je;g(!0);try{const Ot=await Me(ke);';
+  if(source.includes(load)){source=source.replace(load,'/* PB1526 quiet finance */pb1526Loaded=x.useRef(false),pb1472Load=async()=>{var Je;if(!pb1526Loaded.current)g(!0);try{const Ot=await Me(ke);pb1526Loaded.current=true;');}
+  else{const legacy='ce=async()=>{var Je;g(!0);try{const Ot=await Me(ke);';if(source.includes(legacy))source=source.replace(legacy,'/* PB1526 quiet finance */pb1526Loaded=x.useRef(false),ce=async()=>{var Je;if(!pb1526Loaded.current)g(!0);try{const Ot=await Me(ke);pb1526Loaded.current=true;');}
+ }
  source=source.replace('o(Ot.invoices||[])',"o((Ot.invoices||[]).slice().sort((a,b)=>(Date.parse(b.issued_at)||0)-(Date.parse(a.issued_at)||0)||String(b.id).localeCompare(String(a.id))))");
  if(source.includes('/* PB1525 finance polling */'))return source;
  const start=source.indexOf('/* PB1468 finance live */'),end=start<0?-1:source.indexOf('},[t]);',start);if(start<0||end<0)return source;

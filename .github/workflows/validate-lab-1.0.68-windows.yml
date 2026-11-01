@@ -24,6 +24,14 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Prepare integrity-checked Windows Access runtime
         run: node prepare-access-runtime.cjs
+      - name: Diagnose bundled Access Java --read on Windows
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $jar = Join-Path (Get-Location) 'assets/photobridge-access-export.jar'
+          $libs = Join-Path (Get-Location) 'assets/access-libs/*'
+          & .\\access-runtime\\bin\\java.exe -cp "$jar;$libs" PhotoBridgeAccess --read 'Z:\\pb-never-exists.accdb' 'فاکتورها'
+          Write-Host "Java --read diagnostic exit code: $LASTEXITCODE"
       - name: Run native regression tests on Windows
         shell: pwsh
         run: |

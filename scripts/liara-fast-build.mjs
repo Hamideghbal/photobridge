@@ -533,6 +533,8 @@ runR1314(process.execPath,["--test","scripts/test-r1515-intake-retry-confirmatio
 await deployStep("./enable-r1520-live-status.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1520-live-status.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1528-contained-intake.mjs");
+await deployStep("./enable-r1468-offline-policy.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1468-offline-policy.cjs"],{stdio:"inherit"});
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 

@@ -31,7 +31,7 @@ Function Q(value)
 End Function
 Function N(value)
  Dim re: Set re=CreateObject("VBScript.RegExp")
- re.Pattern="^-?[0-9]{1,14}$":re.Global=False
+ re.Pattern="^-?[0-9]{1,15}$":re.Global=False
  If Not re.Test(CStr(value)) Then Err.Raise vbObjectError+200,"PhotoBridge","Invalid money value"
  N=CStr(value)
 End Function

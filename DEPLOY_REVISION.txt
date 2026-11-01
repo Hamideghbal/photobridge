@@ -1,1 +1,1 @@
-2026-11-01-r1520-live-status-release
+2026-11-01-r1525-finance-refresh-fallback

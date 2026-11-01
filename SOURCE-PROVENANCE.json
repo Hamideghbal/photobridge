@@ -11,8 +11,9 @@
   "conflictContext": "Human-readable operation, order/invoice/customer identifiers from saved mutation and account-scoped cache; section links and known validation reasons.",
   "desktopLayoutFix": "RTL styled sync/archive dialogs; bottom-left conflict flag hidden during intake; remove native duplicate copy badge; contain photo quantity controls.",
   "offlineDeviceFix": "Reuse last successful same-account same-device primary confirmation on transport failure; never offline force registration or cross-account approval.",
-  "packageVersion": "1.0.61",
+  "packageVersion": "1.0.62",
   "offlineOrders": "Policy v1: shared documents are read-only offline; independent offline orders carry device-scoped OFF references until an atomic import is acknowledged. Ambiguous imports freeze their exact persisted snapshot.",
   "localBusiness": "Independent offline invoices, own receipts, expenses and corrections with a balanced SQLite journal. Shared mutations require live server acknowledgement. Migration 194 stores immutable import receipts and preserves historical prices, dates and offline references.",
-  "validation": "SQLite/HTTP and authenticated SSE tests; actual Chromium intake, invoice preview and two peer queues; PostgreSQL-compatible PGlite import of 50 invoices, replay, rollback, tenant/device checks and a real desktop order with payment/invoice corrections. Windows installation and production deployment remain unverified."
+  "validation": "SQLite/HTTP and authenticated SSE tests; actual Chromium intake, invoice preview and two peer queues; PostgreSQL-compatible PGlite import of 50 invoices, replay, rollback, tenant/device checks and a real desktop order with payment/invoice corrections. Windows installation and production deployment remain unverified.",
+  "financeLiveFix": "Fresh finance reads and missing-customer hydration; ordered read cache and confirmed-write barriers; lightweight live pulls independent of background transfers; centered normal-flow header status."
 }

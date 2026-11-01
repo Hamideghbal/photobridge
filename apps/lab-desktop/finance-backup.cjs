@@ -16,7 +16,7 @@ async function responseJson(request,url){
  try{return JSON.parse(bytes.toString('utf8'))}catch{fail('finance_snapshot_json_invalid')}
 }
 function createRows(invoiceData,paymentData,ledgerData,labId){
- const verified=(rows)=>rows.filter(row=>row&&!row.lab_id||String(row.lab_id)===String(labId));
+ const verified=(rows)=>rows.filter(row=>row&&(row.lab_id==null||String(row.lab_id)===String(labId)));
  const invoices=verified(invoiceData.invoices).filter(x=>String(x.document_type||'invoice')!=='discount');
  const discounts=verified(invoiceData.invoices).filter(x=>String(x.document_type||'')==='discount');
  const payments=verified(paymentData.payments);

@@ -19,3 +19,10 @@
 
 .labPrintPricingCard .pb1539MobileRename{display:none}
 @media(max-width:750px){.labPrintPricingCard .pb1539MobileRename{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:3px 10px;border:1px solid #c7d7ee;border-radius:8px;background:#f5f8ff;color:#315ecb;font:700 11px Vazirmatn,Tahoma,sans-serif}}
+
+/* Photographer album: binding is selected first, across both columns. */
+.albumCoreFields>.pb1539BindingField{grid-column:1 / -1;min-width:0;display:grid;gap:7px}
+.albumCoreFields>.pb1539BindingField select{width:100%;min-height:42px;border-radius:10px;border:1px solid #d7e2ef;background:#fff;color:#203653;font:inherit;padding:8px 12px}
+.albumCoreFields>.pb1539BindingField select:focus-visible{outline:2px solid #5179ed;outline-offset:2px}
+.albumOrderSummaryFacts .pb1539BindingFact b{overflow-wrap:anywhere}
+@media(max-width:700px){.albumCoreFields>.pb1539BindingField{grid-column:1 / -1}.albumCoreFields>.pb1539BindingField select{min-height:45px}}

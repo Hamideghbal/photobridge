@@ -13,6 +13,7 @@
   set('accessState',!last?'—':last.accessSaved?'ذخیره شد':'در این نوبت تهیه نشده');
   set('reportsState',!last?'—':last.reportsIncluded?'معین و فاکتورهای آتلیه‌ها آماده‌اند':last.accessSaved?'ساخته نشد؛ توضیح بالا':'در این نوبت تهیه نشده');
   set('lastTime',date(last?.finishedAt));
+  set('viewerState',!last?'—':last.viewerSaved?'مشاهده بکاپ.html آماده است':last.viewerError?'ساخته نشد: '+last.viewerError:'در این نوبت ساخته نشده');
   document.querySelectorAll('button').forEach(button=>button.disabled=working||state.busy);
  }
  async function refresh(){if(!working)try{show(await api('status'));}catch(e){set('message',e.message);$('message').className='status-message error';}}

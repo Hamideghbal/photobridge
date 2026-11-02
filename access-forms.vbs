@@ -53,12 +53,37 @@ Sub AddViewer(viewName,viewCaption,recordSource,fields)
  application.DoCmd.Close acForm,temp,acSaveYes
  application.DoCmd.Rename viewName,acForm,temp
 End Sub
+' Verify actual fields in the generated Access table before assigning RecordSource.
+' This prevents Access prompting the user for missing query parameters during backup.
+Function TableHasColumns(tableName,names)
+ Dim t,n,col
+ On Error Resume Next
+ Err.Clear
+ Set t=db.TableDefs(tableName)
+ If Err.Number<>0 Then TableHasColumns=False:Exit Function
+ For Each n In names
+  Err.Clear
+  Set col=t.Fields(CStr(n))
+  If Err.Number<>0 Then TableHasColumns=False:Exit Function
+ Next
+ TableHasColumns=True
+ On Error GoTo 0
+End Function
+If Not TableHasColumns("فاکتورها",Array("شماره فاکتور","تاریخ صدور","نام مشتری","مبلغ کل","مبلغ دریافت‌شده","مانده حساب")) Then
+ WScript.Echo "invoice_field_schema_mismatch":application.Quit:WScript.Quit 10
+End If
+If Not TableHasColumns("دریافت‌ها",Array("شناسه دریافت","شناسه فاکتور","شناسه مشتری","روش پرداخت","تاریخ دریافت","مبلغ")) Then
+ WScript.Echo "receipt_field_schema_mismatch":application.Quit:WScript.Quit 11
+End If
+If Not TableHasColumns("حساب معین",Array("شناسه سند حسابداری","تاریخ","شرح","حساب","شناسه مشتری","بدهکار","بستانکار")) Then
+ WScript.Echo "ledger_field_schema_mismatch":application.Quit:WScript.Quit 12
+End If
 On Error Resume Next
 AddViewer "frmPBInvoices","فاکتورها","SELECT * FROM [فاکتورها]",Array("شماره فاکتور","تاریخ صدور","نام مشتری","مبلغ کل","مبلغ دریافت‌شده","مانده حساب")
 If Err.Number<>0 Then WScript.Echo "invoice_form_failed:" & Err.Number:application.Quit:WScript.Quit 6
 AddViewer "frmPBReceipts","دریافت‌ها","SELECT * FROM [دریافت‌ها]",Array("شناسه دریافت","شناسه فاکتور","شناسه مشتری","روش پرداخت","تاریخ دریافت","مبلغ")
 If Err.Number<>0 Then WScript.Echo "receipts_form_failed:" & Err.Number:application.Quit:WScript.Quit 7
-AddViewer "frmPBLedger","حساب معین","SELECT h.[شناسه سند حسابداری] AS [شماره سند],h.[تاریخ],h.[شرح],e.[حساب],e.[شناسه مشتری],e.[بدهکار],e.[بستانکار] FROM [دفتر حسابداری] AS h INNER JOIN [ردیف‌های حسابداری] AS e ON h.[شناسه سند حسابداری]=e.[شناسه سند حسابداری]",Array("شماره سند","تاریخ","شرح","حساب","شناسه مشتری","بدهکار","بستانکار")
+AddViewer "frmPBLedger","حساب معین","SELECT * FROM [حساب معین]",Array("شناسه سند حسابداری","تاریخ","شرح","حساب","شناسه مشتری","بدهکار","بستانکار")
 If Err.Number<>0 Then WScript.Echo "ledger_form_failed:" & Err.Number:application.Quit:WScript.Quit 8
 Err.Clear
 application.CloseCurrentDatabase

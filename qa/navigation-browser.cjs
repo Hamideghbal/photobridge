@@ -4,7 +4,7 @@ const {LabStore}=require('../store.cjs'),{createHost}=require('../host.cjs');
 (async()=>{const ui=path.join(__dirname,'../verified-ui'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'pb-navigation-')),store=new LabStore(':memory:');
  store.set('labId','A');store.set('auth',{user:{labRole:'lab_admin',name:'نمونه'},lab:{id:'A'}});store.set('nativeVersion',require('../package.json').version);
  const original=fs.readFileSync(path.join(ui,'assets/index-UIRefine-v655-r84.js'),'utf8'),entry='Tx.createRoot(document.getElementById("root")).render(e.jsx(PB605RenderBoundary,{children:e.jsx(ow,{})}));';assert(original.includes(entry));
- const source=original.replace(entry,'Tx.createRoot(document.getElementById("root")).render(e.jsx(PB605RenderBoundary,{children:e.jsxs("div",{className:"labRoleWorkspace",children:[e.jsx("div",{className:"labSettingsWorkspace",style:{display:"none"},children:e.jsxs("div",{children:[e.jsx("nav",{className:"labCustomerSubnav",children:e.jsx("button",{children:"عکاس قدیمی"})}),e.jsx("nav",{className:"financeSectionTabs",children:e.jsx("button",{children:"مالی قدیمی"})}),e.jsxs("nav",{className:"labSettingsSectionTabs",children:[e.jsx("button",{children:"عمومی قدیمی"}),e.jsx("button",{children:"ساعت قدیمی"}),e.jsx("button",{children:"سایت قدیمی"})]})]})}),e.jsx(Bf,{me:{user:{labRole:"lab_admin",name:"نمونه"},lab:{id:"A"}},onLogout:()=>{},testMode:true})]})}));');
+ const source=original.replace(entry,'if(new URLSearchParams(location.search).has("qaHold")){const hold=document.createElement("style");hold.id="qaHold";hold.textContent=".labSettingsWorkspace{display:none!important}";document.head.append(hold);}Tx.createRoot(document.getElementById("root")).render(e.jsx(PB605RenderBoundary,{children:e.jsxs("div",{className:"labRoleWorkspace",children:[e.jsx("div",{className:"labSettingsWorkspace",style:{display:"none"},children:e.jsxs("div",{children:[e.jsx("nav",{className:"labCustomerSubnav",children:e.jsx("button",{children:"عکاس قدیمی"})}),e.jsx("nav",{className:"financeSectionTabs",children:e.jsx("button",{children:"مالی قدیمی"})}),e.jsxs("nav",{className:"labSettingsSectionTabs",children:[e.jsx("button",{children:"عمومی قدیمی"}),e.jsx("button",{children:"ساعت قدیمی"}),e.jsx("button",{children:"سایت قدیمی"})]})]})}),e.jsx(Bf,{me:{user:{labRole:"lab_admin",name:"نمونه"},lab:{id:"A"}},onLogout:()=>{},testMode:true})]})}));');
  fs.mkdirSync(path.join(temp,'assets'));fs.writeFileSync(path.join(temp,'assets/index-UIRefine-v655-r84.js'),source);fs.copyFileSync(path.join(ui,'index.html'),path.join(temp,'index.html'));
  const request=async url=>{const pathname=new URL(url,'http://localhost').pathname;let data={summary:{},orders:[],customers:[],invites:[],requests:[],notifications:[],transactions:[],invoices:[],payments:[],expenses:[]};
  if(pathname==='/api/lab/dashboard')data={lab:{id:'A',name:'لابراتوار آزمایشی',album_enabled:true},settings:{},customers:[],sizes:[],printSizes:[],albums:[],papers:[],status:{},walletBalance:0};
@@ -15,6 +15,22 @@ const {LabStore}=require('../store.cjs'),{createHost}=require('../host.cjs');
  const server=createHost({store,request,token:'test',roots:()=>[temp,ui],isOnline:()=>true,backups:{status:()=>({settings:{directory:temp,automatic:true,intervalHours:24},last:null})},sync:{status:()=>({...store.status(),online:true}),wake(){},run:async()=>({}),live:async()=>({})}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});
  try{const context=await browser.newContext({viewport:{width:1440,height:950}}),origin='http://127.0.0.1:'+server.address().port;await context.addCookies([{name:'desktop',value:'test',url:origin}]);const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+
+ for(const route of ['/lab/settings?qaHold=1#customers','/lab/settings#customers','/lab/settings#customers-invites','/lab/settings#customers-collaboration','/lab/settings/customers','/lab/settings/customers/invites']){
+  await page.goto(origin+route);
+  if(route.includes('qaHold')){await page.locator('.labRolePageScrollArea .labCustomerSubnav').waitFor({state:'attached'});await page.evaluate(()=>document.getElementById('qaHold').remove());}
+  await page.waitForFunction(()=>document.querySelectorAll('.pb1372ThirdHeader>button').length===4);
+  const labels=await page.locator('.pb1372ThirdHeader>button').allTextContents();
+  for(const button of await page.locator('.pb1372ThirdHeader>button').all()){await button.waitFor({state:'visible'});assert(await button.isVisible());}
+  for(const button of await page.locator('.pb1148SecondaryHeader>button[data-pb1173-index]').all())assert.equal(await button.isVisible(),false);
+  assert(await page.locator('.pb1147LabNav button[data-category="1"]').evaluate(button=>button.classList.contains('active')));
+  if(route.includes('qaHold'))await page.screenshot({path:'/tmp/photobridge-76-startup-customers.png',clip:{x:0,y:0,width:1440,height:170}});
+  await page.locator('.pb1147LabNav button[data-source=".labArchiveHeaderBtn"]').click();await page.waitForURL('**/lab/archive');
+  await page.locator('.pb1147LabNav button[data-category="1"]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.pb1372ThirdHeader>button').length===4);
+  assert.deepEqual(await page.locator('.pb1372ThirdHeader>button').allTextContents(),labels);
+ }
+ console.log('PASS: direct cold startup through canonical and legacy customer/invite/collaboration paths shows all four promoted buttons, hides the retired intermediate row, and matches archive round-trip');
  await page.goto(origin+'/lab/settings/general');await page.waitForSelector('.pb1147LabNav');
  const general=['عمومی و اعلان‌ها','ساعت کاری','پیامک مشتریان','اسنپ و ارسال','سایت اختصاصی','برنامهٔ ویندوز'];
  await page.waitForFunction(()=>document.querySelectorAll('.pb1148SecondaryHeader>button[data-pb1173-index]').length===6);

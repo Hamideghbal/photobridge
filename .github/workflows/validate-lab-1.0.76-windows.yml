@@ -1,0 +1,49 @@
+name: Validate PhotoBridge Lab 1.0.76 on Windows
+
+on:
+  push:
+    branches:
+      - build/lab-1.0.76-promoted-header-startup
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - name: Preserve upstream UI assets without Windows line-ending conversion
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      - name: Checkout 1.0.76 source
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Prepare integrity-checked Windows Access runtime
+        run: node prepare-access-runtime.cjs
+      - name: Run native regression tests on Windows
+        shell: pwsh
+        run: |
+          $testFiles = @(Get-ChildItem -Path test -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
+          if ($testFiles.Count -eq 0) { throw 'No regression tests found' }
+          & node --test @testFiles
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify every pinned Lab UI asset byte for byte
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs'),path=require('path'),crypto=require('crypto');const m=JSON.parse(fs.readFileSync('verified-ui/.pb-lab-bundle-manifest.json'));const bad=[];for(const e of m.files){const p=path.join('verified-ui',e.name);const buf=fs.readFileSync(p);const sha=crypto.createHash('sha256').update(buf).digest('hex');if(sha!==e.sha256)bad.push({name:e.name,actual:sha,expected:e.sha256,crlf:buf.includes(Buffer.from([13,10]))});}console.log('PB_UI_PIN_MISMATCHES='+JSON.stringify(bad.slice(0,12))+'; total='+bad.length);if(bad.length)process.exit(1)"
+      - name: Build and verify unsigned Windows installer candidate
+        run: npm run dist:unsigned
+      - name: Upload test-only Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: photobridge-lab-1.0.76-unsigned-test-installer
+          path: release/PhotoBridge-Lab-Setup-1.0.76-x64.exe
+          if-no-files-found: error
+          retention-days: 14

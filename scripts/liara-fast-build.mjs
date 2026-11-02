@@ -631,3 +631,7 @@ runR1314(process.execPath,["--test","scripts/test-r1533-local-ui-font.cjs"],{std
 // Login security is server-side; native clients use the same authenticated login API.
 await deployStep("./enable-r1534-lab-login-security.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1534-lab-login-security.cjs"],{stdio:"inherit"});
+
+// Mobile SMS autofill and browser-only expired-session navigation.
+await deployStep("./enable-r1535-mobile-otp-session.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1535-mobile-otp-session.cjs"],{stdio:"inherit"});

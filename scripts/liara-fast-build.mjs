@@ -677,3 +677,7 @@ await deployStep('./enable-r1543-lab-dialogs.mjs');
 
 // R1544: keep native account projections from suppressing the opening-debt editor.
 await deployStep('./enable-r1544-opening-debt-status.mjs');
+
+// R1545: local photo verification belongs to print, not later invoice/delivery.
+await deployStep('./enable-r1545-downloaded-order-delete.mjs');
+await deployStep('./enable-r1545-print-only-verification.mjs');

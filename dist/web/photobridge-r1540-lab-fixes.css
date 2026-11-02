@@ -1,0 +1,24 @@
+/* R1540 – fixed one-row, horizontally scrollable laboratory print/binding matrix. */
+.labPrintPricingCard .priceScroller{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;overscroll-behavior-x:contain!important;scrollbar-width:thin!important;padding-bottom:12px!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid{display:grid!important;grid-template-columns:155px repeat(var(--pb1539-columns,8),minmax(104px,1fr))!important;grid-template-rows:auto!important;grid-auto-flow:row!important;gap:0!important;min-width:max-content!important;width:100%!important;max-width:none!important;align-items:stretch!important;direction:rtl!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid.head{position:sticky!important;top:0;z-index:2}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid>*,.labPrintPricingCard .priceScroller .inventoryPriceGrid>label{box-sizing:border-box!important;min-width:0!important;max-width:none!important;grid-row:1!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid>label{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:4px!important;margin:0!important;padding:5px!important;border-inline-start:1px solid #e4eaf3!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid>label>input{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid>label>small{font-size:10px!important;text-align:center!important}
+.labPrintPricingCard .priceScroller .inventoryPriceGrid.head>b{padding:9px 5px!important;text-align:center!important;font-size:11px!important;line-height:1.7!important}
+.labPrintPricingCard .pb1540BindingDelete{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:24px!important;min-width:24px!important;padding:1px 6px!important;margin-inline-start:4px!important;border:1px solid #f1c6c6!important;border-radius:7px!important;background:#fff7f7!important;color:#b42318!important;font:700 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;cursor:pointer!important}
+.labPrintPricingCard .pb1540BindingDelete:hover{background:#ffe8e8!important}
+@media(max-width:640px){.labPrintPricingCard .priceScroller .inventoryPriceGrid{grid-template-columns:126px repeat(var(--pb1539-columns,8),minmax(108px,1fr))!important}.labPrintPricingCard .priceScroller .inventoryPriceGrid.head>b{font-size:10px!important}.labPrintPricingCard .pb1540BindingDelete{min-height:29px!important}}
+/* Local archive cleanup pre-confirmation; native Windows permission popup remains system-controlled. */
+.pb1540CleanupDialog{direction:rtl;box-sizing:border-box;width:min(510px,calc(100vw - 30px));max-height:calc(100dvh - 35px);padding:0;margin:auto;border:1px solid #dce6f3;border-radius:20px;background:#fff;color:#233a58;box-shadow:0 25px 90px #142b5360;overflow:auto;font:13px/1.9 Vazirmatn,Tahoma,sans-serif;text-align:right}
+.pb1540CleanupDialog::backdrop{background:#122b4a91;backdrop-filter:blur(3px)}
+.pb1540CleanupTop{padding:22px 24px 16px;display:flex;gap:14px;align-items:center;background:linear-gradient(125deg,#f1f7ff,#fff);border-bottom:1px solid #e5ecf7}
+.pb1540CleanupTop small{display:block;color:#5474a2;font-size:11px}.pb1540CleanupTop h3{margin:4px 0 0;font-size:19px;font-weight:900;color:#173a67}
+.pb1540CleanupSymbol{display:grid;place-items:center;border-radius:14px;background:#e4efff;width:45px;height:45px;color:#275dbe;font-size:28px}
+.pb1540CleanupBody{padding:18px 24px}.pb1540CleanupBody p{margin:0 0 12px;line-height:2}.pb1540CleanupInfo{border:1px solid #cce8d8;background:#f4fbf6;color:#286044;border-radius:12px;padding:10px 14px}.pb1540CleanupBody .pb1540CleanupWarning{margin:12px 0 0;color:#a5442c}
+.pb1540CleanupDialog footer{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;padding:0 24px 22px}
+.pb1540CleanupDialog footer button{min-height:42px;padding:8px 18px;border-radius:10px;font:700 13px Vazirmatn,Tahoma,sans-serif;border:1px solid #dbe4f0;background:white;color:#36506e;cursor:pointer}
+.pb1540CleanupDialog footer .pb1540CleanupProceed{border-color:#1d63c5;background:#1d63c5;color:white}
+.pb1540CleanupDialog button:focus-visible{outline:3px solid #8ebcfb;outline-offset:2px}
+.pb1540WalkinFallback{padding:24px;display:grid;gap:12px}.pb1540WalkinFallback h3{margin:0}.pb1540WalkinFallback button{justify-self:start;min-height:40px;border-radius:8px;padding:8px 16px;border:1px solid #8bb3eb;background:#edf5ff;color:#1b519d;font:inherit;cursor:pointer}

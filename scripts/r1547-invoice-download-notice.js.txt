@@ -1,0 +1,71 @@
+/* R1547: Friendly confirmation for verified local downloads and non-blocking
+   PDF follow-up errors. No global alert() override. */
+function pb1547Notice(message,kind="success"){
+ const content=String(message||"").trim();
+ if(!content)return;
+ if(typeof HTMLDialogElement==="undefined"){window.alert(content);return}
+ const previous=document.activeElement;
+ const dialog=document.createElement("dialog");
+ dialog.className="pb1547Notice";
+ dialog.dir="rtl";
+ const header=document.createElement("div");
+ header.className="pb1547NoticeHeader";
+ const emblem=document.createElement("span");
+ emblem.className="pb1547NoticeIcon "+(kind==="warning"?"warning":"success");
+ emblem.setAttribute("aria-hidden","true");
+ emblem.textContent=kind==="warning"?"!":"✓";
+ const heading=document.createElement("div");
+ const eyebrow=document.createElement("small");
+ eyebrow.textContent="فوتوبریج · لابراتوار";
+ const title=document.createElement("h3");
+ title.id="pb1547NoticeTitle";
+ title.textContent=kind==="warning"?"نیاز به بررسی فاکتور":"دریافت و بررسی فایل‌ها انجام شد";
+ heading.append(eyebrow,title);
+ header.append(emblem,heading);
+ const messageBox=document.createElement("p");
+ messageBox.className="pb1547NoticeMessage";
+ messageBox.textContent=content;
+ dialog.setAttribute("aria-labelledby",title.id);
+ dialog.setAttribute("aria-describedby","pb1547NoticeText");
+ messageBox.id="pb1547NoticeText";
+ const footer=document.createElement("footer");
+ const close=document.createElement("button");
+ close.type="button";
+ close.className="pb1547NoticeDismiss";
+ close.textContent="متوجه شدم";
+ footer.append(close);
+ dialog.append(header,messageBox,footer);
+ let resolved=false;
+ const finish=()=>{if(resolved)return;resolved=true;try{dialog.close()}catch{}dialog.remove();if(previous?.isConnected)previous.focus?.()};
+ close.addEventListener("click",finish);
+ dialog.addEventListener("cancel",event=>{event.preventDefault();finish()});
+ document.body.append(dialog);
+ try{dialog.showModal();close.focus()}catch{dialog.remove();window.alert(content)}
+}
+function pb1547DownloadDialog(message){pb1547Notice(message,"success")}
+async function pb1547CompletePdf(invoice,orderId,allowLocal){
+ let localWarning="";
+ try{
+  // Only this function is backgrounded. The server has ALREADY committed
+  // the ready status and invoice in the caller; never display success sooner.
+  const pdf=await Wu(invoice),filename="invoice-"+invoice.number+".pdf";
+  if(allowLocal)try{
+   const detail=await Me("/api/lab/orders/"+encodeURIComponent(orderId));
+   const folder=await Ef(detail);await jc(folder.dir,filename,pdf)
+  }catch(error){
+   localWarning=error?.message==="folder_permission_denied"?"مجوز ذخیره روی هارد داده نشد.":"ذخیره نسخه فاکتور روی هارد کامل نشد.";
+  }
+  const pdfDataUrl=await new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onload=()=>resolve(String(reader.result||""));
+   reader.onerror=()=>reject(reader.error||new Error("invoice_pdf_read_failed"));
+   reader.readAsDataURL(pdf);
+  });
+  await Me("/api/lab/invoices/"+encodeURIComponent(invoice.id)+"/pdf-upload",{method:"POST",body:JSON.stringify({pdfBase64:pdfDataUrl})});
+  window.dispatchEvent(new CustomEvent("photobridge-finance-changed"));
+  if(localWarning)pb1547Notice("فاکتور #"+invoice.number+" صادر شده، اما "+localWarning,"warning");
+ }catch(error){
+  console.error("[PhotoBridge R1547] invoice saved, PDF follow-up failed",error);
+  pb1547Notice("فاکتور #"+invoice.number+" صادر شده و سفارش آماده تحویل است؛ اما نسخه PDF کامل نشد. از بخش فاکتورها برای مشاهده و چاپ استفاده کنید.","warning");
+ }
+}

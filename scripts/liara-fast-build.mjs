@@ -684,3 +684,8 @@ await deployStep('./enable-r1545-print-only-verification.mjs');
 
 // R1546: native shared orders retain local identities after server import.
 await deployStep('./enable-r1546-mapped-order-invoice.mjs');
+
+// R1547: confirmed ready orders switch immediately; PDF is a non-blocking follow-up.
+// Delivered to browser and Windows Lab UI hot-update package with integrity checks.
+await deployStep("./enable-r1547-invoice-download-fast-ready.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1547-invoice-download-fast-ready.cjs"],{stdio:"inherit"});

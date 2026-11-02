@@ -8,7 +8,11 @@ test('desktop tabs fill the viewport and embedded headers stay hidden after late
  try{
   const css=file=>fs.readFileSync('dist/web/'+file,'utf8');
   // Match production order: navigation loads before the main bundle and header CSS.
-  const styles='<style>'+css('photobridge-r1126-desktop-navigation.css')+'</style><style>'+css('assets/index-UIRefine-v586.css')+'</style><style>'+css('photobridge-r1124-photographer-desktop-header.css')+'</style>';
+  // The real navigation controller unhides the chrome when it mounts. This
+  // static CSS-only fixture has no controller, so explicitly model its active
+  // desktop state; the responsive/geometry rules remain production CSS.
+  const activeChrome='<style>html.pb1126Desktop body #pb1126ChromeHost,html.pb1126Desktop body .pb1126ContentPanel{display:block!important}</style>';
+  const styles='<style>'+css('photobridge-r1126-desktop-navigation.css')+'</style><style>'+css('assets/index-UIRefine-v586.css')+'</style><style>'+css('photobridge-r1124-photographer-desktop-header.css')+'</style>'+activeChrome;
   for(const width of [1024,1366,1920]){
    for(const embedded of [false,true]){
     const page=await browser.newPage({viewport:{width,height:900}});
@@ -21,7 +25,7 @@ test('desktop tabs fill the viewport and embedded headers stay hidden after late
     if(!embedded){
      for(const selector of ['#pb1126DesktopHeader','.pb1126ContentPanel','.pb1126ContentPanel iframe']){
       const box=await page.locator(selector).boundingBox();
-      assert(box,selector+' unexpectedly hidden at '+width+'px; '+JSON.stringify(await page.locator(selector).evaluate(el=>{const chain=[];for(let p=el;p;p=p.parentElement){const st=getComputedStyle(p);chain.push({tag:p.tagName,id:p.id,display:st.display,visibility:st.visibility,opacity:st.opacity,rects:p.getClientRects().length});}const host=document.getElementById('pb1126ChromeHost');const matched=[];const scan=(rules,from='')=>{for(const rule of rules){if(rule.cssRules){scan(rule.cssRules,from+' / '+(rule.conditionText||rule.name||''));continue}if(rule.selectorText&&rule.style?.display){try{if(host.matches(rule.selectorText))matched.push({from,selector:rule.selectorText,display:rule.style.display,priority:rule.style.getPropertyPriority('display')})}catch{}}}};for(let i=0;i<document.styleSheets.length;i++){try{scan(document.styleSheets[i].cssRules,'sheet '+i)}catch{}}return {innerWidth:innerWidth,narrow:matchMedia('(max-width:820px)').matches,chain,matched};})));
+      assert(box,selector+' should be visible in the active desktop shell at '+width+'px');
       assert(Math.abs(box.x)<1,selector+' left edge: '+JSON.stringify(box));
       assert(Math.abs(box.x+box.width-width)<1,selector+' right edge: '+JSON.stringify(box));
      }

@@ -11,11 +11,11 @@ const wrapper=[
 " const preferences=await pool.query('SELECT ui_preferences FROM labs WHERE id=$1',[labId]);",
 ' return {...existing,printTariffCatalog:normalizePrintCatalog(preferences.rows[0]?.ui_preferences?.printTariffCatalog)};',
 '}',
-''].join('\\n');
+''].join('\n');
 const snapshotDecl='async function albumOrderSnapshot(';
 if(s.split(snapshotDecl).length!==2)throw Error('R1539 snapshot declaration unavailable');
 s=s.replace(snapshotDecl,wrapper+snapshotDecl);
-start=s.indexOf('async function albumOrderSnapshot(');end=s.indexOf('\nasync function ',start+18);
+let start=s.indexOf('async function albumOrderSnapshot('),end=s.indexOf('\nasync function ',start+18);
 if(start<0||end<=start)throw Error('album snapshot boundary');
 let body=s.slice(start,end);
 const choice=[

@@ -13,7 +13,7 @@ const a=component.indexOf('w=(B,L)=>'),b=component.indexOf(',F=c.current.map',a)
 if(a<0||b<a||b-a>230)throw Error('R1539 print formatter changed');
 component=component.slice(0,a)+'w=(B,L)=>{const n=L.startsWith("pb1539_")?(Object.hasOwn(B,L)?B[L]:pb1539.rates?.[B.id]?.[L.slice(7)]):B[L];return n==null||String(n)===""||Number(n)===0?"—":V(Number(n))+" تومان"}'+component.slice(b);
 one('e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),',
- 'e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create("paper"),children:"+ کاغذ جدید"}),e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create("binding"),children:"+ صحافی جدید"}),','creation actions');
+ 'e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ صحافی جدید"}),','creation actions');
 one('h.map(([k,E])=>e.jsx("b",{children:E},E))',
  'h.map(([k,E])=>e.jsxs("b",{children:[E,(k==="album_binding_price"||k.startsWith("pb1539_"))&&e.jsx("button",{type:"button",className:"pb1539Rename",title:"ویرایش نام",onClick:()=>pb1539Rename(k.startsWith("pb1539_")?k.slice(7):k,E),children:"✎"})]},k))','rename model header');
 one('className:"priceGrid inventoryPriceGrid head",children:', 'className:"priceGrid inventoryPriceGrid head",style:{"--pb1539-columns":h.length},children:','header width');
@@ -22,7 +22,7 @@ one('e.jsx("small",{children:w}),e.jsx("input",{inputMode:"numeric"',
  'e.jsx("small",{children:w}),(C==="album_binding_price"||C.startsWith("pb1539_"))&&e.jsx("button",{type:"button",className:"pb1539MobileRename",onClick:()=>pb1539Rename(C.startsWith("pb1539_")?C.slice(7):C,w),children:"✎ تغییر نام"}),e.jsx("input",{inputMode:"numeric"','mobile rename action');
 one('value:C.includes("stock")?$u(k[C]??""):Bn(k[C])',
  'value:C.includes("stock")?$u(k[C]??""):Bn(C.startsWith("pb1539_")?(Object.hasOwn(k,C)?k[C]:pb1539.rates?.[k.id]?.[C.slice(7)]):k[C])','custom values');
-js=js.slice(0,start)+component+js.slice(end)+'\n/* PB1539 lab paper and binding pricing */\n';
+js=js.slice(0,start)+component+js.slice(end)+'\n/* PB1539 lab binding pricing with unchanged paper types */\n';
 fs.writeFileSync(path,js);
 const htmlFile='dist/web/index.html';let html=fs.readFileSync(htmlFile,'utf8');
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&printCatalog=r1539')?u:u+'&printCatalog=r1539');

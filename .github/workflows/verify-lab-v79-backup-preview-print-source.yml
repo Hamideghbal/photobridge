@@ -1,0 +1,32 @@
+name: Verify Lab 1.0.79 backup print/calendar source only
+on:
+  push:
+    branches:
+      - build/lab-1.0.79-backup-preview-print-calendar-fix
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve actual 1.0.79 Windows release version
+        run: node -e "if(require('./package.json').version!=='1.0.79')throw Error('wrong_windows_baseline')"
+      - name: Verify finance viewer, Access report sources and data backup integrity
+        run: |
+          node --check backup-finance-viewer.cjs
+          node --test test/backup-finance-print-calendar.test.cjs test/backup-finance-viewer.test.cjs test/data-backups.test.cjs
+      - name: Package entire original Windows project SOURCE only; no Electron build
+        run: git archive --format=zip --output=PhotoBridge-Lab-1.0.79-Backup-Viewer-Fixed-SOURCE.zip HEAD
+      - name: Upload source archive, never installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoBridge-Lab-1.0.79-Backup-Viewer-Fixed-SOURCE
+          path: PhotoBridge-Lab-1.0.79-Backup-Viewer-Fixed-SOURCE.zip
+          if-no-files-found: error
+          retention-days: 14

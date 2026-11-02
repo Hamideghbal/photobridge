@@ -664,3 +664,7 @@ runR1314(process.execPath,["--test","scripts/test-r1539-photographer-album-bindi
 // scroll-aligned tariffs and visible opening-debt amount.
 await deployStep("./enable-r1540-lab-fixes.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1540-lab-fixes.cjs"],{stdio:"inherit"});
+
+// R1541: aligned catalog columns and compact binding controls for site and native hot updates.
+await deployStep("./enable-r1541-tariff-columns.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1541-tariff-columns.cjs"],{stdio:"inherit"});

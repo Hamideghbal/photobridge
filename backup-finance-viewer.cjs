@@ -21,14 +21,14 @@ function buildViewerData(model,{createdAt,labId,sqliteSha256}){
  const documents=inv.map(i=>({
   id:fixed(i.InvoiceId),customerId:fixed(i.CustomerId),customer:customer(i.CustomerId,i.CustomerName),
   number:fixed(i.Number),date:fixed(i.IssuedAt),persianDate:fixed(i.ReportDate),
-  type:'invoice',total:amount(i.Total),paid:amount(i.Paid),balance:amount(i.Balance),
+  type:'invoice',subtotal:amount(i.Subtotal),correction:amount(i.Correction),total:amount(i.Total),paid:amount(i.Paid),balance:amount(i.Balance),accountDebt:amount(byCustomer.get(fixed(i.CustomerId))?.Balance||0),
   origin:fixed(i.Origin),orderId:fixed(i.OrderId),note:fixed(i.Note),lines:linesByInvoice.get(fixed(i.InvoiceId))||[]
  }));
  for(const d of financeDocs){
   if(fixed(d.Type)==='invoice'||!d.Type)continue;
   documents.push({id:fixed(d.DocumentId),customerId:fixed(d.CustomerId),customer:customer(d.CustomerId),
    number:fixed(d.Number),date:fixed(d.IssuedAt),persianDate:'',type:fixed(d.Type),
-   total:amount(d.Total),paid:0,balance:0,origin:'',orderId:'',note:'',lines:[]});
+   subtotal:amount(d.Total),correction:0,total:amount(d.Total),paid:0,balance:0,accountDebt:0,origin:'',orderId:'',note:'',lines:[]});
  }
  const receipts=pick(model,'Payments').map(p=>{
   const invoice=byInvoice.get(fixed(p.InvoiceId)),customerId=fixed(p.CustomerId||invoice?.CustomerId);

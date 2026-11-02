@@ -48,6 +48,10 @@
   position(input,button);
  }
  attach.sequence=0;
+ function isOwnBrand(img){
+  const src=img?.getAttribute('src')||'';
+  return img?.closest('#pbR1361MobileSplash')||/^\\/photobridge-(?:launch|mobile-launch|app|icon|brand|favicon)[a-z0-9.-]*\\.(?:png|svg|webp)(?:\\?.*)?$/i.test(src);
+ }
  function repairBrand(img){
   if(!img||img.dataset.pb1536BrandFallback==='1')return;
   img.dataset.pb1536BrandFallback='1';
@@ -57,8 +61,8 @@
   document.querySelectorAll('input[type="password"],input[data-pb1536-password]').forEach(input=>{
    if(input.tagName==='INPUT')attach(input);
   });
-  document.querySelectorAll('#pbR1361MobileSplash img').forEach(img=>{
-   if(img.complete&&!img.naturalWidth)repairBrand(img);
+  document.querySelectorAll('img').forEach(img=>{
+   if(isOwnBrand(img)&&img.complete&&!img.naturalWidth)repairBrand(img);
   });
   for(const input of tracked){
    if(!input.isConnected){tracked.delete(input);continue}
@@ -75,7 +79,7 @@
  document.addEventListener('error',event=>{
   const img=event.target;
   // Never replace uploaded studio, photographer, store, or lab branding.
-  if(img?.tagName==='IMG'&&img.closest('#pbR1361MobileSplash'))repairBrand(img);
+  if(img?.tagName==='IMG'&&isOwnBrand(img))repairBrand(img);
  },true);
  new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
  addEventListener('resize',schedule,{passive:true});

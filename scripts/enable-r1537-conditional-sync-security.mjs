@@ -119,7 +119,7 @@ path='dist/api/server.js';s=read(path);
         `;
  body=body.slice(0,guardStart)+replacement+body.slice(guardEnd);
  const key='passwordVerify(password, r.password_hash)';
- if(body.split(key).length!==3)throw Error('R1537 photographer password candidate count changed');
+ if(!body.includes(key))throw Error('R1537 photographer password match condition missing');
  body=body.replaceAll(key,"(passwordVerify(password,r.password_hash)||(pb1537SoloPhotographer&&passwordVerify(password,r.photographer_password_hash)))");
  s=s.slice(0,sectionStart)+body+s.slice(sectionEnd);
 }

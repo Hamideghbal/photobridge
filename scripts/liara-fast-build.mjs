@@ -536,6 +536,8 @@ await deployStep("./enable-r1528-contained-intake.mjs");
 await deployStep("./enable-r1468-offline-policy.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1468-offline-policy.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1529-document-tags.mjs");
+// Bundle the font before publishing the verified Windows hot-update snapshot.
+await deployStep("./enable-r1533-local-ui-font.mjs");
 await deployStep("./prepare-lab-desktop-ui.mjs?final-after-r1344");
 await deployStep("./verify-lab-desktop-ui-freshness.mjs");
 
@@ -623,3 +625,5 @@ runR1314(process.execPath,["--test","scripts/test-r1531-site-ready-invoice.cjs"]
 // R1532: website startup only; leave both desktop UI snapshots untouched.
 await deployStep("./enable-r1532-lab-header-first-paint.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1532-lab-header-first-paint.cjs"],{stdio:"inherit"});
+
+runR1314(process.execPath,["--test","scripts/test-r1533-local-ui-font.cjs"],{stdio:"inherit"});

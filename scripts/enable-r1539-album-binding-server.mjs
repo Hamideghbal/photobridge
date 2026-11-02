@@ -2,7 +2,7 @@ import fs from 'node:fs';
 const file='dist/api/server.js';
 let s=fs.readFileSync(file,'utf8');
 function once(source,a,b,label){if(source.split(a).length!==2)throw Error('R1539 album '+label+' changed');return source.replace(a,b)}
-let start=s.indexOf('async function albumCatalogForLab('),end=s.indexOf('\nasync function ',start+16);
+let start=s.indexOf('async function albumCatalogForLab('),end=s.indexOf('async function albumOrderSnapshot(',start+16);
 if(start<0||end<=start)throw Error('album catalog boundary');
 let catalog=s.slice(start,end);
 catalog=once(catalog,'const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;',
@@ -37,7 +37,7 @@ body=once(body,"missingPaperTariff ? 'missing_print_tariff' : null","missingPape
 s=s.slice(0,start)+body+s.slice(end);
 const tick=String.fromCharCode(96),orig='description: '+tick+'صحافی آلبوم ',replacement='description: '+tick+'\u0024{String(ad?.binding?.name||\'صحافی آلبوم\').trim()} ';
 s=once(s,orig,replacement,'binding invoice description');
-start=s.indexOf('async function syncLabAlbumSizesFromPrintTariffs(');end=s.indexOf('\nasync function ',start+24);
+start=s.indexOf('async function syncLabAlbumSizesFromPrintTariffs(');end=s.indexOf('async function albumCatalogForLab(',start+24);
 if(start<0||end<=start)throw Error('album sizes sync boundary');
 let sync=s.slice(start,end);
 const pre=[

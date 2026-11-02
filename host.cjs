@@ -18,6 +18,8 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(!String(req.headers.cookie||'').split(';').some(x=>x.trim()==='desktop='+token))return json(res,403,{error:'desktop_locked'});
       if(req.headers.origin&&req.headers.origin!==origin)return json(res,403,{error:'invalid_origin'});
 
+      // The native host owns offline storage and updates; a PWA worker must not intercept its verified UI.
+      if(req.headers['service-worker']==='script'||/^\/(?:photobridge-sw[^/]*|service-worker|sw)\.js$/.test(url.pathname))return json(res,410,{error:'native_service_worker_disabled'});
       if(url.pathname==='/desktop/backups'&&req.method==='GET'){if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});return res.end(fs.readFileSync(path.join(__dirname,'backup.html')));}
       if(url.pathname==='/desktop/backup-assets/font'&&req.method==='GET'){if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});res.writeHead(200,{'Content-Type':'font/woff2','Cache-Control':'private, max-age=86400'});return res.end(fs.readFileSync(path.join(__dirname,'assets','photobridge-vazirmatn.woff2')));}
       if(await require('./backup-host.cjs').backupHost({req,res,url,manager:backups,store,json,readJson}))return;
@@ -136,7 +138,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         const file=path.resolve(root,name),resolvedRoot=path.resolve(root);
         if(!file.startsWith(resolvedRoot+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())continue;
         const type=MIME[path.extname(file)]||'application/octet-stream';
-        res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-cache'});
+        res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});
         if(name==='index.html'){
           let html=fs.readFileSync(file,'utf8');html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');const end=html.toLowerCase().lastIndexOf('</body>');
           html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));

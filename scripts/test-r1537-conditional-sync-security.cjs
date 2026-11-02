@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=x=>fs.readFileSync(x,'utf8');
+const {login}=require('./test-r1393-shared-account.cjs');
 test('conditional migration client handles ONLY a verified legacy login conflict, never all accounts',()=>{
  const js=read('dist/web/photobridge-r1393-shared-account.js');
  assert.doesNotThrow(()=>new vm.Script(js));
@@ -35,7 +36,7 @@ test('password eye stays compact and its CSS cache refreshes on browser login',(
  }
 });
 test('legacy photographer-only profile signs in; extra business role retains OTP migration',async()=>{
- const {login}=require('./test-r1393-shared-account.cjs');
+
  const crypto=require('node:crypto');
  const hash=p=>{const salt=crypto.randomBytes(16);return salt.toString('hex')+':'+crypto.scryptSync(p,salt,64).toString('hex')};
  const row={id:'U',mobile:'09120000000',active:true,photographer_enabled:true,password_hash:hash('web-old'),photographer_password_hash:hash('photo-old')};

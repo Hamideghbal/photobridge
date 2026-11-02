@@ -1,0 +1,46 @@
+name: Verify tariff columns
+on:
+  pull_request:
+    branches: [aaa-liara-release]
+    paths:
+      - '**/*r1541*'
+      - '.github/workflows/verify-tariff-columns.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tariffs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --omit=dev --no-audit --no-fund
+      - run: npm run build
+      - name: Install isolated browser tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tariff-tests" --no-save --no-audit --no-fund playwright@1.56.1
+          "$RUNNER_TEMP/tariff-tests/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify column alignment and binding actions
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
+        run: |
+          export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
+          node scripts/test-r1541-tariff-columns-browser.cjs
+      - uses: actions/checkout@v4
+        with:
+          ref: 81f82c3c8d7f19c8548beac32d09e1ad073e7db9
+          path: .native-compat
+      - name: Verify installed native updater compatibility
+        env:
+          PB_NATIVE_SOURCE: ${{ github.workspace }}/.native-compat
+        run: node scripts/test-r1541-native-delivery.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tariff-layout-screenshots
+          path: /tmp/photobridge-r1541-*.png
+          if-no-files-found: ignore
+          retention-days: 7

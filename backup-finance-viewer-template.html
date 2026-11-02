@@ -285,6 +285,98 @@ for(const select of document.querySelectorAll(".customerSelect")){
  for(const studio of studios){const option=el("option","",studio.name);option.value=studio.id;select.append(option)}
  select.addEventListener("change",()=>{state.customer=select.value;for(const control of document.querySelectorAll(".customerSelect"))control.value=state.customer;state.pages={invoices:0,payments:0,statement:0};render()})
 }
+/* Persian calendar for every from/to control, independent of the site or internet. */
+const persianParts=new Intl.DateTimeFormat("en-US-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"numeric",day:"numeric"});
+const monthNames=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+function jParts(date){
+ const out={};
+ for(const part of persianParts.formatToParts(date))if(["year","month","day"].includes(part.type))out[part.type]=Number(part.value);
+ return out;
+}
+function dateShift(date,day){
+ return new Date(date.getTime()+day*86400000);
+}
+function findMonthFirst(year,month){
+ // Persian months begin near the Gregorian 20th, with a Dec/Jan rollover.
+ const gYear=year+621+(month>=11?1:0),gMonth=(month+1)%12;
+ const candidate=new Date(Date.UTC(gYear,gMonth,20,12));
+ for(let delta=-40;delta<=40;delta++){
+  const day=dateShift(candidate,delta),part=jParts(day);
+  if(part.year===year&&part.month===month&&part.day===1)return day;
+ }
+ return null;
+}
+let openCalendar=null;
+function closeCalendar(){
+ if(openCalendar){openCalendar.remove();openCalendar=null;}
+}
+function showCalendar(input){
+ closeCalendar();
+ const selectedKey=dateKey(input.value),selected=selectedKey?{year:Number(selectedKey.slice(0,4)),month:Number(selectedKey.slice(4,6))}:jParts(new Date());
+ const popup=el("div","pbCalendar");
+ popup.setAttribute("role","dialog");popup.setAttribute("aria-label","تقویم شمسی انتخاب تاریخ");
+ document.body.append(popup);openCalendar=popup;
+ const rect=input.getBoundingClientRect();
+ popup.style.top=Math.max(8,rect.bottom+window.scrollY+6)+"px";
+ popup.style.left=Math.max(8,Math.min(window.innerWidth-300,rect.left+window.scrollX))+"px";
+ function draw(year,month){
+  popup.replaceChildren();
+  const first=findMonthFirst(year,month);
+  if(!first){popup.append(el("div","empty","تقویم فارسی در این مرورگر در دسترس نیست."));return}
+  const head=el("div","pbCalendarHeader"),before=el("button","","❯"),after=el("button","","❮");
+  const title=el("b","",monthNames[month-1]+" "+money(year));
+  before.type="button";after.type="button";head.append(before,title,after);popup.append(head);
+  const move=delta=>{
+   let m=month+delta,y=year;
+   if(m===0){m=12;y--}else if(m===13){m=1;y++}
+   draw(y,m);
+  };
+  before.addEventListener("click",()=>move(-1));after.addEventListener("click",()=>move(1));
+  const grid=el("div","pbCalendarGrid");
+  for(const name of ["ش","ی","د","س","چ","پ","ج"])grid.append(el("span","dayName",name));
+  const blanks=(first.getUTCDay()+1)%7;
+  for(let k=0;k<blanks;k++)grid.append(el("span"));
+  for(let n=1;n<=31;n++){
+   const day=dateShift(first,n-1),jp=jParts(day);
+   if(jp.month!==month||jp.year!==year)break;
+   const button=el("button","",money(n));button.type="button";
+   const iso=String(year).padStart(4,"0")+"/"+String(month).padStart(2,"0")+"/"+String(n).padStart(2,"0");
+   if(dateKey(input.value)===iso.replace(/\//g,""))button.classList.add("selected");
+   if(dateKey(new Date().toISOString())===iso.replace(/\//g,""))button.setAttribute("aria-current","date");
+   button.addEventListener("click",()=>{
+    input.value=money(year)+"/"+String(money(month)).padStart(2,"۰")+"/"+String(money(n)).padStart(2,"۰");
+    // Use ASCII ISO fields for stable dateKey, while styling keeps Vazirmatn.
+    input.value=iso;closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}));
+   });
+   grid.append(button);
+  }
+  popup.append(grid);
+  const actions=el("div","pbCalendarActions"),today=el("button","btn","امروز"),clear=el("button","btn","پاک کردن");
+  today.type="button";clear.type="button";
+  today.addEventListener("click",()=>{input.value=persian(new Date().toISOString());closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}))});
+  clear.addEventListener("click",()=>{input.value="";closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}))});
+  actions.append(today,clear);popup.append(actions);
+ }
+ draw(selected.year,selected.month);
+}
+function installCalendars(){
+ for(const input of document.querySelectorAll(".fromDate,.toDate")){
+  input.setAttribute("autocomplete","off");
+  input.setAttribute("inputmode","numeric");
+  input.placeholder="انتخاب تاریخ";
+  const button=el("button","datePickerButton","▦");
+  button.type="button";button.setAttribute("aria-label","باز کردن تقویم شمسی");
+  button.title="انتخاب تاریخ از تقویم شمسی";
+  input.insertAdjacentElement("afterend",button);
+  button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();if(openCalendar)closeCalendar();else showCalendar(input)});
+ }
+ document.addEventListener("pointerdown",event=>{
+  if(openCalendar&&!openCalendar.contains(event.target)&&!event.target.closest(".datePickerButton"))closeCalendar();
+ });
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")closeCalendar()});
+}
+installCalendars();
+
 for(const [name,id]of [["invoices","invoiceBlock"],["payments","receiptBlock"],["statement","statementBlock"]]){
  const block=byId(id),range=state.dates[name],inputs=block.querySelectorAll(".fromDate,.toDate");
  inputs[0].addEventListener("change",()=>{range.from=digits(inputs[0].value).trim();state.pages[name]=0;render()});

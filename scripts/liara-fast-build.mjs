@@ -635,3 +635,7 @@ runR1314(process.execPath,["--test","scripts/test-r1534-lab-login-security.cjs"]
 // Mobile SMS autofill and browser-only expired-session navigation.
 await deployStep("./enable-r1535-mobile-otp-session.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1535-mobile-otp-session.cjs"],{stdio:"inherit"});
+
+// Browser signup/login/reset password eyes and authentic PhotoBridge logo fallback.
+await deployStep("./enable-r1536-password-eye-brand.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1536-password-eye-brand.cjs"],{stdio:"inherit"});

@@ -1,1 +1,1 @@
-2026-11-01-r1531-site-ready-invoice-access-review
+2026-11-02-r1532-lab-header-before-first-paint

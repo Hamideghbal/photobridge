@@ -619,3 +619,7 @@ runR1314(process.execPath,["--test","scripts/test-r1530-site-download-transition
 // R1531: website-only ready invoice preconditions; Windows UI snapshot remains unchanged.
 await deployStep("./enable-r1531-site-ready-invoice.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1531-site-ready-invoice.cjs"],{stdio:"inherit"});
+
+// R1532: website startup only; leave both desktop UI snapshots untouched.
+await deployStep("./enable-r1532-lab-header-first-paint.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1532-lab-header-first-paint.cjs"],{stdio:"inherit"});

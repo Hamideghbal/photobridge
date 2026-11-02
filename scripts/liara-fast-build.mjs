@@ -689,3 +689,7 @@ await deployStep('./enable-r1546-mapped-order-invoice.mjs');
 // Delivered to browser and Windows Lab UI hot-update package with integrity checks.
 await deployStep("./enable-r1547-invoice-download-fast-ready.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1547-invoice-download-fast-ready.cjs"],{stdio:"inherit"});
+
+// R1548: Windows Lab only; do not change website navigation or authentication.
+await deployStep("./enable-r1548-native-navigation.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1548-native-navigation.cjs"],{stdio:"inherit"});

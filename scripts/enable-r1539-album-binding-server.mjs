@@ -8,9 +8,12 @@ let catalog=s.slice(start,end);
 catalog=once(catalog,'const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;',
 'const printTariffCatalog=normalizePrintCatalog(labPreferences.printTariffCatalog);\n    const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;','album preferences');
 {
- const match=catalog.match(/return\s*\{\s*enabled:\s*Boolean\(lq\.rows\[0\]\?\.album_enabled\)\s*,\s*coverCatalogEnabled\s*,/g)||[];
- if(match.length!==1)throw Error('R1539 album catalog response changed: '+match.length);
- catalog=catalog.replace(match[0],match[0]+' printTariffCatalog,');
+ const pattern=/return\s*\{/g;
+ const matches=[...catalog.matchAll(pattern)];
+ if(!matches.length)throw Error('R1539 album catalog object response missing');
+ const candidate=matches.at(-1);
+ // The final return in albumCatalogForLab is the outward catalog object.
+ catalog=catalog.slice(0,candidate.index)+candidate[0]+' printTariffCatalog, '+catalog.slice(candidate.index+candidate[0].length);
 }
 s=s.slice(0,start)+catalog+s.slice(end);
 start=s.indexOf('async function albumOrderSnapshot(');end=s.indexOf('\nasync function ',start+18);

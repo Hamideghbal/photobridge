@@ -659,3 +659,8 @@ await deployStep("./enable-r1539-album-binding-server.mjs");
 await deployStep("./enable-r1539-photographer-album-binding-ui.mjs");
 await deployStep("./enable-r1539-album-binding-display.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1539-photographer-album-binding.cjs"],{stdio:"inherit"});
+
+// R1540: Windows lab customer-free navigation, local cleanup, binding removal,
+// scroll-aligned tariffs and visible opening-debt amount.
+await deployStep("./enable-r1540-lab-fixes.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1540-lab-fixes.cjs"],{stdio:"inherit"});

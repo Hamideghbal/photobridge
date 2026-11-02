@@ -1,0 +1,16 @@
+name: Debug R1539 album boundaries
+on:
+  pull_request:
+    branches: [aaa-liara-release]
+    paths:
+      - 'scripts/debug-r1539-album-boundaries.cjs'
+      - '.github/workflows/debug-r1539-album.yml'
+permissions:
+  contents: read
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect album function (read only)
+        run: node scripts/debug-r1539-album-boundaries.cjs

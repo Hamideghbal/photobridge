@@ -16,5 +16,6 @@ if(!s.includes('/* PB1534 lab login security */')){
     }
     if (req.method === 'POST' && url.pathname === '/api/auth/password-reset/request') {`);
  once("['retouch-account.html','account-recovery.html'].includes(path.basename(full))","['retouch-account.html','account-recovery.html','lab-login-security.html'].includes(path.basename(full))");
+ once('    const st = fs.statSync(full), contentType = mime(full)','    if(path.basename(full)===\'lab-login-security.html\'){res.setHeader(\'X-Frame-Options\',\'DENY\');res.setHeader(\'Content-Security-Policy\',"default-src \'self\'; script-src \'self\'; style-src \'self\'; font-src \'self\'; connect-src \'self\'; img-src \'self\'; object-src \'none\'; base-uri \'none\'; form-action \'self\'; frame-ancestors \'none\'");res.setHeader(\'Referrer-Policy\',\'no-referrer\');}\n    const st = fs.statSync(full), contentType = mime(full)');
  fs.writeFileSync(file,s);
 }

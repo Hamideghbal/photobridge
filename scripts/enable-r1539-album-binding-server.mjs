@@ -2,13 +2,19 @@ import fs from 'node:fs';
 const file='dist/api/server.js';
 let s=fs.readFileSync(file,'utf8');
 function once(source,a,b,label){if(source.split(a).length!==2)throw Error('R1539 album '+label+' changed');return source.replace(a,b)}
-let start=s.indexOf('async function albumCatalogForLab('),end=s.indexOf('async function albumOrderSnapshot(',start+16);
-if(start<0||end<=start)throw Error('album catalog boundary');
-let catalog=s.slice(start,end);
-catalog=once(catalog,'const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;',
-'const printTariffCatalog=normalizePrintCatalog(labPreferences.printTariffCatalog);\n    const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;','album preferences');
-catalog=once(catalog,'return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled,','return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled, printTariffCatalog,','catalog return');
-s=s.slice(0,start)+catalog+s.slice(end);
+const original='async function albumCatalogForLab(';
+if(s.split(original).length!==2)throw Error('R1539 album catalog declaration missing');
+s=s.replace(original,'async function albumCatalogForLabOriginal(');
+const wrapper=[
+'async function albumCatalogForLab(labId,includeInactive=false){',
+' const existing=await albumCatalogForLabOriginal(labId,includeInactive);',
+" const preferences=await pool.query('SELECT ui_preferences FROM labs WHERE id=$1',[labId]);",
+' return {...existing,printTariffCatalog:normalizePrintCatalog(preferences.rows[0]?.ui_preferences?.printTariffCatalog)};',
+'}',
+''].join('\\n');
+const snapshotDecl='async function albumOrderSnapshot(';
+if(s.split(snapshotDecl).length!==2)throw Error('R1539 snapshot declaration unavailable');
+s=s.replace(snapshotDecl,wrapper+snapshotDecl);
 start=s.indexOf('async function albumOrderSnapshot(');end=s.indexOf('\nasync function ',start+18);
 if(start<0||end<=start)throw Error('album snapshot boundary');
 let body=s.slice(start,end);

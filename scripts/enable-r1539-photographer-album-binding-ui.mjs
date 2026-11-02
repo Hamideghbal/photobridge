@@ -24,7 +24,12 @@ const snippet=[
 ].join('');
 once(anchor,snippet,'binding types and price by size');
 once('si=Q?0:Number((Be==null?void 0:Be.bindingPrice)||0),','si=Q?0:Number(pb1539Price||0),','quote binding amount');
-once('ja=!!(Tt||ka),','ja=!!(Tt||ka||(!Q&&(!pb1539Price||!pb1539Sizes.some($e=>String($e.id)===String(m))))),','price required warning');
+{
+ const first=ui.indexOf('ja=!!('),last=first<0?-1:ui.indexOf(',Va=',first);
+ if(first<0||last<=first||last-first>300)throw Error('R1539 pending quote boundary changed');
+ const previous=ui.slice(first+3,last);
+ ui=ui.slice(0,first)+'ja=Boolean(('+previous+')||(!Q&&(!pb1539Price||!pb1539Sizes.some($e=>String($e.id)===String(m)))))'+ui.slice(last);
+}
 const form='e.jsxs("div",{className:"grid2 albumCoreFields",children:[e.jsxs("label",{children:["سایز آلبوم"';
 const chosen='e.jsxs("div",{className:"grid2 albumCoreFields",children:[e.jsxs("label",{className:"pb1539BindingField",children:["نوع صحافی",e.jsx("select",{value:String(pb1539Chosen.id),disabled:je||!!he.current,onChange:$e=>{const id=String($e.target.value);pb1539SetBinding(id);const first=(l.sizes||[]).find(gt=>pb1539PriceOf(gt,id)>0);if(first&&String(first.id)!==String(m))Wa(String(first.id));if(!first){g("");J("")}},children:pb1539Bindings.map($e=>e.jsx("option",{value:String($e.id),children:$e.name},$e.id))})]}),e.jsxs("label",{children:["سایز آلبوم"';
 once(form,chosen,'binding before album size');

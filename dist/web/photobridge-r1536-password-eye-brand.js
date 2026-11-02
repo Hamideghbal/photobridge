@@ -4,19 +4,6 @@
  if(window.pbR1536PasswordEye)return;
  window.pbR1536PasswordEye=true;
  const fallback='/photobridge-brand-script-r1285.png';
- const css=`
- .pb1536PasswordHost{position:relative!important}
- .pb1536PasswordHost input[data-pb1536-password]{padding-inline-end:66px!important}
- .pb1536PasswordEye{position:absolute;z-index:5;display:inline-flex;align-items:center;justify-content:center;
-  gap:3px;height:30px;min-width:53px;padding:0 5px;border:0;border-radius:7px;transform:translateY(-50%);
-  background:rgba(247,250,255,.97);color:#34538e;font:600 11px Vazirmatn,Tahoma,sans-serif;
-  cursor:pointer;white-space:nowrap;box-sizing:border-box;box-shadow:0 0 0 1px rgba(130,153,190,.15)}
- .pb1536PasswordEye svg{width:16px;height:16px;flex:none}
- .pb1536PasswordEye:focus-visible{outline:2px solid #315efb;outline-offset:2px}
- .pb1536PasswordEye:disabled{opacity:.5;cursor:default}
- `;
- const style=document.createElement('style');style.id='pb1536PasswordEyeStyle';style.textContent=css;
- (document.head||document.documentElement).appendChild(style);
  const icon='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
  const tracked=new Set();
  const position=(input,button)=>{

@@ -4,11 +4,12 @@ const {addForms}=require('../access-forms.cjs');
 test('Access form builder names the three data-bound forms and uses only read-only controls',async()=>{
  const script=await fs.readFile(path.join(__dirname,'../access-forms.vbs'),'utf8');
  for(const name of ['frmPBInvoices','frmPBReceipts','frmPBLedger'])assert(script.includes(name));
- for(const name of ['فاکتورها','دریافت‌ها','دفتر حسابداری','ردیف‌های حسابداری','بدهکار','بستانکار'])assert(script.includes(name));
+ for(const name of ['فاکتورها','دریافت‌ها','حساب معین','بدهکار','بستانکار'])assert(script.includes(name));
  assert(script.includes('frm.AllowEdits=False'));
  assert(script.includes('frm.AllowAdditions=False'));
  assert(script.includes('frm.AllowDeletions=False'));
  assert(script.includes('frm.DefaultView=2'));
+ assert(!script.includes(' INNER JOIN '),'Access Ledger form must not reintroduce interactive parameter prompts');
 });
 test('native Windows Access forms replace only verified generated report, keep all backup data intact',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pb-forms-')),file=path.join(dir,'finance.accdb'),before=Buffer.from('original verified database');

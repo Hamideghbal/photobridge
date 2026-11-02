@@ -648,3 +648,8 @@ runR1314(process.execPath,["--test","scripts/test-r1537-conditional-sync-securit
 // R1538: single password visibility control plus targeted native lab login refresh.
 await deployStep("./enable-r1538-one-toggle-native-login.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1538-one-toggle-native-login.cjs"],{stdio:"inherit"});
+
+// R1539: lab tariff catalog types and per-size prices, after frozen native UI release.
+await deployStep("./enable-r1539-paper-binding-catalog.mjs");
+await deployStep("./enable-r1539-paper-binding-ui.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1539-paper-binding-catalog.cjs"],{stdio:"inherit"});

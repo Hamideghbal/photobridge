@@ -7,6 +7,7 @@ let component=js.slice(start,end);
 function one(a,b,label){if(component.split(a).length!==2)throw Error('R1539 '+label+' changed');component=component.replace(a,b)}
 const labels='const h=[["luster","لاستر"],["silk","سیلک"],["metallic","متالیک"],["album_binding_price","صحافی آلبوم"],["chassis","قیمت شاسی"],["chassis_stock","موجودی شاسی"],["frame","قیمت قاب"],["frame_stock","موجودی قاب"]]';
 one(labels,fs.readFileSync('scripts/r1539-pricing-react.js.txt','utf8').trim(),'catalog columns');
+one('await Promise.resolve(a()),alert("تعرفه و موجودی ذخیره شد")','await Promise.all([Promise.resolve(a()),pb1539Reload()]),alert("تعرفه و موجودی ذخیره شد")','refresh custom prices after save');
 one('frameStock:Na(F.frame_stock)}))})','frameStock:Na(F.frame_stock),customRates:Object.fromEntries(pb1539Custom.map(t=>[t.id,Na(Object.hasOwn(F,"pb1539_"+t.id)?F["pb1539_"+t.id]:pb1539.rates?.[F.id]?.[t.id]??null)]))}))})','save custom rates');
 const a=component.indexOf('w=(B,L)=>'),b=component.indexOf(',F=c.current.map',a);
 if(a<0||b<a||b-a>230)throw Error('R1539 print formatter changed');

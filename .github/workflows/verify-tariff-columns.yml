@@ -8,6 +8,7 @@ on:
       - '**/*r1543*'
       - '**/*r1544*'
       - '**/*r1545*'
+      - '**/*r1546*'
       - '.github/workflows/verify-tariff-columns.yml'
   workflow_dispatch:
 permissions:
@@ -37,6 +38,7 @@ jobs:
         run: |
           node --test scripts/test-r1545-order-delete-db.cjs
           node --test scripts/test-r1545-print-only-verification.cjs
+          node --test scripts/test-r1546-mapped-order-invoice.cjs
       - name: Verify column alignment and binding actions
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
@@ -72,6 +74,13 @@ jobs:
         run: |
           export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
           node scripts/test-r1545-native-orders-browser.cjs
+      - name: Verify mapped OFF order invoice in installed native host
+        env:
+          PB_NATIVE_SOURCE: ${{ github.workspace }}/.native-compat
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
+        run: |
+          export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
+          node scripts/test-r1546-native-shared-invoice-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -81,5 +90,6 @@ jobs:
             /tmp/photobridge-r1542-*.png
             /tmp/photobridge-r1543-*.png
             /tmp/photobridge-r1545-*.png
+            /tmp/photobridge-r1546-*.png
           if-no-files-found: ignore
           retention-days: 7

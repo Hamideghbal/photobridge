@@ -681,3 +681,6 @@ await deployStep('./enable-r1544-opening-debt-status.mjs');
 // R1545: local photo verification belongs to print, not later invoice/delivery.
 await deployStep('./enable-r1545-downloaded-order-delete.mjs');
 await deployStep('./enable-r1545-print-only-verification.mjs');
+
+// R1546: native shared orders retain local identities after server import.
+await deployStep('./enable-r1546-mapped-order-invoice.mjs');

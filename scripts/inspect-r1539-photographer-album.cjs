@@ -15,3 +15,12 @@ for(const q of ['سایز آلبوم','نوع کاغذ','نوع صحافی','م�
 }
 const routes=['/api/lab/album-settings','/api/customer/labs/','/api/customer/album','/api/lab/prices'];
 for(const q of routes){let at=-1,arr=[];while((at=api.indexOf(q,at+1))>=0&&arr.length<20)arr.push(at);console.log('APIROUTE '+q,arr.map(at=>api.slice(at-140,at+230)));}
+
+const kv=ui.indexOf('function Kv('),nextKv=ui.indexOf('function ',kv+12),full=ui.slice(kv,nextKv);
+console.log('KVTAIL '+full.slice(24000,38500));
+const vl=ui.indexOf('function Vl('),nvl=ui.indexOf('function ',vl+12);
+console.log('LAB_ORDER_ALBUM_DETAIL '+ui.slice(vl,Math.min(nvl,vl+11500)));
+for(const term of ['صحافی آلبوم','هزینه صحافی','صحافی', 'bindingTotal','bindingPrice','binding?.name']){
+ let hits=[],p=-1;while((p=ui.indexOf(term,p+1))>=0&&hits.length<80)hits.push(p);
+ console.log('UIDETAIL '+term+' '+hits.length+' '+JSON.stringify(hits.slice(-20).map(p=>ui.slice(p-220,p+410))));
+}

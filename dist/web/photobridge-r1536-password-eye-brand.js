@@ -1,4 +1,4 @@
-/* R1536: Password visibility for every browser authentication/password form,
+/* R1538: One password visibility control per field (native control wins).\n   R1536: Password visibility for every browser authentication/password form,
    plus a PhotoBridge-only fallback for unavailable generated startup art. */
 (()=>{'use strict';
  if(window.pbR1536PasswordEye)return;
@@ -22,9 +22,36 @@
    button.style.right='auto';
   }
  };
+ function nativeToggle(input){
+  // Prefer a control already provided by the site's React/native form.
+  // Match by both label and location so other password fields and submit
+  // actions cannot suppress the correct control.
+  const a=input.getBoundingClientRect();
+  if(!a.width||!a.height)return null;
+  const parent=input.parentElement;
+  for(const host of [parent,parent?.parentElement]){
+   if(!host)continue;
+   for(const btn of host.querySelectorAll('button,[role="button"]')){
+    if(btn.classList.contains('pb1536PasswordEye'))continue;
+    const label=[btn.textContent,btn.getAttribute('aria-label'),btn.getAttribute('title')].join(' ').trim();
+    if(!/(?:نمایش|مخفی|پنهان|چشم|show|hide|visibility|password|رمز)/i.test(label))continue;
+    const b=btn.getBoundingClientRect();
+    if(!b.width||!b.height)continue;
+    const nearY=Math.abs((b.top+b.bottom)/2-(a.top+a.bottom)/2)<Math.max(30,a.height*.6);
+    const withinX=b.left>=a.left-14&&b.right<=a.right+14;
+    if(nearY&&withinX)return btn;
+   }
+  }
+  return null;
+ }
  function attach(input){
   const parent=input.parentElement;
   if(!parent||parent.closest('[data-pb-no-password-eye]'))return;
+  // If the form already has its own left-hand "نمایش" control, use it.
+  if(nativeToggle(input)){
+   const existing=parent.querySelector('.pb1536PasswordEye[data-eye-for="'+input.dataset.pb1536Password+'"]');
+   existing?.remove();tracked.delete(input);return;
+  }
   if(parent.querySelector('.pb1536PasswordEye[data-eye-for="'+input.dataset.pb1536Password+'"]'))return;
   if(!input.dataset.pb1536Password)input.dataset.pb1536Password=String(++attach.sequence);
   parent.classList.add('pb1536PasswordHost');
@@ -32,14 +59,14 @@
   button.dataset.eyeFor=input.dataset.pb1536Password;
   button.setAttribute('aria-label','نمایش رمز');
   button.setAttribute('aria-pressed','false');
-  button.innerHTML=icon+'<span>نمایش</span>';
+  button.innerHTML='<span>نمایش</span>'+icon;
   if(input.id)button.setAttribute('aria-controls',input.id);
   button.addEventListener('click',()=>{
    const visible=input.type==='password';
    input.type=visible?'text':'password';
    button.setAttribute('aria-label',visible?'پنهان‌کردن رمز':'نمایش رمز');
    button.setAttribute('aria-pressed',String(visible));
-   button.querySelector('span').textContent=visible?'پنهان':'نمایش';
+   button.querySelector('span').textContent=visible?'مخفی‌کردن':'نمایش';
    position(input,button);
    try{input.focus({preventScroll:true})}catch{input.focus()}
   });
@@ -67,7 +94,7 @@
   for(const input of tracked){
    if(!input.isConnected){tracked.delete(input);continue}
    const button=input.parentElement?.querySelector('.pb1536PasswordEye[data-eye-for="'+input.dataset.pb1536Password+'"]');
-   if(button)position(input,button);
+   if(button){if(nativeToggle(input)){button.remove();tracked.delete(input)}else position(input,button)}
   }
  }
  let pending=false;

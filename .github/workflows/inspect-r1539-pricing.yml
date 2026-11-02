@@ -1,0 +1,16 @@
+name: Inspect R1539 lab price catalogs
+on:
+  pull_request:
+    branches: [aaa-liara-release]
+    paths:
+      - 'scripts/inspect-r1539-pricing.cjs'
+      - '.github/workflows/inspect-r1539-pricing.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect source read-only (no data access)
+        run: node scripts/inspect-r1539-pricing.cjs

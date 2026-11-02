@@ -639,3 +639,8 @@ runR1314(process.execPath,["--test","scripts/test-r1535-mobile-otp-session.cjs"]
 // Browser signup/login/reset password eyes and authentic PhotoBridge logo fallback.
 await deployStep("./enable-r1536-password-eye-brand.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1536-password-eye-brand.cjs"],{stdio:"inherit"});
+
+// R1537: website-only conditional migration UX and one-password OTP security page.
+// Runs after frozen Windows installer/UI snapshots and R1536 verification.
+await deployStep("./enable-r1537-conditional-sync-security.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1537-conditional-sync-security.cjs","scripts/test-r1534-lab-login-security.cjs"],{stdio:"inherit"});

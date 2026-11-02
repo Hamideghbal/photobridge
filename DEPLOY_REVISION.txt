@@ -1,1 +1,1 @@
-2026-11-02-r1536-password-eye-and-photo-bridge-brand-fallback
+2026-11-02-r1537-conditional-legacy-unification-change-password-only

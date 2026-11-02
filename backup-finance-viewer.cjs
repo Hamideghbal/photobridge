@@ -8,36 +8,57 @@ const money=value=>{const n=Number(value??0);if(!Number.isSafeInteger(n))throw E
 function prepareFinanceData(model,{createdAt,labId,sqliteSha256}){
  if(!model||!Array.isArray(model.tables)||!/^([a-f0-9]{64})$/.test(sqliteSha256))throw Error('offline_viewer_invalid_snapshot');
  const table=name=>model.tables.find(item=>item.name===name)?.rows||[];
- const customers=new Map(table('CustomerBalances').map(c=>[text(c.CustomerId),text(c.Name)]));
+ const customerRows=table('CustomerBalances');
+ const customers=new Map(customerRows.map(c=>[text(c.CustomerId),text(c.Name).trim()]));
  const invoices=table('Invoices'),invoiceById=new Map(invoices.map(inv=>[text(inv.InvoiceId),inv]));
  const journals=new Map(table('Ledger').map(journal=>[text(journal.TransactionId),journal]));
- const customerName=(id,fallback)=>customers.get(text(id))||text(fallback)||text(id);
+ const entries=table('LedgerEntries');
+ const customerName=(id,fallback)=>customers.get(text(id))||text(fallback).trim()||'';
+ // A journal may contain a non-customer debit/credit line. Attribute it to a
+ // studio only if a single, unambiguous customer is identified in that journal
+ // or the line's linked invoice. Never guess from a different laboratory.
+ const journalCustomers=new Map();
+ for(const entry of entries){
+   const id=text(entry.CustomerId)||(invoiceById.get(text(entry.InvoiceId))?.CustomerId||'');
+   if(!id)continue;
+   const key=text(entry.TransactionId),ids=journalCustomers.get(key)||new Set();
+   ids.add(text(id));journalCustomers.set(key,ids);
+ }
  const output={
   format:'photobridge-finance-offline-v1',createdAt:text(createdAt),labId:text(labId),sqliteSha256,
   invoices:invoices.map(inv=>({
-   number:text(inv.Number),date:text(inv.IssuedAt),customer:customerName(inv.CustomerId,inv.CustomerName),
+   studioId:text(inv.CustomerId),number:text(inv.Number),date:text(inv.IssuedAt),
+   customer:customerName(inv.CustomerId,inv.CustomerName),
    total:money(inv.Total),paid:money(inv.Paid),balance:money(inv.Balance),origin:text(inv.Origin),note:text(inv.Note)
   })),
   receipts:table('Payments').map(p=>{
    const invoice=invoiceById.get(text(p.InvoiceId));
-   return {ref:text(p.PaymentId),date:text(p.PaidAt),
-    customer:customerName(p.CustomerId,invoice?.CustomerName),
+   const id=text(p.CustomerId)||text(invoice?.CustomerId);
+   return {studioId:id,ref:text(p.PaymentId),date:text(p.PaidAt),
+    customer:customerName(id,invoice?.CustomerName),
     invoice:invoice?text(invoice.Number):text(p.InvoiceId),
     amount:money(p.Amount),method:text(p.Method),note:text(p.Note)};
   }),
-  ledger:table('LedgerEntries').map(entry=>({
-   TransactionId:entry.TransactionId,
-   Date:journals.get(text(entry.TransactionId))?.Date||'',
-   Description:journals.get(text(entry.TransactionId))?.Description||'',
-   Account:entry.Account,
-   CustomerId:entry.CustomerId,
-   Debit:entry.Debit,Credit:entry.Credit,
-  })).map(entry=>({
-   ref:text(entry.TransactionId),date:text(entry.Date),description:text(entry.Description),
-   account:text(entry.Account),customer:customerName(entry.CustomerId,''),
-   debit:money(entry.Debit),credit:money(entry.Credit)
-  }))
+  ledger:entries.map(entry=>{
+   const journal=journals.get(text(entry.TransactionId));
+   const ids=journalCustomers.get(text(entry.TransactionId));
+   const invoice=invoiceById.get(text(entry.InvoiceId))||invoiceById.get(text(journal?.ReferenceId));
+   const id=text(entry.CustomerId)||text(invoice?.CustomerId)||(ids?.size===1?[...ids][0]:'');
+   return{
+    studioId:id,ref:text(entry.TransactionId),date:text(journal?.Date),
+    description:text(journal?.Description),account:text(entry.Account),customer:customerName(id,invoice?.CustomerName),
+    debit:money(entry.Debit),credit:money(entry.Credit)
+   };
+  })
  };
+ // List comes from the immutable saved snapshot, never live server calls.
+ output.studios=[...new Map(
+  [...customerRows.map(c=>({id:text(c.CustomerId),name:text(c.Name).trim()})),
+   ...Object.values({invoices:output.invoices,receipts:output.receipts,ledger:output.ledger})
+    .flatMap(rows=>rows.filter(row=>row.studioId&&row.customer).map(row=>({id:row.studioId,name:row.customer})))]
+  .filter(x=>x.id&&x.name).map(x=>[x.id,x])
+ ).values()].sort((a,b)=>a.name.localeCompare(b.name,'fa'));
+
  return output;
 }
 async function createFinanceViewer(model,database,{createdAt,labId,output}){

@@ -24,7 +24,7 @@ function installSitePicker(storage){
     const target=await this.target();this.checkAccount(account);
     if(!target.active||!target.isThisDevice||!target.isSelectedDevice||target.path!==job.path||target.revision!==job.revision)throw Error('storage_target_changed');
     if(this.writers.size)throw Error('download_busy');
-    this.store.set(this.key(account),{id:crypto.randomUUID(),path:canonical,configuredPath:target.path,configurationRevision:target.revision,selectedAt:new Date().toISOString(),configurationBlocked:false});
+    this.rememberRoot({id:crypto.randomUUID(),path:canonical,configuredPath:target.path,configurationRevision:target.revision,selectedAt:new Date().toISOString(),configurationBlocked:false},account);
     await call('ack',{id:job.id});
    };
    this.selection=work();try{await this.selection}finally{this.selection=null}

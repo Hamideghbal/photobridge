@@ -16,6 +16,15 @@ async function repairStorage(store,request,storage){
  for(const order of Object.values(engine.state().orders).filter(o=>!o.remote&&o.serverId&&o.localFiles?.length)){
   try{
    same();const current=store.get('nativeStorageRoot:'+lab);if(!current)continue;
+
+   if(order.storagePreservedAtOriginalRoots&&JSON.stringify(order.serverLocalFiles)===JSON.stringify(order.localFiles))continue;
+   // A changed default only governs new downloads. Existing orders remain
+   // bound to their recorded roots; never copy them to the new default.
+   if(order.localFiles.some(file=>file.rootId!==current.id)){
+    for(const file of order.localFiles){same();if(!file.rootId||!file.sha256)throw Error('local_files_not_verified');if(await fileProof(storage,file)!==file.sha256)throw Error('local_file_hash_mismatch');}
+    save(order.id,o=>{o.serverStorageVersion=1;o.serverStorageRoot=null;o.storagePreservedAtOriginalRoots=true;o.serverLocalFiles=o.localFiles.map(file=>({...file,parts:[...file.parts]}));delete o.storageRepairError;});
+    continue;
+   }
    if(order.serverStorageVersion===1&&order.serverStorageRoot===current.id)continue;
    const response=await request('/api/lab/orders/'+order.serverId);same();if(!response.ok)throw Error('server_order_details_unavailable');const detail=await response.json();same();if(detail.order?.id!==order.serverId||detail.files?.length!==order.files.length)throw Error('server_file_manifest_mismatch');
    const plans=detail.files.map(file=>{const indexes=order.files.map((f,i)=>({f,i})).filter(({f})=>f.id===file.id||(f.original_name===file.original_name&&Number(f.bytes)===Number(file.bytes)));if(indexes.length!==1)throw Error('server_file_mapping_ambiguous');const source=order.localFiles[indexes[0].i];if(!source?.sha256||Number(source.bytes)!==Number(file.bytes))throw Error('local_files_not_verified');return{source,target:{rootId:current.id,parts:serverParts(detail.order,file),bytes:Number(file.bytes)},file};});

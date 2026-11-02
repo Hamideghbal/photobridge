@@ -17,6 +17,8 @@ one('h.map(([k,E])=>e.jsx("b",{children:E},E))',
  'h.map(([k,E])=>e.jsxs("b",{children:[E,(k==="album_binding_price"||k.startsWith("pb1539_"))&&e.jsx("button",{type:"button",className:"pb1539Rename",title:"ویرایش نام",onClick:()=>pb1539Rename(k.startsWith("pb1539_")?k.slice(7):k,E),children:"✎"})]},k))','rename model header');
 one('className:"priceGrid inventoryPriceGrid head",children:', 'className:"priceGrid inventoryPriceGrid head",style:{"--pb1539-columns":h.length},children:','header width');
 one('className:"priceGrid inventoryPriceGrid",children:', 'className:"priceGrid inventoryPriceGrid",style:{"--pb1539-columns":h.length},children:','row width');
+one('e.jsx("small",{children:w}),e.jsx("input",{inputMode:"numeric"',
+ 'e.jsx("small",{children:w}),(C==="album_binding_price"||C.startsWith("pb1539_"))&&e.jsx("button",{type:"button",className:"pb1539MobileRename",onClick:()=>pb1539Rename(C.startsWith("pb1539_")?C.slice(7):C,w),children:"✎ تغییر نام"}),e.jsx("input",{inputMode:"numeric"','mobile rename action');
 one('value:C.includes("stock")?$u(k[C]??""):Bn(k[C])',
  'value:C.includes("stock")?$u(k[C]??""):Bn(C.startsWith("pb1539_")?(Object.hasOwn(k,C)?k[C]:pb1539.rates?.[k.id]?.[C.slice(7)]):k[C])','custom values');
 js=js.slice(0,start)+component+js.slice(end)+'\n/* PB1539 lab paper and binding pricing */\n';

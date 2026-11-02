@@ -106,3 +106,53 @@ test('studio filters can distinguish two photographers with invoice, receipt and
   assert.equal(data[key].find(x=>x.studioId==='B1').customer,'آتلیه نیلی');
  }
 });
+
+test('interactive offline viewer searches Persian studio names consistently across all three tabs',async()=>{
+ const vm=require('node:vm');
+ const source=await fs.readFile(path.join(__dirname,'../backup-finance-viewer-template.html'),'utf8');
+ const script=source.match(/<script>\s*([\s\S]*?)<\/script>/);
+ assert(script,'viewer JavaScript exists');
+ new vm.Script(script[1]);
+ const rows={
+  invoices:[{studioId:'A',customer:'آتلیه یاس',number:'1',total:1000},{studioId:'B',customer:'آتلیه نيلی',number:'2',total:2000}],
+  receipts:[{studioId:'A',customer:'آتلیه یاس',ref:'P1',amount:500},{studioId:'B',customer:'آتلیه نيلی',ref:'P2',amount:1000}],
+  ledger:[{studioId:'A',customer:'آتلیه یاس',ref:'T1',debit:1000,credit:0},{studioId:'B',customer:'آتلیه نيلی',ref:'T2',debit:2000,credit:0}]
+ };
+ const encoded=Buffer.from(JSON.stringify({format:'photobridge-finance-offline-v1',createdAt:'2026-11-02T00:00:00Z',labId:'lab',sqliteSha256:'a'.repeat(64),studios:[{id:'A',name:'آتلیه یاس'},{id:'B',name:'آتلیه نيلی'}],...rows})).toString('base64');
+ class Element{
+  constructor(tag='div'){this.tag=tag;this.textContent='';this.value='';this.hidden=false;this.disabled=false;this.children=[];this.listeners={};this.dataset={};this.attrs={};}
+  replaceChildren(...children){this.children=children}
+  appendChild(child){this.children.push(child);return child}
+  addEventListener(name,callback){this.listeners[name]=callback}
+  setAttribute(name,value){this.attrs[name]=String(value)}
+  fire(name){assert(this.listeners[name],name+' handler exists');this.listeners[name].call(this)}
+ }
+ const all=new Map(),get=id=>{if(!all.has(id))all.set(id,new Element);return all.get(id)};
+ get('pb-snapshot').textContent=encoded;
+ const tabs=['invoices','receipts','ledger'].map(tab=>{const el=new Element('button');el.dataset.tab=tab;return el});
+ const scroll=new Element,content=new Element;
+ const document={
+  getElementById:get,createElement:name=>new Element(name),
+  querySelectorAll:selector=>selector==='[data-tab]'?tabs:[],
+  querySelector:selector=>selector==='.scroll'?scroll:selector==='.content'?content:null
+ };
+ vm.runInNewContext(script[1],{
+  document,Uint8Array,TextDecoder,Intl,Set,Map,Object,Array,String,Number,
+  atob:b64=>Buffer.from(b64,'base64').toString('binary'),
+  window:{print(){}},Blob:class {},URL:{createObjectURL:()=>'',revokeObjectURL(){}},setTimeout(){}},{timeout:2500});
+ assert.equal(get('tbody').children.length,2,'all studios shown by default');
+ get('studio-query').value='اتليه ياس';
+ get('studio-query').fire('input');
+ assert.equal(get('tbody').children.length,1,'Persian/Arabic spelling normalized');
+ assert(get('tbody').children[0].children.some(e=>e.textContent==='آتلیه یاس'));
+ assert.equal(get('count-invoices').textContent,'۱');
+ assert.equal(get('count-receipts').textContent,'۱');
+ assert.equal(get('count-ledger').textContent,'۱');
+ tabs[1].fire('click');assert.equal(get('tbody').children.length,1,'same studio filter on receipts');
+ tabs[2].fire('click');assert.equal(get('tbody').children.length,1,'same studio filter on ledger');
+ get('studio-select').value='B';get('studio-select').fire('change');
+ assert.equal(get('tbody').children.length,1);
+ assert(get('tbody').children[0].children.some(e=>e.textContent==='آتلیه نيلی'));
+ get('studio-clear').fire('click');
+ assert.equal(get('tbody').children.length,2,'all studios restored after clearing');
+});

@@ -43,7 +43,7 @@ test('real database: pending, used, expired or forged OTP proofs cannot change p
  for(const change of ["status='pending'","status='used'","expires_at=now()-interval '1 minute'"]){
   const f=await fixture();try{
    await f.db.exec('UPDATE password_reset_challenges SET '+change);
-   await assert.rejects(f.change(),e=>e.message==='reset_invalid');
+   await errorResponse(()=>f.change(),'reset_invalid');
    assert.equal((await f.db.query('SELECT password_hash FROM users WHERE id=$1',[owner])).rows[0].password_hash,f.before);
    assert.equal((await f.db.query('SELECT count(*)::int n FROM sessions')).rows[0].n,3);
   }finally{await f.db.close()}
@@ -53,7 +53,7 @@ test('real database: pending, used, expired or forged OTP proofs cannot change p
 test('real database: OTP proof cannot be replayed to change a different mobile identity',async()=>{
  const f=await fixture();try{
   await f.db.query("UPDATE password_reset_challenges SET mobile='09121111111' WHERE id=$1",[challenge]);
-  await errorResponse(()=>f.change(),'existing_account_invalid');
+  await assert.rejects(f.change(),e=>e.message==='existing_account_invalid');
   assert.equal((await f.db.query('SELECT password_hash FROM users WHERE id=$1',[owner])).rows[0].password_hash,f.before);
   assert.equal((await f.db.query('SELECT count(*)::int n FROM sessions')).rows[0].n,3);
  }finally{await f.db.close()}

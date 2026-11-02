@@ -17,6 +17,11 @@ test('photographer binding selector appears before album size and paper and reta
  assert(form.indexOf('"نوع صحافی"')<form.indexOf('"سایز آلبوم"'));
  assert(form.indexOf('"سایز آلبوم"')<form.indexOf('"نوع کاغذ"'));
  for(const marker of ['bindingTypeId:pb1539Binding','pb1539SetBinding(String(ht.bindingTypeId))','pb1539Sizes.map','pb1539PriceOf','si=Q?0:Number(pb1539Price||0)'])assert(form.includes(marker),marker);
+ assert(form.includes('children:[pb1539Chosen.name," · "'),'photographer quote must show chosen model');
+ assert(form.includes('children:Q||!pb1539Price?"قیمت‌گذاری لابراتوار":V(_a)'),'unpriced model does not display zero');
+ const lab=ui.slice(ui.indexOf('function Vl('),ui.indexOf('function ',ui.indexOf('function Vl(')+12));
+ assert(lab.includes('className:"pb1539BindingFact"'));
+ assert(lab.includes('s?.binding?.name||"صحافی آلبوم"'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('&albumBinding=r1539'));
 });
 test('selected binding id and name are locked in order and change per-size binding price',async()=>{

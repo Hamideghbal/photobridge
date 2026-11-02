@@ -254,8 +254,24 @@ function renderStatement(){
   const tr=el("tr");for(const value of [money(state.pages.statement*size+index+1),r.persianDate||persian(r.date),r.description,r.ref||"—",
    r.debit?money(r.debit):"—",r.credit?money(r.credit):"—",money(r.balance)])tr.append(el("td","",value));root.append(tr);
   if(state.mode==="detailed"&&r.ref){
-   const doc=arrays.invoices.find(x=>x.number===r.ref&&x.customerId===r.customerId);
-   if(doc?.lines?.length){const sub=el("tr","statementDetail"),td=el("td","",doc.lines.map(l=>l.description+" × "+l.quantity+" = "+money(l.total)).join(" | "));td.colSpan=7;sub.append(td);root.append(sub)}
+   // Same PB1441StatementDetail presentation as the web app: an invoice
+   // details TABLE, not a flattened text-only description.
+   const doc=arrays.invoices.find(x=>String(x.number)===String(r.ref)&&x.customerId===r.customerId&&x.type==="invoice");
+   const sub=el("tr","pb1441StatementDetail"),td=el("td");td.colSpan=7;
+   td.append(el("b","","ریز اقلام فاکتور #"+(doc?.number||r.ref)));
+   if(doc?.lines?.length){
+    const table=el("table","pb1441StatementItems"),head=el("thead"),trh=el("tr");
+    for(const title of ["شرح / سایز","تعداد","فی واحد","جمع"])trh.append(el("th","",title));
+    head.append(trh);table.append(head);
+    const body=el("tbody");
+    for(const item of doc.lines){
+     const tr=el("tr");
+     for(const value of [item.description,money(item.quantity),money(item.unitPrice),money(item.total)])tr.append(el("td","",value));
+     body.append(tr);
+    }
+    table.append(body);td.append(table);
+   }else td.append(el("p","","ریز اقلام این فاکتور در سند اصلی ذخیره نشده است."));
+   sub.append(td);root.append(sub);
   }
  }
  if(!page.length){const tr=el("tr"),td=el("td","empty","در این بازه گردش حسابی ثبت نشده است.");td.colSpan=7;tr.append(td);root.append(tr)}
@@ -296,16 +312,52 @@ function exportCsv(){
 }
 byId("statementBlock").querySelector(".csvBtn").addEventListener("click",exportCsv);
 function openInvoice(invoice){
- const dialog=byId("invoiceDialog");byId("dialogTitle").textContent="فاکتور شماره "+invoice.number;
- const root=byId("dialogContent");root.replaceChildren();root.append(el("p","",invoice.customer+" · "+persian(invoice.date)+" · مبلغ: "+money(invoice.total)+" تومان"));
- if(invoice.lines?.length){
-  const table=el("table","detailsTable"),head=el("tr");for(const title of ["شرح","تعداد","قیمت واحد","مبلغ ردیف"])head.append(el("th","",title));table.append(head);
-  for(const line of invoice.lines){const tr=el("tr");for(const v of [line.description,line.quantity,money(line.unitPrice),money(line.total)])tr.append(el("td","",v));table.append(tr)}root.append(table);
- }else root.append(el("p","empty","جزئیات این سند در نسخه بکاپ موجود نیست."));
- dialog.showModal();
+ const dialog=byId("invoiceDialog"),root=byId("dialogContent");
+ byId("dialogTitle").textContent=(invoice.type==="invoice"?"فاکتور #":"سند مالی #")+invoice.number;
+ root.replaceChildren();
+ const paper=el("article","invoicePaper");
+ const header=el("header","invoicePaperHead"),title=el("div");
+ title.append(el("span","invoicePaperBrand","PhotoBridge"),
+  el("h2","",invoice.type==="invoice"?"فاکتور فروش و خدمات چاپ":invoice.type==="discount"?"سند تخفیف همکاری":"سند اصلاحیه مالی"));
+ const number=el("div","invoicePaperNumber");
+ number.append(el("small","","شماره "+(invoice.type==="invoice"?"فاکتور":"سند")),
+  el("b","","#"+invoice.number),el("small","",persian(invoice.date)));
+ header.append(title,number);paper.append(header);
+ const info=el("section","invoicePaperInfo");
+ const infoBlock=(label,value)=>cell(label,value||"—");
+ info.append(infoBlock("مشتری / عکاسی",invoice.customer),
+  infoBlock("شناسه سفارش",invoice.orderId?"#"+invoice.orderId:"—"),
+  infoBlock("تاریخ صدور",persian(invoice.date)));
+ paper.append(info);
+ const table=el("section","invoicePaperTable"),columns=el("div","invoicePaperTableHead");
+ for(const title of ["شرح / سایز","تعداد","فی","مبلغ"])columns.append(el("span","",title));
+ const items=el("div","invoicePaperItems");
+ for(const item of invoice.lines||[]){
+  const row=el("div","invoicePaperRow");
+  row.append(el("span","",item.description),el("span","",money(item.quantity)),
+   el("span","money",money(item.unitPrice)),el("b","money",money(item.total)));
+  items.append(row);
+ }
+ if(!invoice.lines?.length)items.append(el("div","invoicePaperEmpty","جزئیات ردیف‌های این سند در بکاپ ذخیره نشده است."));
+ table.append(columns,items);paper.append(table);
+ const totals=el("footer","invoicePaperTotals");
+ const totalRow=(label,value,cls)=>{
+  const div=el("div",cls);div.append(el("span","",label),el("b","money",money(value)+" تومان"));return div;
+ };
+ if(invoice.type==="invoice"){
+  totals.append(totalRow("جمع",invoice.subtotal||invoice.total));
+  if(Number(invoice.correction))totals.append(totalRow("اصلاحیه",invoice.correction));
+  totals.append(totalRow("مبلغ نهایی",invoice.total,"final"));
+  totals.append(totalRow("پرداخت‌شده",invoice.paid),totalRow("مانده این فاکتور",invoice.balance));
+  totals.append(totalRow("جمع بدهی عکاسی در لحظه بکاپ",invoice.accountDebt,"invoiceAccountDebt"));
+ }else totals.append(totalRow("اثر این سند روی حساب",invoice.total,"final"));
+ paper.append(totals,el("p","invoicePaperNote","این پیش‌نمایش از ردیف‌های ذخیره‌شده در همان بکاپ ساخته شده است. هیچ اتصال به سایت یا ویرایش اطلاعاتی انجام نمی‌شود."));
+ root.append(paper);dialog.showModal();
 }
 byId("closeDialog").addEventListener("click",()=>byId("invoiceDialog").close());
 byId("dialogPrint").addEventListener("click",()=>window.print());
+byId("dialogPrintTop").addEventListener("click",()=>window.print());
+byId("dialogPdf").addEventListener("click",()=>window.print());
 buttons.forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 byId("backupAt").textContent=persian(data.createdAt);switchTab("invoices");
 })();

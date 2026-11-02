@@ -11,10 +11,13 @@ assert(start>0,'lab local-folder settings view must exist');
 const pairedPanel=source.includes('function Xj(){return e.jsx(PB1395StoragePanel,{})}');
 if(pairedPanel){
  test('active R1395 picker requires permission, server pairing and folder-ID match before saving',()=>{
-  const begin=source.indexOf('async function pb1395Choose(){');
-  const end=source.indexOf('function PB1395StoragePanel()',begin);
+  assert(source.includes('/* PB1395 folder pairing */'),'generated Lab UI must include the active R1395 pairing extension');
+  assert(source.includes('pb1395GuardRoot'),'generated Lab UI must enforce the paired folder guard');
+  const pairedSource=fs.readFileSync('scripts/r1395-storage-panel.js','utf8');
+  const begin=pairedSource.indexOf('async function pb1395Choose(){');
+  const end=pairedSource.indexOf('function PB1395StoragePanel()',begin);
   assert(begin>=0&&end>begin,'active paired picker must exist');
-  const picker=source.slice(begin,end);
+  const picker=pairedSource.slice(begin,end);
   assert.match(picker,/if\(!await Vs\(root\)\)throw Error/);
   assert.match(picker,/const pairFolderId=await pb1395FolderId\(root,true\)/);
   assert.match(picker,/if\(!state\.paired\|\|!state\.isThisDevice\|\|state\.folderId!==pairFolderId\)throw Error/);

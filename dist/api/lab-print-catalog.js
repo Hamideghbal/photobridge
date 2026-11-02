@@ -11,13 +11,13 @@ export function normalizePrintCatalog(raw){
  const data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const originals=Array.isArray(data.types)?data.types:[];
  const known=new Map(defaults.map(d=>[d.id,{...d,name:text(originals.find(t=>t?.id===d.id)?.name)||d.name}]));
- const counts={paper:0,binding:0};
+ let bindingCount=0;
  for(const row of originals){
-  if(!row||typeof row!=='object'||!['paper','binding'].includes(row.kind)||!row.id)continue;
+  if(!row||typeof row!=='object'||row.kind!=='binding'||!row.id)continue;
   const id=text(row.id),name=text(row.name);
   if(known.has(id))continue;
   if(!/^c_[0-9a-f-]{36}$/.test(id)||!name||name.length>70)continue;
-  if(counts[row.kind]++>=30)continue;
+  if(bindingCount++>=30)continue;
   known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false});
  }
  const types=[...known.values()];
@@ -25,7 +25,7 @@ export function normalizePrintCatalog(raw){
  for(const [sizeId,stored] of Object.entries(data.rates||{})){
   if(!/^[a-zA-Z0-9_-]{1,110}$/.test(sizeId)||!stored||typeof stored!=='object'||Array.isArray(stored))continue;
   const obj={};
-  for(const type of types.filter(t=>!t.legacy)){
+  for(const type of types.filter(t=>t.kind==='binding'&&!t.legacy)){
    const v=stored[type.id];
    if(v===null||v===''){obj[type.id]=null;continue}
    if(v===undefined)continue;
@@ -38,7 +38,7 @@ export function normalizePrintCatalog(raw){
 function cleanName(value){const name=text(value);if(!name||name.length>70||/[<>\x00-\x1f]/.test(name))fail('print_catalog_invalid_name');return name;}
 function ensureUnique(types,kind,name,except=''){if(types.some(t=>t.active&&t.kind===kind&&t.id!==except&&t.name.localeCompare(name,'fa',{sensitivity:'base'})===0))fail('print_catalog_duplicate_name');}
 export function addPrintType(catalog,{kind,name}){
- if(!['paper','binding'].includes(kind))fail('print_catalog_invalid_kind');
+ if(kind!=='binding')fail('print_catalog_invalid_kind');
  name=cleanName(name);
  if(catalog.types.filter(t=>t.kind===kind&&!t.legacy).length>=30)fail('print_catalog_limit');
  ensureUnique(catalog.types,kind,name);
@@ -47,13 +47,13 @@ export function addPrintType(catalog,{kind,name}){
 export function renamePrintType(catalog,id,name){
  name=cleanName(name);
  const current=catalog.types.find(t=>t.id===id);
- if(!current)fail('print_catalog_not_found');
+ if(!current||current.kind!=='binding')fail('print_catalog_not_found');
  ensureUnique(catalog.types,current.kind,name,id);
  return {...catalog,types:catalog.types.map(t=>t.id===id?{...t,name}:t)};
 }
 export function applyPrintRates(catalog,rows,sizeIds){
  if(!Array.isArray(rows)||rows.length>300)fail('print_catalog_invalid_rows');
- const allowed=new Set(catalog.types.filter(t=>!t.legacy).map(t=>t.id));
+ const allowed=new Set(catalog.types.filter(t=>t.kind==='binding'&&!t.legacy).map(t=>t.id));
  const sizes=new Set(sizeIds.map(String)),rates={...catalog.rates};
  for(const row of rows){
   const sizeId=String(row?.sizeId||'');

@@ -657,4 +657,5 @@ runR1314(process.execPath,["--test","scripts/test-r1539-paper-binding-catalog.cj
 // R1539: order-safe binding model selected before album size and paper.
 await deployStep("./enable-r1539-album-binding-server.mjs");
 await deployStep("./enable-r1539-photographer-album-binding-ui.mjs");
+await deployStep("./enable-r1539-album-binding-display.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1539-photographer-album-binding.cjs"],{stdio:"inherit"});

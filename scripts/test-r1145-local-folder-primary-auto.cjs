@@ -6,7 +6,7 @@ const start=source.indexOf('function Xj(){');
 assert(start>0,'lab local-folder settings view must exist');
 const selectStart=source.indexOf('const T=async()=>',start);
 const selectEnd=source.indexOf(',k=async()=>',selectStart);
-assert(selectStart>start&&selectEnd>selectStart,'folder picker click handler found');
+assert(selectStart>start&&selectEnd>selectStart,'folder picker click handler found: '+JSON.stringify({selectStart,selectEnd,snippet:source.slice(start,start+1800)}));
 const selection=source.slice(selectStart,selectEnd);
 const mountSelect=(deps)=>Function('no','vc','a','r','p','h','Hu','alert',selection+';return T;')(
  deps.no,deps.vc,deps.setRoot,deps.setPermission,deps.setDevice,deps.setBusy,deps.fetchDevice,deps.alert);

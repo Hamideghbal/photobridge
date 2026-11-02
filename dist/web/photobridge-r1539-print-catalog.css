@@ -16,3 +16,6 @@
  .labPrintPricingCard .priceCatalogActions>button{font-size:12px;min-height:40px;padding:8px 10px}
  .labPrintPricingCard .pb1539Rename{width:30px;height:30px}
 }
+
+.labPrintPricingCard .pb1539MobileRename{display:none}
+@media(max-width:750px){.labPrintPricingCard .pb1539MobileRename{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:3px 10px;border:1px solid #c7d7ee;border-radius:8px;background:#f5f8ff;color:#315ecb;font:700 11px Vazirmatn,Tahoma,sans-serif}}

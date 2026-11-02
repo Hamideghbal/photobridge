@@ -45,7 +45,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         }catch(e){store.set('cookie',previous);throw e}
       }
       if(url.pathname==='/api/auth/logout'&&req.method==='POST'){const out=await onLogout();return json(res,200,{ok:true,...out})}
-      if(url.pathname==='/api/auth/me'&&store.get('auth'))return json(res,200,store.get('auth'));
+      if(url.pathname==='/api/auth/me')return json(res,200,store.get('auth')||null);
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});

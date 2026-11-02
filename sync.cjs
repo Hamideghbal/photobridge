@@ -17,6 +17,7 @@ class Sync{
  run(){if(this.flight)return this.flight;if(this.paused||!this.store.get('labId'))return Promise.resolve({ok:false,error:'login_required',pulled:false,sent:0});this.running=true;this.flight=this.perform().catch(error=>this.failedRun(error)).finally(()=>{this.running=false;this.phase='idle';this.flight=null});return this.flight}
  failedRun(error){this.online=false;this.lastError='sync_internal_error';const now=new Date().toISOString();let state={pending:0,conflicts:[]};try{state=this.store.status()}catch{}this.report={ok:false,pulled:false,pulledCount:0,failedPulls:PULL.length,sent:0,pending:state.pending||0,conflicts:state.conflicts?.length||0,error:this.lastError,startedAt:now,finishedAt:now};try{this.store.set('lastSyncReport',this.report)}catch{}return this.report}
  async perform(){if(this.isOnline()===false){this.online=false;this.lastError='internet_offline';return {ok:false,error:'internet_offline',sent:0,pulled:false};}const startedAt=new Date().toISOString();let sent=0,pulled=0;this.phase='upload';this.lastError=null;const accessForLocal=await checkWriteAccess(this.store,this.request);if(accessForLocal.allowed){if(this.store.get('localBusinessActive:'+this.store.get('labId')))sent+=(await require('./local-business-sync.cjs').syncBusiness(this.store,this.request,this.verifyLocalFiles,this.renderOfflinePdf)).sent;else sent+=await require('./offline-orders.cjs').syncLocalOrders(this.store,this.request,this.verifyLocalFiles);}
+  if(this.paused||!this.store.get('auth')||!this.store.get('labId'))return {ok:false,error:'login_required',sent,pulled:false};
   // A 409 from an idempotent write is safe to replay with the same durable
   // operation ID. Retry these automatically after a quiet period; never replay
   // an ambiguous delivery of a non-idempotent action.
@@ -37,6 +38,7 @@ class Sync{
    if([401,403].includes(response.status)){this.lastError='login_required';break}
    this.lastError=data.error||'server_error';break;
   }
+  if(this.paused||!this.store.get('auth')||!this.store.get('labId'))return {ok:false,error:'login_required',sent,pulled:false};
   if(this.repairLocalStorage)await this.repairLocalStorage();
   this.phase='download';
   if(this.lastError!=='login_required'){

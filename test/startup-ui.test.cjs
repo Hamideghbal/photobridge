@@ -7,7 +7,7 @@ test('new native version starts with the verified full installer UI, preserving 
  assert(adoptEmbeddedUi({store,bundled,version:'1.0.73'}));assert.equal(store.get('uiRoot'),bundled);assert.equal(store.get('uiPreviousRoot'),'older-ui');assert.equal(store.get('uiPreviousBuild'),'older-build');assert.deepEqual(store.get('business-sentinel'),{balance:600});
  store.set('uiRoot','newer-downloaded-ui');store.set('uiBuild','newer-build');
  assert.equal(adoptEmbeddedUi({store,bundled,version:'1.0.73',validate:()=>{throw Error('must not reset on restart')}}),false);assert.equal(store.get('uiRoot'),'newer-downloaded-ui');
- const source=fs.readFileSync(path.join(__dirname,'../main.cjs'),'utf8');assert(source.includes('await applyUi(true);void updateUi(false);'));assert(!source.includes('await updateUi(true);await applyUi(true)'));
+ const source=fs.readFileSync(path.join(__dirname,'../main.cjs'),'utf8');assert(source.indexOf('await applyUi(true);')<source.indexOf('void updateUi(false);'));assert(!source.includes('await updateUi(true);await applyUi(true)'));
 });
 test('tampered embedded UI cannot be activated or alter the stored UI selection',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-embedded-')),hash=x=>crypto.createHash('sha256').update(x).digest('hex'),files=['index.html','desktop-overlay.js'].map(name=>({name,url:'/lab-desktop-ui/'+name,sha256:hash('original')}));

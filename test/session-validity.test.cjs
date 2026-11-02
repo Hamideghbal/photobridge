@@ -1,0 +1,13 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),{LabStore}=require('../store.cjs'),{revokedResponse,expireSession}=require('../session-validity.cjs');
+test('only a confirmed revoked authenticated session invalidates the saved login',async()=>{
+ assert(await revokedResponse(Response.json(null),'/api/auth/me'));
+ assert(await revokedResponse(Response.json({error:'unauthorized'},{status:401}),'/api/lab/orders'));
+ for(const [response,url,options]of [[Response.json({user:{userId:'U'}}),'/api/auth/me'],[Response.json({error:'maintenance'},{status:503}),'/api/auth/me'],[Response.json({error:'permission'},{status:403}),'/api/lab/orders'],[Response.json({error:'invalid_credentials'},{status:401}),'/api/auth/lab-login'],[Response.json({},{status:401}),'/api/desktop-ui/lab-manifest',{anonymous:true}],[new Response('invalid',{status:200}),'/api/auth/me']])assert.equal(await revokedResponse(response,url,options),false);
+});
+test('expiry preserves account business data, storage roots and pending work without waiting on its own sync flight',async()=>{
+ const store=new LabStore(':memory:');store.set('auth',{user:{userId:'U'}});store.set('labId','A');store.set('cookie','encrypted-old-cookie');store.set('cacheOwner','A');store.set('nativeStorageRoot:A',{id:'root',path:'D:\\photos'});store.set('localBusiness:v1:A',{orders:{original:true}});store.enqueue('PATCH','/api/lab/orders/one',{status:'printing'});const sync={online:true,flight:new Promise(()=>{}),pause:()=>assert.fail('waiting on pause would deadlock')};
+ try{assert(expireSession(store,sync));assert.equal(sync.paused,true);assert.equal(store.get('auth'),null);assert.equal(store.get('cookie'),null);assert.equal(store.get('labId'),null);assert.equal(store.get('sessionExpired'),true);assert.deepEqual(store.get('nativeStorageRoot:A'),{id:'root',path:'D:\\photos'});assert.deepEqual(store.get('localBusiness:v1:A'),{orders:{original:true}});store.set('labId','A');assert.equal(store.rows().length,1);assert.equal(store.rows()[0].state,'pending');assert.equal(expireSession(store,sync),false);}finally{store.db.close()}
+});
+test('native validates the saved session before opening UI and uses an epoch guard for stale authentication replies',()=>{
+ const s=fs.readFileSync(require('node:path').join(__dirname,'../main.cjs'),'utf8');assert(s.indexOf("await request('/api/auth/me',{signal:AbortSignal.timeout(4000)})")<s.indexOf('win=new BrowserWindow'));assert(s.includes('epoch===authEpoch&&await'));assert(s.includes("store.set('sessionExpired',false)"));assert(s.includes('uiReady=true;if(reauthPending)invalidateRuntime()'));
+});

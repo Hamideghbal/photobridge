@@ -1,1 +1,1 @@
-2026-11-03-r1546-native-mapped-order-invoice
+2026-11-03-r1547-lab-invoice-preview-download-confirmation-fast-ready

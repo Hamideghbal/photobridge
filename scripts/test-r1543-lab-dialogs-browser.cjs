@@ -1,0 +1,58 @@
+'use strict';
+const path=require('node:path'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+(async()=>{
+ const native=process.env.PB_NATIVE_SOURCE;if(!native)throw Error('PB_NATIVE_SOURCE is required');
+ const {LabStore}=require(path.join(native,'store.cjs')),{createHost}=require(path.join(native,'host.cjs'));
+ const ui=path.resolve(process.env.PB_UI_ROOT||'dist/web/lab-desktop-ui');require(path.join(native,'verify-native-ui.cjs')).validateNativeUi(ui);
+ const api=await import(pathToFileURL(path.resolve('dist/api/lab-print-catalog.js')));let catalog=api.normalizePrintCatalog(),debt=25000;const writes=[];
+ const customers=[{id:'customer-1',name:'عکاسی پیش‌ثبت‌نام',mobile:'09120000001',registrationPending:true,active:true},{id:'customer-2',name:'عکاسی بدون بدهی',mobile:'09120000002',active:true},{id:'customer-3',name:'عکاسی قطع ارتباط',mobile:'09120000003',active:true}];
+ const prices=[{id:'s1',label:'۱۰×۱۵',width_cm:10,height_cm:15,luster:1000,silk:2000,metallic:3000,album_binding_price:4000,chassis:50,frame:100,chassis_stock:0,frame_stock:null}];
+ const store=new LabStore(':memory:');store.set('labId','A');store.set('auth',{user:{userId:'U',labId:'A',labRole:'lab_admin',name:'نمونه'},lab:{id:'A'}});store.set('nativeVersion','1.0.83');
+ const request=async(url,options={})=>{
+  const pathname=new URL(url,'http://localhost').pathname,method=options.method||'GET',body=String(options.body||'').trim()?JSON.parse(String(options.body)):{};
+  let data={summary:{},orders:[],customers:[],invites:[],requests:[],notifications:[],transactions:[],invoices:[],payments:[],expenses:[]};if(method!=='GET')writes.push({pathname,method,body});
+  try{
+   if(pathname==='/api/lab/dashboard')data={lab:{id:'A',name:'لابراتوار آزمایشی',album_enabled:true},settings:{},customers,prices,sizes:prices,printSizes:prices,albums:[],papers:[],status:{},walletBalance:0};
+   if(pathname==='/api/lab/print-catalog'){if(method==='POST')catalog=api.addPrintType(catalog,body);data={ok:true,catalog};}
+   if(pathname==='/api/lab/print-catalog/type'){catalog=body.active===false?api.archivePrintBinding(catalog,body.id):api.renamePrintType(catalog,body.id,body.name);data={ok:true};}
+   if(pathname==='/api/lab/print-sizes'&&method==='POST'){const size={id:'new-size',label:body.label,width_cm:body.widthCm,height_cm:body.heightCm};prices.push(size);data={ok:true,size};}
+   if(pathname==='/api/lab/prices'&&method==='PUT')data={ok:true};
+   if(pathname.endsWith('/account-summary')){if(pathname.includes('customer-3'))return Response.json({error:'fixture_unavailable'},{status:503});data={initialDebt:pathname.includes('customer-1')?debt:0,canEditInitialDebt:pathname.includes('customer-1'),hasInvoice:!pathname.includes('customer-1')};}
+   if(pathname.endsWith('/adjust-initial-debt')){debt=body.initialDebt;data={ok:true,initialDebt:debt};}
+   if(pathname==='/api/lab/storage-target')data={paired:false};
+   if(pathname==='/api/lab/write-access')data={labId:'A',allowed:true,serverNow:new Date().toISOString(),activeUntil:'2030-01-01T00:00:00Z'};
+   if(pathname==='/api/auth/me')data=store.get('auth');return Response.json(data);
+  }catch(e){return Response.json({error:e.message},{status:e.status||400})}
+ };
+ const server=createHost({store,request,token:'test',roots:()=>[ui,path.join(native,'verified-ui')],isOnline:()=>true,sync:{status:()=>({...store.status(),online:true}),wake(){},run:async()=>({}),live:async()=>({})}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const origin='http://127.0.0.1:'+server.address().port,context=await browser.newContext({viewport:{width:1440,height:1000}});await context.addCookies([{name:'desktop',value:'test',url:origin}]);
+  await context.addInitScript(()=>{
+   window.__rawDialogs=[];window.prompt=()=>{window.__rawDialogs.push('prompt');throw Error('Electron prompt is unsupported')};window.confirm=()=>{window.__rawDialogs.push('confirm');throw Error('raw confirmation must not be used')};
+   // Virtual IPC descriptors only: this test never touches a real archive or disk.
+   window.__removed=[];window.__entries=[];const root={rootId:'virtual-root',parts:[],name:'آرشیو آزمایشی',kind:'directory'};
+   window.pbNativeStorage={invoke:async(action,payload)=>{let value=null;if(action==='status')value={root};if(action==='permission')value='granted';if(action==='entries')value=window.__entries.map(name=>[name,{...root,parts:[name]}]);if(action==='remove'){window.__removed.push(payload.parts.join('/'));value=true;}if(action==='device')value={registered:true,isThisDevice:true};return{ok:true,value}}};
+  });
+  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
+  await page.goto(origin+'/lab/settings/prices');const actions=page.locator('.pb1372ThirdHeader');await actions.getByRole('button',{name:'صحافی جدید',exact:true}).waitFor();assert.equal(await actions.getByRole('button',{name:'سایز جدید',exact:true}).count(),1);
+  const first=page.locator('.inventoryPriceGrid:not(.head)').first().locator('input').first();await first.fill('4321');
+  // Cancel and Escape never write; Enter submits the in-app form and handles errors inline.
+  await actions.getByRole('button',{name:'صحافی جدید',exact:true}).click();const dialog=page.locator('.pb1543CatalogDialog');await dialog.waitFor();await page.getByLabel('نام مدل صحافی',{exact:true}).fill('لغو شده');let before=writes.filter(w=>w.pathname==='/api/lab/print-catalog').length;await dialog.getByRole('button',{name:'انصراف',exact:true}).click();assert.equal(writes.filter(w=>w.pathname==='/api/lab/print-catalog').length,before);
+  await actions.getByRole('button',{name:'صحافی جدید',exact:true}).click();await page.keyboard.press('Escape');await dialog.waitFor({state:'detached'});assert.equal(await actions.getByRole('button',{name:'صحافی جدید',exact:true}).evaluate(el=>el===document.activeElement),true);
+  await actions.getByRole('button',{name:'صحافی جدید',exact:true}).click();await page.getByLabel('نام مدل صحافی',{exact:true}).fill('صحافی ۶۰ گرم');await page.screenshot({path:'/tmp/photobridge-r1543-binding.png'});await page.getByLabel('نام مدل صحافی',{exact:true}).press('Enter');await dialog.waitFor({state:'detached'});await page.locator('.inventoryPriceGrid.head .pb1540BindingDelete').waitFor();assert.equal(catalog.types.at(-1).name,'صحافی ۶۰ گرم');assert.equal(await first.inputValue(),'۴٬۳۲۱');
+  await actions.getByRole('button',{name:'صحافی جدید',exact:true}).click();await page.getByLabel('نام مدل صحافی',{exact:true}).fill('صحافی ۶۰ گرم');await dialog.getByRole('button',{name:'افزودن صحافی',exact:true}).click();await dialog.getByRole('alert').filter({hasText:'مدلی با این نام وجود دارد'}).waitFor();await page.getByLabel('نام مدل صحافی',{exact:true}).fill('صحافی ژورنال');await dialog.getByRole('button',{name:'افزودن صحافی',exact:true}).click();await dialog.waitFor({state:'detached'});
+  await page.locator('.inventoryPriceGrid.head .pb1539Rename').last().click();assert.equal(await page.getByLabel('نام مدل صحافی',{exact:true}).inputValue(),'صحافی ژورنال');await page.getByLabel('نام مدل صحافی',{exact:true}).fill('صحافی ژورنال اصلاح');await dialog.getByRole('button',{name:'ذخیره نام',exact:true}).click();await dialog.waitFor({state:'detached'});assert.equal(catalog.types.at(-1).name,'صحافی ژورنال اصلاح');
+  // The other New button opens the real React size editor and saves through existing APIs.
+  await actions.getByRole('button',{name:'سایز جدید',exact:true}).click();const size=page.getByRole('dialog',{name:'افزودن سایز چاپ',exact:true});await size.waitFor();await size.getByLabel('نام سایز',{exact:true}).fill('۲۰×۳۰');await size.getByLabel('عرض (سانتی‌متر)',{exact:true}).fill('20');await size.getByLabel('ارتفاع (سانتی‌متر)',{exact:true}).fill('30');await page.screenshot({path:'/tmp/photobridge-r1543-size.png'});await size.getByRole('button',{name:'ذخیره سایز و تعرفه',exact:true}).click();await size.waitFor({state:'detached'});assert(writes.some(w=>w.pathname==='/api/lab/print-sizes'&&w.body.widthCm===20&&w.body.heightCm===30));
+  await page.locator('.pb1147LabNav button[data-category="1"]').click();const cards=page.locator('.labPhotographerCard');await cards.first().waitFor();await cards.first().locator('.pb1543OpeningDebtAmount').filter({hasText:'۲۵٬۰۰۰ تومان'}).waitFor();await cards.nth(1).locator('.pb1543OpeningDebtAmount').filter({hasText:'بدهی اولیه: ۰ تومان'}).waitFor();await cards.nth(2).locator('.pb1543OpeningDebtAmount').filter({hasText:'مبلغ بدهی در دسترس نیست'}).waitFor();
+  const placement=await cards.first().evaluate(card=>{const phone=card.querySelector('.labPhotographerIdentityCopy>small'),tag=card.querySelector('.pb1446PendingTag');return{sameParent:phone.parentElement===tag.parentElement,below:tag.getBoundingClientRect().top>=phone.getBoundingClientRect().bottom-1,inName:!!tag.closest('.pb1446PhotographerName')}});assert.deepEqual(placement,{sameParent:true,below:true,inName:false});await page.screenshot({path:'/tmp/photobridge-r1543-photographers.png'});
+  // Locked account remains read-only; display change never bypasses invoice locks.
+  await cards.nth(1).getByRole('button',{name:'بدهی اولیه / اصلاح',exact:true}).click();await page.getByText('پس از صدور اولین فاکتور، بدهی اولیه قابل اصلاح نیست.',{exact:true}).waitFor();assert.equal(await page.getByLabel('مبلغ بدهی اولیه دعوت').count(),0);await page.getByRole('button',{name:'بستن',exact:true}).last().click();
+  await cards.first().getByRole('button',{name:'بدهی اولیه / اصلاح',exact:true}).click();await page.getByLabel('مبلغ بدهی اولیه دعوت').fill('۳۵۰۰۰');await page.getByRole('button',{name:'ثبت اصلاح',exact:true}).click();await page.getByText('بدهی اولیه با موفقیت اصلاح شد.',{exact:true}).waitFor();assert.equal(writes.find(w=>w.pathname.endsWith('/adjust-initial-debt')).body.expectedInitialDebt,25000);await page.getByRole('button',{name:'بستن',exact:true}).last().click();await cards.first().locator('.pb1543OpeningDebtAmount').filter({hasText:'۳۵٬۰۰۰ تومان'}).waitFor();
+  await page.goto(origin+'/lab/settings/local');const cleanup=page.getByRole('button',{name:'پاکسازی آرشیو قدیمی',exact:true});await cleanup.waitFor();await page.evaluate(()=>window.__entries=['1300-01-01','2099-01-01','misc']);await cleanup.click();const archive=page.locator('.pb1540CleanupDialog');await archive.waitFor();await page.screenshot({path:'/tmp/photobridge-r1543-archive.png'});await archive.getByRole('button',{name:'انصراف',exact:true}).click();assert.deepEqual(await page.evaluate(()=>window.__removed),[]);await cleanup.click();await archive.getByRole('button',{name:'ادامه و بررسی دسترسی',exact:true}).click();await page.getByRole('status').filter({hasText:'1 پوشهٔ قدیمی پاک شد.'}).waitFor();assert.deepEqual(await page.evaluate(()=>window.__removed),['1300-01-01']);
+  assert.deepEqual(await page.evaluate(()=>window.__rawDialogs),[]);assert.deepEqual(errors,[]);
+  console.log('PASS: full native shell labels and opens distinct binding/size dialogs without prompt; cancel/escape/duplicate/rename/save preserve drafts; styled archive confirmation controls virtual deletion; debt previews, locks, saved refresh and preregistration position are correct.');
+ }finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));store.db.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});

@@ -671,3 +671,6 @@ runR1314(process.execPath,["--test","scripts/test-r1541-tariff-columns.cjs"],{st
 
 // R1542: override the complete desktop shell and avoid cached customer handlers.
 await deployStep('./enable-r1542-native-tariffs.mjs');
+
+// R1543: usable native catalog dialogs, archive confirmation and customer details.
+await deployStep('./enable-r1543-lab-dialogs.mjs');

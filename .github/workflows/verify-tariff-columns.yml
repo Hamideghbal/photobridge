@@ -5,6 +5,7 @@ on:
     paths:
       - '**/*r1541*'
       - '**/*r1542*'
+      - '**/*r1543*'
       - '.github/workflows/verify-tariff-columns.yml'
   workflow_dispatch:
 permissions:
@@ -45,6 +46,13 @@ jobs:
         run: |
           export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
           node scripts/test-r1542-native-shell-browser.cjs
+      - name: Verify native catalog dialogs, cleanup and photographer details
+        env:
+          PB_NATIVE_SOURCE: ${{ github.workspace }}/.native-compat
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
+        run: |
+          export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
+          node scripts/test-r1543-lab-dialogs-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -52,5 +60,6 @@ jobs:
           path: |
             /tmp/photobridge-r1541-*.png
             /tmp/photobridge-r1542-*.png
+            /tmp/photobridge-r1543-*.png
           if-no-files-found: ignore
           retention-days: 7

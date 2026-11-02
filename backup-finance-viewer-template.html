@@ -5,7 +5,7 @@
 <style>
 @font-face{font-family:Vazirmatn;src:url(data:font/woff2;base64,__PB_FONT_BASE64__) format("woff2");font-display:swap;font-weight:100 900}
 :root{font:13px/1.85 Vazirmatn,Tahoma,Arial,sans-serif;color:#344054;background:#f5f7fb}
-*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}
 button:disabled{opacity:.58;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #9ab7f8;outline-offset:2px}
 main{max-width:1420px;margin:0 auto;padding:14px 20px 34px}
 .appHeader{background:linear-gradient(112deg,#0d4d98,#176ccc 67%,#2c9adc);color:white;border-radius:15px;padding:18px 23px;box-shadow:0 9px 20px #205ca71f}
@@ -130,7 +130,7 @@ function dateKey(raw){
  const t=digits(raw).trim(),parts=t.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
  if(parts&&Number(parts[1])<1600)return parts[1]+parts[2].padStart(2,"0")+parts[3].padStart(2,"0");
  if(!t)return"";
- const x=digits(persian(raw)),m=x.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+ const x=digits(persian(raw)).replace(/[^\d/]/g,""),m=x.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
  return m?m[1]+m[2].padStart(2,"0")+m[3].padStart(2,"0"):"";
 }
 function inDates(row){
@@ -143,6 +143,7 @@ function textMatches(row){if(state.tab==="statement")return true;
  const field=byId(state.tab==="invoices"?"invoiceSearch":"paymentSearch"),needle=normalize(field.value);
  return !needle||normalize(Object.values(row).filter(v=>typeof v!=="object").join(" ")).includes(needle)}
 function visible(){
+ if(state.tab==="statement"&&!state.customer)return [];
  return arrays[state.tab].filter(r=>studioMatches(r)&&inDates(r)&&textMatches(r))
  .sort((a,b)=>((Date.parse(b.date)||0)-(Date.parse(a.date)||0))*(state.tab==="statement"&&state.sort==="asc"?-1:1))
 }
@@ -179,7 +180,8 @@ function renderPayments(){
 function statementTotals(studio){
  const entries=arrays.statement.filter(x=>x.customerId===studio?.id&&x.rowNumber>0).sort((a,b)=>(Date.parse(a.date)||0)-(Date.parse(b.date)||0));
  const within=entries.filter(inDates);
- const opening=within.length?within[0].balance-within[0].debit+within[0].credit:(entries.length?entries[entries.length-1].balance:Number(studio?.opening||0));
+ const preceding=entries.filter(r=>state.dates.statement.from&&dateKey(r.date)<dateKey(state.dates.statement.from));
+ const opening=within.length?within[0].balance-within[0].debit+within[0].credit:(preceding.length?preceding[preceding.length-1].balance:entries.length?entries[0].balance-entries[0].debit+entries[0].credit:Number(studio?.opening||0));
  const debit=within.reduce((a,r)=>a+r.debit,0),credit=within.reduce((a,r)=>a+r.credit,0);
  return{opening,debit,credit,closing:opening+debit-credit};
 }

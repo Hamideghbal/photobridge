@@ -5,6 +5,8 @@ on:
     paths:
       - '**/*r1541*'
       - '**/*r1542*'
+      - '**/*r1543*'
+      - '**/*r1544*'
       - '.github/workflows/verify-tariff-columns.yml'
   workflow_dispatch:
 permissions:
@@ -22,8 +24,12 @@ jobs:
       - run: npm run build
       - name: Install isolated browser tools
         run: |
-          npm install --prefix "$RUNNER_TEMP/tariff-tests" --no-save --no-audit --no-fund playwright@1.56.1
+          npm install --prefix "$RUNNER_TEMP/tariff-tests" --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
           "$RUNNER_TEMP/tariff-tests/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify authoritative opening-debt route with PostgreSQL engine
+        env:
+          PB_PGLITE_PATH: ${{ runner.temp }}/tariff-tests/node_modules/@electric-sql/pglite
+        run: node --test scripts/test-r1544-opening-debt-db.cjs
       - name: Verify column alignment and binding actions
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
@@ -45,6 +51,13 @@ jobs:
         run: |
           export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
           node scripts/test-r1542-native-shell-browser.cjs
+      - name: Verify native catalog dialogs, cleanup and photographer details
+        env:
+          PB_NATIVE_SOURCE: ${{ github.workspace }}/.native-compat
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright
+        run: |
+          export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
+          node scripts/test-r1543-lab-dialogs-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -52,5 +65,6 @@ jobs:
           path: |
             /tmp/photobridge-r1541-*.png
             /tmp/photobridge-r1542-*.png
+            /tmp/photobridge-r1543-*.png
           if-no-files-found: ignore
           retention-days: 7

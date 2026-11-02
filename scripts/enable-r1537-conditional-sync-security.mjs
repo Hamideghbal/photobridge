@@ -10,20 +10,31 @@ if(!s.includes('/* PB1537 conditional unification */')){
  const a=s.indexOf(' let scheduled=false;'),b=s.indexOf(' const launcher=',a);
  if(a<0||b<=a)throw Error('R1537 legacy universal hint block changed');
  s=s.slice(0,a)+`
+ // Remove old universal sync affordances, even if client hydration restores them.
+ function removeLegacyHints(){
+  for(const el of document.querySelectorAll('[data-shared-account],.pbSharedAccountHint'))el.remove();
+ }
+ let hintScheduled=false;
+ const hintObserver=new MutationObserver(()=>{if(hintScheduled)return;hintScheduled=true;requestAnimationFrame(()=>{hintScheduled=false;removeLegacyHints()})});
+ hintObserver.observe(document.documentElement,{childList:true,subtree:true});
+ removeLegacyHints();
  // Only an actual verified legacy-credential conflict may launch recovery.
  const originalFetch=window.fetch.bind(window);
  function promptAfterLegacyLogin(mobile){
-  if(document.querySelector('.pbSharedAccountDialog'))return;
-  const source=document.activeElement?.closest('form')||document.querySelector('.unifiedLoginPage form,#loginForm,.trialForm form,form.photographerSignupForm')||document;
+  if(location.pathname==='/account-recovery.html')return;
+  if(document.documentElement.dataset.pb1537Navigating==='1')return;
+  document.documentElement.dataset.pb1537Navigating='1';
+  try{
+   sessionStorage.setItem('pb1537_legacy_mobile',mobile||'');
+   sessionStorage.setItem('pb1537_login_return',location.pathname+location.search+location.hash);
+  }catch{}
+  // Only a verified legacy login conflict can trigger navigation.
   if(window.pbNativeStorage&&location.hostname==='127.0.0.1'){
-   if(document.querySelector('[data-pb1537-native-recovery]'))return;
-   const button=document.createElement('button');button.type='button';
-   button.dataset.pb1537NativeRecovery='1';
-   button.textContent='برای یکسان‌سازی رمز قدیمی، تأیید پیامکی را باز کنید';
-   button.onclick=()=>open(source,mobile);
-   (source===document?document.body:source).appendChild(button);return;
+   window.open('https://photobridge.ir/account-recovery.html','_blank');
+   document.documentElement.dataset.pb1537Navigating='0';
+   return;
   }
-  open(source,mobile);
+  location.assign('/account-recovery.html');
  }
  window.fetch=function(input,init){
   return Promise.resolve(originalFetch(input,init)).then(response=>{
@@ -41,7 +52,8 @@ if(!s.includes('/* PB1537 conditional unification */')){
   });
  };
 `+s.slice(b);
- s=replaceOne(s,"status.textContent='رمز مشترک ثبت شد. اکنون با همین شماره و رمز وارد شوید یا عضویت جدید را ادامه دهید.'","status.textContent='رمز مشترک ثبت شد. برای ورود، با رمز جدید وارد شوید.';const returnButton=document.createElement('button');returnButton.type='button';returnButton.textContent='بازگشت به صفحه ورود';returnButton.onclick=()=>{dialog.close();const field=source.querySelector('input[type=password]');field?.focus()};form.append(returnButton)","return to login");
+ s=replaceOne(s,"status.textContent='رمز مشترک ثبت شد. اکنون با همین شماره و رمز وارد شوید یا عضویت جدید را ادامه دهید.'","status.textContent='رمز مشترک ثبت شد. برای ورود، با رمز جدید وارد شوید.';const returnButton=document.createElement('button');returnButton.type='button';returnButton.textContent='بازگشت به صفحه ورود';returnButton.onclick=()=>{dialog.close();let to='/';try{to=sessionStorage.getItem('pb1537_login_return')||'/';sessionStorage.removeItem('pb1537_login_return')}catch{}location.assign(to.startsWith('/')&&!to.startsWith('//')&&to!=='/account-recovery.html'?to:'/')};form.append(returnButton)","return to login");
+ s=replaceOne(s," const launcher=document.querySelector('[data-open-shared-account]');if(launcher){launcher.onclick=()=>open(document);open(document);}"," const launcher=document.querySelector('[data-open-shared-account]');if(launcher){let initialMobile='';try{initialMobile=sessionStorage.getItem('pb1537_legacy_mobile')||'';sessionStorage.removeItem('pb1537_legacy_mobile')}catch{}launcher.onclick=()=>open(document,initialMobile);open(document,initialMobile);}",'recovery page boot');
  s=s.replace('})();','/* PB1537 conditional unification */\n})();');
  write(path,s);
 }

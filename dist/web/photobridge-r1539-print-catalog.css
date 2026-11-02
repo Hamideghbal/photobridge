@@ -10,7 +10,7 @@
 }
 .labPrintPricingCard .pb1539Rename:hover{background:#e3efff}
 .labPrintPricingCard .pb1539Rename:focus-visible{outline:2px solid #315efb;outline-offset:2px}
-.labPrintPricingCard .inventoryPriceGrid{grid-auto-flow:column;grid-auto-columns:minmax(96px,1fr)}
+@media(min-width:751px){.labPrintPricingCard .inventoryPriceGrid{grid-template-columns:minmax(154px,1.4fr) repeat(var(--pb1539-columns,8),minmax(102px,1fr))!important;min-width:max-content}.labPrintPricingCard .priceScroller{overflow-x:auto!important}}
 @media(max-width:750px){
  .labPrintPricingCard .priceCatalogActions{gap:6px}
  .labPrintPricingCard .priceCatalogActions>button{font-size:12px;min-height:40px;padding:8px 10px}

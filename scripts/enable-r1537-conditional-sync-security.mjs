@@ -52,6 +52,14 @@ s=s.replaceAll('دکمهٔ یکسان‌سازی یا بازیابی رمز را
 s=s.replaceAll('با دکمهٔ یکسان‌سازی یا بازیابی رمز، برای این شماره یک رمز مشترک تعیین کنید.','مرحله تأیید پیامکی به‌صورت خودکار باز می‌شود.');
 write(path,s);
 path='dist/api/equipment-rental-portal.html';if(fs.existsSync(path)){s=read(path);s=s.replaceAll('گزینهٔ یکسان‌سازی یا بازیابی رمز را انتخاب کنید.','مرحله تأیید پیامکی به‌صورت خودکار باز می‌شود.');write(path,s);}
+// Invalidate cached legacy recovery UI after the conditional-login change.
+for(const htmlPath of ['dist/web/index.html','dist/web/account-recovery.html','dist/api/equipment-rental-register.html','dist/api/equipment-rental-portal.html']){
+ if(!fs.existsSync(htmlPath))continue;
+ let html=read(htmlPath);
+ html=html.replaceAll('photobridge-r1393-shared-account.js?v=r1535','photobridge-r1393-shared-account.js?v=r1537');
+ html=html.replaceAll('photobridge-r1393-shared-account.js?v=r1393','photobridge-r1393-shared-account.js?v=r1537');
+ write(htmlPath,html);
+}
 // Retire the second, password-disabling action from the SMS security page.
 path='dist/web/lab-login-security.html';s=read(path);
 const from=s.indexOf('<form id="disableForm"'),to=s.indexOf('</form>',from);
@@ -73,4 +81,14 @@ const routeStart=s.indexOf("    if(req.method==='POST'&&url.pathname==='/api/aut
 const routeEnd=s.indexOf("    if (req.method === 'POST' && url.pathname === '/api/auth/password-reset/request')",routeStart);
 if(routeStart<0||routeEnd<=routeStart)throw Error('R1537 disable-password route boundary changed');
 s=s.slice(0,routeStart)+'    /* PB1537 password-disable endpoint retired: OTP-verified password change only. */\n'+s.slice(routeEnd);
+s=replaceOne(s,"import {sendLabLoginAlert,disableLabPassword} from './lab-login-security.js';","import {sendLabLoginAlert} from './lab-login-security.js';",'retired route import');
+write(path,s);
+// Change SMS alert wording, remove the unreachable password-disabling function.
+path='dist/api/lab-login-security.js';s=read(path);
+s=replaceOne(s,'اگر این ورود را نمی‌شناسید، تغییر رمز یا غیرفعال‌کردن رمز و خروج از نشست‌ها:','اگر این ورود را نمی‌شناسید، رمز را با تأیید پیامکی تغییر دهید تا نشست‌های قبلی بسته شوند:','SMS instructions');
+s=replaceOne(s,"import crypto from 'node:crypto';\nimport {setSharedPassword,sharedMobile} from './shared-credentials.js';","import {sharedMobile} from './shared-credentials.js';",'unused disable imports');
+const unused=s.indexOf('// The SMS URL is only a navigation link.');
+if(unused<0)throw Error('R1537 retired helper missing');
+s=s.slice(0,unused)+'// Password changes use the existing OTP-verified password-reset endpoint.\n';
+s=s.replace(/^const uuid=.*\n/m,'');
 write(path,s);

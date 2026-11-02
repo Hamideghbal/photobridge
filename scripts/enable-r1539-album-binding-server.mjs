@@ -7,8 +7,11 @@ if(start<0||end<=start)throw Error('album catalog boundary');
 let catalog=s.slice(start,end);
 catalog=once(catalog,'const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;',
 'const printTariffCatalog=normalizePrintCatalog(labPreferences.printTariffCatalog);\n    const coverCatalogEnabled = labPreferences.albumCoverCatalogEnabled !== false;','album preferences');
-catalog=once(catalog,'return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled,',
-'return { enabled: Boolean(lq.rows[0]?.album_enabled), coverCatalogEnabled, printTariffCatalog,','catalog response');
+{
+ const match=catalog.match(/return\s*\{\s*enabled:\s*Boolean\(lq\.rows\[0\]\?\.album_enabled\)\s*,\s*coverCatalogEnabled\s*,/g)||[];
+ if(match.length!==1)throw Error('R1539 album catalog response changed: '+match.length);
+ catalog=catalog.replace(match[0],match[0]+' printTariffCatalog,');
+}
 s=s.slice(0,start)+catalog+s.slice(end);
 start=s.indexOf('async function albumOrderSnapshot(');end=s.indexOf('\nasync function ',start+18);
 if(start<0||end<=start)throw Error('album snapshot boundary');

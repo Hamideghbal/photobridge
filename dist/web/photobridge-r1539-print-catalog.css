@@ -1,0 +1,18 @@
+/* R1539: Additional lab-specific paper/binding tariffs, matching existing price settings. */
+.labPrintPricingCard .priceCatalogActions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.labPrintPricingCard .priceCatalogActions>button{min-height:38px;white-space:nowrap}
+.labPrintPricingCard .inventoryPriceGrid.head>b{position:relative}
+.labPrintPricingCard .pb1539Rename{
+ display:inline-flex;align-items:center;justify-content:center;
+ margin-inline-start:6px;width:26px;height:26px;padding:0;
+ border:1px solid #c7d7ee;border-radius:8px;background:#f4f8ff;
+ color:#315ecb;font-size:15px;vertical-align:middle;cursor:pointer
+}
+.labPrintPricingCard .pb1539Rename:hover{background:#e3efff}
+.labPrintPricingCard .pb1539Rename:focus-visible{outline:2px solid #315efb;outline-offset:2px}
+.labPrintPricingCard .inventoryPriceGrid{grid-auto-flow:column;grid-auto-columns:minmax(96px,1fr)}
+@media(max-width:750px){
+ .labPrintPricingCard .priceCatalogActions{gap:6px}
+ .labPrintPricingCard .priceCatalogActions>button{font-size:12px;min-height:40px;padding:8px 10px}
+ .labPrintPricingCard .pb1539Rename{width:30px;height:30px}
+}

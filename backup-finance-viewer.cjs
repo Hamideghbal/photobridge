@@ -14,7 +14,7 @@ function buildViewerData(model,{createdAt,labId,sqliteSha256}){
  const linesByInvoice=new Map();
  for(const l of pick(model,'InvoiceLines')){
    const id=fixed(l.InvoiceId),group=linesByInvoice.get(id)||[];
-   group.push({description:fixed(l.Description),quantity:amount(l.Quantity),unitPrice:amount(l.UnitPrice),total:amount(l.LineTotal)});
+   group.push({description:fixed(l.Description),quantity:Number(l.Quantity||0),unitPrice:amount(l.UnitPrice),total:amount(l.LineTotal)});
    linesByInvoice.set(id,group);
  }
  const financeDocs=pick(model,'FinancialDocuments');
@@ -43,7 +43,7 @@ function buildViewerData(model,{createdAt,labId,sqliteSha256}){
  }
  // IMPORTANT: use the app's computed per-customer statement, NOT raw double-entry
  // ledger rows; otherwise balances and customer debt would be incorrect.
- const ledger=pick(model,'CustomerStatement').map(row=>({
+ const ledger=pick(model,'CustomerStatement').filter(row=>Number(row.RowNumber)>0).map(row=>({
   id:fixed(row.CustomerId)+':'+fixed(row.RowNumber),customerId:fixed(row.CustomerId),
   customer:customer(row.CustomerId,row.CustomerName),date:fixed(row.Date),persianDate:fixed(row.ReportDate),
   ref:fixed(row.InvoiceNumber),description:fixed(row.Description),

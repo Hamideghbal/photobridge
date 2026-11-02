@@ -1,0 +1,46 @@
+name: Verify lab login security
+on:
+  pull_request:
+    branches: [aaa-liara-release]
+    paths:
+      - '**/*r1534*'
+      - 'dist/api/lab-login-security.js'
+      - 'dist/web/lab-login-security.html'
+      - '.github/workflows/verify-lab-login-security.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production dependencies
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Build production payload and verify login integration
+        run: npm run build
+      - name: Install isolated browser and database test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lab-security-tests" --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
+          "$RUNNER_TEMP/lab-security-tests/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify OTP authorization and atomic revocation against PostgreSQL engine
+        env:
+          PB_PGLITE_PATH: ${{ runner.temp }}/lab-security-tests/node_modules/@electric-sql/pglite
+        run: node --test scripts/test-r1534-lab-login-security-db.cjs
+      - name: Verify security link and mobile action flows in browser
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/lab-security-tests/node_modules/playwright
+        run: |
+          export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
+          node scripts/test-r1534-lab-login-security-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-login-security-screenshots
+          path: /tmp/photobridge-r1534-*.png
+          if-no-files-found: ignore
+          retention-days: 7

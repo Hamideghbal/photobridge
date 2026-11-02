@@ -72,6 +72,18 @@ for(const htmlPath of ['dist/web/index.html','dist/web/account-recovery.html','d
  html=html.replaceAll('photobridge-r1393-shared-account.js?v=r1393','photobridge-r1393-shared-account.js?v=r1537');
  write(htmlPath,html);
 }
+// Force fresh small eye-icon CSS/JS on every browser login/registration page.
+for(const htmlPath of [
+ 'dist/web/index.html','dist/web/account-recovery.html','dist/web/lab-login-security.html',
+ 'dist/api/equipment-rental-register.html','dist/api/equipment-rental-portal.html',
+ 'dist/api/equipment-rental-book.html','dist/api/admin-equipment-rental.html'
+]){
+ if(!fs.existsSync(htmlPath))continue;
+ let html=read(htmlPath);
+ html=html.replaceAll('photobridge-r1536-password-eye-brand.css?v=r1536','photobridge-r1536-password-eye-brand.css?v=r1537');
+ html=html.replaceAll('photobridge-r1536-password-eye-brand.js?v=r1536','photobridge-r1536-password-eye-brand.js?v=r1537');
+ write(htmlPath,html);
+}
 // Retire the second, password-disabling action from the SMS security page.
 path='dist/web/lab-login-security.html';s=read(path);
 const from=s.indexOf('<form id="disableForm"'),to=s.indexOf('</form>',from);

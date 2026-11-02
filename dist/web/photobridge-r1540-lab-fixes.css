@@ -22,3 +22,8 @@
 .pb1540CleanupDialog footer .pb1540CleanupProceed{border-color:#1d63c5;background:#1d63c5;color:white}
 .pb1540CleanupDialog button:focus-visible{outline:3px solid #8ebcfb;outline-offset:2px}
 .pb1540WalkinFallback{padding:24px;display:grid;gap:12px}.pb1540WalkinFallback h3{margin:0}.pb1540WalkinFallback button{justify-self:start;min-height:40px;border-radius:8px;padding:8px 16px;border:1px solid #8bb3eb;background:#edf5ff;color:#1b519d;font:inherit;cursor:pointer}
+
+/* Keep navigation clickable even when walk-in content is waiting on a remote QR/API. */
+.labSettingsTabbed .labSettingsNavigation{position:relative!important;z-index:5!important;pointer-events:auto!important}
+.labSettingsTabbed .labSettingsSectionTabs,.labSettingsTabbed .labSettingsSectionTabs button,.labSettingsTabbed .labSettingsCategoryTabs button{pointer-events:auto!important}
+.labSettingsTabbed .settingsBody{position:relative!important;z-index:1!important;min-width:0!important}

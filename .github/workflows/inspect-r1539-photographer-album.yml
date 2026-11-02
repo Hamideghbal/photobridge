@@ -1,0 +1,16 @@
+name: Inspect R1539 photographer binding
+on:
+  pull_request:
+    branches: [aaa-liara-release]
+    paths:
+      - 'scripts/inspect-r1539-photographer-album.cjs'
+      - '.github/workflows/inspect-r1539-photographer-album.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read only source inspection
+        run: node scripts/inspect-r1539-photographer-album.cjs

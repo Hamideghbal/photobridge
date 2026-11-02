@@ -61,7 +61,7 @@
   document.querySelectorAll('input[type="password"],input[data-pb1536-password]').forEach(input=>{
    if(input.tagName==='INPUT')attach(input);
   });
-  document.querySelectorAll('img').forEach(img=>{
+  document.querySelectorAll('#pbR1361MobileSplash img,img[src^="/photobridge-"]').forEach(img=>{
    if(isOwnBrand(img)&&img.complete&&!img.naturalWidth)repairBrand(img);
   });
   for(const input of tracked){

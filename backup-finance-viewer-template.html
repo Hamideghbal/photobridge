@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>PhotoBridge | امور مالی نسخه پشتیبان</title>
+<style>
+@font-face{font-family:Vazirmatn;src:url(data:font/woff2;base64,__PB_FONT_BASE64__) format("woff2");font-display:swap;font-weight:100 900}
+:root{font:13px/1.85 Vazirmatn,Tahoma,Arial,sans-serif;color:#344054;background:#f5f7fb}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}
+button:disabled{opacity:.58;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #9ab7f8;outline-offset:2px}
+main{max-width:1420px;margin:0 auto;padding:14px 20px 34px}
+.appHeader{background:linear-gradient(112deg,#0d4d98,#176ccc 67%,#2c9adc);color:white;border-radius:15px;padding:18px 23px;box-shadow:0 9px 20px #205ca71f}
+.headerLine,.headerBrand,.headerActions{display:flex;align-items:center;gap:12px}.headerLine{justify-content:space-between;flex-wrap:wrap}.headerBrand svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2}
+.headerBrand b{font-size:19px;display:block;line-height:1.3}.headerBrand small{display:block;color:#daeeff;font-size:11px}
+.headerPill{background:#ffffff24;border:1px solid #ffffff66;padding:5px 13px;border-radius:20px;font-size:11px}
+.headerSub{padding-top:10px;color:#eaf5ff;font-size:11px}
+.financeWorkspace{margin-top:11px}.sectionTopline{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;padding:3px 6px}
+.sectionTopline h2{font-size:17px;margin:0;font-weight:900}.sectionTopline p{font-size:11px;color:#667085;margin:2px 0}
+.card{background:#fff;border:1px solid #e2e7ef;border-radius:12px;box-shadow:0 3px 12px #254a8210}
+.financeNavDock{display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid #e9edf3;margin-bottom:9px;flex-wrap:wrap}
+.financeSectionTabs{display:flex;gap:7px;overflow:auto;padding:5px 2px 11px}
+.financeSectionTabs button{border:1px solid #e4e7ec;background:#fff;color:#667085;border-radius:10px;padding:8px 16px;white-space:nowrap;font-weight:750;min-width:95px}
+.financeSectionTabs button.active{background:#eef2ff;border-color:#c7d2fe;color:#4338ca;font-weight:900}
+.financeNavDock .info{font-size:11px;color:#73839a}.snapshotTag{font-size:10px;color:#517393;background:#eef6ff;border:1px solid #d6e8fe;padding:4px 9px;border-radius:7px}
+.btn{min-height:35px;background:#fff;color:#344054;border:1px solid #d6dce6;border-radius:8px;padding:6px 11px;font-weight:750}
+.btn.primary{background:#315efb;border-color:#315efb;color:#fff}.btn.active{background:#eef2ff;border-color:#bfcfff;color:#2d52ab}
+.btn.muted{background:#f5f6f8;color:#808b9c}input,select{min-height:38px;border:1px solid #dce4ef;border-radius:8px;background:#fff;padding:6px 9px;color:#344054}
+input[type=search]{min-width:190px}input::placeholder{color:#8293a9}
+.toolbar,.invoiceRangeToolbar,.statementFilters,.statementActions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.toolbar{padding:12px 14px;justify-content:space-between}.toolbarTitle{display:grid}.toolbarTitle b{font-size:13px}.toolbarTitle small{font-size:10px;color:#667085}
+.invoiceRangeToolbar{padding:8px 14px 12px;border-top:1px solid #f0f2f6}
+.invoiceRangeToolbar label,.statementFilters label{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#667085}
+.invoiceRangeToolbar input,.statementFilters input{width:130px}
+.financeCounts{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#667085}
+.invoiceRows{display:grid}.invoiceRow{display:grid;grid-template-columns:.9fr 1.45fr .7fr .9fr .9fr .9fr auto;gap:9px;align-items:center;padding:13px 15px;border-bottom:1px solid #f0f3f7}
+.invoiceRow:last-child{border-bottom:0}.invoiceRow small,.invoiceRow b{display:block}
+.invoiceRow small{font-size:10px;color:#8b9aaf}.invoiceRow b{font-size:12px;color:#344054;margin-top:3px}
+.invoiceRow .number{color:#234a96}.actionStack{display:flex;flex-wrap:wrap;gap:5px;max-width:260px}
+.actionStack .btn{min-height:30px;padding:4px 8px;font-size:10px}
+.financeListCard{overflow:hidden}.pb1176PaymentActions{padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pb1420PaymentColumns,.receiptRow{display:grid;grid-template-columns:1.65fr .8fr 1fr 1fr 1.4fr;gap:12px;align-items:center;padding:10px 15px}
+.pb1420PaymentColumns{background:#f6f8fc;color:#64748b;font-size:11px;font-weight:800}
+.receiptRow{border-bottom:1px solid #eef1f5}.receiptRow b,.receiptRow small{display:block}.receiptRow small{color:#8d9bb0;font-size:10px}
+.miniBadge{font-size:10px;padding:2px 8px;border-radius:15px;color:#47699c;background:#edf4ff;display:inline-block}
+.statementToolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:12px;margin-bottom:10px;flex-wrap:wrap}
+.statementFilters{flex:1}.statementFilters select{min-width:205px}.statementActions button{min-width:100px}
+.statementHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:2px solid #344054;padding-bottom:10px;margin-bottom:13px}
+.statementHead span{color:#315efb;font-size:12px;font-weight:900}.statementHead h3{font-size:21px;margin:0}
+.statementHead small,.statementHead b{display:block}.statementHead small{color:#6d7f95;font-size:11px}
+.statementPaper{padding:17px}.statementSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:13px}
+.statementSummary>div{border:1px solid #e1e6ed;background:#fbfcfe;border-radius:10px;padding:10px 13px}
+.statementSummary small,.statementSummary b{display:block}.statementSummary small{font-size:11px;color:#728298}.statementSummary b{font-size:16px;margin-top:2px}
+.statementSummary>.statementClosing{background:#eef4ff;border-color:#c7d7fe}.statementSummary .statementClosing b{color:#265cd3}
+.tableWrap{overflow:auto}.statementTable{width:100%;min-width:850px;border-collapse:collapse}
+.statementTable th,.statementTable td{border:1px solid #e2e7ee;text-align:center;padding:9px 10px}
+.statementTable th{background:#f2f4f7;color:#344054;font-size:11px;font-weight:850}
+.statementTable td:nth-child(3){text-align:right;max-width:300px;white-space:normal}
+.statementTable tbody tr:nth-child(even){background:#fafbff}.statementTable button{border:0;background:none;color:#2b58b7;text-decoration:underline}
+.money{direction:ltr;font-variant-numeric:tabular-nums;font-family:Vazirmatn,Tahoma,sans-serif}
+.empty{padding:34px 14px;text-align:center;color:#8090a4}
+.footerBar{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:10px 14px;border-top:1px solid #f0f2f5;font-size:11px;color:#76879b}
+.footerBar button{min-height:30px}
+.offlineNotice{margin-top:13px;background:#fff8e9;border-right:3px solid #e9b54c;color:#866932;border-radius:6px;padding:10px 12px;font-size:11px}
+dialog{border:1px solid #d9e3f1;border-radius:15px;max-width:min(720px,95vw);width:100%;box-shadow:0 15px 45px #1f44753c;color:#344054}
+dialog::backdrop{background:#173b6080}.dialogHeader{display:flex;align-items:center;justify-content:space-between}.dialogHeader h3{margin:0}.dialogContent{padding:8px 0}.dialogFooter{text-align:left}
+.detailsTable{border-collapse:collapse;width:100%}.detailsTable th,.detailsTable td{border:1px solid #e8edf5;padding:6px;text-align:right}
+.statementDetail{color:#5e7192;background:#f4f8ff;font-size:11px}
+@media(max-width:1010px){.invoiceRow{grid-template-columns:repeat(3,minmax(120px,1fr))}.actionStack{grid-column:1/-1;max-width:none}.statementSummary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){main{padding:8px}.appHeader{padding:14px}.pb1420PaymentColumns{display:none}.receiptRow{grid-template-columns:1fr 1fr}.receiptRow .rowAction{grid-column:1/-1}.invoiceRow{grid-template-columns:repeat(2,minmax(120px,1fr))}.statementToolbar select{width:100%}.invoiceRangeToolbar input{width:112px}}
+@media print{body{background:white}main{padding:0}.appHeader,.financeNavDock,.sectionTopline,.toolbar,.invoiceRangeToolbar,.pb1176PaymentActions,.statementToolbar,.footerBar,.offlineNotice,.actionStack,.rowAction{display:none!important}.card{border:none;box-shadow:none}.invoiceRow{break-inside:avoid}.statementTable{min-width:0}.statementSummary>div{break-inside:avoid}}
+</style></head><body><main>
+<header class="appHeader"><div class="headerLine"><div class="headerBrand">
+<svg viewBox="0 0 36 36" aria-hidden="true"><rect x="4" y="10" width="28" height="20" rx="4"/><circle cx="18" cy="20" r="7"/><path d="M11 10 14 5h8l3 5"/></svg>
+<div><b>PhotoBridge</b><small>پنل لابراتوار · امور مالی و فاکتورها</small></div></div>
+<div class="headerActions"><span class="headerPill">نمای بکاپ · فقط مشاهده</span><span class="headerPill" id="backupAt">—</span></div></div>
+<div class="headerSub">فاکتورها، دریافت‌ها و حساب معین · اطلاعات ذخیره‌شده روی همین رایانه در لحظه بکاپ</div></header>
+<section class="financeWorkspace accountingWorkspace financeWorkspaceCompact" aria-label="امور مالی بکاپ">
+<div class="sectionTopline financeTopline"><div><h2>حسابداری و امور مالی</h2><p>فاکتور، دریافت، تخفیف و حساب معین در یک بخش</p></div><div class="snapshotTag">آفلاین · بدون تغییر در اطلاعات</div></div>
+<div class="financeNavDock"><div class="financeSectionTabs" role="tablist" aria-label="انتخاب بخش حسابداری">
+<button data-tab="invoices" class="active" role="tab" aria-selected="true">فاکتورها</button>
+<button data-tab="payments" role="tab" aria-selected="false">دریافت‌ها</button>
+<button data-tab="statement" role="tab" aria-selected="false">حساب معین</button></div><span class="info">نسخه پشتیبان پنل مالی PhotoBridge</span></div>
+<div id="invoiceBlock" class="invoiceTableCard card">
+<div class="toolbar pb1423InvoiceToolbar"><div class="toolbarTitle"><b>فاکتورها و اسناد مالی</b><small id="invoiceTotal">—</small></div>
+<div class="toolbar"><select class="customerSelect" aria-label="انتخاب عکاسی"><option value="">همهٔ عکاسی‌ها</option></select>
+<input type="search" id="invoiceSearch" placeholder="جستجوی فاکتور، عکاسی یا سند…" aria-label="جستجوی فاکتور"/>
+<button type="button" class="btn muted" disabled title="بکاپ فقط قابل مشاهده است">＋ ثبت فاکتور دستی</button></div></div>
+<div class="invoiceRangeToolbar"><label>از تاریخ <input class="fromDate" placeholder="۱۴۰۵/۰۸/۰۱" aria-label="از تاریخ فاکتورها"/></label><label>تا تاریخ <input class="toDate" placeholder="۱۴۰۵/۰۸/۳۰" aria-label="تا تاریخ فاکتورها"/></label>
+<button type="button" class="btn rangeApply">نمایش بازه</button><button type="button" class="btn today">امروز</button><button type="button" class="btn showAll">نمایش همه</button><span class="financeCounts" id="invoiceCounts"></span></div>
+<div class="invoiceRows accountingInvoiceRows" id="invoiceRows"></div><div class="footerBar"><span id="invoiceRange"></span><div><button class="btn prev">قبلی</button> <button class="btn next">بعدی</button></div></div></div>
+<div id="receiptBlock" class="card financeListCard" hidden><div class="pb1176PaymentActions">
+<select class="customerSelect" aria-label="انتخاب عکاسی برای دریافت‌ها"><option value="">همهٔ عکاسی‌ها</option></select>
+<input type="search" id="paymentSearch" placeholder="جستجوی دریافت یا عکاسی…" aria-label="جستجوی دریافتی"/>
+<button class="btn muted" disabled title="در نسخه بکاپ امکان ثبت وجود ندارد">＋ ثبت پرداخت</button><button class="btn muted" disabled title="در نسخه بکاپ امکان ثبت وجود ندارد">＋ ثبت تخفیف</button></div>
+<div class="invoiceRangeToolbar"><label>از تاریخ <input class="fromDate" placeholder="از تاریخ" aria-label="از تاریخ دریافت‌ها"/></label><label>تا تاریخ <input class="toDate" placeholder="تا تاریخ" aria-label="تا تاریخ دریافت‌ها"/></label>
+<button class="btn rangeApply">نمایش بازه</button><button class="btn today">امروز</button><button class="btn showAll">نمایش همه</button><span id="paymentCounts" class="financeCounts"></span></div>
+<div class="pb1420PaymentColumns"><b>عکاسی / شرح</b><b>تاریخ</b><b>روش دریافت</b><b>مبلغ</b><b>عملیات</b></div>
+<div class="financeRecordRows" id="paymentRows"></div><div class="footerBar"><span id="paymentRange"></span><div><button class="btn prev">قبلی</button> <button class="btn next">بعدی</button></div></div></div>
+<div id="statementBlock" class="customerStatementWorkspace" hidden>
+<section class="card statementToolbar"><div class="statementFilters">
+<select class="customerSelect" aria-label="انتخاب عکاسی برای حساب معین"><option value="">انتخاب عکاسی</option></select>
+<label>از تاریخ <input class="fromDate" placeholder="از تاریخ" aria-label="از تاریخ معین"/></label>
+<label>تا تاریخ <input class="toDate" placeholder="تا تاریخ" aria-label="تا تاریخ معین"/></label></div>
+<div class="statementActions"><button type="button" class="btn viewMode active" data-mode="summary">نمایش خلاصه</button><button type="button" class="btn viewMode" data-mode="detailed">نمایش با جزئیات</button>
+<button type="button" class="btn printBtn">چاپ</button><button type="button" class="btn csvBtn">خروجی Excel (CSV)</button></div></section>
+<section class="card statementPaper" id="statementPaper">
+<header class="statementHead"><div><span>PhotoBridge</span><h3>حساب معین</h3></div><div><small>طرف حساب</small><b id="statementCustomer">انتخاب عکاسی</b><small id="statementMobile"></small></div></header>
+<div class="statementSummary"><div><small>مانده اول دوره</small><b id="opening">—</b></div><div><small>جمع بدهکار</small><b id="debit">—</b></div>
+<div><small>جمع بستانکار</small><b id="credit">—</b></div><div class="statementClosing"><small>مانده پایان دوره</small><b id="closing">—</b></div></div>
+<div class="tableWrap"><table class="statementTable"><thead><tr><th>ردیف</th><th><button id="sortDate" type="button">تاریخ ↓</button></th><th>شرح</th><th>شماره سند</th><th>بدهکار</th><th>بستانکار</th><th>باقیمانده</th></tr></thead><tbody id="statementRows"></tbody></table></div>
+<div class="footerBar"><span id="statementRange"></span><div><button class="btn prev">قبلی</button> <button class="btn next">بعدی</button></div></div></section></div>
+</section><div class="offlineNotice">این صفحه تنها نسخه ذخیره‌شده در زمان بکاپ را نمایش می‌دهد و هیچ اطلاعاتی را از سایت دریافت نمی‌کند. دکمه‌های ثبت و اصلاح حسابداری غیرفعال‌اند. فایل اصلی <b>data.sqlite</b> بدون تغییر باقی می‌ماند.</div></main>
+<dialog id="invoiceDialog"><div class="dialogHeader"><h3 id="dialogTitle">مشاهده فاکتور</h3><button type="button" id="closeDialog" class="btn">بستن</button></div>
+<div class="dialogContent" id="dialogContent"></div><div class="dialogFooter"><button id="dialogPrint" type="button" class="btn primary">چاپ</button></div></dialog>
+<script type="application/octet-stream" id="snapshot">__PB_SNAPSHOT_BASE64__</script>
+<script>
+(function(){
+"use strict";
+const byId=id=>document.getElementById(id),buttons=[...document.querySelectorAll("[data-tab]")];
+let data;
+try{const bytes=Uint8Array.from(atob(byId("snapshot").textContent.trim()),ch=>ch.charCodeAt(0));data=JSON.parse(new TextDecoder().decode(bytes));if(data.format!=="photobridge-finance-offline-v2")throw Error("version")}
+catch{byId("invoiceRows").textContent="خواندن اطلاعات بکاپ امکان‌پذیر نیست.";return}
+const arrays={invoices:data.documents||[],payments:data.receipts||[],statement:data.ledger||[]},studios=data.studios||[];
+const state={tab:"invoices",customer:"",mode:"summary",sort:"desc",pages:{invoices:0,payments:0,statement:0},
+ dates:{invoices:{from:"",to:""},payments:{from:"",to:""},statement:{from:"",to:""}}};
+const size=40,money=n=>new Intl.NumberFormat("fa-IR").format(Number(n)||0);
+const digits=t=>String(t||"").replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));
+function normalize(t){return digits(t).normalize("NFKC").replace(/[آأإٱ]/g,"ا").replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\u200c\u200e\u200f]/g," ").replace(/\s+/g," ").trim().toLocaleLowerCase("fa-IR")}
+function persian(iso){if(!iso)return"—";const d=new Date(iso);if(!Number.isFinite(d.getTime()))return String(iso);return new Intl.DateTimeFormat("fa-IR-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"}).format(d)}
+function dateKey(raw){
+ const t=digits(raw).trim(),parts=t.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+ if(parts&&Number(parts[1])<1600)return parts[1]+parts[2].padStart(2,"0")+parts[3].padStart(2,"0");
+ if(!t)return"";
+ const x=digits(persian(raw)).replace(/[^\d/]/g,""),m=x.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+ return m?m[1]+m[2].padStart(2,"0")+m[3].padStart(2,"0"):"";
+}
+function inDates(row){
+ const k=dateKey(row.date),range=state.dates[state.tab];
+ return (!range.from||k>=dateKey(range.from))&&(!range.to||k<=dateKey(range.to));
+}
+const studioName=id=>studios.find(s=>String(s.id)===String(id)),selectedStudio=()=>studioName(state.customer);
+const studioMatches=row=>!state.customer||String(row.customerId)===String(state.customer);
+function textMatches(row){if(state.tab==="statement")return true;
+ const field=byId(state.tab==="invoices"?"invoiceSearch":"paymentSearch"),needle=normalize(field.value);
+ return !needle||normalize(Object.values(row).filter(v=>typeof v!=="object").join(" ")).includes(needle)}
+function visible(){
+ if(state.tab==="statement"&&!state.customer)return [];
+ return arrays[state.tab].filter(r=>studioMatches(r)&&inDates(r)&&textMatches(r))
+ .sort((a,b)=>((Date.parse(b.date)||0)-(Date.parse(a.date)||0))*(state.tab==="statement"&&state.sort==="asc"?-1:1))
+}
+function el(tag,cls,txt){const x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=String(txt);return x}
+function cell(label,value,cls){const d=el("div",cls);d.append(el("small","",label),el("b","",value));return d}
+function action(txt,click,disabled){const b=el("button","btn"+(disabled?" muted":""),txt);b.type="button";b.disabled=!!disabled;if(click)b.addEventListener("click",click);if(disabled)b.title="در نسخه پشتیبان امکان ثبت و ویرایش وجود ندارد";return b}
+function pageRows(block,items){
+ const count=items.length,pages=Math.max(1,Math.ceil(count/size)),page=Math.min(state.pages[state.tab],pages-1);state.pages[state.tab]=page;
+ block.querySelector(".prev").disabled=page===0;block.querySelector(".next").disabled=page>=pages-1;
+ block.querySelector(".footerBar span").textContent=count?money(page*size+1)+" تا "+money(Math.min(count,(page+1)*size))+" از "+money(count)+" رکورد":"۰ رکورد";
+ return items.slice(page*size,(page+1)*size);
+}
+function renderInvoices(){
+ const rows=visible(),root=byId("invoiceRows"),items=pageRows(byId("invoiceBlock"),rows);root.replaceChildren();
+ byId("invoiceTotal").textContent=money(rows.length)+" رکورد";
+ byId("invoiceCounts").textContent="فاکتورهای نمایش‌داده‌شده: "+money(rows.filter(i=>i.type==="invoice").length)+" · وضعیت ثبت در حسابداری: در این بکاپ ثبت نشده";
+ if(!items.length){root.append(el("div","empty","هنوز فاکتور یا سند مالی در این بازه ثبت نشده است."));return}
+ for(const x of items){
+  const row=el("article","invoiceRow");row.append(cell(x.type==="discount"?"سند تخفیف":x.type==="correction"?"اصلاحیه":"فاکتور","#"+x.number,"number"),
+  cell("عکاسی",x.customer||"—"),cell("سفارش",x.orderId||"—"),cell("صدور",persian(x.date)),
+  cell("مبلغ",money(x.total)),cell("پرداخت مستقیم / مانده",money(x.paid)+" / "+money(x.balance)));
+  const actions=el("div","actionStack");actions.append(action("مشاهده فاکتور",()=>openInvoice(x)),action("اصلاحیه",null,true),action("ثبت در حسابداری",null,true));row.append(actions);root.append(row);
+ }
+}
+function renderPayments(){
+ const rows=visible(),root=byId("paymentRows"),items=pageRows(byId("receiptBlock"),rows);root.replaceChildren();byId("paymentCounts").textContent="دریافت‌های نمایش‌داده‌شده: "+money(rows.length);
+ if(!items.length){root.append(el("div","empty","برای این عکاسی دریافتی ثبت نشده است."));return}
+ for(const x of items){
+  const row=el("div","receiptRow"),studio=el("div");studio.append(el("b","",x.customer||"—"),el("small","",x.kind==="discount"?"سند تخفیف":(x.number?"فاکتور #"+x.number:"پرداخت علی‌الحساب")));
+  row.append(studio,el("time","",persian(x.date)),el("span","miniBadge",x.kind==="discount"?"تخفیف":({cash:"نقدی",card:"کارتخوان",transfer:"انتقال بانکی",cheque:"چک"})[x.method]||x.method||"—"),el("strong","money",money(x.amount)));
+  const controls=el("div","rowAction");controls.append(action("اصلاحیه",null,true),action("ثبت در حسابداری",null,true));row.append(controls);root.append(row);
+ }
+}
+function statementTotals(studio){
+ const entries=arrays.statement.filter(x=>x.customerId===studio?.id&&x.rowNumber>0).sort((a,b)=>(Date.parse(a.date)||0)-(Date.parse(b.date)||0));
+ const within=entries.filter(inDates);
+ const preceding=entries.filter(r=>state.dates.statement.from&&dateKey(r.date)<dateKey(state.dates.statement.from));
+ const opening=within.length?within[0].balance-within[0].debit+within[0].credit:(preceding.length?preceding[preceding.length-1].balance:entries.length?entries[0].balance-entries[0].debit+entries[0].credit:Number(studio?.opening||0));
+ const debit=within.reduce((a,r)=>a+r.debit,0),credit=within.reduce((a,r)=>a+r.credit,0);
+ return{opening,debit,credit,closing:opening+debit-credit};
+}
+function renderStatement(){
+ const studio=selectedStudio(),items=visible(),summary=statementTotals(studio),root=byId("statementRows"),page=pageRows(byId("statementPaper"),items);
+ byId("statementCustomer").textContent=studio?.name||"انتخاب عکاسی";byId("statementMobile").textContent=studio?.mobile||"";
+ for(const key of ["opening","debit","credit","closing"])byId(key).textContent=money(summary[key]);
+ root.replaceChildren();if(!studio){const tr=el("tr"),td=el("td","empty","برای مشاهده حساب معین یک عکاسی انتخاب کنید.");td.colSpan=7;tr.append(td);root.append(tr);return}
+ for(const [index,r]of page.entries()){
+  const tr=el("tr");for(const value of [money(state.pages.statement*size+index+1),r.persianDate||persian(r.date),r.description,r.ref||"—",
+   r.debit?money(r.debit):"—",r.credit?money(r.credit):"—",money(r.balance)])tr.append(el("td","",value));root.append(tr);
+  if(state.mode==="detailed"&&r.ref){
+   const doc=arrays.invoices.find(x=>x.number===r.ref&&x.customerId===r.customerId);
+   if(doc?.lines?.length){const sub=el("tr","statementDetail"),td=el("td","",doc.lines.map(l=>l.description+" × "+l.quantity+" = "+money(l.total)).join(" | "));td.colSpan=7;sub.append(td);root.append(sub)}
+  }
+ }
+ if(!page.length){const tr=el("tr"),td=el("td","empty","در این بازه گردش حسابی ثبت نشده است.");td.colSpan=7;tr.append(td);root.append(tr)}
+}
+function render(){if(state.tab==="invoices")renderInvoices();else if(state.tab==="payments")renderPayments();else renderStatement()}
+function switchTab(tab){
+ state.tab=tab;for(const b of buttons){const on=b.dataset.tab===tab;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on))}
+ for(const [id,name]of [["invoiceBlock","invoices"],["receiptBlock","payments"],["statementBlock","statement"]])byId(id).hidden=name!==tab;render()
+}
+for(const select of document.querySelectorAll(".customerSelect")){
+ for(const studio of studios){const option=el("option","",studio.name);option.value=studio.id;select.append(option)}
+ select.addEventListener("change",()=>{state.customer=select.value;for(const control of document.querySelectorAll(".customerSelect"))control.value=state.customer;state.pages={invoices:0,payments:0,statement:0};render()})
+}
+for(const [name,id]of [["invoices","invoiceBlock"],["payments","receiptBlock"],["statement","statementBlock"]]){
+ const block=byId(id),range=state.dates[name],inputs=block.querySelectorAll(".fromDate,.toDate");
+ inputs[0].addEventListener("change",()=>{range.from=digits(inputs[0].value).trim();state.pages[name]=0;render()});
+ inputs[1].addEventListener("change",()=>{range.to=digits(inputs[1].value).trim();state.pages[name]=0;render()});
+ const apply=block.querySelector(".rangeApply");if(apply)apply.addEventListener("click",render);
+ const today=block.querySelector(".today");if(today)today.addEventListener("click",()=>{
+  const d=digits(persian(new Date().toISOString()));range.from=d;range.to=d;inputs[0].value=d;inputs[1].value=d;render();
+ });
+ const all=block.querySelector(".showAll");if(all)all.addEventListener("click",()=>{range.from="";range.to="";inputs[0].value="";inputs[1].value="";render()});
+ block.querySelector(".prev").addEventListener("click",()=>{state.pages[name]=Math.max(0,state.pages[name]-1);render()});
+ block.querySelector(".next").addEventListener("click",()=>{state.pages[name]++;render()});
+}
+for(const input of [byId("invoiceSearch"),byId("paymentSearch")])input.addEventListener("input",()=>{state.pages[state.tab]=0;render()});
+byId("sortDate").addEventListener("click",()=>{state.sort=state.sort==="desc"?"asc":"desc";byId("sortDate").textContent="تاریخ "+(state.sort==="desc"?"↓":"↑");render()});
+for(const b of document.querySelectorAll(".viewMode"))b.addEventListener("click",()=>{state.mode=b.dataset.mode;for(const item of document.querySelectorAll(".viewMode"))item.classList.toggle("active",item.dataset.mode===state.mode);render()});
+for(const b of document.querySelectorAll(".printBtn"))b.addEventListener("click",()=>window.print());
+function exportCsv(){
+ const source=visible(),columns=state.tab==="invoices"?[["number","شماره فاکتور"],["customer","عکاسی"],["date","تاریخ صدور"],["total","مبلغ"],["paid","پرداخت"],["balance","مانده"]]:
+ state.tab==="payments"?[["customer","عکاسی"],["date","تاریخ"],["kind","نوع"],["method","روش دریافت"],["amount","مبلغ"]]:
+ [["customer","عکاسی"],["date","تاریخ"],["description","شرح"],["ref","سند"],["debit","بدهکار"],["credit","بستانکار"],["balance","مانده"]];
+ const quote=v=>{let t=String(v??"");if(/^[=+@-]/.test(t))t="'"+t;return'"'+t.replace(/"/g,'""')+'"'};
+ const lines=[columns.map(c=>c[1]),...source.map(row=>columns.map(c=>row[c[0]]))];
+ const blob=new Blob(["\uFEFF"+lines.map(line=>line.map(quote).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=el("a");a.href=url;a.download="PhotoBridge-Backup-"+state.tab+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+byId("statementBlock").querySelector(".csvBtn").addEventListener("click",exportCsv);
+function openInvoice(invoice){
+ const dialog=byId("invoiceDialog");byId("dialogTitle").textContent="فاکتور شماره "+invoice.number;
+ const root=byId("dialogContent");root.replaceChildren();root.append(el("p","",invoice.customer+" · "+persian(invoice.date)+" · مبلغ: "+money(invoice.total)+" تومان"));
+ if(invoice.lines?.length){
+  const table=el("table","detailsTable"),head=el("tr");for(const title of ["شرح","تعداد","قیمت واحد","مبلغ ردیف"])head.append(el("th","",title));table.append(head);
+  for(const line of invoice.lines){const tr=el("tr");for(const v of [line.description,line.quantity,money(line.unitPrice),money(line.total)])tr.append(el("td","",v));table.append(tr)}root.append(table);
+ }else root.append(el("p","empty","جزئیات این سند در نسخه بکاپ موجود نیست."));
+ dialog.showModal();
+}
+byId("closeDialog").addEventListener("click",()=>byId("invoiceDialog").close());
+byId("dialogPrint").addEventListener("click",()=>window.print());
+buttons.forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+byId("backupAt").textContent=persian(data.createdAt);switchTab("invoices");
+})();
+</script></body></html>

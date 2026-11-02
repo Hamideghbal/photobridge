@@ -84,6 +84,46 @@ for(const htmlPath of [
  html=html.replaceAll('photobridge-r1536-password-eye-brand.js?v=r1536','photobridge-r1536-password-eye-brand.js?v=r1537');
  write(htmlPath,html);
 }
+// A historical photographer-only identity can have two old hashes without any
+// additional business role. Accept the already valid photographer password in
+// that one special case; never permit lab/store sign-in to bypass unification.
+path='dist/api/server.js';s=read(path);
+{
+ const sectionStart=s.indexOf('    const loginWithMobile = async (expected) => {');
+ const sectionEnd=s.indexOf("    if (req.method === 'POST' && url.pathname === '/api/auth/lab-login')",sectionStart);
+ if(sectionStart<0||sectionEnd<=sectionStart)throw Error('R1537 login route boundary changed');
+ let body=s.slice(sectionStart,sectionEnd);
+ const guardStart=body.indexOf('if(!wantsAdmin){const state=businessLoginState(mobileMatches,password,passwordVerify);');
+ const guardEnd=body.indexOf('        let user = null, selectedMembership',guardStart);
+ if(guardStart<0||guardEnd<=guardStart)throw Error('R1537 shared-account login guard missing');
+ const previous=body.slice(guardStart,guardEnd);
+ if(!previous.includes("error:'account_password_unification_required'"))throw Error('R1537 cannot identify old guard');
+ const replacement=`let pb1537SoloPhotographer=false;
+        if(!wantsAdmin){
+          const state=businessLoginState(mobileMatches,password,passwordVerify);
+          if(state.needsUnification){
+            const only=mobileMatches.length===1?mobileMatches[0]:null;
+            if(expected==='customer'&&only?.active===true&&only.photographer_enabled===true
+               &&(passwordVerify(password,only.password_hash)||passwordVerify(password,only.photographer_password_hash))){
+              try{
+                const check=await pool.query(\`SELECT (
+                  EXISTS(SELECT 1 FROM lab_memberships WHERE user_id=$1 AND active=true AND role NOT IN ('customer','photographer'))
+                  OR EXISTS(SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND active=true AND role NOT IN ('customer','photographer'))
+                ) AS has_other_business_role /* PB1537 solo photographer roles */\`,[only.id]);
+                pb1537SoloPhotographer=check.rows[0]?.has_other_business_role===false;
+              }catch{pb1537SoloPhotographer=false;}
+            }
+            if(!pb1537SoloPhotographer)return sendJson(res,409,{error:'account_password_unification_required',message:'رمزهای قدیمی این شماره متفاوت‌اند؛ با تأیید پیامکی یک رمز مشترک برای عکاس، لابراتوار و فروشگاه تعیین کنید.'});
+          }
+        }
+        `;
+ body=body.slice(0,guardStart)+replacement+body.slice(guardEnd);
+ const key='passwordVerify(password, r.password_hash)';
+ if(body.split(key).length!==3)throw Error('R1537 photographer password candidate count changed');
+ body=body.replaceAll(key,"(passwordVerify(password,r.password_hash)||(pb1537SoloPhotographer&&passwordVerify(password,r.photographer_password_hash)))");
+ s=s.slice(0,sectionStart)+body+s.slice(sectionEnd);
+}
+write(path,s);
 // Retire the second, password-disabling action from the SMS security page.
 path='dist/web/lab-login-security.html';s=read(path);
 const from=s.indexOf('<form id="disableForm"'),to=s.indexOf('</form>',from);

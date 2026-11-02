@@ -10,11 +10,42 @@ test('conditional migration client handles ONLY a verified legacy login conflict
  assert(js.includes("target.origin!==location.origin"));
  assert(js.includes("target.pathname.startsWith('/api/auth/')"));
  assert(js.includes('promptAfterLegacyLogin(mobile)'));
+ assert(js.includes("location.assign('/account-recovery.html')"));
+ assert(js.includes("sessionStorage.setItem('pb1537_legacy_mobile'"));
+ assert(js.includes("sessionStorage.getItem('pb1537_legacy_mobile')"));
+ assert(js.includes("location.assign(to.startsWith('/')"));
+ assert(js.includes('removeLegacyHints()'));
+ assert(!js.includes('یکسان‌سازی رمز در مرورگر'));
  assert(!js.includes('let scheduled=false;'));
  assert(!js.includes('holder.className='));
  assert(js.includes("returnButton.textContent='بازگشت به صفحه ورود'"));
  assert(js.includes("stopOtp=window.pbSmsOtp?.listen(code)"));
  assert(!js.includes('/api/auth/unification-status'));
+});
+
+test('password eye stays compact and its CSS cache refreshes on browser login',()=>{
+ const css=read('dist/web/photobridge-r1536-password-eye-brand.css');
+ assert(css.includes('width:32px!important'));
+ assert(css.includes('min-width:32px!important'));
+ assert(css.includes('height:32px!important'));
+ assert(css.includes('padding-inline-end:42px!important'));
+ assert(css.includes('.pb1536PasswordEye span{display:none!important}'));
+ for(const html of ['dist/web/index.html','dist/web/lab-login-security.html','dist/api/equipment-rental-register.html']){
+  assert(read(html).includes('photobridge-r1536-password-eye-brand.css?v=r1537'),html);
+ }
+});
+test('legacy photographer-only profile signs in; extra business role retains OTP migration',async()=>{
+ const {login}=require('./test-r1393-shared-account.cjs');
+ const crypto=require('node:crypto');
+ const hash=p=>{const salt=crypto.randomBytes(16);return salt.toString('hex')+':'+crypto.scryptSync(p,salt,64).toString('hex')};
+ const row={id:'U',mobile:'09120000000',active:true,photographer_enabled:true,password_hash:hash('web-old'),photographer_password_hash:hash('photo-old')};
+ const solo=await login('customer',{rows:[row],roles:['customer'],password:'photo-old'});
+ assert.equal(solo.result.status,200,'photographer-only credentials should enter without migration');
+ const dual=await login('customer',{rows:[row],roles:['customer','lab_admin'],password:'photo-old'});
+ assert.equal(dual.result.status,409);
+ assert.equal(dual.result.data.error,'account_password_unification_required');
+ const wrong=await login('customer',{rows:[row],roles:['customer'],password:'wrong'});
+ assert.equal(wrong.result.status,401);
 });
 test('one-password-only security page removes the second form and endpoint',()=>{
  const html=read('dist/web/lab-login-security.html'),js=read('dist/web/photobridge-r1534-lab-login-security.js');

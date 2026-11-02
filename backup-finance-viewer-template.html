@@ -138,7 +138,7 @@ var arrays={invoices:data.invoices||[],receipts:data.receipts||[],ledger:data.le
 var active="invoices",page=0,pageSize=50,filtered=[];
 var studioSelected="",studioQuery="";
 function normalizeFa(value){return String(value??"").normalize("NFKC")
- .replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\u200c\u200e\u200f]/g," ")
+ .replace(/[آأإٱ]/g,"ا").replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[ۀة]/g,"ه").replace(/[\u200c\u200e\u200f]/g," ")
  .replace(/[\u064b-\u065f]/g,"").replace(/\s+/g," ").trim().toLocaleLowerCase("fa-IR")}
 var studios=Array.isArray(data.studios)?data.studios:[];
 if(!studios.length){

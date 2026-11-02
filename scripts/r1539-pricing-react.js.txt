@@ -1,0 +1,8 @@
+const [pb1539,pb1539Set]=x.useState({types:[],rates:{}}),pb1539Types=pb1539.types||[];
+x.useEffect(()=>{let alive=true;Me("/api/lab/print-catalog").then(v=>{if(alive&&v.catalog)pb1539Set(v.catalog)}).catch(()=>{});return()=>{alive=false}},[]);
+const pb1539Label=(id,fallback)=>pb1539Types.find(t=>t.id===id)?.name||fallback;
+const pb1539Custom=pb1539Types.filter(t=>t.kind==="binding"&&!t.legacy&&t.active!==false);
+const pb1539Reload=async()=>{const result=await Me("/api/lab/print-catalog");pb1539Set(result.catalog||{types:[],rates:{}})};
+const pb1539Create=async()=>{const title="صحافی جدید",name=window.prompt("نام مدل صحافی را بنویسید (نوع یا ضخامت را هم می‌توانید در نام مشخص کنید):");if(name==null||!name.trim())return;try{await Me("/api/lab/print-catalog",{method:"POST",body:JSON.stringify({kind:"binding",name:name.trim()})});await pb1539Reload()}catch{alert("افزودن مدل صحافی انجام نشد؛ نام باید یکتا و معتبر باشد.")}};
+const pb1539Rename=async(id,old)=>{const name=window.prompt("نام مدل صحافی را ویرایش کنید:",old);if(name==null||!name.trim()||name.trim()===old)return;try{await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id,name:name.trim()})});await pb1539Reload()}catch{alert("ویرایش نام انجام نشد؛ نام باید یکتا و معتبر باشد.")}};
+const h=[["luster",pb1539Label("luster","لاستر")],["silk",pb1539Label("silk","سیلک")],["metallic",pb1539Label("metallic","متالیک")],["album_binding_price",pb1539Label("album_binding_price","صحافی آلبوم")],...pb1539Custom.filter(t=>t.kind==="binding").map(t=>["pb1539_"+t.id,t.name]),["chassis","قیمت شاسی"],["chassis_stock","موجودی شاسی"],["frame","قیمت قاب"],["frame_stock","موجودی قاب"]]

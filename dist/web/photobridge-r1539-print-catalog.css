@@ -1,0 +1,28 @@
+/* R1539: Additional lab-specific paper/binding tariffs, matching existing price settings. */
+.labPrintPricingCard .priceCatalogActions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.labPrintPricingCard .priceCatalogActions>button{min-height:38px;white-space:nowrap}
+.labPrintPricingCard .inventoryPriceGrid.head>b{position:relative}
+.labPrintPricingCard .pb1539Rename{
+ display:inline-flex;align-items:center;justify-content:center;
+ margin-inline-start:6px;width:26px;height:26px;padding:0;
+ border:1px solid #c7d7ee;border-radius:8px;background:#f4f8ff;
+ color:#315ecb;font-size:15px;vertical-align:middle;cursor:pointer
+}
+.labPrintPricingCard .pb1539Rename:hover{background:#e3efff}
+.labPrintPricingCard .pb1539Rename:focus-visible{outline:2px solid #315efb;outline-offset:2px}
+@media(min-width:751px){.labPrintPricingCard .inventoryPriceGrid{grid-template-columns:minmax(154px,1.4fr) repeat(var(--pb1539-columns,8),minmax(102px,1fr))!important;min-width:max-content}.labPrintPricingCard .priceScroller{overflow-x:auto!important}}
+@media(max-width:750px){
+ .labPrintPricingCard .priceCatalogActions{gap:6px}
+ .labPrintPricingCard .priceCatalogActions>button{font-size:12px;min-height:40px;padding:8px 10px}
+ .labPrintPricingCard .pb1539Rename{width:30px;height:30px}
+}
+
+.labPrintPricingCard .pb1539MobileRename{display:none}
+@media(max-width:750px){.labPrintPricingCard .pb1539MobileRename{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:3px 10px;border:1px solid #c7d7ee;border-radius:8px;background:#f5f8ff;color:#315ecb;font:700 11px Vazirmatn,Tahoma,sans-serif}}
+
+/* Photographer album: binding is selected first, across both columns. */
+.albumCoreFields>.pb1539BindingField{grid-column:1 / -1;min-width:0;display:grid;gap:7px}
+.albumCoreFields>.pb1539BindingField select{width:100%;min-height:42px;border-radius:10px;border:1px solid #d7e2ef;background:#fff;color:#203653;font:inherit;padding:8px 12px}
+.albumCoreFields>.pb1539BindingField select:focus-visible{outline:2px solid #5179ed;outline-offset:2px}
+.albumOrderSummaryFacts .pb1539BindingFact b{overflow-wrap:anywhere}
+@media(max-width:700px){.albumCoreFields>.pb1539BindingField{grid-column:1 / -1}.albumCoreFields>.pb1539BindingField select{min-height:45px}}

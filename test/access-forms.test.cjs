@@ -4,11 +4,12 @@ const {addForms}=require('../access-forms.cjs');
 test('Access form builder names the three data-bound forms and uses only read-only controls',async()=>{
  const script=await fs.readFile(path.join(__dirname,'../access-forms.vbs'),'utf8');
  for(const name of ['frmPBInvoices','frmPBReceipts','frmPBLedger'])assert(script.includes(name));
- for(const name of ['فاکتورها','دریافت‌ها','دفتر حسابداری','ردیف‌های حسابداری','بدهکار','بستانکار'])assert(script.includes(name));
+ for(const name of ['فاکتورها','دریافت‌ها','حساب معین','بدهکار','بستانکار'])assert(script.includes(name));
  assert(script.includes('frm.AllowEdits=False'));
  assert(script.includes('frm.AllowAdditions=False'));
  assert(script.includes('frm.AllowDeletions=False'));
  assert(script.includes('frm.DefaultView=2'));
+ assert(!script.includes(' INNER JOIN '),'Access Ledger form must not reintroduce interactive parameter prompts');
 });
 test('native Windows Access forms replace only verified generated report, keep all backup data intact',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pb-forms-')),file=path.join(dir,'finance.accdb'),before=Buffer.from('original verified database');
@@ -39,7 +40,7 @@ test('Access missing or validation failure leaves original readable report byte-
 });
 test('native 1.0.69 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.69');
+ assert.equal(pkg.version,'1.0.71');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));

@@ -50,7 +50,7 @@
  attach.sequence=0;
  function isOwnBrand(img){
   const src=img?.getAttribute('src')||'';
-  return img?.closest('#pbR1361MobileSplash')||/^\\/photobridge-(?:launch|mobile-launch|app|icon|brand|favicon)[a-z0-9.-]*\\.(?:png|svg|webp)(?:\\?.*)?$/i.test(src);
+  return img?.closest('#pbR1361MobileSplash')||/^\/photobridge-(?:launch|mobile-launch|app|icon|brand|favicon)[a-z0-9.-]*\.(?:png|svg|webp)(?:\?.*)?$/i.test(src);
  }
  function repairBrand(img){
   if(!img||img.dataset.pb1536BrandFallback==='1')return;

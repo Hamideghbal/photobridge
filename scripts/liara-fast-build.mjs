@@ -674,3 +674,6 @@ await deployStep('./enable-r1542-native-tariffs.mjs');
 
 // R1543: usable native catalog dialogs, archive confirmation and customer details.
 await deployStep('./enable-r1543-lab-dialogs.mjs');
+
+// R1544: keep native account projections from suppressing the opening-debt editor.
+await deployStep('./enable-r1544-opening-debt-status.mjs');

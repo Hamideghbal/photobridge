@@ -6,6 +6,7 @@ on:
       - '**/*r1541*'
       - '**/*r1542*'
       - '**/*r1543*'
+      - '**/*r1544*'
       - '.github/workflows/verify-tariff-columns.yml'
   workflow_dispatch:
 permissions:
@@ -23,8 +24,12 @@ jobs:
       - run: npm run build
       - name: Install isolated browser tools
         run: |
-          npm install --prefix "$RUNNER_TEMP/tariff-tests" --no-save --no-audit --no-fund playwright@1.56.1
+          npm install --prefix "$RUNNER_TEMP/tariff-tests" --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
           "$RUNNER_TEMP/tariff-tests/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify authoritative opening-debt route with PostgreSQL engine
+        env:
+          PB_PGLITE_PATH: ${{ runner.temp }}/tariff-tests/node_modules/@electric-sql/pglite
+        run: node --test scripts/test-r1544-opening-debt-db.cjs
       - name: Verify column alignment and binding actions
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/tariff-tests/node_modules/playwright

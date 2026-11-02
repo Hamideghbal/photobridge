@@ -1,5 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{pathToFileURL}=require('node:url');
 const api=()=>import(pathToFileURL(path.resolve('dist/api/lab-login-security.js')));
+const {login}=require('./test-r1393-shared-account.cjs');
 test('login SMS targets only persisted active lab managers, deduplicates phones and never contains credentials',async()=>{
  const {sendLabLoginAlert}=await api(),sent=[];let query;
  const result=await sendLabLoginAlert({pool:{query:async(sql,args)=>{query={sql,args};return {rows:[{lab_name:'Lab',user_id:'owner',mobile:'09120000000'},{lab_name:'Lab',user_id:'same-owner',mobile:'+989120000000'},{mobile:'invalid'}]}}},sendSms:async args=>sent.push(args),labId:'L',userId:'actor',publicAppUrl:'https://photobridge.ir',now:new Date('2026-11-02T10:00:00Z')});
@@ -16,7 +17,7 @@ test('public security page has no GET mutations or URL secrets and requires expl
  assert(server.includes("if(req.method==='POST'&&url.pathname==='/api/auth/lab-login-security/disable-password')"));assert(server.includes("if(labRole==='lab_admin'&&labId)void notifyLabLoginSecurity(labId,user.id,req)"));assert.equal((server.match(/void notifyLabLoginSecurity\(/g)||[]).length,5);
 });
 
-test('lab login security alerts fire only after a successful lab administrator login',async()=>{const {login}=require('./test-r1393-shared-account.cjs');assert.equal((await login('lab')).loginAlerts,1);assert.equal((await login('customer')).loginAlerts,0);assert.equal((await login('lab',{password:'wrong'})).loginAlerts,0);assert.equal((await login('lab',{suspended:true})).loginAlerts,0);});
+test('lab login security alerts fire only after a successful lab administrator login',async()=>{assert.equal((await login('lab')).loginAlerts,1);assert.equal((await login('customer')).loginAlerts,0);assert.equal((await login('lab',{password:'wrong'})).loginAlerts,0);assert.equal((await login('lab',{suspended:true})).loginAlerts,0);});
 test('actual HTTP route returns actionable authorization errors and a GET cannot revoke anything',async()=>{
  const vm=require('node:vm'),s=fs.readFileSync('dist/api/server.js','utf8'),start=s.indexOf("    if(req.method==='POST'&&url.pathname==='/api/auth/lab-login-security/disable-password')"),end=s.indexOf("    if (req.method === 'POST' && url.pathname === '/api/auth/password-reset/request')",start),route=s.slice(start,end);assert(start>0&&end>start);
  for(const [method,code,status]of [['POST','reset_invalid',400],['POST','lab_manager_required',403],['POST','existing_account_invalid',409],['GET',null,null]]){let result,mutations=0;await vm.runInNewContext('(async()=>{'+route+'})()',{req:{method},url:{pathname:'/api/auth/lab-login-security/disable-password'},res:{},bodyJson:async()=>({}),pool:{},passwordHash(){},tokenHash(){},audit(){},disableLabPassword:async()=>{mutations++;throw Object.assign(Error(code),{status})},sendJson:(_,code,body)=>result={code,body}});if(method==='GET'){assert.equal(mutations,0);assert.equal(result,undefined)}else{assert.equal(result.code,status);assert.equal(result.body.error,code);}}

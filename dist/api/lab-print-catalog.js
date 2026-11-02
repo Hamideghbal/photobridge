@@ -51,6 +51,12 @@ export function renamePrintType(catalog,id,name){
  ensureUnique(catalog.types,current.kind,name,id);
  return {...catalog,types:catalog.types.map(t=>t.id===id?{...t,name}:t)};
 }
+// Never hard-delete an album model: historic invoice snapshots and prices may reference its ID.
+export function archivePrintBinding(catalog,id){
+ const current=catalog.types.find(type=>type.id===id);
+ if(!current||current.legacy||current.kind!=='binding')fail('print_catalog_cannot_remove_type');
+ return {...catalog,types:catalog.types.map(type=>type.id===id?{...type,active:false}:type)};
+}
 export function applyPrintRates(catalog,rows,sizeIds){
  if(!Array.isArray(rows)||rows.length>300)fail('print_catalog_invalid_rows');
  const allowed=new Set(catalog.types.filter(t=>t.kind==='binding'&&!t.legacy).map(t=>t.id));
@@ -89,10 +95,10 @@ export async function handleLabPrintCatalog({req,res,url,pool,labId,bodyJson,sen
   if(!q.rowCount)fail('lab_not_found');
   const prefs=q.rows[0].ui_preferences||{};
   const catalog=normalizePrintCatalog(prefs.printTariffCatalog);
-  const updated=method==='POST'?addPrintType(catalog,body):renamePrintType(catalog,text(body.id),body.name);
+  const updated=method==='POST'?addPrintType(catalog,body):body.active===false?archivePrintBinding(catalog,text(body.id)):renamePrintType(catalog,text(body.id),body.name);
   await c.query("UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",[labId,JSON.stringify(updated)]);
   await c.query('COMMIT');
-  await audit(userId,labId,method==='POST'?'print_catalog.type_create':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
+  await audit(userId,labId,method==='POST'?'print_catalog.type_create':body.active===false?'print_catalog.type_archive':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
   sendJson(res,200,{ok:true,catalog:updated});return true;
  }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message}),true;throw e}finally{c.release()}
 }

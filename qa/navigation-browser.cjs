@@ -66,6 +66,16 @@ const {LabStore}=require('../store.cjs'),{createHost}=require('../host.cjs');
  await page.locator('.pb1147LabNav button[data-category="0"]').click();
  await page.waitForFunction(()=>document.querySelectorAll('.pb1148SecondaryHeader>button[data-pb1173-index]').length===6);
  console.log('PASS: print queue retains its three stage tabs and returning to General restores all six settings tabs');
+
+ const diagnostics=require('../ui-diagnostics.cjs');
+ await page.evaluate(()=>{const p=document.createElement('p');p.id='private-sentinel';p.textContent='PRIVATE-CUSTOMER-AND-INVOICE-DO-NOT-COLLECT';document.body.append(p);});
+ const snapshot=await page.evaluate('('+diagnostics.rendererSnapshot.toString()+')()');
+ const proof=await page.evaluate('('+diagnostics.browserProof.toString()+')()');
+ assert(!JSON.stringify({snapshot,proof}).includes('PRIVATE-CUSTOMER-AND-INVOICE-DO-NOT-COLLECT'));
+ const moduleName='assets/index-UIRefine-v655-r84.js';assert.equal(snapshot.proof.sha256,proof.host.data.roots[0].files[moduleName].sha256);
+ assert.equal(proof['/'+moduleName].sha256,proof.host.data.roots[0].files[moduleName].servedSha256);
+ console.log('PASS: UI diagnostics identify the executed module and served bytes without collecting customer/body data');
+ await page.evaluate(()=>document.getElementById('private-sentinel').remove());
  await page.screenshot({path:'/tmp/photobridge-72-general.png',fullPage:true});
  assert(await page.locator('.pb1148SecondaryHeader #pbLabBackupSettingsButton').isVisible());
  await page.locator('#pbLabBackupSettingsButton').click();await page.waitForURL('**/desktop/backups');await page.getByRole('heading',{name:'پشتیبان اطلاعات برنامه',exact:true}).waitFor();assert.deepEqual(errors,[]);

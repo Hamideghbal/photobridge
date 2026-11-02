@@ -10,3 +10,10 @@ for(const p of ['dist/web/assets/index-UIRefine-v655-r84.js','dist/api/server.js
   if(!hits)console.log('NOT FOUND',term);
  }
 }
+
+const web=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),api=fs.readFileSync('dist/api/server.js','utf8');
+function section(name,s,start,length){console.log('SECTION '+name+' '+start+' LENGTH '+length);console.log(s.slice(Math.max(0,start),Math.min(s.length,start+length)))}
+const uiAt=web.indexOf('labPrintPricingCard');const f=web.lastIndexOf('function ',uiAt);
+section('UI PRINT PRICING COMPONENT',web,f,Math.min(26000,uiAt-f+9000));
+const apiTerms=["if (req.method === 'GET' && url.pathname === '/api/lab/prices')","if (req.method === 'PUT' && url.pathname === '/api/lab/prices')","if (req.method === 'GET' && url.pathname === '/api/lab/dashboard')","lab_prices SET","cleanPrintSizeInput","const prices ="];
+for(const term of apiTerms){let at=api.indexOf(term);if(at>=0)section('API '+term,api,at,Math.min(5800,api.length-at));}

@@ -75,7 +75,11 @@ async function createFinanceViewer(model,database,{createdAt,labId,output}){
  const template=await fs.readFile(templatePath,'utf8');
  const token='__PB_SNAPSHOT_BASE64__';
  if(template.split(token).length!==2)throw Error('offline_viewer_template_invalid');
- const html=template.replace(token,b64);
+ const fontToken='__PB_FONT_BASE64__';
+ if(template.split(fontToken).length!==2)throw Error('offline_viewer_font_token_invalid');
+ const font=await fs.readFile(path.join(__dirname,'assets','photobridge-vazirmatn.woff2'));
+ if(font.length<2000||font.toString('ascii',0,4)!=='wOF2')throw Error('offline_viewer_project_font_invalid');
+ const html=template.replace(token,b64).replace(fontToken,font.toString('base64'));
  const destination=output||path.join(path.dirname(database),OUTPUT);
  await fs.writeFile(destination,html,{flag:'wx',mode:0o600});
  return{filename:path.basename(destination),counts:{invoices:viewer.invoices.length,receipts:viewer.receipts.length,ledger:viewer.ledger.length},sqliteSha256:sha};

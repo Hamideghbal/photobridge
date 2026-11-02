@@ -22,7 +22,8 @@ function run({mode='print',alreadyReady=false,invoiceRequired=true}={}){
  const b=mode==='album'?source.indexOf(',aa=async(le,nt)=>',a):source.indexOf(',Cn=async(le,nt)=>',a);
  assert(a>=0&&b>a);
  const prefix=mode==='album'?',Cn=':'un=';
- vm.runInNewContext('globalThis.invoke='+source.slice(a+prefix.length,b),context);
+ const identityMarker='/* PB1546 trusted native order identity */',identityHelpers=source.includes(identityMarker)?source.slice(source.indexOf(identityMarker)+identityMarker.length):'';
+ vm.runInNewContext(identityHelpers+'\nglobalThis.invoke='+source.slice(a+prefix.length,b),context);
  return context.invoke(le,...(mode==='album'?['ready']:[])).then(()=>({calls,messages}));
 }
 test('R1531 is website-only, idempotent, and cache-busted',()=>{

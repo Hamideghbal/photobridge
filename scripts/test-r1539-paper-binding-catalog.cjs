@@ -27,7 +27,7 @@ test('catalog HTML and UI expose new actions, label editing, custom prices, and 
  const bundle=read('dist/web/assets/index-UIRefine-v655-r84.js');
  assert.doesNotThrow(()=>new vm.Script(bundle));
  assert(bundle.includes('/* PB1539 lab binding pricing with unchanged paper types */'));
- for(const t of ['+ صحافی جدید','pb1539Rename','pb1539MobileRename','pb1539Custom','customRates:Object.fromEntries','pb1539Reload','pb1539.rates?.[k.id]'])assert(bundle.includes(t),t);
+ for(const t of ['+ مدل صحافی جدید','pb1539Rename','pb1539MobileRename','pb1539Custom','customRates:Object.fromEntries','pb1539Reload','pb1539.rates?.[k.id]'])assert(bundle.includes(t),t);
  assert(!bundle.includes('+ کاغذ جدید'));
  const server=read('dist/api/server.js');
  for(const marker of ['/* PB1539 paper and binding catalogs */','handleLabPrintCatalog({req,res,url,pool,labId','applyPrintRates(normalizePrintCatalog','if(pb1539Catalog)await c.query('])assert(server.includes(marker),marker);

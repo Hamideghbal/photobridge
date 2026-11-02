@@ -1,0 +1,16 @@
+// R1540: isolate a failing walk-in settings request/render from its parent navigation.
+// The category/section buttons remain available and the user can retry safely.
+class PB1540WalkinBoundary extends x.Component {
+ constructor(props){super(props);this.state={failed:false}}
+ static getDerivedStateFromError(){return {failed:true}}
+ componentDidCatch(error){console.error('[PhotoBridge Lab] walk-in settings failed',error)}
+ render(){return this.state.failed?e.jsxs('section',{className:'card panel pb1540WalkinFallback',children:[e.jsx('h3',{children:'بخش مشتری آزاد موقتاً باز نشد'}),e.jsx('p',{children:'می‌توانید از بخش‌های دیگر استفاده کنید یا دریافت اطلاعات مشتری آزاد را دوباره امتحان کنید.'}),e.jsx('button',{type:'button',onClick:()=>this.setState({failed:false}),children:'تلاش دوباره'})]}):this.props.children}
+}
+function pb1540CleanupConfirm(){return new Promise(resolve=>{
+ const previous=document.activeElement,dialog=document.createElement('dialog');let settled=false;
+ dialog.className='pb1540CleanupDialog';dialog.dir='rtl';dialog.setAttribute('aria-labelledby','pb1540CleanupTitle');dialog.setAttribute('aria-describedby','pb1540CleanupText');
+ dialog.innerHTML='<div class="pb1540CleanupTop"><span class="pb1540CleanupSymbol" aria-hidden="true">⌁</span><div><small>فوتوبریج · مدیریت فضای هارد</small><h3 id="pb1540CleanupTitle">پاک‌سازی آرشیو قدیمی</h3></div></div><div class="pb1540CleanupBody" id="pb1540CleanupText"><p>پوشه‌های تاریخ‌دار قدیمی‌تر از مدت نگهداری انتخاب‌شده، فقط از <strong>مسیر آرشیو محلی همین سیستم</strong> پاک می‌شوند.</p><div class="pb1540CleanupInfo">فاکتورها و اطلاعات سفارش در سایت باقی می‌مانند؛ فایل‌های فضای ابری از این مسیر حذف نمی‌شوند.</div><p class="pb1540CleanupWarning">پوشه‌هایی که از هارد پاک می‌شوند، ممکن است دیگر قابل بازیابی نباشند.</p></div><footer><button type="button" data-action="cancel">انصراف</button><button type="button" class="pb1540CleanupProceed" data-action="confirm">ادامه و بررسی دسترسی</button></footer>';
+ const finish=value=>{if(settled)return;settled=true;if(dialog.open)dialog.close();dialog.remove();previous?.isConnected&&previous.focus?.();resolve(value)};
+ dialog.querySelector('[data-action=cancel]').onclick=()=>finish(false);dialog.querySelector('[data-action=confirm]').onclick=()=>finish(true);dialog.addEventListener('cancel',event=>{event.preventDefault();finish(false)});
+ document.body.append(dialog);try{dialog.showModal();dialog.querySelector('[data-action=cancel]').focus()}catch{finish(false)}
+})}

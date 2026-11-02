@@ -21,6 +21,7 @@ test('desktop tabs fill the viewport and embedded headers stay hidden after late
     if(!embedded){
      for(const selector of ['#pb1126DesktopHeader','.pb1126ContentPanel','.pb1126ContentPanel iframe']){
       const box=await page.locator(selector).boundingBox();
+      assert(box,selector+' unexpectedly hidden at '+width+'px; display='+await page.locator(selector).evaluate(el=>getComputedStyle(el).display));
       assert(Math.abs(box.x)<1,selector+' left edge: '+JSON.stringify(box));
       assert(Math.abs(box.x+box.width-width)<1,selector+' right edge: '+JSON.stringify(box));
      }

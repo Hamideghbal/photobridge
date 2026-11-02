@@ -67,6 +67,66 @@ dialog::backdrop{background:#173b6080}.dialogHeader{display:flex;align-items:cen
 @media(max-width:1010px){.invoiceRow{grid-template-columns:repeat(3,minmax(120px,1fr))}.actionStack{grid-column:1/-1;max-width:none}.statementSummary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){main{padding:8px}.appHeader{padding:14px}.pb1420PaymentColumns{display:none}.receiptRow{grid-template-columns:1fr 1fr}.receiptRow .rowAction{grid-column:1/-1}.invoiceRow{grid-template-columns:repeat(2,minmax(120px,1fr))}.statementToolbar select{width:100%}.invoiceRangeToolbar input{width:112px}}
 @media print{body{background:white}main{padding:0}.appHeader,.financeNavDock,.sectionTopline,.toolbar,.invoiceRangeToolbar,.pb1176PaymentActions,.statementToolbar,.footerBar,.offlineNotice,.actionStack,.rowAction{display:none!important}.card{border:none;box-shadow:none}.invoiceRow{break-inside:avoid}.statementTable{min-width:0}.statementSummary>div{break-inside:avoid}}
+
+
+/* Native PhotoBridge finance preview: Persian calendar, invoice paper, row details */
+.datePickerButton{flex:none;border:1px solid #d6e3f6;background:#f1f6ff;border-radius:7px;color:#315efb;min-height:34px;padding:4px 8px;font-size:15px}
+.pbCalendar{position:absolute;z-index:20000;width:292px;max-width:calc(100vw - 24px);border:1px solid #ccd8eb;border-radius:14px;background:#fff;padding:12px;box-shadow:0 16px 46px #18396136;direction:rtl;color:#344054}
+.pbCalendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.pbCalendarHeader b{font-size:13px}.pbCalendarHeader button,.pbCalendarGrid button{border:1px solid #e5ebf5;border-radius:7px;background:white;min-height:31px;padding:3px;min-width:30px}
+.pbCalendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.pbCalendarGrid .dayName{font-size:10px;color:#8192a9;padding:5px 0}
+.pbCalendarGrid button{font-size:11px}.pbCalendarGrid button:hover,.pbCalendarGrid button[aria-current="date"]{background:#edf3ff;border-color:#8bb1f6;color:#204fad}
+.pbCalendarGrid button.selected{background:#315efb;color:white;border-color:#315efb}
+.pbCalendarActions{display:flex;gap:6px;margin-top:10px;justify-content:space-between}
+.pbCalendarActions button{font-size:11px;min-height:30px}
+#invoiceDialog{width:min(1000px,96vw);max-width:1000px;max-height:94vh;padding:13px;background:#f6f8fc;overflow:auto}
+#invoiceDialog .dialogHeader{padding:10px 13px 15px}
+#invoiceDialog .dialogHeader small{display:block;color:#7b8da4;font-size:11px}
+#invoiceDialog .dialogHeader h3{font-size:17px;margin:0}
+#invoiceDialog .dialogContent{padding:0}
+#invoiceDialog .invoicePaper{border:1px solid #e3e8f0;border-radius:11px;background:#fff;padding:26px 28px;max-width:850px;margin:0 auto;box-shadow:0 4px 14px #0e428a0b}
+#invoiceDialog .invoicePaperHead{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:2px solid #17283d;padding-bottom:16px}
+#invoiceDialog .invoicePaperBrand{color:#315efb;font-weight:900;font-size:19px}
+#invoiceDialog .invoicePaperHead h2{font-size:21px;margin:5px 0 0}
+#invoiceDialog .invoicePaperNumber{text-align:left}
+#invoiceDialog .invoicePaperNumber small,#invoiceDialog .invoicePaperNumber b{display:block}
+#invoiceDialog .invoicePaperNumber small{font-size:11px;color:#667085}
+#invoiceDialog .invoicePaperNumber b{font-size:20px}
+#invoiceDialog .invoicePaperInfo{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:16px 0}
+#invoiceDialog .invoicePaperInfo>div{border:1px solid #e1e7ef;border-radius:9px;background:#fafbfe;padding:12px}
+#invoiceDialog .invoicePaperInfo small,#invoiceDialog .invoicePaperInfo b{display:block}
+#invoiceDialog .invoicePaperInfo small{font-size:11px;color:#74859c}
+#invoiceDialog .invoicePaperInfo b{font-size:12px;margin-top:3px;overflow-wrap:anywhere}
+#invoiceDialog .invoicePaperTable{border:1px solid #e2e7ef;border-radius:9px;overflow:hidden}
+#invoiceDialog .invoicePaperTableHead,#invoiceDialog .invoicePaperRow{display:grid;grid-template-columns:minmax(240px,1.8fr) .5fr .8fr .9fr;gap:9px;align-items:center;padding:9px 12px}
+#invoiceDialog .invoicePaperTableHead{background:#f2f4f8;color:#53647e;font-size:11px;font-weight:900}
+#invoiceDialog .invoicePaperRow{border-top:1px solid #eef1f5;font-size:12px}
+#invoiceDialog .invoicePaperRow b{font-weight:900}
+#invoiceDialog .invoicePaperEmpty{padding:20px;font-size:12px;color:#7c8ea4;text-align:center}
+#invoiceDialog .invoicePaperTotals{width:min(380px,100%);margin:19px 0 0 auto}
+#invoiceDialog .invoicePaperTotals>div{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #edf0f5}
+#invoiceDialog .invoicePaperTotals .final{font-weight:900;font-size:15px;border-top:2px solid #26374b;background:#eff5ff;color:#244fa4}
+#invoiceDialog .invoiceAccountDebt{padding:12px;background:#f9faff;font-weight:800}
+#invoiceDialog .invoicePaperNote{font-size:10px;color:#667085;margin-top:14px}
+#invoiceDialog .dialogFooter{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.pb1441StatementDetail td{background:#f6f9ff!important;padding:13px 18px!important;text-align:right!important}
+.pb1441StatementDetail b{display:block;color:#315efb;margin-bottom:7px}
+.pb1441StatementItems{border-collapse:collapse;width:100%;font-size:11px;margin-top:7px}
+.pb1441StatementItems th,.pb1441StatementItems td{border:1px solid #dce6f4!important;padding:7px 9px!important}
+.pb1441StatementItems th{background:#e9f0fc!important;color:#344054}
+#invoiceDialog .dialogHeader .dialogButtons{display:flex;gap:7px}
+@media(max-width:700px){#invoiceDialog .invoicePaper{padding:14px}#invoiceDialog .invoicePaperInfo{grid-template-columns:1fr}#invoiceDialog .invoicePaperTableHead,#invoiceDialog .invoicePaperRow{grid-template-columns:minmax(130px,1.6fr) .5fr .7fr .8fr;font-size:10px;gap:3px;padding:8px}}
+@media print{
+ .pbCalendar{display:none!important}
+ body:has(#invoiceDialog[open]) main{display:none!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog{position:static!important;display:block!important;max-height:none!important;max-width:none!important;width:190mm!important;border:none!important;margin:0 auto!important;padding:0!important;box-shadow:none!important;background:white!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog .dialogHeader,
+ body:has(#invoiceDialog[open]) #invoiceDialog .dialogFooter{display:none!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog .invoicePaper{padding:0!important;border:0!important;box-shadow:none!important}
+ #invoiceDialog .invoicePaperRow{break-inside:avoid}
+ .pb1441StatementDetail,.pb1441StatementItems tr{break-inside:avoid}
+}
 </style></head><body><main>
 <header class="appHeader"><div class="headerLine"><div class="headerBrand">
 <svg viewBox="0 0 36 36" aria-hidden="true"><rect x="4" y="10" width="28" height="20" rx="4"/><circle cx="18" cy="20" r="7"/><path d="M11 10 14 5h8l3 5"/></svg>
@@ -109,7 +169,7 @@ dialog::backdrop{background:#173b6080}.dialogHeader{display:flex;align-items:cen
 <div class="tableWrap"><table class="statementTable"><thead><tr><th>ردیف</th><th><button id="sortDate" type="button">تاریخ ↓</button></th><th>شرح</th><th>شماره سند</th><th>بدهکار</th><th>بستانکار</th><th>باقیمانده</th></tr></thead><tbody id="statementRows"></tbody></table></div>
 <div class="footerBar"><span id="statementRange"></span><div><button class="btn prev">قبلی</button> <button class="btn next">بعدی</button></div></div></section></div>
 </section><div class="offlineNotice">این صفحه تنها نسخه ذخیره‌شده در زمان بکاپ را نمایش می‌دهد و هیچ اطلاعاتی را از سایت دریافت نمی‌کند. دکمه‌های ثبت و اصلاح حسابداری غیرفعال‌اند. فایل اصلی <b>data.sqlite</b> بدون تغییر باقی می‌ماند.</div></main>
-<dialog id="invoiceDialog"><div class="dialogHeader"><h3 id="dialogTitle">مشاهده فاکتور</h3><button type="button" id="closeDialog" class="btn">بستن</button></div>
+<dialog id="invoiceDialog"><div class="dialogHeader"><div><small>پیش‌نمایش کامل فاکتور</small><h3 id="dialogTitle">فاکتور فروش</h3></div><div class="dialogButtons"><button id="dialogPrintTop" type="button" class="btn primary">چاپ فاکتور</button><button id="dialogPdf" type="button" class="btn">PDF</button><button type="button" id="closeDialog" class="btn">بستن ×</button></div></div>
 <div class="dialogContent" id="dialogContent"></div><div class="dialogFooter"><button id="dialogPrint" type="button" class="btn primary">چاپ</button></div></dialog>
 <script type="application/octet-stream" id="snapshot">__PB_SNAPSHOT_BASE64__</script>
 <script>

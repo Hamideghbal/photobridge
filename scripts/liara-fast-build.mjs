@@ -627,3 +627,7 @@ await deployStep("./enable-r1532-lab-header-first-paint.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1532-lab-header-first-paint.cjs"],{stdio:"inherit"});
 
 runR1314(process.execPath,["--test","scripts/test-r1533-local-ui-font.cjs"],{stdio:"inherit"});
+
+// Login security is server-side; native clients use the same authenticated login API.
+await deployStep("./enable-r1534-lab-login-security.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1534-lab-login-security.cjs"],{stdio:"inherit"});

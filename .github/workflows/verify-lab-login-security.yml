@@ -4,6 +4,7 @@ on:
     branches: [aaa-liara-release]
     paths:
       - '**/*r1534*'
+      - '**/*r1535*'
       - 'dist/api/lab-login-security.js'
       - 'dist/web/lab-login-security.html'
       - '.github/workflows/verify-lab-login-security.yml'
@@ -37,6 +38,7 @@ jobs:
         run: |
           export CHROMIUM_PATH="$(node -e 'process.stdout.write(require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath())')"
           node scripts/test-r1534-lab-login-security-browser.cjs
+          node scripts/test-r1535-mobile-otp-session-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

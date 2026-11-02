@@ -27,10 +27,38 @@ test('catalog HTML and UI expose new actions, label editing, custom prices, and 
  const bundle=read('dist/web/assets/index-UIRefine-v655-r84.js');
  assert.doesNotThrow(()=>new vm.Script(bundle));
  assert(bundle.includes('/* PB1539 lab paper and binding pricing */'));
- for(const t of ['+ کاغذ جدید','+ صحافی جدید','pb1539Rename','pb1539Custom','customRates:Object.fromEntries','pb1539Reload','pb1539.rates?.[k.id]'])assert(bundle.includes(t),t);
+ for(const t of ['+ کاغذ جدید','+ صحافی جدید','pb1539Rename','pb1539MobileRename','pb1539Custom','customRates:Object.fromEntries','pb1539Reload','pb1539.rates?.[k.id]'])assert(bundle.includes(t),t);
  const server=read('dist/api/server.js');
  for(const marker of ['/* PB1539 paper and binding catalogs */','handleLabPrintCatalog({req,res,url,pool,labId','applyPrintRates(normalizePrintCatalog','if(pb1539Catalog)await c.query('])assert(server.includes(marker),marker);
  const html=read('dist/web/index.html');
  assert(html.includes('&printCatalog=r1539'));
  assert(html.includes('photobridge-r1539-print-catalog.css?v=r1539'));
+});
+
+test('authorized lab catalog API isolates data by lab and retains renamed default binding identity',async()=>{
+ const {handleLabPrintCatalog}=await catalog();
+ const preferences=new Map([['labA',{}],['labB',{}]]);
+ const query=async(sql,args)=>{
+  if(sql.startsWith('SELECT ui_preferences FROM labs'))return {rowCount:1,rows:[{ui_preferences:preferences.get(args[0])}]};
+  if(sql.startsWith('UPDATE labs SET ui_preferences=')){
+   const prefs=preferences.get(args[0]);prefs.printTariffCatalog=JSON.parse(args[1]);return {rowCount:1,rows:[]};
+  }
+  return {rows:[],rowCount:0};
+ };
+ const pool={query,connect:async()=>({query,release(){}})};
+ const request=async(labId,method,url,body)=>{
+  let res;
+  const handled=await handleLabPrintCatalog({req:{method},res:{},url:{pathname:url},pool,labId,bodyJson:async()=>body,sendJson:(_,status,data)=>{res={status,...data}},audit:async()=>{},userId:'owner'});
+  assert(handled);return res;
+ };
+ const created=await request('labA','POST','/api/lab/print-catalog',{kind:'binding',name:'صحافی کتان ضخیم'});
+ assert.equal(created.status,200);
+ const id=created.catalog.types.find(x=>x.name==='صحافی کتان ضخیم').id;
+ const renamed=await request('labA','PATCH','/api/lab/print-catalog/type',{id:'album_binding_price',name:'صحافی ژورنال'});
+ assert.equal(renamed.catalog.types.find(x=>x.id==='album_binding_price').name,'صحافی ژورنال');
+ const other=await request('labB','GET','/api/lab/print-catalog',{});
+ assert.equal(other.catalog.types.length,4);
+ assert.equal(other.catalog.types.find(x=>x.id==='album_binding_price').name,'صحافی آلبوم');
+ const found=await request('labA','GET','/api/lab/print-catalog',{});
+ assert(found.catalog.types.some(x=>x.id===id));
 });

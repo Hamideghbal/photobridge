@@ -644,3 +644,7 @@ runR1314(process.execPath,["--test","scripts/test-r1536-password-eye-brand.cjs"]
 // Runs after frozen Windows installer/UI snapshots and R1536 verification.
 await deployStep("./enable-r1537-conditional-sync-security.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1537-conditional-sync-security.cjs","scripts/test-r1534-lab-login-security.cjs"],{stdio:"inherit"});
+
+// R1538: single password visibility control plus targeted native lab login refresh.
+await deployStep("./enable-r1538-one-toggle-native-login.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1538-one-toggle-native-login.cjs"],{stdio:"inherit"});

@@ -28,7 +28,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),fs=require
   await page.locator('#verifyButton').click();
   await page.locator('#actions').waitFor({state:'visible'});
   const eye=page.locator('.pb1536PasswordEye').first();await eye.waitFor({state:'visible'});
-  const box=await eye.boundingBox();assert(box&&box.width<=34&&box.height<=34,'password eye must not cover the input');
+  const box=await eye.boundingBox();assert(box&&box.height<=36&&box.width<=(width<=640?34:78),'password reveal control must fit within the input');if(width>640){assert(await eye.locator('span').isVisible(),'desktop should show Persian text');}else{assert(await eye.locator('svg').isVisible(),'mobile should show the eye icon');}
   assert.equal(await page.locator('#password').getAttribute('type'),'password');
   await eye.click();
   assert.equal(await page.locator('#password').getAttribute('type'),'text');
@@ -45,7 +45,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),fs=require
   assert(await page.locator('#recovery').isVisible());
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.screenshot({path:'/tmp/photobridge-r1534-change-'+width+'.png',fullPage:true});
-  console.log('PASS: '+width+'px browser security password change with OTP, one action, compact eye and cleared secrets');
+  console.log('PASS: '+width+'px browser security password change with OTP, one action, responsive single visibility control and cleared secrets');
   await page.close();
  }
  }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

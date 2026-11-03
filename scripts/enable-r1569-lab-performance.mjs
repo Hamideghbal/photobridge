@@ -139,9 +139,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const oldQueue="const pb1472Loads=x.useRef(Promise.resolve()),ce=()=>{if(!window.pbNativeStorage)return pb1472Load();const next=pb1472Loads.current.catch(()=>{}).then(()=>pb1472Load());pb1472Loads.current=next;return next;};";
   const newQueue="const pb1569FinanceLoader=x.useRef(null);pb1569FinanceLoader.current=pb1472Load;const pb1472Loads=x.useRef({active:null,pending:false}),ce=()=>{if(!window.pbNativeStorage)return pb1472Load();return pb1569CoalescedLoad(pb1569FinanceLoader,pb1472Loads.current);};";
   ui=once(ui,oldQueue,newQueue,'native pending finance refresh queue '+root);
-  const start=ui.indexOf('pb1472Load=async()=>{var Je;g(!0);try{const Ot=await Me(ke);');
-  const end=ui.indexOf('}finally{g(!1)}};',start);
-  if(start<0||end<start)throw Error('R1569 missing finance loader '+root);
+  const start=ui.indexOf('pb1472Load=async()=>{');
+  const end=start<0?-1:ui.indexOf('}finally{g(!1)}};',start);
+  if(start<0||end<start){
+    const near=ui.indexOf('pb1472Load');
+    throw Error('R1569 missing finance loader '+root+' start='+start+' end='+end+
+      ' preview='+JSON.stringify(ui.slice(Math.max(0,near-35),near+550)));
+  }
   const current=ui.slice(start,end+17);
   if(!current.includes('Me("/api/lab/finance/ledger")')||!current.includes('Me("/api/lab/finance/payments")'))throw Error('R1569 finance loader shape mismatch '+root);
   const optimized=`pb1472Load=async()=>{var Je;g(!0);try{

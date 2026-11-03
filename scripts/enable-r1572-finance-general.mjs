@@ -26,9 +26,16 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
       '}finally{pb1572FinanceFirstLoad.current=false;g(!1)}};');
     // Keep the two settings in General, as regular section tabs with the other
     // General controls. No stand-alone button in Print or in settings nav.
-    js=once(js,'["site","سایت اختصاصی"]]}',
-      '["site","سایت اختصاصی"],["automation","دانلود و چاپ خودکار"],["backup","پشتیبان اطلاعات برنامه"]]}',
-      'general section list '+root);
+    // Locate the General settings group's item array structurally; other build
+    // layers may change the last General option or its display label.
+    const generalStart=js.indexOf('key:"general",label:"عمومی"');
+    const nextCategory=generalStart<0?-1:js.indexOf('},{key:',generalStart);
+    const itemsEnd=nextCategory<0?-1:js.lastIndexOf(']]',nextCategory);
+    if(generalStart<0||nextCategory<0||itemsEnd<generalStart)
+      throw Error('R1572 settings General group not found '+root);
+    if(js.slice(generalStart,itemsEnd).includes('["automation"')||js.slice(generalStart,itemsEnd).includes('["backup"'))
+      throw Error('R1572 duplicate General option '+root);
+    js=js.slice(0,itemsEnd+1)+',["automation","دانلود و چاپ خودکار"],["backup","پشتیبان اطلاعات برنامه"]'+js.slice(itemsEnd+1);
     js=once(js,',["backup","پشتیبان اطلاعات سایت"]]}',
       ']}',
       'system section list '+root);

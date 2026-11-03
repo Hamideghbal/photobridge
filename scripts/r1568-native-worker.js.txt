@@ -9,7 +9,7 @@ function pb1568Problem(error){return String(error?.data?.error||error?.code||err
 async function pb1568Thermal(kind,orderId,invoiceId){
  const r=await fetch('/desktop/thermal/print',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,orderId,invoiceId})});
  const data=await r.json().catch(()=>({}));
- if(!r.ok&&!data?.alreadyHandled)throw Error(data?.error||'thermal_print_unavailable');
+ if(!r.ok||data?.state!=='spool_accepted')throw Error(data?.state==='needs_review'?'printer_needs_operator_review':data?.error||'thermal_print_unavailable');
  return data;
 }
 async function pb1568PersistPdf(invoice,orderId){
@@ -85,14 +85,20 @@ async function pb1568AutoTick(){
    const settings=(await Me('/api/lab/automation')).settings;
    if(!settings?.autoDownloadEnabled&&!settings?.autoPrintInvoice)return;
    const rows=(await Me('/api/lab/orders')).orders||[];
+   const downloadGate='pb1568:downloadEnabledAt:'+lab,printGate='pb1568:printEnabledAt:'+lab;
+   if(!settings.autoDownloadEnabled)localStorage.removeItem(downloadGate);
+   if(!settings.autoPrintInvoice)localStorage.removeItem(printGate);
+   const downloadEnabledAt=Number(localStorage.getItem(downloadGate))||Date.now(),printEnabledAt=Number(localStorage.getItem(printGate))||Date.now();
+   if(settings.autoDownloadEnabled&&!localStorage.getItem(downloadGate))localStorage.setItem(downloadGate,String(downloadEnabledAt));
+   if(settings.autoPrintInvoice&&!localStorage.getItem(printGate))localStorage.setItem(printGate,String(printEnabledAt));
    for(const order of rows){
      if(!window.pbNativeStorage)break;
      const previous=pb1568State(lab,order.id);
-     if(previous&&previous.phase!=='complete'||settings.autoDownloadEnabled&&!order.downloaded_at&&['sent','received'].includes(String(order.status||''))){
+     if(previous&&previous.phase!=='complete'||settings.autoDownloadEnabled&&!order.downloaded_at&&Date.parse(order.created_at||0)>=downloadEnabledAt&&['sent','received'].includes(String(order.status||''))){
        await pb1568ProcessOrder(lab,order,settings);
      }
      // After-print policy: an existing finalized invoice is sent only once.
-     if(settings.invoiceTiming==='after_print'&&settings.autoPrintInvoice&&order.invoice_id&&order.invoice_pdf_ready&&['ready','completed'].includes(order.status)){
+     if(settings.invoiceTiming==='after_print'&&settings.autoPrintInvoice&&Date.parse(order.invoice_issued_at||0)>=printEnabledAt&&order.invoice_id&&order.invoice_pdf_ready&&['ready','completed'].includes(order.status)){
        try{await pb1568Thermal('invoice',order.id,order.invoice_id);}
        catch(error){pb1568Work.lastError=pb1568Problem(error);}
      }

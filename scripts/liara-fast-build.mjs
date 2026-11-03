@@ -745,5 +745,10 @@ runR1314(process.execPath,['--test','scripts/test-r1570-automation-entry.cjs'],{
 await deployStep('./enable-r1571-win7-photo-picker.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1571-win7-photo-picker.cjs'],{stdio:'inherit'});
 
+// R1572: stable finance refresh and General settings placement for automation/backup.
+await deployStep('./enable-r1572-finance-general.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1572-finance-general.cjs'],{stdio:'inherit'});
+
+
 
 

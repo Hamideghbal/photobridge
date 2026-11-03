@@ -1,7 +1,7 @@
 name: Build Lab 1.0.85 thermal Windows candidate
 on:
   push:
-    branches: [feat/lab-1.0.85-thermal-auto-print-candidate]
+    branches: [feat/lab-1.0.85-thermal-auto-print-candidate, fix/native-alert-ready-delivery]
   workflow_dispatch:
 permissions:
   contents: read

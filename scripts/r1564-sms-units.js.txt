@@ -1,0 +1,19 @@
+const basic=new Set('@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà');
+const extended=new Set('^{}\\[~]|€\f');
+export function smsParts(text){const value=String(text||'');let septets=0;for(const c of value){if(basic.has(c))septets++;else if(extended.has(c))septets+=2;else return{encoding:'ucs2',units:value.length,parts:Math.max(1,value.length<=70?1:Math.ceil(value.length/67))};}return{encoding:'gsm7',units:septets,parts:Math.max(1,septets<=160?1:Math.ceil(septets/153))};}
+export function compactSms(args){
+ const text=String(args.message||'');
+ if(args.purpose==='gallery_customer_notification'){
+  const link=text.match(/https?:\/\/[^\s]+/g)?.at(-1);
+  if(link){const short='PhotoBridge\n'+(args.metadata?.kind==='approval'?'روتوش‌شده آماده است':'انتخاب عکس')+'\n'+link;if(short.length<=70)return short;}
+ }
+ if(args.purpose!=='lab_photographer_permanent_invite'||!args.metadata?.shortToken)return text;
+ const link=text.match(/https?:\/\/[^\s]+/g)?.at(-1);if(!link)return text;
+ const lab=text.match(/لابراتوار\s+«([^»]+)»/)?.[1]||'PhotoBridge',budget=70-('PhotoBridge\nدعوت \n'+link).length;
+ if(budget>=3){const name=lab.length>budget?lab.slice(0,budget-1)+'…':lab;return 'PhotoBridge\nدعوت '+name+'\n'+link;}
+ const simple='PhotoBridge\n'+link;return simple.length<=70?simple:text;
+}
+export function orderConfirmationSms(lab,number,mode){
+ const prefix='PhotoBridge\n',suffix='\nسفارش '+(mode==='album'?'آلبوم ':'')+String(number)+' ثبت شد.',budget=Math.max(0,70-prefix.length-suffix.length),name=String(lab||'لابراتوار');
+ return prefix+(name.length>budget?name.slice(0,Math.max(0,budget-1))+'…':name)+suffix;
+}

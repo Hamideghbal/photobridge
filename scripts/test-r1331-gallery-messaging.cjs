@@ -17,6 +17,7 @@ async function fixture(){
  const state={service:{enabled:true,customer_enabled:true,effective_price:500,name:'SMS'},gateway:true,fail:false,sends:[],logs:[]};
  const pool={query:async(sql,args)=>{const r=await db.query(sql,args);return {...r,rowCount:r.rows.length||r.affectedRows||0}},connect:async()=>({query:pool.query,release(){}})};
  const ctx={pool,crypto,console,normalizeMobile:x=>String(x).replace(/[\s-]/g,''),resolvedSMSSettings:async()=>({configured:state.gateway,provider:'test'}),SMS_PROVIDER_ADAPTERS:{test:async(mobile,message)=>{state.sends.push({mobile,message});if(state.fail)throw Error('sms_provider_rejected');return {reference:'sent'};}},logSms:async args=>state.logs.push(args),photographerWalletEnsure:async()=>{},photographerEffectivePrice:async()=>state.service};
+ Object.assign(ctx,await import('../dist/api/sms-message-units.js'));
  vm.createContext(ctx);vm.runInContext(extract('reservePhotographerWalletCharge')+'\n'+extract('refundPhotographerWalletCharge')+'\n'+extract('sendSms')+'\nthis.send=sendSms;this.reserve=reservePhotographerWalletCharge;',ctx);
  const {createGalleryMessaging}=await import('../dist/api/gallery-messaging.js');const sms=createGalleryMessaging({pool,sendSms:ctx.send,price:async()=>state.service,configured:async()=>state.gateway,normalizeMobile:ctx.normalizeMobile,publicAppUrl:'https://photobridge.ir'});
  const balance=async()=>Number((await db.query('SELECT balance FROM photographer_service_wallets WHERE user_id=$1',[owner])).rows[0].balance);
@@ -78,4 +79,11 @@ test('concurrent approval actions transition once and send only one paid SMS',()
  const missing=await handler({method:'POST'},{},{userId:owner});assert.equal(missing.status,409);assert.equal(missing.data.error,'gallery_retouch_proof_required');assert.equal(state.sends.length,0);
  await db.query("INSERT INTO photographer_gallery_retouch_proofs VALUES($1,$2,'active')",[order,other]);
  const results=await Promise.all([handler({method:'POST'},{},{userId:owner}),handler({method:'POST'},{},{userId:owner})]);assert.deepEqual(results.map(x=>x.status).sort(),[200,409]);assert.equal(state.sends.length,1);assert.equal(await balance(),1500);
+}));
+
+test('multipart SMS debits every segment and refunds the full charge if the provider fails',()=>run(async({ctx,state,balance,db})=>{
+ const args={mobile:'09123456789',message:'ا'.repeat(71),purpose:'multipart_test',userId:owner,chargePhotographerId:owner,serviceKey:'sms_customer_notification'};
+ const out=await ctx.send(args);assert.equal(out.smsParts,2);assert.equal(out.chargedAmount,1000);assert.equal(await balance(),1000);assert.equal(state.logs[0].metadata.smsParts,2);
+ state.fail=true;await assert.rejects(ctx.send(args),/sms_provider_rejected/);assert.equal(await balance(),1000);
+ const amounts=(await db.query("SELECT kind,amount FROM photographer_service_wallet_transactions ORDER BY id")).rows;assert.equal(amounts.filter(r=>r.kind==='debit'&&Number(r.amount)===1000).length,2);assert.equal(amounts.filter(r=>r.kind==='refund'&&Number(r.amount)===1000).length,1);
 }));

@@ -1,0 +1,26 @@
+(()=>{'use strict';
+ if(!/^\/lab(?:\/|$)/.test(location.pathname)||window.__PB_R1038_SUBSCRIPTION_DISCOUNTS__)return;
+ window.__PB_R1038_SUBSCRIPTION_DISCOUNTS__=true;
+ const selector='html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button[data-pb-discount]';
+ const style=document.createElement('style');style.textContent=`
+ ${selector}{position:relative!important;padding:8px 11px 8px 69px!important;min-height:72px!important;border:1px solid #e7dcc4!important;border-radius:9px!important;background:#fffefa!important;transform:none!important;cursor:pointer!important;text-align:right!important;box-shadow:none!important}
+ ${selector}.selected{border-color:#6b9cde!important;background:#f2f7ff!important;box-shadow:0 0 0 1px #bcd0ec!important}
+ ${selector}::before{content:attr(data-pb-discount)!important;position:absolute!important;left:10px!important;top:50%!important;transform:translateY(-50%)!important;width:49px!important;height:34px!important;box-sizing:border-box!important;padding:4px 0 13px!important;border-radius:8px!important;border:1px solid #eadcc0!important;background:#fbf4e5!important;color:#876b3c!important;font-size:12px!important;font-weight:800!important;line-height:1.2!important;font-family:inherit!important;text-align:center!important;pointer-events:none!important;box-shadow:none!important}
+ ${selector}::after{content:'اختصاصی شما'!important;position:absolute!important;left:10px!important;top:calc(50% + 3px)!important;width:49px!important;height:auto!important;background:none!important;font-size:7.5px!important;line-height:1.2!important;color:#8b7550!important;text-align:center!important;pointer-events:none!important;transform:none!important;box-shadow:none!important}
+ ${selector}>b{display:block!important;font-size:16px!important;line-height:1.5!important;color:#26364d!important}
+ ${selector}>b[data-pb-before]::after{content:attr(data-pb-before)!important;display:block!important;text-decoration:line-through!important;font-size:10px!important;font-weight:500!important;color:#98a2b3!important;line-height:1.3!important}
+ ${selector}>small,${selector}>del{display:none!important}
+ `;document.head.appendChild(style);
+ let plans=null,busy=false,queued=false;
+ async function load(){if(plans||busy)return;busy=true;try{const r=await fetch('/api/lab/subscription',{credentials:'same-origin',cache:'no-store'});if(r.ok){const data=await r.json();plans=Array.isArray(data.plans)?data.plans:[]}}catch{}finally{busy=false;if(plans)schedule()}}
+ function paint(){queued=false;const buttons=[...document.querySelectorAll('.labSubscriptionPanel .labPlanChoices>button')];if(!buttons.length)return;if(!plans){void load();return;}
+ for(const[at,button]of buttons.entries()){const plan=plans[at],pct=Number(plan?.special_discount_percent||0),before=Number(plan?.plan_price||plan?.price||0),after=Number(plan?.price||0),price=button.querySelector(':scope>b');if(!(pct>0&&before>after)){button.removeAttribute('data-pb-discount');price?.removeAttribute('data-pb-before');continue;}
+ const text=Number(pct).toLocaleString('fa-IR')+'٪';if(button.dataset.pbDiscount!==text)button.dataset.pbDiscount=text;
+ if(price){const value=Math.round(before).toLocaleString('fa-IR')+' تومان';if(price.dataset.pbBefore!==value)price.dataset.pbBefore=value;}
+ }}
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(paint)}
+ // No foreign child nodes or class mutations inside React-owned plan buttons.
+ new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+})();
+/* PB1564 compact selectable plan */

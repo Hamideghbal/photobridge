@@ -78,7 +78,7 @@ test('release payload has optimized, syntax-valid web and native finance and loc
   server=fs.readFileSync('dist/api/server.js','utf8');
  for(const bundle of [web,native]){
   assert.match(bundle,/PB1569 finance focused loads/);
-  assert.match(bundle,/pb1569InitialFinance/);
+  assert.match(bundle,/pb1569FinanceReady/);
   assert.match(bundle,/w==="payments"\?"\/api\/lab\/finance\/payments"/);
  }
  assert.match(manual,/PB1569 manual intake latency/);

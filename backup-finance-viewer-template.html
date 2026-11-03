@@ -67,6 +67,66 @@ dialog::backdrop{background:#173b6080}.dialogHeader{display:flex;align-items:cen
 @media(max-width:1010px){.invoiceRow{grid-template-columns:repeat(3,minmax(120px,1fr))}.actionStack{grid-column:1/-1;max-width:none}.statementSummary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){main{padding:8px}.appHeader{padding:14px}.pb1420PaymentColumns{display:none}.receiptRow{grid-template-columns:1fr 1fr}.receiptRow .rowAction{grid-column:1/-1}.invoiceRow{grid-template-columns:repeat(2,minmax(120px,1fr))}.statementToolbar select{width:100%}.invoiceRangeToolbar input{width:112px}}
 @media print{body{background:white}main{padding:0}.appHeader,.financeNavDock,.sectionTopline,.toolbar,.invoiceRangeToolbar,.pb1176PaymentActions,.statementToolbar,.footerBar,.offlineNotice,.actionStack,.rowAction{display:none!important}.card{border:none;box-shadow:none}.invoiceRow{break-inside:avoid}.statementTable{min-width:0}.statementSummary>div{break-inside:avoid}}
+
+
+/* Native PhotoBridge finance preview: Persian calendar, invoice paper, row details */
+.datePickerButton{flex:none;border:1px solid #d6e3f6;background:#f1f6ff;border-radius:7px;color:#315efb;min-height:34px;padding:4px 8px;font-size:15px}
+.pbCalendar{position:absolute;z-index:20000;width:292px;max-width:calc(100vw - 24px);border:1px solid #ccd8eb;border-radius:14px;background:#fff;padding:12px;box-shadow:0 16px 46px #18396136;direction:rtl;color:#344054}
+.pbCalendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.pbCalendarHeader b{font-size:13px}.pbCalendarHeader button,.pbCalendarGrid button{border:1px solid #e5ebf5;border-radius:7px;background:white;min-height:31px;padding:3px;min-width:30px}
+.pbCalendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.pbCalendarGrid .dayName{font-size:10px;color:#8192a9;padding:5px 0}
+.pbCalendarGrid button{font-size:11px}.pbCalendarGrid button:hover,.pbCalendarGrid button[aria-current="date"]{background:#edf3ff;border-color:#8bb1f6;color:#204fad}
+.pbCalendarGrid button.selected{background:#315efb;color:white;border-color:#315efb}
+.pbCalendarActions{display:flex;gap:6px;margin-top:10px;justify-content:space-between}
+.pbCalendarActions button{font-size:11px;min-height:30px}
+#invoiceDialog{width:min(1000px,96vw);max-width:1000px;max-height:94vh;padding:13px;background:#f6f8fc;overflow:auto}
+#invoiceDialog .dialogHeader{padding:10px 13px 15px}
+#invoiceDialog .dialogHeader small{display:block;color:#7b8da4;font-size:11px}
+#invoiceDialog .dialogHeader h3{font-size:17px;margin:0}
+#invoiceDialog .dialogContent{padding:0}
+#invoiceDialog .invoicePaper{border:1px solid #e3e8f0;border-radius:11px;background:#fff;padding:26px 28px;max-width:850px;margin:0 auto;box-shadow:0 4px 14px #0e428a0b}
+#invoiceDialog .invoicePaperHead{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:2px solid #17283d;padding-bottom:16px}
+#invoiceDialog .invoicePaperBrand{color:#315efb;font-weight:900;font-size:19px}
+#invoiceDialog .invoicePaperHead h2{font-size:21px;margin:5px 0 0}
+#invoiceDialog .invoicePaperNumber{text-align:left}
+#invoiceDialog .invoicePaperNumber small,#invoiceDialog .invoicePaperNumber b{display:block}
+#invoiceDialog .invoicePaperNumber small{font-size:11px;color:#667085}
+#invoiceDialog .invoicePaperNumber b{font-size:20px}
+#invoiceDialog .invoicePaperInfo{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:16px 0}
+#invoiceDialog .invoicePaperInfo>div{border:1px solid #e1e7ef;border-radius:9px;background:#fafbfe;padding:12px}
+#invoiceDialog .invoicePaperInfo small,#invoiceDialog .invoicePaperInfo b{display:block}
+#invoiceDialog .invoicePaperInfo small{font-size:11px;color:#74859c}
+#invoiceDialog .invoicePaperInfo b{font-size:12px;margin-top:3px;overflow-wrap:anywhere}
+#invoiceDialog .invoicePaperTable{border:1px solid #e2e7ef;border-radius:9px;overflow:hidden}
+#invoiceDialog .invoicePaperTableHead,#invoiceDialog .invoicePaperRow{display:grid;grid-template-columns:minmax(240px,1.8fr) .5fr .8fr .9fr;gap:9px;align-items:center;padding:9px 12px}
+#invoiceDialog .invoicePaperTableHead{background:#f2f4f8;color:#53647e;font-size:11px;font-weight:900}
+#invoiceDialog .invoicePaperRow{border-top:1px solid #eef1f5;font-size:12px}
+#invoiceDialog .invoicePaperRow b{font-weight:900}
+#invoiceDialog .invoicePaperEmpty{padding:20px;font-size:12px;color:#7c8ea4;text-align:center}
+#invoiceDialog .invoicePaperTotals{width:min(380px,100%);margin:19px 0 0 auto}
+#invoiceDialog .invoicePaperTotals>div{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #edf0f5}
+#invoiceDialog .invoicePaperTotals .final{font-weight:900;font-size:15px;border-top:2px solid #26374b;background:#eff5ff;color:#244fa4}
+#invoiceDialog .invoiceAccountDebt{padding:12px;background:#f9faff;font-weight:800}
+#invoiceDialog .invoicePaperNote{font-size:10px;color:#667085;margin-top:14px}
+#invoiceDialog .dialogFooter{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.pb1441StatementDetail td{background:#f6f9ff!important;padding:13px 18px!important;text-align:right!important}
+.pb1441StatementDetail b{display:block;color:#315efb;margin-bottom:7px}
+.pb1441StatementItems{border-collapse:collapse;width:100%;font-size:11px;margin-top:7px}
+.pb1441StatementItems th,.pb1441StatementItems td{border:1px solid #dce6f4!important;padding:7px 9px!important}
+.pb1441StatementItems th{background:#e9f0fc!important;color:#344054}
+#invoiceDialog .dialogHeader .dialogButtons{display:flex;gap:7px}
+@media(max-width:700px){#invoiceDialog .invoicePaper{padding:14px}#invoiceDialog .invoicePaperInfo{grid-template-columns:1fr}#invoiceDialog .invoicePaperTableHead,#invoiceDialog .invoicePaperRow{grid-template-columns:minmax(130px,1.6fr) .5fr .7fr .8fr;font-size:10px;gap:3px;padding:8px}}
+@media print{
+ .pbCalendar{display:none!important}
+ body:has(#invoiceDialog[open]) main{display:none!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog{position:static!important;display:block!important;max-height:none!important;max-width:none!important;width:190mm!important;border:none!important;margin:0 auto!important;padding:0!important;box-shadow:none!important;background:white!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog .dialogHeader,
+ body:has(#invoiceDialog[open]) #invoiceDialog .dialogFooter{display:none!important}
+ body:has(#invoiceDialog[open]) #invoiceDialog .invoicePaper{padding:0!important;border:0!important;box-shadow:none!important}
+ #invoiceDialog .invoicePaperRow{break-inside:avoid}
+ .pb1441StatementDetail,.pb1441StatementItems tr{break-inside:avoid}
+}
 </style></head><body><main>
 <header class="appHeader"><div class="headerLine"><div class="headerBrand">
 <svg viewBox="0 0 36 36" aria-hidden="true"><rect x="4" y="10" width="28" height="20" rx="4"/><circle cx="18" cy="20" r="7"/><path d="M11 10 14 5h8l3 5"/></svg>
@@ -109,7 +169,7 @@ dialog::backdrop{background:#173b6080}.dialogHeader{display:flex;align-items:cen
 <div class="tableWrap"><table class="statementTable"><thead><tr><th>ردیف</th><th><button id="sortDate" type="button">تاریخ ↓</button></th><th>شرح</th><th>شماره سند</th><th>بدهکار</th><th>بستانکار</th><th>باقیمانده</th></tr></thead><tbody id="statementRows"></tbody></table></div>
 <div class="footerBar"><span id="statementRange"></span><div><button class="btn prev">قبلی</button> <button class="btn next">بعدی</button></div></div></section></div>
 </section><div class="offlineNotice">این صفحه تنها نسخه ذخیره‌شده در زمان بکاپ را نمایش می‌دهد و هیچ اطلاعاتی را از سایت دریافت نمی‌کند. دکمه‌های ثبت و اصلاح حسابداری غیرفعال‌اند. فایل اصلی <b>data.sqlite</b> بدون تغییر باقی می‌ماند.</div></main>
-<dialog id="invoiceDialog"><div class="dialogHeader"><h3 id="dialogTitle">مشاهده فاکتور</h3><button type="button" id="closeDialog" class="btn">بستن</button></div>
+<dialog id="invoiceDialog"><div class="dialogHeader"><div><small>پیش‌نمایش کامل فاکتور</small><h3 id="dialogTitle">فاکتور فروش</h3></div><div class="dialogButtons"><button id="dialogPrintTop" type="button" class="btn primary">چاپ فاکتور</button><button id="dialogPdf" type="button" class="btn">PDF</button><button type="button" id="closeDialog" class="btn">بستن ×</button></div></div>
 <div class="dialogContent" id="dialogContent"></div><div class="dialogFooter"><button id="dialogPrint" type="button" class="btn primary">چاپ</button></div></dialog>
 <script type="application/octet-stream" id="snapshot">__PB_SNAPSHOT_BASE64__</script>
 <script>
@@ -194,8 +254,24 @@ function renderStatement(){
   const tr=el("tr");for(const value of [money(state.pages.statement*size+index+1),r.persianDate||persian(r.date),r.description,r.ref||"—",
    r.debit?money(r.debit):"—",r.credit?money(r.credit):"—",money(r.balance)])tr.append(el("td","",value));root.append(tr);
   if(state.mode==="detailed"&&r.ref){
-   const doc=arrays.invoices.find(x=>x.number===r.ref&&x.customerId===r.customerId);
-   if(doc?.lines?.length){const sub=el("tr","statementDetail"),td=el("td","",doc.lines.map(l=>l.description+" × "+l.quantity+" = "+money(l.total)).join(" | "));td.colSpan=7;sub.append(td);root.append(sub)}
+   // Same PB1441StatementDetail presentation as the web app: an invoice
+   // details TABLE, not a flattened text-only description.
+   const doc=arrays.invoices.find(x=>String(x.number)===String(r.ref)&&x.customerId===r.customerId&&x.type==="invoice");
+   const sub=el("tr","pb1441StatementDetail"),td=el("td");td.colSpan=7;
+   td.append(el("b","","ریز اقلام فاکتور #"+(doc?.number||r.ref)));
+   if(doc?.lines?.length){
+    const table=el("table","pb1441StatementItems"),head=el("thead"),trh=el("tr");
+    for(const title of ["شرح / سایز","تعداد","فی واحد","جمع"])trh.append(el("th","",title));
+    head.append(trh);table.append(head);
+    const body=el("tbody");
+    for(const item of doc.lines){
+     const tr=el("tr");
+     for(const value of [item.description,money(item.quantity),money(item.unitPrice),money(item.total)])tr.append(el("td","",value));
+     body.append(tr);
+    }
+    table.append(body);td.append(table);
+   }else td.append(el("p","","ریز اقلام این فاکتور در سند اصلی ذخیره نشده است."));
+   sub.append(td);root.append(sub);
   }
  }
  if(!page.length){const tr=el("tr"),td=el("td","empty","در این بازه گردش حسابی ثبت نشده است.");td.colSpan=7;tr.append(td);root.append(tr)}
@@ -209,6 +285,99 @@ for(const select of document.querySelectorAll(".customerSelect")){
  for(const studio of studios){const option=el("option","",studio.name);option.value=studio.id;select.append(option)}
  select.addEventListener("change",()=>{state.customer=select.value;for(const control of document.querySelectorAll(".customerSelect"))control.value=state.customer;state.pages={invoices:0,payments:0,statement:0};render()})
 }
+/* Persian calendar for every from/to control, independent of the site or internet. */
+const persianParts=new Intl.DateTimeFormat("en-US-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"numeric",day:"numeric"});
+const monthNames=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+function jParts(date){
+ const out={};
+ for(const part of persianParts.formatToParts(date))if(["year","month","day"].includes(part.type))out[part.type]=Number(part.value);
+ return out;
+}
+function dateShift(date,day){
+ return new Date(date.getTime()+day*86400000);
+}
+function findMonthFirst(year,month){
+ // Persian months begin near the Gregorian 20th, with a Dec/Jan rollover.
+ const gYear=year+621+(month>=11?1:0),gMonth=(month+1)%12;
+ const candidate=new Date(Date.UTC(gYear,gMonth,20,12));
+ for(let delta=-40;delta<=40;delta++){
+  const day=dateShift(candidate,delta),part=jParts(day);
+  if(part.year===year&&part.month===month&&part.day===1)return day;
+ }
+ return null;
+}
+let openCalendar=null,calendarInput=null;
+function closeCalendar(){
+ if(openCalendar){openCalendar.remove();openCalendar=null;calendarInput=null;}
+}
+function showCalendar(input){
+ closeCalendar();
+ const selectedKey=dateKey(input.value),selected=selectedKey?{year:Number(selectedKey.slice(0,4)),month:Number(selectedKey.slice(4,6))}:jParts(new Date());
+ const popup=el("div","pbCalendar");
+ popup.setAttribute("role","dialog");popup.setAttribute("aria-label","تقویم شمسی انتخاب تاریخ");
+ document.body.append(popup);openCalendar=popup;calendarInput=input;
+ const rect=input.getBoundingClientRect();
+ popup.style.top=Math.max(8,rect.bottom+window.scrollY+6)+"px";
+ popup.style.left=Math.max(8,Math.min(window.innerWidth-300,rect.left+window.scrollX))+"px";
+ function draw(year,month){
+  popup.replaceChildren();
+  const first=findMonthFirst(year,month);
+  if(!first){popup.append(el("div","empty","تقویم فارسی در این مرورگر در دسترس نیست."));return}
+  const head=el("div","pbCalendarHeader"),before=el("button","","❯"),after=el("button","","❮");
+  const title=el("b","",monthNames[month-1]+" "+money(year));
+  before.type="button";after.type="button";head.append(before,title,after);popup.append(head);
+  const move=delta=>{
+   let m=month+delta,y=year;
+   if(m===0){m=12;y--}else if(m===13){m=1;y++}
+   draw(y,m);
+  };
+  before.addEventListener("click",()=>move(-1));after.addEventListener("click",()=>move(1));
+  const grid=el("div","pbCalendarGrid");
+  for(const name of ["ش","ی","د","س","چ","پ","ج"])grid.append(el("span","dayName",name));
+  const blanks=(first.getUTCDay()+1)%7;
+  for(let k=0;k<blanks;k++)grid.append(el("span"));
+  for(let n=1;n<=31;n++){
+   const day=dateShift(first,n-1),jp=jParts(day);
+   if(jp.month!==month||jp.year!==year)break;
+   const button=el("button","",money(n));button.type="button";
+   const iso=String(year).padStart(4,"0")+"/"+String(month).padStart(2,"0")+"/"+String(n).padStart(2,"0");
+   if(dateKey(input.value)===iso.replace(/\//g,""))button.classList.add("selected");
+   if(dateKey(new Date().toISOString())===iso.replace(/\//g,""))button.setAttribute("aria-current","date");
+   button.addEventListener("click",()=>{
+    input.value=money(year)+"/"+String(money(month)).padStart(2,"۰")+"/"+String(money(n)).padStart(2,"۰");
+    // Use ASCII ISO fields for stable dateKey, while styling keeps Vazirmatn.
+    input.value=iso;closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}));
+   });
+   grid.append(button);
+  }
+  popup.append(grid);
+  const actions=el("div","pbCalendarActions"),today=el("button","btn","امروز"),clear=el("button","btn","پاک کردن");
+  today.type="button";clear.type="button";
+  today.addEventListener("click",()=>{input.value=persian(new Date().toISOString());closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}))});
+  clear.addEventListener("click",()=>{input.value="";closeCalendar();input.dispatchEvent(new Event("change",{bubbles:true}))});
+  actions.append(today,clear);popup.append(actions);
+ }
+ draw(selected.year,selected.month);
+}
+function installCalendars(){
+ for(const input of document.querySelectorAll(".fromDate,.toDate")){
+  input.setAttribute("autocomplete","off");
+  input.setAttribute("inputmode","numeric");
+  input.placeholder="انتخاب تاریخ";
+  const button=el("button","datePickerButton","▦");
+  button.type="button";button.setAttribute("aria-label","باز کردن تقویم شمسی");
+  button.title="انتخاب تاریخ از تقویم شمسی";
+  input.insertAdjacentElement("afterend",button);
+  button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();if(openCalendar&&calendarInput===input)closeCalendar();else showCalendar(input)});
+  input.addEventListener("click",()=>{if(calendarInput!==input)showCalendar(input)});
+ }
+ document.addEventListener("pointerdown",event=>{
+  if(openCalendar&&!openCalendar.contains(event.target)&&!event.target.closest(".datePickerButton"))closeCalendar();
+ });
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")closeCalendar()});
+}
+installCalendars();
+
 for(const [name,id]of [["invoices","invoiceBlock"],["payments","receiptBlock"],["statement","statementBlock"]]){
  const block=byId(id),range=state.dates[name],inputs=block.querySelectorAll(".fromDate,.toDate");
  inputs[0].addEventListener("change",()=>{range.from=digits(inputs[0].value).trim();state.pages[name]=0;render()});
@@ -236,16 +405,52 @@ function exportCsv(){
 }
 byId("statementBlock").querySelector(".csvBtn").addEventListener("click",exportCsv);
 function openInvoice(invoice){
- const dialog=byId("invoiceDialog");byId("dialogTitle").textContent="فاکتور شماره "+invoice.number;
- const root=byId("dialogContent");root.replaceChildren();root.append(el("p","",invoice.customer+" · "+persian(invoice.date)+" · مبلغ: "+money(invoice.total)+" تومان"));
- if(invoice.lines?.length){
-  const table=el("table","detailsTable"),head=el("tr");for(const title of ["شرح","تعداد","قیمت واحد","مبلغ ردیف"])head.append(el("th","",title));table.append(head);
-  for(const line of invoice.lines){const tr=el("tr");for(const v of [line.description,line.quantity,money(line.unitPrice),money(line.total)])tr.append(el("td","",v));table.append(tr)}root.append(table);
- }else root.append(el("p","empty","جزئیات این سند در نسخه بکاپ موجود نیست."));
- dialog.showModal();
+ const dialog=byId("invoiceDialog"),root=byId("dialogContent");
+ byId("dialogTitle").textContent=(invoice.type==="invoice"?"فاکتور #":"سند مالی #")+invoice.number;
+ root.replaceChildren();
+ const paper=el("article","invoicePaper");
+ const header=el("header","invoicePaperHead"),title=el("div");
+ title.append(el("span","invoicePaperBrand","PhotoBridge"),
+  el("h2","",invoice.type==="invoice"?"فاکتور فروش و خدمات چاپ":invoice.type==="discount"?"سند تخفیف همکاری":"سند اصلاحیه مالی"));
+ const number=el("div","invoicePaperNumber");
+ number.append(el("small","","شماره "+(invoice.type==="invoice"?"فاکتور":"سند")),
+  el("b","","#"+invoice.number),el("small","",persian(invoice.date)));
+ header.append(title,number);paper.append(header);
+ const info=el("section","invoicePaperInfo");
+ const infoBlock=(label,value)=>cell(label,value||"—");
+ info.append(infoBlock("مشتری / عکاسی",invoice.customer),
+  infoBlock("شناسه سفارش",invoice.orderId?"#"+invoice.orderId:"—"),
+  infoBlock("تاریخ صدور",persian(invoice.date)));
+ paper.append(info);
+ const table=el("section","invoicePaperTable"),columns=el("div","invoicePaperTableHead");
+ for(const title of ["شرح / سایز","تعداد","فی","مبلغ"])columns.append(el("span","",title));
+ const items=el("div","invoicePaperItems");
+ for(const item of invoice.lines||[]){
+  const row=el("div","invoicePaperRow");
+  row.append(el("span","",item.description),el("span","",money(item.quantity)),
+   el("span","money",money(item.unitPrice)),el("b","money",money(item.total)));
+  items.append(row);
+ }
+ if(!invoice.lines?.length)items.append(el("div","invoicePaperEmpty","جزئیات ردیف‌های این سند در بکاپ ذخیره نشده است."));
+ table.append(columns,items);paper.append(table);
+ const totals=el("footer","invoicePaperTotals");
+ const totalRow=(label,value,cls)=>{
+  const div=el("div",cls);div.append(el("span","",label),el("b","money",money(value)+" تومان"));return div;
+ };
+ if(invoice.type==="invoice"){
+  totals.append(totalRow("جمع",invoice.subtotal||invoice.total));
+  if(Number(invoice.correction))totals.append(totalRow("اصلاحیه",invoice.correction));
+  totals.append(totalRow("مبلغ نهایی",invoice.total,"final"));
+  totals.append(totalRow("پرداخت‌شده",invoice.paid),totalRow("مانده این فاکتور",invoice.balance));
+  totals.append(totalRow("جمع بدهی عکاسی در لحظه بکاپ",invoice.accountDebt,"invoiceAccountDebt"));
+ }else totals.append(totalRow("اثر این سند روی حساب",invoice.total,"final"));
+ paper.append(totals,el("p","invoicePaperNote","این پیش‌نمایش از ردیف‌های ذخیره‌شده در همان بکاپ ساخته شده است. هیچ اتصال به سایت یا ویرایش اطلاعاتی انجام نمی‌شود."));
+ root.append(paper);dialog.showModal();
 }
 byId("closeDialog").addEventListener("click",()=>byId("invoiceDialog").close());
 byId("dialogPrint").addEventListener("click",()=>window.print());
+byId("dialogPrintTop").addEventListener("click",()=>window.print());
+byId("dialogPdf").addEventListener("click",()=>window.print());
 buttons.forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 byId("backupAt").textContent=persian(data.createdAt);switchTab("invoices");
 })();

@@ -174,11 +174,13 @@ Sub BuildReports()
  Setting "AppTitle",10,"PhotoBridge | گزارش‌های مالی"
  For Each name In Array("معین آتلیه‌ها","فاکتورهای آتلیه‌ها","خلاصه بدهی آتلیه‌ها")
   If application.CurrentProject.AllReports(name).Name<>name Then Err.Raise 513,,"missing_report:" & name
-  Stage "validate_report: " & name
-  application.DoCmd.OpenReport name,5
-  Set check=application.Reports(name)
-  If check.RecordSource="" Then Err.Raise 514,,"empty_report_source:" & name
-  application.DoCmd.Close acReport,name,2
+  ' The SQL is already validated noninteractively via db.OpenRecordset(sql)
+  ' inside GroupedReport. Opening the report here resolves Access text-box
+  ' and sort expressions, which can display the modal "Enter Parameter: تاریخ"
+  ' dialog and block an unattended Windows backup. Never open a report while
+  ' generating a backup; the saved reports remain available for manual viewing.
+  Stage "validate_saved_report: " & name
+  If application.CurrentProject.AllReports(name).Name<>name Then Err.Raise 513,,"missing_report:" & name
  Next
 End Sub
 On Error Resume Next

@@ -1,0 +1,114 @@
+/* R1568: installed Windows-only order automation.
+   Runs in the signed native UI context; old hosts without thermal support stay inert.
+   Work checkpoints persist per lab and order, and no local print is retried blindly. */
+const pb1568Work={running:false,deviceReady:false,lastError:'',labId:null,checkedAt:0};
+const pb1568StoreKey=(lab,id)=>'pb1568-work:'+lab+':'+id;
+function pb1568State(lab,id){try{return JSON.parse(localStorage.getItem(pb1568StoreKey(lab,id))||'null')}catch{return null}}
+function pb1568Save(lab,id,data){localStorage.setItem(pb1568StoreKey(lab,id),JSON.stringify({...data,updatedAt:new Date().toISOString()}));}
+function pb1568Problem(error){return String(error?.data?.error||error?.code||error?.message||'automation_failed')}
+async function pb1568Thermal(kind,orderId,invoiceId){
+ const r=await fetch('/desktop/thermal/print',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,orderId,invoiceId})});
+ const data=await r.json().catch(()=>({}));
+ if(!r.ok||data?.state!=='spool_accepted')throw Error(data?.state==='needs_review'?'printer_needs_operator_review':data?.error||'thermal_print_unavailable');
+ return data;
+}
+async function pb1568PersistPdf(invoice,orderId){
+ if(invoice?.pdf_ready)return;
+ if(!invoice?.id)throw Error('invoice_missing');
+ const pdf=await Wu(invoice);
+ const b64=await new Promise((resolve,reject)=>{const f=new FileReader();f.onload=()=>resolve(String(f.result||''));f.onerror=()=>reject(f.error||Error('invoice_pdf_read_failed'));f.readAsDataURL(pdf)});
+ await Me('/api/lab/invoices/'+encodeURIComponent(invoice.id)+'/pdf-upload',{method:'POST',body:JSON.stringify({pdfBase64:b64})});
+}
+async function pb1568ProcessOrder(lab,order,settings){
+ const id=order.id;
+ let task=pb1568State(lab,id);
+ if(task?.phase==='complete')return;
+ if(task?.retryAt&&Date.now()<task.retryAt)return;
+ if(!task&&!settings.autoDownloadEnabled)return;
+ // A fresh order may be downloaded here; an already-downloaded *manual* order is never commandeered.
+ if(!task){
+   if(order.downloaded_at||!['sent','received'].includes(String(order.status||''))||Number(order.file_count||0)<1)return;
+   if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return;
+   task={phase:'pending_download',attempts:0};pb1568Save(lab,id,task);
+ }
+ try{
+   if(task.phase==='pending_download'){
+     const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));
+     if(detail.files?.some(file=>file.local_only))throw Error('local_only_order_manual_review');
+     // Never open a folder selector in an unattended session; a configured writable root is mandatory.
+     await pb1450Root(false,detail);
+     const outcome=await pb1450Download(detail,()=>{},{silent:true});
+     if(outcome.fallbackUsed)throw Error('original_fallback_requires_operator');
+     const ack=await pb1451AcknowledgeDownload(detail);
+     const current={...detail.order,...(ack?.order||{})};
+     if(!['downloaded','printing','reviewing','ready_print','printed','ready','completed'].includes(String(current.status||''))){
+       if(current.mode==='album')await Me('/api/lab/orders/'+id+'/album-download-complete',{method:'POST',body:JSON.stringify({expectedRevision:current.document_revision,expectedUpdatedAt:current.updated_at})});
+       else await Me('/api/lab/orders/'+id,{method:'PATCH',body:JSON.stringify({status:'downloaded',expectedRevision:current.document_revision,expectedUpdatedAt:current.updated_at})});
+     }
+     task={phase:'downloaded',attempts:0};pb1568Save(lab,id,task);
+   }
+   if(settings.invoiceTiming==='after_verified_download'){
+     let data;
+     try{data=await Me('/api/lab/orders/'+id+'/automation-invoice',{method:'POST',body:'{}'});}
+     catch(error){
+       if(pb1568Problem(error)!=='invoice_pricing_required')throw error;
+       if(settings.autoPrintMissingPriceTicket)await pb1568Thermal('ticket',id,null);
+       pb1568Save(lab,id,{phase:'waiting_for_pricing',attempts:0,retryAt:Date.now()+60000});
+       return;
+     }
+     if(!data?.invoice?.id)throw Error('issued_invoice_missing');
+     pb1568Save(lab,id,{phase:'invoice_issued',invoiceId:data.invoice.id,attempts:0});
+     await pb1568PersistPdf(data.invoice,id);
+     if(settings.autoPrintInvoice)await pb1568Thermal('invoice',id,data.invoice.id);
+   }else{
+     const price=await Me('/api/lab/orders/'+id+'/invoice-pricing');
+     if(price.missing?.length&&settings.autoPrintMissingPriceTicket)await pb1568Thermal('ticket',id,null);
+   }
+   pb1568Save(lab,id,{phase:'complete',attempts:0});
+ }catch(error){
+   const current=pb1568State(lab,id)||task||{};
+   const attempts=Math.min(8,(current.attempts||0)+1),message=pb1568Problem(error);
+   pb1568Save(lab,id,{...current,attempts,error:message,retryAt:Date.now()+Math.min(600000,30000*2**Math.min(attempts,4))});
+   pb1568Work.lastError=message;
+   console.warn('[PhotoBridge auto processing]',id,message);
+ }
+}
+async function pb1568AutoTick(){
+ if(!window.pbNativeStorage||pb1568Work.running||document.visibilityState==='prerender')return;
+ pb1568Work.running=true;
+ try{
+   const status=await fetch('/desktop/thermal/status',{cache:'no-store'});
+   if(!status.ok)return; // Installed legacy host cannot safely perform automated printing.
+   const printer=await status.json();if(!printer?.supported)return;
+   const me=await Me('/api/auth/me'),lab=me?.lab?.id;if(!lab)return;
+   pb1568Work.labId=lab;
+   const settings=(await Me('/api/lab/automation')).settings;
+   if(!settings?.autoDownloadEnabled&&!settings?.autoPrintInvoice)return;
+   const rows=(await Me('/api/lab/orders')).orders||[];
+   const downloadGate='pb1568:downloadEnabledAt:'+lab,printGate='pb1568:printEnabledAt:'+lab;
+   if(!settings.autoDownloadEnabled)localStorage.removeItem(downloadGate);
+   if(!settings.autoPrintInvoice)localStorage.removeItem(printGate);
+   const downloadEnabledAt=Number(localStorage.getItem(downloadGate))||Date.now(),printEnabledAt=Number(localStorage.getItem(printGate))||Date.now();
+   if(settings.autoDownloadEnabled&&!localStorage.getItem(downloadGate))localStorage.setItem(downloadGate,String(downloadEnabledAt));
+   if(settings.autoPrintInvoice&&!localStorage.getItem(printGate))localStorage.setItem(printGate,String(printEnabledAt));
+   for(const order of rows){
+     if(!window.pbNativeStorage)break;
+     const previous=pb1568State(lab,order.id);
+     if(previous&&previous.phase!=='complete'||settings.autoDownloadEnabled&&!order.downloaded_at&&Date.parse(order.created_at||0)>=downloadEnabledAt&&['sent','received'].includes(String(order.status||''))){
+       await pb1568ProcessOrder(lab,order,settings);
+     }
+     // After-print policy: an existing finalized invoice is sent only once.
+     if(settings.invoiceTiming==='after_print'&&settings.autoPrintInvoice&&Date.parse(order.invoice_issued_at||0)>=printEnabledAt&&order.invoice_id&&order.invoice_pdf_ready&&['ready','completed'].includes(order.status)){
+       try{await pb1568Thermal('invoice',order.id,order.invoice_id);}
+       catch(error){pb1568Work.lastError=pb1568Problem(error);}
+     }
+   }
+   pb1568Work.checkedAt=Date.now();
+ }catch(error){pb1568Work.lastError=pb1568Problem(error)}
+ finally{pb1568Work.running=false}
+}
+if(typeof window!=='undefined'&&window.pbNativeStorage){
+ setTimeout(()=>void pb1568AutoTick(),12000);
+ setInterval(()=>void pb1568AutoTick(),45000);
+ window.pb1568AutomationStatus=()=>({...pb1568Work});
+}

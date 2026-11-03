@@ -21,9 +21,9 @@ test('automation and backup appear under General settings, not System or Print o
   assert(general>=0);
   const generalSection=source.slice(general,general+650);
   assert(generalSection.includes('["automation","دانلود و چاپ خودکار"]'));
-  assert(generalSection.includes('["backup","پشتیبان اطلاعات برنامه"]'));
+  if(root==='dist/web/lab-desktop-ui'&&source.includes('R1573 native backup'))assert(!generalSection.includes('["backup","پشتیبان اطلاعات برنامه"]'));else assert(generalSection.includes('["backup","پشتیبان اطلاعات برنامه"]'));
   const settingsMenu=source.slice(general,general+2200);
-  assert.equal((settingsMenu.match(/\["backup","[^"]*"\]/g)||[]).length,1,
+  assert.equal((settingsMenu.match(/\["backup","[^"]*"\]/g)||[]).length,root==='dist/web/lab-desktop-ui'&&source.includes('R1573 native backup')?0:1,
     'backup should appear exactly once in the Lab settings menu');
   assert(source.includes('g==="automation"&&e.jsx(PB1568AutomationSettings'));
   assert(source.includes('g==="backup"&&e.jsxs("section"'));

@@ -22,6 +22,8 @@ test('Website backup takes only authenticated same-origin read-only API snapshot
  assert(js.includes("method:'GET'"));
  assert(js.includes("const blob=new Blob"));
  assert(js.includes("not a restore archive"));
+ assert(js.indexOf('const bytes=saveFile(backup)')>js.indexOf('for(let i=0;i<sources.length;i++)'),'a partial fetch must never trigger download');
+ assert(js.includes('if(!response.ok)throw Error'),'failed API requests must interrupt the backup');
  assert(!js.includes('document.cookie'));
  assert(!js.includes('localStorage'));
  assert(!js.includes('fetch("http'));

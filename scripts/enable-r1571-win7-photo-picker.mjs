@@ -33,24 +33,35 @@ execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const uiFile='dist/web/photobridge-r1137-lab-local-intake.js';
 let ui=load(uiFile);
 if(!ui.includes('/* R1571 Windows 7 manual photo picker */')){
- const existing="choose.onclick=()=>selectPhotos('copy');movePhotos.onclick=()=>selectPhotos('move');";
- const next=`choose.onclick=()=>selectPhotos('copy');
-    // Legacy Windows 7 Chrome cannot delete source files with the File System Access API.
-    // Hide misleading Move button; the Copy path remains fully usable.
-    const nativeMove=Boolean(window.pbNativeFolder?.pickPhotos);
-    const browserMove=typeof window.showOpenFilePicker==='function'
-      &&typeof window.FileSystemFileHandle?.prototype?.remove==='function';
-    if(!nativeMove&&!browserMove){
-      movePhotos.hidden=true;movePhotos.disabled=true;
-      movePhotos.title='این مرورگر انتقال مستقیم را پشتیبانی نمی‌کند؛ از کپی عکس استفاده کنید.';
-    }else movePhotos.onclick=()=>selectPhotos('move');`;
- ui=once(ui,existing,next,'main picker controls');
- // Extra group button is created in renderGroups; guard it on legacy browsers.
- ui=once(ui,"moveMore.onclick=()=>addMore('move');head.append(moveMore);",
- `if(window.pbNativeFolder?.pickPhotos||(typeof window.showOpenFilePicker==='function'&&typeof window.FileSystemFileHandle?.prototype?.remove==='function')){
-   moveMore.onclick=()=>addMore('move');head.append(moveMore);
-  }else{moveMore.hidden=true;moveMore.disabled=true;}`, 'group picker controls');
- ui+='\n/* R1571 Windows 7 manual photo picker */\n';
+ ui+=`
+/* R1571 Windows 7 manual photo picker */
+(function(){
+  // Leave the browser's standard Copy selection untouched. On Chrome 109,
+  // remove/move of source files is unsupported; hide only its Move action.
+  if(window.pbNativeFolder?.pickPhotos ||
+    (typeof window.showOpenFilePicker==='function' &&
+     typeof window.FileSystemFileHandle?.prototype?.remove==='function'))return;
+  let busy=false;
+  const hide=()=>{
+    const dialog=document.querySelector('.pb1137Intake');
+    if(!dialog)return;
+    for(const button of dialog.querySelectorAll('button')){
+      const label=String(button.getAttribute('aria-label')||button.textContent||'').trim();
+      if(label!=='انتقال عکس')continue;
+      if(!button.hidden){button.hidden=true;button.disabled=true;
+        button.setAttribute('aria-hidden','true');}
+    }
+  };
+  const refresh=()=>{
+    if(busy)return;busy=true;requestAnimationFrame(()=>{busy=false;hide();});
+  };
+  new MutationObserver(records=>{
+    if(records.some(record=>record.addedNodes.length))refresh();
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('click',refresh,true);
+  refresh();
+})();
+`;
  save(uiFile,ui);
 }
 execFileSync(process.execPath,['--check',uiFile],{stdio:'inherit'});

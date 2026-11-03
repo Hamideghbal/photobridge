@@ -697,3 +697,7 @@ runR1314(process.execPath,["--test","scripts/test-r1548-native-navigation.cjs"],
 // R1549: remove Lab login home link and enter browser editor through normal Lab sign-in.
 await deployStep('./enable-r1549-lab-login-site-editor.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1549-lab-login-site-editor.cjs'],{stdio:'inherit'});
+
+// R1550: bind local file access to each order, independently of the new default root.
+await deployStep('./enable-r1550-order-storage.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1550-order-storage.cjs'],{stdio:'inherit'});

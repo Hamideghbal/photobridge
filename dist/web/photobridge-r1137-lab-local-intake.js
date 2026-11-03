@@ -33,7 +33,7 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
  const debt=field(fields,'بدهی اولیه (تومان)',node('input'));
  debt.type='text';debt.inputMode='numeric';debt.dir='ltr';debt.value='0';debt.autocomplete='off';
  const actions=node('div',null,'pb1143NewActions');panel.append(actions);
- const smsLabel=field(actions,'ارسال پیامک دعوتنامه',node('input'));smsLabel.type='checkbox';
+ const smsLabel=field(actions,'ارسال پیامک دعوتنامه',node('input'));smsLabel.type='checkbox';smsLabel.checked=true;smsLabel.title='لینک کوتاه عضویت پس از ثبت مشتری ارسال می‌شود؛ در صورت عدم نیاز تیک را بردارید.';
  const addCustomer=node('button','افزودن','pb1143CustomerAdd');addCustomer.type='button';actions.append(addCustomer);
  const back=node('button','← بازگشت به فهرست','pb1144PickerBack');back.type='button';back.hidden=true;
  const notice=node('p',null,'pb1143PickerNotice');notice.setAttribute('role','status');
@@ -89,6 +89,21 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
   smsChoice.title=data.smsEnabled?'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.':'ارسال پیامک برای این لابراتوار غیرفعال است';
   smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);
   sms.onchange=()=>{model.sendInvoiceSms=sms.checked;};
+  if(c.registrationPending){
+   const resend=node('button','ارسال مجدد دعوت‌نامه','pb1294ResendInvite');resend.type='button';
+   resend.onclick=async()=>{
+    resend.disabled=true;localNotice.textContent='در حال ارسال پیامک دعوت‌نامه…';
+    try{
+     const delivery=await resendInvitation(c.id);
+     if(delivery?.invitationSmsSent!==true)throw Error(delivery?.invitationSmsError||'sms_send_failed');
+     localNotice.textContent='پیامک دعوت‌نامه با لینک کوتاه ارسال شد.';
+    }catch(e){
+     const code=String(e?.message||'sms_send_failed');
+     localNotice.textContent='ارسال انجام نشد: '+(code==='invitation_sms_rate_limited'?'برای جلوگیری از ارسال تکراری، یک دقیقه دیگر تلاش کنید.':code==='sms_not_configured'?'سامانه پیامک تنظیم نیست.':code==='invalid_sms_mobile'?'شماره موبایل معتبر نیست.':code);
+    }finally{resend.disabled=false;}
+   };
+   controls.append(resend);
+  }
   if(data.canEditInitialDebt){
    const toggle=node('button','اصلاح بدهی اولیه','pb1294Edit');toggle.type='button';
    const editPanel=node('div',null,'pb1294InitialEdit');editPanel.hidden=true;
@@ -165,7 +180,8 @@ function customerMenu(parent,customers,registerCustomer,resendInvitation,account
    search.value='';render();selectCustomer(c);
    if(smsLabel.checked&&c.registrationPending&&!created.invitationSmsSent){
     menu.hidden=false;button.setAttribute('aria-expanded','true');
-    notice.textContent='مشتری اضافه شد اما پیامک دعوت‌نامه ارسال نشد؛ از بخش دعوت‌نامه‌ها دوباره ارسال کنید.';
+    const code=String(created.invitationSmsError||'sms_send_failed');
+    notice.textContent='مشتری ثبت شد اما پیامک ارسال نشد: '+(code==='invitation_sms_rate_limited'?'یک دقیقه دیگر روی «ارسال مجدد دعوت‌نامه» بزنید.':code)+'. برای ارسال مجدد، مشتری را انتخاب کنید.';
    }
   }catch(e){notice.textContent=e.message;}finally{addCustomer.disabled=false;}
  };
@@ -202,7 +218,7 @@ async function open(){
   const cachedPrimary=primaryState===true&&Date.now()-primaryCheckedAt<45000;
   const [primary,root,data]=await Promise.all([
     cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device'),
-    provider.root(),api('/api/lab/delegated-orders/bootstrap'+(/^\/lab\/album(?:s|[-/]|$)/.test(location.pathname)?'':'?mode=print'))
+    provider.root(),api('/api/lab/delegated-orders/bootstrap?fresh='+Date.now()+(/^\/lab\/album(?:s|[-/]|$)/.test(location.pathname)?'':'&mode=print'))
   ]);
   primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();
   if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);

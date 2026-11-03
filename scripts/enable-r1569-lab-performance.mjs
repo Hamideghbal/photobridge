@@ -78,7 +78,7 @@ if(!intake.includes(marker)){
     return out;
   }
 `;
- intake=once(intake," const storage=()=>window.pbLabLocalIntakeStorage;",helper+" const storage=()=>window.pbLabLocalIntakeStorage;",'intake hashing helpers');
+ intake=once(intake,"const storage=()=>window.pbLabLocalIntakeStorage;",helper+" const storage=()=>window.pbLabLocalIntakeStorage;",'intake hashing helpers');
  intake=once(intake,
    "for(const file of files){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');",
    "const pb1569Files=[...files],pb1569Hashes=await pb1569MapLimit(pb1569Files,3,pb1569Digest);for(let index=0;index<pb1569Files.length;index++){const file=pb1569Files[index],hash=pb1569Hashes[index];",

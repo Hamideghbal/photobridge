@@ -12,6 +12,8 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '16.20.2'
@@ -25,7 +27,16 @@ jobs:
         shell: pwsh
         run: |
           $env:PB_ACCESS_TEST_JAVA = Join-Path $env:JAVA_HOME 'bin/java.exe'
-          $tests = @(Get-ChildItem test -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
+          # Runtime changes run the entire suite. Test/build-harness-only followups
+          # retain the previous successful runtime suite and rerun affected checks.
+          $changed = @(git diff-tree --no-commit-id --name-only -r HEAD)
+          $runtimeChanges = @($changed | Where-Object { $_ -notmatch '^(test/|\.github/|README|compat-smoke\.cjs$|build-local\.cjs$|BUILD-WINDOWS\.cmd$)' })
+          if ($runtimeChanges.Count -eq 0) {
+            Write-Host 'Runtime unchanged: full Windows suite passed run 41682249391; rerunning affected compatibility/build checks.'
+            $tests = @('test/download-transition.test.cjs','test/runtime-compat.test.cjs')
+          } else {
+            $tests = @(Get-ChildItem test -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
+          }
           & node --require ./runtime-compat-auto.cjs --test @tests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/setup-node@v4

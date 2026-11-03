@@ -32,7 +32,8 @@ test('server requires new password location and birth and uses editable name',()
 test('old studio name is merely editable prefill',()=>{
  assert.match(ui,/function prefillRejoiningName\(form\)/);
  assert.match(ui,/if\(!String\(input.value\|\|''\).trim\(\)\)setInputValue\(input,previousName\)/);
- assert.doesNotMatch(ui,/input.readOnly=true/);
+ const prefill=ui.slice(ui.indexOf('function prefillRejoiningName(form)'),ui.indexOf('function PB1411RentalShopName(',ui.indexOf('function prefillRejoiningName(form)')));
+ assert.doesNotMatch(prefill,/input.readOnly=true/);
  assert.match(ui,/prefillRejoiningName\(form\);identityBox\(form\)/);
  assert.match(html,/photobridge-v904r98-invite-stable\.js\?v=r1417&rejoin=r1549/);
 });

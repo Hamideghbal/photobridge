@@ -741,5 +741,9 @@ runR1314(process.execPath,['--test','scripts/test-r1569-lab-performance.mjs'],{s
 await deployStep('./enable-r1570-automation-entry.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1570-automation-entry.cjs'],{stdio:'inherit'});
 
+// R1571: Chrome 109 / Windows 7 conventional photo copy picker and safe Move guard.
+await deployStep('./enable-r1571-win7-photo-picker.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1571-win7-photo-picker.cjs'],{stdio:'inherit'});
+
 
 

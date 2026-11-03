@@ -27,6 +27,8 @@ jobs:
       - name: Check changed JavaScript syntax
         run: |
           node --check dist/api/server.js
+          node --check dist/web/photobridge-v904r98-invite-stable.js
+          node --test scripts/test-r1549-admin-deleted-photographer-rejoin.cjs
           node --test scripts/test-r1257-domain-proof.cjs
           node --check dist/web/photobridge-v904r19-admin-stores.js
           node --check dist/web/photobridge-r100f90-entity-discount-activation.js

@@ -9,7 +9,7 @@ const tariff=segment('function V0({rows:', 'function W0(){');
 test('tariff save stays tappable; invalid active print sizes explain how to fix',()=>{
  assert.match(tariff,/disabled:r,onClick:\(\)=>\{if\(k\)/);
  assert.match(tariff,/قیمت چاپ لاستر، سیلک یا متالیک بیشتر از صفر/);
- assert.match(tariff,/children:r\?"در حال ذخیره…":"ذخیره جدول تعرفه"/);
+ assert.match(tariff,/children:r\?"در حال ذخیره…":PB1344saveLabel\|\|"ذخیره جدول تعرفه"/);
 });
 test('gallery manager moves delete action to red overlay while keeping confirmation',()=>{
  assert.match(ui,/className:"pb1153PhotoDelete"/);

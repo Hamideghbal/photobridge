@@ -29,8 +29,11 @@ for(const width of [390,1440])test('branded equipment storefront uses photograph
   await page.locator('#rentalLogin button[type=submit]').click();
   await page.locator('#rentalBookingForm').waitFor({state:'visible'});
   assert.equal(await page.locator('.rentalProduct').count(),1);
-  await page.locator('#rentalFrom').fill('2026-11-02');
-  await page.locator('#rentalTo').fill('2026-11-03');
+  // Rental availability must be requested for future dates. Fixed 2026-11-02
+  // became a past date and caused the confirmation button to stay disabled.
+  const dayOffset=days=>new Date(Date.now()+days*86400000).toISOString().slice(0,10);
+  await page.locator('#rentalFrom').fill(dayOffset(3));
+  await page.locator('#rentalTo').fill(dayOffset(4));
   await page.locator('.rentalProduct input[type=checkbox]').check();
   await page.locator('#rentalCheck').click();
   await page.locator('#rentalConfirm:not([disabled])').waitFor();

@@ -36,9 +36,14 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     if(js.slice(generalStart,itemsEnd).includes('["automation"')||js.slice(generalStart,itemsEnd).includes('["backup"'))
       throw Error('R1572 duplicate General option '+root);
     js=js.slice(0,itemsEnd+1)+',["automation","دانلود و چاپ خودکار"],["backup","پشتیبان اطلاعات برنامه"]'+js.slice(itemsEnd+1);
-    js=once(js,',["backup","پشتیبان اطلاعات سایت"]]}',
-      ']}',
-      'system section list '+root);
+    const systemStart=js.indexOf('key:"system",label:"سیستم و ارسال"');
+    const systemEnd=systemStart<0?-1:js.indexOf('];E.flatMap(',systemStart);
+    if(systemStart<0||systemEnd<systemStart)throw Error('R1572 system group not found '+root);
+    const systemBlock=js.slice(systemStart,systemEnd);
+    const withoutBackup=systemBlock.replace(/,\["backup","[^"]*"\]/,'');
+    if(withoutBackup===systemBlock&&systemBlock.includes('["backup"'))
+      throw Error('R1572 system backup shape unexpected '+root);
+    js=js.slice(0,systemStart)+withoutBackup+js.slice(systemEnd);
     js+='\n/* R1572 finance stable background refresh */\n';
     write(asset,js);
     execFileSync(process.execPath,['--check',asset],{stdio:'inherit'});

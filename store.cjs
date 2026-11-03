@@ -1,6 +1,6 @@
 'use strict';
 const {describeConflict}=require('./conflict-context.cjs');
-const {DatabaseSync}=require('node:sqlite'),crypto=require('node:crypto');const now=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
+const {DatabaseSync}=require('./sqlite-compat.cjs'),crypto=require('node:crypto');const now=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
 class LabStore{
  constructor(file){this.db=new DatabaseSync(file);this.db.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');this.db.exec(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);CREATE TABLE IF NOT EXISTS cache(lab TEXT NOT NULL,url TEXT NOT NULL,status INTEGER NOT NULL,mime TEXT NOT NULL,body TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(lab,url));CREATE TABLE IF NOT EXISTS outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE NOT NULL,lab TEXT NOT NULL,method TEXT NOT NULL,url TEXT NOT NULL,body TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',error TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);`);if(!this.get('deviceId'))this.set('deviceId',uid())}
  get(k){const r=this.db.prepare('SELECT value FROM settings WHERE key=?').get(k);return r?JSON.parse(r.value):null}set(k,v){this.db.prepare('INSERT OR REPLACE INTO settings VALUES(?,?)').run(k,JSON.stringify(v))}

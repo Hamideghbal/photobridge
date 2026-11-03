@@ -1,5 +1,5 @@
 'use strict';
-const {DatabaseSync,backup}=require('node:sqlite'),{LabStore}=require('./store.cjs');
+const {DatabaseSync,backup}=require('./sqlite-compat.cjs'),{LabStore}=require('./store.cjs');
 const quote=s=>'"'+s.replaceAll('"','""')+'"';
 function stripFiles(value){if(typeof value==='string'&&/^data:[^,]*;base64,/i.test(value))return null;if(!value||typeof value!=='object')return value;if(value.type==='Buffer'&&Array.isArray(value.data))return null;if(Array.isArray(value))return value.map(stripFiles);const out={};for(const[k,v]of Object.entries(value)){if(/^(pdfBase64|fileBase64|imageBase64|audioBase64|dataBase64|fileBytes|binaryData)$/i.test(k))continue;out[k]=stripFiles(v);}return out;}
 function sanitized(table,row){row={...row};if(table==='settings'){if(['cookie','auth','dataBackupLast:v1'].includes(row.key)||row.key.startsWith('dataBackupAttempt:'))return null;row.value=JSON.stringify(stripFiles(JSON.parse(row.value)));}if(table==='cache'){if(!row.mime?.includes('application/json'))return null;try{row.body=Buffer.from(JSON.stringify(stripFiles(JSON.parse(Buffer.from(row.body,'base64').toString())))).toString('base64');}catch{return null;}}if(table==='outbox'){if(/\/(?:pdf-upload|pdf-complete|upload)(?:\?|$)/.test(row.url))return null;row.body=JSON.stringify(stripFiles(JSON.parse(row.body)));}return row;}

@@ -7,3 +7,5 @@ runtime/
 *.p12
 access-runtime/
 .access-runtime-build-*/
+.access-classes/
+.compat-smoke/

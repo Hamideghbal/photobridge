@@ -10,6 +10,8 @@ for(const root of ['dist/web',native]){
  s=once(s,"Me('/api/lab/orders/'+result.order.id+'/download')","Me('/api/lab/orders/'+result.order.id+(window.pbNativeStorage?'/download':''))");
  s=once(s,"Me('/api/lab/orders/'+draft.id+'/download?recovery='","Me('/api/lab/orders/'+draft.id+(window.pbNativeStorage?'/download':'')+'?recovery='");
  s=once(s,"const downloaded=await Dg(prepared,value=>progress?.(value));","const downloaded=await Dg(prepared,value=>progress?.(value));\n      await pb1451AcknowledgeDownload(prepared);");
+ s=once(s,"const downloaded=await pb1451LiveRecovery('/api/lab/orders/'+draft.id,{status:'downloaded'","if(!window.pbNativeStorage)await pb1451AcknowledgeDownload(prepared);\n    const downloaded=await pb1451LiveRecovery('/api/lab/orders/'+draft.id,{status:'downloaded'");
+ s=once(s,"ساخته شد، اما ثبت مرحله دانلود کامل نشد. همین سفارش در صف باز می‌شود؛ سفارش تکراری نسازید.'","ساخته شد، اما ثبت مرحله دانلود کامل نشد. همین سفارش در صف باز می‌شود؛ سفارش تکراری نسازید.\\nجزئیات: '+pb1450Code(error)");
  s+='\n/* PB1565 browser recovery routes */\n';fs.writeFileSync(root+'/'+asset,s);
  }
  const discount=root+'/photobridge-r1038-subscription-discounts.js';let d=fs.readFileSync(discount,'utf8');d=d.replace("+'٪';","+'٪ تخفیف';").replace('width:49px!important','width:75px!important').replace('8px 69px','8px 95px');fs.writeFileSync(discount,d);

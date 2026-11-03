@@ -40,7 +40,7 @@ if(!server.includes('/* PB1569 lab performance */')){
             FROM finance_entries e JOIN finance_accounts a ON a.id=e.account_id
             WHERE a.lab_id=$1 AND a.system_key='receivable' GROUP BY e.customer_id
           )
-          SELECT u.id,${labFinanceCustomerNameSql()} name,u.mobile,u.email,
+          SELECT u.id,\${labFinanceCustomerNameSql()} name,u.mobile,u.email,
             COALESCE(i.invoiced,0)::bigint invoiced,
             COALESCE(p.paid,0)::bigint paid,
             COALESCE(x.discounts,0)::bigint discounts,
@@ -148,7 +148,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    if(t==="lab"){
     const At=new URLSearchParams;Le&&At.set("from",$s(Le)),Ke&&At.set("to",$s(Ke));
     const extraPath=w==="payments"?"/api/lab/finance/payments":w==="expenses"?"/api/lab/finance/expenses":w==="ledger"?"/api/lab/finance/ledger":null;
-    const[Ot,Et,extra]=await Promise.all([Me(ke),Me(\`/api/lab/finance/summary?${At.toString()}\`),extraPath?Me(extraPath):Promise.resolve(null)]);
+    const[Ot,Et,extra]=await Promise.all([Me(ke),Me(\`/api/lab/finance/summary?\${At.toString()}\`),extraPath?Me(extraPath):Promise.resolve(null)]);
     o(Ot.invoices||[]),f(Et.summary||null),C(Et.customers||[]);
     if(w==="payments")S(extra?.payments||[]);
     if(w==="expenses")I(extra?.expenses||[]);

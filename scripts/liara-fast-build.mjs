@@ -708,3 +708,7 @@ await deployStep('./enable-r1551-walkin-album-binding.mjs');
 // R1552: archive day order follows registration time, newest at the top.
 await deployStep('./enable-r1552-archive-newest-first.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1552-archive-newest-first.cjs'],{stdio:'inherit'});
+
+// R1553: website exports authorized lab finance/archive data; local Windows backups are separate.
+await deployStep('./enable-r1553-lab-web-backup.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1553-lab-web-backup.cjs'],{stdio:'inherit'});

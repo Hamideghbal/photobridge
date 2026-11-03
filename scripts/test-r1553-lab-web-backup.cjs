@@ -1,0 +1,32 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const read=p=>fs.readFileSync(p,'utf8');
+test('Lab website has a settings entry and a separate read-only export page',()=>{
+ const ui=read('dist/web/assets/index-UIRefine-v655-r84.js');
+ assert(ui.includes('["backup","پشتیبان اطلاعات سایت"]'));
+ assert(ui.includes('g==="backup"&&e.jsxs("section"'));
+ assert(ui.includes('href:"/lab-data-backup.html"'));
+ assert(read('dist/web/index.html').includes('&webBackup=r1553'));
+ const html=read('dist/web/lab-data-backup.html');
+ assert(html.includes('role="progressbar"'));
+ assert(html.includes('aria-valuenow="0"'));
+ assert(html.includes('فایل قابل‌بازیابی برنامه نیست'));
+ assert(html.includes('src="/photobridge-lab-web-backup.js?v=r1553"'));
+ assert(html.includes('connect-src &#39;self&#39;')||html.includes("connect-src 'self'"));
+});
+test('Website backup takes only authenticated same-origin read-only API snapshots and downloads no media',()=>{
+ const js=read('dist/web/photobridge-lab-web-backup.js');
+ for(const pathname of ['/api/auth/me','/api/lab/dashboard','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/ledger','/api/lab/archive'])assert(js.includes("'"+pathname+"'"),pathname);
+ assert(js.includes("data?.user?.labRole!=='lab_admin'"));
+ assert(js.includes("credentials:'same-origin'"));
+ assert(js.includes("method:'GET'"));
+ assert(js.includes("const blob=new Blob"));
+ assert(js.includes("not a restore archive"));
+ assert(js.indexOf('const bytes=saveFile(backup)')>js.indexOf('for(let i=0;i<sources.length;i++)'),'a partial fetch must never trigger download');
+ assert(js.includes('if(!response.ok)throw Error'),'failed API requests must interrupt the backup');
+ assert(!js.includes('document.cookie'));
+ assert(!js.includes('localStorage'));
+ assert(!js.includes('fetch("http'));
+ assert(!js.includes("method:'POST'"));
+ assert(!read('dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js').includes('/* PB1553 Lab site backup navigation */'),'native Windows backup retains its separate workflow');
+});

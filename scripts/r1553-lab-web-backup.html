@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'">
+<title>پشتیبان اطلاعات سایت | PhotoBridge</title><link rel="stylesheet" href="/photobridge-lab-web-backup.css?v=r1553">
+</head><body>
+<main>
+<a class="back" href="/lab/settings">بازگشت به تنظیمات لابراتوار</a>
+<header><span class="symbol" aria-hidden="true">▣</span><div><h1>پشتیبان اطلاعات سایت</h1><p>دریافت یک نسخهٔ قابل‌نگهداری از اطلاعات مالی و فهرست آرشیوِ قابل‌دسترسی حساب لابراتوار</p></div></header>
+<section class="card">
+<h2>تهیه خروجی اطلاعات سایت</h2>
+<p>اطلاعات به‌ترتیب از سرور دریافت می‌شوند و فقط پس از موفقیت همهٔ مراحل، فایل JSON روی دستگاه شما ذخیره می‌شود. درصد نوار، <strong>پیشرفت مراحل</strong> را نشان می‌دهد؛ نه درصد حجم دانلود.</p>
+<button id="start" class="primary" type="button" disabled>شروع پشتیبان‌گیری سایت</button>
+<div id="backupProgress" role="progressbar" aria-label="پیشرفت مراحل پشتیبان‌گیری" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<div class="track"><div id="backupProgressBar"></div></div>
+<div class="metarow"><b id="backupStage">در حال بررسی دسترسی…</b><span id="backupPercent">۰٪</span></div></div>
+<p id="message" role="status" aria-live="polite">در حال بررسی حساب لابراتوار…</p>
+<ol id="steps"><li>بررسی حساب و دسترسی</li><li>اطلاعات لابراتوار و مشتریان</li><li>فاکتورها</li><li>دریافت‌ها و هزینه‌ها</li><li>حساب معین</li><li>فهرست سفارش‌های آرشیو</li><li>ساخت و ذخیره فایل پشتیبان</li></ol>
+</section>
+<section class="card note"><h2>تفاوت با بکاپ برنامه ویندوز</h2>
+<p>این خروجی شامل پاسخ‌های فعلی API حساب لابراتوار است؛ برای نگهداری سوابق و بررسی اطلاعات. ممکن است API بعضی فهرست‌ها را محدود کند. این فایل <strong>بکاپ کامل PostgreSQL یا فایل قابل‌بازیابی برنامه نیست</strong> و شامل عکس‌های اصلی، PDF، SQLite محلی، فایل Access یا فایل‌های رایانهٔ ویندوز نمی‌شود. برای بازیابی محیط ویندوز، بکاپ خود برنامه ویندوز را جداگانه نگه دارید.</p>
+<p>فایل خروجی ممکن است اطلاعات مالی و مشخصات مشتریان داشته باشد؛ آن را در محل امن ذخیره کنید و برای افراد ناشناس ارسال نکنید. داده‌ها در مرورگر شما بسته‌بندی می‌شوند و به سرویس دیگری فرستاده نمی‌شوند.</p></section>
+</main><script src="/photobridge-lab-web-backup.js?v=r1553"></script></body></html>

@@ -737,4 +737,9 @@ runR1314(process.execPath,['--test','scripts/test-r1568-auto-processing.cjs'],{s
 await deployStep('./enable-r1569-lab-performance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1569-lab-performance.mjs'],{stdio:'inherit'});
 
+// R1570: make the R1568 Lab automation setting immediately discoverable.
+await deployStep('./enable-r1570-automation-entry.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1570-automation-entry.cjs'],{stdio:'inherit'});
+
+
 

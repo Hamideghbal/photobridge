@@ -136,6 +136,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const asset=root+'/assets/index-UIRefine-v655-r84.js';
  let ui=read(asset);
  if(!ui.includes(financeMarker)){
+  const oldQueue="const pb1472Loads=x.useRef(Promise.resolve()),ce=()=>{if(!window.pbNativeStorage)return pb1472Load();const next=pb1472Loads.current.catch(()=>{}).then(()=>pb1472Load());pb1472Loads.current=next;return next;};";
+  const newQueue="const pb1569FinanceLoader=x.useRef(null);pb1569FinanceLoader.current=pb1472Load;const pb1472Loads=x.useRef({active:null,pending:false}),ce=()=>{if(!window.pbNativeStorage)return pb1472Load();return pb1569CoalescedLoad(pb1569FinanceLoader,pb1472Loads.current);};";
+  ui=once(ui,oldQueue,newQueue,'native pending finance refresh queue '+root);
   const start=ui.indexOf('pb1472Load=async()=>{var Je;g(!0);try{const Ot=await Me(ke);');
   const end=ui.indexOf('}finally{g(!1)}};',start);
   if(start<0||end<start)throw Error('R1569 missing finance loader '+root);
@@ -177,7 +180,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   },[w,t,pb1569FinanceReady]);
   `;
   ui=once(ui,anchor,watcher+anchor,'finance active tab watcher '+root);
-  ui+='\n'+financeMarker+'\n';
+  ui+='\n'+read('scripts/r1569-finance-coalesce.js.txt')+'\n'+financeMarker+'\n';
   write(asset,ui);
   execFileSync(process.execPath,['--check',asset],{stdio:'inherit'});
  }

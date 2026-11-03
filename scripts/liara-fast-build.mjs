@@ -752,3 +752,6 @@ runR1314(process.execPath,['--test','scripts/test-r1572-finance-general.cjs'],{s
 
 
 
+
+await deployStep('./enable-r1573-native-backup.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1573-native-backup.cjs'],{stdio:'inherit'});

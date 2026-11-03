@@ -55,14 +55,14 @@ class NativeAlerts {
   const account=this.getAccount();if(this.busy||!account||!this.isSupported())return;
   initializeSettings(this.store,account);
   if(!this.store.get('nativeAlertsPresented:'+account))this.store.set('nativeAlertsPresented:'+account,this.store.get('nativeAlertsSeen:'+account)||[]);
-  const epoch=this.epoch,checkedAt=this.now();this.busy=true;
+  const epoch=this.epoch,checkedAt=this.now(),token={};let ownsChat=false;this.busy=true;this.busyToken=token;const release=()=>{if(this.busyToken===token)this.busy=false};
   try{
-   await this.flushReceipts(account).catch(()=>{});
+   void this.flushReceipts(account).catch(()=>{});
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    let pending=this.store.get(this.key(account))||[];
 
    const response=await this.request('/api/lab/notifications?limit=200&pending='+encodeURIComponent(pending.filter(n=>/^[0-9a-f-]{36}$/i.test(n.id)).slice(0,200).map(n=>n.id).join(',')),{headers:{'x-photobridge-native-info-alerts':'1'}});if(!response.ok){await this.present(account,pending,epoch);return;}
-   const data=await response.json();if(epoch!==this.epoch||this.getAccount()!==account)return;let sharedChat={};try{const r=await this.request('/api/lab/notifications/chat-read');if(r.ok)sharedChat=(await r.json()).seen||{};}catch{}
+   const data=await response.json();if(epoch!==this.epoch||this.getAccount()!==account)return;let sharedChat={};
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    const key='nativeAlertsSeen:'+account,seen=new Set(this.store.get(key)||[]);
    const items=Array.isArray(data.notifications)?data.notifications:[];
@@ -75,8 +75,20 @@ class NativeAlerts {
    const deliveredInfo=new Set();
    for(const n of info)if(n.id&&!n.read_at&&!seen.has(n.id)){if(epoch!==this.epoch||this.getAccount()!==account)return;try{await this.notifyInfo(n,account);deliveredInfo.add(n.id)}catch{}}
    const fresh=items.filter(n=>!infoEvent(n)).filter(n=>n.id&&!n.read_at&&!seen.has(n.id)).map(alertContent);
+   // Order alarms must not wait behind chat history or an offline read receipt.
+   const locallyAcknowledged=new Set(this.store.get(this.receiptKey(account))||[]);
+   const earlyIds=new Set(pending.map(n=>n.id));
+   for(const n of fresh)if(!earlyIds.has(n.id)&&!locallyAcknowledged.has(n.id)){pending.push(n);earlyIds.add(n.id)}
+   this.store.set(this.key(account),pending);
+   const orderPending=pending.filter(n=>!n.chatThread);
+   if(orderPending.length)await this.present(account,orderPending,epoch);
+   if(epoch!==this.epoch||this.getAccount()!==account)return;
+   this.store.set('nativeAlertStatus:'+account,{checkedAt:this.now(),received:items.length,pending:pending.length,error:null});
+   for(const n of items)if(n.id&&(!infoEvent(n)||n.read_at||deliveredInfo.has(n.id)))seen.add(n.id);this.store.set(key,[...seen].slice(-1000));
+   release();if(this.chatBusy)return;this.chatBusy=true;ownsChat=true;
+   try{const r=await this.request('/api/lab/notifications/chat-read',{signal:AbortSignal.timeout(8000)});if(r.ok)sharedChat=(await r.json()).seen||{};}catch{}
    let chat=null;
-   if(this.getUserId())try{chat=await collectChatAlerts({store:this.store,request:this.request,account,userId:this.getUserId(),now:checkedAt});}catch{}
+   if(this.getUserId())try{chat=await collectChatAlerts({store:this.store,request:(path,options={})=>this.request(path,{...options,signal:options.signal||AbortSignal.timeout(8000)}),account,userId:this.getUserId(),now:checkedAt});}catch{}
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    if(chat)for(const n of chat.items)if(!seen.has(n.id))fresh.push(n);
    // Re-read after the request: the operator may have acknowledged a popup meanwhile.
@@ -88,9 +100,10 @@ class NativeAlerts {
    this.store.set(this.key(account),pending);
    for(const n of [...items,...fresh])if(n.id&&(!infoEvent(n)||n.read_at||deliveredInfo.has(n.id)))seen.add(n.id);
    if(chat)this.store.set(chat.key,chat.checkpoint);
+   for(const id of this.store.get(key)||[])seen.add(id);
    this.store.set(key,[...seen].slice(-1000));
    await this.present(account,pending,epoch);
-  }catch{await this.present(account,this.store.get(this.key(account))||[],epoch).catch(()=>{});/* Retry durable orders and messages offline. */}finally{this.busy=false;}
+  }catch(error){if(epoch===this.epoch&&this.getAccount()===account)this.store.set('nativeAlertStatus:'+account,{checkedAt:this.now(),error:String(error?.message||error)});await this.present(account,this.store.get(this.key(account))||[],epoch).catch(()=>{});/* Retry durable orders and messages offline. */}finally{release();if(ownsChat)this.chatBusy=false;}
  }
 }
 module.exports={NativeAlerts};

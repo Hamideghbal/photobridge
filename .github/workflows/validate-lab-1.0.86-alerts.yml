@@ -1,0 +1,55 @@
+name: Build Lab 1.0.86 thermal Windows candidate
+on:
+  push:
+    branches: [fix/lab-1.0.86-alert-tray]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2'
+      - name: Install pinned packages and legacy engine
+        run: npm ci --no-audit --no-fund
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Native regression tests on the older Node generation
+        shell: pwsh
+        run: |
+          $env:PB_ACCESS_TEST_JAVA = Join-Path $env:JAVA_HOME 'bin/java.exe'
+          $tests = @(Get-ChildItem test -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
+          & node --require ./runtime-compat-auto.cjs --test @tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build same-app installer with Electron 22 native addon
+        run: npm run dist:unsigned
+      - name: Execute packaged app with its actual Electron runtime
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'release/win-unpacked/PhotoBridge Lab.exe'
+          $p = Start-Process -FilePath $exe -ArgumentList '--compat-smoke','--enable-logging' -PassThru -Wait -RedirectStandardOutput 'compat-smoke.log' -RedirectStandardError 'compat-smoke-error.log'
+          Get-Content compat-smoke.log
+          Get-Content compat-smoke-error.log
+          if ($p.ExitCode -ne 0) { throw "Packaged smoke failed: $($p.ExitCode)" }
+          if (!(Select-String -Path compat-smoke.log -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) { throw 'Smoke completion missing' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: photobridge-lab-1.0.86-thermal-candidate
+          path: |
+            release/PhotoBridge-Lab-Setup-1.0.86-x64.exe
+            compat-smoke*.log
+          if-no-files-found: error
+          retention-days: 14

@@ -1,5 +1,6 @@
 (()=>{'use strict';
  if(!window.pbNativeStorage||window.pbNativeFolder)return;
+ /* R1574 native first layout */if(/^\/lab\/(?:orders|album|archive|finance|settings|wallet)(?:\/|$)/.test(location.pathname)&&matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)').matches)document.documentElement.classList.add('pb1363OrderQueue');
  const invoke=async(action,payload)=>{const packet=await window.pbNativeStorage.invoke(action,payload);if(!packet.ok){const error=new Error(packet.error.message);Object.assign(error,packet.error);throw error}return packet.value};
  const identity=handle=>({rootId:handle.rootId,parts:handle.parts});
  const child=(desc,name)=>({...identity(desc),parts:[...desc.parts,name]});

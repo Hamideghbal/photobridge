@@ -35,6 +35,8 @@ jobs:
           node --test scripts/test-r1257-domain-proof.cjs
           node --check dist/web/photobridge-v904r19-admin-stores.js
           node --check dist/web/photobridge-r100f90-entity-discount-activation.js
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+          node --test scripts/test-r1556-admin-lab-discount-column.cjs
       - name: Verify equipment custom-site footer, header and office navigation
         run: |
           node --check dist/api/equipment-site-content.js

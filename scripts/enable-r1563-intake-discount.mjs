@@ -37,7 +37,7 @@ for(const root of ['dist/web',native]){
  const result=await storage().request(live?url+'/download':url,`);
   const anchor='  directory=root;bootstrap=data;';
   s=once(s,anchor,`  if(window.pbNativeStorage){
-   try{const live=await api('/api/lab/intake-live/download/bootstrap'+(albumMode?'':'?mode=print'));if(Array.isArray(live.customers)){const rows=new Map((data.customers||[]).filter(c=>c.local_contact||c.origin_offline&&!c.remote).map(c=>[String(c.serverId||c.id),c]));for(const c of live.customers)rows.set(String(c.id),c);data.customers=[...rows.values()];}}
+   try{const live=await api('/api/lab/intake-live/download/bootstrap'+(albumMode?'':'?mode=print'));if(Array.isArray(live.customers)){const rows=new Map((data.customers||[]).filter(c=>c.local_contact||c.origin_offline&&!c.remote).map(c=>[String(c.serverId||c.id),c]));for(const c of live.customers)rows.set(String(c.id),c);data.customers=[...rows.values()];if(live.album)data.album=live.album;if(Array.isArray(live.printSizes))data.printSizes=live.printSizes;}}
    catch{ /* Existing offline contacts remain selectable; no SMS success is claimed. */ }
   }
 `+anchor);

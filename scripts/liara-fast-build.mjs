@@ -701,3 +701,6 @@ runR1314(process.execPath,['--test','scripts/test-r1549-lab-login-site-editor.cj
 // R1550: bind local file access to each order, independently of the new default root.
 await deployStep('./enable-r1550-order-storage.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1550-order-storage.cjs'],{stdio:'inherit'});
+
+// R1551: expose the existing binding catalog in manual album intake too.
+await deployStep('./enable-r1551-walkin-album-binding.mjs');

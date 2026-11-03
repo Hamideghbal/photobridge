@@ -722,3 +722,7 @@ runR1314(process.execPath,['--test','scripts/test-r1564-core.cjs'],{stdio:'inher
 
 await deployStep('./enable-r1566-archive-revision.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1566-archive-revision.cjs'],{stdio:'inherit'});
+
+// R1567: native-only feature menu and measured low-end UI work reduction.
+await deployStep('./enable-r1567-native-performance.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1567-native-requests.cjs'],{stdio:'inherit'});

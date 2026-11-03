@@ -1,0 +1,17 @@
+// Called only inside the verified receipt transaction, after the exact manifest matched.
+export async function invoiceAfterVerifiedDownload(c,labId,order,issueInvoice){
+ if(order.invoice_required===false)return {};
+ if(!order.downloaded_at)throw Error('download_not_verified');
+ await c.query('SAVEPOINT verified_download_invoice');
+ try{
+  const invoice=await issueInvoice(c,labId,order.id);
+  const fresh=await c.query('SELECT * FROM orders WHERE id=$1 AND lab_id=$2',[order.id,labId]);
+  await c.query('RELEASE SAVEPOINT verified_download_invoice');
+  return {invoice,order:fresh.rows[0]||order};
+ }catch(error){
+  await c.query('ROLLBACK TO SAVEPOINT verified_download_invoice');
+  await c.query('RELEASE SAVEPOINT verified_download_invoice');
+  const pricing=String(error.code||error.message)==='invoice_pricing_required';
+  return {invoice:null,invoiceError:pricing?'invoice_pricing_required':'invoice_issuance_failed',missingPricing:pricing?(error.missingPricing||[]):[]};
+ }
+}

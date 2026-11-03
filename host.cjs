@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,backups,isOnline=()=>true}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
@@ -24,6 +24,17 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(url.pathname==='/desktop/backups'&&req.method==='GET'){if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});return res.end(fs.readFileSync(path.join(__dirname,'backup.html')));}
       if(url.pathname==='/desktop/backup-assets/font'&&req.method==='GET'){if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});res.writeHead(200,{'Content-Type':'font/woff2','Cache-Control':'private, max-age=86400'});return res.end(fs.readFileSync(path.join(__dirname,'assets','photobridge-vazirmatn.woff2')));}
       if(await require('./backup-host.cjs').backupHost({req,res,url,manager:backups,store,json,readJson}))return;
+      // R1568: authenticated native-only printer configuration and spool operations.
+      if(url.pathname.startsWith('/desktop/thermal/')){
+        if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});
+        if(!thermalPrinter)return json(res,501,{error:'thermal_host_upgrade_required'});
+        try{
+          if(url.pathname==='/desktop/thermal/status'&&req.method==='GET')return json(res,200,await thermalPrinter.status());
+          if(url.pathname==='/desktop/thermal/config'&&req.method==='PUT')return json(res,200,await thermalPrinter.configure(await readJson(req)));
+          if(url.pathname==='/desktop/thermal/print'&&req.method==='POST')return json(res,200,await thermalPrinter.print(await readJson(req)));
+          return json(res,405,{error:'method_not_allowed'});
+        }catch(error){return json(res,error.status||500,{error:String(error.message||'thermal_printer_failed')});}
+      }
       if(url.pathname==='/desktop/ui-proof'&&req.method==='GET')return json(res,200,await require('./ui-diagnostics.cjs').diskProof({roots:roots(),version:require('./package.json').version,store}));
       if(url.pathname==='/desktop/status'){const state=store.get('auth')?sync.status():{signedIn:false,online:false,syncing:false,pending:0,conflicts:[]};return json(res,200,{...state,internetConnected:state.online===true&&!connectionOffline(),localBusiness:store.get('auth')&&store.get('localBusinessActive:'+store.get('labId'))?(store.get('localBusiness:v1:'+store.get('labId'))?new (require('./local-business.cjs').LocalBusiness)(store).status():{enabled:true,initialized:false,pending:0,conflicts:[],syncIssues:[]}):null,uiTrayUpdateSupported:true,backupSupported:!!backups,nativeVersion:store.get('nativeVersion')||null,uiKnownGoodBuild:store.get('uiKnownGoodBuild')||null,uiBuild:store.get('uiBuild')||null,uiLastCheckedAt:store.get('uiLastCheckedAt')||null,uiDownloadedAt:store.get('uiDownloadedAt')||null,uiAppliedAt:store.get('uiAppliedAt')||null,updateError:store.get('updateError')||null})}
       if(url.pathname==='/desktop/sync'&&req.method==='POST'){if(!store.get('auth'))return json(res,401,{error:'login_required'});return json(res,200,await sync.run())}

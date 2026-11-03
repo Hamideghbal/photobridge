@@ -1,6 +1,7 @@
 'use strict';
 const DEFAULTS={mode:'gentle',tone:'bell',volume:50,interval:10};
 function normalizeSettings(value={}){
+ if(!value||typeof value!=='object'||Array.isArray(value))value={};
  return {mode:['silent','gentle','repeat'].includes(value.mode)?value.mode:DEFAULTS.mode,
  tone:['bell','beep','soft'].includes(value.tone)?value.tone:DEFAULTS.tone,
  volume:Number.isFinite(Number(value.volume))?Math.max(0,Math.min(100,Number(value.volume))):DEFAULTS.volume,

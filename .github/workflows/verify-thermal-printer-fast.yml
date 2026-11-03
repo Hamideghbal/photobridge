@@ -1,0 +1,23 @@
+name: Fast thermal receipt verification
+on:
+  push:
+    branches: [feat/lab-1.0.85-thermal-auto-print-candidate]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  receipt-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Windows host syntax
+        run: |
+          node --check thermal-printer.cjs
+          node --check host.cjs
+          node --check main.cjs
+      - name: Run thermal printing unit tests
+        run: node --test test/thermal-printer.test.cjs

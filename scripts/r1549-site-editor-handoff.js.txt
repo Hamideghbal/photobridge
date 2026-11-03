@@ -1,0 +1,25 @@
+(()=>{'use strict';
+ if(location.hostname!=='photobridge.ir')return;
+ const key='pb1549LabSiteEditor',ttl=15*60*1000;
+ if(new URLSearchParams(location.search).get('openSiteEditor')==='1')sessionStorage.setItem(key,String(Date.now()));
+ const started=Number(sessionStorage.getItem(key));
+ if(!started)return;
+ if(Date.now()-started>ttl){sessionStorage.removeItem(key);return;}
+ let busy=false,done=false;
+ async function check(){
+  if(busy||done)return;
+  if(Date.now()-started>ttl){done=true;sessionStorage.removeItem(key);clearInterval(timer);return;}
+  busy=true;
+  try{
+   const response=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
+   if(!response.ok)return;
+   const me=await response.json();
+   if(me.user?.labRole!=='lab_admin'||!me.user?.labId)return;
+   done=true;clearInterval(timer);sessionStorage.removeItem(key);
+   location.replace('/lab/site-editor');
+  }catch{}finally{busy=false;}
+ }
+ const timer=setInterval(check,3000);
+ addEventListener('focus',check);
+ void check();
+})();

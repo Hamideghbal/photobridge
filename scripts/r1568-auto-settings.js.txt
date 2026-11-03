@@ -1,0 +1,46 @@
+/* R1568 Lab settings for unattended order processing.
+   Cloud policy is lab-scoped. The printer itself is bound locally to one Windows device. */
+function PB1568AutomationSettings(){
+ const [settings,setSettings]=x.useState(null),[printer,setPrinter]=x.useState(null),[printers,setPrinters]=x.useState([]),[status,setStatus]=x.useState(""),[busy,setBusy]=x.useState(false);
+ const native=Boolean(window.pbNativeStorage);
+ const load=async()=>{try{
+   const r=await Me('/api/lab/automation');setSettings(r.settings);
+   if(native){const p=await fetch('/desktop/thermal/status',{cache:'no-store'});if(p.ok){const result=await p.json();setPrinter(result.config||null);setPrinters(result.printers||[]);}}
+ }catch(error){setStatus('دریافت تنظیمات انجام نشد: '+(error?.message||'خطا'))}};
+ x.useEffect(()=>{void load()},[]);
+ const update=(key,value)=>setSettings(current=>({...current,[key]:value}));
+ const save=async()=>{setBusy(true);setStatus('');try{
+   const result=await Me('/api/lab/automation',{method:'PUT',body:JSON.stringify(settings)});
+   setSettings(result.settings);
+   if(native&&printer){const r=await fetch('/desktop/thermal/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(printer)});const data=await r.json();if(!r.ok)throw Error(data.error||'printer_config_error');}
+   setStatus('تنظیمات ذخیره شد.');
+ }catch(error){setStatus('ذخیره انجام نشد: '+(error?.message||'خطا'))}finally{setBusy(false)}};
+ const toggle=(key,label,hint)=>e.jsxs('label',{className:'pb1568Row',children:[e.jsx('input',{type:'checkbox',checked:Boolean(settings[key]),onChange:event=>update(key,event.target.checked)}),e.jsxs('span',{children:[e.jsx('strong',{children:label}),e.jsx('small',{children:hint})]})]});
+ if(!settings)return e.jsx('section',{className:'card panel compactPanel',children:e.jsx('p',{children:status||'در حال دریافت تنظیمات خودکار…'})});
+ return e.jsxs('section',{className:'card panel compactPanel pb1568AutomationSettings',children:[
+   e.jsx('h2',{children:'دانلود خودکار و چاپ فاکتور'}),
+   e.jsx('p',{children:'این امکانات فقط روی برنامه نصب‌شده ویندوز و سیستم اصلی دانلود فعال می‌شوند؛ پیش‌فرض دانلود و چاپ خودکار خاموش است.'}),
+   toggle('autoDownloadEnabled','دانلود خودکار سفارش‌های جدید','پس از دریافت سفارش، فایل‌ها روی سیستم اصلی ذخیره و با سرور کنترل می‌شوند.'),
+   e.jsxs('label',{className:'pb1568Select',children:[e.jsx('strong',{children:'زمان صدور فاکتور'}),
+     e.jsxs('select',{value:settings.invoiceTiming,onChange:event=>update('invoiceTiming',event.target.value),children:[
+       e.jsx('option',{value:'after_print',children:'بعد از چاپ عکس (حالت فعلی)'}),
+       e.jsx('option',{value:'after_verified_download',children:'بعد از دانلود و تطبیق فایل‌ها، قبل از چاپ عکس'})
+     ]})]}),
+   toggle('autoPrintInvoice','چاپ خودکار فاکتور کامل','چاپ تمام اقلام، جمع فاکتور و کل بدهی عکاسی روی رول حرارتی.'),
+   toggle('autoPrintMissingPriceTicket','چاپ برگه سفارش بدون قیمت','وقتی تعرفه ناقص است فقط رسید اقلام با اخطار قیمت‌گذاری دستی چاپ می‌شود.'),
+   e.jsxs('label',{className:'pb1568Select',children:[e.jsx('strong',{children:'عرض رول حرارتی'}),e.jsxs('select',{value:settings.receiptWidthMm,onChange:event=>update('receiptWidthMm',Number(event.target.value)),children:[
+     e.jsx('option',{value:58,children:'۵۸ میلی‌متر'}),e.jsx('option',{value:80,children:'۸۰ میلی‌متر'})
+   ]})]}),
+   native?e.jsxs('div',{className:'pb1568Printer',children:[
+     e.jsx('h3',{children:'پرینتر این سیستم'}),
+     printer?e.jsxs('label',{className:'pb1568Select',children:[e.jsx('strong',{children:'انتخاب پرینتر حرارتی نصب‌شده'}),
+       e.jsxs('select',{value:printer.deviceName||'',onChange:event=>setPrinter(v=>({...v,deviceName:event.target.value})),children:[
+         e.jsx('option',{value:'',children:'ابتدا پرینتر را انتخاب کنید'}),
+         ...printers.map(p=>e.jsx('option',{value:p.name,children:p.displayName||p.name},p.name))
+       ]})]}):e.jsx('p',{children:'برای چاپ خودکار، نصب نسخه جدید برنامه ویندوز و انتخاب پرینتر لازم است.'})
+   ]}):e.jsx('p',{children:'نام پرینتر فقط داخل برنامه ویندوز همان دستگاه انتخاب می‌شود.'}),
+   e.jsx('p',{children:'درصورت قیمت نامشخص فاکتور مالی ساخته نمی‌شود؛ یک برگه سفارش چاپ و برای ثبت مبلغ به اپراتور ارجاع می‌شود.'}),
+   status&&e.jsx('p',{role:'status',children:status}),
+   e.jsx('button',{type:'button',disabled:busy,onClick:save,children:busy?'در حال ذخیره…':'ذخیره تنظیمات'})
+ ]});
+}

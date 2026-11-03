@@ -19715,10 +19715,8 @@ ${inviteUrl}`;
                     LEFT JOIN LATERAL (SELECT i.target_name FROM invitations i
                         WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile AND i.active=true AND i.uses=0
                         ORDER BY i.created_at DESC LIMIT 1) pending_i ON true
-                    WHERE m.lab_id=$1 AND m.role='customer'
-                    AND (m.active=true OR EXISTS(
-                        SELECT 1 FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile=u.mobile
-                        AND i.active=true AND i.uses=0))
+                    WHERE m.lab_id=$1 AND m.role='customer' AND u.account_deleted_at IS NULL
+                    -- Show preregistered customers even when their earlier invitation was replaced or expired.
                     ORDER BY name`, [labId]),
                 pool.query(`SELECT s.id,s.label,s.width_cm,s.height_cm,p.luster,p.silk,p.metallic,p.chassis,p.frame
                     FROM print_sizes s LEFT JOIN lab_prices p ON p.size_id=s.id AND p.lab_id=$1
@@ -19750,31 +19748,50 @@ ${inviteUrl}`;
             return created.rows[0];
         };
         const sendDelegatedCustomerInvite = async (invitationId, customerId) => {
-            const iq = await pool.query(`SELECT i.id,i.token,i.target_mobile,i.target_name,
-                l.name lab_name FROM invitations i
-                JOIN labs l ON l.id=i.lab_id
-                WHERE i.id=$1 AND i.lab_id=$2 AND i.active=true AND i.uses=0`, [invitationId, labId]);
-            const invite = iq.rows[0];
-            if (!invite) return { invitationSmsSent: false, invitationSmsError: 'invalid_invite' };
-            // Atomic send reservation stops repeated clicks from creating duplicate SMS charges.
-            const reserved = await pool.query(`UPDATE invitations
-                SET sms_status='not_sent',sms_reference='dispatching',sms_sent_at=now()
+            const iq=await pool.query(`SELECT i.id,i.target_mobile,i.target_name,l.name lab_name
+                FROM invitations i JOIN labs l ON l.id=i.lab_id
+                WHERE i.id=$1 AND i.lab_id=$2 AND i.active=true AND i.uses=0`,[invitationId,labId]);
+            const invite=iq.rows[0];
+            if(!invite)return {invitationSmsSent:false,invitationSmsError:'invalid_invite'};
+            const reserved=await pool.query(`UPDATE invitations
+                SET sms_reference='dispatching',sms_sent_at=now()
                 WHERE id=$1 AND (sms_sent_at IS NULL OR sms_sent_at<now()-interval '60 seconds')
-                RETURNING id`, [invitationId]);
-            if (!reserved.rowCount)
-                return { invitationSmsSent: false, invitationSmsError: 'invitation_sms_rate_limited' };
-            try {
-                const message = `سلام ${invite.target_name || ''}\nکار شما در لابراتوار «${invite.lab_name || 'PhotoBridge'}» در حال انجام است.\nبرای مشاهده مراحل انجام کار و پیگیری سفارش، عضویت خود را در لابراتوار تکمیل کنید.\nلینک عضویت: ${PUBLIC_APP_URL}/invite/${invite.token}`;
-                const sms = await sendSms({ mobile: invite.target_mobile, message, purpose: 'lab_invitation',
-                    eventKey: 'delegated_customer_pre_registration', labId,
-                    metadata: { invitationId, customerId } });
+                RETURNING id`,[invitationId]);
+            if(!reserved.rowCount)return {invitationSmsSent:false,invitationSmsError:'invitation_sms_rate_limited'};
+            try{
+                // Manual invoice invitations must follow the working permanent lab
+                // invitation and short SMS URL, not the long /invite/<token> link.
+                const pq=await pool.query(`SELECT id,code FROM photographer_invites
+                    WHERE issuer_type='lab' AND issuer_lab_id=$1 AND active=true
+                      AND (expires_at IS NULL OR expires_at>now())
+                      AND (max_uses IS NULL OR uses<max_uses)
+                    ORDER BY created_at DESC LIMIT 1`,[labId]);
+                let permanent=pq.rows[0]||null;
+                for(let attempt=0;!permanent&&attempt<5;attempt++){
+                    try{
+                        const created=await pool.query(`INSERT INTO photographer_invites(
+                            code,issuer_user_id,issuer_type,issuer_lab_id,max_uses,uses,
+                            expires_at,active,campaign,channel,target_mobile,metadata)
+                            VALUES($1,$2,'lab',$3,NULL,0,NULL,true,
+                            'permanent_lab_photographer_invite','lab_sms',NULL,$4::jsonb)
+                            RETURNING id,code`,[newPhotographerInviteCode(),a.userId,labId,JSON.stringify({createdFrom:'manual_invoice_invite'})]);
+                        permanent=created.rows[0]||null;
+                    }catch(e){if(String(e?.code||'')!=='23505')throw e;}
+                }
+                if(!permanent)throw new Error('invite_create_failed');
+                const short=await ensurePhotographerInviteSmsShortLink(permanent,labId,invite.target_mobile,null);
+                const message=`PhotoBridge\nلابراتوار «${invite.lab_name||'PhotoBridge'}» شما را برای همکاری دعوت کرده است.\nبرای تکمیل عضویت و پیگیری سفارش:\n${short.url}`;
+                const sms=await sendSms({mobile:invite.target_mobile,message,purpose:'lab_photographer_permanent_invite',
+                    eventKey:'photographer_invite',labId,metadata:{invitationId,customerId,photographerInviteId:permanent.id,
+                    shortToken:short.token,source:'manual_invoice'}});
+                await pool.query(`UPDATE photographer_invite_sms_links SET last_sent_at=now() WHERE token=$1`,[short.token]);
                 await pool.query(`UPDATE invitations SET sms_status='sent',sms_reference=$2,sms_sent_at=now()
-                    WHERE id=$1`, [invitationId, String(sms?.reference || '') || null]);
-                return { invitationSmsSent: true };
-            } catch (e) {
-                await pool.query(`UPDATE invitations SET sms_status='failed',sms_reference=NULL WHERE id=$1`,
-                    [invitationId]).catch(() => {});
-                return { invitationSmsSent: false, invitationSmsError: String(e?.message || 'sms_send_failed') };
+                    WHERE id=$1`,[invitationId,String(sms?.reference||'')||null]);
+                return {invitationSmsSent:true,invitationUrl:short.url};
+            }catch(e){
+                await pool.query(`UPDATE invitations SET sms_status='failed',sms_reference=NULL WHERE id=$1`,[invitationId]).catch(()=>{});
+                console.warn('[delegated-invite:sms-failed]',{labId,invitationId,error:String(e?.message||e),providerStatus:e?.status||null});
+                return {invitationSmsSent:false,invitationSmsError:String(e?.message||'sms_send_failed')};
             }
         };
         if (req.method === 'POST' && url.pathname === '/api/lab/delegated-customers') {

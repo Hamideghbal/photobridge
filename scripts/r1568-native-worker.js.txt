@@ -1,0 +1,82 @@
+/* R1568: Windows-only unattended photo-order intake. Never runs in a browser. */
+const pb1568Worker={busy:false,lastError:'',lastOrder:null};
+const pb1568Escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pb1568Num=value=>Number(value||0).toLocaleString('fa-IR');
+function pb1568Paper(title,detail,rows,warning=''){
+ const order=detail.order||{},name=order.customer_name||order.walkin_customer_name||'عکاس';
+ const tr=rows.map(x=>'<tr><td>'+pb1568Escape(x.name)+'</td><td>'+pb1568Num(x.files||1)+'</td><td>'+pb1568Num(x.copies||1)+'</td><td>'+pb1568Escape(x.price||'—')+'</td></tr>').join('');
+ return '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>@page{size:A4;margin:13mm}body{font:13px/1.9 Tahoma,Arial;color:#111}h2{margin:0}header{border-bottom:2px solid #222;padding-bottom:12px}.warn{border:2px solid #111;padding:12px;margin:15px 0;font-size:17px;font-weight:bold}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #888;padding:8px;text-align:right}th{background:#eee}.details{margin-top:12px}</style></head><body><header><h2>'+pb1568Escape(title)+'</h2><div>فوتوبریج · شماره سفارش: '+pb1568Escape(order.number)+'</div><div>عکاس: '+pb1568Escape(name)+'</div><div>تاریخ: '+new Date().toLocaleString('fa-IR')+'</div></header>'+(warning?'<div class="warn">'+pb1568Escape(warning)+'</div>':'')+'<div class="details">تعداد فایل‌های سفارش: '+pb1568Num(detail.files?.length||order.file_count||0)+'</div><table><thead><tr><th>شرح / سایز</th><th>فایل</th><th>تعداد نسخه</th><th>مبلغ</th></tr></thead><tbody>'+tr+'</tbody></table></body></html>';
+}
+function pb1568Slip(detail){
+ const map=new Map();for(const f of detail.files||[]){
+  const key=[f.size_label||'سایز نامشخص',f.print_type||''].join(' / '),row=map.get(key)||{name:key,files:0,copies:0,price:''};
+  row.files++;row.copies+=Math.max(1,Number(f.print_copies||1));map.set(key,row);
+ }
+ return pb1568Paper('برگه مشخصات سفارش · نیازمند تعیین قیمت',detail,[...map.values()],'نیازمند ثبت فاکتور دستی توسط اپراتور لابراتوار — قیمت یک یا چند سایز تعریف نشده است. این برگه فاکتور مالی نیست.');
+}
+function pb1568Invoice(invoice,detail){
+ let items=invoice.items||[];if(typeof items==='string')try{items=JSON.parse(items)}catch{items=[]}
+ const rows=(Array.isArray(items)?items:[]).map(item=>({name:item.description||item.sizeLabel||'آیتم چاپ',files:item.quantity||1,copies:item.quantity||1,price:pb1568Num(item.lineTotal)+' ریال'}));
+ return pb1568Paper('فاکتور شماره '+invoice.number,detail,rows,'جمع فاکتور: '+pb1568Num(invoice.total)+' ریال');
+}
+async function pb1568Print(kind,detail,invoice){
+ if(!window.pbLabAutoPrint?.print) {pb1568Worker.lastError='برای چاپ خودکار، برنامه ویندوز باید به نسخه دارای چاپگر خودکار ارتقا یابد.';return;}
+ const key=kind==='invoice'?'invoice:'+String(invoice.id):'manual-pricing-slip:'+String(detail.order.id);
+ const html=kind==='invoice'?pb1568Invoice(invoice,detail):pb1568Slip(detail);
+ const result=await window.pbLabAutoPrint.print({jobKey:key,html});
+ if(!result?.ok&&result?.error!=='already_submitted')throw Error(result?.error||'auto_printer_failed');
+}
+async function pb1568Issue(detail,settings){
+ let current=detail;
+ const root=await pb1450Root(false,current),receipts=yc(current.order.id)?.localFiles||{};
+ const report=await pb1450Verify(current,root,receipts);
+ if(!report.complete)return;
+ const files=current.files.map(file=>{const f=pb1450Meta(file,receipts);return{id:file.id,name:f.original_name,bytes:Number(f.bytes)}});
+ try{
+  // This endpoint repeats server-side receipt validation and is idempotent.
+  const result=await Me('/api/lab/orders/'+current.order.id+'/early-invoice/download',{method:'POST',body:JSON.stringify({files})});
+  const invoice=result.invoice;
+  if(invoice&&settings.autoPrint)await pb1568Print('invoice',current,invoice);
+  if(invoice&&!invoice.pdf_ready)void pb1547CompletePdf(invoice,current.order.id,true).catch(e=>console.error('[R1568] PDF follow-up',e));
+ }catch(error){
+  if((error?.data?.error||error?.message)==='invoice_pricing_required'){if(settings.autoPrint)await pb1568Print('slip',current,null);return;}
+  throw error;
+ }
+}
+async function pb1568Run(){
+ if(pb1568Worker.busy||!window.pbNativeStorage||location.hostname!=='127.0.0.1')return;
+ pb1568Worker.busy=true;
+ try{
+  const settings=(await Me('/api/lab/automation-settings'))?.settings;
+  if(!settings||(settings.autoDownload!==true&&settings.invoiceTiming!=='before_print'&&settings.autoPrint!==true))return;
+  const device=await Hu();
+  if(!device?.registered||!device?.isThisDevice)return;
+  const list=(await Me('/api/lab/orders'))?.orders||[];
+  for(const order of list.slice(0,100)){
+   if(order.mode!=='print'||order.status==='cancelled')continue;
+   try{
+    if(settings.autoDownload&&['sent','received'].includes(order.status)&&!order.downloaded_at&&Number(order.file_count)>0&&!(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')&&!['walkin','manual_invoice','manual'].includes(String(order.source||''))){
+     const detail=await Me('/api/lab/orders/'+order.id);
+     await pb1450Download(detail,()=>{},{automatic:true});
+     const ack=await pb1451AcknowledgeDownload(detail);
+     if(!ack?.order?.downloaded_at)throw Error('download_verification_failed');
+     const fresh=(await Me('/api/lab/orders/'+order.id)).order;
+     if(['sent','received'].includes(fresh.status)){
+      const changed=await Me('/api/lab/orders/'+order.id+'/download',{method:'PATCH',body:JSON.stringify({status:'downloaded',expectedRevision:fresh.document_revision,expectedUpdatedAt:fresh.updated_at})});
+      if(changed?.queued||changed?.operationId)throw Error('live_status_not_committed');
+     }
+     pb1568Worker.lastOrder=order.id;
+    }
+    if(settings.invoiceTiming==='before_print'&&(order.downloaded_at||pb1568Worker.lastOrder===order.id)){
+      const detail=await Me('/api/lab/orders/'+order.id);
+      if(detail.order.invoice_required!==false&&detail.order.downloaded_at&&!['cancelled','uploading'].includes(detail.order.status))await pb1568Issue(detail,settings);
+    }else if(settings.autoPrint&&settings.invoiceTiming==='after_print'&&['ready','completed'].includes(order.status)&&order.invoice_id){
+      const detail=await Me('/api/lab/orders/'+order.id);
+      if(detail.invoice)await pb1568Print('invoice',detail,detail.invoice);
+    }
+   }catch(error){pb1568Worker.lastError='سفارش '+order.number+': '+(error?.message||String(error));console.warn('[R1568] Auto intake:',pb1568Worker.lastError);break}
+  }
+ }catch(error){pb1568Worker.lastError=error?.message||String(error)}
+ finally{pb1568Worker.busy=false}
+}
+if(typeof window!=='undefined'&&window.pbNativeStorage){setTimeout(()=>void pb1568Run(),12000);setInterval(()=>void pb1568Run(),20000);window.addEventListener('online',()=>void pb1568Run());}

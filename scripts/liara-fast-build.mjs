@@ -726,3 +726,7 @@ runR1314(process.execPath,['--test','scripts/test-r1566-archive-revision.cjs'],{
 // R1567: native-only feature menu and measured low-end UI work reduction.
 await deployStep('./enable-r1567-native-performance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1567-native-requests.cjs'],{stdio:'inherit'});
+
+// R1568: opt-in, verified automatic native intake + early invoice and manual-price sheet.
+await deployStep('./enable-r1568-lab-automation.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1568-lab-automation.mjs'],{stdio:'inherit'});

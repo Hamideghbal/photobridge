@@ -5549,6 +5549,19 @@ async function photographerProfileByUserId(db, userId) {
     const q = await db.query(`SELECT user_id,studio_name,password_hash,province,city,location_lat,location_lng,location_address,created_at,updated_at FROM photographer_profiles WHERE user_id=$1 LIMIT 1`, [userId]);
     return q.rows[0] || null;
 }
+// R1549: admin deletion is role-scoped and retains historic invite/financial rows.
+async function photographerAdminRemovalRecord(db, identity) {
+    if (!identity || identity.photographer_enabled || identity.photographer_profile_user_id) return null;
+    const q = await db.query({
+        text: `SELECT NULLIF(btrim(data->>'name'),'') studio_name FROM audit_log
+                 WHERE entity_type='user' AND entity_id::text=$1::text
+                   AND action='platform_admin.photographer_delete'
+                 ORDER BY created_at DESC,id DESC LIMIT 1`,
+        values: [String(identity.id)], query_timeout: 1500
+    });
+    if (!q.rows.length) return null;
+    return {userId:String(identity.id),name:String(q.rows[0].studio_name||identity.name||'عکاسی').trim().slice(0,140)};
+}
 async function photographerIdentityByMobile(db, mobileValue) {
     const mobile = normalizeMobile(String(mobileValue || ''));
     if (!/^09\d{9}$/.test(mobile))
@@ -5570,23 +5583,25 @@ async function photographerIdentityByMobile(db, mobileValue) {
     // canonical photographer instead of failing the public context with mobile_ambiguous.
     // The SQL ordering already prefers identities with an actual photographer profile,
     // then enabled platform-admin/public-retouch identities and finally the oldest account.
-    if (photographerRows.length >= 1)
-        return { ...photographerRows[0], existingPhotographer: true, duplicateMobileResolved: photographerRows.length > 1 };
+    if (photographerRows.length >= 1) {
+        const selected = photographerRows[0], adminDeletedPhotographer = await photographerAdminRemovalRecord(db,selected);
+        return {...selected,existingPhotographer:!adminDeletedPhotographer,adminDeletedPhotographer,duplicateMobileResolved:photographerRows.length>1};
+    }
     const activeRows = q.rows.filter((r) => Boolean(r.active));
     if (!activeRows.length)
         return null;
     const admins = activeRows.filter((r) => r.platform_role === 'platform_admin');
     if (admins.length >= 1)
-        return { ...admins[0], existingPhotographer: false, duplicateMobileResolved: activeRows.length > 1 };
+        return {...admins[0],existingPhotographer:false,adminDeletedPhotographer:await photographerAdminRemovalRecord(db,admins[0]),duplicateMobileResolved:activeRows.length>1};
     const retouch = activeRows.filter((r) => Boolean(r.public_retouch_enabled));
     if (retouch.length >= 1)
-        return { ...retouch[0], existingPhotographer: false, duplicateMobileResolved: activeRows.length > 1 };
-    return { ...activeRows[0], existingPhotographer: false, duplicateMobileResolved: activeRows.length > 1 };
+        return {...retouch[0],existingPhotographer:false,adminDeletedPhotographer:await photographerAdminRemovalRecord(db,retouch[0]),duplicateMobileResolved:activeRows.length>1};
+    return {...activeRows[0],existingPhotographer:false,adminDeletedPhotographer:await photographerAdminRemovalRecord(db,activeRows[0]),duplicateMobileResolved:activeRows.length>1};
 }
 // Verified PhotoBridge accounts can accept lab invitations via mobile OTP only.
 // A lab-created mobile placeholder has neither a verified account nor a photographer role.
 function labInviteExistingAccount(identity) {
-    return Boolean(identity && (identity.existingPhotographer || identity.mobile_verified_at || identity.public_retouch_enabled));
+    return Boolean(identity && !identity.adminDeletedPhotographer && (identity.existingPhotographer || identity.mobile_verified_at || identity.public_retouch_enabled));
 }
 async function ensurePhotographerProfile(db, args) {
     const current = await photographerProfileByUserId(db, args.userId);
@@ -6444,7 +6459,13 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
         }
         await c.query('LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE');
         const existing = await photographerIdentityByMobile(c, mobile);
-        const existingPhotographer = existing?.existingPhotographer ? existing : null;
+        const adminDeletedPhotographer = existing?.adminDeletedPhotographer || null;
+        // An OTP for a different account state cannot silently revive a deleted role.
+        if (adminDeletedPhotographer
+             ? (p.rejoinAfterAdminDeletion!==true||String(p.rejoinUserId||'')!==adminDeletedPhotographer.userId)
+             : p.rejoinAfterAdminDeletion===true)
+             throw Object.assign(new Error('invite_identity_changed'),{status:409});
+        const existingPhotographer = !adminDeletedPhotographer && existing?.existingPhotographer ? existing : null;
         if (existingPhotographer && inv.issuer_type === 'lab' && inv.issuer_lab_id) {
             const existingMembership = await c.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true LIMIT 1`, [inv.issuer_lab_id, existingPhotographer.id]);
             if (existingMembership.rowCount)
@@ -12387,7 +12408,8 @@ async function api(req, res, url) {
             // map location and birth date) for that mobile until activation.
             const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
             const existing = photographerRows[0] || rows.find(r=>r.active) || null;
-            const existingPhotographer = existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed) ? existing : null;
+            const adminDeletedPhotographer = await photographerAdminRemovalRecord(pool,existing);
+            const existingPhotographer = !adminDeletedPhotographer && existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed) ? existing : null;
             // R96: identity fields can be split across legacy rows that share one mobile.
             // Prefer the selected photographer row, but fill blank studio/province/city/address
             // from any other matching photographer profile instead of showing empty cards.
@@ -12447,7 +12469,7 @@ async function api(req, res, url) {
             let membershipRequiredFields = null, membershipProfile = null;
             if (inv.issuer_type === 'rental' && inv.issuer_rental_shop_id) {
                 membershipRequiredFields = equipmentRentalInviteRequiredFields(inv, {membership_required_fields:inv.resolved_rental_shop_required_fields});
-                if (existing?.id) {
+                if (existing?.id && !adminDeletedPhotographer) {
                     const mp = await pool.query({text:`SELECT m.birth_jalali,m.national_id,m.birth_certificate_no,m.business_license_no,m.business_license_image_object_key,m.business_license_image_name,m.business_license_image_content_type,m.business_license_image_bytes,pp.birth_jalali profile_birth_jalali,pp.business_license_no profile_business_license_no
                       FROM users u LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
                       LEFT JOIN equipment_rental_shop_memberships m ON m.shop_id=$1 AND m.user_id=u.id AND m.role='photographer'
@@ -12456,7 +12478,7 @@ async function api(req, res, url) {
                     membershipProfile={name:String(resolvedExistingIdentity?.name||existing.photographer_name||existing.name||'عکاسی'),mobile:String(resolvedExistingIdentity?.mobile||existing.mobile||mobile),province:String(resolvedExistingIdentity?.province||existing.photographer_province||''),city:String(resolvedExistingIdentity?.city||existing.photographer_city||''),locationAddress:String(resolvedExistingIdentity?.locationAddress||existing.photographer_location_address||''),birthJalali:String(row.birth_jalali||row.profile_birth_jalali||''),nationalId:String(row.national_id||''),birthCertificateNo:String(row.birth_certificate_no||''),businessLicenseNo:String(row.business_license_no||row.profile_business_license_no||''),businessLicenseImage:row.business_license_image_object_key?{objectKey:row.business_license_image_object_key,name:row.business_license_image_name||'',contentType:row.business_license_image_content_type||'',bytes:Number(row.business_license_image_bytes||0)}:null};
                 }
             }
-            return sendJson(res,200,{invite:photographerInvitePublicView(inv),existingAccount:resolvedExistingIdentity?{exists:true,name:resolvedExistingIdentity.name,studioName:resolvedExistingIdentity.studioName,mobile:resolvedExistingIdentity.mobile,province:resolvedExistingIdentity.province,city:resolvedExistingIdentity.city,locationAddress:resolvedExistingIdentity.locationAddress,photographerEnabled:true,alreadyConnected}:null,mobile,membershipRequiredFields,membershipProfile});
+            return sendJson(res,200,{invite:photographerInvitePublicView(inv),existingAccount:resolvedExistingIdentity?{exists:true,name:resolvedExistingIdentity.name,studioName:resolvedExistingIdentity.studioName,mobile:resolvedExistingIdentity.mobile,province:resolvedExistingIdentity.province,city:resolvedExistingIdentity.city,locationAddress:resolvedExistingIdentity.locationAddress,photographerEnabled:true,alreadyConnected}:null,rejoiningAccount:adminDeletedPhotographer?{required:true,previousName:adminDeletedPhotographer.name,mobile}:null,mobile,membershipRequiredFields,membershipProfile});
         } catch (e) {
             console.error('[public-photographer-signup-context-fast:failed]',{code:String(e?.code||''),message:String(e?.message||'')});
             return sendJson(res,503,{error:'invite_temporarily_unavailable'});
@@ -14320,7 +14342,8 @@ async function api(req, res, url) {
         catch (e) {
             return sendJson(res, e?.status || 409, { error: e?.message || 'mobile_ambiguous' });
         }
-        const existingPhotographer = existing?.existingPhotographer ? existing : null;
+        const adminDeletedPhotographer = existing?.adminDeletedPhotographer || null;
+        const existingPhotographer = !adminDeletedPhotographer && existing?.existingPhotographer ? existing : null;
         if (existingPhotographer && inv.issuer_type === 'lab' && inv.issuer_lab_id) {
             const mq = await pool.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true LIMIT 1`, [inv.issuer_lab_id, existingPhotographer.id]);
             if (mq.rowCount)
@@ -14342,7 +14365,7 @@ async function api(req, res, url) {
         }
         const inviteIdentity = { issuerType: inv.issuer_type || null, issuerLabName: inv.issuer_lab_name || null, issuerRentalShopName: inv.issuer_rental_shop_name || null };
         const profilePayload={birthJalali,nationalId,birthCertificateNo,businessLicenseNo,businessLicenseImage,rentalRequiredFields};
-        const payload = existingPhotographer ? { inviteCode, existingAccount: true, existingUserId: String(existingPhotographer.id), ...profilePayload, ...inviteIdentity } : { inviteCode, name, province, city, locationLat: location.lat, locationLng: location.lng, locationAddress, ...profilePayload, existingCredentialUserId: existing ? String(existing.id) : null, ...inviteIdentity };
+        const payload = existingPhotographer ? { inviteCode, existingAccount: true, existingUserId: String(existingPhotographer.id), ...profilePayload, ...inviteIdentity } : { inviteCode, name, province, city, locationLat: location.lat, locationLng: location.lng, locationAddress, ...profilePayload, existingCredentialUserId: existing ? String(existing.id) : null, rejoinAfterAdminDeletion:Boolean(adminDeletedPhotographer),rejoinUserId:adminDeletedPhotographer?.userId||null,...inviteIdentity };
         let challenge = null, lastChallengeError = null;
         for (let attempt = 0; attempt < 2; attempt++) {
             try {
@@ -18987,8 +19010,10 @@ ${inviteUrl}`;
             await c.query(`UPDATE photographer_invites SET active=false,updated_at=now() WHERE issuer_user_id=$1`, [photographerId]).catch(() => { });
             await c.query(`DELETE FROM photographer_profiles WHERE user_id=$1`, [photographerId]);
             await c.query(`UPDATE users SET photographer_enabled=false,photographer_active_lab_id=NULL,updated_at=now() WHERE id=$1`, [photographerId]);
+            // Atomic audit marker is authoritative for future re-enrollment.
+            await c.query(`INSERT INTO audit_log(actor_id,action,entity_type,entity_id,data) VALUES($1,'platform_admin.photographer_delete','user',$2,$3::jsonb)`,
+                [a.userId,photographerId,JSON.stringify({name:row.name,hadMobile:Boolean(row.mobile),historyRetained:true,sharedIdentityPreserved:true,removedLabConnections:removedFromLabs.length})]);
             await c.query('COMMIT');
-            await audit(a.userId, undefined, 'platform_admin.photographer_delete', 'user', photographerId, { name: row.name, hadMobile: Boolean(row.mobile), historyRetained: true, sharedIdentityPreserved: true, removedLabConnections: removedFromLabs.length }).catch(() => { });
             for (const lab of removedFromLabs)
                 publishLabEvent(String(lab.id), 'photographer_removed_by_admin', { photographerId, photographerName: row.name || 'عکاس', labId: lab.id, labName: lab.name, removedAt: new Date().toISOString(), removedBy: 'platform_admin' });
             return sendJson(res, 200, { ok: true, historyRetained: true, sharedIdentityPreserved: true, removedLabConnections: removedFromLabs.length });

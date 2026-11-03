@@ -33,7 +33,7 @@
     next.membershipRequiredFields={birthDate:a.birthDate||b.birthDate,nationalId:a.nationalId||b.nationalId,birthCertificateNo:a.birthCertificateNo||b.birthCertificateNo,businessLicenseNo:a.businessLicenseNo||b.businessLicenseNo,businessLicenseImage:a.businessLicenseImage||b.businessLicenseImage};
     const oa=old.existingAccount&&typeof old.existingAccount==='object'?old.existingAccount:{},na=x.existingAccount&&typeof x.existingAccount==='object'?x.existingAccount:{};
     const mergedAccount={...oa,...Object.fromEntries(Object.entries(na).filter(([,v])=>v!==null&&v!==undefined&&v!==''))};
-    next.existingAccount=Object.keys(mergedAccount).length?mergedAccount:null;
+    next.existingAccount=(x.rejoiningAccount?.required||old.rejoiningAccount?.required)?null:(Object.keys(mergedAccount).length?mergedAccount:null);
     const previousInvite=old.invite||{},incomingInvite=x.invite||{};next.invite={...previousInvite,...incomingInvite};for(const field of ['issuerRentalShopName','issuerName','issuerLabName']){const fresh=String(incomingInvite[field]??'').trim();if((!fresh||fresh==='فروشگاه')&&previousInvite[field])next.invite[field]=previousInvite[field]}
     const op=old.membershipProfile||{},np=x.membershipProfile||{};
     next.membershipProfile={...op,...Object.fromEntries(Object.entries(np).filter(([,v])=>v!==null&&v!==undefined&&v!==''))};
@@ -69,7 +69,20 @@
   const required=()=>({...normalizeReq(state.ctx?.membershipRequiredFields||{}),birthDate:isExisting()&&!hasProfileValue('birthJalali')});
   function PB1412IsRental(invite,fields){const item=invite||{},type=String(item.issuerType||item.issuer_type||'');if(type==='lab'||item.issuerLabName||item.issuer_lab_name)return false;if(type==='rental')return true;return Object.values(normalizeReq(fields||{})).some(Boolean);}
   const isRental=()=>PB1412IsRental(state.ctx?.invite,state.ctx?.membershipRequiredFields);
-  const isExisting=()=>Boolean(state.ctx?.existingAccount?.exists||state.ctx?.existingAccount);
+  const isExisting=()=>!state.ctx?.rejoiningAccount?.required&&Boolean(state.ctx?.existingAccount?.exists||state.ctx?.existingAccount);
+  function prefillRejoiningName(form){
+    const previousName=String(state.ctx?.rejoiningAccount?.previousName||'').trim();
+    if(!state.ctx?.rejoiningAccount?.required||!previousName||form.dataset.pbR1549Prefilled==='1')return;
+    for(const label of form.querySelectorAll('label')){
+      if(!String(label.textContent||'').includes('نام عکاسی'))continue;
+      const input=label.querySelector('input');
+      if(!input)continue;
+      if(!String(input.value||'').trim())setInputValue(input,previousName);
+      // Only prefill: the new name stays fully editable.
+      form.dataset.pbR1549Prefilled='1';
+      break;
+    }
+  }
   function PB1411RentalShopName(invite){const item=invite||{};const options=[item.issuerRentalShopName,item.issuer_rental_shop_name,item.issuerName,item.issuer_name];return options.map(value=>String(value||'').trim()).find(value=>value&&value!=='فروشگاه'&&value!=='PhotoBridge')||'';}
   const hasProfileValue=k=>Boolean(String((state.ctx?.membershipProfile||{})[k]||'').trim());
   function hideLabel(label){label.classList.add('pbR94BaseHidden');label.querySelectorAll('input,select,button').forEach(el=>{if('required' in el)el.required=false;el.tabIndex=-1})}
@@ -312,7 +325,7 @@
     // this avoids the scroll-lock/performance regression of the old invite observer.
     formObserver.observe(form,{childList:true});
   }
-  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;document.documentElement.classList.toggle('pbR1411ExistingRentalInvite',isExisting()&&Boolean(state.ctx?.invite));watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
+  function render(){state.raf=0;const form=document.querySelector('.photographerSignupForm');if(!form||!state.ctx||!state.contextReady)return;document.documentElement.classList.toggle('pbR1411ExistingRentalInvite',isExisting()&&Boolean(state.ctx?.invite));watchExistingForm(form);decorateRentalIntro();if(form.querySelector('input[maxlength="6"],input[autocomplete="one-time-code"]')){document.getElementById('pbR94InviteRequired')?.classList.add('pbR94BaseHidden');clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');return}upgradeBaseBirthCalendar(form);hideBase(form);prefillRejoiningName(form);identityBox(form);requiredBox(form);const b=tweakButton(form);cleanupExistingLegacyForm(form,b);clearTimeout(window.__PB_INVITE_GATE_TIMEOUT__);document.documentElement.classList.remove('pbR100F7InviteBootPending');}
   function schedule(){if(state.raf)return;state.raf=requestAnimationFrame(render)}
   let settleTimers=[];function scheduleSeries(){schedule();settleTimers.forEach(clearTimeout);settleTimers=[80,220,600,1400,3000,6000,10000].map(ms=>setTimeout(schedule,ms))}
   async function bootstrap(){

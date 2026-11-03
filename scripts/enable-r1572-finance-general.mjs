@@ -43,7 +43,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     const generalBackupEnd=js.indexOf(generalBackup)+generalBackup.length;
     if(generalBackupEnd<generalBackup.length)throw Error('R1572 General backup missing '+root);
     const laterMenu=js.slice(generalBackupEnd,generalBackupEnd+2500);
-    const cleanedMenu=laterMenu.replace(/,\["backup","[^"]*"\]/g,'');
+    const cleanedMenu=laterMenu.replace(/,?\["backup","[^"]*"\],?/g,'');
     js=js.slice(0,generalBackupEnd)+cleanedMenu+js.slice(generalBackupEnd+2500);
     js+='\n/* R1572 finance stable background refresh */\n';
     write(asset,js);

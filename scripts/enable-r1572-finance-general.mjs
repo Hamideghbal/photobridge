@@ -36,14 +36,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     if(js.slice(generalStart,itemsEnd).includes('["automation"')||js.slice(generalStart,itemsEnd).includes('["backup"'))
       throw Error('R1572 duplicate General option '+root);
     js=js.slice(0,itemsEnd+1)+',["automation","دانلود و چاپ خودکار"],["backup","پشتیبان اطلاعات برنامه"]'+js.slice(itemsEnd+1);
-    // Remove any backup option from System, regardless of its wording in
-    // previous patch layers. Never remove the new General tab.
-    const systemStart=js.indexOf('key:"system"');
-    if(systemStart<0)throw Error('R1572 Settings System category missing '+root);
-    const systemPrefix=js.slice(systemStart,systemStart+750);
-    const oldBackup=/,\["backup","[^"]*"\]/;
-    const systemClean=systemPrefix.replace(oldBackup,'');
-    js=js.slice(0,systemStart)+systemClean+js.slice(systemStart+750);
+    // There may be no System category in the final compiled variant. Remove
+    // any *other* backup item in the settings menu region after the new General
+    // tab; never target the new General entry itself.
+    const generalBackup='["backup","پشتیبان اطلاعات برنامه"]';
+    const generalBackupEnd=js.indexOf(generalBackup)+generalBackup.length;
+    if(generalBackupEnd<generalBackup.length)throw Error('R1572 General backup missing '+root);
+    const laterMenu=js.slice(generalBackupEnd,generalBackupEnd+2500);
+    const cleanedMenu=laterMenu.replace(/,\["backup","[^"]*"\]/g,'');
+    js=js.slice(0,generalBackupEnd)+cleanedMenu+js.slice(generalBackupEnd+2500);
     js+='\n/* R1572 finance stable background refresh */\n';
     write(asset,js);
     execFileSync(process.execPath,['--check',asset],{stdio:'inherit'});

@@ -21,7 +21,7 @@ for(const root of ['dist/web',native]){
    if(a<0)throw Error('R1550 archive entry missing');
    const end=b<0?source.length:b,part=source.slice(a,end),from='const root=await qs();';
    if(part.split(from).length!==2)throw Error('R1550 archive root changed: '+name);
-   source=source.slice(0,a)+part.replace(from,'const root=await pb1550Root(detail,false);')+source.slice(end);
+   source=source.slice(0,a)+part.replace(from,'const root=await pb1550ArchiveRoot(detail);')+source.slice(end);
   }
   source+='\n'+marker+'\n'+fs.readFileSync('scripts/r1550-order-storage.js.txt','utf8')+'\n';fs.writeFileSync(file,source);
  }

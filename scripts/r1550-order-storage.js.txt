@@ -67,6 +67,11 @@ async function pb1550Root(detail,choose=false,candidate){
   return root;
  });
 }
+async function pb1550ArchiveRoot(detail){
+ const saved=await pb1550Db(detail),state=yc(detail.order.id)||{};
+ if(!saved&&!detail.order.downloaded_at&&!state.startedAt&&!detail.order.localFiles?.length)return null;
+ try{return await pb1550Root(detail,false)}catch(error){if(saved)throw error;return null;}
+}
 async function pb1550Target(candidate,detail,file){
  const root=await pb1550Root(detail,false,candidate);
  return pb1550Serial(detail,async()=>{

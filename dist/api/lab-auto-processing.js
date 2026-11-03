@@ -1,6 +1,7 @@
 // R1568: Lab-scoped unattended processing policy and guarded early invoice.
 // This endpoint is called *inside* the authenticated /api/lab/ section in server.js.
 import {downloadManifestFingerprint, verifiedDownloadKey} from './lab-download-receipt.js';
+import {storageDeviceAllowed} from './lab-storage-pair.js';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const automationKey=labId=>'lab_auto_processing:'+labId;
 export const automationDefaults=Object.freeze({
@@ -62,6 +63,12 @@ export async function handleLabAutomation({req,res,url,labId,deviceId,pool,bodyJ
     const oq=await c.query('SELECT * FROM orders WHERE lab_id=$1 AND id=$2 FOR UPDATE',[labId,id]);
     order=oq.rows[0];if(!order)throw Object.assign(Error('not_found'),{status:404});
     if(['cancelled','uploading'].includes(String(order.status||'')))throw Object.assign(Error('order_not_downloadable'),{status:409});
+    if(order.invoice_required===false||String(order.mode||'print')!=='print'
+       ||['walkin','manual_invoice','manual'].includes(String(order.source||'')))
+      throw Object.assign(Error('early_invoice_not_allowed'),{status:409});
+    const lab=(await c.query('SELECT primary_download_device_id FROM labs WHERE id=$1 FOR SHARE',[labId])).rows[0];
+    if(!lab||!storageDeviceAllowed(lab,deviceId))
+      throw Object.assign(Error('not_primary_download_device'),{status:403});
     if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')throw Object.assign(Error('payment_required'),{status:409});
     if(!order.downloaded_at)throw Object.assign(Error('download_not_verified'),{status:409});
     const fileQ=await c.query(`SELECT id,original_name,print_name,bytes,print_bytes FROM order_files

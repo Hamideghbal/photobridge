@@ -20,8 +20,9 @@ async function exercise({pathname='/api/lab/delegated-customers',body={},existin
   if(sql.includes('SELECT id,token,sms_status FROM invitations'))return rows(existingInvite?[{id:'invite',token:'secret',sms_status:'sent'}]:[]);
   if(sql.includes('INSERT INTO invitations('))return rows([{id:'invite',token:'secret',sms_status:'not_sent'}]);
   if(sql.includes("reference_type='lab_delegated_opening_debt'"))return rows(priorDebt?[{id:'debt'}]:[]);
-  if(sql.includes('SELECT i.id,i.token,i.target_mobile'))return rows([{id:'invite',token:'secret',target_mobile:'09120000001',target_name:null,lab_name:'Lab'}]);
-  if(sql.includes("SET sms_status='not_sent',sms_reference='dispatching'"))return rows(sendAllowed?[{id:'invite'}]:[]);
+  if(sql.includes('SELECT i.id,i.target_mobile'))return rows([{id:'invite',target_mobile:'09120000001',target_name:null,lab_name:'Lab'}]);
+  if(sql.includes("FROM photographer_invites")&&sql.includes("issuer_type='lab'"))return rows([{id:'permanent',code:'code'}]);
+  if(sql.includes("SET sms_reference='dispatching'"))return rows(sendAllowed?[{id:'invite'}]:[]);
   if(sql.includes('SELECT u.mobile,u.name FROM lab_memberships'))return rows(member===false?[{mobile:'09120000001',name:'Customer'}]:[]);
   return rows([]);
  };
@@ -31,6 +32,8 @@ async function exercise({pathname='/api/lab/delegated-customers',body={},existin
   req:{method:'POST'},url:{pathname},res:{},bodyJson:async()=>({name:'نام موقت لابراتوار',mobile:'09120000001',initialDebt:50000,sendInvitation:false,...body}),
   requireLocalIntakePrimary:async()=>enabled,normalizeMobile:x=>x,pool,labId:'lab',a:{userId:'actor'},crypto,
   passwordHash:x=>x,PUBLIC_APP_URL:'https://app.test',
+  newPhotographerInviteCode:()=> 'LABINV',
+  ensurePhotographerInviteSmsShortLink:async()=>({token:'shortToken',url:'https://app.test/j/shortToken'}),
   ensureFinanceAccounts:async()=>{},postBalancedFinanceTransaction:async(db,data)=>ledger.push(data),
   audit:async()=>{},sendSms:async data=>{sms.push(data);return{reference:'sms-id'};},
   sendJson:(res,status,body)=>{answers.push({status,body});return body;}
@@ -58,6 +61,8 @@ test('preexisting global user is reused with pending membership; invitation SMS 
  assert.equal(r.sms.length,1);
  assert.equal(r.sms[0].chargeLabId,undefined);
  assert.equal(r.sms[0].chargeRentalShopId,undefined);
+ assert.match(r.sms[0].message,/https:\/\/app\.test\/j\/shortToken/);
+ assert.doesNotMatch(r.sms[0].message,/\/invite\//);
  assert(!r.statements.some(x=>x.sql.includes('INSERT INTO users(')));
 });
 test('repeat pending customer cannot duplicate an opening debt',async()=>{

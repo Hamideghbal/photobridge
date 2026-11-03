@@ -32,6 +32,7 @@ function setup({proof=true,missing=false,timing='after_verified_download'}={}){
  const c={
   query:async(sql,args)=>{
     if(sql.startsWith('SELECT * FROM orders'))return {rows:[order]};
+    if(sql.includes('FROM labs WHERE id='))return {rows:[{ui_preferences:null,primary_download_device_id:DEVICE}]};
     if(sql.includes('FROM order_files'))return {rows:[row]};
     if(sql.includes('FROM platform_settings'))return {rows:proof?[{value:receipt}]:[]};
     if(sql.includes('FROM invoices'))return {rowCount:0,rows:[]};

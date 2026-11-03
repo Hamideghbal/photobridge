@@ -8,11 +8,13 @@ class TrayMenu{
  validate(event){if(!this.window||this.window.isDestroyed()||event.sender!==this.window.webContents)throw Error('invalid_sender')}
  async popup(bounds){
   let win=this.window;if(!win||win.isDestroyed()){
-   win=this.window=new this.BrowserWindow({width:300,height:this.items.length*43+22,frame:false,resizable:false,show:false,skipTaskbar:true,alwaysOnTop:true,backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'tray-preload.cjs'),contextIsolation:true,sandbox:true,nodeIntegration:false}});
+   win=this.window=new this.BrowserWindow({width:280,height:220,frame:false,resizable:false,show:false,skipTaskbar:true,alwaysOnTop:true,backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'tray-preload.cjs'),contextIsolation:true,sandbox:true,nodeIntegration:false}});
    win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());win.on('blur',()=>win.hide());
    this.ready=win.loadFile(path.join(__dirname,'tray-menu.html'));
   }
   await this.ready;if(win.isDestroyed())return;
+  const height=await win.webContents.executeJavaScript('window.__labTrayReady.then(()=>document.fonts.ready).then(()=>Math.ceil(document.body.getBoundingClientRect().height))');
+  win.setContentSize(280,Math.max(80,Math.min(600,height)));
   const area=this.getWorkArea(bounds),size=win.getBounds(),x=Math.min(area.x+area.width-size.width,Math.max(area.x,bounds.x+bounds.width-size.width)),y=Math.min(area.y+area.height-size.height,Math.max(area.y,bounds.y-size.height));
   win.setPosition(Math.round(x),Math.round(y));win.show();win.focus();
  }

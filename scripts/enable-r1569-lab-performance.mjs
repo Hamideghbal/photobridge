@@ -83,9 +83,6 @@ if(!intake.includes(marker)){
    "for(const file of files){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');",
    "const pb1569Files=[...files],pb1569Hashes=await pb1569MapLimit(pb1569Files,3,pb1569Digest);for(let index=0;index<pb1569Files.length;index++){const file=pb1569Files[index],hash=pb1569Hashes[index];",
    'serial full-file hash');
- const photosStart="const photos=node('div',null,'pb1139GroupPhotos');photos.hidden=!!group.collapsed;";
- intake=once(intake,photosStart+"\n    for(const item of group.items){",
-  photosStart+"\n    if(!group.collapsed)for(const item of group.items){",'hidden group rendering');
  intake=once(intake,"const image=node('img');image.src=item.preview;",
   "const image=node('img');image.loading='lazy';image.decoding='async';image.src=item.preview;",'lazy photo decoding');
 

@@ -9,7 +9,7 @@ const start=server.indexOf('async function archiveOrdersForLab(');
 const end=server.indexOf('async function financeDocumentsForCustomer(',start);
 if(start<0||end<=start)throw Error('R1552 archive API boundary not found');
 let section=server.slice(start,end);
-const archiveSelect='SELECT o.id order_id,o.number order_number,o.mode,o.status raw_order_status,o.album_stage,o.updated_at,';
+const archiveSelect='SELECT o.id order_id,o.number order_number';
 if(!section.includes('o.created_at order_created_at')){
  if(section.split(archiveSelect).length!==2)throw Error('R1552 archive order timestamp anchor changed');
  section=section.replace(archiveSelect,archiveSelect+'\n    o.created_at order_created_at,');

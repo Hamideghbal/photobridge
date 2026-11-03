@@ -732,3 +732,9 @@ runR1314(process.execPath,['--test','scripts/test-r1567-native-requests.cjs'],{s
 await deployStep('./enable-r1568-auto-processing.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1568-auto-processing.cjs'],{stdio:'inherit'});
 
+// R1569: reduce manual intake request fan-out and finance first-panel loading.
+// Atomic batch file metadata (no photo upload), bounded hashing and aggregated balances.
+await deployStep('./enable-r1569-lab-performance.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1569-lab-performance.mjs'],{stdio:'inherit'});
+
+

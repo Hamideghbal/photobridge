@@ -41,14 +41,13 @@ function documentHtml({kind,labName,order,invoice,files=[],requirements=[],width
  if(kind==='invoice'){
   if(!invoice?.id||!Array.isArray(invoice.items))throw Error('invoice_missing_items');
   lines='<table><thead><tr><th>شرح / واحد</th><th>تعداد</th><th>مبلغ</th></tr></thead><tbody>'+
-    invoice.items.map(item=>'<tr class="item"><td>'+esc(item.description||item.sizeLabel||item.kind)+'<div class="unit">فی واحد: '+number(item.unitPrice)+'</div></td><td>'+number(item.quantity)+'</td><td>'+number(item.lineTotal)+'</td></tr>').join('')+'</tbody></table>';
-  const rows=[
-    ['جمع اقلام',invoice.subtotal],
-    ['تخفیف',invoice.discount_total??invoice.discount??0],
-    ['جمع فاکتور',invoice.total],
-  ];
+    invoice.items.map(item=>'<tr class="item"><td>'+esc(item.description||[item.sizeLabel,item.printTypeLabel].filter(Boolean).join(' · ')||item.kind)+'<div class="unit">فی واحد: '+number(item.unitPrice)+'</div></td><td>'+number(item.quantity)+'</td><td>'+number(item.lineTotal)+'</td></tr>').join('')+'</tbody></table>';
+  const rows=[['جمع اقلام',invoice.subtotal],['جمع فاکتور',invoice.total]];
+  if(invoice.discount_total!=null||invoice.discount!=null)rows.splice(1,0,['تخفیف',invoice.discount_total??invoice.discount]);
+  if(invoice.correction_delta!=null&&Number(invoice.correction_delta)!==0)rows.push(['اصلاحات مالی فاکتور',invoice.correction_delta]);
+  if(invoice.paid!=null)rows.push(['پرداخت ثبت‌شده',invoice.paid]);
+  if(invoice.paid!=null||invoice.correction_delta!=null)rows.push(['مانده همین فاکتور',Number(invoice.total||0)+Number(invoice.correction_delta||0)-Number(invoice.paid||0)]);
   lines+='<section class="total">'+rows.map(([label,v])=>'<div class="line"><span>'+esc(label)+'</span><b>'+number(v)+'</b></div>').join('');
-  if(invoice.paid!=null)lines+='<div class="line"><span>پرداخت ثبت‌شده</span><b>'+number(invoice.paid)+'</b></div>';
   const balance=invoice.account_balance_at_issue??invoice.customer_total_debt;
   lines+='<div class="debt">کل بدهی عکاسی<br>'+ (balance==null?'نامشخص':number(balance)+' تومان')+'</div></section>';
  }else if(kind==='ticket'){

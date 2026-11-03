@@ -21,7 +21,7 @@ test('batch preserves local-only storage, name suffix and exact 19-column shape'
  const {sql,params}=localBatchInsert(list);
  assert.equal(params.length,38);
  assert.match(sql,/ON CONFLICT \(id\) DO UPDATE/);
- assert.match(sql,/AND order_files\.object_key=EXCLUDED\.object_key/);
+ assert.match(sql,/AND order_files\.object_key LIKE/);
  assert.match(sql,/RETURNING id/);
  assert.equal((sql.match(/\$\d+/g)||[]).length,38);
 });

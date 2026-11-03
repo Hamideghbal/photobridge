@@ -1,6 +1,6 @@
 {
   "name": "photobridge-lab-desktop",
-  "version": "1.0.83",
+  "version": "1.0.84",
   "private": true,
   "description": "PhotoBridge Lab — offline-first Windows workspace",
   "main": "main.cjs",
@@ -13,10 +13,12 @@
     "release:json": "node create-update-release.cjs"
   },
   "dependencies": {
-    "electron-updater": "6.8.9"
+    "electron-updater": "6.8.9",
+    "better-sqlite3": "8.7.0",
+    "undici": "5.28.5"
   },
   "devDependencies": {
-    "electron": "44.5.1",
+    "electron": "22.3.27",
     "electron-builder": "26.15.3"
   },
   "build": {
@@ -34,7 +36,8 @@
       "access-helper.sha256",
       "THIRD-PARTY-ACCESS.txt",
       "*.vbs",
-      "access-worker-owner.ps1"
+      "access-worker-owner.ps1",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {
@@ -80,7 +83,8 @@
     },
     "asarUnpack": [
       "assets/access-libs/**",
-      "assets/photobridge-access-export.jar"
+      "assets/photobridge-access-export.jar",
+      "node_modules/better-sqlite3/build/Release/*.node"
     ]
   },
   "author": "PhotoBridge"

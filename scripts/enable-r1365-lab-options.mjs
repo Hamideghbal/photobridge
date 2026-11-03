@@ -2,7 +2,13 @@ import fs from 'node:fs';
 const once=(text,before,after,label)=>{if(text.includes(after))return text;if(text.split(before).length!==2)throw Error('R1365 missing/ambiguous '+label);return text.replace(before,after)};
 const main='dist/web/assets/index-UIRefine-v655-r84.js';let bundle=fs.readFileSync(main,'utf8');
 if(!bundle.includes('function PB1365LabFeature(')){
- bundle=once(bundle,'"snappbox","site"]),m=()=>','"snappbox","site","desktop"]),m=()=>','settings keys');
+ // R1562: the browser-only backup tab is already present in newer bundles.
+ // Keep it while adding Windows Desktop to the same allowlist.
+ if(bundle.includes('"snappbox","site","backup"]),m=()=>')){
+  bundle=once(bundle,'"snappbox","site","backup"]),m=()=>','"snappbox","site","desktop","backup"]),m=()=>','settings keys with backup');
+ }else{
+  bundle=once(bundle,'"snappbox","site"]),m=()=>','"snappbox","site","desktop"]),m=()=>','settings keys');
+ }
  bundle=once(bundle,'["site","سایت اختصاصی"]]','["site","سایت اختصاصی"],["desktop","برنامهٔ ویندوز"]]','settings menu');
  bundle=once(bundle,'g==="site"&&e.jsx(PB1296LabSite,{})','g==="site"&&e.jsx(PB1365LabFeature,{kind:"site"}),g==="desktop"&&e.jsx(PB1365LabFeature,{kind:"desktop"})','settings content');
  bundle=once(bundle,'className:"rowActions adminRowActions",children:[e.jsx("button",{type:"button",onClick:()=>location.assign("/admin/storefront?labId="','className:"rowActions adminRowActions",children:[e.jsx(PB1365LabFeatureAdmin,{labId:q.id}),e.jsx("button",{type:"button",onClick:()=>location.assign("/admin/storefront?labId="','admin lab actions');

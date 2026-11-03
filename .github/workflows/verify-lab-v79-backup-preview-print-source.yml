@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - build/lab-1.0.79-backup-preview-print-calendar-fix
+      - fix/windows-v79-backup-progress-recovery
   workflow_dispatch:
 permissions:
   contents: read

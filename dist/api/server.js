@@ -5588,8 +5588,16 @@ async function photographerIdentityByMobile(db, mobileValue) {
         return {...selected,existingPhotographer:!adminDeletedPhotographer,adminDeletedPhotographer,duplicateMobileResolved:photographerRows.length>1};
     }
     const activeRows = q.rows.filter((r) => Boolean(r.active));
-    if (!activeRows.length)
+    if (!activeRows.length) {
+        // A disabled shared account may still have been deleted as a photographer.
+        // Return its existing identity instead of attempting a duplicate mobile INSERT.
+        for (const candidate of q.rows) {
+            const adminDeletedPhotographer = await photographerAdminRemovalRecord(db,candidate);
+            if (adminDeletedPhotographer)
+                return {...candidate,existingPhotographer:false,adminDeletedPhotographer,duplicateMobileResolved:q.rows.length>1};
+        }
         return null;
+    }
     const admins = activeRows.filter((r) => r.platform_role === 'platform_admin');
     if (admins.length >= 1)
         return {...admins[0],existingPhotographer:false,adminDeletedPhotographer:await photographerAdminRemovalRecord(db,admins[0]),duplicateMobileResolved:activeRows.length>1};
@@ -6465,6 +6473,8 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
              ? (p.rejoinAfterAdminDeletion!==true||String(p.rejoinUserId||'')!==adminDeletedPhotographer.userId)
              : p.rejoinAfterAdminDeletion===true)
              throw Object.assign(new Error('invite_identity_changed'),{status:409});
+        if (adminDeletedPhotographer && existing?.active !== true)
+            throw Object.assign(new Error('account_suspended'),{status:403});
         const existingPhotographer = !adminDeletedPhotographer && existing?.existingPhotographer ? existing : null;
         if (existingPhotographer && inv.issuer_type === 'lab' && inv.issuer_lab_id) {
             const existingMembership = await c.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true LIMIT 1`, [inv.issuer_lab_id, existingPhotographer.id]);
@@ -6498,7 +6508,11 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
             userId = String(existing.id);
             reusedExisting = true;
             // Reuse the mobile identity; legacy retouch-only credentials are upgraded below after OTP verification.
-            await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=COALESCE($2::double precision,location_lat),location_lng=COALESCE($3::double precision,location_lng),location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=CASE WHEN $2::double precision IS NOT NULL THEN now() ELSE location_updated_at END,updated_at=now() WHERE id=$1`, [userId, lat, lng, locationAddress || '']);
+            // Keep other roles' identities unchanged. Update the shared display name only
+            // when it still equals the studio name deleted by the admin; the role-isolated
+            // photographer profile always receives the freshly entered editable name.
+            const updateSharedStudioName = Boolean(adminDeletedPhotographer && String(existing.name||'').trim()===adminDeletedPhotographer.name);
+            await c.query(`UPDATE users SET name=CASE WHEN $5::boolean THEN $6::text ELSE name END,mobile_verified_at=COALESCE(mobile_verified_at,now()),location_lat=COALESCE($2::double precision,location_lat),location_lng=COALESCE($3::double precision,location_lng),location_address=COALESCE(NULLIF($4,''),location_address),location_updated_at=CASE WHEN $2::double precision IS NOT NULL THEN now() ELSE location_updated_at END,updated_at=now() WHERE id=$1`, [userId, lat, lng, locationAddress || '', updateSharedStudioName, name]);
         }
         else {
             const uq = await c.query(`INSERT INTO users(name,mobile,password_hash,platform_role,force_password_change,active,mobile_verified_at,location_lat,location_lng,location_address,location_updated_at,photographer_enabled,photographer_joined_at) VALUES($1,$2,$3,'user',false,true,now(),$4,$5,$6,now(),true,now()) RETURNING id,name`, [name, mobile, String(challenge.password_hash), lat, lng, locationAddress || null]);
@@ -12407,8 +12421,10 @@ async function api(req, res, url) {
             // photographer account.  Keep the full signup form (address,
             // map location and birth date) for that mobile until activation.
             const photographerRows = rows.filter(r=>Boolean(r.photographer_enabled || r.photographer_profile_user_id || r.photographer_membership_exists || r.photographer_invite_redeemed));
-            const existing = photographerRows[0] || rows.find(r=>r.active) || null;
+            const existing = photographerRows[0] || rows.find(r=>r.active) || rows[0] || null;
             const adminDeletedPhotographer = await photographerAdminRemovalRecord(pool,existing);
+            if (adminDeletedPhotographer && existing.active !== true)
+                return sendJson(res,403,{error:'account_suspended'});
             const existingPhotographer = !adminDeletedPhotographer && existing && Boolean(existing.photographer_enabled || existing.photographer_profile_user_id || existing.photographer_membership_exists || existing.photographer_invite_redeemed) ? existing : null;
             // R96: identity fields can be split across legacy rows that share one mobile.
             // Prefer the selected photographer row, but fill blank studio/province/city/address
@@ -14343,6 +14359,8 @@ async function api(req, res, url) {
             return sendJson(res, e?.status || 409, { error: e?.message || 'mobile_ambiguous' });
         }
         const adminDeletedPhotographer = existing?.adminDeletedPhotographer || null;
+        if (adminDeletedPhotographer && existing.active !== true)
+            return sendJson(res,403,{error:'account_suspended'});
         const existingPhotographer = !adminDeletedPhotographer && existing?.existingPhotographer ? existing : null;
         if (existingPhotographer && inv.issuer_type === 'lab' && inv.issuer_lab_id) {
             const mq = await pool.query(`SELECT 1 FROM lab_memberships WHERE lab_id=$1 AND user_id=$2 AND role='customer' AND active=true LIMIT 1`, [inv.issuer_lab_id, existingPhotographer.id]);

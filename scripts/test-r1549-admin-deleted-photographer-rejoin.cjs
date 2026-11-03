@@ -45,3 +45,28 @@ test('audited deleted account preserves owner identity and prior name',async()=>
  const result=await f(db,{id:'u1',photographer_enabled:false,photographer_profile_user_id:null});
  assert.equal(result.userId,'u1');assert.equal(result.name,'نام قبلی');
 });
+
+test('inactive admin-deleted identity cannot become a duplicate account on rejoin',async()=>{
+ const start=api.indexOf('async function photographerIdentityByMobile('),end=api.indexOf('// Verified PhotoBridge accounts can accept',start);
+ const identity=vm.runInNewContext('('+api.slice(start,end).trim()+')',{
+    normalizeMobile:s=>s,
+    photographerAdminRemovalRecord:async(_,row)=>row.id==='deleted' ? {userId:'deleted',name:'عکاسی قبلی'} : null
+ });
+ const db={query:async()=>({rowCount:1,rows:[{id:'deleted',mobile:'09123456789',active:false,photographer_enabled:false,photographer_profile_user_id:null,photographer_invite_redeemed:false}]})};
+ const result=await identity(db,'09123456789');
+ assert.equal(result.id,'deleted');
+ assert.equal(result.existingPhotographer,false);
+ assert.equal(result.adminDeletedPhotographer.userId,'deleted');
+});
+test('inactive rejoin blocked at context, submit and OTP; editable name saved consistently',()=>{
+ const a=api.indexOf("if (req.method === 'GET' && (url.pathname === '/api/public/photographer-signup/context'");
+ const b=api.indexOf("const publicPhotographerInvite =",a);
+ assert.match(api.slice(a,b),/adminDeletedPhotographer && existing.active !== true/);
+ const c=api.indexOf("if (req.method === 'POST' && url.pathname === '/api/public/photographer-signup')");
+ const d=api.indexOf("if (req.method === 'POST' && url.pathname === '/api/public/photographer-signup/verify')",c);
+ assert.match(api.slice(c,d),/adminDeletedPhotographer && existing.active !== true/);
+ assert.match(api,/adminDeletedPhotographer && existing\?\.active !== true/);
+ assert.match(api,/const updateSharedStudioName = Boolean\(adminDeletedPhotographer/);
+ assert.match(api,/name=CASE WHEN \$5::boolean THEN \$6::text ELSE name END/);
+ assert.match(api,/passwordHash: existingPhotographer \? .* : String\(challenge.password_hash\)/);
+});

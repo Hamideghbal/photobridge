@@ -16,7 +16,7 @@ web globals, structuredClone and AbortSignal.any are supplied. Access helper
 bytecode and its checked bundled Java runtime target Java 8, with the existing
 Access library checksums preserved. UI hot updates and signed update trust stay.
 
-Build on Windows 10/11 x64 with Node 22: `npm ci`, `npm run dist:unsigned`.
+Build on Windows 10/11 x64 with Node 22 using `BUILD-WINDOWS.cmd` and the original publisher key. The builder installs/rebuilds the addon for Electron and runs tests under that same engine, not under the build host Node.
 The GitHub compatibility workflow runs regression tests on Node 16, packages on
 Node 22, then executes the actual packaged Electron 22 app with a temporary
 SQLite store and a real Chromium login render. The artifact is an unsigned test

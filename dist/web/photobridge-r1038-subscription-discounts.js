@@ -7,7 +7,7 @@
   const css=document.createElement('style');
   css.id='pbR1558GoldenSubscriptionDiscount';
   css.textContent=`
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{
       position:relative!important;display:flex!important;flex-direction:column!important;
       align-items:flex-start!important;justify-content:center!important;text-align:right!important;
       padding:12px 15px 12px 119px!important;min-height:114px!important;overflow:hidden!important;
@@ -15,25 +15,25 @@
       background:linear-gradient(155deg,#fff 2%,#fffaf0 100%)!important;
       box-shadow:0 4px 14px rgba(158,111,27,.06)!important;
     }
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan.selected{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan.selected{
       border-color:#70b5f8!important;box-shadow:0 0 0 2px rgba(63,142,240,.12),0 7px 20px rgba(158,111,27,.08)!important;
     }
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>span:first-child{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>span:first-child{
       color:#626f87!important;font-size:11px!important;font-weight:700!important;
       line-height:1.7!important;margin:0 0 5px!important;
     }
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>b{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>b{
       font-size:clamp(15px,1.15vw,21px)!important;font-weight:900!important;
       color:#1b293e!important;line-height:1.5!important;margin:0!important;
     }
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>small,
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>del:not(.pbR1038BeforePrice){display:none!important}
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>del.pbR1038BeforePrice{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>small,
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>del:not(.pbR1038BeforePrice){display:none!important}
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>del.pbR1038BeforePrice{
       display:block!important;font-size:11px!important;color:#98a2b3!important;
       text-decoration:line-through!important;text-decoration-thickness:1.2px!important;
       margin:3px 0 0!important;line-height:1.5!important;white-space:nowrap;
     }
-    .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{
+    html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{
       position:absolute!important;top:50%;left:13px;transform:translateY(-50%);direction:rtl;
       display:grid!important;place-items:center!important;gap:3px;
       width:91px;height:84px;box-sizing:border-box;pointer-events:none;
@@ -47,8 +47,10 @@
     .pbR1038LabDiscountDetails strong{display:block!important;font-size:22px!important;font-weight:950!important;line-height:1!important;color:#84510c!important;white-space:nowrap}
     .pbR1038LabDiscountDetails small{display:block!important;font-size:10px!important;font-weight:850!important;line-height:1.4!important;color:#865719!important;white-space:nowrap}
     @media(max-width:780px){
-      .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{padding-left:93px!important;min-height:104px!important}
-      .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{left:8px;width:74px;height:74px;border-radius:24px}
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{flex:1 1 225px!important;min-width:195px!important}
+
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{padding-left:93px!important;min-height:104px!important}
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{left:8px;width:74px;height:74px;border-radius:24px}
       .pbR1038LabDiscountDetails strong{font-size:19px!important}.pbR1038LabDiscountDetails small{font-size:9px!important}
     }
   `;
@@ -61,7 +63,7 @@
   }
   function paint(){
     queued=false;
-    const buttons=[...document.querySelectorAll('.labSubscriptionPanel .labPlanChoices>button')];
+    const buttons=[...document.querySelectorAll('html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button')];
     if(!buttons.length)return;
     if(!plans){void load();return}
     buttons.forEach((button,index)=>{

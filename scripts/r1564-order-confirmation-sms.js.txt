@@ -1,0 +1,18 @@
+// Explicit current-order consent. Claim the same row atomically so invoice/submit workers cannot double-send.
+export async function dispatchIntakeOrderSms({pool,sendSms,normalizeMobile},labId,orderId){
+ const q=await pool.query(`UPDATE lab_intake_invoice_sms AS pending SET status='dispatching',updated_at=now(),error=NULL
+  FROM orders o,users u,labs l
+  WHERE pending.order_id=$1 AND pending.lab_id=$2 AND pending.requested=true AND pending.status='pending'
+   AND o.id=pending.order_id AND o.lab_id=pending.lab_id AND o.customer_id=pending.customer_id
+   AND o.status NOT IN ('uploading','cancelled') AND u.id=o.customer_id AND l.id=o.lab_id
+  RETURNING o.number AS order_number,o.mode,u.mobile,pending.customer_id,l.name AS lab_name,l.sms_customer_notifications_allowed,EXISTS(SELECT 1 FROM lab_memberships m WHERE m.lab_id=o.lab_id AND m.user_id=o.customer_id AND m.role='customer' AND m.active=true) AS registered_customer`,[orderId,labId]);
+ const row=q.rows[0];if(!row)return intakeInvoiceSmsState(pool,labId,orderId);
+ try{
+  if(row.sms_customer_notifications_allowed!==true)throw Error('lab_sms_disabled');
+  const mobile=normalizeMobile(row.mobile);if(!/^09\d{9}$/.test(mobile))throw Error('invalid_sms_mobile');
+  const message=orderConfirmationSms(row.lab_name,row.order_number,row.mode);
+  const result=await sendSms({mobile,message,purpose:'lab_intake_order_confirmation',eventKey:'intake_order_confirmation',userId:row.customer_id,labId,...(row.registered_customer?{chargePhotographerId:row.customer_id}:{}),serviceKey:'sms_customer_notification',metadata:{orderId,orderNumber:row.order_number,payer:row.registered_customer?'photographer':'platform'}});
+  await pool.query("UPDATE lab_intake_invoice_sms SET status='sent',sms_reference=$3,sent_at=now(),updated_at=now() WHERE order_id=$1 AND lab_id=$2 AND status='dispatching'",[orderId,labId,String(result?.reference||'')||null]);
+ }catch(e){await pool.query("UPDATE lab_intake_invoice_sms SET status='failed',error=$3,updated_at=now() WHERE order_id=$1 AND lab_id=$2 AND status='dispatching'",[orderId,labId,String(e?.message||'sms_send_failed').slice(0,500)]);}
+ return intakeInvoiceSmsState(pool,labId,orderId);
+}

@@ -711,3 +711,7 @@ runR1314(process.execPath,['--test','scripts/test-r1552-archive-newest-first.cjs
 
 // R1563: stable discount seal and live Windows intake preregistration/SMS.
 await deployStep('./enable-r1563-intake-discount.mjs');
+
+// R1564: selectable plans, order SMS accounting and browser archive recovery.
+await deployStep('./enable-r1564-subscription-browser-recovery.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1564-core.cjs'],{stdio:'inherit'});

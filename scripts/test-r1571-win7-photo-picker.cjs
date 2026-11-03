@@ -13,11 +13,11 @@ test('Windows 7 copy uses conventional file input and never invokes move or dele
 test('manual intake distinguishes unsupported move from supported copy',()=>{
  const s=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
  assert(s.includes('R1571 Windows 7 manual photo picker'));
- assert(s.includes("choose.onclick=()=>selectPhotos('copy')"));
- assert(s.includes('movePhotos.hidden=true'));
- assert(s.includes('moveMore.hidden=true'));
+ assert(s.includes("const dialog=document.querySelector('.pb1137Intake')"));
+ assert(s.includes("label!=='انتقال عکس'"));
+ assert(s.includes('button.hidden=true;button.disabled=true'));
  assert(s.includes("typeof window.FileSystemFileHandle?.prototype?.remove==='function'"));
- assert(s.includes("const files=await window.pb1466IntakeMove.pick(mode)"));
+ assert(s.includes("new MutationObserver(records=>"));
 });
 test('web and native packages have same patched picker and correct hash manifests',()=>{
  const m=JSON.parse(fs.readFileSync('dist/web/lab-desktop-ui/manifest.json','utf8'));

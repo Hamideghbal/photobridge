@@ -7,6 +7,7 @@
  // available, and only actual conflict records surface a small corner flag.
  const style=document.createElement('style');
  style.textContent=`
+#pb1573NativeBackup{display:none!important}
 /* PB1528 contained intake and right-edge launch */
 html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch{grid-column:3!important;grid-row:1!important;justify-self:end!important;margin:0!important;order:0!important}
 html body .pb1137Intake,html body .pb1137Intake>form{box-sizing:border-box!important;min-width:0!important;overflow-x:hidden!important}

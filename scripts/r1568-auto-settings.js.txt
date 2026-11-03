@@ -44,3 +44,32 @@ function PB1568AutomationSettings(){
    e.jsx('button',{type:'button',disabled:busy,onClick:save,children:busy?'در حال ذخیره…':'ذخیره تنظیمات'})
  ]});
 }
+
+/* Manual download must honor the selected invoice timing as well. This path runs
+   after the existing verified receipt and downloaded-stage transition. */
+async function pb1568AfterManualDownload(orderId){
+ const settings=(await Me('/api/lab/automation')).settings;
+ if(settings?.invoiceTiming!=='after_verified_download')return;
+ let result;
+ try{result=await Me('/api/lab/orders/'+encodeURIComponent(orderId)+'/automation-invoice',{method:'POST',body:'{}'});}
+ catch(error){
+  const code=String(error?.data?.error||error?.message||'');
+  if(code==='invoice_pricing_required'){
+   if(window.pbNativeStorage&&settings.autoPrintMissingPriceTicket){
+    const response=await fetch('/desktop/thermal/print',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'ticket',orderId})});
+    if(!response.ok)console.warn('[PB1568] operator price ticket could not spool',response.status);
+   }
+   pb1547Notice('این سفارش تعرفه ناقص دارد. دانلود تأیید شد، اما فاکتور مالی تا تعیین قیمت توسط اپراتور صادر نمی‌شود.','warning');
+   return;
+  }
+  throw error;
+ }
+ if(!result?.invoice?.id)throw Error('invoice_missing_after_verified_download');
+ // The existing PDF helper uses the authoritative invoice snapshot and uploads
+ // the generated PDF. It does not issue a second invoice.
+ await pb1547CompletePdf(result.invoice,orderId,ai());
+ if(window.pbNativeStorage&&settings.autoPrintInvoice){
+  const response=await fetch('/desktop/thermal/print',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'invoice',orderId,invoiceId:result.invoice.id})});
+  if(!response.ok)pb1547Notice('فاکتور صادر شده، اما پرینت حرارتی نیازمند بررسی است.','warning');
+ }
+}

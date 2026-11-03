@@ -18687,6 +18687,8 @@ ${inviteUrl}`;
             }
         }
         const password = String(b.password || ''), confirmPassword = String(b.confirmPassword || ''), requestedName = String(b.name || '').trim(), province = String(b.province || '').trim(), city = String(b.city || '').trim(), location = optionalLatLng(b.locationLat, b.locationLng), locationAddress = String(b.locationAddress || '').trim().slice(0, 500);
+        const birthJalali = normalizeDigits(String(b.birthJalali || '')).trim();
+        if (!/^(13|14)\d{2}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/.test(birthJalali)) return sendJson(res, 400, { error: 'birth_date_required', message: 'تاریخ تولد شمسی معتبر را وارد کنید.' });
         if (!province || !city)
             return sendJson(res, 400, { error: 'location_required' });
         if (!isValidIranLocation(province, city))
@@ -18701,7 +18703,7 @@ ${inviteUrl}`;
         if (!name)
             return sendJson(res, 400, { error: 'invalid_fields' });
         try {
-            const challenge = await createSignupMobileChallenge('invite', mobile, { token, name, province, city, locationLat: location.lat, locationLng: location.lng, locationAddress, existingAccount: false, existingCredentialUserId: existingUser ? String(existingUser.id) : null }, password, req, Boolean(existingUser));
+            const challenge = await createSignupMobileChallenge('invite', mobile, { token, name, province, city, birthJalali, locationLat: location.lat, locationLng: location.lng, locationAddress, existingAccount: false, existingCredentialUserId: existingUser ? String(existingUser.id) : null }, password, req, Boolean(existingUser));
             return sendJson(res, 202, { ok: true, verificationRequired: true, existingAccount: false, ...challenge });
         }
         catch (e) {
@@ -18751,7 +18753,8 @@ ${inviteUrl}`;
                 await c.query(`UPDATE users SET mobile_verified_at=COALESCE(mobile_verified_at,now()),updated_at=now() WHERE id=$1`, [userId]);
             }
             else {
-                const location = optionalLatLng(p.locationLat, p.locationLng), name = String(p.name || '').trim(), province = String(p.province || '').trim(), city = String(p.city || '').trim(), locationAddress = String(p.locationAddress || '').trim().slice(0, 500);
+                const location = optionalLatLng(p.locationLat, p.locationLng), name = String(p.name || '').trim(), province = String(p.province || '').trim(), city = String(p.city || '').trim(), locationAddress = String(p.locationAddress || '').trim().slice(0, 500), birthJalali = normalizeDigits(String(p.birthJalali || '')).trim();
+                if (!/^(13|14)\d{2}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/.test(birthJalali)) throw Object.assign(new Error('birth_date_required'), { status: 400 });
                 if (!name || !isValidIranLocation(province, city) || location === null || location.lat === null || location.lng === null)
                     throw Object.assign(new Error('invalid_fields'), { status: 400 });
                 if (existingUser) {
@@ -18763,6 +18766,7 @@ ${inviteUrl}`;
                     userId = String(uq.rows[0].id);
                 }
                 profile = await ensurePhotographerProfile(c, { userId, studioName: name, passwordHash: String(challenge.password_hash), province, city, lat: location.lat, lng: location.lng, locationAddress });
+                await c.query(`UPDATE photographer_profiles SET birth_jalali=$2,updated_at=now() WHERE user_id=$1`, [userId,birthJalali]);
                 resolvedName = String(profile?.studio_name || name);
                 resolvedLocation = location;
                 resolvedLocationAddress = locationAddress;

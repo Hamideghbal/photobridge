@@ -726,3 +726,9 @@ runR1314(process.execPath,['--test','scripts/test-r1566-archive-revision.cjs'],{
 // R1567: native-only feature menu and measured low-end UI work reduction.
 await deployStep('./enable-r1567-native-performance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1567-native-requests.cjs'],{stdio:'inherit'});
+
+// R1568: guarded invoice-before-print and automatic verified downloads, OFF by default.
+// A newer native host is required before any silent thermal print can be enabled.
+await deployStep('./enable-r1568-auto-processing.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1568-auto-processing.cjs'],{stdio:'inherit'});
+

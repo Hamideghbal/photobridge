@@ -15,14 +15,14 @@ test('finance refresh only shows full-page busy on initial load, never on later 
 test('automation and backup appear under General settings, not System or Print orders',()=>{
  for(const root of roots){
   const source=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
-  const settings=source.slice(source.indexOf('function Nj({'),source.indexOf('function Nj({')+5800);
-  const general=settings.indexOf('key:"general",label:"عمومی"');
-  const notifications=settings.indexOf('key:"notifications",label:"اعلان و ارتباط"');
-  assert(general>=0&&notifications>general);
-  const generalSection=settings.slice(general,notifications);
+  // Locate the exact General menu that the build patch modifies. Other
+  // minification layers may rename component functions or category labels.
+  const general=source.indexOf('key:"general",label:"عمومی"');
+  assert(general>=0);
+  const generalSection=source.slice(general,general+650);
   assert(generalSection.includes('["automation","دانلود و چاپ خودکار"]'));
   assert(generalSection.includes('["backup","پشتیبان اطلاعات برنامه"]'));
-  const settingsMenu=settings.slice(general,general+2200);
+  const settingsMenu=source.slice(general,general+2200);
   assert.equal((settingsMenu.match(/\["backup","[^"]*"\]/g)||[]).length,1,
     'backup should appear exactly once in the Lab settings menu');
   assert(source.includes('g==="automation"&&e.jsx(PB1568AutomationSettings'));

@@ -1,0 +1,95 @@
+// Per-order disk capabilities stay local to this device, never synced as cloud paths.
+const pb1550Flights=new Map();
+function pb1550Key(detail){if(!detail?.order?.id)throw Error('order_storage_identity_missing');return 'pb1550:'+uh(detail.order.id);}
+async function pb1550Db(detail,value){
+ const db=await Ag(Iy+'_order_paths_v1');
+ try{return await new Promise((resolve,reject)=>{const tx=db.transaction(Zr,value===undefined?'readonly':'readwrite'),store=tx.objectStore(Zr),request=value===undefined?store.get(pb1550Key(detail)):store.put(value,pb1550Key(detail));let result;request.onsuccess=()=>{result=request.result};tx.oncomplete=()=>resolve(value===undefined?result:value);tx.onerror=tx.onabort=()=>reject(tx.error||request.error||Error('order_storage_not_saved'));});}finally{db.close();}
+}
+async function pb1550Serial(detail,work){const key=pb1550Key(detail),previous=pb1550Flights.get(key)||Promise.resolve();const run=previous.catch(()=>{}).then(work);pb1550Flights.set(key,run);try{return await run}finally{if(pb1550Flights.get(key)===run)pb1550Flights.delete(key);}}
+const pb1550Encode=handle=>handle.__pbNative?{native:true,rootId:handle.rootId,parts:[...handle.parts],kind:handle.kind||'directory',name:handle.name,displayPath:handle.displayPath}:handle;
+async function pb1550Invoke(action,payload){const result=await window.pbNativeStorage.invoke(action,payload);if(!result.ok)throw Object.assign(Error(result.error?.message||'order_folder_unavailable'),result.error);return result.value;}
+function pb1550Decode(saved){
+ if(!saved?.native)return saved;
+ const identity={rootId:saved.rootId,parts:[...saved.parts]},invoke=(action,extra={})=>pb1550Invoke(action,{...identity,...extra});
+ const permission=async()=>{try{return await invoke('permission')}catch{return 'denied'}};
+ const handle={...saved,__pbNative:true,queryPermission:permission,requestPermission:permission,isSameEntry:async other=>other?.rootId===saved.rootId&&JSON.stringify(other.parts)===JSON.stringify(saved.parts)};
+ if(saved.kind==='file')handle.getFile=async()=>{const stat=await invoke('stat'),chunks=[];for(let offset=0;offset<stat.size;offset+=1048576){const length=Math.min(1048576,stat.size-offset),bytes=await invoke('read',{offset,length});if(bytes.byteLength!==length)throw Error('local_file_changed');chunks.push(bytes);}return new File(chunks,saved.name,{lastModified:stat.lastModified});};
+ else{
+  const child=async(action,name,options={})=>pb1550Decode({native:true,...await invoke(action,{parts:[...saved.parts,name],create:options.create===true})});
+  handle.getDirectoryHandle=(name,options)=>child('directory',name,options);
+  handle.getFileHandle=(name,options)=>child('file',name,options);
+  handle.entries=async function*(){for(const[name,desc]of await invoke('entries'))yield[name,pb1550Decode({native:true,...desc})]};
+ }
+ // Native historical roots intentionally remain read-only; complete downloads need no writer.
+ handle.createWritable=async()=>{const id=await invoke('begin');return{write:async blob=>{const bytes=typeof blob==='string'?new TextEncoder().encode(blob):ArrayBuffer.isView(blob)?new Uint8Array(blob.buffer,blob.byteOffset,blob.byteLength):blob instanceof ArrayBuffer?new Uint8Array(blob):new Uint8Array(await blob.arrayBuffer());for(let offset=0;offset<bytes.length;offset+=1048576)await pb1550Invoke('write',{id,bytes:bytes.slice(offset,offset+1048576)});},close:()=>pb1550Invoke('close',{id}),abort:()=>pb1550Invoke('abort',{id})};};
+ return handle;
+}
+function pb1550LocalFile(detail,file){
+ const files=detail.order.localFiles;if(!Array.isArray(files)||!window.pbNativeStorage)return null;
+ const exact=files.find(f=>f.fileId&&String(f.fileId)===String(file.id));if(exact)return exact;
+ const meta=pb1450Meta(file,yc(detail.order.id)?.localFiles||{}),matches=files.filter(f=>Array.isArray(f.parts)&&f.parts.at(-1)===Ya(meta.original_name,'file')&&Number(f.bytes)===Number(meta.bytes));
+ return matches.length===1?matches[0]:null;
+}
+async function pb1550Probe(root,detail){
+ const state=yc(detail.order.id)||{},pathDate=state.pathDate||detail.order.downloaded_at||state.startedAt;
+ if(!pathDate||!detail.files?.length)return null;
+ const day=Ic(new Date(pathDate)),customer=Tg(detail.order),targets={};
+ try{for(const file of detail.files){let dir=root;for(const name of [day,customer,Uy(detail,file)])dir=await dir.getDirectoryHandle(Ya(name),{create:false});const meta=pb1450Meta(file,state.localFiles||{}),handle=await dir.getFileHandle(Ya(meta.original_name,'file'),{create:false}),info=await pb1450FileInfo(handle);if(!info.size||info.size!==Number(meta.bytes))return null;targets[String(file.id)]={dir:pb1550Encode(dir),day};}
+ return{version:1,root:pb1550Encode(root),targets,pathDate,customer,createdAt:new Date().toISOString()};}catch{return null;}
+}
+async function pb1550NativeLegacy(detail){
+ if(!window.pbNativeStorage||!detail.files?.length)return;
+ // HEAD asks the installed local host to locate and retain its existing disk descriptors.
+ // It neither downloads cloud bytes nor moves files to the new default.
+ try{for(const file of detail.files){const response=await fetch('/desktop/local-files/'+encodeURIComponent(detail.order.id)+'/'+encodeURIComponent(file.id),{method:'HEAD'});if(!response.ok||/text\/html/i.test(response.headers.get('content-type')||'')||Number(response.headers.get('content-length'))!==Number(file.bytes))return;}
+ const fresh=await Me('/api/lab/orders/'+encodeURIComponent(detail.order.id));if(fresh.order?.localFiles?.length===detail.files.length)detail.order.localFiles=fresh.order.localFiles;
+ }catch{}
+}
+async function pb1550Root(detail,choose=false,candidate){
+ if(!ai())throw Error('folder_picker_unsupported');
+ if(choose){const device=await Hu();if(device.registered&&!device.isThisDevice)throw Error('not_primary_download_device');}
+ return pb1550Serial(detail,async()=>{
+  const saved=await pb1550Db(detail);
+  if(saved){const root=pb1550Decode(saved.root);if(!await Vs(root))throw Error('پوشهٔ ثبت‌شدهٔ این سفارش در دسترس نیست؛ اتصال همان هارد و مجوز آن را بررسی کنید. مسیر پیش‌فرض جدید جایگزین آن نمی‌شود.');return root;}
+  const state=yc(detail.order.id)||{},legacy=!!(detail.order.downloaded_at||state.startedAt||state.localComplete);
+  let local=(detail.files||[]).map(file=>pb1550LocalFile(detail,file)).find(Boolean);
+  if(legacy&&!local&&window.pbNativeStorage){await pb1550NativeLegacy(detail);local=(detail.files||[]).map(file=>pb1550LocalFile(detail,file)).find(Boolean);}
+  let root;
+  if(local?.rootId)root=pb1550Decode({native:true,rootId:local.rootId,parts:[],kind:'directory'});
+  else root=candidate||await pb1550DefaultRoot(choose);
+  if(!root||!await Vs(root))throw Error('folder_permission_denied');
+  if(legacy&&!local){
+   let record=await pb1550Probe(root,detail);
+   if(!record&&choose&&!window.pbNativeStorage){root=await window.showDirectoryPicker({mode:'readwrite',id:'photobridge-order-folder'});record=await pb1550Probe(root,detail);}
+   if(!record)throw Error('پوشهٔ قبلی این سفارش پیدا نشد؛ برای اتصال دوباره، «بررسی و تکمیل دانلود» را بزنید و پوشهٔ اصلی قبلی را انتخاب کنید. مسیر پیش‌فرض تغییر نمی‌کند.');
+   await pb1550Db(detail,record);
+  }else await pb1550Db(detail,{version:1,root:pb1550Encode(root),targets:{},createdAt:new Date().toISOString()});
+  return root;
+ });
+}
+async function pb1550Target(candidate,detail,file){
+ const root=await pb1550Root(detail,false,candidate);
+ return pb1550Serial(detail,async()=>{
+  const saved=await pb1550Db(detail),key=String(file.id),local=pb1550LocalFile(detail,file),old=saved.targets[key];
+  if(old)return{root,dir:pb1550Decode(old.dir),day:old.day};
+  if(local?.rootId&&Array.isArray(local.parts)&&local.parts.length){
+   const dir=pb1550Decode({native:true,rootId:local.rootId,parts:local.parts.slice(0,-1),kind:'directory',name:local.parts.at(-2)});
+   saved.targets[key]={dir:pb1550Encode(dir),day:local.parts[0]};await pb1550Db(detail,saved);
+   return{root,dir,day:local.parts[0]};
+  }
+  const state=yc(detail.order.id)||{};
+  saved.pathDate||=state.pathDate||detail.order.downloaded_at||detail.order._local_download_started_at||state.startedAt||new Date().toISOString();
+  const day=Ic(new Date(saved.pathDate));saved.customer||=Tg(detail.order);
+  let dir=root;
+  for(const name of [day,saved.customer,Uy(detail,file)]){
+   try{dir=await dir.getDirectoryHandle(Ya(name),{create:false})}
+   catch(error){if(!pb1450Missing(error))throw error;dir=await dir.getDirectoryHandle(Ya(name),{create:true});}
+  }
+  saved.targets[key]={dir:pb1550Encode(dir),day};await pb1550Db(detail,saved);
+  return{root,dir,day};
+ });
+}
+// Preserve the existing device registration checks for new downloads.
+const pb1550DefaultRoot=pb1450Root;
+pb1450Root=async function(choose=false,detail){return detail?pb1550Root(detail,choose):pb1550DefaultRoot(choose)};
+window.pbLabLocalIntakeStorage.target=pb1550Target;

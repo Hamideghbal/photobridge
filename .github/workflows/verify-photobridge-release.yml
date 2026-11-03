@@ -144,7 +144,7 @@ jobs:
           /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1549-lab-entry-browser.cjs
+          node --test scripts/test-r1549-lab-entry-browser.cjs scripts/test-r1550-order-storage-browser.cjs
           node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full

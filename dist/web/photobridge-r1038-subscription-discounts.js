@@ -10,20 +10,20 @@
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{
       position:relative!important;display:flex!important;flex-direction:column!important;
       align-items:flex-start!important;justify-content:center!important;text-align:right!important;
-      padding:12px 15px 12px 119px!important;min-height:114px!important;overflow:hidden!important;
-      border-color:#eed48d!important;border-radius:12px!important;
-      background:linear-gradient(155deg,#fff 2%,#fffaf0 100%)!important;
-      box-shadow:0 4px 14px rgba(158,111,27,.06)!important;
+      padding:7px 11px 7px 84px!important;min-height:79px!important;overflow:hidden!important;
+      border-color:#e9d6a5!important;border-radius:9px!important;
+      background:linear-gradient(145deg,#fff 20%,#fffdf7 100%)!important;
+      box-shadow:0 2px 8px rgba(158,111,27,.035)!important;
     }
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan.selected{
       border-color:#70b5f8!important;box-shadow:0 0 0 2px rgba(63,142,240,.12),0 7px 20px rgba(158,111,27,.08)!important;
     }
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>span:first-child{
       color:#626f87!important;font-size:11px!important;font-weight:700!important;
-      line-height:1.7!important;margin:0 0 5px!important;
+      line-height:1.5!important;margin:0 0 2px!important;
     }
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>b{
-      font-size:clamp(15px,1.15vw,21px)!important;font-weight:900!important;
+      font-size:clamp(14px,1.05vw,19px)!important;font-weight:900!important;
       color:#1b293e!important;line-height:1.5!important;margin:0!important;
     }
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>small,
@@ -31,27 +31,27 @@
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan>del.pbR1038BeforePrice{
       display:block!important;font-size:11px!important;color:#98a2b3!important;
       text-decoration:line-through!important;text-decoration-thickness:1.2px!important;
-      margin:3px 0 0!important;line-height:1.5!important;white-space:nowrap;
+      margin:1px 0 0!important;line-height:1.35!important;white-space:nowrap;
     }
     html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{
-      position:absolute!important;top:50%;left:13px;transform:translateY(-50%);direction:rtl;
-      display:grid!important;place-items:center!important;gap:3px;
-      width:91px;height:84px;box-sizing:border-box;pointer-events:none;
-      border:1px solid #e9bb61;border-radius:26px 31px 24px 32px;
-      background:radial-gradient(circle at 30% 12%,#fff8de 0%,#ffe8a5 38%,#f2c66e 78%,#e6ad4a 100%);
-      box-shadow:inset 0 2px 3px rgba(255,255,255,.85),inset 0 -3px 5px rgba(173,107,18,.1),0 5px 15px rgba(174,119,25,.13);
+      position:absolute!important;top:50%;left:12px;transform:translateY(-50%);direction:rtl;
+      display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px;
+      width:62px;height:62px;box-sizing:border-box;pointer-events:none;
+      border:1px solid #e5bf74;border-radius:50%;
+      background:radial-gradient(circle at 30% 15%,#fff9e8 0%,#ffecbc 48%,#f5d791 100%);
+      box-shadow:inset 0 1px 2px rgba(255,255,255,.9),0 2px 6px rgba(174,119,25,.12);
       color:#825113!important;text-align:center!important;
     }
-    .pbR1038LabDiscountDetails::before{content:'✦';position:absolute;top:-9px;right:5px;font-size:18px;color:#dbac49;text-shadow:0 2px 2px #fff}
-    .pbR1038LabDiscountDetails::after{content:'✧';position:absolute;top:3px;right:-10px;font-size:14px;color:#e8bd64}
-    .pbR1038LabDiscountDetails strong{display:block!important;font-size:22px!important;font-weight:950!important;line-height:1!important;color:#84510c!important;white-space:nowrap}
-    .pbR1038LabDiscountDetails small{display:block!important;font-size:10px!important;font-weight:850!important;line-height:1.4!important;color:#865719!important;white-space:nowrap}
+    .pbR1038LabDiscountDetails::before{content:'';position:absolute;top:7px;left:18px;width:20px;height:6px;border-radius:100%;background:rgba(255,255,255,.45)}
+    .pbR1038LabDiscountDetails::after{content:none}
+    .pbR1038LabDiscountDetails strong{display:block!important;font-size:17px!important;font-weight:900!important;line-height:1!important;color:#84510c!important;white-space:nowrap}
+    .pbR1038LabDiscountDetails small{display:block!important;font-size:8px!important;font-weight:800!important;line-height:1.4!important;color:#865719!important;white-space:nowrap}
     @media(max-width:780px){
-      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{flex:1 1 225px!important;min-width:195px!important}
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{flex:1 1 175px!important;min-width:160px!important}
 
-      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{padding-left:93px!important;min-height:104px!important}
-      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{left:8px;width:74px;height:74px;border-radius:24px}
-      .pbR1038LabDiscountDetails strong{font-size:19px!important}.pbR1038LabDiscountDetails small{font-size:9px!important}
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan{padding-left:70px!important;min-height:72px!important}
+      html body #root .labRoleWorkspace .labSubscriptionPanel .labPlanChoices>button.pbR1038DiscountedPlan .pbR1038LabDiscountDetails{left:7px;width:53px;height:53px;border-radius:50%}
+      .pbR1038LabDiscountDetails strong{font-size:15px!important}.pbR1038LabDiscountDetails small{font-size:7px!important}
     }
   `;
   document.head.appendChild(css);

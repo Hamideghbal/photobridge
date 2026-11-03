@@ -3,7 +3,7 @@
 const rootId='pb1568-automation-settings';
 let cached=null,loading=false;
 const api=async(method='GET',body)=>{
- const response=await fetch('/api/lab/automation-settings',{method,credentials:'include',cache:'no-store',headers:{'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ const response=await fetch(window.pbNativeStorage?'/api/lab/automation-settings/download':'/api/lab/automation-settings',{method,credentials:'include',cache:'no-store',headers:{'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
  const json=await response.json().catch(()=>({}));
  if(!response.ok)throw Error(json.error||'خطا در دریافت یا ذخیره تنظیمات');return json.settings;
 };

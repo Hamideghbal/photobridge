@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/web/assets/index-UIRefine-v655-r84.js';
 let source=fs.readFileSync(path,'utf8');
+// The newer backup tab is a separate feature. Temporarily normalize the old
+// category layout so the R1177 legacy transform remains deterministic, then
+// restore the backup tab without altering the historical R1177 test contracts.
+const backupTab='["backup","پشتیبان اطلاعات سایت"]';
+const hasBackupTab=source.includes(backupTab);
 if(!source.includes('pb1177LedgerDetails')){
  // R1303: R1301 prebuilt bundles already include Site under General. The
  // legacy stage needs its original shape; R1301 restores Site after grouping.
@@ -14,6 +19,13 @@ if(!source.includes('pb1177LedgerDetails')){
  };
  replace('items:[["general","عمومی و اعلان‌ها"],["hours","ساعت کاری"]]',
   'items:[["general","عمومی و اعلان‌ها"],["hours","ساعت کاری"],["sms","پیامک مشتریان"],["windowsAlert","هشدار ویندوز"],["snappbox","اسنپ و ارسال"]]');
+ // R1561: R1560 appends the browser-backup tab to the legacy system category.
+ // Strip just that addition before applying the old exact-match migration.
+ if(hasBackupTab){
+  const legacySystem='{key:"system",label:"سیستم و ارسال",hint:"فایل و تحویل",items:[["windowsAlert","هشدار ویندوز"],["local","مسیر ذخیره روی هارد"],["snappbox","اسنپ و ارسال"],'+backupTab+']}';
+  const previousSystem='{key:"system",label:"سیستم و ارسال",hint:"فایل و تحویل",items:[["windowsAlert","هشدار ویندوز"],["local","مسیر ذخیره روی هارد"],["snappbox","اسنپ و ارسال"]]}';
+  if(source.includes(legacySystem))source=source.replace(legacySystem,previousSystem);
+ }
  replace('{key:"notifications",label:"اعلان و ارتباط",hint:"پیام و هشدار",items:[["sms","پیامک مشتریان"]]},{key:"system",label:"سیستم و ارسال",hint:"فایل و تحویل",items:[["windowsAlert","هشدار ویندوز"],["local","مسیر ذخیره روی هارد"],["snappbox","اسنپ و ارسال"]]}',
   '{key:"local",label:"مسیر ذخیره روی هارد",hint:"ذخیره فایل",items:[["local","مسیر ذخیره روی هارد"]]}');
  replace('p&&(t!=="lab"||w!=="invoices")&&e.jsx("div",{className:"financeSummary accountingSummary financeSummaryCompact"',
@@ -29,6 +41,13 @@ if(!source.includes('pb1177LedgerDetails')){
  const point='e.jsx(cg,{page:Y,pages:dt,total:st.length,pageSize:N,onPage:Re})]}),t==="lab"&&e.jsxs("section",{className:"card customerDiscountSettings"';
  const detail='e.jsx(cg,{page:Y,pages:dt,total:st.length,pageSize:N,onPage:Re})]}),t==="lab"&&_pb1177StmtMode==="detailed"&&e.jsxs("section",{className:"card pb1177LedgerDetails",children:[e.jsx("h3",{children:"جزئیات فاکتورهای این صفحه"}),Pt.filter(Je=>Je.reference_type==="invoice").map(Je=>{const item=r.find(Ot=>Ot.document_type==="invoice"&&String(Ot.id)===String(Je.reference_id));const rows=window.pb1176Finance?.items(item)||[];return e.jsxs("div",{className:"pb1177LedgerInvoice",children:[e.jsxs("header",{children:[e.jsx("b",{children:"فاکتور #"+V(item?.number||Je.invoice_number||"")}),e.jsx("small",{children:Je.description||""}),e.jsx("strong",{children:Xe(item?.total||Je.debit)})]}),e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"شرح / سایز"}),e.jsx("th",{children:"تعداد"}),e.jsx("th",{children:"فی واحد"}),e.jsx("th",{children:"جمع"})]})}),e.jsx("tbody",{children:rows.length?rows.map((Ot,At)=>e.jsxs("tr",{children:[e.jsx("td",{children:Ot.description||Ot.sizeLabel||Ot.printSize||"خدمت"}),e.jsx("td",{children:V(Ot.quantity||Ot.copies||1)}),e.jsx("td",{children:Xe(Ot.unitPrice)}),e.jsx("td",{children:Xe(Ot.lineTotal||Ot.total)})]},At)):e.jsx("tr",{children:e.jsx("td",{colSpan:4,children:"ریز اقلام این فاکتور موجود نیست."})})})]})]},Je.id)}),!Pt.some(Je=>Je.reference_type==="invoice")&&e.jsx("p",{children:"در این صفحه فاکتوری برای نمایش جزئیات وجود ندارد."})]}),t==="lab"&&e.jsxs("section",{className:"card customerDiscountSettings"';
  replace(point,detail);
+ if(hasBackupTab){
+  // Preserve the existing R1177 "local" category byte-for-byte for regression
+  // tests and follow-up transforms, while adding the backup tab as its own group.
+  const local='{key:"local",label:"مسیر ذخیره روی هارد",hint:"ذخیره فایل",items:[["local","مسیر ذخیره روی هارد"]]}';
+  const backup='{key:"backup",label:"پشتیبان اطلاعات سایت",hint:"خروجی سایت",items:['+backupTab+']}';
+  if(!source.includes(backup))replace(local,local+','+backup);
+ }
  fs.writeFileSync(path,source);
 }
 const htmlFile='dist/web/index.html';let html=fs.readFileSync(htmlFile,'utf8');

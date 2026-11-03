@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const root=process.env.PB_TEST_ROOT||process.cwd(),source=fs.readFileSync(path.join(root,'dist/web/assets/index-UIRefine-v655-r84.js'),'utf8');
+function extract(name,end){const a=source.indexOf('async function '+name+'('),b=source.indexOf(end,a);assert(a>=0&&b>a);return source.slice(a,b)}
+for(const local of [false,true])for(const race of [false,true])test(`archive ${local?'local copy':'server download'} uses receipt revision and respects concurrent edits: race=${race}`,async()=>{
+ const events=[],id='new',order={id,document_revision:3},files=[{id:'file',original_name:'a.jpg',bytes:3}];let revision=3,finalized=false;
+ const ctx={window:{},ai:()=>true,Me:async()=>({order:{...order},files}),pb1451ReadArchive:async()=>local?Object.assign([{meta:files[0],file:{size:3}}],{localCount:1}):null,pb1450Root:async()=>({}),pb1550Root:async()=>({}),pb1450Code:e=>e.message,Dg:async()=>{events.push('download');return{done:1}},hr(){},pb1450Target:async()=>({dir:{}}),jc:async()=>events.push('copy'),pb1450Verify:async()=>({complete:true}),pb1450Save(){},pb1451AcknowledgeDownload:async()=>{events.push('receipt');revision++;const receipt={order:{...order,document_revision:revision}};if(race)revision++;return receipt},pb1451LiveRecovery:async(url,body,method)=>{if(method==='PATCH'){events.push('status');assert.equal(body.expectedRevision,4);if(body.expectedRevision!==revision)throw Error('shared_document_changed');return{order:{...order,status:'downloaded'}}}if(url.includes('recovery-finalize'))finalized=true;return{order:{...order},file:{id:'file'},fileCount:1}}};
+ vm.createContext(ctx);vm.runInContext(extract('pb1451RestoreLocal','\nasync function pb1451RecoverOrder')+'\n'+extract('pb1451RecoverOrder','\nfunction pb1451RecoveryMessage'),ctx);
+ const run=()=>ctx.pb1451RecoverOrder({order:{id:'old'},files},false,'',()=>{});
+ if(race)await assert.rejects(run(),e=>e.message==='shared_document_changed'&&e.recoveryOrder.id===id);else assert.equal((await run()).order.status,'downloaded');
+ assert.deepEqual(events,[local?'copy':'download','receipt','status']);assert.equal(finalized,local);
+});

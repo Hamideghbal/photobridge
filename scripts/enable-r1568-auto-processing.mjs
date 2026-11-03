@@ -48,8 +48,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   source+='\n/* R1568 automation settings */\n'+read('scripts/r1568-auto-settings.js.txt')+'\n';
  }
  if(root.endsWith('lab-desktop-ui')&&!source.includes('/* R1568 native auto worker */')){
-  source=once(source,"if (response.pbFallbackOriginal) alert(","if (response.pbFallbackOriginal && !options.silent) alert(",'no modal fallback');
-  source=once(source,"alreadyComplete:!force && already.size===files.length}","alreadyComplete:!force && already.size===files.length,fallbackUsed:false}",'verified download return shape');
+  source=once(source,"let done = force ? 0 : report.valid, bytes = force ? 0 : report.loadedBytes;",
+    "let done = force ? 0 : report.valid, bytes = force ? 0 : report.loadedBytes;let fallbackUsed=false;",'native fallback tracker');
+  const fallback=/if \\(response\\.pbFallbackOriginal\\) alert\\(([^;]+)\\);/;
+  if(!fallback.test(source))throw Error('R1568 missing native original fallback warning');
+  source=source.replace(fallback,'if (response.pbFallbackOriginal) {fallbackUsed=true;if(!options.silent)alert($1);}');
+  source=once(source,"alreadyComplete:!force && already.size===files.length}","alreadyComplete:!force && already.size===files.length,fallbackUsed}",'verified download return shape');
   // A fallback original may be valid but must not silently move through print production.
   // The caller probes conversion statuses first in future native runtime upgrades.
   source+='\n/* R1568 native auto worker */\n'+read('scripts/r1568-native-worker.js.txt')+'\n';

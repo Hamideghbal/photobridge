@@ -8,7 +8,7 @@ if(!s.includes(marker)){
  const anchor="        if (req.method === 'GET' && url.pathname === '/api/lab/orders') {";
  const route=`
         ${marker}
-        if (url.pathname === '/api/lab/automation-settings') {
+        if (url.pathname === '/api/lab/automation-settings' || url.pathname === '/api/lab/automation-settings/download') {
             if (req.method === 'GET')
                 return sendJson(res,200,{settings:await readLabAutomation(pool,labId)});
             if (req.method === 'PUT') {

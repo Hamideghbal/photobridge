@@ -1,7 +1,5 @@
 name: Build Lab 1.0.87 thermal Windows candidate
 on:
-  push:
-    branches: [fix/lab-1.0.87-backup-menu]
   workflow_dispatch:
 permissions:
   contents: read

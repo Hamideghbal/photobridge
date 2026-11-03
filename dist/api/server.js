@@ -6489,7 +6489,9 @@ async function completePublicPhotographerSignupVerification(challengeId, code, w
         }
         const rawLat = Number(p.locationLat), rawLng = Number(p.locationLng), province = String(p.province || '').trim(), city = String(p.city || '').trim();
         let name = String(p.name || '').trim().slice(0, 140), lat = Number.isFinite(rawLat) ? rawLat : null, lng = Number.isFinite(rawLng) ? rawLng : null, locationAddress = String(p.locationAddress || '').trim().slice(0, 500);
-        const wasPhotographer = Boolean(existingPhotographer);
+        // Rejoining after admin deletion is a full form enrollment, not a first-time referral.
+        // Preserve the historic photographer classification for rewards and commission safety.
+        const wasPhotographer = Boolean(existingPhotographer || adminDeletedPhotographer);
         if (existingPhotographer) {
             name = String(existingPhotographer.photographer_name || existingPhotographer.name || name || 'عکاس').trim().slice(0, 140);
             if (lat === null && existingPhotographer.photographer_location_lat != null)

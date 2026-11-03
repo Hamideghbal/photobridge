@@ -70,3 +70,12 @@ test('inactive rejoin blocked at context, submit and OTP; editable name saved co
  assert.match(api,/name=CASE WHEN \$5::boolean THEN \$6::text ELSE name END/);
  assert.match(api,/passwordHash: existingPhotographer \? .* : String\(challenge.password_hash\)/);
 });
+
+test('rejoined photographers are historic members and do not receive first-time referral rewards',()=>{
+ const start=api.indexOf('async function completePublicPhotographerSignupVerification(');
+ const end=api.indexOf('async function ',start+15);
+ const block=api.slice(start,end>start?end:undefined);
+ assert.match(block,/const wasPhotographer = Boolean\(existingPhotographer \|\| adminDeletedPhotographer\)/);
+ assert.match(block,/commissionStatus = wasPhotographer \? 'not_applicable' : 'pending'/);
+ assert.match(block,/recordPhotographerInviteRedemptionPostCommit\(postCommit.inv, postCommit.userId, postCommit.mobile, postCommit.reusedExisting, postCommit.wasPhotographer\)/);
+});

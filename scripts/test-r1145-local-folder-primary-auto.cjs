@@ -4,9 +4,35 @@ const fs=require('node:fs');
 const source=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
 const start=source.indexOf('function Xj(){');
 assert(start>0,'lab local-folder settings view must exist');
+// R1395 replaced the legacy local-folder picker with a paired browser/Windows
+// folder identity. The old handler is no longer reachable once Xj delegates to
+// PB1395StoragePanel. Preserve legacy checks only on legacy builds; on current
+// builds run the active pairing security regression suite instead.
+const pairedPanel=source.includes('function Xj(){return e.jsx(PB1395StoragePanel,{})}');
+if(pairedPanel){
+ test('active R1395 picker requires permission, server pairing and folder-ID match before saving',()=>{
+  assert(source.includes('/* PB1395 folder pairing */'),'generated Lab UI must include the active R1395 pairing extension');
+  assert(source.includes('pb1395GuardRoot'),'generated Lab UI must enforce the paired folder guard');
+  const pairedSource=fs.readFileSync('scripts/r1395-storage-panel.js','utf8');
+  const begin=pairedSource.indexOf('async function pb1395Choose(){');
+  const end=pairedSource.indexOf('function PB1395StoragePanel()',begin);
+  assert(begin>=0&&end>begin,'active paired picker must exist');
+  const picker=pairedSource.slice(begin,end);
+  assert.match(picker,/if\(!await Vs\(root\)\)throw Error/);
+  assert.match(picker,/const pairFolderId=await pb1395FolderId\(root,true\)/);
+  assert.match(picker,/if\(!state\.paired\|\|!state\.isThisDevice\|\|state\.folderId!==pairFolderId\)throw Error/);
+  assert(picker.indexOf('await Oy(root)')>picker.indexOf('if(!state.paired'), 'never persist a folder before server confirmation');
+  const guard=source.slice(source.indexOf('async function pb1395GuardRoot('));
+  assert.match(guard,/if\(!target\.isThisDevice\)return null/);
+  assert.match(guard,/pb1395FolderId\(root\)===target\.folderId\?root:null/);
+ });
+ // Exercise current access-control, pairing, stale folder, cancel and marker
+ // persistence flows, not merely a snapshot of old minified variable names.
+ require('./test-r1395-storage-pair.cjs');
+}else{
 const selectStart=source.indexOf('const T=async()=>',start);
 const selectEnd=source.indexOf(',k=async()=>',selectStart);
-assert(selectStart>start&&selectEnd>selectStart,'folder picker click handler found');
+assert(selectStart>start&&selectEnd>selectStart,'folder picker click handler found: '+JSON.stringify({selectStart,selectEnd,snippet:source.slice(start,start+1800)}));
 const selection=source.slice(selectStart,selectEnd);
 const mountSelect=(deps)=>Function('no','vc','a','r','p','h','Hu','alert',selection+';return T;')(
  deps.no,deps.vc,deps.setRoot,deps.setPermission,deps.setDevice,deps.setBusy,deps.fetchDevice,deps.alert);
@@ -56,3 +82,5 @@ test('picker help does not demand a second manual primary-device action',()=>{
  assert.doesNotMatch(settings,/onClick:E,children:/);
  assert.match(settings,/با انتخاب پوشه روی هارد، همین کامپیوتر خودکار/);
 });
+
+}

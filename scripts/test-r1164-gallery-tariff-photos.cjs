@@ -69,5 +69,5 @@ test('desktop gallery photo totals render circular badges and store-style transi
  assert.match(headerCss,/transition:transform \.28s cubic-bezier/);
  assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1165/);
  assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1165/);
- assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&wallet=r1238&cards=r1164/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159(?=[^"\s]*&wallet=r1238)(?=[^"\s]*&cards=r1333)/);
 });

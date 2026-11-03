@@ -21,7 +21,8 @@ test('R1294 keeps authenticated customer-account endpoints and keeps details bes
  assert(server.includes('handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson'));
  assert(server.includes("from './lab-manual-customer-controls.js'"));
  assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
- assert.match(html,/photobridge-r1137-lab-local-intake\.js\?v=r(?:1365|1367)/);
+ // Later native-intake releases intentionally rotate this cache-bust token.
+ assert.match(html,/<script\b[^>]*\bsrc="\/photobridge-r1137-lab-local-intake\.js\?v=r[0-9]+[^"<>]*"[^>]*><\/script>/);
 });
 function setup({owner=true,balance=50000,smsRecent=false,member=true,primary=true,invoiceFound=true}={}){
  let current=balance;const calls=[],answers=[],journals=[],sms=[];

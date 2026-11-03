@@ -309,7 +309,7 @@ await deployStep("./enable-r1344-gallery-create-pricing.mjs");
 // to the desktop Electron icon.
 await deployStep("./enable-r1359-mobile-blue-launch.mjs");
 console.log("[R1359] START mobile PWA blue brand regression tests");
-runR1314(process.execPath, ["--test", "scripts/test-r1359-mobile-blue-launch.cjs", "scripts/test-r1222-mobile-brand.cjs"], { stdio: "inherit" });
+runR1314(process.execPath, ["--test", "scripts/test-r1359-mobile-blue-launch.cjs", "scripts/test-r1222-mobile-brand.cjs"], { stdio: "inherit", env: { ...process.env, PB_TEST_PWA_REVISION: "r1359" } });
 console.log("[R1359] OK mobile PWA blue brand regression tests");
 await deployStep("./enable-r1361-mobile-startup-caption.mjs");
 console.log("[R1361] START readable mobile launch tests");
@@ -689,3 +689,7 @@ await deployStep('./enable-r1546-mapped-order-invoice.mjs');
 // Delivered to browser and Windows Lab UI hot-update package with integrity checks.
 await deployStep("./enable-r1547-invoice-download-fast-ready.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1547-invoice-download-fast-ready.cjs"],{stdio:"inherit"});
+
+// R1548: Windows Lab only; do not change website navigation or authentication.
+await deployStep("./enable-r1548-native-navigation.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1548-native-navigation.cjs"],{stdio:"inherit"});

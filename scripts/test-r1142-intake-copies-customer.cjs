@@ -1,8 +1,14 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
 const source=fs.readFileSync('dist/api/server.js','utf8');
-const routeStart=source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')");
+// The R1467 Windows live/manual intake alias serves the same guarded handler.
+// Test both its source form (before the production build) and its generated form
+// (after R1467), without accepting an unrelated route or disabling any checks.
+const primaryRoute="if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')";
+const liveRoute="if (req.method === 'POST' && ['/api/lab/delegated-orders','/api/lab/delegated-orders/download'].includes(url.pathname))";
+const routeStart=source.indexOf(liveRoute)>=0?source.indexOf(liveRoute):source.indexOf(primaryRoute);
 const routeEnd=source.indexOf('const delegatedFiles =',routeStart);
-assert(routeStart>=0&&routeEnd>routeStart,'delegated-order request handler must be extracted forward from its own route');
+assert(routeStart>=0&&routeEnd>routeStart,'delegated-order request handler must be extracted forward from its own route (normal or R1467 live alias)');
+assert(source.slice(routeStart,routeEnd).includes('PB1142 optional mobile-only customer'),'opening-debt guard must remain in the delegated handler');
 const create=source.slice(routeStart,routeEnd);
 for(const scenario of ['invitation','no-sms','replay','invalid-debt','existing-debt'])test(`mobile-only delegated customer: ${scenario}`,async()=>{
  const queries=[],ledger=[],sms=[],response=[];const customer='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

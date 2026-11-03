@@ -42,7 +42,7 @@ test('gallery studio image alone invokes existing file input and the password is
  assert.match(fields,/children:\["رمز",e\.jsx\("input"/);
  assert.match(fields,/رمز قبلی به‌صورت امن نگهداری می‌شود و قابل نمایش نیست/);
  assert.doesNotMatch(fields,/رمز جدید \(اختیاری\)/);
- assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159&wallet=r1238&cards=r1164/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159(?=[^"\s]*&wallet=r1238)(?=[^"\s]*&cards=r1333)/);
  assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1165/);
 });
 

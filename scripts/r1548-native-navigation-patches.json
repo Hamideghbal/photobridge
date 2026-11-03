@@ -1,0 +1,62 @@
+[
+  [
+    "Ke=window.open(Ge,\"_blank\");if(Ke){try{Ke.opener=null}catch{}return!0}return alert(\"مرورگر باز شدن اسنپ را مسدود کرده است. اجازه Pop-up را برای PhotoBridge فعال کن و دوباره بزن.\"),!1",
+    "Ke=window.open(Ge,\"_blank\",\"noopener,noreferrer\");return!0"
+  ],
+  [
+    "M=async()=>{w()&&(await p(T,\"مبدأ\"),F())}",
+    "M=()=>{if(!w())return;void p(y,\"GPS مبدأ\");F()}"
+  ],
+  [
+    "e.jsx(\"button\",{type:\"button\",className:\"primaryCopy\",onClick:()=>p(T,\"مبدأ\"),children:l===\"مبدأ\"?\"کپی شد ✓\":\"کپی آدرس\"}),",
+    ""
+  ],
+  [
+    "e.jsx(\"button\",{type:\"button\",className:\"primaryCopy\",onClick:()=>p(k,\"مقصد\"),children:l===\"مقصد\"?\"کپی شد ✓\":\"کپی آدرس\"}),",
+    ""
+  ],
+  [
+    "e.jsx(\"button\",{type:\"button\",onClick:B,children:l===\"مسیر کامل\"?\"مسیر کپی شد ✓\":\"کپی کل مسیر\"}),",
+    ""
+  ],
+  [
+    "PhotoBridge فقط متن خالص آدرس یا GPS را کپی می‌کند",
+    "PhotoBridge فقط مختصات GPS را کپی می‌کند"
+  ],
+  [
+    "children:\"کپی مبدأ\"",
+    "children:\"کپی GPS مبدأ\""
+  ],
+  [
+    "children:\"آدرس لابراتوار آماده است\"",
+    "children:\"GPS لابراتوار آماده است\""
+  ],
+  [
+    "children:\"مبدأ را Paste کن\"",
+    "children:\"GPS مبدأ را Paste کن\""
+  ],
+  [
+    "children:\"کپی مقصد\"",
+    "children:\"کپی GPS مقصد\""
+  ],
+  [
+    "children:\"برگرد و مقصد عکاسی را کپی کن\"",
+    "children:\"برگرد و GPS مقصد را کپی کن\""
+  ],
+  [
+    "children:S?\"کپی مبدأ + باز کردن اسنپ\":\"بررسی مسیر\"",
+    "children:S?\"کپی GPS مبدأ + باز کردن اسنپ\":\"بررسی مسیر\""
+  ],
+  [
+    "href:\"/lab/site-editor\",children:\"ویرایش دیداری سایت\"",
+    "href:\"https://photobridge.ir/lab/site-editor\",target:\"_blank\",rel:\"noopener noreferrer\",title:\"ویرایش سایت در مرورگر\",children:\"ویرایش دیداری سایت\""
+  ],
+  [
+    "!k&&E&&e.jsx(\"a\",{href:\"/photographer\",children:\"ورود عکاس / آتلیه\"}),",
+    ""
+  ],
+  [
+    "!k&&E&&e.jsx(\"a\",{href:\"/rental\",children:\"ورود فروشگاه\"}),",
+    ""
+  ]
+]

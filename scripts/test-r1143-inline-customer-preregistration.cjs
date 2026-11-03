@@ -95,7 +95,12 @@ test('bootstrap and repeat invoices can see the pending membership without activ
  assert.match(bootstrap,/pending_i.target_name/);
  assert.match(bootstrap,/pp.studio_name/);
  assert.match(bootstrap,/i.active=true AND i.uses=0/);
- const create=source.slice(source.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')"),source.indexOf('const delegatedFiles ='));
+ const normalRoute="if (req.method === 'POST' && url.pathname === '/api/lab/delegated-orders')";
+ const liveRoute="if (req.method === 'POST' && ['/api/lab/delegated-orders','/api/lab/delegated-orders/download'].includes(url.pathname))";
+ const createStart=source.indexOf(liveRoute)>=0?source.indexOf(liveRoute):source.indexOf(normalRoute);
+ const createEnd=source.indexOf('const delegatedFiles =',createStart);
+ assert(createStart>=0&&createEnd>createStart,'delegated create handler must be found in its normal or R1467 live form');
+ const create=source.slice(createStart,createEnd);
  assert.match(create,/m.active=true OR EXISTS/);
  assert.match(create,/i.target_mobile=u.mobile/);
  assert(!ui.includes('const newFields='));

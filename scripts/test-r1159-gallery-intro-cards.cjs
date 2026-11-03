@@ -34,28 +34,21 @@ test('all gallery-card action counts have gap-free layouts',()=>{
 });
 
 test('gallery card uses two exact action rows with icon-only deletion',()=>{
- const at=ui.indexOf('className:"clientGalleryCardActions pb1160GalleryActions"');
- assert(at>=0,'gallery action group exists');
- const cardEnd=ui.indexOf(']})]})',at);
- assert(cardEnd>at,'gallery action rows close correctly');
- const card=ui.slice(at,cardEnd+6);
- const topAt=card.indexOf('className:"pb1161GalleryTopRow"');
- const bottomAt=card.indexOf('className:"pb1161GalleryBottomRow"');
+ // R1332 keeps all five actions in a refined primary/secondary two-row layout.
+ const at=ui.indexOf('className:"clientGalleryCardActions pb1160GalleryActions pb1332Actions"');
+ const end=ui.indexOf(']},L.id)',at);
+ assert(at>=0&&end>at,'gallery action group exists');
+ const card=ui.slice(at,end),topAt=card.indexOf('className:"pb1332PrimaryRow"'),bottomAt=card.indexOf('className:"pb1332SecondaryRow"');
  assert(topAt>=0&&bottomAt>topAt,'two separate action rows are present');
  const top=card.slice(topAt,bottomAt),bottom=card.slice(bottomAt);
- assert.equal(top.split('e.jsx("button"').length-1,3,'top row contains exactly three buttons');
- assert.equal(bottom.split('e.jsx("button"').length-1,2,'bottom row contains exactly two buttons');
- for(const token of ['PB1112publish(L)','onClick:()=>I(L.id)','className:"pbActionButton pb1160GalleryDelete"','aria-label":`حذف گالری','pb1113GalleryConfirm','method:"DELETE"','children:e.jsx("svg"']){
-   assert.ok(top.includes(token),'missing upper action: '+token);
- }
- assert.ok(!top.includes('title:"حذف گالری"'),'no delete tooltip or visible caption');
- assert.ok(bottom.includes('children:"کپی لینک"'));
- assert.ok(bottom.includes('children:"نمایش مشتری"'));
- assert.ok(bottom.indexOf('children:"کپی لینک"')<bottom.indexOf('children:"نمایش مشتری"'));
- assert.ok(css.includes('.pb1161GalleryTopRow{'));
- assert.ok(css.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px!important'));
- assert.ok(css.includes('.pb1161GalleryBottomRow{'));
- assert.ok(css.includes('grid-template-columns:repeat(2,minmax(0,1fr))!important'));
- assert.ok(html.includes('gallery-intro-cards.css?v=r1159&cards=r1161'));
- assert.ok(html.includes('index-UIRefine-v655-r84.js?v=r1159&wallet=r1238&cards=r1164'));
+ assert.equal(top.split('e.jsx("button"').length-1,2,'primary row contains manage and preview');
+ assert.equal(bottom.split('e.jsx("button"').length-1,3,'secondary row contains toggle, copy and deletion');
+ for(const token of ['onClick:()=>I(L.id)','children:"نمایش مشتری"'])assert(top.includes(token),token);
+ for(const token of ['PB1112publish(L)','children:"کپی لینک"','className:"pbActionButton pb1160GalleryDelete"','aria-label":`حذف گالری','pb1113GalleryConfirm','method:"DELETE"','children:e.jsx("svg"'])assert(bottom.includes(token),token);
+ assert(!bottom.includes('title:"حذف گالری"'),'no delete tooltip or visible caption');
+ const refinedCss=fs.readFileSync('dist/web/photobridge-r1332-gallery-cards.css','utf8');
+ assert.match(refinedCss,/\.pb1332PrimaryRow\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(refinedCss,/\.pb1332SecondaryRow\{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) 40px/);
+ assert(html.includes('gallery-intro-cards.css?v=r1159&cards=r1161'));
+ assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159(?=[^"\s]*&wallet=r1238)(?=[^"\s]*&cards=r1333)/);
 });

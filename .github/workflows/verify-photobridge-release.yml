@@ -17,7 +17,8 @@ permissions:
 jobs:
   deploy-verification:
     name: Build and verify deploy payload
-    runs-on: ubuntu-latest
+    # Playwright 1.56.1 targets Ubuntu 24.04, not the new ubuntu-latest image.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -135,7 +136,15 @@ jobs:
       - name: Verify photo print quantities, filename and mobile navigation
         run: node --test scripts/test-r1132-photo-print-copies.cjs
       - name: Verify photographer mobile bottom navigation never wraps into two rows
-        run: node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
+        run: |
+          # Browser-backed regression tests run before the later browser suite.
+          # Install its pinned test-only dependencies here rather than requiring
+          # the production --omit=dev install to contain Playwright.
+          npm install --prefix /tmp/photobridge-frame-browser --no-save --no-audit --no-fund playwright@1.56.1 @electric-sql/pglite@0.5.10
+          /tmp/photobridge-frame-browser/node_modules/.bin/playwright install --with-deps chromium
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium

@@ -31,7 +31,9 @@ test('verified invite logs the existing account into photographer portal only af
  assert.match(verify,/invite_identity_changed/);
  assert.match(verify,/await c\.query\('COMMIT'\);[\s\S]*?if \(existingAccount\) \{[\s\S]*?await createSession\(userId,res,'photographer'\)/);
  assert.match(verify,/loggedIn: Boolean\(existingAccount\)/);
- assert.match(verify,/name=\$5,mobile_verified_at=COALESCE/);
+ // R134x preserve the verified account's official name; only fill a blank name.
+ assert.match(verify,/name=COALESCE\(NULLIF\(name,''\),\$5\),mobile_verified_at=COALESCE/);
+ assert.match(verify,/UPDATE users SET mobile_verified_at=COALESCE\(mobile_verified_at,now\(\)\),updated_at=now\(\)/);
  assert.match(verify,/ensurePhotographerProfile\(c, \{/);
 });
 test('lab customer row shows entered temporary name until official name is available',()=>{

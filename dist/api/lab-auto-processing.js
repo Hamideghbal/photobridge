@@ -66,7 +66,7 @@ export async function handleLabAutomation({req,res,url,labId,deviceId,pool,bodyJ
     if(order.invoice_required===false||String(order.mode||'print')!=='print'
        ||['walkin','manual_invoice','manual'].includes(String(order.source||'')))
       throw Object.assign(Error('early_invoice_not_allowed'),{status:409});
-    const lab=(await c.query('SELECT primary_download_device_id FROM labs WHERE id=$1 FOR SHARE',[labId])).rows[0];
+    const lab=(await c.query('SELECT ui_preferences,primary_download_device_id FROM labs WHERE id=$1 FOR SHARE',[labId])).rows[0];
     if(!lab||!storageDeviceAllowed(lab,deviceId))
       throw Object.assign(Error('not_primary_download_device'),{status:403});
     if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')throw Object.assign(Error('payment_required'),{status:409});

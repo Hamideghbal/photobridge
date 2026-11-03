@@ -14,7 +14,9 @@ const start=source.indexOf('function Nj('),end=source.indexOf('function ',start+
 if(start<0||end<start)throw Error('R1553 settings component boundary changed');
 let ui=source.slice(start,end);
 const once=(from,to,label)=>{if(ui.includes(to))return;if(ui.split(from).length!==2)throw Error('R1553 missing '+label);ui=ui.replace(from,to)};
-once('"snappbox","site"]);','"snappbox","site","backup"]);','settings allowlist');
+const allowed=ui.match(/const c=new Set\(\[([^\]]+)\]\)/);
+if(!allowed)throw Error('R1553 Lab settings allowlist missing: '+ui.slice(0,350));
+if(!allowed[1].includes('"backup"'))ui=ui.replace(allowed[0],'const c=new Set(['+allowed[1]+',"backup"])');
 once('["snappbox","اسنپ و ارسال"]','["snappbox","اسنپ و ارسال"],["backup","پشتیبان اطلاعات سایت"]','system navigation');
 const site='g==="site"&&e.jsx(PB1296LabSite,{})';
 const backup=`g==="site"&&e.jsx(PB1296LabSite,{}),g==="backup"&&e.jsxs("section",{className:"card panel compactPanel",children:[e.jsx("h2",{children:"پشتیبان اطلاعات سایت"}),e.jsx("p",{children:"خروجی اطلاعات مالی و فهرست آرشیو سایت، مستقل از بکاپ محلی برنامه ویندوز"}),e.jsx("a",{href:"/lab-data-backup.html",className:"pbActionButton primaryAction",target:"_blank",rel:"noopener noreferrer",children:"تهیه فایل پشتیبان سایت"})]})`;

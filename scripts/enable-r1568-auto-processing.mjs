@@ -42,6 +42,9 @@ const bundle='assets/index-UIRefine-v655-r84.js';
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  path=root+'/'+bundle;let source=read(path);
  if(!source.includes('/* R1568 automation settings */')){
+  source=once(source,"B(value=>value+1);await ye();\n   pb1547DownloadDialog(",
+    "B(value=>value+1);await ye();\n   if(!warning)await pb1568AfterManualDownload(le.id).catch(error=>pb1547Notice('دانلود کامل شد ولی صدور خودکار فاکتور نیازمند بررسی است: '+(error?.message||'خطا'),'warning'));\n   pb1547DownloadDialog(",
+    'manual verified-download invoice hook '+root);
   source=once(source,'"backup"]),m=()=>','"backup","automation"]),m=()=>','settings allowlist '+root);
   source=once(source,'["backup","پشتیبان اطلاعات سایت"]','["backup","پشتیبان اطلاعات سایت"],["automation","دانلود و چاپ خودکار"]','settings tab '+root);
   source=once(source,'g==="backup"&&e.jsxs("section"','g==="automation"&&e.jsx(PB1568AutomationSettings,{}),g==="backup"&&e.jsxs("section"','settings component '+root);

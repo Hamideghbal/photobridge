@@ -20,7 +20,7 @@ class AlertWindow {
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',e=>e.preventDefault());
   win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide();void this.accept(this.items.map(n=>n.id),false).catch(()=>{})});
-  win.once('ready-to-show',()=>{if(!this.hiddenByUser&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
+  win.once('ready-to-show',()=>{if(!this.hiddenByUser&&(!this.account||this.account===this.getAccount())&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
   this.ready=win.loadFile(path.join(__dirname,'alert.html')).catch(error=>{if(this.window===win)this.window=null;win.destroy();throw error});
   void this.ready.catch(()=>{});
   return win;

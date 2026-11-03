@@ -12,5 +12,5 @@ test('switching account during renderer load cannot display the previous account
  let resolve,account='a',shows=0;
  class Window extends EventEmitter{constructor(){super();this.webContents=new EventEmitter();this.webContents.setWindowOpenHandler=()=>{};this.webContents.send=()=>{}}loadFile(){return new Promise(r=>resolve=r)}isDestroyed(){return false}show(){shows++}restore(){}focus(){}flashFrame(){}}
  const controller=new AlertWindow({BrowserWindow:Window,store:{get(){},set(){}},ipcMain:{handle(){}},getAccount:()=>account,open:async()=>{}});
- const pending=controller.present({items:[{id:'order'}]},null,()=>{},'a');account='b';resolve();await assert.rejects(pending,/account_changed/);assert.equal(shows,0);
+ const pending=controller.present({items:[{id:'order'}]},null,()=>{},'a');account='b';controller.window.emit('ready-to-show');resolve();await assert.rejects(pending,/account_changed/);assert.equal(shows,0);
 });

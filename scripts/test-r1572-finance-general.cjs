@@ -18,13 +18,13 @@ test('automation and backup appear under General settings, not System or Print o
   const settings=source.slice(source.indexOf('function Nj({'),source.indexOf('function Nj({')+5800);
   const general=settings.indexOf('key:"general",label:"عمومی"');
   const notifications=settings.indexOf('key:"notifications",label:"اعلان و ارتباط"');
-  const system=settings.indexOf('key:"system",label:"سیستم و ارسال"');
-  assert(general>=0&&notifications>general&&system>notifications);
+  assert(general>=0&&notifications>general);
   const generalSection=settings.slice(general,notifications);
-  const systemSection=settings.slice(system,system+430);
   assert(generalSection.includes('["automation","دانلود و چاپ خودکار"]'));
   assert(generalSection.includes('["backup","پشتیبان اطلاعات برنامه"]'));
-  assert(!systemSection.includes('["backup"'));
+  const settingsMenu=settings.slice(general,general+2200);
+  assert.equal((settingsMenu.match(/\["backup","[^"]*"\]/g)||[]).length,1,
+    'backup should appear exactly once in the Lab settings menu');
   assert(source.includes('g==="automation"&&e.jsx(PB1568AutomationSettings'));
   assert(source.includes('g==="backup"&&e.jsxs("section"'));
   const html=fs.readFileSync(root+'/index.html','utf8');

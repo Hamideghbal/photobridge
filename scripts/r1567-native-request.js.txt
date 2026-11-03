@@ -1,0 +1,13 @@
+const pb1567PendingReads=new Map();
+async function Me(t,a={}){
+ const method=String(a.method||'GET').toUpperCase();
+ if(!['GET','HEAD'].includes(method)){pb1567PendingReads.clear();return pb1567RawMe(t,a);}
+ // Only identical in-flight reads share transport. No response TTL, disk cache,
+ // background retry or financial mutation is introduced.
+ if(method!=='GET'||a.signal||a.body||typeof t!=='string'||Object.keys(a).some(k=>!['method','headers'].includes(k))||!/^\/api\/(?:lab\/|auth\/me(?:\?|$))/.test(t))return pb1567RawMe(t,a);
+ const headers=[...new Headers(a.headers||{})].sort((a,b)=>a[0].localeCompare(b[0]));
+ const key=JSON.stringify([t,Sr(),oh(),yg(),headers]);
+ let pending=pb1567PendingReads.get(key);
+ if(!pending){pending=pb1567RawMe(t,a);pb1567PendingReads.set(key,pending);const clear=()=>{if(pb1567PendingReads.get(key)===pending)pb1567PendingReads.delete(key)};pending.then(clear,clear);}
+ try{return structuredClone(await pending)}catch(error){throw Object.assign(new Error(error.message),error);}
+}

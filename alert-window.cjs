@@ -20,14 +20,15 @@ class AlertWindow {
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',e=>e.preventDefault());
   win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide();void this.accept(this.items.map(n=>n.id),false).catch(()=>{})});
-  win.once('ready-to-show',()=>{if(!this.hiddenByUser&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
-  win.loadFile(path.join(__dirname,'alert.html')).catch(()=>{if(this.window===win)this.window=null;win.destroy()});
+  win.once('ready-to-show',()=>{if(!this.hiddenByUser&&(!this.account||this.account===this.getAccount())&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
+  this.ready=win.loadFile(path.join(__dirname,'alert.html')).catch(error=>{if(this.window===win)this.window=null;win.destroy();throw error});
+  void this.ready.catch(()=>{});
   return win;
  }
- present(options,_onOpen,ack,account){
+ async present(options,_onOpen,ack,account){
   if(this.getAccount()!==account)return;
-  const previous=this.items.map(x=>x.id).join('|');this.items=options.items||[];this.account=account;this.ack=ack;this.settingsOnly=false;
-  const win=this.ensure();if(previous!==this.items.map(x=>x.id).join('|')){this.hiddenByUser=false;win.webContents.send('lab-alert-change');win.show();win.restore();win.focus();win.flashFrame(true)}
+  const previous=this.window&&!this.window.isDestroyed()?this.items.map(x=>x.id).join('|'):'';this.items=options.items||[];this.account=account;this.ack=ack;this.settingsOnly=false;
+  const win=this.ensure();await this.ready;if(this.getAccount()!==account||this.window!==win||win.isDestroyed())throw Error('alert_account_changed');if(previous!==this.items.map(x=>x.id).join('|')){this.hiddenByUser=false;win.webContents.send('lab-alert-change');win.show();win.restore();win.focus();win.flashFrame(true)}
  }
  showSettings(){this.hiddenByUser=false;this.settingsOnly=!this.items.length;const win=this.ensure();win.webContents.send('lab-alert-change');win.show();win.restore();win.focus();}
  async sendReply(value){

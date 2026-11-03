@@ -1,0 +1,13 @@
+/* PB1569 finite finance refresh queue.
+   Multiple native order/finance events while one read is running become at most
+   one trailing refresh. Use the newest React loader closure for that refresh. */
+function pb1569CoalescedLoad(loader,queue){
+ if(queue.active){queue.pending=true;return queue.active;}
+ const active=(async()=>{
+  do{queue.pending=false;await loader.current();}while(queue.pending);
+ })();
+ queue.active=active;
+ const clear=()=>{if(queue.active===active)queue.active=null;};
+ active.then(clear,clear);
+ return active;
+}

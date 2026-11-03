@@ -708,3 +708,6 @@ await deployStep('./enable-r1551-walkin-album-binding.mjs');
 // R1552: archive day order follows registration time, newest at the top.
 await deployStep('./enable-r1552-archive-newest-first.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1552-archive-newest-first.cjs'],{stdio:'inherit'});
+
+// R1563: stable discount seal and live Windows intake preregistration/SMS.
+await deployStep('./enable-r1563-intake-discount.mjs');

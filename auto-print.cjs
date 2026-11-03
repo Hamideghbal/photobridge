@@ -9,6 +9,7 @@ function validateJob(job){
 }
 function installAutoPrint({ipcMain,BrowserWindow,store,getWindow,getOrigin}){
  if(!ipcMain?.handle||!BrowserWindow||!store?.get||!store?.set)throw Error('invalid_auto_printer_host');
+ const pending=new Set();
  const submit=async(event,raw)=>{
   const main=getWindow();let senderOrigin='';
   try{senderOrigin=new URL(String(event.senderFrame?.url||'')).origin}catch{}
@@ -16,10 +17,11 @@ function installAutoPrint({ipcMain,BrowserWindow,store,getWindow,getOrigin}){
   let job;
   try{job=validateJob(raw)}catch(error){return {ok:false,error:error.message}}
   const key='lab-auto-print:v1:'+store.get('labId')+':'+job.jobKey;
-  if(store.get(key))return {ok:false,error:'already_submitted',state:store.get(key).state};
-  const printers=await main.webContents.getPrintersAsync().catch(()=>[]);
+  if(store.get(key)||pending.has(key))return {ok:false,error:'already_submitted',state:store.get(key)?.state||'in_progress'};
+  pending.add(key);
+  const printers=await Promise.resolve().then(()=>main.webContents.getPrintersAsync()).catch(()=>[]);
   const printer=printers.find(p=>p.isDefault||p.isDefaultPrinter);
-  if(!printer?.name)return {ok:false,error:'no_default_printer'};
+  if(!printer?.name){pending.delete(key);return {ok:false,error:'no_default_printer'}}
   let hidden=null,attempted=false;
   try{
    hidden=new BrowserWindow({width:900,height:1200,show:false,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,javascript:false,webSecurity:true,backgroundThrottling:false}});
@@ -32,7 +34,7 @@ function installAutoPrint({ipcMain,BrowserWindow,store,getWindow,getOrigin}){
   }catch(error){
    if(attempted)try{store.set(key,{state:'needs_review',printer:printer.name,at:new Date().toISOString(),error:String(error.message||error)})}catch{}
    return {ok:false,error:attempted?'print_uncertain_needs_review':'print_preparation_failed'};
-  }finally{try{hidden?.destroy()}catch{}}
+  }finally{try{hidden?.destroy()}catch{}pending.delete(key)}
  };
  ipcMain.handle('lab-auto-print',submit);
  return()=>ipcMain.removeHandler?.('lab-auto-print');

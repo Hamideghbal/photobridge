@@ -148,7 +148,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    if(t==="lab"){
     const At=new URLSearchParams;Le&&At.set("from",$s(Le)),Ke&&At.set("to",$s(Ke));
     const extraPath=w==="payments"?"/api/lab/finance/payments":w==="expenses"?"/api/lab/finance/expenses":w==="ledger"?"/api/lab/finance/ledger":null;
-    const[Ot,Et,extra]=await Promise.all([Me(ke),Me(\`/api/lab/finance/summary?\${At.toString()}\`),extraPath?Me(extraPath):Promise.resolve(null)]);
+    // Preserve invoice reconciliation before dependent finance balances are read.
+    const Ot=await Me(ke);
+    const[Et,extra]=await Promise.all([Me(\`/api/lab/finance/summary?\${At.toString()}\`),extraPath?Me(extraPath):Promise.resolve(null)]);
     o(Ot.invoices||[]),f(Et.summary||null),C(Et.customers||[]);
     if(w==="payments")S(extra?.payments||[]);
     if(w==="expenses")I(extra?.expenses||[]);

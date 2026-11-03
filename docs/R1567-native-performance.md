@@ -8,8 +8,9 @@ updaters accept the payload; runtime filtering controls the actual menu.
 Eight unrelated public gallery, photographer and Store scripts no longer load
 in native windows. Promoted headers ignore their own generated mutations and
 update disabled/ARIA state only when it changes. Offscreen order cards use CSS
-content visibility, with explicit print expansion. Diagnostic status is fetched
-when its dialog opens instead of polling SQLite-derived state every ten seconds.
+content visibility, with explicit print expansion. The fallback UI overlay fetches diagnostic status on demand. Installed 1.0.83/1.0.84
+hosts pin a richer overlay to the executable: its business handlers and status
+timer remain unchanged, and a native-only stylesheet hides its installer link.
 The native sync process, alerts, authentication, mutation transports and business
 rules remain responsible for their existing behavior.
 
@@ -21,7 +22,8 @@ a tab after a save still performs a fresh read.
 
 ## Measurement
 
-Actual complete generated React UI and all scripts, Chromium with 4x CPU
+Actual generated native React UI payload (including its fallback overlay, not
+the executable-pinned overlay), Chromium with 4x CPU
 throttling, 1440x950 window, deterministic empty-data API fixtures, 3.5 seconds
 per section. This is a controlled desktop-browser simulation, not measurements
 on a user's physical Windows computer. The table lists the seven most expensive

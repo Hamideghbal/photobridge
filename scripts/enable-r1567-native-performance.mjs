@@ -18,6 +18,7 @@ if(!source.includes('/* PB1567 native lightweight workspace */')){
  // Keep the source navigation schema for installed updater compatibility,
  // then omit website-only entries from the rendered native menu.
  source=once(source,'}];E.flatMap(ae=>ae.items);',"}];E[0]={...E[0],items:E[0].items.filter(([key])=>!['site','desktop'].includes(key))};E.flatMap(ae=>ae.items);");
+ source=once(source,'{id:"settings-desktop",label:"برنامهٔ ویندوز",hint:"دانلود برنامه",icon:"↧",url:"/lab/settings/desktop"},','');
  source=once(source,'function PB1365LabFeature({kind}){','function PB1365LabFeature({kind}){return null;');
  source=once(source,'async function Me(t,a={}){',fs.readFileSync('scripts/r1567-native-request.js.txt','utf8')+'\nasync function pb1567RawMe(t,a={}){');
  source+='\n/* PB1567 native lightweight workspace */\n';fs.writeFileSync(root+'/'+bundle,source);
@@ -34,7 +35,7 @@ for(const name of ['photobridge-r1147-lab-admin-header.js','photobridge-r1372-th
  }
 }
 // Diagnostic status is needed only when a diagnostics dialog is opened.
-for(const file of ['apps/lab-desktop/desktop-overlay.js',root+'/desktop-overlay.js']){
+for(const file of [root+'/desktop-overlay.js']){
  let s=fs.readFileSync(file,'utf8');
  s=s.replace("   const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);\n   link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';",'');
  s=s.replace(' void refresh();setInterval(()=>void refresh(),10000);',' // Status is refreshed on demand by openSync/openUpdate, not polled while idle.');fs.writeFileSync(file,s);
@@ -49,6 +50,7 @@ fs.writeFileSync(root+'/'+css,`/* Native-only layout work reduction; printing re
 @media screen {
  .labRoleWorkspace .labOrderCard{content-visibility:auto;contain-intrinsic-size:auto 180px;animation:none!important}
  .labRoleWorkspace .labRolePageScrollArea,.labRoleWorkspace .settingsBody,.labRoleWorkspace .financeWorkspace{animation:none!important}
+ .pbLabDesktopConflicts a[href*="lab-windows-download.html"],.pbLabDesktopConflicts a[href*="/api/lab/desktop-installer"]{display:none!important}
  .labRoleWorkspace .pb1175HeaderFade{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 }
 @media print {.labRoleWorkspace .labOrderCard{content-visibility:visible;contain:none;contain-intrinsic-size:none}}

@@ -19,12 +19,11 @@ function fakeEnvironment(conflicts=[]){
  return {elements,listeners,requests,get pollMs(){return pollMs}};
 }
 const wait=()=>new Promise(resolve=>setImmediate(resolve));
-test('no permanent bottom sync/update bar or idle diagnostics polling',async()=>{
+test('no permanent bottom sync/update bar while status polling continues',async()=>{
  const f=fakeEnvironment();await wait();
  assert.equal(f.elements.some(el=>el.id==='pbLabDesktopState'),false);
  assert.equal(f.elements.filter(el=>el.tagName==='button'&&!el.hidden).length,0);
- assert.equal(f.pollMs,0);
- assert.equal(f.requests.length,0);
+ assert.equal(f.pollMs,10000);
  assert(f.requests.every(r=>r.url==='/desktop/status'));
 });
 test('Ctrl+Shift+S opens status without posting, replaying or discarding any operation',async()=>{

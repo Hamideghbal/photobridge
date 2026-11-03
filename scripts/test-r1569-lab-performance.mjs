@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import vm from 'node:vm';
 import {prepareLocalBatch,localBatchInsert,handleLocalBatch,localBatchPath} from '../dist/api/lab-local-batch.js';
 const labId='11111111-1111-4111-8111-111111111111',
  orderId='22222222-2222-4222-8222-222222222222',
@@ -71,6 +72,22 @@ test('partial conflict rolls entire batch back instead of confirming fake local 
  assert.equal(f.reply().data.error,'local_batch_conflict');
  assert.equal(f.commits(),0);assert.equal(f.rollbacks(),1);
 });
+test('native finance refresh coalesces a burst of events and uses latest loader without cache',async()=>{
+ const ctx={};
+ vm.runInNewContext(fs.readFileSync('scripts/r1569-finance-coalesce.js.txt','utf8')+';this.run=pb1569CoalescedLoad;',ctx);
+ let calls=0,release;
+ const loader={current:async()=>{calls++;if(calls===1)await new Promise(resolve=>release=resolve);}};
+ const queue={active:null,pending:false};
+ const first=ctx.run(loader,queue);
+ const duplicates=Array.from({length:30},()=>ctx.run(loader,queue));
+ assert.equal(calls,1);
+ release();await Promise.all([first,...duplicates]);
+ assert.equal(calls,2);
+ loader.current=async()=>{calls++};
+ await ctx.run(loader,queue);
+ assert.equal(calls,3);
+});
+
 test('release payload has optimized, syntax-valid web and native finance and local manual intake',()=>{
  const web=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),
   native=fs.readFileSync('dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js','utf8'),
@@ -79,6 +96,7 @@ test('release payload has optimized, syntax-valid web and native finance and loc
  for(const bundle of [web,native]){
   assert.match(bundle,/PB1569 finance focused loads/);
   assert.match(bundle,/pb1569FinanceReady/);
+  assert.match(bundle,/pb1569CoalescedLoad/);
   assert.match(bundle,/w==="payments"\?"\/api\/lab\/finance\/payments"/);
  }
  assert.match(manual,/PB1569 manual intake latency/);

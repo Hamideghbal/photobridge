@@ -1,7 +1,7 @@
 
 /* R1576 stable native backup */
 (()=>{if(window.pb1576BackupController)return;window.pb1576BackupController=true;let button,queued=false;
-const style=document.createElement('style');style.textContent='#pbLabBackupSettingsButton,#pb1573NativeBackup{display:none!important}#pb1576NativeBackup[hidden]{display:none!important}';document.head.append(style);
+const style=document.createElement('style');style.textContent='html body #root .labRoleWorkspace #pbLabBackupSettingsButton,html body #root .labRoleWorkspace #pb1573NativeBackup{display:none!important}html body #root .labRoleWorkspace #pb1576NativeBackup[hidden]{display:none!important}';document.head.append(style);
 function mount(){queued=false;const active=/^\/lab\/settings(?:\/(?:general|hours|sms|windowsAlert|snappbox|automation))?\/?$/.test(location.pathname);if(!active){if(button)button.hidden=true;return}const host=document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader')||document.querySelector('.labRoleWorkspace .settingsBody');if(!host)return;
 if(!button){button=document.createElement('button');button.id='pb1576NativeBackup';button.type='button';button.innerHTML='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z M8 12l3 3 5-6"/></svg><span>پشتیبان اطلاعات برنامه</span>';button.style.cssText='font:600 13px Vazirmatn,Tahoma;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;min-height:44px;border:1px solid #d5deef;border-radius:11px;background:#eef3ff;color:#315efb;cursor:pointer;margin:6px';button.onclick=()=>location.assign('/desktop/backups')}
 button.hidden=false;if(button.parentElement!==host)host.append(button)}

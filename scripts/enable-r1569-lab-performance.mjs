@@ -157,14 +157,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     const[Ot,At,Et]=await Promise.all([Me(ke),Me("/api/customer/finance/summary"),Me("/api/customer/finance/payments")]);
     o(Ot.invoices||[]),f(At.summary||null),S(Et.payments||[]);
    }
-   pb1569InitialFinance.current=true;
+   pb1569LoadedFinanceView.current=w;pb1569SetFinanceReady(true);
   }finally{g(!1)}};`;
   ui=ui.slice(0,start)+optimized+ui.slice(end+17);
   const anchor='const Ve=r.filter(';
   if(ui.split(anchor).length!==2)throw Error('R1569 finance list anchor '+root);
-  const watcher=`const pb1569InitialFinance=x.useRef(false);
+  const watcher=`const [pb1569FinanceReady,pb1569SetFinanceReady]=x.useState(false),pb1569LoadedFinanceView=x.useRef(null);
   // Load only the selected secondary table, not three unrelated 1000-row collections.
-  x.useEffect(()=>{if(t!=="lab"||!pb1569InitialFinance.current)return;
+  x.useEffect(()=>{if(t!=="lab"||!pb1569FinanceReady||pb1569LoadedFinanceView.current===w)return;
+   pb1569LoadedFinanceView.current=w;
    const endpoint=w==="payments"?"/api/lab/finance/payments":w==="expenses"?"/api/lab/finance/expenses":w==="ledger"?"/api/lab/finance/ledger":null;
    if(!endpoint)return;let active=true;
    Me(endpoint).then(response=>{if(!active)return;
@@ -173,7 +174,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     if(w==="ledger")k(response.transactions||[]);
    }).catch(error=>{if(active)console.warn("[PhotoBridge] finance tab refresh",error?.message||"load failed")});
    return()=>{active=false};
-  },[w,t]);
+  },[w,t,pb1569FinanceReady]);
   `;
   ui=once(ui,anchor,watcher+anchor,'finance active tab watcher '+root);
   ui+='\n'+financeMarker+'\n';

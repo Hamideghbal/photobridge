@@ -693,3 +693,7 @@ runR1314(process.execPath,["--test","scripts/test-r1547-invoice-download-fast-re
 // R1548: Windows Lab only; do not change website navigation or authentication.
 await deployStep("./enable-r1548-native-navigation.mjs");
 runR1314(process.execPath,["--test","scripts/test-r1548-native-navigation.cjs"],{stdio:"inherit"});
+
+// R1549: remove Lab login home link and enter browser editor through normal Lab sign-in.
+await deployStep('./enable-r1549-lab-login-site-editor.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1549-lab-login-site-editor.cjs'],{stdio:'inherit'});

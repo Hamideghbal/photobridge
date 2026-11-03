@@ -7,12 +7,12 @@ function pb1568Paper(title,detail,rows,warning=''){
  const tr=rows.map(x=>'<tr><td>'+pb1568Escape(x.name)+'</td><td>'+pb1568Num(x.files||1)+'</td><td>'+pb1568Num(x.copies||1)+'</td><td>'+pb1568Escape(x.price||'—')+'</td></tr>').join('');
  return '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>@page{size:A4;margin:13mm}body{font:13px/1.9 Tahoma,Arial;color:#111}h2{margin:0}header{border-bottom:2px solid #222;padding-bottom:12px}.warn{border:2px solid #111;padding:12px;margin:15px 0;font-size:17px;font-weight:bold}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #888;padding:8px;text-align:right}th{background:#eee}.details{margin-top:12px}</style></head><body><header><h2>'+pb1568Escape(title)+'</h2><div>فوتوبریج · شماره سفارش: '+pb1568Escape(order.number)+'</div><div>عکاس: '+pb1568Escape(name)+'</div><div>تاریخ: '+new Date().toLocaleString('fa-IR')+'</div></header>'+(warning?'<div class="warn">'+pb1568Escape(warning)+'</div>':'')+'<div class="details">تعداد فایل‌های سفارش: '+pb1568Num(detail.files?.length||order.file_count||0)+'</div><table><thead><tr><th>شرح / سایز</th><th>فایل</th><th>تعداد نسخه</th><th>مبلغ</th></tr></thead><tbody>'+tr+'</tbody></table></body></html>';
 }
-function pb1568Slip(detail){
+function pb1568Slip(detail,missing=[]){
  const map=new Map();for(const f of detail.files||[]){
   const key=[f.size_label||'سایز نامشخص',f.print_type||''].join(' / '),row=map.get(key)||{name:key,files:0,copies:0,price:''};
   row.files++;row.copies+=Math.max(1,Number(f.print_copies||1));map.set(key,row);
  }
- return pb1568Paper('برگه مشخصات سفارش · نیازمند تعیین قیمت',detail,[...map.values()],'نیازمند ثبت فاکتور دستی توسط اپراتور لابراتوار — قیمت یک یا چند سایز تعریف نشده است. این برگه فاکتور مالی نیست.');
+ const missingNames=(Array.isArray(missing)?missing:[]).map(x=>String(x.sizeLabel||x.size_label||x.sizeId||x.key||'')).filter(Boolean);return pb1568Paper('برگه مشخصات سفارش · نیازمند تعیین قیمت',detail,[...map.values()],'نیازمند ثبت فاکتور دستی توسط اپراتور لابراتوار — قیمت یک یا چند سایز تعریف نشده است. '+(missingNames.length?'موارد فاقد تعرفه: '+missingNames.join('، ')+'؛ ':'')+'این برگه فاکتور مالی نیست.');
 }
 function pb1568Invoice(invoice,detail){
  let items=invoice.items||[];if(typeof items==='string')try{items=JSON.parse(items)}catch{items=[]}
@@ -22,7 +22,7 @@ function pb1568Invoice(invoice,detail){
 async function pb1568Print(kind,detail,invoice){
  if(!window.pbLabAutoPrint?.print) {pb1568Worker.lastError='برای چاپ خودکار، برنامه ویندوز باید به نسخه دارای چاپگر خودکار ارتقا یابد.';return;}
  const key=kind==='invoice'?'invoice:'+String(invoice.id):'manual-pricing-slip:'+String(detail.order.id);
- const html=kind==='invoice'?pb1568Invoice(invoice,detail):pb1568Slip(detail);
+ const html=kind==='invoice'?Vy(invoice,'lab'):pb1568Slip(detail,invoice);
  const result=await window.pbLabAutoPrint.print({jobKey:key,html});
  if(!result?.ok&&result?.error!=='already_submitted')throw Error(result?.error||'auto_printer_failed');
 }
@@ -39,7 +39,7 @@ async function pb1568Issue(detail,settings){
   if(invoice&&settings.autoPrint)await pb1568Print('invoice',current,invoice);
   if(invoice&&!invoice.pdf_ready)void pb1547CompletePdf(invoice,current.order.id,true).catch(e=>console.error('[R1568] PDF follow-up',e));
  }catch(error){
-  if((error?.data?.error||error?.message)==='invoice_pricing_required'){if(settings.autoPrint)await pb1568Print('slip',current,null);return;}
+  if((error?.data?.error||error?.message)==='invoice_pricing_required'){if(settings.autoPrint)await pb1568Print('slip',current,error?.data?.missingPricing||[]);return;}
   throw error;
  }
 }

@@ -49,8 +49,8 @@ export function localBatchInsert(items){
    print_size_id=EXCLUDED.print_size_id,print_type=EXCLUDED.print_type,
    chassis=EXCLUDED.chassis,frame=EXCLUDED.frame,print_copies=EXCLUDED.print_copies
   WHERE order_files.order_id=EXCLUDED.order_id AND order_files.lab_id=EXCLUDED.lab_id
-    AND order_files.original_name=EXCLUDED.original_name
-    AND order_files.bytes=EXCLUDED.bytes AND order_files.object_key=EXCLUDED.object_key
+    AND order_files.bytes=EXCLUDED.bytes
+    AND order_files.object_key LIKE ('client-local-recovery/' || EXCLUDED.lab_id::text || '/' || EXCLUDED.order_id::text || '/' || EXCLUDED.id::text || '-%')
     AND order_files.original_state='active'
   RETURNING id`;
  return {sql,params};

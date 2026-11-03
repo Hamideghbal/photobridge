@@ -1,0 +1,19 @@
+const basic=new Set('@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà');
+const extended=new Set('^{}\\[~]|€\f');
+export function smsParts(text){const value=String(text||'');let septets=0;for(const c of value){if(basic.has(c))septets++;else if(extended.has(c))septets+=2;else return{encoding:'ucs2',units:value.length,parts:Math.max(1,value.length<=70?1:Math.ceil(value.length/67))};}return{encoding:'gsm7',units:septets,parts:Math.max(1,septets<=160?1:Math.ceil(septets/153))};}
+function labSmsName(value){const name=String(value||'').trim();return 'لابراتوار عکس'+(name?' '+name.replace(/^لابراتوار(?:\s+عکس)?\s*/, ''):'');}
+export function compactSms(args){
+ const text=String(args.message||'');
+ if(args.purpose==='gallery_customer_notification'){
+  const link=text.match(/https?:\/\/[^\s]+/g)?.at(-1);
+  if(link){const short='PhotoBridge\n'+(args.metadata?.kind==='approval'?'روتوش‌شده آماده است':'انتخاب عکس')+'\n'+link;if(short.length<=70)return short;}
+ }
+ if(args.purpose!=='lab_photographer_permanent_invite'||!args.metadata?.shortToken)return text;
+ const link=text.match(/https?:\/\/[^\s]+/g)?.at(-1);if(!link)return text;
+ const lab=text.match(/لابراتوار\s+«([^»]+)»/)?.[1]||'لابراتوار';
+ return labSmsName(lab)+'\nدعوت شما\n'+link;
+}
+export function orderConfirmationSms(lab,number,mode){
+ const name=String(lab||'لابراتوار');
+ return labSmsName(name)+'\nسفارش '+(mode==='album'?'آلبوم ':'')+String(number)+' ثبت شد.';
+}

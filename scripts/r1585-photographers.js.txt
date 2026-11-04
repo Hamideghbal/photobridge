@@ -1,0 +1,24 @@
+/* R1585: display the existing finance discount settings; no discount or membership rules change. */
+function pb1585HasLocation(customer){return customer.location_lat!=null&&customer.location_lng!=null&&String(customer.location_lat).trim()!==''&&String(customer.location_lng).trim()!==''&&Ra(customer.location_lat,customer.location_lng)}
+function pb1585DiscountInfo(customer){
+ if(!Object.hasOwn(customer,'finance_discount_percent'))return null;
+ const percent=Number(customer.finance_discount_percent),rawEvery=Number(customer.finance_discount_every_invoices);
+ if(!Number.isFinite(percent)||percent<0||percent>100)return null;
+ return{percent,enabled:customer.finance_discount_enabled===true,configured:customer.finance_discount_configured===true,every:Number.isInteger(rawEvery)&&rawEvery>0?rawEvery:10};
+}
+function PB1585Discount({customer}){const info=pb1585DiscountInfo(customer);return e.jsxs('div',{className:'pb1585Discount',children:[e.jsx('strong',{children:info?V(info.percent)+'٪':'—'}),e.jsx('small',{children:!info?'هنوز دریافت نشده':!info.configured?'تعریف نشده':info.enabled?'هر '+V(info.every)+' فاکتور':'غیرفعال'})]})}
+function PB1585CopyLocation({customer}){return e.jsx('button',{type:'button',className:'pb1585CopyCoordinates',onClick:async()=>{const value=Number(customer.location_lat).toFixed(7)+', '+Number(customer.location_lng).toFixed(7);try{await navigator.clipboard.writeText(value);alert('مختصات عکاسی کپی شد.')}catch{prompt('مختصات را کپی کن:',value)}},children:'کپی مختصات'})}
+function PB1585PhotographersTable({customers,onSaved}){
+ if(!customers.length)return e.jsx(zn,{text:'هنوز عکاسی عضو نشده است.'});
+ return e.jsx('div',{className:'labPhotographerList pb1585PhotographerScroll',children:e.jsxs('table',{className:'pb1585PhotographersTable',children:[
+ e.jsx('colgroup',{children:['25%','11%','16%','14%','8%','26%'].map((width,index)=>e.jsx('col',{style:{width}},index))}),
+ e.jsx('thead',{children:e.jsx('tr',{children:['عکاسی / شماره تماس','وضعیت','روش تسویه','تخفیف','نقشه','حساب / عملیات'].map(label=>e.jsx('th',{scope:'col',children:label},label))})}),
+ e.jsx('tbody',{children:customers.map(customer=>e.jsxs('tr',{'data-customer-id':customer.id,children:[
+ e.jsx('th',{scope:'row',children:e.jsxs('div',{className:'pb1585Identity',children:[e.jsx('div',{className:'avatar',children:String(customer.name||'?').slice(0,1)}),e.jsxs('div',{className:'pb1585IdentityCopy',children:[e.jsx('b',{children:customer.name}),e.jsx('small',{dir:'ltr',children:customer.mobile||'بدون شماره موبایل'}),customer.registrationPending&&e.jsx('span',{className:'pb1446PendingTag',children:'پیش‌ثبت‌نام'})]})]})}),
+ e.jsx('td',{children:e.jsx(Sb,{ok:customer.active,children:customer.registrationPending?'در انتظار تأیید عضویت':customer.active?'فعال':'غیرفعال'})}),
+ e.jsx('td',{children:e.jsx(PB1441SettlementChoice,{value:customer.settlement_mode||'ledger',onChange:async value=>{await Me('/api/lab/customers/'+customer.id,{method:'PATCH',body:JSON.stringify({settlementMode:value})});await onSaved()}})}),
+ e.jsx('td',{children:e.jsx(PB1585Discount,{customer})}),
+ e.jsx('td',{className:'pb1585MapCell',children:pb1585HasLocation(customer)?e.jsx(PB1438LocationMap,{customer}):e.jsx('button',{type:'button',className:'labMapLink',disabled:true,title:'موقعیت عکاسی ثبت نشده است',children:'نقشه'})}),
+ e.jsx('td',{children:e.jsxs('div',{className:'pb1585PhotographerActions',children:[e.jsx(PB1465InviteDebt,{customerId:customer.id}),e.jsx('button',{type:'button',className:'pbActionButton compact customerActionButton '+(customer.active?'warning':'success'),disabled:!!customer.registrationPending,title:customer.registrationPending?'در انتظار تأیید عکاس':customer.active?'تعلیق حساب':'فعال‌سازی حساب',onClick:async()=>{await Me('/api/lab/customers/'+customer.id,{method:'PATCH',body:JSON.stringify({active:!customer.active})});await onSaved()},children:customer.active?'تعلیق':'فعال'})]})})
+ ]},customer.id))})]})});
+}

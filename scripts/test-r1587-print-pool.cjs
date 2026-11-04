@@ -78,7 +78,7 @@ test('repeatable SYNTHETIC benchmark, not a real Liara speed test',async()=>{
 if(process.env.PB1587_VERIFY_BUNDLE==='1')test('built bundle contains bounded upload pool and preserves the original order guards',()=>{
   const bundle=fs.readFileSync(path.resolve(__dirname,'../dist/web/assets/index-UIRefine-v655-r84.js'),'utf8');
   assert(bundle.includes('PB1587runUploadPool='));
-  assert(bundle.includes('PB1587runUploadPool(PB1587jobs,3,PB1587uploadOne)'));
+  assert(bundle.includes('PB1587runUploadPool(PB1587jobs,E.current.some(bt=>bt.sizeId==="__custom__")?1:3,PB1587uploadOne)'));
   assert(bundle.includes('await Me("/api/customer/uploads/complete"'));
   assert(bundle.includes('await rs(Gt.uploadUrl,tt.file'));
   assert(bundle.includes('const Be=await Me('));

@@ -1,8 +1,9 @@
 (()=>{'use strict';if(window.pb1578TransferIndicator)return;window.pb1578TransferIndicator=true;document.documentElement.classList.add('pb1578FeedbackEnabled');
-const labels={flow:'در جریان',ready:'آماده تحویل',completed:'تحویل‌شده'};let panel,timer,target,generation=0;
+const labels={flow:'در جریان',ready:'آماده تحویل',completed:'تحویل‌شده'};let timer,target,animation,generation=0,active=false;
 const normalize=text=>String(text||'').replace(/[\s\u200c\-0-9۰-۹٠-٩]/g,'');
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-function clear(){clearTimeout(timer);panel?.remove();panel=null;target?.classList.remove('pb1578Destination');target=null;generation++}
+const inQueue=()=>/^\/lab\/(?:orders|album)(?:\/|$)/.test(location.pathname);
+function clear(){clearTimeout(timer);animation?.cancel();animation=null;target?.classList.remove('pb1578Destination');target=null;active=false;generation++}
 function highlight(to){
  const root=document.querySelector('.labRoleWorkspace');if(!root)return;
  const buttons=[...root.querySelectorAll('.pb1148SecondaryHeader button,.mainQueueFilters button')];
@@ -10,18 +11,20 @@ function highlight(to){
  if(!button)return;if(target!==button){target?.classList.remove('pb1578Destination');target=button;button.classList.add('pb1578Destination')}
  const nav=button.closest('.pb1148SecondaryHeader,.mainQueueFilters');if(nav&&nav.scrollWidth>nav.clientWidth){const item=button.getBoundingClientRect(),bounds=nav.getBoundingClientRect();if(item.left<bounds.left||item.right>bounds.right)nav.scrollBy({left:item.left+item.width/2-bounds.left-bounds.width/2,behavior:reduced()?'auto':'smooth'})}
 }
+function turn(){
+ if(reduced())return;
+ const root=document.querySelector('.labRoleWorkspace'),card=root&&[...root.querySelectorAll('.labOrderCard')].find(node=>node.getClientRects().length);
+ const sheet=card?.parentElement;if(!sheet||sheet===root||typeof sheet.animate!=='function')return;
+ animation?.cancel();const distance=Math.min(240,sheet.clientWidth*.22);
+ animation=sheet.animate([{transform:'perspective(1400px) translateX(-'+distance+'px) rotateY(7deg)',transformOrigin:'right center',opacity:.72},{transform:'perspective(1400px) translateX(0) rotateY(0deg)',transformOrigin:'right center',opacity:1}],{duration:420,easing:'cubic-bezier(.2,.7,.2,1)'});
+}
 function show(event){
- const detail=event.detail||{},to=detail.to;if(!labels[to]||!/^\/lab\/(?:orders|album)(?:\/|$)/.test(location.pathname))return;
- const root=document.querySelector('.labRoleWorkspace');if(!root)return;
- const from=detail.from||location.pathname.split('/')[3]||'flow';clear();const run=generation;
- panel=document.createElement('aside');panel.className='pb1578Transfer';panel.dir='rtl';panel.setAttribute('role','status');panel.setAttribute('aria-live','polite');panel.setAttribute('aria-atomic','true');panel.dataset.destination=to;
- const title=document.createElement('div');title.className='pb1578Title';title.textContent=detail.number?'سفارش #'+String(detail.number).slice(0,48):'جابه‌جایی سفارش';panel.append(title);
- const route=document.createElement('div');route.className='pb1578Route';const origin=document.createElement('span');origin.textContent=labels[from]||labels.flow;const arrow=document.createElement('span');arrow.className='pb1578Arrow';arrow.textContent='←';arrow.setAttribute('aria-hidden','true');const destination=document.createElement('strong');destination.textContent=labels[to];route.append(origin,arrow,destination);panel.append(route);
- const track=document.createElement('div');track.className='pb1578Track';track.setAttribute('aria-hidden','true');panel.append(track);
- const headers=[...root.querySelectorAll('.labSingleHeader,.pb1148SecondaryHeader,.pb1372ThirdHeader')].filter(node=>node.getClientRects().length);const edge=Math.max(0,...headers.map(node=>node.getBoundingClientRect().bottom));panel.style.top=Math.max(12,Math.min(innerHeight-120,Math.ceil(edge)+10))+'px';
- document.body.append(panel);highlight(to);requestAnimationFrame(()=>{if(run===generation)highlight(to)});timer=setTimeout(clear,2400);
+ const to=event.detail?.to;if(!labels[to]||!inQueue()||!document.querySelector('.labRoleWorkspace'))return;
+ clear();active=true;const run=generation;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{if(run!==generation||!inQueue())return;highlight(to);turn()}));
+ timer=setTimeout(clear,1800);
 }
 addEventListener('photobridge-queue-transfer',show);
-addEventListener('popstate',()=>{if(panel&&!/^\/lab\/(?:orders|album)(?:\/|$)/.test(location.pathname))clear();else if(panel){const run=generation;requestAnimationFrame(()=>{if(run===generation&&panel)highlight(panel.dataset.destination)})}});
+addEventListener('popstate',()=>{if(active&&!inQueue())clear()});
 addEventListener('photobridge-auth-session-changed',clear);
 })();

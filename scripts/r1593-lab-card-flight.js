@@ -27,6 +27,38 @@
     if (text.includes('تحویلشد') || text.includes('تحویلشده')) return 'completed';
     return '';
   }
+  // Freeze the computed card appearance while it still belongs to its original
+  // layout. The copy will then be safely rendered directly under document.body,
+  // above Electron/Windows scroll containers and native CSS containment.
+  var visualProperties = [
+    'display','box-sizing','width','height','min-width','max-width','min-height',
+    'max-height','position','top','right','bottom','left','padding','margin',
+    'border','border-top','border-right','border-bottom','border-left',
+    'border-radius','background','background-color','background-image',
+    'background-size','background-position','box-shadow','color','opacity',
+    'font-family','font-size','font-style','font-weight','letter-spacing',
+    'line-height','text-align','text-decoration','white-space','text-overflow',
+    'overflow','overflow-x','overflow-y','direction','vertical-align',
+    'gap','row-gap','column-gap','align-items','justify-content',
+    'justify-items','align-self','flex','flex-direction','flex-wrap','flex-grow',
+    'flex-shrink','flex-basis','grid-template-columns','grid-template-rows',
+    'grid-template-areas','grid-column','grid-row','object-fit','aspect-ratio'
+  ];
+  function preserveAppearance(original, clone) {
+    if (!window.getComputedStyle) return;
+    var originals = [original].concat(Array.from(original.querySelectorAll('*')));
+    var copies = [clone].concat(Array.from(clone.querySelectorAll('*')));
+    var count = Math.min(originals.length, copies.length, 280);
+    for (var i = 0; i < count; i++) {
+      var computed = window.getComputedStyle(originals[i]);
+      for (var j = 0; j < visualProperties.length; j++) {
+        var name = visualProperties[j];
+        var value = computed.getPropertyValue(name);
+        if (value) copies[i].style.setProperty(name, value, 'important');
+      }
+    }
+  }
+
   function capture(event) {
     if (!inLabQueue()) return;
     var button = event.target && event.target.closest && event.target.closest('button');
@@ -39,16 +71,12 @@
     if (rect.width < 70 || rect.height < 24) return;
     // Preserve the original DOM BEFORE React removes/replaces the source card.
     // Never rely on card.isConnected after the status request resolves.
-    var ancestors = [];
-    var ancestor = card.parentElement;
-    while (ancestor && !ancestor.classList.contains('labRoleWorkspace') && ancestors.length < 9) {
-      ancestors.push(typeof ancestor.className === 'string' ? ancestor.className : '');
-      ancestor = ancestor.parentElement;
-    }
+    var clone = card.cloneNode(true);
+    preserveAppearance(card, clone);
     last = {
-      card: card, stage: stage, at: Date.now(), ancestors: ancestors,
+      card: card, stage: stage, at: Date.now(),
       rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
-      clone: card.cloneNode(true)
+      clone: clone
     };
     window.PB1594LabFlightDiagnostic = 'captured:' + stage;
   }
@@ -88,54 +116,54 @@
     } catch (_) {}
   }
 
-  // Reconstruct the card's original ancestor classes so the flying copy keeps
-  // its authentic Lab card styling even when the source has unmounted.
-  function makeShell(snapshot, workspace) {
+  // Append outside every Lab scroll/transform/contain stacking context.
+  // This is the central R1595 fix for the nearly invisible Windows animation.
+  function makeShell(snapshot) {
     var shell = document.createElement('div');
     shell.setAttribute('aria-hidden', 'true');
-    shell.className = 'pb1594FlightShell';
-    var declarations = {
+    shell.className = 'pb1595VisibleOrderFlight';
+    var visual = {
       position: 'fixed', left: snapshot.rect.left + 'px',
       top: snapshot.rect.top + 'px',
       width: snapshot.rect.width + 'px',
       height: snapshot.rect.height + 'px',
       margin: '0', padding: '0', overflow: 'visible',
-      pointerEvents: 'none', zIndex: '2147483000',
-      transformOrigin: 'center center', opacity: '1'
+      pointerEvents: 'none', userSelect: 'none',
+      zIndex: '2147483647', transformOrigin: 'center center',
+      isolation: 'isolate', opacity: '1', visibility: 'visible',
+      contain: 'none'
     };
-    Object.keys(declarations).forEach(function (key) {
-      shell.style.setProperty(key.replace(/[A-Z]/g, function (c) {
-        return '-' + c.toLowerCase();
-      }), declarations[key], 'important');
+    Object.keys(visual).forEach(function(key) {
+      shell.style.setProperty(
+        key.replace(/[A-Z]/g, function(ch){return '-' + ch.toLowerCase();}),
+        visual[key], 'important'
+      );
     });
-
     var clone = snapshot.clone;
     clone.removeAttribute('id');
-    clone.setAttribute('aria-hidden', 'true');
+    clone.setAttribute('aria-hidden','true');
+    clone.style.setProperty('display', 'block', 'important');
+    clone.style.setProperty('width', '100%', 'important');
+    clone.style.setProperty('height', '100%', 'important');
+    clone.style.setProperty('margin', '0', 'important');
+    clone.style.setProperty('min-width', '0', 'important');
     clone.style.setProperty('content-visibility', 'visible', 'important');
     clone.style.setProperty('contain', 'none', 'important');
+    clone.style.setProperty('visibility', 'visible', 'important');
+    clone.style.setProperty('opacity', '1', 'important');
     clone.style.setProperty('pointer-events', 'none', 'important');
-    clone.querySelectorAll('[id]').forEach(function (node) { node.removeAttribute('id'); });
-    clone.querySelectorAll('button,a,input,select,textarea,[tabindex]').forEach(function (node) {
-      node.setAttribute('tabindex', '-1');
+    clone.querySelectorAll('[id]').forEach(function (node) {
+      node.removeAttribute('id');
+    });
+    clone.querySelectorAll('button,a,input,select,textarea,[tabindex]').forEach(function(node) {
+      node.setAttribute('tabindex','-1');
       if ('disabled' in node) node.disabled = true;
     });
-
-    var hierarchy = clone;
-    (snapshot.ancestors || []).forEach(function (className) {
-      var wrapper = document.createElement('div');
-      wrapper.className = className;
-      wrapper.style.setProperty('display', 'contents', 'important');
-      wrapper.style.setProperty('overflow', 'visible', 'important');
-      wrapper.appendChild(hierarchy);
-      hierarchy = wrapper;
-    });
-    shell.appendChild(hierarchy);
-    workspace.appendChild(shell);
-    // Fixed descendants can be offset by a transformed workspace. Compensate.
-    var located = shell.getBoundingClientRect();
-    shell.style.setProperty('left', snapshot.rect.left * 2 - located.left + 'px', 'important');
-    shell.style.setProperty('top', snapshot.rect.top * 2 - located.top + 'px', 'important');
+    shell.appendChild(clone);
+    // Ensure a readable silhouette even if the native build uses low-contrast
+    // cards. Do not draw over the order content or alter the real order.
+    shell.style.setProperty('filter', 'drop-shadow(0 18px 22px rgba(25,69,140,.29))','important');
+    document.body.appendChild(shell);
     return shell;
   }
 
@@ -158,7 +186,7 @@
     if (target.width < 8 || target.height < 8) return;
     var shell;
     try {
-      shell = makeShell(snapshot, workspace);
+      shell = makeShell(snapshot);
       active.add(shell);
       if (snapshot.card.isConnected) snapshot.card.style.setProperty('visibility', 'hidden', 'important');
       var origin = snapshot.rect;
@@ -180,17 +208,19 @@
         return;
       }
       var duration = window.matchMedia &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 260 : 880;
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 320 : 1380;
       var motion = shell.animate([
         { offset: 0, transform: 'translate3d(0px,0px,0) scale(1)', opacity: 1 },
-        { offset: .18, transform: 'translate3d(' + dx * .08 + 'px,' + (dy * .05 - 13) + 'px,0) scale(.96)', opacity: 1 },
-        { offset: .63, transform: 'translate3d(' + dx * .67 + 'px,' + (dy * .55 - 19) + 'px,0) scale(.54)', opacity: .88 },
+        { offset: .12, transform: 'translate3d(' + dx * .045 + 'px,-22px,0) scale(1.035)', opacity: 1 },
+        { offset: .34, transform: 'translate3d(' + dx * .29 + 'px,' + (dy * .19 - 42) + 'px,0) scale(.94)', opacity: 1 },
+        { offset: .62, transform: 'translate3d(' + dx * .68 + 'px,' + (dy * .55 - 37) + 'px,0) scale(.66)', opacity: 1 },
+        { offset: .84, transform: 'translate3d(' + dx * .91 + 'px,' + (dy * .83 - 14) + 'px,0) scale(.35)', opacity: .72 },
         { offset: 1, transform: 'translate3d(' + dx + 'px,' + dy + 'px,0) scale(' + scale + ')', opacity: 0 }
-      ], { duration: duration, easing: 'cubic-bezier(.22,.78,.22,1)', fill: 'forwards' });
+      ], { duration: duration, easing: 'cubic-bezier(.26,.68,.18,1)', fill: 'forwards' });
       motion.addEventListener('finish', complete, { once: true });
       motion.addEventListener('cancel', complete, { once: true });
       setTimeout(complete, duration + 500); // fail-safe for WebView/Windows 7
-      window.PB1594LabFlightDiagnostic = 'flying:' + stage;
+      window.PB1594LabFlightDiagnostic = 'flying-visible:' + stage;
     } catch (error) {
       if (shell) { shell.remove(); active.delete(shell); }
       if (snapshot.card.isConnected) snapshot.card.style.removeProperty('visibility');

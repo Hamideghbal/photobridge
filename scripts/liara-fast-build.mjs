@@ -781,3 +781,11 @@ await deployStep('./enable-r1584-price-increase.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1584-price-increase.cjs'],{stdio:'inherit'});
 
 await deployStep('./enable-r1585-preview-photographers.mjs');
+ 
+// R1586: experimental print-only three-way uploads; drain in-flight requests before cleanup.
+// Never alter album upload or Windows Lab download behavior.
+await deployStep('./enable-r1586-print-upload-pool.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1586-print-pool.cjs'],{
+  stdio:'inherit',env:{...process.env,PB1586_VERIFY_BUNDLE:'1'}
+});
+

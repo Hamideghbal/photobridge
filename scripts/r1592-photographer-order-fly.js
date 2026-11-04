@@ -20,6 +20,7 @@
   }
 
   function fly({orderId,mode='print',target}={}) {
+    let original=null,ghost=null;
     try {
       if(!orderId || !['ready','completed','needs_fix','flow'].includes(target))return false;
       if(!document.documentElement.matches('.pb1126Desktop,.pb1126Embedded'))return false;
@@ -32,13 +33,13 @@
 
       const root=document.querySelector('#root .liveCustomerOrders');
       if(!root)return false;
-      const original=Array.from(root.querySelectorAll('.liveOrderCard[data-order-id]'))
+      original=Array.from(root.querySelectorAll('.liveOrderCard[data-order-id]'))
         .find(card=>card.dataset.orderId===String(orderId));
       if(!original || typeof original.animate!=='function')return false;
       const from=original.getBoundingClientRect(),to=tab.getBoundingClientRect();
       if(from.width<80 || from.height<30 || from.bottom<0 || from.top>window.innerHeight)return false;
 
-      const ghost=original.cloneNode(true);
+      ghost=original.cloneNode(true);
       ghost.classList.add('pb1592FlyingOrderCard');
       ghost.setAttribute('aria-hidden','true');
       ghost.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
@@ -85,6 +86,9 @@
       motion.addEventListener('cancel',cleanup,{once:true});
       return true;
     }catch(error){
+      // Fail open: restore the original card if this device cannot animate it.
+      if(ghost&&ghost.isConnected)ghost.remove();
+      if(original&&original.isConnected)original.style.removeProperty('opacity');
       // Animation must never interfere with order refresh or change the status.
       if(window.console && typeof console.debug==='function')console.debug('[PB1592] motion skipped',error);
       return false;

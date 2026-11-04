@@ -781,3 +781,5 @@ await deployStep('./enable-r1584-price-increase.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1584-price-increase.cjs'],{stdio:'inherit'});
 
 await deployStep('./enable-r1585-preview-photographers.mjs');
+
+await deployStep('./enable-r1586-opening-debt-history.mjs');

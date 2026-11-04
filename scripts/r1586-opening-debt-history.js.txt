@@ -1,0 +1,14 @@
+async function readInitialDebtHistory(db,labId,customerId){
+ const result=await db.query(`WITH changes AS (
+  SELECT t.id,t.txn_date,t.created_at,SUM(e.debit-e.credit)::bigint delta
+  FROM finance_entries e JOIN finance_transactions t ON t.id=e.transaction_id AND t.lab_id=$1
+  JOIN finance_accounts fa ON fa.id=e.account_id AND fa.lab_id=$1 AND fa.system_key='receivable'
+  WHERE e.customer_id=$2 AND ((t.reference_type='lab_delegated_opening_debt' AND t.reference_id=$2)
+   OR t.reference_type IN ('lab_manual_customer_initial_debt_adjustment','accounting_opening_balance_change'))
+  GROUP BY t.id,t.txn_date,t.created_at
+ ), history AS (
+  SELECT *,SUM(delta) OVER(ORDER BY txn_date,created_at,id ROWS UNBOUNDED PRECEDING)::bigint amount FROM changes
+ ) SELECT * FROM history ORDER BY txn_date DESC,created_at DESC,id DESC LIMIT 50`,[labId,customerId]);
+ const history=result.rows.map(row=>({id:row.id,recordedAt:row.txn_date,delta:Number(row.delta),amount:Number(row.amount)}));
+ return{initialDebt:history[0]?.amount||0,initialDebtUpdatedAt:history[0]?.recordedAt||null,initialDebtHistory:history};
+}

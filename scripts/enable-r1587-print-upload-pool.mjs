@@ -58,7 +58,7 @@ if(js.includes('PB1587runUploadPool=')){
     'await PB1587runUploadPool(PB1587jobs,E.current.some(bt=>bt.sizeId==="__custom__")?1:3,PB1587uploadOne);'
   ].join('\n');
   js=js.slice(0,start)+replacement+js.slice(finish+2);
-  if(js.includes(begin)||!js.includes('await PB1587runUploadPool(PB1587jobs,3,PB1587uploadOne)'))throw new Error('R1587 patch verification failed');
+  if(js.includes(begin)||!js.includes('await PB1587runUploadPool(PB1587jobs,E.current.some(bt=>bt.sizeId==="__custom__")?1:3,PB1587uploadOne)'))throw new Error('R1587 patch verification failed');
   fs.writeFileSync(bundle,js);
   console.log('R1587 print upload pool installed, max 3 concurrent, awaiting all active requests on failure');
 }

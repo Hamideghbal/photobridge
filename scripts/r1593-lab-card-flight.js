@@ -142,7 +142,7 @@
     var clone = snapshot.clone;
     clone.removeAttribute('id');
     clone.setAttribute('aria-hidden','true');
-    clone.style.setProperty('display', 'block', 'important');
+    // Keep the exact flex/grid display captured from the visible card.
     clone.style.setProperty('width', '100%', 'important');
     clone.style.setProperty('height', '100%', 'important');
     clone.style.setProperty('margin', '0', 'important');

@@ -783,3 +783,11 @@ runR1314(process.execPath,['--test','scripts/test-r1584-price-increase.cjs'],{st
 await deployStep('./enable-r1585-preview-photographers.mjs');
 
 await deployStep('./enable-r1586-opening-debt-history.mjs');
+
+// R1587: print-only experimental upload pool. Strictly after latest R1586 changes.
+// Benchmarks are synthetic; live storage performance remains to be measured.
+await deployStep('./enable-r1587-print-upload-pool.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1587-print-pool.cjs'],{
+  stdio:'inherit',env:{...process.env,PB1587_VERIFY_BUNDLE:'1'}
+});
+

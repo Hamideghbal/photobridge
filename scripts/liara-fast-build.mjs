@@ -822,3 +822,9 @@ runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.c
 
 
 
+
+// R1593: COMPACT photographer print status layout and actual LAB Windows/site flight.
+// Must run AFTER native snapshot creation and all R1547/R1578/R1580/R1592 patches.
+// Update both dist/web and lab-desktop-ui plus the integrity-checked native manifest.
+await deployStep('./enable-r1593-lab-flight-and-photographer-card.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1593-lab-flight-and-card.cjs'],{stdio:'inherit'});

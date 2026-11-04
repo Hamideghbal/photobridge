@@ -18,3 +18,5 @@ test('notification progress is bounded, isolated by lab and cleared on dismissal
  for(let i=0;i<25;i++)controller.updateDownload({orderId:'order-'+i,phase:'downloading',percent:25},'A');assert.equal(controller.state().downloads.length,20);
  account='B';assert.equal(controller.state().downloads.length,0);controller.updateDownload({orderId:'old'},'A');assert.equal(controller.state().downloads.length,0);controller.updateDownload({orderId:'new'},'B');assert.equal(controller.state().downloads[0].orderId,'new');controller.dismiss();assert.equal(controller.state().downloads.length,0);
 });
+
+test('failure reason reaches the alert, is bounded and is cleared when download resumes',()=>{const error={orderId:'order-1',phase:'failed',reason:'مسئول ذخیره‌سازی انتخاب نشده است.'};assert.equal(normalizeProgress(error).reason,error.reason);assert.equal(normalizeProgress({...error,reason:'x'.repeat(600)}).reason.length,400);assert.equal(normalizeProgress({...error,phase:'downloading'}).reason,'');});

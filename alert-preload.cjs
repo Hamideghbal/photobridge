@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('labAlert',{
  save:value=>ipcRenderer.invoke('lab-alert-save',value),
  acknowledge:ids=>ipcRenderer.invoke('lab-alert-ack',ids),
  open:ids=>ipcRenderer.invoke('lab-alert-open',ids),
+ onProgress:callback=>ipcRenderer.on('lab-alert-progress',(_event,items)=>{if(typeof callback==='function')callback(items)}),
  onChange:callback=>ipcRenderer.on('lab-alert-change',()=>callback())
 });

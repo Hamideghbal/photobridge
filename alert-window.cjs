@@ -3,7 +3,7 @@ const path=require('node:path');
 const {normalizeSettings,initializeSettings}=require('./alert-settings.cjs');
 class AlertWindow {
  constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
-  Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,getWorkArea});this.window=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();
+  Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();
   const valid=event=>this.window&&!this.window.isDestroyed()&&event.sender===this.window.webContents;
   ipcMain.handle('lab-alert-layout',(event,height)=>{if(!valid(event))throw Error('invalid_sender');const area=this.getWorkArea(),h=Math.max(220,Math.min(640,area.height-80,Number(height)||300)),w=Math.min(420,area.width-40);this.window.setContentSize?.(w,Math.ceil(h));const bounds=this.window.getBounds?.();if(bounds)this.window.setPosition?.(Math.max(area.x+8,area.x+area.width-bounds.width-20),Math.max(area.y+8,area.y+area.height-bounds.height-20));return h});
   ipcMain.handle('lab-alert-state',event=>{if(!valid(event))throw Error('invalid_sender');return this.state()});
@@ -12,8 +12,15 @@ class AlertWindow {
   ipcMain.handle('lab-alert-reply',(event,value)=>{if(!valid(event))throw Error('invalid_sender');return this.sendReply(value)});
   ipcMain.handle('lab-alert-open',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(ids,true)});
  }
+ updateDownload(value,account){
+  if(!account||account!==this.getAccount())return;
+  if(this.downloadAccount!==account){this.downloads.clear();this.downloadAccount=account}
+  this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
+  while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
+  if(this.window&&!this.window.isDestroyed())this.window.webContents.send('lab-alert-progress',[...this.downloads.values()]);
+ }
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}
- state(){return {items:this.items,settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
+ state(){const downloads=this.downloadAccount===this.getAccount()?[...this.downloads.values()]:[];return {downloads,items:this.items,settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
  ensure(){
   if(this.window&&!this.window.isDestroyed())return this.window;
   const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
@@ -49,7 +56,7 @@ class AlertWindow {
   if(this.window&&!this.window.isDestroyed()){this.window.flashFrame(false);if(!this.items.length)this.window.hide();this.window.webContents.send('lab-alert-change')}
   return true;
  }
- dismiss(){this.items=[];this.ack=null;this.account=null;this.settingsOnly=false;if(this.window&&!this.window.isDestroyed()){this.window.webContents.send('lab-alert-change');this.window.hide();this.window.flashFrame(false)}}
+ dismiss(){this.downloads.clear();this.downloadAccount=null;this.items=[];this.ack=null;this.account=null;this.settingsOnly=false;if(this.window&&!this.window.isDestroyed()){this.window.webContents.send('lab-alert-change');this.window.hide();this.window.flashFrame(false)}}
  destroy(){this.window?.destroy();this.window=null;for(const name of ['state','save','ack','open','layout','reply'])this.ipcMain.removeHandler('lab-alert-'+name)}
 }
 module.exports={AlertWindow};

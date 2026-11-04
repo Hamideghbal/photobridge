@@ -3,6 +3,10 @@ const $=id=>document.getElementById(id);let state={items:[],settings:{}},timer=n
 const replyDrafts=new Map(),replyBusy=new Set();
 const controls=['mode','tone','volume','interval'];
 function fit(){requestAnimationFrame(()=>void window.labAlert.layout(Math.ceil(document.body.getBoundingClientRect().height)).catch(()=>{}))}
+function renderDownloads(items){
+ const root=$('downloads');root.replaceChildren();root.hidden=!items?.length;
+ for(const item of (items||[]).slice(-5)){const row=document.createElement('div');row.className='download '+item.phase;const title=document.createElement('strong'),label=document.createElement('small'),bar=document.createElement('progress');title.textContent='سفارش '+(item.number?'#'+item.number:'');const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',failed:'دانلود کامل نشد؛ نیازمند بررسی'};label.textContent=phase[item.phase]+' · '+Number(item.percent||0).toLocaleString('fa-IR')+'٪'+(item.total?' · '+Number(item.done).toLocaleString('fa-IR')+' از '+Number(item.total).toLocaleString('fa-IR')+' فایل':'');bar.max=100;bar.value=item.percent;bar.setAttribute('aria-label',title.textContent+'؛ '+phase[item.phase]);row.append(title,label,bar);root.append(row)}fit();
+}
 function status(message){$('status').textContent=message;fit();}
 function controlsState(){return {mode:$('mode').value,tone:$('tone').value,volume:Number($('volume').value),interval:Number($('interval').value)}}
 function stop(){if(timer)clearInterval(timer);timer=null;context?.suspend().catch(()=>{});}
@@ -20,7 +24,7 @@ function updateControls(){const s=controlsState();$('volumeText').textContent=s.
 async function refresh(){
  const id=++refreshId;try{
   await saveChain;const next=await window.labAlert.state();if(id!==refreshId)return;
-  const hadItems=state.items.length>0,fresh=next.items.some(x=>!played.has(x.id));state=next;for(const key of replyDrafts.keys())if(!next.items.some(n=>n.id===key))replyDrafts.delete(key);
+  const hadItems=state.items.length>0,fresh=next.items.some(x=>!played.has(x.id));state=next;renderDownloads(next.downloads);for(const key of replyDrafts.keys())if(!next.items.some(n=>n.id===key))replyDrafts.delete(key);
   for(const name of controls)$(name).value=String(next.settings[name]);updateControls();
   $('title').textContent=state.items.length?state.items.length.toLocaleString('fa-IR')+' اعلان جدید':'تنظیمات صدای اعلان';
   $('hint').textContent=state.items.length?'با «همه را دیدم»، تمام اعلان‌های این پنجره تأیید می‌شوند.':'حتی وقتی پنجرهٔ اصلی بسته است، اعلان سفارش فعال می‌ماند.';
@@ -39,4 +43,5 @@ for(const [button,method] of [['ack','acknowledge'],['open','open']])$(button).o
 };
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else void refresh()});
 $('preferences').addEventListener('toggle',fit);document.fonts.ready.then(fit);
+window.labAlert.onProgress(items=>renderDownloads(items));
 window.labAlert.onChange(()=>void refresh());void refresh();

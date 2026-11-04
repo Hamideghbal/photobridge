@@ -13,7 +13,7 @@ const ui='dist/web/assets/index-UIRefine-v655-r84.js';
 function setup({reduced=false,hidden=false}={}){
   const cssCalls=[],classes=new Set(),events={};
   const style=()=>({setProperty(){},removeProperty(){}});
-  const target={isConnected:true,offsetWidth:102,classList:{add:s=>classes.add(s),remove:s=>classes.delete(s)},
+  const target={isConnected:true,offsetWidth:102,animate(){return{}},classList:{add:s=>classes.add(s),remove:s=>classes.delete(s)},
     getBoundingClientRect:()=>({left:420,top:35,width:112,height:32})};
   const buttons=Array.from({length:4},()=>target);
   const original={isConnected:true,dataset:{orderId:'an-order-1'},style:style(),

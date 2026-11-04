@@ -34,7 +34,7 @@ class AlertWindow {
  }
  async present(options,_onOpen,ack,account){
   if(this.getAccount()!==account)return;
-  const previous=this.window&&!this.window.isDestroyed()?this.items.map(x=>x.id).join('|'):'';this.items=options.items||[];this.account=account;this.ack=ack;this.settingsOnly=false;
+  const previous=this.window&&!this.window.isDestroyed()?this.items.map(x=>x.id).join('|'):'';const incoming=options.items||[],retained=this.account===account?this.items:[],seen=new Set();this.items=[...incoming,...retained].filter(item=>{if(seen.has(item.id))return false;seen.add(item.id);return true});this.account=account;this.ack=ack;this.settingsOnly=false;
   const win=this.ensure();await this.ready;if(this.getAccount()!==account||this.window!==win||win.isDestroyed())throw Error('alert_account_changed');if(previous!==this.items.map(x=>x.id).join('|')){this.hiddenByUser=false;win.webContents.send('lab-alert-change');win.show();win.restore();win.focus();win.flashFrame(true)}
  }
  showSettings(){this.hiddenByUser=false;this.settingsOnly=!this.items.length;const win=this.ensure();win.webContents.send('lab-alert-change');win.show();win.restore();win.focus();}

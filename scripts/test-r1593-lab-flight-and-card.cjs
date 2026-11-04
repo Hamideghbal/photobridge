@@ -77,7 +77,7 @@ test('hidden tab, reduced motion, or small viewport skips animation without hidi
    const t=createDom(option);
    assert.equal(t.window.PB1593LabFlyOrder({orderId:'lab-order-1',target:'ready'}),false);
    assert(!t.hiddenOriginal.value);
-   assert.equal(t.getGhost(),undefined);
+   assert.equal(t.getGhost(),null);
  }
 });
 

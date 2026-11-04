@@ -1,0 +1,157 @@
+/* R1591 — Photographer desktop print-order card: four separated, aligned zones.
+   Intentionally limited to print orders (album cards and mobile remain unchanged). */
+@media (min-width:821px) {
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) > .liveOrderMainRow {
+    display:grid!important;
+    grid-template-columns:minmax(115px,.8fr) minmax(132px,.9fr) minmax(235px,2fr) minmax(130px,.9fr)!important;
+    grid-template-areas:"head facts progress actions" "details details details details"!important;
+    column-gap:0!important;
+    row-gap:9px!important;
+    align-items:stretch!important;
+    direction:rtl!important;
+    min-width:0!important;
+  }
+
+  /* Section 1: order identification remains right aligned. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderHead {
+    grid-area:head!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-start!important;
+    text-align:right!important;
+    align-self:stretch!important;
+    min-width:0!important;
+    padding:9px 4px 9px 12px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .customerOrderHead > div {
+    justify-items:start!important;
+    text-align:right!important;
+  }
+
+  /* Section 2: facts centered within THEIR section, bounded by first divider. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderFacts {
+    grid-area:facts!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    align-items:center!important;
+    justify-items:center!important;
+    align-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:9px 12px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .customerOrderFacts > span {
+    justify-items:center!important;
+    align-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+
+  /* Section 3: no "وضعیت چاپ" header; dots/labels centered between dividers. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .pb1464OrderProgress {
+    grid-area:progress!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    place-content:center!important;
+    justify-items:center!important;
+    align-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:6px 15px!important;
+    margin:0!important;
+    gap:0!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress > small {
+    display:none!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress > .liveTimeline {
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    justify-self:center!important;
+    align-self:center!important;
+    direction:rtl!important;
+  }
+
+  /* Section 4: operation controls hug the LEFT edge, with a third divider. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderQuickRail {
+    grid-area:actions!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-end!important;
+    align-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:8px 8px 8px 12px!important;
+    margin:0!important;
+    gap:7px!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    background:transparent!important;
+    text-align:left!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .customerOrderQuickRail > span {
+    display:block!important;
+    width:100%!important;
+    text-align:left!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .customerOrderQuickActions {
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:wrap!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    direction:rtl!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    gap:5px!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard:not(.albumCustomerOrderCard) .customerOrderQuickActions > button {
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+  }
+}

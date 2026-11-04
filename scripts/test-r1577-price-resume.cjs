@@ -22,3 +22,8 @@ for(const native of [false,true]){
   const missing=fixture({incomplete:true});await missing.context.run({order:missing.order,ready:true});assert(missing.calls.some(x=>x[0]==='price-dialog'));assert.equal(missing.checkpoint().phase,'waiting_for_pricing');
  });
 }
+
+for(const root of ['dist/web','dist/web/lab-desktop-ui'])test(root+': next missing-price dialog waits until the current invoice continuation finishes',()=>{
+ const source=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8'),a=source.indexOf('x.useEffect(()=>{const lab=t?.id;'),b=source.indexOf('},[t?.id,p,Se,E]);',a);assert(a>0&&b>a);let effect,opened=0,ids=['next'];const context={t:{id:'lab'},E:'current',Se:null,p:[{id:'next'}],on:()=>opened++,localStorage:{getItem:()=>JSON.stringify(ids),setItem:(_,value)=>ids=JSON.parse(value)},x:{useEffect:(fn,dependencies)=>{effect=fn;assert.equal(dependencies.at(-1),context.E)}},addEventListener(){},removeEventListener(){}};
+ const script=source.slice(a,b+'},[t?.id,p,Se,E]);'.length);vm.runInNewContext(script,context);const stop=effect();assert.equal(opened,0);assert.equal(ids.length,1);stop();context.E='';vm.runInNewContext(script,context);effect();assert.equal(opened,1);assert.equal(ids.length,0);
+});

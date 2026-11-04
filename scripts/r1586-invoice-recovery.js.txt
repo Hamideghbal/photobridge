@@ -1,0 +1,24 @@
+function pb1586InvoiceProblem(stage,error){const code=pb1568Problem(error),label=stage==='print'?'فاکتور صادر شده است؛ چاپ فاکتور انجام نشد. چاپگر و صف چاپ را بررسی کنید.':stage==='pdf'?'فاکتور صادر شده است؛ ذخیرهٔ PDF انجام نشد. پس از بررسی اتصال دوباره تلاش کنید.':'دانلود کامل و تأیید شده است؛ صدور فاکتور انجام نشد. پس از بررسی اتصال دوباره تلاش کنید.';return label+' کد: '+String(code).slice(0,100)}
+function pb1586NetworkFailure(error){const code=pb1568Problem(error)+' '+String(error?.cause?.code||'');return typeof navigator!=='undefined'&&navigator.onLine===false||/internet_offline|online_connection_required|download_device_registration_offline|\boffline\b|failed to fetch|fetch failed|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|AbortError|TimeoutError|ERR_NETWORK|network.?error|request_timeout|net::ERR_|connection (?:closed|reset|lost)|load failed/i.test(code)}
+function pb1586NetworkReason(){return 'اتصال اینترنت یا ارتباط با سرور قطع شده است. فایل‌های سالم حفظ شده‌اند؛ پس از اتصال، ادامهٔ دانلود به‌صورت خودکار انجام می‌شود. از «ادامهٔ دانلود» هم می‌توانید استفاده کنید.'}
+function pb1586RestoreDownloads(lab){
+ if(!lab||typeof pb1581Transfers==='undefined')return;let changed=false;
+ for(const transfer of pb1581Transfers.values()){
+  const value=transfer.value;if(!value?.networkError||String(value.labId)!==String(lab))continue;
+  const task=pb1568State(lab,value.orderId);if(task&&task.phase!=='complete')pb1568Save(lab,value.orderId,{...task,retryAt:0,error:null});
+  pb1581Report({id:value.orderId,lab_id:lab,number:value.number},{phase:'checking',stage:value.stage,networkError:false,downloadVerified:value.downloadVerified===true,reason:'',queued:true});changed=true;
+ }
+ if(changed)pb1586WakeDownloads();
+}
+let pb1586NetworkDialog=null,pb1586ProbeBusy=false;
+function pb1586ShowNetworkProblem(order,stage){
+ if(typeof document==='undefined'||pb1586NetworkDialog?.isConnected)return;
+ pb1547Notice(pb1586NetworkReason(),'warning');const dialog=[...document.querySelectorAll('dialog.pb1547Notice')].at(-1);if(!dialog)return;pb1586NetworkDialog=dialog;dialog.dataset.pb1586Network='true';const heading=dialog.querySelector('h3');if(heading)heading.textContent='ارتباط اینترنت قطع شده است';
+ const retry=document.createElement('button');retry.type='button';retry.textContent=stage==='download'?'ادامهٔ دانلود':'ادامهٔ فاکتور';retry.onclick=async()=>{retry.disabled=true;try{await pb1583RetryDownload({labId:order.lab_id,orderId:order.id,number:order.number})}finally{retry.disabled=false}};dialog.querySelector('footer')?.prepend(retry);
+}
+async function pb1586ProbeConnection(){
+ if(pb1586ProbeBusy||typeof pb1581Transfers==='undefined'||(!pb1586NetworkDialog?.isConnected&&![...pb1581Transfers.values()].some(item=>item.value?.networkError)))return;
+ const lab=pb1568Work.labId;if(!lab)return;pb1586ProbeBusy=true;
+ try{const response=await fetch('/api/lab/write-access',{cache:'no-store'}),data=await response.json();if(!response.ok||data.offline===true||response.headers.get('X-PhotoBridge-Offline')==='1'||pb1568Work.labId!==lab)return;pb1586RestoreDownloads(lab);if(pb1586NetworkDialog?.isConnected)pb1586NetworkDialog.querySelector('.pb1547NoticeDismiss')?.click();pb1586NetworkDialog=null;}catch{}finally{pb1586ProbeBusy=false}
+}
+if(typeof window!=='undefined'&&window.pbNativeStorage){setInterval(()=>void pb1586ProbeConnection(),5000);addEventListener('online',()=>void pb1586ProbeConnection());}

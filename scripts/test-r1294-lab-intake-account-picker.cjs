@@ -4,6 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const handler=()=>import(pathToFileURL(path.resolve('dist/api/lab-manual-customer-controls.js')).href);
+const datedCorrections=fs.readFileSync('dist/api/lab-manual-customer-controls.js','utf8').includes('async function readInitialDebtHistory(');
 
 test('lab intake picker has only customer identity/status while account summary loads after selection',()=>{
  const ui=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
@@ -31,6 +32,8 @@ function setup({owner=true,member=true,invoiced=false,opening=25000,pending=true
   if(sql.includes('FROM lab_memberships'))return rows(member?[{active:!pending||(completeDuringSave&&sql.includes('FOR UPDATE'))}]:[]);
   if(sql.includes('FROM labs WHERE id=$1 AND created_by=$2'))return rows(owner?[{}]:[]);
   if(sql.includes('AS sms_enabled'))return rows([{can_edit:owner,sms_enabled:true}]);
+  if(sql.includes('clock_timestamp()'))return rows([{recorded_at:'2026-11-04T15:00:00Z'}]);
+  if(sql.includes('WITH changes AS'))return rows([{id:'history',amount:initial,delta:initial,txn_date:'2026-11-04T15:00:00Z'}]);
   if(sql.includes('AS initial_debt'))return rows([{initial_debt:initial}]);
   if(sql.includes('AS balance'))return rows([{balance,updated_at:'2026-10-18T10:00:00Z'}]);
   if(sql.includes('FROM invoices'))return rows(invoiced?[{id:'invoice',number:19,total:30000,issued_at:'2026-10-18T08:00:00Z'}]:[]);
@@ -60,7 +63,7 @@ test('selected customer summary reports invoice, opening debt, receivable and ed
   assert.equal(s.responses[0].body.balance,25000);
   assert.equal(s.responses[0].body.initialDebt,25000);
   assert.equal(s.responses[0].body.hasInvoice,invoiced);
-  assert.equal(s.responses[0].body.canEditInitialDebt,!invoiced);
+  assert.equal(s.responses[0].body.canEditInitialDebt,datedCorrections||!invoiced);
   assert(s.queries.filter(x=>x.sql.includes('FROM invoices')).every(x=>x.args[0]==='lab'));
  }
 });
@@ -79,15 +82,15 @@ test('opening amount adjusts through balanced entries without overwriting invoic
  assert.equal(s.postings[0].lines.find(x=>x.accountKey==='opening_balance_equity').credit,5000);
  assert(!s.queries.some(x=>/UPDATE invoices/.test(x.sql)));
 });
-test('initial debt is immutable after any invoice and restricted to authenticated lab managers',async()=>{
+test('initial debt follows invoice policy and remains restricted to authenticated lab managers',async()=>{
  const {handleLabManualCustomerAccounts}=await handler();
- for(const [scenario,expectedStatus] of [[{invoiced:true},409],[{actorRole:'customer'},403],[{member:false},404]]){
+ for(const [scenario,expectedStatus] of [[{invoiced:true},datedCorrections?200:409],[{actorRole:'customer'},403],[{member:false},404]]){
   const s=setup(scenario);s.ctx.req.method='POST';
   s.ctx.url.pathname=s.ctx.url.pathname.replace('account-summary','adjust-initial-debt');
   s.ctx.bodyJson=async()=>({initialDebt:30000,expectedInitialDebt:25000,note:'اصلاح پیش از فاکتور'});
   await handleLabManualCustomerAccounts(s.ctx);
   assert.equal(s.responses.at(-1).status,expectedStatus);
-  assert.equal(s.postings.length,0);
+  assert.equal(s.postings.length,expectedStatus===200?1:0);
  }
  const stale=setup();stale.ctx.req.method='POST';
  stale.ctx.url.pathname=stale.ctx.url.pathname.replace('account-summary','adjust-initial-debt');

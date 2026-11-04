@@ -1,0 +1,15 @@
+/* R1586: wake the existing serialized automatic worker; do not bypass new-order eligibility or verification. */
+let pb1586WakeTimer=null,pb1586WakePending=false,pb1586LastWake=0;
+const pb1586NotificationIds=new Set();
+function pb1586WakeDownloads(){
+ if(!window.pbNativeStorage)return;pb1586WakePending=true;
+ if(pb1586WakeTimer!==null||pb1568Work.running)return;
+ pb1586WakeTimer=setTimeout(async()=>{pb1586WakeTimer=null;if(!pb1586WakePending||pb1568Work.running)return;pb1586WakePending=false;pb1586LastWake=Date.now();await pb1568AutoTick();if(pb1586WakePending)pb1586WakeDownloads()},Math.max(0,1000-(Date.now()-pb1586LastWake)));
+}
+function pb1586NoticeWake(url,data){
+ if(!window.pbNativeStorage||!/^\/api\/lab\/notifications(?:\?|$)/.test(url))return;
+ let fresh=false;for(const notice of data?.notifications||[]){if(!notice.id||notice.read_at||pb1586NotificationIds.has(notice.id))continue;pb1586NotificationIds.add(notice.id);fresh=true;}
+ while(pb1586NotificationIds.size>500)pb1586NotificationIds.delete(pb1586NotificationIds.values().next().value);
+ if(fresh)pb1586WakeDownloads();
+}
+if(window.pbNativeStorage){window.pbDesktopEvents?.onChange?.(pb1586WakeDownloads);addEventListener('online',pb1586WakeDownloads);addEventListener('photobridge-auth-session-changed',()=>{pb1586NotificationIds.clear();pb1586WakePending=false;if(pb1586WakeTimer!==null)clearTimeout(pb1586WakeTimer);pb1586WakeTimer=null;pb1586WakeDownloads()});pb1586WakeDownloads();}

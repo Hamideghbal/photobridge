@@ -181,6 +181,15 @@ jobs:
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1584-price-increase.cjs scripts/test-r1585-photographers.cjs
           node scripts/test-r1585-preview-photographers-browser.cjs
           node scripts/test-r1584-price-increase-browser.cjs
+      - name: Verify dated debt corrections and immediate download wake
+        run: |
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1586-opening-debt-db.cjs scripts/test-r1586-download-wake.cjs scripts/test-r1586-invoice-recovery.cjs
+          node scripts/test-r1586-download-resume.cjs
+          node scripts/test-r1586-opening-debt-browser.cjs
+          node scripts/test-r1586-intake-debt-browser.cjs
+          node scripts/test-r1586-reconnect-browser.cjs
       - name: Verify lab manager role is preserved during customer enrollment
         run: PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-lab-admin-role-preservation.cjs
       - name: Save frame editor screenshots

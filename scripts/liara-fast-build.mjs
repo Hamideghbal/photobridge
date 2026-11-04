@@ -802,5 +802,23 @@ runR1314(process.execPath,['--test','scripts/test-r1588-print-completion.cjs'],{
 await deployStep('./enable-r1590-photographer-desktop-card-fit.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1590-photographer-desktop-card-fit.cjs'],{stdio:'inherit'});
 
+// R1591: four separated desktop print-card zones; the title is hidden and the two
+// central sections are centered between dividers. Mobile and album cards unchanged.
+await deployStep('./enable-r1591-desktop-print-four-section.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1591-desktop-print-four-section.cjs'],{stdio:'inherit'});
+
+// R1592: demonstrate status-based card-to-tab flight in the photographer desktop.
+// Movement is presentation-only; the active tab does not change automatically.
+await deployStep('./enable-r1592-photographer-order-fly.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.cjs'],{stdio:'inherit'});
+
+
+// R1592: visually fly orders to their next tab on real status updates.
+// Never auto-switch the active photographer tab and never change server status.
+await deployStep('./enable-r1592-photographer-order-fly.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.cjs'],{stdio:'inherit'});
+
+
+
 
 

@@ -1,0 +1,54 @@
+/* R1592: lightweight floating order-card and destination-tab confirmation.
+   The body-level flying clone is outside React, aria-hidden, and never interactive. */
+.pb1592FlyingOrderCard{
+  position:fixed!important;
+  display:block!important;
+  z-index:2147483000!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  touch-action:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  direction:rtl!important;
+  transform-origin:center center!important;
+  border:1px solid #b9cdec!important;
+  border-radius:14px!important;
+  background:linear-gradient(150deg,#fff 10%,#f6f9ff 100%)!important;
+  box-shadow:0 20px 44px rgba(31,74,154,.19),0 3px 12px rgba(31,74,154,.12)!important;
+  will-change:transform,opacity,filter;
+}
+.pb1592FlyingOrderCard .liveOrderMainRow{
+  display:grid!important;
+  grid-template-columns:minmax(95px,.8fr) minmax(105px,.9fr) minmax(180px,2fr) minmax(105px,.9fr)!important;
+  grid-template-areas:"head facts progress actions"!important;
+  align-items:center!important;
+  gap:0!important;
+  padding:6px!important;
+  direction:rtl!important;
+}
+.pb1592FlyingOrderCard .customerOrderHead{grid-area:head!important}
+.pb1592FlyingOrderCard .customerOrderFacts{grid-area:facts!important}
+.pb1592FlyingOrderCard .pb1464OrderProgress{grid-area:progress!important}
+.pb1592FlyingOrderCard .customerOrderQuickRail{grid-area:actions!important}
+.pb1592FlyingOrderCard .mobileOrderDisclosure{display:none!important}
+.pb1592FlyingOrderCard .liveTimeline{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.pb1592FlyingOrderCard .albumCustomerTimeline{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+.pb1592FlyingOrderCard .liveTimeline>div{min-width:0!important;text-align:center!important}
+.pb1592FlyingOrderCard button{pointer-events:none!important}
+@keyframes pb1592TabReceived {
+  0%{background-color:transparent;box-shadow:0 0 0 0 rgba(66,127,232,.32);transform:scale(1)}
+  40%{background-color:#eaf3ff;box-shadow:0 0 0 6px rgba(66,127,232,.15);transform:scale(1.055)}
+  100%{background-color:transparent;box-shadow:0 0 0 0 rgba(66,127,232,0);transform:scale(1)}
+}
+html:is(.pb1126Desktop,.pb1126Embedded) .photographerContextStatusesDesktop button.pb1592TabReceivedOrder,
+html:is(.pb1126Desktop,.pb1126Embedded) .albumHeaderStatuses button.pb1592TabReceivedOrder{
+  animation:pb1592TabReceived .6s ease-out 1!important;
+  transform-origin:center center!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .pb1592FlyingOrderCard{display:none!important}
+ html:is(.pb1126Desktop,.pb1126Embedded) .photographerContextStatusesDesktop button.pb1592TabReceivedOrder,
+ html:is(.pb1126Desktop,.pb1126Embedded) .albumHeaderStatuses button.pb1592TabReceivedOrder{
+   animation:none!important;
+ }
+}

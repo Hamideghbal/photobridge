@@ -1,0 +1,17 @@
+/* A short horizontal route cue, independent from committing order stages. */
+.pb1578Transfer{position:fixed;z-index:1100;left:50%;right:auto;transform:translateX(-50%);width:min(420px,calc(100vw - 32px));box-sizing:border-box;padding:10px 16px 12px;border:1px solid #cadbff;border-radius:14px;background:#f8fbff;color:#405776;box-shadow:0 6px 22px #24446c20;font:13px/1.8 Vazirmatn,Tahoma,sans-serif;pointer-events:none}
+.pb1578Title{font-size:11px;color:#73839a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pb1578Route{display:flex;align-items:center;justify-content:space-between;gap:14px;white-space:nowrap}.pb1578Route strong{font-weight:700;color:#315efb}.pb1578Arrow{font-size:21px;line-height:1;color:#668bce}
+.pb1578Track{height:4px;position:relative;margin-top:8px;overflow:hidden;border-radius:8px;background:#e0e9f9}.pb1578Track::before{content:'';position:absolute;inset:0;background:linear-gradient(270deg,#698bff,#27a98e);transform-origin:right;animation:pb1578Travel .8s cubic-bezier(.2,.7,.25,1) both}
+.pb1578Destination{outline:2px solid #91afff!important;outline-offset:2px;animation:pb1578Glow 1.2s ease-out 1}
+@keyframes pb1578Travel{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes pb1578Glow{from{box-shadow:0 0 0 5px #5480ff30}to{box-shadow:0 0 0 0 #5480ff00}}
+@media(max-width:600px){.pb1578Transfer{font-size:12px;padding:9px 12px}.pb1578Title{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.pb1578Transfer,.pb1578Track::before,.pb1578Destination{animation:none!important}.pb1578Track::before{transform:scaleX(1)}}
+@media print{.pb1578Transfer{display:none!important}.pb1578Destination{outline:none!important;box-shadow:none!important}}
+html body #root .labRoleWorkspace .labActionTimeline>button[aria-busy="true"]{opacity:1!important;cursor:progress!important;background:#eef4ff!important;border-color:#9ab7ff!important}
+html body #root .labRoleWorkspace .labActionTimeline .timelineDot.pb1578Spinner{position:relative}
+html body #root .labRoleWorkspace .labActionTimeline .timelineDot.pb1578Spinner::after{content:'';position:absolute;inset:3px;border:2px solid #c2d3ff;border-top-color:#315efb;border-radius:50%;animation:pb1578Spin .75s linear infinite}
+@keyframes pb1578Spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){html body #root .labRoleWorkspace .labActionTimeline .timelineDot.pb1578Spinner::after{animation:none}}
+
+html.pb1578FeedbackEnabled body #root .labRoleWorkspace .labQueueTransitionNotice{display:none!important}

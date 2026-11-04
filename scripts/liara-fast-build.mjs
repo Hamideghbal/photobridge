@@ -765,3 +765,5 @@ await deployStep('./enable-r1576-pricing-backup.mjs');
 
 await deployStep('./enable-r1577-price-resume.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1577-price-resume.cjs'],{stdio:'inherit'});
+
+await deployStep('./enable-r1578-queue-transfer.mjs');

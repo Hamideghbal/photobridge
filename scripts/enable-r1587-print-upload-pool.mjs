@@ -18,7 +18,7 @@ if(js.includes('PB1587runUploadPool=')){
   const old=js.slice(start,finish+2);
   for(const required of [
     '/api/customer/uploads/presign', '/api/customer/uploads/complete',
-    'printCopies:pbPrintCopies(tt)', 'cropHandling:"none"',
+    'printCopies:pbPrintCopies(tt)', 'cropHandling:"lab"',
     'rs(Gt.uploadUrl,tt.file', 'ue.signal', 'ke(bt.id,tt.id,100)'
   ])if(!old.includes(required))throw new Error('R1587 print loop changed: missing '+required);
   const replacement=[
@@ -41,7 +41,7 @@ if(js.includes('PB1587runUploadPool=')){
     '      width:tt.width||null,height:tt.height||null,dpi:tt.dpi||null,',
     '      printSizeId:bt.sizeId==="__custom__"?null:bt.sizeId,',
     '      customSize:bt.sizeId==="__custom__"?bt.customSize:void 0,',
-    '      printType:_t,chassis:yt,frame:Tt,cropHandling:"none"})',
+    '      printType:_t,chassis:yt,frame:Tt,cropHandling:"lab"})',
     '  });',
     '  ye();',
     '  await rs(Gt.uploadUrl,tt.file,on=>{',

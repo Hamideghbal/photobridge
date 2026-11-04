@@ -1,7 +1,7 @@
 /* R1581: native notification progress and invoice preview use the existing verified download pipeline. */
 const pb1581Transfers=new Map(),pb1581Invoices=[],pb1581Shown=new Set();
 function pb1581Report(order,value){
- const reason=value.phase==='failed'?pb1582Explain(order,value.error,value.explain):'';if(value.phase==='verified')pb1582Problems.delete(order?.lab_id+':'+order?.id);
+ const reason=value.phase==='failed'?pb1582Explain(order,value.error,value.explain):'';if(value.phase==='verified'){for(const key of pb1582Problems.keys())if(key.startsWith((order?.lab_id||'')+':'))pb1582Problems.delete(key);}
  if(!window.pbNativeStorage||typeof window.pbDesktopEvents?.orderProgress!=='function'||!order?.id||!order.lab_id)return;
  const key=order.lab_id+':'+order.id,old=pb1581Transfers.get(key)||{last:0},phase=value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';
  old.value={...old.value,...value,labId:order.lab_id,orderId:order.id,number:order.number,phase,reason};
@@ -48,7 +48,7 @@ function pb1582Explain(order,error,show=false){
  };
  const network=['Failed to fetch','fetch failed','ETIMEDOUT','ECONNRESET','AbortError','ERR_NETWORK'].includes(code);
  const reason=messages[code]||(network?'ارتباط دریافت فایل قطع شد؛ اینترنت را بررسی و دوباره تلاش کنید.':'دریافت یا ذخیرهٔ فایل انجام نشد. کد خطا: '+code.slice(0,100));
- const key=(order?.lab_id||'')+':'+(order?.id||''),previous=pb1582Problems.get(key);
+ const key=(order?.lab_id||'')+':'+code,previous=pb1582Problems.get(key);
  if(show&&(!previous||previous.code!==code)){pb1582Problems.set(key,{code,at:Date.now()});if(pb1582Problems.size>50)pb1582Problems.delete(pb1582Problems.keys().next().value);if(typeof pb1547Notice==='function')pb1547Notice('دانلود سفارش'+(order?.number?' #'+order.number:'')+' انجام نشد؛ '+reason,'warning');void window.pbDesktopEvents?.focusForPricing?.(order?.lab_id)?.catch(()=>{})}
  return reason;
 }

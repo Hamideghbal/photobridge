@@ -33,7 +33,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  fs.copyFileSync('scripts/r1593-lab-card-flight.js',root+'/'+flight);
  const page=root+'/index.html';
  let html=fs.readFileSync(page,'utf8');
- html=html.replace('</head>','<script defer src="/'+flight+'?v=r1594"></script>\n</head>');
+ html=html.replace('</head>','<script defer src="/'+flight+'?v=r1595"></script>\n</head>');
  fs.writeFileSync(page,html);
  execFileSync(process.execPath,['--check',root+'/'+flight],{stdio:'inherit'});
 }
@@ -43,4 +43,4 @@ for(const name of ['assets/index-UIRefine-v655-r84.js','index.html',flight]){
  row.sha256=hash(fs.readFileSync(root+'/'+name));
 }
 m.build=hash(JSON.stringify(m.files));m.generatedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(m));
-console.log('[R1594] detached-safe lab order card shrink-flight, current queue stays selected');
+console.log('[R1595] body-level 1380ms legible Lab order card flight; site+Windows enabled');

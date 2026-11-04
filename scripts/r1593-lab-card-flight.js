@@ -39,8 +39,14 @@
     if (rect.width < 70 || rect.height < 24) return;
     // Preserve the original DOM BEFORE React removes/replaces the source card.
     // Never rely on card.isConnected after the status request resolves.
+    var ancestors = [];
+    var ancestor = card.parentElement;
+    while (ancestor && !ancestor.classList.contains('labRoleWorkspace') && ancestors.length < 9) {
+      ancestors.push(typeof ancestor.className === 'string' ? ancestor.className : '');
+      ancestor = ancestor.parentElement;
+    }
     last = {
-      card: card, stage: stage, at: Date.now(),
+      card: card, stage: stage, at: Date.now(), ancestors: ancestors,
       rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
       clone: card.cloneNode(true)
     };
@@ -116,17 +122,14 @@
     });
 
     var hierarchy = clone;
-    var cursor = snapshot.card.parentElement;
-    var depth = 0;
-    while (cursor && cursor !== workspace && depth++ < 9) {
+    (snapshot.ancestors || []).forEach(function (className) {
       var wrapper = document.createElement('div');
-      wrapper.className = (typeof cursor.className === 'string' ? cursor.className : '');
+      wrapper.className = className;
       wrapper.style.setProperty('display', 'contents', 'important');
       wrapper.style.setProperty('overflow', 'visible', 'important');
       wrapper.appendChild(hierarchy);
       hierarchy = wrapper;
-      cursor = cursor.parentElement;
-    }
+    });
     shell.appendChild(hierarchy);
     workspace.appendChild(shell);
     // Fixed descendants can be offset by a transformed workspace. Compensate.

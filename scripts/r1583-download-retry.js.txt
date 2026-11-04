@@ -1,0 +1,28 @@
+/* R1583: an explicit retry bypasses only the wait, using the existing resumable downloader. */
+const pb1583Queue=new Map(),pb1583Active=new Map();let pb1583Epoch=0;
+function pb1583CanRetry(order,lab){return !!(window.pbNativeStorage&&typeof pb1568State==='function'&&pb1568State(lab,order.id)?.phase==='pending_download'&&pb1568State(lab,order.id)?.error)}
+function pb1583RetryDownload(value){
+ if(!window.pbNativeStorage||!value?.labId||!value.orderId)return Promise.resolve(false);
+ const key=value.labId+':'+value.orderId;if(pb1583Active.has(key))return pb1583Active.get(key).promise;
+ let resolve;const promise=new Promise(done=>resolve=done),entry={...value,key,promise,resolve,epoch:pb1583Epoch};pb1583Active.set(key,entry);pb1583Queue.set(key,entry);void pb1583DrainRetries();return promise;
+}
+async function pb1583DrainRetries(){
+ if(pb1568Work.running||!pb1583Queue.size)return;pb1568Work.running=true;
+ try{while(pb1583Queue.size){const entry=pb1583Queue.values().next().value;pb1583Queue.delete(entry.key);let ok=false;
+  try{
+   const me=await Me('/api/auth/me');if(entry.epoch!==pb1583Epoch||String(me?.lab?.id)!==String(entry.labId))continue;
+   const order={id:entry.orderId,lab_id:entry.labId,number:entry.number};pb1581Report(order,{phase:'checking'});
+   const task=pb1568State(entry.labId,entry.orderId);
+   const detail=await Me('/api/lab/orders/'+encodeURIComponent(entry.orderId));
+   const settings=(await Me('/api/lab/automation')).settings;
+   if(entry.epoch!==pb1583Epoch)continue;
+   pb1568Save(entry.labId,entry.orderId,{...(task||{}),phase:'pending_download',attempts:0,retryAt:0,error:null});
+   // No force flag: existing complete files are checked and skipped, never re-downloaded.
+   await pb1568ProcessOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});
+   ok=pb1568State(entry.labId,entry.orderId)?.phase!=='pending_download';
+  }catch(error){if(entry.epoch===pb1583Epoch)pb1581Report({id:entry.orderId,lab_id:entry.labId,number:entry.number},{phase:'failed',error,explain:true});}
+  finally{if(pb1583Active.get(entry.key)===entry)pb1583Active.delete(entry.key);entry.resolve(ok);dispatchEvent(new CustomEvent('photobridge-lab-orders-changed'));}
+ }}finally{pb1568Work.running=false;}
+}
+if(typeof window!=='undefined'&&window.pbNativeStorage)window.pbDesktopEvents?.onDownloadRetry?.(value=>{void pb1583RetryDownload(value)});
+addEventListener('photobridge-auth-session-changed',()=>{pb1583Epoch++;for(const entry of pb1583Active.values())entry.resolve(false);pb1583Queue.clear();pb1583Active.clear()});

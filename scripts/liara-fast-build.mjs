@@ -773,3 +773,5 @@ await deployStep('./enable-r1580-stage-feedback.mjs');
 await deployStep('./enable-r1581-download-feedback.mjs');
 
 await deployStep('./enable-r1582-download-reason.mjs');
+
+await deployStep('./enable-r1583-download-retry.mjs');

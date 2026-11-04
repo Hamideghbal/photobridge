@@ -807,6 +807,12 @@ runR1314(process.execPath,['--test','scripts/test-r1590-photographer-desktop-car
 await deployStep('./enable-r1591-desktop-print-four-section.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1591-desktop-print-four-section.cjs'],{stdio:'inherit'});
 
+// R1592: visually fly orders to their next tab on real status updates.
+// Never auto-switch the active photographer tab and never change server status.
+await deployStep('./enable-r1592-photographer-order-fly.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.cjs'],{stdio:'inherit'});
+
+
 
 
 

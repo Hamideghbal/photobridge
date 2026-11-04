@@ -1,0 +1,36 @@
+/* R1593: Lab queue flying clone — works in website and the Windows laboratory UI. */
+.pb1593LabOrderFlight{
+  position:fixed!important;
+  display:block!important;
+  z-index:2147482900!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  touch-action:none!important;
+  overflow:hidden!important;
+  border:1px solid #b9cfee!important;
+  border-radius:12px!important;
+  background:linear-gradient(150deg,#fff,#f5f9ff)!important;
+  box-shadow:0 19px 44px rgba(36,73,138,.2)!important;
+  box-sizing:border-box!important;
+  transform-origin:center center!important;
+  will-change:transform,opacity,filter;
+  direction:rtl!important;
+}
+.pb1593LabOrderFlight .customerOrderHead,
+.pb1593LabOrderFlight .customerOrderFacts{display:inline-flex!important;align-items:center!important;gap:12px!important;margin:5px!important}
+.pb1593LabOrderFlight .labActionTimeline{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-around!important;gap:6px!important}
+.pb1593LabOrderFlight .labActionTimeline button{flex:1!important;display:grid!important;justify-items:center!important;gap:4px!important;padding:5px!important}
+.pb1593LabOrderFlight .labActionTimeline .timelineDot{position:static!important;transform:none!important}
+.pb1593LabOrderFlight :is(button,a){pointer-events:none!important}
+@keyframes pb1593LabReceive{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(49,94,251,.25)}
+  40%{transform:scale(1.055);box-shadow:0 0 0 6px rgba(49,94,251,.16);background-color:#edf4ff}
+  100%{transform:scale(1);box-shadow:0 0 0 0 transparent}
+}
+.stageQueueWorkspace .compactQueueFilters button.pb1593LabTabReceive{
+  animation:pb1593LabReceive .69s ease-out 1!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .pb1593LabOrderFlight{display:none!important}
+  .stageQueueWorkspace .compactQueueFilters button.pb1593LabTabReceive{animation:none!important}
+}

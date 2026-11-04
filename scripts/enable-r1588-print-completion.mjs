@@ -29,7 +29,7 @@ if(js.includes('const PB1588verifyUpload=')){
  }
  js=js.replace(insert,helper+insert);
  js=js.replace(original,newConfirm);
- const fallback=':"ارسال سفارش کامل نشد؛ دوباره تلاش کن.")';
+ const fallback=':"ارسال سفارش کامل نشد؛ دوباره تلاش کن."))';
  const better=':([502,503,504].includes(Number(ye?.status||0))?"عکس‌ها منتقل شدند، ولی سرور هنگام تأیید نهایی پاسخ نداد (خطای "+String(ye.status)+"). لطفاً کمی بعد دوباره تلاش کن.":"ارسال سفارش کامل نشد؛ دوباره تلاش کن.")';
  if(js.split(fallback).length===2)js=js.replace(fallback,better);
  if(!js.includes(newConfirm)||js.includes(original))throw new Error('R1588 patch validation failed');

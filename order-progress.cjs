@@ -6,7 +6,7 @@ function normalizeProgress(value){
  const totalBytes=number(value.totalBytes),loadedBytes=Math.min(totalBytes||Number.MAX_SAFE_INTEGER,number(value.loadedBytes));
  const total=Math.floor(number(value.total)),done=Math.min(total||Number.MAX_SAFE_INTEGER,Math.floor(number(value.done)));
  const measured=totalBytes?loadedBytes/totalBytes*100:total?done/total*100:number(value.percent);
- return {orderId:String(value.orderId),number:String(value.number||'').slice(0,48),phase:value.phase,reason:value.phase==='failed'?String(value.reason||'').slice(0,400):'',done,total,loadedBytes,totalBytes,percent:value.phase==='verified'?100:Math.max(0,Math.min(99,Math.floor(measured)))};
+ return {orderId:String(value.orderId),number:String(value.number||'').slice(0,48),phase:value.phase,retrySupported:value.retrySupported===true,queued:value.queued===true,reason:value.phase==='failed'?String(value.reason||'').slice(0,400):'',done,total,loadedBytes,totalBytes,percent:value.phase==='verified'?100:Math.max(0,Math.min(99,Math.floor(measured)))};
 }
 function installOrderProgress({ipcMain,getWindow,getAccount,getOrigin,update}){
  ipcMain.handle('lab-order-progress',(event,value)=>{

@@ -1,6 +1,7 @@
 'use strict';
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('labAlert',{
+ retryDownload:id=>ipcRenderer.invoke('lab-alert-retry-download',id),
  reply:(id,message)=>ipcRenderer.invoke('lab-alert-reply',{id,message}),
  layout:height=>ipcRenderer.invoke('lab-alert-layout',height),
  state:()=>ipcRenderer.invoke('lab-alert-state'),

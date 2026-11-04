@@ -22,7 +22,7 @@ function documentHtml({kind,labName,order,invoice,files=[],requirements=[],width
  @page{size:${widthMm}mm auto;margin:0}*{box-sizing:border-box}
  html,body{margin:0;padding:0;width:${widthMm}mm;max-width:${widthMm}mm;background:white;color:#101820}
  body{font:11px/1.55 Vazirmatn,Tahoma,sans-serif;direction:rtl}
- article{padding:3mm 2.5mm 5mm}h1{font-size:15px;text-align:center;margin:0}
+ article{width:100%;max-width:100%;padding:3mm 5mm 5mm}h1{font-size:15px;text-align:center;margin:0}
  h2{font-size:12px;text-align:center;margin:1mm 0 2mm}
  .meta{border-top:1px dashed #111;border-bottom:1px dashed #111;margin:2mm 0;padding:2mm 0}
  .line{display:flex;justify-content:space-between;gap:2mm;align-items:baseline}

@@ -798,4 +798,9 @@ runR1314(process.execPath,['--test','scripts/test-r1588-print-completion.cjs'],{
   stdio:'inherit',env:{...process.env,PB1588_VERIFY_BUNDLE:'1'}
 });
 
+// R1590: desktop photographer layout only; injected AFTER all existing CSS patches.
+await deployStep('./enable-r1590-photographer-desktop-card-fit.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1590-photographer-desktop-card-fit.cjs'],{stdio:'inherit'});
+
+
 

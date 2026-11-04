@@ -1,1 +1,1 @@
-2026-11-05-r1594-lab-card-shrink-flight-after-commit
+2026-11-05-r1595-visible-windows-lab-card-flight

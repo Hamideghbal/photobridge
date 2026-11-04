@@ -172,6 +172,8 @@ jobs:
           node --check dist/web/photobridge-r1207-frame-store.js
           node --check dist/web/photobridge-r1172-production-owner.js
           node --check dist/api/frame-production.js
+      - name: Verify invoices at verified download and nonblocking production stages
+        run: NODE_PATH=/tmp/photobridge-frame-browser/node_modules PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1575-download-invoice.cjs scripts/test-r1576-pricing-backup.cjs scripts/test-r1576-backup-browser.cjs
       - name: Verify lab manager role is preserved during customer enrollment
         run: PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-lab-admin-role-preservation.cjs
       - name: Save frame editor screenshots

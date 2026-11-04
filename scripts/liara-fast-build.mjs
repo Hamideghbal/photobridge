@@ -822,3 +822,7 @@ runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.c
 
 
 
+
+
+// R1593: Lab card flight only on a confirmed state change. Never auto-switch queue tabs.
+await deployStep('./enable-r1593-lab-card-flight.mjs');

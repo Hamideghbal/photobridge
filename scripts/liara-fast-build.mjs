@@ -762,3 +762,6 @@ runR1314(process.execPath,['--test','scripts/test-r1574-native-first-layout.cjs'
 await deployStep('./enable-r1575-download-invoice.mjs');
 
 await deployStep('./enable-r1576-pricing-backup.mjs');
+
+await deployStep('./enable-r1577-price-resume.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1577-price-resume.cjs'],{stdio:'inherit'});

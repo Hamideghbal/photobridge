@@ -1,0 +1,19 @@
+import fs from 'node:fs';import crypto from 'node:crypto';import {execFileSync} from 'node:child_process';
+for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+ const file=root+'/assets/index-UIRefine-v655-r84.js';let s=fs.readFileSync(file,'utf8');
+ const once=(a,b)=>{if(s.split(a).length!==2)throw Error('R1581 changed anchor '+a.slice(0,80));s=s.replace(a,b)};
+ const start=s.indexOf('async function pb1450Download(detail, progress = () => {}, options = {}) {'),end=s.indexOf('\n/* Only the public phone',start);if(start<0||end<start)throw Error('R1581 download function changed');
+ let download=s.slice(start,end);download=download.replace('  const id = detail.order.id;',`  const originalProgress=progress;progress=value=>{originalProgress(value);pb1581Report(detail.order,value)};
+  pb1581Report(detail.order,{phase:'checking',done:0,total:detail.files?.length||0,loadedBytes:0,totalBytes:0});
+  const id = detail.order.id;`);
+ download=download.replace('    throw error;\n  } finally',"    pb1581Report(detail.order,{phase:'failed'});\n    throw error;\n  } finally");s=s.slice(0,start)+download+s.slice(end);
+ once("  if(!result.order?.downloaded_at||result.verifiedFiles!==files.length)throw Error('تأیید دانلود کامل توسط سرور انجام نشد؛ دوباره تلاش کنید.');\n  return result;", "  if(!result.order?.downloaded_at||result.verifiedFiles!==files.length){pb1581Report(detail.order,{phase:'failed'});throw Error('تأیید دانلود کامل توسط سرور انجام نشد؛ دوباره تلاش کنید.');}\n  pb1581Report(detail.order,{phase:'verified',done:files.length,total:files.length,loadedBytes:files.reduce((sum,f)=>sum+f.bytes,0),totalBytes:files.reduce((sum,f)=>sum+f.bytes,0)});\n  return result;");
+ once(' await pb1547CompletePdf(result.invoice,orderId,ai());', ' await pb1547CompletePdf(result.invoice,orderId,ai());\n if(typeof pb1581OpenInvoice==="function")pb1581OpenInvoice(result.invoice,orderId,labId);');
+ once("const result=await pb1451LiveRecovery('/api/lab/orders/'+detail.order.id+'/download-receipt',{files});", "const result=await pb1451LiveRecovery('/api/lab/orders/'+detail.order.id+'/download-receipt',{files}).catch(error=>{pb1581Report(detail.order,{phase:'failed'});throw error});");
+ const hook='},[t?.id,p,Se,E]);';
+ once(hook,hook+`x.useEffect(()=>{const account=t?.id;if(!account)return;const show=()=>{if(W||Se)return;const index=pb1581Invoices.findIndex(item=>String(item.labId)===String(account));if(index<0)return;const item=pb1581Invoices.splice(index,1)[0];O({...item.invoice,lab_name:item.invoice.lab_name||t.name})};show();addEventListener('photobridge-download-invoice',show);return()=>removeEventListener('photobridge-download-invoice',show)},[W,Se,t?.id]);`);
+ if(root.endsWith('lab-desktop-ui'))once('     await pb1568PersistPdf(data.invoice,id);','     await pb1568PersistPdf(data.invoice,id);\n     if(typeof pb1581OpenInvoice==="function")pb1581OpenInvoice(data.invoice,id,lab);');
+ s+='\n'+fs.readFileSync('scripts/r1581-download-feedback.js.txt','utf8');fs.writeFileSync(file,s);execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+ const htmlFile=root+'/index.html';let html=fs.readFileSync(htmlFile,'utf8');html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url+'&downloadFeedback=r1581');fs.writeFileSync(htmlFile,html);
+}
+const root='dist/web/lab-desktop-ui',path=root+'/manifest.json',manifest=JSON.parse(fs.readFileSync(path)),sha=b=>crypto.createHash('sha256').update(b).digest('hex');for(const name of ['assets/index-UIRefine-v655-r84.js','index.html']){const row=manifest.files.find(x=>x.name===name);if(!row)throw Error('R1581 manifest entry missing');row.sha256=sha(fs.readFileSync(root+'/'+name))}manifest.build=sha(JSON.stringify(manifest.files));manifest.generatedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(manifest));

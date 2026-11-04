@@ -769,3 +769,5 @@ runR1314(process.execPath,['--test','scripts/test-r1577-price-resume.cjs'],{stdi
 await deployStep('./enable-r1578-queue-transfer.mjs');
 
 await deployStep('./enable-r1580-stage-feedback.mjs');
+
+await deployStep('./enable-r1581-download-feedback.mjs');

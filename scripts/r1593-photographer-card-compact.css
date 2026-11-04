@@ -1,0 +1,136 @@
+/* R1593: compact 4-zone photographer print order cards in the Windows/embedded desktop UI.
+   Draw ONLY three vertical dividing rules. Status steps remain centered between them. */
+@media (min-width:821px) {
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) {
+    padding:8px 10px!important;
+    min-height:0!important;
+    height:auto!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) > .liveOrderMainRow {
+    grid-template-columns:minmax(110px,.8fr) minmax(130px,.9fr) minmax(245px,2fr) minmax(130px,.9fr)!important;
+    grid-template-areas:"head facts progress actions" "details details details details"!important;
+    column-gap:0!important;
+    row-gap:4px!important;
+    align-items:center!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderHead {
+    padding:5px 5px 5px 10px!important;
+    min-height:0!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderFacts {
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    place-items:center!important;
+    align-items:center!important;
+    align-self:stretch!important;
+    height:auto!important;
+    margin:0!important;
+    padding:5px 9px!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .pb1464OrderProgress {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+    align-self:stretch!important;
+    justify-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:3px 12px!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    background:none!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress > :is(small,h2,h3,.progressTitle) {
+    display:none!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress > .liveTimeline {
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    align-self:center!important;
+    justify-self:center!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    padding:0!important;
+    gap:3px!important;
+    border:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress .liveTimeline > div {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    min-height:48px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:2px 2px!important;
+    border:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress .liveTimeline > div::before,
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress .liveTimeline > div::after {
+    content:none!important;
+    display:none!important;
+    border:0!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress .liveTimeline .timelineDot {
+    margin:0 auto 2px!important;
+    align-self:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .pb1464OrderProgress .liveTimeline > div > :is(b,small) {
+    width:100%!important;
+    margin:0!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    line-height:1.35!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace
+  .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow > .customerOrderQuickRail {
+    padding:4px 7px!important;
+    min-height:0!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+}

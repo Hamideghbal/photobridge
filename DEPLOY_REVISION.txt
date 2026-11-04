@@ -1,1 +1,1 @@
-2026-11-05-r1593-lab-card-flight-fixed-tabs-print-feedback
+2026-11-05-r1594-lab-card-shrink-flight-after-commit

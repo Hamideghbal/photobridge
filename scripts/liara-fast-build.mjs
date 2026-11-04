@@ -826,3 +826,5 @@ runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.c
 
 // R1593: Lab card flight only on a confirmed state change. Never auto-switch queue tabs.
 await deployStep('./enable-r1593-lab-card-flight.mjs');
+// R1594 verifies a copied order still animates after React removes the live card.
+runR1314(process.execPath,['--test','scripts/test-r1594-lab-card-flight.cjs'],{stdio:'inherit'});

@@ -2,6 +2,7 @@
 (()=>{'use strict';
 if(window.PB1593LabFlight)return;window.PB1593LabFlight=true;
 let last=null;
+const style=document.createElement('style');style.textContent='.pb1593PrintPending{filter:brightness(.96);outline:2px solid #78a8ff!important;outline-offset:2px!important}.pb1593Receive{animation:pb1593Pulse .65s ease-out 1!important}@keyframes pb1593Pulse{45%{box-shadow:0 0 0 8px #579aff35!important;transform:scale(1.045)}100%{box-shadow:none;transform:scale(1)}}';document.head.appendChild(style);
 const clean=s=>String(s||'').replace(/[\s\u200c\-۰-۹0-9]/g,'');
 const names={ready:'آماده تحویل',completed:'تحویل شده'};
 document.addEventListener('pointerdown',ev=>{

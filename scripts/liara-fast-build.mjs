@@ -775,3 +775,7 @@ await deployStep('./enable-r1581-download-feedback.mjs');
 await deployStep('./enable-r1582-download-reason.mjs');
 
 await deployStep('./enable-r1583-download-retry.mjs');
+
+await deployStep('./enable-r1584-price-increase.mjs');
+
+runR1314(process.execPath,['--test','scripts/test-r1584-price-increase.cjs'],{stdio:'inherit'});

@@ -1,9 +1,10 @@
 /* R1581: native notification progress and invoice preview use the existing verified download pipeline. */
 const pb1581Transfers=new Map(),pb1581Invoices=[],pb1581Shown=new Set();
 function pb1581Report(order,value){
+ const reason=value.phase==='failed'?pb1582Explain(order,value.error,value.explain):'';if(value.phase==='verified')pb1582Problems.delete(order?.lab_id+':'+order?.id);
  if(!window.pbNativeStorage||typeof window.pbDesktopEvents?.orderProgress!=='function'||!order?.id||!order.lab_id)return;
  const key=order.lab_id+':'+order.id,old=pb1581Transfers.get(key)||{last:0},phase=value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';
- old.value={...old.value,...value,labId:order.lab_id,orderId:order.id,number:order.number,phase};
+ old.value={...old.value,...value,labId:order.lab_id,orderId:order.id,number:order.number,phase,reason};
  const send=()=>{old.timer=null;old.last=Date.now();void window.pbDesktopEvents.orderProgress(old.value).catch(()=>{})};
  clearTimeout(old.timer);if(phase==='verified'||phase==='failed'||Date.now()-old.last>=250)send();else old.timer=setTimeout(send,250-(Date.now()-old.last));
  pb1581Transfers.set(key,old);if(pb1581Transfers.size>50){const first=pb1581Transfers.keys().next().value;clearTimeout(pb1581Transfers.get(first).timer);pb1581Transfers.delete(first)}
@@ -17,3 +18,38 @@ function pb1581OpenInvoice(invoice,orderId,labId){
  dispatchEvent(new CustomEvent('photobridge-download-invoice'));
 }
 addEventListener('photobridge-auth-session-changed',()=>{for(const item of pb1581Transfers.values())clearTimeout(item.timer);pb1581Transfers.clear();pb1581Invoices.length=0;pb1581Shown.clear()});
+
+const pb1582Problems=new Map();
+function pb1582Explain(order,error,show=false){
+ const code=String(error?.data?.error||error?.code||error?.message||error||'download_failed');
+ const messages={
+ download_device_not_registered:'مسئول ذخیره‌سازی انتخاب نشده است. از بخش «مسیر ذخیره روی هارد»، مسئول ذخیره‌سازی را انتخاب کنید.',
+ not_primary_download_device:'مسئول ذخیره‌سازی سیستم دیگری است. دانلود را روی همان سیستم انجام دهید یا مسئول ذخیره‌سازی را در تنظیمات تغییر دهید.',
+ folder_not_selected:'پوشهٔ ذخیره انتخاب نشده است. از بخش «مسیر ذخیره روی هارد»، پوشهٔ سفارش‌ها را انتخاب کنید.',
+ folder_permission_denied:'دسترسی نوشتن در پوشهٔ ذخیره وجود ندارد؛ مجوز پوشه و اتصال هارد را بررسی کنید.',
+ folder_not_writable:'پوشهٔ انتخاب‌شده قابل نوشتن نیست؛ دسترسی و اتصال هارد را بررسی کنید.',
+ folder_unavailable:'پوشهٔ ذخیره در دسترس نیست؛ اتصال هارد یا درایو را بررسی کنید.',
+ folder_changed:'مسیر پوشه تغییر کرده است؛ پوشهٔ ذخیره را دوباره انتخاب کنید.',
+ paired_folder_required:'پوشهٔ این سیستم با مسیر تعیین‌شده هماهنگ نیست؛ آن را در بخش مسیر ذخیره‌سازی دوباره انتخاب کنید.',
+ primary_device_exists:'سیستم دیگری مسئول ذخیره‌سازی است؛ تنظیمات مسئول ذخیره‌سازی را بررسی کنید.',
+ registration_offline:'تأیید مسئول ذخیره‌سازی دریافت نشد؛ اتصال اینترنت را بررسی کنید.',
+ download_device_registration_offline:'بررسی مسئول ذخیره‌سازی به اتصال اینترنت نیاز دارد؛ پس از اتصال دوباره تلاش کنید.',
+ ENOSPC:'فضای خالی هارد کافی نیست؛ فضای ذخیره‌سازی را آزاد کنید و دانلود را دوباره بزنید.',
+ EACCES:'اجازهٔ نوشتن روی هارد داده نشد؛ دسترسی پوشه را بررسی کنید.',
+ EPERM:'ویندوز اجازهٔ ذخیرهٔ فایل را نداد؛ دسترسی پوشه و قفل‌بودن فایل را بررسی کنید.',
+ ENOENT:'مسیر یا درایو ذخیره پیدا نشد؛ اتصال هارد و مسیر انتخاب‌شده را بررسی کنید.',
+ payment_required:'پرداخت سفارش هنوز تأیید نشده است و سرور اجازهٔ دانلود نمی‌دهد.',
+ download_size_mismatch:'فایل کامل دریافت نشده است؛ اتصال اینترنت و فضای هارد را بررسی و دانلود را دوباره بزنید.',
+ download_manifest_incomplete:'فهرست فایل‌های دریافتی با سرور تطبیق نکرد؛ دانلود کامل تأیید نشده است. دوباره دانلود را بررسی کنید.',
+ local_download_incomplete:'همهٔ فایل‌ها سالم و کامل ذخیره نشده‌اند؛ جزئیات سفارش و پوشهٔ آن را بررسی کنید.',
+ file_not_found:'فایل سفارش روی سرور پیدا نشد؛ اصل فایل باید دوباره ارسال شود.',
+ local_file_only:'فایل فقط روی هارد سیستم قبلی موجود است و نسخه‌ای برای دریافت از سرور ندارد.',
+ login_required:'نشست ورود پایان یافته است؛ دوباره وارد برنامه شوید.'
+ };
+ const network=['Failed to fetch','fetch failed','ETIMEDOUT','ECONNRESET','AbortError','ERR_NETWORK'].includes(code);
+ const reason=messages[code]||(network?'ارتباط دریافت فایل قطع شد؛ اینترنت را بررسی و دوباره تلاش کنید.':'دریافت یا ذخیرهٔ فایل انجام نشد. کد خطا: '+code.slice(0,100));
+ const key=(order?.lab_id||'')+':'+(order?.id||''),previous=pb1582Problems.get(key);
+ if(show&&(!previous||previous.code!==code)){pb1582Problems.set(key,{code,at:Date.now()});if(pb1582Problems.size>50)pb1582Problems.delete(pb1582Problems.keys().next().value);if(typeof pb1547Notice==='function')pb1547Notice('دانلود سفارش'+(order?.number?' #'+order.number:'')+' انجام نشد؛ '+reason,'warning');void window.pbDesktopEvents?.focusForPricing?.(order?.lab_id)?.catch(()=>{})}
+ return reason;
+}
+addEventListener('photobridge-auth-session-changed',()=>pb1582Problems.clear());

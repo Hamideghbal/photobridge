@@ -13,10 +13,16 @@ function highlight(to){
 }
 function turn(){
  if(reduced())return;
- const root=document.querySelector('.labRoleWorkspace'),card=root&&[...root.querySelectorAll('.labOrderCard')].find(node=>node.getClientRects().length);
- const sheet=card?.parentElement;if(!sheet||sheet===root||typeof sheet.animate!=='function')return;
- animation?.cancel();const distance=Math.min(240,sheet.clientWidth*.22);
- animation=sheet.animate([{transform:'perspective(1400px) translateX(-'+distance+'px) rotateY(7deg)',transformOrigin:'right center',opacity:.72},{transform:'perspective(1400px) translateX(0) rotateY(0deg)',transformOrigin:'right center',opacity:1}],{duration:420,easing:'cubic-bezier(.2,.7,.2,1)'});
+ const sheet=document.querySelector('.labRoleWorkspace .labOrderScrollArea');if(!sheet)return;
+ animation?.cancel();
+ const old=sheet.style.getPropertyValue('translate'),priority=sheet.style.getPropertyPriority('translate');
+ const width=sheet.getBoundingClientRect().width;let frame=0,start=null,cancelled=false;
+ const restore=()=>{if(old)sheet.style.setProperty('translate',old,priority);else sheet.style.removeProperty('translate')};
+ animation={cancel(){cancelled=true;cancelAnimationFrame(frame);restore()}};
+ // The legacy styles force both transform AND translate:none!important.
+ // A bounded compositor-only slide overrides that rule only while navigating.
+ const tick=now=>{if(cancelled)return;if(start===null)start=now;const progress=Math.min(1,(now-start)/520),eased=1-Math.pow(1-progress,3);sheet.style.setProperty('translate',(-width*(1-eased))+'px 0','important');if(progress<1)frame=requestAnimationFrame(tick);else restore()};
+ sheet.style.setProperty('translate',-width+'px 0','important');frame=requestAnimationFrame(tick);
 }
 function show(event){
  const to=event.detail?.to;if(!labels[to]||!inQueue()||!document.querySelector('.labRoleWorkspace'))return;

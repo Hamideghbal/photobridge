@@ -43,7 +43,7 @@
   }
   function sync(){
     const root=document.querySelector('.labRoleWorkspace main.appWorkspacePage .labSingleHeader');
-    const enabled=!!(phone.matches&&root);
+    const enabled=!!(phone.matches&&root&&/^\/lab(?:\/|$)/.test(window.location.pathname));
     document.documentElement.classList.toggle('pb1482LabPhoneMode',enabled);
     if(!enabled){
       if(dock){dock.remove();dock=null;}

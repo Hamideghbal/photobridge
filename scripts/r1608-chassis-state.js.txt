@@ -1,0 +1,1 @@
+function pb1608ChassisState(group){const files=group.files||[];if(!files.length)return group.chassis?'all':'none';const selected=files.filter(file=>Wr(group,file,'chassis')).length;return selected===0?'none':selected===files.length?'all':'mixed'}

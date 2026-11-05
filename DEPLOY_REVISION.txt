@@ -1,1 +1,1 @@
-2026-11-05-r1597-release-verified-download-dialog-fast
+2026-11-05-r1597-hotfix-invoice-continuation-build-anchor

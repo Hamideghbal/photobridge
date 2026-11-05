@@ -881,3 +881,7 @@ await deployStep('./enable-r1613-lab-invoice-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1615-pricing-build-anchor.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1613-lab-invoice-ui.cjs'],{stdio:'inherit'});
 
+
+// Additive laboratory referral program; separate from photographer invitations.
+await deployStep('./enable-lab-referral-program.mjs');
+runR1314(process.execPath,['--test','scripts/test-lab-referral-build.cjs'],{stdio:'inherit'});

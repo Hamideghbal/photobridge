@@ -39,7 +39,7 @@ test('R1600: release handles duplicate or rewritten warning without failing Dock
  assert.equal((alternative.match(/await pb1599ConfirmCropSend\(/g)||[]).length,2);
  assert.doesNotThrow(()=>new Function(alternative));
  const absent=[
-   'const xe=async()=>{const Jt=[1];const gt=++dt.current;}',
+   'const xe=async()=>{const Jt=[1];if(Jt.length){void 0;}const gt=++dt.current;}',
    'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);const ue=new AbortController;}'
  ].join('\n');
  const fallback=patchCrop(absent);

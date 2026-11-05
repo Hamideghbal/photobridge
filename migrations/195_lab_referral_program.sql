@@ -51,9 +51,6 @@ CREATE INDEX IF NOT EXISTS lab_referral_rewards_referrer_idx ON lab_referral_rew
 ALTER TABLE subscription_renewals DROP CONSTRAINT IF EXISTS subscription_renewals_payment_method_check;
 ALTER TABLE subscription_renewals ADD CONSTRAINT subscription_renewals_payment_method_check
  CHECK (payment_method IN ('receipt','zibal','wallet'));
-ALTER TABLE platform_payments DROP CONSTRAINT IF EXISTS platform_payments_source_check;
-ALTER TABLE platform_payments ADD CONSTRAINT platform_payments_source_check
- CHECK (source IN ('receipt','gateway','manual','wallet'));
 CREATE TABLE IF NOT EXISTS lab_referral_wallet_renewals (
  renewal_id uuid PRIMARY KEY REFERENCES subscription_renewals(id) ON DELETE RESTRICT,
  wallet_transaction_id uuid NOT NULL UNIQUE REFERENCES service_wallet_transactions(id) ON DELETE RESTRICT,

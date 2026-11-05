@@ -1,0 +1,13 @@
+/* Explicit opt-in for crop-mismatch upload, mobile-friendly and RTL. */
+.pb1599CropSendDialog{border:1px solid #dae4f2;background:#fff;color:#1d3148;border-radius:17px;box-shadow:0 24px 65px #12284a38;padding:0;direction:rtl;font:14px/1.85 Vazirmatn,Tahoma,sans-serif;width:min(92vw,490px);max-height:min(90dvh,720px);overflow:auto;z-index:2147483610}
+.pb1599CropSendDialog::backdrop{background:rgba(16,32,57,.54)}
+.pb1599CropInner{padding:22px}
+.pb1599CropTitle{font-size:18px;font-weight:850;margin-bottom:10px}
+.pb1599CropText{white-space:pre-line;margin:0 0 10px}
+.pb1599CropHint{font-size:12px;color:#57677d;margin-bottom:18px}
+.pb1599CropActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pb1599CropActions button{font:inherit;line-height:1.55;padding:10px;min-height:46px;border-radius:11px;cursor:pointer}
+.pb1599CropCancel{background:#f3f6fb;color:#23466c;border:1px solid #bbcee3}
+.pb1599CropProceed{background:#245fc1;color:#fff;border:1px solid #245fc1}
+.pb1599CropFallback{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%)}
+@media(max-width:520px){.pb1599CropActions{grid-template-columns:1fr}.pb1599CropProceed{order:2}.pb1599CropCancel{order:1}}

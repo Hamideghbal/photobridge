@@ -59,3 +59,10 @@
    overflow:hidden!important;
  }
 }
+
+/* R1605: older notification/invoice routes can mount a utility rail without BottomAppNav. */
+@media(max-width:820px){
+html.pb1599PhotographerRoute body nav.photographerMobileUtilityRail[data-pb1598-duplicate="1"],
+html.pb1598CustomerInvoiceOpen body nav.photographerMobileUtilityRail:not(.labMobileUtilityRail):not(.labBottomAppNav),
+html.pb1598CustomerInvoiceOpen body nav.photographerBottomAppNav[aria-label="ناوبری اصلی عکاس"]{display:none!important}
+}

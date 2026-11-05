@@ -23,7 +23,7 @@
      Boolean(document.querySelector('.globalInvoicePreviewLayer .customerInvoicePreview'));
    html.classList.toggle('pb1598CustomerInvoiceOpen',modal);
    const navs=[...document.querySelectorAll(
-     'nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav),'+
+     'nav.photographerMobileUtilityRail:not(.labBottomAppNav):not(.labMobileUtilityRail),'+
      'nav.photographerBottomAppNav[aria-label="ناوبری اصلی عکاس"]'
    )].filter((nav,index,array)=>array.indexOf(nav)===index);
    const visible=nav=>typeof nav.getClientRects==='function'?nav.getClientRects().length>0:true;
@@ -42,7 +42,7 @@
  }
  function schedule(){if(!frame)frame=requestAnimationFrame(sync)}
  function start(){
-   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','style','aria-label']});
    window.addEventListener('popstate',schedule);
    window.addEventListener('pageshow',schedule);
    window.addEventListener('resize',schedule,{passive:true});

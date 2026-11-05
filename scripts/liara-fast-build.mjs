@@ -855,3 +855,5 @@ await deployStep('./enable-r1602-photographer-upload-orders.mjs');
 await deployStep('./enable-r1603-lab-pricing-stage.mjs');
 
 await deployStep('./enable-r1604-photo-editor.mjs');
+
+await deployStep('./enable-r1605-photo-mobile-polish.mjs');

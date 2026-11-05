@@ -869,3 +869,8 @@ await deployStep('./enable-r1608-chassis-compact-orders.mjs');
 await deployStep('./enable-r1610-lab-ux.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1610-lab-ux.cjs'],{stdio:'inherit'});
 
+// R1612: timeline circle stays in its original position while the inner ring
+// animates; customer finance discount editing opens a top-layer dialog.
+await deployStep('./enable-r1612-lab-spinner-discount-modal.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1612-lab-spinner-discount-modal.cjs'],{stdio:'inherit'});
+

@@ -33,3 +33,16 @@ CREATE TABLE IF NOT EXISTS lab_referral_commissions (
 );
 CREATE INDEX IF NOT EXISTS lab_referral_commissions_referrer_idx
   ON lab_referral_commissions(referrer_lab_id,created_at DESC);
+
+-- Track/refuse excessive SMS sends without using the existing SMS wallet.
+CREATE TABLE IF NOT EXISTS lab_referral_sms_attempts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_id uuid NOT NULL REFERENCES labs(id) ON DELETE CASCADE,
+  recipient_mobile text NOT NULL,
+  status text NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending','sent','failed')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  sent_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS lab_referral_sms_throttle_idx
+  ON lab_referral_sms_attempts(lab_id,created_at DESC);

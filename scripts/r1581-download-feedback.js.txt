@@ -10,13 +10,18 @@ function pb1581Report(order,value){
  pb1581Transfers.set(key,old);if(pb1581Transfers.size>50){const first=pb1581Transfers.keys().next().value;clearTimeout(pb1581Transfers.get(first).timer);pb1581Transfers.delete(first)}
 }
 function pb1581OpenInvoice(invoice,orderId,labId){
+ // R1613: a background receipt/PDF retry, app restart, or Windows UI update
+ // does not express user intent to view an invoice. In-memory deduping used
+ // to reset on reload, causing old invoice previews (e.g. #187) to re-open.
+ // Keep the processed notification flow, but open invoice previews ONLY from
+ // existing explicit "فاکتور / مشاهده" buttons in the lab orders and finance.
  if(!window.pbNativeStorage||!invoice?.id||!labId)return;
- const key=labId+':'+invoice.id;if(pb1581Shown.has(key))return;pb1581Shown.add(key);
- pb1581Invoices.push({labId,orderId,invoice});
- if(!/^\/lab\/(orders|album)(?:\/|$)/.test(location.pathname))Dn('/lab/orders/flow');
- void window.pbDesktopEvents?.focusForPricing?.(labId)?.catch(()=>{});
- dispatchEvent(new CustomEvent('photobridge-download-invoice'));
+ const key=String(labId)+':'+String(invoice.id);
+ if(pb1581Shown.has(key))return;
+ pb1581Shown.add(key);
+ // No queue push, forced navigation, focusForPricing, or modal event.
 }
+
 addEventListener('photobridge-auth-session-changed',()=>{for(const item of pb1581Transfers.values())clearTimeout(item.timer);pb1581Transfers.clear();pb1581Invoices.length=0;pb1581Shown.clear()});
 
 const pb1582Problems=new Map();

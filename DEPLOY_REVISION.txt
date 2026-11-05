@@ -1,1 +1,1 @@
-2026-11-05-r1606-gallery-single-header-lazy-panels
+2026-11-05-r1607-single-dock-after-invoice-navigation

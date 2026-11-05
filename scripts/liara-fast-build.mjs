@@ -859,3 +859,5 @@ await deployStep('./enable-r1604-photo-editor.mjs');
 await deployStep('./enable-r1605-photo-mobile-polish.mjs');
 
 await deployStep('./enable-r1606-gallery-startup.mjs');
+
+await deployStep('./enable-r1607-embedded-mobile-dock.mjs');

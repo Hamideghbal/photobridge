@@ -60,24 +60,33 @@ test('native invoice PDF worker cannot auto-open a previous invoice after update
  assert.equal(items.length,0,'background event must not queue an invoice modal');
  assert.equal(set.size,1,'background dedupe recorded');
 });
-test('user price save opens only the newly confirmed invoice and uploads its PDF',async()=>{
+test('user price save preserves R1577 pending/refresh and previews only the newly confirmed invoice',async()=>{
  const snippet=read('scripts/r1613-on-pricing-saved.js.txt');
- const events=[],order={id:'order-42',number:42,customer_name:'Customer'};
+ const events=[],order={id:'order-42',number:42,customer_name:'Customer',downloaded_at:'2026-11-05'};
  const invoice={id:'invoice-new',number:188,pdf_ready:false};
  const sandbox={
   Se:{order,resume:'none'},Fe:value=>events.push(['closePricing',value]),
-  ye:async()=>events.push(['reloadOrders']),h:null,
-  Tt:async()=>{},un:async()=>{},P:message=>events.push(['notice',message]),
-  V:value=>String(value),pb1547CompletePdf:async()=>events.push(['pdf',invoice.id]),
-  Qn:async(id)=>events.push(['preview',id]),
+  C:value=>events.push(['pending',value]),
+  f:fn=>events.push(['rowsUpdated',!!fn]),
+  Me:async(url)=>{events.push(['getOrder',url]);return{order:{...order,invoice_id:invoice.id}}},
+  ye:async()=>events.push(['reloadOrders']),h:null,Tt:async()=>{},
+  un:async()=>events.push(['resumeReady']),
+  P:message=>events.push(['notice',message]),
+  V:value=>String(value),
+  pb1547CompletePdf:async()=>events.push(['pdf',invoice.id]),
+  pb1568AfterManualDownload:async()=>{throw Error('must not retry when server issued invoice')},
+  pb1547Notice:()=>{},
+  Qn:async id=>events.push(['preview',id]),
   ai:()=>false,t:{name:'Lab'},
   window:{setTimeout(callback){events.push(['schedule']);callback()}},
  };
  vm.runInNewContext(snippet+';',sandbox);
- await sandbox.Nn({invoice});
+ await sandbox.Nn({invoice,ready:true,order});
  assert.equal(events.filter(v=>v[0]==='pdf').length,1);
  assert.deepEqual(events.filter(v=>v[0]==='preview'),[['preview',invoice.id]]);
+ assert.deepEqual(events.filter(v=>v[0]==='pending').map(x=>x[1]),[order.id,'']);
  assert.equal(events.some(v=>v[0]==='schedule'),false,'do not replay unrelated stage');
+ assert.ok(events.some(v=>v[0]==='reloadOrders'),'old refresh behavior must be retained');
 });
 test('R1613 appears in site/Windows, with middle column headings centered, active badge pulse and sorted manifest',()=>{
  const server=read('dist/api/server.js');
@@ -89,7 +98,7 @@ test('R1613 appears in site/Windows, with middle column headings centered, activ
   const file=root+'/assets/index-UIRefine-v655-r84.js',bundle=read(file),index=read(root+'/index.html');
   const css=read(root+'/photobridge-r1613-lab-stage-table.css');
   assert.match(bundle,/PB1613 manual pricing completion/);
-  assert.match(bundle,/await Qn\(le\.invoice\.id/);
+  assert.match(bundle,/await Qn\(issued\.id/);
   const guardSource=bundle.match(/function pb1603InvoicePending\(order\)\{[^}]+\}/)?.[0];
   const stageSource=bundle.match(/function pb1603StageInvoicePending\(order,stage\)\{[^}]+\}/)?.[0];
   assert.ok(guardSource&&stageSource,'stage UI guards are present in generated bundle');

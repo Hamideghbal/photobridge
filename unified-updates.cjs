@@ -9,7 +9,7 @@ function createUnifiedUpdates({checkProgram,checkUi,uiBusy,pending,uiError,canAp
    if(uiBusy())await waitForUi();
    await checkUi((done,total)=>progress({message:`دریافت فایل‌های رابط برنامه: ${Number(done).toLocaleString('fa-IR')} از ${Number(total).toLocaleString('fa-IR')}`,percent:total?Math.round(done/total*100):0}));
   }finally{stopProgress();}
-  const program=await checkProgram();
+  let program;try{program=await checkProgram()}catch{program={state:'error'}};
   if(['ready','busy','cancelled'].includes(program?.state))return;
   if(pending()){
    if(await prompt({kind:'ready'})==='apply'){

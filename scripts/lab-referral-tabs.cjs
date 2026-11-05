@@ -1,0 +1,7 @@
+const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('Lab referral promoted tabs anchor: '+a.slice(0,80));return s.replace(a,b)};
+function patchLabReferralTabs(source){if(source.includes('/* R1621 laboratory referral tab */'))return source;
+ source=once(source,"[1,'دعوت‌نامه','/lab/settings/customers/invites']","[1,'دعوت‌نامهٔ عکاس‌ها','/lab/settings/customers/invites'],[2,'دعوت‌نامهٔ لابراتوارها','/lab/settings/customers/lab-invites']");
+ const cooperation=/\[2,'(دفتر همکاری|درخواست همکاری)','\/lab\/settings\/customers\/collaboration'\]/g;if([...source.matchAll(cooperation)].length!==1)throw Error('Lab referral cooperation route changed');source=source.replace(cooperation,"[3,'$1','/lab/settings/customers/collaboration']");
+ source=once(source,"[3,'مشتری آزاد','/lab/settings/walkin']","[4,'مشتری آزاد','/lab/settings/walkin']");
+ source=once(source,"const active=location.pathname.includes('/walkin')?3:location.pathname.includes('/invites')||location.hash==='#customers-invites'?1:location.pathname.includes('/collaboration')||location.hash==='#customers-collaboration'?2:0;","/* R1621 laboratory referral tab */const active=location.pathname.includes('/walkin')?4:location.pathname.includes('/lab-invites')||location.hash==='#customers-lab-invites'?2:location.pathname.includes('/invites')||location.hash==='#customers-invites'?1:location.pathname.includes('/collaboration')||location.hash==='#customers-collaboration'?3:0;");return source;
+}module.exports={patchLabReferralTabs};

@@ -1,0 +1,45 @@
+import crypto from 'node:crypto';
+export const LAB_REFERRAL_DISCOUNT_PERCENT=30,LAB_REFERRAL_REWARD_PERCENT=10;
+const fail=(error,status=400)=>Object.assign(new Error(error),{status});
+const money=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<0)throw fail('invalid_money');return n};
+export async function labReferralInvite(db,code){if(!/^[a-f0-9]{48}$/.test(String(code||'')))throw fail('lab_referral_invalid');const q=await db.query(`SELECT i.lab_id,i.code,l.name FROM lab_referral_invites i JOIN labs l ON l.id=i.lab_id WHERE i.code=$1 AND i.enabled=true AND COALESCE(l.suspended,false)=false`,[code]);if(!q.rowCount)throw fail('lab_referral_invalid');return q.rows[0]}
+export async function bindNewLabReferral(db,{code,labId,userId,isNewAccount}){
+ if(!code)return null;if(isNewAccount!==true)throw fail('lab_referral_new_accounts_only',409);const invite=await labReferralInvite(db,code);if(String(invite.lab_id)===String(labId))throw fail('lab_referral_self_invite',409);
+ const old=await db.query(`SELECT 1 FROM lab_memberships WHERE user_id=$1 AND role='lab_admin' AND lab_id<>$2 LIMIT 1`,[userId,labId]);if(old.rowCount)throw fail('lab_referral_new_accounts_only',409);
+ await db.query(`INSERT INTO lab_referrals(referred_lab_id,inviter_lab_id,registered_user_id,invite_code) VALUES($1,$2,$3,$4)`,[labId,invite.lab_id,userId,code]);return invite;
+}
+export function referralBestPrice(grossAmount,planAmount,existing){
+ const plan=money(planAmount),gross=Math.max(money(grossAmount),plan),current=money(existing.amount);const target=Math.max(0,gross-Math.round(gross*30/100));const amount=Math.min(current,target);
+ return {...existing,amount,specialDiscountAmount:Math.max(0,plan-amount),discountPercent:plan>0?Math.round(Math.max(0,plan-amount)*10000/plan)/100:0,referralEligible:true,referralApplied:amount<current,referralDiscountPercent:30};
+}
+export async function labReferralPrice(db,labId,grossAmount,planAmount,existing){const q=await db.query('SELECT 1 FROM lab_referrals WHERE referred_lab_id=$1',[labId]);return q.rowCount?referralBestPrice(grossAmount,planAmount,existing):existing}
+// Caller owns the subscription-approval transaction. Claim and credit commit together.
+export async function awardLabReferral(db,renewalId,{ensureWallet}){
+ const q=await db.query(`SELECT r.id,r.lab_id,r.amount,f.inviter_lab_id FROM subscription_renewals r JOIN lab_referrals f ON f.referred_lab_id=r.lab_id JOIN platform_payments p ON p.renewal_id=r.id WHERE r.id=$1 AND r.status='approved' AND p.status='paid' AND p.amount=r.amount AND r.created_at>=f.registered_at`,[renewalId]);
+ if(!q.rowCount||!q.rows[0].inviter_lab_id)return{awarded:false};const row=q.rows[0],paid=money(row.amount),reward=Number(BigInt(paid)/10n);if(!reward)return{awarded:false};
+ const claim=await db.query(`INSERT INTO lab_referral_rewards(renewal_id,inviter_lab_id,referred_lab_id,paid_amount,reward_amount) VALUES($1,$2,$3,$4,$5) ON CONFLICT(renewal_id) DO NOTHING RETURNING renewal_id`,[renewalId,row.inviter_lab_id,row.lab_id,paid,reward]);if(!claim.rowCount)return{awarded:false,replayed:true};
+ await ensureWallet(db,row.inviter_lab_id);const balance=await db.query(`UPDATE lab_service_wallets SET balance=balance+$2,updated_at=now() WHERE lab_id=$1 RETURNING balance`,[row.inviter_lab_id,reward]);if(!balance.rowCount)throw fail('referral_wallet_missing',500);
+ const tx=await db.query(`INSERT INTO service_wallet_transactions(lab_id,kind,amount,balance_after,reference_type,reference_id,reference_key,note,metadata) VALUES($1,'credit',$2,$3,'lab_referral_subscription',$4,$5,'اعتبار معرفی لابراتوار جدید',$6::jsonb) RETURNING id`,[row.inviter_lab_id,reward,balance.rows[0].balance,renewalId,'lab-referral:'+renewalId,JSON.stringify({referredLabId:row.lab_id,paidAmount:paid,rewardPercent:10})]);
+ await db.query('UPDATE lab_referral_rewards SET wallet_transaction_id=$2 WHERE renewal_id=$1',[renewalId,tx.rows[0].id]);return{awarded:true,amount:reward};
+}
+export async function labReferralSummary(db,labId,userId,baseUrl){
+ await db.query(`INSERT INTO lab_referral_invites(lab_id,code,created_by) VALUES($1,$2,$3) ON CONFLICT(lab_id) DO NOTHING`,[labId,crypto.randomBytes(24).toString('hex'),userId]);
+ const [code,rows,rewards,incoming]=await Promise.all([db.query('SELECT code,enabled FROM lab_referral_invites WHERE lab_id=$1',[labId]),db.query(`SELECT l.name,f.registered_at,count(r.renewal_id)::int paid_subscriptions,COALESCE(sum(r.reward_amount),0)::bigint earned FROM lab_referrals f JOIN labs l ON l.id=f.referred_lab_id LEFT JOIN lab_referral_rewards r ON r.referred_lab_id=f.referred_lab_id AND r.inviter_lab_id=f.inviter_lab_id WHERE f.inviter_lab_id=$1 GROUP BY l.id,f.registered_at ORDER BY f.registered_at DESC LIMIT 50`,[labId]),db.query('SELECT COALESCE(sum(reward_amount),0)::bigint total FROM lab_referral_rewards WHERE inviter_lab_id=$1',[labId]),db.query(`SELECT l.name inviter_name FROM lab_referrals f LEFT JOIN labs l ON l.id=f.inviter_lab_id WHERE f.referred_lab_id=$1`,[labId])]);
+ const token=code.rows[0];return{inviteUrl:token?.enabled?new URL('/trial?labInvite='+token.code,baseUrl).href:null,discountPercent:30,rewardPercent:10,totalEarned:Number(rewards.rows[0].total),referrals:rows.rows,incoming:incoming.rows[0]||null};
+}
+// Wallet checkout is explicit and idempotent; no automatic spending or auto-renewal.
+export async function paySubscriptionFromWallet(db,{labId,userId,planId,key,expectedAmount},{ensureWallet,pricePlan}){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(key||'')))throw fail('idempotency_key_required');
+ const expected=money(expectedAmount);
+ const lab=await db.query('SELECT id,name,active_until FROM labs WHERE id=$1 FOR UPDATE',[labId]);if(!lab.rowCount)throw fail('lab_not_found',404);
+ const prior=await db.query('SELECT id,lab_id,plan_id,amount,status,payment_method,new_active_until FROM subscription_renewals WHERE id=$1 FOR UPDATE',[key]);if(prior.rowCount){const row=prior.rows[0];if(row.lab_id!==labId||row.plan_id!==planId||row.payment_method!=='wallet'||row.status!=='approved'||Number(row.amount)!==expected)throw fail('idempotency_conflict',409);return{renewalId:row.id,amount:Number(row.amount),activeUntil:row.new_active_until,replayed:true}}
+ const plan=(await db.query(`SELECT p.*,l.subscription_discount_enabled,l.subscription_discount_amount,l.subscription_discount_percent FROM subscription_plans p JOIN labs l ON l.id=$2 WHERE p.id=$1 AND p.active=true`,[planId,labId])).rows[0];if(!plan)throw fail('invalid_plan');const priced=await pricePlan(db,labId,plan),amount=money(priced.amount);if(amount<=0)throw fail('payment_amount_invalid');if(amount!==expected)throw fail('subscription_price_changed',409);
+ await ensureWallet(db,labId);const wallet=(await db.query('SELECT balance FROM lab_service_wallets WHERE lab_id=$1 FOR UPDATE',[labId])).rows[0];if(!wallet||BigInt(wallet.balance)<BigInt(amount))throw fail('wallet_insufficient',402);
+ const after=await db.query('UPDATE lab_service_wallets SET balance=balance-$2,updated_at=now() WHERE lab_id=$1 AND balance>=$2 RETURNING balance',[labId,amount]);if(!after.rowCount)throw fail('wallet_insufficient',402);
+ const until=await db.query(`SELECT (GREATEST(COALESCE($1::timestamptz,now()),now())+make_interval(months=>$2::int)) AS new_until`,[lab.rows[0].active_until,Number(plan.months)]);const activeUntil=until.rows[0].new_until;
+ await db.query(`INSERT INTO subscription_renewals(id,lab_id,plan_id,months,list_amount,plan_amount,discount_percent,special_discount_amount,amount,status,payment_method,submitted_by,submitted_at,reviewed_at,previous_active_until,new_active_until,review_note) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'approved','wallet',$10,now(),now(),$11,$12,'پرداخت با اعتبار کیف پول')`,[key,labId,planId,Number(plan.months),priced.listAmount,priced.planAmount,priced.discountPercent,priced.specialDiscountAmount,amount,userId,lab.rows[0].active_until,activeUntil]);
+ await db.query(`INSERT INTO service_wallet_transactions(lab_id,kind,amount,balance_after,reference_type,reference_id,reference_key,note,created_by,metadata) VALUES($1,'debit',$2,$3,'subscription_renewal',$4,$5,'تمدید اشتراک با کیف پول',$6,'{}'::jsonb)`,[labId,amount,after.rows[0].balance,key,'subscription-wallet:'+key,userId]);
+ await db.query(`UPDATE labs SET active=true,active_until=$2,updated_at=now() WHERE id=$1`,[labId,activeUntil]);
+ await db.query(`INSERT INTO platform_payments(lab_id,lab_name,renewal_id,amount,status,source,provider,paid_at,updated_at) VALUES($1,$2,$3,$4,'paid','wallet','service_wallet',now(),now())`,[labId,lab.rows[0].name,key,amount]);
+ await awardLabReferral(db,key,{ensureWallet});return{renewalId:key,amount,balance:Number(after.rows[0].balance),activeUntil};
+}

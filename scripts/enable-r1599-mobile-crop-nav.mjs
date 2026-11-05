@@ -26,6 +26,8 @@ if(!html.includes('pb1493MobileSessionResume'))throw Error('R1599 PWA role boot 
 const rolePrepaint='<style id="pb1599RoutePrepaintStyle">@media(max-width:820px){'+
  'html.pb1599PhotographerRoute body nav.labMobileUtilityRail,'+
  'html.pb1599PhotographerRoute body nav.pb1482LabPhoneDock,'+
+ 'html.pb1599PhotographerRoute body #photographerStoreBottomNav,'+
+ 'html.pb1599PhotographerRoute body nav.mobileRoleUtilityRail:not(.photographerMobileUtilityRail),'+
  'html.pb1599RentalRoute body nav.labMobileUtilityRail,'+
  'html.pb1599RentalRoute body nav.pb1482LabPhoneDock,'+
  'html.pb1599LabRoute body nav.photographerMobileUtilityRail:not(.labMobileUtilityRail){display:none!important}}'+

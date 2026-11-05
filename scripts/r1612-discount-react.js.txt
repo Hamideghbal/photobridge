@@ -1,0 +1,11 @@
+function PB1585Discount({customer,onSaved}){
+ const info=pb1585DiscountInfo(customer);
+ return e.jsxs('div',{className:'pb1585Discount',children:[
+  e.jsxs('button',{type:'button',className:'pb1585DiscountEdit pb1612DiscountTrigger',
+   disabled:!info,onClick:()=>pb1612OpenDiscountDialog({customer,info,onSaved}),
+   title:'تنظیم درصد و تعداد فاکتورهای تخفیف این عکاسی',
+   children:[e.jsx('strong',{children:info?V(info.percent)+'٪':'—'}),e.jsx('span',{'aria-hidden':'true',children:'✎'})]
+  }),
+  e.jsx('small',{children:!info?'هنوز دریافت نشده':!info.configured?'تعریف نشده':info.enabled?'هر '+V(info.every)+' فاکتور':'غیرفعال'})
+ ]})
+}

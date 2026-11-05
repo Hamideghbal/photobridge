@@ -25,7 +25,7 @@ test('R1600: release handles duplicate or rewritten warning without failing Dock
    'if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("first"))return;',
    'if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("second"))return;',
    'const ue=new AbortController;}'
- ].join('');
+ ].join('\n');
  const multiple=patchCrop(twice);
  assert.equal((multiple.match(/await pb1599ConfirmCropSend\(/g)||[]).length,3);
  assert.doesNotThrow(()=>new Function(multiple));
@@ -34,14 +34,14 @@ test('R1600: release handles duplicate or rewritten warning without failing Dock
    'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);',
    'if(pbMismatch&&someGate&&!window.confirm("print warning"))return;',
    'const ue=new AbortController;}'
- ].join('');
+ ].join('\n');
  const alternative=patchCrop(changed);
  assert.equal((alternative.match(/await pb1599ConfirmCropSend\(/g)||[]).length,2);
  assert.doesNotThrow(()=>new Function(alternative));
  const absent=[
    'const xe=async()=>{const Jt=[1];const gt=++dt.current;}',
    'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);const ue=new AbortController;}'
- ].join('');
+ ].join('\n');
  const fallback=patchCrop(absent);
  assert.equal((fallback.match(/await pb1599ConfirmCropSend\(/g)||[]).length,2);
  assert.ok(fallback.indexOf('if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!await')<

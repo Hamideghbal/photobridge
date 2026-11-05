@@ -903,3 +903,9 @@ await deployStep('./enable-r1629-header-wallet.mjs');
 
 // Prepare the reusable photographer invitation once and keep its copy action inside the field.
 await deployStep('./enable-r1630-photographer-link.mjs');
+
+// Desktop photographer finance navigation and read-only statement grouping fix.
+await deployStep('./enable-r1631-desktop-finance.mjs');
+
+// Successful ready/delivered moves exit the current queue without switching tabs.
+await deployStep('./enable-r1631-order-exit.mjs');

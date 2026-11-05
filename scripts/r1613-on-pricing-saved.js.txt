@@ -1,0 +1,20 @@
+Nn=async le=>{
+ const pending=Se,order=pending?.order;
+ Fe(null);
+ await ye();
+ if(order&&h?.id===order.id)await Tt(order,false).catch(()=>{});
+ if(pending?.resume==='ready'&&order){
+  window.setTimeout(()=>{un(order)},0);
+  return;
+ }
+ if(le?.invoice?.id&&order){
+  P('فاکتور #'+V(le.invoice.number)+' پس از قیمت‌گذاری صادر شد.');
+  if(!le.invoice.pdf_ready)await pb1547CompletePdf(le.invoice,order.id,ai());
+  // Explicit user price confirmation is a valid view intent; background
+  // download/auto-retry events never open the invoice preview.
+  await Qn(le.invoice.id,{...le.invoice,customer_name:order.customer_name,
+   order_number:order.number,lab_name:t.name});
+  return;
+ }
+ P('قیمت‌گذاری سفارش #'+V(order?.number||'')+' ذخیره شد.');
+}

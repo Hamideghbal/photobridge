@@ -1,0 +1,64 @@
+/* R1613 — center the middle headers and their corresponding cells. */
+html body #root .labRoleWorkspace .pb1585PhotographersTable thead th:nth-child(n+2),
+html body #root .labRoleWorkspace .pb1585PhotographersTable tbody td {
+ text-align:center!important;vertical-align:middle!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable tbody td:nth-child(n+2)>* {
+ margin-inline:auto!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585Discount {
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ flex-direction:column!important;gap:2px!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585DiscountEdit {
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ gap:5px!important;min-height:28px!important;padding:3px 7px!important;
+ color:#36557c!important;background:transparent!important;
+ border:1px solid transparent!important;border-radius:8px!important;
+ margin-inline:auto!important;white-space:nowrap!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585DiscountEdit:hover,
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585DiscountEdit:focus-visible {
+ border-color:#d7e3f5!important;background:#f5f8ff!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585PhotographerActions{
+ justify-content:center!important;align-items:center!important;gap:6px!important;
+}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585MapCell{
+ text-align:center!important;
+}
+body > dialog.pb1612DiscountModal .pb1612DiscountPreview {
+ background:#f8faff!important;border:1px dashed #d8e6fa!important;
+ color:#315780!important;text-align:center!important;
+ border-radius:11px!important;padding:10px!important;
+}
+/* Stage badges never move: the ORIGINAL absolute top/50%/translate remains.
+   Only background, border and halo oscillate; the inner ring independently spins. */
+html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot {
+ position:absolute!important;
+ animation:pb1613BadgeHeartbeat 1.03s ease-in-out infinite!important;
+ color:transparent!important;
+ will-change:background-color,box-shadow,border-color;
+}
+html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot::after {
+ animation:pb1613InnerSpin .66s linear infinite!important;
+ border-top-color:#2563eb!important;
+ border-right-color:#2563eb!important;
+}
+@keyframes pb1613BadgeHeartbeat {
+ 0%,100% {background-color:#fff;border-color:#9fbee8;box-shadow:0 0 0 2px rgba(37,99,235,.10)}
+ 50% {background-color:#d5e6ff;border-color:#2563eb;box-shadow:0 0 0 5px rgba(37,99,235,.23)}
+}
+@keyframes pb1613InnerSpin{
+ from{transform:translate(-50%,-50%) rotate(0deg)}
+ to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot {
+  animation:none!important;background:#d5e6ff!important;
+  border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.18)!important;
+ }
+ html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot::after{
+  animation:none!important;
+ }
+}

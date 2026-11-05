@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS lab_referral_wallet_renewals (
  renewal_id uuid PRIMARY KEY REFERENCES subscription_renewals(id) ON DELETE RESTRICT,
  wallet_transaction_id uuid NOT NULL UNIQUE REFERENCES service_wallet_transactions(id) ON DELETE RESTRICT,
  lab_id uuid NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
+ request_key varchar(64) NOT NULL,
  amount bigint NOT NULL CHECK(amount>0),
+ UNIQUE(lab_id,request_key),
  created_at timestamptz NOT NULL DEFAULT now()
 );

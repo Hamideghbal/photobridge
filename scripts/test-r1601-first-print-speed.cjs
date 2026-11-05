@@ -46,11 +46,11 @@ test('R1601 actual async route overlaps SQL with identical directory payload',as
   return delay({rows:[]});
  }};
  const execute=new Function('req','url','a','labId','pool','photographerCanDiscoverLabs',
-  'photographerInvitedLabIds','photographerInitialOriginContext','testAccountVisibleSql','testAccountSql','sendJson',
+  'photographerInvitedLabIds','photographerInitialOriginContext','testAccountVisibleSql','testAccountSql','sendJson','res',
   'return (async()=>{'+source+'})()');
  const result=await execute({method:'GET'},{pathname:'/api/customer/labs'},{userId:'u1'},'lab1',
   pool,async()=>true,async()=>[],()=>delay({originType:'self',primaryLabId:null}),
-  ()=>'TRUE',()=>'FALSE',(res,status,payload)=>({status,payload}));
+  ()=>'TRUE',()=>'FALSE',(res,status,payload)=>({status,payload}),{});
  assert.ok(max>=3,'independent API operations should overlap');
  assert.equal(result.status,200);
  assert.deepEqual(result.payload.memberships.map(v=>v.id),['lab1']);

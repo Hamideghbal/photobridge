@@ -842,3 +842,10 @@ runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs
 await deployStep('./enable-r1598-mobile-role-invoice-nav.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1598-mobile-role-invoice-nav.cjs'],{stdio:'inherit'});
 
+// R1599: website/PWA role isolation and explicit crop confirmation only.
+// The Windows Lab UI snapshot and retired Lab flight remain unchanged.
+await deployStep('./enable-r1599-mobile-crop-nav.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1599-mobile-crop-nav.cjs'],{
+ stdio:'inherit',env:{...process.env,PB1599_VERIFY_BUNDLE:'1'}
+});
+

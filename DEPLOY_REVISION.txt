@@ -1,1 +1,1 @@
-2026-11-05-r1596-emergency-rollback-lab-white-screen
+2026-11-05-r1597-verified-download-dialog-before-invoice-continuation

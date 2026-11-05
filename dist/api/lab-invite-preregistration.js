@@ -1,5 +1,5 @@
 // A pending lab relationship never grants photographer login or activates membership.
-export async function ensureLabInviteCustomer(deps,{labId,mobile,previousDebt=null,actorId}){
+export async function ensureLabInviteCustomer(deps,{labId,mobile,previousDebt=null,actorId,temporaryName=null}){
  const {pool,crypto,passwordHash,ensureFinanceAccounts,postBalancedFinanceTransaction}=deps;
  const c=await pool.connect();
  try{
@@ -18,7 +18,9 @@ export async function ensureLabInviteCustomer(deps,{labId,mobile,previousDebt=nu
   if(fresh)await c.query("INSERT INTO lab_memberships(lab_id,user_id,role,active) VALUES($1,$2,'customer',false)",[labId,customer.id]);
   if(!mq.rows[0]?.active){
    const iq=await c.query('SELECT id FROM invitations WHERE lab_id=$1 AND target_mobile=$2 AND active=true AND uses=0 LIMIT 1',[labId,mobile]);
-   if(!iq.rowCount)await c.query("INSERT INTO invitations(lab_id,token,created_by,target_mobile,target_name,max_uses,sms_status) VALUES($1,$2,$3,$4,$5,1,'not_sent')",[labId,crypto.randomBytes(18).toString('base64url'),actorId,mobile,customer.name===mobile?null:customer.name]);
+   const pendingName=String(temporaryName||'').trim().replace(/\s+/g,' ').slice(0,120);
+   if(!iq.rowCount)await c.query("INSERT INTO invitations(lab_id,token,created_by,target_mobile,target_name,max_uses,sms_status) VALUES($1,$2,$3,$4,$5,1,'not_sent')",[labId,crypto.randomBytes(18).toString('base64url'),actorId,mobile,pendingName||(customer.name===mobile?null:customer.name)]);
+   else if(pendingName)await c.query('UPDATE invitations SET target_name=$3 WHERE lab_id=$1 AND target_mobile=$2 AND active=true AND uses=0',[labId,mobile,pendingName]);
   }
   const invoices=await c.query('SELECT 1 FROM invoices WHERE lab_id=$1 AND customer_id=$2 LIMIT 1',[labId,customer.id]);
   if(!invoices.rowCount){

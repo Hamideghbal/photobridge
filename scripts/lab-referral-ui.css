@@ -15,3 +15,45 @@
 .labReferralInviteControls .labReferralInviteSend input{width:100%;min-width:0;max-width:none;height:42px;flex:none}
 .labReferralInviteControls .labReferralInviteSend>button{width:auto;min-width:130px}
 @media(max-width:650px){.labReferralInviteControls .labReferralInviteSend{grid-template-columns:minmax(0,1fr)}.labReferralInviteControls .labReferralInviteSend>button{width:100%}}
+
+
+/* R1626: one desktop row: invitation URL | separating stroke | mobile + send.
+   The copy action is absolutely positioned INSIDE the input's visible border. */
+.labReferralInviteControls.pb1436InviteControls{
+ display:grid!important;grid-template-columns:minmax(0,1.25fr) 1px minmax(0,1fr)!important;
+ gap:14px!important;align-items:center!important;box-sizing:border-box;width:100%;min-width:0
+}
+.labReferralInviteControls .labReferralInviteLink{
+ display:block!important;position:relative!important;direction:ltr;min-width:0;width:100%;overflow:visible
+}
+.labReferralInviteControls .labReferralInviteLink input{
+ display:block!important;width:100%!important;min-width:0!important;max-width:none!important;
+ height:42px!important;padding:8px 112px 8px 12px!important;box-sizing:border-box!important;direction:ltr;text-align:left
+}
+.labReferralInviteControls .labReferralInviteLink button{
+ position:absolute!important;left:auto!important;right:5px!important;top:5px!important;bottom:5px!important;
+ z-index:1;box-sizing:border-box;max-width:102px;min-width:88px;width:auto!important;height:32px!important;
+ min-height:0!important;padding:3px 10px!important;border-radius:7px;white-space:nowrap
+}
+.labReferralInviteControls .labReferralInviteDivider{
+ display:block!important;width:1px!important;min-width:1px;height:40px!important;min-height:40px!important;
+ background:#cbd5e1;margin:0!important;align-self:center;justify-self:center
+}
+.labReferralInviteControls .labReferralInviteSend{
+ display:grid!important;grid-template-columns:minmax(0,1fr) max-content!important;grid-template-rows:auto!important;
+ gap:8px!important;width:100%!important;min-width:0!important;align-items:center
+}
+.labReferralInviteControls .labReferralInviteSend>input{
+ width:100%!important;min-width:0!important;max-width:none!important;height:42px!important;grid-row:1!important;grid-column:1!important
+}
+.labReferralInviteControls .labReferralInviteSend>button{
+ grid-row:1!important;grid-column:2!important;width:auto!important;min-width:132px;height:42px
+}
+.labReferralJoinedNotice{padding:9px 12px;border:1px solid #c4e4d2;background:#f1fbf4;color:#216441;border-radius:9px;font-size:12px}
+.labReferralJoinedStatus{color:#16844e;font-weight:700}
+@media(max-width:720px){
+ .labReferralInviteControls.pb1436InviteControls{grid-template-columns:minmax(0,1fr)!important;gap:9px!important}
+ .labReferralInviteControls .labReferralInviteDivider{width:100%!important;min-width:0;height:1px!important;min-height:1px!important}
+ .labReferralInviteControls .labReferralInviteSend{grid-template-columns:minmax(0,1fr) max-content!important}
+ .labReferralInviteControls .labReferralInviteSend>button{width:auto!important}
+}

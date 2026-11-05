@@ -12,7 +12,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   assert.match(asset,/PB1585Discount,\{customer,onSaved\}/);
   assert.match(asset,/\/api\/lab\/finance\/customer-settings/);
   assert.match(asset,/discountEveryInvoices:info.every/);
-  assert.match(asset,/e\.jsx\("button",\{type:"button",className:"pb1585DiscountEdit"/);
+  assert.match(asset,/e\.jsxs\("button",\{type:"button",className:"pb1585DiscountEdit"/);
   assert.match(css,/\.timelineDot::after/);
   assert.match(css,/aria-busy="true"/);
   assert.match(css,/pb1610NotQueue/);

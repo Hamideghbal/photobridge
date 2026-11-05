@@ -44,8 +44,8 @@ export async function handleLabReferralWalletRenewal({
   await db.query("INSERT INTO subscription_renewals(id,lab_id,plan_id,months,list_amount,plan_amount,discount_percent,special_discount_amount,amount,status,submitted_by,submitted_at,reviewed_at,reviewed_by,review_note,previous_active_until,new_active_until,payment_method) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'approved',$10,now(),now(),NULL,'پرداخت از کیف پول',$11,$12,'wallet')",
    [renewalId,labId,plan.id,Number(plan.months),publicPrice.grossAmount,planAmount,clampDiscount(plan.discount_percent),special.specialDiscountAmount,amount,userId,lab.active_until||null,activeUntil]);
   await db.query('UPDATE labs SET active=true,active_until=$2,updated_at=now() WHERE id=$1',[labId,activeUntil]);
-  await db.query("INSERT INTO platform_payments(lab_id,lab_name,renewal_id,amount,status,source,paid_at,updated_at) VALUES($1,$2,$3,$4,'paid','wallet',now(),now())",
-   [labId,lab.name,renewalId,amount]);
+  // Wallet-funded renewal moves already-held platform credit. It is not new
+  // cash revenue and must NOT create a fresh platform_payments paid row.
   await db.query('INSERT INTO lab_referral_wallet_renewals(renewal_id,wallet_transaction_id,lab_id,request_key,amount) VALUES($1,$2,$3,$4,$5)',
    [renewalId,tx.rows[0].id,labId,requestKey,amount]);
   await db.query('COMMIT');

@@ -31,7 +31,7 @@ export function labReferralRewardAmount(paidAmount,pct=10){
  return Math.floor(amount/10);
 }
 export async function rewardInvitingLab(db,{referredLabId,sourceKind,sourceId,paidAmount,ensureWallet}){
- if(!['subscription','wallet_topup'].includes(sourceKind)||!sourceId)return null;
+ if(!['subscription','wallet_topup','wallet_manual_topup'].includes(sourceKind)||!sourceId)return null;
  const memberships=await db.query('SELECT referrer_lab_id,referrer_reward_percent FROM lab_referral_memberships WHERE referred_lab_id=$1',[referredLabId]);
  const r=memberships.rows?.[0];if(!r||String(r.referrer_lab_id)===String(referredLabId))return null;
  const reward=labReferralRewardAmount(paidAmount,Number(r.referrer_reward_percent));if(reward<=0)return null;

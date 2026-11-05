@@ -1,20 +1,42 @@
-Nn=async le=>{
- const pending=Se,order=pending?.order;
- Fe(null);
- await ye();
- if(order&&h?.id===order.id)await Tt(order,false).catch(()=>{});
- if(pending?.resume==='ready'&&order){
-  window.setTimeout(()=>{un(order)},0);
-  return;
+Nn=async saved=>{
+ const selection=Se,order={...(selection?.order||{}),...(saved?.order||{})};
+ if(!order.id)return;
+ if(saved?.ready===false||saved?.missing?.length){
+  P('قیمت همهٔ ردیف‌ها را تکمیل کنید.');return;
  }
- if(le?.invoice?.id&&order){
-  P('فاکتور #'+V(le.invoice.number)+' پس از قیمت‌گذاری صادر شد.');
-  if(!le.invoice.pdf_ready)await pb1547CompletePdf(le.invoice,order.id,ai());
-  // Explicit user price confirmation is a valid view intent; background
-  // download/auto-retry events never open the invoice preview.
-  await Qn(le.invoice.id,{...le.invoice,customer_name:order.customer_name,
-   order_number:order.number,lab_name:t.name});
-  return;
+ Fe(null);C(order.id);
+ if(saved?.order)f(rows=>rows.map(row=>row.id===order.id?{...row,...saved.order}:row));
+ try{
+  const issued=saved?.invoice;
+  if(issued?.id){
+   // Only explicit confirmation of these prices may preview this particular invoice.
+   // Keep R1577's direct card refresh and pending-reset behavior intact.
+   P('قیمت‌گذاری سفارش #'+V(order.number)+' تکمیل شد؛ فاکتور #'+V(issued.number)+' صادر شد.');
+   if(!issued.pdf_ready)await pb1547CompletePdf(issued,order.id,ai());
+   const detail=await Me('/api/lab/orders/'+encodeURIComponent(order.id)).catch(()=>null);
+   const fresh=detail?.order;
+   if(fresh)f(rows=>rows.map(row=>row.id===order.id?{...row,...fresh}:row));
+   await Qn(issued.id,{...issued,customer_name:order.customer_name,order_number:order.number,lab_name:t.name});
+  }else if(selection?.resume==='ready'){
+   window.setTimeout(()=>{un(order)},0);
+  }else if(order.downloaded_at&&order.invoice_required!==false){
+   // Older awaiting-pricing jobs can still need their verified-download retry.
+   P('قیمت ذخیره شد؛ در حال تکمیل فاکتور سفارش…');
+   const result=await pb1568AfterManualDownload(order.id,order.lab_id||t.id);
+   if(!result?.completed){P('قیمت ذخیره شد؛ تکمیل فاکتور نیازمند بررسی است.');return;}
+   const detail=await Me('/api/lab/orders/'+encodeURIComponent(order.id));
+   if(detail?.order)f(rows=>rows.map(row=>row.id===order.id?{...row,...detail.order}:row));
+   if(typeof pb1568Save==='function')pb1568Save(order.lab_id||t.id,order.id,{phase:'complete',invoiceId:result.invoice?.id,attempts:0});
+   P('قیمت‌گذاری تکمیل شد؛ فاکتور سفارش #'+V(order.number)+' آماده است.');
+  }else{
+   P('قیمت‌گذاری سفارش #'+V(order.number)+' ذخیره شد.');
+  }
+ }catch(error){
+  P('قیمت ذخیره شد، اما تکمیل فاکتور نیازمند بررسی است.');
+  pb1547Notice(error?.message||'تکمیل فاکتور انجام نشد.','warning');
+ }finally{
+  C('');
+  void ye().catch(()=>{});
+  if(h?.id===order.id)void Tt(order,false).catch(()=>{});
  }
- P('قیمت‌گذاری سفارش #'+V(order?.number||'')+' ذخیره شد.');
 }

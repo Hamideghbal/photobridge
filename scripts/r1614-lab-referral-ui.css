@@ -1,0 +1,20 @@
+.pb1614Referral{direction:rtl;display:grid;gap:15px;font-family:Vazirmatn,Tahoma,Arial,sans-serif;max-width:100%;padding:3px 0 24px}
+.pb1614ReferralHero,.pb1614ReferralPanel{border:1px solid #dce6f3;border-radius:16px;background:#fff;padding:18px 20px;box-shadow:0 3px 14px rgba(25,61,99,.04)}
+.pb1614ReferralHero{background:linear-gradient(115deg,#edf5ff,#fff)}
+.pb1614ReferralHero h2{font-size:18px;font-weight:850;margin:0 0 7px}
+.pb1614ReferralHero p,.pb1614ReferralPanel p,.pb1614ReferralPanel small{color:#53657d;font-size:12px;line-height:2;max-width:850px;margin:4px 0}
+.pb1614ReferralPanel h3{margin:0 0 13px;font-size:15px;font-weight:800}
+.pb1614ReferralSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pb1614ReferralSummary article{border:1px solid #dbe7f5;background:#f8fbff;border-radius:14px;padding:13px;display:grid;gap:6px}
+.pb1614ReferralSummary article span{font-size:11px;color:#52627a}
+.pb1614ReferralSummary article strong{font-size:16px;color:#235d9d}
+.pb1614ReferralLink,.pb1614ReferralSend,.pb1614ReferralRenew{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.pb1614Referral :is(input,select){box-sizing:border-box;min-width:0;min-height:42px;padding:9px 11px;border:1px solid #cbd8e9;border-radius:10px;background:#fff;flex:1;font:700 12px Vazirmatn,Tahoma,sans-serif;color:#243c59}
+.pb1614Referral button{min-height:42px;border:1px solid #2667ae;border-radius:10px;background:#2667ae;color:white;cursor:pointer;padding:8px 13px;font:800 12px Vazirmatn,Tahoma,sans-serif}
+.pb1614Referral button:disabled{opacity:.58;cursor:not-allowed}
+.pb1614ReferralRows{display:grid;gap:5px}
+.pb1614ReferralRows>div{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f8fbff;padding:10px 12px;border:1px solid #edf2f9;border-radius:10px;font-size:12px}
+.pb1614ReferralError,.pb1614ReferralSuccess{border-radius:10px;padding:12px 14px;font-size:12px;margin:0}
+.pb1614ReferralError{background:#fff2f1;color:#a3291d}
+.pb1614ReferralSuccess{background:#effaf4;color:#21704e}
+@media(max-width:700px){.pb1614ReferralSummary{grid-template-columns:1fr}.pb1614ReferralLink,.pb1614ReferralSend,.pb1614ReferralRenew{flex-wrap:wrap}.pb1614ReferralLink input,.pb1614ReferralSend input,.pb1614ReferralRenew select{flex-basis:100%}.pb1614ReferralPanel{padding:14px}}

@@ -140,3 +140,63 @@ export async function reserveReferralSms(db,labId,mobile){
  }catch(error){await c.query('ROLLBACK').catch(()=>{});throw error}
  finally{c.release()}
 }
+
+export async function handleReferralApi({req,res,url,a,pool,bodyJson,sendJson,requireRole,sendSms,publicUrl}){
+ if(req.method==='GET'&&url.pathname==='/api/public/lab-referral/preview'){
+  const code=normalizeReferralCode(url.searchParams.get('code'));
+  if(!code)return sendJson(res,400,{error:'lab_referral_invalid'}),true;
+  try{
+   const q=await pool.query(
+    "SELECT l.name,l.active,l.suspended FROM lab_referral_codes c JOIN labs l ON l.id=c.lab_id WHERE c.code=$1",
+    [code]);
+   const row=q.rows[0];
+   if(!row||row.active!==true||row.suspended===true)
+    return sendJson(res,404,{error:'lab_referral_unavailable'}),true;
+   return sendJson(res,200,{inviterName:row.name,discountPercent:LAB_REFERRAL_DISCOUNT}),true;
+  }catch(err){throw err}
+ }
+ if(url.pathname!=='/api/lab/referrals'&&url.pathname!=='/api/lab/referrals/send-sms')
+  return false;
+ if(!requireRole(a,'lab_admin')||!a?.labId)
+  return sendJson(res,403,{error:'forbidden'}),true;
+ const labId=a.labId;
+ try{
+  const code=await getOrCreateReferralCode(pool,labId,a.userId);
+  const link=publicUrl+'/trial?labReferral='+encodeURIComponent(code);
+  if(req.method==='GET'&&url.pathname==='/api/lab/referrals'){
+   const data=await referralOverview(pool,labId);
+   return sendJson(res,200,{code,inviteUrl:link,
+    discountPercent:LAB_REFERRAL_DISCOUNT,rewardPercent:LAB_REFERRAL_REWARD,
+    benefitScope:'lab_subscription',rewardScope:['subscription','wallet_topup'],
+    ...data}),true;
+  }
+  if(req.method==='POST'&&url.pathname==='/api/lab/referrals/send-sms'){
+   const payload=await bodyJson(req);
+   const mobile=String(payload.mobile||'').trim().replace(/[٠-٩۰-۹]/g,d=>{
+    const i='۰۱۲۳۴۵۶۷۸۹'.indexOf(d);return i>=0?String(i):String('٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+   }).replace(/\D/g,'');
+   const target=/^989\d{9}$/.test(mobile)?'0'+mobile.slice(2):/^9\d{9}$/.test(mobile)?'0'+mobile:mobile;
+   if(!/^09\d{9}$/.test(target))return sendJson(res,400,{error:'invalid_mobile'}),true;
+   const owner=await pool.query(
+    "SELECT 1 FROM lab_memberships lm JOIN users u ON u.id=lm.user_id WHERE lm.lab_id=$1 AND lm.role='lab_admin' AND lm.active=true AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=$2",
+    [labId,target.slice(-10)]);
+   if(owner.rowCount)return sendJson(res,409,{error:'lab_referral_self_invite'}),true;
+   const reserved=await reserveReferralSms(pool,labId,target);
+   try{
+    await sendSms({mobile:target,message:'PhotoBridge: دعوت به عضویت لابراتوار با ۳۰٪ تخفیف اشتراک.\nثبت‌نام: '+link,
+     purpose:'lab_referral_invitation',eventKey:'lab_referral_invitation',labId,userId:a.userId,
+     metadata:{referralCode:code}});
+    await pool.query("UPDATE lab_referral_sms_attempts SET status='sent',sent_at=now() WHERE id=$1",[reserved]);
+    return sendJson(res,200,{ok:true,sent:true}),true;
+   }catch(error){
+    await pool.query("UPDATE lab_referral_sms_attempts SET status='failed' WHERE id=$1",[reserved]).catch(()=>{});
+    throw error;
+   }
+  }
+  return sendJson(res,405,{error:'method_not_allowed'}),true;
+ }catch(error){
+  const code=String(error.code||error.message||'lab_referral_failed');
+  const http=Number(error.status||0);
+  return sendJson(res,http>=400&&http<600?http:503,{error:code}),true;
+ }
+}

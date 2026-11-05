@@ -881,3 +881,8 @@ await deployStep('./enable-r1613-lab-invoice-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1615-pricing-build-anchor.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1613-lab-invoice-ui.cjs'],{stdio:'inherit'});
 
+// R1616: separate opt-in lab-to-lab referral program only. Keep all earlier
+// invoice, lab status, wallet and invite steps untouched.
+await deployStep('./enable-r1614-lab-referrals.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1614-lab-referrals.cjs'],{stdio:'inherit'});
+

@@ -1,0 +1,4 @@
+import fs from 'node:fs';import crypto from 'node:crypto';
+const name='photobridge-r1628-invite-row.css';
+for(const root of ['dist/web','dist/web/lab-desktop-ui']){fs.copyFileSync('scripts/r1628-invite-row.css',root+'/'+name);const path=root+'/index.html';let html=fs.readFileSync(path,'utf8');if(!html.includes(name))html=html.replace('</head>',`<link rel="stylesheet" href="/${name}?v=r1628"></head>`);fs.writeFileSync(path,html);}
+const root='dist/web/lab-desktop-ui',path=root+'/manifest.json',manifest=JSON.parse(fs.readFileSync(path)),hash=b=>crypto.createHash('sha256').update(b).digest('hex');for(const file of [name,'index.html']){let entry=manifest.files.find(x=>x.name===file);if(!entry){entry={name:file,url:'/lab-desktop-ui/'+file};manifest.files.push(entry)}entry.sha256=hash(fs.readFileSync(root+'/'+file))}manifest.build=hash(JSON.stringify(manifest.files));manifest.generatedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(manifest));

@@ -1,1 +1,1 @@
-2026-11-05-r1627-fix-invitation-status-test-false-positive
+2026-11-05-r1628-invite-row-unified-updates

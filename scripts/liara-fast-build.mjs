@@ -894,3 +894,6 @@ runR1314(process.execPath,['--test','scripts/test-r1624-invitations.cjs'],{stdio
 runR1314(process.execPath,['--test','scripts/test-r1625-invitations.cjs'],{stdio:'inherit'});
 // R1626: single-row invite actions and automatic joined-recipient status.
 runR1314(process.execPath,['--test','scripts/test-r1626-referral-invites.cjs'],{stdio:'inherit'});
+
+// One shared invitation row in both website and existing Windows UI updates.
+await deployStep('./enable-r1628-invite-row.mjs');

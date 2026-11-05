@@ -41,7 +41,7 @@ test('R1599: phone dock belongs to active role including customer finance',()=>{
  const js=fs.readFileSync('scripts/r1598-photographer-mobile-invoice-dock.js','utf8');
  const css=fs.readFileSync('scripts/r1598-photographer-mobile-invoice-dock.css','utf8');
  const lab=fs.readFileSync('scripts/r1482-lab-mobile.js','utf8');
- assert.match(js,/photographer\(?:\\\/\|\$\)/);
+ assert.match(js,/const role=\(\)=>/);
  assert.match(js,/pb1599PhotographerRoute/);
  assert.match(js,/data-pb1598-duplicate/);
  assert.match(css,/pb1599PhotographerRoute body nav\.labMobileUtilityRail/);

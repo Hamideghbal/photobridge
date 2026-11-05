@@ -1,0 +1,7 @@
+/* R1606: use the same approved, viewer-scoped directory as the Store chooser. */
+(()=>{'use strict';if(window.pb1606StoreAvailability||window!==window.top||!/^\/photographer(?:\/|$)/.test(location.pathname)||/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(location.pathname))return;window.pb1606StoreAvailability=true;
+const root=document.documentElement;let pending=false,epoch=0,lastCheck=0;
+async function refresh(force=false){if(pending||!force&&Date.now()-lastCheck<30000)return;pending=true;const current=epoch;try{const response=await fetch('/api/customer/equipment-rental/shops',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(!response.ok)return;const data=await response.json();if(current!==epoch||!Array.isArray(data.shops))return;root.dataset.pb1606Store=data.shops.length?'available':'empty';lastCheck=Date.now()}catch{}finally{if(current===epoch)pending=false}}
+addEventListener('focus',()=>void refresh());addEventListener('online',()=>void refresh(true));addEventListener('photobridge-navigation-tabs',()=>void refresh());addEventListener('photobridge-auth-session-changed',event=>{epoch++;pending=false;lastCheck=0;root.dataset.pb1606Store='pending';if(event.detail?.labRole==='customer')void refresh(true)});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>void refresh(),{once:true});else void refresh();
+})();

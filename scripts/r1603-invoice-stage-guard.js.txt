@@ -1,0 +1,7 @@
+/* Called with the existing lab-scoped order row lock, before any status write. */
+export async function labOrderStageInvoiceGuard(db,labId,order,stage){
+ if(order.invoice_required===false||!['printing','reviewing','ready_print','printed','binding','ready','completed'].includes(stage))return null;
+ const invoice=await db.query('SELECT id FROM invoices WHERE lab_id=$1 AND order_id=$2 LIMIT 1',[labId,order.id]);
+ if(invoice.rowCount)return null;
+ return{error:'order_invoice_required',message:'ابتدا قیمت‌گذاری سفارش را تکمیل و فاکتور را صادر کنید؛ سپس وضعیت سفارش را تغییر دهید.'};
+}

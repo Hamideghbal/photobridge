@@ -1,0 +1,5 @@
+.pb1603DetailsReadonly .pb1180Settings,.pb1603DetailsReadonly .pb1180Remove,.pb1603DetailsReadonly .pb1180Quantity>button{display:none!important}
+.pb1603DetailsReadonly .pb1180Paper{appearance:none!important;background:transparent!important;border-color:transparent!important;color:#475569!important;opacity:1!important;cursor:default!important}
+.pb1603DetailsReadonly .pb1180Quantity input{background:transparent!important;border-color:transparent!important;color:#475569!important;opacity:1!important;appearance:textfield!important;cursor:default!important}
+.pb1603DetailsReadonly .pb1180Quantity input::-webkit-inner-spin-button{appearance:none!important}
+.pb1603IssueInvoice{border:1px solid #efc271!important;background:#fff8e9!important;color:#8c5a19!important;border-radius:9px;padding:7px 12px;font:inherit;cursor:pointer}

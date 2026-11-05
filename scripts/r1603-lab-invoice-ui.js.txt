@@ -1,0 +1,2 @@
+function pb1603InvoicePending(order){return order.invoice_required!==false&&!order.invoice_id&&!order.invoiceId&&!order.local_invoice_id&&(!!order.downloaded_at||['downloaded','printing','reviewing','ready_print','printed','ready','completed'].includes(String(order.status||'')))}
+function pb1603StageInvoicePending(order,stage){return pb1603InvoicePending(order)&&(['print','printing','ready','completed','binding'].includes(stage)||stage==='download_print'&&!!order.downloaded_at)}

@@ -851,3 +851,5 @@ runR1314(process.execPath,['--test','scripts/test-r1599-mobile-crop-nav.cjs'],{
 
 
 await deployStep('./enable-r1602-photographer-upload-orders.mjs');
+
+await deployStep('./enable-r1603-lab-pricing-stage.mjs');

@@ -5,8 +5,8 @@ const source=fs.readFileSync('scripts/r1599-crop-send-confirm.js','utf8');
 const installer=fs.readFileSync('scripts/enable-r1599-mobile-crop-nav.mjs','utf8');
 test('R1599: print and album crop warnings have two explicit choices and are before order/upload',()=>{
  const legacy=[
-  'const a=async()=>{if(Jt.length&&!we&&!window.confirm("album warning"))return;const gt=++dt.current;}',
-  'const b=async()=>{if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("print warning"))return;const ue=new AbortController;}'
+  'const xe=async()=>{const Jt=[];if(Jt.length&&!we&&!window.confirm("album warning"))return;const gt=++dt.current;}',
+  'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("print warning"))return;const ue=new AbortController;}'
  ].join('\n');
  const done=patchCrop(legacy);
  assert.match(done,/if\(Jt\.length&&!we&&!await pb1599ConfirmCropSend\(/);
@@ -17,6 +17,36 @@ test('R1599: print and album crop warnings have two explicit choices and are bef
  assert.doesNotThrow(()=>new Function('async function fake(){'+
   'let Jt=[],we=false,pbMismatch=0,window={__photobridgePrintDelegateToLabV666:false};'+
   'const pb1599ConfirmCropSend=async()=>false;'+done+'}'));
+});
+test('R1600: release handles duplicate or rewritten warning without failing Docker',()=>{
+ const twice=[
+   'const xe=async()=>{const Jt=[1];if(Jt.length&&!we&&!window.confirm("album warning"))return;const gt=++dt.current;}',
+   'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);',
+   'if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("first"))return;',
+   'if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!window.confirm("second"))return;',
+   'const ue=new AbortController;}'
+ ].join('');
+ const multiple=patchCrop(twice);
+ assert.equal((multiple.match(/await pb1599ConfirmCropSend\(/g)||[]).length,3);
+ assert.doesNotThrow(()=>new Function(multiple));
+ const changed=[
+   'const xe=async()=>{const Jt=[1];if(Jt.length&&!we&&!window.confirm("album warning"))return;const gt=++dt.current;}',
+   'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);',
+   'if(pbMismatch&&someGate&&!window.confirm("print warning"))return;',
+   'const ue=new AbortController;}'
+ ].join('');
+ const alternative=patchCrop(changed);
+ assert.equal((alternative.match(/await pb1599ConfirmCropSend\(/g)||[]).length,2);
+ assert.doesNotThrow(()=>new Function(alternative));
+ const absent=[
+   'const xe=async()=>{const Jt=[1];const gt=++dt.current;}',
+   'const he=async()=>{const pbMismatch=T.reduce((n,g)=>n,0);const ue=new AbortController;}'
+ ].join('');
+ const fallback=patchCrop(absent);
+ assert.equal((fallback.match(/await pb1599ConfirmCropSend\(/g)||[]).length,2);
+ assert.ok(fallback.indexOf('if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!await')<
+    fallback.indexOf('const ue=new AbortController'));
+ assert.doesNotThrow(()=>new Function(fallback));
 });
 test('R1599: cancellation rejects and sending needs an explicit button',async()=>{
  const buttons={};
@@ -58,7 +88,7 @@ test('R1599: website-only bundle; preserve safe Windows and disabled flight',()=
  if(process.env.PB1599_VERIFY_BUNDLE==='1'){
    const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
    assert.match(ui,/R1599 explicit crop cancellation/);
-   assert.equal((ui.match(/!await pb1599ConfirmCropSend\(/g)||[]).length,2);
+   assert.ok((ui.match(/!await pb1599ConfirmCropSend\(/g)||[]).length>=2);
    assert.doesNotThrow(()=>new Function(ui));
    const html=fs.readFileSync('dist/web/index.html','utf8');
    assert.match(html,/id="pb1599RoutePrepaint"/);

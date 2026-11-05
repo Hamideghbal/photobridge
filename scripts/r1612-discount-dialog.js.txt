@@ -1,0 +1,110 @@
+/* R1612: fullscreen-safe standalone discount dialog; no editing controls inside table cells. */
+function pb1612NormalizeNumeric(value){
+ return String(value??'').trim()
+  .replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+  .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+  .replace('٫','.');
+}
+function pb1612DiscountInputs(percentInput,everyInput){
+ const percentText=pb1612NormalizeNumeric(percentInput);
+ const everyText=pb1612NormalizeNumeric(everyInput);
+ if(!/^\d{1,3}(?:\.\d{1,2})?$/.test(percentText))return {error:'درصد تخفیف باید بین صفر تا ۱۰۰ و با حداکثر دو رقم اعشار باشد.'};
+ const percent=Number(percentText);
+ if(!Number.isFinite(percent)||percent<0||percent>100)return {error:'درصد تخفیف باید بین صفر تا ۱۰۰ باشد.'};
+ if(!/^\d{1,4}$/.test(everyText))return {error:'تعداد فاکتور باید یک عدد صحیح از ۱ تا ۱۰۰۰ باشد.'};
+ const every=Number(everyText);
+ if(!Number.isInteger(every)||every<1||every>1000)return {error:'تعداد فاکتور باید بین ۱ تا ۱۰۰۰ باشد.'};
+ return {percent,every};
+}
+function pb1612OpenDiscountDialog({customer,info,onSaved}){
+ if(!info||document.querySelector('dialog.pb1612DiscountModal'))return;
+ const node=(tag,className,text)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!=null)el.textContent=String(text);return el};
+ const dialog=node('dialog','pb1612DiscountModal');
+ dialog.setAttribute('dir','rtl');
+ dialog.setAttribute('aria-labelledby','pb1612DiscountTitle');
+ dialog.setAttribute('aria-modal','true');
+ const form=node('form','pb1612DiscountForm');
+ form.noValidate=true;
+ const header=node('header','pb1612DiscountHead');
+ const title=node('h2',null,'تخفیف اختصاصی عکاسی');
+ title.id='pb1612DiscountTitle';
+ const close=node('button','pb1612DiscountClose','×');
+ close.type='button';close.setAttribute('aria-label','بستن پنجره تخفیف');
+ header.append(title,close);
+ const sub=node('p','pb1612DiscountCustomer',customer.name||'عکاسی');
+ const fields=node('div','pb1612DiscountFields');
+ function labeled(labelText,input){
+  const label=node('label','pb1612DiscountField');
+  label.append(node('span',null,labelText),input);
+  fields.append(label);
+ }
+ const percentInput=node('input','pb1612DiscountPercent');
+ percentInput.type='number';percentInput.inputMode='decimal';percentInput.min='0';percentInput.max='100';percentInput.step='0.01';
+ percentInput.value=String(info.percent||0);percentInput.required=true;
+ percentInput.setAttribute('aria-label','درصد تخفیف');
+ const everyInput=node('input','pb1612DiscountEvery');
+ everyInput.type='number';everyInput.inputMode='numeric';everyInput.min='1';everyInput.max='1000';everyInput.step='1';
+ everyInput.value=String(info.every||10);everyInput.required=true;
+ everyInput.setAttribute('aria-label','اعمال تخفیف بعد از چند فاکتور');
+ labeled('درصد تخفیف',percentInput);
+ labeled('اعمال تخفیف پس از هر چند فاکتور؟',everyInput);
+ const toggle=node('label','pb1612DiscountToggle');
+ const enabledInput=node('input');enabledInput.type='checkbox';enabledInput.checked=!!info.enabled;
+ toggle.append(enabledInput,node('span',null,'تخفیف فعال باشد'));
+ const preview=node('p','pb1612DiscountPreview');
+ const description=node('p','pb1612DiscountNote','با ذخیرهٔ تخفیف فعال، ممکن است برای فاکتورهای مشمول قبلی نیز سند تخفیف خودکار ایجاد شود.');
+ const error=node('p','pb1612DiscountError');error.setAttribute('role','alert');error.hidden=true;
+ const footer=node('footer','pb1612DiscountActions');
+ const cancel=node('button','pb1612DiscountCancel','انصراف');cancel.type='button';
+ const save=node('button','pb1612DiscountSave','ذخیره تنظیمات');save.type='submit';
+ footer.append(cancel,save);
+ form.append(header,sub,fields,toggle,preview,description,error,footer);
+ dialog.append(form);
+ document.body.append(dialog);
+ let saving=false;
+ function updatePreview(){
+  const values=pb1612DiscountInputs(percentInput.value,everyInput.value);
+  preview.textContent=values.error?'درصد و تعداد فاکتور را وارد کنید.':
+   enabledInput.checked?'تخفیف '+values.percent.toLocaleString('fa-IR')+'٪ پس از هر '+values.every.toLocaleString('fa-IR')+' فاکتور اعمال می‌شود.':'تخفیف غیرفعال است؛ تنظیمات ذخیره می‌شوند.';
+ }
+ function showError(message){error.hidden=!message;error.textContent=message||'';}
+ function closeDialog(){if(saving)return;dialog.close()}
+ close.addEventListener('click',closeDialog);cancel.addEventListener('click',closeDialog);
+ dialog.addEventListener('cancel',event=>{if(saving)event.preventDefault()});
+ dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+ [percentInput,everyInput,enabledInput].forEach(input=>input.addEventListener('input',()=>{showError('');updatePreview()}));
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(saving)return;
+  const values=pb1612DiscountInputs(percentInput.value,everyInput.value);
+  if(values.error){showError(values.error);return}
+  const enabled=!!enabledInput.checked&&values.percent>0;
+  if(enabled===info.enabled&&values.percent===info.percent&&values.every===info.every){dialog.close();return}
+  saving=true;showError('');
+  save.disabled=true;cancel.disabled=true;close.disabled=true;percentInput.disabled=true;everyInput.disabled=true;enabledInput.disabled=true;
+  save.textContent='در حال ذخیره…';
+  try{
+   const response=await Me('/api/lab/finance/customer-settings',{
+    method:'PUT',body:JSON.stringify({customerId:customer.id,discountEnabled:enabled,discountPercent:values.percent,discountEveryInvoices:values.every})
+   });
+   const persisted=response?.settings;
+   if(!persisted||Math.abs(Number(persisted.discount_percent)-values.percent)>0.00001||
+      Number(persisted.discount_every_invoices)!==values.every||
+      Boolean(persisted.discount_enabled)!==enabled){
+    throw Error('سرور ذخیره شدن تنظیمات را تأیید نکرد.');
+   }
+   try{await onSaved?.()}catch(refreshError){console.warn('[R1612] customer table refresh',refreshError)}
+   dialog.close();
+   if(Number(response.appliedDiscounts)>0)alert(String(response.appliedDiscounts)+' سند تخفیف خودکار برای فاکتورهای مشمول ثبت شد.');
+  }catch(failure){
+   showError(failure?.data?.message||failure?.message||'ذخیره تنظیمات انجام نشد. دوباره تلاش کنید.');
+  }finally{
+   saving=false;save.disabled=false;cancel.disabled=false;close.disabled=false;
+   percentInput.disabled=false;everyInput.disabled=false;enabledInput.disabled=false;
+   save.textContent='ذخیره تنظیمات';
+  }
+ });
+ updatePreview();
+ dialog.showModal();
+ percentInput.focus();
+}

@@ -15,7 +15,7 @@ class AlertWindow {
  }
  updateDownload(value,account){
   if(!account||account!==this.getAccount())return;
-  if(this.downloadAccount!==account){this.downloads.clear();this.focusOrderId=null;this.downloadAccount=account}
+  if(this.downloadAccount!==account){this.downloads.clear();if(this.account!==account)this.focusOrderId=null;this.downloadAccount=account}
   const previous=this.downloads.get(value.orderId);value={...value,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
   while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
   if(this.window&&!this.window.isDestroyed())this.window.webContents.send('lab-alert-progress',this.visibleDownloads());

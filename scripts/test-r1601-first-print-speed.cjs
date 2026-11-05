@@ -57,6 +57,30 @@ test('R1601 actual async route overlaps SQL with identical directory payload',as
  assert.deepEqual(result.payload.labs.map(v=>v.id),['lab1','lab2']);
  assert.equal(result.payload.invitationScoped,false);
 });
+test('R1601 invited-lab-only account still sees only accepted labs and primary sort',async()=>{
+ const source=route(patchLabDirectory(server)),queries=[];
+ const pool={query:async(sql,params)=>{
+  queries.push({sql,params});
+  if(sql.includes('SELECT l.id,l.name,l.slug,l.province,l.city,l.service_only,m.active'))
+   return {rows:[{id:'lab1',name:'One'},{id:'lab2',name:'Two'}]};
+  if(sql.includes('0::numeric photographer_join_discount_percent,true connected'))
+   return {rows:[{id:'lab1',name:'One'},{id:'lab2',name:'Two'}]};
+  return {rows:[]};
+ }};
+ const execute=new Function('req','url','a','labId','pool','photographerCanDiscoverLabs',
+  'photographerInvitedLabIds','photographerInitialOriginContext','testAccountVisibleSql','testAccountSql','sendJson','res',
+  'return (async()=>{'+source+'})()');
+ const answer=await execute({method:'GET'},{pathname:'/api/customer/labs'},{userId:'u1'},'lab1',
+  pool,async()=>false,async()=>['lab1','lab2'],
+  async()=>({originType:'lab',primaryLabId:'lab2'}),
+  ()=>'TRUE',()=>'FALSE',(res,status,payload)=>({status,payload}),{});
+ assert.equal(answer.status,200);
+ assert.equal(answer.payload.canDiscoverLabs,false);
+ assert.equal(answer.payload.invitationScoped,true);
+ assert.deepEqual(answer.payload.labs.map(x=>x.id),['lab2','lab1']);
+ assert.deepEqual(answer.payload.memberships.map(x=>x.id),['lab2','lab1']);
+ assert.equal(queries.filter(x=>x.sql.includes('UPDATE users')).length,0);
+});
 test('R1601 stages are web/desktop-only and keep disabled Lab card animation',()=>{
  const stage=fs.readFileSync('scripts/enable-r1601-first-print-speed.mjs','utf8');
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');

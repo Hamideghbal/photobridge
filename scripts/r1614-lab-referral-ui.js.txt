@@ -1,0 +1,98 @@
+// R1614: opt-in referral page isolated under Lab Settings; no legacy tabs changed.
+function PB1614LabReferrals(){
+ const[data,setData]=x.useState(null),[plans,setPlans]=x.useState([]),[plan,setPlan]=x.useState('');
+ const[mobile,setMobile]=x.useState(''),[message,setMessage]=x.useState('');
+ const[busy,setBusy]=x.useState(''),[error,setError]=x.useState('');
+ const renewKey=x.useRef(null);
+ const money=v=>Number(v||0).toLocaleString('fa-IR')+' تومان';
+ const load=async()=>{try{
+   const result=await Me('/api/lab/referrals');setData(result);
+   const subscription=await Me('/api/lab/subscription');
+   setPlans(subscription.plans||[]);setPlan(prev=>prev||(subscription.plans||[])[0]?.id||'');
+  }catch(failure){setError(failure?.data?.message||'دریافت اطلاعات دعوت لابراتوار انجام نشد.')}
+ };
+ x.useEffect(()=>{void load()},[]);
+ const run=async(name,work)=>{if(busy)return;setBusy(name);setError('');setMessage('');
+  try{await work()}catch(failure){setError(failure?.data?.message||failure?.data?.error||failure?.message||'عملیات انجام نشد.')}
+  finally{setBusy('')}
+ };
+ const newLink=()=>run('invite',async()=>{await Me('/api/lab/referrals/invite',{method:'POST',body:'{}'});await load();setMessage('لینک اختصاصی دعوت آماده شد.')});
+ const copyLink=()=>run('copy',async()=>{
+  if(!data?.invite?.link)return;
+  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(data.invite.link);
+  else{const el=document.createElement('textarea');el.value=data.invite.link;document.body.append(el);el.select();
+   const success=document.execCommand('copy');el.remove();if(!success)throw Error('کپی انجام نشد. لینک را از کادر کپی کنید.')}
+  setMessage('لینک دعوت کپی شد.');
+ });
+ const send=()=>run('send',async()=>{
+  if(!/^09[0-9]{9}$/.test(String(mobile||'')))throw Error('شماره موبایل را به شکل 09xxxxxxxxx وارد کنید.');
+  await Me('/api/lab/referrals/send',{method:'POST',body:JSON.stringify({mobile})});
+  setMobile('');setMessage('دعوت‌نامه با پیامک ارسال شد.');await load();
+ });
+ const renew=()=>run('renew',async()=>{
+  if(!plan)throw Error('ابتدا دوره اشتراک را انتخاب کنید.');
+  const item=plans.find(p=>p.id===plan);
+  if(!item)throw Error('دوره نامعتبر است.');
+  const cost=Number(item.price||0);
+  if(cost<=0)throw Error('مبلغ اشتراک معتبر نیست.');
+  if(Number(data?.walletBalance||0)<cost)throw Error('اعتبار کیف پول برای این تمدید کافی نیست.');
+  if(!window.confirm('تمدید '+item.name+' به مبلغ '+money(cost)+' از کیف پول انجام شود؟'))return;
+  if(!renewKey.current)renewKey.current=Date.now().toString(36)+Math.random().toString(36).slice(2);
+  const result=await Me('/api/lab/referrals/wallet-renewal',{method:'POST',body:JSON.stringify({planId:plan,requestKey:renewKey.current})});
+  renewKey.current=null;
+  setMessage(result.alreadyProcessed?'این تمدید قبلاً ثبت شده است.':'اشتراک با موفقیت از موجودی کیف پول تمدید شد.');
+  await load();
+ });
+ const field=(key)=>data?.invite?.[key]||'';
+ return e.jsxs('section',{className:'pb1614Referral',dir:'rtl',children:[
+  e.jsxs('div',{className:'pb1614ReferralHero',children:[
+   e.jsx('h2',{children:'دعوت لابراتوارهای دیگر'}),
+   e.jsx('p',{children:'با لینک اختصاصی خود یک لابراتوار جدید به PhotoBridge معرفی کنید. لابراتوار عضو‌شده ۳۰٪ تخفیف اشتراک می‌گیرد و شما از هر پرداخت تأییدشدهٔ او، ۱۰٪ اعتبار کیف پول دریافت می‌کنید.'})
+  ]}),
+  error&&e.jsx('p',{className:'pb1614ReferralError',role:'alert',children:error}),
+  message&&e.jsx('p',{className:'pb1614ReferralSuccess',role:'status',children:message}),
+  !data?e.jsx('p',{children:'در حال دریافت اطلاعات دعوت…'}):e.jsxs(e.Fragment,{children:[
+   e.jsxs('div',{className:'pb1614ReferralSummary',children:[
+    e.jsxs('article',{children:[e.jsx('span',{children:'لابراتوارهای معرفی‌شده'}),e.jsx('strong',{children:V(data.referredLabs?.length||0)})]}),
+    e.jsxs('article',{children:[e.jsx('span',{children:'مجموع پاداش'}),e.jsx('strong',{children:money(data.rewardTotal)})]}),
+    e.jsxs('article',{children:[e.jsx('span',{children:'موجودی کیف پول خدمات'}),e.jsx('strong',{children:money(data.walletBalance)})]})
+   ]}),
+   e.jsxs('div',{className:'pb1614ReferralPanel',children:[
+    e.jsx('h3',{children:'لینک دعوت اختصاصی'}),
+    !data.invite?e.jsx('button',{type:'button',disabled:!!busy,onClick:newLink,children:busy==='invite'?'در حال ساخت…':'ساخت لینک دعوت'}):
+     e.jsxs('div',{className:'pb1614ReferralLink',children:[
+      e.jsx('input',{readOnly:true,dir:'ltr',value:field('link'),'aria-label':'لینک دعوت لابراتوار'}),
+      e.jsx('button',{type:'button',disabled:!!busy,onClick:copyLink,children:'کپی لینک'})
+     ]}),
+    e.jsxs('div',{className:'pb1614ReferralSend',children:[
+     e.jsx('input',{dir:'ltr',inputMode:'tel',placeholder:'09xxxxxxxxx',value:mobile,onChange:ev=>setMobile(ev.target.value),'aria-label':'شماره موبایل لابراتوار جدید'}),
+     e.jsx('button',{type:'button',disabled:!!busy||!data.invite,onClick:send,children:busy==='send'?'در حال ارسال…':'ارسال پیامک دعوت'})
+    ]}),
+    e.jsx('small',{children:'لینک دعوت دائمی است و می‌توانید آن را برای چند لابراتوار بفرستید. ارتباط معرف در زمان تأیید شماره موبایل و عضویت واقعی لابراتوار ثبت می‌شود.'})
+   ]}),
+   e.jsxs('div',{className:'pb1614ReferralPanel',children:[
+    e.jsx('h3',{children:'تمدید اشتراک از کیف پول'}),
+    e.jsx('p',{children:'پاداش معرفی به همین کیف پول خدمات واریز می‌شود و برای هزینه‌های خدمات و تمدید اشتراک قابل استفاده است.'}),
+    e.jsxs('div',{className:'pb1614ReferralRenew',children:[
+     e.jsx('select',{value:plan,onChange:ev=>{setPlan(ev.target.value);renewKey.current=null},children:(plans||[]).map(p=>e.jsx('option',{value:p.id,children:p.name+' · '+money(p.price)},p.id))}),
+     e.jsx('button',{type:'button',disabled:!!busy||!plan,onClick:renew,children:busy==='renew'?'در حال تمدید…':'تمدید از کیف پول'})
+    ]})
+   ]}),
+   e.jsxs('div',{className:'pb1614ReferralPanel',children:[
+    e.jsx('h3',{children:'لابراتوارهای معرفی‌شده'}),
+    !(data.referredLabs||[]).length?e.jsx('p',{children:'هنوز لابراتواری از طریق لینک شما عضو نشده است.'}):
+     e.jsx('div',{className:'pb1614ReferralRows',children:(data.referredLabs||[]).map(item=>e.jsxs('div',{children:[
+      e.jsx('strong',{children:item.name}),e.jsx('span',{children:item.active?'فعال':'در انتظار فعال‌سازی'})
+     ]},item.referred_lab_id))})
+   ]}),
+   e.jsxs('div',{className:'pb1614ReferralPanel',children:[
+    e.jsx('h3',{children:'آخرین پاداش‌ها'}),
+    !(data.rewards||[]).length?e.jsx('p',{children:'پس از تأیید اولین پرداخت لابراتوارهای معرفی‌شده، پاداش در این قسمت دیده می‌شود.'}):
+     e.jsx('div',{className:'pb1614ReferralRows',children:(data.rewards||[]).map((item,i)=>e.jsxs('div',{children:[
+      e.jsx('span',{children:item.source_kind==='subscription'?'تمدید اشتراک':'شارژ کیف پول'}),
+      e.jsx('strong',{children:'+'+money(item.reward_amount)})
+     ]},String(i)+String(item.created_at)))})
+   ]})
+  ]})
+ ]});
+}

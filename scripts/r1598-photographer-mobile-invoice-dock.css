@@ -28,3 +28,32 @@
    z-index:2147483400!important;
  }
 }
+
+/* R1599 — route ownership, including finance opened by invoice notifications. */
+@media(max-width:820px){
+ html.pb1599PhotographerRoute body nav.labMobileUtilityRail,
+ html.pb1599PhotographerRoute body nav.pb1482LabPhoneDock,
+ html.pb1599RentalRoute body nav.labMobileUtilityRail,
+ html.pb1599RentalRoute body nav.pb1482LabPhoneDock,
+ html.pb1599LabRoute body nav.photographerMobileUtilityRail:not(.labMobileUtilityRail),
+ html.pb1599LabRoute body nav.photographerBottomAppNav[aria-label="ناوبری اصلی عکاس"],
+ html body nav[data-pb1599-wrong-role="1"]{display:none!important}
+ html body nav.photographerBottomAppNav[data-pb1598-duplicate="1"]{display:none!important}
+ html.pb1599PhotographerRoute body nav.photographerMobileUtilityRail.photographerBottomAppNav
+ .photographerBottomAppNavGrid,
+ html.pb1599PhotographerRoute body nav.photographerBottomAppNav[aria-label="ناوبری اصلی عکاس"]
+ .photographerBottomAppNavGrid{
+   display:grid!important;
+   grid-template-columns:repeat(6,minmax(0,1fr))!important;
+   grid-template-rows:auto!important;
+   grid-auto-flow:column!important;
+   flex-wrap:nowrap!important;
+   width:100%!important;
+ }
+ html.pb1599PhotographerRoute body nav.photographerBottomAppNav .photographerBottomAppNavGrid>button{
+   min-width:0!important;
+   max-width:100%!important;
+   white-space:normal!important;
+   overflow:hidden!important;
+ }
+}

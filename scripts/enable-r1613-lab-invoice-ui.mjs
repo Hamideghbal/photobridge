@@ -32,10 +32,19 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const app=root+'/assets/index-UIRefine-v655-r84.js';
  let js=read(app);
  if(!js.includes('/* PB1613 manual pricing completion */')){
-  const from='Nn=async le=>{var xt,Mt,qt;const nt=Se;';
-  const tail=';x.useEffect(()=>{const le=()=>{const nt=jf(l)';
-  const start=js.indexOf(from),end=js.indexOf(tail,start);
-  if(start<0||end<=start||end-start>2400)throw Error('R1613 pricing callback changed in '+root);
+  // R1613 hotfix: prior R1576/R1603 stages can add hooks and rewrite the
+  // callback's minified temporary variables. Match the named assignment and
+  // its immediate *next* useEffect boundary instead of the old exact text.
+  const from='Nn=async le=>';
+  const matches=js.split(from).length-1;
+  const start=js.indexOf(from);
+  const boundary='};x.useEffect(()=>';
+  const boundaryStart=js.indexOf(boundary,start);
+  const end=boundaryStart+1; // Preserve ';x.useEffect' and every later hook.
+  const previous=js.slice(start,end);
+  if(matches!==1||start<0||boundaryStart<start||end-start>3200||
+      !previous.includes('Fe(null)')||!previous.includes('await ye()'))
+    throw Error('R1613 pricing callback not uniquely located in '+root);
   js=js.slice(0,start)+read('scripts/r1613-on-pricing-saved.js.txt')+js.slice(end);
   // R1603 pre-invoice client guard wrongly blocked the ordinary after-print
   // flow at the print/ready/binding stages. The /ready handler already

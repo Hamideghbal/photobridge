@@ -17,9 +17,9 @@ function landing(path, authenticated, storedRole=''){
  window.top=window;
  const locals={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)};
  const context={
-  window,navigator:{standalone:true},document,location,localStorage:locals,
+  window,navigator:{standalone:true},document:doc,location,localStorage:locals,
   matchMedia:()=>({matches:true}),URL,URLSearchParams,Headers,Request,AbortController,
-  setTimeout,clearTimeout,console
+  setTimeout,clearTimeout,console:{log(){},error(){}}
  };
  vm.runInNewContext(login,context,{timeout:1000});
  return {events,storage,classes};
@@ -68,7 +68,7 @@ test('R1598: invoice preview hides underlying photographer mobile dock and dedup
  const context={window:win,document:doc,location:{pathname:'/photographer/orders/ready'},
    matchMedia:()=>({matches:true,addEventListener:()=>{}}),
    MutationObserver:class{observe(){}},requestAnimationFrame:fn=>{scheduled.push(fn);return scheduled.length},
-   console};
+   console:{log(){},error(){}}};
  vm.runInNewContext(dock,context,{timeout:1000});
  scheduled.shift()();
  assert.ok(flags.has('pb1598CustomerInvoiceOpen'));

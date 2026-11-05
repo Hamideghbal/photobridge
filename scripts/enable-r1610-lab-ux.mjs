@@ -21,10 +21,32 @@ for(const root of roots){
  execFileSync(process.execPath,['--check',asset],{stdio:'inherit'});
  const header=root+'/photobridge-r1147-lab-admin-header.js';
  let h=fs.readFileSync(header,'utf8');
- if(!h.includes('/* R1610 no archive second header */')){
-  h=only(h,"function secondary(h){\n let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');",
-  "function secondary(h){\n let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');\n /* R1610 no archive second header */\n if(/^\\/lab\\/archive(?:\\/|$)/.test(location.pathname)||h.querySelector('.labArchiveHeaderBtn.active')){\n  row?.remove();h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();h.parentElement.classList.remove('pb1148HasSecondary');\n  h.parentElement.querySelectorAll('.pb1148SecondarySource').forEach(el=>el.classList.remove('pb1148SecondarySource'));return;\n }",'archive header');
-  fs.writeFileSync(header,h);
+ // R1611: the native/desktop header may have been rewritten by an earlier build
+ // stage. Do not fail Docker because its exact formatting differs. The route-
+ // scoped R1610 CSS/runtime independently hide the archive second header and
+ // reset the content offset, even when the direct function guard is unavailable.
+ const archiveMarker='/* R1610 no archive second header */';
+ const secondaryStart='function secondary(h){';
+ if(!h.includes(archiveMarker)){
+  const instances=h.split(secondaryStart).length-1;
+  if(instances===1){
+   const guard=`\n ${archiveMarker}
+ if(/^\\/lab\\/archive(?:\\/|$)/.test(location.pathname)||h.querySelector('.labArchiveHeaderBtn.active')){
+  const row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
+  row?.remove();
+  h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();
+  h.parentElement.classList.remove('pb1148HasSecondary');
+  h.parentElement.querySelectorAll('.pb1148SecondarySource').forEach(el=>el.classList.remove('pb1148SecondarySource'));
+  return;
+ }
+`;
+   h=h.replace(secondaryStart,secondaryStart+guard);
+   fs.writeFileSync(header,h);
+   console.log('[R1611] Archive header guard inserted into '+root);
+  }else{
+   // CSS and route-marker JS remain authoritative for this layout.
+   console.warn('[R1611] Skipping direct archive header injection in '+root+'; route CSS fallback applies (matches='+instances+')');
+  }
  }
  execFileSync(process.execPath,['--check',header],{stdio:'inherit'});
  const files=['photobridge-r1610-lab-ux.js','photobridge-r1610-lab-ux.css'];

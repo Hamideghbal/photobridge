@@ -14,7 +14,7 @@ if(!ui.includes('/* PB1436 settings and invitations */')){
  const inviteStart=ui.indexOf('function Xl('),inviteEnd=ui.indexOf('function ',inviteStart+15);
  if(inviteStart<0||inviteEnd<=inviteStart)throw Error('R1624 photographer invite manager missing');
  let inviteForm=ui.slice(inviteStart,inviteEnd);
- const signature=inviteForm.match(/^function Xl\\([^)]*\\)\\{/);
+ const signature=inviteForm.match(/^function Xl\([^)]*\)\{/);
  if(!signature)throw Error('R1624 photographer invite function changed');
  inviteForm=inviteForm.replace(signature[0],signature[0]+'const pbR1624TempName=x.useRef("");');
  const sendAnchor='inviteId:de?.id||"",previousDebt:D';

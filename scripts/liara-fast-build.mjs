@@ -836,3 +836,9 @@ runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs
 await deployStep('./enable-r1597-early-download-notice.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1597-early-download-notice.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs'],{stdio:'inherit'});
+ 
+// R1598: PWA role restoration and the Photographer phone invoice dock ONLY.
+// Do not modify the native Windows Lab bundle or restore the disabled card flight.
+await deployStep('./enable-r1598-mobile-role-invoice-nav.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1598-mobile-role-invoice-nav.cjs'],{stdio:'inherit'});
+

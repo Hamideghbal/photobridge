@@ -1,1 +1,1 @@
-2026-11-05-r1597-hotfix-invoice-continuation-build-anchor
+2026-11-05-r1598-mobile-active-role-and-photographer-invoice-nav

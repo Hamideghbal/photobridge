@@ -33,17 +33,19 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let js=read(app);
  if(!js.includes('/* PB1613 manual pricing completion */')){
   // R1613 hotfix: prior R1576/R1603 stages can add hooks and rewrite the
-  // callback's minified temporary variables. Match the named assignment and
+  // callback's parameters (Nn=async saved=> in R1577). Match the named assignment and
   // its immediate *next* useEffect boundary instead of the old exact text.
-  const from='Nn=async le=>';
-  const matches=js.split(from).length-1;
-  const start=js.indexOf(from);
+  const variants=['Nn=async saved=>','Nn=async le=>'];
+  const matches=variants.reduce((n,token)=>n+js.split(token).length-1,0);
+  const from=variants.find(token=>js.includes(token));
+  const start=from?js.indexOf(from):-1;
   const boundary='};x.useEffect(()=>';
   const boundaryStart=js.indexOf(boundary,start);
   const end=boundaryStart+1; // Preserve ';x.useEffect' and every later hook.
   const previous=js.slice(start,end);
   if(matches!==1||start<0||boundaryStart<start||end-start>3200||
-      !previous.includes('Fe(null)')||!previous.includes('await ye()'))
+      !previous.includes('Fe(null)')||
+      !(previous.includes('C(order.id)')||previous.includes('await ye()')))
     throw Error('R1613 pricing callback not uniquely located in '+root);
   js=js.slice(0,start)+read('scripts/r1613-on-pricing-saved.js.txt')+js.slice(end);
   // R1603 pre-invoice client guard wrongly blocked the ordinary after-print

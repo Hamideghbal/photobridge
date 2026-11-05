@@ -1,0 +1,8 @@
+/* Desktop photographer print cards: balanced insets, less empty bottom space. */
+@media(min-width:821px){
+html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard){padding:8px 12px!important}
+html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace .liveCustomerOrders .liveOrderCard:not(.albumCustomerOrderCard)>.liveOrderMainRow{grid-template-rows:minmax(82px,auto) auto!important;min-height:0!important;row-gap:4px!important}
+}
+html body #root .simplePrintCardAddonCheck.pb1608ChassisGroup.mixed{border-color:#d1a33b!important;background:#fff9e9!important;color:#765710!important}
+html body #root .pb1608ChassisGroup input{accent-color:#365cff}
+html body #root .pb1608ChassisGroup .pb1608ChassisMixedHint{font-size:10px;line-height:1.3;margin-inline-start:4px;font-weight:500;white-space:nowrap}

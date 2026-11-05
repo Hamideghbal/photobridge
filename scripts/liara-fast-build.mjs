@@ -900,3 +900,6 @@ await deployStep('./enable-r1628-invite-row.mjs');
 
 // Preserve customer navigation layout; show insufficient SMS credit in the existing wallet badge.
 await deployStep('./enable-r1629-header-wallet.mjs');
+
+// Prepare the reusable photographer invitation once and keep its copy action inside the field.
+await deployStep('./enable-r1630-photographer-link.mjs');

@@ -11,8 +11,8 @@ function patchLabDirectory(server){
   if(section.split(a).length!==2)throw Error('R1601 labs '+label+' changed');
   section=section.replace(a,b);
  };
- once('const canDiscoverLabs = await photographerCanDiscoverLabs(a.userId);',
-      'const originContextPromise=photographerInitialOriginContext(a.userId);\n            const canDiscoverLabs = await photographerCanDiscoverLabs(a.userId);','origin prefetch');
+ once('const memberships = canDiscoverLabs\n',
+      'const originContextPromise=photographerInitialOriginContext(a.userId);\n            const memberships = canDiscoverLabs\n','origin prefetch');
  once('const memberships = canDiscoverLabs\n                ? await pool.query(',
       'const membershipsPromise = canDiscoverLabs\n                ? pool.query(','memberships discovery');
  once(': await pool.query(',

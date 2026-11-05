@@ -49,8 +49,8 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,b
 
  function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=null;}}
  function scheduleRetry(){clearRetry();retryTimer=setTimeout(()=>{retryTimer=null;void check();},5*60*1000);retryTimer.unref?.();}
- async function check(manual=false){
-  if(!app.isPackaged||platform!=='win32'||checking)return;checking=true;
+ async function check(manual=false,quietCurrent=false){
+  if(!app.isPackaged||platform!=='win32')return{state:'unsupported'};if(checking)return{state:'busy'};checking=true;
   try{
    const result=await updater.check();store.set('nativeUpdateError',null);lastSuccessfulCheck=Date.now();clearRetry();
    if(result.state==='ready'){
@@ -58,21 +58,23 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,b
     if(manual||readyAnnounced!==result.version){readyAnnounced=result.version;await prompt();}
    }else if(result.state==='available'){
     getWindow()?.setProgressBar?.(-1);progress.close();
-   }else if(manual){
+   }else if(manual&&!quietCurrent){
     await dialog.showMessageBox(getWindow(),{type:'info',title:'به‌روزرسانی برنامه',message:result.state==='current'?'آخرین نسخهٔ برنامه نصب است.':result.state==='login_required'?'برای دریافت نسخهٔ جدید وارد حساب لابراتوار شوید.':'هنوز نسخهٔ جدیدی برای دریافت منتشر نشده است.'});
    }
+   return result;
   }catch(error){
    getWindow()?.setProgressBar?.(-1);store.set('nativeUpdateError',error.message);progress.log?.('error',{code:String(error.message)});
    const failedDownload=downloadInProgress;downloadInProgress=false;
-   if(error.message==='update_cancelled'){progress.close();store.set('nativeUpdateError',null);return;}
+   if(error.message==='update_cancelled'){progress.close();store.set('nativeUpdateError',null);return{state:'cancelled'};}
    scheduleRetry();
    if(failedDownload){
     let action=await progress.ask({state:'error',retryStage:'download',message:'دریافت کامل نشد. برنامهٔ فعلی حفظ شده است؛ اتصال اینترنت را بررسی و دوباره تلاش کن.'});if(action==='ui_unavailable')action=await nativeAction('error',null,'پنجرهٔ پیشرفت به‌روزرسانی پاسخ نداد. برنامهٔ فعلی حفظ شده است؛ اتصال اینترنت را بررسی و دوباره تلاش کن.');
     if(action==='retry'){checking=false;return check(true);}
     progress.close();
-   }else if(manual){
+   }else if(manual&&!quietCurrent){
     await dialog.showMessageBox(getWindow(),{type:'warning',title:'به‌روزرسانی برنامه',message:'دریافت نسخهٔ جدید انجام نشد. اینترنت و انتشار نسخه را بررسی کن؛ برنامهٔ فعلی قابل استفاده است.'});
    }
+   return{state:'error'};
   }finally{checking=false;}
  }
 

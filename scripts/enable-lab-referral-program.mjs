@@ -22,7 +22,7 @@ const review=s.indexOf("`subscription.${action}`");a=s.lastIndexOf("            
  const routeStart=s.indexOf("url.pathname === '/api/photographer-invites/send-sms'");
  const pendingStart=s.indexOf('const pendingCustomer=await ensureLabInviteCustomer(',routeStart);
  if(routeStart<0||pendingStart<routeStart||pendingStart-routeStart>13000)throw Error('R1624 photographer SMS path changed');
- const bodyMatches=[...s.slice(routeStart,pendingStart).matchAll(/const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*await\\s+bodyJson\\(req\\)/g)];
+ const bodyMatches=[...s.slice(routeStart,pendingStart).matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await\s+bodyJson\(req\)/g)];
  if(bodyMatches.length!==1)throw Error('R1624 SMS body binding changed');
  const pendingEnd=s.indexOf(');',pendingStart),prior=s.slice(pendingStart,pendingEnd+2);
  if(!prior.includes('actorId:a.userId'))throw Error('R1624 pending invite helper changed');
@@ -34,14 +34,14 @@ const r1624SmsRoute=String.raw`
         if(req.method==='POST'&&url.pathname==='/api/lab/referrals/send-sms'){
          if(a.labRole!=='lab_admin')return sendJson(res,403,{error:'forbidden'});
          const body=await bodyJson(req),mobile=normalizeMobile(String(body.mobile||''));
-         if(!/^09\\d{9}$/.test(mobile))return sendJson(res,400,{error:'invalid_mobile'});
+         if(!/^09\d{9}$/.test(mobile))return sendJson(res,400,{error:'invalid_mobile'});
          const summary=await labReferralSummary(pool,labId,a.userId,PUBLIC_APP_URL);
          if(!summary.inviteUrl)return sendJson(res,409,{error:'lab_referral_invalid'});
          const key='lab-referral-sms:'+labId+':'+mobile;
          const claim=await pool.query("INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now() WHERE platform_settings.updated_at<now()-interval '90 seconds' RETURNING key",[key,JSON.stringify({mobile,status:'dispatching'})]);
          if(!claim.rowCount)return sendJson(res,429,{error:'lab_referral_sms_rate_limited'});
          try{
-          const message='PhotoBridge\\nدعوت به عضویت لابراتوار با ۳۰٪ تخفیف اشتراک (تخفیف‌ها جمع نمی‌شوند):\\n'+summary.inviteUrl;
+          const message='PhotoBridge\nدعوت به عضویت لابراتوار با ۳۰٪ تخفیف اشتراک (تخفیف‌ها جمع نمی‌شوند):\n'+summary.inviteUrl;
           const result=await sendSms({mobile,message,purpose:'lab_referral_invitation',eventKey:'lab_referral_invite',userId:a.userId,labId,metadata:{referralLink:summary.inviteUrl}});
           await pool.query('UPDATE platform_settings SET value=$2::jsonb,updated_at=now() WHERE key=$1',[key,JSON.stringify({mobile,status:'sent',reference:result?.reference||null})]);
           return sendJson(res,200,{accepted:true,mobile});
@@ -51,7 +51,7 @@ const r1624SmsRoute=String.raw`
          }
         }
 `;
-s=once(s,r1624LabAnchor,r1624LabAnchor+'\\n'+r1624SmsRoute,'R1624 laboratory route injection');
+s=once(s,r1624LabAnchor,r1624LabAnchor+'\n'+r1624SmsRoute,'R1624 laboratory route injection');
 fs.writeFileSync(path,s);execFileSync(process.execPath,['--check',path]);execFileSync(process.execPath,['--check','dist/api/lab-referrals.js']);
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){const nav=root+'/photobridge-r1372-third-header.js';fs.writeFileSync(nav,patchLabReferralTabs(fs.readFileSync(nav,'utf8')));execFileSync(process.execPath,['--check',nav]);const file=root+'/assets/index-UIRefine-v655-r84.js';s=fs.readFileSync(file,'utf8');const customersStart=s.indexOf('function Kj('),customersEnd=s.indexOf('function wb(',customersStart);if(customersStart<0||customersEnd<customersStart)throw Error('Lab referral customer tabs missing');let customers=s.slice(customersStart,customersEnd);
  customers=once(customers,'return S==="collaboration"||location.hash==="#customers-collaboration"','return S==="lab-invites"||location.hash==="#customers-lab-invites"?"lab-invites":S==="collaboration"||location.hash==="#customers-collaboration"');

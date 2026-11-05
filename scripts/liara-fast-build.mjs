@@ -909,3 +909,6 @@ await deployStep('./enable-r1631-desktop-finance.mjs');
 
 // Successful ready/delivered moves exit the current queue without switching tabs.
 await deployStep('./enable-r1631-order-exit.mjs');
+
+// Dedicated photographer finance third header and lab-parity desktop navigation.
+await deployStep('./enable-r1632-three-header.mjs');

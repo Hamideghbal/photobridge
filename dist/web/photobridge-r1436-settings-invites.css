@@ -24,3 +24,29 @@ html body #root .labRoleWorkspace .labRolePageScrollArea .financeWorkspace .pb14
 /* R1625: keep all three photographer invite inputs and send action on a single desktop row. */
 @media(min-width:601px){.pb1436LabInvites .pb1436InviteSend{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr) max-content;gap:8px;align-items:center}.pb1436LabInvites .pb1436InviteSend>input,.pb1436LabInvites .pb1436InviteDebt,.pb1436LabInvites .pb1436InviteDebt input{min-width:0;width:100%}.pb1436LabInvites .pb1436InviteSend>button{grid-column:4;white-space:nowrap}}
 @media(max-width:600px){.pb1436LabInvites .pb1436InviteSend{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pb1436LabInvites .pb1436InviteDebt{grid-row:2;grid-column:1}.pb1436LabInvites .pb1436InviteSend>button{grid-row:2;grid-column:2}}
+
+
+/* R1626: force all FOUR photographer invitation controls into the same top row,
+   overriding legacy @media rules which moved the button to a second line. */
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend{
+ display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr) minmax(0,1fr) max-content!important;
+ grid-template-rows:auto!important;grid-auto-flow:row!important;gap:8px!important;
+ align-items:center!important;width:100%!important;max-width:100%;min-width:0!important
+}
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>input:first-child{
+ grid-column:1!important;grid-row:1!important;min-width:0!important;width:100%!important
+}
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>input:nth-child(2){
+ grid-column:2!important;grid-row:1!important;min-width:0!important;width:100%!important
+}
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>.pb1436InviteDebt{
+ grid-column:3!important;grid-row:1!important;min-width:0!important;width:100%!important
+}
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>.pb1436InviteDebt input{box-sizing:border-box;width:100%!important;min-width:0!important}
+.pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>button{
+ grid-column:4!important;grid-row:1!important;white-space:nowrap!important;min-width:124px
+}
+@media(max-width:670px){
+ .pb1436LabInvites .pb1436InviteControls{overflow-x:auto}
+ .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend{min-width:620px!important}
+}

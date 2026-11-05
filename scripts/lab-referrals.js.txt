@@ -32,7 +32,19 @@ export async function labReferralSummary(db,labId,userId,baseUrl){
  await db.query(`INSERT INTO lab_referral_invites(lab_id,code,created_by) VALUES($1,$2,$3) ON CONFLICT(lab_id) DO NOTHING`,[labId,crypto.randomBytes(24).toString('hex'),userId]);
  const [code,rows,rewards,incoming]=await Promise.all([db.query('SELECT code,enabled FROM lab_referral_invites WHERE lab_id=$1',[labId]),db.query(`SELECT l.name,f.registered_at,count(r.renewal_id)::int paid_subscriptions,COALESCE(sum(r.reward_amount),0)::bigint earned FROM lab_referrals f JOIN labs l ON l.id=f.referred_lab_id LEFT JOIN lab_referral_rewards r ON r.referred_lab_id=f.referred_lab_id AND r.inviter_lab_id=f.inviter_lab_id WHERE f.inviter_lab_id=$1 GROUP BY l.id,f.registered_at ORDER BY f.registered_at DESC LIMIT 50`,[labId]),db.query('SELECT COALESCE(sum(reward_amount),0)::bigint total FROM lab_referral_rewards WHERE inviter_lab_id=$1',[labId]),db.query(`SELECT l.name inviter_name FROM lab_referrals f LEFT JOIN labs l ON l.id=f.inviter_lab_id WHERE f.referred_lab_id=$1`,[labId])]);
  const sms=await db.query('SELECT value,updated_at FROM platform_settings WHERE key LIKE $1 ORDER BY updated_at DESC LIMIT 30',['lab-referral-sms:'+labId+':%']);
- const smsHistory=sms.rows.map(row=>({mobile:String(row.value?.mobile||''),status:String(row.value?.status||'unknown'),updatedAt:row.updated_at})).filter(row=>/^09\d{9}$/.test(row.mobile));
+ const pendingSms=sms.rows.map(row=>({mobile:String(row.value?.mobile||''),status:String(row.value?.status||'unknown'),updatedAt:row.updated_at})).filter(row=>/^09\d{9}$/.test(row.mobile));
+ // A referral is complete only when a lab registered with this inviter's code.
+ // Match by recipient phone, not by the generic referral URL: a forwarded URL should not mark the wrong SMS recipient as joined.
+ const phoneSuffixes=[...new Set(pendingSms.map(row=>row.mobile.slice(-10)))];
+ const recipients=phoneSuffixes.length?await db.query(`SELECT right(regexp_replace(COALESCE(u.mobile,''),'[^0-9]','','g'),10) AS phone10,l.name AS lab_name,f.registered_at AS joined_at
+   FROM lab_memberships m
+   JOIN users u ON u.id=m.user_id
+   JOIN labs l ON l.id=m.lab_id
+   LEFT JOIN lab_referrals f ON f.referred_lab_id=m.lab_id AND f.inviter_lab_id=$1 AND f.registered_user_id=u.id
+   WHERE m.role='lab_admin' AND right(regexp_replace(COALESCE(u.mobile,''),'[^0-9]','','g'),10)=ANY($2::text[])`,[labId,phoneSuffixes]):{rows:[]};
+ const byPhone=new Map();
+ for(const recipient of recipients.rows){const mobile10=String(recipient.phone10||''),old=byPhone.get(mobile10);if(!old||(!old.joined&&!!recipient.joined_at))byPhone.set(mobile10,{registered:true,joined:!!recipient.joined_at,joinedAt:recipient.joined_at||null,labName:String(recipient.lab_name||'')});}
+ const smsHistory=pendingSms.map(row=>({...row,...(byPhone.get(row.mobile.slice(-10))||{registered:false,joined:false,joinedAt:null,labName:''})}));
  const token=code.rows[0];return{smsHistory,inviteUrl:token?.enabled?new URL('/trial?labInvite='+token.code,baseUrl).href:null,discountPercent:30,rewardPercent:10,totalEarned:Number(rewards.rows[0].total),referrals:rows.rows,incoming:incoming.rows[0]||null};
 }
 // Wallet checkout is explicit and idempotent; no automatic spending or auto-renewal.

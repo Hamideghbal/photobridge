@@ -892,3 +892,5 @@ await deployStep('./enable-signup-sms-identity.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1624-invitations.cjs'],{stdio:'inherit'});
 // R1625: prevent already-registered laboratory invitations and keep the copy/link and form controls aligned.
 runR1314(process.execPath,['--test','scripts/test-r1625-invitations.cjs'],{stdio:'inherit'});
+// R1626: single-row invite actions and automatic joined-recipient status.
+runR1314(process.execPath,['--test','scripts/test-r1626-referral-invites.cjs'],{stdio:'inherit'});

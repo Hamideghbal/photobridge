@@ -17,6 +17,56 @@ const sub="        if (req.method === 'GET' && url.pathname === '/api/lab/subscr
 a=s.indexOf(sub);b=s.indexOf("        if (req.method === 'POST' && url.pathname === '/api/lab/subscription/zibal/request')",a);c=s.slice(a,b);c=once(c,'const pricedPlans = plans.rows.map',"const referralEligible=(await pool.query('SELECT 1 FROM lab_referrals WHERE referred_lab_id=$1',[labId])).rowCount>0;\n            const walletBalance=Number((await pool.query('SELECT balance FROM lab_service_wallets WHERE lab_id=$1',[labId])).rows[0]?.balance||0);\n            const pricedPlans = plans.rows.map");c=once(c,'const special = applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount, labRow?.subscription_discount_percent);','const original=applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount, labRow?.subscription_discount_percent);const special=referralEligible?referralBestPrice(publicCalc.grossAmount,planAmount,original):original;');c=once(c,'{ lab: labRow, plans: pricedPlans,','{ lab: labRow, walletBalance,referral:referralEligible?{discountPercent:30,combineDiscounts:false}:null,plans: pricedPlans,');s=s.slice(0,a)+c+s.slice(b);
 a=s.indexOf('async function finalizePaidSubscriptionRenewal(');b=s.indexOf('async function statusEvent(',a);c=s.slice(a,b);c=once(c,'    return newUntil;','    await awardLabReferral(c,row.id,{ensureWallet:serviceWalletEnsure});\n    return newUntil;');s=s.slice(0,a)+c+s.slice(b);
 const review=s.indexOf("`subscription.${action}`");a=s.lastIndexOf("            else {",review);b=s.indexOf("            await c.query('COMMIT');",a);c=s.slice(a,b);const paid="[row.lab_id, labName, row.id, Number(row.amount)]);";c=once(c,paid,paid+'\n                await awardLabReferral(c,row.id,{ensureWallet:serviceWalletEnsure});');s=s.slice(0,a)+c+s.slice(b);
+// R1624: forward the optional temporary photographer name on the original SMS endpoint.
+{
+ const routeStart=s.indexOf("url.pathname === '/api/photographer-invites/send-sms'");
+ const pendingStart=s.indexOf('const pendingCustomer=await ensureLabInviteCustomer(',routeStart);
+ if(routeStart<0||pendingStart<routeStart||pendingStart-routeStart>13000)throw Error('R1624 photographer SMS path changed');
+ const bodyMatches=[...s.slice(routeStart,pendingStart).matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await\s+bodyJson\(req\)/g)];
+ if(bodyMatches.length!==1)throw Error('R1624 SMS body binding changed');
+ const pendingEnd=s.indexOf(');',pendingStart),prior=s.slice(pendingStart,pendingEnd+2);
+ if(!prior.includes('actorId:a.userId'))throw Error('R1624 pending invite helper changed');
+ s=s.slice(0,pendingStart)+prior.replace('actorId:a.userId','actorId:a.userId,temporaryName:'+bodyMatches[0][1]+'.temporaryName')+s.slice(pendingEnd+2);
+}
+// Display the saved temporary photography name in the lab's invitation history.
+{
+ const getStart=s.indexOf("if (req.method === 'GET' && url.pathname === '/api/photographer-invites')");
+ const getEnd=s.indexOf("if (req.method === 'PUT' && url.pathname === '/api/admin/photographer-invites/commission')",getStart);
+ if(getStart<0||getEnd<=getStart)throw Error('R1624 invite history route changed');
+ let route=s.slice(getStart,getEnd);
+ const oldSelect='SELECT link.invite_id,link.mobile,link.last_sent_at,link.previous_debt,';
+ const newSelect="SELECT link.invite_id,link.mobile,link.last_sent_at,link.previous_debt,(SELECT NULLIF(i.target_name,'') FROM invitations i WHERE i.lab_id=$1 AND right(regexp_replace(i.target_mobile,'[^0-9]','','g'),10)=right(regexp_replace(link.mobile,'[^0-9]','','g'),10) AND i.uses=0 ORDER BY i.created_at DESC LIMIT 1) AS temporary_name,";
+ if(route.split(oldSelect).length!==2)throw Error('R1624 history SQL changed');
+ route=route.replace(oldSelect,newSelect);
+ const oldMap='inviteId:r.invite_id,customerId:r.customer_id,mobile:r.mobile';
+ if(route.split(oldMap).length!==2)throw Error('R1624 history JSON changed');
+ route=route.replace(oldMap,oldMap+',name:r.temporary_name||null');
+ s=s.slice(0,getStart)+route+s.slice(getEnd);
+}
+const r1624LabAnchor='        const labId = a.labId;';
+const r1624SmsRoute=String.raw`
+        /* R1624 laboratory referral SMS */
+        if(req.method==='POST'&&url.pathname==='/api/lab/referrals/send-sms'){
+         if(a.labRole!=='lab_admin')return sendJson(res,403,{error:'forbidden'});
+         const body=await bodyJson(req),mobile=normalizeMobile(String(body.mobile||''));
+         if(!/^09\d{9}$/.test(mobile))return sendJson(res,400,{error:'invalid_mobile'});
+         const summary=await labReferralSummary(pool,labId,a.userId,PUBLIC_APP_URL);
+         if(!summary.inviteUrl)return sendJson(res,409,{error:'lab_referral_invalid'});
+         const key='lab-referral-sms:'+labId+':'+mobile;
+         const claim=await pool.query("INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now() WHERE platform_settings.updated_at<now()-interval '90 seconds' RETURNING key",[key,JSON.stringify({mobile,status:'dispatching'})]);
+         if(!claim.rowCount)return sendJson(res,429,{error:'lab_referral_sms_rate_limited'});
+         try{
+          const message='PhotoBridge\nدعوت به عضویت لابراتوار با ۳۰٪ تخفیف اشتراک (تخفیف‌ها جمع نمی‌شوند):\n'+summary.inviteUrl;
+          const result=await sendSms({mobile,message,purpose:'lab_referral_invitation',eventKey:'lab_referral_invite',userId:a.userId,labId,metadata:{referralLink:summary.inviteUrl}});
+          await pool.query('UPDATE platform_settings SET value=$2::jsonb,updated_at=now() WHERE key=$1',[key,JSON.stringify({mobile,status:'sent',reference:result?.reference||null})]);
+          return sendJson(res,200,{accepted:true,mobile});
+         }catch(error){
+          await pool.query('UPDATE platform_settings SET value=$2::jsonb,updated_at=now() WHERE key=$1',[key,JSON.stringify({mobile,status:'failed'})]).catch(()=>{});
+          return sendJson(res,502,{error:'lab_referral_sms_failed'});
+         }
+        }
+`;
+s=once(s,r1624LabAnchor,r1624LabAnchor+'\n'+r1624SmsRoute,'R1624 laboratory route injection');
 fs.writeFileSync(path,s);execFileSync(process.execPath,['--check',path]);execFileSync(process.execPath,['--check','dist/api/lab-referrals.js']);
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){const nav=root+'/photobridge-r1372-third-header.js';fs.writeFileSync(nav,patchLabReferralTabs(fs.readFileSync(nav,'utf8')));execFileSync(process.execPath,['--check',nav]);const file=root+'/assets/index-UIRefine-v655-r84.js';s=fs.readFileSync(file,'utf8');const customersStart=s.indexOf('function Kj('),customersEnd=s.indexOf('function wb(',customersStart);if(customersStart<0||customersEnd<customersStart)throw Error('Lab referral customer tabs missing');let customers=s.slice(customersStart,customersEnd);
  customers=once(customers,'return S==="collaboration"||location.hash==="#customers-collaboration"','return S==="lab-invites"||location.hash==="#customers-lab-invites"?"lab-invites":S==="collaboration"||location.hash==="#customers-collaboration"');

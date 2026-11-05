@@ -874,3 +874,8 @@ runR1314(process.execPath,['--test','scripts/test-r1610-lab-ux.cjs'],{stdio:'inh
 await deployStep('./enable-r1612-lab-spinner-discount-modal.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1612-lab-spinner-discount-modal.cjs'],{stdio:'inherit'});
 
+// R1613: restore after-print invoice issuance following manual price entry,
+// prevent Windows auto-reopen of old invoices, and animate status circles.
+await deployStep('./enable-r1613-lab-invoice-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1613-lab-invoice-ui.cjs'],{stdio:'inherit'});
+

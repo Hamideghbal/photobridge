@@ -15,7 +15,7 @@ function PBLabReferralPanel(){
   e.jsx('h2',{children:'دعوت‌نامهٔ لابراتوارها'}),
   e.jsxs('div',{className:'labReferralInviteControls pb1436InviteControls',children:[
    e.jsxs('div',{className:'labReferralInviteLink pb1436InviteLink',children:[e.jsx('input',{readOnly:true,dir:'ltr',value:data?.inviteUrl||'',placeholder:'در حال دریافت لینک دعوت‌نامه…','aria-label':'لینک دعوت لابراتوار',onFocus:event=>event.target.select()}),e.jsx('button',{type:'button',disabled:!data?.inviteUrl,onClick:copy,children:'کپی'})]}),
-   e.jsx('div',{className:'labReferralInviteDivider',role:'separator','aria-orientation':'horizontal'}),
+   e.jsx('div',{className:'labReferralInviteDivider',role:'separator','aria-orientation':'vertical'}),
    e.jsxs('div',{className:'labReferralInviteSend pb1436InviteSend',children:[e.jsx('input',{type:'tel',dir:'ltr',inputMode:'tel',value:mobile,onChange:event=>setMobile(event.target.value),placeholder:'شماره موبایل لابراتوار','aria-label':'شماره موبایل لابراتوار',disabled:!!sending}),e.jsx('button',{type:'button',className:'primary',disabled:!!sending||busy||!data?.inviteUrl,onClick:()=>void send(),children:sending?'در حال ارسال…':'ارسال دعوت‌نامه'})]})
   ]}),
   notice&&e.jsx('p',{role:'status',children:notice}),error&&e.jsx('p',{role:'alert',children:error}),

@@ -1,0 +1,12 @@
+/* Keep original files/dimensions; limit bitmap decoding to two photos at once. */
+async function pb1602PreparePhotos(files){
+ const input=Array.from(files),out=new Array(input.length);let next=0,failure=null;
+ await new Promise(done=>setTimeout(done,0));
+ await Promise.all(Array.from({length:Math.min(2,input.length)},async()=>{
+  while(!failure&&next<input.length){const index=next++,file=input[index];try{
+   const meta=await Hc(file,360);out[index]={id:crypto.randomUUID(),file,width:Number(meta.width||0),height:Number(meta.height||0),dpi:meta.dpi==null?null:Number(meta.dpi),thumbUrl:String(meta.thumbUrl||''),previewUrl:URL.createObjectURL(file),relativePath:String(file.webkitRelativePath||file.name),paperOverride:'',chassisOverride:null,frameOverride:null,printCopies:1,progress:0};
+   await new Promise(done=>setTimeout(done,0));
+  }catch(error){failure=error}}
+ }));
+ if(failure){for(const photo of out)if(photo)zs(photo);throw failure}return out;
+}

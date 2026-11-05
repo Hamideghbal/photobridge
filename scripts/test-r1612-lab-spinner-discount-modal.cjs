@@ -47,3 +47,47 @@ test('R1612 generated Windows update manifest hashes match all modified assets',
  }
  assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
 });
+
+test('R1612 discount dialog stays outside the table and saves both finance settings',async()=>{
+ class Element{
+  constructor(tag){this.tag=tag;this.children=[];this.events={};this.attributes={};this.value='';this.hidden=false;this.disabled=false}
+  append(...children){this.children.push(...children)}
+  setAttribute(name,value){this.attributes[name]=value}
+  addEventListener(type,callback){(this.events[type]??=[]).push(callback)}
+  focus(){this.focused=true}
+  showModal(){this.showed=true}
+  close(){this.closed=true;(this.events.close||[]).forEach(callback=>callback())}
+  remove(){this.removed=true}
+ }
+ const body=new Element('body'),document={body,createElement:type=>new Element(type),
+  querySelector:selector=>selector==='dialog.pb1612DiscountModal'?body.children.find(item=>item.tag==='dialog'&&!item.removed):null};
+ const writes=[];let refreshes=0;
+ const sandbox={document,console:{warn(){}},alert(){},
+  Me:async(path,options)=>{
+   writes.push({path,payload:JSON.parse(options.body)});
+   return {settings:{discount_enabled:true,discount_percent:12.5,discount_every_invoices:5},appliedDiscounts:0};
+  }};
+ vm.runInNewContext(source,sandbox);
+ sandbox.pb1612OpenDiscountDialog({customer:{id:'customer-1',name:'آتلیه نمونه'},info:{percent:3,every:10,enabled:true},onSaved:async()=>{refreshes++}});
+ const dialog=body.children[0];
+ assert.equal(dialog.tag,'dialog');
+ assert.equal(dialog.showed,true);
+ assert.equal(dialog.attributes['aria-modal'],'true');
+ const find=(className,item=dialog)=>{
+  if(item.className===className)return item;
+  for(const child of item.children){const result=find(className,child);if(result)return result}
+  return null;
+ };
+ const percent=find('pb1612DiscountPercent'),every=find('pb1612DiscountEvery'),form=find('pb1612DiscountForm');
+ assert.ok(percent&&every&&form);
+ percent.value='101';
+ await form.events.submit[0]({preventDefault(){}});
+ assert.equal(writes.length,0,'invalid percent must not send a finance request');
+ assert.ok(find('pb1612DiscountError').textContent);
+ percent.value='12.5';every.value='5';
+ await form.events.submit[0]({preventDefault(){}});
+ assert.deepEqual(writes[0],{path:'/api/lab/finance/customer-settings',
+  payload:{customerId:'customer-1',discountEnabled:true,discountPercent:12.5,discountEveryInvoices:5}});
+ assert.equal(refreshes,1);
+ assert.equal(dialog.removed,true,'dialog closes after confirmed save');
+});

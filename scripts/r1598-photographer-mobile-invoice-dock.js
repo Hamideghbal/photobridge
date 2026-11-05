@@ -26,7 +26,7 @@
      'nav.photographerMobileUtilityRail.photographerBottomAppNav:not(.labBottomAppNav),'+
      'nav.photographerBottomAppNav[aria-label="ناوبری اصلی عکاس"]'
    )].filter((nav,index,array)=>array.indexOf(nav)===index);
-   const visible=nav=>nav.getClientRects().length>0;
+   const visible=nav=>typeof nav.getClientRects==='function'?nav.getClientRects().length>0:true;
    const current=navs.filter(nav=>nav.closest('.photographerMain')&&visible(nav));
    const primary=current[0]||navs.find(visible)||navs[0];
    navs.forEach(nav=>{
@@ -49,6 +49,7 @@
    if(phone.addEventListener)phone.addEventListener('change',schedule);
    else if(phone.addListener)phone.addListener(schedule);
    for(const key of ['pushState','replaceState']){
+     if(typeof history==='undefined')continue;
      const old=history[key];
      if(typeof old==='function'&&!old.__pb1599RoleSync){
        const fn=function(){const v=old.apply(this,arguments);schedule();return v};

@@ -824,7 +824,8 @@ runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.c
 
 
 
-// R1593: Lab card flight only on a confirmed state change. Never auto-switch queue tabs.
-await deployStep('./enable-r1593-lab-card-flight.mjs');
-// R1594 verifies a copied order still animates after React removes the live card.
-runR1314(process.execPath,['--test','scripts/test-r1594-lab-card-flight.cjs'],{stdio:'inherit'});
+// R1596 hotfix: disable the experimental R1593-R1595 Lab card flight and
+// its core-bundle stage overrides. Prioritize the last known usable Lab UI.
+// Do not restore these patches until the Windows blank-screen fault is verified.
+console.log('[R1596] Experimental Lab card-flight overlay/JS stage patches disabled');
+runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs'],{stdio:'inherit'});

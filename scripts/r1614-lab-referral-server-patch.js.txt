@@ -1,0 +1,49 @@
+// R1614: a scoped additive integration, without altering legacy invites.
+const replaceOne=(s,a,b)=>{const n=s.split(a).length-1;if(n!==1)throw Error('R1614 anchor count '+n+': '+a.slice(0,70));return s.replace(a,b)};
+const scoped=(s,a,b,fn)=>{const i=s.indexOf(a),j=s.indexOf(b,i+a.length);if(i<0||j<=i)throw Error('R1614 scope '+a);return s.slice(0,i)+fn(s.slice(i,j))+s.slice(j)};
+export function patchLabReferralServer(original){
+ if(original.includes('/* R1614 lab referrals */'))return original;
+ let s=original;
+ const pub="    if (req.method === 'POST' && url.pathname === '/api/public/lab-trial') {";
+ const verify="    if (req.method === 'POST' && url.pathname === '/api/public/lab-trial/verify') {";
+ s=replaceOne(s,pub,"    if(await handlePublicLabReferral({req,res,url,pool,sendJson}))return;\n"+pub);
+ s=scoped(s,pub,verify,p=>{
+  p=replaceOne(p,"        try {\n            const challenge = await createSignupMobileChallenge('lab_trial',",
+  "        const labReferralCode=String(b.labReferralCode||'').trim().toUpperCase();\n        if(labReferralCode&&!(await lookupLabReferral(pool,labReferralCode)))return sendJson(res,409,{error:'lab_referral_invalid'});\n        try {\n            const challenge = await createSignupMobileChallenge('lab_trial',");
+  return replaceOne(p,"locationAddress, existingUserId: existing?.id || null",
+   "locationAddress, labReferralCode, existingUserId: existing?.id || null");
+ });
+ s=scoped(s,verify,"    if (req.method === ",p=>replaceOne(p,"[lq.rows[0].id, userId]);",
+  "[lq.rows[0].id, userId]);\n            await attachVerifiedLabReferral(c,String(p.labReferralCode||''),lq.rows[0].id);"));
+ const site="        if(await handleLabSiteManagement(req,res,url,a,storefrontDependencies()))return;";
+ s=replaceOne(s,site,
+  "        if(await handleLabReferral({req,res,url,labId,userId:a.userId,pool,bodyJson,sendJson,sendSms,normalizeMobile,publicUrl:PUBLIC_APP_URL}))return;\n"+
+  "        if(await handleLabReferralWalletRenewal({req,res,url,labId,userId:a.userId,pool,bodyJson,sendJson,getSubscriptionPricing,planAmountFromBase,moneyAmount,applySpecialDiscount,clampDiscount,serviceWalletEnsure}))return;\n"+site);
+ const plans="        if (req.method === 'GET' && url.pathname === '/api/lab/subscription') {";
+ const buy="        if (req.method === 'POST' && url.pathname === '/api/lab/subscription/zibal/request') {";
+ s=scoped(s,plans,buy,p=>{
+  p=replaceOne(p,"            const pricing = await getSubscriptionPricing();\n            const pricedPlans =",
+  "            const pricing = await getSubscriptionPricing();\n            const referralPercent=await labReferralPercent(pool,labId);\n            const pricedPlans =");
+  return replaceOne(p,
+   "const special = applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount, labRow?.subscription_discount_percent);",
+   "const special = applyLabReferralDiscount(referralPercent,planAmount,applySpecialDiscount(planAmount, discountEnabled, specialDiscountAmount, labRow?.subscription_discount_percent));");
+ });
+ const q="const special = applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount, plan.subscription_discount_percent);";
+ if(s.split(q).length!==3)throw Error('R1614 quote anchors not exactly two');
+ s=s.split(q).join("const special = applyLabReferralDiscount(await labReferralPercent(pool,labId),planAmount,applySpecialDiscount(planAmount, plan.subscription_discount_enabled, plan.subscription_discount_amount, plan.subscription_discount_percent));");
+ s=scoped(s,'async function finalizePaidSubscriptionRenewal(c, row, verify) {','async function statusEvent(',
+  p=>replaceOne(p,"    return newUntil;\n}",
+  "    await rewardInvitingLab(c,{referredLabId:row.lab_id,sourceKind:'subscription',sourceId:row.id,paidAmount:Number(row.amount),ensureWallet:serviceWalletEnsure});\n    return newUntil;\n}"));
+ s=scoped(s,"    if (adminRenewalReview && req.method === 'POST') {","    // Lab admin",
+  p=>replaceOne(p," [row.lab_id, labName, row.id, Number(row.amount)]);\n            }\n            await c.query('COMMIT');",
+  " [row.lab_id, labName, row.id, Number(row.amount)]);\n                await rewardInvitingLab(c,{referredLabId:row.lab_id,sourceKind:'subscription',sourceId:row.id,paidAmount:Number(row.amount),ensureWallet:serviceWalletEnsure});\n            }\n            await c.query('COMMIT');"));
+ const paidAudit="                    await audit(undefined, x.owner_type === 'lab' ? x.owner_id : undefined, 'service_wallet.zibal_paid'";
+ s=replaceOne(s,paidAudit,"                    if(x.owner_type==='lab')await rewardInvitingLab(c,{referredLabId:x.owner_id,sourceKind:'wallet_topup',sourceId:x.id,paidAmount:Number(x.payable_amount??x.amount??0),ensureWallet:serviceWalletEnsure});\n"+paidAudit);
+ const approval="            await c.query('COMMIT');\n            await audit(a.userId, topup.lab_id, 'platform_admin.service_topup_approve'";
+ s=replaceOne(s,approval,"            await rewardInvitingLab(c,{referredLabId:topup.lab_id,sourceKind:'wallet_manual_topup',sourceId:topup.id,paidAmount:Number(topup.amount),ensureWallet:serviceWalletEnsure});\n"+approval);
+ const prelude="import {applyLabReferralDiscount,labReferralPercent,lookupLabReferral,attachVerifiedLabReferral,rewardInvitingLab} from './lab-referral-policy.js';\n"+
+ "import {handleLabReferral,handlePublicLabReferral} from './lab-referrals.js';\n"+
+ "import {handleLabReferralWalletRenewal} from './lab-referral-wallet-renewal.js';\n"+
+ "/* R1614 lab referrals */\n";
+ return prelude+s;
+}

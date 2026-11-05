@@ -1,0 +1,15 @@
+import fs from 'node:fs';import {execFileSync} from 'node:child_process';
+const path='dist/web/assets/index-UIRefine-v655-r84.js';let source=fs.readFileSync(path,'utf8');const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('R1602 anchor changed: '+a.slice(0,90));return s.replace(a,b)};
+const a=source.indexOf('function ej('),b=source.indexOf('function vh(',a);if(a<0||b<a)throw Error('R1602 print intake missing');let intake=source.slice(a,b);
+intake=once(intake,'const m=x.useRef(null),','const pb1602Draft=x.useRef(null),m=x.useRef(null),');
+intake=once(intake,'return k(ge=>[...ge,Ye]),ae(ye),Ze(""),ye','return pb1602Draft.current=Ye,ae(ye),Ze(""),ye');
+const start=intake.indexOf('d=async ue=>'),end=intake.indexOf(',_=async(ue,P)=>',start);if(start<0||end<start)throw Error('R1602 photo preparation missing');intake=intake.slice(0,start)+'d=pb1602PreparePhotos'+intake.slice(end);
+intake=once(intake,'_=async(ue,P)=>{if(!ue||!(P!=null&&P.length))return;','_=async(ue,P)=>{const pb1602Pending=pb1602Draft.current?.id===ue?pb1602Draft.current:null;pb1602Draft.current=null;if(!ue||!(P!=null&&P.length))return;');
+intake=once(intake,'k(ee=>ee.map(Q=>{if(Q.id!==ue)return Q;const files=[...Q.files];','k(ee=>(pb1602Pending&&!ee.some(Q=>Q.id===ue)?[...ee,pb1602Pending]:ee).map(Q=>{if(Q.id!==ue)return Q;const files=[...Q.files];');
+intake=once(intake,'if(pbMismatch)PB1462RatioNotice(pbMismatch);','');
+intake=once(intake,'if(pbMismatch&&!window.__photobridgePrintDelegateToLabV666&&!await pb1599ConfirmCropSend(','if(pbMismatch&&!await pb1599ConfirmCropSend(');
+source=source.slice(0,a)+intake+source.slice(b);
+source=once(source,'if(Jt.length&&!we&&!await pb1599ConfirmCropSend(','if(Jt.length&&!await pb1599ConfirmCropSend(');
+source=once(source,'function pb1599ConfirmCropSend(message) {',"function pb1599ConfirmCropSend(message) {\n if(document.querySelector('dialog.pb1599CropSendDialog'))return Promise.resolve(false);");
+source+='\n'+fs.readFileSync('scripts/r1602-prepare-photos.js.txt','utf8');fs.writeFileSync(path,source);execFileSync(process.execPath,['--check',path]);
+const css='photobridge-r1602-photographer-orders.css';fs.copyFileSync('scripts/r1602-photographer-orders.css','dist/web/'+css);const file='dist/web/index.html';let html=fs.readFileSync(file,'utf8');html=html.replace('<head>','<head>\n'+fs.readFileSync('scripts/r1602-photographer-prepaint.html','utf8'));html=html.replace('</head>',`<link rel="stylesheet" href="/${css}?v=r1602"></head>`).replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&photographerIntake=r1602');fs.writeFileSync(file,html);

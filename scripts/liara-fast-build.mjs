@@ -849,3 +849,5 @@ runR1314(process.execPath,['--test','scripts/test-r1599-mobile-crop-nav.cjs'],{
  stdio:'inherit',env:{...process.env,PB1599_VERIFY_BUNDLE:'1'}
 });
 
+
+await deployStep('./enable-r1602-photographer-upload-orders.mjs');

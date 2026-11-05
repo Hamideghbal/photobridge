@@ -190,6 +190,13 @@ jobs:
           node scripts/test-r1586-opening-debt-browser.cjs
           node scripts/test-r1586-intake-debt-browser.cjs
           node scripts/test-r1586-reconnect-browser.cjs
+      - name: Verify photographer crop consent, file selection and first paint
+        run: |
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node --test scripts/test-r1602-photo-preparation.cjs
+          node scripts/test-r1602-photographer-browser.cjs
+          node scripts/test-r1602-layout-prepaint-browser.cjs
       - name: Verify lab manager role is preserved during customer enrollment
         run: PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-lab-admin-role-preservation.cjs
       - name: Save frame editor screenshots

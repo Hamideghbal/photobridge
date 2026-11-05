@@ -6,8 +6,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const css=fs.readFileSync(root+'/photobridge-r1610-lab-ux.css','utf8');
   const runtime=fs.readFileSync(root+'/photobridge-r1610-lab-ux.js','utf8');
   const html=fs.readFileSync(root+'/index.html','utf8');
-  assert.match(header,/R1610 no archive second header/);
+  // R1611: the direct archive hook is optional when a previous build rewrote
+  // the native header. Route-scoped CSS/JS must always preserve the layout.
   assert.match(header,/pb1148HasSecondary/);
+  if(header.includes('function secondary(h){'))assert.match(header,/R1610 no archive second header/);
+  assert.match(css,/pb1610Archive/);
+  assert.match(css,/pb1148SecondaryHeader/);
+  assert.match(runtime,/pb1610Archive/);
   assert.match(asset,/R1610 inline finance discount/);
   assert.match(asset,/PB1585Discount,\{customer,onSaved\}/);
   assert.match(asset,/\/api\/lab\/finance\/customer-settings/);

@@ -863,3 +863,9 @@ await deployStep('./enable-r1606-gallery-startup.mjs');
 await deployStep('./enable-r1607-embedded-mobile-dock.mjs');
 
 await deployStep('./enable-r1608-chassis-compact-orders.mjs');
+
+// R1610: lab archive header cleanup, inline customer discount and status-circle loader.
+// Apply last, after the R1585 table and all native hot-update stages are present.
+await deployStep('./enable-r1610-lab-ux.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1610-lab-ux.cjs'],{stdio:'inherit'});
+

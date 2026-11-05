@@ -897,3 +897,6 @@ runR1314(process.execPath,['--test','scripts/test-r1626-referral-invites.cjs'],{
 
 // One shared invitation row in both website and existing Windows UI updates.
 await deployStep('./enable-r1628-invite-row.mjs');
+
+// Preserve customer navigation layout; show insufficient SMS credit in the existing wallet badge.
+await deployStep('./enable-r1629-header-wallet.mjs');

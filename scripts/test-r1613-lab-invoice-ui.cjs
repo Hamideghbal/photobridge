@@ -90,6 +90,15 @@ test('R1613 appears in site/Windows, with middle column headings centered, activ
   const css=read(root+'/photobridge-r1613-lab-stage-table.css');
   assert.match(bundle,/PB1613 manual pricing completion/);
   assert.match(bundle,/await Qn\(le\.invoice\.id/);
+  const guardSource=bundle.match(/function pb1603InvoicePending\(order\)\{[^}]+\}/)?.[0];
+  const stageSource=bundle.match(/function pb1603StageInvoicePending\(order,stage\)\{[^}]+\}/)?.[0];
+  assert.ok(guardSource&&stageSource,'stage UI guards are present in generated bundle');
+  const context={};
+  vm.runInNewContext(guardSource+'\n'+stageSource,context);
+  const pending={id:'order',status:'downloaded',downloaded_at:'2026-11-05',invoice_required:true,settlement_mode:'ledger'};
+  assert.equal(context.pb1603StageInvoicePending(pending,'print'),false);
+  assert.equal(context.pb1603StageInvoicePending(pending,'ready'),false);
+  assert.equal(context.pb1603StageInvoicePending(pending,'completed'),true);
   assert.match(index,/pricedInvoice=r1613/);
   assert.match(index,/photobridge-r1613-lab-stage-table\.css\?v=r1613/);
   assert.match(css,/thead th:nth-child\(n\+2\)/);

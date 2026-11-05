@@ -9,6 +9,14 @@ function paintIdentity(h){const identity=h.querySelector('.labHeaderIdentity');i
 }
 function secondary(h){
  let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
+ // Archive uses the primary header only. Never clone the archive filters into a second header.
+ if(/^\/lab\/archive(?:\/|$)/.test(location.pathname)){
+  row?.remove();
+  h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();
+  h.parentElement.classList.remove('pb1148HasSecondary');
+  h.parentElement.querySelectorAll('.pb1148SecondarySource').forEach(source=>source.classList.remove('pb1148SecondarySource'));
+  return;
+ }
  const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');
  if(!source){row?.remove();h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();h.parentElement.classList.remove('pb1148HasSecondary');return;}
  if(!row){row=document.createElement('nav');row.className='pb1148SecondaryHeader';row.setAttribute('aria-label','زیرگزینه‌های لابراتوار');h.after(row);}

@@ -1,0 +1,104 @@
+/* R1612: fixed timeline circles and working spinner animation. */
+html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) {
+  cursor:default!important;
+  transform:none!important;
+}
+html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot {
+  /* R1610 set position:relative!important here, pushing the stage circle
+     into normal layout. Preserve the original absolute badge geometry. */
+  position:absolute!important;
+  top:2px!important;
+  right:50%!important;
+  left:auto!important;
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  min-height:17px!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  margin:0!important;
+  transform:translateX(50%)!important;
+  transition:none!important;
+  color:transparent!important;
+  border-radius:50%!important;
+}
+html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot::after {
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  box-sizing:border-box!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:10px!important;
+  height:10px!important;
+  min-width:10px!important;
+  min-height:10px!important;
+  margin:0!important;
+  padding:0!important;
+  border:2px solid rgba(37,99,235,.24)!important;
+  border-top-color:#2563eb!important;
+  border-right-color:#2563eb!important;
+  border-radius:50%!important;
+  transform-origin:center center!important;
+  animation:pb1612CircleSpin .72s linear infinite!important;
+  will-change:transform;
+  pointer-events:none!important;
+}
+@keyframes pb1612CircleSpin {
+  from {transform:translate(-50%,-50%) rotate(0deg)}
+  to {transform:translate(-50%,-50%) rotate(360deg)}
+}
+@media (prefers-reduced-motion:reduce) {
+ html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot::after {
+  animation:none!important;
+  border-top-color:#2563eb!important;
+ }
+}
+/* Open this dialog in the browser's top layer, never positioned in a table row. */
+body > dialog.pb1612DiscountModal {
+  box-sizing:border-box!important;
+  width:min(450px,calc(100vw - 24px))!important;
+  max-width:calc(100vw - 24px)!important;
+  max-height:min(90dvh,720px)!important;
+  margin:auto!important;
+  padding:0!important;
+  border:1px solid #d9e5f4!important;
+  border-radius:18px!important;
+  box-shadow:0 26px 85px rgba(23,50,83,.28)!important;
+  background:#fff!important;
+  color:#20334d!important;
+  overflow:auto!important;
+  font-family:Vazirmatn,Tahoma,Arial,sans-serif!important;
+  direction:rtl!important;
+}
+body > dialog.pb1612DiscountModal::backdrop{background:rgba(15,31,51,.48);backdrop-filter:blur(3px)}
+.pb1612DiscountForm{display:grid;gap:14px;padding:20px;min-width:0}
+.pb1612DiscountHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pb1612DiscountHead h2{margin:0;font:850 18px/1.6 Vazirmatn,Tahoma,sans-serif;color:#182d48}
+.pb1612DiscountClose{width:32px;height:32px;flex:none;border:1px solid #d9e5f4;border-radius:10px;background:#f6f9fd;color:#53647a;font-size:22px;cursor:pointer}
+.pb1612DiscountCustomer{margin:-5px 0 1px;color:#66788f;font-size:12px;font-weight:700}
+.pb1612DiscountFields{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:11px}
+.pb1612DiscountField{min-width:0;display:grid;gap:8px;font:700 11px/1.8 Vazirmatn,Tahoma,sans-serif}
+.pb1612DiscountField>input{box-sizing:border-box!important;width:100%!important;height:42px!important;min-width:0!important;margin:0!important;padding:7px 11px!important;background:#fff!important;color:#182d48!important;border:1px solid #bfcfe3!important;border-radius:10px!important;text-align:center!important;direction:ltr!important;font:750 15px Vazirmatn,Tahoma,sans-serif!important}
+.pb1612DiscountField>input:focus{outline:2px solid #9ec1f5!important;outline-offset:1px}
+.pb1612DiscountToggle{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid #e1e9f5;border-radius:10px;background:#f7faff;font-size:12px;font-weight:750;cursor:pointer}
+.pb1612DiscountToggle input{width:16px;height:16px;accent-color:#2563eb}
+.pb1612DiscountPreview{margin:0;padding:9px 11px;border-radius:9px;background:#eef5ff;color:#245e9f;font-size:12px;font-weight:750;line-height:1.8}
+.pb1612DiscountNote{margin:0;color:#8a602b;font:600 10px/1.9 Vazirmatn,Tahoma,sans-serif}
+.pb1612DiscountError{margin:0;color:#b42318;font-size:11px;font-weight:700;line-height:1.8}
+.pb1612DiscountError[hidden]{display:none!important}
+.pb1612DiscountActions{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
+.pb1612DiscountActions button{min-height:39px;padding:7px 14px;border-radius:10px;border:1px solid #ccd9e9;background:#f4f7fc;color:#384f6d;font:800 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+.pb1612DiscountActions .pb1612DiscountSave{background:#2563eb;color:#fff;border-color:#2563eb}
+.pb1612DiscountActions button:disabled{opacity:.6;cursor:wait}
+html body #root .labRoleWorkspace .pb1585PhotographersTable{min-width:1050px!important;table-layout:fixed!important}
+html body #root .labRoleWorkspace .pb1585PhotographersTable th,
+html body #root .labRoleWorkspace .pb1585PhotographersTable td{padding:10px 12px!important;vertical-align:middle!important;text-align:right!important}
+html body #root .labRoleWorkspace .pb1585PhotographersTable tr>:first-child,
+html body #root .labRoleWorkspace .pb1585PhotographersTable tr>:last-child{padding-inline:8px!important}
+html body #root .labRoleWorkspace .pb1585DiscountEdit{min-height:30px;max-width:100%;padding:4px 8px!important;border:1px solid #e0e8f4!important;background:#f8faff!important;border-radius:9px;white-space:nowrap}
+@media(max-width:550px){.pb1612DiscountFields{grid-template-columns:1fr}.pb1612DiscountForm{padding:15px}.pb1612DiscountHead h2{font-size:16px}}

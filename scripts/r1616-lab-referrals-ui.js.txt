@@ -1,0 +1,78 @@
+/* R1616: a self-contained invitation panel; leaves all existing Lab tabs intact. */
+(function(){
+ if(typeof window==='undefined'||window.__pb1616LabReferralsMounted)return;
+ window.__pb1616LabReferralsMounted=true;
+ const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
+ const safeError=e=>({'lab_referral_requires_active_lab':'ابتدا لابراتوار باید فعال شود.',
+ 'lab_referral_sms_hourly_limit':'سقف ۱۵ دعوت پیامکی در ساعت تکمیل شده است.',
+ 'lab_referral_sms_repeat_limit':'به این شماره اخیراً دعوت فرستاده شده است.',
+ 'sms_not_configured':'سامانه پیامک تنظیم نشده است.',
+ 'invalid_mobile':'شماره موبایل معتبر نیست.',
+ 'lab_referral_self_invite':'ارسال دعوت‌نامه برای شماره مدیر همین لابراتوار مجاز نیست.'}[e?.data?.error||e?.message]||'درخواست انجام نشد؛ دوباره تلاش کنید.');
+ function add(parent,...children){parent.append(...children);return parent}
+ function mountSettings(){
+  const root=document.querySelector('.labSettingsPageMode .labRolePageScrollArea')||
+   document.querySelector('.labSettingsPageMode');
+  if(!root||root.querySelector('.pb1616ReferralPanel'))return;
+  const panel=el('section','pb1616ReferralPanel');
+  const title=el('h3',null,'دعوت لابراتوار جدید');
+  const info=el('p','pb1616ReferralDescription','لابراتوار دعوت‌شده ۳۰٪ تخفیف اشتراک می‌گیرد. از پرداخت‌های تأییدشدهٔ اشتراک و شارژ کیف پول او، ۱۰٪ اعتبار به کیف پول شما افزوده می‌شود.');
+  const state=el('p','pb1616ReferralState','دریافت اطلاعات دعوت…');
+  const main=el('div','pb1616ReferralMain');
+  const code=el('input','pb1616ReferralLink');code.readOnly=true;code.dir='ltr';code.setAttribute('aria-label','لینک معرفی لابراتوار');
+  const copy=el('button','pb1616ReferralCopy','کپی لینک');copy.type='button';
+  const send=el('div','pb1616ReferralSend');
+  const mobile=el('input','pb1616ReferralMobile');mobile.placeholder='شماره موبایل لابراتوار جدید';mobile.type='tel';mobile.inputMode='tel';
+  const sms=el('button','pb1616ReferralSms','ارسال پیامک دعوت');sms.type='button';
+  const list=el('div','pb1616ReferralList');
+  add(send,mobile,sms);add(main,code,copy);add(panel,title,info,state,main,send,list);
+  root.append(panel);
+  const load=async()=>{
+   try{
+    const data=await Me('/api/lab/referrals');if(!panel.isConnected)return;
+    code.value=data.inviteUrl||'';
+    state.textContent='پاداش ثبت‌شده: '+Number(data.earned||0).toLocaleString('fa-IR')+' تومان · '+Number(data.introduced?.length||0).toLocaleString('fa-IR')+' لابراتوار معرفی‌شده';
+    list.replaceChildren();
+    const rows=Array.isArray(data.introduced)?data.introduced:[];
+    if(!rows.length)add(list,el('p','pb1616ReferralEmpty','هنوز لابراتواری از طریق لینک شما ثبت‌نام نکرده است.'));
+    for(const row of rows){
+     add(list,add(el('div','pb1616ReferralRow'),
+      el('b',null,row.name||'لابراتوار'),
+      el('span',null,'پاداش: '+Number(row.reward_total||0).toLocaleString('fa-IR')+' تومان')));
+    }
+   }catch(error){
+    if(panel.isConnected){state.textContent=safeError(error);main.hidden=true;send.hidden=true}
+   }
+  };
+  copy.onclick=async()=>{
+   if(!code.value)return;
+   try{await navigator.clipboard.writeText(code.value);copy.textContent='لینک کپی شد';}
+   catch{code.select();document.execCommand('copy');copy.textContent='کپی شد';}
+  };
+  sms.onclick=async()=>{
+   if(!mobile.value.trim())return;
+   sms.disabled=true;state.textContent='در حال ارسال پیامک…';
+   try{await Me('/api/lab/referrals/send-sms',{method:'POST',body:JSON.stringify({mobile:mobile.value})});
+    state.textContent='دعوت‌نامه پیامکی ارسال شد.';mobile.value='';}
+   catch(error){state.textContent=safeError(error)}
+   finally{sms.disabled=false}
+  };
+  void load();
+ }
+ function mountTrial(){
+  if(!/^\/trial\/?$/.test(location.pathname))return;
+  const token=new URLSearchParams(location.search).get('labReferral');
+  if(!token)return;
+  const root=document.querySelector('.trialPage');if(!root||root.querySelector('.pb1616TrialBanner'))return;
+  const note=el('aside','pb1616TrialBanner','در حال بررسی دعوت‌نامهٔ لابراتوار…');
+  root.prepend(note);
+  void Me('/api/public/lab-referral/preview?code='+encodeURIComponent(token))
+   .then(data=>{if(note.isConnected)note.textContent='دعوت از طرف «'+data.inviterName+'» · ۳۰٪ تخفیف ویژه اشتراک پس از ثبت‌نام';})
+   .catch(()=>{if(note.isConnected)note.textContent='کد دعوت معتبر نیست؛ برای دریافت تخفیف از لینک صحیح استفاده کنید.'});
+ }
+ let scheduled=false;
+ const scan=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;mountSettings();mountTrial()})};
+ new MutationObserver(scan).observe(document.documentElement,{subtree:true,childList:true});
+ window.addEventListener('popstate',scan);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scan,{once:true});else scan();
+})();

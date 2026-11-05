@@ -37,6 +37,14 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const start=js.indexOf(from),end=js.indexOf(tail,start);
   if(start<0||end<=start||end-start>2400)throw Error('R1613 pricing callback changed in '+root);
   js=js.slice(0,start)+read('scripts/r1613-on-pricing-saved.js.txt')+js.slice(end);
+  // R1603 pre-invoice client guard wrongly blocked the ordinary after-print
+  // flow at the print/ready/binding stages. The /ready handler already
+  // validates pricing and issues the invoice transactionally; only delivery
+  // or unpaid prepaid printing needs an existing invoice.
+  const oldStage='function pb1603StageInvoicePending(order,stage){return pb1603InvoicePending(order)&&([\'print\',\'printing\',\'ready\',\'completed\',\'binding\'].includes(stage)||stage===\'download_print\'&&!!order.downloaded_at)}';
+  const newStage='function pb1603StageInvoicePending(order,stage){return pb1603InvoicePending(order)&&(stage===\'completed\'||String(order.settlement_mode||\'ledger\')===\'prepaid\'&&[\'print\',\'printing\',\'binding\'].includes(stage))}';
+  if(js.split(oldStage).length!==2)throw Error('R1613 after-print stage guard changed in '+root);
+  js=js.replace(oldStage,newStage);
   js=js.replace('children:m?"در حال ثبت…":"تأیید و تعیین قیمت"','children:m?"در حال ثبت…":"ثبت قیمت و صدور فاکتور"');
   js+='\n/* PB1613 manual pricing completion */\n';
   write(app,js);

@@ -32,11 +32,27 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const app=root+'/assets/index-UIRefine-v655-r84.js';
  let js=read(app);
  if(!js.includes('/* PB1613 manual pricing completion */')){
-  const from='Nn=async le=>{var xt,Mt,qt;const nt=Se;';
-  const tail=';x.useEffect(()=>{const le=()=>{const nt=jf(l)';
-  const start=js.indexOf(from),end=js.indexOf(tail,start);
-  if(start<0||end<=start||end-start>2400)throw Error('R1613 pricing callback changed in '+root);
-  js=js.slice(0,start)+read('scripts/r1613-on-pricing-saved.js.txt')+js.slice(end);
+  // R1615: preceding R1603/R1612/UI optimization stages may rewrite the
+  // compiled callback. The preview convenience hook is strictly optional:
+  // never abort a Docker release or replace an unrelated function due to
+  // a brittle minifier-specific parameter/variable sequence.
+  const componentStart=js.indexOf('function Uf(');
+  const componentEnd=js.indexOf('function vi(',componentStart);
+  const from='Nn=async le=>';
+  const start=componentStart>=0?js.indexOf(from,componentStart):-1;
+  const tail=';x.useEffect(';
+  const end=start>=0?js.indexOf(tail,start):-1;
+  const candidate=start>=0&&end>start?js.slice(start,end):'';
+  const stable=start>=0&&componentEnd>start&&end>start&&end<componentEnd&&
+    end-start<=2400&&candidate.includes('Se')&&candidate.includes('Fe(null)')&&
+    candidate.includes('await ye()');
+  if(stable){
+   js=js.slice(0,start)+read('scripts/r1613-on-pricing-saved.js.txt')+
+    '\n/* PB1613 confirmed pricing callback */'+js.slice(end);
+  }else{
+   console.warn('[R1615] Preserving existing price-save callback in '+root+
+    ' (callback '+(start<0?'not found':'shape changed')+'); financial API and explicit invoice buttons remain unchanged');
+  }
   // R1603 pre-invoice client guard wrongly blocked the ordinary after-print
   // flow at the print/ready/binding stages. The /ready handler already
   // validates pricing and issues the invoice transactionally; only delivery

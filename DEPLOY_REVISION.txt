@@ -1,1 +1,1 @@
-2026-11-05-r1595-visible-windows-lab-card-flight
+2026-11-05-r1596-emergency-rollback-lab-white-screen

@@ -863,3 +863,5 @@ await deployStep('./enable-r1606-gallery-startup.mjs');
 await deployStep('./enable-r1607-embedded-mobile-dock.mjs');
 
 await deployStep('./enable-r1608-chassis-compact-orders.mjs');
+
+await deployStep('./enable-r1609-lab-layout.mjs');

@@ -43,7 +43,10 @@ test('lab referral form sends only a mobile number and canonical referral link, 
  assert.match(panel,/JSON\.stringify\(\{mobile:phone\}\)/);
  assert.match(panel,/لینک دعوت لابراتوار/);
  assert.match(panel,/شماره موبایل لابراتوار/);
- assert(!/نام لابراتوار|temporaryName|setName/.test(panel));
+ assert.doesNotMatch(panel,/(?:'aria-label'|placeholder)\s*:\s*['"]نام لابراتوار/);
+ assert.doesNotMatch(panel,/\b(?:temporaryName|setName)\b/);
+ // Status text about completed registration is not a laboratory-name input.
+ assert.match(panel,/ثبت‌نام لابراتوار دعوت‌شده تکمیل شده است/);
  assert(panel.indexOf('labReferralInviteControls')<panel.indexOf('PBLabReferralGuide'));
 });
 

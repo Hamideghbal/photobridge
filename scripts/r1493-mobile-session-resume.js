@@ -39,6 +39,9 @@
    const loginPortal=logins[url.pathname];
    if(loginPortal){
      promise.then(response=>{if(response.ok)try{localStorage.setItem(KEY,loginPortal)}catch{}}).catch(()=>{});
+   }else if(url.pathname==='/api/auth/logout'){
+     // The previous Lab preference must not briefly resume after logout.
+     promise.then(response=>{if(response.ok)try{localStorage.removeItem(KEY)}catch{}}).catch(()=>{});
    }else if(url.pathname==='/api/auth/me'&&!resuming){
      const portal=readHeaders(input,init).get('x-photobridge-portal');
      // A photographer background request should not change the active role while

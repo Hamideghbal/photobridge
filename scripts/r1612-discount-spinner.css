@@ -4,25 +4,11 @@ html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="tru
   transform:none!important;
 }
 html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot {
-  /* R1610 set position:relative!important here, pushing the stage circle
-     into normal layout. Preserve the original absolute badge geometry. */
+  /* Only override the R1610 position regression. All coordinates, dimensions,
+     and the original translate(50%) remain exactly as before the click. */
   position:absolute!important;
-  top:2px!important;
-  right:50%!important;
-  left:auto!important;
-  width:17px!important;
-  height:17px!important;
-  min-width:17px!important;
-  min-height:17px!important;
-  box-sizing:border-box!important;
-  display:grid!important;
-  place-items:center!important;
-  padding:0!important;
-  margin:0!important;
-  transform:translateX(50%)!important;
-  transition:none!important;
   color:transparent!important;
-  border-radius:50%!important;
+  transition:none!important;
 }
 html body #root .labRoleWorkspace .labActionTimeline > button:is([aria-busy="true"],.pb1610StageClicked) > .timelineDot::after {
   content:""!important;

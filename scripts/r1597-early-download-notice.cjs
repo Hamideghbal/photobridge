@@ -3,7 +3,7 @@
 // server has verified the complete local file manifest. Do not move invoice work.
 const marker='/* R1597 verified-download notice before invoice and queue refresh */';
 const receipt="const acknowledgedOrder={...detail.order,...(acknowledgement?.order||{})};";
-const successMessage="result.alreadyComplete?'همه '+V(result.done)+' فایل سفارش در پوشه درست و کامل‌اند؛ دریافت دوباره لازم نبود.':V(result.done)+' فایل سفارش کامل دریافت و با فهرست سرور تطبیق داده شد.";
+const successMessage="result.alreadyComplete?'همه '+V(result.done)+' فایل سفارش در پوشه درست و کامل‌اند؛ دریافت دوباره لازم نبود.':V(result.done)+' فایل سفارش کامل دریافت و با فهرست سرور تطبیق داده شد.'";
 const oldLate='pb1547DownloadDialog(warning||('+successMessage+'))';
 const early="pb1547DownloadDialog("+successMessage+")";
 const warnings="if(warning){const existing=document.querySelector('dialog.pb1547Notice[open] .pb1547NoticeMessage');if(existing)existing.textContent+=' '+warning;else pb1547Notice(warning,'warning')}";

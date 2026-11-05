@@ -877,5 +877,7 @@ runR1314(process.execPath,['--test','scripts/test-r1612-lab-spinner-discount-mod
 // R1613: restore after-print invoice issuance following manual price entry,
 // prevent Windows auto-reopen of old invoices, and animate status circles.
 await deployStep('./enable-r1613-lab-invoice-ui.mjs');
+// R1615: prevent optimizer-specific pricing callback shape from blocking Docker.
+runR1314(process.execPath,['--test','scripts/test-r1615-pricing-build-anchor.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1613-lab-invoice-ui.cjs'],{stdio:'inherit'});
 

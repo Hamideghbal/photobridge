@@ -28,7 +28,9 @@ test('lab invitation link is full-width with copy action inside the field and se
  assert.match(css,/\.labReferralInviteDivider\{[^}]*height:1px/);
  assert.match(panel,/onClick:copy,children:'کپی'/);
  assert.match(panel,/lab_referral_new_accounts_only/);
- assert.doesNotMatch(panel,/نام لابراتوار|temporaryName/);
+ assert.doesNotMatch(panel,/(?:'aria-label'|placeholder)\s*:\s*['"]نام لابراتوار/);
+ assert.doesNotMatch(panel,/\btemporaryName\b/);
+ assert.match(panel,/ثبت‌نام لابراتوار دعوت‌شده تکمیل شده است/);
 });
 
 test('referral SMS refuses already-registered lab numbers before any SMS or throttle write',async()=>{

@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS lab_referral_rewards (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  referrer_lab_id uuid NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
  referred_lab_id uuid NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
- source_kind text NOT NULL CHECK(source_kind IN ('subscription','wallet_topup')),
+ source_kind text NOT NULL CHECK(source_kind IN ('subscription','wallet_topup','wallet_manual_topup')),
  source_id uuid NOT NULL,
  paid_amount bigint NOT NULL CHECK(paid_amount > 0),
  reward_amount bigint NOT NULL CHECK(reward_amount > 0),

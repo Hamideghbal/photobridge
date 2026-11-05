@@ -19,7 +19,7 @@ const sample=[
 "     catch(error){warning='ثبت مرحله دانلود در سرور انجام نشد'}",
 "   }",
 "   B(value=>value+1);await ye();",
-"   if(!warning)await pb1568AfterManualDownload(le.id).catch(error=>pb1547Notice('فاکتور نیازمند بررسی است','warning'));",
+"   if(!warning)await pb1568AfterManualDownload(le.id,detail.order.lab_id||t.id).catch(error=>pb1547Notice('فاکتور نیازمند بررسی است','warning'));",
 "   pb1547DownloadDialog(warning||(result.alreadyComplete?'همه '+V(result.done)+' فایل سفارش در پوشه درست و کامل‌اند؛ دریافت دوباره لازم نبود.':V(result.done)+' فایل سفارش کامل دریافت و با فهرست سرور تطبیق داده شد.'));",
 " }catch(error){pb1450Notify(error)}",
 " finally{C('');F(null)}",
@@ -30,16 +30,16 @@ test('R1597 opens verified notice before invoice completion and refresh',async()
  assert.ok(patched.includes(marker));
  assert.ok(patched.indexOf('await pb1451AcknowledgeDownload(detail)')<patched.indexOf('pb1547DownloadDialog('));
  assert.ok(patched.indexOf('pb1547DownloadDialog(')<patched.indexOf('await ye()'));
- assert.ok(patched.indexOf('pb1547DownloadDialog(')<patched.indexOf('await pb1568AfterManualDownload(le.id)'));
+ assert.ok(patched.indexOf('pb1547DownloadDialog(')<patched.indexOf('await pb1568AfterManualDownload(le.id,detail.order.lab_id||t.id)'));
  assert.equal((patched.match(/pb1547DownloadDialog\(/g)||[]).length,1);
- assert.match(patched,/if\(!warning\)await pb1568AfterManualDownload\(le\.id\)/);
+ assert.match(patched,/if\(!warning\)await pb1568AfterManualDownload\(le\.id,detail\.order\.lab_id\|\|t\.id\)/);
  assert.equal(patchEarlyNotice(patched),patched);
  let finishInvoice;
  const invoice=new Promise(resolve=>finishInvoice=resolve);
  const events=[];
  const notice=(message,kind)=>events.push('notice:'+message+(kind?':'+kind:''));
  const context={
-  E:false,C:()=>{},F:()=>{},B:()=>{},V:n=>String(n),
+  E:false,t:{id:'lab1'},C:()=>{},F:()=>{},B:()=>{},V:n=>String(n),
   Me:async()=>({order:{id:'o1',status:'sent'}}),
   Dg:async()=>({done:3,alreadyComplete:false}),
   pb1451AcknowledgeDownload:async()=>({order:{status:'downloaded'}}),

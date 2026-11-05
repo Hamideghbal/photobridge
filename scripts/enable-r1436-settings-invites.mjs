@@ -25,4 +25,4 @@ if(!ui.includes('/* PB1436 settings and invitations */')){
  ui=ui.slice(0,start)+fs.readFileSync('scripts/r1436-correction-view.js','utf8')+'\n'+fs.readFileSync('scripts/r1436-lab-invites.js','utf8')+'\n/* PB1436 settings and invitations */\n';
  fs.writeFileSync(file,ui);
 }
-let html=fs.readFileSync('dist/web/index.html','utf8');if(!html.includes('photobridge-r1436-settings-invites.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1436-settings-invites.css?v=r1436" /></head>');html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&settingsInvites=')?url:url+'&settingsInvites=r1436');fs.writeFileSync('dist/web/index.html',html);
+let html=fs.readFileSync('dist/web/index.html','utf8');if(!html.includes('photobridge-r1436-settings-invites.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1436-settings-invites.css?v=r1625" /></head>');html=html.replace(/(assets\/index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&settingsInvites=')?url:url+'&settingsInvites=r1436');fs.writeFileSync('dist/web/index.html',html);

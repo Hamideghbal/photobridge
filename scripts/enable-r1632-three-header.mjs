@@ -15,7 +15,7 @@ const third=`
    const next=controls.map(button=>button.textContent.trim()).join('|');
    if(financeThird.dataset.source!==next){
     financeThird.replaceChildren();
-    for(const original of controls){const copy=cleanClone(original);copy.removeAttribute('style');copy.classList.add('pb1632FinanceTab');copy.onclick=()=>{if(original.isConnected)original.click();schedule()};financeThird.append(copy)}
+    for(const original of controls){const copy=cleanClone(original);copy.removeAttribute('style');copy.classList.add('pb1632FinanceTab');copy.onclick=()=>{const live=[...(currentDocument()?.querySelectorAll('.financeSectionTabs>button')||[])].find(button=>button.textContent.trim()===copy.textContent.trim());live?.click();schedule()};financeThird.append(copy)}
     financeThird.dataset.source=next;
    }
    controls.forEach((original,index)=>{

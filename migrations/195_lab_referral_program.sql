@@ -45,3 +45,19 @@ CREATE TABLE IF NOT EXISTS lab_referral_rewards (
  CONSTRAINT lab_referral_rewards_no_self CHECK(referrer_lab_id <> referred_lab_id)
 );
 CREATE INDEX IF NOT EXISTS lab_referral_rewards_referrer_idx ON lab_referral_rewards(referrer_lab_id,created_at DESC);
+
+-- R1614: wallet redemption is a distinct non-gateway payment, with full
+-- audit trail and only a wider CHECK set. Existing rows are untouched.
+ALTER TABLE subscription_renewals DROP CONSTRAINT IF EXISTS subscription_renewals_payment_method_check;
+ALTER TABLE subscription_renewals ADD CONSTRAINT subscription_renewals_payment_method_check
+ CHECK (payment_method IN ('receipt','zibal','wallet'));
+ALTER TABLE platform_payments DROP CONSTRAINT IF EXISTS platform_payments_source_check;
+ALTER TABLE platform_payments ADD CONSTRAINT platform_payments_source_check
+ CHECK (source IN ('receipt','gateway','manual','wallet'));
+CREATE TABLE IF NOT EXISTS lab_referral_wallet_renewals (
+ renewal_id uuid PRIMARY KEY REFERENCES subscription_renewals(id) ON DELETE RESTRICT,
+ wallet_transaction_id uuid NOT NULL UNIQUE REFERENCES service_wallet_transactions(id) ON DELETE RESTRICT,
+ lab_id uuid NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
+ amount bigint NOT NULL CHECK(amount>0),
+ created_at timestamptz NOT NULL DEFAULT now()
+);

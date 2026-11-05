@@ -3,9 +3,15 @@ export const LAB_REFERRAL_DISCOUNT_PERCENT=30,LAB_REFERRAL_REWARD_PERCENT=10;
 const fail=(error,status=400)=>Object.assign(new Error(error),{status});
 const money=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<0)throw fail('invalid_money');return n};
 export async function labReferralInvite(db,code){if(!/^[a-f0-9]{48}$/.test(String(code||'')))throw fail('lab_referral_invalid');const q=await db.query(`SELECT i.lab_id,i.code,l.name FROM lab_referral_invites i JOIN labs l ON l.id=i.lab_id WHERE i.code=$1 AND i.enabled=true AND COALESCE(l.suspended,false)=false`,[code]);if(!q.rowCount)throw fail('lab_referral_invalid');return q.rows[0]}
-export async function bindNewLabReferral(db,{code,labId,userId,isNewAccount}){
- if(!code)return null;if(isNewAccount!==true)throw fail('lab_referral_new_accounts_only',409);const invite=await labReferralInvite(db,code);if(String(invite.lab_id)===String(labId))throw fail('lab_referral_self_invite',409);
- const old=await db.query(`SELECT 1 FROM lab_memberships WHERE user_id=$1 AND role='lab_admin' AND lab_id<>$2 LIMIT 1`,[userId,labId]);if(old.rowCount)throw fail('lab_referral_new_accounts_only',409);
+// Identity is shared across roles. Only prior laboratory ownership disqualifies a referral.
+export async function assertLabReferralEligible(db,{userId=null,mobile='',excludeLabId=null}){
+ const phone=String(mobile||'').replace(/\D/g,'').slice(-10);if(!userId&&!phone)throw fail('invalid_mobile');
+ const old=await db.query(`SELECT 1 FROM lab_memberships m JOIN users u ON u.id=m.user_id WHERE m.role='lab_admin' AND (($1::uuid IS NOT NULL AND m.user_id=$1) OR ($2<>'' AND right(regexp_replace(COALESCE(u.mobile,''),'[^0-9]','','g'),10)=$2)) AND ($3::uuid IS NULL OR m.lab_id<>$3) LIMIT 1`,[userId,phone,excludeLabId]);if(old.rowCount)throw fail('lab_referral_new_accounts_only',409);
+}
+export async function lockLabSignupIdentity(db,mobile){const phone=String(mobile||'').replace(/\D/g,'').slice(-10);if(!phone)throw fail('invalid_mobile');await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['lab-signup:'+phone])}
+export async function bindNewLabReferral(db,{code,labId,userId,mobile,isNewLab}){
+ if(!code)return null;if(isNewLab!==true)throw fail('lab_referral_new_accounts_only',409);const invite=await labReferralInvite(db,code);if(String(invite.lab_id)===String(labId))throw fail('lab_referral_self_invite',409);
+ await assertLabReferralEligible(db,{userId,mobile,excludeLabId:labId});
  await db.query(`INSERT INTO lab_referrals(referred_lab_id,inviter_lab_id,registered_user_id,invite_code) VALUES($1,$2,$3,$4)`,[labId,invite.lab_id,userId,code]);return invite;
 }
 export function referralBestPrice(grossAmount,planAmount,existing){

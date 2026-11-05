@@ -885,3 +885,6 @@ runR1314(process.execPath,['--test','scripts/test-r1613-lab-invoice-ui.cjs'],{st
 // Additive laboratory referral program; separate from photographer invitations.
 await deployStep('./enable-lab-referral-program.mjs');
 runR1314(process.execPath,['--test','scripts/test-lab-referral-build.cjs'],{stdio:'inherit'});
+
+// Existing business accounts add roles only after SMS proof, without password changes.
+await deployStep('./enable-signup-sms-identity.mjs');

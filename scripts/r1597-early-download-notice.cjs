@@ -18,12 +18,13 @@ function patchEarlyNotice(source){
   if(from<0||end<=from)throw new Error('R1597 manual verified-download handler missing');
   let handler=source.slice(from,end);
   if(!handler.includes('const acknowledgement=await pb1451AcknowledgeDownload(detail);'))throw new Error('R1597 server verification anchor missing');
-  if(!handler.includes('if(!warning)await pb1568AfterManualDownload(le.id)'))throw new Error('R1597 existing invoice continuation changed');
+  const invoiceContinuation='if(!warning)await pb1568AfterManualDownload(le.id,detail.order.lab_id||t.id)';
+  if(!handler.includes(invoiceContinuation))throw new Error('R1597 existing invoice continuation changed');
   handler=replaceOnce(handler,receipt,
     receipt+'\n   '+marker+'\n   '+early+';',
     'verified-receipt placement');
   handler=replaceOnce(handler,oldLate,warnings,'duplicate late success dialog');
-  if(handler.indexOf(early)>handler.indexOf('if(!warning)await pb1568AfterManualDownload(le.id)'))throw new Error('R1597 notice still delayed behind invoice');
+  if(handler.indexOf(early)>handler.indexOf(invoiceContinuation))throw new Error('R1597 notice still delayed behind invoice');
   // Explicitly preserve server stage updates, invoice issuance, React refresh,
   // and error messages. Only notice timing changes.
   return source.slice(0,from)+handler+source.slice(end);

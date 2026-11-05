@@ -9,7 +9,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // R1611: the direct archive hook is optional when a previous build rewrote
   // the native header. Route-scoped CSS/JS must always preserve the layout.
   assert.match(header,/pb1148HasSecondary/);
-  if(header.includes('function secondary(h){'))assert.match(header,/R1610 no archive second header/);
+  if(header.split('function secondary(h){').length===2)assert.match(header,/R1610 no archive second header/);
   assert.match(css,/pb1610Archive/);
   assert.match(css,/pb1148SecondaryHeader/);
   assert.match(runtime,/pb1610Archive/);

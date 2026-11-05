@@ -15,7 +15,7 @@ test('progress IPC accepts only the authenticated main frame and current laborat
 });
 test('notification progress is bounded, isolated by lab and cleared on dismissal',()=>{
  const {AlertWindow}=require('../alert-window.cjs');let account='A';const controller=new AlertWindow({ipcMain:{handle(){}},store:{get(){return null},set(){}},getAccount:()=>account});
- for(let i=0;i<25;i++)controller.updateDownload({orderId:'order-'+i,phase:'downloading',percent:25},'A');assert.equal(controller.state().downloads.length,20);
+ for(let i=0;i<25;i++)controller.updateDownload({orderId:'order-'+i,phase:'downloading',percent:25},'A');assert.equal(controller.downloads.size,20);assert.equal(controller.state().downloads.length,1);
  account='B';assert.equal(controller.state().downloads.length,0);controller.updateDownload({orderId:'old'},'A');assert.equal(controller.state().downloads.length,0);controller.updateDownload({orderId:'new'},'B');assert.equal(controller.state().downloads[0].orderId,'new');controller.dismiss();assert.equal(controller.state().downloads.length,0);
 });
 

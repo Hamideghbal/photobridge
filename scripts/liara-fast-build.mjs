@@ -829,3 +829,10 @@ runR1314(process.execPath,['--test','scripts/test-r1592-photographer-order-fly.c
 // Do not restore these patches until the Windows blank-screen fault is verified.
 console.log('[R1596] Experimental Lab card-flight overlay/JS stage patches disabled');
 runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs'],{stdio:'inherit'});
+
+// R1597: display the verified-download confirmation immediately after server
+// receipt, BEFORE slow invoice continuation and queue refresh. Invoice timing
+// and the successful R1596 Windows startup rollback remain unchanged.
+await deployStep('./enable-r1597-early-download-notice.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1597-early-download-notice.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1596-lab-startup-rollback.cjs'],{stdio:'inherit'});

@@ -68,6 +68,7 @@ test('R1614 authenticated backend route hooks and confirmed payment credits are 
  assert.match(wallet,/alreadyProcessed:true/);
  assert.match(wallet,/wallet_insufficient/);
  assert.doesNotMatch(wallet,/rewardInvitingLab/,'wallet-redeemed subscription cannot create a new commission');
+ assert.doesNotMatch(wallet,/INSERT INTO platform_payments/,'spending already-issued wallet credit must not inflate cash revenue');
 });
 test('R1614 shared UI and Windows manifest integrity',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){

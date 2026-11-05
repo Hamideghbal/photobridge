@@ -28,6 +28,21 @@ const review=s.indexOf("`subscription.${action}`");a=s.lastIndexOf("            
  if(!prior.includes('actorId:a.userId'))throw Error('R1624 pending invite helper changed');
  s=s.slice(0,pendingStart)+prior.replace('actorId:a.userId','actorId:a.userId,temporaryName:'+bodyMatches[0][1]+'.temporaryName')+s.slice(pendingEnd+2);
 }
+// Display the saved temporary photography name in the lab's invitation history.
+{
+ const getStart=s.indexOf("if (req.method === 'GET' && url.pathname === '/api/photographer-invites')");
+ const getEnd=s.indexOf("if (req.method === 'PUT' && url.pathname === '/api/admin/photographer-invites/commission')",getStart);
+ if(getStart<0||getEnd<=getStart)throw Error('R1624 invite history route changed');
+ let route=s.slice(getStart,getEnd);
+ const oldSelect='SELECT link.invite_id,link.mobile,link.last_sent_at,link.previous_debt,';
+ const newSelect="SELECT link.invite_id,link.mobile,link.last_sent_at,link.previous_debt,(SELECT NULLIF(i.target_name,'') FROM invitations i WHERE i.lab_id=$1 AND right(regexp_replace(i.target_mobile,'[^0-9]','','g'),10)=right(regexp_replace(link.mobile,'[^0-9]','','g'),10) AND i.uses=0 ORDER BY i.created_at DESC LIMIT 1) AS temporary_name,";
+ if(route.split(oldSelect).length!==2)throw Error('R1624 history SQL changed');
+ route=route.replace(oldSelect,newSelect);
+ const oldMap='inviteId:r.invite_id,customerId:r.customer_id,mobile:r.mobile';
+ if(route.split(oldMap).length!==2)throw Error('R1624 history JSON changed');
+ route=route.replace(oldMap,oldMap+',name:r.temporary_name||null');
+ s=s.slice(0,getStart)+route+s.slice(getEnd);
+}
 const r1624LabAnchor='        const labId = a.labId;';
 const r1624SmsRoute=String.raw`
         /* R1624 laboratory referral SMS */

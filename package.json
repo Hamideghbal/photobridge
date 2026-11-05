@@ -1,6 +1,6 @@
 {
   "name": "photobridge-lab-desktop",
-  "version": "1.0.87",
+  "version": "1.0.89",
   "private": true,
   "description": "PhotoBridge Lab — offline-first Windows workspace",
   "main": "main.cjs",

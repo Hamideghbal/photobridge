@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+test('hidden main renderer retains download worker timer scheduling alongside tray alerts',()=>{const source=fs.readFileSync(require('node:path').join(__dirname,'../main.cjs'),'utf8');assert.match(source,/webPreferences:\{[^}]*backgroundThrottling:false/);assert.match(source,/win\.webContents\.send\('lab-document-change'\)/)});

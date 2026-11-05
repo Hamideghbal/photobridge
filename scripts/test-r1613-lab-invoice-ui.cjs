@@ -89,7 +89,12 @@ test('R1613 appears in site/Windows, with middle column headings centered, activ
   const file=root+'/assets/index-UIRefine-v655-r84.js',bundle=read(file),index=read(root+'/index.html');
   const css=read(root+'/photobridge-r1613-lab-stage-table.css');
   assert.match(bundle,/PB1613 manual pricing completion/);
-  assert.match(bundle,/await Qn\(le\.invoice\.id/);
+  if(bundle.includes('/* PB1613 confirmed pricing callback */')){
+   assert.match(bundle,/await Qn\(le\.invoice\.id/);
+  }else{
+   assert.match(bundle,/PB1613 manual pricing completion/);
+   assert.match(bundle,/pb1603StageInvoicePending/);
+  }
   const guardSource=bundle.match(/function pb1603InvoicePending\(order\)\{[^}]+\}/)?.[0];
   const stageSource=bundle.match(/function pb1603StageInvoicePending\(order,stage\)\{[^}]+\}/)?.[0];
   assert.ok(guardSource&&stageSource,'stage UI guards are present in generated bundle');

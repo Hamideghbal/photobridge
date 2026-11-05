@@ -849,3 +849,10 @@ runR1314(process.execPath,['--test','scripts/test-r1599-mobile-crop-nav.cjs'],{
  stdio:'inherit',env:{...process.env,PB1599_VERIFY_BUNDLE:'1'}
 });
 
+// R1601: improve first desktop Photographer Print load and lab directory queries.
+// Website + API only; the healthy Windows Lab UI and rollback remain untouched.
+await deployStep('./enable-r1601-first-print-speed.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1601-first-print-speed.cjs'],{
+ stdio:'inherit',env:{...process.env,PB1601_VERIFY_BUNDLE:'1'}
+});
+

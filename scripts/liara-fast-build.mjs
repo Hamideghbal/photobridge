@@ -890,3 +890,5 @@ runR1314(process.execPath,['--test','scripts/test-lab-referral-build.cjs'],{stdi
 await deployStep('./enable-signup-sms-identity.mjs');
 // R1624: photographer temporary names, SMS-only lab referrals and dismissible expiry.
 runR1314(process.execPath,['--test','scripts/test-r1624-invitations.cjs'],{stdio:'inherit'});
+// R1625: prevent already-registered laboratory invitations and keep the copy/link and form controls aligned.
+runR1314(process.execPath,['--test','scripts/test-r1625-invitations.cjs'],{stdio:'inherit'});

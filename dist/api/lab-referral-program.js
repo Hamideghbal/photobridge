@@ -118,3 +118,25 @@ export async function rewardConfirmedPayment(db,{referredLabId,kind,paymentId,ac
   [commission.rows[0].id,movement.rows[0].id]);
  return {credited:true,amount:reward,inviterLabId:inviter};
 }
+
+export async function reserveReferralSms(db,labId,mobile){
+ const c=await db.connect();
+ try{
+  await c.query('BEGIN');
+  // Serializes all sends for one Lab; no concurrent throttle bypass.
+  await c.query("SELECT id FROM labs WHERE id=$1 FOR UPDATE",[labId]);
+  const count=await c.query(
+   "SELECT count(*)::int AS n FROM lab_referral_sms_attempts WHERE lab_id=$1 AND created_at>now()-interval '1 hour'",[labId]);
+  if(Number(count.rows[0]?.n||0)>=15)throw fail('lab_referral_sms_hourly_limit',429);
+  const repeat=await c.query(
+   "SELECT 1 FROM lab_referral_sms_attempts WHERE lab_id=$1 AND recipient_mobile=$2 AND created_at>now()-interval '10 minutes' LIMIT 1",
+   [labId,mobile]);
+  if(repeat.rowCount)throw fail('lab_referral_sms_repeat_limit',429);
+  const q=await c.query(
+   "INSERT INTO lab_referral_sms_attempts(lab_id,recipient_mobile) VALUES($1,$2) RETURNING id",
+   [labId,mobile]);
+  await c.query('COMMIT');
+  return q.rows[0].id;
+ }catch(error){await c.query('ROLLBACK').catch(()=>{});throw error}
+ finally{c.release()}
+}

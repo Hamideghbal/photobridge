@@ -1,0 +1,37 @@
+/* R1616 isolated lab-referral panel: no existing Lab controls overridden. */
+.pb1616ReferralPanel{
+ box-sizing:border-box;direction:rtl;display:grid;gap:12px;width:100%;max-width:100%;
+ margin:14px auto 20px;padding:18px;border-radius:16px;
+ border:1px solid #dce6f5;background:#fff;box-shadow:0 5px 25px rgba(45,82,129,.07);
+ font-family:Vazirmatn,Tahoma,Arial,sans-serif;color:#20334d;
+}
+.pb1616ReferralPanel h3{margin:0;font-size:16px;font-weight:850}
+.pb1616ReferralDescription{font-size:12px;line-height:2;margin:0;color:#65788d}
+.pb1616ReferralState{margin:0;font-size:12px;font-weight:750;color:#2460a1}
+.pb1616ReferralMain,.pb1616ReferralSend{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pb1616ReferralLink,.pb1616ReferralMobile{
+ box-sizing:border-box;flex:1 1 240px;min-width:0!important;max-width:100%;
+ border:1px solid #cfdcf0!important;background:#f8faff!important;
+ border-radius:9px!important;min-height:40px!important;padding:8px 11px!important;
+ font:650 12px Vazirmatn,Tahoma,Arial,sans-serif!important;
+}
+.pb1616ReferralPanel button{
+ min-height:40px;padding:7px 13px;border:1px solid #c4d9f4;
+ border-radius:9px;background:#eff6ff;color:#2865ac;
+ cursor:pointer;font:800 12px Vazirmatn,Tahoma,Arial,sans-serif;
+}
+.pb1616ReferralPanel .pb1616ReferralSms{background:#2563eb;color:#fff;border-color:#2563eb}
+.pb1616ReferralPanel button:disabled{opacity:.65;cursor:wait}
+.pb1616ReferralList{display:grid;gap:7px}
+.pb1616ReferralRow{display:flex;justify-content:space-between;align-items:center;gap:12px;
+ padding:9px 11px;border:1px solid #e5edf7;border-radius:9px;font-size:12px}
+.pb1616ReferralRow span{color:#56718e;font-size:11px}
+.pb1616ReferralEmpty{margin:0;color:#74869a;font-size:11px}
+.pb1616TrialBanner{margin:8px auto 14px;padding:12px 14px;text-align:center;border-radius:12px;
+ max-width:650px;border:1px solid #cfdef0;background:#f5f9ff;color:#28578b;
+ font:750 13px/2 Vazirmatn,Tahoma,Arial,sans-serif}
+@media(max-width:560px){
+ .pb1616ReferralPanel{padding:13px;border-radius:12px}
+ .pb1616ReferralMain button,.pb1616ReferralSend button{flex:1 1 120px}
+ .pb1616ReferralRow{align-items:flex-start;flex-direction:column;gap:3px}
+}

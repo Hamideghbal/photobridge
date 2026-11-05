@@ -1,0 +1,41 @@
+/* R1610: one-row archive, tighter photographer columns and in-circle stage feedback. */
+html body #root .labRoleWorkspace.pb1610Archive .pb1148SecondaryHeader,
+html body #root .labRoleWorkspace.pb1610Archive .pb1175HeaderFade{display:none!important}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html body #root .labRoleWorkspace.pb1610Archive main.pbFixedRoleHeader,
+ html body #root .labRoleWorkspace.pb1610Archive main.pbFixedRoleHeader.pb1148HasSecondary{padding-top:72px!important}
+ html body #root .labRoleWorkspace.pb1610Archive main .labRolePageScrollArea{height:calc(100dvh - 72px)!important}
+}
+html body #root .labRoleWorkspace.pb1610Archive .labArchiveWorkspace{margin-top:0!important;padding-top:6px!important}
+html body #root .labRoleWorkspace.pb1610Archive .labArchiveWorkspace>.sectionTopline{margin-top:0!important;padding-top:0!important}
+/* Online/open state belongs to print and album, not archive, finance or settings. */
+html body #root .labRoleWorkspace.pb1610NotQueue .workspaceStatusDot,
+html body #root .labRoleWorkspace.pb1610NotQueue .workspaceStatusPill,
+html body #root .labRoleWorkspace.pb1610NotQueue .workspaceIdentityCopy>small:not(.pb1148Manager){display:none!important}
+/* Photographer header and values share precisely the same fixed column grid. */
+html body #root .labRoleWorkspace .pb1585PhotographersTable{min-width:1000px!important;table-layout:fixed!important}
+html body #root .labRoleWorkspace .pb1585PhotographersTable th,
+html body #root .labRoleWorkspace .pb1585PhotographersTable td{padding:10px 9px!important;text-align:right!important;vertical-align:middle!important}
+html body #root .labRoleWorkspace .pb1585PhotographersTable thead th{white-space:normal!important;line-height:1.5!important}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585Identity{gap:8px}
+html body #root .labRoleWorkspace .pb1585PhotographersTable .pb1585Discount{min-width:0;white-space:normal}
+html body #root .labRoleWorkspace .pb1585DiscountEdit{display:inline-flex;align-items:center;gap:5px;max-width:100%;border:1px solid transparent;border-radius:8px;padding:4px 6px;background:transparent;color:#245c76;font:800 13px Vazirmatn,Tahoma,sans-serif;cursor:pointer;text-align:right}
+html body #root .labRoleWorkspace .pb1585DiscountEdit:hover,
+html body #root .labRoleWorkspace .pb1585DiscountEdit:focus-visible{border-color:#cbdcf7;background:#eff5ff}
+html body #root .labRoleWorkspace .pb1585DiscountForm{display:flex;align-items:center;flex-wrap:wrap;gap:5px;max-width:100%;min-width:0}
+html body #root .labRoleWorkspace .pb1585DiscountForm input{min-width:0;width:62px;height:32px;box-sizing:border-box;text-align:center;direction:ltr;border:1px solid #b8c9e2;border-radius:7px;font:700 12px Vazirmatn,Tahoma,sans-serif;background:#fff;color:#172b4d}
+html body #root .labRoleWorkspace .pb1585DiscountForm button{min-height:30px;padding:4px 7px;border:1px solid #c7d7ed;border-radius:7px;background:#f2f6fd;color:#244775;cursor:pointer;font:700 10px Vazirmatn,Tahoma,sans-serif}
+html body #root .labRoleWorkspace .pb1585DiscountForm button:disabled{opacity:.55;cursor:wait}
+html body #root .labRoleWorkspace .pb1585DiscountError{display:block;color:#b42318;font-size:10px;line-height:1.6}
+html body #root .labRoleWorkspace .pb1585Discount small{display:block;font-size:10px;color:#667085}
+/* Invite list: keep the rightmost 'عکاسی' label directly above names. */
+html body #root .labRoleWorkspace .labInvitesWorkspace table th:first-child,
+html body #root .labRoleWorkspace .labInvitesWorkspace table td:first-child{padding-right:10px!important;text-align:right!important;vertical-align:middle!important}
+html body #root .labRoleWorkspace .labInvitesWorkspace :is(.photographerInviteMain,.photographerInviteHistory){text-align:right!important;justify-items:start}
+html body #root .labRoleWorkspace .labInvitesWorkspace :is(th,td):first-child{justify-content:flex-start!important}
+/* Loading is visible *inside* the status circle, not as a progress mouse cursor. */
+html body #root .labRoleWorkspace .labActionTimeline>button:is([aria-busy="true"],.pb1610StageClicked){cursor:default!important;position:relative}
+html body #root .labRoleWorkspace .labActionTimeline>button:is([aria-busy="true"],.pb1610StageClicked) .timelineDot{position:relative!important;display:inline-grid!important;place-items:center!important;color:transparent!important}
+html body #root .labRoleWorkspace .labActionTimeline>button:is([aria-busy="true"],.pb1610StageClicked) .timelineDot::after{content:"";position:absolute;left:50%;top:50%;width:58%;height:58%;min-width:10px;min-height:10px;box-sizing:border-box;border:2px solid rgba(36,94,170,.22);border-top-color:#245eaa;border-right-color:#245eaa;border-radius:50%;transform:translate(-50%,-50%);animation:pb1610CircleSpin .68s linear infinite;pointer-events:none}
+@keyframes pb1610CircleSpin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){html body #root .labRoleWorkspace .labActionTimeline>button:is([aria-busy="true"],.pb1610StageClicked) .timelineDot::after{animation:none;border-top-color:#245eaa;border-right-color:#245eaa}}

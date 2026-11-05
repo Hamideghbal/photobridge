@@ -2,6 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const {patchDesktop}=require('./r1601-first-print-desktop.cjs');
 const {patchLabDirectory}=require('./r1601-lab-directory-fast.cjs');
+const {patchActiveLabEntry}=require('./r1601-active-lab-entry.cjs');
 const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
 const server=fs.readFileSync('dist/api/server.js','utf8');
 const route=s=>{const a=s.indexOf("if (req.method === 'GET' && url.pathname === '/api/customer/labs') {"),b=s.indexOf('const customerLabRequest = url.pathname.match(',a);assert.ok(a>0&&b>a);return s.slice(a,b)};
@@ -81,6 +82,28 @@ test('R1601 invited-lab-only account still sees only accepted labs and primary s
  assert.deepEqual(answer.payload.memberships.map(x=>x.id),['lab2','lab1']);
  assert.equal(queries.filter(x=>x.sql.includes('UPDATE users')).length,0);
 });
+test('R1601 existing selected lab enters print by SPA navigation; changed lab still reloads',()=>{
+ const old='if(String(S)===String((a==null?void 0:a.activeLabId)||"")){location.assign("/photographer/orders/flow?workspace=print");return}';
+ const altered=patchActiveLabEntry(old),head=altered.slice(0,altered.indexOf('\n/* PB1601'));
+ assert.equal(patchActiveLabEntry(altered),altered);
+ assert.ok(head.includes('history.pushState'));
+ const calls=[];
+ const body=new Function('S','a','t','location','history','window','PopStateEvent','URL','URLSearchParams',head);
+ const location={origin:'https://photobridge.ir',search:'?pbDesktopContent=1',assign:target=>calls.push('reload:'+target)};
+ const history={pushState:(_data,_title,url)=>calls.push('spa:'+url)};
+ const win={dispatchEvent:evt=>calls.push('event:'+evt.type)};
+ const Event=class{constructor(type){this.type=type}};
+ body('lab1',{activeLabId:'lab1'},{id:'lab1'},location,history,win,Event,URL,URLSearchParams);
+ assert.ok(calls.some(x=>x==='spa:/photographer/orders/flow?workspace=print&pbDesktopContent=1'));
+ assert.ok(calls.includes('event:popstate'));
+ assert.ok(!calls.some(x=>x.startsWith('reload:')));
+ calls.length=0;
+ body('lab1',{activeLabId:'lab1'},{id:'different'},location,history,win,Event,URL,URLSearchParams);
+ assert.deepEqual(calls,['reload:/photographer/orders/flow?workspace=print']);
+ calls.length=0;
+ body('lab2',{activeLabId:'lab1'},{id:'lab1'},location,history,win,Event,URL,URLSearchParams);
+ assert.deepEqual(calls,[],'new lab must still pass through the existing secure selection path');
+});
 test('R1601 stages are web/desktop-only and keep disabled Lab card animation',()=>{
  const stage=fs.readFileSync('scripts/enable-r1601-first-print-speed.mjs','utf8');
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
@@ -90,6 +113,8 @@ test('R1601 stages are web/desktop-only and keep disabled Lab card animation',()
  if(process.env.PB1601_VERIFY_BUNDLE==='1'){
   assert.match(nav,/PB1601 warm first photographer print frame/);
   assert.match(server,/PB1601 parallel photographer lab directory queries/);
+  assert.match(fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),/PB1601 same active lab enters print/);
   assert.match(fs.readFileSync('dist/web/index.html','utf8'),/firstPrint=r1601/);
+  assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labEntry=r1601/);
  }
 });

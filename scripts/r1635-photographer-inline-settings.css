@@ -1,0 +1,15 @@
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs>button,
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1635SettingsNav>button{font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:normal!important;color:#475467!important}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1635SettingsNav{grid-column:3!important;justify-self:end!important;display:flex;align-items:center;direction:rtl;gap:4px;white-space:nowrap}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1635SettingsNav>button{position:relative;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:5px 9px 8px!important;min-height:34px!important;cursor:pointer}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader :is(.pb1635SettingsNav,.pb1632FinanceTabs)>button.active{color:#315efb!important}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader :is(.pb1126MainNav,.pb1127PrintModes,.pb1632FinanceTabs,.pb1635SettingsNav)>button.active::after{content:""!important;position:absolute!important;left:9px!important;right:9px!important;bottom:6px!important;height:1px!important;background:#315efb!important;border-radius:1px!important}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button.active::after{bottom:6px!important;height:1px!important}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>.pb1131MovingIndicator{height:1px!important;bottom:6px!important}
+html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button.active::after{content:none!important}
+#pb1635SettingsPanel{position:fixed;inset:113px 0 0;z-index:80;background:#f5f7fb;display:flex}
+#pb1635SettingsPanel>iframe{width:100%;height:100%;border:0;background:#f5f7fb}
+html.pb1635SettingsOpen.pb1632FinanceThird body #pb1126ChromeHost #pb1126DesktopHeader{height:113px!important;min-height:113px!important;grid-template-rows:72px 41px!important}
+html.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs{display:none!important}
+}

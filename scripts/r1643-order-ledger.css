@@ -20,3 +20,17 @@
 .pb1643LedgerConfirm .modalActions button{min-height:38px;padding:7px 16px;border-radius:9px;font:750 12px/1.5 Vazirmatn,Tahoma,sans-serif}
 .pb1643LedgerConfirm .pb1643LedgerConfirmButton{background:#3461b6!important;border:1px solid #3461b6!important;color:#fff!important}
 @media(max-width:650px){.pb1643LedgerConfirm .modalActions button{flex:1 1 130px}.labOrderMiniActions .pb1643LedgerAction{width:auto!important}}
+
+/* The legacy compact lab queue forces 7px labels on action buttons.
+   Override it specifically for the finance decision so it remains readable. */
+.labOrderScrollArea .labOrderMiniActions button.pb1643LedgerAction{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ min-height:32px!important;min-width:116px!important;padding:6px 11px!important;
+ font:800 11px/1.55 Vazirmatn,Tahoma,sans-serif!important;
+ background:#edf4ff!important;color:#1e4a84!important;
+ border:1px solid #9fbfe8!important;opacity:1!important;
+ white-space:nowrap!important;visibility:visible!important;
+}
+.labOrderScrollArea .labOrderMiniActions button.pb1643LedgerAction:disabled{
+ opacity:.5!important;cursor:not-allowed!important;
+}

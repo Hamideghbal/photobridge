@@ -55,7 +55,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
      onClick:()=>{pb1643SetLedgerOrder(le);pb1643SetError('')},
      children:"دفتری کردن این سفارش"})]})`;
   component=once(component,noticeEnd,noticeReplacement,'prepaid card action');
-  const modalAnchor='Se&&e.jsx($f,{order:Se.order,onClose:()=>Fe(null),onSaved:Nn}),';
+  const modalAnchor='Se&&e.jsx($f,{order:Se.order,onClose:()=>Fe(null),onSaved:Nn}),L&&e.jsxs(On,';
   const modal=`pb1643LedgerOrder&&e.jsx(On,{
    title:"تبدیل سفارش #"+V(pb1643LedgerOrder.number)+" به حساب دفتری",
    onClose:()=>{if(!pb1643Working)pb1643SetLedgerOrder(null)},

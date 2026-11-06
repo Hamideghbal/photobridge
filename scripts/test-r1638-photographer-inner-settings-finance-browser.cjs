@@ -34,6 +34,13 @@ const {chromium}=require('playwright');
 
   await page.setViewportSize({width:390,height:750});
   assert.notEqual(await page.locator('.photographerSettingsTabs').evaluate(el=>getComputedStyle(el).display),'none','mobile UI untouched');
-  console.log('PASS R1638: legacy settings removed in embedded desktop, eight aligned invoice columns at 980/1440, mobile preserved');
+  const headerPage=await browser.newPage({viewport:{width:1366,height:768}});
+  await headerPage.setContent('<html lang="fa" class="pb1126Desktop"><head></head><body><div id="pb1126ChromeHost"><header id="pb1126DesktopHeader"><div class="photographerHeaderIdentity"><button class="pb1163ProfileButton">ع</button><div class="workspaceIdentityCopy"><h1>نام عکاسی</h1><small>پنل عکاسی PhotoBridge</small><p class="photographerIdentityDateOnly">تاریخ</p></div></div></header></div></body></html>');
+  await headerPage.addStyleTag({content:fs.readFileSync('scripts/r1638-photographer-inner-settings-finance.css','utf8')});
+  assert.equal(await headerPage.locator('.workspaceIdentityCopy>small').evaluate(el=>getComputedStyle(el).display),'none');
+  for(const selector of ['.workspaceIdentityCopy>h1','.photographerIdentityDateOnly','.pb1163ProfileButton'])
+   assert.notEqual(await headerPage.locator(selector).evaluate(el=>getComputedStyle(el).display),'none',selector+' should remain visible');
+  await headerPage.close();
+  console.log('PASS R1638: legacy settings removed in embedded desktop, eight aligned invoice columns at 980/1440, mobile preserved, photographer identity subtitle removed');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

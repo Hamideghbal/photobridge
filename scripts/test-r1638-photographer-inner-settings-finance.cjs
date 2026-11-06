@@ -53,3 +53,12 @@ test('R1638 stylesheet is the same in web and Windows UI updater',()=>{
  }
  assert.equal(manifest.build,sha(JSON.stringify(manifest.files)),'wrong native build hash');
 });
+
+test('R1638 declutters only the photographer identity subtitle below the studio name',()=>{
+ const rule=css.match(/html\.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader \.photographerHeaderIdentity > \.workspaceIdentityCopy > small \{([^}]+)\}/);
+ assert.ok(rule,'desktop photographer identity subtitle selector missing');
+ assert.match(rule[1],/display:none!important/);
+ assert.doesNotMatch(css,/\.photographerIdentityDateOnly\s*\{[^}]*display:none/);
+ assert.doesNotMatch(css,/\.pb1163ProfileButton\s*\{[^}]*display:none/);
+ assert.doesNotMatch(css,/\.photographerHeaderIdentity h1\s*\{[^}]*display:none/);
+});

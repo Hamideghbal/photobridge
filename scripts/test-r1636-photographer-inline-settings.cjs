@@ -58,3 +58,19 @@ test('the hosted site and native Windows bundle include versioned R1637 assets',
  }
  assert.equal(manifest.build,hash(JSON.stringify(manifest.files)));
 });
+
+test('R1637 replaces lab management with tariff settings and removes redundant inner navigation',()=>{
+ assert.match(source,/key:'prices',label:'تعرفه‌های لابراتوار',path:'\/photographer\/settings\/prices'/);
+ assert.match(source,/key:'location',label:'موقعیت عکاسی',path:'\/photographer\/settings\/location'/);
+ assert.match(source,/key:'invites',label:'دعوت همکار',path:'\/photographer\/invites'/);
+ assert.doesNotMatch(source,/key:'labs',label:'تعریف لابراتوار'/);
+ assert.match(source,/\.photographerSettingsTabs,.settingsNav\.photographerSettingsTabs\{display:none!important\}/);
+ assert.match(source,/key==='prices'\?doc\.querySelector\('\.photographerPricingSettings'\)/);
+ assert.match(css,/pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader \.pb1126MainNav>button\.active/);
+ assert.match(css,/\.pb1126MainNav>\.pb1131MovingIndicator\{\s*opacity:0!important;visibility:hidden!important;/);
+ assert.match(css,/font:800 12px\/1\.4 Vazirmatn,Tahoma,sans-serif!important/);
+ const deploy=fs.readFileSync('scripts/enable-r1635-photographer-inline-settings.mjs','utf8');
+ assert.match(deploy,/labelRange\.getBoundingClientRect\(\)\.width/);
+ assert.match(deploy,/rect\.width-parseFloat\(width\)/);
+ assert.match(deploy,/\?v=r1637/);
+});

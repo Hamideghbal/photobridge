@@ -51,3 +51,22 @@ test('ticket is refused when the order already has an invoice',async()=>{
  const f=fixture();await f.printer.configure({deviceName:'THERMAL-80'});
  await assert.rejects(f.printer.print({kind:'ticket',orderId:ORDER}),/upstream_404/);
 });
+
+test('independent offline invoice uses local document and cached printer settings without any server request',async()=>{
+ const {LabStore}=require('../store.cjs'),{LocalBusiness}=require('../local-business.cjs'),crypto=require('node:crypto');
+ const store=new LabStore(':memory:');store.set('labId',LAB);store.set('auth',{user:{},lab:{id:LAB,name:'لاب محلی'}});const customer=crypto.randomUUID(),orderId=crypto.randomUUID(),file=crypto.randomUUID();
+ store.cache('/api/lab/delegated-orders/bootstrap',200,'application/json',Buffer.from(JSON.stringify({customers:[{id:customer,name:'مشتری'}],printSizes:[{id:'13x18',label:'۱۳×۱۸',luster:100}]})).toString('base64'));
+ const engine=new LocalBusiness(store),call=(method,url,body)=>engine.handle(method,url,body,crypto.randomUUID(),{isolated:true,offline:true});
+ try{
+  call('POST','/api/lab/delegated-orders',{clientOrderId:orderId,localOnly:true,customerId:customer,mode:'print'});
+  call('POST','/api/lab/delegated-orders/'+orderId+'/files/local-batch',{localOnly:true,files:[{clientFileId:file,name:'photo.jpg',bytes:12,printSizeId:'13x18',printType:'luster'}]});
+  call('POST','/api/lab/delegated-orders/'+orderId+'/submit',{desktopLocalFiles:[{rootId:'root',parts:['photo.jpg'],bytes:12,sha256:'a'.repeat(64)}]});
+  const issued=call('POST','/api/lab/orders/'+orderId+'/automation-invoice',{});
+  let requests=0,spools=0;
+  const BrowserWindow=class{constructor(){this.webContents={setWindowOpenHandler(){},executeJavaScript:async()=>true,print:(_o,cb)=>{spools++;cb(true)}}}async loadURL(){}isDestroyed(){return false}destroy(){}};
+  const printer=new ThermalPrinter({store,BrowserWindow,getWindow:()=>({webContents:{getPrintersAsync:async()=>[{name:'THERMAL-80'}]}}),request:async()=>{requests++;throw Error('offline')}});
+  await printer.configure({deviceName:'THERMAL-80'});
+  let result=await printer.print({kind:'invoice',orderId,invoiceId:issued.invoice.id});assert.equal(result.spoolAccepted,true);
+  result=await printer.print({kind:'invoice',orderId,invoiceId:issued.invoice.id});assert.equal(result.alreadyHandled,true);assert.equal(spools,1);assert.equal(requests,0);
+ }finally{store.db.close()}
+});

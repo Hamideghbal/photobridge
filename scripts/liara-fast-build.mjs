@@ -924,3 +924,8 @@ runR1314(process.execPath,['--test','scripts/test-r1636-photographer-inline-sett
 // R1638: hide legacy settings navigation and align eight photographer invoice columns.
 await deployStep('./enable-r1638-photographer-inner-settings-finance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1638-photographer-inner-settings-finance.cjs'],{stdio:'inherit'});
+
+// R1641: manual order submit avoids redundant copy-only disk hashing.
+// The native invoice-progress dialog only offers retry/cancel after a failure.
+await deployStep('./enable-r1641-lab-manual-speed-dialog.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1641-lab-manual-speed-dialog.cjs'],{stdio:'inherit'});

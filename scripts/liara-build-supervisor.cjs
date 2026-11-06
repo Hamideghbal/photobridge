@@ -7,21 +7,37 @@ function runBuild({command=process.execPath,args=['--expose-gc','scripts/liara-f
   return new Promise(resolve=>{
     const recent=[];
     let lastStage='starting',started=Date.now();
+    // Liara's log-view proxy can fail on very chatty builds; keep progress visible
+    // while logging only sparse milestones. All child lines remain in the error ring.
+    let stageStarts=0,stageOk=0,lastMilestoneAt=0;
     const child=spawn(command,args,{cwd,env,stdio:['ignore','pipe','pipe']});
     const remember=(line,stream)=>{
       const trimmed=String(line).slice(0,2500);
       recent.push(`[${stream}] ${trimmed}`);
       if(recent.length>160)recent.shift();
       if(/^\[PhotoBridge Docker build\] (?:START|OK|FAIL)\b/.test(trimmed)){
-        progress(trimmed);
-        if(trimmed.includes(' START '))lastStage=trimmed.replace(/^.* START /,'');
+        if(trimmed.includes(' START ')){
+          lastStage=trimmed.replace(/^.* START /,'');
+          stageStarts++;
+          const now=Date.now();
+          if(stageStarts===1 || now-lastMilestoneAt>=12000){
+            progress(trimmed);
+            lastMilestoneAt=now;
+          }
+        }else if(trimmed.includes(' OK ')){
+          stageOk++;
+          if(stageOk===1)progress(trimmed);
+        }else{
+          // Never suppress a real build FAIL.
+          progress(trimmed);
+        }
       } else if(/^Lab UI release prepared:|^Store UI release prepared:|^\[PhotoBridge Liara Fast Build\] (?:missing|main bundle accepted)/.test(trimmed)){
         progress(trimmed.slice(0,300));
       }
     };
     readline.createInterface({input:child.stdout,crlfDelay:Infinity}).on('line',line=>remember(line,'stdout'));
     readline.createInterface({input:child.stderr,crlfDelay:Infinity}).on('line',line=>remember(line,'stderr'));
-    const timer=setInterval(()=>progress(`[PhotoBridge Docker build] running ${Math.round((Date.now()-started)/1000)}s; latest stage: ${lastStage.slice(0,100)}`),intervalMs);
+    const timer=setInterval(()=>progress(`[PhotoBridge Docker build] running ${Math.round((Date.now()-started)/1000)}s; completed ${stageOk}/${stageStarts} steps; latest stage: ${lastStage.slice(0,100)}`),intervalMs);
     timer.unref();
     let finished=false;
     const stop=(code,signal,problem)=>{
@@ -34,7 +50,7 @@ function runBuild({command=process.execPath,args=['--expose-gc','scripts/liara-f
         for(const line of recent)error(line);
         resolve(code===null?(signal==='SIGKILL'?137:1):(code||1));
       }else{
-        progress(`[PhotoBridge Docker build] SUCCESS completed in ${Math.round((Date.now()-started)/1000)}s`);
+        progress(`[PhotoBridge Docker build] SUCCESS completed ${stageOk}/${stageStarts} steps in ${Math.round((Date.now()-started)/1000)}s`);
         resolve(0);
       }
     };

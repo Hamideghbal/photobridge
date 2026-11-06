@@ -1,6 +1,6 @@
 /* R1643 - compact, distinct per-order ledger conversion control. */
 .labPrepayOrderNotice{align-items:center}
-.labPrepayOrderNotice .pb1643LedgerAction{
+.labOrderMiniActions .pb1643LedgerAction{
  display:inline-flex!important;align-items:center!important;justify-content:center!important;
  min-height:30px!important;padding:5px 13px!important;margin:4px 0!important;
  border:1px solid #b2c9ed!important;border-radius:9px!important;
@@ -9,8 +9,8 @@
  box-shadow:0 2px 7px rgba(33,79,142,.06)!important;
  white-space:nowrap;cursor:pointer;
 }
-.labPrepayOrderNotice .pb1643LedgerAction:hover:not(:disabled){background:#e5efff!important;border-color:#83a9dc!important}
-.labPrepayOrderNotice .pb1643LedgerAction:disabled{opacity:.48!important;cursor:not-allowed!important}
+.labOrderMiniActions .pb1643LedgerAction:hover:not(:disabled){background:#e5efff!important;border-color:#83a9dc!important}
+.labOrderMiniActions .pb1643LedgerAction:disabled{opacity:.48!important;cursor:not-allowed!important}
 .pb1643LedgerConfirm{display:grid;gap:12px;direction:rtl;padding:2px 2px 4px;font-family:Vazirmatn,Tahoma,sans-serif}
 .pb1643LedgerConfirm strong{font-size:15px;font-weight:800;color:#162b45}
 .pb1643LedgerConfirm p{margin:0;font-size:13px;line-height:2;color:#52637b}
@@ -19,4 +19,4 @@
 .pb1643LedgerConfirm .modalActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-top:5px}
 .pb1643LedgerConfirm .modalActions button{min-height:38px;padding:7px 16px;border-radius:9px;font:750 12px/1.5 Vazirmatn,Tahoma,sans-serif}
 .pb1643LedgerConfirm .pb1643LedgerConfirmButton{background:#3461b6!important;border:1px solid #3461b6!important;color:#fff!important}
-@media(max-width:650px){.pb1643LedgerConfirm .modalActions button{flex:1 1 130px}.labPrepayOrderNotice .pb1643LedgerAction{width:auto!important}}
+@media(max-width:650px){.pb1643LedgerConfirm .modalActions button{flex:1 1 130px}.labOrderMiniActions .pb1643LedgerAction{width:auto!important}}

@@ -7,3 +7,60 @@ test('expired license is not bypassed by local business processing',async()=>{co
 
 test('independent offline invoice receives OFF namespace and can accept its own receipt',async()=>{const f=await fixture();try{const created=await f.call('/api/lab/invoices/manual',{customerId:f.customer,items:[{description:'چاپ مستقل آفلاین',quantity:2,unitPrice:100}]});assert.equal(created.status,200);assert.equal(created.data.invoice.number,'OFF-1');assert.match(created.data.invoice.offline_reference,/^OFF-[A-F0-9]{32}-INV-00000001$/);assert.equal(new LocalBusiness(f.store).state().invoices[created.data.invoice.id].number,created.data.invoice.offline_reference);assert.equal(created.data.invoice.document_authority,'offline');const paid=await f.call('/api/lab/finance/payments',{invoiceId:created.data.invoice.id,amount:50});assert.equal(paid.status,200);assert.equal(paid.data.payment.amount,50);assert.equal(f.calls,0);}finally{await f.close()}});
 test('shared online changes require a server acknowledgement and are never placed in the offline ledger/outbox',async()=>{let failWrite=false;const f=await fixture(true,async(url,options={})=>{if(url==='/api/lab/write-access')return Response.json({labId:'A',allowed:true,serverNow:new Date().toISOString(),activeUntil:new Date(Date.now()+86400000).toISOString()});if(options.method==='PATCH'){if(failWrite)throw Error('reply_unknown');const body=JSON.parse(options.body);return Response.json({order:{id:url.split('/').at(-1),status:body.status,updated_at:new Date().toISOString()}});}throw Error('unexpected URL '+url);});try{let result=await f.call('/api/lab/orders/'+f.order,{status:'printed'},'PATCH');assert.equal(result.status,200);assert(!result.data.localCommitted);assert.equal(new LocalBusiness(f.store).state().orders[f.order].status,'printed');failWrite=true;result=await f.call('/api/lab/orders/'+f.order,{status:'ready'},'PATCH');assert.equal(result.status,503);assert.equal(result.data.error,'shared_online_unconfirmed');assert.equal(f.store.rows().length,0);assert.equal(new LocalBusiness(f.store).state().events.length,0);}finally{await f.close()}});
+
+
+test('native /download aliases are local-only route markers and never go upstream',()=>{
+ const {remoteRequest}=require('../document-policy.cjs');
+ const store=new LabStore(':memory:');store.set('labId','A');store.set('deviceId',crypto.randomUUID());
+ try{
+  const order=crypto.randomUUID(),file=crypto.randomUUID();
+  const pairs=[
+   ['/api/lab/delegated-orders/download','/api/lab/delegated-orders'],
+   ['/api/lab/delegated-orders/'+order+'/files/presign/download','/api/lab/delegated-orders/'+order+'/files/presign'],
+   ['/api/lab/delegated-orders/'+order+'/submit/download','/api/lab/delegated-orders/'+order+'/submit'],
+   ['/api/lab/orders/'+order+'/download','/api/lab/orders/'+order],
+   ['/api/lab/delegated-orders/bootstrap?mode=print','/api/lab/delegated-orders/bootstrap?mode=print'],
+   // This is a REAL server download endpoint and must not be modified.
+   ['/api/lab/order-files/'+file+'/download','/api/lab/order-files/'+file+'/download'],
+   ['/api/lab/invoices/'+order+'/download','/api/lab/invoices/'+order+'/download']
+  ];
+  for(const [client,server] of pairs)assert.equal(remoteRequest(store,client,{}).url,server,client);
+ }finally{store.db.close()}
+});
+
+test('online local-device intake forwards creation, chosen size and details without /download suffix',async()=>{
+ const orderId=crypto.randomUUID(),fileId=crypto.randomUUID(),urls=[];
+ const f=await fixture(true,async (url,options={})=>{
+  urls.push(url);
+  if(url==='/api/lab/write-access')return Response.json({labId:'A',allowed:true,serverNow:new Date().toISOString(),activeUntil:new Date(Date.now()+86400000).toISOString()});
+  if(url==='/api/lab/delegated-orders'){
+   assert.equal(options.method,'POST');
+   const data=JSON.parse(options.body);assert.equal(data.mode,'print');assert.equal(data.localOnly,true);
+   return Response.json({ok:true,orderId,orderNumber:521,customerId:data.customerId});
+  }
+  if(url==='/api/lab/delegated-orders/'+orderId+'/files/presign'){
+   const data=JSON.parse(options.body);
+   assert.equal(data.clientFileId,fileId);assert.equal(data.printSizeId,f.size);
+   assert.equal(data.printType,'luster');assert.equal(data.localOnly,true);
+   return Response.json({fileId,storageMode:'device-local',state:'active'});
+  }
+  if(url==='/api/lab/orders/'+orderId)return Response.json({order:{id:orderId,number:521,customer_id:f.customer,status:'uploading',mode:'print',source:'lab_delegated'},files:[{id:fileId,original_name:'test.jpg',bytes:12,print_size_id:f.size,print_type:'luster'}]});
+  // Fixture has some cached reads but may request additional optional snapshots.
+  if(['GET',undefined].includes(options.method))return Response.json({});
+  return Response.json({error:'unexpected_upstream_path',url},{status:404});
+ });
+ try{
+  const clientOrderId=crypto.randomUUID();
+  let response=await f.call('/api/lab/delegated-orders/download',{clientOrderId,localOnly:true,customerId:f.customer,mode:'print'});
+  assert.equal(response.status,200);assert.equal(response.data.orderId,orderId);
+  response=await f.call('/api/lab/delegated-orders/'+orderId+'/files/presign/download',{clientFileId:fileId,localOnly:true,name:'test.jpg',bytes:12,printSizeId:f.size,printType:'luster'});
+  assert.equal(response.status,200);assert.equal(response.data.storageMode,'device-local');
+  response=await f.call('/api/lab/orders/'+orderId+'/download');
+  assert.equal(response.status,200);assert.equal(response.data.files[0].print_size_id,f.size);
+  assert(urls.includes('/api/lab/delegated-orders'));
+  assert(urls.includes('/api/lab/delegated-orders/'+orderId+'/files/presign'));
+  assert(urls.includes('/api/lab/orders/'+orderId));
+  assert.equal(urls.some(x=>x.endsWith('/download')),false,'native alias escaped to remote API');
+  assert.equal(f.store.rows().length,0,'online registration must not silently create a legacy offline outbox event');
+ }finally{await f.close()}
+});

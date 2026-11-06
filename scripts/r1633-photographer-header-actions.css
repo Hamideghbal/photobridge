@@ -1,0 +1,53 @@
+/* R1633 — Photographer desktop matches the final Windows Lab tab typography.
+   Lab R1174 uses 800 / 11px and muted #475467 for both header rows.
+   Only native desktop chrome and the embedded photographer print/album toolbar.
+   Icons, action buttons outside the tabs, Lab manager pages, and mobile stay unchanged. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1163ManagerRow>.pb1163ManagerAction,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary>.pb1163ManagerRow>button {
+  font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  letter-spacing:normal!important;
+  color:#475467!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button:is(.active,[aria-current="page"]),
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button:is(.active,[aria-current="page"]),
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1163ManagerRow>.pb1163ManagerAction:is(.active,[aria-current="page"]),
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary>.pb1163ManagerRow>button:is(.active,[aria-current="page"]) {
+  color:#315efb!important;
+ }
+ /* R1462 centered the new-order action with position:fixed and left:50%.
+    Keep the real, mounted action (and React click handler) in the third
+    toolbar, but let the RTL flex row place it at the physical right edge. */
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerPrintWorkspace:is(.pb1461Orders,.pb1464Album)>.photographerLabContextRail .photographerLabContextMain {
+  direction:rtl!important;
+  justify-content:flex-start!important;
+ }
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerPrintWorkspace:is(.pb1461Orders,.pb1464Album)>.photographerLabContextRail .photographerLabContextActions {
+  position:static!important;
+  inset:auto!important;
+  top:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  margin:0!important;
+  justify-content:flex-start!important;
+  justify-self:start!important;
+  align-self:center!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  max-width:100%!important;
+ }
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerPrintWorkspace.pb1464Album>.photographerLabContextRail #photographer-album-new-order-slot {
+  position:static!important;
+  inset:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  margin:0!important;
+  justify-self:start!important;
+  align-self:center!important;
+  flex:0 0 auto!important;
+ }
+}

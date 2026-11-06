@@ -18,14 +18,14 @@ function fixture({source=order(),membership={settlement_mode:'prepaid'},orders=[
   if(sql.includes("UPDATE lab_memberships SET settlement_mode='ledger'"))
    return {rowCount:1,rows:[{...membership,settlement_mode:'ledger'}]};
   if(sql.includes('FROM orders')&&sql.includes('ORDER BY id FOR UPDATE'))return{rowCount:orders.length,rows:orders};
-  if(sql.includes('FROM order_payment_receipts'))return {rowCount:receipts.length,rows:receipts};
-  if(sql.includes('JOIN finance_payments')&&!sql.includes('UPDATE orders'))return{rowCount:paidIds.length,rows:paidIds.map(order_id=>({order_id}))};
   if(sql.includes('UPDATE orders SET')){
    const source=orders.find(o=>o.id===params[0]);
    const protectedReceipt=receipts.some(r=>r.order_id===params[0]&&['uploading','pending','approved'].includes(r.status));
    const paid=paidIds.includes(params[0]);
    return protectedReceipt||paid?{rowCount:0,rows:[]}:{rowCount:1,rows:[{...source,settlement_mode:'ledger',payment_status:'not_required',status:'sent'}]};
   }
+  if(sql.includes('FROM order_payment_receipts'))return {rowCount:receipts.length,rows:receipts};
+  if(sql.includes('JOIN finance_payments')&&!sql.includes('UPDATE orders'))return{rowCount:paidIds.length,rows:paidIds.map(order_id=>({order_id}))};
   throw Error('unexpected SQL '+sql.slice(0,110));
  }})};
  const a={req:{method:'POST'},url:{pathname:'/api/lab/orders/'+id+'/photographer-ledger'},res:{},pool,labId:lab,a:{userId:'lab-admin'},bodyJson:async()=>body,

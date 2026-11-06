@@ -7,7 +7,7 @@ import {prepareLocalBatch,localBatchInsert,handleLocalBatch,localBatchPath} from
 const labId='11111111-1111-4111-8111-111111111111',
  orderId='22222222-2222-4222-8222-222222222222',
  customerId='33333333-3333-4333-8333-333333333333',
- sizeId='44444444-4444-4444-8444-444444444444';
+ sizeId='13x18';
 const order={id:orderId,mode:'print',status:'uploading',customer_id:customerId};
 const file=(n,copies=1)=>({clientFileId:'55555555-5555-4555-8555-'+String(n).padStart(12,'0'),
  name:'photo_'+n+'.jpg',relativePath:'photo_'+n+'.jpg',bytes:1234,contentType:'image/jpeg',
@@ -112,4 +112,12 @@ test('release payload has optimized, syntax-valid web and native finance and loc
   const hash=crypto.createHash('sha256').update(fs.readFileSync('dist/web/lab-desktop-ui/'+name)).digest('hex');
   assert.equal(row.sha256,hash);
  }
+});
+
+test('batch accepts catalog text and custom UUID size keys while retaining selection validation',()=>{
+ for(const size of ['13x18','10x15','44444444-4444-4444-8444-444444444444']){
+  const prepared=prepareLocalBatch([{...file(1),printSizeId:size}],opts);
+  assert.equal(prepared[0].rows[12],size);
+ }
+ for(const size of ['',null,'x'.repeat(201)])assert.throws(()=>prepareLocalBatch([{...file(1),printSizeId:size}],opts),/print_selection_required/);
 });

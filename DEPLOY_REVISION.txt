@@ -1,1 +1,1 @@
-2026-11-06-r1639-liara-build-log-throttle
+2026-11-06-r1640-manual-intake-text-size-batch-fix

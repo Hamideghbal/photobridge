@@ -14,7 +14,9 @@ export function prepareLocalBatch(files,{labId,order,safeFileName,maxBytes}){
   const copies=Number(b.printCopies??1),size=String(b.printSizeId||''),type=String(b.printType||'');
   const bytes=Number(b.bytes||0);
   if(!Number.isInteger(copies)||copies<1||copies>99)throw fail('invalid_print_copies');
-  if(!UUID.test(size))throw fail('print_selection_required');
+  // Print-size IDs are catalog text keys (for example '13x18'), not file UUIDs.
+  // The authenticated handler checks each key with labCanUsePrintSize below.
+  if(!size||size.length>200)throw fail('print_selection_required');
   if(!['luster','silk','metallic'].includes(type))throw fail('print_selection_required');
   if(!Number.isSafeInteger(bytes)||bytes<1||bytes>maxBytes)throw fail('invalid_file_size',413);
   const sourceName=String(b.name||'file');

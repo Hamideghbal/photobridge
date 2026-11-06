@@ -33,6 +33,7 @@ test('online local-device intake forwards creation, chosen size and details with
  const f=await fixture(true,async (url,options={})=>{
   urls.push(url);
   if(url==='/api/lab/write-access')return Response.json({labId:'A',allowed:true,serverNow:new Date().toISOString(),activeUntil:new Date(Date.now()+86400000).toISOString()});
+  if(url==='/api/lab/delegated-orders/bootstrap?mode=print')return Response.json({lab:{id:'A'},customers:[{id:f.customer,name:'مشتری به‌روز'}],printSizes:[{id:f.size,label:'۱۳×۱۸',luster:1000}]});
   if(url==='/api/lab/delegated-orders'){
    assert.equal(options.method,'POST');
    const data=JSON.parse(options.body);assert.equal(data.mode,'print');assert.equal(data.localOnly,true);
@@ -50,6 +51,11 @@ test('online local-device intake forwards creation, chosen size and details with
   return Response.json({error:'unexpected_upstream_path',url},{status:404});
  });
  try{
+  let current=await f.call('/api/lab/delegated-orders/bootstrap?mode=print');
+  assert.equal(current.status,200);
+  assert.equal(current.data.printSizes[0].id,f.size,'print sizes come from server when online');
+  assert.equal(current.data.customers[0].name,'مشتری به‌روز');
+  assert.equal(JSON.parse(Buffer.from(f.store.cached('/api/lab/delegated-orders/bootstrap?mode=print').body,'base64').toString()).printSizes[0].id,f.size);
   const clientOrderId=crypto.randomUUID();
   let response=await f.call('/api/lab/delegated-orders/download',{clientOrderId,localOnly:true,customerId:f.customer,mode:'print'});
   assert.equal(response.status,200);assert.equal(response.data.orderId,orderId);

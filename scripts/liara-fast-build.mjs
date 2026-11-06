@@ -955,7 +955,9 @@ runR1314(process.execPath,['--test','scripts/test-r1649-photographer-album-card.
 await deployStep('./enable-r1652-photographer-settings-archive.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1652-photographer-settings-archive.cjs'],{stdio:'inherit'});
 
-// R1653: stabilize desktop print/finance header, remove duplicate financial title,
-// and reuse loaded photographer tariff/location/invitation pages.
-await deployStep('./enable-r1653-photographer-header-settings-speed.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1653-photographer-desktop-stability.cjs'],{stdio:'inherit'});
+// R1655 SAFETY ROLLBACK: R1653 rewrote desktop click state and cached another
+// settings iframe, breaking the print/album/archive/tariff mappings. Do NOT
+// invoke R1653 or R1654. R1648's unsafe index-based click override is disabled
+// in its installer; its R1651 standalone invoice-frame fallback remains.
+await deployStep('./enable-r1655-restore-photographer-navigation.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1655-restore-photographer-navigation.cjs'],{stdio:'inherit'});

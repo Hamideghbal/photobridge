@@ -918,3 +918,5 @@ await deployStep('./enable-r1633-photographer-header-actions.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1633-photographer-header-actions.cjs'],{stdio:'inherit'});
 
 await deployStep('./enable-r1635-photographer-inline-settings.mjs');
+// R1636: catch hidden iframe settings and broken native UI payloads in Docker builds.
+runR1314(process.execPath,['--test','scripts/test-r1636-photographer-inline-settings.cjs'],{stdio:'inherit'});

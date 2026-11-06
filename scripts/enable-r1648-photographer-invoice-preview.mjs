@@ -22,8 +22,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'F=Math.min(1,k/C,E/w);f(Math.max(.58,F))',
    'F=t==="customer"&&pb1648InvoicePortal(t)!==document.body?Math.min(1.12,k/C):Math.min(1,k/C,E/w);f(Math.max(.58,F))',
    'customer preview scale');
-  if(!component.endsWith(',document.body)'))throw Error('R1648 unexpected preview portal suffix '+root);
-  component=component.slice(0,-',document.body)'.length)+',pb1648InvoicePortal(t))';
+  if(!component.endsWith(',document.body)}'))throw Error('R1648 unexpected preview portal suffix '+root);
+  component=component.slice(0,-',document.body)}'.length)+',pb1648InvoicePortal(t))}';
   const helper=[
    'function pb1648InvoicePortal(role){',
    ' if(role==="customer"&&window.parent!==window&&new URLSearchParams(location.search).get("pbDesktopContent")==="1"){',

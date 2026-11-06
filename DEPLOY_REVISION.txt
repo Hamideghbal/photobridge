@@ -1,1 +1,1 @@
-2026-11-06-r1654-optional-root-observer-build-fix
+2026-11-06-r1655-rollback-photographer-tab-routing-regression

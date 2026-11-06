@@ -100,7 +100,8 @@ test('website, Windows and lab-only API include settlement action with valid man
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const code=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
   assert.match(code,/PB1643 order-ledger action/);
-  assert.match(code,/دفتری کردن این سفارش/);
+  assert.match(code,/دفتری کردن سفارش/);
+  assert.match(code,/miniInvoiceBtn pb1643LedgerAction/);
   assert.match(code,/هیچ مبلغی صفر یا تسویه نمی‌شود/);
   assert.match(fs.readFileSync(root+'/index.html','utf8'),/photobridge-r1643-order-ledger\.css/);
  }

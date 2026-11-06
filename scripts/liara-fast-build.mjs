@@ -959,4 +959,5 @@ runR1314(process.execPath,['--test','scripts/test-r1652-photographer-settings-ar
 // settings iframe, breaking the print/album/archive/tariff mappings. Do NOT
 // invoke R1653 or R1654. R1648's unsafe index-based click override is disabled
 // in its installer; its R1651 standalone invoice-frame fallback remains.
+await deployStep('./enable-r1655-restore-photographer-navigation.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1655-restore-photographer-navigation.cjs'],{stdio:'inherit'});

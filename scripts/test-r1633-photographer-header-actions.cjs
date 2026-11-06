@@ -21,7 +21,8 @@ test('new print and album order actions stay attached to RTL right toolbar',()=>
  assert.match(css,/transform:none!important/);
  assert.match(css,/justify-content:flex-start!important/);
  assert.match(css,/#photographer-album-new-order-slot/);
- assert.doesNotMatch(css,/left:50%/,'no new centering rule');
+ const declarations=css.replace(/\/\*[\s\S]*?\*\//g,''); // CSS comments are not active declarations.
+ assert.doesNotMatch(declarations,/(?:^|[{;])\s*left\s*:\s*50%\s*(?:!important)?\s*;/m,'no new centering rule');
 });
 test('both deployed entry points include the stylesheet and Windows UI manifest tracks it',()=>{
  const name='photobridge-r1633-photographer-header-actions.css';

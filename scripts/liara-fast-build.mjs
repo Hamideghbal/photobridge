@@ -940,3 +940,8 @@ runR1314(process.execPath,['--test','scripts/test-r1645-ledger-card-update-dialo
 // from the receipt/approval order itself. Never zero their invoices or payments.
 await deployStep('./enable-r1646-photographer-ledger.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1646-photographer-ledger.cjs'],{stdio:'inherit'});
+
+// R1648: keep photographer desktop invoice visible above its native chrome and
+// stabilize print/finance tabs without changing any financial operations.
+await deployStep('./enable-r1648-photographer-invoice-preview.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1648-photographer-invoice.cjs'],{stdio:'inherit'});

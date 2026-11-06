@@ -912,3 +912,6 @@ await deployStep('./enable-r1631-order-exit.mjs');
 
 // Dedicated photographer finance third header and lab-parity desktop navigation.
 await deployStep('./enable-r1632-three-header.mjs');
+
+// Match the photographer's Windows header text to the lab and right-align new print/album order actions.
+await deployStep('./enable-r1633-photographer-header-actions.mjs');

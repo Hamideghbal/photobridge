@@ -91,8 +91,11 @@ test('website, Windows and lab-only API include settlement action with valid man
  const server=fs.readFileSync('dist/api/server.js','utf8');
  const outer=server.indexOf("if (url.pathname.startsWith('/api/lab/'))");
  const call=server.indexOf('handleLabLedgerOverride({req,url,res,pool,labId,a,bodyJson');
- const orderGet=server.indexOf('const labOrder = url.pathname.match(',call);
- assert(outer>=0&&call>outer&&orderGet>call);
+ const suspensionGuard=server.indexOf('labAccess.rows[0].suspended',outer);
+ const deviceBoundary=server.indexOf('const requestDeviceId =',outer);
+ assert(outer>=0&&suspensionGuard>outer&&call>suspensionGuard&&deviceBoundary>call,
+  'ledger route must be inside lab-admin auth, after the suspension check and before device handlers');
+ assert.equal((server.match(/PB1643 per-order ledger settlement/g)||[]).length,1);
  assert.match(server,/import \{handleLabLedgerOverride\} from '.\/lab-order-ledger-override\.js'/);
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const code=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
@@ -107,4 +110,13 @@ test('website, Windows and lab-only API include settlement action with valid man
   assert(row,'missing Windows manifest '+name);
   assert.equal(row.sha256,crypto.createHash('sha256').update(fs.readFileSync(root+'/'+name)).digest('hex'));
  }
+});
+
+test('R1644 build insertion uses the stable post-auth lab device boundary, not a rewritten order declaration',()=>{
+ const script=fs.readFileSync('scripts/enable-r1643-order-ledger.mjs','utf8');
+ assert(script.includes("const deviceAnchor='const requestDeviceId ='"));
+ assert(script.includes('labAccess.rows[0].suspended'));
+ assert(script.includes("requireRole(a, 'lab_admin')"));
+ assert(script.includes('handleLabSiteManagement'));
+ assert(!script.includes('const routeAnchor='));
 });

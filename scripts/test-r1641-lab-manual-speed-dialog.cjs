@@ -12,10 +12,10 @@ test('copy-only intake avoids hashing when destination is empty, and avoids reha
   async arrayBuffer(){fileReads++;return Uint8Array.from([1,2,3]).buffer}
  };
  const document={
-  createElement:()=>({files:[original],click(){this.onchange()},remove(){},setAttribute(){}}),
+  createElement:()=>({files:[original],style:{},listeners:{},addEventListener(k,fn){this.listeners[k]=fn},click(){this.listeners.change?.()},remove(){},setAttribute(){}}),
   body:{append(){}}
  };
- const sandbox={window:{pbLabLocalIntakeStorage:{fileName:n=>n}},document,crypto:crypto.webcrypto,WeakMap,WeakSet,Uint8Array,Error,Promise};
+ const sandbox={window:{pbLabLocalIntakeStorage:{fileName:n=>n}},document,crypto:crypto.webcrypto,WeakMap,WeakSet,Uint8Array,Error,Promise,setTimeout,addEventListener(){},removeEventListener(){}};
  vm.runInNewContext(sourceText,sandbox,{filename:helper});
  const api=sandbox.window.pb1466IntakeMove;
  const picked=await api.pick('copy');
@@ -46,9 +46,9 @@ test('copy-only intake avoids hashing when destination is empty, and avoids reha
 test('an unverified copy-only order is still validated before finish reports success',async()=>{
  const src=fs.readFileSync(web+helper,'utf8');
  const original={name:'b.jpg',size:3,lastModified:1,type:'image/jpeg',async arrayBuffer(){return Uint8Array.from([1,2,3]).buffer}};
- const document={createElement:()=>({files:[original],click(){this.onchange()},remove(){}}),body:{append(){}}};
+ const document={createElement:()=>({files:[original],style:{},listeners:{},addEventListener(k,fn){this.listeners[k]=fn},click(){this.listeners.change?.()},remove(){},setAttribute(){}}),body:{append(){}}};
  const w={pbLabLocalIntakeStorage:{fileName:n=>n}};
- vm.runInNewContext(src,{window:w,document,crypto:crypto.webcrypto,WeakMap,WeakSet,Uint8Array,Error,Promise},{filename:helper});
+ vm.runInNewContext(src,{window:w,document,crypto:crypto.webcrypto,WeakMap,WeakSet,Uint8Array,Error,Promise,setTimeout,addEventListener(){},removeEventListener(){}},{filename:helper});
  await w.pb1466IntakeMove.pick('copy');
  const bad={size:3,async arrayBuffer(){return Uint8Array.from([1,2,0]).buffer}};
  const target={item:{file:original},file:{original_name:'b.jpg'},target:{dir:{name:'a',async getFileHandle(){return {getFile:async()=>bad,isSameEntry:async()=>false}}}}};

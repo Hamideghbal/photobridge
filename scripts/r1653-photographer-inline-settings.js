@@ -85,8 +85,9 @@
   frame.title=item.label;frame.dataset.pb1653Settings=item.key;
   frame.setAttribute('loading','eager');frame.hidden=true;frame.style.display='none';
   frame.addEventListener('load',()=>{
-   const url=frame.contentWindow?.location?.href;
-   if(url==='about:blank')return;
+   let href='';
+   try{href=frame.contentWindow?.location?.href||''}catch{failure(item.key,frame);return}
+   if(!href||href==='about:blank')return;
    if(selected===item.key)displayReady(item.key,frame);
   });
   frame.addEventListener('error',()=>failure(item.key,frame));

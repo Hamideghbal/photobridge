@@ -66,6 +66,28 @@
    max-height:none!important;
    min-height:0!important;
  }
+ /* The lab-directory / "define lab" view can also be rendered directly
+    outside Settings. Its own list must scroll within the embedded frame. */
+ html.pb1126Embedded body #root main.photographerMain > .rolePageScrollArea:has(>.photographerLabDirectory),
+ html.pb1126Embedded body #root main.photographerMain > .photographerRolePageScrollArea:has(>.photographerLabDirectory) {
+   display:block!important;
+   min-height:0!important;
+   max-height:100%!important;
+   flex:1 1 auto!important;
+   overflow-y:auto!important;
+   overflow-x:hidden!important;
+   overscroll-behavior-y:contain!important;
+   scrollbar-width:thin!important;
+   padding-bottom:48px!important;
+ }
+ html.pb1126Embedded body #root main.photographerMain .photographerLabDirectory {
+   display:block!important;
+   height:auto!important;
+   max-height:none!important;
+   min-height:0!important;
+   overflow:visible!important;
+   padding-bottom:28px!important;
+ }
  /* Match the laboratory archive's base two-column layout and calendar
     density instead of the photographer-specific compact overrides. */
  html.pb1126Embedded body #root .photographerArchiveWorkspace .archiveLayout {

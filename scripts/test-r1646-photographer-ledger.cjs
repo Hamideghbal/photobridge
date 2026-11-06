@@ -22,7 +22,8 @@ function fixture({source=order(),membership={settlement_mode:'prepaid'},orders=[
    const source=orders.find(o=>o.id===params[0]);
    const protectedReceipt=receipts.some(r=>r.order_id===params[0]&&['uploading','pending','approved'].includes(r.status));
    const paid=paidIds.includes(params[0]);
-   return protectedReceipt||paid?{rowCount:0,rows:[]}:{rowCount:1,rows:[{...source,settlement_mode:'ledger',payment_status:'not_required',status:'sent'}]};
+   return protectedReceipt||paid?{rowCount:0,rows:[]}:{rowCount:1,rows:[{...source,settlement_mode:'ledger',payment_status:'not_required',
+     status:source.status==='downloaded'?'downloaded':'sent'}]};
   }
   if(sql.includes('FROM order_payment_receipts'))return {rowCount:receipts.length,rows:receipts};
   if(sql.includes('JOIN finance_payments')&&!sql.includes('UPDATE orders'))return{rowCount:paidIds.length,rows:paidIds.map(order_id=>({order_id}))};
@@ -86,6 +87,37 @@ test('without financial receipt, the clicked waiting order is released, and late
  assert.equal(repeat.history.length,0);
 });
 
+test('R1647: unpaid downloaded proforma can change to ledger without rewinding file status',async()=>{
+ const {handleLabPhotographerLedger:run,photographerLedgerOrderEligibility:eligible}=await policy();
+ const downloaded=order('1',{status:'downloaded',downloaded_at:'2026-11-06T16:00:00Z'});
+ assert.equal(eligible(downloaded,'',false).eligible,true);
+ assert.equal(eligible({...downloaded,status:'printing'},'',false).eligible,false);
+ assert.equal(eligible({...downloaded,printed_at:'2026-11-06T16:05:00Z'},'',false).eligible,false);
+ const t=fixture({source:downloaded,orders:[downloaded]});
+ await run(t.args);
+ assert.equal(t.response().status,200);
+ assert.equal(t.response().data.releasedCount,1);
+ assert.deepEqual(t.response().data.releasedOrderIds,[downloaded.id]);
+ assert.equal(t.history.length,1);
+ assert.equal(t.history[0].status,'downloaded');
+ const sql=t.calls.find(c=>c.sql.startsWith('UPDATE orders SET')).sql;
+ assert.match(sql,/status=CASE WHEN status='awaiting_payment' THEN 'sent' ELSE status END/);
+ assert.match(sql,/status='downloaded'/);
+ assert(!t.calls.some(c=>/UPDATE (invoices|finance_payments)/.test(c.sql)));
+});
+
+test('R1647: a pending receipt on a downloaded order remains pending while member becomes ledger',async()=>{
+ const {handleLabPhotographerLedger:run}=await policy();
+ const downloaded=order('1',{status:'downloaded',downloaded_at:'2026-11-06T16:00:00Z',payment_status:'receipt_pending'});
+ const t=fixture({source:downloaded,orders:[downloaded],receipts:[{order_id:id,status:'pending'}]});
+ await run(t.args);
+ assert.equal(t.response().status,200);
+ assert.equal(t.response().data.releasedCount,0);
+ assert.equal(t.response().data.pendingReceiptCount,1);
+ assert(!t.calls.some(c=>c.sql.startsWith('UPDATE orders SET')));
+ assert(t.calls.some(c=>c.sql.includes('UPDATE lab_memberships')));
+});
+
 test('account action validates POST, correct body, scoped member before changing settlement',async()=>{
  const {handleLabPhotographerLedger:run}=await policy();
  for(const body of [{settlementMode:'prepaid'},{},null]){
@@ -115,11 +147,13 @@ test('new API route follows lab-admin permission checks; cards, detail, receipt 
   assert(js.includes('pb1646LedgerFromReceipt'));
   assert(js.includes('رسیدهای در حال ارسال یا بررسی'));
   assert(js.includes('photographer_settlement_mode'));
+  assert(js.includes('["awaiting_payment","downloaded"].includes(String(le.status||""))'));
+  assert(js.includes('["awaiting_payment","downloaded"].includes(String(y.order.status||""))'));
   assert(js.includes('حساب عکاسی دفتری شد · رسید در انتظار بررسی'));
   assert(js.includes('حساب عکاسی اکنون دفتری است'));
   const html=fs.readFileSync(root+'/index.html','utf8');
-  assert(html.includes('orderLedger=r1646'));
-  assert(html.includes('photobridge-r1643-order-ledger.css?v=r1646'));
+  assert(html.includes('orderLedger=r1647'));
+  assert(html.includes('photobridge-r1643-order-ledger.css?v=r1647'));
  }
  const root='dist/web/lab-desktop-ui',manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
  for(const name of ['assets/index-UIRefine-v655-r84.js','index.html','photobridge-r1643-order-ledger.css']){

@@ -1,0 +1,110 @@
+/* R1638 — Photographer Windows: remove duplicated inner settings navigation and
+   make the eight invoice fields line up at every desktop viewport width.
+   This is scoped to the embedded photographer workspace, not Lab, Store or mobile. */
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+  /* The compiled site CSS includes a more-specific display:grid!important rule
+     for .rolePageScrollArea > .settingsWorkspace > .photographerSettingsTabs.
+     Override that exact structure here rather than relying on the earlier
+     unscoped .photographerSettingsTabs selector. */
+  html.pb1126Embedded body #root .rolePageScrollArea > .settingsWorkspace.photographerSettings > .photographerSettingsTabs,
+  html.pb1126Embedded body #root .rolePageScrollArea > .settingsWorkspace.photographerSettings > aside.settingsNav,
+  html.pb1126Embedded body #root .photographerRolePageScrollArea > .settingsWorkspace.photographerSettings > .photographerSettingsTabs {
+    display:none!important;
+    visibility:hidden!important;
+  }
+  html.pb1126Embedded body #root .rolePageScrollArea > .settingsWorkspace.photographerSettings {
+    display:block!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+  }
+  html.pb1126Embedded body #root .rolePageScrollArea > .settingsWorkspace.photographerSettings > .settingsBody {
+    display:block!important;
+    grid-column:1/-1!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+
+  /* Customer invoices are rendered with EIGHT direct child cells, but the
+     shared 1250px/900px rules reduce the grid to seven/three columns and
+     hide fields. Keep all eight columns and scroll the records horizontally. */
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard {
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows {
+    display:block!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    scrollbar-width:thin;
+    scrollbar-color:#c1cde0 transparent;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow {
+    box-sizing:border-box!important;
+    display:grid!important;
+    width:max(100%,1060px)!important;
+    min-width:1060px!important;
+    grid-template-columns:78px minmax(148px,1fr) 82px 112px 108px 114px 118px 168px!important;
+    gap:9px!important;
+    padding:10px 12px!important;
+    align-items:center!important;
+    direction:rtl!important;
+    border-bottom:1px solid #e6ecf4!important;
+    background:#fff!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow:nth-child(even) {
+    background:#f9fbfe!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > div:not(.invoiceActionStack) {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+    text-align:center!important;
+    min-width:0!important;
+    gap:3px!important;
+  }
+  /* Cancel the shared responsive rule which hides the seventh (balance)
+     and third-through-seventh invoice fields at narrower widths. */
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > div:nth-child(n+3):nth-child(-n+7) {
+    display:flex!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > div:not(.invoiceActionStack) > :is(small,b) {
+    box-sizing:border-box!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    text-align:center!important;
+    line-height:1.55!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > div:not(.invoiceActionStack) > small {
+    font-size:10px!important;
+    color:#667085!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > div:not(.invoiceActionStack) > b {
+    font-size:11px!important;
+    color:#344054!important;
+    overflow-wrap:anywhere!important;
+    font-variant-numeric:tabular-nums;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > .invoiceActionStack {
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    min-width:0!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > .invoiceActionStack button {
+    min-height:30px!important;
+    white-space:nowrap!important;
+  }
+}

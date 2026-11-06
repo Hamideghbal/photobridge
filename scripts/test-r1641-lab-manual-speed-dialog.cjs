@@ -70,7 +70,7 @@ test('native invoice progress actions disappear only during issuance and return 
  vm.runInNewContext(source,{window:{},document,MutationObserver,requestAnimationFrame:cb=>cb(),Set,RegExp},{filename:busy});
  assert.equal(retry.classList.contains('pb1641HideRecovery'),true);
  assert.equal(cancel.classList.contains('pb1641HideRecovery'),true);
- modal.textContent='صدور فاکتور با خطا مواجه شد. تلاش مجدد انصراف';
+ modal.textContent='در حال صدور فاکتور · خطا در ارتباط با سرور. تلاش مجدد انصراف';
  observer();
  assert.equal(retry.classList.contains('pb1641HideRecovery'),false);
  assert.equal(cancel.classList.contains('pb1641HideRecovery'),false);

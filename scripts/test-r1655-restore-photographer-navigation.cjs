@@ -26,6 +26,8 @@ test('R1655: restore the original R1635 settings controller and prevent R1653 do
   const html=fs.readFileSync(root+'/index.html','utf8');
   const actual=fs.readFileSync(root+'/photobridge-r1635-photographer-inline-settings.js','utf8');
   assert.equal(actual,legacy,root+' must serve the original settings controller');
+  assert.equal(html.split('routing=r1655').length-1,1,'restored desktop nav must bypass stale cache: '+root);
+  assert.equal(html.split('settingsRollback=r1655').length-1,1,'restored settings must bypass stale cache: '+root);
   assert(!html.includes('speed=r1653'),'bad R1653 cached settings script loaded: '+root);
   assert(!html.includes('stable=r1653'),'bad R1653 tab/nav patch loaded: '+root);
   assert(!html.includes('pb1653FirstPaint'),'bad early header injected: '+root);
@@ -52,6 +54,7 @@ test('R1655: release build must not invoke broken R1653 transformer or its obsol
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  assert(!build.includes("await deployStep('./enable-r1653-photographer-header-settings-speed.mjs')"));
  assert(!build.includes("['--test','scripts/test-r1653-photographer-desktop-stability.cjs']"));
+ assert.match(build,/await deployStep\('\.\/enable-r1655-restore-photographer-navigation\.mjs'\)/);
  assert.match(build,/scripts\/test-r1655-restore-photographer-navigation\.cjs/);
  const root='dist/web/lab-desktop-ui';
  const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));

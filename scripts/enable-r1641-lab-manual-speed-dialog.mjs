@@ -9,7 +9,13 @@ const helper='photobridge-r1466-intake-move.js';
 const busyName='photobridge-r1641-native-invoice-busy.js';
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 for(const root of roots){
- fs.copyFileSync('scripts/r1466-intake-move.js',root+'/'+helper);
+ // Keep R1571's Chrome 109 / Windows 7 picker and other preceding patches intact.
+ // The optimized helper is already copied into the build by R1468/R1469/R1470,
+ // and R1571 re-copies its patched version to the native installer.
+ const compiled=fs.readFileSync(root+'/'+helper,'utf8');
+ if(!compiled.includes('PB1641 safe manual intake fast-path')||
+    !compiled.includes('R1571 browser photo copy compatibility'))
+  throw Error('R1641 expected optimized Windows 7-compatible manual helper in '+root);
  const indexPath=root+'/index.html';
  let html=fs.readFileSync(indexPath,'utf8');
  const re=/(photobridge-r1466-intake-move\.js\?[^"'<\s]*)/g;

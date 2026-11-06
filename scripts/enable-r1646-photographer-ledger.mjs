@@ -64,7 +64,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'account success message');
   component=replaceOne(component,
    'le.settlement_mode==="prepaid"&&le.payment_status!=="paid"&&le.status==="awaiting_payment"&&',
-   'le.settlement_mode==="prepaid"&&le.status==="awaiting_payment"&&String(le.photographer_settlement_mode||"prepaid")!=="ledger"&&',
+   'le.settlement_mode==="prepaid"&&le.payment_status!=="paid"&&["awaiting_payment","downloaded"].includes(String(le.status||""))&&String(le.photographer_settlement_mode||"prepaid")!=="ledger"&&',
    'card visibility');
   component=replaceOne(component,
    'disabled:E===le.id||le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||"")),',
@@ -79,7 +79,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // show a stable status instead of offering a repeated conversion.
   component=replaceOne(component,
    'children:"دفتری کردن حساب عکاسی"}),',
-   'children:"دفتری کردن حساب عکاسی"}),le.settlement_mode==="prepaid"&&le.status==="awaiting_payment"&&String(le.photographer_settlement_mode||"") ==="ledger"&&e.jsx("span",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی دفتری شد · رسید در انتظار بررسی"}),',
+   'children:"دفتری کردن حساب عکاسی"}),le.settlement_mode==="prepaid"&&le.payment_status==="receipt_pending"&&["awaiting_payment","downloaded"].includes(String(le.status||""))&&String(le.photographer_settlement_mode||"") ==="ledger"&&e.jsx("span",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی دفتری شد · رسید در انتظار بررسی"}),',
    'account changed confirmation on card');
   component=replaceOne(component,
    'title:"تبدیل سفارش #"+V(pb1643LedgerOrder.number)+" به حساب دفتری",',
@@ -103,7 +103,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'confirm label');
   // The order DETAILS panel shows financial/prepay controls above the card list.
   const detailAnchor='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"})]})';
-  const detailNext='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"}),y.order.status==="awaiting_payment"&&String(y.order.photographer_settlement_mode||"prepaid")!=="ledger"&&e.jsx("button",{type:"button",className:"pb1643LedgerAction",onClick:()=>{pb1643SetLedgerOrder(y.order);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"}),y.order.status==="awaiting_payment"&&y.order.photographer_settlement_mode==="ledger"&&e.jsx("small",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی اکنون دفتری است؛ رسید این سفارش هنوز نیاز به بررسی دارد."})]})';
+  const detailNext='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"}),y.order.settlement_mode==="prepaid"&&y.order.payment_status!=="paid"&&["awaiting_payment","downloaded"].includes(String(y.order.status||""))&&String(y.order.photographer_settlement_mode||"prepaid")!=="ledger"&&e.jsx("button",{type:"button",className:"pb1643LedgerAction",onClick:()=>{pb1643SetLedgerOrder(y.order);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"}),y.order.settlement_mode==="prepaid"&&y.order.payment_status==="receipt_pending"&&["awaiting_payment","downloaded"].includes(String(y.order.status||""))&&y.order.photographer_settlement_mode==="ledger"&&e.jsx("small",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی اکنون دفتری است؛ رسید این سفارش هنوز نیاز به بررسی دارد."})]})';
   component=replaceOne(component,detailAnchor,detailNext,'detail financial action');
   // Two view modes each expose a receipt-approval modal. Keep the new choice
   // next to reject/approve, not hidden in a global settings page.
@@ -140,9 +140,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const htmlPath=root+'/index.html';
  let html=read(htmlPath);
  if(!html.includes(cssName))throw Error('R1646 missing ledger action CSS link '+root);
- html=html.replace(/photobridge-r1643-order-ledger\.css\?v=r[0-9]+/g,cssName+'?v=r1646');
- html=html.replace(/&orderLedger=r[0-9]+/g,'&orderLedger=r1646');
- if(!html.includes('orderLedger=r1646')||!html.includes(cssName+'?v=r1646'))
+ html=html.replace(/photobridge-r1643-order-ledger\.css\?v=r[0-9]+/g,cssName+'?v=r1647');
+ html=html.replace(/&orderLedger=r[0-9]+/g,'&orderLedger=r1647');
+ if(!html.includes('orderLedger=r1647')||!html.includes(cssName+'?v=r1647'))
   throw Error('R1646 ledger cache markers absent '+root);
  write(htmlPath,html);
  if(root.endsWith('lab-desktop-ui')){
@@ -158,4 +158,4 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   write(mp,JSON.stringify(m));
  }
 }
-console.log('[R1646] Lab account-wide ledger conversion on card, order detail and receipt approval; finance preserved');
+console.log('[R1647] Lab ledger action visible for unpaid downloaded and awaiting-payment orders; finance preserved');

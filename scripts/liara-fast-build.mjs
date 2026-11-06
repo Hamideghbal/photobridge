@@ -915,3 +915,4 @@ await deployStep('./enable-r1632-three-header.mjs');
 
 // Match the photographer's Windows header text to the lab and right-align new print/album order actions.
 await deployStep('./enable-r1633-photographer-header-actions.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1633-photographer-header-actions.cjs'],{stdio:'inherit'});

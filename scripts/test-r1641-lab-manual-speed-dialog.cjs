@@ -86,5 +86,19 @@ test('web and Windows helper hashes match; installed manifest includes the new b
   assert.equal(entry.sha256,crypto.createHash('sha256').update(fs.readFileSync(native+name)).digest('hex'));
  }
  assert.match(fs.readFileSync(native+'index.html','utf8'),/photobridge-r1641-native-invoice-busy\.js\?v=r1641/);
- assert.match(fs.readFileSync(web+helper,'utf8'),/PB1641 safe manual intake fast-path/);
+ assert.match(fs.readFileSync(web+helper,'utf8'),/PB1642 late intake verification optimization/);
+});
+
+test('R1504 consumes the original helper; R1642 patches only late assembled assets',()=>{
+ const source=fs.readFileSync('scripts/r1466-intake-move.js','utf8');
+ const web=fs.readFileSync('dist/web/photobridge-r1466-intake-move.js','utf8');
+ const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
+ assert.match(source,/PB1504 per-photo source mode/);
+ assert.doesNotMatch(source,/PB1642 late intake verification optimization/);
+ assert.match(web,/PB1642 late intake verification optimization/);
+ assert.match(web,/R1571 browser photo copy compatibility/);
+ const r1504=build.indexOf('enable-r1504-per-photo-copy-move.mjs');
+ const r1571=build.indexOf('enable-r1571-win7-photo-picker.mjs');
+ const r1641=build.indexOf('enable-r1641-lab-manual-speed-dialog.mjs');
+ assert(r1504>=0&&r1571>r1504&&r1641>r1571);
 });

@@ -8,6 +8,8 @@ test('R1652 embedded photographer location and lab tariff pages have a real vert
  assert.match(css,/standalonePhotographerSettings/);
  assert.match(css,/photographerPricingSettings/);
  assert.match(css,/photographerLocationSettings/);
+ assert.match(css,/photographerLabDirectory/);
+ assert.match(css,/\.rolePageScrollArea:has\(>\.photographerLabDirectory\)/);
  assert.match(css,/settingsWorkspace\.photographerSettings > \.settingsBody/);
  assert.match(css,/overflow-y:auto!important/);
  assert.match(css,/flex:1 1 auto!important/);

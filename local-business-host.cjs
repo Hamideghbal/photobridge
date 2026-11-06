@@ -20,6 +20,24 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    if(!nativeStorage||!Array.isArray(files)||!files.length||files.length!==order?.files?.length||new Set(files.map(f=>JSON.stringify([f.rootId,f.parts]))).size!==files.length)throw Object.assign(Error('ذخیرهٔ عکس‌ها باید کامل و بررسی شود.'),{code:'local_files_not_verified',status:409});
    for(const file of files){file.sha256=await require('./local-file-proof.cjs').fileProof(nativeStorage,file);same();}
   }
+  // On reconnect, do not keep presenting the offline print-size snapshot:
+  // it may contain sizes the server has since disabled or renamed. Fetch the
+  // current bootstrap before a fresh online walk-in, but retain offline-only
+  // customer profiles and always fall back to the local cache on outage.
+  if(req.method==='GET'&&p==='/api/lab/delegated-orders/bootstrap'&&!offline&&request){
+   try{
+    const upstream=await request(req.url,{signal:AbortSignal.timeout(3500)});
+    if(upstream.ok){
+     const live=await upstream.json();same();
+     if(Array.isArray(live.printSizes)&&Array.isArray(live.customers)){
+      const localCustomers=Object.values(engine.state().customers).filter(c=>c.origin_offline===true&&!c.serverId&&!c.remote);
+      const seen=new Set(live.customers.map(c=>String(c.id)));
+      store.cache(req.url,upstream.status,'application/json',Buffer.from(JSON.stringify(live)).toString('base64'));
+      return json(res,200,{...live,customers:[...live.customers,...localCustomers.filter(c=>!seen.has(String(c.id)))]});
+     }
+    }
+   }catch{same();/* Use last verified local bootstrap if server briefly drops. */}
+  }
   if(req.method==='GET'&&!offline&&['/api/lab/invoices','/api/lab/finance/summary','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/ledger'].includes(p))await require('./finance-refresh.cjs').refreshFinance(store,request,{force:p==='/api/lab/invoices'});
   const policy=require('./document-policy.cjs').routePolicy(store,req.method,req.url,b,offline);
   const detailMatch=p.match(/^\/api\/lab\/orders\/([^/]+)(?:\/invoice-pricing)?$/);

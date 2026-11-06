@@ -949,3 +949,8 @@ runR1314(process.execPath,['--test','scripts/test-r1648-photographer-invoice.cjs
 // R1649: album photographer card only. Keep photo-print layout unchanged.
 await deployStep('./enable-r1649-photographer-album-card.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1649-photographer-album-card.cjs'],{stdio:'inherit'});
+
+// R1652: restore photographer standalone settings scrolling, and make the
+// photographer archive calendar the same readable size as the Lab archive.
+await deployStep('./enable-r1652-photographer-settings-archive.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1652-photographer-settings-archive.cjs'],{stdio:'inherit'});

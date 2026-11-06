@@ -935,3 +935,8 @@ runR1314(process.execPath,['--test','scripts/test-r1641-lab-manual-speed-dialog.
 await deployStep('./enable-r1643-order-ledger.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1643-order-ledger.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1645-ledger-card-update-dialog.cjs'],{stdio:'inherit'});
+
+// R1646: convert the photographer's settlement relationship in THIS lab,
+// from the receipt/approval order itself. Never zero their invoices or payments.
+await deployStep('./enable-r1646-photographer-ledger.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1646-photographer-ledger.cjs'],{stdio:'inherit'});

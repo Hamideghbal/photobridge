@@ -7,7 +7,7 @@ test('R1651 embedded photographer invoice is made visible above Windows chrome w
  const script=fs.readFileSync('scripts/r1651-photographer-invoice-host.js','utf8');
  const css=fs.readFileSync('scripts/r1651-photographer-invoice-host.css','utf8');
  assert.match(script,/pbDesktopContent/);
- assert.match(script,/window\.parent!==window/);
+ assert.match(script,/window\.parent===window/);
  assert.match(script,/pb1126Desktop/);
  assert.match(script,/\.pb1126ContentPanel/);
  assert.match(script,/dataset\.panel!=='print'/);
@@ -20,6 +20,39 @@ test('R1651 embedded photographer invoice is made visible above Windows chrome w
  assert.match(css,/width:min\(940px,calc\(100vw - 24px\)\)!important/);
  assert.match(css,/html\.pb1126Embedded/);
  assert.doesNotMatch(script,/api\/lab\//);
+});
+
+test('R1651 invoice host raises its parent only while the modal is visible and restores it on navigation',()=>{
+ const vm=require('node:vm');
+ const source=fs.readFileSync('scripts/r1651-photographer-invoice-host.js','utf8');
+ let visibleNode=null,callback=null,pagehide=null,active=false,disconnected=false;
+ const panel={
+  dataset:{panel:'print'},
+  classList:{toggle:(name,next)=>{assert.equal(name,'pb1651InvoiceOpen');active=next;},
+    remove:name=>{assert.equal(name,'pb1651InvoiceOpen');active=false}}
+ };
+ const fakeWindow={parent:{document:{documentElement:{classList:{contains:name=>name==='pb1126Desktop'}}}},
+  frameElement:{closest:name=>name==='.pb1126ContentPanel'?panel:null},
+  addEventListener:(name,fn)=>{if(name==='pagehide')pagehide=fn}
+ };
+ const fakeDocument={body:{},querySelector:()=>visibleNode};
+ class Observer{constructor(fn){callback=fn}observe(){}disconnect(){disconnected=true}}
+ vm.runInNewContext(source,{
+  window:fakeWindow,document:fakeDocument,MutationObserver:Observer,URLSearchParams,
+  location:{pathname:'/photographer/orders/flow',search:'?pbDesktopContent=1'},
+  getComputedStyle:()=>({display:'flex',visibility:'visible'})
+ });
+ assert.equal(active,false);
+ assert.equal(typeof callback,'function');
+ visibleNode={getAttribute:()=>null};
+ callback();
+ assert.equal(active,true);assert.equal(panel.dataset.pb1651InvoiceOpen,'1');
+ visibleNode=null;callback();
+ assert.equal(active,false);assert.equal(panel.dataset.pb1651InvoiceOpen,'0');
+ visibleNode={getAttribute:()=>null};callback();assert.equal(active,true);
+ pagehide();
+ assert.equal(active,false);assert.equal(disconnected,true);
+ assert.equal(Object.hasOwn(panel.dataset,'pb1651InvoiceOpen'),false);
 });
 
 test('R1651 verified native and website asset registration, cache and parsed fallback JS',()=>{

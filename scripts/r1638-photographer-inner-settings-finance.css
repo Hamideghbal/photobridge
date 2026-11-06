@@ -2,6 +2,12 @@
    make the eight invoice fields line up at every desktop viewport width.
    This is scoped to the embedded photographer workspace, not Lab, Store or mobile. */
 @media (min-width:821px) and (hover:hover) and (pointer:fine) {
+  /* The subtitle beneath the studio name is redundant in the desktop
+     photographer chrome. Preserve studio name, clickable avatar and date. */
+  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .photographerHeaderIdentity > .workspaceIdentityCopy > small {
+    display:none!important;
+  }
+
   /* The compiled site CSS includes a more-specific display:grid!important rule
      for .rolePageScrollArea > .settingsWorkspace > .photographerSettingsTabs.
      Override that exact structure here rather than relying on the earlier

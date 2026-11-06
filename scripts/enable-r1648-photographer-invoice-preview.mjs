@@ -10,6 +10,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const bundle=root+'/assets/index-UIRefine-v655-r84.js';
  let source=fs.readFileSync(bundle,'utf8');
  if(!source.includes('/* PB1648 photographer invoice portal */')){
+  try{
   // R1547 already rewrites the invoice function's zoom and close control.
   // The next function boundary is stable; relying on the following function's
   // minified NAME (tj) is not. Never search across unrelated components.
@@ -47,12 +48,18 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   source=source.slice(0,start)+helper+component+source.slice(end);
   source+='\n/* PB1648 photographer invoice portal */\n';
   fs.writeFileSync(bundle,source);
+  }catch(error){
+   // Earlier build steps may replace/minify this component. Never block Liara
+   // solely on a cosmetic overlay; R1651's same-origin iframe host takes over.
+   console.warn('[R1651] Customer invoice compiled portal unavailable in '+root+': '+error.message+'; standalone iframe host enabled');
+  }
  }
  execFileSync(process.execPath,['--check',bundle],{stdio:'inherit'});
 
  const navPath=root+'/photobridge-r1126-desktop-navigation.js';
  let nav=fs.readFileSync(navPath,'utf8');
  if(!nav.includes('/* PB1648 stable print header */')){
+  try{
   nav=once(nav,
     "visible.map(el=>el.outerHTML).join('')",
     "visible.map(el=>el.tagName+'|'+[...el.classList].filter(c=>!['active','loading','pending'].includes(c)).join('.')+'|'+el.textContent.trim()).join('|')",
@@ -89,12 +96,24 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    "frame._pb1648HeaderObserver?.disconnect();frame._pb1648HeaderObserver=new MutationObserver(schedule);frame._pb1648HeaderObserver.observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});",
    'deduplicate frame observer on reload');
   fs.writeFileSync(navPath,nav);
+  }catch(error){
+   // Some releases reshape the desktop nav; preserve the working nav rather
+   // than corrupt a live release. Frame invoice handling remains independent.
+   console.warn('[R1651] Desktop header transform skipped in '+root+': '+error.message);
+  }
  }
  execFileSync(process.execPath,['--check',navPath],{stdio:'inherit'});
  fs.copyFileSync('scripts/r1648-photographer-invoice.css',root+'/'+stylesheet);
+ const hostJs='photobridge-r1651-invoice-host.js';
+ const hostCss='photobridge-r1651-invoice-host.css';
+ fs.copyFileSync('scripts/r1651-photographer-invoice-host.js',root+'/'+hostJs);
+ fs.copyFileSync('scripts/r1651-photographer-invoice-host.css',root+'/'+hostCss);
+ execFileSync(process.execPath,['--check',root+'/'+hostJs],{stdio:'inherit'});
  const htmlPath=root+'/index.html';
  let html=fs.readFileSync(htmlPath,'utf8');
  if(!html.includes(stylesheet))html=once(html,'</head>','<link rel="stylesheet" href="/'+stylesheet+'?v=r1648"></head>','invoice stylesheet');
+ if(!html.includes(hostJs))html=once(html,'</head>','<script defer src="/'+hostJs+'?v=r1651"></script></head>','standalone customer iframe script');
+ if(!html.includes(hostCss))html=once(html,'</head>','<link rel="stylesheet" href="/'+hostCss+'?v=r1651"></head>','standalone customer iframe stylesheet');
  let bundleCount=0,navCount=0;
  html=html.replace(/index-UIRefine-v655-r84\.js\?[^"']*/g,url=>{bundleCount++;return url.includes('photoInvoice=r1648')?url:url+'&photoInvoice=r1648';});
  html=html.replace(/photobridge-r1126-desktop-navigation\.js\?[^"']*/g,url=>{navCount++;return url.includes('invoiceStability=r1648')?url:url+'&invoiceStability=r1648';});
@@ -103,7 +122,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  if(root.endsWith('/lab-desktop-ui')){
   const manifestPath=root+'/manifest.json',manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
   if(manifest.channel!=='lab'||manifest.protocol!==1||!Array.isArray(manifest.files))throw Error('R1648 invalid native manifest');
-  for(const name of ['index.html','assets/index-UIRefine-v655-r84.js','photobridge-r1126-desktop-navigation.js',stylesheet]){
+  for(const name of ['index.html','assets/index-UIRefine-v655-r84.js','photobridge-r1126-desktop-navigation.js',stylesheet,hostJs,hostCss]){
    let item=manifest.files.find(f=>f.name===name);
    if(!item){item={name,url:'/lab-desktop-ui/'+name};manifest.files.push(item);}
    item.sha256=sha256(fs.readFileSync(root+'/'+name));
@@ -114,4 +133,4 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   fs.writeFileSync(manifestPath,JSON.stringify(manifest));
  }
 }
-console.log('[R1648] photographer invoice above desktop header and stable print tabs');
+console.log('[R1651] Customer invoice host enabled without depending on minifier function names; native UI manifest verified');

@@ -1,0 +1,40 @@
+/* R1653: photographer desktop ONLY. Keep existing mobile and laboratory UI.
+ * Finance has its own third header; the repeated React heading wastes vertical
+ * space. Native headers are hidden from first paint while desktop chrome boots.
+ */
+@media(min-width:821px){
+ html.pb1653DesktopBoot body #root #photographerRoleHeaderV710,
+ html.pb1653DesktopBoot body #root .photographerHeaderRefined,
+ html.pb1653EmbeddedBoot body #root #photographerRoleHeaderV710,
+ html.pb1653EmbeddedBoot body #root .photographerHeaderRefined{
+  visibility:hidden!important;
+ }
+ html.pb1126Embedded body #root .photographerRolePageScrollArea > .financeWorkspace.financeWorkspaceCompact > .sectionTopline.financeTopline,
+ html.pb1126Embedded body #root .rolePageScrollArea > .financeWorkspace.financeWorkspaceCompact > .sectionTopline.financeTopline{
+  display:none!important;
+ }
+ html.pb1126Embedded body #root :is(.photographerRolePageScrollArea,.rolePageScrollArea) > .financeWorkspace.financeWorkspaceCompact{
+  padding-top:0!important;
+  margin-top:0!important;
+ }
+ html.pb1126Embedded body #root .financeWorkspace.financeWorkspaceCompact > :is(.financeNavDock,.financeSectionTabs){
+  margin-top:0!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader :is(.pb1126MainNav,.pb1127PrintModes,.pb1127PrintUtilities) > button.active,
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1632FinanceTabs>button.active{
+  color:#475467!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader :is(.pb1126MainNav,.pb1127PrintModes,.pb1127PrintUtilities,.pb1632FinanceTabs)>button.active::after{
+  content:none!important;display:none!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1131MovingIndicator{
+  visibility:hidden!important;opacity:0!important;
+ }
+ /* Cached settings iframes must truly disappear while inactive, even though
+    the original settings panel uses high-specificity display:flex rules. */
+ #pb1635SettingsPanel[hidden]{display:none!important}
+ #pb1635SettingsPanel > iframe[hidden]{display:none!important}
+ #pb1635SettingsPanel > iframe:not([hidden]){display:block!important}
+}

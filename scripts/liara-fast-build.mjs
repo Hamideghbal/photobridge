@@ -954,3 +954,8 @@ runR1314(process.execPath,['--test','scripts/test-r1649-photographer-album-card.
 // photographer archive calendar the same readable size as the Lab archive.
 await deployStep('./enable-r1652-photographer-settings-archive.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1652-photographer-settings-archive.cjs'],{stdio:'inherit'});
+
+// R1653: stabilize desktop print/finance header, remove duplicate financial title,
+// and reuse loaded photographer tariff/location/invitation pages.
+await deployStep('./enable-r1653-photographer-header-settings-speed.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1653-photographer-desktop-stability.cjs'],{stdio:'inherit'});

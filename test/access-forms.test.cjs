@@ -42,9 +42,9 @@ test('Access missing or validation failure leaves original readable report byte-
   }finally{await fs.rm(dir,{recursive:true,force:true})}
  }
 });
-test('native 1.0.89 stays based on true 1.0.68 backup/restore source and includes script in packaged payload',async()=>{
+test('native Access reports preserve the 1.0.68 backup/restore source and packaged script in supported versions',async()=>{
  const pkg=JSON.parse(await fs.readFile(path.join(__dirname,'../package.json'),'utf8'));
- assert.equal(pkg.version,'1.0.89');
+ const match=/^1\.0\.(\d+)$/.exec(pkg.version);assert(match&&Number(match[1])>=89,'Access report integration requires native 1.0.89 or later');
  assert(pkg.build.files.includes('*.vbs'));
  const source=await fs.readFile(path.join(__dirname,'../data-backups.cjs'),'utf8');
  assert(source.includes('createDataSnapshot(this.store,database)'));

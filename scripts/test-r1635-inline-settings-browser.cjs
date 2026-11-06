@@ -36,7 +36,9 @@ const {chromium}=require('playwright');
    await page.getByRole('button',{name:label,exact:true}).click();
    await page.waitForFunction(selector=>document.querySelector('#pb1635SettingsPanel iframe')?.contentDocument?.querySelector(selector),marker);
    const frame=page.locator('#pb1635SettingsPanel iframe');
-   assert.match(await frame.getAttribute('src'),new RegExp(url.replace(/\//g,'\/')+'\?pbDesktopContent=1'));
+   const dest=new URL(await frame.getAttribute('src'),'https://panel.test');
+   assert.equal(dest.pathname,url);
+   assert.equal(dest.searchParams.get('pbDesktopContent'),'1');
    assert.equal(await page.locator('[role="dialog"]').count(),0);
    assert.equal(await page.locator('#pb1635SettingsPanel').evaluate(el=>getComputedStyle(el).zIndex),'2147483475');
    assert.equal(await page.evaluate(()=>{

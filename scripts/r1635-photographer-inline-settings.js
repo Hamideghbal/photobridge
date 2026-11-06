@@ -1,4 +1,4 @@
-/* R1636: desktop photographer settings are real in-page workspaces, never modals. */
+/* R1637: real photographer tariff/location/invite pages share a desktop inline workspace. */
 (()=>{
  'use strict';
  if(!matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)').matches||
@@ -6,7 +6,7 @@
 
  // These are existing photographer routes with their own React data and handlers.
  const options=[
-  {key:'labs',label:'تعریف لابراتوار',path:'/photographer/labs'},
+  {key:'prices',label:'تعرفه‌های لابراتوار',path:'/photographer/settings/prices'},
   {key:'location',label:'موقعیت عکاسی',path:'/photographer/settings/location'},
   {key:'invites',label:'دعوت همکار',path:'/photographer/invites'}
  ];
@@ -51,8 +51,7 @@
    let url,doc;
    try{url=new URL(frame.contentWindow.location.href);doc=frame.contentDocument;}catch{fail();return;}
    if(url.href==='about:blank')return;
-   // Selecting a lab in the real lab chooser navigates to the print workspace.
-   // Promote that navigation to the desktop host rather than nesting an order page.
+   // Keep navigation out of the embedded panel if a nested page redirects to orders.
    if(url.origin===location.origin&&/^\/photographer\/orders(?:\/|$)/.test(url.pathname)){
     url.searchParams.delete('pbDesktopContent');
     window.location.assign(url.pathname+url.search+url.hash);return;
@@ -62,9 +61,10 @@
    }
    if(!doc?.body){fail();return;}
    // Keep existing forms/React handlers intact; hide only redundant inner navigation.
+   doc.documentElement.classList.add('pb1637InlineSettings');
    if(!doc.getElementById('pb1636SettingsContentStyle')){
     const style=doc.createElement('style');style.id='pb1636SettingsContentStyle';
-    style.textContent='.photographerSettingsTabs{display:none!important}.settingsWorkspace.photographerSettings{display:block!important;width:100%!important;max-width:none!important}.settingsBody{width:100%!important;min-width:0!important;max-width:none!important;grid-column:1/-1!important}';
+    style.textContent='html.pb1637InlineSettings body #root .settingsWorkspace.photographerSettings>.photographerSettingsTabs,html.pb1637InlineSettings body #root .settingsWorkspace.photographerSettings>.settingsNav,html.pb1637InlineSettings body #root .photographerSettingsTabs{display:none!important}html.pb1637InlineSettings body #root .settingsWorkspace.photographerSettings{display:block!important;width:100%!important;max-width:none!important;grid-template-columns:minmax(0,1fr)!important}html.pb1637InlineSettings body #root .settingsWorkspace.photographerSettings>.settingsBody{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;grid-column:1/-1!important}';
     doc.head.append(style);
    }
    stopWatching();
@@ -72,7 +72,7 @@
     if(!panel?.isConnected||selected!==key)return;
     const target=key==='location'?doc.querySelector('.photographerLocationSettings'):
      key==='invites'?doc.querySelector('.photographerInviteWorkspace'):
-     doc.querySelector('.photographerMain .card.panel,.photographerMain .loadingBox');
+     doc.querySelector('.photographerPricingSettings,.photographerTariffDetailedRows');
     if(target){status.hidden=true;stopWatching();}
    };
    renderWatch=new MutationObserver(ready);
@@ -106,6 +106,22 @@
     button.type='button';button.textContent=item.label;button.dataset.settings=item.key;
     button.addEventListener('click',()=>open(item.key));
     nav.append(button);
+   }
+  }
+  // The second-row print/album selection is suspended while a settings page is in front.
+  // Do not mutate its React-controlled active class: selecting print again must still work.
+  for(const button of row.querySelectorAll('.pb1127PrintModes>button,.pb1163ManagerRow>button,.pb1126FrameStoreTabs>button')){
+   if(selected){
+    if(button.dataset.pb1637SavedCurrent===undefined)button.dataset.pb1637SavedCurrent=button.getAttribute('aria-current')??'';
+    if(button.dataset.pb1637SavedSelected===undefined)button.dataset.pb1637SavedSelected=button.getAttribute('aria-selected')??'';
+    button.removeAttribute('aria-current');
+    if(button.hasAttribute('aria-selected'))button.setAttribute('aria-selected','false');
+   }else if(button.dataset.pb1637SavedCurrent!==undefined){
+    if(button.dataset.pb1637SavedCurrent)button.setAttribute('aria-current',button.dataset.pb1637SavedCurrent);
+    else button.removeAttribute('aria-current');
+    if(button.dataset.pb1637SavedSelected)button.setAttribute('aria-selected',button.dataset.pb1637SavedSelected);
+    else button.removeAttribute('aria-selected');
+    delete button.dataset.pb1637SavedCurrent;delete button.dataset.pb1637SavedSelected;
    }
   }
   for(const button of nav.children){

@@ -102,3 +102,11 @@ test('R1504 consumes the original helper; R1642 patches only late assembled asse
  const r1641=build.indexOf('enable-r1641-lab-manual-speed-dialog.mjs');
  assert(r1504>=0&&r1571>r1504&&r1641>r1571);
 });
+
+test('R1642 late patch is idempotent and rejects pre-Win7 source input',()=>{
+ const {patchManualIntakeVerification}=require('./r1642-intake-verification.cjs');
+ const built=fs.readFileSync('dist/web/photobridge-r1466-intake-move.js','utf8');
+ assert.equal(patchManualIntakeVerification(built),built);
+ const preWin7=fs.readFileSync('scripts/r1466-intake-move.js','utf8');
+ assert.throws(()=>patchManualIntakeVerification(preWin7),/requires the R1504 source modes and Windows 7 picker first/);
+});

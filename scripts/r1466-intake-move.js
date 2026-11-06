@@ -2,20 +2,9 @@
 (()=>{
  'use strict';
  if(window.pb1466IntakeMove)return;
- const sources=new WeakMap(),directHandles=[],pb1641SelectedHashes=new WeakMap(),pb1641VerifiedTargets=new WeakSet();
+ const sources=new WeakMap(),directHandles=[];
  const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;};
- // Only selected immutable File snapshots are cached. Fresh disk reads are rehashed
- // before a destructive move, so changing source files cannot bypass verification.
- const digest=async(file,cache=false)=>{
-  if(!cache)return [...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');
-  let value=pb1641SelectedHashes.get(file);
-  if(!value){
-   value=digest(file,false);
-   pb1641SelectedHashes.set(file,value);
-   value.catch(()=>pb1641SelectedHashes.delete(file));
-  }
-  return value;
- };
+ const digest=async file=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');
  const message={source_missing:'فایل مبدأ پیدا نشد.',source_changed:'فایل مبدأ پس از انتخاب تغییر کرده است.',same_file:'پوشهٔ سفارش و فایل مبدأ نباید یک فایل باشند.',destination_changed:'فایل ذخیره‌شده کامل نیست یا تغییر کرده است.',source_permission:'اجازهٔ حذف از پوشهٔ مبدأ داده نشده است.',source_required:'عکس‌ها را با دکمهٔ انتخاب عکس‌ها از پوشهٔ مبدأ انتخاب کنید.',destination_exists:'در مسیر سفارش فایلی با همین نام و محتوای متفاوت وجود دارد.'};
  const fail=key=>Error(message[key]||key);
  async function pick(mode='copy'){
@@ -53,12 +42,12 @@
  }
  async function original(group){
   const {source}=group;if(source.deleted)return;
-  if(source.copyOnly)return digest(group.files[0],true);
+  if(source.copyOnly)return digest(group.files[0]);
   if(await (source.direct?source.handle:source.dir).queryPermission({mode:'readwrite'})!=='granted')throw fail('source_permission');
   let current;try{current=source.direct?source.handle:await source.dir.getFileHandle(source.name);}catch{throw fail('source_missing');}
   if(current.kind!=='file'||!await current.isSameEntry(source.handle))throw fail('source_changed');
   const file=await current.getFile();if(file.size!==source.size||file.lastModified!==source.lastModified)throw fail('source_changed');
-  const hash=await digest(file);try{for(const selected of group.files)if(hash!==await digest(selected,true))throw fail('source_changed');}catch{throw fail('source_changed');}
+  const hash=await digest(file);try{for(const selected of group.files)if(hash!==await digest(selected))throw fail('source_changed');}catch{throw fail('source_changed');}
   return hash;
  }
  async function destination(target,expected){
@@ -68,15 +57,13 @@
  }
  async function prepare(targets){
   const selected=groups(targets);
-  for(const group of selected){const hash=group.source.copyOnly?null:await original(group);for(const target of group.targets){let existing;try{existing=await target.target.dir.getFileHandle(window.pbLabLocalIntakeStorage.fileName(target.file.original_name,'file'));}catch(e){if(e.name!=='NotFoundError'&&e.code!=='ENOENT'&&e.name!=='ENOENT'&&!/^ENOENT: no such file or directory, lstat ['"].+['"]$/.test(e.message||''))throw e;}
-    if(existing){for(const other of selected)if(other.source.handle&&await existing.isSameEntry(other.source.handle))throw fail('same_file');if(await digest(await existing.getFile())!==(hash||await original(group)))throw fail('destination_exists');}
+  for(const group of selected){const hash=await original(group);for(const target of group.targets){let existing;try{existing=await target.target.dir.getFileHandle(window.pbLabLocalIntakeStorage.fileName(target.file.original_name,'file'));}catch(e){if(e.name!=='NotFoundError'&&e.code!=='ENOENT'&&e.name!=='ENOENT'&&!/^ENOENT: no such file or directory, lstat ['"].+['"]$/.test(e.message||''))throw e;}
+    if(existing){for(const other of selected)if(other.source.handle&&await existing.isSameEntry(other.source.handle))throw fail('same_file');if(await digest(await existing.getFile())!==hash)throw fail('destination_exists');}
   }}
  }
- async function verify(targets){for(const group of groups(targets)){if(group.source.deleted)continue;const hash=await original(group);for(const target of group.targets){const saved=await destination(target,hash);if(group.source.handle&&await saved.isSameEntry(group.source.handle))throw fail('same_file');}}for(const target of targets)pb1641VerifiedTargets.add(target);}
+ async function verify(targets){for(const group of groups(targets)){if(group.source.deleted)continue;const hash=await original(group);for(const target of group.targets){const saved=await destination(target,hash);if(group.source.handle&&await saved.isSameEntry(group.source.handle))throw fail('same_file');}}}
  async function finish(targets){
-  // Copy-only orders have already been SHA-256 verified before the commit.
-  // Never skip the final live disk check when ANY source will be deleted.
-  let selected;try{selected=groups(targets);if(selected.some(group=>!group.source.copyOnly)||targets.some(target=>!pb1641VerifiedTargets.has(target)))await verify(targets);}catch(error){const total=selected?.length??targets.length,removed=selected?.filter(g=>g.source.deleted).length??0;return{removed,total,remaining:total-removed,error:error.message};}
+  let selected;try{selected=groups(targets);await verify(targets);}catch(error){const total=selected?.length??targets.length,removed=selected?.filter(g=>g.source.deleted).length??0;return{removed,total,remaining:total-removed,error:error.message};}
   const errors=[];
   for(const group of selected){if(group.source.deleted||group.source.copyOnly)continue;try{const hash=await original(group);for(const target of group.targets)await destination(target,hash);if(group.source.direct)await group.source.handle.remove({recursive:false});else await group.source.dir.removeEntry(group.source.name,{recursive:false});group.source.deleted=true;}catch(error){errors.push(group.source.name+' — '+(Object.values(message).includes(error.message)?error.message:error.name==='NotAllowedError'?message.source_permission:'حذف از مبدأ انجام نشد؛ دسترسی پوشه یا باز بودن فایل در برنامه‌های دیگر را بررسی کنید.'));}}
   const removed=selected.filter(g=>g.source.deleted).length,copied=selected.filter(g=>g.source.copyOnly).length;return{removed,copied,total:selected.length,remaining:selected.length-removed-copied,error:errors[0]||''};
@@ -90,5 +77,3 @@
  }
  window.pb1466IntakeMove={pick,track,prepare,verify,finish,report};
 })();
-
-/* PB1641 safe manual intake fast-path */

@@ -38,7 +38,7 @@ test('R1653 ignores regular order-card mutations and temporary missing print-mod
   const normal=code.indexOf("const copies=[...row.querySelectorAll('.pb1127PrintModes>button,.pb1127PrintUtilities>button')];");
   const render=code.indexOf('function render(){'),press=code.indexOf('const pressTimers=new WeakMap();');
   assert(render>=0&&normal>render&&press>normal);
-  assert.match(code.slice(normal,press),/\n \}\n const pressTimers/);
+  assert.match(code.slice(normal,press+34),/\n \}\n const pressTimers/);
  }
 });
 

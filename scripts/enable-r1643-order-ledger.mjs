@@ -50,8 +50,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const noticeReplacement=`le.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر رسید جدید"}),
     le.status==="awaiting_payment"&&e.jsx("button",{
      type:"button",className:"pb1643LedgerAction",
-     disabled:E===le.id||le.payment_status==="receipt_pending",
-     title:le.payment_status==="receipt_pending"?"ابتدا رسید پرداخت را بررسی کنید.":"فقط همین سفارش دفتری می‌شود و هیچ پرداختی ثبت نمی‌شود.",
+     disabled:E===le.id||le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||"")),
+     title:le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||""))?"ابتدا وضعیت رسید پرداخت را مشخص کنید.":"فقط همین سفارش دفتری می‌شود و هیچ پرداختی ثبت نمی‌شود.",
      onClick:()=>{pb1643SetLedgerOrder(le);pb1643SetError('')},
      children:"دفتری کردن این سفارش"})]})`;
   component=once(component,noticeEnd,noticeReplacement,'prepaid card action');

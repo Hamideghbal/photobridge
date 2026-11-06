@@ -144,6 +144,15 @@ function remoteRequest(store, url, body, target) {
       for (const f of d.files || []) if (f.serverId) maps.set(f.id, f.serverId);
     }
   const u = new URL(url, "http://localhost");
+  // The verified native intake UI appends '/download' to distinguish
+  // local device requests. It is ONLY a desktop-host routing alias: the
+  // Liara API has no corresponding routes. Canonicalize the narrow
+  // intake/detail aliases before forwarding online. Do not rewrite
+  // legitimate /api/lab/order-files/:id/download routes.
+  const nativeIntakeAlias =
+    /^\/api\/lab\/delegated-orders\/(?:download|[0-9a-f-]{36}\/(?:files\/presign|submit)\/download)$/i.test(u.pathname) ||
+    /^\/api\/lab\/orders\/[0-9a-f-]{36}\/download$/i.test(u.pathname);
+  if (nativeIntakeAlias) u.pathname = u.pathname.slice(0, -'/download'.length);
   u.pathname = u.pathname
     .split("/")
     .map((x) => maps.get(x) || x)

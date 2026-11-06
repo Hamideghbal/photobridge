@@ -10,18 +10,30 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const bundle=root+'/assets/index-UIRefine-v655-r84.js';
  let source=fs.readFileSync(bundle,'utf8');
  if(!source.includes('/* PB1648 photographer invoice portal */')){
+  // R1547 already rewrites the invoice function's zoom and close control.
+  // The next function boundary is stable; relying on the following function's
+  // minified NAME (tj) is not. Never search across unrelated components.
   const start=source.indexOf('function Oc({role:t,invoice:a,onClose:s}){');
-  const end=source.indexOf('function tj(',start);
-  if(start<0||end<=start||end-start>11000)throw Error('R1648 invoice preview function boundary '+root);
+  const end=start<0?-1:source.indexOf('function ',start+'function Oc('.length);
+  if(start<0||end<=start||end-start>24000)
+   throw Error('R1650 invoice function shape '+root+' start='+start+' end='+end);
   let component=source.slice(start,end);
   component=once(component,
    'const h=document.body.style.overflow;document.body.style.overflow="hidden";const S=y=>{y.key==="Escape"&&s()};return window.addEventListener("keydown",S),()=>{document.body.style.overflow=h,window.removeEventListener("keydown",S)}',
    'const body=pb1648InvoicePortal(t).ownerDocument.body,h=body.style.overflow;body.style.overflow="hidden";const keyWin=body.ownerDocument.defaultView||window,S=y=>{y.key==="Escape"&&s()};return keyWin.addEventListener("keydown",S),()=>{body.style.overflow=h,keyWin.removeEventListener("keydown",S)}',
    'escape and host scroll lock');
-  component=once(component,
-   'F=Math.min(1,k/C,E/w);f(Math.max(.58,F))',
-   'F=t==="customer"&&pb1648InvoicePortal(t)!==document.body?Math.min(1.12,k/C):Math.min(1,k/C,E/w);f(Math.max(.58,F))',
-   'customer preview scale');
+  // R1547 makes lab zoom larger and must remain in effect. Customer
+  // invoices can scroll vertically in the parent desktop preview.
+  const r1547Zoom='f(t==="lab"?Math.max(.9,Math.min(1.05,k/C)):Math.max(.58,F))';
+  const originalZoom='f(Math.max(.58,F))';
+  const targetZoom='f(t==="lab"?Math.max(.9,Math.min(1.05,k/C)):t==="customer"&&pb1648InvoicePortal(t)!==document.body?Math.max(.58,Math.min(1.12,k/C)):Math.max(.58,F))';
+  if(component.includes(r1547Zoom)){
+   component=once(component,r1547Zoom,targetZoom,'R1547-compatible customer scale');
+  }else if(component.includes(originalZoom)){
+   component=once(component,originalZoom,targetZoom,'original customer scale');
+  }else{
+   throw Error('R1650 invoice zoom expression has changed '+root);
+  }
   if(!component.endsWith(',document.body)}'))throw Error('R1648 unexpected preview portal suffix '+root);
   component=component.slice(0,-',document.body)}'.length)+',pb1648InvoicePortal(t))}';
   const helper=[

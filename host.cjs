@@ -154,7 +154,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         const type=MIME[path.extname(file)]||'application/octet-stream';
         res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});
         if(name==='index.html'){
-          let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');const end=html.toLowerCase().lastIndexOf('</body>');
+          let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');html=require('./native-first-paint.cjs').injectFirstPaint(html);const end=html.toLowerCase().lastIndexOf('</body>');
           html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
           return res.end(html);
         }

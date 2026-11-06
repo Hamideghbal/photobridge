@@ -9,7 +9,10 @@ const stylesheet='photobridge-r1648-photographer-invoice.css';
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const bundle=root+'/assets/index-UIRefine-v655-r84.js';
  let source=fs.readFileSync(bundle,'utf8');
- if(!source.includes('/* PB1648 photographer invoice portal */')){
+ // R1655: DO NOT rewrite the minified React invoice function. Across releases
+ // this signature changes; the R1651 iframe invoice host works independently.
+ // Never install two competing portal/iframe presentation strategies.
+ if(false && !source.includes('/* PB1648 photographer invoice portal */')){
   try{
   // R1547 already rewrites the invoice function's zoom and close control.
   // The next function boundary is stable; relying on the following function's
@@ -58,7 +61,10 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 
  const navPath=root+'/photobridge-r1126-desktop-navigation.js';
  let nav=fs.readFileSync(navPath,'utf8');
- if(!nav.includes('/* PB1648 stable print header */')){
+ // R1655 emergency rollback: R1648's visible[index] -> live[index] click
+ // override no longer targets the right tab after R1632 moves utilities.
+ // Preserve the original R1632 cloned buttons and their direct click handlers.
+ if(false && !nav.includes('/* PB1648 stable print header */')){
   try{
   nav=once(nav,
     "visible.map(el=>el.outerHTML).join('')",

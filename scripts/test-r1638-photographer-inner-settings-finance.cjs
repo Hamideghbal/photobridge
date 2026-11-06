@@ -28,7 +28,7 @@ test('photographer invoice records keep eight columns and never hide balance on 
  const cols=rule[1].match(/grid-template-columns:([^;]+)!important/);
  assert.ok(cols,'missing enforced invoice columns');
  assert.equal(cols[1].trim().split(/\s+/).length,8,'invoice has exactly eight cells');
- assert.match(rule[1],/min-width:1060px!important/);
+ assert.match(rule[1],/min-width:1120px!important/);
  assert.match(css,/div:nth-child\(n\+3\):nth-child\(-n\+7\)/);
  const cell=css.match(/div:nth-child\(n\+3\):nth-child\(-n\+7\) \{([^}]+)\}/);
  assert.ok(cell&&cell[1].includes('display:flex!important'),'responsive hide must be undone');

@@ -62,10 +62,18 @@ function patchNav(nav){
  else nav=one(nav,obsLegacy,
   "new MutationObserver(records=>{if(pb1653RelevantHeader(records))schedule()}).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});",
   'frame observer legacy');
- nav=one(nav,
- "new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});",
- "new MutationObserver(records=>{if(pb1653RelevantHeader(records))schedule()}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});",
- 'root observer');
+ // R1654: some earlier build stages replace/remove the host-root observer
+ // before this installer runs. It is only an auxiliary event source; the
+ // native iframe header observer above is mandatory and was just verified.
+ // Do not abort the Docker build for an absent optional host-root observer.
+ const oldRootObserver="new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});";
+ const filteredRootObserver="new MutationObserver(records=>{if(pb1653RelevantHeader(records))schedule()}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});";
+ if(nav.includes(oldRootObserver)){
+  nav=one(nav,oldRootObserver,filteredRootObserver,'root observer');
+ }else if(!nav.includes(filteredRootObserver)){
+  console.warn('[R1654] Host root observer uses another shape or is absent; preserving its existing behavior. The iframe header observer remains filtered.');
+ }
+
  const normalized=[
  "  if(active==='print'&&!choosing){",
  "   const copies=[...row.querySelectorAll('.pb1127PrintModes>button,.pb1127PrintUtilities>button')];",

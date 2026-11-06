@@ -105,6 +105,8 @@ test('new API route follows lab-admin permission checks; cards, detail, receipt 
  const old=server.indexOf('if(await handleLabLedgerOverride(',route);
  assert(auth>=0&&suspended>auth&&route>suspended&&old>route);
  assert(server.includes("import {handleLabPhotographerLedger} from './lab-photographer-ledger.js'"));
+ assert.equal((server.match(/AS photographer_settlement_mode/g)||[]).length,2,
+   'lab order list and detail must both reflect the current photographer account mode');
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const js=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
   assert(js.includes("'/photographer-ledger'"));
@@ -112,6 +114,9 @@ test('new API route follows lab-admin permission checks; cards, detail, receipt 
   assert(js.includes('حساب این عکاسی در همین لابراتوار دفتری می‌شود.'));
   assert(js.includes('pb1646LedgerFromReceipt'));
   assert(js.includes('رسیدهای در حال ارسال یا بررسی'));
+  assert(js.includes('photographer_settlement_mode'));
+  assert(js.includes('حساب عکاسی دفتری شد · رسید در انتظار بررسی'));
+  assert(js.includes('حساب عکاسی اکنون دفتری است'));
   const html=fs.readFileSync(root+'/index.html','utf8');
   assert(html.includes('orderLedger=r1646'));
   assert(html.includes('photobridge-r1643-order-ledger.css?v=r1646'));

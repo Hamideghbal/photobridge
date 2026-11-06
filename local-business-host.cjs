@@ -33,6 +33,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
       const localCustomers=Object.values(engine.state().customers).filter(c=>c.origin_offline===true&&!c.serverId&&!c.remote);
       const seen=new Set(live.customers.map(c=>String(c.id)));
       store.cache(req.url,upstream.status,'application/json',Buffer.from(JSON.stringify(live)).toString('base64'));
+      const canonicalBootstrap=p+(url.searchParams.get('mode')==='print'?'?mode=print':'');store.cache(canonicalBootstrap,upstream.status,'application/json',Buffer.from(JSON.stringify(live)).toString('base64'));
       json(res,200,{...live,customers:[...live.customers,...localCustomers.filter(c=>!seen.has(String(c.id)))]});
       return true;
      }

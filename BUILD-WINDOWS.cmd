@@ -1,12 +1,6 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-node build-local.cjs 1.0.90
-if errorlevel 1 goto failed
-echo Build completed. See release folder.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0build-windows-oneclick.ps1"
+if errorlevel 1 echo Build stopped. See debug-logs for the full report.
 pause
-exit /b 0
-:failed
-echo Build stopped. Read the error above.
-pause
-exit /b 1

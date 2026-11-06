@@ -99,3 +99,30 @@ test('updated UI local-batch route commits offline files atomically, replays and
   assert.equal(result.status,200);assert.equal(result.data.order.status,'downloaded');assert.equal(f.calls,0);
  }finally{await f.close()}
 });
+
+test('verified offline manual order invoices immediately without advancing its print stage or duplicating ledger',async()=>{
+ const f=await fixture();try{
+  const shared=await f.call('/api/lab/orders/'+f.order+'/automation-invoice',{});assert.equal(shared.status,409);assert.equal(shared.data.error,'shared_document_requires_online');
+  const id=crypto.randomUUID(),file=crypto.randomUUID();
+  await f.call('/api/lab/delegated-orders',{clientOrderId:id,localOnly:true,customerId:f.customer,mode:'print'});
+  let result=await f.call('/api/lab/orders/'+id+'/automation-invoice',{});assert.equal(result.status,409);assert.equal(result.data.error,'download_not_verified');
+  await f.call('/api/lab/delegated-orders/'+id+'/files/local-batch',{localOnly:true,files:[{clientFileId:file,name:'photo.jpg',bytes:12,printSizeId:'13x18',printType:'luster',printCopies:2}]});
+  await f.call('/api/lab/delegated-orders/'+id+'/submit',{desktopLocalFiles:[{rootId:'root',parts:['photo.jpg'],bytes:12}]});
+  result=await f.call('/api/lab/orders/'+id+'/automation-invoice',{});assert.equal(result.status,200);assert.equal(result.data.invoice.total,200);assert.equal(result.data.order.status,'downloaded');
+  const invoice=result.data.invoice.id;result=await f.call('/api/lab/orders/'+id+'/automation-invoice',{});assert.equal(result.data.invoice.id,invoice);assert.equal(result.data.existing,true);
+  result=await f.call('/api/lab/orders/'+id,{status:'ready'},'PATCH');assert.equal(result.data.invoice.id,invoice);
+  const state=new LocalBusiness(f.store).state();assert.equal(Object.values(state.invoices).filter(i=>i.order_id===id).length,1);assert.equal(state.journal.filter(t=>t.reference_type==='invoice').length,1);assert.equal(f.calls,0);
+ }finally{await f.close()}
+});
+test('offline missing price exposes editable size row and only invoices after operator enters its unit price',async()=>{
+ const f=await fixture();try{
+  const id=crypto.randomUUID(),file=crypto.randomUUID();
+  await f.call('/api/lab/delegated-orders',{clientOrderId:id,localOnly:true,customerId:f.customer,mode:'print'});
+  await f.call('/api/lab/delegated-orders/'+id+'/files/local-batch',{localOnly:true,files:[{clientFileId:file,name:'photo.jpg',bytes:12,printSizeId:'13x18',printType:'metallic'}]});
+  await f.call('/api/lab/delegated-orders/'+id+'/submit',{desktopLocalFiles:[{rootId:'root',parts:['photo.jpg'],bytes:12}]});
+  let result=await f.call('/api/lab/orders/'+id+'/automation-invoice',{});assert.equal(result.status,409);assert.equal(result.data.error,'invoice_pricing_required');assert.equal(result.data.missingPricing[0].sizeId,'13x18');assert.equal(Object.keys(new LocalBusiness(f.store).state().invoices).length,0);
+  result=await f.call('/api/lab/orders/'+id+'/invoice-pricing');assert.equal(result.data.requirements[0].printType,'metallic');assert.equal(result.data.requirements[0].resolved,false);
+  await f.call('/api/lab/orders/'+id+'/invoice-pricing',{prices:[{sizeId:'13x18',printType:'metallic',unitPrice:150}]},'PUT');
+  result=await f.call('/api/lab/orders/'+id+'/automation-invoice',{});assert.equal(result.status,200);assert.equal(result.data.invoice.total,150);assert.equal(f.calls,0);
+ }finally{await f.close()}
+});

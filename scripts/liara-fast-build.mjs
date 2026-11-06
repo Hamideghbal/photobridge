@@ -945,3 +945,7 @@ runR1314(process.execPath,['--test','scripts/test-r1646-photographer-ledger.cjs'
 // stabilize print/finance tabs without changing any financial operations.
 await deployStep('./enable-r1648-photographer-invoice-preview.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1648-photographer-invoice.cjs'],{stdio:'inherit'});
+
+// R1649: album photographer card only. Keep photo-print layout unchanged.
+await deployStep('./enable-r1649-photographer-album-card.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1649-photographer-album-card.cjs'],{stdio:'inherit'});

@@ -78,3 +78,28 @@ html.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632Finan
   font:750 9.5px/1 Vazirmatn,Tahoma,sans-serif!important;
  }
 }
+
+/* R1637 — the first-header underline follows the rendered label, not tab padding. */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button{
+  font:800 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>.pb1131MovingIndicator{
+  height:2px!important;
+  bottom:6px!important;
+ }
+ /* Settings in the left group are the sole active second-row section.
+    Keep the underlying print selection for when the panel closes. */
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes>button.active,
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1163ManagerRow>button.active,
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1126FrameStoreTabs>button.active{
+  color:#475467!important;
+  background:transparent!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes>button.active::after,
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1163ManagerRow>button.active::after,
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1126FrameStoreTabs>button.active::after{
+  content:none!important;
+  display:none!important;
+ }
+}

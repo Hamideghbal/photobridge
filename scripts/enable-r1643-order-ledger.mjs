@@ -10,11 +10,22 @@ const serverFile='dist/api/server.js',policyName='lab-order-ledger-override.js';
 fs.copyFileSync('scripts/r1643-order-ledger-override.js','dist/api/'+policyName);
 let server=read(serverFile);
 if(!server.includes('/* PB1643 per-order ledger settlement */')){
- const routeAnchor='        const labOrder = url.pathname.match(/^\\/api\\/lab\\/orders\\/([0-9a-f-]+)$/);';
- server=once(server,routeAnchor,
-  `        /* PB1643 per-order ledger settlement */
+ // The large server build is patched by many earlier releases. The declaration
+ // "const labOrder" can move or be rewritten; attach to the stable lab-admin
+ // device boundary, after role/access/suspension checks instead.
+ const adminStart=server.indexOf("if (url.pathname.startsWith('/api/lab/')) {");
+ const deviceAnchor='const requestDeviceId =';
+ const deviceAt=adminStart<0?-1:server.indexOf(deviceAnchor,adminStart);
+ const region=server.slice(adminStart,deviceAt);
+ if(adminStart<0||deviceAt<0||deviceAt-adminStart>12000
+   ||region.indexOf("requireRole(a, 'lab_admin')")<0
+   ||region.indexOf("labAccess.rows[0].suspended")<0
+   ||region.indexOf('handleLabSiteManagement')<0
+   ||server.indexOf(deviceAnchor,deviceAt+deviceAnchor.length)>=0)
+   throw Error('R1644 expected lab-admin authenticated, active-access guarded device boundary');
+ server=server.slice(0,deviceAt)+`/* PB1643 per-order ledger settlement */
         if(await handleLabLedgerOverride({req,url,res,pool,labId,a,bodyJson,sendJson,statusEvent,audit,publishCustomerEvent,publishLabEvent}))return;
-`+routeAnchor,'lab order routes');
+        `+server.slice(deviceAt);
  server=`import {handleLabLedgerOverride} from './${policyName}';\n`+server;
  write(serverFile,server);
 }

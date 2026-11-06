@@ -54,6 +54,32 @@ test('R1653 removes the duplicate customer finance heading, holds previous tab n
  assert(prev.includes('photographerArchiveWorkspace'),'R1652 calendar kept intact');
 });
 
+test('R1654 Docker installer accepts legacy, already-filtered, and absent host-root observers',()=>{
+ const installer=fs.readFileSync('scripts/enable-r1653-photographer-header-settings-speed.mjs','utf8');
+ const start=installer.indexOf(' const oldRootObserver=');
+ const end=installer.indexOf(' const normalized=',start);
+ assert(start>0&&end>start,'root observer patch block missing');
+ const snippet=installer.slice(start,end);
+ const one=(source,before,after,label)=>{
+  const count=source.split(before).length-1;
+  if(count!==1)throw Error(label+' count '+count);
+  return source.replace(before,after);
+ };
+ const warnings=[],log={warn:(message)=>warnings.push(String(message))};
+ const apply=new Function('nav','one','console',snippet+'\nreturn nav;');
+ const legacy="new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});";
+ const filtered="new MutationObserver(records=>{if(pb1653RelevantHeader(records))schedule()}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});";
+ assert.equal(apply(legacy,one,log),filtered,'legacy observer must be filtered');
+ assert.equal(apply(filtered,one,log),filtered,'already-filtered observer must not be rewritten');
+ const alternate="new MutationObserver(onRootChanged).observe(document.querySelector('#root'),{childList:true,subtree:true});";
+ assert.equal(apply(alternate,one,log),alternate,'unknown upstream observer must remain untouched');
+ assert.equal(apply('/* prior stage removed the optional observer */',one,log),
+  '/* prior stage removed the optional observer */','absent optional root observer must not crash');
+ assert.equal(warnings.length,2);
+ assert.match(warnings[0],/R1654/);
+ assert.match(installer,/frame observer modern/,'the actual iframe header observer must remain mandatory');
+});
+
 test('R1653 is registered after R1652, both web and Windows payloads contain verified assets and early bootstrap',()=>{
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  const before=build.indexOf("await deployStep('./enable-r1652-photographer-settings-archive.mjs')");

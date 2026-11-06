@@ -929,3 +929,8 @@ runR1314(process.execPath,['--test','scripts/test-r1638-photographer-inner-setti
 // The native invoice-progress dialog only offers retry/cancel after a failure.
 await deployStep('./enable-r1641-lab-manual-speed-dialog.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1641-lab-manual-speed-dialog.cjs'],{stdio:'inherit'});
+
+// R1643: lab manager can convert one unpaid pre-print order to ledger.
+// Keep the photographer's default settlement and the invoice/payment ledger unchanged.
+await deployStep('./enable-r1643-order-ledger.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1643-order-ledger.cjs'],{stdio:'inherit'});

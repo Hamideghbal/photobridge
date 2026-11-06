@@ -98,9 +98,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let html=read(indexPath);
  if(!html.includes(stylesheet)){
    if(!html.includes('</head>'))throw Error('R1643 missing document head '+root);
-   html=html.replace('</head>',`<link rel="stylesheet" href="/${stylesheet}?v=r1643"></head>`);
+   html=html.replace('</head>',`<link rel="stylesheet" href="/${stylesheet}?v=r1645"></head>`);
  }
- html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&orderLedger=r1643')?u:u+'&orderLedger=r1643');
+ html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&orderLedger=r1645')?u:u.replace(/&orderLedger=r16\\d{2}/g,'')+'&orderLedger=r1645');
  write(indexPath,html);
  if(root.endsWith('/lab-desktop-ui')){
   const manifestPath=root+'/manifest.json',m=JSON.parse(read(manifestPath));

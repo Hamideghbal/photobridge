@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   const routes={
-   '/photographer/labs':'<main class="photographerMain"><section class="card panel"><h2>مدیریت و تعریف لابراتوار</h2><button>درخواست همکاری</button></section></main>',
+   '/photographer/settings/prices':'<main class="photographerMain"><section class="settingsWorkspace photographerSettings"><aside class="photographerSettingsTabs">منوی قدیمی</aside><div class="settingsBody"><section class="photographerPricingSettings"><h2>تعرفه‌های لابراتوار</h2></section></div></section></main>',
    '/photographer/settings/location':'<main class="photographerMain"><section class="settingsWorkspace photographerSettings"><aside class="photographerSettingsTabs">منوی قدیمی</aside><div class="settingsBody"><section class="photographerLocationSettings">نقشه و آدرس عکاسی<input placeholder="آدرس"></section></div></section></main>',
    '/photographer/invites':'<main class="photographerMain"><section class="photographerInviteWorkspace"><h2>دعوت همکار</h2><form><input placeholder="شماره موبایل"></form></section></main>'
   };
@@ -25,11 +25,12 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator(sel).first().evaluate(el=>getComputedStyle(el).fontWeight),'800');
   }
   assert.equal(await page.locator('.pb1127PrintModes').evaluate(el=>getComputedStyle(el).gap),'4px');
+  assert.equal(await page.locator('.pb1126MainNav>button').first().evaluate(el=>getComputedStyle(el).fontSize),'12px');
   assert.equal(await page.locator('.pb1635SettingsNav').evaluate(el=>getComputedStyle(el).gap),'4px');
   assert.equal(await page.locator('.photographerContextStatusesDesktop>button').first().evaluate(el=>getComputedStyle(el).fontSize),'10.5px');
 
   for(const [key,label,url,marker] of [
-   ['labs','تعریف لابراتوار','/photographer/labs','.card.panel'],
+   ['prices','تعرفه‌های لابراتوار','/photographer/settings/prices','.photographerPricingSettings'],
    ['location','موقعیت عکاسی','/photographer/settings/location','.photographerLocationSettings'],
    ['invites','دعوت همکار','/photographer/invites','.photographerInviteWorkspace']
   ]){
@@ -46,6 +47,7 @@ const {chromium}=require('playwright');
     return document.elementFromPoint(box.left+box.width/2,box.top+Math.min(70,box.height/2))===panel.querySelector('iframe');
    }),true,'inline iframe must be above desktop print pane');
    await page.waitForFunction(()=>document.querySelector('#pb1635SettingsPanel .pb1635SettingsLoading')?.hidden===true);
+   if(key!=='invites')assert.equal(await frame.evaluate(el=>getComputedStyle(el.contentDocument.querySelector('.photographerSettingsTabs')).display),'none');
   }
   await page.getByRole('button',{name:'گالری',exact:true}).click();
   assert.equal(await page.locator('#pb1635SettingsPanel').count(),0);

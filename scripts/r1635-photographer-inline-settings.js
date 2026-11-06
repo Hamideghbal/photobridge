@@ -6,7 +6,7 @@
 
  // These are existing photographer routes with their own React data and handlers.
  const options=[
-  {key:'labs',label:'تعریف لابراتوار',path:'/photographer/labs'},
+  {key:'prices',label:'تعرفه‌های لابراتوار',path:'/photographer/settings/prices'},
   {key:'location',label:'موقعیت عکاسی',path:'/photographer/settings/location'},
   {key:'invites',label:'دعوت همکار',path:'/photographer/invites'}
  ];
@@ -64,15 +64,15 @@
    // Keep existing forms/React handlers intact; hide only redundant inner navigation.
    if(!doc.getElementById('pb1636SettingsContentStyle')){
     const style=doc.createElement('style');style.id='pb1636SettingsContentStyle';
-    style.textContent='.photographerSettingsTabs{display:none!important}.settingsWorkspace.photographerSettings{display:block!important;width:100%!important;max-width:none!important}.settingsBody{width:100%!important;min-width:0!important;max-width:none!important;grid-column:1/-1!important}';
+    style.textContent='.photographerSettingsTabs,.settingsNav.photographerSettingsTabs{display:none!important}.settingsWorkspace.photographerSettings{display:block!important;width:100%!important;max-width:none!important;grid-template-columns:minmax(0,1fr)!important}.settingsWorkspace.photographerSettings>.settingsBody{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;grid-column:1/-1!important}.settingsWorkspace.photographerSettings>.settingsBody>.photographerLocationSettings,.settingsWorkspace.photographerSettings>.settingsBody>.photographerPricingSettings{width:100%!important;max-width:none!important}';
     doc.head.append(style);
    }
    stopWatching();
    const ready=()=>{
     if(!panel?.isConnected||selected!==key)return;
     const target=key==='location'?doc.querySelector('.photographerLocationSettings'):
-     key==='invites'?doc.querySelector('.photographerInviteWorkspace'):
-     doc.querySelector('.photographerMain .card.panel,.photographerMain .loadingBox');
+     key==='prices'?doc.querySelector('.photographerPricingSettings'):
+     doc.querySelector('.photographerInviteWorkspace');
     if(target){status.hidden=true;stopWatching();}
    };
    renderWatch=new MutationObserver(ready);

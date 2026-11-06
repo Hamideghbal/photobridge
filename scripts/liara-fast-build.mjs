@@ -934,3 +934,4 @@ runR1314(process.execPath,['--test','scripts/test-r1641-lab-manual-speed-dialog.
 // Keep the photographer's default settlement and the invoice/payment ledger unchanged.
 await deployStep('./enable-r1643-order-ledger.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1643-order-ledger.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1645-ledger-card-update-dialog.cjs'],{stdio:'inherit'});

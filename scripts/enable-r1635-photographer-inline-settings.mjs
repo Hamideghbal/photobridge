@@ -15,7 +15,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   let html=fs.readFileSync(path,'utf8');
 
   if(!html.includes('</head>'))throw Error('R1635 missing head: '+path);
-  if(!html.includes(cssFile))html=html.replace('</head>',`<link rel="stylesheet" href="/${cssFile}?v=r1635"><script defer src="/photobridge-r1635-photographer-inline-settings.js?v=r1635"></script></head>`);
+  if(!html.includes(cssFile))html=html.replace('</head>',`<link rel="stylesheet" href="/${cssFile}?v=r1636"><script defer src="/photobridge-r1635-photographer-inline-settings.js?v=r1636"></script></head>`);
   fs.writeFileSync(path,html);
 }
 // The Windows Lab bundle's manifest must keep its file hashes consistent with

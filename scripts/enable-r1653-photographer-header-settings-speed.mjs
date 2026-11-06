@@ -53,7 +53,7 @@ function patchNav(nav){
  '   return false;',
  '  }'
  ].join('\n');
- const fn="  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}";
+ const fn=" function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}";
  nav=one(nav,fn,fn+'\n'+helper,'filtered observer helper');
  const obsModern="frame._pb1648HeaderObserver=new MutationObserver(schedule);";
  const obsLegacy="new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});";
@@ -80,7 +80,7 @@ function patchNav(nav){
  '   });',
  '  }'
  ].join('\n');
- nav=one(nav,'  const pressTimers=new WeakMap();',normalized+'\n  const pressTimers=new WeakMap();','settings mode restore');
+ nav=one(nav,' const pressTimers=new WeakMap();',normalized+'\n const pressTimers=new WeakMap();','settings mode restore');
  nav=one(nav,"window.addEventListener('resize',schedule,{passive:true});",
  "window.addEventListener('resize',schedule,{passive:true});\n  window.addEventListener('pb1653-settings-selection',schedule);",
  'settings event bridge');

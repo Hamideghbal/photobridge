@@ -1,0 +1,57 @@
+/* R1651: parent frame becomes fullscreen only while a photographer invoice is open.
+ * Otherwise all desktop columns, header and order cards keep their prior geometry.
+ */
+@media(min-width:821px){
+ html.pb1126Desktop body > .pb1126ContentPanel[data-panel="print"].pb1651InvoiceOpen{
+  position:fixed!important;
+  inset:0!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  z-index:2147483646!important;
+  overflow:hidden!important;
+ }
+ html.pb1126Desktop body > .pb1126ContentPanel.pb1651InvoiceOpen > iframe {
+  display:block!important;
+  position:relative!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  min-height:0!important;
+ }
+ html.pb1126Embedded body > .globalInvoicePreviewLayer.invoicePreviewBack,
+ html.pb1126Embedded body > .modalBack.invoicePreviewBack{
+  position:fixed!important;
+  inset:0!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  z-index:2147483640!important;
+  background:rgba(15,23,42,.64)!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+ }
+ html.pb1126Embedded body > .invoicePreviewBack > .invoicePreviewModal.customerInvoicePreview.invoiceFitModal {
+  display:flex!important;
+  flex-direction:column!important;
+  width:min(940px,calc(100vw - 24px))!important;
+  max-width:calc(100vw - 24px)!important;
+  height:min(940px,calc(100dvh - 24px))!important;
+  max-height:calc(100dvh - 24px)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+ }
+ html.pb1126Embedded body > .invoicePreviewBack > .customerInvoicePreview .invoicePaperViewport {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:auto!important;
+  padding:12px!important;
+ }
+}

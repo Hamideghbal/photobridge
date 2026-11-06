@@ -58,14 +58,19 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     };const[p,f]=x.useState([])`;
   component=once(component,'const[p,f]=x.useState([])',state,'state and action');
   const noticeEnd='le.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر رسید جدید"})]})';
-  const noticeReplacement=`le.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر رسید جدید"}),
-    le.status==="awaiting_payment"&&e.jsx("button",{
-     type:"button",className:"pb1643LedgerAction",
-     disabled:E===le.id||le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||"")),
-     title:le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||""))?"ابتدا وضعیت رسید پرداخت را مشخص کنید.":"فقط همین سفارش دفتری می‌شود و هیچ پرداختی ثبت نمی‌شود.",
-     onClick:()=>{pb1643SetLedgerOrder(le);pb1643SetError('')},
-     children:"دفتری کردن این سفارش"})]})`;
-  component=once(component,noticeEnd,noticeReplacement,'prepaid card action');
+  // Put the action in the card's PRIMARY action row, where all order types
+  // and both desktop/mobile layouts already render buttons. A subsidiary
+  // prepaid notice can collapse or be restyled by other releases.
+  const footerAnchor='e.jsxs("div",{className:"labOrderMiniActions",children:[';
+  const ledgerAction=`e.jsxs("div",{className:"labOrderMiniActions",children:[
+    le.settlement_mode==="prepaid"&&le.payment_status!=="paid"&&le.status==="awaiting_payment"&&
+    e.jsx("button",{type:"button",className:"miniInvoiceBtn pb1643LedgerAction",
+      disabled:E===le.id||le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||"")),
+      title:le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||""))?"ابتدا وضعیت رسید پرداخت را مشخص کنید.":"فقط همین سفارش به حساب دفتری تبدیل می‌شود.",
+      onClick:()=>{pb1643SetLedgerOrder(le);pb1643SetError('')},
+      children:"دفتری کردن سفارش"}),
+    `;
+  component=once(component,footerAnchor,ledgerAction,'visible order action row');
   const modalAnchor='Se&&e.jsx($f,{order:Se.order,onClose:()=>Fe(null),onSaved:Nn}),L&&e.jsxs(On,';
   const modal=`pb1643LedgerOrder&&e.jsx(On,{
    title:"تبدیل سفارش #"+V(pb1643LedgerOrder.number)+" به حساب دفتری",

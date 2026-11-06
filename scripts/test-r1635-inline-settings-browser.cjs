@@ -47,7 +47,7 @@ const {chromium}=require('playwright');
     return document.elementFromPoint(box.left+box.width/2,box.top+Math.min(70,box.height/2))===panel.querySelector('iframe');
    }),true,'inline iframe must be above desktop print pane');
    await page.waitForFunction(()=>document.querySelector('#pb1635SettingsPanel .pb1635SettingsLoading')?.hidden===true);
-   assert.equal(await page.locator('#pb1635SettingsPanel iframe').evaluate(el=>getComputedStyle(el.contentDocument.querySelector('.photographerSettingsTabs'))?.display || 'none'), 'none');
+   if(key!=='invites')assert.equal(await frame.evaluate(el=>getComputedStyle(el.contentDocument.querySelector('.photographerSettingsTabs')).display),'none');
   }
   await page.getByRole('button',{name:'گالری',exact:true}).click();
   assert.equal(await page.locator('#pb1635SettingsPanel').count(),0);

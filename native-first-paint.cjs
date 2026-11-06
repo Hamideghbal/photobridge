@@ -11,9 +11,10 @@ function readyToReveal(doc, win) {
   const header=workspace.querySelector('.labSingleHeader');
   if(!header || !header.querySelector('.settingsIconBtn,.mobileHeaderSettings'))return false;
   if(!header.classList.contains('pb1147LabAdminHeader') || !header.querySelector('.pb1147LabNav'))return false;
-  if(!workspace.querySelector('.pb1148SecondaryHeader'))return false;
+  const secondarySource=doc.querySelector('.labSettingsSectionTabs,.financeSectionTabs,.mainQueueFilters');
+  if(secondarySource && !workspace.querySelector('.pb1148SecondaryHeader'))return false;
   const thirdSource=workspace.querySelector('.labCustomerSubnav,.albumSettingsInnerTabs,.financeSectionTabs,.labPrintPricingCard>.panelHead');
-  if(thirdSource && !workspace.querySelector('.pb1372ThirdHeader'))return false;
+  if(secondarySource && thirdSource && !workspace.querySelector('.pb1372ThirdHeader'))return false;
   return true;
 }
 function bootNativeFirstPaint(ready) {

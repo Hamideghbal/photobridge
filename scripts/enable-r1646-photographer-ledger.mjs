@@ -23,6 +23,24 @@ if(!server.includes('/* PB1646 photographer-wide ledger */')){
   `        /* PB1646 photographer-wide ledger */
         if(await handleLabPhotographerLedger({req,url,res,pool,labId,a,bodyJson,sendJson,statusEvent,audit,publishCustomerEvent,publishLabEvent}))return;
 `+anchor,'lab scoped handler');
+ // Display the ACTUAL photographer settlement default beside each order.
+ // The order's own historical settlement_mode may remain prepaid while a
+ // pending receipt is being reviewed, even after the member becomes ledger.
+ const ledgerColumn="(SELECT m.settlement_mode FROM lab_memberships m WHERE m.lab_id=o.lab_id AND m.user_id=o.customer_id AND m.role='customer' LIMIT 1) AS photographer_settlement_mode";
+ const enrich=(startText,endText,label)=>{
+  const begin=server.indexOf(startText),end=server.indexOf(endText,begin+startText.length);
+  if(begin<0||end<begin)throw Error('R1646 missing '+label+' listing boundary');
+  let section=server.slice(begin,end);
+  section=replaceOne(section,
+   'SELECT o.*,COALESCE(o.walkin_customer_name,u.name) customer_name',
+   'SELECT o.*,'+ledgerColumn+',COALESCE(o.walkin_customer_name,u.name) customer_name',
+   label+' current account mode');
+  server=server.slice(0,begin)+section+server.slice(end);
+ };
+ enrich("if (req.method === 'GET' && url.pathname === '/api/lab/orders') {",
+  "if (req.method === 'GET' && url.pathname === '/api/lab/archive') {",'order list');
+ enrich('const labOrder = url.pathname.match(',
+  "if (labOrder && req.method === 'DELETE') {",'order detail');
  server=`import {handleLabPhotographerLedger} from './${policy}';\n`+server;
  write(file,server);
 }
@@ -46,7 +64,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'account success message');
   component=replaceOne(component,
    'le.settlement_mode==="prepaid"&&le.payment_status!=="paid"&&le.status==="awaiting_payment"&&',
-   'le.settlement_mode==="prepaid"&&le.status==="awaiting_payment"&&',
+   'le.settlement_mode==="prepaid"&&le.status==="awaiting_payment"&&String(le.photographer_settlement_mode||"prepaid")!=="ledger"&&',
    'card visibility');
   component=replaceOne(component,
    'disabled:E===le.id||le.payment_status==="receipt_pending"||["uploading","pending","approved"].includes(String(le.receipt_status||"")),',
@@ -57,6 +75,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'title:"کل حساب عکاسی در همین لابراتوار دفتری می‌شود؛ رسیدهای در انتظار بررسی محفوظ می‌مانند.",',
    'photographer-wide button tooltip');
   component=replaceOne(component,'children:"دفتری کردن سفارش"','children:"دفتری کردن حساب عکاسی"','card label');
+  // When membership is ledger but this particular receipt still needs review,
+  // show a stable status instead of offering a repeated conversion.
+  component=replaceOne(component,
+   'children:"دفتری کردن حساب عکاسی"}),',
+   'children:"دفتری کردن حساب عکاسی"}),le.settlement_mode==="prepaid"&&le.status==="awaiting_payment"&&String(le.photographer_settlement_mode||"") ==="ledger"&&e.jsx("span",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی دفتری شد · رسید در انتظار بررسی"}),',
+   'account changed confirmation on card');
   component=replaceOne(component,
    'title:"تبدیل سفارش #"+V(pb1643LedgerOrder.number)+" به حساب دفتری",',
    'title:"دفتری کردن حساب عکاسی · سفارش #"+V(pb1643LedgerOrder.number),',
@@ -79,14 +103,14 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'confirm label');
   // The order DETAILS panel shows financial/prepay controls above the card list.
   const detailAnchor='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"})]})';
-  const detailNext='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"}),y.order.status==="awaiting_payment"&&e.jsx("button",{type:"button",className:"pb1643LedgerAction",onClick:()=>{pb1643SetLedgerOrder(y.order);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"})]})';
+  const detailNext='y.order.payment_status==="receipt_rejected"&&e.jsx("small",{children:"رسید رد شده؛ منتظر ارسال مجدد عکاس"}),y.order.status==="awaiting_payment"&&String(y.order.photographer_settlement_mode||"prepaid")!=="ledger"&&e.jsx("button",{type:"button",className:"pb1643LedgerAction",onClick:()=>{pb1643SetLedgerOrder(y.order);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"}),y.order.status==="awaiting_payment"&&y.order.photographer_settlement_mode==="ledger"&&e.jsx("small",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی اکنون دفتری است؛ رسید این سفارش هنوز نیاز به بررسی دارد."})]})';
   component=replaceOne(component,detailAnchor,detailNext,'detail financial action');
   // Two view modes each expose a receipt-approval modal. Keep the new choice
   // next to reject/approve, not hidden in a global settings page.
   const receiptApprove='e.jsx("button",{className:"primary",disabled:De,onClick:()=>fa("approve"),children:"تأیید پرداخت و ورود به صف چاپ"})';
   const count=component.split(receiptApprove).length-1;
   if(count!==2)throw Error('R1646 expected two receipt review modal views, got '+count);
-  component=component.split(receiptApprove).join(receiptApprove+',e.jsx("button",{type:"button",className:"pb1646LedgerFromReceipt",disabled:De,onClick:()=>{Ce(null);Ze("");pb1643SetLedgerOrder(Z);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"})');
+  component=component.split(receiptApprove).join(receiptApprove+',Z&&String(Z.photographer_settlement_mode||"prepaid")!=="ledger"&&e.jsx("button",{type:"button",className:"pb1646LedgerFromReceipt",disabled:De,onClick:()=>{Ce(null);Ze("");pb1643SetLedgerOrder(Z);pb1643SetError("")},children:"دفتری کردن حساب عکاسی"}),Z&&Z.photographer_settlement_mode==="ledger"&&e.jsx("small",{className:"pb1646AccountAlreadyLedger",children:"حساب عکاسی دفتری است؛ این رسید هنوز نیاز به بررسی دارد."})');
   js=js.slice(0,start)+component+js.slice(end)+'\n/* PB1646 photographer-wide ledger UI */\n';
   write(asset,js);
  }
@@ -104,6 +128,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 }
 .labOrderScrollArea .labOrderMiniActions button.pb1643LedgerAction{
  min-width:160px!important;font-size:10.5px!important;
+}
+.pb1646AccountAlreadyLedger{
+ display:inline-flex;align-items:center;padding:5px 9px;border-radius:8px;
+ border:1px solid #b3d9c4;background:#effaf3;color:#25734b;
+ font:750 10px/1.65 Vazirmatn,Tahoma,sans-serif;max-width:100%;white-space:normal;
 }
 `;
  write(cssPath,css);

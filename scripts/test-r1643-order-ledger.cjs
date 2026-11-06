@@ -58,6 +58,7 @@ test('per-order conversion unlocks just this order; financial rows remain untouc
 test('pending receipt, existing payment, and already-paid orders cannot be turned into false ledger settlement',async()=>{
  const {handleLabLedgerOverride:handle}=await policy();
  for(const item of [
+  {receipt:[{id:'r',status:'uploading'}],expected:'receipt_upload_in_progress'},
   {receipt:[{id:'r',status:'pending'}],expected:'receipt_review_required'},
   {receipt:[{id:'r',status:'approved'}],expected:'payment_already_recorded'},
   {paymentCount:1,expected:'order_has_payment'},

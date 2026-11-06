@@ -40,3 +40,11 @@ test('Docker build invokes the monitored runner instead of flooding logs',()=>{
  assert(docker.includes('node scripts/liara-build-supervisor.cjs'));
  assert(!docker.includes('&& node scripts/liara-fast-build.mjs \\'));
 });
+
+test('hundreds of successful patches do not flood Liara log transport',async()=>{
+ const r=await fixture(`for(let i=0;i<900;i++){console.log('[PhotoBridge Docker build] START patch-'+i);console.log('[PhotoBridge Docker build] OK patch-'+i+' (1ms)')}`);
+ assert.equal(r.code,0);
+ assert(r.logs.length<15,'unexpected verbose build logs: '+r.logs.length);
+ assert(r.logs.some(x=>x.includes('completed 900/900 steps')));
+ assert.deepEqual(r.errs,[]);
+});

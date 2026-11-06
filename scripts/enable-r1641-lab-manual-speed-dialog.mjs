@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+const {patchManualIntakeVerification}=createRequire(import.meta.url)('./r1642-intake-verification.cjs');
 
 // R1641 is a late patch on the already prepared website and native Windows payload.
 // Do not change financial state transitions, server routes, or source-file deletion policy.
@@ -9,13 +11,11 @@ const helper='photobridge-r1466-intake-move.js';
 const busyName='photobridge-r1641-native-invoice-busy.js';
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 for(const root of roots){
- // Keep R1571's Chrome 109 / Windows 7 picker and other preceding patches intact.
- // The optimized helper is already copied into the build by R1468/R1469/R1470,
- // and R1571 re-copies its patched version to the native installer.
+ // R1504 and R1571 must complete before patching this final web/native asset.
+ // This avoids changing R1504's exact source anchors in scripts/r1466-intake-move.js.
  const compiled=fs.readFileSync(root+'/'+helper,'utf8');
- if(!compiled.includes('PB1641 safe manual intake fast-path')||
-    !compiled.includes('R1571 browser photo copy compatibility'))
-  throw Error('R1641 expected optimized Windows 7-compatible manual helper in '+root);
+ const optimized=patchManualIntakeVerification(compiled);
+ fs.writeFileSync(root+'/'+helper,optimized);
  const indexPath=root+'/index.html';
  let html=fs.readFileSync(indexPath,'utf8');
  const re=/(photobridge-r1466-intake-move\.js\?[^"'<\s]*)/g;
@@ -47,4 +47,4 @@ manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
 manifest.build=hash(JSON.stringify(manifest.files));
 manifest.generatedAt=new Date().toISOString();
 fs.writeFileSync(manifestPath,JSON.stringify(manifest));
-console.log('[R1641] Manual copy-only order verification reuse; invoice pending buttons restricted to error state; Windows manifest '+manifest.build.slice(0,12));
+console.log('[R1642] Post-R1504 manual verification fast-path; invoice pending buttons restricted to error state; Windows manifest '+manifest.build.slice(0,12));

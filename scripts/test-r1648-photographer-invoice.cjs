@@ -6,8 +6,9 @@ test('R1648 customer invoice is placed in same-origin desktop parent above its i
  for(const root of roots){
   const js=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
   const start=js.indexOf('function pb1648InvoicePortal(');
-  const end=js.indexOf('function tj(',start);
-  assert(start>=0&&end>start,root+' invoice preview portal not found');
+  const invoiceStart=js.indexOf('function Oc(',start);
+  const end=invoiceStart<0?-1:js.indexOf('function ',invoiceStart+'function Oc('.length);
+  assert(start>=0&&invoiceStart>start&&end>invoiceStart,root+' invoice preview portal boundary not found');
   const component=js.slice(start,end);
   assert.match(component,/role==="customer"&&window\.parent!==window/);
   assert.match(component,/p\.documentElement\.classList\.contains\("pb1126Desktop"\)/);
@@ -15,6 +16,7 @@ test('R1648 customer invoice is placed in same-origin desktop parent above its i
   assert.match(component,/pb1648InvoicePortal\(t\)\)\}/);
   assert.match(component,/ownerDocument\.body/);
   assert.match(component,/ownerDocument\.defaultView/);
+  assert.match(component,/t==="lab"\?Math\.max\(\.9,Math\.min\(1\.05,k\/C\)\)/);
   assert.match(component,/t==="customer"&&pb1648InvoicePortal\(t\)!==document\.body/);
   assert.match(component,/labInvoicePreview/);
   assert.match(component,/customerInvoicePreview/);

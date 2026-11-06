@@ -49,9 +49,9 @@
   html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow {
     box-sizing:border-box!important;
     display:grid!important;
-    width:max(100%,1060px)!important;
-    min-width:1060px!important;
-    grid-template-columns:78px minmax(148px,1fr) 82px 112px 108px 114px 118px 168px!important;
+    width:max(100%,1120px)!important;
+    min-width:1120px!important;
+    grid-template-columns:78px minmax(148px,1fr) 82px 112px 108px 114px 118px 210px!important;
     gap:9px!important;
     padding:10px 12px!important;
     align-items:center!important;
@@ -102,6 +102,14 @@
     justify-content:center!important;
     gap:6px!important;
     min-width:0!important;
+  }
+  html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow .invoiceActionMini {
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    gap:6px!important;
   }
   html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .accountingInvoiceRows > .invoiceRow > .invoiceActionStack button {
     min-height:30px!important;

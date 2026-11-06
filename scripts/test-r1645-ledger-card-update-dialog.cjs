@@ -20,7 +20,10 @@ test('R1645 ledger conversion is on the visible main order-card actions for site
   assert.match(card,/هیچ مبلغی صفر یا تسویه نمی‌شود/);
   assert.equal((card.match(/pb1643LedgerAction/g)||[]).length,1);
   assert.match(fs.readFileSync(root+'/photobridge-r1643-order-ledger.css','utf8'),/\.labOrderMiniActions \.pb1643LedgerAction/);
-  assert.match(fs.readFileSync(root+'/index.html','utf8'),/photobridge-r1643-order-ledger\.css/);
+  const html=fs.readFileSync(root+'/index.html','utf8');
+  assert.match(html,/photobridge-r1643-order-ledger\\.css\\?v=r1645/);
+  assert.match(html,/orderLedger=r1645/);
+  assert.match(fs.readFileSync(root+'/photobridge-r1643-order-ledger.css','utf8'),/labOrderScrollArea \\.labOrderMiniActions button\\.pb1643LedgerAction/);
  }
  const root='dist/web/lab-desktop-ui',manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
  for(const name of ['assets/index-UIRefine-v655-r84.js','index.html','photobridge-r1643-order-ledger.css']){

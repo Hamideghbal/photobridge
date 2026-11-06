@@ -6,8 +6,11 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const refundableStatuses=new Set(['uploading','pending','approved']);
 const cancellablePayments=new Set(['pricing_required','awaiting_receipt','receipt_rejected']);
 export function photographerLedgerOrderEligibility(order,receiptStatus,hasPayments){
- if(!order||order.settlement_mode!=='prepaid'||order.status!=='awaiting_payment'
-   ||order.downloaded_at||order.printed_at)return {eligible:false,reason:'not_pending'};
+ // R1647: downloaded orders can still have an unpaid proforma. Keep download state.
+ if(!order||order.settlement_mode!=='prepaid'||order.printed_at||
+   !['awaiting_payment','downloaded'].includes(String(order.status||''))||
+   (order.status==='awaiting_payment'&&order.downloaded_at))
+  return {eligible:false,reason:'not_pending'};
  if(order.payment_status==='paid'||hasPayments||receiptStatus==='approved')return {eligible:false,reason:'payment_recorded'};
  if(receiptStatus==='pending'||receiptStatus==='uploading'||order.payment_status==='receipt_pending')
   return {eligible:false,reason:'receipt_needs_review'};
@@ -45,7 +48,8 @@ export async function handleLabPhotographerLedger({req,url,res,pool,labId,a,body
   account=mq.rows[0];
   const candidates=await db.query(`SELECT * FROM orders
     WHERE lab_id=$1 AND customer_id=$2 AND settlement_mode='prepaid'
-      AND status='awaiting_payment' AND downloaded_at IS NULL AND printed_at IS NULL
+      AND (status='downloaded' OR (status='awaiting_payment' AND downloaded_at IS NULL))
+      AND printed_at IS NULL
     ORDER BY id FOR UPDATE`,[labId,customerId]);
   const ids=candidates.rows.map(row=>row.id);
   let receiptMap=new Map(),hasPayment=new Set();
@@ -65,9 +69,11 @@ export async function handleLabPhotographerLedger({req,url,res,pool,labId,a,body
    if(!decision.eligible){skipped.push({id:old.id,number:old.number,reason:decision.reason});continue;}
    // Repeat the financial checks inside UPDATE to protect against stale state.
    const changed=await db.query(`UPDATE orders SET
-     settlement_mode='ledger',payment_status='not_required',status='sent',updated_at=now()
+     settlement_mode='ledger',payment_status='not_required',
+     status=CASE WHEN status='awaiting_payment' THEN 'sent' ELSE status END,updated_at=now()
      WHERE id=$1 AND lab_id=$2 AND customer_id=$3 AND settlement_mode='prepaid'
-       AND status='awaiting_payment' AND downloaded_at IS NULL AND printed_at IS NULL
+       AND (status='downloaded' OR (status='awaiting_payment' AND downloaded_at IS NULL))
+       AND printed_at IS NULL
        AND payment_status IN ('pricing_required','awaiting_receipt','receipt_rejected')
        AND NOT EXISTS (SELECT 1 FROM order_payment_receipts r
          WHERE r.order_id=orders.id AND r.lab_id=orders.lab_id
@@ -77,8 +83,10 @@ export async function handleLabPhotographerLedger({req,url,res,pool,labId,a,body
      RETURNING *`,[old.id,labId,customerId]);
    if(!changed.rowCount){skipped.push({id:old.id,number:old.number,reason:'state_changed'});continue;}
    const fresh=changed.rows[0];released.push(fresh);
-   await statusEvent(db,fresh,'sent',a.userId,
-    'حساب عکاسی در این لابراتوار دفتری شد؛ سفارش بدون ثبت پرداخت جدید آزاد شد.');
+   await statusEvent(db,fresh,fresh.status,a.userId,
+    fresh.status==='downloaded'
+     ?'حساب عکاسی دفتری شد؛ فایل‌های دانلودشده و سوابق مالی بدون تغییر باقی ماندند.'
+     :'حساب عکاسی در این لابراتوار دفتری شد؛ سفارش بدون ثبت پرداخت جدید آزاد شد.');
   }
   await db.query('COMMIT');
  }catch(error){await db.query('ROLLBACK').catch(()=>{});throw error}
@@ -92,8 +100,10 @@ export async function handleLabPhotographerLedger({req,url,res,pool,labId,a,body
    {customerId,settlementMode:'ledger',labId,releasedOrderIds:released.map(o=>o.id)});
   for(const item of released)
    publishCustomerEvent(labId,String(customerId),'order_status',
-    {orderId:item.id,number:item.number,status:'sent',settlementMode:'ledger',updatedAt:item.updated_at,
-     note:'حساب عکاسی به دفتری تغییر کرد؛ سفارش در صف دریافت لابراتوار قرار گرفت.'});
+    {orderId:item.id,number:item.number,status:item.status,settlementMode:'ledger',updatedAt:item.updated_at,
+     note:item.status==='downloaded'
+       ?'حساب عکاسی دفتری شد؛ دانلود فعلی محفوظ ماند و مانع تسویهٔ پیش از چاپ برداشته شد.'
+       :'حساب عکاسی دفتری شد؛ سفارش در صف دریافت لابراتوار قرار گرفت.'});
   publishLabEvent(labId,'photographer_settlement_changed',
    {customerId,sourceOrderId:reference.id,settlementMode:'ledger',releasedCount:released.length,pendingReceipt});
  }catch{}

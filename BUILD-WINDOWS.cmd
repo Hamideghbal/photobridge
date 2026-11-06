@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-node build-local.cjs 1.0.89
+node build-local.cjs 1.0.90
 if errorlevel 1 goto failed
 echo Build completed. See release folder.
 pause

@@ -20,6 +20,7 @@ const messages={
  order_not_awaiting_payment:'فقط سفارش‌هایی که هنوز در انتظار تسویه و قبل از دانلود یا چاپ هستند قابل دفتری‌کردن‌اند.',
  payment_already_recorded:'برای این سفارش پرداخت ثبت شده است؛ ابتدا گردش مالی را بررسی کنید.',
  receipt_review_required:'رسید پرداخت در انتظار بررسی است؛ ابتدا رسید را تأیید یا رد کنید.',
+ receipt_upload_in_progress:'ارسال رسید پرداخت در حال انجام است؛ ابتدا تکلیف رسید را مشخص کنید.',
  order_payment_state_changed:'وضعیت پرداخت سفارش تغییر کرده است؛ فهرست سفارش‌ها را به‌روز کنید.',
  order_has_payment:'این فاکتور قبلاً دریافت مالی دارد؛ تبدیل خودکار آن به حساب دفتری مجاز نیست.'
 };
@@ -44,9 +45,9 @@ export async function handleLabLedgerOverride({req,url,res,pool,labId,a,bodyJson
   if(check.alreadyLedger){await db.query('COMMIT');sendJson(res,200,{ok:true,order:old,unchanged:true});return true;}
   // Even a stale payment_status cannot override a receipt or a financial payment.
   const receipts=await db.query('SELECT id,status FROM order_payment_receipts WHERE order_id=$1 AND lab_id=$2 FOR UPDATE',[old.id,labId]);
-  if(receipts.rows.some(r=>['pending','approved'].includes(String(r.status)))){
+  if(receipts.rows.some(r=>['uploading','pending','approved'].includes(String(r.status)))){
    await db.query('ROLLBACK');
-   const error=receipts.rows.some(r=>r.status==='approved')?'payment_already_recorded':'receipt_review_required';
+   const error=receipts.rows.some(r=>r.status==='approved')?'payment_already_recorded':receipts.rows.some(r=>r.status==='uploading')?'receipt_upload_in_progress':'receipt_review_required';
    sendJson(res,409,{error,message:messages[error]});return true;
   }
   const paid=await db.query(`SELECT count(*)::int count FROM finance_payments p

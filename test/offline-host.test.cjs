@@ -46,11 +46,14 @@ test('online local-device intake forwards creation, chosen size and details with
    return Response.json({fileId,storageMode:'device-local',state:'active'});
   }
   if(url==='/api/lab/orders/'+orderId)return Response.json({order:{id:orderId,number:521,customer_id:f.customer,status:'uploading',mode:'print',source:'lab_delegated'},files:[{id:fileId,original_name:'test.jpg',bytes:12,print_size_id:f.size,print_type:'luster'}]});
+  if(url==='/api/lab/delegated-orders/'+orderId+'/submit')return Response.json({ok:true,orderId,orderNumber:521,status:'downloaded'});
   // Fixture has some cached reads but may request additional optional snapshots.
   if(['GET',undefined].includes(options.method))return Response.json({});
   return Response.json({error:'unexpected_upstream_path',url},{status:404});
  });
  try{
+  // Reproduce switching from offline to online with the native local ledger active.
+  f.store.set('localBusinessActive:A',true);
   let current=await f.call('/api/lab/delegated-orders/bootstrap?mode=print');
   assert.equal(current.status,200);
   assert.equal(current.data.printSizes[0].id,f.size,'print sizes come from server when online');
@@ -63,6 +66,9 @@ test('online local-device intake forwards creation, chosen size and details with
   assert.equal(response.status,200);assert.equal(response.data.storageMode,'device-local');
   response=await f.call('/api/lab/orders/'+orderId+'/download');
   assert.equal(response.status,200);assert.equal(response.data.files[0].print_size_id,f.size);
+  response=await f.call('/api/lab/delegated-orders/'+orderId+'/submit/download',{desktopLocalFiles:[{rootId:'root',parts:['test.jpg'],bytes:12}],sendInvoiceSms:false});
+  assert.equal(response.status,200);assert.equal(response.data.status,'downloaded');
+  assert(urls.includes('/api/lab/delegated-orders/'+orderId+'/submit'));
   assert(urls.includes('/api/lab/delegated-orders'));
   assert(urls.includes('/api/lab/delegated-orders/'+orderId+'/files/presign'));
   assert(urls.includes('/api/lab/orders/'+orderId));

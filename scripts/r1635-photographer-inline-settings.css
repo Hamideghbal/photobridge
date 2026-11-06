@@ -13,3 +13,68 @@ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>bu
 html.pb1635SettingsOpen.pb1632FinanceThird body #pb1126ChromeHost #pb1126DesktopHeader{height:113px!important;min-height:113px!important;grid-template-rows:72px 41px!important}
 html.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs{display:none!important}
 }
+
+/* R1636 — keep the inline settings ABOVE the native print iframe
+   (2147483400) and BELOW the real desktop header (2147483550). */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ #pb1635SettingsPanel{
+  position:fixed!important;
+  inset:113px 0 0!important;
+  z-index:2147483475!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  background:#f5f7fb!important;
+ }
+ #pb1635SettingsPanel>iframe{
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+ }
+ #pb1635SettingsPanel>.pb1635SettingsLoading{
+  position:absolute;inset:0;z-index:1;display:flex;align-items:center;
+  justify-content:center;gap:12px;direction:rtl;
+  background:#f5f7fb;color:#475467;
+  font:700 13px/1.6 Vazirmatn,Tahoma,sans-serif;
+ }
+ #pb1635SettingsPanel>.pb1635SettingsLoading[hidden]{display:none!important}
+ #pb1635SettingsPanel>.pb1635SettingsLoading>button{
+  border:1px solid #cdd8eb;border-radius:8px;
+  padding:6px 12px;background:#fff;color:#315efb;
+  font:700 12px/1.5 Vazirmatn,Tahoma,sans-serif;
+  cursor:pointer;
+ }
+ /* Second-row right controls and left settings have identical tab metrics. */
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1635SettingsNav{
+  gap:4px!important;
+  align-items:center!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1635SettingsNav>button{
+  box-sizing:border-box!important;
+  min-width:0!important;
+  min-height:34px!important;
+  height:34px!important;
+  margin:0!important;
+  padding:5px 9px 8px!important;
+  font:800 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  letter-spacing:normal!important;
+ }
+ /* Subtle status pills, without changing the selected color or order counts. */
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace :is(.photographerContextStatusesDesktop,#photographer-album-status-desktop-slot .albumHeaderStatuses)>button{
+  min-height:30px!important;
+  height:30px!important;
+  padding:4px 3px!important;
+  gap:5px!important;
+  font:700 10.5px/1.35 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root main.photographerMain.photographerPrintWorkspace :is(.photographerContextStatusesDesktop,#photographer-album-status-desktop-slot .albumHeaderStatuses)>button>b{
+  flex-basis:20px!important;
+  min-width:20px!important;
+  width:20px!important;
+  height:20px!important;
+  font:750 9.5px/1 Vazirmatn,Tahoma,sans-serif!important;
+ }
+}

@@ -1000,3 +1000,9 @@ runR1314(process.execPath,['--test','scripts/test-r1674-direct-customer-invoice.
 // R1666: HEIC/HEIF iPhone conversion and safe photo filenames.
 await deployStep('./enable-r1666-iphone-heic-upload.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1666-iphone-heic-upload.cjs'],{stdio:'inherit'});
+
+// R1682: direct-customer invoices must issue independently of photographer ledger flags.
+// Keep the photographer after-print flow intact, block direct-customer Ready without invoice,
+// and trigger native auto-download on fresh order-list responses.
+await deployStep('./enable-r1682-direct-customer-order-flow.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1682-direct-customer-order-flow.cjs'],{stdio:'inherit'});

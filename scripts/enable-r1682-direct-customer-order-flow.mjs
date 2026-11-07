@@ -54,17 +54,22 @@ function replaceOptional(source,oldValue,newValue,label){
  return source;
 }
 
-// If the frozen Windows snapshot already contains an older R1568 worker,
-// replace only its scheduler tail; do not duplicate the worker's processing functions.
+// R1683: the R1586 patch has already installed a serialized immediate wake
+// for new notifications and desktop events. Preserve it, then shorten only
+// its safety polling interval. Do not replace the worker or its wake hooks.
 const nativeAsset='dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js';
 let nativeJs=read(nativeAsset);
-if(!nativeJs.includes('/* R1682 event-driven order download */')){
- const workerSource=read('scripts/r1568-native-worker.js.txt');
- const marker='/* R1682 event-driven order download:';
- const markerAt=workerSource.indexOf(marker);
- if(markerAt<0)throw Error('R1682 updated native worker tail missing');
- const oldTail="if(typeof window!=='undefined'&&window.pbNativeStorage){\n setTimeout(()=>void pb1568AutoTick(),12000);\n setInterval(()=>void pb1568AutoTick(),45000);\n window.pb1568AutomationStatus=()=>({...pb1568Work});\n}";
- nativeJs=one(nativeJs,oldTail,workerSource.slice(markerAt),'native worker scheduler');
+if(!nativeJs.includes('/* R1683 preserved R1586 download wake */')){
+ if(!nativeJs.includes('/* R1586: the event scheduler starts the worker immediately. */')||
+    !nativeJs.includes('function pb1586WakeDownloads()'))
+  throw Error('R1683 R1586 realtime worker has not been applied');
+ nativeJs=one(nativeJs,'setInterval(()=>void pb1568AutoTick(),45000);',
+   'setInterval(()=>void pb1568AutoTick(),10000);','native safety poll');
+ nativeJs+='\n/* R1683 preserved R1586 download wake */\n'
+  +'if(typeof window!=="undefined"&&window.pbNativeStorage){\n'
+  +' window.addEventListener("focus",pb1586WakeDownloads);\n'
+  +' document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pb1586WakeDownloads()});\n'
+  +'}\n';
  write(nativeAsset,nativeJs);
  execFileSync(process.execPath,['--check',nativeAsset],{stdio:'inherit'});
 }

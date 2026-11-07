@@ -992,3 +992,7 @@ runR1314(process.execPath,['--test','scripts/test-r1664-storage-separation.cjs']
 // R1665: bold monochrome thermal invoices for coworker and customer with party telephone.
 await deployStep('./enable-r1665-thermal-invoice.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1665-thermal-invoice.cjs'],{stdio:'inherit'});
+
+// R1666: HEIC/HEIF iPhone conversion and safe photo filenames.
+await deployStep('./enable-r1666-iphone-heic-upload.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1666-iphone-heic-upload.cjs'],{stdio:'inherit'});

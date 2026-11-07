@@ -1,1 +1,1 @@
-2026-11-07-r1667-sw-url-compatible
+2026-11-07-r1668-settings-header-capture

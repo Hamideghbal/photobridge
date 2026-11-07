@@ -5,22 +5,18 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {withSettingsCapture,withSettingsCloser} from './r1662-settings-capture.mjs';
 const digest=x=>crypto.createHash('sha256').update(x).digest('hex');
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const navFile=root+'/photobridge-r1126-desktop-navigation.js';
  const settingsFile=root+'/photobridge-r1635-photographer-inline-settings.js';
  let nav=fs.readFileSync(navFile,'utf8');
  let settings=fs.readFileSync(settingsFile,'utf8');
- const navAnchor='function navigate(key){';
- const settingsAnchor=' function open(key){';
- if(nav.split(navAnchor).length!==2||settings.split(settingsAnchor).length!==2
-   ||!nav.includes("if(key==='print'){open(key);return;}")
-   ||!settings.includes("panel?.remove();panel=null;selected='';")
-   ||!settings.includes("document.documentElement.classList.remove('pb1635SettingsOpen')")
-   ||!nav.includes("window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]')"))
-   throw Error('R1662 photographer navigation anchors: '+root);
- nav=nav.replace(navAnchor,navAnchor+"\n  // PB1662: close settings before showing this tab.\n  window.pb1635CloseInlineSettings?.();");
- settings=settings.replace(settingsAnchor," // PB1662: expose the existing full settings cleanup.\n window.pb1635CloseInlineSettings=close;\n"+settingsAnchor);
+ // R1668: do not depend on the exact navigate()/print-tab implementation.
+ // A window capture listener must run before R1126's existing capture click
+ // path (which can stop event propagation before Settings receives a click).
+ nav=withSettingsCapture(nav);
+ settings=withSettingsCloser(settings);
  fs.writeFileSync(navFile,nav);
  fs.writeFileSync(settingsFile,settings);
  execFileSync(process.execPath,['--check',navFile],{stdio:'inherit'});

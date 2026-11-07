@@ -121,7 +121,7 @@ function pb1568InstallOrderFetchHook(){
  window.fetch=function(input,init){
   const url=String(typeof input==='string'?input:input?.url||'');
   const result=original.call(this,input,init);
-  if(/\\/api\\/lab\\/orders(?:\\?|$)/.test(url)){
+  if(/\/api\/lab\/orders(?:\?|$)/.test(url)){
    result.then(response=>{if(response?.ok&&!pb1568Work.running)pb1568ScheduleTick()}).catch(()=>{});
   }
   return result;

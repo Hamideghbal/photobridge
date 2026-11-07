@@ -1,6 +1,7 @@
 // Called only inside the verified receipt transaction, after the exact manifest matched.
+function r1682DirectCustomerOrder(order={}){const kind=String(order.customer_kind||'').trim().toLowerCase();if(kind==='customer')return true;if(kind==='coworker')return false;const source=String(order.source||order.order_source||'').trim().toLowerCase();return source==='walkin'||source==='manual_invoice'||Boolean(String(order.walkin_customer_name||'').trim());}
 export async function invoiceAfterVerifiedDownload(c,labId,order,issueInvoice){
- if(order.invoice_required===false)return {};
+ if(order.invoice_required===false&&!r1682DirectCustomerOrder(order))return {};
  if(!order.downloaded_at)throw Error('download_not_verified');
  await c.query('SAVEPOINT verified_download_invoice');
  try{
@@ -15,3 +16,5 @@ export async function invoiceAfterVerifiedDownload(c,labId,order,issueInvoice){
   return {invoice:null,invoiceError:pricing?'invoice_pricing_required':'invoice_issuance_failed',missingPricing:pricing?(error.missingPricing||[]):[]};
  }
 }
+
+/* R1682 direct-customer verified invoice */

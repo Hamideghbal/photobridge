@@ -52,6 +52,15 @@ test('R1674 server includes direct customer identity in both invoice listing and
  assert(api.includes("order_source: order.order_source"));
  assert.equal(api.split('direct_customer_mobile: order.direct_customer_mobile').length-1,2);
  assert(api.includes('lab_phone'));assert(api.includes('lab_address'));assert(api.includes('LEFT JOIN lab_delivery_settings ds ON ds.lab_id=l.id'));assert(api.includes('lab_admin.mobile'));
+ const invoiceFn=api.indexOf('async function createOrGetInvoice(');
+ const orderQueryStart=api.indexOf('const oq = await c.query(`SELECT o.*,',invoiceFn);
+ const orderQueryEnd=api.indexOf('`, [orderId, labId]);',orderQueryStart);
+ assert(invoiceFn>=0&&orderQueryStart>invoiceFn&&orderQueryEnd>orderQueryStart);
+ const sql=api.slice(orderQueryStart,orderQueryEnd);
+ assert(sql.includes('LEFT JOIN lab_delivery_settings ds'),'Invoice contact must be available when issuing');
+ assert(sql.includes('LEFT JOIN LATERAL'),'Invoice lab admin contact must be optional');
+ assert(sql.includes('WHERE o.id=$1 AND o.lab_id=$2 FOR UPDATE OF o'),'Lock ONLY order row with optional lab contact joins');
+ assert(!sql.endsWith(' FOR UPDATE'),'Bare FOR UPDATE cannot lock nullable side of LEFT JOIN');
 });
 test('R1674 web/native preview/print/PDF route by customer type while preserving coworker templates',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import {withInvoiceServiceWorkerRevision} from './r1661-sw-registration.mjs';
 const root='dist/web';
 function one(s,a,b,label){const n=s.split(a).length-1;if(n!==1)throw Error('R1661 '+label+' count '+n);return s.replace(a,b)}
 const hooks="/* PB1661 customer invoice overlay */\nconst[pb1661Invoice,pb1661SetInvoice]=x.useState(null),[pb1661Busy,pb1661SetBusy]=x.useState(false),[pb1661Error,pb1661SetError]=x.useState(\"\"),pb1661Sequence=x.useRef(0);\nx.useEffect(()=>{\n let alive=true;\n const open=async event=>{\n  const id=String(event?.detail?.invoiceId||\"\").trim();\n  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))return;\n  const seq=++pb1661Sequence.current;\n  pb1661SetError(\"\");pb1661SetInvoice(null);pb1661SetBusy(true);\n  try{\n   const result=await Me(\"/api/customer/invoices\");\n   const invoice=(result?.invoices||[]).find(v=>String(v.id)===id&&![\"discount\",\"correction\"].includes(String(v.document_type||\"\")));\n   if(!invoice)throw Error(\"not_found\");\n   if(alive&&seq===pb1661Sequence.current)pb1661SetInvoice(invoice);\n  }catch{if(alive&&seq===pb1661Sequence.current)pb1661SetError(\"دریافت فاکتور انجام نشد. اتصال یا دسترسی را بررسی کنید.\");}\n  finally{if(alive&&seq===pb1661Sequence.current)pb1661SetBusy(false);}\n };\n window.addEventListener(\"pb1661-invoice-open\",open);\n const q=new URLSearchParams(location.search);\n const id=q.get(\"pbInvoice\")||(location.pathname===\"/photographer/finance/invoices\"?q.get(\"invoice\"):null);\n if(id){\n  const u=new URL(location.href);u.searchParams.delete(\"pbInvoice\");u.searchParams.delete(\"invoice\");\n  history.replaceState(history.state,\"\",u.pathname+u.search+u.hash);\n  void open({detail:{invoiceId:id}});\n }\n return()=>{alive=false;pb1661Sequence.current++;window.removeEventListener(\"pb1661-invoice-open\",open)};\n},[]);\n";
@@ -29,8 +30,7 @@ push=one(push,'const open=()=>location.assign(targetWithId(payload));',
  'const open=()=>{if(pb1661OpenInvoice(payload))el.remove();else location.assign(targetWithId(payload))};','push click');
 push=one(push,"  navigator.serviceWorker?.addEventListener?.('message',e=>{if(e?.data?.type!=='PB_PUSH_FOREGROUND')",
  pushMessage+"  navigator.serviceWorker?.addEventListener?.('message',e=>{if(e?.data?.type!=='PB_PUSH_FOREGROUND')",'worker message');
-push=one(push,"const SW='/photobridge-sw-v710.js?gallery=r1318';",
- "const SW='/photobridge-sw-v710.js?gallery=r1318&invoiceModal=r1661';",'SW version');
+push=withInvoiceServiceWorkerRevision(push);
 fs.writeFileSync(pushPath,push);execFileSync(process.execPath,['--check',pushPath],{stdio:'inherit'});
 const workerPath=root+'/photobridge-sw-v710.js';let worker=fs.readFileSync(workerPath,'utf8');
 const clickAt=worker.indexOf("self.addEventListener('notificationclick',event=>{");

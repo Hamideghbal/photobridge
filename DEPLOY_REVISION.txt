@@ -1,1 +1,1 @@
-2026-11-07-r1666-storage-thermal-heic-filenames
+2026-11-07-r1667-sw-url-compatible

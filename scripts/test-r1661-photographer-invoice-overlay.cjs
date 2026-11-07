@@ -37,5 +37,26 @@ test('R1663: service worker VERSION is optional when installer cache busts the w
  assert(installer.includes("if(versions.length===1)worker=worker.replace(swVersion"));
  assert(installer.includes("keeping generated worker version (URL cache-busted)"));
  assert(!installer.includes("throw Error('R1661 SW version"));
- assert(installer.includes("invoiceModal=r1661"));
+ assert(installer.includes("withInvoiceServiceWorkerRevision(push)"));
+});
+
+test('R1667: SW invoice cache key preserves existing revisions and is idempotent',async()=>{
+ const {withInvoiceServiceWorkerRevision:fix}=await import('./r1661-sw-registration.mjs');
+ const samples=[
+  ["const SW='/photobridge-sw-v710.js?gallery=r1318';","gallery=r1318&invoiceModal=r1661"],
+  ["const SW='/photobridge-sw-v710.js?gallery=r1318&other=r888';","gallery=r1318&other=r888&invoiceModal=r1661"],
+  ['const SW="/photobridge-sw-v710.js?invoiceModal=old&other=r7";',"other=r7&invoiceModal=r1661"],
+  ["const SW='/photobridge-sw-v710.js';","?invoiceModal=r1661"]
+ ];
+ for(const [before,expected] of samples){
+  const after=fix(before);
+  assert(after.includes(expected),before);
+  assert.equal(fix(after),after,'SW revision must be idempotent');
+  assert.equal(after.split('invoiceModal=r1661').length-1,1);
+ }
+ assert.throws(()=>fix("const SW='/unrelated.js';"),/R1661 SW registration count 0/);
+ const registered=fs.readFileSync(web+'/photobridge-push-v728.js','utf8');
+ const revised=fix(registered);
+ assert(revised.includes('invoiceModal=r1661'));
+ assert.equal(fix(revised),revised);
 });

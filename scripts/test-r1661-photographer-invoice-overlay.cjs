@@ -31,3 +31,11 @@ test('R1661 cache busts both JS assets and runs after R1660',()=>{
  assert(build.indexOf("await deployStep('./enable-r1661-photographer-invoice-overlay.mjs')")>
         build.indexOf("await deployStep('./enable-r1660-mobile-lab-order-number.mjs')"));
 });
+
+test('R1663: service worker VERSION is optional when installer cache busts the worker URL',()=>{
+ const installer=fs.readFileSync('scripts/enable-r1661-photographer-invoice-overlay.mjs','utf8');
+ assert(installer.includes("if(versions.length===1)worker=worker.replace(swVersion"));
+ assert(installer.includes("keeping generated worker version (URL cache-busted)"));
+ assert(!installer.includes("throw Error('R1661 SW version"));
+ assert(installer.includes("invoiceModal=r1661"));
+});

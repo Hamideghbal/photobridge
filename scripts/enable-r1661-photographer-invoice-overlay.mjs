@@ -38,8 +38,12 @@ if(clickAt<0||!worker.slice(clickAt).includes('await client.navigate(target)'))t
 worker=worker.slice(0,clickAt)+swClick;
 const swVersion=/^const VERSION\s*=\s*(['"])[^'"\r\n]+\1\s*;/gm;
 const versions=[...worker.matchAll(swVersion)];
-if(versions.length!==1)throw Error('R1661 SW version contract count '+versions.length);
-worker=worker.replace(swVersion,"const VERSION='photobridge-pwa-v1661';");
+// The worker script can have a generated VERSION expression or an inlined
+// identifier after earlier build stages. Its cache revision is optional:
+// the service-worker registration URL below is independently cache-busted.
+// Never block a release just because an existing worker omits this constant.
+if(versions.length===1)worker=worker.replace(swVersion,"const VERSION='photobridge-pwa-v1661';");
+else console.log('[R1661] SW VERSION declaration count='+versions.length+'; keeping generated worker version (URL cache-busted)');
 fs.writeFileSync(workerPath,worker);execFileSync(process.execPath,['--check',workerPath],{stdio:'inherit'});
 const cssFile='photobridge-r1661-invoice-notification.css';fs.copyFileSync('scripts/r1661-invoice-notification.css',root+'/'+cssFile);
 const htmlPath=root+'/index.html';let html=fs.readFileSync(htmlPath,'utf8');

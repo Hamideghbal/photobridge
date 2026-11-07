@@ -1,1 +1,1 @@
-2026-11-07-r1662-settings-return-sw-version
+2026-11-07-r1663-sw-version-nonblocking-invoice-overlay

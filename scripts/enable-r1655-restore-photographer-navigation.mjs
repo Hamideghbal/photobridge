@@ -15,7 +15,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     nav.includes('/* PB1653 stable desktop photographer */')||
     nav.includes('live[index]?.click()'))
   throw Error('R1655 unsafe photographer navigation still present: '+root);
- if(!nav.includes('copy.onclick=()=>{press(copy);original.click()')||
+ if(!/copy\.onclick=\(\)=>\{press\(copy\);original\.click\(\);/.test(nav)||
     !nav.includes("if(utilities){const separator="))
   throw Error('R1655 expected R1632 direct routing missing: '+root);
  execFileSync(process.execPath,['--check',navPath],{stdio:'inherit'});

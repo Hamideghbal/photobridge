@@ -1,1 +1,1 @@
-2026-11-07-r1684-invoice-row-lock-fix
+2026-11-07-r1685-direct-customer-thermal-invoice

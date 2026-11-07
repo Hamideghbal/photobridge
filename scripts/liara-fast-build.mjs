@@ -973,3 +973,7 @@ runR1314(process.execPath,['--test','scripts/test-r1658-album-compact-three-up.c
 // R1659: first-paint mobile dock deduplication and desktop settings selected-state correction.
 await deployStep('./enable-r1659-single-mobile-dock-settings-active.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1659-single-mobile-dock-settings-active.cjs'],{stdio:'inherit'});
+
+// R1660: mobile Lab order number and small tablet single-column card header.
+await deployStep('./enable-r1660-mobile-lab-order-number.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1660-mobile-lab-order-number.cjs'],{stdio:'inherit'});

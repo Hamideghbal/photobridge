@@ -1,16 +1,19 @@
 function pb1674DirectCustomer(t){
- const kind=String(t?.customer_kind||'').trim().toLowerCase();
- if(kind==='customer')return true;
- // The dedicated walk-in fields are evidence of a free customer even
- // if an old cached document still reports coworker.
- if(String(t?.walkin_customer_name||'').trim()||String(t?.walkin_customer_mobile||'').trim())return true;
- if(kind==='coworker')return false;
- // Some manual orders belong to a photographer; do not label them as free customers.
- if(t?.photographer_id||t?.studio_id||t?.photographer_name||t?.studio_name)return false;
+ const kind=String(t?.customer_kind||t?.party_kind||t?.role||'').trim().toLowerCase();
  const source=String(t?.order_source||t?.source||'').trim().toLowerCase();
- return source==='walkin'||source==='manual_invoice';
+ const walkin=Boolean(String(t?.walkin_customer_name||t?.direct_customer_name||t?.walkin_customer_mobile||t?.direct_customer_mobile||'').trim());
+ // R1703: a photographer's order can carry stale customer-only fields.
+ // An explicit photographer identity and role override those fields.
+ if(t?.photographer_id||t?.studio_id||t?.atelier_id||t?.photographer_name||t?.studio_name)return false;
+ if(['coworker','photographer','studio','atelier'].includes(kind)){
+  return source==='walkin'&&walkin;
+ }
+ if(kind==='customer'||kind==='direct_customer')return true;
+ if(['photographer','studio','atelier'].includes(source))return false;
+ if(source==='walkin'||source==='direct_customer'||source==='free_customer')return true;
+ if(source==='manual_invoice')return walkin||!kind;
+ return walkin;
 }
-
 function pb1674CustomerName(t){
  return String(t?.direct_customer_name||t?.walkin_customer_name||t?.customer_name||'ثبت نشده').trim();
 }

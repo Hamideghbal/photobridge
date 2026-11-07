@@ -109,7 +109,6 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    if(!item)throw Error('R1682 missing native manifest entry '+name);
    item.sha256=digest(fs.readFileSync(root+'/'+name));
   }
-  manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
   manifest.build=digest(JSON.stringify(manifest.files));
   manifest.generatedAt=new Date().toISOString();
   write(manifestPath,JSON.stringify(manifest));

@@ -16,11 +16,19 @@ export function withDirectCustomerIdentityFields(api){
   const sqlAfter=api.slice(end,end+500);
   if(!sqlAfter.includes('JOIN users u')||!sqlAfter.includes('JOIN orders o')&&star!=='o')
    throw Error('R1674 invoice query joins changed '+query);
+  // R1705: classify from this laboratory's active membership, not from stale
+  // walk-in columns. Both studios and registered free customers can use the
+  // same photo-upload channel, so order.source alone is not the party's role.
+  const legacyKind="CASE WHEN o.source IN ('walkin','manual_invoice') OR EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) OR NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind";
+  const membershipRole="CASE WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' ELSE '' END party_membership_role";
+  const resolvedKind="CASE WHEN o.source IN ('walkin','manual_invoice') THEN 'customer' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' WHEN o.source IN ('photographer','studio','atelier') THEN 'coworker' WHEN NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind";
+  if(select.includes(legacyKind))select=select.replace(legacyKind,resolvedKind);
   const parts=[];
   if(!/\bdirect_customer_name\b/.test(select))parts.push("NULLIF(BTRIM(o.walkin_customer_name),'') direct_customer_name");
   if(!/\bdirect_customer_mobile\b/.test(select))parts.push("COALESCE(NULLIF(BTRIM(o.walkin_customer_mobile),''),u.mobile) direct_customer_mobile");
   if(!/\bcustomer_mobile\b/.test(select))parts.push("COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile");
-  if(!/\bcustomer_kind\b/.test(select))parts.push("CASE WHEN o.source IN ('walkin','manual_invoice') OR EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) OR NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind");
+  if(!/\bcustomer_kind\b/.test(select))parts.push(resolvedKind);
+  if(!/\bparty_membership_role\b/.test(select))parts.push(membershipRole);
   if(!/\border_source\b/.test(select))parts.push('o.source order_source');
   if(parts.length){
    select=select.replace(marker,match=>match+parts.join(',')+',');
@@ -28,7 +36,7 @@ export function withDirectCustomerIdentityFields(api){
   }
  }
  const returnTail='order_created_at: order.created_at }';
- const newTail='order_created_at: order.created_at, direct_customer_name: order.direct_customer_name, direct_customer_mobile: order.direct_customer_mobile, customer_mobile: order.customer_mobile, customer_kind: order.customer_kind, order_source: order.order_source }';
+ const newTail='order_created_at: order.created_at, direct_customer_name: order.direct_customer_name, direct_customer_mobile: order.direct_customer_mobile, customer_mobile: order.customer_mobile, customer_kind: order.customer_kind, order_source: order.order_source, party_membership_role: order.party_membership_role }';
  const oldCount=api.split(returnTail).length-1,newCount=api.split(newTail).length-1;
  if(oldCount===2)api=api.split(returnTail).join(newTail);
  else if(oldCount!==0||newCount!==2)throw Error('R1674 invoice new-return contract '+oldCount+'/'+newCount);

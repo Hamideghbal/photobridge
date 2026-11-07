@@ -6,7 +6,7 @@ test('R1698 approved customer and photographer thermal samples use the same fram
  const obj={number:123,issued_at:'2026-11-07T15:00:00Z',lab_name:'لابراتوار نمونه',lab_phone:'0261234567',lab_address:'کرج، فردیس',customer_name:'آتلیه نگار',direct_customer_name:'مریم',direct_customer_mobile:'09121111111',customer_mobile:'09120000000',total:90000,paid_total:10000,customer_total_debt:450000,items:[{description:'چاپ ۱۵×۲۱',quantity:2,unitPrice:45000,lineTotal:90000}]};
  for(const direct of [true,false]){
   const html=context.pbR1698ApprovedThermal(obj,direct);
-  for(const match of ['size:80mm auto','class="frame"','class="contact"','کالا / خدمات','فروش','تلفن لابراتوار','0261234567','کرج، فردیس','۹۰٬۰۰۰','هزار','مانده همین فاکتور'])assert(html.includes(match),match);
+  for(const match of ['size:80mm auto','class="frame"','class="contact"','کالا / خدمات','لابراتوار عکاسی','تلفن لابراتوار','0261234567','کرج، فردیس','۹۰٬۰۰۰','هزار','مانده همین فاکتور'])assert(html.includes(match),match);
   assert(!html.includes('مشخصات مشتری آزاد'));assert(!html.includes('رسید خدمات چاپ و آلبوم'));
  }
  const free=context.pbR1698ApprovedThermal(obj,true);

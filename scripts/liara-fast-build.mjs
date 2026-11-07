@@ -961,3 +961,7 @@ runR1314(process.execPath,['--test','scripts/test-r1652-photographer-settings-ar
 // in its installer; its R1651 standalone invoice-frame fallback remains.
 await deployStep('./enable-r1655-restore-photographer-navigation.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1655-restore-photographer-navigation.cjs'],{stdio:'inherit'});
+
+// R1657: remove redundant embedded photographer finance heading and center an only mobile Print/Album mode.
+await deployStep('./enable-r1657-photographer-finance-mobile-tab.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1657-photographer-finance-mobile-tab.cjs'],{stdio:'inherit'});

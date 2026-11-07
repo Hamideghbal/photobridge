@@ -1013,3 +1013,5 @@ runR1314(process.execPath,['--test','scripts/test-r1687-direct-customer-thermal.
 // R1698: activate approved compact thermal receipt layout on site + native UI snapshot.
 await deployStep('./enable-r1698-approved-receipts.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1698-approved-receipts.cjs'],{stdio:'inherit'});
+// R1700: receipts explicitly identify the photographer; worker wakes when prior download ends.
+runR1314(process.execPath,['--test','scripts/test-r1700-receipt-wake.cjs'],{stdio:'inherit'});

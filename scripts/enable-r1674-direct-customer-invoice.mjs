@@ -31,6 +31,11 @@ function patchPreview(js,root){
  const oldPrint='e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:"چاپ فاکتور"})';
  const newPrint='e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:pb1674DirectCustomer(a)&&t==="lab"?"چاپ حرارتی":"چاپ فاکتور"}),pb1674DirectCustomer(a)&&t==="lab"&&e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,"customer-a4"),children:"چاپ A4"})';
  p=one(p,oldPrint,newPrint,'preview thermal and A4 buttons '+root);
+ // Direct customers have a single-invoice receipt, not a studio ledger.
+ // Keep their recorded payment when present, but omit the account-like balance.
+ const oldPayment='(o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})';
+ const newPayment='(pb1674DirectCustomer(a)?o>0:o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})';
+ p=one(p,oldPayment,newPayment,'preview direct-customer payment display '+root);
  p=one(p,'e.jsxs("div",{className:"invoiceAccountDebt"',
     '!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"','preview coworker-only debt '+root);
  return js.slice(0,start)+p+js.slice(end);

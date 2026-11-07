@@ -1,1 +1,1 @@
-2026-11-07-r1674-direct-customer-invoice-templates
+2026-11-07-r1675-direct-customer-receipt-preview

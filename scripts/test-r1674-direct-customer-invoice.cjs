@@ -59,6 +59,8 @@ test('R1674 web/native preview/print/PDF route by customer type while preserving
   assert(js.includes('if(pb1674DirectCustomer(t))return pb1674CustomerPdf(t);'),root);
   assert(js.includes('pb1674DirectCustomer(t)?pb1674CustomerThermal(t):pb1665Thermal(t,a)'),root);
   assert(js.includes('!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"'),root);
+  assert(js.includes('(pb1674DirectCustomer(a)?o>0:o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini"'),root);
+  assert(js.includes('!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: "'),root);
   assert(js.includes('Wy(a,"customer-a4")'),root);
   assert(js.includes('children:"شماره موبایل مشتری"'),root);
   assert(js.includes('function Vy(t,a){if(pb1674DirectCustomer(t))return pb1674CustomerA4(t);'),root);

@@ -1,0 +1,7 @@
+/* R1661: customer notification action; existing invoice component remains authoritative. */
+.systemNotificationList .pb1661NotificationInvoiceButton{
+ display:inline-flex;align-items:center;justify-content:center;margin:7px 0 0;
+ padding:5px 12px;min-height:32px;border:1px solid #c6d4ff;border-radius:9px;
+ background:#eef2ff;color:#315efb;font:inherit;font-size:11px;font-weight:800;cursor:pointer;
+}
+.systemNotificationList .pb1661NotificationInvoiceButton:hover{background:#e0e9ff}

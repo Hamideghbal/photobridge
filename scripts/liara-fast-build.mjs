@@ -977,3 +977,7 @@ runR1314(process.execPath,['--test','scripts/test-r1659-single-mobile-dock-setti
 // R1660: mobile Lab order number and small tablet single-column card header.
 await deployStep('./enable-r1660-mobile-lab-order-number.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1660-mobile-lab-order-number.cjs'],{stdio:'inherit'});
+
+// R1661: open push invoice inside the current photographer page, on phone and desktop.
+await deployStep('./enable-r1661-photographer-invoice-overlay.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1661-photographer-invoice-overlay.cjs'],{stdio:'inherit'});

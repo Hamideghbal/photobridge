@@ -54,6 +54,21 @@ function replaceOptional(source,oldValue,newValue,label){
  return source;
 }
 
+// If the frozen Windows snapshot already contains an older R1568 worker,
+// replace only its scheduler tail; do not duplicate the worker's processing functions.
+const nativeAsset='dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js';
+let nativeJs=read(nativeAsset);
+if(!nativeJs.includes('/* R1682 event-driven order download */')){
+ const workerSource=read('scripts/r1568-native-worker.js.txt');
+ const marker='/* R1682 event-driven order download:';
+ const markerAt=workerSource.indexOf(marker);
+ if(markerAt<0)throw Error('R1682 updated native worker tail missing');
+ const oldTail="if(typeof window!=='undefined'&&window.pbNativeStorage){\\n setTimeout(()=>void pb1568AutoTick(),12000);\\n setInterval(()=>void pb1568AutoTick(),45000);\\n window.pb1568AutomationStatus=()=>({...pb1568Work});\\n}";
+ nativeJs=one(nativeJs,oldTail,workerSource.slice(markerAt),'native worker scheduler');
+ write(nativeAsset,nativeJs);
+ execFileSync(process.execPath,['--check',nativeAsset],{stdio:'inherit'});
+}
+
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const file=root+'/assets/index-UIRefine-v655-r84.js';
  let js=read(file);

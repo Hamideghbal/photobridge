@@ -1,1 +1,1 @@
-2026-11-07-r1682-direct-customer-invoice-download-fast
+2026-11-07-r1683-r1586-download-wake-compat

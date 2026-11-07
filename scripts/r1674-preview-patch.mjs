@@ -15,7 +15,7 @@ export function patchDirectCustomerPreview(js,root){
  p=one(p,'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
    'e.jsx("h2",{children:pb1674DirectCustomer(a)?"فاکتور خدمات مشتری آزاد":"فاکتور فروش و خدمات چاپ"})','preview heading '+root);
  p=one(p,'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
-   'e.jsx("small",{children:pb1674DirectCustomer(a)?"نام مشتری":t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})','preview customer label '+root);
+   'e.jsx("small",{children:pb1674DirectCustomer(a)?"نام و نام خانوادگی مشتری":t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})','preview customer label '+root);
  const oldName='e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})';
  const newName='e.jsx("b",{children:pb1674DirectCustomer(a)?pb1674CustomerName(a):t==="lab"?a.customer_name||"—":a.lab_name||"—"})]}),pb1674DirectCustomer(a)&&e.jsxs("div",{children:[e.jsx("small",{children:"شماره موبایل مشتری"}),e.jsx("b",{children:pb1674CustomerMobile(a)})]})';
  p=one(p,oldName,newName,'preview customer name and mobile '+root);
@@ -43,5 +43,23 @@ export function patchDirectCustomerPreview(js,root){
  }
  p=one(p,'e.jsxs("div",{className:"invoiceAccountDebt"',
     '!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"','preview coworker-only debt '+root);
+ const invoiceNote="e.jsx(\"div\",{className:\"invoicePaperNote\",children:\"پیش‌نمایش، چاپ و PDF از یک ساختار اطلاعاتی استفاده می‌کنند تا شرح، مبالغ و جمع فاکتور یکسان باشد.\"})";
+ const labContact="e.jsxs(\"div\",{className:\"invoicePaperLabContact\",style:{display:\"grid\",gridTemplateColumns:\"1fr 1.5fr\",gap:12,borderTop:\"1px dashed #d0d5dd\",paddingTop:12,marginTop:14,fontSize:12},children:[e.jsxs(\"div\",{children:[e.jsx(\"small\",{children:\"شماره تماس لابراتوار\"}),e.jsx(\"b\",{children:a.lab_phone||\"ثبت نشده\"})]}),e.jsxs(\"div\",{children:[e.jsx(\"small\",{children:\"آدرس لابراتوار\"}),e.jsx(\"b\",{children:a.lab_address||\"ثبت نشده\"})]})]})";
+ p=one(p,invoiceNote,invoiceNote+","+labContact,'preview laboratory contact '+root);
+ return p;
+}
+
+
+/* R1679: the ordinary photographer A4 print and PDF keep their existing
+ * photographer/debt layout, but gain the same laboratory contact footer.
+ */
+export function patchPhotographerInvoiceContact(js,root){
+ let p=js;
+ const oldHtml='<div class="accountDebt"><span>جمع بدهی عکاسی</span><b>\${_n(V(l))} تومان</b></div><div class="note">این فاکتور توسط PhotoBridge صادر شده است.</div>';
+ const newHtml='<div class="accountDebt"><span>جمع بدهی عکاسی</span><b>\${_n(V(l))} تومان</b></div><div class="labContact" style="margin-top:5mm;border-top:1px dashed #d0d5dd;padding-top:3mm;color:#475467;font-size:10px;line-height:1.9"><div>شماره تماس لابراتوار: \${_n(t.lab_phone||"ثبت نشده")}</div><div>آدرس لابراتوار: \${_n(t.lab_address||"ثبت نشده")}</div></div><div class="note">این فاکتور توسط PhotoBridge صادر شده است.</div>';
+ p=one(p,oldHtml,newHtml,'photographer A4 laboratory contact '+root);
+ const oldPdf='s.fillText("فاکتور صادرشده در PhotoBridge · مبلغ‌ها بر اساس تعرفه ثبت‌شده در زمان صدور فاکتور است.",o,1640);';
+ const newPdf='s.fillText("شماره تماس لابراتوار: "+String(t.lab_phone||"ثبت نشده"),o,1630,1060),s.fillText("آدرس لابراتوار: "+String(t.lab_address||"ثبت نشده"),o,1660,1060),s.fillText("فاکتور صادرشده در PhotoBridge · مبلغ‌ها بر اساس تعرفه ثبت‌شده در زمان صدور فاکتور است.",o,1700);';
+ p=one(p,oldPdf,newPdf,'photographer A4 PDF laboratory contact '+root);
  return p;
 }

@@ -4,20 +4,19 @@ test('R1665 receipt supports coworker and direct customer, bold print, name and 
  const src=fs.readFileSync('scripts/r1665-thermal-invoice.js.txt','utf8');
  const ctx={_n:v=>String(v).replace(/</g,'&lt;'),V:v=>String(v),vh:o=>o.items||[],ph:r=>r.description,vn:()=> '۱۴۰۵/۰۸/۱۶'};
  vm.createContext(ctx);vm.runInContext(src,ctx);
- const base={number:22,order_number:36,customer_name:'استودیو بهار',customer_mobile:'09120000000',lab_name:'چاپ مثبت',items:[{description:'چاپ ۱۵×۲۱',quantity:2,unitPrice:30000,lineTotal:60000}],subtotal:60000,total:60000,paid_total:10000,balance:50000,customer_total_debt:75000};
+ const base={number:22,order_number:36,customer_name:'استودیو بهار',customer_mobile:'09120000000',lab_name:'چاپ مثبت',items:[{description:'چاپ ۱۵×۲۱',quantity:2,unitPrice:30000,lineTotal:60000}],subtotal:60000,total:60000,paid_total:10000,balance:50000,customer_total_debt:75000,lab_phone:'02144556677',lab_address:'تهران، خیابان آزادی، پلاک ۱۲'};
  const coworker=ctx.pb1665Thermal({...base,customer_kind:'coworker'},'lab');
  const customer=ctx.pb1665Thermal({...base,customer_kind:'customer',customer_name:'مشتری حضوری'},'lab');
  for(const html of [coworker,customer]){
   assert(html.includes('size:80mm auto'));
   assert(html.includes('font-weight:900'));
   assert(html.includes('09120000000'));
-  assert(html.includes('جمع بدهی حساب:'));
-  assert(html.includes('75000'));
+  assert(html.includes('شماره تماس لابراتوار:'));assert(html.includes('02144556677'));assert(html.includes('آدرس لابراتوار:'));assert(html.includes('تهران، خیابان آزادی، پلاک ۱۲'));
   assert(html.includes('شرح'));
   assert(html.includes('60000'));
  }
- assert(coworker.includes('فاکتور همکار'));
- assert(customer.includes('فاکتور مشتری'));
+ assert(coworker.includes('فاکتور همکار'));assert(coworker.includes('جمع بدهی حساب:'));assert(coworker.includes('75000'));
+ assert(customer.includes('فاکتور مشتری'));assert(!customer.includes('جمع بدهی حساب:'));assert(!customer.includes('75000'));
 });
 test('R1665 lab uses thermal; customer A4 remains unchanged; API includes mobile and kind',()=>{
  const api=fs.readFileSync('dist/api/server.js','utf8');

@@ -1,1 +1,1 @@
-2026-11-07-r1678-preview-payment-shape-compat
+2026-11-07-r1679-invoice-lab-contact

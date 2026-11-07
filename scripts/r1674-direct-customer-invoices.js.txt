@@ -13,6 +13,8 @@ function pb1674CustomerName(t){
 function pb1674CustomerMobile(t){
  return String(t?.direct_customer_mobile||t?.walkin_customer_mobile||t?.customer_mobile||'ثبت نشده').trim();
 }
+function pb1674LabPhone(t){return String(t?.lab_phone||t?.lab_admin_mobile||'ثبت نشده').trim();}
+function pb1674LabAddress(t){return String(t?.lab_address||'ثبت نشده').trim();}
 
 function pb1674CustomerA4(t){
  const esc=v=>_n(String(v??'')),num=v=>_n(V(v??0));
@@ -31,6 +33,7 @@ function pb1674CustomerA4(t){
  .customer h2{font-size:14px;margin:0 0 3mm}.fields{display:grid;grid-template-columns:1fr 1fr;gap:3mm 7mm}
  .field{background:#f5f7fa;border-radius:2mm;padding:3mm}.field small{display:block;color:#606c7d;margin-bottom:1mm}.field strong{font-size:14px;overflow-wrap:anywhere}
  .ltr{direction:ltr;unicode-bidi:isolate;text-align:right}
+ .lab-contact{display:grid;grid-template-columns:1fr;gap:2mm;margin-top:7mm;border-top:1px dashed #b0b7c2;padding-top:3mm;color:#586779;font-size:11px;line-height:1.9}.lab-contact .phone{direction:ltr;unicode-bidi:isolate}
  table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}th,td{border:1px solid #d6dce6;padding:3mm;text-align:center;overflow-wrap:anywhere}
  th{background:#edf2f8;font-weight:900}th:first-child,td:first-child{text-align:right;width:44%}
  .amounts{width:55%;margin:6mm 0 0 auto;border:1.5px solid #24344d;border-radius:2mm;padding:3mm}
@@ -42,7 +45,7 @@ function pb1674CustomerA4(t){
  <header class="head"><div><div class="brand">PhotoBridge</div><h1>فاکتور مشتری آزاد</h1><div class="subtitle">خدمات چاپ عکس و آلبوم</div></div>
  <div class="invoiceNo"><small>شماره فاکتور</small><b>#${num(t.number)}</b><small>${esc(vn(t.issued_at))}</small></div></header>
  <section class="customer"><h2>مشخصات مشتری</h2><div class="fields">
- <div class="field"><small>نام مشتری</small><strong>${name}</strong></div>
+ <div class="field"><small>نام و نام خانوادگی مشتری</small><strong>${name}</strong></div>
  <div class="field"><small>شماره تماس مشتری</small><strong class="ltr">${phone}</strong></div>
  <div class="field"><small>لابراتوار ارائه‌دهنده خدمات</small><strong>${esc(t.lab_name||'—')}</strong></div>
  ${t.order_number?`<div class="field"><small>شماره سفارش</small><strong>#${num(t.order_number)}</strong></div>`:''}
@@ -52,7 +55,7 @@ function pb1674CustomerA4(t){
  ${Number(t.discount||0)>0?`<div><span>تخفیف</span><b>${num(t.discount)} تومان</b></div>`:''}
  <div class="final"><span>مبلغ کل فاکتور</span><b>${num(t.total)} تومان</b></div>
  ${paid>0?`<div><span>پرداخت‌شده برای این فاکتور</span><b>${num(paid)} تومان</b></div>`:''}
- </section><div class="end">با سپاس از اعتماد شما · PhotoBridge</div></main>
+ </section><div class="lab-contact"><div>شماره تماس لابراتوار: <b class="phone">${esc(pb1674LabPhone(t))}</b></div><div>آدرس لابراتوار: ${esc(pb1674LabAddress(t))}</div></div><div class="end">با سپاس از اعتماد شما · PhotoBridge</div></main>
  <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}<\/script></body></html>`;
 }
 
@@ -72,6 +75,7 @@ function pb1674CustomerThermal(t){
  th:first-child,td:first-child{text-align:right;width:39%}th:nth-child(2){width:13%}th:nth-child(3){width:22%}th:nth-child(4){width:26%}
  .final{font-size:17px;border:3px solid #000;padding:2mm;margin:3mm 0;font-weight:900}
  .phone{direction:ltr;unicode-bidi:isolate;white-space:nowrap}
+ .lab-contact{text-align:right;border-top:2px dashed #000;padding:3mm 0 0;margin-top:3mm;font-size:11px;line-height:1.9;overflow-wrap:anywhere}
  .foot{text-align:center;border-top:2px dashed #000;padding:3mm 0;margin-top:3mm}
  @media print{body{width:80mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper{margin:0}tr{break-inside:avoid}}
  </style></head><body><main class="paper"><h1>${esc(t.lab_name||'لابراتوار')}</h1>
@@ -79,14 +83,14 @@ function pb1674CustomerThermal(t){
  <div class="row"><span>شماره فاکتور:</span><b>#${num(t.number)}</b></div>
  <div class="row"><span>تاریخ:</span><b>${esc(vn(t.issued_at))}</b></div>
  ${t.order_number?`<div class="row"><span>شماره سفارش:</span><b>#${num(t.order_number)}</b></div>`:''}
- <div class="section"><div class="row"><span>نام مشتری:</span><b>${esc(pb1674CustomerName(t))}</b></div>
+ <div class="section"><div class="row"><span>نام و نام خانوادگی:</span><b>${esc(pb1674CustomerName(t))}</b></div>
  <div class="row"><span>موبایل مشتری:</span><b class="phone">${esc(pb1674CustomerMobile(t))}</b></div></div>
  <table><thead><tr><th>شرح</th><th>تعداد</th><th>فی</th><th>مبلغ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">جزئیات ثبت نشده است</td></tr>'}</tbody></table>
  <div class="row"><span>تعداد کل:</span><b>${num(count)}</b></div>
  ${Number(t.discount||0)>0?`<div class="row"><span>تخفیف:</span><b>${num(t.discount)} تومان</b></div>`:''}
  <div class="row final"><span>مبلغ کل فاکتور:</span><b>${num(t.total)} تومان</b></div>
  ${paid>0?`<div class="row"><span>پرداخت‌شده:</span><b>${num(paid)} تومان</b></div>`:''}
- <div class="foot">سپاس از اعتماد شما<br>PhotoBridge</div></main>
+ <div class="lab-contact"><div>شماره تماس لابراتوار: <b class="phone">${esc(pb1674LabPhone(t))}</b></div><div>آدرس لابراتوار: ${esc(pb1674LabAddress(t))}</div></div><div class="foot">سپاس از اعتماد شما<br>PhotoBridge</div></main>
  <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),500))<\/script></body></html>`;
 }
 
@@ -125,6 +129,6 @@ async function pb1674CustomerPdf(t){
  if(Number(t.discount||0)>0){g.textAlign='right';g.fillText('تخفیف',right-17,bottom+77);g.textAlign='left';g.fillText(fmt(t.discount)+' تومان',bx+18,bottom+77);}
  g.fillStyle='#111827';g.font='900 31px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('مبلغ کل فاکتور',right-17,bottom+126);
  g.textAlign='left';g.fillText(fmt(t.total)+' تومان',bx+18,bottom+126);
- g.fillStyle='#64748b';g.font='600 18px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('این فاکتور خدمات برای مشتری آزاد صادر شده است · PhotoBridge',right,1670);
+ g.fillStyle='#475467';g.font='600 18px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('شماره تماس لابراتوار: '+pb1674LabPhone(t),right,1595,1000);g.fillText('آدرس لابراتوار: '+pb1674LabAddress(t),right,1630,1000);g.fillStyle='#64748b';g.font='600 18px Vazirmatn,Tahoma,Arial';g.fillText('این فاکتور خدمات برای مشتری آزاد صادر شده است · PhotoBridge',right,1680);
  const jpg=await mh(c,.95);return new Blob([hh([{jpeg:jpg,width:c.width,height:c.height}])],{type:'application/pdf'});
 }

@@ -4,8 +4,8 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {withDirectCustomerIdentityFields} from './r1674-invoice-api-parties.mjs';
-import {patchDirectCustomerPreview} from './r1674-preview-patch.mjs';
+import {withDirectCustomerIdentityFields,withInvoiceLabContactFields} from './r1674-invoice-api-parties.mjs';
+import {patchDirectCustomerPreview,patchPhotographerInvoiceContact} from './r1674-preview-patch.mjs';
 const digest=x=>crypto.createHash('sha256').update(x).digest('hex');
 function one(s,oldValue,next,label){
  const n=s.split(oldValue).length-1;
@@ -14,6 +14,7 @@ function one(s,oldValue,next,label){
 }
 let api=fs.readFileSync('dist/api/server.js','utf8');
 api=withDirectCustomerIdentityFields(api);
+api=withInvoiceLabContactFields(api);
 fs.writeFileSync('dist/api/server.js',api);
 execFileSync(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'});
 
@@ -33,6 +34,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    "a==='lab'?(pb1674DirectCustomer(t)?pb1674CustomerThermal(t):pb1665Thermal(t,a)):Vy(t,a)",
    'direct thermal '+root);
  js=patchDirectCustomerPreview(js,root);
+ js=patchPhotographerInvoiceContact(js,root);
  fs.writeFileSync(file,js);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  const htmlFile=root+'/index.html';

@@ -7,12 +7,12 @@ test('R1674 direct customers have their own thermal/A4 templates without photogr
  vm.createContext(ctx);vm.runInContext(source,ctx);
  const base={number:90,order_number:123,order_source:'walkin',customer_kind:'customer',
   customer_name:'نام عمومی',direct_customer_name:'مشتری رضا',customer_mobile:'09120000000',
-  lab_name:'لابراتوار مثبت',items:[{description:'چاپ ۲۰×۳۰',quantity:2,unitPrice:45000,lineTotal:90000}],
+  lab_name:'لابراتوار مثبت',lab_phone:'02144556677',lab_address:'تهران، خیابان آزادی، پلاک ۱۲',items:[{description:'چاپ ۲۰×۳۰',quantity:2,unitPrice:45000,lineTotal:90000}],
   subtotal:90000,total:90000,customer_total_debt:3000000,account_balance_at_issue:3000000};
  for(const html of [ctx.pb1674CustomerA4(base),ctx.pb1674CustomerThermal(base)]){
   assert(html.includes('مشتری رضا'));assert(html.includes('09120000000'));
   assert(html.includes('چاپ ۲۰×۳۰'));assert(html.includes('90000'));
-  assert(html.includes('مبلغ کل فاکتور'));assert(html.includes('مشتری آزاد'));
+  assert(html.includes('مبلغ کل فاکتور'));assert(html.includes('مشتری آزاد'));assert(html.includes('نام و نام خانوادگی مشتری'));assert(html.includes('شماره تماس لابراتوار:'));assert(html.includes('02144556677'));assert(html.includes('آدرس لابراتوار:'));assert(html.includes('تهران، خیابان آزادی، پلاک ۱۲'));
   assert(!html.includes('جمع بدهی'));assert(!html.includes('عکاسی'));
   assert(!html.includes('3000000'));assert(!html.includes('نام عمومی'));
  }
@@ -34,23 +34,24 @@ test('R1674 PDF renderer uses direct name/mobile/total and never uses customer a
   hh:()=>new Uint8Array([2]),Blob};
  vm.createContext(ctx);vm.runInContext(source,ctx);
  const pdf=await ctx.pb1674CustomerPdf({number:9,customer_kind:'customer',direct_customer_name:'مریم',
-  direct_customer_mobile:'09123456789',total:65000,customer_total_debt:9999999,
+  direct_customer_mobile:'09123456789',lab_phone:'02144556677',lab_address:'تهران، خیابان آزادی، پلاک ۱۲',total:65000,customer_total_debt:9999999,
   items:[{description:'چاپ',quantity:1,unitPrice:65000,lineTotal:65000}]});
  assert.equal(pdf.type,'application/pdf');
  assert(drawn.some(x=>x.includes('مریم')));
  assert(drawn.some(x=>x.includes('09123456789')));
- assert(drawn.some(x=>x.includes('65000')));
+ assert(drawn.some(x=>x.includes('65000')));assert(drawn.some(x=>x.includes('02144556677')));assert(drawn.some(x=>x.includes('تهران، خیابان آزادی، پلاک ۱۲')));
  assert(!drawn.some(x=>x.includes('بدهی')||x.includes('9999999')||x.includes('عکاسی')));
 });
 test('R1674 server includes direct customer identity in both invoice listing and immediate issue',async()=>{
  const api=fs.readFileSync('dist/api/server.js','utf8');
- const {withDirectCustomerIdentityFields}=await import('./r1674-invoice-api-parties.mjs');
- assert.equal(withDirectCustomerIdentityFields(api),api);
+ const {withDirectCustomerIdentityFields,withInvoiceLabContactFields}=await import('./r1674-invoice-api-parties.mjs');
+ assert.equal(withDirectCustomerIdentityFields(api),api);assert.equal(withInvoiceLabContactFields(api),api);
  assert(api.includes("NULLIF(BTRIM(o.walkin_customer_name),'') direct_customer_name"));
  assert(api.includes("COALESCE(NULLIF(BTRIM(o.walkin_customer_mobile),''),u.mobile) direct_customer_mobile"));
  assert(api.includes("customer_kind: order.customer_kind"));
  assert(api.includes("order_source: order.order_source"));
  assert.equal(api.split('direct_customer_mobile: order.direct_customer_mobile').length-1,2);
+ assert(api.includes('lab_phone'));assert(api.includes('lab_address'));assert(api.includes('LEFT JOIN lab_delivery_settings ds ON ds.lab_id=l.id'));assert(api.includes('lab_admin.mobile'));
 });
 test('R1674 web/native preview/print/PDF route by customer type while preserving coworker templates',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
@@ -62,7 +63,7 @@ test('R1674 web/native preview/print/PDF route by customer type while preserving
   assert(js.includes('(pb1674DirectCustomer(a)?o>0:o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini"'),root);
   assert(js.includes('!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: "'),root);
   assert(js.includes('Wy(a,"customer-a4")'),root);
-  assert(js.includes('children:"شماره موبایل مشتری"'),root);
+  assert(js.includes('children:"شماره موبایل مشتری"'),root);assert(js.includes('نام و نام خانوادگی مشتری'),root);assert(js.includes('شماره تماس لابراتوار'),root);assert(js.includes('آدرس لابراتوار'),root);assert(js.includes('String(t.lab_phone||"ثبت نشده")'),root);
   assert(js.includes('function Vy(t,a){if(pb1674DirectCustomer(t))return pb1674CustomerA4(t);'),root);
   assert(js.includes('className:"accountDebt"')||js.includes('جمع بدهی عکاسی'),root);
   assert.equal(fs.readFileSync(root+'/index.html','utf8').split('directCustomerInvoice=r1674').length-1,1);
@@ -85,6 +86,7 @@ test('R1676 preview JSX patch survives renamed minified invoice component withou
   'function RenamedInvoicePreview({role:t,invoice:a,onClose:s}){',
   'className:"invoicePreviewHeadActions",children:[',
   'className:"invoicePaperInfo"',
+  "e.jsx(\"div\",{className:\"invoicePaperNote\",children:\"پیش‌نمایش، چاپ و PDF از یک ساختار اطلاعاتی استفاده می‌کنند تا شرح، مبالغ و جمع فاکتور یکسان باشد.\"})",
   'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
   'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
   'e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})',
@@ -116,6 +118,7 @@ test('R1677 A4 action is added without requiring old print button labels/handler
   const fixture=[
    'function Whatever(){','className:"invoicePreviewHeadActions",children:[',
    handler,'className:"invoicePaperInfo"',
+   "e.jsx(\"div\",{className:\"invoicePaperNote\",children:\"پیش‌نمایش، چاپ و PDF از یک ساختار اطلاعاتی استفاده می‌کنند تا شرح، مبالغ و جمع فاکتور یکسان باشد.\"})",
    'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
    'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
    'e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})',
@@ -135,6 +138,7 @@ test('R1678 payment preview tolerates earlier wrappers around original print/sum
   'function GenericInvoicePreview(){',
   'className:"invoicePreviewHeadActions",children:[',
   'className:"invoicePaperInfo"',
+  "e.jsx(\"div\",{className:\"invoicePaperNote\",children:\"پیش‌نمایش، چاپ و PDF از یک ساختار اطلاعاتی استفاده می‌کنند تا شرح، مبالغ و جمع فاکتور یکسان باشد.\"})",
   'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
   'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
   'e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})',

@@ -2,9 +2,11 @@
  * The caller has already locked the lab order row in a DB transaction.
  * Never create on missing prices, excluded orders, or prepaid flows (handled
  * separately). Reuse the server's existing idempotent createOrGetInvoice. */
+function r1682DirectCustomerOrder(order={}){const kind=String(order.customer_kind||'').trim().toLowerCase();if(kind==='customer')return true;if(kind==='coworker')return false;const source=String(order.source||order.order_source||'').trim().toLowerCase();return source==='walkin'||source==='manual_invoice'||Boolean(String(order.walkin_customer_name||'').trim());}
 export function pricedLedgerInvoiceAllowed(order,missing){
- if(!order||order.invoice_required===false||!Array.isArray(missing)||missing.length)return false;
- if(String(order.settlement_mode||'ledger')==='prepaid')return false;
+ const direct=r1682DirectCustomerOrder(order);
+ if(!order||(order.invoice_required===false&&!direct)||!Array.isArray(missing)||missing.length)return false;
+ if(!direct&&String(order.settlement_mode||'ledger')==='prepaid')return false;
  if(['cancelled','uploading'].includes(String(order.status||'')))return false;
  return true;
 }
@@ -14,3 +16,5 @@ export async function issueAfterManualPriceConfirmation(db,labId,orderId,order,m
  const q=await db.query('SELECT * FROM orders WHERE id=$1 AND lab_id=$2',[orderId,labId]);
  return {invoice,order:q.rows?.[0]||order};
 }
+
+/* R1682 direct-customer priced invoice */

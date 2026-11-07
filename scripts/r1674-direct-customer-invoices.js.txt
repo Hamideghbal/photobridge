@@ -1,16 +1,17 @@
 function pb1674DirectCustomer(t){
  const kind=String(t?.customer_kind||t?.party_kind||t?.role||'').trim().toLowerCase();
  const source=String(t?.order_source||t?.source||'').trim().toLowerCase();
+ const verified=String(t?.party_membership_role||t?.verified_party_kind||'').trim().toLowerCase();
  const walkin=Boolean(String(t?.walkin_customer_name||t?.direct_customer_name||t?.walkin_customer_mobile||t?.direct_customer_mobile||'').trim());
- // R1703: a photographer's order can carry stale customer-only fields.
- // An explicit photographer identity and role override those fields.
+ // R1705: membership from the laboratory is authoritative. A registered
+ // free customer and an atelier may share the same upload channel.
  if(t?.photographer_id||t?.studio_id||t?.atelier_id||t?.photographer_name||t?.studio_name)return false;
- if(['coworker','photographer','studio','atelier'].includes(kind)){
-  return source==='walkin'&&walkin;
- }
+ if(['coworker','photographer','studio','atelier'].includes(verified))return false;
+ if(['customer','direct_customer'].includes(verified))return true;
+ if(['walkin','direct_customer','free_customer'].includes(source))return true;
+ if(['photographer','studio','atelier','photographer_order'].includes(source))return false;
+ if(['coworker','photographer','studio','atelier'].includes(kind))return false;
  if(kind==='customer'||kind==='direct_customer')return true;
- if(['photographer','studio','atelier'].includes(source))return false;
- if(source==='walkin'||source==='direct_customer'||source==='free_customer')return true;
  if(source==='manual_invoice')return walkin||!kind;
  return walkin;
 }

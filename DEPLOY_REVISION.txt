@@ -1,1 +1,1 @@
-2026-11-07-r1683-r1586-download-wake-compat
+2026-11-07-r1684-invoice-row-lock-fix

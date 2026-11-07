@@ -965,3 +965,7 @@ runR1314(process.execPath,['--test','scripts/test-r1655-restore-photographer-nav
 // R1657: remove redundant embedded photographer finance heading and center an only mobile Print/Album mode.
 await deployStep('./enable-r1657-photographer-finance-mobile-tab.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1657-photographer-finance-mobile-tab.cjs'],{stdio:'inherit'});
+
+// R1658: new-album photo sheets, compact resume notice, and no moving price sidebar.
+await deployStep('./enable-r1658-album-compact-three-up.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1658-album-compact-three-up.cjs'],{stdio:'inherit'});

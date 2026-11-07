@@ -17,5 +17,5 @@ test('direct customers print their own receipt even on legacy manual orders',()=
 });
 test('final build patches both site and native snapshot',()=>{
  const script=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');assert(script.indexOf("await deployStep('./enable-r1687-direct-customer-thermal.mjs')")>script.indexOf("await deployStep('./enable-r1682-direct-customer-order-flow.mjs')"));
- const patch=fs.readFileSync('scripts/enable-r1687-direct-customer-thermal.mjs','utf8');assert(patch.includes("['dist/web','dist/web/lab-desktop-ui']"));assert(patch.includes('row.sha256=sha('));
+ const patch=fs.readFileSync('scripts/enable-r1687-direct-customer-thermal.mjs','utf8');assert(patch.includes("['dist/web','dist/web/lab-desktop-ui']"));assert(patch.includes('row.sha256=sha('));assert(patch.includes('if(live===1)return s'));
 });

@@ -9,16 +9,23 @@ const updated=fs.readFileSync('scripts/r1674-direct-customer-invoices.js.txt','u
 const newPred=updated.slice(updated.indexOf('function pb1674DirectCustomer(t){'),updated.indexOf('\nfunction pb1674CustomerName(t){')).trimEnd();
 const thermal=fs.readFileSync('scripts/r1665-thermal-invoice.js.txt','utf8');
 const newThermal=thermal.match(/const customer=[^\n]+/)[0];
-const once=(s,a,b,tag)=>{const n=s.split(a).length-1;if(n!==1)throw Error('R1687 '+tag+' count '+n);return s.replace(a,b)};
+const upgrade=(s,previous,current,tag)=>{
+ const live=s.split(current).length-1;
+ if(live===1)return s; // R1665 and R1674 already inject the latest source.
+ if(live!==0)throw Error('R1687 duplicated current '+tag);
+ const legacy=s.split(previous).length-1;
+ if(legacy!==1)throw Error('R1687 missing or duplicated '+tag+' count '+legacy);
+ return s.replace(previous,current);
+};
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const file=root+'/assets/index-UIRefine-v655-r84.js';
  let js=fs.readFileSync(file,'utf8');
- js=once(js,oldPred,newPred,'direct customer '+root);
- js=once(js,oldThermal,newThermal,'thermal fallback '+root);
+ js=upgrade(js,oldPred,newPred,'direct customer '+root);
+ js=upgrade(js,oldThermal,newThermal,'thermal fallback '+root);
  fs.writeFileSync(file,js);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  const page=root+'/index.html';let html=fs.readFileSync(page,'utf8'),count=0;
- html=html.replace(/index-UIRefine-v655-r84\.js\?[^"']*/g,u=>{count++;return u+'&customerThermal=r1687'});
+ html=html.replace(/index-UIRefine-v655-r84\.js\?[^"']*/g,u=>{count++;return u.includes('&customerThermal=r1687')?u:u+'&customerThermal=r1687'});
  if(count!==1)throw Error('R1687 script reference '+root+' '+count);
  fs.writeFileSync(page,html);
  if(root.endsWith('lab-desktop-ui')){

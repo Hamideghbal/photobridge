@@ -1,1 +1,1 @@
-2026-11-07-r1668-settings-header-capture
+2026-11-07-r1669-settings-unique-click-anchor

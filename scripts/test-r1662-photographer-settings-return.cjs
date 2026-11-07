@@ -31,7 +31,10 @@ test('R1662 native integrity and R1661 SW version patch install order',()=>{
 
 test('R1668 accepts changed print-tab handlers without changing their code',async()=>{
  const {withSettingsCapture,withSettingsCloser}=await import('./r1662-settings-capture.mjs');
+ // A real R1668 Docker build had TWO desktop class markers; neither is
+ // a reliable insertion anchor. The original desktop click is unique.
  const nav="(()=>{document.documentElement.classList.add('pb1126Desktop');\n"+
+  "document.documentElement.classList.add('pb1126Desktop');\n"+
   "function navigate(key){if(key==='print'){return 'modified handler';}}\n"+
   "window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;},true);})();";
  const patched=withSettingsCapture(nav);
@@ -39,10 +42,24 @@ test('R1668 accepts changed print-tab handlers without changing their code',asyn
  assert(patched.indexOf('window.pb1635CloseInlineSettings?.();')<
   patched.indexOf("window.addEventListener('click',e=>"));
  assert.equal(withSettingsCapture(patched),patched);
- assert.throws(()=>withSettingsCapture('function navigate(key){}'),/R1662 desktop class anchor count 0/);
+ assert.throws(()=>withSettingsCapture('function navigate(key){}'),/R1662 header click anchor count 0/);
  const originalSettings=fs.readFileSync('scripts/r1635-photographer-inline-settings.js','utf8');
  const updated=withSettingsCloser(originalSettings);
  assert(updated.includes('window.pb1635CloseInlineSettings=close;'));
  assert.equal(withSettingsCloser(updated),updated);
  assert(updated.includes("panel?.remove();panel=null;selected='';"));
+});
+
+test('R1669: duplicate desktop markers still install capture once before original header navigation',async()=>{
+ const {withSettingsCapture}=await import('./r1662-settings-capture.mjs');
+ const click="window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]')";
+ const twice="document.documentElement.classList.add('pb1126Desktop');\n"+
+             "document.documentElement.classList.add('pb1126Desktop');\n"+
+             click+";if(!b)return;";
+ const patched=withSettingsCapture(twice);
+ assert.equal(patched.split('/* PB1668 close settings before desktop header click */').length-1,1);
+ assert(patched.indexOf('window.pb1635CloseInlineSettings?.();')<patched.indexOf(click));
+ assert(patched.includes(click+";if(!b)return;"));
+ assert.equal(withSettingsCapture(patched),patched);
+ assert.throws(()=>withSettingsCapture(twice+click),/R1662 header click anchor count 2/);
 });

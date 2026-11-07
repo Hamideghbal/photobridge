@@ -8,9 +8,9 @@ function pb1674DirectCustomer(t){
  if(t?.photographer_id||t?.studio_id||t?.atelier_id||t?.photographer_name||t?.studio_name)return false;
  if(['coworker','photographer','studio','atelier'].includes(verified))return false;
  if(['customer','direct_customer'].includes(verified))return true;
+ if(['coworker','photographer','studio','atelier'].includes(kind))return source==='walkin'&&walkin;
  if(['walkin','direct_customer','free_customer'].includes(source))return true;
  if(['photographer','studio','atelier','photographer_order'].includes(source))return false;
- if(['coworker','photographer','studio','atelier'].includes(kind))return false;
  if(kind==='customer'||kind==='direct_customer')return true;
  if(source==='manual_invoice')return walkin||!kind;
  return walkin;

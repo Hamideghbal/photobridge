@@ -66,7 +66,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   js=js.slice(0,start)+nextPricingHandler+js.slice(end);
 
   js=replaceOptional(js,'این سفارش سایز بدون تعرفه دارد','قیمت‌گذاری اختصاصی این سفارش','pricing modal title');
-  const bodyMatch=js.match(/ارسال فایل متوقف (?:نشده|شده) است\\. فقط برای همین سفارش قیمت واحد را مشخص کن(?:ید)?؛/);
+  const bodyMatch=js.match(/ارسال فایل متوقف (?:نشده|شده) است\. فقط برای همین سفارش قیمت واحد را مشخص کن(?:ید)?؛/);
   if(bodyMatch){
    const bodyAt=js.indexOf(bodyMatch[0]),endText='فاکتور صادر نمی‌شود',bodyEndAt=js.indexOf(endText,bodyAt);
    if(bodyEndAt>=0){

@@ -10,6 +10,7 @@ const patches=[
 ];
 function patchStorageBundle(source){
  source=require('./live-order-patch.cjs').patchOrderLive(source);
+ source=require('./manual-invoice-ui.cjs').patchManualInvoiceUI(source);
  if(source.includes('/* PB native disk bridge v1 */'))return source;
  for(const [before] of patches)if(source.split(before).length!==2)throw Error('native_storage_ui_incompatible:'+before);
  for(const [before,after] of patches)source=source.replace(before,after);

@@ -6,7 +6,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=v=>Number(v||0).toLocaleString('fa-IR');
 const key=(lab,kind,id)=>'thermalJob:v1:'+lab+':'+kind+':'+id;
 const configKey=lab=>'thermalPrinter:v1:'+lab;
-const number=v=>Number.isFinite(Number(v))?money(v):'نامشخص';
+const number=v=>Number.isFinite(Number(v))?money(v):/^OFF-\d+$/.test(String(v))?esc(v):'نامشخص';
 function ticketRows(files=[]){
  const groups=new Map();
  for(const f of files){
@@ -94,7 +94,10 @@ class ThermalPrinter{
   if(!config?.deviceName)throw Object.assign(Error('printer_not_configured'),{status:409});
   const available=await this.printers();
   if(!available.some(p=>p.name===config.deviceName))throw Object.assign(Error('printer_offline_or_missing'),{status:409});
-  const doc=await fetchJson(this.request,'/api/lab/orders/'+id);
+  const local=this.store.get('localBusiness:v1:'+lab)?.orders?.[id];
+  const independent=local?.origin_offline&&!local.remote&&!local.serverId&&!local.sharedAt&&!local.importFrozen;
+  const engine=independent?new(require('./local-business.cjs').LocalBusiness)(this.store):null;
+  const doc=engine?engine.read('/api/lab/orders/'+id):await fetchJson(this.request,'/api/lab/orders/'+id);
   if(String(doc.order?.lab_id)!==String(lab))throw Object.assign(Error('wrong_lab'),{status:403});
   let invoice=null,requirements=[],printId=id;
   if(kind==='invoice'){
@@ -102,15 +105,15 @@ class ThermalPrinter{
    if(!invoice.pdf_ready)throw Object.assign(Error('invoice_pdf_not_ready'),{status:409});
    printId=invoiceId;
   }else{
-   const pricing=await fetchJson(this.request,'/api/lab/orders/'+id+'/invoice-pricing');
+   const pricing=engine?engine.read('/api/lab/orders/'+id+'/invoice-pricing'):await fetchJson(this.request,'/api/lab/orders/'+id+'/invoice-pricing');
    requirements=pricing.requirements||[];
    if(!requirements.some(x=>!x.resolved)||doc.invoice)throw Object.assign(Error('ticket_not_needed'),{status:409});
   }
   const jobKey=key(lab,kind,printId),previous=this.store.get(jobKey);
   if(previous)return {alreadyHandled:true,state:previous.state,jobId:jobKey};
-  const settings=await fetchJson(this.request,'/api/lab/automation');
+  const settings=engine?(require('./local-business.cjs').cached(this.store,'/api/lab/automation')||{}):await fetchJson(this.request,'/api/lab/automation');
   const widthMm=settings?.settings?.receiptWidthMm===58?58:80;
-  const labData=await fetchJson(this.request,'/api/auth/me');
+  const labData=engine?(this.store.get('auth')||{}):await fetchJson(this.request,'/api/auth/me');
   const font=fs.readFileSync(path.join(__dirname,'assets/photobridge-vazirmatn.woff2')).toString('base64');
   const html=documentHtml({kind,labName:labData.lab?.name,order:doc.order,invoice,files:doc.files,requirements,widthMm,fontData:font});
   // State is persisted BEFORE we hand off to the OS spooler. Unknown outcomes require a human.

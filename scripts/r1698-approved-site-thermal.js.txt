@@ -1,0 +1,87 @@
+// R1698 approved 80mm site printing; native Windows printer uses approved R1690 module.\nfunction pbR1698Words(amount) {
+  let n=Number(amount);
+  if(!Number.isSafeInteger(n)||n<0||n>=1e15)return '';
+  if(n===0)return 'صفر';
+  const units=['','هزار','میلیون','میلیارد','تریلیون'];
+  const ones=['','یک','دو','سه','چهار','پنج','شش','هفت','هشت','نه'];
+  const tens=['','','بیست','سی','چهل','پنجاه','شصت','هفتاد','هشتاد','نود'];
+  const teens=['ده','یازده','دوازده','سیزده','چهارده','پانزده','شانزده','هفده','هجده','نوزده'];
+  const hundreds=['','صد','دویست','سیصد','چهارصد','پانصد','چهارصد','هفتصد','هشتصد','نهصد'];
+  let index=0,parts=[];
+  while(n>0){
+    const g=n%1000; n=Math.floor(n/1000);
+    if(g){
+      const words=[],h=Math.floor(g/100),r=g%100;
+      if(h)words.push(hundreds[h]);
+      if(r>=10&&r<20)words.push(teens[r-10]);
+      else{if(r>=20)words.push(tens[Math.floor(r/10)]);if(r%10)words.push(ones[r%10]);}
+      parts.unshift(words.join(' و ')+(units[index]?' '+units[index]:''));
+    }
+    index++;
+  }
+  return parts.join(' و ');
+}\nfunction pbR1698ApprovedThermal(t,customer) {
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const first=(...a)=>a.map(x=>String(x??'').trim()).find(Boolean)||'';
+  const number=v=>Number.isFinite(Number(v))?Number(v).toLocaleString('fa-IR'):'—';
+  const digits=v=>String(v??'').replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+  const name=customer?first(t.direct_customer_name,t.walkin_customer_name,t.customer_name):first(t.customer_name);
+  const mobile=customer?first(t.direct_customer_mobile,t.walkin_customer_mobile,t.customer_mobile):first(t.customer_mobile);
+  const lab=first(t.lab_name,'لابراتوار');
+  const labPhone=first(t.lab_phone,t.lab_admin_mobile,'ثبت نشده');
+  const labAddress=first(t.lab_address,'ثبت نشده');
+  const issued=t.issued_at;
+  const d=new Date(issued||Date.now());
+  const date=Number.isNaN(d.getTime())?String(issued||'—'):d.toLocaleString('fa-IR',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+  const items=typeof vh==='function'?vh(t):(Array.isArray(t.items)?t.items:[]);
+  const rows=items.map(x=>{
+    const label=typeof ph==='function'?ph(x):first(x.description,x.sizeLabel,x.kind,'چاپ عکس');
+    const qty=x.quantity??1,unit=first(x.unitLabel,x.unit_name,x.unit,'عدد');
+    const price=x.unitPrice??x.unit_price??0;
+    const total=x.lineTotal??x.line_total??Number(qty)*Number(price);
+    return `<tr><td class="desc">${esc(label)}</td><td class="qty">${number(qty)}</td><td class="unit">${esc(unit)}</td><td class="price">${number(price)}</td><td class="amount">${number(total)}</td></tr>`;
+  }).join('');
+  const total=Number(t.total||0),subtotal=Number(t.subtotal??total),discount=Number(t.discount??t.discount_total??0);
+  const paid=Number(t.paid_total??t.paid??0);
+  const correction=Number(t.correction_delta||0);
+  const due=Math.max(0,total+correction-paid);
+  const amountRow=(label,val,cls='')=>`<div class="money ${cls}"><span>${esc(label)}</span><b>${number(val)} تومان</b></div>`;
+  let sums='<section class="totals">'+amountRow('مجموع',subtotal,'grand');
+  if(discount)sums+=amountRow('تخفیف',discount);
+  if(subtotal!==total)sums+=amountRow('جمع فاکتور',total,'grand');
+  const words=pbR1698Words(total);
+  if(words)sums+='<div class="words">'+esc(words)+' تومان</div>';
+  sums+='<div class="hairline"></div>'+amountRow('دریافتی',paid)+amountRow('مانده همین فاکتور',due)+'</section>';
+  const balanceRaw=t.account_balance_at_issue??t.customer_total_debt;
+  if(!customer&&balanceRaw!=null&&Number.isFinite(Number(balanceRaw))){
+    const balance=Number(balanceRaw),prior=Math.max(0,balance-due);
+    sums+='<section class="credit"><div><span>مانده حساب از قبل</span><b>'+number(prior)+' تومان</b></div><div><span>مانده کل حساب شما</span><b>'+number(balance)+' تومان</b></div></section>';
+  }
+  const css=`@page{size:80mm auto;margin:0}
+  @font-face{font-family:Vazirmatn;src:url('/assets/photobridge-handover-vazirmatn.woff2') format('woff2')}
+  *{box-sizing:border-box}html,body{width:80mm;max-width:80mm;margin:0;padding:0;background:#fff;color:#000}
+  body{font-family:Vazirmatn,Tahoma,Arial,sans-serif;font-size:12px;font-weight:850;line-height:1.45;direction:rtl;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .paper{width:80mm;max-width:100%;padding:2mm 2mm 3mm}
+  .frame{border:2px solid #000;overflow:hidden}
+  .head{padding:1.8mm 1.5mm;font-weight:900}
+  h1{text-align:center;margin:0 0 1mm;font-size:19px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}
+  .meta{display:flex;direction:rtl;align-items:baseline;justify-content:space-between;gap:1mm;font-size:11px;font-weight:900;white-space:nowrap}
+  .meta .title{font-size:15px;font-weight:900}.meta .date{direction:ltr;unicode-bidi:plaintext;font-size:10.5px}
+  .person{display:grid;gap:.6mm;margin-top:1mm;font-size:12px;font-weight:900}
+  .person div{text-align:right;overflow-wrap:anywhere}.phone{direction:ltr;unicode-bidi:plaintext;display:inline-block}
+  table{border-collapse:collapse;table-layout:fixed;width:100%;font-size:10.5px;line-height:1.4}
+  thead th{background:#e5e5e5;font-weight:900}
+  td{font-weight:850}th,td{border:1px solid #000;padding:1.2mm .6mm;vertical-align:middle;overflow-wrap:anywhere;text-align:center}
+  .desc{text-align:right;width:36%}.qty{width:11%}.unit{width:11%}.price{width:20%}.amount{width:22%}
+  th:first-child,td:first-child{border-right:none}th:last-child,td:last-child{border-left:none}
+  .totals{padding:1.5mm 2mm;font-weight:900}
+  .money{display:flex;justify-content:space-between;align-items:baseline;gap:2mm;margin:.3mm 0;font-size:11.5px;line-height:1.65}
+  .money b{direction:ltr;unicode-bidi:plaintext;white-space:nowrap;font-weight:900}
+  .money.grand{font-size:14px}.words{padding:.4mm 0;font-size:10.5px;line-height:1.5;font-weight:850}
+  .hairline{border-top:1px solid #000;margin:1mm -2mm}
+  .credit{border-top:2px solid #000;padding:1.7mm;background:#eee;font-size:12px;line-height:1.6;font-weight:900}
+  .credit>div{display:flex;justify-content:space-between;gap:1mm}.credit b{direction:ltr;unicode-bidi:plaintext;white-space:nowrap}
+  .contact{border-top:2px solid #000;background:#f2f2f2;padding:1.3mm 1.8mm;text-align:center;font-size:10.5px;line-height:1.5;font-weight:900;overflow-wrap:anywhere}
+  .contact div{margin:.4mm 0}@media print{.frame,.contact,.credit{break-inside:avoid}tr{break-inside:avoid}}`;
+  return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>${css}</style></head><body><article class="paper"><div class="frame"><header class="head"><h1>${esc(lab)}</h1><div class="meta"><span>شماره: ${esc(digits(t.number||t.order_number||'—'))}</span><span class="title">فروش</span><span class="date">${esc(date)}</span></div><div class="person"><div><b>${customer?'مشتری':'عکاسی'}:</b> ${esc(name||'ثبت نشده')}</div><div><b>${customer?'شماره مشتری':'شماره عکاسی'}:</b> <span class="phone">${esc(mobile||'ثبت نشده')}</span></div></div></header><table><thead><tr><th class="desc">کالا / خدمات</th><th class="qty">تعداد</th><th class="unit">واحد</th><th class="price">قیمت</th><th class="amount">قیمت کل</th></tr></thead><tbody>${rows||'<tr><td colspan="5">اقلام ثبت نشده</td></tr>'}</tbody></table>${sums}<footer class="contact"><div>تلفن لابراتوار: <span class="phone">${esc(labPhone)}</span></div><div>آدرس لابراتوار: ${esc(labAddress)}</div></footer></div></article><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),500))<\/script></body></html>`;
+}\n

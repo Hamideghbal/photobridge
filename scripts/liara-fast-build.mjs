@@ -969,3 +969,7 @@ runR1314(process.execPath,['--test','scripts/test-r1657-photographer-finance-mob
 // R1658: new-album photo sheets, compact resume notice, and no moving price sidebar.
 await deployStep('./enable-r1658-album-compact-three-up.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1658-album-compact-three-up.cjs'],{stdio:'inherit'});
+
+// R1659: first-paint mobile dock deduplication and desktop settings selected-state correction.
+await deployStep('./enable-r1659-single-mobile-dock-settings-active.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1659-single-mobile-dock-settings-active.cjs'],{stdio:'inherit'});

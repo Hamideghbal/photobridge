@@ -1,0 +1,25 @@
+/* R1659 — Only one photographer mobile bottom bar at first paint. */
+@media(max-width:820px){
+ html.pb1659PhotographerDock body #root main.photographerMain nav.photographerBottomAppNav:not([data-pb1659-primary="1"]),
+ html.pb1659PhotographerDock body nav.photographerBottomAppNav:not([data-pb1659-primary="1"]),
+ html.pb1659PhotographerDock body #photographerStoreBottomNav,
+ html.pb1659PhotographerDock body nav.labMobileUtilityRail,
+ html.pb1659PhotographerDock body nav.pb1482LabPhoneDock{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+}
+/* When Tariffs, Photographer Location or Invite Colleague opens, the last
+   Print/Album/Finance/Archive selection is no longer visually active. */
+@media(min-width:821px){
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader
+ :is(.pb1126MainNav,.pb1127PrintModes,.pb1127PrintUtilities,.pb1632FinanceTabs)>button:is(.active,[aria-current="page"]){
+  color:#475467!important;background:transparent!important;box-shadow:none!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader
+ :is(.pb1126MainNav,.pb1127PrintModes,.pb1127PrintUtilities,.pb1632FinanceTabs)>button:is(.active,[aria-current="page"])::after{
+  content:none!important;display:none!important;
+ }
+ html.pb1126Desktop.pb1635SettingsOpen body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>.pb1131MovingIndicator{
+  display:none!important;visibility:hidden!important;opacity:0!important;
+ }
+}

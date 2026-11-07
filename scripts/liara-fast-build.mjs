@@ -988,3 +988,7 @@ runR1314(process.execPath,['--test','scripts/test-r1662-photographer-settings-re
 
 // R1664: customer vs photographer local order folders, old pinned storage unchanged.
 runR1314(process.execPath,['--test','scripts/test-r1664-storage-separation.cjs'],{stdio:'inherit'});
+
+// R1665: bold monochrome thermal invoices for coworker and customer with party telephone.
+await deployStep('./enable-r1665-thermal-invoice.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1665-thermal-invoice.cjs'],{stdio:'inherit'});

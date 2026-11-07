@@ -37,8 +37,8 @@ test('R1674 PDF renderer uses direct name/mobile/total and never uses customer a
   direct_customer_mobile:'09123456789',lab_phone:'02144556677',lab_address:'تهران، خیابان آزادی، پلاک ۱۲',total:65000,customer_total_debt:9999999,
   items:[{description:'چاپ',quantity:1,unitPrice:65000,lineTotal:65000}]});
  assert.equal(pdf.type,'application/pdf');
- assert(drawn.some(x=>x.includes('مریم')));
- assert(drawn.some(x=>x.includes('09123456789')));
+ assert(drawn.some(x=>x.includes('مریم')));assert(drawn.some(x=>x.includes('نام و نام خانوادگی مشتری')));
+ assert(drawn.some(x=>x.includes('09123456789')));assert(drawn.some(x=>x.includes('شماره موبایل مشتری')));
  assert(drawn.some(x=>x.includes('65000')));assert(drawn.some(x=>x.includes('02144556677')));assert(drawn.some(x=>x.includes('تهران، خیابان آزادی، پلاک ۱۲')));
  assert(!drawn.some(x=>x.includes('بدهی')||x.includes('9999999')||x.includes('عکاسی')));
 });

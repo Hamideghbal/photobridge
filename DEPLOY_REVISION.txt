@@ -1,1 +1,1 @@
-2026-11-07-r1679-invoice-lab-contact
+2026-11-07-r1680-direct-invoice-full-name-labels

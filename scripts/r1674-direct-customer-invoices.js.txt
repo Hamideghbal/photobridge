@@ -46,7 +46,7 @@ function pb1674CustomerA4(t){
  <div class="invoiceNo"><small>شماره فاکتور</small><b>#${num(t.number)}</b><small>${esc(vn(t.issued_at))}</small></div></header>
  <section class="customer"><h2>مشخصات مشتری</h2><div class="fields">
  <div class="field"><small>نام و نام خانوادگی مشتری</small><strong>${name}</strong></div>
- <div class="field"><small>شماره تماس مشتری</small><strong class="ltr">${phone}</strong></div>
+ <div class="field"><small>شماره موبایل مشتری</small><strong class="ltr">${phone}</strong></div>
  <div class="field"><small>لابراتوار ارائه‌دهنده خدمات</small><strong>${esc(t.lab_name||'—')}</strong></div>
  ${t.order_number?`<div class="field"><small>شماره سفارش</small><strong>#${num(t.order_number)}</strong></div>`:''}
  </div></section><table><thead><tr><th>شرح خدمات</th><th>تعداد</th><th>فی (تومان)</th><th>مبلغ (تومان)</th></tr></thead>
@@ -104,8 +104,8 @@ async function pb1674CustomerPdf(t){
  g.textAlign='left';g.font='800 27px Vazirmatn,Tahoma,Arial';g.fillText('#'+fmt(t.number),left,123);
  g.font='600 19px Vazirmatn,Tahoma,Arial';g.fillText(vn(t.issued_at),left,157);
  g.fillStyle='#22324b';g.fillRect(left,190,right-left,5);g.textAlign='right';
- line('نام مشتری',pb1674CustomerName(t),right,250);
- line('شماره تماس مشتری',pb1674CustomerMobile(t),right-560,250);
+ line('نام و نام خانوادگی مشتری',pb1674CustomerName(t),right,250);
+ line('شماره موبایل مشتری',pb1674CustomerMobile(t),right-560,250);
  line('لابراتوار',t.lab_name||'—',right,355);
  if(t.order_number)line('شماره سفارش','#'+fmt(t.order_number),right-560,355);
  let y=460;

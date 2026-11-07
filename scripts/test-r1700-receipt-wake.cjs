@@ -15,13 +15,29 @@ test('R1700 compact templates clearly separate free customer from studio and ide
  assert(studio.includes('رسید عکاسی'));assert(studio.includes('شماره عکاسی'));assert(studio.includes('09351234567'));
  assert(!studio.includes('شماره مشتری'));assert(!studio.includes('09129999999'));assert(studio.includes('مانده کل حساب شما'));
 });
-test('R1700 busy native download worker re-arms the already-coalesced R1586 notification wake',()=>{
- const worker=fs.readFileSync('scripts/r1568-native-worker.js.txt','utf8'),wake=fs.readFileSync('scripts/r1586-download-wake.js.txt','utf8');
- assert(worker.includes("pb1568Work.running=false;"));
- assert(worker.includes("typeof pb1586WakeDownloads==='function'"));
- assert(worker.includes("pb1586WakePending)pb1586WakeDownloads();"));
+test('R1700 wake preserves R1583 retry patch and R1586 immediate coalesced wake in correct build order',()=>{
+ const worker=fs.readFileSync('scripts/r1568-native-worker.js.txt','utf8');
+ const retry=fs.readFileSync('scripts/enable-r1583-download-retry.mjs','utf8');
+ const after=fs.readFileSync('scripts/enable-r1586-opening-debt-history.mjs','utf8');
+ const wake=fs.readFileSync('scripts/r1586-download-wake.js.txt','utf8');
+ const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
+ const anchor=' finally{pb1568Work.running=false}';
+ const retryPatched=' finally{pb1568Work.running=false;if(typeof pb1583DrainRetries==="function")void pb1583DrainRetries()}';
+ const wakePatched='finally{pb1568Work.running=false;if(typeof pb1583DrainRetries==="function")void pb1583DrainRetries();if(typeof pb1586WakeDownloads==="function"&&pb1586WakePending)pb1586WakeDownloads()}';
+ assert.equal(worker.split(anchor).length-1,1,'R1568 must preserve early R1583 anchor');
+ assert(retry.includes("once(' finally{pb1568Work.running=false}'"));
+ const next=worker.replace(anchor,retryPatched);
+ assert.equal(next.split(retryPatched.trimStart()).length-1,1,'R1583 installs retry drain');
+ assert(after.includes(wakePatched),'R1586 installs pending wake after retry drain');
+ assert(next.includes('pb1583DrainRetries()'));
  assert(wake.includes('if(pb1586WakeTimer!==null||pb1568Work.running)return'));
  assert(wake.includes('pb1568AutoTick()'));
- const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
- assert(build.indexOf("await deployStep('./enable-r1698-approved-receipts.mjs')")<build.indexOf("runR1314(process.execPath,['--test','scripts/test-r1700-receipt-wake.cjs']"));
+ const stages=[
+  "await deployStep('./enable-r1568-auto-processing.mjs')",
+  "await deployStep('./enable-r1583-download-retry.mjs')",
+  "await deployStep('./enable-r1586-opening-debt-history.mjs')",
+  "await deployStep('./enable-r1682-direct-customer-order-flow.mjs')",
+  "runR1314(process.execPath,['--test','scripts/test-r1700-receipt-wake.cjs']"
+ ];
+ let previous=-1;for(const stage of stages){const index=build.indexOf(stage);assert(index>previous,stage);previous=index;}
 });

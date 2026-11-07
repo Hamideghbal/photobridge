@@ -13,7 +13,7 @@ test('R1655: do not reroute original print/album/finance/archive buttons by arra
   assert.doesNotMatch(js,/\/\* PB1648 stable print header \*\//,root);
   assert.doesNotMatch(js,/\/\* PB1653 stable desktop photographer \*\//,root);
   assert.doesNotMatch(js,/live\[index\]\?\.click\(\)/,root);
-  assert.match(js,/copy\.onclick=\(\)=>\{press\(copy\);original\.click\(\)/,root);
+  assert.match(js,/copy\.onclick=\(\)=>\{press\(copy\);original\.click\(\);/,root);
   assert.match(js,/if\(utilities\)\{const separator=/,root+' R1632 utility grouping must remain');
   assert.match(js,/modes\.append\(b\)/,root+' finance/archive stay in R1632 original order');
   assert.doesNotThrow(()=>new Function(js),root);

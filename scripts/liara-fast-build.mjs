@@ -981,3 +981,7 @@ runR1314(process.execPath,['--test','scripts/test-r1660-mobile-lab-order-number.
 // R1661: open push invoice inside the current photographer page, on phone and desktop.
 await deployStep('./enable-r1661-photographer-invoice-overlay.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1661-photographer-invoice-overlay.cjs'],{stdio:'inherit'});
+
+// R1662: desktop photographer Settings overlay closes before printing or navigation.
+await deployStep('./enable-r1662-photographer-settings-return.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1662-photographer-settings-return.cjs'],{stdio:'inherit'});

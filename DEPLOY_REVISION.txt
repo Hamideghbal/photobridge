@@ -1,1 +1,1 @@
-2026-11-07-r1661-customer-invoice-preview-no-navigation
+2026-11-07-r1662-settings-return-sw-version

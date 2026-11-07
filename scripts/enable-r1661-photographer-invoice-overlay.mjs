@@ -36,7 +36,10 @@ const workerPath=root+'/photobridge-sw-v710.js';let worker=fs.readFileSync(worke
 const clickAt=worker.indexOf("self.addEventListener('notificationclick',event=>{");
 if(clickAt<0||!worker.slice(clickAt).includes('await client.navigate(target)'))throw Error('R1661 SW click anchor');
 worker=worker.slice(0,clickAt)+swClick;
-worker=one(worker,"const VERSION='photobridge-pwa-v786';","const VERSION='photobridge-pwa-v1661';",'cache version');
+const swVersion=/^const VERSION\s*=\s*(['"])[^'"\r\n]+\1\s*;/gm;
+const versions=[...worker.matchAll(swVersion)];
+if(versions.length!==1)throw Error('R1661 SW version contract count '+versions.length);
+worker=worker.replace(swVersion,"const VERSION='photobridge-pwa-v1661';");
 fs.writeFileSync(workerPath,worker);execFileSync(process.execPath,['--check',workerPath],{stdio:'inherit'});
 const cssFile='photobridge-r1661-invoice-notification.css';fs.copyFileSync('scripts/r1661-invoice-notification.css',root+'/'+cssFile);
 const htmlPath=root+'/index.html';let html=fs.readFileSync(htmlPath,'utf8');

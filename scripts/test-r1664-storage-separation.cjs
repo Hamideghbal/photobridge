@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const code=fs.readFileSync('scripts/r1550-order-storage.js.txt','utf8');
 test('R1664 routes only walk-in/direct customers into customer folder, photographers to coworker folder',()=>{
- const context={window:{pbLabLocalIntakeStorage:{}},Map,Promise,Date};
+ const context={window:{pbLabLocalIntakeStorage:{}},Map,Promise,Date,pb1450Root:async()=>null};
  vm.createContext(context);vm.runInContext(code,context);
  const fn=context.pb1664StorageBucket;
  assert.equal(fn({source:'walkin',walkin_customer_name:'مشتری'}),'مشتریان');

@@ -30,7 +30,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  // A finance deep-link may be navigated inside the existing print iframe
  // without retaining pbDesktopContent=1. Never create a second desktop chrome
  // inside the parent desktop chrome. This is a route-level, not visual, guard.
- const inlineStart="const query=new URLSearchParams(location.search);\\n if(query.get('pbDesktopContent')==='1')";
+ const inlineStart="const query=new URLSearchParams(location.search);"+String.fromCharCode(10)+" if(query.get('pbDesktopContent')==='1')";
  const inlineNext=`const query=new URLSearchParams(location.search);
  /* PB1656 embedded invoice link guard */
  let embeddedHost=false;

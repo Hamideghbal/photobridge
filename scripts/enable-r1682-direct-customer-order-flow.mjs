@@ -63,7 +63,7 @@ if(!nativeJs.includes('/* R1682 event-driven order download */')){
  const marker='/* R1682 event-driven order download:';
  const markerAt=workerSource.indexOf(marker);
  if(markerAt<0)throw Error('R1682 updated native worker tail missing');
- const oldTail="if(typeof window!=='undefined'&&window.pbNativeStorage){\\n setTimeout(()=>void pb1568AutoTick(),12000);\\n setInterval(()=>void pb1568AutoTick(),45000);\\n window.pb1568AutomationStatus=()=>({...pb1568Work});\\n}";
+ const oldTail="if(typeof window!=='undefined'&&window.pbNativeStorage){\n setTimeout(()=>void pb1568AutoTick(),12000);\n setInterval(()=>void pb1568AutoTick(),45000);\n window.pb1568AutomationStatus=()=>({...pb1568Work});\n}";
  nativeJs=one(nativeJs,oldTail,workerSource.slice(markerAt),'native worker scheduler');
  write(nativeAsset,nativeJs);
  execFileSync(process.execPath,['--check',nativeAsset],{stdio:'inherit'});

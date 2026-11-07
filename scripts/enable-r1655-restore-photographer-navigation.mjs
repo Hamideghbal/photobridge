@@ -26,7 +26,25 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  }
  // Guard behavior and structure, not exact formatting of a generated
  // onclick expression. The proxy must click its own source element.
- const directProxy=/for\(const original of storeHeader\?\[\]:visible\)\s*\{[\s\S]{0,500}?copy\.onclick\s*=\s*\(\)\s*=>\s*\{[\s\S]{0,200}?original\.click\(\)/.test(nav);
+ const directProxy=/copy\.onclick\s*=\s*\(\)\s*=>\s*\{[^}]{0,600}original\.click\(\)/.test(nav);
+ // A finance deep-link may be navigated inside the existing print iframe
+ // without retaining pbDesktopContent=1. Never create a second desktop chrome
+ // inside the parent desktop chrome. This is a route-level, not visual, guard.
+ const inlineStart="const query=new URLSearchParams(location.search);\\n if(query.get('pbDesktopContent')==='1')";
+ const inlineNext=`const query=new URLSearchParams(location.search);
+ /* PB1656 embedded invoice link guard */
+ let embeddedHost=false;
+ try{
+  embeddedHost=window.parent!==window&&
+   Boolean(window.frameElement?.closest('.pb1126ContentPanel[data-panel="print"],.pb1126ContentPanel[data-panel="store"]'))&&
+   window.parent.document.documentElement.classList.contains('pb1126Desktop');
+ }catch{}
+ if(query.get('pbDesktopContent')==='1'||embeddedHost)`;
+ if(!nav.includes('/* PB1656 embedded invoice link guard */')){
+  if(!nav.includes(inlineStart))throw Error('R1656 expected photographer embedded bootstrap missing: '+root);
+  nav=nav.replace(inlineStart,inlineNext);
+  fs.writeFileSync(navPath,nav);
+ }
  const thirdHeader=nav.includes('pb1632FinanceTabs')&&nav.includes('financeThird');
  if(!directProxy||!hasDivider()||!thirdHeader)
   throw Error('R1655 navigation contract '+root+' directProxy='+directProxy+' divider='+hasDivider()+' financeThird='+thirdHeader);
@@ -36,7 +54,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let navCount=0,settingsCount=0;
  html=html.replace(/photobridge-r1126-desktop-navigation\.js\?[^"']*/g,url=>{
   navCount++;
-  return url.includes('routing=r1655')?url:url+'&routing=r1655';
+  const stable=url.includes('routing=r1655')?url:url+'&routing=r1655';
+  return stable.includes('embeddedChrome=r1656')?stable:stable+'&embeddedChrome=r1656';
  });
  html=html.replace(/photobridge-r1635-photographer-inline-settings\.js\?[^"']*/g,url=>{
   settingsCount++;

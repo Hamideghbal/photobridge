@@ -1,6 +1,6 @@
 function pb1665Thermal(t,a){
  const esc=x=>_n(String(x==null?'':x)),num=x=>_n(V(x??0));
- const customer=String(t.customer_kind||'').toLowerCase()==='customer'||(!t.customer_kind&&['walkin','manual_invoice'].includes(String(t.order_source||'')));
+ const customer=typeof pb1674DirectCustomer==='function'?pb1674DirectCustomer(t):String(t.customer_kind||'').toLowerCase()==='customer'||(!t.customer_kind&&['walkin','manual_invoice'].includes(String(t.order_source||'')));
  const kind=customer?'مشتری':'همکار',mobile=t.direct_customer_mobile||t.customer_mobile||t.walkin_customer_mobile||'ثبت نشده',name=t.direct_customer_name||t.walkin_customer_name||t.customer_name||'ثبت نشده',labPhone=t.lab_phone||t.lab_admin_mobile||'ثبت نشده',labAddress=t.lab_address||'ثبت نشده';
  const rows=vh(t),count=rows.reduce((total,row)=>total+Math.max(0,Number(row.quantity||1)),0),paid=Math.max(0,Number(t.paid_total||0)),balance=Math.max(0,Number(t.balance??Number(t.total||0)-paid)),debt=Math.max(0,Number(t.customer_total_debt??t.account_balance_at_issue??balance));
  const table=rows.map(row=>`<tr><td class="desc">${esc(ph(row))}</td><td>${num(row.quantity||1)}</td><td>${num(row.unitPrice||0)}</td><td>${num(row.lineTotal||0)}</td></tr>`).join('');

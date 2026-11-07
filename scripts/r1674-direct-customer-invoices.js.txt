@@ -83,7 +83,7 @@ function pb1674CustomerThermal(t){
  <div class="row"><span>شماره فاکتور:</span><b>#${num(t.number)}</b></div>
  <div class="row"><span>تاریخ:</span><b>${esc(vn(t.issued_at))}</b></div>
  ${t.order_number?`<div class="row"><span>شماره سفارش:</span><b>#${num(t.order_number)}</b></div>`:''}
- <div class="section"><div class="row"><span>نام و نام خانوادگی:</span><b>${esc(pb1674CustomerName(t))}</b></div>
+ <div class="section"><div class="row"><span>نام و نام خانوادگی مشتری:</span><b>${esc(pb1674CustomerName(t))}</b></div>
  <div class="row"><span>موبایل مشتری:</span><b class="phone">${esc(pb1674CustomerMobile(t))}</b></div></div>
  <table><thead><tr><th>شرح</th><th>تعداد</th><th>فی</th><th>مبلغ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">جزئیات ثبت نشده است</td></tr>'}</tbody></table>
  <div class="row"><span>تعداد کل:</span><b>${num(count)}</b></div>

@@ -62,20 +62,21 @@ function pb1674CustomerA4(t){
 function pb1674CustomerThermal(t){
  const esc=v=>_n(String(v??'')),num=v=>_n(V(v??0)),items=vh(t);
  const count=items.reduce((n,x)=>n+Math.max(0,Number(x.quantity||1)),0),paid=Math.max(0,Number(t.paid_total||0));
+ const name=esc(pb1674CustomerName(t)),mobile=esc(pb1674CustomerMobile(t)),labPhone=esc(pb1674LabPhone(t)),labAddress=esc(pb1674LabAddress(t));
  const rows=items.map(x=>`<tr><td>${esc(ph(x))}</td><td>${num(x.quantity||1)}</td><td>${num(x.unitPrice||0)}</td><td>${num(x.lineTotal||0)}</td></tr>`).join('');
  return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور مشتری آزاد #${num(t.number)}</title><style>
  @page{size:80mm auto;margin:0}*{box-sizing:border-box}body{margin:0;color:#000;background:#fff;font:900 13px/1.5 Vazirmatn,Tahoma,Arial,sans-serif}
- .paper{width:72mm;max-width:100%;margin:auto;padding:3mm 1mm 8mm}
- h1{text-align:center;font-size:19px;margin:0 0 1mm}.subtitle{text-align:center;font-size:12px}
- .kind{font-size:18px;font-weight:900;border:2px solid #000;text-align:center;padding:2mm;margin:3mm 0}
- .row{display:flex;justify-content:space-between;gap:4px;padding:1.2mm 0;overflow-wrap:anywhere}.row b{text-align:left}
- .section{border-block:2px dashed #000;margin:2mm 0;padding:2mm 0}
+ .paper{width:72mm;max-width:100%;margin:auto;padding:3mm 1.5mm 8mm;overflow-wrap:anywhere}
+ h1{text-align:center;font-size:19px;margin:0 0 1mm;font-weight:900}.subtitle{text-align:center;font-size:11px;font-weight:800}
+ .kind{font-size:18px;font-weight:900;border:2.5px solid #000;text-align:center;padding:2.5mm 1mm;margin:3mm 0}
+ .row{display:flex;justify-content:space-between;align-items:baseline;gap:5px;padding:1.3mm 0;overflow-wrap:anywhere}.row b{text-align:left;font-weight:900}
+ .customer-card{border:2px solid #000;margin:3mm 0;padding:2.2mm 2.5mm}.customer-title{font-size:14px;text-align:center;font-weight:900;border-bottom:1px dashed #000;padding-bottom:1.2mm;margin-bottom:1mm}.customer-name{font-size:14px}.customer-mobile{font-size:13px}
  table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:11px}
  th,td{border-bottom:1px solid #000;padding:1.8mm .5mm;text-align:center;overflow-wrap:anywhere}
  th:first-child,td:first-child{text-align:right;width:39%}th:nth-child(2){width:13%}th:nth-child(3){width:22%}th:nth-child(4){width:26%}
- .final{font-size:17px;border:3px solid #000;padding:2mm;margin:3mm 0;font-weight:900}
+ .final{font-size:17px;border:3px solid #000;padding:2.5mm 2mm;margin:3mm 0;font-weight:900}.final b{white-space:nowrap}
  .phone{direction:ltr;unicode-bidi:isolate;white-space:nowrap}
- .lab-contact{text-align:right;border-top:2px dashed #000;padding:3mm 0 0;margin-top:3mm;font-size:11px;line-height:1.9;overflow-wrap:anywhere}
+ .lab-contact{text-align:right;border-top:2px dashed #000;padding:3mm 0 0;margin-top:4mm;font-size:12px;line-height:1.95;overflow-wrap:anywhere}.lab-contact strong{display:block;font-size:12px;font-weight:900}.lab-contact .phone{font-size:14px;font-weight:900}
  .foot{text-align:center;border-top:2px dashed #000;padding:3mm 0;margin-top:3mm}
  @media print{body{width:80mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper{margin:0}tr{break-inside:avoid}}
  </style></head><body><main class="paper"><h1>${esc(t.lab_name||'لابراتوار')}</h1>
@@ -83,14 +84,14 @@ function pb1674CustomerThermal(t){
  <div class="row"><span>شماره فاکتور:</span><b>#${num(t.number)}</b></div>
  <div class="row"><span>تاریخ:</span><b>${esc(vn(t.issued_at))}</b></div>
  ${t.order_number?`<div class="row"><span>شماره سفارش:</span><b>#${num(t.order_number)}</b></div>`:''}
- <div class="section"><div class="row"><span>نام و نام خانوادگی مشتری:</span><b>${esc(pb1674CustomerName(t))}</b></div>
- <div class="row"><span>موبایل مشتری:</span><b class="phone">${esc(pb1674CustomerMobile(t))}</b></div></div>
+ <section class="customer-card"><div class="customer-title">مشخصات مشتری آزاد</div><div class="row customer-name"><span>نام و نام خانوادگی مشتری:</span><b>${name}</b></div>
+ <div class="row customer-mobile"><span>شماره موبایل مشتری:</span><b class="phone">${mobile}</b></div></section>
  <table><thead><tr><th>شرح</th><th>تعداد</th><th>فی</th><th>مبلغ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">جزئیات ثبت نشده است</td></tr>'}</tbody></table>
  <div class="row"><span>تعداد کل:</span><b>${num(count)}</b></div>
  ${Number(t.discount||0)>0?`<div class="row"><span>تخفیف:</span><b>${num(t.discount)} تومان</b></div>`:''}
  <div class="row final"><span>مبلغ کل فاکتور:</span><b>${num(t.total)} تومان</b></div>
  ${paid>0?`<div class="row"><span>پرداخت‌شده:</span><b>${num(paid)} تومان</b></div>`:''}
- <div class="lab-contact"><div>شماره تماس لابراتوار: <b class="phone">${esc(pb1674LabPhone(t))}</b></div><div>آدرس لابراتوار: ${esc(pb1674LabAddress(t))}</div></div><div class="foot">سپاس از اعتماد شما<br>PhotoBridge</div></main>
+ <div class="lab-contact"><strong>اطلاعات تماس لابراتوار</strong><div>شماره تماس لابراتوار: <b class="phone">${labPhone}</b></div><div>آدرس لابراتوار: <b>${labAddress}</b></div></div><div class="foot">سپاس از اعتماد شما<br>PhotoBridge</div></main>
  <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),500))<\/script></body></html>`;
 }
 

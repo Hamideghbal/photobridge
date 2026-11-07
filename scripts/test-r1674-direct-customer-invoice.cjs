@@ -83,7 +83,7 @@ test('R1676 preview JSX patch survives renamed minified invoice component withou
  const {patchDirectCustomerPreview}=await import('./r1674-preview-patch.mjs');
  const fixture=[
   'function RenamedInvoicePreview({role:t,invoice:a,onClose:s}){',
-  'className:"invoicePreviewHeadActions"',
+  'className:"invoicePreviewHeadActions",children:[',
   'className:"invoicePaperInfo"',
   'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
   'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
@@ -102,4 +102,29 @@ test('R1676 preview JSX patch survives renamed minified invoice component withou
  assert(patched.includes('!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"'));
  assert(patched.includes('!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: "'));
  assert.throws(()=>patchDirectCustomerPreview('function RenamedInvoicePreview(){}','missing'),/preview landmark missing/);
+});
+
+test('R1677 A4 action is added without requiring old print button labels/handlers',async()=>{
+ const {patchDirectCustomerPreview}=await import('./r1674-preview-patch.mjs');
+ const old=fs.readFileSync('scripts/test-r1674-direct-customer-invoice.cjs','utf8');
+ const printVariations=[
+   'e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:"چاپ فاکتور"})',
+   'e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:"چاپ رسید"})',
+   'e.jsx("button",{className:"invoicePrintBtn",onClick:()=>pbNativePrint(a,t),children:"چاپ حرارتی"})'
+ ];
+ for(const handler of printVariations){
+  const fixture=[
+   'function Whatever(){','className:"invoicePreviewHeadActions",children:[',
+   handler,'className:"invoicePaperInfo"',
+   'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
+   'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
+   'e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})',
+   '(o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})',
+   'e.jsxs("div",{className:"invoiceAccountDebt"','}'
+  ].join(';');
+  const result=patchDirectCustomerPreview(fixture,'preview variant');
+  assert(result.includes(handler),'Existing print handler must be preserved');
+  assert(result.includes('Wy(a,"customer-a4")'),'Separate A4 action missing');
+  assert.equal(result.split('Wy(a,"customer-a4")').length-1,1);
+ }
 });

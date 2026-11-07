@@ -19,9 +19,13 @@ export function patchDirectCustomerPreview(js,root){
  const oldName='e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})';
  const newName='e.jsx("b",{children:pb1674DirectCustomer(a)?pb1674CustomerName(a):t==="lab"?a.customer_name||"—":a.lab_name||"—"})]}),pb1674DirectCustomer(a)&&e.jsxs("div",{children:[e.jsx("small",{children:"شماره موبایل مشتری"}),e.jsx("b",{children:pb1674CustomerMobile(a)})]})';
  p=one(p,oldName,newName,'preview customer name and mobile '+root);
- const oldPrint='e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:"چاپ فاکتور"})';
- const newPrint='e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,t),children:pb1674DirectCustomer(a)&&t==="lab"?"چاپ حرارتی":"چاپ فاکتور"}),pb1674DirectCustomer(a)&&t==="lab"&&e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,"customer-a4"),children:"چاپ A4"})';
- p=one(p,oldPrint,newPrint,'preview thermal and A4 buttons '+root);
+ // The previous stages can rename the primary Print button, change its
+ // onClick handler, or wrap it for desktop navigation. Don't rewrite it.
+ // R1665 already routes the existing lab Print action to thermal output.
+ // Just add the direct-customer A4 action to the known preview actions row.
+ const actions='className:"invoicePreviewHeadActions",children:[';
+ const a4='pb1674DirectCustomer(a)&&t==="lab"&&e.jsx("button",{className:"invoicePrintBtn",onClick:()=>Wy(a,"customer-a4"),children:"چاپ A4"}),';
+ p=one(p,actions,actions+a4,'preview direct-customer A4 action '+root);
  // Direct customers have a single-invoice receipt, not a studio ledger.
  // Keep their recorded payment when present, but omit the account-like balance.
  const oldPayment='(o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})';

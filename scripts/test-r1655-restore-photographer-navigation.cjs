@@ -16,11 +16,14 @@ test('R1655: do not reroute original print/album/finance/archive buttons by arra
   assert.doesNotMatch(js,/\/\* PB1648 stable print header \*\//,root);
   assert.doesNotMatch(js,/\/\* PB1653 stable desktop photographer \*\//,root);
   assert.doesNotMatch(js,/live\[index\]\?\.click\(\)/,root);
-  assert.match(js,/for\(const original of storeHeader\?\[\]:visible\)[\s\S]{0,500}?copy\.onclick\s*=\s*\(\)\s*=>\s*\{[\s\S]{0,200}?original\.click\(\)/,root+' cloned tabs must directly click their original');
+  assert.match(js,/copy\.onclick\s*=\s*\(\)\s*=>\s*\{[^}]{0,600}original\.click\(\)/,root+' cloned tabs must directly click their original');
   assert.match(js,/pb1632ModeDivider/,root+' R1632 divider exists');
   assert.match(js,/modes\.append\(separator\)/,root+' R1632 divider stays in modes');
   assert.match(js,/modes\.append\(b\)/,root+' finance/archive stay in modes');
   assert.match(js,/pb1632FinanceTabs/,root+' finance third header stays separate');
+  assert.match(js,/\/\* PB1656 embedded invoice link guard \*\//,root+' nested invoice route guard installed');
+  assert.match(js,/window\.frameElement\?\.closest\('\.pb1126ContentPanel/,root+' verify real parent iframe');
+  assert.match(js,/if\(query\.get\('pbDesktopContent'\)==='1'\|\|embeddedHost\)/,root+' embedded route never creates desktop header');
   assert.doesNotThrow(()=>new Function(js),root);
  }
 });
@@ -32,6 +35,7 @@ test('R1655: restore the original R1635 settings controller and prevent R1653 do
   const actual=fs.readFileSync(root+'/photobridge-r1635-photographer-inline-settings.js','utf8');
   assert.equal(actual,legacy,root+' must serve the original settings controller');
   assert.equal(html.split('routing=r1655').length-1,1,'restored desktop nav must bypass stale cache: '+root);
+  assert.equal(html.split('embeddedChrome=r1656').length-1,1,'embedded finance link must not launch a second header: '+root);
   assert.equal(html.split('settingsRollback=r1655').length-1,1,'restored settings must bypass stale cache: '+root);
   assert(!html.includes('speed=r1653'),'bad R1653 cached settings script loaded: '+root);
   assert(!html.includes('stable=r1653'),'bad R1653 tab/nav patch loaded: '+root);

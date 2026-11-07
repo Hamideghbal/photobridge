@@ -66,13 +66,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   js=js.slice(0,start)+nextPricingHandler+js.slice(end);
 
   js=replaceOptional(js,'این سفارش سایز بدون تعرفه دارد','قیمت‌گذاری اختصاصی این سفارش','pricing modal title');
-  const bodyStart='ارسال فایل متوقف نشده است. فقط برای همین سفارش قیمت واحد را مشخص کن؛';
-  const bodyEnd='فاکتور صادر نمی‌شود.';
-  const bodyAt=js.indexOf(bodyStart);
-  if(bodyAt>=0){
-   const bodyEndAt=js.indexOf(bodyEnd,bodyAt);
+  const bodyMatch=js.match(/ارسال فایل متوقف (?:نشده|شده) است\\. فقط برای همین سفارش قیمت واحد را مشخص کن(?:ید)?؛/);
+  if(bodyMatch){
+   const bodyAt=js.indexOf(bodyMatch[0]),endText='فاکتور صادر نمی‌شود',bodyEndAt=js.indexOf(endText,bodyAt);
    if(bodyEndAt>=0){
-    js=js.slice(0,bodyAt)+'مبالغ واردشده فقط برای همین سفارش ثبت می‌شوند و تعرفه عمومی لابراتوار را تغییر نمی‌دهند. اگر ردیفی قیمت نداشته باشد، همان ردیف برای تکمیل در فهرست زیر نمایش داده می‌شود.'+js.slice(bodyEndAt+bodyEnd.length);
+    let end=bodyEndAt+endText.length;if(js[end]==='.')end++;
+    js=js.slice(0,bodyAt)+'مبالغ واردشده فقط برای همین سفارش ثبت می‌شوند و تعرفه عمومی لابراتوار را تغییر نمی‌دهند. اگر ردیفی قیمت نداشته باشد، همان ردیف برای تکمیل در فهرست زیر نمایش داده می‌شود.'+js.slice(end);
    }
   }
   js+='\n/* PB1682 direct customer invoice policy */\n';

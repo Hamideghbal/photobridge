@@ -9,7 +9,13 @@ test('R1662 main tabs close settings first, without changing source tab handlers
   const originalNav=nav.indexOf("window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]')");
   assert(injected>=0&&closure>injected,root+' must register early settings cleanup');
   if(originalNav>=0)assert(closure<originalNav,root+' settings cleanup must capture before nav');
-  assert(nav.includes('copy.onclick=()=>{press(copy);original.click();'));
+  // R1655 already validates the direct source-click contract. Earlier
+  // transformers may change the proxy's visual press animation or spacing.
+  // Verify behavior instead of requiring that old literal implementation.
+  assert.match(nav,/copy\\.onclick\\s*=\\s*\\(\\)\\s*=>\\s*\\{[^}]{0,600}original\\.click\\(\\)/,
+   root+' copied tabs must click their own original buttons');
+  assert.doesNotMatch(nav,/live\\[index\\]\\?\\.click\\(\\)/,
+   root+' must not route tab proxies by array index');
   assert(settings.includes('window.pb1635CloseInlineSettings=close;'));
   assert(settings.includes("panel?.remove();panel=null;selected='';"));
   assert(settings.includes("classList.remove('pb1635SettingsOpen')"));
@@ -62,4 +68,12 @@ test('R1669: duplicate desktop markers still install capture once before origina
  assert(patched.includes(click+";if(!b)return;"));
  assert.equal(withSettingsCapture(patched),patched);
  assert.throws(()=>withSettingsCapture(twice+click),/R1662 header click anchor count 2/);
+});
+
+test('R1670: navigation proxy contract accepts R1631+ transformations',()=>{
+ const direct=/copy\\.onclick\\s*=\\s*\\(\\)\\s*=>\\s*\\{[^}]{0,600}original\\.click\\(\\)/;
+ assert(direct.test('copy.onclick=()=>{press(copy);original.click();}'));
+ assert(direct.test("copy.onclick=()=>{original.click();schedule();}"));
+ assert(!direct.test('copy.onclick=()=>{live[index]?.click();}'));
+ assert(!direct.test('copy.onclick=()=>{other.click();}'));
 });

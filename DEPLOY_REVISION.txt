@@ -1,1 +1,1 @@
-2026-11-07-r1680-direct-invoice-full-name-labels
+2026-11-07-r1681-direct-customer-thermal-name-label

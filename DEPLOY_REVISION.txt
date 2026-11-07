@@ -1,1 +1,1 @@
-2026-11-07-r1677-preview-a4-independent-button
+2026-11-07-r1678-preview-payment-shape-compat

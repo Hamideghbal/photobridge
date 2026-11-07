@@ -128,3 +128,25 @@ test('R1677 A4 action is added without requiring old print button labels/handler
   assert.equal(result.split('Wy(a,"customer-a4")').length-1,1);
  }
 });
+
+test('R1678 payment preview tolerates earlier wrappers around original print/summary text',async()=>{
+ const {patchDirectCustomerPreview}=await import('./r1674-preview-patch.mjs');
+ const fixture=[
+  'function GenericInvoicePreview(){',
+  'className:"invoicePreviewHeadActions",children:[',
+  'className:"invoicePaperInfo"',
+  'e.jsx("h2",{children:"فاکتور فروش و خدمات چاپ"})',
+  'e.jsx("small",{children:t==="lab"?"مشتری / عکاسی":"صادرکننده / لابراتوار"})',
+  'e.jsx("b",{children:t==="lab"?a.customer_name||"—":a.lab_name||"—"})]})',
+  'e.jsx("div",{className:"invoicePaymentRowWrapper",children:[(o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[',
+  'e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})',
+  ']}',
+  'e.jsxs("div",{className:"invoiceAccountDebt"',
+  '}'
+ ].join(';');
+ const patched=patchDirectCustomerPreview(fixture,'altered payment');
+ assert(patched.includes('Wy(a,"customer-a4")'));
+ assert(patched.includes('style:{display:pb1674DirectCustomer(a)&&!o?"none":void 0}'));
+ assert(patched.includes('!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: "'));
+ assert(patched.includes('!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"'));
+});

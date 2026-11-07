@@ -30,7 +30,17 @@ export function patchDirectCustomerPreview(js,root){
  // Keep their recorded payment when present, but omit the account-like balance.
  const oldPayment='(o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})';
  const newPayment='(pb1674DirectCustomer(a)?o>0:o>0||l>0)&&e.jsxs("div",{className:"invoicePaymentMini",children:[e.jsxs("span",{children:["پرداخت‌شده: ",e.jsx("b",{children:V(o)})]}),!pb1674DirectCustomer(a)&&e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})]})';
- p=one(p,oldPayment,newPayment,'preview direct-customer payment display '+root);
+ if(p.includes(oldPayment))
+  p=one(p,oldPayment,newPayment,'preview direct-customer payment display '+root);
+ else {
+  // Earlier finance/preview updates can restyle the payment row. Avoid
+  // pinning the entire JSX expression; hide the studio balance and suppress
+  // the row when a direct customer has not paid anything.
+  const span='e.jsxs("span",{children:["مانده این فاکتور: ",e.jsx("b",{children:V(l)})]})';
+  const wrap='className:"invoicePaymentMini",children:[';
+  p=one(p,span,'!pb1674DirectCustomer(a)&&'+span,'preview balance fallback '+root);
+  p=one(p,wrap,'className:"invoicePaymentMini",style:{display:pb1674DirectCustomer(a)&&!o?"none":void 0},children:[','preview payment fallback '+root);
+ }
  p=one(p,'e.jsxs("div",{className:"invoiceAccountDebt"',
     '!pb1674DirectCustomer(a)&&e.jsxs("div",{className:"invoiceAccountDebt"','preview coworker-only debt '+root);
  return p;

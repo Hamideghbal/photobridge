@@ -1006,3 +1006,6 @@ runR1314(process.execPath,['--test','scripts/test-r1666-iphone-heic-upload.cjs']
 // and trigger native auto-download on fresh order-list responses.
 await deployStep('./enable-r1682-direct-customer-order-flow.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1682-direct-customer-order-flow.cjs'],{stdio:'inherit'});
+// R1687: update customer-only invoice routing in the last generated Windows and site bundles.
+await deployStep('./enable-r1687-direct-customer-thermal.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1687-direct-customer-thermal.cjs'],{stdio:'inherit'});

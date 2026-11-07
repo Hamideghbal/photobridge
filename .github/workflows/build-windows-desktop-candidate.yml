@@ -112,9 +112,14 @@ jobs:
           node scripts/integrate-r1477-gentle-default.cjs apps/lab-desktop
           node scripts/integrate-r1478-fast-entry.cjs apps/lab-desktop
           node scripts/integrate-r1524-updater-exit.cjs apps/lab-desktop
+          node scripts/integrate-r1628-unified-updates.cjs apps/lab-desktop
+          node scripts/integrate-r1629-update-retry.cjs apps/lab-desktop
+          node scripts/integrate-r1687-windows-release.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Current native integration failed" }
       - name: Verify configured-path activation
         run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
+      - name: Test native update controllers
+        run: node --test scripts/test-r1686-unified-updater.cjs scripts/test-r1687-windows-release.cjs
       - name: Prepare current lab UI
         run: node scripts/prepare-lab-desktop-ui.mjs
       - name: Prepare missing installer icons from existing PhotoBridge artwork
@@ -132,7 +137,7 @@ jobs:
       - name: Publish lab Windows installer candidate
         uses: actions/upload-artifact@v4
         with:
-          name: photobridge-lab-1.0.39-windows-test-installer
+          name: photobridge-lab-1.0.94-windows-test-installer
           path: apps/lab-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14

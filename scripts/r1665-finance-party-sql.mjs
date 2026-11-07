@@ -25,7 +25,7 @@ export function withThermalInvoicePartyFields(source) {
  if(mobilePresent&&kindPresent)return source;
  const additions=[];
  if(!mobilePresent)additions.push('COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile');
- if(!kindPresent)additions.push("CASE WHEN o.source IN ('walkin','manual_invoice') OR o.walkin_customer_name IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind");
+ if(!kindPresent)additions.push("CASE WHEN o.source IN ('walkin','manual_invoice') OR EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) OR NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind");
  projection=projection.replace(selectAnchor,match=>match+additions.join(',')+',');
  return source.slice(0,invAt)+projection+source.slice(fromAt);
 }

@@ -1,6 +1,9 @@
 function pb1674DirectCustomer(t){
  const kind=String(t?.customer_kind||'').trim().toLowerCase();
  if(kind==='customer')return true;
+ // The dedicated walk-in fields are evidence of a free customer even
+ // if an old cached document still reports coworker.
+ if(String(t?.walkin_customer_name||'').trim()||String(t?.walkin_customer_mobile||'').trim())return true;
  if(kind==='coworker')return false;
  const source=String(t?.order_source||t?.source||'').trim().toLowerCase();
  return source==='walkin'||source==='manual_invoice';

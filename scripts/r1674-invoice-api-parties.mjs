@@ -20,7 +20,7 @@ export function withDirectCustomerIdentityFields(api){
   if(!/\bdirect_customer_name\b/.test(select))parts.push("NULLIF(BTRIM(o.walkin_customer_name),'') direct_customer_name");
   if(!/\bdirect_customer_mobile\b/.test(select))parts.push("COALESCE(NULLIF(BTRIM(o.walkin_customer_mobile),''),u.mobile) direct_customer_mobile");
   if(!/\bcustomer_mobile\b/.test(select))parts.push("COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile");
-  if(!/\bcustomer_kind\b/.test(select))parts.push("CASE WHEN o.source IN ('walkin','manual_invoice') OR o.walkin_customer_name IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind");
+  if(!/\bcustomer_kind\b/.test(select))parts.push("CASE WHEN o.source IN ('walkin','manual_invoice') OR EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) OR NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind");
   if(!/\border_source\b/.test(select))parts.push('o.source order_source');
   if(parts.length){
    select=select.replace(marker,match=>match+parts.join(',')+',');

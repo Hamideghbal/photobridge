@@ -155,6 +155,7 @@ test('native auto-download starts immediately, reacts to order-list refresh, and
  assert(worker.includes('setInterval(()=>void pb1568AutoTick(),10000)'));
  assert(native.includes('pb1568InstallOrderFetchHook'));
  assert(native.includes('setInterval(()=>void pb1568AutoTick(),10000)'));
+ assert(!native.includes('setInterval(()=>void pb1568AutoTick(),45000)'));
  assert(!worker.includes('setTimeout(()=>void pb1568AutoTick(),12000)'));
  assert(!worker.includes('setInterval(()=>void pb1568AutoTick(),45000)'));
 });

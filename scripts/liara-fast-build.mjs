@@ -985,3 +985,6 @@ runR1314(process.execPath,['--test','scripts/test-r1661-photographer-invoice-ove
 // R1662: desktop photographer Settings overlay closes before printing or navigation.
 await deployStep('./enable-r1662-photographer-settings-return.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1662-photographer-settings-return.cjs'],{stdio:'inherit'});
+
+// R1664: customer vs photographer local order folders, old pinned storage unchanged.
+runR1314(process.execPath,['--test','scripts/test-r1664-storage-separation.cjs'],{stdio:'inherit'});

@@ -147,15 +147,24 @@ test('manual price callback opens the invoice returned by the pricing transactio
  assert(!events.some(row=>row[0]==='get'&&row[1].includes('automation-invoice')));
 });
 
-test('native auto-download starts immediately, reacts to order-list refresh, and keeps a 10-second fallback',()=>{
+test('R1586 receives its expected initial worker timer before R1683 makes downloads faster',()=>{
  const worker=fs.readFileSync('scripts/r1568-native-worker.js.txt','utf8');
+ const originalPatch=fs.readFileSync('scripts/enable-r1586-opening-debt-history.mjs','utf8');
+ const latePatch=fs.readFileSync('scripts/enable-r1682-direct-customer-order-flow.mjs','utf8');
+ assert(worker.includes('setTimeout(()=>void pb1568AutoTick(),12000);'));
+ assert(worker.includes('setInterval(()=>void pb1568AutoTick(),45000);'));
+ assert(originalPatch.includes("source=replace(source,'setTimeout(()=>void pb1568AutoTick(),12000);'"));
+ assert(latePatch.includes("nativeJs=one(nativeJs,'setInterval(()=>void pb1568AutoTick(),45000);'"));
+ assert(latePatch.includes("/* R1586: the event scheduler starts the worker immediately. */"));
+});
+
+test('native auto-download keeps R1586 instant notification wake and uses 10-second safety polling',()=>{
  const native=fs.readFileSync('dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js','utf8');
- assert(worker.includes('pb1568InstallOrderFetchHook'));
- assert(worker.includes('pb1568ScheduleTick();'));
- assert(worker.includes('setInterval(()=>void pb1568AutoTick(),10000)'));
- assert(native.includes('pb1568InstallOrderFetchHook'));
- assert(native.includes('setInterval(()=>void pb1568AutoTick(),10000)'));
- assert(!native.includes('setInterval(()=>void pb1568AutoTick(),45000)'));
- assert(!worker.includes('setTimeout(()=>void pb1568AutoTick(),12000)'));
- assert(!worker.includes('setInterval(()=>void pb1568AutoTick(),45000)'));
+ assert(native.includes('function pb1586WakeDownloads()'));
+ assert(native.includes('function pb1586NoticeWake('));
+ assert(native.includes('/* R1683 preserved R1586 download wake */'));
+ assert(native.includes('setInterval(()=>void pb1568AutoTick(),10000);'));
+ assert(native.includes('window.addEventListener("focus",pb1586WakeDownloads);'));
+ assert(!native.includes('setInterval(()=>void pb1568AutoTick(),45000);'));
+ assert(!native.includes('setTimeout(()=>void pb1568AutoTick(),12000);'));
 });

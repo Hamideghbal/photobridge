@@ -2,12 +2,13 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {withThermalInvoicePartyFields} from './r1665-finance-party-sql.mjs';
 const digest=v=>crypto.createHash('sha256').update(v).digest('hex');
 function one(s,oldValue,next,label){const n=s.split(oldValue).length-1;if(n!==1)throw Error('R1665 '+label+' count '+n);return s.replace(oldValue,next)}
 let api=fs.readFileSync('dist/api/server.js','utf8');
-const queryOld="SELECT i.*,COALESCE(o.walkin_customer_name,u.name) customer_name,o.number order_number";
-const queryNew="SELECT i.*,COALESCE(o.walkin_customer_name,u.name) customer_name,COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile,CASE WHEN o.source IN ('walkin','manual_invoice') OR o.walkin_customer_name IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind,o.number order_number";
-api=one(api,queryOld,queryNew,'finance invoice party type/mobile');
+// R1672: Earlier finance stages can replace the customer-name SQL projection.
+// Target the invoice SELECT inside financeDocumentsForCustomer, never its name.
+api=withThermalInvoicePartyFields(api);
 fs.writeFileSync('dist/api/server.js',api);
 execFileSync(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'});
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){

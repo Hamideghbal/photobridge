@@ -30,3 +30,28 @@ test('R1665 lab uses thermal; customer A4 remains unchanged; API includes mobile
   assert(js.includes('function pb1665Thermal(t,a){'));
  }
 });
+
+test('R1672 thermal party fields use the invoice query even when accounting rewrites customer_name',async()=>{
+ const {withThermalInvoicePartyFields}=await import('./r1665-finance-party-sql.mjs');
+ const tick=String.fromCharCode(96);
+ const variants=[
+  'COALESCE(o.walkin_customer_name,u.name)',
+  '$'+'{labFinanceCustomerNameSql()}',
+  'CASE WHEN u.account_deleted_at IS NULL THEN u.name ELSE u.name END'
+ ];
+ for(const customerExpression of variants){
+  const sql='async function financeDocumentsForCustomer(c,labId,customerId){\n'+
+   'const invQ = await c.query('+tick+'SELECT i.*,'+customerExpression+' customer_name,o.number order_number,o.status order_status,\n'+
+   ' FROM invoices i JOIN users u ON u.id=i.customer_id JOIN orders o ON o.id=i.order_id WHERE i.lab_id=$1'+tick+',params);\n'+
+   'const adjQ = await c.query('+tick+'SELECT x.* FROM finance_customer_adjustments x'+tick+');}\n'+
+   'function elsewhere(){return "customer_name,o.number order_number"}';
+  const patched=withThermalInvoicePartyFields(sql);
+  assert(patched.includes(customerExpression+' customer_name'), 'customer display must remain untouched');
+  assert.equal(patched.split('COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile').length-1,1);
+  assert.equal(patched.split('END customer_kind').length-1,1);
+  assert(patched.includes("CASE WHEN o.source IN ('walkin','manual_invoice')"));
+  assert(patched.includes('function elsewhere(){return "customer_name,o.number order_number"}'));
+  assert.equal(withThermalInvoicePartyFields(patched),patched);
+ }
+ assert.throws(()=>withThermalInvoicePartyFields('const invQ=1'),/finance documents function count/);
+});

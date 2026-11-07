@@ -75,5 +75,20 @@ export function withInvoiceLabContactFields(source) {
    api=api.slice(0,joinEnd)+extra+api.slice(joinEnd);
   }
  }
+ // R1684: adding nullable contact lookups to the invoice order SELECT means
+ // FOR UPDATE must target only the order row. The unqualified lock raises
+ // 'FOR UPDATE cannot be applied to the nullable side of an outer join'.
+ const invoiceAt=api.indexOf('async function createOrGetInvoice(');
+ const lockStart=api.indexOf('const oq = await c.query(`SELECT o.*,',invoiceAt);
+ const lockEnd=api.indexOf('`, [orderId, labId]);',lockStart);
+ if(invoiceAt<0||lockStart<0||lockEnd<lockStart||lockEnd-lockStart>14000)
+  throw Error('R1684 invoice order lock query changed');
+ const lockSql=api.slice(lockStart,lockEnd);
+ const unsafe='WHERE o.id=$1 AND o.lab_id=$2 FOR UPDATE';
+ const safe='WHERE o.id=$1 AND o.lab_id=$2 FOR UPDATE OF o';
+ if(!lockSql.includes(safe)){
+  if(lockSql.split(unsafe).length!==2)throw Error('R1684 invoice order lock anchor changed');
+  api=api.slice(0,lockStart)+lockSql.replace(unsafe,safe)+api.slice(lockEnd);
+ }
  return api;
 }

@@ -66,7 +66,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   js=js.slice(0,start)+nextPricingHandler+js.slice(end);
 
   js=replaceOptional(js,'این سفارش سایز بدون تعرفه دارد','قیمت‌گذاری اختصاصی این سفارش','pricing modal title');
-  const bodyStart='ارسال فایل متوقف شده است. فقط برای همین سفارش قیمت واحد را مشخص کن؛';
+  const bodyStart='ارسال فایل متوقف نشده است. فقط برای همین سفارش قیمت واحد را مشخص کن؛';
   const bodyEnd='فاکتور صادر نمی‌شود.';
   const bodyAt=js.indexOf(bodyStart);
   if(bodyAt>=0){

@@ -1009,3 +1009,5 @@ runR1314(process.execPath,['--test','scripts/test-r1682-direct-customer-order-fl
 // R1687: update customer-only invoice routing in the last generated Windows and site bundles.
 await deployStep('./enable-r1687-direct-customer-thermal.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1687-direct-customer-thermal.cjs'],{stdio:'inherit'});
+await deployStep('./enable-r1690-compact-thermal.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1690-compact-thermal.cjs'],{stdio:'inherit'});

@@ -1,4 +1,5 @@
-// R1698 approved 80mm site printing; native Windows printer uses approved R1690 module.\nfunction pbR1698Words(amount) {
+// R1698 approved 80mm site printing; native Windows printer uses approved R1690 module.
+function pbR1698Words(amount) {
   let n=Number(amount);
   if(!Number.isSafeInteger(n)||n<0||n>=1e15)return '';
   if(n===0)return 'صفر';
@@ -6,7 +7,7 @@
   const ones=['','یک','دو','سه','چهار','پنج','شش','هفت','هشت','نه'];
   const tens=['','','بیست','سی','چهل','پنجاه','شصت','هفتاد','هشتاد','نود'];
   const teens=['ده','یازده','دوازده','سیزده','چهارده','پانزده','شانزده','هفده','هجده','نوزده'];
-  const hundreds=['','صد','دویست','سیصد','چهارصد','پانصد','چهارصد','هفتصد','هشتصد','نهصد'];
+  const hundreds=['','صد','دویست','سیصد','چهارصد','پانصد','ششصد','هفتصد','هشتصد','نهصد'];
   let index=0,parts=[];
   while(n>0){
     const g=n%1000; n=Math.floor(n/1000);
@@ -20,7 +21,8 @@
     index++;
   }
   return parts.join(' و ');
-}\nfunction pbR1698ApprovedThermal(t,customer) {
+}
+function pbR1698ApprovedThermal(t,customer) {
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const first=(...a)=>a.map(x=>String(x??'').trim()).find(Boolean)||'';
   const number=v=>Number.isFinite(Number(v))?Number(v).toLocaleString('fa-IR'):'—';
@@ -84,4 +86,4 @@
   .contact{border-top:2px solid #000;background:#f2f2f2;padding:1.3mm 1.8mm;text-align:center;font-size:10.5px;line-height:1.5;font-weight:900;overflow-wrap:anywhere}
   .contact div{margin:.4mm 0}@media print{.frame,.contact,.credit{break-inside:avoid}tr{break-inside:avoid}}`;
   return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>${css}</style></head><body><article class="paper"><div class="frame"><header class="head"><h1>${esc(lab)}</h1><div class="meta"><span>شماره: ${esc(digits(t.number||t.order_number||'—'))}</span><span class="title">فروش</span><span class="date">${esc(date)}</span></div><div class="person"><div><b>${customer?'مشتری':'عکاسی'}:</b> ${esc(name||'ثبت نشده')}</div><div><b>${customer?'شماره مشتری':'شماره عکاسی'}:</b> <span class="phone">${esc(mobile||'ثبت نشده')}</span></div></div></header><table><thead><tr><th class="desc">کالا / خدمات</th><th class="qty">تعداد</th><th class="unit">واحد</th><th class="price">قیمت</th><th class="amount">قیمت کل</th></tr></thead><tbody>${rows||'<tr><td colspan="5">اقلام ثبت نشده</td></tr>'}</tbody></table>${sums}<footer class="contact"><div>تلفن لابراتوار: <span class="phone">${esc(labPhone)}</span></div><div>آدرس لابراتوار: ${esc(labAddress)}</div></footer></div></article><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),500))<\/script></body></html>`;
-}\n
+}

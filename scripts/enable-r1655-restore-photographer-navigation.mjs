@@ -10,14 +10,26 @@ import {execFileSync} from 'node:child_process';
 const digest=data=>crypto.createHash('sha256').update(data).digest('hex');
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const navPath=root+'/photobridge-r1126-desktop-navigation.js';
- const nav=fs.readFileSync(navPath,'utf8');
+ let nav=fs.readFileSync(navPath,'utf8');
  if(nav.includes('/* PB1648 stable print header */')||
     nav.includes('/* PB1653 stable desktop photographer */')||
     nav.includes('live[index]?.click()'))
   throw Error('R1655 unsafe photographer navigation still present: '+root);
- if(!/copy\.onclick=\(\)=>\{press\(copy\);original\.click\(\);/.test(nav)||
-    !nav.includes("if(utilities){const separator="))
-  throw Error('R1655 expected R1632 direct routing missing: '+root);
+ // R1632's desktop utility grouping may have been overwritten by a later
+ // generated header. Restore that known pre-R1632 shape only, not arbitrary JS.
+ const oldUtilities="if(utilities){for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}";
+ const restoredUtilities="if(utilities){const separator=document.createElement('span');separator.className='pb1632ModeDivider';separator.setAttribute('aria-hidden','true');modes.append(separator);for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)modes.append(b)}utilities.remove();}";
+ const hasDivider=()=>nav.includes('pb1632ModeDivider')&&nav.includes('modes.append(separator)')&&nav.includes('modes.append(b)')&&nav.includes('utilities.remove()');
+ if(!hasDivider()&&nav.includes(oldUtilities)){
+  nav=nav.replace(oldUtilities,restoredUtilities);
+  fs.writeFileSync(navPath,nav);
+ }
+ // Guard behavior and structure, not exact formatting of a generated
+ // onclick expression. The proxy must click its own source element.
+ const directProxy=/for\(const original of storeHeader\?\[\]:visible\)\s*\{[\s\S]{0,500}?copy\.onclick\s*=\s*\(\)\s*=>\s*\{[\s\S]{0,200}?original\.click\(\)/.test(nav);
+ const thirdHeader=nav.includes('pb1632FinanceTabs')&&nav.includes('financeThird');
+ if(!directProxy||!hasDivider()||!thirdHeader)
+  throw Error('R1655 navigation contract '+root+' directProxy='+directProxy+' divider='+hasDivider()+' financeThird='+thirdHeader);
  execFileSync(process.execPath,['--check',navPath],{stdio:'inherit'});
  const index=root+'/index.html';
  let html=fs.readFileSync(index,'utf8');

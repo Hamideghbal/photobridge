@@ -55,3 +55,24 @@ test('R1672 thermal party fields use the invoice query even when accounting rewr
  }
  assert.throws(()=>withThermalInvoicePartyFields('const invQ=1'),/finance documents function count/);
 });
+
+test('R1673 insert fields independently of the rewritten or absent order-number projection',async()=>{
+ const {withThermalInvoicePartyFields}=await import('./r1665-finance-party-sql.mjs');
+ const tick=String.fromCharCode(96);
+ for(const orderColumn of [
+   'o.number order_number',
+   'COALESCE(o.number,0)::integer AS order_number',
+   'o.number AS number_of_order',
+   'o.status order_status'
+ ]){
+  const sql='async function financeDocumentsForCustomer(c,labId,customerId){\n'+
+   'const invQ=await c.query('+tick+'SELECT i.*,COALESCE(o.walkin_customer_name,u.name) customer_name,'+
+   orderColumn+',l.name lab_name\n'+
+   'FROM invoices i JOIN users u ON u.id=i.customer_id JOIN orders o ON o.id=i.order_id JOIN labs l ON l.id=i.lab_id'+tick+');\n}';
+  const patched=withThermalInvoicePartyFields(sql);
+  assert(patched.includes(orderColumn));
+  assert.equal(patched.split('COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile').length-1,1);
+  assert.equal(patched.split('END customer_kind').length-1,1);
+  assert.equal(withThermalInvoicePartyFields(patched),patched);
+ }
+});

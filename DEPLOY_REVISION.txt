@@ -1,1 +1,1 @@
-2026-11-07-r1672-thermal-party-query-compat
+2026-11-07-r1673-thermal-invoice-select-anchor

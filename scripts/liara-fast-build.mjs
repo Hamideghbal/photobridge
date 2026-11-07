@@ -1009,3 +1009,7 @@ runR1314(process.execPath,['--test','scripts/test-r1682-direct-customer-order-fl
 // R1687: update customer-only invoice routing in the last generated Windows and site bundles.
 await deployStep('./enable-r1687-direct-customer-thermal.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1687-direct-customer-thermal.cjs'],{stdio:'inherit'});
+
+// R1698: activate approved compact thermal receipt layout on site + native UI snapshot.
+await deployStep('./enable-r1698-approved-receipts.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1698-approved-receipts.cjs'],{stdio:'inherit'});

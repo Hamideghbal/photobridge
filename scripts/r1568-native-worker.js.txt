@@ -107,34 +107,8 @@ async function pb1568AutoTick(){
  }catch(error){pb1568Work.lastError=pb1568Problem(error)}
  finally{pb1568Work.running=false}
 }
-/* R1682 event-driven order download: react to order-list refreshes, with a short safety poll. */
-let pb1568TickQueued=false;
-function pb1568ScheduleTick(){
- if(pb1568TickQueued)return;
- pb1568TickQueued=true;
- setTimeout(()=>{pb1568TickQueued=false;void pb1568AutoTick()},200);
-}
-function pb1568InstallOrderFetchHook(){
- const original=window.fetch;
- if(typeof original!=='function'||window.__pb1568OrderFetchHook)return;
- window.__pb1568OrderFetchHook=true;
- window.fetch=function(input,init){
-  const url=String(typeof input==='string'?input:input?.url||'');
-  const result=original.call(this,input,init);
-  if(/\/api\/lab\/orders(?:\?|$)/.test(url)){
-   result.then(response=>{if(response?.ok&&!pb1568Work.running)pb1568ScheduleTick()}).catch(()=>{});
-  }
-  return result;
- };
-}
 if(typeof window!=='undefined'&&window.pbNativeStorage){
- pb1568InstallOrderFetchHook();
- window.addEventListener?.('focus',pb1568ScheduleTick);
- window.addEventListener?.('online',pb1568ScheduleTick);
- window.addEventListener?.('photobridge-queue-transfer',pb1568ScheduleTick);
- document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='visible')pb1568ScheduleTick()});
- pb1568ScheduleTick();
- setInterval(()=>void pb1568AutoTick(),10000);
+ setTimeout(()=>void pb1568AutoTick(),12000);
+ setInterval(()=>void pb1568AutoTick(),45000);
  window.pb1568AutomationStatus=()=>({...pb1568Work});
 }
-/* R1682 event-driven order download */

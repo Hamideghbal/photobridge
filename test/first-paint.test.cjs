@@ -45,6 +45,6 @@ test('native host injects the gate and successful startup opens only the final U
  assert.doesNotMatch(main,/startupPage\(\)\)\);await applyUi\(true\)/);
  assert.match(main,/try\{await applyUi\(true\)\}catch\(error\)/);
  const pkg=require('../package.json'),lock=require('../package-lock.json');
- assert.equal(pkg.version,'1.0.93');assert.equal(lock.version,pkg.version);
+ assert.equal(pkg.version,'1.0.94');assert.equal(lock.version,pkg.version);
  assert.equal(lock.packages[''].version,pkg.version);
 });

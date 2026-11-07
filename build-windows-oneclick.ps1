@@ -61,11 +61,11 @@ try {
  $env:PATH=$nodeFolder+';'+$env:PATH
  $env:PB_UPDATE_SIGNING_KEY=$publisher
  Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
- Write-Host 'Building PhotoBridge Lab 1.0.93 with your existing publisher key...'
+ Write-Host 'Building PhotoBridge Lab 1.0.94 with your existing publisher key...'
  $ErrorActionPreference='Continue'
- & $node (Join-Path $PSScriptRoot 'build-local.cjs') '1.0.93'
+ & $node (Join-Path $PSScriptRoot 'build-local.cjs') '1.0.94'
  $exitCode=$LASTEXITCODE
- if ($exitCode -eq 0) {Write-Host ('SUCCESS: '+(Join-Path $PSScriptRoot 'release\PhotoBridge-Lab-Setup-1.0.93-x64.exe'))}
+ if ($exitCode -eq 0) {Write-Host ('SUCCESS: '+(Join-Path $PSScriptRoot 'release\PhotoBridge-Lab-Setup-1.0.94-x64.exe'))}
  else {Write-Host 'Build stopped. The full error is saved in the log below.'}
 } catch {
  Write-Host $_.Exception.Message

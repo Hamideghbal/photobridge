@@ -18,6 +18,20 @@ test('R1674 direct customers have their own thermal/A4 templates without photogr
  }
  assert(ctx.pb1674CustomerA4(base).includes('size:A4'));
  assert(ctx.pb1674CustomerThermal(base).includes('size:80mm auto'));
+ const receipt=ctx.pb1674CustomerThermal(base);
+ assert(receipt.includes('مشخصات مشتری آزاد'));
+ assert(receipt.includes('class="customer-card"'));
+ assert(receipt.includes('شماره موبایل مشتری:'));
+ assert(receipt.includes('اطلاعات تماس لابراتوار'));
+ assert(receipt.includes('مبلغ کل فاکتور:'));
+ assert(receipt.indexOf('نام و نام خانوادگی مشتری:')<receipt.indexOf('شماره تماس لابراتوار:'));
+ assert(!receipt.includes('نام عمومی'));
+ assert(!receipt.includes('عکاسی'));
+ assert(!receipt.includes('جمع بدهی حساب'));
+ assert(!receipt.includes('مانده این فاکتور'));
+ const escaped=ctx.pb1674CustomerThermal({...base,direct_customer_name:'<strong>مریم</strong>',direct_customer_mobile:'09000000000'});
+ assert(escaped.includes('&lt;strong&gt;مریم&lt;/strong&gt;'));
+ assert(!escaped.includes('<strong>مریم</strong>'));
  assert(ctx.pb1674DirectCustomer({order_source:'manual_invoice'}));
  assert(ctx.pb1674DirectCustomer({customer_kind:'customer'}));
  assert(!ctx.pb1674DirectCustomer({customer_kind:'coworker',order_source:'walkin'}));

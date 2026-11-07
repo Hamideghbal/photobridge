@@ -1,1 +1,1 @@
-2026-11-07-r1681-direct-customer-thermal-name-label
+2026-11-07-r1682-direct-customer-invoice-download-fast

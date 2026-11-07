@@ -3,6 +3,8 @@
 const fs=require('node:fs'),path=require('node:path');
 const version='1.0.94';
 function integrate(root){
+ const base=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+ if(base.name!=='photobridge-lab-desktop'||base.version!=='1.0.93')throw Error('unsafe_lab_installer_base: need verified PhotoBridge Lab 1.0.93, got '+String(base.version||'unknown'));
  for(const name of ['package.json','package-lock.json']){
   const file=path.join(root,name),doc=JSON.parse(fs.readFileSync(file,'utf8'));
   doc.version=version;if(doc.packages?.[''])doc.packages[''].version=version;

@@ -4,9 +4,11 @@ const {integrate,version}=require('./integrate-r1687-windows-release.cjs');
 test('R1687 fixes the native version for a newer 1.0.93 installation',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb1687-'));
  try{
-  fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({name:'photobridge-lab-desktop',version:'1.0.39'}));
+  fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({name:'photobridge-lab-desktop',version:'1.0.93'}));
   fs.writeFileSync(path.join(dir,'package-lock.json'),JSON.stringify({version:'1.0.39',packages:{'':{version:'1.0.39'}}}));
   fs.writeFileSync(path.join(dir,'BUILD-WINDOWS.cmd'),'PhotoBridge Lab 1.0.39');
+  assert.throws(()=>{fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({name:'photobridge-lab-desktop',version:'1.0.39'}));integrate(dir)},/unsafe_lab_installer_base/);
+  fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({name:'photobridge-lab-desktop',version:'1.0.93'}));
   integrate(dir);
   assert.equal(version,'1.0.94');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'package.json'))).version,'1.0.94');

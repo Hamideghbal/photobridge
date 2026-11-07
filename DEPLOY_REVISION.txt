@@ -1,1 +1,1 @@
-2026-11-07-r1673-thermal-invoice-select-anchor
+2026-11-07-r1674-direct-customer-invoice-templates

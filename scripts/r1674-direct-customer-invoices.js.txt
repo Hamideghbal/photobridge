@@ -1,0 +1,130 @@
+function pb1674DirectCustomer(t){
+ const kind=String(t?.customer_kind||'').trim().toLowerCase();
+ if(kind==='customer')return true;
+ if(kind==='coworker')return false;
+ const source=String(t?.order_source||t?.source||'').trim().toLowerCase();
+ return source==='walkin'||source==='manual_invoice';
+}
+
+function pb1674CustomerName(t){
+ return String(t?.direct_customer_name||t?.walkin_customer_name||t?.customer_name||'ثبت نشده').trim();
+}
+
+function pb1674CustomerMobile(t){
+ return String(t?.direct_customer_mobile||t?.walkin_customer_mobile||t?.customer_mobile||'ثبت نشده').trim();
+}
+
+function pb1674CustomerA4(t){
+ const esc=v=>_n(String(v??'')),num=v=>_n(V(v??0));
+ const items=vh(t),paid=Math.max(0,Number(t.paid_total||0));
+ const rows=items.map(x=>`<tr><td>${esc(ph(x))}</td><td>${num(x.quantity||1)}</td><td>${num(x.unitPrice||0)}</td><td>${num(x.lineTotal||0)}</td></tr>`).join('');
+ const phone=esc(pb1674CustomerMobile(t)),name=esc(pb1674CustomerName(t));
+ return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور مشتری آزاد #${num(t.number)}</title><style>
+ @page{size:A4;margin:10mm}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#17212f}
+ body{font-family:Vazirmatn,Tahoma,Arial,sans-serif;font-size:12px}
+ .paper{width:190mm;min-height:270mm;margin:auto;padding:9mm}
+ .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #24344d;padding-bottom:6mm}
+ h1{font-size:23px;margin:3mm 0 1mm;font-weight:900}.subtitle{font-size:12px;color:#59687c}
+ .brand{font-size:16px;font-weight:900;color:#315efb}
+ .invoiceNo{text-align:left}.invoiceNo b{font-size:20px;display:block}.invoiceNo small{color:#59687c}
+ .customer{border:2px solid #24344d;border-radius:3mm;padding:4mm;margin:6mm 0 5mm}
+ .customer h2{font-size:14px;margin:0 0 3mm}.fields{display:grid;grid-template-columns:1fr 1fr;gap:3mm 7mm}
+ .field{background:#f5f7fa;border-radius:2mm;padding:3mm}.field small{display:block;color:#606c7d;margin-bottom:1mm}.field strong{font-size:14px;overflow-wrap:anywhere}
+ .ltr{direction:ltr;unicode-bidi:isolate;text-align:right}
+ table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}th,td{border:1px solid #d6dce6;padding:3mm;text-align:center;overflow-wrap:anywhere}
+ th{background:#edf2f8;font-weight:900}th:first-child,td:first-child{text-align:right;width:44%}
+ .amounts{width:55%;margin:6mm 0 0 auto;border:1.5px solid #24344d;border-radius:2mm;padding:3mm}
+ .amounts>div{display:flex;justify-content:space-between;gap:2mm;padding:2.5mm;border-bottom:1px solid #e3e7ec}
+ .amounts>div:last-child{border:0}.final{font-size:18px;font-weight:900;background:#edf2f8}
+ .end{margin-top:9mm;border-top:1px dashed #b0b7c2;padding-top:4mm;color:#586779;text-align:center}
+ @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper{break-inside:avoid}}
+ </style></head><body><main class="paper">
+ <header class="head"><div><div class="brand">PhotoBridge</div><h1>فاکتور مشتری آزاد</h1><div class="subtitle">خدمات چاپ عکس و آلبوم</div></div>
+ <div class="invoiceNo"><small>شماره فاکتور</small><b>#${num(t.number)}</b><small>${esc(vn(t.issued_at))}</small></div></header>
+ <section class="customer"><h2>مشخصات مشتری</h2><div class="fields">
+ <div class="field"><small>نام مشتری</small><strong>${name}</strong></div>
+ <div class="field"><small>شماره تماس مشتری</small><strong class="ltr">${phone}</strong></div>
+ <div class="field"><small>لابراتوار ارائه‌دهنده خدمات</small><strong>${esc(t.lab_name||'—')}</strong></div>
+ ${t.order_number?`<div class="field"><small>شماره سفارش</small><strong>#${num(t.order_number)}</strong></div>`:''}
+ </div></section><table><thead><tr><th>شرح خدمات</th><th>تعداد</th><th>فی (تومان)</th><th>مبلغ (تومان)</th></tr></thead>
+ <tbody>${rows||'<tr><td colspan="4">جزئیات اقلام ثبت نشده است</td></tr>'}</tbody></table>
+ <section class="amounts"><div><span>جمع خدمات</span><b>${num(t.subtotal??t.total)} تومان</b></div>
+ ${Number(t.discount||0)>0?`<div><span>تخفیف</span><b>${num(t.discount)} تومان</b></div>`:''}
+ <div class="final"><span>مبلغ کل فاکتور</span><b>${num(t.total)} تومان</b></div>
+ ${paid>0?`<div><span>پرداخت‌شده برای این فاکتور</span><b>${num(paid)} تومان</b></div>`:''}
+ </section><div class="end">با سپاس از اعتماد شما · PhotoBridge</div></main>
+ <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}<\/script></body></html>`;
+}
+
+function pb1674CustomerThermal(t){
+ const esc=v=>_n(String(v??'')),num=v=>_n(V(v??0)),items=vh(t);
+ const count=items.reduce((n,x)=>n+Math.max(0,Number(x.quantity||1)),0),paid=Math.max(0,Number(t.paid_total||0));
+ const rows=items.map(x=>`<tr><td>${esc(ph(x))}</td><td>${num(x.quantity||1)}</td><td>${num(x.unitPrice||0)}</td><td>${num(x.lineTotal||0)}</td></tr>`).join('');
+ return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فاکتور مشتری آزاد #${num(t.number)}</title><style>
+ @page{size:80mm auto;margin:0}*{box-sizing:border-box}body{margin:0;color:#000;background:#fff;font:900 13px/1.5 Vazirmatn,Tahoma,Arial,sans-serif}
+ .paper{width:72mm;max-width:100%;margin:auto;padding:3mm 1mm 8mm}
+ h1{text-align:center;font-size:19px;margin:0 0 1mm}.subtitle{text-align:center;font-size:12px}
+ .kind{font-size:18px;font-weight:900;border:2px solid #000;text-align:center;padding:2mm;margin:3mm 0}
+ .row{display:flex;justify-content:space-between;gap:4px;padding:1.2mm 0;overflow-wrap:anywhere}.row b{text-align:left}
+ .section{border-block:2px dashed #000;margin:2mm 0;padding:2mm 0}
+ table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:11px}
+ th,td{border-bottom:1px solid #000;padding:1.8mm .5mm;text-align:center;overflow-wrap:anywhere}
+ th:first-child,td:first-child{text-align:right;width:39%}th:nth-child(2){width:13%}th:nth-child(3){width:22%}th:nth-child(4){width:26%}
+ .final{font-size:17px;border:3px solid #000;padding:2mm;margin:3mm 0;font-weight:900}
+ .phone{direction:ltr;unicode-bidi:isolate;white-space:nowrap}
+ .foot{text-align:center;border-top:2px dashed #000;padding:3mm 0;margin-top:3mm}
+ @media print{body{width:80mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper{margin:0}tr{break-inside:avoid}}
+ </style></head><body><main class="paper"><h1>${esc(t.lab_name||'لابراتوار')}</h1>
+ <div class="subtitle">رسید خدمات چاپ و آلبوم</div><div class="kind">فاکتور مشتری آزاد</div>
+ <div class="row"><span>شماره فاکتور:</span><b>#${num(t.number)}</b></div>
+ <div class="row"><span>تاریخ:</span><b>${esc(vn(t.issued_at))}</b></div>
+ ${t.order_number?`<div class="row"><span>شماره سفارش:</span><b>#${num(t.order_number)}</b></div>`:''}
+ <div class="section"><div class="row"><span>نام مشتری:</span><b>${esc(pb1674CustomerName(t))}</b></div>
+ <div class="row"><span>موبایل مشتری:</span><b class="phone">${esc(pb1674CustomerMobile(t))}</b></div></div>
+ <table><thead><tr><th>شرح</th><th>تعداد</th><th>فی</th><th>مبلغ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">جزئیات ثبت نشده است</td></tr>'}</tbody></table>
+ <div class="row"><span>تعداد کل:</span><b>${num(count)}</b></div>
+ ${Number(t.discount||0)>0?`<div class="row"><span>تخفیف:</span><b>${num(t.discount)} تومان</b></div>`:''}
+ <div class="row final"><span>مبلغ کل فاکتور:</span><b>${num(t.total)} تومان</b></div>
+ ${paid>0?`<div class="row"><span>پرداخت‌شده:</span><b>${num(paid)} تومان</b></div>`:''}
+ <div class="foot">سپاس از اعتماد شما<br>PhotoBridge</div></main>
+ <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),500))<\/script></body></html>`;
+}
+
+async function pb1674CustomerPdf(t){
+ const c=document.createElement('canvas');c.width=1240;c.height=1754;
+ const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.direction='rtl';g.textAlign='right';
+ const right=1150,left=90,fmt=v=>V(v??0);
+ const line=(label,val,x,y)=>{g.fillStyle='#667085';g.font='600 20px Vazirmatn,Tahoma,Arial';g.fillText(label,x,y);g.fillStyle='#111827';g.font='900 25px Vazirmatn,Tahoma,Arial';g.fillText(String(val||'—'),x,y+42);};
+ g.fillStyle='#315efb';g.font='900 27px Vazirmatn,Tahoma,Arial';g.fillText('PhotoBridge',right,90);
+ g.fillStyle='#111827';g.font='900 40px Vazirmatn,Tahoma,Arial';g.fillText('فاکتور مشتری آزاد',right,151);
+ g.textAlign='left';g.font='800 27px Vazirmatn,Tahoma,Arial';g.fillText('#'+fmt(t.number),left,123);
+ g.font='600 19px Vazirmatn,Tahoma,Arial';g.fillText(vn(t.issued_at),left,157);
+ g.fillStyle='#22324b';g.fillRect(left,190,right-left,5);g.textAlign='right';
+ line('نام مشتری',pb1674CustomerName(t),right,250);
+ line('شماره تماس مشتری',pb1674CustomerMobile(t),right-560,250);
+ line('لابراتوار',t.lab_name||'—',right,355);
+ if(t.order_number)line('شماره سفارش','#'+fmt(t.order_number),right-560,355);
+ let y=460;
+ g.fillStyle='#edf2f8';g.fillRect(left,y,right-left,58);g.fillStyle='#202c40';g.font='900 21px Vazirmatn,Tahoma,Arial';
+ const cols=[right-18,right-615,right-766,right-920,left+12];
+ g.fillText('شرح خدمات',cols[0],y+38);g.textAlign='center';g.fillText('تعداد',(cols[1]+cols[2])/2,y+38);
+ g.fillText('فی',(cols[2]+cols[3])/2,y+38);g.fillText('مبلغ',(cols[3]+cols[4])/2,y+38);
+ y+=58;const rows=vh(t);
+ for(const x of rows){
+  if(y>1270)break;
+  g.strokeStyle='#d6dce6';g.strokeRect(left,y,right-left,54);
+  g.fillStyle='#17212f';g.font='600 19px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText(String(ph(x)).slice(0,57),cols[0],y+35);
+  g.textAlign='center';g.fillText(fmt(x.quantity||1),(cols[1]+cols[2])/2,y+35);
+  g.fillText(fmt(x.unitPrice||0),(cols[2]+cols[3])/2,y+35);
+  g.fillText(fmt(x.lineTotal||0),(cols[3]+cols[4])/2,y+35);y+=54;
+ }
+ if(rows.length>Math.floor((1270-518)/54)){g.fillStyle='#64748b';g.font='600 18px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('بخشی از اقلام در این صفحه نمایش داده شده است',right,y+35);}
+ const bottom=Math.max(1370,y+65),bx=590,bw=560;g.fillStyle='#f5f7fa';g.fillRect(bx,bottom,bw,155);
+ g.fillStyle='#334155';g.font='650 23px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('جمع خدمات',right-17,bottom+40);
+ g.textAlign='left';g.fillText(fmt(t.subtotal??t.total)+' تومان',bx+18,bottom+40);
+ if(Number(t.discount||0)>0){g.textAlign='right';g.fillText('تخفیف',right-17,bottom+77);g.textAlign='left';g.fillText(fmt(t.discount)+' تومان',bx+18,bottom+77);}
+ g.fillStyle='#111827';g.font='900 31px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('مبلغ کل فاکتور',right-17,bottom+126);
+ g.textAlign='left';g.fillText(fmt(t.total)+' تومان',bx+18,bottom+126);
+ g.fillStyle='#64748b';g.font='600 18px Vazirmatn,Tahoma,Arial';g.textAlign='right';g.fillText('این فاکتور خدمات برای مشتری آزاد صادر شده است · PhotoBridge',right,1670);
+ const jpg=await mh(c,.95);return new Blob([hh([{jpeg:jpg,width:c.width,height:c.height}])],{type:'application/pdf'});
+}

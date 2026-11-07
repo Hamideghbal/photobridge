@@ -993,6 +993,10 @@ runR1314(process.execPath,['--test','scripts/test-r1664-storage-separation.cjs']
 await deployStep('./enable-r1665-thermal-invoice.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1665-thermal-invoice.cjs'],{stdio:'inherit'});
 
+// R1674: direct customers get distinct receipts, A4/PDF, preview and identity.
+await deployStep('./enable-r1674-direct-customer-invoice.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1674-direct-customer-invoice.cjs'],{stdio:'inherit'});
+
 // R1666: HEIC/HEIF iPhone conversion and safe photo filenames.
 await deployStep('./enable-r1666-iphone-heic-upload.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1666-iphone-heic-upload.cjs'],{stdio:'inherit'});

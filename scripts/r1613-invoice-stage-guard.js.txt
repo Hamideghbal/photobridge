@@ -2,9 +2,11 @@
  * Existing /ready transactions issue the idempotent invoice after validating
  * pricing; only delivery without an issued invoice is blocked.
  * Paid prepaid orders should still hold the prior invoice before printing. */
+function r1682DirectCustomerOrder(order={}){const kind=String(order.customer_kind||'').trim().toLowerCase();if(kind==='customer')return true;if(kind==='coworker')return false;const source=String(order.source||order.order_source||'').trim().toLowerCase();return source==='walkin'||source==='manual_invoice'||Boolean(String(order.walkin_customer_name||'').trim());}
 export async function labOrderStageInvoiceGuard(db,labId,order,stage){
- if(order.invoice_required===false)return null;
- const requiresExisting=stage==='completed'||
+ const direct=r1682DirectCustomerOrder(order);
+ if(order.invoice_required===false&&!direct)return null;
+ const requiresExisting=direct&&['ready','completed'].includes(stage)||stage==='completed'||
    String(order.settlement_mode||'ledger')==='prepaid'&&
    ['printing','reviewing','ready_print','printed','binding'].includes(stage);
  if(!requiresExisting)return null;
@@ -12,3 +14,5 @@ export async function labOrderStageInvoiceGuard(db,labId,order,stage){
  if(invoice.rowCount)return null;
  return {error:'order_invoice_required',message:'ابتدا قیمت‌گذاری سفارش را تکمیل و فاکتور را صادر کنید؛ سپس وضعیت سفارش را تغییر دهید.'};
 }
+
+/* R1682 direct-customer ready guard */

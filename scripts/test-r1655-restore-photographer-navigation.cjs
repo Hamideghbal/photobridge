@@ -7,15 +7,20 @@ const roots=['dist/web','dist/web/lab-desktop-ui'];
 
 test('R1655: do not reroute original print/album/finance/archive buttons by array indices',()=>{
  const installer=fs.readFileSync('scripts/enable-r1648-photographer-invoice-preview.mjs','utf8');
+ const restore=fs.readFileSync('scripts/enable-r1655-restore-photographer-navigation.mjs','utf8');
  assert.match(installer,/if\(false && !nav\.includes\('\/\* PB1648 stable print header \*\/'\)\)/);
+ assert.match(restore,/const directProxy=/);
+ assert.match(restore,/const restoredUtilities=/);
  for(const root of roots){
   const js=fs.readFileSync(root+'/photobridge-r1126-desktop-navigation.js','utf8');
   assert.doesNotMatch(js,/\/\* PB1648 stable print header \*\//,root);
   assert.doesNotMatch(js,/\/\* PB1653 stable desktop photographer \*\//,root);
   assert.doesNotMatch(js,/live\[index\]\?\.click\(\)/,root);
-  assert.match(js,/copy\.onclick=\(\)=>\{press\(copy\);original\.click\(\);/,root);
-  assert.match(js,/if\(utilities\)\{const separator=/,root+' R1632 utility grouping must remain');
-  assert.match(js,/modes\.append\(b\)/,root+' finance/archive stay in R1632 original order');
+  assert.match(js,/for\(const original of storeHeader\?\[\]:visible\)[\s\S]{0,500}?copy\.onclick\s*=\s*\(\)\s*=>\s*\{[\s\S]{0,200}?original\.click\(\)/,root+' cloned tabs must directly click their original');
+  assert.match(js,/pb1632ModeDivider/,root+' R1632 divider exists');
+  assert.match(js,/modes\.append\(separator\)/,root+' R1632 divider stays in modes');
+  assert.match(js,/modes\.append\(b\)/,root+' finance/archive stay in modes');
+  assert.match(js,/pb1632FinanceTabs/,root+' finance third header stays separate');
   assert.doesNotThrow(()=>new Function(js),root);
  }
 });

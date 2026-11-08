@@ -15,8 +15,8 @@ test('R1705 studio and genuine customer sharing photographer upload channel rout
   const actual=ctx.pb1674DirectCustomer(testCase.data);
   assert.equal(actual,testCase.customer,testCase.label);
   const html=ctx.pbR1698ApprovedThermal(testCase.data,actual);
-  assert(html.includes(testCase.customer?'رسید مشتری':'رسید عکاسی'),testCase.label);
-  assert(html.includes(testCase.customer?'شماره مشتری':'شماره عکاسی'),testCase.label);
+  assert(html.includes(testCase.customer?'رسید مشتری':'رسید همکار'),testCase.label);
+  assert(html.includes(testCase.customer?'شماره مشتری':'شماره عکاس'),testCase.label);
   if(!testCase.customer){assert(html.includes('عکاسی روشن'));assert(html.includes('09125556677'));assert(!html.includes('مشتری قبلی'));assert(!html.includes('09129998888'));}
  }
 });

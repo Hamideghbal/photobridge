@@ -1,4 +1,5 @@
 import {createGalleryMessaging} from './gallery-messaging.js';
+import {serveStoreArchive} from './rentalArchive.js';
 import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
@@ -15048,6 +15049,12 @@ async function api(req, res, url) {
         await pool.query(`INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`, [key, JSON.stringify({ imageData })]);
         return sendJson(res, 200, { ok: true, imageData });
     }
+    if (req.method === 'GET' && url.pathname === '/api/rental/archive') {
+        const shop=await equipmentRentalCurrentShop(a);
+        if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
+        await ensureEquipmentRentalV727Schema();
+        return serveStoreArchive({pool,res,shopId:shop.id,searchParams:url.searchParams,sendJson});
+    }
     if (req.method === 'GET' && url.pathname === '/api/rental/overview') {
         if(a?.rentalRole==='handover_staff'){
             const shop=await equipmentRentalHandoverShop(a,{requireSubscription:true});if(!shop)return sendJson(res,401,{error:'rental_auth_required'});
@@ -26194,7 +26201,7 @@ async function bootstrap() {
             return serveEquipmentRentalPage(res, 'equipment-rental-register.html', 'noindex, follow');
         if (req.method === 'GET' && url.pathname === '/equipment-rental/book')
             return serveEquipmentRentalPage(res, 'equipment-rental-book.html');
-        if (req.method === 'GET' && (/^\/rental(?:\/(?:equipment|sales|catalog|bookings|photographers|accounting|sms|subscription|settings))?\/?$/.test(url.pathname)))
+        if (req.method === 'GET' && (/^\/rental(?:\/(?:equipment|sales|catalog|bookings|archive|photographers|accounting|sms|subscription|settings))?\/?$/.test(url.pathname)))
             return serveEquipmentRentalPage(res, 'equipment-rental-portal.html');
         return serveWeb(req, res, url.pathname);
     }

@@ -10,9 +10,9 @@ test('R1698 approved customer and photographer thermal samples use the same fram
   assert(!html.includes('مشخصات مشتری آزاد'));assert(!html.includes('رسید خدمات چاپ و آلبوم'));
  }
  const free=context.pbR1698ApprovedThermal(obj,true);
- assert(free.includes('مشتری:'));assert(free.includes('شماره مشتری'));assert(free.includes('09121111111'));assert(!free.includes('عکاسی:'));assert(free.includes('لابراتوار عکاسی'));assert(free.includes('رسید مشتری'));assert(!free.includes('شماره عکاسی'));assert(!free.includes('مانده کل حساب شما'));assert(!free.includes('۴۵۰٬۰۰۰'));
+ assert(free.includes('مشتری:'));assert(free.includes('شماره مشتری'));assert(free.includes('09121111111'));assert(!free.includes('عکاس:'));assert(free.includes('لابراتوار عکاسی'));assert(free.includes('رسید مشتری'));assert(!free.includes('شماره عکاس'));assert(!free.includes('مانده کل حساب شما'));assert(!free.includes('۴۵۰٬۰۰۰'));
  const studio=context.pbR1698ApprovedThermal(obj,false);
- assert(studio.includes('عکاسی:'));assert(studio.includes('رسید عکاسی'));assert(studio.includes('شماره عکاسی'));assert(studio.includes('شماره عکاسی'));assert(studio.includes('09120000000'));assert(studio.includes('مانده حساب از قبل'));assert(studio.includes('مانده کل حساب شما'));assert(studio.includes('۴۵۰٬۰۰۰'));
+ assert(studio.includes('عکاس:'));assert(!studio.includes('رسید مشتری'));assert(!studio.includes('شماره مشتری:'));;assert(studio.includes('رسید همکار'));assert(studio.includes('شماره عکاس'));assert(studio.includes('شماره عکاس'));assert(studio.includes('09120000000'));assert(studio.includes('مانده حساب از قبل'));assert(studio.includes('مانده کل حساب شما'));assert(studio.includes('۴۵۰٬۰۰۰'));
  const escaped=context.pbR1698ApprovedThermal({...obj,direct_customer_name:'<img src=x>'},true);
  assert(escaped.includes('&lt;img src=x&gt;'));assert(!escaped.includes('<img src=x>'));
  assert.equal(context.pbR1698Words(600000),'ششصد هزار');

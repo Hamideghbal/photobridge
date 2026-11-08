@@ -1021,3 +1021,7 @@ runR1314(process.execPath,['--test','scripts/test-r1705-verified-receipt-role.cj
 // R1711: image rotation and print-size frame orientation are independent in Lab Edit Photo.
 await deployStep('./enable-r1711-independent-print-frame.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1711-independent-print-frame.cjs'],{stdio:'inherit'});
+
+// R1713: website-only financial backup for stores; never add order-archive backup.
+await deployStep('./enable-r1713-store-finance-backup.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1713-store-finance-backup.cjs'],{stdio:'inherit'});

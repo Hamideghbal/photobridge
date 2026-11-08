@@ -1025,3 +1025,7 @@ runR1314(process.execPath,['--test','scripts/test-r1711-independent-print-frame.
 // R1712: HEIC first decoder, verified JPEG and accurate upload error phases.
 await deployStep('./enable-r1712-heic-verified-conversion.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1712-heic-verified-conversion.cjs'],{stdio:'inherit'});
+
+// R1714: decouple HEIC conversion from HTTP upload completion to avoid gateway 502.
+await deployStep('./enable-r1714-async-upload-completion.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1714-async-upload-completion.cjs'],{stdio:'inherit'});

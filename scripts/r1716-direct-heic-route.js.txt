@@ -1,0 +1,51 @@
+        // R1716: authenticated fallback for HEIC originals that reached storage but
+        // cannot be read back through Liara's S3 GET endpoint. Never changes
+        // original order id, original object key, or ownership.
+        const pb1716DirectHeic = url.pathname.match(/^\/api\/customer\/uploads\/([0-9a-f-]+)\/direct-heic$/);
+        if (pb1716DirectHeic && req.method === 'PUT') {
+            const fileId = pb1716DirectHeic[1];
+            const q = await pool.query('SELECT * FROM order_files WHERE id=$1 AND lab_id=$2 AND customer_id=$3', [fileId, labId, a.userId]);
+            if (!q.rowCount) return sendJson(res, 404, { error: 'not_found' });
+            const row = q.rows[0];
+            if (row.original_state === 'active') return sendJson(res, 200, { ok: true, state: 'ready' });
+            if (row.original_state !== 'pending' || !pb1666IsHeic(row))
+                return sendJson(res, 409, { error: 'direct_heic_not_allowed' });
+            if (!/^read:/.test(String(row.print_conversion_error || '')))
+                return sendJson(res, 409, { error: 'direct_heic_requires_read_failure' });
+            const expected = Number(row.bytes || 0), max = 32 * 1024 * 1024;
+            if (!Number.isSafeInteger(expected) || expected < 1 || expected > max)
+                return sendJson(res, 413, { error: 'direct_heic_size_limit' });
+            const announced = Number(req.headers['content-length'] || 0);
+            if (announced && announced !== expected)
+                return sendJson(res, 400, { error: 'direct_heic_size_mismatch' });
+            const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'photobridge-heic-direct-'));
+            const filePath = path.join(directory, 'original.heic');
+            let bytes = 0;
+            try {
+                const {Transform} = await import('node:stream');
+                const guard = new Transform({
+                    transform(chunk, encoding, done) {
+                        bytes += chunk.length;
+                        if (bytes > max || bytes > expected) return done(new Error('direct_heic_size_limit'));
+                        done(null, chunk);
+                    }
+                });
+                await streamPipeline(req, guard, fs.createWriteStream(filePath));
+                if (bytes !== expected) throw new Error('direct_heic_size_mismatch');
+                if (!(await pb1712LooksHeic(filePath))) throw new Error('direct_heic_invalid_signature');
+            } catch (error) {
+                await fs.promises.rm(directory, {recursive:true,force:true}).catch(()=>{});
+                const code = String(error?.message || error || '');
+                const status = code.includes('size_limit') ? 413 : 400;
+                return sendJson(res, status, {error:code.startsWith('direct_heic_')?code:'direct_heic_upload_failed'});
+            }
+            await pool.query("UPDATE order_files SET print_conversion_status=NULL,print_conversion_error=NULL WHERE id=$1 AND original_state='pending'", [fileId]);
+            const previous = pb1716DirectSources.get(fileId);
+            pb1716DirectSources.set(fileId, {path:filePath,directory,createdAt:Date.now()});
+            // Do not remove a source still being converted; an unused duplicate
+            // will be cleaned up by the instance's temp-directory lifecycle.
+            if (previous) console.warn('[print-heic:direct-source-replaced]', {fileId});
+            console.log('[print-heic:direct-source-received]', {fileId,bytes});
+            pb1714QueueConversion(row);
+            return sendJson(res, 202, {ok:false,processing:true,fileId,stage:'recovering'});
+        }

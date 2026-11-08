@@ -11,8 +11,8 @@ test('R1700 compact templates clearly separate free customer from studio and ide
   assert(page.includes('لابراتوار عکاسی'));assert(page.includes('قصر عکس'));assert(page.includes('02632223344'));assert(page.includes('فردیس'));assert(page.includes('class="frame"'));
  }
  assert(free.includes('رسید مشتری'));assert(free.includes('شماره مشتری'));assert(free.includes('09120000000'));
- assert(!free.includes('شماره عکاسی'));assert(!free.includes('مانده کل حساب شما'));
- assert(studio.includes('رسید عکاسی'));assert(studio.includes('شماره عکاسی'));assert(studio.includes('09351234567'));
+ assert(!free.includes('شماره عکاس'));assert(!free.includes('مانده کل حساب شما'));
+ assert(studio.includes('رسید همکار'));assert(studio.includes('شماره عکاس'));assert(studio.includes('09351234567'));
  assert(!studio.includes('شماره مشتری'));assert(!studio.includes('09129999999'));assert(studio.includes('مانده کل حساب شما'));
 });
 test('R1700 wake preserves R1583 retry patch and R1586 immediate coalesced wake in correct build order',()=>{

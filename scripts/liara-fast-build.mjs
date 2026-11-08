@@ -1021,3 +1021,7 @@ runR1314(process.execPath,['--test','scripts/test-r1705-verified-receipt-role.cj
 // R1711: image rotation and print-size frame orientation are independent in Lab Edit Photo.
 await deployStep('./enable-r1711-independent-print-frame.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1711-independent-print-frame.cjs'],{stdio:'inherit'});
+
+// R1712: HEIC first decoder, verified JPEG and accurate upload error phases.
+await deployStep('./enable-r1712-heic-verified-conversion.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1712-heic-verified-conversion.cjs'],{stdio:'inherit'});

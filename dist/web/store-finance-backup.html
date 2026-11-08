@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'">
+<title>پشتیبان امور مالی فروشگاه | PhotoBridge</title><link rel="stylesheet" href="/photobridge-lab-web-backup.css?v=r1553">
+</head><body>
+<main>
+<a class="back" href="/rental/settings">بازگشت به تنظیمات فروشگاه</a>
+<header><span class="symbol" aria-hidden="true">▣</span><div><h1>پشتیبان امور مالی فروشگاه</h1><p>تهیه خروجی از سوابق مالی فروشگاه، با ظاهر و روند بکاپ سایت لابراتوار</p></div></header>
+<section class="card">
+<h2>تهیه خروجی اطلاعات مالی</h2>
+<p>اطلاعات به‌ترتیب از حساب همین فروشگاه دریافت می‌شوند. فقط پس از موفقیت همهٔ مراحل، فایل JSON روی دستگاه ذخیره می‌شود. درصد نوار، <strong>پیشرفت مراحل</strong> است؛ نه درصد حجم دانلود.</p>
+<button id="start" class="primary" type="button" disabled>شروع پشتیبان‌گیری مالی</button>
+<div id="backupProgress" role="progressbar" aria-label="پیشرفت مراحل پشتیبان‌گیری" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<div class="track"><div id="backupProgressBar"></div></div>
+<div class="metarow"><b id="backupStage">در حال بررسی دسترسی…</b><span id="backupPercent">۰٪</span></div></div>
+<p id="message" role="status" aria-live="polite">در حال بررسی حساب مدیر فروشگاه…</p>
+<ol id="steps"><li>بررسی حساب مدیر فروشگاه</li><li>دریافت مشخصات مالی و طرف‌حساب‌ها</li><li>فاکتورهای اجاره و مانده‌حساب‌ها</li><li>دریافت‌ها و ریزگردش حساب معین</li><li>اسناد مالی فروش کالا</li><li>کنترل محدودیت پاسخ‌ها و کامل‌بودن مراحل</li><li>ساخت و ذخیره فایل JSON</li></ol>
+</section>
+<section class="card note"><h2>درباره این نسخه پشتیبان</h2>
+<p>این خروجیِ قابل‌خواندن، حاوی اطلاعات مالی برگردانده‌شده از API فعلی فروشگاه است: فاکتورهای اجاره، اسناد فروش، دریافت‌ها، مانده‌ها و گردش حساب عکاس‌ها. <strong>آرشیو سفارش‌ها در آن نیست.</strong> اگر تعداد اسناد از سقف پاسخ API بالاتر باشد، محدودیت در خود فایل ثبت می‌شود.</p>
+<p>این فایل <strong>بکاپ کامل PostgreSQL یا فایل قابل‌بازیابی و بازگردانی برنامه نیست</strong> و شامل عکس‌ها، فایل‌های فیزیکی و پایگاه دادهٔ محلی ویندوز نمی‌شود. فایل را در محل امن نگه دارید؛ اطلاعات مالی و شماره تلفن مشتریان ممکن است در آن باشند. پردازش در مرورگر انجام می‌شود و هیچ داده‌ای به سرویس دیگری ارسال نمی‌شود.</p></section>
+</main><script src="/photobridge-r1713-store-finance-backup.js?v=r1713"></script></body></html>

@@ -50,10 +50,23 @@ for (const dir of ['dist/web', 'dist/web/lab-desktop-ui']) {
         'await Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId:An.fileId})})',
         'await pb1714AwaitUploadReady(Me,An.fileId,ht.signal)',
         'album upload completion ' + dir);
-    js = one(js,
-        'await Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId:Gt.fileId})})',
-        'await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal)',
-        'print upload completion ' + dir);
+    // R1588 replaced the direct print /complete call with a serialized
+    // PB1588verifyUpload queue. Retain that queue: only its confirmation
+    // callback should use the new R1714 polling helper.
+    if (js.includes('const PB1588verifyUpload=')) {
+        js = one(js,
+            'complete:fileId=>Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId})}),',
+            'complete:fileId=>pb1714AwaitUploadReady(Me,fileId,ue.signal),',
+            'R1588 queued print confirmation ' + dir);
+        if (!js.includes('await PB1588verifyUpload(Gt.fileId,tt.file)'))
+            throw Error('R1715 print confirmation queue call missing ' + dir);
+    } else {
+        // Older desktop bundle can still have the direct confirmation call.
+        js = one(js,
+            'await Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId:Gt.fileId})})',
+            'await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal)',
+            'legacy print completion ' + dir);
+    }
     fs.writeFileSync(bundle, js);
     execFileSync(process.execPath, ['--check', bundle], { stdio: 'inherit' });
     const htmlFile = dir + '/index.html';

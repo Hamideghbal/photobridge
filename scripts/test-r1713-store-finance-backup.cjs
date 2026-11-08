@@ -15,7 +15,7 @@ test('R1713 store backup copies Lab progress/CSP style without order archive or 
  assert.match(html,/id="backupProgress"/);
  assert.match(html,/id="start"/);
  assert.match(html,/default-src 'none'/);
- assert.match(html,/محدودیت پاسخ API/);
+ assert.match(html,/محدودیت در خود فایل/);
  assert.doesNotMatch(code,/\/api\/lab\//);
  assert.doesNotMatch(code,/\/api\/rental\/archive/);
  assert.doesNotMatch(code,/\/api\/rental\/orders/);

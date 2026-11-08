@@ -18,7 +18,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  fs.writeFileSync(file,js);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  const page=root+'/index.html';let html=fs.readFileSync(page,'utf8'),hits=0;
- html=html.replace(/index-UIRefine-v655-r84\.js\?[^"']*/g,u=>{hits++;return u+'&approvedThermal=r1708';});
+ html=html.replace(/index-UIRefine-v655-r84\.js\?[^"']*/g,u=>{hits++;return u+'&approvedThermal=r1709';});
  if(hits!==1)throw Error('R1698 cache reference '+root+' '+hits);
  fs.writeFileSync(page,html);
  if(root.endsWith('/lab-desktop-ui')){

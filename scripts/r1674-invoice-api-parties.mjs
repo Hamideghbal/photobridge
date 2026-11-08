@@ -1,3 +1,6 @@
+// Receipt display only: never use this projection for permissions or ledger rules.
+export const invoiceReceiptPartySql="CASE WHEN o.source IN ('walkin','manual_invoice') THEN 'customer' WHEN COALESCE(u.photographer_enabled,false) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' ELSE 'coworker' END";
+
 export function withDirectCustomerIdentityFields(api){
  const specs=[
   ['async function financeDocumentsForCustomer(','const invQ','FROM invoices i','i'],
@@ -16,13 +19,15 @@ export function withDirectCustomerIdentityFields(api){
   const sqlAfter=api.slice(end,end+500);
   if(!sqlAfter.includes('JOIN users u')||!sqlAfter.includes('JOIN orders o')&&star!=='o')
    throw Error('R1674 invoice query joins changed '+query);
-  // R1705: classify from this laboratory's active membership, not from stale
-  // walk-in columns. Both studios and registered free customers can use the
-  // same photo-upload channel, so order.source alone is not the party's role.
+  // Laboratory membership role "customer" is also used for photographers.
+  // Only the account's photographer flag distinguishes those linked accounts;
+  // walk-in and manual-invoice orders retain their explicit direct identity.
+  const previousMembershipRole="CASE WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' ELSE '' END party_membership_role";
+  const previousResolvedKind="CASE WHEN o.source IN ('walkin','manual_invoice') THEN 'customer' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' WHEN o.source IN ('photographer','studio','atelier') THEN 'coworker' WHEN NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind";
   const legacyKind="CASE WHEN o.source IN ('walkin','manual_invoice') OR EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) OR NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind";
-  const membershipRole="CASE WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' ELSE '' END party_membership_role";
-  const resolvedKind="CASE WHEN o.source IN ('walkin','manual_invoice') THEN 'customer' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role IN ('coworker','photographer') AND pb_member.active=true) THEN 'coworker' WHEN EXISTS (SELECT 1 FROM lab_memberships pb_member WHERE pb_member.lab_id=o.lab_id AND pb_member.user_id=o.customer_id AND pb_member.role='customer' AND pb_member.active=true) THEN 'customer' WHEN o.source IN ('photographer','studio','atelier') THEN 'coworker' WHEN NULLIF(BTRIM(o.walkin_customer_name),'') IS NOT NULL THEN 'customer' ELSE 'coworker' END customer_kind";
-  if(select.includes(legacyKind))select=select.replace(legacyKind,resolvedKind);
+  const resolvedKind=invoiceReceiptPartySql+' customer_kind';
+  const membershipRole=invoiceReceiptPartySql+' party_membership_role';
+  select=select.replace(legacyKind,resolvedKind).replace(previousResolvedKind,resolvedKind).replace(previousMembershipRole,membershipRole);
   const parts=[];
   if(!/\bdirect_customer_name\b/.test(select))parts.push("NULLIF(BTRIM(o.walkin_customer_name),'') direct_customer_name");
   if(!/\bdirect_customer_mobile\b/.test(select))parts.push("COALESCE(NULLIF(BTRIM(o.walkin_customer_mobile),''),u.mobile) direct_customer_mobile");
@@ -32,8 +37,8 @@ export function withDirectCustomerIdentityFields(api){
   if(!/\border_source\b/.test(select))parts.push('o.source order_source');
   if(parts.length){
    select=select.replace(marker,match=>match+parts.join(',')+',');
-   api=api.slice(0,start)+select+api.slice(end);
   }
+  api=api.slice(0,start)+select+api.slice(end);
  }
  const returnTail='order_created_at: order.created_at }';
  const newTail='order_created_at: order.created_at, direct_customer_name: order.direct_customer_name, direct_customer_mobile: order.direct_customer_mobile, customer_mobile: order.customer_mobile, customer_kind: order.customer_kind, order_source: order.order_source, party_membership_role: order.party_membership_role }';

@@ -1,1 +1,1 @@
-2026-11-08-r1713-heic-source-get-pathstyle-fallback
+2026-11-08-r1714-heic-async-upload-complete-502-recovery

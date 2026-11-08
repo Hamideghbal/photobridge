@@ -17,7 +17,7 @@ async function pb1712ReadPrintOriginal(row, target) {
     let last;
     for (let attempt = 0; attempt < 3; attempt++) {
         const pathStyle = attempt > 0 && !key.startsWith('local/') && !!s3Download;
-        const signal = AbortSignal.timeout(pb1666IsHeic(row) ? 20000 : 60000);
+        const signal = AbortSignal.timeout(typeof pb1666IsHeic === 'function' && pb1666IsHeic(row) ? 20000 : 60000);
         try {
             let src;
             if (pathStyle) {

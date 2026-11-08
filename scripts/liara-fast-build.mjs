@@ -1017,3 +1017,7 @@ runR1314(process.execPath,['--test','scripts/test-r1698-approved-receipts.cjs'],
 runR1314(process.execPath,['--test','scripts/test-r1700-receipt-wake.cjs'],{stdio:'inherit'});
 // R1705: distinguish verified laboratory member roles for actual photographer uploads.
 runR1314(process.execPath,['--test','scripts/test-r1705-verified-receipt-role.cjs'],{stdio:'inherit'});
+
+// R1711: image rotation and print-size frame orientation are independent in Lab Edit Photo.
+await deployStep('./enable-r1711-independent-print-frame.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1711-independent-print-frame.cjs'],{stdio:'inherit'});

@@ -1,0 +1,19 @@
+        // R1714: short polling requests avoid Liara's gateway timeout during HEIC decode.
+        const pb1714Status = url.pathname.match(/^\/api\/customer\/uploads\/status\/([0-9a-f-]+)$/);
+        if (pb1714Status && req.method === 'GET') {
+            const q = await pool.query('SELECT * FROM order_files WHERE id=$1 AND lab_id=$2 AND customer_id=$3', [pb1714Status[1], labId, a.userId]);
+            if (!q.rowCount) return sendJson(res, 404, { error: 'not_found' });
+            const file = q.rows[0];
+            if (file.original_state === 'active') return sendJson(res, 200, { ok: true, state: 'ready' });
+            if (file.original_state !== 'pending') return sendJson(res, 409, { error: 'upload_not_pending' });
+            if (String(file.print_conversion_status || '') === 'failed') {
+                const reason = printJpegFailureReason(file.print_conversion_error || 'print_jpeg_conversion_failed');
+                return sendJson(res, 422, { error: 'print_jpeg_conversion_failed', fileId: file.id, fileName: file.original_name, reason, retryable: true });
+            }
+            if (printFileIsJpeg(file)) {
+                // The old synchronous JPEG path is already fast; only non-JPEG conversion is queued.
+                return sendJson(res, 409, { error: 'upload_not_confirmed' });
+            }
+            pb1714QueueConversion(file);
+            return sendJson(res, 202, { ok: false, processing: true, fileId: file.id });
+        }

@@ -1,0 +1,44 @@
+// R1714: HEIC conversion must not hold the upload-complete HTTP request open.
+// A bounded serial queue also prevents simultaneous HEIC workers from exhausting Liara RAM.
+const pb1714PendingJobs = new Map();
+let pb1714QueueTail = Promise.resolve();
+function pb1714Enqueue(row) {
+    const id = String(row?.id || '');
+    if (!id) throw new Error('print_file_id_missing');
+    const old = pb1714PendingJobs.get(id);
+    if (old?.status === 'processing' || old?.status === 'ready') return old;
+    const state = { status: 'processing', phase: 'decode', reason: null, promise: null };
+    pb1714PendingJobs.set(id, state);
+    const run = pb1714QueueTail.then(async () => {
+        try {
+            const q = await pool.query("SELECT f.* FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND f.lab_id=$2 AND f.customer_id=$3 AND o.status='uploading' LIMIT 1", [id, row.lab_id, row.customer_id]);
+            if (!q.rowCount) throw Object.assign(new Error('print_source_order_unavailable'), { phase: 'read' });
+            const latest = q.rows[0];
+            if (latest.original_state === 'active') { state.status = 'ready'; return; }
+            if (latest.original_state !== 'pending') throw Object.assign(new Error('print_source_not_pending'), { phase: 'read' });
+            await ensurePrintReadyJpeg(latest);
+            // Never expose or submit an original HEIC until a verified JPEG is stored.
+            const confirmed = await pool.query("UPDATE order_files SET original_state='active' WHERE id=$1 AND lab_id=$2 AND customer_id=$3 AND original_state='pending' AND print_conversion_status='ready' AND print_object_key IS NOT NULL AND EXISTS (SELECT 1 FROM orders o WHERE o.id=order_files.order_id AND o.status='uploading') RETURNING id", [id, row.lab_id, row.customer_id]);
+            if (!confirmed.rowCount) throw Object.assign(new Error('print_jpeg_ready_not_confirmed'), { phase: 'database' });
+            state.status = 'ready';
+        } catch (e) {
+            state.status = 'failed';
+            state.phase = String(e?.phase || 'decode');
+            state.reason = String(e?.reason || 'تبدیل تصویر به JPEG کامل نشد؛ دوباره تلاش کنید').slice(0, 300);
+            console.error('[pb1714:heic-complete]', { fileId: id, phase: state.phase, code: String(e?.code || e?.message || 'failed').slice(0, 120) });
+            await pool.query("UPDATE order_files SET print_conversion_status='failed', print_conversion_error=$2 WHERE id=$1 AND original_state='pending'", [id, String(e?.message || 'print_jpeg_conversion_failed').slice(0, 300)]).catch(() => {});
+        } finally {
+            const timer = setTimeout(() => {
+                if (pb1714PendingJobs.get(id) === state && state.status !== 'processing') pb1714PendingJobs.delete(id);
+            }, 10 * 60 * 1000);
+            timer.unref?.();
+        }
+    });
+    pb1714QueueTail = run.catch(() => {});
+    state.promise = run.catch(error => {
+        state.status = 'failed';
+        state.reason = 'خطای داخلی در آماده‌سازی عکس؛ دوباره تلاش کنید';
+        console.error('[pb1714:unexpected]', { fileId: id, error: String(error?.message || error).slice(0, 150) });
+    });
+    return state;
+}

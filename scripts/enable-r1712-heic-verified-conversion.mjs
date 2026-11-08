@@ -51,10 +51,15 @@ body=one(body,
  "        err.reason = reason;\n        err.phase = pb1712Phase;\n        throw err;",
  'phase response');
 api=api.slice(0,start)+fs.readFileSync('scripts/r1712-heic-conversion-helpers.js.txt','utf8')+body+api.slice(stop);
-api=one(api,
+const routeStart=api.indexOf("if (req.method === 'POST' && url.pathname === '/api/customer/uploads/complete') {");
+const routeEnd=api.indexOf("\n    return sendJson(res, 404, { error: 'not_found' });",routeStart);
+if(routeStart<0||routeEnd<=routeStart)throw Error('R1712 customer upload completion not found');
+const beforeRoute=api.slice(routeStart,routeEnd);
+const afterRoute=one(beforeRoute,
  "reason: e?.reason || 'تبدیل تصویر به JPEG کامل نشد' });",
  "reason: e?.reason || 'تبدیل تصویر به JPEG کامل نشد', phase:e?.phase||'decode', retryable:e?.phase==='storage'||e?.phase==='database' });",
- 'upload completion response');
+ 'scoped customer upload completion response');
+api=api.slice(0,routeStart)+afterRoute+api.slice(routeEnd);
 fs.writeFileSync(file,api);
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 console.log('[R1712] HEIC-first decode, verified JPEG, Object Storage retry and diagnostic upload-completion phases installed.');

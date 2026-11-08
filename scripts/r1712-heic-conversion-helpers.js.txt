@@ -1,3 +1,50 @@
+// R1713: retry print-original downloads with Liara-compatible path-style GET.
+async function pb1712ReadPrintOriginal(row, target) {
+    const key = String(row?.object_key || '');
+    if (!key) throw new Error('print_source_key_missing');
+    let last;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const pathStyle = attempt > 0 && !key.startsWith('local/') && !!s3Download;
+        try {
+            let src;
+            if (pathStyle) {
+                const object = await s3Download.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }));
+                if (!object?.Body) throw new Error('print_source_body_missing');
+                await fs.promises.mkdir(path.dirname(target), { recursive: true });
+                if (typeof object.Body.pipe === 'function') {
+                    await streamPipeline(object.Body, fs.createWriteStream(target));
+                } else if (typeof object.Body.transformToByteArray === 'function') {
+                    await fs.promises.writeFile(target, Buffer.from(await object.Body.transformToByteArray()));
+                } else {
+                    const chunks = [];
+                    for await (const chunk of object.Body) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+                    await fs.promises.writeFile(target, Buffer.concat(chunks));
+                }
+                src = target;
+            } else {
+                src = await materializeAiObjectForComposite(key, target);
+            }
+            const stat = await fs.promises.stat(src);
+            const expected = Number(row?.bytes || 0);
+            if (!stat.isFile() || !stat.size || (expected > 0 && stat.size !== expected))
+                throw new Error('print_source_size_mismatch');
+            return src;
+        } catch (error) {
+            last = error;
+            console.warn('[print-jpeg:source-read-retry]', {
+                fileId: row?.id,
+                attempt: attempt + 1,
+                mode: pathStyle ? 'path-style' : 'default',
+                code: String(error?.name || error?.code || error?.Code || 'unavailable').slice(0, 90),
+                httpStatus: Number(error?.$metadata?.httpStatusCode) || undefined
+            });
+            if (!key.startsWith('local/')) await fs.promises.rm(target, { force: true }).catch(() => {});
+            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+        }
+    }
+    throw last || new Error('print_source_unavailable');
+}
+
 // R1712: recognize HEIC by its file signature, not only its name.
 async function pb1712LooksHeic(file){
  const handle=await fs.promises.open(file,'r');

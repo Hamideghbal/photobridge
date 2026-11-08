@@ -23,6 +23,10 @@ body=one(body,
  fs.readFileSync('scripts/r1712-heic-first-decoder.js.txt','utf8'),
  'HEIC-first decoder');
 body=one(body,
+ "const src = await materializeAiObjectForComposite(String(row.object_key), input), attemptErrors = [];",
+ "const src = await pb1712ReadPrintOriginal(row, input), attemptErrors = [];",
+ 'R1713 verified source-read fallback');
+body=one(body,
  "if(pb1666IsHeic(row)){",
  "if(pb1666IsHeic(row)&&!pb1712WorkerAttempted){",
  'avoid duplicate HEIC worker');

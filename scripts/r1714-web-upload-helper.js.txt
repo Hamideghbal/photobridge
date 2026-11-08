@@ -1,0 +1,31 @@
+// R1714: finalize print uploads with bounded polling; retry lost gateway acknowledgements.
+async function pb1714AwaitUploadReady(request, fileId, signal) {
+    let response;
+    try {
+        response = await request('/api/customer/uploads/complete', { method: 'POST', body: JSON.stringify({ fileId }), signal });
+    } catch (error) {
+        // A 502/504 after the PUT does not prove the uploaded original is missing.
+        if (![502, 503, 504].includes(Number(error?.status))) throw error;
+        response = { processing: true };
+    }
+    if (!response?.processing) return response;
+    const deadline = Date.now() + 240000;
+    while (Date.now() < deadline) {
+        if (signal?.aborted) {
+            const error = new Error('upload_aborted');
+            error.name = 'AbortError';
+            throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1600));
+        try {
+            const status = await request('/api/customer/uploads/status/' + encodeURIComponent(fileId), { method: 'GET', signal });
+            if (status?.ok && !status.processing) return status;
+        } catch (error) {
+            if ([502, 503, 504].includes(Number(error?.status))) continue;
+            throw error;
+        }
+    }
+    throw Object.assign(new Error('print_jpeg_conversion_timeout'), {
+        data: { error: 'print_jpeg_conversion_failed', reason: 'تبدیل عکس بیش از حد طول کشید. فایل اصلی حفظ شده است و می‌توان دوباره تلاش کرد.' }
+    });
+}

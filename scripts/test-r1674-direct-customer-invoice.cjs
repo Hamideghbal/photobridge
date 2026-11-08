@@ -33,7 +33,8 @@ test('R1674 direct customers have their own thermal/A4 templates without photogr
  assert(escaped.includes('&lt;strong&gt;مریم&lt;/strong&gt;'));
  assert(!escaped.includes('<strong>مریم</strong>'));
  assert(ctx.pb1674DirectCustomer({order_source:'manual_invoice'}));
- assert(ctx.pb1674DirectCustomer({customer_kind:'customer'}));
+ assert(ctx.pb1674DirectCustomer({customer_kind:'customer',party_membership_role:'customer'}));
+ assert(!ctx.pb1674DirectCustomer({customer_kind:'customer'}),'unverified legacy customer kind cannot override an atelier receipt');
  assert(!ctx.pb1674DirectCustomer({customer_kind:'coworker',order_source:'walkin'}));
  assert(!ctx.pb1674DirectCustomer({order_source:'photographer'}));
 });

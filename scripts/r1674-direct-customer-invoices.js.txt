@@ -3,17 +3,17 @@ function pb1674DirectCustomer(t){
  const source=String(t?.order_source||t?.source||'').trim().toLowerCase();
  const verified=String(t?.party_membership_role||t?.verified_party_kind||'').trim().toLowerCase();
  const walkin=Boolean(String(t?.walkin_customer_name||t?.direct_customer_name||t?.walkin_customer_mobile||t?.direct_customer_mobile||'').trim());
- // R1705: membership from the laboratory is authoritative. A registered
- // free customer and an atelier may share the same upload channel.
+ // R1707: an invoice's generic customer_kind=customer or stale walkin fields
+ // must never turn a photographer order into a direct-customer receipt.
  if(t?.photographer_id||t?.studio_id||t?.atelier_id||t?.photographer_name||t?.studio_name)return false;
  if(['coworker','photographer','studio','atelier'].includes(verified))return false;
  if(['customer','direct_customer'].includes(verified))return true;
  if(['coworker','photographer','studio','atelier'].includes(kind))return source==='walkin'&&walkin;
  if(['walkin','direct_customer','free_customer'].includes(source))return true;
- if(['photographer','studio','atelier','photographer_order'].includes(source))return false;
- if(kind==='customer'||kind==='direct_customer')return true;
- if(source==='manual_invoice')return walkin||!kind;
- return walkin;
+ if(['photographer','studio','atelier','photographer_order','upload','web','api'].includes(source))return false;
+ if(source==='manual_invoice')return true;
+ if(source==='manual')return kind==='customer'&&walkin;
+ return false;
 }
 function pb1674CustomerName(t){
  return String(t?.direct_customer_name||t?.walkin_customer_name||t?.customer_name||'ثبت نشده').trim();

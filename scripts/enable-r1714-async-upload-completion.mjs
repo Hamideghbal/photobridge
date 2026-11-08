@@ -15,6 +15,7 @@ const convertAnchor = 'async function ensurePrintReadyJpeg(row) {';
 api = one(api, convertAnchor, fs.readFileSync('scripts/r1714-async-upload-helper.js.txt', 'utf8') + convertAnchor, 'conversion worker');
 const routeAnchor = "        if (req.method === 'POST' && url.pathname === '/api/customer/uploads/complete') {";
 api = one(api, routeAnchor, fs.readFileSync('scripts/r1714-upload-status-route.js.txt', 'utf8') + routeAnchor, 'status endpoint');
+api = one(api, routeAnchor, fs.readFileSync('scripts/r1716-direct-heic-route.js.txt', 'utf8') + routeAnchor, 'R1716 direct HEIC endpoint');
 const routeStart = api.indexOf(routeAnchor);
 const routeEnd = api.indexOf("\n    return sendJson(res, 404, { error: 'not_found' });", routeStart);
 if (routeStart < 0 || routeEnd < routeStart) throw Error('R1714 customer upload boundary unavailable');
@@ -48,7 +49,7 @@ for (const dir of ['dist/web', 'dist/web/lab-desktop-ui']) {
     js = one(js, 'async function Me(t,a={}){', helper + 'async function Me(t,a={}){', 'browser helper ' + dir);
     js = one(js,
         'await Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId:An.fileId})})',
-        'await pb1714AwaitUploadReady(Me,An.fileId,ht.signal)',
+        'await pb1714AwaitUploadReady(Me,An.fileId,ht.signal,Un.file)',
         'album upload completion ' + dir);
     // R1588 replaced the direct print /complete call with a serialized
     // PB1588verifyUpload queue. Retain that queue: only its confirmation
@@ -56,7 +57,7 @@ for (const dir of ['dist/web', 'dist/web/lab-desktop-ui']) {
     if (js.includes('const PB1588verifyUpload=')) {
         js = one(js,
             'complete:fileId=>Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId})}),',
-            'complete:fileId=>pb1714AwaitUploadReady(Me,fileId,ue.signal),',
+            'complete:(fileId,file)=>pb1714AwaitUploadReady(Me,fileId,ue.signal,file),',
             'R1588 queued print confirmation ' + dir);
         if (!js.includes('await PB1588verifyUpload(Gt.fileId,tt.file)'))
             throw Error('R1715 print confirmation queue call missing ' + dir);
@@ -64,7 +65,7 @@ for (const dir of ['dist/web', 'dist/web/lab-desktop-ui']) {
         // Older desktop bundle can still have the direct confirmation call.
         js = one(js,
             'await Me("/api/customer/uploads/complete",{method:"POST",body:JSON.stringify({fileId:Gt.fileId})})',
-            'await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal)',
+            'await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal,tt.file)',
             'legacy print completion ' + dir);
     }
     fs.writeFileSync(bundle, js);
@@ -72,7 +73,7 @@ for (const dir of ['dist/web', 'dist/web/lab-desktop-ui']) {
     const htmlFile = dir + '/index.html';
     let html = fs.readFileSync(htmlFile, 'utf8');
     let number = 0;
-    html = html.replace(/index-UIRefine-v655-r84\.js\?[^"'\s]*/g, url => { number++; return url + '&uploadComplete=r1714'; });
+    html = html.replace(/index-UIRefine-v655-r84\.js\?[^"'\s]*/g, url => { number++; return url + '&uploadComplete=r1714&directHeic=r1716'; });
     if (number !== 1) throw Error('R1714 HTML cache-bust count ' + dir + ': ' + number);
     fs.writeFileSync(htmlFile, html);
     if (dir.endsWith('lab-desktop-ui')) {

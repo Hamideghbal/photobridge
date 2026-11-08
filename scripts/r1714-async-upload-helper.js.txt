@@ -1,13 +1,13 @@
-// R1714: detach heavy print conversion from HTTP upload acknowledgement.
-// One conversion per file/process; PostgreSQL advisory lock serializes workers across instances.
+// R1714/R1716: finalize HEIC conversion outside HTTP request.
+// R1716 also permits an authenticated same-file direct-source retry after S3 GET fails.
+const pb1716DirectSources = new Map();
 const pb1714ConversionJobs = new Map();
 function pb1714QueueConversion(row) {
     const id = String(row?.id || '');
     if (!id || pb1714ConversionJobs.has(id)) return;
     const job = (async () => {
-        // Start after the current response is able to flush.
         await new Promise(resolve => setImmediate(resolve));
-        let client, locked = false;
+        let client, locked = false, heicLocked = false, directEntry = null;
         try {
             client = await pool.connect();
             const lock = await client.query('SELECT pg_try_advisory_lock(hashtext($1),hashtext($2)) AS acquired', ['photobridge-print-r1714', id]);
@@ -16,19 +16,34 @@ function pb1714QueueConversion(row) {
             const q = await pool.query('SELECT * FROM order_files WHERE id=$1', [id]);
             if (!q.rowCount || q.rows[0].original_state !== 'pending') return;
             const fresh = q.rows[0];
+            if (pb1666IsHeic(fresh)) {
+                // Keep one memory-heavy HEIC decoder active across Liara app instances.
+                const maxOne = await client.query('SELECT pg_try_advisory_lock(hashtext($1),hashtext($2)) AS acquired', ['photobridge-print-r1716', 'heic-global']);
+                heicLocked = Boolean(maxOne.rows[0]?.acquired);
+                if (!heicLocked) return; // status polling will requeue when slot opens
+            }
+            directEntry = pb1716DirectSources.get(id) || null;
+            console.log('[print-heic:conversion-start]', { fileId: id, direct: Boolean(directEntry) });
             const converted = await ensurePrintReadyJpeg(fresh);
-            // Raster formats retain the old source fallback, but HEIC must have a valid JPEG.
             if (!converted.print_object_key && !printOriginalRasterFallbackAllowed(fresh))
                 throw new Error('print_ready_output_missing');
             await pool.query("UPDATE order_files SET original_state='active' WHERE id=$1 AND original_state='pending'", [id]);
+            console.log('[print-heic:conversion-ready]', { fileId: id });
         } catch (error) {
-            console.error('[print-jpeg:async-finalize]', { fileId: id, message: String(error?.message || error).slice(0, 350) });
-            // ensurePrintReadyJpeg() records its own failures; cover unexpected worker/DB errors too.
-            await pool.query("UPDATE order_files SET print_conversion_status='failed',print_conversion_error=$2 WHERE id=$1 AND original_state='pending' AND print_conversion_status IS DISTINCT FROM 'ready'", [id, String(error?.message || error).slice(0, 400)]).catch(() => {});
+            const phase = String(error?.phase || 'convert').replace(/[^a-z]/gi,'').slice(0,24) || 'convert';
+            const message = phase + ':' + String(error?.message || error || 'conversion_failed').slice(0,350);
+            console.error('[print-heic:conversion-failed]', { fileId: id, phase, message: message.slice(0,250) });
+            await pool.query("UPDATE order_files SET print_conversion_status='failed',print_conversion_error=$2 WHERE id=$1 AND original_state='pending' AND print_conversion_status IS DISTINCT FROM 'ready'", [id, message]).catch(() => {});
         } finally {
             if (client) {
+                if (heicLocked) await client.query('SELECT pg_advisory_unlock(hashtext($1),hashtext($2))', ['photobridge-print-r1716', 'heic-global']).catch(() => {});
                 if (locked) await client.query('SELECT pg_advisory_unlock(hashtext($1),hashtext($2))', ['photobridge-print-r1714', id]).catch(() => {});
                 client.release();
+            }
+            // Only the task that consumed this direct source may release it.
+            if (directEntry && pb1716DirectSources.get(id) === directEntry) {
+                pb1716DirectSources.delete(id);
+                await fs.promises.rm(directEntry.directory, { recursive: true, force: true }).catch(() => {});
             }
         }
     })();

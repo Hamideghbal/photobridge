@@ -29,7 +29,7 @@ function PB1588makeCompletionQueue({complete, assertActive, sleep, maxRetries=2}
       assertActive();
       for(let n=0;n<=maxRetries;n++){
         assertActive();
-        try { return await complete(fileId); }
+        try { return await complete(fileId, file); }
         catch(error){
           if(n===maxRetries||!safeJpeg(file)||!transient(error))throw error;
           await sleep(700*(2**n));

@@ -1,5 +1,5 @@
 // R1714: finalize print uploads with bounded polling; retry lost gateway acknowledgements.
-async function pb1714AwaitUploadReady(request, fileId, signal) {
+async function pb1714AwaitUploadReady(request, fileId, signal, originalFile) {
     let response;
     try {
         response = await request('/api/customer/uploads/complete', { method: 'POST', body: JSON.stringify({ fileId }), signal });
@@ -9,7 +9,8 @@ async function pb1714AwaitUploadReady(request, fileId, signal) {
         response = { processing: true };
     }
     if (!response?.processing) return response;
-    const deadline = Date.now() + 240000;
+    let deadline = Date.now() + 240000;
+    let directRecoveryAttempted = false;
     let jpegReconfirmAttempts = 0;
     const reconfirm = () => request('/api/customer/uploads/complete', {
         method: 'POST', body: JSON.stringify({ fileId }), signal
@@ -25,6 +26,26 @@ async function pb1714AwaitUploadReady(request, fileId, signal) {
             const status = await request('/api/customer/uploads/status/' + encodeURIComponent(fileId), { method: 'GET', signal });
             if (status?.ok && !status.processing) return status;
         } catch (error) {
+            if (!directRecoveryAttempted && originalFile &&
+                Number(error?.status) === 422 &&
+                error?.data?.phase === 'read' &&
+                error?.data?.recoveryAvailable) {
+                directRecoveryAttempted = true;
+                // Original file still lives in this browser. Retry directly to
+                // the authenticated app only after the S3 GET read has failed.
+                try {
+                    const fallback = await request('/api/customer/uploads/' + encodeURIComponent(fileId) + '/direct-heic', {
+                        method: 'PUT', body: originalFile, signal,
+                        headers: { 'content-type': 'application/octet-stream' }
+                    });
+                    if (fallback?.ok && !fallback?.processing) return fallback;
+                } catch (fallbackError) {
+                    // A 502 after this PUT is ambiguous; poll the SAME fileId.
+                    if (![502, 503, 504].includes(Number(fallbackError?.status))) throw fallbackError;
+                }
+                deadline = Date.now() + 240000;
+                continue;
+            }
             if (Number(error?.status) === 409 &&
                 error?.data?.error === 'upload_not_confirmed' &&
                 jpegReconfirmAttempts < 2) {

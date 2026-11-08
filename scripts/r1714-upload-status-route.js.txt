@@ -7,13 +7,27 @@
             if (file.original_state === 'active') return sendJson(res, 200, { ok: true, state: 'ready' });
             if (file.original_state !== 'pending') return sendJson(res, 409, { error: 'upload_not_pending' });
             if (String(file.print_conversion_status || '') === 'failed') {
-                const reason = printJpegFailureReason(file.print_conversion_error || 'print_jpeg_conversion_failed');
-                return sendJson(res, 422, { error: 'print_jpeg_conversion_failed', fileId: file.id, fileName: file.original_name, reason, retryable: true });
+                // The uploader can recover the source even if the previous S3 read failed.
+                if (pb1716DirectSources.has(String(file.id))) {
+                    await pool.query("UPDATE order_files SET print_conversion_status=NULL,print_conversion_error=NULL WHERE id=$1 AND original_state='pending'", [file.id]);
+                    pb1714QueueConversion(file);
+                    return sendJson(res, 202, { ok: false, processing: true, fileId: file.id, stage: 'recovering' });
+                }
+                const raw = String(file.print_conversion_error || 'conversion_failed');
+                const phase = /^read:/.test(raw) ? 'read' : /^storage:/.test(raw) ? 'storage' : /^database:/.test(raw) ? 'database' : 'decode';
+                const reason = pb1712FailureReason(phase, raw);
+                const recoveryAvailable = phase === 'read' && pb1666IsHeic(file) &&
+                    Number(file.bytes || 0) > 0 && Number(file.bytes) <= 32 * 1024 * 1024;
+                return sendJson(res, 422, {
+                    error: 'print_jpeg_conversion_failed',
+                    fileId: file.id, fileName: file.original_name,
+                    phase, reason, retryable: true, recoveryAvailable
+                });
             }
             if (printFileIsJpeg(file)) {
                 // The old synchronous JPEG path is already fast; only non-JPEG conversion is queued.
                 return sendJson(res, 409, { error: 'upload_not_confirmed' });
             }
             pb1714QueueConversion(file);
-            return sendJson(res, 202, { ok: false, processing: true, fileId: file.id });
+            return sendJson(res, 202, { ok: false, processing: true, fileId: file.id, stage: String(file.print_conversion_status || '') === 'processing' ? 'converting' : 'queued' });
         }

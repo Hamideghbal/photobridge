@@ -1,0 +1,20 @@
+/* R1713 — A store financial backup entry, like Lab > Settings backup. */
+(()=>{'use strict';
+ if(window.pb1713StoreFinanceBackupEntry)return;
+ window.pb1713StoreFinanceBackupEntry=true;
+ const root=document.getElementById('settings');
+ if(!root||document.getElementById('pb1713StoreFinanceBackupEntry'))return;
+ const box=document.createElement('section');
+ box.id='pb1713StoreFinanceBackupEntry';
+ box.className='box pb1713FinanceBackupBox';
+ const title=document.createElement('h2');title.textContent='پشتیبان امور مالی فروشگاه';
+ const desc=document.createElement('p');desc.className='muted';
+ desc.textContent='همان روش بکاپ سایت لابراتوار: دریافت اطلاعات مالی، نوار پیشرفت مراحل و ذخیره فایل JSON. بدون آرشیو سفارش‌ها.';
+ const link=document.createElement('a');
+ link.href='/store-finance-backup.html';link.target='_blank';link.rel='noopener noreferrer';
+ link.className='btn secondary';link.id='pb1713StoreFinanceBackupLink';
+ link.textContent='تهیه فایل پشتیبان مالی';
+ link.style.cssText='display:inline-flex;align-items:center;text-decoration:none;min-height:44px;padding:10px 16px';
+ box.append(title,desc,link);
+ root.prepend(box);
+})();

@@ -17,7 +17,7 @@ api=once(api,'async function ensurePrintReadyJpeg(row) {',
 const anchor = "        if (req.method === 'POST' && url.pathname === '/api/customer/uploads/complete') {";
 const statusRoute = [
 "        // Short, authenticated polling endpoint for an already-uploaded HEIC.",
-"        const pb1714StatusMatch = url.pathname.match(/^\/api\/customer\/uploads\/status\/([0-9a-f-]{36})$/i);",
+"        const pb1714StatusMatch = url.pathname.match(new RegExp('^/api/customer/uploads/status/([0-9a-f-]{36})$', 'i'));",
 "        if (req.method === 'GET' && pb1714StatusMatch) {",
 "            const q = await pool.query('SELECT * FROM order_files WHERE id=$1 AND lab_id=$2 AND customer_id=$3', [pb1714StatusMatch[1], labId, a.userId]);",
 "            if (!q.rowCount) return sendJson(res, 404, { error: 'not_found' });",

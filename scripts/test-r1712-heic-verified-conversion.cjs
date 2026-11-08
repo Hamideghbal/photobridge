@@ -53,3 +53,27 @@ test('R1712 conversion errors are not mislabeled and storage retry is bounded',a
  assert(add>build.indexOf("await deployStep('./enable-r1666-iphone-heic-upload.mjs')"));
  assert(build.indexOf("test-r1712-heic-verified-conversion.cjs")>add);
 });
+
+test('R1713 retries verified HEIC source using path-style GET when default download fails',async()=>{
+ const source=fs.readFileSync('dist/api/server.js','utf8');
+ const begin=source.indexOf('async function pb1712ReadPrintOriginal('),end=source.indexOf('async function pb1712LooksHeic(',begin);
+ assert(begin>0&&end>begin,'bounded original-read helper installed');
+ const conversion=source.slice(source.indexOf('async function ensurePrintReadyJpeg(row) {'),source.indexOf('function clampDiscount(',source.indexOf('async function ensurePrintReadyJpeg(row) {')));
+ assert(conversion.includes('await pb1712ReadPrintOriginal(row, input)'),'conversion must read from verified retry helper');
+ const {Readable}=require('node:stream'),{pipeline}=require('node:stream/promises');
+ const mk=(original,download)=>Function('fs','path','s3Download','S3_BUCKET','GetObjectCommand','streamPipeline','materializeAiObjectForComposite','console',source.slice(begin,end)+';return pb1712ReadPrintOriginal')(fs,path,download,'photos',function GetObjectCommand(args){Object.assign(this,args)},pipeline,original,{warn(){}});
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb1713-'));const file=path.join(dir,'source.heic');
+ try{
+  let primary=0,secondary=0;
+  const recover=mk(async()=>{primary++;throw Error('wrong-host-404')},{async send(cmd){secondary++;assert.equal(cmd.Key,'prefix/test.heic');return {Body:Readable.from([Buffer.from('heic-source')])}}});
+  assert.equal(await recover({id:'photo-1',object_key:'prefix/test.heic',bytes:11},file),file);
+  assert.equal(fs.readFileSync(file,'utf8'),'heic-source');
+  assert.equal(primary,1);assert.equal(secondary,1);
+  fs.rmSync(file,{force:true});
+  let partial=0;
+  const reject=mk(async()=>{fs.writeFileSync(file,'partial');throw Error('stream-closed')},{async send(){partial++;return {Body:Readable.from([Buffer.from('short')])}}});
+  await assert.rejects(()=>reject({object_key:'prefix/test.heic',bytes:11},file),/print_source_size_mismatch/);
+  assert.equal(partial,2,'fallback GET attempts are bounded');
+  assert.equal(fs.existsSync(file),false,'discard incomplete sources');
+ }finally{fs.rmSync(dir,{recursive:true,force:true})}
+});

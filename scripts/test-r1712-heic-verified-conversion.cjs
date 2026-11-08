@@ -27,17 +27,17 @@ test('R1712 prioritized HEIC worker and output JPEG validation are wired in real
  assert(conversion.indexOf('await pb1712LooksHeic(src)')<conversion.indexOf('await writeSharp(src, true)'));
  assert(conversion.includes('pb1666HeicFallback(src,output)'));
  assert(conversion.includes('if(!(await pb1712ValidJpeg(output)))'));
- assert(conversion.includes('pb1712Phase=\\'storage\\''));
+ assert(conversion.includes("pb1712Phase='storage'"));
  assert(conversion.includes('await pb1712StoreRetry(row, output, name)'));
- assert(conversion.includes('pb1712Phase=\\'database\\''));
+ assert(conversion.includes("pb1712Phase='database'"));
  assert(conversion.includes('err.phase = pb1712Phase'));
- assert(src.includes('retryable:e?.phase===\\'storage\\'||e?.phase===\\'database\\''));
+ assert(src.includes("retryable:e?.phase==='storage'||e?.phase==='database'"));
  assert(src.includes('if (expected && actual !== expected)'),'original integrity check retained');
  assert(src.includes("UPDATE order_files SET original_state='active'"),'file activated only after converter stage');
 });
 test('R1712 conversion errors are not mislabeled and storage retry is bounded',async()=>{
  const src=fs.readFileSync('dist/api/server.js','utf8');
- const a=src.indexOf('function pb1712FailureReason(');
+ const a=src.indexOf('async function pb1712StoreRetry(');
  const b=src.indexOf('async function ensurePrintReadyJpeg(',a);
  assert(a>0&&b>a);
  const unit=src.slice(a,b);
@@ -47,7 +47,7 @@ test('R1712 conversion errors are not mislabeled and storage retry is bounded',a
  assert.match(last.pb1712FailureReason('database','error'),/ثبت/);
  assert.equal(last.pb1712FailureReason('decode','codec-failed'),'codec-failed');
  const main=fs.readFileSync('scripts/enable-r1712-heic-verified-conversion.mjs','utf8');
- assert(main.includes("new URL")===false||main.includes('pb1712'));
+ assert(main.includes('pb1712LooksHeic'));
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  const add=build.indexOf("await deployStep('./enable-r1712-heic-verified-conversion.mjs')");
  assert(add>build.indexOf("await deployStep('./enable-r1666-iphone-heic-upload.mjs')"));

@@ -1,0 +1,50 @@
+// R1714: poll short authenticated requests while the server converts HEIC in a queue.
+async function pb1714FinishUpload(fileId, signal) {
+    const wait = ms => new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+            const error = new Error('upload_aborted'); error.name = 'AbortError'; error.pb1714Pending = true;
+            return reject(error);
+        }
+        let timer;
+        const abort = () => {
+            clearTimeout(timer);
+            const error = new Error('upload_aborted'); error.name = 'AbortError'; error.pb1714Pending = true;
+            reject(error);
+        };
+        timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve(); }, ms);
+        signal?.addEventListener('abort', abort, { once: true });
+    });
+    let initial;
+    for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+            initial = await Me('/api/customer/uploads/complete', {
+                method: 'POST', body: JSON.stringify({ fileId }), signal
+            });
+            break;
+        } catch (error) {
+            if (signal?.aborted) { error.pb1714Pending = true; throw error; }
+            if (![502, 503, 504].includes(error?.status) || attempt === 3) throw error;
+            await wait(500 * (attempt + 1));
+        }
+    }
+    if (initial?.status !== 'processing') return initial;
+    const deadline = Date.now() + 10 * 60 * 1000;
+    let unavailable = 0;
+    while (Date.now() < deadline) {
+        await wait(1600);
+        try {
+            const result = await Me('/api/customer/uploads/status/' + encodeURIComponent(fileId), { method: 'GET', signal });
+            if (result?.status === 'ready' || (result?.ok && result?.status !== 'processing')) return result;
+            unavailable = 0;
+        } catch (error) {
+            if (signal?.aborted) { error.pb1714Pending = true; throw error; }
+            if ([502, 503, 504].includes(error?.status) && ++unavailable <= 12) continue;
+            throw error;
+        }
+    }
+    const error = new Error('print_conversion_still_processing');
+    error.status = 408;
+    error.pb1714Pending = true;
+    error.data = { error: 'print_conversion_still_processing', reason: 'فایل منتقل شده و تبدیل در سرور هنوز در جریان است؛ سفارش حذف نشده است.' };
+    throw error;
+}

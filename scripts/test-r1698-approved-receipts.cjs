@@ -6,7 +6,7 @@ test('R1698 approved customer and photographer thermal samples use the same fram
  const obj={number:123,issued_at:'2026-11-07T15:00:00Z',lab_name:'لابراتوار نمونه',lab_phone:'0261234567',lab_address:'کرج، فردیس',customer_name:'آتلیه نگار',direct_customer_name:'مریم',direct_customer_mobile:'09121111111',customer_mobile:'09120000000',total:90000,paid_total:10000,customer_total_debt:450000,items:[{description:'چاپ ۱۵×۲۱',quantity:2,unitPrice:45000,lineTotal:90000}]};
  for(const direct of [true,false]){
   const html=context.pbR1698ApprovedThermal(obj,direct);
-  for(const match of ['size:80mm auto','class="frame"','class="contact"','کالا / خدمات','لابراتوار عکاسی','تلفن لابراتوار','0261234567','کرج، فردیس','۹۰٬۰۰۰','هزار','مانده همین فاکتور'])assert(html.includes(match),match);
+  for(const match of ['size:80mm auto','padding:2mm 4mm 3mm','class="frame"','class="contact"','کالا / خدمات','لابراتوار عکاسی','تلفن لابراتوار','0261234567','کرج، فردیس','۹۰٬۰۰۰','هزار','مانده همین فاکتور'])assert(html.includes(match),match);
   assert(!html.includes('مشخصات مشتری آزاد'));assert(!html.includes('رسید خدمات چاپ و آلبوم'));
  }
  const free=context.pbR1698ApprovedThermal(obj,true);
@@ -26,9 +26,13 @@ test('R1698 printed routes and native manifest are updated after the previous in
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const js=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
   assert(js.includes('function pbR1698ApprovedThermal('),root);
+  assert(js.includes('padding:2mm 4mm 3mm'),root+' paper margins');
+  const partySource=fs.readFileSync('scripts/r1674-direct-customer-invoices.js.txt','utf8');
+  const partyFunction=partySource.slice(0,partySource.indexOf('function pb1674CustomerName'));
+  assert(js.includes(partyFunction),root+' latest party detection');
   assert(js.includes('pbR1698ApprovedThermal(t,pb1674DirectCustomer(t))'),root);
   assert(!js.includes('pb1674DirectCustomer(t)?pb1674CustomerThermal(t):pb1665Thermal(t,a)'),root);
-  assert(fs.readFileSync(root+'/index.html','utf8').includes('approvedThermal=r1698'));
+  assert(fs.readFileSync(root+'/index.html','utf8').includes('approvedThermal=r1708'));
  }
  const root='dist/web/lab-desktop-ui',m=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
  for(const name of ['index.html','assets/index-UIRefine-v655-r84.js']){

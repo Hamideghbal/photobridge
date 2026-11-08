@@ -1,0 +1,36 @@
+// R1712: recognize HEIC by its file signature, not only its name.
+async function pb1712LooksHeic(file){
+ const handle=await fs.promises.open(file,'r');
+ try{
+  const buf=Buffer.alloc(96),{bytesRead}=await handle.read(buf,0,buf.length,0);
+  if(bytesRead<16||buf.toString('ascii',4,8)!=='ftyp')return false;
+  const brands=buf.toString('ascii',8,Math.min(bytesRead,96));
+  return /heic|heix|heim|heis|hevc|hevx|mif1|msf1/i.test(brands);
+ }finally{await handle.close()}
+}
+async function pb1712ValidJpeg(file){
+ try{
+  const stat=await fs.promises.stat(file);
+  if(stat.size<100)return false;
+  const meta=await sharp(file,{failOn:'error',pages:1}).metadata();
+  return meta.format==='jpeg'&&meta.width>0&&meta.height>0;
+ }catch{return false}
+}
+async function pb1712StoreRetry(row,output,name){
+ let last;
+ for(let attempt=0;attempt<3;attempt++){
+  try{return await storePrintReadyJpeg(row,output,name)}
+  catch(error){
+   last=error;
+   if(attempt<2)await new Promise(resolve=>setTimeout(resolve,300*(attempt+1)));
+  }
+ }
+ throw last;
+}
+function pb1712FailureReason(phase,message){
+ if(phase==='storage')return 'فایل JPEG آماده شد، اما ذخیره نسخه چاپ در سرور ناموفق بود؛ دوباره تلاش کنید';
+ if(phase==='database')return 'فایل JPEG آماده شد، اما ثبت نتیجه در سفارش ناموفق بود؛ دوباره تلاش کنید';
+ if(phase==='read')return 'فایل اصلی برای تبدیل از فضای ذخیره‌سازی دریافت نشد';
+ if(phase==='verify')return 'خروجی تبدیل، JPEG معتبر و قابل چاپ نبود';
+ return printJpegFailureReason(message);
+}

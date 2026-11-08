@@ -45,8 +45,41 @@ test('R1714 browser polls processing and treats gateway timeouts as unknown, not
     for (const dir of ['dist/web','dist/web/lab-desktop-ui']) {
         const js = fs.readFileSync(dir+'/assets/index-UIRefine-v655-r84.js','utf8');
         assert(js.includes('await pb1714AwaitUploadReady(Me,An.fileId,ht.signal)'));
-        assert(js.includes('await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal)'));
+        if (js.includes('const PB1588verifyUpload=')) {
+            assert(js.includes('complete:fileId=>pb1714AwaitUploadReady(Me,fileId,ue.signal)'));
+            assert(js.includes('await PB1588verifyUpload(Gt.fileId,tt.file)'),
+                'preserve R1588 serialized completion queue');
+            assert(!js.includes('complete:fileId=>Me("/api/customer/uploads/complete"'));
+        } else {
+            assert(js.includes('await pb1714AwaitUploadReady(Me,Gt.fileId,ue.signal)'));
+        }
         assert(!js.includes('await Me("/api/customer/uploads/complete",{method:"POST"'));
         assert(fs.readFileSync(dir+'/index.html','utf8').includes('uploadComplete=r1714'));
     }
+});
+
+test('R1715 lost gateway reply for JPEG retries same fileId instead of dropping uploaded original', async () => {
+    const code = fs.readFileSync('scripts/r1714-web-upload-helper.js.txt', 'utf8');
+    const wait = new Function('setTimeout',code+';return pb1714AwaitUploadReady;')(callback => callback());
+    let complete = 0, status = 0;
+    const id = 'a0da61bb-67ac-4b07-989a-c045a40b3720';
+    const result = await wait(async (url, options) => {
+        if (url === '/api/customer/uploads/complete') {
+            complete++;
+            assert.equal(JSON.parse(options.body).fileId, id, 'reconfirm same file ID');
+            if (complete === 1) throw Object.assign(new Error('gateway_502'), {status:502});
+            return {ok:true, state:'ready'};
+        }
+        status++;
+        throw Object.assign(new Error('not yet confirmed'), {status:409, data:{error:'upload_not_confirmed'}});
+    }, id);
+    assert.equal(result.state,'ready');
+    assert.equal(complete,2);
+    assert.equal(status,1);
+});
+test('R1715 installer recognizes R1588 queued confirmation before legacy print path', () => {
+    const source=fs.readFileSync('scripts/enable-r1714-async-upload-completion.mjs','utf8');
+    assert(source.includes("js.includes('const PB1588verifyUpload=')"));
+    assert(source.includes('complete:fileId=>pb1714AwaitUploadReady(Me,fileId,ue.signal)'));
+    assert(source.includes('await PB1588verifyUpload(Gt.fileId,tt.file)'));
 });

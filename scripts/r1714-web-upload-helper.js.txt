@@ -10,6 +10,10 @@ async function pb1714AwaitUploadReady(request, fileId, signal) {
     }
     if (!response?.processing) return response;
     const deadline = Date.now() + 240000;
+    let jpegReconfirmAttempts = 0;
+    const reconfirm = () => request('/api/customer/uploads/complete', {
+        method: 'POST', body: JSON.stringify({ fileId }), signal
+    });
     while (Date.now() < deadline) {
         if (signal?.aborted) {
             const error = new Error('upload_aborted');
@@ -21,6 +25,20 @@ async function pb1714AwaitUploadReady(request, fileId, signal) {
             const status = await request('/api/customer/uploads/status/' + encodeURIComponent(fileId), { method: 'GET', signal });
             if (status?.ok && !status.processing) return status;
         } catch (error) {
+            if (Number(error?.status) === 409 &&
+                error?.data?.error === 'upload_not_confirmed' &&
+                jpegReconfirmAttempts < 2) {
+                // A gateway 502 during ordinary JPEG confirmation is ambiguous.
+                // Safely replay the same fileId; server completion is idempotent.
+                jpegReconfirmAttempts++;
+                try {
+                    const renewed = await reconfirm();
+                    if (renewed?.ok && !renewed?.processing) return renewed;
+                } catch (e) {
+                    if (![502, 503, 504].includes(Number(e?.status))) throw e;
+                }
+                continue;
+            }
             if ([502, 503, 504].includes(Number(error?.status))) continue;
             throw error;
         }

@@ -1,0 +1,16 @@
+        };
+        // R1712: decode actual HEIC data with the dedicated worker first.
+        // If it fails, keep the existing Sharp/ffmpeg alternatives.
+        let pb1712WorkerAttempted=false,pb1712Ready=false;
+        pb1712Phase='decode';
+        if(await pb1712LooksHeic(src)){
+         pb1712WorkerAttempted=true;
+         try{
+          await pb1666HeicFallback(src,output);
+          pb1712Ready=await pb1712ValidJpeg(output);
+          if(!pb1712Ready)attemptErrors.push('heic-primary:invalid_jpeg');
+         }catch(error){attemptErrors.push('heic-primary:'+String(error?.message||error))}
+        }
+        if(!pb1712Ready){
+        try {
+            await writeSharp(src, true);

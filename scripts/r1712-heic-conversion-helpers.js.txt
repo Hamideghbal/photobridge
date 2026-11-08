@@ -2,17 +2,30 @@
 async function pb1712ReadPrintOriginal(row, target) {
     const key = String(row?.object_key || '');
     if (!key) throw new Error('print_source_key_missing');
+    // R1716: when S3 HEAD/PUT succeeds but GET cannot retrieve the original,
+    // the authenticated uploader may stream the same HEIC bytes directly to
+    // this API instance. The verified file is scoped to this order file id.
+    const direct = typeof pb1716DirectSources !== 'undefined'
+        ? pb1716DirectSources.get(String(row?.id || '')) : null;
+    if (direct) {
+        const stat = await fs.promises.stat(direct.path);
+        const expected = Number(row?.bytes || 0);
+        if (!stat.isFile() || !stat.size || (expected > 0 && stat.size !== expected))
+            throw new Error('print_direct_source_size_mismatch');
+        return direct.path;
+    }
     let last;
     for (let attempt = 0; attempt < 3; attempt++) {
         const pathStyle = attempt > 0 && !key.startsWith('local/') && !!s3Download;
+        const signal = AbortSignal.timeout(pb1666IsHeic(row) ? 20000 : 60000);
         try {
             let src;
             if (pathStyle) {
-                const object = await s3Download.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }));
+                const object = await s3Download.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }), { abortSignal: signal });
                 if (!object?.Body) throw new Error('print_source_body_missing');
                 await fs.promises.mkdir(path.dirname(target), { recursive: true });
                 if (typeof object.Body.pipe === 'function') {
-                    await streamPipeline(object.Body, fs.createWriteStream(target));
+                    await streamPipeline(object.Body, fs.createWriteStream(target), { signal });
                 } else if (typeof object.Body.transformToByteArray === 'function') {
                     await fs.promises.writeFile(target, Buffer.from(await object.Body.transformToByteArray()));
                 } else {
@@ -22,7 +35,7 @@ async function pb1712ReadPrintOriginal(row, target) {
                 }
                 src = target;
             } else {
-                src = await materializeAiObjectForComposite(key, target);
+                src = await materializeAiObjectForComposite(key, target, signal);
             }
             const stat = await fs.promises.stat(src);
             const expected = Number(row?.bytes || 0);

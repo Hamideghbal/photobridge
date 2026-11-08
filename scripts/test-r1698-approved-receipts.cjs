@@ -32,7 +32,7 @@ test('R1698 printed routes and native manifest are updated after the previous in
   assert(js.includes(partyFunction),root+' latest party detection');
   assert(js.includes('pbR1698ApprovedThermal(t,pb1674DirectCustomer(t))'),root);
   assert(!js.includes('pb1674DirectCustomer(t)?pb1674CustomerThermal(t):pb1665Thermal(t,a)'),root);
-  assert(fs.readFileSync(root+'/index.html','utf8').includes('approvedThermal=r1708'));
+  assert(fs.readFileSync(root+'/index.html','utf8').includes('approvedThermal=r1709'));
  }
  const root='dist/web/lab-desktop-ui',m=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
  for(const name of ['index.html','assets/index-UIRefine-v655-r84.js']){

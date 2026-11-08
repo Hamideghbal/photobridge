@@ -20,13 +20,13 @@ test('R1705 studio and genuine customer sharing photographer upload channel rout
   if(!testCase.customer){assert(html.includes('عکاسی روشن'));assert(html.includes('09125556677'));assert(!html.includes('مشتری قبلی'));assert(!html.includes('09129998888'));}
  }
 });
-test('R1705 invoice queries return laboratory verified membership, not stale customer metadata',async()=>{
+test('R1705 invoice queries return account photographer flag despite shared customer membership',async()=>{
  const source=fs.readFileSync('dist/api/server.js','utf8');
  const {withDirectCustomerIdentityFields}=await import('./r1674-invoice-api-parties.mjs');
  assert.equal(withDirectCustomerIdentityFields(source),source,'R1674 transforms are idempotent after deploy');
  assert.equal((source.match(/END party_membership_role/g)||[]).length,3);
  assert(source.includes('party_membership_role: order.party_membership_role'));
- assert(source.includes("pb_member.role IN ('coworker','photographer')"));
+ assert(source.includes("WHEN COALESCE(u.photographer_enabled,false) THEN 'coworker'"));
  assert(source.includes("pb_member.role='customer'"));
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  assert(build.indexOf("await deployStep('./enable-r1674-direct-customer-invoice.mjs')") < build.indexOf("runR1314(process.execPath,['--test','scripts/test-r1705-verified-receipt-role.cjs']"));

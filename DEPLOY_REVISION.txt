@@ -1,1 +1,1 @@
-2026-11-08-r1711-independent-lab-print-frame-rotation
+2026-11-08-r1712-heic-verified-jpeg-conversion

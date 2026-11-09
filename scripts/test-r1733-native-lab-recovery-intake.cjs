@@ -77,7 +77,12 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   .replace(/^import [^\n]+\n/gm,'');
  const intake=read('dist/web/photobridge-r1137-lab-local-intake.js');
  const header=read('dist/web/photobridge-r1147-lab-admin-header.js');
- for(const changed of [false,true]){
+ // R1188 runs before the final native snapshot in production. It replaces
+ // the legacy source selector with route-aware queue prioritization.
+ const baseSource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
+ const upstreamSource="const queueRoute=location.pathname.startsWith('/lab/orders');const source=queueRoute?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
+ assert(header.includes(baseSource));
+ for(const changed of [false,true,'R1188']){
   const prefix='dist/web/lab-desktop-ui/';
   const modified=changed?intake
    .replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent='متن اصلاح‌شده توسط مرحلهٔ قبلی';")
@@ -85,7 +90,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
    .replaceAll("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2','پنجرهٔ سفارش'));"):intake;
   const files=new Map([
    [prefix+'photobridge-r1137-lab-local-intake.js',modified],
-   [prefix+'photobridge-r1147-lab-admin-header.js',header],
+   [prefix+'photobridge-r1147-lab-admin-header.js',changed==='R1188'?header.replace(baseSource,upstreamSource):header],
    ['scripts/r1733-native-intake.css',read('scripts/r1733-native-intake.css')],
    ['scripts/r1733-native-auth-help.js',read('scripts/r1733-native-auth-help.js')],
    [prefix+'index.html','<html><head></head><body></body></html>'],
@@ -106,6 +111,9 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   assert(built.includes("pb1733DialogHeading.textContent=pb1733IntakeLabel()"));
   assert(built.includes("const button=old||node('button',pb1733IntakeLabel()"));
   assert(built.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
+  const nativeHeader=files.get(prefix+'photobridge-r1147-lab-admin-header.js');
+  assert(nativeHeader.includes('PB1736 native current queue source'),'R1188 queue header must be accepted');
+  assert(nativeHeader.includes('PB1733 keep intake across header rebuild'));
   const manifest=JSON.parse(files.get(prefix+'manifest.json'));
   assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
   assert.equal(manifest.files.length,5);

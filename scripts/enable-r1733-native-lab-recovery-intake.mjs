@@ -17,23 +17,25 @@ const nativeMount=[
  " const old=document.getElementById('pb1137LocalIntakeButton');",
  " const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);",
  " if(!workspace||!queue){old?.remove();return;}",
- " // R1735: the secondary header is a sibling of <main>, not inside it.",
- " // Never mount on mainQueueFilters: the header clones tabs and hides that source.",
- " const header=workspace.querySelector('.pb1148SecondaryHeader.pb1174QueueNav');",
- " const target=header||workspace.querySelector('.labSingleHeader');",
- " if(!target)return;",
+ " // R1736: an inactive filter strip can exist while the visible header is elsewhere.",
+ " const visible=el=>!!el&&el.hidden!==true&&(typeof el.getClientRects!=='function'||el.getClientRects().length>0);",
+ " const secondary=workspace.querySelector('.pb1148SecondaryHeader.pb1174QueueNav');",
+ " const top=workspace.querySelector('.labSingleHeader');",
+ " const target=visible(secondary)?secondary:visible(top)?top:workspace;",
  " const button=old||node('button',pb1733IntakeLabel(),'pb1137Launch');",
  " if(!old){button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;}",
+ " if(button.classList?.contains&&!button.classList.contains('pb1736NativeWalkin'))button.classList.add('pb1736NativeWalkin');",
+ " if(button.dataset)button.dataset.pbNativeIntakeVersion='r1736';",
+ " if(button.hidden)button.hidden=false;",
  " const label=opening?'در حال آماده‌سازی…':pb1733IntakeLabel();",
  " if(button.textContent!==label)button.textContent=label;",
- " const aria=pb1733IntakeLabel();",
- " if(button.getAttribute('aria-label')!==aria)button.setAttribute('aria-label',aria);",
- " // Show the action even after folder-marker loss; opening checks real eligibility.",
+ " if(button.getAttribute('aria-label')!==pb1733IntakeLabel())button.setAttribute('aria-label',pb1733IntakeLabel());",
+ " // Keep the action visible; the existing open() checks server primary, folder and permissions.",
  " if(!opening&&button.disabled)button.disabled=false;",
  " let paired=false;try{paired=!!storage()?.deviceId?.();}catch{}",
- " const hint=!paired?'مسیر ذخیره‌سازی یا دستگاه اصلی را بررسی کنید؛ برای مشاهده علت، روی ثبت سفارش بزنید.':",
- "  primaryState===false?'تأیید دستگاه اصلی هنگام بازکردن سفارش دوباره بررسی می‌شود.':",
- "  'ثبت سفارش حضوری؛ پیش از ثبت، وضعیت دستگاه اصلی دوباره بررسی می‌شود.';",
+ " const hint=!paired?'برای ثبت سفارش، وضعیت دستگاه اصلی و پوشه را بررسی کنید.':",
+ "  primaryState===false?'دستگاه اصلی هنگام بازکردن فرم دوباره تأیید می‌شود.':",
+ "  'ثبت سفارش حضوری در برنامه ویندوز';",
  " if(button.title!==hint)button.title=hint;",
  " if(button.parentElement!==target)target.prepend(button);",
  " if(paired&&primaryState===null&&!checking)checkPrimary();",
@@ -71,6 +73,11 @@ execFileSync(process.execPath,['--check',loc],{stdio:'inherit'});
 // Preserve the original intake button when a secondary-tab refresh rebuilds its row.
 const headerName='photobridge-r1147-lab-admin-header.js',hpath=root+'/'+headerName;
 let header=fs.readFileSync(hpath,'utf8');
+const nativeHeaderSource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
+const nativeQueueSource="/* PB1736 native current queue source */const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);const source=queue?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
+if(header.includes(nativeHeaderSource))header=one(header,nativeHeaderSource,nativeQueueSource,'native queue prioritization');
+else if(!header.includes('PB1736 native current queue source'))throw Error('R1736 missing native queue source');
+
 if(!header.includes('/* PB1733 keep intake across header rebuild */')){
  header=one(header,'  row.replaceChildren();',
   "  const pb1733Intake=row.querySelector('#pb1137LocalIntakeButton');\n  row.replaceChildren();\n  if(pb1733Intake)row.prepend(pb1733Intake);\n  /* PB1733 keep intake across header rebuild */",
@@ -85,7 +92,7 @@ for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
 const htmlPath=root+'/index.html';
 let html=fs.readFileSync(htmlPath,'utf8');
 if(!html.includes('r1733-native-intake.css')){
- html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1735">\n</head>','CSS inclusion');
+ html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1736">\n</head>','CSS inclusion');
 }
 if(!html.includes('r1733-native-auth-help.js')){
  html=one(html,'</body>','<script defer src="/r1733-native-auth-help.js?v=r1733"></script>\n</body>','recovery helper inclusion');
@@ -94,7 +101,7 @@ if(!html.includes('r1733-native-auth-help.js')){
 const nativeIntakeScript=/photobridge-r1137-lab-local-intake\.js\?[^"'\s<>]+/g;
 const nativeHits=[...html.matchAll(nativeIntakeScript)];
 if(nativeHits.length>1)throw Error('R1735 duplicate native intake script URL');
-if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1735')?url:url+'&nativeQueue=r1735');
+if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1736')?url:url+'&nativeQueue=r1736');
 fs.writeFileSync(htmlPath,html);
 const manifestPath=root+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

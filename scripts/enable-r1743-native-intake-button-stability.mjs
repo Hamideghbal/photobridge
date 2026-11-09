@@ -44,7 +44,7 @@ if(!header.includes('/* PB1743 preserve native launch while rebuilding header */
   "   /* PB1743 preserve native launch while rebuilding header */\n   const retainedLaunch=row.querySelector('#pb1137LocalIntakeButton');\n   row.replaceChildren();\n   if(retainedLaunch){retainedLaunch.classList.add('pb1174QueueLaunch');row.prepend(retainedLaunch);}",
   'header rebuild keeps original launch');
  header=replace(header,
-  '  if(isQueue&&intake&&intake.parentElement!==row)row.prepend(intake);',
+  'if(isQueue&&intake&&intake.parentElement!==row)row.prepend(intake);',
   "  if(isQueue&&intake){intake.classList.add('pb1174QueueLaunch');if(intake.parentElement!==row)row.prepend(intake);}",
   'header retains one real launch');
  fs.writeFileSync(headerPath,header);

@@ -1,0 +1,76 @@
+/* R1727 — top row order on the MOBILE photographer/login card:
+   logo → PhotoBridge → Persian portal title (right to left).
+   Keep the R1726 keyboard top anchor and PWA install banner intact. */
+@media screen and (max-width:767px) {
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard {
+    display:grid!important;
+    grid-template-columns:max-content minmax(0,1fr)!important;
+    grid-auto-rows:min-content!important;
+    column-gap:9px!important;
+    row-gap:7px!important;
+    align-items:center!important;
+    padding:13px 14px!important;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > * {
+    grid-column:1 / -1;
+    min-width:0;
+  }
+  /* First logical column is on the right in the site's RTL layout. */
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .unifiedLoginBrand {
+    grid-column:1!important;
+    grid-row:1!important;
+    display:inline-flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:7px!important;
+    margin:0!important;
+    padding:0 0 0 9px!important;
+    min-height:38px!important;
+    border-inline-end:1px solid #e2e8f2;
+    white-space:nowrap!important;
+    direction:rtl!important;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .unifiedLoginBrand .unifiedLoginLogo {
+    order:0;
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+    object-fit:contain;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .unifiedLoginBrand b {
+    order:1;
+    font-size:16px!important;
+    line-height:1.35!important;
+    direction:ltr!important;
+    white-space:nowrap!important;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .authTitle {
+    grid-column:2!important;
+    grid-row:1!important;
+    align-self:center!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:right!important;
+    min-width:0!important;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .authTitle h1 {
+    margin:0!important;
+    font-size:15px!important;
+    font-weight:800!important;
+    line-height:1.55!important;
+    white-space:normal!important;
+    overflow-wrap:normal;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .authTitle p {
+    display:none!important;
+  }
+  /* Everything after the header remains full-width, including the login button. */
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > label,
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > button,
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .authFooterLinks,
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard > .alert {
+    grid-column:1 / -1!important;
+  }
+  /* Keep keyboard focus behavior and installed-app banner as implemented in R1726. */
+}

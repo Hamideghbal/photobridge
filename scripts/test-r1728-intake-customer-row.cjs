@@ -164,3 +164,15 @@ test('both real site and Windows Lab delivery have the styling, updated cache an
  }
  assert.equal(m.build,sha(JSON.stringify(m.files)));
 });
+
+
+test('R1730 build patch accepts upstream SMS label and title changes',()=>{
+ const installer=fs.readFileSync('scripts/enable-r1728-intake-customer-row.mjs','utf8');
+ assert(installer.includes("const smsAnchor=src.includes(smsMount)?smsMount:smsChange;"),
+   'use a stable checkbox mount/fallback rather than a historic SMS label');
+ assert(installer.includes("src=once(src,smsAnchor,smsAnchor+'\\n'+smsLines,'SMS checkbox mount');"));
+ assert(!installer.includes("'SMS type label'"),'a changed upstream label must not block Liara');
+ assert(!installer.includes("'SMS explanatory title'"),'a changed tooltip must not block Liara');
+ assert(installer.includes("c.registrationPending?'ارسال پیامک دعوت‌نامه پس از ثبت سفارش'"));
+ assert(installer.includes("c.registrationPending?'پس از ثبت سفارش، پیامک دعوت‌نامه عضویت"));
+});

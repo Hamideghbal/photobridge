@@ -48,7 +48,10 @@ function harness(data){
     origin:'https://photobridge.ir',
     href:'https://photobridge.ir/photographer/orders/flow?workspace=print&pbLabChooser=1'
   };
-  const window={__pbR100F5PrimaryLab:''};
+  // In a real browser, global addEventListener and window.addEventListener are the same API.
+  // The production chooser may use either form after the late-stage installers.
+  const addEventListener=(event,fn)=>{events['window:'+event]=fn};
+  const window={__pbR100F5PrimaryLab:'',addEventListener};
   const sessionStorage={getItem(){return null},setItem(){}};
   const history={pushState(){},replaceState(){}};
   const fetch=async url=>{
@@ -56,8 +59,9 @@ function harness(data){
     calls++;
     return {ok:true,json:async()=>data};
   };
-  const addEventListener=(event,fn)=>events['window:'+event]=fn;
   const queueMicrotask=fn=>Promise.resolve().then(fn);
+  window.document=document;
+  window.location=location;
   vm.runInNewContext(script,{
     window,document,location,sessionStorage,history,fetch,addEventListener,queueMicrotask,
     setInterval(){},setTimeout(){},URLSearchParams,console:{warn(){}}

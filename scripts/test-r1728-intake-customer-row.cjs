@@ -107,6 +107,9 @@ test('pre-registered photographer has ONE checkbox for invitation and no resend 
   const f=makeMenuFixture(js,true);
   await f.select();
   const sms=f.sendToggle();
+  // R1467 re-parents checkbox and action buttons inside a dedicated row.
+  if(dir==='dist/web')assert(f.traverse(f.parent,n=>n.className==='pb1467AccountActionRow'),
+    'older R1467 account-action row must remain connected after node moves');
   assert(sms,dir+' SMS checkbox missing');
   assert.equal(sms.attributes['aria-label'],'ارسال پیامک دعوت‌نامه پس از ثبت سفارش');
   assert.equal(f.traverse(f.parent,n=>n.className==='pb1294ResendInvite'),null);

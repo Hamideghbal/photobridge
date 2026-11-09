@@ -1,4 +1,4 @@
-// R1743: fix the real Windows Lab launch button after a native UI hot update.
+// R1743 / R1744: keep the real Windows Lab intake button visible, without ever removing it as a legacy proxy.
 // No proxy controls, no new permission APIs, no changes to orders or local files.
 // The original mount placed the button under .mainQueueFilters, which the
 // R1147 desktop header CSS hides after it creates .pb1174QueueNav. Its
@@ -11,6 +11,15 @@ const replace=(source,from,to,label)=>{
  const n=source.split(from).length-1;
  if(n!==1)throw Error('[R1743] '+label+' anchor count '+n);
  return source.replace(from,to);
+};
+
+const extendRootQueue=(source,prefix,label)=>{
+ const i=source.indexOf(prefix);
+ if(i<0||source.indexOf(prefix,i+prefix.length)!==-1)throw Error('[R1744] '+label+' selector missing or repeated');
+ const end=source.indexOf('\n',i),line=source.slice(i,end<0?undefined:end);
+ if(!line.includes('&&/^')||!line.endsWith('.test(location.pathname);'))throw Error('[R1744] '+label+' predicate changed');
+ const expanded=line.replace('&&/^',"&&((location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace'))||/^").replace(/\.test\(location\.pathname\);$/,'.test(location.pathname));');
+ return source.slice(0,i)+expanded+source.slice(end<0?source.length:end);
 };
 const intakeName='photobridge-r1137-lab-local-intake.js';
 const intakePath=root+'/'+intakeName;
@@ -27,6 +36,8 @@ if(!intake.includes('/* PB1743 native button target */')){
  // Retain the established v2268 native callback exactly as earlier stages
  // generated it. The visible-header target fixes its placement; no click-hook
  // rewrite, proxy action, or registration change is needed.
+ /* PB1744 root /lab queues and protected primary button */
+ intake=extendRootQueue(intake,' const desktopQueue=','native root queue');
  fs.writeFileSync(intakePath,intake);
 }
 execFileSync(process.execPath,['--check',intakePath],{stdio:'inherit'});
@@ -41,12 +52,14 @@ let header=fs.readFileSync(headerPath,'utf8');
 if(!header.includes('/* PB1743 preserve native launch while rebuilding header */')){
  header=replace(header,
   '  row.replaceChildren();',
-  "   /* PB1743 preserve native launch while rebuilding header */\n   const retainedLaunch=row.querySelector('#pb1137LocalIntakeButton');\n   row.replaceChildren();\n   if(retainedLaunch){retainedLaunch.classList.add('pb1174QueueLaunch');row.prepend(retainedLaunch);}",
+  "   /* PB1743 preserve native launch while rebuilding header */\n   const retainedLaunch=row.querySelector('#pb1137LocalIntakeButton');\n   row.replaceChildren();\n   if(retainedLaunch){retainedLaunch.classList.remove('pb1174QueueLaunch');row.prepend(retainedLaunch);}",
   'header rebuild keeps original launch');
  header=replace(header,
   'if(isQueue&&intake&&intake.parentElement!==row)row.prepend(intake);',
-  "  if(isQueue&&intake){intake.classList.add('pb1174QueueLaunch');if(intake.parentElement!==row)row.prepend(intake);}",
+  "  if(isQueue&&intake){intake.classList.remove('pb1174QueueLaunch');if(intake.parentElement!==row)row.prepend(intake);}",
   'header retains one real launch');
+ header=extendRootQueue(header," const isQueue=source.classList.contains('mainQueueFilters')&&",'native header root queue');
+ header=replace(header,"row.querySelector(':scope>.pb1174QueueLaunch')?.remove();","row.querySelector(':scope>.pb1174QueueLaunch:not(#pb1137LocalIntakeButton)')?.remove();",'only legacy proxy may be removed');
  fs.writeFileSync(headerPath,header);
 }
 execFileSync(process.execPath,['--check',headerPath],{stdio:'inherit'});

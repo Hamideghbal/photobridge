@@ -103,6 +103,15 @@ for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
  fs.copyFileSync('scripts/'+name,root+'/'+name);
  if(name.endsWith('.js'))execFileSync(process.execPath,['--check',root+'/'+name],{stdio:'inherit'});
 }
+// R1739: the desktop overlay is copied early by prepare-lab-desktop-ui.mjs.
+// Later native diagnostics must be recopied into the actual downloadable
+// snapshot, not just edited under apps/lab-desktop/.
+const overlaySource='apps/lab-desktop/desktop-overlay.js';
+const overlayTarget=root+'/desktop-overlay.js';
+const overlay=fs.readFileSync(overlaySource,'utf8');
+if(!overlay.includes('تشخیص ثبت سفارش حضوری: '))throw Error('R1739 missing live native intake diagnostics');
+fs.writeFileSync(overlayTarget,overlay);
+execFileSync(process.execPath,['--check',overlayTarget],{stdio:'inherit'});
 const htmlPath=root+'/index.html';
 let html=fs.readFileSync(htmlPath,'utf8');
 if(!html.includes('r1733-native-intake.css')){
@@ -125,7 +134,7 @@ fs.writeFileSync(htmlPath,html);
 const manifestPath=root+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
 if(manifest.protocol!==1||manifest.channel!=='lab'||!Array.isArray(manifest.files))throw Error('R1733 invalid Lab UI manifest');
-for(const name of [intake,headerName,'r1733-native-intake.css','r1733-native-auth-help.js','index.html']){
+for(const name of [intake,headerName,'r1733-native-intake.css','r1733-native-auth-help.js','desktop-overlay.js','index.html']){
  const bytes=fs.readFileSync(root+'/'+name),sha=hash(bytes);
  const entry=manifest.files.find(x=>x.name===name);
  if(entry){entry.sha256=sha;}else{manifest.files.push({name,url:'/lab-desktop-ui/'+name,sha256:sha});}

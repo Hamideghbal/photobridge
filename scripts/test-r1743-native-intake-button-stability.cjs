@@ -17,7 +17,7 @@ function launch({navVisible=true,preexisting=false,pathname='/lab/orders'}={}){
    append(child){if(child.parentElement){child.parentElement.children=child.parentElement.children.filter(c=>c!==child)}this.children.push(child);child.parentElement=this;}};
  }
  const host=element(),nav=element(),top=element(),hiddenFilters=element(),plainOrders=element();
- const originalButton=element();originalButton.id='pb1137LocalIntakeButton';
+ const originalButton=element();originalButton.id='pb1137LocalIntakeButton';originalButton.onclick=()=>{};
  if(preexisting){hiddenFilters.append(originalButton);elements.set(originalButton.id,originalButton);}
  host.querySelector=selector=>{
   if(selector==='.labQueueQuickIntroV464 button')return null;

@@ -1,1 +1,1 @@
-2026-11-10-r1743-v2268-native-intake-button-and-safe-stuck-order-cancel
+2026-11-10-r1744-native-intake-protected-from-legacy-proxy-cleanup

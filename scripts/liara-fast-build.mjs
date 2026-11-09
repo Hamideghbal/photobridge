@@ -1078,3 +1078,11 @@ runR1314(process.execPath,['--test','scripts/test-r1728-intake-customer-row.cjs'
 // login screen (hidden and visible states); keep top anchor and Windows UI intact.
 await deployStep('./enable-r1729-login-password-clearance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1729-login-password-clearance.cjs'],{stdio:'inherit'});
+
+// R1733: Windows Lab-only: restore BOTH in-person print/album buttons in
+// the second header and send OTP recovery to the safe public browser page.
+// The existing server-side primary-device check remains mandatory. Website
+// login, site header, customers and Web intake are unchanged.
+await deployStep('./enable-r1733-native-lab-recovery-intake.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1733-native-lab-recovery-intake.cjs'],{stdio:'inherit'});
+

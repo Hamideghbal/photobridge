@@ -1,1 +1,1 @@
-2026-11-09-r1722-lab-chooser-city-grouping
+2026-11-09-r1723-uppercase-storage-and-deploy-guard

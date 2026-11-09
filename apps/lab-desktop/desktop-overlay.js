@@ -76,6 +76,10 @@
      'آخرین دریافت: '+date(s.uiDownloadedAt),
      'آخرین اعمال: '+date(s.uiAppliedAt)
    ])element('p',line,panel);
+   // A downloaded UI build is not necessarily the last verified/applied one.
+   const shortBuild=value=>/^[a-f0-9]{64}$/.test(String(value||''))?String(value).slice(0,12):'ثبت نشده';
+   element('p','شناسه رابط دانلودشده: '+shortBuild(s.uiBuild),panel);
+   element('p','شناسه رابط سالم ثبت‌شده: '+shortBuild(s.uiKnownGoodBuild),panel);
    const walkin=window.pb1738RescueStatus;
    const walkinDetail=!walkin?'کد R1738 اجرا نشده':walkin.nativeVisible?'دکمه اصلی قابل نمایش است':walkin.rescueVisible?'دکمه جایگزین فعال است':walkin.openHook?'فرم بارگذاری شده، اما دکمه هنوز نمایش داده نشده':'تابع بازکردن فرم اجرا نشده';
    element('p','تشخیص ثبت سفارش حضوری: '+walkinDetail,panel);

@@ -66,3 +66,45 @@ test('R1733 Windows localhost proxy forwards public OTP endpoints but rejects un
   assert.equal(sent.password,'  sEcRet+78  ');
  }finally{await new Promise(resolve=>srv.close(resolve))}
 });
+
+
+test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
+ const vm=require('node:vm');
+ const patch=read('scripts/enable-r1733-native-lab-recovery-intake.mjs')
+  .replace(/^import [^\n]+\n/gm,'');
+ const intake=read('dist/web/photobridge-r1137-lab-local-intake.js');
+ const header=read('dist/web/photobridge-r1147-lab-admin-header.js');
+ for(const changed of [false,true]){
+  const prefix='dist/web/lab-desktop-ui/';
+  const modified=changed?intake
+   .replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent='متن اصلاح‌شده توسط مرحلهٔ قبلی';")
+   .replaceAll("modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');","modal.setAttribute('aria-label','پنجرهٔ سفارش';")
+   .replaceAll("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2','پنجرهٔ سفارش'));"):intake;
+  const files=new Map([
+   [prefix+'photobridge-r1137-lab-local-intake.js',modified],
+   [prefix+'photobridge-r1147-lab-admin-header.js',header],
+   ['scripts/r1733-native-intake.css',read('scripts/r1733-native-intake.css')],
+   ['scripts/r1733-native-auth-help.js',read('scripts/r1733-native-auth-help.js')],
+   [prefix+'index.html','<html><head></head><body></body></html>'],
+   [prefix+'manifest.json',JSON.stringify({protocol:1,channel:'lab',files:[]})]
+  ]);
+  const fsMock={
+   readFileSync:p=>{assert(files.has(p),'missing fixture '+p);return files.get(p)},
+   writeFileSync:(p,v)=>files.set(p,v),
+   copyFileSync:(a,b)=>{assert(files.has(a),'missing fixture '+a);files.set(b,files.get(a))}
+  };
+  const run=new Function('fs','crypto','execFileSync','process','console',patch);
+  const verify=(_node,args)=>{const content=files.get(args.at(-1));assert(content);assert.doesNotThrow(()=>new vm.Script(content))};
+  const invoke=()=>run(fsMock,crypto,verify,{execPath:process.execPath},{log(){}});
+  assert.doesNotThrow(invoke,'build should tolerate legacy label changes');
+  // A second execution must be safe for repeated local builds.
+  assert.doesNotThrow(invoke,'native patch should be idempotent');
+  const built=files.get(prefix+'photobridge-r1137-lab-local-intake.js');
+  assert(built.includes("pb1733DialogHeading.textContent=pb1733IntakeLabel()"));
+  assert(built.includes("const button=old||node('button',pb1733IntakeLabel()"));
+  assert(built.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
+  const manifest=JSON.parse(files.get(prefix+'manifest.json'));
+  assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
+  assert.equal(manifest.files.length,5);
+ }
+});

@@ -50,12 +50,61 @@ execFileSync(process.execPath,['--check',entryPath],{stdio:'inherit'});
 const bundlePath='dist/web/assets/index-UIRefine-v655-r84.js';
 let bundle=fs.readFileSync(bundlePath,'utf8');
 if(!bundle.includes('pb1721MobileEntryPending')){
-  const anchor='if(location.pathname==="/photographer"||location.pathname==="/photographer/login"||location.pathname==="/login"){const b=';
-  const replacement='if(location.pathname==="/photographer"||location.pathname==="/photographer/login"||location.pathname==="/login"){'+
+  const anchor='location.pathname==="/photographer"||location.pathname==="/photographer/login"||location.pathname==="/login"){const b=';
+  const replacement='location.pathname==="/photographer"||location.pathname==="/photographer/login"||location.pathname==="/login"){'+
     'if(window===window.top&&window.matchMedia?.("(max-width:820px)")?.matches&&!be.has("logged_out")&&!be.has("walletPayment")&&!be.has("pbEntryDone")&&be.get("workspace")!=="print"&&be.get("pbLabChooser")!=="1"&&(location.pathname==="/photographer"||location.pathname==="/photographer/login")){'+
     'document.documentElement.classList.add("pb1721MobileEntryPending");'+
-    'if(location.pathname==="/photographer/login")Dn("/photographer",!0);return}const b=';
+    'if(location.pathname==="/photographer/login")Dn("/photographer",!0)}else{const b=';
   bundle=one(bundle,anchor,replacement,'React auto Gallery/AI redirect');
+  // The effect must retain its React popstate cleanup after either branch.
+  const tick=String.fromCharCode(96);
+  const suffix='Dn('+tick+'
+  fs.writeFileSync(bundlePath,bundle);
+}
+execFileSync(process.execPath,['--check',bundlePath],{stdio:'inherit'});
+
+const htmlFile='dist/web/index.html';
+let html=fs.readFileSync(htmlFile,'utf8');
+const prepaint="<script id=\"pb1721MobileFirstEntry\">try{const p=location.pathname.replace(/\\/+$/,'')||'/',q=new URLSearchParams(location.search);if(window===window.top&&window.matchMedia('(max-width:820px)').matches&&p==='/photographer'&&!q.has('logged_out')&&!q.has('walletPayment')&&!q.has('pbEntryDone')&&q.get('pbLabChooser')!=='1'&&q.get('workspace')!=='print'){document.documentElement.classList.add('pb1721MobileEntryPending');setTimeout(()=>document.documentElement.classList.remove('pb1721MobileEntryPending'),6500)}}catch{}</script><style id=\"pb1721MobileFirstEntryStyle\">@media(max-width:820px){html.pb1721MobileEntryPending body #root{visibility:hidden!important;pointer-events:none!important}html.pb1721MobileEntryPending body #pbR1361MobileSplash{display:block!important}}</style>";
+if(!html.includes('id="pb1721MobileFirstEntry"'))html=one(html,'<head>','<head>\n'+prepaint+'\n','early mobile prepaint');
+html=one(html,
+  'photobridge-r100f5-entry-routing.js?v=r1720',
+  'photobridge-r100f5-entry-routing.js?v=r1721',
+  'mobile first-entry script cache');
+fs.writeFileSync(htmlFile,html);
+console.log('[R1721] Mobile entry resolves invite destination without Gallery flash or duplicate page load; desktop and Windows unchanged.');
++'{b}
+  fs.writeFileSync(bundlePath,bundle);
+}
+execFileSync(process.execPath,['--check',bundlePath],{stdio:'inherit'});
+
+const htmlFile='dist/web/index.html';
+let html=fs.readFileSync(htmlFile,'utf8');
+const prepaint="<script id=\"pb1721MobileFirstEntry\">try{const p=location.pathname.replace(/\\/+$/,'')||'/',q=new URLSearchParams(location.search);if(window===window.top&&window.matchMedia('(max-width:820px)').matches&&p==='/photographer'&&!q.has('logged_out')&&!q.has('walletPayment')&&!q.has('pbEntryDone')&&q.get('pbLabChooser')!=='1'&&q.get('workspace')!=='print'){document.documentElement.classList.add('pb1721MobileEntryPending');setTimeout(()=>document.documentElement.classList.remove('pb1721MobileEntryPending'),6500)}}catch{}</script><style id=\"pb1721MobileFirstEntryStyle\">@media(max-width:820px){html.pb1721MobileEntryPending body #root{visibility:hidden!important;pointer-events:none!important}html.pb1721MobileEntryPending body #pbR1361MobileSplash{display:block!important}}</style>";
+if(!html.includes('id="pb1721MobileFirstEntry"'))html=one(html,'<head>','<head>\n'+prepaint+'\n','early mobile prepaint');
+html=one(html,
+  'photobridge-r100f5-entry-routing.js?v=r1720',
+  'photobridge-r100f5-entry-routing.js?v=r1721',
+  'mobile first-entry script cache');
+fs.writeFileSync(htmlFile,html);
+console.log('[R1721] Mobile entry resolves invite destination without Gallery flash or duplicate page load; desktop and Windows unchanged.');
++'{location.search}
+  fs.writeFileSync(bundlePath,bundle);
+}
+execFileSync(process.execPath,['--check',bundlePath],{stdio:'inherit'});
+
+const htmlFile='dist/web/index.html';
+let html=fs.readFileSync(htmlFile,'utf8');
+const prepaint="<script id=\"pb1721MobileFirstEntry\">try{const p=location.pathname.replace(/\\/+$/,'')||'/',q=new URLSearchParams(location.search);if(window===window.top&&window.matchMedia('(max-width:820px)').matches&&p==='/photographer'&&!q.has('logged_out')&&!q.has('walletPayment')&&!q.has('pbEntryDone')&&q.get('pbLabChooser')!=='1'&&q.get('workspace')!=='print'){document.documentElement.classList.add('pb1721MobileEntryPending');setTimeout(()=>document.documentElement.classList.remove('pb1721MobileEntryPending'),6500)}}catch{}</script><style id=\"pb1721MobileFirstEntryStyle\">@media(max-width:820px){html.pb1721MobileEntryPending body #root{visibility:hidden!important;pointer-events:none!important}html.pb1721MobileEntryPending body #pbR1361MobileSplash{display:block!important}}</style>";
+if(!html.includes('id="pb1721MobileFirstEntry"'))html=one(html,'<head>','<head>\n'+prepaint+'\n','early mobile prepaint');
+html=one(html,
+  'photobridge-r100f5-entry-routing.js?v=r1720',
+  'photobridge-r100f5-entry-routing.js?v=r1721',
+  'mobile first-entry script cache');
+fs.writeFileSync(htmlFile,html);
+console.log('[R1721] Mobile entry resolves invite destination without Gallery flash or duplicate page load; desktop and Windows unchanged.');
++'{location.hash}'+tick+',!0)}return()=>window.removeEventListener("popstate",P)';
+  bundle=one(bundle,suffix,suffix.replace('!0)}return','!0)}}return'),'React route effect cleanup');
   fs.writeFileSync(bundlePath,bundle);
 }
 execFileSync(process.execPath,['--check',bundlePath],{stdio:'inherit'});

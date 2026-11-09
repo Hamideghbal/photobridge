@@ -126,3 +126,20 @@
   html.pbR1302LoginFocus #pbR1726InstallBanner{display:none!important}
 }
 @media screen and (min-width:768px){#pbR1726InstallBanner{display:none!important}}
+
+
+/* R1729: the password Show/Hide control is positioned at the LEFT of this LTR
+   input. R1726's shorthand 'padding:5px 10px!important' had overridden the
+   66–72px clearance in the original passwordField CSS on mobile, causing the
+   first typed characters (masked and visible) to render under the button.
+   This selector is deliberately narrower than all form inputs. */
+@media screen and (max-width:767px){
+  html body #root .unifiedLoginPage form.unifiedLoginCard .passwordField > input,
+  html body.pbR100F28PortalLogin form.unifiedLoginCard .passwordField > input,
+  html body.pbR100F28PortalLogin form.rentalUnifiedLogin .passwordField > input,
+  html body.pbR100F28PortalLogin form.labLogin .passwordField > input {
+    box-sizing:border-box!important;
+    padding-left:76px!important;
+    padding-right:12px!important;
+  }
+}

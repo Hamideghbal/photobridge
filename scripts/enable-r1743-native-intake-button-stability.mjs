@@ -50,7 +50,7 @@ if(!header.includes('/* PB1743 preserve native launch while rebuilding header */
  fs.writeFileSync(headerPath,header);
 }
 execFileSync(process.execPath,['--check',headerPath],{stdio:'inherit'});
-if(!header.includes('row.querySelector(\':scope>button[data-pb1173-index]\')'))throw Error('[R1743] original header tab routing missing');
+if(!header.includes("row.querySelector(':scope>button[data-pb1173-index]"))throw Error('[R1743] original header tab routing missing');
 
 const cssName='photobridge-r1147-lab-admin-header.css';
 const cssPath=root+'/'+cssName;

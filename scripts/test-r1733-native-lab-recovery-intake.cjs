@@ -12,7 +12,7 @@ test('R1733 Windows lab header retains one walk-in action for print and album; s
  assert(js.includes("'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری'"));
  assert(js.includes('if(button.textContent!==label)button.textContent=label'));
  assert(js.includes('if(!opening&&button.disabled)button.disabled=false'));
- assert(js.includes("const target=header||workspace.querySelector('.labSingleHeader')"));
+ assert(js.includes('const target=visible(secondary)?secondary:visible(top)?top:workspace;'));
  assert(!js.includes("host.querySelector('.mainQueueFilters')"));
  assert(!js.includes('if(!primaryState){old?.remove();return;}'));
  assert(js.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
@@ -31,7 +31,7 @@ test('R1733 release is isolated to native UI, has valid hashes and safe browser 
  }
  const nativeIndex=read(base+'index.html'),help=read(base+'r1733-native-auth-help.js');
  assert(nativeIndex.includes('/r1733-native-intake.css?v=r1733'));
- assert(nativeIndex.includes('nativeQueue=r1735'));
+ assert(nativeIndex.includes('nativeQueue=r1736'));
  assert(nativeIndex.includes('/r1733-native-auth-help.js?v=r1733'));
  assert(help.includes("https://photobridge.ir/account-recovery.html"));
  assert(help.includes('event.stopImmediatePropagation()'));
@@ -121,7 +121,7 @@ test('R1735 visible native walk-in action survives hidden filters and lost marke
  let path='/lab/orders',current=null,secondaryVisible=true,paired=false,checkingCalls=0;
  const createTarget=name=>({name,prepends:0,prepend(button){this.prepends++;button.parentElement=this;}});
  const top=createTarget('top'),secondary=createTarget('secondary');
- const workspace={querySelector:selector=>selector==='.pb1148SecondaryHeader.pb1174QueueNav'?(secondaryVisible?secondary:null):selector==='.labSingleHeader'?top:null};
+ const workspace={querySelector:selector=>selector==='.pb1148SecondaryHeader.pb1174QueueNav'?(secondaryVisible?secondary:null):selector==='.labSingleHeader'?top:null,prepend(button){button.parentElement=this;}};
  const doc={querySelector:selector=>selector==='.labRoleWorkspace'?workspace:null,getElementById:id=>id==='pb1137LocalIntakeButton'?current:null};
  const makeButton=(tag,text,cls)=>{assert.equal(tag,'button');return current={textContent:text,className:cls,disabled:false,parentElement:null,attrs:{},setAttribute(k,v){this.attrs[k]=v},getAttribute(k){return this.attrs[k]||null},remove(){this.parentElement=null;}};};
  const label=()=>path.startsWith('/lab/album')?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';
@@ -140,5 +140,19 @@ test('R1735 visible native walk-in action survives hidden filters and lost marke
  secondaryVisible=false;mount();assert.equal(current.parentElement,top,'before secondary nav is ready show it in first header');
  paired=true;mount();assert.equal(checkingCalls,1,'real pairing can trigger background device check');
  current.disabled=true;makeMount(true)();assert.equal(current.disabled,true,'preparing action must remain disabled');
+ current.parentElement=top;secondaryVisible=false;top.getClientRects=()=>[];mount();assert.equal(current.parentElement,workspace,'both headers hidden: workspace fallback keeps action');
  path='/lab/settings';mount();assert.equal(current.parentElement,null,'leave intake out of settings');
+});
+
+test('R1736 native release prioritizes the live queue and stamps the hot-update payload',()=>{
+ const header=read(base+'photobridge-r1147-lab-admin-header.js');
+ const js=read(base+'photobridge-r1137-lab-local-intake.js');
+ const html=read(base+'index.html');
+ assert(header.includes('PB1736 native current queue source'));
+ assert(js.includes("button.dataset.pbNativeIntakeVersion='r1736'"));
+ assert(js.includes('const target=visible(secondary)?secondary:visible(top)?top:workspace'));
+ assert(!js.includes("host.querySelector('.mainQueueFilters')"));
+ assert(html.includes('nativeQueue=r1736'));
+ const css=read(base+'r1733-native-intake.css');
+ assert(css.includes('pb1736NativeWalkin'));
 });

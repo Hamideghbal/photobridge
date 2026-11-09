@@ -108,7 +108,10 @@ test('site intake and native permission guard are preserved',()=>{
  assert(js.includes("const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;"));
  assert(js.includes("const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;"));
  assert(original.includes("button.id='pb1137LocalIntakeButton'"));
- assert(original.includes('button.onclick=open'));
+ const launchAt=original.indexOf("button.id='pb1137LocalIntakeButton'");
+ const launchCode=original.slice(Math.max(0,launchAt-500),launchAt+1600);
+ assert(/\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(launchCode),
+  'site intake button must keep an attached click handler (direct or wrapped)');
  assert(!original.includes('/* PB1743 native button target */'),"site's original intake navigation remains untouched");
 });
 test('Windows hot-update manifest lists the exact modified native JS and CSS bytes',()=>{

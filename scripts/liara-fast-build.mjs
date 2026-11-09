@@ -1073,3 +1073,8 @@ runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'
 // Run after all older mutators, then verify both delivered layouts and behavior.
 await deployStep('./enable-r1728-intake-customer-row.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1728-intake-customer-row.cjs'],{stdio:'inherit'});
+
+// R1729: restore padding beside the Show/Hide password button on the mobile
+// login screen (hidden and visible states); keep top anchor and Windows UI intact.
+await deployStep('./enable-r1729-login-password-clearance.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1729-login-password-clearance.cjs'],{stdio:'inherit'});

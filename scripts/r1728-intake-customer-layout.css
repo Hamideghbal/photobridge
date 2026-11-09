@@ -21,7 +21,7 @@
 .pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
   grid-column:1!important;
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) max-content!important;
+  grid-template-columns:minmax(0,1fr) minmax(270px,360px)!important;
   align-items:start!important;
   column-gap:14px!important;row-gap:8px!important;
   min-width:0!important;width:100%!important;
@@ -80,6 +80,10 @@
   flex:1 0 100%!important;z-index:auto!important;
   box-sizing:border-box!important;margin:3px 0 0!important;
   box-shadow:0 2px 9px rgba(23,43,67,.10)!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit input {
+  min-width:0!important;max-width:100%!important;
+  width:100%!important;box-sizing:border-box!important;
 }
 .pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit[hidden] {
   display:none!important;

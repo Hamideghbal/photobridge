@@ -201,8 +201,26 @@ test('known-good Liara 2268 native intake launcher remains in both interfaces',(
  for(const {dir,js} of sources){
   assert(js.includes('function mount(){'),dir+' mount missing');
   assert(js.includes("button.id='pb1137LocalIntakeButton'"),dir+' native button removed');
-  assert(js.includes('button.onclick=open'),dir+' original opener changed');
+  const at=js.indexOf("button.id='pb1137LocalIntakeButton'");
+  const code=js.slice(Math.max(0,at-500),at+1600);
+  assert(/\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(code),dir+' launcher must have click handler');
   assert(js.includes("/api/lab/download-device"),dir+' primary-device guard changed');
   assert(!js.includes('PB1733 native Lab walk-in header fix'),dir+' unrelated R1733 recovery was reintroduced');
  }
+});
+
+
+test('R1741 accepts native callback rewrites without accepting a missing launcher',()=>{
+ const locate=s=>{
+  const at=s.indexOf("button.id='pb1137LocalIntakeButton'");
+  if(at<0)return false;
+  const code=s.slice(Math.max(0,at-500),at+1600);
+  return /\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(code);
+ };
+ const prefix="function mount(){ const button=node('button','ثبت سفارش عکس حضوری'); button.id='pb1137LocalIntakeButton'; button.type='button'; ";
+ assert(locate(prefix+"button.onclick=open; target.append(button); }"));
+ assert(locate(prefix+"button.onclick=()=>open('print'); target.append(button); }"));
+ assert(locate(prefix+"button.addEventListener('click',()=>open('album')); target.append(button); }"));
+ assert.equal(locate(prefix+"target.append(button); }"),false);
+ assert.equal(locate("function mount(){}"),false);
 });

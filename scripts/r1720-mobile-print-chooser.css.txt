@@ -1,0 +1,22 @@
+/* R1720: MOBILE ONLY. Do not change desktop or native Windows layout.
+   A chooser is a modal workspace. React's order rails and scrollport must not
+   bleed through it while the bottom photographer navigation remains usable. */
+@media screen and (max-width:820px) {
+  html body.pbR100F14ChoosingLab #root main.photographerMain.photographerPrintWorkspace > .photographerRolePageScrollArea,
+  html body.pbR100F14ChoosingLab #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders,
+  html body.pbR100F14ChoosingLab #root main.photographerMain.photographerPrintWorkspace #pbR1122PrintOrderStatuses,
+  html body.pbR100F14ChoosingLab #root main.photographerMain.photographerPrintWorkspace .pb761PhotoStatuses,
+  html body.pbR100F14ChoosingLab #root main.photographerMain.photographerPrintWorkspace .photographerContextStatuses {
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  /* Only the chooser scrolls; no underlying order list can capture touch. */
+  html body.pbR100F14ChoosingLab #pbR99LabChooser {
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+  }
+}

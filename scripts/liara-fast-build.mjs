@@ -1029,3 +1029,8 @@ runR1314(process.execPath,['--test','scripts/test-r1712-heic-verified-conversion
 // R1714: decouple HEIC conversion from HTTP upload completion to avoid gateway 502.
 await deployStep('./enable-r1714-async-upload-completion.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1714-async-upload-completion.cjs'],{stdio:'inherit'});
+
+// R1720: web-mobile-only Print chooser visibility, lower polling and initial invitation tab.
+// Run after desktop snapshots and all legacy patch stages; leave Windows UI untouched.
+await deployStep('./enable-r1720-mobile-print-chooser.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1720-mobile-print-chooser.cjs'],{stdio:'inherit'});

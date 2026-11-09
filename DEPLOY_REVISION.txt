@@ -1,1 +1,1 @@
-2026-11-10-r1740-v2268-compact-intake-pending-invite-sms
+2026-11-10-r1741-v2268-intake-launcher-guard-and-layout

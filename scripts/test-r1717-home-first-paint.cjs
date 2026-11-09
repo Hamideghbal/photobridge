@@ -24,7 +24,7 @@ test('startup scripts cannot block HTML parsing', () => {
 
 test('core stylesheet is prioritized and no duplicate style download remains', () => {
   const css = '/assets/index-UIRefine-v586.css?v=673&ui=767';
-  assert.ok(html.includes('<link rel="preload" as="style" fetchpriority="high" href="' + css + '">'));
+  assert.ok(html.includes('<link rel="preload" as="style" crossorigin fetchpriority="high" href="' + css + '">'));
   assert.ok(html.includes('<link rel="stylesheet" crossorigin href="' + css + '">'));
   assert.equal(html.split('href="/photobridge-v890-lab-finance-store-parity.css?').length - 1, 1);
 });

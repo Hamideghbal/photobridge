@@ -1034,3 +1034,8 @@ runR1314(process.execPath,['--test','scripts/test-r1714-async-upload-completion.
 // Run after desktop snapshots and all legacy patch stages; leave Windows UI untouched.
 await deployStep('./enable-r1720-mobile-print-chooser.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1720-mobile-print-chooser.cjs'],{stdio:'inherit'});
+
+// R1721: mobile-only initial navigation must not show Gallery then restart the app.
+// Keep this AFTER R1720 and all Windows UI snapshots.
+await deployStep('./enable-r1721-mobile-first-entry.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1721-mobile-first-entry.cjs'],{stdio:'inherit'});

@@ -13,31 +13,30 @@ function one(src,old,next,label){
 }
 const nativeMount=[
  "function mount(){",
- " const provider=storage();",
- " const host=document.querySelector('.labRoleWorkspace main')||document.querySelector('main.labMain');",
+ " const workspace=document.querySelector('.labRoleWorkspace');",
  " const old=document.getElementById('pb1137LocalIntakeButton');",
  " const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);",
- " if(!host||!queue){old?.remove();return;}",
- " // The queue header is authoritative, but can mount a frame later than the intake script.",
- " const header=document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav');",
- " const target=header||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace')||host;",
+ " if(!workspace||!queue){old?.remove();return;}",
+ " // R1735: the secondary header is a sibling of <main>, not inside it.",
+ " // Never mount on mainQueueFilters: the header clones tabs and hides that source.",
+ " const header=workspace.querySelector('.pb1148SecondaryHeader.pb1174QueueNav');",
+ " const target=header||workspace.querySelector('.labSingleHeader');",
+ " if(!target)return;",
  " const button=old||node('button',pb1733IntakeLabel(),'pb1137Launch');",
  " if(!old){button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;}",
- " const label=pb1733IntakeLabel();",
- " // The outer intake MutationObserver watches childList. Never rewrite text",
- " // on an unchanged button, or it will schedule endless repaints.",
+ " const label=opening?'در حال آماده‌سازی…':pb1733IntakeLabel();",
  " if(button.textContent!==label)button.textContent=label;",
- " if(button.getAttribute('aria-label')!==label)button.setAttribute('aria-label',label);",
- " const ready=!!provider?.deviceId?.();",
- " if(button.disabled===ready)button.disabled=!ready;",
- " const hint=!ready?'امکان ثبت سفارش حضوری پس از راه‌اندازی ذخیره‌سازی روی این دستگاه فعال می‌شود.':",
- "  primaryState===false?'تأیید دستگاه اصلی در زمان بازکردن سفارش دوباره بررسی می‌شود.':",
- "  'ثبت سفارش حضوری؛ قبل از ثبت، دستگاه اصلی دوباره بررسی می‌شود.';",
+ " const aria=pb1733IntakeLabel();",
+ " if(button.getAttribute('aria-label')!==aria)button.setAttribute('aria-label',aria);",
+ " // Show the action even after folder-marker loss; opening checks real eligibility.",
+ " if(!opening&&button.disabled)button.disabled=false;",
+ " let paired=false;try{paired=!!storage()?.deviceId?.();}catch{}",
+ " const hint=!paired?'مسیر ذخیره‌سازی یا دستگاه اصلی را بررسی کنید؛ برای مشاهده علت، روی ثبت سفارش بزنید.':",
+ "  primaryState===false?'تأیید دستگاه اصلی هنگام بازکردن سفارش دوباره بررسی می‌شود.':",
+ "  'ثبت سفارش حضوری؛ پیش از ثبت، وضعیت دستگاه اصلی دوباره بررسی می‌شود.';",
  " if(button.title!==hint)button.title=hint;",
  " if(button.parentElement!==target)target.prepend(button);",
- " // Never hide the entry after a transient network/auth failure. The real order",
- " // still validates primary device with a fresh server response in open().",
- " if(ready&&primaryState===null&&!checking)checkPrimary();",
+ " if(paired&&primaryState===null&&!checking)checkPrimary();",
  "}",
 ].join('\n');
 const loc=root+'/'+intake;
@@ -86,11 +85,16 @@ for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
 const htmlPath=root+'/index.html';
 let html=fs.readFileSync(htmlPath,'utf8');
 if(!html.includes('r1733-native-intake.css')){
- html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733">\n</head>','CSS inclusion');
+ html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1735">\n</head>','CSS inclusion');
 }
 if(!html.includes('r1733-native-auth-help.js')){
  html=one(html,'</body>','<script defer src="/r1733-native-auth-help.js?v=r1733"></script>\n</body>','recovery helper inclusion');
 }
+// Make the Windows native WebView request the newly patched intake script.
+const nativeIntakeScript=/photobridge-r1137-lab-local-intake\.js\?[^"'\s<>]+/g;
+const nativeHits=[...html.matchAll(nativeIntakeScript)];
+if(nativeHits.length>1)throw Error('R1735 duplicate native intake script URL');
+if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1735')?url:url+'&nativeQueue=r1735');
 fs.writeFileSync(htmlPath,html);
 const manifestPath=root+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

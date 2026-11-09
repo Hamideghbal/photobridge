@@ -61,7 +61,7 @@ function launch({navVisible=true,preexisting=false,pathname='/lab/orders'}={}){
  const button=placed[0];assert.equal(typeof button.onclick,'function');
  // The native build can wrap this callback with its own device/album logic.
  // Keep it, and do not invoke order creation from a synthetic DOM harness.
- assert(js.includes('async function open()'),'real intake form remains present');
+ assert(/async function open\s*\(/.test(js),'real intake form remains present');
  return {nav,top,hiddenFilters,button};
 }
 

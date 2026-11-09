@@ -39,10 +39,10 @@ function makeMenuFixture(source,pending){
    tag,className,children:[],parent:null,textContent:text??'',value:'',hidden:false,
    checked:false,disabled:false,style:{},dataset:{},attributes:{},
    classList:{
-    contains(name){return String(el.className||'').split(/\\s+/).includes(name)},
+    contains(name){return String(el.className||'').split(/\s+/).includes(name)},
     toggle(name,force){const has=this.contains(name),enable=force===undefined?!has:!!force;if(enable)this.add(name);else this.remove(name);return enable},
     add(name){if(!this.contains(name))el.className=(el.className?el.className+' ':'')+name},
-    remove(name){el.className=String(el.className||'').split(/\\s+/).filter(x=>x&&x!==name).join(' ')}
+    remove(name){el.className=String(el.className||'').split(/\s+/).filter(x=>x&&x!==name).join(' ')}
    },
    append(...nodes){for(const child of nodes){if(!child)continue;
     if(child.parent){const siblings=child.parent.children;const at=siblings.indexOf(child);if(at>=0)siblings.splice(at,1)}

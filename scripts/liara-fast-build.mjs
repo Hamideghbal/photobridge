@@ -1039,3 +1039,9 @@ runR1314(process.execPath,['--test','scripts/test-r1720-mobile-print-chooser.cjs
 // Keep this AFTER R1720 and all Windows UI snapshots.
 await deployStep('./enable-r1721-mobile-first-entry.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1721-mobile-first-entry.cjs'],{stdio:'inherit'});
+
+// R1722: group the existing photographer Lab chooser by city only when the
+// authorized directory spans multiple registered cities (mobile + desktop web).
+// Apply after all older UI mutators, without altering the native Windows UI snapshot.
+await deployStep('./enable-r1722-lab-city-grouping.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1722-lab-city-grouping.cjs'],{stdio:'inherit'});

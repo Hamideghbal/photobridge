@@ -1067,3 +1067,8 @@ runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdi
 // Keep the existing keyboard-safe top anchor, login behavior and installed-app banner.
 await deployStep('./enable-r1727-mobile-login-header.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'],{stdio:'inherit'});
+
+// R1748 isolated reintroduction of the tested R1740 Lab intake account row and pending-invite SMS.
+// R1742 stuck-order cancellation and R1743 native launcher rewrites are deliberately NOT installed.
+await deployStep('./enable-r1740-intake-two-row-sms.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1740-intake-two-row-sms.cjs'],{stdio:'inherit'});

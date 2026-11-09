@@ -48,6 +48,9 @@ const orderNew=[
   "    if(document.body.classList.contains('pbR100F14ChoosingLab')){old?.remove();return;}"
 ].join('\n');
 if(!orders.includes('R1720: do not build'))orders=one(orders,orderOld,orderNew,'hidden order-status work');
+const scheduleOld="  function schedule(){\n    if(scheduled)return;";
+const scheduleNew="  function schedule(){\n    // R1720: pause whole-body status scanning while the chooser is visible.\n    if(document.body.classList.contains('pbR100F14ChoosingLab')&&!document.getElementById(id))return;\n    if(scheduled)return;";
+if(!orders.includes('R1720: pause whole-body'))orders=one(orders,scheduleOld,scheduleNew,'chooser status observer work');
 fs.writeFileSync(orderFile,orders);
 execFileSync(process.execPath,['--check',orderFile],{stdio:'inherit'});
 

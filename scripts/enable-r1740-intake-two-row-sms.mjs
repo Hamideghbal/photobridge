@@ -65,9 +65,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     fs.writeFileSync(file,src);
   }
   execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
-  // R1740 never mutates the original native mount or click handler.
-  const launchAnchors=['function mount(){',"button.id='pb1137LocalIntakeButton'",'button.onclick=open'];
-  for(const a of launchAnchors)if(!src.includes(a))throw Error('[R1740] native intake launcher regression: '+a);
+  // R1741: keep the real v2268 launcher, including approved callbacks
+  // rewritten by earlier native steps (onclick=()=>open(...) etc).
+  // Check the actual local launcher rather than one old literal spelling.
+  const launchAnchors=['function mount(){',"button.id='pb1137LocalIntakeButton'","/api/lab/download-device"];
+  for(const a of launchAnchors)if(!src.includes(a))throw Error('[R1741] intake launcher missing: '+a);
+  const launchAt=src.indexOf("button.id='pb1137LocalIntakeButton'");
+  const launchCode=src.slice(Math.max(0,launchAt-500),launchAt+1600);
+  if(!/\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(launchCode))
+    throw Error('[R1741] native intake launcher exists but lacks a click handler');
   const cssFile=root+'/'+cssName;
   fs.copyFileSync('scripts/r1740-intake-customer-layout.css',cssFile);
   const htmlPath=root+'/index.html';

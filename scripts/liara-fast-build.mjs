@@ -1067,3 +1067,9 @@ runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdi
 // Keep the existing keyboard-safe top anchor, login behavior and installed-app banner.
 await deployStep('./enable-r1727-mobile-login-header.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'],{stdio:'inherit'});
+
+// R1728: no-overlap photographer balance/debt beneath the Lab manual intake
+// chooser, with SMS invitation for preregistered customers. Site AND native Lab UI.
+// Run after all older mutators, then verify both delivered layouts and behavior.
+await deployStep('./enable-r1728-intake-customer-row.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1728-intake-customer-row.cjs'],{stdio:'inherit'});

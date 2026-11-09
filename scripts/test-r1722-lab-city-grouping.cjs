@@ -92,6 +92,16 @@ test('one lab, one registered city, and one city with unknown labels keep the or
     if(config.includeB)assert(h.html().includes('چاپ ج'));
   }
 });
+test('an actual one-laboratory account stays ungrouped',async()=>{
+  const only=fixture({includeB:false});
+  only.memberships=only.memberships.slice(0,1);
+  only.labs=only.labs.slice(0,1);
+  const h=harness(only);await h.start();
+  assert(!h.html().includes('pbR99CityChooser'));
+  assert(h.html().includes('چاپ الف'));
+  assert(!h.html().includes('چاپ ب'));
+  assert(h.html().includes('data-select="a"'));
+});
 test('different cities expose city buttons; active lab city is selected by default',async()=>{
   const h=harness(fixture());
   await h.start();

@@ -5,6 +5,29 @@
  if(window.pbR1733NativeAuthHelp)return;
  window.pbR1733NativeAuthHelp=true;
  const recovery='https://photobridge.ir/account-recovery.html';
+ // Some Windows keyboards paste Persian/Arabic digits into the mobile field.
+ // Normalize only the submitted mobile; do not trim or change the password.
+ const normalizeMobile=value=>String(value)
+  .replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+  .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+  .replace(/[\s\u200c\u200e\u200f\u2066-\u2069]/g,'');
+ const previousFetch=window.fetch.bind(window);
+ window.fetch=function(input,init){
+  try{
+   const url=new URL(typeof input==='string'?input:input?.url||'',location.href);
+   if(url.origin===location.origin&&url.pathname==='/api/auth/lab-login'
+      &&String(init?.method||input?.method||'GET').toUpperCase()==='POST'
+      &&typeof init?.body==='string'){
+    const body=JSON.parse(init.body);
+    if(body&&typeof body.mobile==='string'){
+     const mobile=normalizeMobile(body.mobile);
+     if(mobile!==body.mobile)init={...init,body:JSON.stringify({...body,mobile})};
+    }
+   }
+  }catch{/* Retain original request exactly if it cannot be parsed. */}
+  return previousFetch(input,init);
+ };
+
  const isRecovery=el=>{
   if(!el||!el.matches?.('a,button,[role="button"]'))return false;
   const label=String(el.textContent||el.getAttribute('aria-label')||'').trim();

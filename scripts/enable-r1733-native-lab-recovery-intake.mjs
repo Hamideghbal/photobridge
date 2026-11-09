@@ -15,26 +15,33 @@ const nativeMount=[
  "function mount(){",
  " const workspace=document.querySelector('.labRoleWorkspace');",
  " const old=document.getElementById('pb1137LocalIntakeButton');",
- " const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);",
+ " const pathname=location.pathname;",
+ " const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(pathname)||",
+ "  (pathname==='/lab'&&!!workspace?.querySelector('.stageQueueWorkspace,.labOrderScrollArea'));",
  " if(!workspace||!queue){old?.remove();return;}",
- " // R1736: an inactive filter strip can exist while the visible header is elsewhere.",
- " const visible=el=>!!el&&el.hidden!==true&&(typeof el.getClientRects!=='function'||el.getClientRects().length>0);",
+ " const album=/^\\/lab\\/album(?:s|[-/]|$)/.test(pathname)||",
+ "  (pathname==='/lab'&&!!workspace.querySelector('.albumTopNav.active'));",
+ " // The second header can be hidden during CSS prepaint; never mount in hidden queue filters.",
  " const secondary=workspace.querySelector('.pb1148SecondaryHeader.pb1174QueueNav');",
  " const top=workspace.querySelector('.labSingleHeader');",
- " const target=visible(secondary)?secondary:visible(top)?top:workspace;",
+ " const secondaryVisible=!!secondary&&!secondary.hidden&&",
+ "  (typeof secondary.getClientRects!=='function'||secondary.getClientRects().length>0);",
+ " const target=secondaryVisible?secondary:top||workspace;",
  " const button=old||node('button',pb1733IntakeLabel(),'pb1137Launch');",
- " if(!old){button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;}",
- " if(button.classList?.contains&&!button.classList.contains('pb1736NativeWalkin'))button.classList.add('pb1736NativeWalkin');",
- " if(button.dataset)button.dataset.pbNativeIntakeVersion='r1736';",
+ " if(!old){button.id='pb1137LocalIntakeButton';button.type='button';}",
+ " if(button.classList?.contains&&!button.classList.contains('pb1737NativeWalkin'))button.classList.add('pb1737NativeWalkin');",
+ " if(button.dataset)button.dataset.pbNativeIntakeVersion='r1737';",
  " if(button.hidden)button.hidden=false;",
- " const label=opening?'در حال آماده‌سازی…':pb1733IntakeLabel();",
+ " const label=opening?'در حال آماده‌سازی…':album?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';",
  " if(button.textContent!==label)button.textContent=label;",
- " if(button.getAttribute('aria-label')!==pb1733IntakeLabel())button.setAttribute('aria-label',pb1733IntakeLabel());",
- " // Keep the action visible; the existing open() checks server primary, folder and permissions.",
+ " const aria=album?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';",
+ " if(button.getAttribute('aria-label')!==aria)button.setAttribute('aria-label',aria);",
+ " // R1184 open(mode) requires a string; onclick=open would pass the event instead.",
+ " button.onclick=()=>open(album?'album':'print');",
  " if(!opening&&button.disabled)button.disabled=false;",
  " let paired=false;try{paired=!!storage()?.deviceId?.();}catch{}",
- " const hint=!paired?'برای ثبت سفارش، وضعیت دستگاه اصلی و پوشه را بررسی کنید.':",
- "  primaryState===false?'دستگاه اصلی هنگام بازکردن فرم دوباره تأیید می‌شود.':",
+ " const hint=!paired?'وضعیت دستگاه اصلی و پوشه هنگام بازکردن سفارش بررسی می‌شود.':",
+ "  primaryState===false?'برای ثبت سفارش، تأیید دستگاه اصلی دوباره بررسی می‌شود.':",
  "  'ثبت سفارش حضوری در برنامه ویندوز';",
  " if(button.title!==hint)button.title=hint;",
  " if(button.parentElement!==target)target.prepend(button);",
@@ -98,7 +105,7 @@ for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
 const htmlPath=root+'/index.html';
 let html=fs.readFileSync(htmlPath,'utf8');
 if(!html.includes('r1733-native-intake.css')){
- html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1736">\n</head>','CSS inclusion');
+ html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1737">\n</head>','CSS inclusion');
 }
 if(!html.includes('r1733-native-auth-help.js')){
  html=one(html,'</body>','<script defer src="/r1733-native-auth-help.js?v=r1733"></script>\n</body>','recovery helper inclusion');
@@ -107,7 +114,12 @@ if(!html.includes('r1733-native-auth-help.js')){
 const nativeIntakeScript=/photobridge-r1137-lab-local-intake\.js\?[^"'\s<>]+/g;
 const nativeHits=[...html.matchAll(nativeIntakeScript)];
 if(nativeHits.length>1)throw Error('R1735 duplicate native intake script URL');
-if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1736')?url:url+'&nativeQueue=r1736');
+if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1737')?url:url+'&nativeQueue=r1737');
+// The desktop header participates in the restored button placement.
+const nativeHeaderScript=/photobridge-r1147-lab-admin-header\.js\?[^"'\s<>]+/g;
+const nativeHeaderHits=[...html.matchAll(nativeHeaderScript)];
+if(nativeHeaderHits.length>1)throw Error('R1737 duplicate native header script');
+if(nativeHeaderHits.length===1)html=html.replace(nativeHeaderScript,url=>url.includes('nativeHeader=r1737')?url:url+'&nativeHeader=r1737');
 fs.writeFileSync(htmlPath,html);
 const manifestPath=root+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

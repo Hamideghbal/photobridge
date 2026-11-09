@@ -1072,3 +1072,14 @@ runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'
 // after a successful intake order only; never an invoice SMS to pre-registered accounts.
 await deployStep('./enable-r1740-intake-two-row-sms.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1740-intake-two-row-sms.cjs'],{stdio:'inherit'});
+
+// R1742: optional per-order cancellation of stalled unprinted lab orders.
+// Existing paid/printed/courier guards stay in force; no automatic cancellation.
+await deployStep('./enable-r1742-stalled-orders-safe-cancel.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1742-stalled-orders-safe-cancel.cjs'],{stdio:'inherit'});
+
+// R1743: restore the existing native Windows intake launcher to the *visible*
+// queue header, retain its original click, primary-device guard and manifest.
+await deployStep('./enable-r1743-native-intake-button-stability.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1743-native-intake-button-stability.cjs'],{stdio:'inherit'});
+

@@ -15,7 +15,7 @@ test('the selected account has a full-width picker row above its debt, dates and
  assert(css.includes('grid-template-columns:minmax(0,1fr)!important'));
  assert(css.includes('> .pb1139Customer'));
  assert(css.includes('> .pb1294SelectedDetails'));
- assert(css.includes('grid-template-columns:minmax(0,1fr) max-content!important'));
+ assert(css.includes('grid-template-columns:minmax(0,1fr) minmax(270px,360px)!important'));
  assert(css.includes('.pb1294AccountSummary'));
  assert(css.includes('.pb1586IntakeDebtDate'));
  assert(css.includes('flex-wrap:wrap!important'));

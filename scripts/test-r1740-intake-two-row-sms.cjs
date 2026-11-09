@@ -186,8 +186,8 @@ test('both real site and Windows Lab delivery have the styling, updated cache an
 });
 
 
-test('R1730 build patch accepts upstream SMS label and title changes',()=>{
- const installer=fs.readFileSync('scripts/enable-r1740-intake-customer-row.mjs','utf8');
+test('R1740 patch accepts upstream SMS label and title changes',()=>{
+ const installer=fs.readFileSync('scripts/enable-r1740-intake-two-row-sms.mjs','utf8');
  assert(installer.includes("const smsAnchor=src.includes(smsMount)?smsMount:smsChange;"),
    'use a stable checkbox mount/fallback rather than a historic SMS label');
  assert(installer.includes("src=once(src,smsAnchor,smsAnchor+'\\n'+smsLines,'SMS checkbox mount');"));

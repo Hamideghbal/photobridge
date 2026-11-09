@@ -38,11 +38,27 @@ function makeMenuFixture(source,pending){
   const el={
    tag,className,children:[],parent:null,textContent:text??'',value:'',hidden:false,
    checked:false,disabled:false,style:{},dataset:{},attributes:{},
-   classList:{toggle(){},add(){},remove(){}},
-   append(...nodes){for(const child of nodes){if(!child)continue;child.parent=this;this.children.push(child)}},
+   classList:{
+    contains(name){return String(el.className||'').split(/\\s+/).includes(name)},
+    toggle(name,force){const has=this.contains(name),enable=force===undefined?!has:!!force;if(enable)this.add(name);else this.remove(name);return enable},
+    add(name){if(!this.contains(name))el.className=(el.className?el.className+' ':'')+name},
+    remove(name){el.className=String(el.className||'').split(/\\s+/).filter(x=>x&&x!==name).join(' ')}
+   },
+   append(...nodes){for(const child of nodes){if(!child)continue;
+    if(child.parent){const siblings=child.parent.children;const at=siblings.indexOf(child);if(at>=0)siblings.splice(at,1)}
+    child.parent=this;this.children.push(child);
+   }},
+   prepend(...nodes){for(const child of [...nodes].reverse()){if(!child)continue;
+    if(child.parent){const siblings=child.parent.children;const at=siblings.indexOf(child);if(at>=0)siblings.splice(at,1)}
+    child.parent=this;this.children.unshift(child);
+   }},
    appendChild(child){this.append(child);return child},
-   replaceChildren(...nodes){this.children=[];this.append(...nodes)},
-   replaceWith(other){const p=this.parent;if(!p)throw Error('parent missing');const index=p.children.indexOf(this);p.children[index]=other;other.parent=p},
+   replaceChildren(...nodes){for(const child of this.children)child.parent=null;this.children=[];this.append(...nodes)},
+   replaceWith(other){const p=this.parent;if(!p)throw Error('parent missing');
+    const index=p.children.indexOf(this);if(index<0)throw Error('source node missing from its parent');
+    if(other.parent){const siblings=other.parent.children;const at=siblings.indexOf(other);if(at>=0)siblings.splice(at,1)}
+    p.children[index]=other;other.parent=p;this.parent=null;
+   },
    setAttribute(key,value){this.attributes[key]=value},
    addEventListener(){},
    closest(){return dialog},

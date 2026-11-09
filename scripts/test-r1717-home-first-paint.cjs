@@ -15,6 +15,13 @@ test('home prepaint never hides the entire application', () => {
   assert.ok(gate.includes('pbCanonicalHeader'));
 });
 
+test('global startup boot does not re-hide the homepage', () => {
+  const boot = html.match(/<script id="pbR100F10Prepaint">([\s\S]*?)<\/script>/);
+  assert.ok(boot, 'the global boot guard remains installed');
+  assert.ok(boot[1].includes("location.pathname!=='/'"), 'home is excluded from the global root-hiding gate');
+  assert.ok(boot[1].includes("pbR100F10Boot"), 'other routes still retain the safety gate');
+});
+
 test('startup scripts cannot block HTML parsing', () => {
   for (const name of ['photobridge-r1363-lab-queue.js', 'photobridge-r1126-desktop-navigation.js']) {
     assert.ok(html.includes('<script defer src="/' + name), name + ' must remain deferred');

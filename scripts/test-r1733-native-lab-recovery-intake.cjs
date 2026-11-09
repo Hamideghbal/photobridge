@@ -77,12 +77,23 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   .replace(/^import [^\n]+\n/gm,'');
  const intake=read('dist/web/photobridge-r1137-lab-local-intake.js');
  const header=read('dist/web/photobridge-r1147-lab-admin-header.js');
- // R1188 runs before the final native snapshot in production. It replaces
- // the legacy source selector with route-aware queue prioritization.
- const baseSource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
- const upstreamSource="const queueRoute=location.pathname.startsWith('/lab/orders');const source=queueRoute?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
- assert(header.includes(baseSource));
- for(const changed of [false,true,'R1188','other-header']){
+ // The actual final-build header can be modified by earlier Liara stages.
+ // Generate regression fixtures from its current selector, not from the
+ // original pre-R1188 source string.
+ const liveSource=header.match(/const source=[^\r\n;]*;/)?.[0];
+ assert(liveSource,'native header must include its current source selector');
+ const legacySource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
+ const upstreamSource="const source=queueRoute?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
+ const queueDeclaration="const queueRoute=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-\\/]|$)|print(?:\\/|$))/.test(location.pathname);";
+ const otherSource="const source=document.querySelector('.mainQueueFilters')||document.querySelector('.financeSectionTabs');";
+ function fixtureHeader(kind){
+  if(kind===false||kind===true)return header;
+  let result=header.replace(liveSource,kind==='legacy'?legacySource:kind==='R1188'?upstreamSource:otherSource);
+  if(kind==='R1188'&&!/\b(?:const|let|var) queueRoute\s*=/.test(result))
+   result=result.replace('function secondary(h){','function secondary(h){\n  '+queueDeclaration);
+  return result;
+ }
+ for(const changed of [false,true,'legacy','R1188','other-header']){
   const prefix='dist/web/lab-desktop-ui/';
   const modified=changed?intake
    .replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent='متن اصلاح‌شده توسط مرحلهٔ قبلی';")
@@ -90,7 +101,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
    .replaceAll("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2','پنجرهٔ سفارش'));"):intake;
   const files=new Map([
    [prefix+'photobridge-r1137-lab-local-intake.js',modified],
-   [prefix+'photobridge-r1147-lab-admin-header.js',changed==='R1188'?header.replace(baseSource,upstreamSource):changed==='other-header'?header.replace(baseSource,"const source=document.querySelector('.mainQueueFilters')||document.querySelector('.financeSectionTabs');"):header],
+   [prefix+'photobridge-r1147-lab-admin-header.js',fixtureHeader(changed)],
    ['scripts/r1733-native-intake.css',read('scripts/r1733-native-intake.css')],
    ['scripts/r1733-native-auth-help.js',read('scripts/r1733-native-auth-help.js')],
    [prefix+'index.html','<html><head></head><body></body></html>'],

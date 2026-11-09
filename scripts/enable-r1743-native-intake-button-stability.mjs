@@ -25,19 +25,28 @@ const intakeName='photobridge-r1137-lab-local-intake.js';
 const intakePath=root+'/'+intakeName;
 let intake=fs.readFileSync(intakePath,'utf8');
 if(!intake.includes('/* PB1743 native button target */')){
- intake=replace(intake,
+ const start=intake.indexOf('function mount(){');
+ const finish=intake.indexOf('\nlet primaryState=',start);
+ if(start<0||finish<=start)throw Error('[R1745] native mount function not found');
+ let mount=intake.slice(start,finish);
+ // The existing native bundle was transformed by numerous prior Liara stages.
+ // Match declarations by meaning, not by the exact previous header/target lines.
+ mount=replace(mount,
   "const host=document.querySelector('.labRoleWorkspace main')||document.querySelector('main.labMain');",
-  "/* PB1743 native button target */\n const host=document.querySelector('.labRoleWorkspace main')||document.querySelector('main.labMain')||document.querySelector('.labRoleWorkspace');",
+  "const host=document.querySelector('.labRoleWorkspace main')||document.querySelector('main.labMain')||document.querySelector('.labRoleWorkspace');",
   'native mount host');
- intake=replace(intake,
-  "const header=desktopQueue?host.querySelector('.pb1148SecondaryHeader.pb1174QueueNav'):null;\n const target=header||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}",
-  "const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;\n // The hidden queue filter is never the preferred target on Windows desktop.\n const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;\n const target=header||visibleFallback||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}",
-  'native visible header');
- // Retain the established v2268 native callback exactly as earlier stages
- // generated it. The visible-header target fixes its placement; no click-hook
- // rewrite, proxy action, or registration change is needed.
- /* PB1744 root /lab queues and protected primary button */
- intake=extendRootQueue(intake,' const desktopQueue=','native root queue');
+ const headerRx=/\bconst\s+header\s*=\s*desktopQueue\s*\?[^;\n]+;/g;
+ const targetRx=/\bconst\s+target\s*=\s*([^;\n]+);/g;
+ const headerMatches=[...mount.matchAll(headerRx)];
+ const targetMatches=[...mount.matchAll(targetRx)];
+ if(headerMatches.length!==1||targetMatches.length!==1)throw Error('[R1745] native mount header/target count '+headerMatches.length+'/'+targetMatches.length);
+ const oldHeader=headerMatches[0][0],oldTarget=targetMatches[0][1].trim();
+ if(!oldHeader.includes('pb1148SecondaryHeader.pb1174QueueNav')||!oldTarget.includes('.mainQueueFilters'))throw Error('[R1745] native mount queue header semantics changed');
+ mount=mount.replace(headerRx,"const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;");
+ mount=mount.replace(targetRx,"const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;\n const target=header||visibleFallback||("+oldTarget+");");
+ mount=extendRootQueue(mount,' const desktopQueue=','native root queue');
+ mount="/* PB1743 native button target */\n"+mount;
+ intake=intake.slice(0,start)+mount+intake.slice(finish);
  fs.writeFileSync(intakePath,intake);
 }
 execFileSync(process.execPath,['--check',intakePath],{stdio:'inherit'});

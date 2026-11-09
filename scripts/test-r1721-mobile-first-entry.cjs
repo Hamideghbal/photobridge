@@ -30,7 +30,7 @@ async function simulate(destination,{mobile=true,pathname='/photographer',search
     return {ok,json:async()=>({destination})};
   };
   const addEventListener=(name,fn)=>{handlers[name]=fn};
-  const setTimeout=()=>0; // explicit DOMContentLoaded triggers first entry
+  const setTimeout=(fn,ms)=>{if(ms!==6500)Promise.resolve().then(fn);return 1}; // skip only safety fallback
   const requestAnimationFrame=fn=>{fn();return 1};
   const PopStateEvent=function(type){this.type=type};
   const sandbox={window,document,location,history,fetch,setTimeout,requestAnimationFrame,PopStateEvent,URLSearchParams,addEventListener};

@@ -28,6 +28,7 @@ function launch({navVisible=true,preexisting=false,pathname='/lab/orders'}={}){
  const document={
   querySelector(selector){
    if(selector==='.labRoleWorkspace main')return host;
+   if(selector==='.labRoleWorkspace .stageQueueWorkspace')return host;
    if(selector==='.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav')return navVisible?nav:null;
    if(selector==='.labRoleWorkspace .labSingleHeader')return top;
    return null;
@@ -70,6 +71,18 @@ test('Windows desktop launcher is in visible fixed queue header, not the CSS-hid
  assert.equal(r.button.parentElement,r.nav);
  assert.notEqual(r.button.parentElement,r.hiddenFilters);
 });
+test('root /lab also finds the native queue and its actual button',()=>{
+ const r=launch({pathname:'/lab'});
+ assert.equal(r.button.parentElement,r.nav);
+});
+
+test('native header cannot delete the real intake button as a retired proxy',()=>{
+ assert(header.includes("row.querySelector(':scope>.pb1174QueueLaunch:not(#pb1137LocalIntakeButton)')?.remove();"));
+ assert(!header.includes("row.querySelector(':scope>.pb1174QueueLaunch')?.remove();"));
+ assert(!header.includes("intake.classList.add('pb1174QueueLaunch')"));
+ assert(js.includes("location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace')"));
+ assert(header.includes("location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace')"));
+});
 test('Windows desktop launcher falls back to visible main header while the secondary header is initializing',()=>{
  const r=launch({navVisible:false});
  assert.equal(r.button.parentElement,r.top);
@@ -81,8 +94,8 @@ test('existing original launcher moves to the header without creating a proxy or
 test('native header rebuild preserves the same element and flags it as queue launcher',()=>{
  assert(header.includes('/* PB1743 preserve native launch while rebuilding header */'));
  assert(header.includes("const retainedLaunch=row.querySelector('#pb1137LocalIntakeButton')"));
- assert(header.includes("if(retainedLaunch){retainedLaunch.classList.add('pb1174QueueLaunch');row.prepend(retainedLaunch);}"));
- assert(header.includes("if(isQueue&&intake){intake.classList.add('pb1174QueueLaunch')"));
+ assert(header.includes("if(retainedLaunch){retainedLaunch.classList.remove('pb1174QueueLaunch');row.prepend(retainedLaunch);}"));
+ assert(header.includes("if(isQueue&&intake){intake.classList.remove('pb1174QueueLaunch')"));
  assert(css.includes('/* PB1743 native launch visible in queue header */'));
  assert(css.includes('.pb1148SecondaryHeader.pb1174QueueNav>#pb1137LocalIntakeButton{display:inline-flex!important'));
 });

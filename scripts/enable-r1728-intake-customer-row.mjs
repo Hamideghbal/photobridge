@@ -24,7 +24,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     // on the historical literal (which differs in the real Liara build).
     src=once(src,
       "  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);",
-      "  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);\\n  sms.setAttribute('aria-label',c.registrationPending?'ارسال پیامک دعوت‌نامه پس از ثبت سفارش':'ارسال پیامک فاکتور همین سفارش');\\n  smsChoice.title=data.smsEnabled?(c.registrationPending?'پس از ثبت سفارش، پیامک دعوت‌نامه عضویت مجدداً ارسال می‌شود.':'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.'):'ارسال پیامک برای این لابراتوار غیرفعال است';",
+      "  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);\n  sms.setAttribute('aria-label',c.registrationPending?'ارسال پیامک دعوت‌نامه پس از ثبت سفارش':'ارسال پیامک فاکتور همین سفارش');\n  smsChoice.title=data.smsEnabled?(c.registrationPending?'پس از ثبت سفارش، پیامک دعوت‌نامه عضویت مجدداً ارسال می‌شود.':'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.'):'ارسال پیامک برای این لابراتوار غیرفعال است';",
       'SMS checkbox mount');
     const startAnchor="  if(c.registrationPending){\n   const resend=node('button','ارسال مجدد دعوت‌نامه','pb1294ResendInvite');";
     const endAnchor="  if(data.canEditInitialDebt){";

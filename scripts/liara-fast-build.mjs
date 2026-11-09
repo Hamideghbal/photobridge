@@ -1067,3 +1067,8 @@ runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdi
 // Keep the existing keyboard-safe top anchor, login behavior and installed-app banner.
 await deployStep('./enable-r1727-mobile-login-header.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'],{stdio:'inherit'});
+
+// R1740: compact responsive photographer account strip, and invitation SMS
+// after a successful intake order only; never an invoice SMS to pre-registered accounts.
+await deployStep('./enable-r1740-intake-two-row-sms.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1740-intake-two-row-sms.cjs'],{stdio:'inherit'});

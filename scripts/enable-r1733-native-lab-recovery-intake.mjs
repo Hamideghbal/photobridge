@@ -75,15 +75,21 @@ const headerName='photobridge-r1147-lab-admin-header.js',hpath=root+'/'+headerNa
 let header=fs.readFileSync(hpath,'utf8');
 const nativeHeaderSource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
 const nativeQueueSource="/* PB1736 native current queue source */const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);const source=queue?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
+// R1188 already prioritizes the live queue by route before the native
+// snapshot is assembled. Preserve its correct code rather than requiring
+// the obsolete pre-R1188 selector string (the cause of the Liara build failure).
+const upstreamPriority="const source=queueRoute?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
 if(header.includes(nativeHeaderSource))header=one(header,nativeHeaderSource,nativeQueueSource,'native queue prioritization');
-else if(!header.includes('PB1736 native current queue source'))throw Error('R1736 missing native queue source');
+else if(header.includes(upstreamPriority)&&!header.includes('PB1736 native current queue source'))
+ header=one(header,upstreamPriority,'/* PB1736 native current queue source: existing R1188 priority */'+upstreamPriority,'already prioritized queue');
+else if(!header.includes('PB1736 native current queue source'))throw Error('R1736 unrecognized queue source in native header');
 
 if(!header.includes('/* PB1733 keep intake across header rebuild */')){
  header=one(header,'  row.replaceChildren();',
   "  const pb1733Intake=row.querySelector('#pb1137LocalIntakeButton');\n  row.replaceChildren();\n  if(pb1733Intake)row.prepend(pb1733Intake);\n  /* PB1733 keep intake across header rebuild */",
   'header rebuild');
- fs.writeFileSync(hpath,header);
 }
+fs.writeFileSync(hpath,header);
 execFileSync(process.execPath,['--check',hpath],{stdio:'inherit'});
 for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
  fs.copyFileSync('scripts/'+name,root+'/'+name);

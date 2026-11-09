@@ -38,7 +38,7 @@ test('R1733 Windows localhost proxy forwards public OTP endpoints but rejects un
  const {createHost}=require('./r1388-native/host.cjs');
  let requests=[];
  const responseData=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
- const srv=createHost({store:{get:()=>null},sync:{},request:async(path,options)=>{
+ const srv=createHost({store:{get:()=>null,set:()=>{}},sync:{},request:async(path,options)=>{
   requests.push({path,options});return path==='/api/auth/lab-login'
    ?responseData(401,{error:'invalid_credentials'})
    :responseData(200,{challengeId:'challenge'});

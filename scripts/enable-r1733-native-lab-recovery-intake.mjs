@@ -11,6 +11,7 @@ function one(src,old,next,label){
  if(count!==1)throw Error('R1733 '+label+' anchor count '+count);
  return src.replace(old,next);
 }
+const nativeRescue="\n/* PB1738 guarded Windows Lab walk-in rescue: independent of hidden tabs. */\n;(()=>{\n if(window.pb1738RescueInstalled)return;\n window.pb1738RescueInstalled=true;\n const status={loaded:true,mode:'',nativeVisible:false,rescueVisible:false,openHook:false};\n window.pb1738RescueStatus=status;\n const id='pb1738WalkinRescue';\n const queueRoute=()=>/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname);\n const isAlbum=()=>/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)||(\n    location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .albumTopNav.active'));\n const inQueue=workspace=>queueRoute()||(location.pathname==='/lab'&&\n   !!workspace.querySelector('.stageQueueWorkspace,.labOrderScrollArea,.labPrintTopNav.active,.albumTopNav.active'));\n function visible(el){\n  if(!el||!el.isConnected||el.closest('.pb1148SecondarySource,.pb1172RetiredQuickAccess'))return false;\n  const rects=el.getClientRects?.();\n  if(rects&&!rects.length)return false;\n  const style=window.getComputedStyle?.(el);\n  return !style||(style.display!=='none'&&style.visibility!=='hidden');\n }\n function mountRescue(){\n  const workspace=document.querySelector('.labRoleWorkspace'),native=document.getElementById('pb1137LocalIntakeButton');\n  let button=document.getElementById(id);\n  const nativeVisible=visible(native);\n  status.nativeVisible=nativeVisible;\n  status.openHook=typeof window.pb1738IntakeOpen==='function';\n  status.mode=isAlbum()?'album':'print';\n  if(!workspace||!inQueue(workspace)||nativeVisible||!status.openHook){\n   button?.remove();status.rescueVisible=false;return;\n  }\n  const header=workspace.querySelector('.pb1148SecondaryHeader.pb1174QueueNav');\n  const top=workspace.querySelector('.labSingleHeader');\n  const target=visible(header)?header:top||workspace;\n  if(!button){\n    button=document.createElement('button');button.id=id;button.type='button';\n    button.className='pb1137Launch pb1738NativeRescue';\n    button.setAttribute('data-pb-native-rescue','r1738');\n    button.onclick=()=>window.pb1738IntakeOpen?.(isAlbum()?'album':'print');\n  }\n  const label=isAlbum()?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';\n  if(button.textContent!==label)button.textContent=label;\n  if(button.parentElement!==target)target.prepend(button);\n  status.rescueVisible=true;\n }\n let scheduled=false;\n const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;mountRescue()})};\n const start=()=>{schedule();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});addEventListener('popstate',schedule);addEventListener('focus',schedule);};\n if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();\n})();\n";
 const nativeMount=[
  "function mount(){",
  " const workspace=document.querySelector('.labRoleWorkspace');",
@@ -52,7 +53,7 @@ const loc=root+'/'+intake;
 let js=fs.readFileSync(loc,'utf8');
 if(!js.includes(marker)){
  js=one(js,'let active=null,opening=false;',
-  "let active=null,opening=false;\nconst pb1733IntakeLabel=()=>/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';",
+  "let active=null,opening=false;\nwindow.pb1738IntakeOpen=mode=>open(mode);\nconst pb1733IntakeLabel=()=>/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';",
   'intake title helper');
  // Previous native build stages can replace these literal labels. The visible
  // launcher is authoritatively repainted by mount(), so cosmetic old-label
@@ -73,7 +74,7 @@ if(!js.includes(marker)){
  js=one(js,"window.addEventListener('photobridge-auth-session-changed',()=>{primaryState=null;primaryCheckedAt=0;schedule();});",
   "window.addEventListener('photobridge-auth-session-changed',()=>{primaryState=null;primaryCheckedAt=0;schedule();});\nwindow.addEventListener('online',()=>{primaryState=null;primaryCheckedAt=0;schedule();});\nwindow.addEventListener('focus',()=>{if(Date.now()-primaryCheckedAt>45000){primaryState=null;schedule();}});",
   'native device retry');
- js+='\n'+marker+'\n';
+ js+='\n'+marker+'\n'+nativeRescue+'\n';
  fs.writeFileSync(loc,js);
 }
 execFileSync(process.execPath,['--check',loc],{stdio:'inherit'});
@@ -105,7 +106,7 @@ for(const name of ['r1733-native-intake.css','r1733-native-auth-help.js']){
 const htmlPath=root+'/index.html';
 let html=fs.readFileSync(htmlPath,'utf8');
 if(!html.includes('r1733-native-intake.css')){
- html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1737">\n</head>','CSS inclusion');
+ html=one(html,'</head>','<link rel="stylesheet" href="/r1733-native-intake.css?v=r1733&nativeQueue=r1738">\n</head>','CSS inclusion');
 }
 if(!html.includes('r1733-native-auth-help.js')){
  html=one(html,'</body>','<script defer src="/r1733-native-auth-help.js?v=r1733"></script>\n</body>','recovery helper inclusion');
@@ -114,12 +115,12 @@ if(!html.includes('r1733-native-auth-help.js')){
 const nativeIntakeScript=/photobridge-r1137-lab-local-intake\.js\?[^"'\s<>]+/g;
 const nativeHits=[...html.matchAll(nativeIntakeScript)];
 if(nativeHits.length>1)throw Error('R1735 duplicate native intake script URL');
-if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1737')?url:url+'&nativeQueue=r1737');
+if(nativeHits.length===1)html=html.replace(nativeIntakeScript,url=>url.includes('nativeQueue=r1738')?url:url+'&nativeQueue=r1738');
 // The desktop header participates in the restored button placement.
 const nativeHeaderScript=/photobridge-r1147-lab-admin-header\.js\?[^"'\s<>]+/g;
 const nativeHeaderHits=[...html.matchAll(nativeHeaderScript)];
 if(nativeHeaderHits.length>1)throw Error('R1737 duplicate native header script');
-if(nativeHeaderHits.length===1)html=html.replace(nativeHeaderScript,url=>url.includes('nativeHeader=r1737')?url:url+'&nativeHeader=r1737');
+if(nativeHeaderHits.length===1)html=html.replace(nativeHeaderScript,url=>url.includes('nativeHeader=r1738')?url:url+'&nativeHeader=r1738');
 fs.writeFileSync(htmlPath,html);
 const manifestPath=root+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

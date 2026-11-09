@@ -22,10 +22,38 @@ function createHost({store,sync,request,roots,token,onLogin,onLogout}){
       if(url.pathname==='/desktop/discard'&&req.method==='POST'){const p=await readJson(req);store.discard(String(p.id||''));return json(res,200,{ok:true})}
 
       const {bytes,contentType}=await readBody(req);
+      // R1733: Password recovery is public but always online, never queued or cached.
+      // The local desktop-cookie + origin gate above still protects this proxy.
+      if(req.method==='POST'&&/^\/api\/auth\/password-reset\/(request|verify|complete)$/.test(url.pathname)){
+        try{
+          const up=await request(url.pathname,{method:'POST',body:bytes,anonymous:true,
+            headers:{'Content-Type':contentType||'application/json'}});
+          const body=Buffer.from(await up.arrayBuffer());
+          res.writeHead(up.status,{'Content-Type':up.headers.get('content-type')||'application/json','Cache-Control':'no-store'});
+          return res.end(body);
+        }catch{
+          return json(res,503,{error:'online_connection_required',
+            message:'بازیابی رمز به اتصال اینترنت نیاز دارد. از مرورگر photobridge.ir/account-recovery.html نیز می‌توانید استفاده کنید.'});
+        }
+      }
       if(url.pathname==='/api/auth/lab-login'&&req.method==='POST'){
         const previous=store.get('cookie');
         try{
-          const up=await request(url.pathname,{method:'POST',body:bytes.toString(),headers:{'Content-Type':contentType||'application/json'}});
+          // Normalize only the mobile number. Password bytes, case and spaces
+          // remain EXACTLY as entered; no alternative or bypass login is attempted.
+          let loginBody=bytes.toString('utf8');
+          if((contentType||'application/json').includes('application/json')){
+            try{
+              const data=JSON.parse(loginBody);
+              if(data&&typeof data==='object'&&!Array.isArray(data)&&typeof data.mobile==='string'){
+                const mobile=data.mobile.replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+                  .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+                  .replace(/[\s\u200c\u200e\u200f\u2066-\u2069]/g,'');
+                loginBody=JSON.stringify({...data,mobile});
+              }
+            }catch{/* Preserve the original request if it was not valid JSON. */}
+          }
+          const up=await request(url.pathname,{method:'POST',body:loginBody,headers:{'Content-Type':contentType||'application/json'}});
           const data=await up.json().catch(()=>({}));
           if(up.ok)await onLogin(data);else store.set('cookie',previous);
           return json(res,up.status,data);

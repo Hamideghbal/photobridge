@@ -97,7 +97,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   const prefix='dist/web/lab-desktop-ui/';
   const modified=changed?intake
    .replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent='متن اصلاح‌شده توسط مرحلهٔ قبلی';")
-   .replaceAll("modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');","modal.setAttribute('aria-label','پنجرهٔ سفارش';")
+   .replaceAll("modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');","modal.setAttribute('aria-label','پنجرهٔ سفارش');")
    .replaceAll("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2','پنجرهٔ سفارش'));"):intake;
   const files=new Map([
    [prefix+'photobridge-r1137-lab-local-intake.js',modified],

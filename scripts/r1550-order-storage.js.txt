@@ -34,17 +34,19 @@ function pb1664StorageBucket(order){
  const source=String(order?.source||order?.order_source||'').toLowerCase();
  // Source 'walkin' represents a direct customer, not a photographer account.
  return source==='walkin'||source==='walk_in'||source==='manual_invoice'||
-        Boolean(order?.walkin_customer_name||order?.walkin_customer_mobile)?'moshtari':'hamkar';
+        Boolean(order?.walkin_customer_name||order?.walkin_customer_mobile)?'moshtari':'Hamkar';
 }
-// Preserve previous folder labels for reattaching historical downloads; never rename their directories.
+// Never rename historical downloads. Earlier builds used lowercase hamkar or Persian labels.
+function pb1664PreviousStorageBucket(order){return pb1664StorageBucket(order)==='moshtari'?null:'hamkar';}
 function pb1664LegacyStorageBucket(order){return pb1664StorageBucket(order)==='moshtari'?'مشتریان':'همکاران';}
 async function pb1550Probe(root,detail){
  const state=yc(detail.order.id)||{},pathDate=state.pathDate||detail.order.downloaded_at||state.startedAt;
  if(!pathDate||!detail.files?.length)return null;
  const day=Ic(new Date(pathDate)),customer=Tg(detail.order),targets={};
- // Historical orders may still use Persian category names or [day,customer,size]. Try all layouts
- // without creating directories, moving files, or overriding pinned handles.
- for(const prefix of [[pb1664StorageBucket(detail.order),day,customer],[pb1664LegacyStorageBucket(detail.order),day,customer],[day,customer]]){
+ // Historical orders may still use lowercase hamkar, Persian labels or [day,customer,size].
+ // Probe existing folders without creating directories, moving files or overwriting pinned handles.
+ const previous=pb1664PreviousStorageBucket(detail.order);
+ for(const prefix of [[pb1664StorageBucket(detail.order),day,customer],...(previous?[[previous,day,customer]]:[]),[pb1664LegacyStorageBucket(detail.order),day,customer],[day,customer]]){
   const found={};let valid=true;
   for(const file of detail.files){try{let dir=root;for(const name of [...prefix,Uy(detail,file)])dir=await dir.getDirectoryHandle(Ya(name),{create:false});const meta=pb1450Meta(file,state.localFiles||{}),handle=await dir.getFileHandle(Ya(meta.original_name,'file'),{create:false}),info=await pb1450FileInfo(handle);if(!info.size||info.size!==Number(meta.bytes)){valid=false;break}found[String(file.id)]={dir:pb1550Encode(dir),day};}catch{valid=false;break}}
   if(valid)return{version:1,root:pb1550Encode(root),targets:found,pathDate,customer,createdAt:new Date().toISOString()};

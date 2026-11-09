@@ -1062,3 +1062,8 @@ runR1314(process.execPath,['--test','scripts/test-r1725-marker-recovery.cjs'],{s
 // Correct the earlier R1451 test assertion at source before this build reaches it.
 await deployStep('./enable-r1726-mobile-login.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdio:'inherit'});
+
+// R1727: site-mobile login visual refinement only: logo -> PhotoBridge -> Persian title.
+// Keep the existing keyboard-safe top anchor, login behavior and installed-app banner.
+await deployStep('./enable-r1727-mobile-login-header.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'],{stdio:'inherit'});

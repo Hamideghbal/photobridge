@@ -43,7 +43,20 @@ const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const bundle=root+'/assets/index-UIRefine-v655-r84.js';
   let ui=fs.readFileSync(bundle,'utf8');
-  if(!ui.includes(newEligibility))ui=one(ui,oldEligibility,newEligibility,root+' delete eligibility');
+  if(!ui.includes(newEligibility)){
+    if(ui.includes(oldEligibility)){
+      ui=one(ui,oldEligibility,newEligibility,root+' updated delete eligibility');
+    }else{
+      // Some native snapshots predate the R1545 queue predicate. The API
+      // safeguards are identical; update that older predicate in-place.
+      const start=ui.indexOf(',ma=le=>'),end=ui.indexOf(',si=async le=>',start);
+      if(start<0||end<=start||ui.indexOf(',ma=le=>',start+1)!==-1)throw Error('[R1742] '+root+' native delete predicate not found');
+      const previous=ui.slice(start,end);
+      if(!previous.startsWith(',ma=le=>!(le!=null&&le.downloaded_at)&&'))throw Error('[R1742] '+root+' unknown delete predicate');
+      const safe=',ma=le=>!(le!=null&&le.printed_at)&&(!(le!=null&&le.downloaded_at)||["sent","received","downloaded"].includes(String(le.status||"")))&&!['+'"uploading","completed","cancelled","ready","printed","ready_print","printing","reviewing"'+'].includes(String((le==null?void 0:le.status)||""))&&!["printing","binding","ready","completed","delivered"].includes(String((le==null?void 0:le.album_stage)||""))&&String((le==null?void 0:le.payment_status)||"")!=="paid"';
+      ui=ui.slice(0,start)+safe+ui.slice(end);
+    }
+  }
   for(const guard of ['le.printed_at',"String((le==null?void 0:le.payment_status)||\"\")!==\"paid\""]){
     if(!ui.includes(guard))throw Error('[R1742] missing queue cancellation guard '+root+': '+guard);
   }

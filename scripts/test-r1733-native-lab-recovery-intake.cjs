@@ -11,7 +11,7 @@ test('R1733 Windows lab header retains one walk-in action for print and album; s
  assert(js.includes('/* PB1733 native Lab walk-in header fix */'));
  assert(js.includes("'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری'"));
  assert(js.includes('if(button.textContent!==label)button.textContent=label'));
- assert(js.includes("button.disabled=!ready"));
+ assert(js.includes('if(button.disabled===ready)button.disabled=!ready'));
  assert(!js.includes('if(!primaryState){old?.remove();return;}'));
  assert(js.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
  assert(header.includes('/* PB1733 keep intake across header rebuild */'));

@@ -57,7 +57,7 @@ if(!js.includes(marker)){
   " const pb1733DialogHeading=modal.querySelector('header h2');",
   " if(pb1733DialogHeading)pb1733DialogHeading.textContent=pb1733IntakeLabel();",
   " modal.showModal();"
- ].join('\\n'),'intake modal display');
+ ].join('\n'),'intake modal display');
  const start=js.indexOf('function mount(){');
  const stop=js.indexOf('\nlet primaryState=null,checking=false,primaryCheckedAt=0;',start);
  if(start<0||stop<start)throw Error('R1733 native intake mount boundary changed');

@@ -1,1 +1,1 @@
-2026-11-09-r1719-local-order-folder-moshtari-hamkar
+2026-11-09-r1720-mobile-print-chooser-entry-fast

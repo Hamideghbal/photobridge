@@ -1052,3 +1052,8 @@ runR1314(process.execPath,['--test','scripts/test-r1722-lab-city-grouping.cjs'],
 // must never be reintroduced by later builds. GitHub Actions not required.
 await deployStep('./verify-r1723-uppercase-storage.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1723-storage-and-build.cjs'],{stdio:'inherit'});
+
+// R1725: an explicitly reselected Lab folder may have lost its local identity JSON.
+// Verify native and browser UI recovery, and regenerate Windows UI cache/manifest.
+await deployStep('./verify-r1725-deleted-marker.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1725-marker-recovery.cjs'],{stdio:'inherit'});

@@ -76,6 +76,10 @@
      'آخرین دریافت: '+date(s.uiDownloadedAt),
      'آخرین اعمال: '+date(s.uiAppliedAt)
    ])element('p',line,panel);
+   const walkin=window.pb1738RescueStatus;
+   const walkinDetail=!walkin?'کد R1738 اجرا نشده':walkin.nativeVisible?'دکمه اصلی قابل نمایش است':walkin.rescueVisible?'دکمه جایگزین فعال است':walkin.openHook?'فرم بارگذاری شده، اما دکمه هنوز نمایش داده نشده':'تابع بازکردن فرم اجرا نشده';
+   element('p','تشخیص ثبت سفارش حضوری: '+walkinDetail,panel);
+   element('p','مسیر صفحه: '+location.pathname,panel);
    element('p',s.updateError?'به‌روزرسانی کامل نشده است: '+s.updateError:'بررسی و دریافت تغییرات ظاهر خودکار انجام می‌شود.',panel);
    element('p','برای بررسی دستی از منوی آیکون PhotoBridge کنار ساعت ویندوز استفاده کن.',panel);
    const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);

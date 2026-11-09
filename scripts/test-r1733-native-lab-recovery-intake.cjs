@@ -23,7 +23,7 @@ test('R1733 Windows lab header retains one walk-in action for print and album; s
 test('R1733 release is isolated to native UI, has valid hashes and safe browser recovery',()=>{
  const manifest=JSON.parse(read(base+'manifest.json'));
  const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
- const files=['photobridge-r1137-lab-local-intake.js','photobridge-r1147-lab-admin-header.js','r1733-native-intake.css','r1733-native-auth-help.js','index.html'];
+ const files=['photobridge-r1137-lab-local-intake.js','photobridge-r1147-lab-admin-header.js','r1733-native-intake.css','r1733-native-auth-help.js','desktop-overlay.js','index.html'];
  assert.equal(manifest.channel,'lab');
  assert.equal(manifest.build,hash(JSON.stringify(manifest.files)));
  for(const name of files){
@@ -105,6 +105,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
    [prefix+'photobridge-r1147-lab-admin-header.js',fixtureHeader(changed)],
    ['scripts/r1733-native-intake.css',read('scripts/r1733-native-intake.css')],
    ['scripts/r1733-native-auth-help.js',read('scripts/r1733-native-auth-help.js')],
+   ['apps/lab-desktop/desktop-overlay.js',read('apps/lab-desktop/desktop-overlay.js')],
    [prefix+'index.html','<html><head></head><body></body></html>'],
    [prefix+'manifest.json',JSON.stringify({protocol:1,channel:'lab',files:[]})]
   ]);
@@ -128,7 +129,8 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   assert(nativeHeader.includes('PB1733 keep intake across header rebuild'));
   const manifest=JSON.parse(files.get(prefix+'manifest.json'));
   assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
-  assert.equal(manifest.files.length,5);
+  assert.equal(manifest.files.length,6);
+  assert(files.get(prefix+'desktop-overlay.js').includes('تشخیص ثبت سفارش حضوری: '));
  }
 });
 
@@ -235,4 +237,17 @@ test('R1738 guarded fallback creates an order launch when original is absent, bu
  win.getComputedStyle=()=>({display:'inline-flex',visibility:'visible'});
  onPopstate();assert.equal(button,null,'rescue must not duplicate a visible original');
  assert.equal(win.pb1738RescueStatus.nativeVisible,true);
+});
+
+
+test('R1739 final Lab release really ships the live Ctrl+Shift+U diagnostic overlay',()=>{
+ const overlay=read(base+'desktop-overlay.js');
+ const source=read('apps/lab-desktop/desktop-overlay.js');
+ const manifest=JSON.parse(read(base+'manifest.json'));
+ const entry=manifest.files.find(x=>x.name==='desktop-overlay.js');
+ assert(entry,'desktop UI manifest must contain the diagnostics overlay');
+ assert.equal(overlay,source,'downloadable overlay must equal the latest diagnostics source');
+ assert(overlay.includes('تشخیص ثبت سفارش حضوری: '));
+ assert.equal(entry.sha256,crypto.createHash('sha256').update(overlay).digest('hex'));
+ assert(read('scripts/enable-r1733-native-lab-recovery-intake.mjs').includes("const overlayTarget=root+'/desktop-overlay.js'"));
 });

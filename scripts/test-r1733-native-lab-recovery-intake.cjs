@@ -11,7 +11,9 @@ test('R1733 Windows lab header retains one walk-in action for print and album; s
  assert(js.includes('/* PB1733 native Lab walk-in header fix */'));
  assert(js.includes("'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری'"));
  assert(js.includes('if(button.textContent!==label)button.textContent=label'));
- assert(js.includes('if(button.disabled===ready)button.disabled=!ready'));
+ assert(js.includes('if(!opening&&button.disabled)button.disabled=false'));
+ assert(js.includes("const target=header||workspace.querySelector('.labSingleHeader')"));
+ assert(!js.includes("host.querySelector('.mainQueueFilters')"));
  assert(!js.includes('if(!primaryState){old?.remove();return;}'));
  assert(js.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
  assert(header.includes('/* PB1733 keep intake across header rebuild */'));
@@ -29,6 +31,7 @@ test('R1733 release is isolated to native UI, has valid hashes and safe browser 
  }
  const nativeIndex=read(base+'index.html'),help=read(base+'r1733-native-auth-help.js');
  assert(nativeIndex.includes('/r1733-native-intake.css?v=r1733'));
+ assert(nativeIndex.includes('nativeQueue=r1735'));
  assert(nativeIndex.includes('/r1733-native-auth-help.js?v=r1733'));
  assert(help.includes("https://photobridge.ir/account-recovery.html"));
  assert(help.includes('event.stopImmediatePropagation()'));
@@ -107,4 +110,35 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
   assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
   assert.equal(manifest.files.length,5);
  }
+});
+
+test('R1735 visible native walk-in action survives hidden filters and lost marker',()=>{
+ const js=read(base+'photobridge-r1137-lab-local-intake.js');
+ const start=js.indexOf('function mount(){');
+ const end=js.indexOf('\nlet primaryState=null,checking=false,primaryCheckedAt=0;',start);
+ assert(start>=0&&end>start);
+ const mountCode=js.slice(start,end);
+ let path='/lab/orders',current=null,secondaryVisible=true,paired=false,checkingCalls=0;
+ const createTarget=name=>({name,prepends:0,prepend(button){this.prepends++;button.parentElement=this;}});
+ const top=createTarget('top'),secondary=createTarget('secondary');
+ const workspace={querySelector:selector=>selector==='.pb1148SecondaryHeader.pb1174QueueNav'?(secondaryVisible?secondary:null):selector==='.labSingleHeader'?top:null};
+ const doc={querySelector:selector=>selector==='.labRoleWorkspace'?workspace:null,getElementById:id=>id==='pb1137LocalIntakeButton'?current:null};
+ const makeButton=(tag,text,cls)=>{assert.equal(tag,'button');return current={textContent:text,className:cls,disabled:false,parentElement:null,attrs:{},setAttribute(k,v){this.attrs[k]=v},getAttribute(k){return this.attrs[k]||null},remove(){this.parentElement=null;}};};
+ const label=()=>path.startsWith('/lab/album')?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';
+ const location={get pathname(){return path}};
+ const fakeOpen=()=>{};
+ const makeMount=(opening=false)=>new Function('document','storage','location','pb1733IntakeLabel','node','open','primaryState','checking','checkPrimary','opening',mountCode+'\nreturn mount;')(
+  doc,()=>({deviceId:()=>paired?'device':null}),location,label,makeButton,fakeOpen,null,false,()=>{checkingCalls++},opening);
+ const mount=makeMount();
+ mount();
+ assert.equal(current.parentElement,secondary,'button must be in visible sibling header');
+ assert.equal(current.disabled,false,'missing marker must not hide or disable launch');
+ assert.equal(current.textContent,'ثبت سفارش عکس حضوری');
+ assert.equal(current.onclick,fakeOpen);
+ mount();assert.equal(secondary.prepends,1,'repeated repaint must not duplicate action');
+ path='/lab/album';mount();assert.equal(current.textContent,'ثبت سفارش آلبوم حضوری');
+ secondaryVisible=false;mount();assert.equal(current.parentElement,top,'before secondary nav is ready show it in first header');
+ paired=true;mount();assert.equal(checkingCalls,1,'real pairing can trigger background device check');
+ current.disabled=true;makeMount(true)();assert.equal(current.disabled,true,'preparing action must remain disabled');
+ path='/lab/settings';mount();assert.equal(current.parentElement,null,'leave intake out of settings');
 });

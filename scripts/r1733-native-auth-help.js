@@ -34,7 +34,7 @@
   return el.classList.contains('forgotPasswordLink') ||
     /فراموش.{0,15}رمز|بازیابی.{0,15}رمز|یکسان.{0,15}سازی.{0,15}رمز/.test(label);
  };
- const inLogin=el=>!!el.closest('.unifiedLoginPage,.authShell,form.labLogin,form.unifiedLoginCard,.rentalUnifiedLogin');
+ const inLogin=el=>!!(el.closest('.unifiedLoginPage,.authShell,form.labLogin,form.unifiedLoginCard,.rentalUnifiedLogin')||[...document.querySelectorAll('form')].some(form=>form.contains(el)&&form.querySelector('input[type="password"]')&&form.querySelector('input[type="tel"],input[name="mobile"]')));
  function openRecovery(){
   // Electron's external-navigation handler opens HTTPS links in the default
   // system browser, where the existing OTP recovery flow is already supported.
@@ -47,7 +47,7 @@
   openRecovery();
  },true);
  function mount(){
-  const form=document.querySelector('.unifiedLoginPage form,.authShell form,form.labLogin');
+  const form=document.querySelector('.unifiedLoginPage form,.authShell form,form.labLogin')||[...document.querySelectorAll('form')].find(f=>!f.closest('dialog')&&f.querySelector('input[type="password"]')&&f.querySelector('input[type="tel"],input[name="mobile"]'));
   if(!form||!form.querySelector('input[type="password"],.passwordField input'))return;
   if(form.querySelector('.pbR1733RecoveryLink'))return;
   // Keep the original recovery link whenever present; do not render a duplicate.

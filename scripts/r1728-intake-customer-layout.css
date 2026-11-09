@@ -1,0 +1,112 @@
+/* R1728 — Lab walk-in photo order: selected photographer account details.
+   Shared website/Windows Lab UI; only the manual intake dialog is scoped. */
+.pb1137Intake .pb1137Settings.pb1139EntryRow > .pb1365CustomerAccountRow {
+  grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-rows:min-content!important;
+  align-items:start!important;
+  width:100%!important;min-width:0!important;
+  gap:9px!important;
+  overflow:visible!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1139Customer {
+  grid-column:1!important;
+  grid-row:auto!important;
+  flex:none!important;
+  width:100%!important;max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+  grid-column:1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(270px,360px)!important;
+  align-items:start!important;
+  column-gap:14px!important;row-gap:8px!important;
+  min-width:0!important;width:100%!important;
+  margin:0!important;padding:0 2px!important;
+  border:0!important;background:transparent!important;
+  overflow:visible!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails[hidden] {
+  display:none!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountSummary {
+  min-width:0!important;
+  display:flex!important;align-items:start!important;
+  gap:8px 20px!important;flex-wrap:wrap!important;
+  overflow-wrap:anywhere!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta {
+  display:flex!important;flex-direction:column!important;
+  align-items:flex-start!important;justify-content:flex-start!important;
+  flex:0 1 auto!important;gap:3px!important;min-width:0!important;
+  margin:0!important;padding:0!important;
+  white-space:normal!important;
+  line-height:1.45!important;
+  border:0!important;background:transparent!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > span {
+  display:block!important;color:#6b7c95!important;
+  font-size:10px!important;font-weight:600!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > strong {
+  display:block!important;max-width:100%!important;
+  font-size:12px!important;font-weight:800!important;
+  overflow-wrap:anywhere!important;white-space:normal!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1586IntakeDebtDate {
+  display:block!important;margin-top:3px!important;
+  font-size:10px!important;font-weight:500!important;
+  line-height:1.5!important;color:#74849e!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+  min-width:0!important;max-width:100%!important;
+  display:flex!important;align-items:center!important;
+  align-content:flex-start!important;justify-content:flex-end!important;
+  flex-wrap:wrap!important;gap:7px!important;
+  margin:0!important;padding:0!important;
+  position:static!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions > button {
+  flex:0 0 auto!important;max-width:100%!important;
+  white-space:normal!important;min-height:32px!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit {
+  position:static!important;top:auto!important;inset:auto!important;
+  width:100%!important;max-width:100%!important;
+  flex:1 0 100%!important;z-index:auto!important;
+  box-sizing:border-box!important;margin:3px 0 0!important;
+  box-shadow:0 2px 9px rgba(23,43,67,.10)!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit input {
+  min-width:0!important;max-width:100%!important;
+  width:100%!important;box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit[hidden] {
+  display:none!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294ActionNotice:not(:empty),
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit:not([hidden]) ~ .pb1294ActionNotice:not(:empty) {
+  position:static!important;top:auto!important;inset:auto!important;
+  display:block!important;z-index:auto!important;
+  max-width:100%!important;width:100%!important;
+  flex-basis:100%!important;white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  padding:5px 8px!important;margin:0!important;
+  box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1365SmsChoice {
+  display:inline-flex!important;flex:0 0 auto!important;
+  align-items:center!important;white-space:nowrap!important;
+}
+@media (max-width:1000px) {
+  .pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+    justify-content:flex-start!important;
+  }
+}

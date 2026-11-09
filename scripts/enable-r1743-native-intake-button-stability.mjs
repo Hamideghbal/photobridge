@@ -31,7 +31,7 @@ if(!intake.includes('/* PB1743 native button target */')){
 }
 execFileSync(process.execPath,['--check',intakePath],{stdio:'inherit'});
 const buttonAt=intake.indexOf("button.id='pb1137LocalIntakeButton'");
-if(buttonAt<0||!/\\bbutton\\.(?:onclick\\s*=|addEventListener\\s*\\(\\s*['"]click['"])/.test(intake.slice(Math.max(0,buttonAt-500),buttonAt+1600)))
+if(buttonAt<0||!/\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(intake.slice(Math.max(0,buttonAt-500),buttonAt+1600)))
  throw Error('[R1743] original intake click handler missing');
 if(!intake.includes("!provider||!provider.deviceId()"))throw Error('[R1743] original device guard changed');
 

@@ -16,7 +16,7 @@ function fixture({cityA='تهران',cityB='اصفهان',includeB=true,unknown=
   if(unknown)labs.push({id:'d',name:'چاپ بدون شهر',city:'',connected:false});
   return {primaryLabId:'a',activeLabId:'a',canDiscoverLabs:true,memberships:members,labs};
 }
-function harness(data){
+function harness(data,simulateWindowEventRegistration=false){
   let calls=0,root=null,style=null;
   const board={innerHTML:''},events={};
   const attrs={
@@ -48,7 +48,10 @@ function harness(data){
     origin:'https://photobridge.ir',
     href:'https://photobridge.ir/photographer/orders/flow?workspace=print&pbLabChooser=1'
   };
-  const window={__pbR100F5PrimaryLab:''};
+  // In a real browser, global addEventListener and window.addEventListener are the same API.
+  // The production chooser may use either form after the late-stage installers.
+  const addEventListener=(event,fn)=>{events['window:'+event]=fn};
+  const window={__pbR100F5PrimaryLab:'',addEventListener};
   const sessionStorage={getItem(){return null},setItem(){}};
   const history={pushState(){},replaceState(){}};
   const fetch=async url=>{
@@ -56,9 +59,14 @@ function harness(data){
     calls++;
     return {ok:true,json:async()=>data};
   };
-  const addEventListener=(event,fn)=>events['window:'+event]=fn;
   const queueMicrotask=fn=>Promise.resolve().then(fn);
-  vm.runInNewContext(script,{
+  window.document=document;
+  window.location=location;
+  // Simulate the exact late-build error shape: some builds use window.addEventListener.
+  const runtimeScript=simulateWindowEventRegistration
+    ? script.replace("  addEventListener('focus',","  window.addEventListener('focus',")
+    : script;
+  vm.runInNewContext(runtimeScript,{
     window,document,location,sessionStorage,history,fetch,addEventListener,queueMicrotask,
     setInterval(){},setTimeout(){},URLSearchParams,console:{warn(){}}
   },{timeout:2000});
@@ -139,6 +147,13 @@ test('HTML-unsafe city names are escaped in labels and attribute keys',async()=>
   const h=harness(data);await h.start();
   assert(h.html().includes('&lt;img'));
   assert(!h.html().includes('<img src=x onerror'));
+});
+test('late-stage scripts can register focus with window.addEventListener in real VM',async()=>{
+  const h=harness(fixture(),true);
+  await h.start();
+  assert.equal(h.calls(),1);
+  await h.refresh();
+  assert.equal(h.calls(),2,'window focus event must trigger the same refresh callback');
 });
 test('responsive city filter works on web and keeps old chooser handlers',()=>{
   assert(script.includes('/* PB1722 city filters */'));

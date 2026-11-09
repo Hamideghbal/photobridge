@@ -8,15 +8,18 @@ test('R1664 routes only walk-in/direct customers into customer folder, photograp
  const context={window:{pbLabLocalIntakeStorage:{}},Map,Promise,Date,pb1450Root:async()=>null};
  vm.createContext(context);vm.runInContext(code,context);
  const fn=context.pb1664StorageBucket;
- assert.equal(fn({source:'walkin',walkin_customer_name:'مشتری'}),'مشتریان');
- assert.equal(fn({source:'manual_invoice'}),'مشتریان');
- assert.equal(fn({source:'print',customer_name:'عکاسی'}),'همکاران');
- assert.equal(fn({source:'web',mode:'album'}),'همکاران');
- assert.equal(fn({walkin_customer_mobile:'09123456789'}),'مشتریان');
+ assert.equal(fn({source:'walkin',walkin_customer_name:'مشتری'}),'moshtari');
+ assert.equal(fn({source:'manual_invoice'}),'moshtari');
+ assert.equal(fn({source:'print',customer_name:'عکاسی'}),'hamkar');
+ assert.equal(fn({source:'web',mode:'album'}),'hamkar');
+ assert.equal(fn({walkin_customer_mobile:'09123456789'}),'moshtari');
+ const legacy=context.pb1664LegacyStorageBucket;
+ assert.equal(legacy({source:'walkin'}),'مشتریان');
+ assert.equal(legacy({source:'print'}),'همکاران');
 });
 test('R1664 new storage layout includes category, date, named party and order-size subfolder',()=>{
  assert.match(code,/\[pb1664StorageBucket\(detail\.order\),day,saved\.customer,Uy\(detail,file\)\]/);
- assert.match(code,/for\(const prefix of \[\[pb1664StorageBucket\(detail\.order\),day,customer\],\[day,customer\]\]\)/);
+ assert.match(code,/for\(const prefix of \[\[pb1664StorageBucket\(detail\.order\),day,customer\],\[pb1664LegacyStorageBucket\(detail\.order\),day,customer\],\[day,customer\]\]\)/);
  assert.match(code,/if\(old\)return\{root,dir:pb1550Decode\(old\.dir\),day:old\.day\}/);
 });
 test('R1664 browser and native installs use the same guarded source without migrating old orders',()=>{

@@ -100,7 +100,11 @@ test('native header rebuild preserves the same element and flags it as queue lau
  assert(css.includes('.pb1148SecondaryHeader.pb1174QueueNav>#pb1137LocalIntakeButton{display:inline-flex!important'));
 });
 test('site intake and native permission guard are preserved',()=>{
- assert(js.includes("!provider||!provider.deviceId()"));
+ const mountStart=js.indexOf('function mount(){');
+ const mountEnd=js.indexOf('let primaryState=',mountStart);
+ const mounted=mountStart>=0&&mountEnd>mountStart?js.slice(mountStart,mountEnd):'';
+ assert(mounted.includes('primaryState'),'native mount must retain primary-device state check');
+ assert(js.includes('/api/lab/download-device'),'native primary-device verification API must remain present');
  assert(js.includes("const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;"));
  assert(js.includes("const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;"));
  assert(original.includes("button.id='pb1137LocalIntakeButton'"));

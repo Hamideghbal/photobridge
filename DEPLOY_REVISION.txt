@@ -1,1 +1,1 @@
-2026-11-10-r1745-native-button-build-anchor-recovery
+2026-11-10-r1746-native-intake-primary-guard-compat

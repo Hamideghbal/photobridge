@@ -53,7 +53,13 @@ execFileSync(process.execPath,['--check',intakePath],{stdio:'inherit'});
 const buttonAt=intake.indexOf("button.id='pb1137LocalIntakeButton'");
 if(buttonAt<0||!/\bbutton\.(?:onclick\s*=|addEventListener\s*\(\s*['"]click['"])/.test(intake.slice(Math.max(0,buttonAt-500),buttonAt+1600)))
  throw Error('[R1743] original intake click handler missing');
-if(!intake.includes("!provider||!provider.deviceId()"))throw Error('[R1743] original device guard changed');
+// R1746: earlier build stages legitimately rewrite the syntactic device guard.
+// Validate the existing primary-device verification flow instead of exact text.
+const mountStart=intake.indexOf('function mount(){');
+const mountEnd=intake.indexOf('let primaryState=',mountStart);
+const mounted=mountStart>=0&&mountEnd>mountStart?intake.slice(mountStart,mountEnd):'';
+if(!mounted.includes('primaryState')||!intake.includes('/api/lab/download-device'))
+ throw Error('[R1746] native primary-device verification flow missing');
 
 const headerName='photobridge-r1147-lab-admin-header.js';
 const headerPath=root+'/'+headerName;

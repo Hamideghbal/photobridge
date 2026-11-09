@@ -40,7 +40,7 @@ const headerPath=root+'/'+headerName;
 let header=fs.readFileSync(headerPath,'utf8');
 if(!header.includes('/* PB1743 preserve native launch while rebuilding header */')){
  header=replace(header,
-  '   row.replaceChildren();',
+  '  row.replaceChildren();',
   "   /* PB1743 preserve native launch while rebuilding header */\n   const retainedLaunch=row.querySelector('#pb1137LocalIntakeButton');\n   row.replaceChildren();\n   if(retainedLaunch){retainedLaunch.classList.add('pb1174QueueLaunch');row.prepend(retainedLaunch);}",
   'header rebuild keeps original launch');
  header=replace(header,

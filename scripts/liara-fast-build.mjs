@@ -1045,3 +1045,10 @@ runR1314(process.execPath,['--test','scripts/test-r1721-mobile-first-entry.cjs']
 // Apply after all older UI mutators, without altering the native Windows UI snapshot.
 await deployStep('./enable-r1722-lab-city-grouping.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1722-lab-city-grouping.cjs'],{stdio:'inherit'});
+
+// R1723: enforce EXACT uppercase HAMKAR/MOSHTARI names in final web + Lab
+// Windows hot-update bundles and refresh the Windows manifest checksum.
+// Repeat the R1132 regression test here: its old defer/duplicate boot error
+// must never be reintroduced by later builds. GitHub Actions not required.
+await deployStep('./verify-r1723-uppercase-storage.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1723-storage-and-build.cjs'],{stdio:'inherit'});

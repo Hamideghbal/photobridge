@@ -1,0 +1,17 @@
+/* R1733 native Lab-only: the queue intake action is always discoverable.
+   Disabled until the server confirms the configured primary download device. */
+@media (min-width:821px){
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 auto!important;order:-1!important;margin-inline-start:0!important;
+  margin-inline-end:auto!important;min-width:180px!important;max-width:270px!important;
+  min-height:36px!important;padding:6px 12px!important;
+  font:800 12px/1.5 Vazirmatn,Tahoma,Arial,sans-serif!important;
+  color:#315efb!important;background:#eef3ff!important;border:1px solid #cbd8ff!important;
+  border-radius:10px!important;white-space:nowrap!important;visibility:visible!important;
+ }
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch:disabled{
+  color:#667085!important;background:#f5f6f8!important;border-color:#e2e6ec!important;opacity:.75!important;
+  cursor:not-allowed!important;pointer-events:auto!important;
+ }
+}

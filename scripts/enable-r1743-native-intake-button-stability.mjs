@@ -24,14 +24,15 @@ if(!intake.includes('/* PB1743 native button target */')){
   "const header=desktopQueue?host.querySelector('.pb1148SecondaryHeader.pb1174QueueNav'):null;\n const target=header||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}",
   "const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;\n // The hidden queue filter is never the preferred target on Windows desktop.\n const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;\n const target=header||visibleFallback||host.querySelector('.mainQueueFilters')||host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}",
   'native visible header');
- intake=replace(intake,
-  "if(old){if(old.parentElement!==target)target.append(old);return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;\n target.append(button);",
-  "if(old){if(old.parentElement!==target)target.append(old);if(header)old.classList.add('pb1174QueueLaunch');return;}const button=node('button','ثبت سفارش عکس حضوری','pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';button.onclick=open;\n if(header)button.classList.add('pb1174QueueLaunch');target.append(button);",
-  'native original launch/handler');
+ // Retain the established v2268 native callback exactly as earlier stages
+ // generated it. The visible-header target fixes its placement; no click-hook
+ // rewrite, proxy action, or registration change is needed.
  fs.writeFileSync(intakePath,intake);
 }
 execFileSync(process.execPath,['--check',intakePath],{stdio:'inherit'});
-if(!intake.includes('button.onclick=open'))throw Error('[R1743] original intake click handler changed');
+const buttonAt=intake.indexOf("button.id='pb1137LocalIntakeButton'");
+if(buttonAt<0||!/\\bbutton\\.(?:onclick\\s*=|addEventListener\\s*\\(\\s*['"]click['"])/.test(intake.slice(Math.max(0,buttonAt-500),buttonAt+1600)))
+ throw Error('[R1743] original intake click handler missing');
 if(!intake.includes("!provider||!provider.deviceId()"))throw Error('[R1743] original device guard changed');
 
 const headerName='photobridge-r1147-lab-admin-header.js';

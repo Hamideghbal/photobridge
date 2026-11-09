@@ -19,14 +19,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
       " const itemLabel=c=>[c.mobile,c.name!==c.mobile?c.name:null,c.registrationPending?'پیش‌عضویت':'عضویت کامل'].filter(Boolean).join(' · ');",
       " const itemLabel=c=>[c.mobile,c.name!==c.mobile?c.name:null,c.registrationPending?'پیش‌عضویت':'عضویت کامل'].filter(Boolean).join(' · ');\n // R1728: reuse the existing invitation endpoint; never create an invoice SMS for a pending account.\n model.resendPendingInvitation=()=>resendInvitation(model.value);",
       'pending invite action');
+    // Earlier build stages may have customized the SMS aria-label and tooltip.
+    // Override those attributes AFTER the checkbox is mounted; do not depend
+    // on the historical literal (which differs in the real Liara build).
     src=once(src,
-      "  sms.setAttribute('aria-label','ارسال پیامک فاکتور همین سفارش');",
-      "  sms.setAttribute('aria-label',c.registrationPending?'ارسال پیامک دعوت‌نامه پس از ثبت سفارش':'ارسال پیامک فاکتور همین سفارش');",
-      'SMS type label');
-    src=once(src,
-      "  smsChoice.title=data.smsEnabled?'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.':'ارسال پیامک برای این لابراتوار غیرفعال است';",
-      "  smsChoice.title=data.smsEnabled?(c.registrationPending?'پس از ثبت سفارش، پیامک دعوت‌نامه عضویت مجدداً ارسال می‌شود.':'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.'):'ارسال پیامک برای این لابراتوار غیرفعال است';",
-      'SMS explanatory title');
+      "  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);",
+      "  smsChoice.append(sms,node('span','پیامک'));controls.append(smsChoice);\\n  sms.setAttribute('aria-label',c.registrationPending?'ارسال پیامک دعوت‌نامه پس از ثبت سفارش':'ارسال پیامک فاکتور همین سفارش');\\n  smsChoice.title=data.smsEnabled?(c.registrationPending?'پس از ثبت سفارش، پیامک دعوت‌نامه عضویت مجدداً ارسال می‌شود.':'پس از ثبت سفارش، پیامک فاکتور همین سفارش بعد از صدور ارسال می‌شود.'):'ارسال پیامک برای این لابراتوار غیرفعال است';",
+      'SMS checkbox mount');
     const startAnchor="  if(c.registrationPending){\n   const resend=node('button','ارسال مجدد دعوت‌نامه','pb1294ResendInvite');";
     const endAnchor="  if(data.canEditInitialDebt){";
     const start=src.indexOf(startAnchor);

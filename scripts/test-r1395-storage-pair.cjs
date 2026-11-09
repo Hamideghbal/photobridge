@@ -18,6 +18,73 @@ test('marker is stable in same folder, distinct in different folders, malformed 
  const root=()=>{let value;return {async getFileHandle(name,options){if(value===undefined&&!options?.create)throw Object.assign(Error(),{name:'NotFoundError'});return {async createWritable(){return {async write(text){value=text},async close(){},async abort(){}}},async getFile(){return {size:value.length,async text(){return value}}}}},set value(x){value=x}}};
  const a=root(),b=root(),id=await context.pb1395FolderId(a,true);assert.equal(await context.pb1395FolderId(a,true),id);assert.notEqual(await context.pb1395FolderId(b,true),id);a.value='{}';await assert.rejects(context.pb1395FolderId(a,true));
 });
+test('R1725 deleted native JSON marker is recreated only after explicit folder selection',async()=>{
+ const context={crypto};
+ vm.createContext(context);
+ vm.runInContext(fs.readFileSync('scripts/r1395-storage-panel.js','utf8'),context);
+ let marker=null,created=0,saved=false;
+ const filename='.photobridge-folder-id.json';
+ const root={
+  name:'New Lab Photos',displayPath:'E:\\New Lab Photos',
+  async getFileHandle(name,opts){
+   assert.equal(name,filename);
+   if(marker===null&&!opts?.create){
+    // Actual Windows native storage error from Liara user: plain Error, without code.
+    throw Error("ENOENT: no such file or directory, lstat 'E:\\New Lab Photos\\"+filename+"'");
+   }
+   if(opts?.create)created++;
+   return {
+    async createWritable(){return {async write(payload){marker=String(payload)},async close(){},async abort(){}};},
+    async getFile(){return {size:Buffer.byteLength(marker||''),text:async()=>marker};}
+   };
+  }
+ };
+ await assert.rejects(context.pb1395FolderId(root,false),/ENOENT/);
+ assert.equal(created,0,'background status must never create a marker');
+ const id=await context.pb1395FolderId(root,true);
+ assert.match(id,/^[0-9a-f-]{36}$/i);
+ assert.equal(created,1,'one explicit selection creates one marker');
+ assert.equal(await context.pb1395FolderId(root,true),id,'reselecting this folder preserves its identity');
+ assert.equal(created,1);
+ context.window={
+  pbNativeFolder:{announce:async()=>({pairSupport:true}),choose:async()=>root}
+ };
+ context.Vs=async()=>true;context.Uc=()=>{};
+ context.Me=async(_,options)=>{
+  const body=JSON.parse(options.body);
+  assert.equal(body.pairFolderId,id);
+  assert.equal(body.kind,'native');
+  return {paired:true,isThisDevice:true,folderId:id};
+ };
+ context.Oy=async selected=>{assert.equal(selected,root);saved=true};
+ const result=await context.pb1395Choose();
+ assert.equal(result.state.folderId,id);
+ assert.equal(saved,true);
+});
+
+test('R1725 native marker recovery refuses permission errors, unrelated missing files and corrupt JSON',async()=>{
+ const context={crypto};vm.createContext(context);
+ vm.runInContext(fs.readFileSync('scripts/r1395-storage-panel.js','utf8'),context);
+ for(const error of [
+  Object.assign(Error('permission denied'),{code:'EACCES'}),
+  Error("ENOENT: no such file or directory, lstat 'E:\\Other\\photo.jpg'")
+ ]){
+  let created=false;
+  const root={async getFileHandle(name,opts){if(opts?.create)created=true;throw error}};
+  await assert.rejects(context.pb1395FolderId(root,true));
+  assert.equal(created,false,'must not create on unrelated or permission failure');
+ }
+ let modified=false;
+ const broken={
+  async getFileHandle(){return {
+   async getFile(){return {size:2,text:async()=>'{}'}},
+   async createWritable(){modified=true;throw Error('must not overwrite marker')}
+  }}
+ };
+ await assert.rejects(context.pb1395FolderId(broken,true),/شناسه پوشه معتبر نیست/);
+ assert.equal(modified,false,'malformed existing JSON must never be overwritten');
+});
+
 test('paired native status validates local marker, blocks stale folder, preserves root for display',async()=>{
  const {installConfiguredStorage}=require('../apps/lab-desktop/configured-storage.cjs');let saved={id:'root',path:'/tmp/photos'},folderId=folderA;
  const storage={account:()=> 'lab',checkAccount(){},key:()=> 'key',store:{get:()=>saved,set:(k,v)=>{saved=v}},fs:{readFile:async()=>JSON.stringify({id:folderId})},record:async()=>saved,status:async()=>({root:{name:'photos'},permission:'granted'}),descriptor:()=>({name:'photos'}),request:async()=>({ok:true,json:async()=>({paired:true,folderId:folderA,isThisDevice:true})})};

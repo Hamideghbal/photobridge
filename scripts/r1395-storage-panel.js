@@ -1,6 +1,15 @@
 const PB1395Marker='.photobridge-folder-id.json';
+// R1725: Electron's native file bridge may return a plain Error with ENOENT in
+// the message instead of DOMException.name or error.code. This is safe ONLY
+// when the missing path is the selected folder's own marker file.
+function pb1395MissingMarker(err){
+ const code=String(err?.code||err?.cause?.code||err?.name||'');
+ if(code==='NotFoundError'||code==='ENOENT')return true;
+ const msg=String(err?.message||'');
+ return /(?:\bENOENT\b|no such file or directory)/i.test(msg)&&msg.includes(PB1395Marker);
+}
 async function pb1395FolderId(root,create=false){
- let file;try{file=await root.getFileHandle(PB1395Marker)}catch(err){if(!create||!['NotFoundError','ENOENT'].includes(err?.name)&&err?.code!=='ENOENT')throw err;
+ let file;try{file=await root.getFileHandle(PB1395Marker)}catch(err){if(!create||!pb1395MissingMarker(err))throw err;
   file=await root.getFileHandle(PB1395Marker,{create:true});const writer=await file.createWritable();try{await writer.write(JSON.stringify({version:1,id:crypto.randomUUID()}));await writer.close()}catch(error){await writer.abort().catch(()=>{});throw error}
  }
  const source=await file.getFile();if(source.size>512)throw Error('شناسه پوشه معتبر نیست؛ پوشه دیگری انتخاب کنید.');

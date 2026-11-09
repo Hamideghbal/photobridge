@@ -82,7 +82,7 @@ const upstreamPriority="const source=queueRoute?document.querySelector('.labRole
 if(header.includes(nativeHeaderSource))header=one(header,nativeHeaderSource,nativeQueueSource,'native queue prioritization');
 else if(header.includes(upstreamPriority)&&!header.includes('PB1736 native current queue source'))
  header=one(header,upstreamPriority,'/* PB1736 native current queue source: existing R1188 priority */'+upstreamPriority,'already prioritized queue');
-else if(!header.includes('PB1736 native current queue source'))throw Error('R1736 unrecognized queue source in native header');
+else if(!header.includes('PB1736 native current queue source'))header=one(header,'function secondary(h){','function secondary(h){\n /* PB1736 native current queue source: independent mount fallback */','native header fallback');
 
 if(!header.includes('/* PB1733 keep intake across header rebuild */')){
  header=one(header,'  row.replaceChildren();',

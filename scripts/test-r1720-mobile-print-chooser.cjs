@@ -58,6 +58,8 @@ test('mobile chooser background activity is reduced without changing desktop pol
   const rail=read('dist/web/photobridge-r1122-mobile-print-orders.js');
   assert(rail.includes("classList.contains('pbR100F14ChoosingLab')"));
   assert(rail.includes('old?.remove();return;'));
+  assert(rail.includes('R1720: pause whole-body status scanning while the chooser is visible.'));
+
 });
 test('mobile fix is linked only in web HTML after desktop manifests are prepared',()=>{
   const html=read('dist/web/index.html');

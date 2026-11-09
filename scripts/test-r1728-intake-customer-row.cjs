@@ -28,8 +28,11 @@ test('the selected account has a full-width picker row above its debt, dates and
 
 function makeMenuFixture(source,pending){
  const beg=source.indexOf('function customerMenu(');
- const end=source.indexOf('\nasync function open()',beg);
- assert(beg>0&&end>beg,'customer chooser code must still be reachable');
+ // Earlier build steps can rename/rewrite the function following the chooser.
+ // Isolate the chooser by its own final return instead of depending on open().
+ const match=beg>=0?/\n\s*return model;\s*\n\s*\}/g.exec(source.slice(beg)):null;
+ const end=match?beg+match.index+match[0].length:-1;
+ assert(beg>0&&end>beg,'customer chooser function and its return must remain reachable');
  const dialog={addEventListener(){}};
  const node=(tag,text='',className='')=>{
   const el={

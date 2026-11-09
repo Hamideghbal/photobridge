@@ -1057,3 +1057,8 @@ runR1314(process.execPath,['--test','scripts/test-r1723-storage-and-build.cjs'],
 // Verify native and browser UI recovery, and regenerate Windows UI cache/manifest.
 await deployStep('./verify-r1725-deleted-marker.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1725-marker-recovery.cjs'],{stdio:'inherit'});
+
+// R1726: after all native/UI packaging stages, enhance SITE mobile login only.
+// Correct the earlier R1451 test assertion at source before this build reaches it.
+await deployStep('./enable-r1726-mobile-login.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdio:'inherit'});

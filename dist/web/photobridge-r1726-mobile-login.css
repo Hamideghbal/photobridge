@@ -1,0 +1,128 @@
+/* PhotoBridge R1726 — mobile LOGIN only. Keep the original brand and desktop UI. */
+@media screen and (max-width:767px){
+  /* The keyboard changes viewport height, not the form's top position. */
+  html:root body #root .unifiedLoginPage,
+  html:root body.pbR100F28PortalLogin #loginView.rentalLoginOverlay:not(.hidden),
+  html:root body.pbR100F28PortalLogin .authBg:not(.hidden){
+    position:fixed!important;
+    top:0!important;left:0!important;right:0!important;bottom:auto!important;
+    height:var(--pb-login-height,100dvh)!important;
+    min-height:0!important;max-height:var(--pb-login-height,100dvh)!important;
+    display:flex!important;flex-direction:column!important;
+    justify-content:flex-start!important;align-items:center!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+    padding:calc(8px + env(safe-area-inset-top)) 10px 8px!important;
+    scroll-padding-top:8px!important;
+  }
+  html:root body #root .unifiedLoginPage .unifiedLoginShell,
+  html:root body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell,
+  html:root body #loginView.rentalLoginOverlay>.authShell {
+    margin:0 auto!important;
+    padding:0!important;
+    width:min(420px,100%)!important;max-width:420px!important;
+    flex:0 0 auto!important;min-height:0!important;
+    align-self:center!important;
+    transform:none!important;
+  }
+  html:root body #root .unifiedLoginPage form.unifiedLoginCard,
+  html:root body.pbR100F28PortalLogin form.unifiedLoginCard,
+  html:root body.pbR100F28PortalLogin form.rentalUnifiedLogin{
+    width:100%!important;max-width:100%!important;
+    margin:0!important;padding:11px 13px!important;
+    display:flex!important;flex-direction:column!important;
+    gap:5px!important;border-radius:15px!important;
+  }
+  html:root body #root .unifiedLoginPage form .unifiedLoginBrand,
+  html:root body.pbR100F28PortalLogin form .unifiedLoginBrand{
+    display:flex!important;margin:0 0 3px!important;
+    gap:7px!important;min-height:30px!important;
+  }
+  html:root body #root .unifiedLoginPage form .unifiedLoginLogo,
+  html:root body.pbR100F28PortalLogin form .unifiedLoginLogo {
+    width:30px!important;height:30px!important;flex:0 0 30px!important;
+  }
+  html:root body #root .unifiedLoginPage form .unifiedLoginBrand b,
+  html:root body.pbR100F28PortalLogin form .unifiedLoginBrand b{
+    font-size:17px!important;line-height:1.4!important;
+  }
+  html:root body #root .unifiedLoginPage form .authTitle,
+  html:root body.pbR100F28PortalLogin form .authTitle {margin:0 0 2px!important}
+  html:root body #root .unifiedLoginPage form .authTitle h1,
+  html:root body.pbR100F28PortalLogin form .authTitle h1{
+    font-size:16px!important;line-height:1.35!important;margin:0!important;
+  }
+  /* Make the mobile form the same height before and after a field gets focus. */
+  html:root body #root .unifiedLoginPage form .authTitle p,
+  html:root body.pbR100F28PortalLogin form .authTitle p{display:none!important}
+  html:root body #root .unifiedLoginPage form label,
+  html:root body.pbR100F28PortalLogin form label{
+    margin:0!important;gap:3px!important;
+    font-size:11px!important;line-height:1.35!important;
+  }
+  html:root body #root .unifiedLoginPage form input:not([type="checkbox"]),
+  html:root body.pbR100F28PortalLogin form input:not([type="checkbox"]){
+    box-sizing:border-box!important;min-height:38px!important;height:38px!important;
+    padding:5px 10px!important;font-size:16px!important;
+  }
+  html:root body #root .unifiedLoginPage form .forgotPasswordLink,
+  html:root body.pbR100F28PortalLogin form .forgotPasswordLink{
+    margin:0!important;padding:1px 0!important;
+    min-height:0!important;line-height:1.25!important;font-size:10.5px!important;
+  }
+  html:root body #root .unifiedLoginPage form button.primary,
+  html:root body.pbR100F28PortalLogin form button.primary{
+    min-height:40px!important;height:40px!important;margin:1px 0 0!important;
+    font-size:13px!important;flex-shrink:0!important;
+  }
+  html:root body #root .unifiedLoginPage form .authFooterLinks,
+  html:root body.pbR100F28PortalLogin form .authFooterLinks{
+    margin:3px 0 0!important;padding:0!important;gap:5px 10px!important;
+    font-size:10px!important;line-height:1.45!important;
+  }
+  /* Links are below Submit: hide them only during text entry to keep the CTA visible. */
+  html.pbR1302LoginFocus body #root .unifiedLoginPage form .authFooterLinks,
+  html.pbR1302LoginFocus body.pbR100F28PortalLogin form .authFooterLinks{
+    display:none!important;
+  }
+  html.pbR1302LoginFocus body #root .unifiedLoginPage form .unifiedLoginBrand,
+  html.pbR1302LoginFocus body.pbR100F28PortalLogin form .unifiedLoginBrand{
+    display:flex!important;
+  }
+  /* Keep keyboard-open form top-anchored; never recenter on a focus change. */
+  html.pbR1302LoginFocus body #root .unifiedLoginPage .unifiedLoginShell,
+  html.pbR1302LoginFocus body.pbR100F28PortalLogin .authShell.pbR100F28AuthShell{
+    margin:0 auto!important;
+  }
+}
+
+/* Install invitation appears only in the mobile browser login, never in installed PWA. */
+#pbR1726InstallBanner[hidden]{display:none!important}
+@media screen and (max-width:767px){
+  #pbR1726InstallBanner {
+    box-sizing:border-box;position:fixed;z-index:2147482000;
+    left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));
+    display:flex;align-items:center;gap:9px;direction:rtl;
+    padding:10px 11px;border:1px solid #d7e4fd;
+    border-radius:16px;background:#fff;
+    box-shadow:0 10px 32px rgba(22,51,107,.15);
+    color:#172b52;font:700 11px/1.5 Vazirmatn,Tahoma,Arial,sans-serif;
+  }
+  #pbR1726InstallBanner .pbR1726InstallCopy{min-width:0;flex:1}
+  #pbR1726InstallBanner .pbR1726InstallCopy strong{display:block;font-size:12px}
+  #pbR1726InstallBanner .pbR1726InstallCopy span{display:block;color:#64748b;font-weight:500}
+  #pbR1726InstallBanner .pbR1726InstallAction{
+    flex:none;border:0;border-radius:10px;min-height:38px;
+    padding:0 13px;background:#315efb;color:white;font:800 11px Vazirmatn,Tahoma,sans-serif;
+  }
+  #pbR1726InstallBanner .pbR1726InstallClose{
+    flex:none;width:27px;height:30px;border:0;background:transparent;
+    color:#64748b;font:700 21px Arial,sans-serif;
+  }
+  #pbR1726InstallBanner.pbR1726HelpVisible{align-items:flex-start;flex-wrap:wrap}
+  #pbR1726InstallBanner .pbR1726Help{
+    flex-basis:100%;color:#334155;font-size:11px;line-height:1.7;
+    padding-top:6px;border-top:1px solid #edf2fa;
+  }
+  html.pbR1302LoginFocus #pbR1726InstallBanner{display:none!important}
+}
+@media screen and (min-width:768px){#pbR1726InstallBanner{display:none!important}}

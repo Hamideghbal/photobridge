@@ -32,7 +32,7 @@ test('R1733 release is isolated to native UI, has valid hashes and safe browser 
  }
  const nativeIndex=read(base+'index.html'),help=read(base+'r1733-native-auth-help.js');
  assert(nativeIndex.includes('/r1733-native-intake.css?v=r1733'));
- assert(nativeIndex.includes('nativeQueue=r1737'));
+ assert(nativeIndex.includes('nativeQueue=r1738'));
  assert(nativeIndex.includes('/r1733-native-auth-help.js?v=r1733'));
  assert(help.includes("https://photobridge.ir/account-recovery.html"));
  assert(help.includes('event.stopImmediatePropagation()'));
@@ -174,10 +174,65 @@ test('R1736 native release prioritizes the live queue and stamps the hot-update 
  assert(js.includes("button.dataset.pbNativeIntakeVersion='r1737'"));
  assert(js.includes('const target=secondaryVisible?secondary:top||workspace'));
  assert(!js.includes("host.querySelector('.mainQueueFilters')"));
- assert(html.includes('nativeQueue=r1737'));
- assert(html.includes('nativeHeader=r1737'));
+ assert(html.includes('nativeQueue=r1738'));
+ assert(html.includes('nativeHeader=r1738'));
  assert(js.includes("button.onclick=()=>open(album?'album':'print')"));
  const css=read(base+'r1733-native-intake.css');
  assert(css.includes('.labSingleHeader > #pb1137LocalIntakeButton'));
  assert(css.includes('.pb1148SecondaryHeader > #pb1137LocalIntakeButton'));
+});
+
+
+test('R1738 guarded fallback creates an order launch when original is absent, but keeps server permission checks',()=>{
+ const js=read(base+'photobridge-r1137-lab-local-intake.js'),html=read(base+'index.html');
+ const css=read(base+'r1733-native-intake.css'),overlay=read(base+'desktop-overlay.js');
+ assert(js.includes('window.pb1738IntakeOpen=mode=>open(mode)'));
+ assert(js.includes("if(!primary.registered||!primary.isThisDevice)throw Error("));
+ assert(html.includes('nativeQueue=r1738')&&html.includes('nativeHeader=r1738'));
+ assert(css.includes('#pb1738WalkinRescue.pb1137Launch'));
+ assert(overlay.includes('تشخیص ثبت سفارش حضوری: '));
+ const p=js.indexOf('/* PB1738 guarded Windows Lab walk-in rescue: independent of hidden tabs. */');
+ assert(p>0);
+ const source=js.slice(p);
+ let path='/lab/orders',original=null,button=null,clicked=[],onPopstate;
+ const workspace={
+  prepend(el){el.parentElement=this;el.isConnected=true},
+  querySelector(selector){
+   if(selector==='.labSingleHeader')return this;
+   if(selector==='.stageQueueWorkspace,.labOrderScrollArea,.labPrintTopNav.active,.albumTopNav.active')return {};
+   return null;
+  }
+ };
+ const doc={
+  readyState:'complete',
+  querySelector(selector){
+   if(selector==='.labRoleWorkspace')return workspace;
+   if(selector==='.labRoleWorkspace .albumTopNav.active')return path.includes('album')?{}:null;
+   return null;
+  },
+  getElementById(id){return id==='pb1738WalkinRescue'?button:id==='pb1137LocalIntakeButton'?original:null},
+  createElement(tag){
+   assert.equal(tag,'button');
+   return button={textContent:'',isConnected:false,parentElement:null,
+    setAttribute(){},remove(){this.parentElement=null;this.isConnected=false;button=null}};
+  }
+ };
+ const win={pb1738IntakeOpen:mode=>clicked.push(mode),getComputedStyle:()=>({display:'none',visibility:'hidden'})};
+ const location={get pathname(){return path}};
+ const MutationObserver=class{observe(){}};
+ const requestAnimationFrame=cb=>cb();
+ const addEventListener=(name,cb)=>{if(name==='popstate')onPopstate=cb};
+ new Function('window','document','location','MutationObserver','requestAnimationFrame','addEventListener',source)(
+  win,doc,location,MutationObserver,requestAnimationFrame,addEventListener);
+ assert(button,'rescue must create the action on a print queue');
+ assert.equal(button.textContent,'ثبت سفارش عکس حضوری');
+ button.onclick();assert.deepEqual(clicked,['print']);
+ path='/lab/album';onPopstate();assert.equal(button.textContent,'ثبت سفارش آلبوم حضوری');
+ button.onclick();assert.deepEqual(clicked,['print','album']);
+ path='/lab/settings';onPopstate();assert.equal(button,null,'rescue must not appear on settings');
+ path='/lab/orders';onPopstate();assert(button);
+ original={isConnected:true,closest:()=>null,getClientRects:()=>[{}]};
+ win.getComputedStyle=()=>({display:'inline-flex',visibility:'visible'});
+ onPopstate();assert.equal(button,null,'rescue must not duplicate a visible original');
+ assert.equal(win.pb1738RescueStatus.nativeVisible,true);
 });

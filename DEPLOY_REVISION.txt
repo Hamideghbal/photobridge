@@ -1,1 +1,1 @@
-2026-11-09-r1738-native-guarded-walkin-rescue-and-live-diagnostic
+2026-11-09-r1739-native-ui-overlay-repacked-diagnostics

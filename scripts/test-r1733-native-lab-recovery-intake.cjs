@@ -82,7 +82,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
  const baseSource="const source=document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs')||document.querySelector('.mainQueueFilters');";
  const upstreamSource="const queueRoute=location.pathname.startsWith('/lab/orders');const source=queueRoute?document.querySelector('.labRoleWorkspace .mainQueueFilters'):(document.querySelector('.labSettingsSectionTabs')||document.querySelector('.financeSectionTabs'));";
  assert(header.includes(baseSource));
- for(const changed of [false,true,'R1188']){
+ for(const changed of [false,true,'R1188','other-header']){
   const prefix='dist/web/lab-desktop-ui/';
   const modified=changed?intake
    .replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent='متن اصلاح‌شده توسط مرحلهٔ قبلی';")
@@ -90,7 +90,7 @@ test('R1734 Liara native patch tolerates modified upstream walk-in labels',()=>{
    .replaceAll("head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2','پنجرهٔ سفارش'));"):intake;
   const files=new Map([
    [prefix+'photobridge-r1137-lab-local-intake.js',modified],
-   [prefix+'photobridge-r1147-lab-admin-header.js',changed==='R1188'?header.replace(baseSource,upstreamSource):header],
+   [prefix+'photobridge-r1147-lab-admin-header.js',changed==='R1188'?header.replace(baseSource,upstreamSource):changed==='other-header'?header.replace(baseSource,"const source=document.querySelector('.mainQueueFilters')||document.querySelector('.financeSectionTabs');"):header],
    ['scripts/r1733-native-intake.css',read('scripts/r1733-native-intake.css')],
    ['scripts/r1733-native-auth-help.js',read('scripts/r1733-native-auth-help.js')],
    [prefix+'index.html','<html><head></head><body></body></html>'],

@@ -46,9 +46,18 @@ if(!js.includes(marker)){
  js=one(js,'let active=null,opening=false;',
   "let active=null,opening=false;\nconst pb1733IntakeLabel=()=>/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';",
   'intake title helper');
- js=one(js,"launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent=pb1733IntakeLabel();",'button text reset');
- js=one(js,"modal.setAttribute('aria-label','ثبت سفارش عکس حضوری');","modal.setAttribute('aria-label',pb1733IntakeLabel());",'dialog accessibility');
- js=one(js,"head.append(node('h2','ثبت سفارش عکس حضوری'));","head.append(node('h2',pb1733IntakeLabel()));",'dialog title');
+ // Previous native build stages can replace these literal labels. The visible
+ // launcher is authoritatively repainted by mount(), so cosmetic old-label
+ // replacements must never be required for a successful production build.
+ js=js.replaceAll("launch.textContent='ثبت سفارش عکس حضوری';","launch.textContent=pb1733IntakeLabel();");
+ // Patch the constructed modal at its display boundary, independently of how
+ // upstream stages named its heading or accessibility label.
+ js=one(js," modal.showModal();",[
+  " modal.setAttribute('aria-label',pb1733IntakeLabel());",
+  " const pb1733DialogHeading=modal.querySelector('header h2');",
+  " if(pb1733DialogHeading)pb1733DialogHeading.textContent=pb1733IntakeLabel();",
+  " modal.showModal();"
+ ].join('\\n'),'intake modal display');
  const start=js.indexOf('function mount(){');
  const stop=js.indexOf('\nlet primaryState=null,checking=false,primaryCheckedAt=0;',start);
  if(start<0||stop<start)throw Error('R1733 native intake mount boundary changed');

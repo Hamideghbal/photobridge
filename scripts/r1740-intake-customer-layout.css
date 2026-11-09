@@ -89,3 +89,18 @@
     max-width:100%!important; justify-content:flex-start!important;
   }
 }
+
+/* R1741: override the older R1467 nowrap action strip that caused overlap. */
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow {
+  display:flex!important; flex-flow:row wrap!important;
+  align-items:center!important; gap:5px 7px!important;
+  white-space:normal!important; min-width:0!important; max-width:100%!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > button {
+  width:auto!important; max-width:100%!important;
+  height:auto!important; min-height:29px!important;
+  white-space:normal!important; line-height:1.45!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > .pb1365SmsChoice {
+  min-width:0!important; max-width:100%!important;
+}

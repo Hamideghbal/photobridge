@@ -32,26 +32,50 @@ CREATE INDEX IF NOT EXISTS pb_crm_customers_by_permission
   ON pb_crm.customers (owner_kind, owner_id, marketing_permission)
   WHERE deleted_at IS NULL;
 
--- Each customer can have several photography sessions or categories.
+-- Each lab/photographer owns an editable, independent photography type menu.
+-- Only CRM operators manage this table; the customers themselves have NO login.
+CREATE TABLE IF NOT EXISTS pb_crm.shoot_types (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_kind TEXT NOT NULL CHECK (owner_kind IN ('lab', 'photographer')),
+  owner_id TEXT NOT NULL CHECK (length(btrim(owner_id)) > 0),
+  name TEXT NOT NULL CHECK (length(btrim(name)) BETWEEN 1 AND 100),
+  is_preset BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  archived_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (id, owner_kind, owner_id)
+);
+-- Prevent active duplicates per owner; allow re-adding a name after archiving.
+CREATE UNIQUE INDEX IF NOT EXISTS pb_crm_shoot_types_active_name
+  ON pb_crm.shoot_types (owner_kind, owner_id, lower(btrim(name)))
+  WHERE archived_at IS NULL;
+CREATE INDEX IF NOT EXISTS pb_crm_shoot_types_menu
+  ON pb_crm.shoot_types (owner_kind, owner_id, sort_order, created_at)
+  WHERE archived_at IS NULL;
+
+-- Each customer may have several sessions, including custom categories.
 CREATE TABLE IF NOT EXISTS pb_crm.sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL,
   owner_kind TEXT NOT NULL CHECK (owner_kind IN ('lab', 'photographer')),
   owner_id TEXT NOT NULL CHECK (length(btrim(owner_id)) > 0),
-  shoot_type TEXT NOT NULL
-    CHECK (shoot_type IN ('child', 'birthday', 'engagement', 'wedding',
-                         'family', 'portrait', 'other')),
-  shoot_type_other TEXT,
+  shoot_type_id UUID NOT NULL,
   shoot_date DATE,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT pb_crm_sessions_customer_owner_fk
     FOREIGN KEY (customer_id, owner_kind, owner_id)
     REFERENCES pb_crm.customers(id, owner_kind, owner_id)
-    ON DELETE CASCADE
+    ON DELETE CASCADE,
+  -- Cross-tenant category IDs cannot be applied to this customer's session.
+  CONSTRAINT pb_crm_sessions_shoot_type_owner_fk
+    FOREIGN KEY (shoot_type_id, owner_kind, owner_id)
+    REFERENCES pb_crm.shoot_types(id, owner_kind, owner_id)
+    ON DELETE RESTRICT
 );
 CREATE INDEX IF NOT EXISTS pb_crm_sessions_by_owner
-  ON pb_crm.sessions (owner_kind, owner_id, shoot_type, shoot_date DESC);
+  ON pb_crm.sessions (owner_kind, owner_id, shoot_type_id, shoot_date DESC);
 
 -- An occasion's year may be unknown. Month/day are kept in the ORIGINAL
 -- calendar. Never treat a Jalali month/day as a Gregorian month/day.
@@ -100,6 +124,19 @@ CREATE INDEX IF NOT EXISTS pb_crm_occasions_by_owner_date
 ALTER TABLE pb_crm.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pb_crm.customers FORCE ROW LEVEL SECURITY;
 CREATE POLICY pb_crm_customers_scope ON pb_crm.customers
+  FOR ALL
+  USING (
+    owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')
+    AND owner_id = nullif(current_setting('pb_crm.owner_id', true), '')
+  )
+  WITH CHECK (
+    owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')
+    AND owner_id = nullif(current_setting('pb_crm.owner_id', true), '')
+  );
+
+ALTER TABLE pb_crm.shoot_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pb_crm.shoot_types FORCE ROW LEVEL SECURITY;
+CREATE POLICY pb_crm_shoot_types_scope ON pb_crm.shoot_types
   FOR ALL
   USING (
     owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')

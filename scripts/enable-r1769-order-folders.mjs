@@ -22,7 +22,9 @@ const helper=[
  " return Ya('order-'+number,'order');",
  "}",
  "async function pb1769CustomerDir(dateDir,order){",
- " const alias=pb1769OrderFirst(order)&&order?.source!=='walkin'?String(order?.folder_latin_name||'').trim():'';",
+ " const state=yc(String(order?.id||''))||{};",
+ " const storedAlias=state.pathLayout==='order-v2'?(state.pathLatinAlias?state.pathCustomerName:''):order?.folder_latin_name;",
+ " const alias=pb1769OrderFirst(order)&&order?.source!=='walkin'?String(storedAlias||'').trim():'';",
  " if(alias&&alias.length<=64&&(/^[A-Za-z0-9][A-Za-z0-9 ._-]*[A-Za-z0-9]$/.test(alias)||/^[A-Za-z0-9]$/.test(alias)))return dateDir.getDirectoryHandle(alias,{create:true});",
  " return Hl(dateDir,Tg(order));",
  "}"
@@ -50,7 +52,10 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  if(tgStart<0||tgEnd<tgStart||tgEnd-tgStart>1100)throw Error('[R1769] lab folder name function missing '+root);
  const tg=[
  "function Tg(order){",
- " const shown=order?.source==='walkin'?order?.customer_name:pb1769OrderFirst(order)?(order?.folder_latin_name||order?.customer_name):(order?.storage_customer_name||order?.customer_name);",
+ " const stored=yc(String(order?.id||''))||{};",
+ " const current=pb1769OrderFirst(order);",
+ " const actual=current&&typeof stored.pathCustomerName==='string'?stored.pathCustomerName:(current?(order?.folder_latin_name||order?.customer_name):(order?.storage_customer_name||order?.customer_name));",
+ " const shown=order?.source==='walkin'?order?.customer_name:actual;",
  " const name=String(shown||'مشتری').trim()||'مشتری';",
  " if(order?.source==='walkin'){",
  "  const phone=String(order?.customer_mobile||order?.walkin_customer_mobile||'').trim();",

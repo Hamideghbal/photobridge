@@ -52,6 +52,16 @@ test('R1769: lab-specific Latin alias is saved literally, while blank aliases us
  assert.equal((await ctx.pb1769CustomerDir(dir,{...incoming,folder_latin_name:''})).name,'persian-original');
  assert.deepEqual(names,['My Studio 2026','persian-original']);
 });
+test('R1769: changing the Latin alias never moves a previously downloaded order',async()=>{
+ const {ctx,states,dir}=harness();
+ const order={id:'pinned',number:770,mode:'print',customer_name:'Original Name',folder_latin_name:'New Alias',downloaded_at:'2026-11-10'};
+ states.set('pinned',{pathLayout:'order-v2',pathCustomerName:'Old Alias',pathLatinAlias:true,startedAt:'2026-11-10'});
+ assert.equal((await ctx.pb1769CustomerDir(dir,order)).name,'Old Alias');
+ assert.equal(ctx.Tg(order),'old-alias');
+ states.set('pinned',{pathLayout:'order-v2',pathCustomerName:'Original Name',pathLatinAlias:false,startedAt:'2026-11-10'});
+ assert.equal((await ctx.pb1769CustomerDir(dir,order)).name,'original-name');
+ assert.equal(ctx.Tg(order),'original-name');
+});
 test('R1769: QR/walk-in customer folders remain separate from photographer aliases',async()=>{
  const {ctx,dir}=harness();
  const order={id:'walkin-1',number:201,source:'walkin',customer_name:'Walk-in Person',customer_mobile:'09120000000',folder_latin_name:'A Studio'};

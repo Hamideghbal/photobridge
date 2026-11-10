@@ -1100,3 +1100,8 @@ runR1314(process.execPath,['--test','scripts/test-r1766-crm-unified.cjs'],{stdio
 await deployStep('./enable-r1767-shared-customers-tabs.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1099-tab-settings.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1767-shared-customers-tabs.cjs'],{stdio:'inherit'});
+
+// R1768: preserve existing account identity; repair display-only studio names
+// for lab orders and invoice/finance views after all historical server rewrites.
+await deployStep('./enable-r1768-invited-photographer-display.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1768-invited-photographer-display.cjs'],{stdio:'inherit'});

@@ -28,7 +28,7 @@ test('R1768: every legacy lab order and invoice walk-in name resolver receives t
  const uses=source.split(withWalkin);
  assert.equal(uses.length-1,5,'all five original walk-in/order queries were upgraded');
  for(const [i,tail] of uses.slice(1).entries()){
-   assert.match(tail.slice(0,80),/^\\s+customer_name\\b/,'upgraded display expression #'+(i+1)+' must still supply customer_name');
+   assert.match(tail.slice(0,80),/^\s+customer_name\b/,'upgraded display expression #'+(i+1)+' must still supply customer_name');
  }
  assert(source.includes("COALESCE(o.walkin_customer_name,"+profile+",u.name,'مشتری آزاد')"),'completed order archive uses studio while retaining walk-in and free-customer fallbacks');
  assert(!source.includes('COALESCE(o.walkin_customer_name,u.name)'),'no old mobile-first walk-in display remains');

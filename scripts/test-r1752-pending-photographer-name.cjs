@@ -73,10 +73,14 @@ test('R1752: site and generated Lab UI offer the edit button only for eligible p
  assert(api.includes("Object.prototype.hasOwnProperty.call(b,'temporaryName')"));
  assert(api.includes('pending_i.target_name temporary_name'));
  assert(api.includes('temporary_name_editable'));
- assert(ui.includes('h.temporary_name_editable&&e.jsx("button"'));
+ const activeTable=ui.slice(ui.indexOf('function PB1585PhotographersTable('));
+ assert(activeTable.includes('e.jsx(PB1755TemporaryNameEdit,{customer,onSaved})'));
+ assert(activeTable.includes('pb1585IdentityCopy'));
+ assert(ui.includes('customer.temporary_name_editable'));
+ assert(ui.includes('function PB1755TemporaryNameEdit('));
  assert(ui.includes('pbR1752NameEdit'));
  assert(ui.includes('temporaryName:name'));
- assert(html.includes('pendingName=r1752'));
+ assert(html.includes('pendingName=r1755'));
  assert(html.includes('pbR1752TemporaryNameStyle'));
  execFileSync(process.execPath,['--check','dist/api/server.js'],{cwd:root,stdio:'pipe'});
  execFileSync(process.execPath,['--check','dist/web/assets/index-UIRefine-v655-r84.js'],{cwd:root,stdio:'pipe'});
@@ -84,7 +88,7 @@ test('R1752: site and generated Lab UI offer the edit button only for eligible p
  if(fs.existsSync(path.join(native,'index.html'))){
   const page=fs.readFileSync(path.join(native,'index.html'),'utf8');
   const uiNative=fs.readFileSync(path.join(native,'assets/index-UIRefine-v655-r84.js'),'utf8');
-  assert(page.includes('pendingName=r1752'));
+  assert(page.includes('pendingName=r1755'));
   assert(uiNative.includes('pbR1752NameEdit'));
   const manifest=JSON.parse(fs.readFileSync(path.join(native,'manifest.json'),'utf8'));
   for(const asset of ['index.html','assets/index-UIRefine-v655-r84.js']){
@@ -96,12 +100,26 @@ test('R1752: site and generated Lab UI offer the edit button only for eligible p
  }
 });
 
-test('R1754: alternate lab customer identity markup keeps the pencil edit while preserving all badges and mobile text',()=>{
- const source=fs.readFileSync(path.join(root,'scripts/enable-r1752-pending-photographer-name.mjs'),'utf8');
- assert(source.includes('const slot=\'className:"labPhotographerIdentityCopy",children:[\''));
- assert(source.includes('const childAt=ui.indexOf(child,slotAt)'));
- assert(source.includes('ui=ui.slice(0,childAt)+row+ui.slice(childAt+child.length)'));
- assert(source.includes('ui=ui.slice(0,slotAt)+button+\',\'+ui.slice(slotAt)'));
- assert(source.includes('if(!ui.includes(\'pbR1752NameEdit\'))throw Error'));
- assert(source.includes("if(slotMatches!==1)throw Error"),'must not silently skip missing UI');
+test('R1755: active R1585 table (not retired cards) contains the name editor',()=>{
+ const script=fs.readFileSync(path.join(root,'scripts/enable-r1752-pending-photographer-name.mjs'),'utf8');
+ assert(script.includes("const tableStart=ui.indexOf('function PB1585PhotographersTable(')"));
+ assert(script.includes("const patched=once(table,uiOld,uiNew,root+' active photographers table name')"));
+ assert(script.includes("if(!customer.temporary_name_editable)return null"));
+ assert(script.includes("await Me('/api/lab/customers/'+customer.id"));
+ assert(script.includes("await onSaved()"));
+ assert(!script.includes("const slot='className:"));
+ const tableAt=ui.indexOf('function PB1585PhotographersTable(');
+ assert(tableAt>=0);
+ const tableEnd=ui.indexOf('\n}',tableAt);
+ const table=ui.slice(tableAt,tableEnd+2);
+ assert(table.includes('e.jsx(PB1755TemporaryNameEdit,{customer,onSaved})'));
+ assert.equal(table.split('e.jsx(PB1755TemporaryNameEdit,{customer,onSaved})').length,2);
+ assert(table.includes('data-customer-id'));
+ assert(table.includes('pb1585PhotographerActions'));
+ assert(table.includes("customer.mobile||'بدون شماره موبایل'"));
+ const helperAt=ui.indexOf('function PB1755TemporaryNameEdit(');
+ assert(helperAt>=0);
+ const helper=ui.slice(helperAt,helperAt+1600);
+ assert(helper.includes('if(!customer.temporary_name_editable)return null'));
+ assert(helper.includes("body:JSON.stringify({temporaryName:name})"));
 });

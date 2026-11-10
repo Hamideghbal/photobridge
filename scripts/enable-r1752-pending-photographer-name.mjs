@@ -56,23 +56,30 @@ if(!server.includes(marker)){
   server+='\n'+marker+'\n';
   fs.writeFileSync(serverFile,server);
 }
-const uiOld='e.jsx("b",{children:h.name}),e.jsx("small",{dir:"ltr",children:h.mobile||"بدون شماره موبایل"})';
-const uiNew=[
- 'e.jsxs("div",{className:"pbR1752NameRow",children:[',
- 'e.jsx("b",{children:h.name}),',
- 'h.temporary_name_editable&&e.jsx("button",{type:"button",className:"pbR1752NameEdit",title:"ویرایش نام موقت عکاس",',
- '"aria-label":"ویرایش نام موقت "+(h.name||"عکاس"),onClick:async()=>{',
- 'const initial=String(h.temporary_name||"");',
- 'const answer=prompt("نام موقت عکاس یا عکاسی را وارد کنید:",initial);',
- 'if(answer===null)return;',
- 'const name=String(answer).trim().replace(/\\s+/g," ");',
- 'if(!name||name.length>140){alert("نام موقت را بین ۱ تا ۱۴۰ کاراکتر وارد کنید.");return;}',
- 'try{await Me("/api/lab/customers/"+h.id,{method:"PATCH",body:JSON.stringify({temporaryName:name})});o();}',
- 'catch(error){const code=error?.data?.error;alert(code==="customer_not_preregistered"?"این عکاس دیگر در وضعیت پیش‌عضویت نیست.":',
- 'code==="invalid_temporary_name"?"نام موقت معتبر نیست.":"ذخیره نام موقت انجام نشد. دوباره تلاش کنید.");}',
- '},children:"✎"})',
- ']}),e.jsx("small",{dir:"ltr",children:h.mobile||"بدون شماره موبایل"})'
-].join('');
+// R1585 replaces the original photographer cards with PB1585PhotographersTable.
+// R1755 patches the live rendered table, not retired labPhotographerIdentityCopy cards.
+const uiOld="e.jsx('b',{children:customer.name}),e.jsx('small',{dir:'ltr',children:customer.mobile||'بدون شماره موبایل'})";
+const uiNew="e.jsxs('div',{className:'pbR1752NameRow',children:[e.jsx('b',{children:customer.name}),e.jsx(PB1755TemporaryNameEdit,{customer,onSaved})]}),e.jsx('small',{dir:'ltr',children:customer.mobile||'بدون شماره موبایل'})";
+function PB1755TemporaryNameEdit({customer,onSaved}){
+ if(!customer.temporary_name_editable)return null;
+ return e.jsx('button',{type:'button',className:'pbR1752NameEdit',
+  title:'ویرایش نام موقت عکاس','aria-label':'ویرایش نام موقت '+(customer.name||'عکاس'),
+  onClick:async()=>{
+   const answer=prompt('نام موقت عکاس یا عکاسی را وارد کنید:',String(customer.temporary_name||customer.name||''));
+   if(answer===null)return;
+   const name=String(answer).trim().replace(/\s+/g,' ');
+   if(!name||name.length>140){alert('نام موقت را بین ۱ تا ۱۴۰ کاراکتر وارد کنید.');return}
+   try{
+    await Me('/api/lab/customers/'+customer.id,{method:'PATCH',body:JSON.stringify({temporaryName:name})});
+    await onSaved();
+   }catch(error){
+    const code=error?.data?.error;
+    alert(code==='customer_not_preregistered'?'این عکاس دیگر در وضعیت پیش‌عضویت نیست.':
+     code==='invalid_temporary_name'?'نام موقت معتبر نیست.':'ذخیره نام موقت انجام نشد. دوباره تلاش کنید.');
+   }
+  },children:'✎'});
+}
+const editHelper='\n'+PB1755TemporaryNameEdit.toString()+'\n';
 const css='.pbR1752NameRow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}.labPhotographerIdentityCopy{position:relative}.labPhotographerIdentityCopy:has(>.pbR1752NameEdit){padding-inline-end:34px}.labPhotographerIdentityCopy>.pbR1752NameEdit{position:absolute;inset-inline-end:0;top:0}.pbR1752NameRow>b{min-width:0;overflow-wrap:anywhere}.pbR1752NameEdit{width:29px;height:29px;min-width:29px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:20px;line-height:1;cursor:pointer}.pbR1752NameEdit:hover,.pbR1752NameEdit:focus-visible{background:#e2e8f0;outline:2px solid transparent;border-color:#64748b}';
 const tag='<style id="pbR1752TemporaryNameStyle">'+css+'</style>';
 const sha=buffer=>crypto.createHash('sha256').update(buffer).digest('hex');
@@ -87,48 +94,24 @@ for(const root of roots){
   continue;
  }
  let ui=fs.readFileSync(bundle,'utf8');
- if(!ui.includes('pbR1752NameEdit')){
-  // The older name + mobile pair is not stable: other release scripts can
-  // add a badge/wrapper between these children. Prefer the original form,
-  // then anchor on the customer card's identity-copy slot instead.
-  if(ui.split(uiOld).length===2){
-   ui=ui.replace(uiOld,uiNew);
-  }else{
-   const slot='className:"labPhotographerIdentityCopy",children:[';
-   const slotMatches=ui.split(slot).length-1;
-   if(slotMatches!==1)throw Error('[R1752] '+root+' photographer identity slot count '+slotMatches);
-   const slotAt=ui.indexOf(slot)+slot.length;
-   const cardAt=ui.lastIndexOf('t.customers.map(',slotAt);
-   if(cardAt<0||slotAt-cardAt>1900)throw Error('[R1752] '+root+' identity slot is not on the lab customer card');
-   const child='e.jsx("b",{children:h.name})';
-   const childAt=ui.indexOf(child,slotAt);
-   if(childAt>=slotAt&&childAt-slotAt<400){
-    // Retain any extra badges, mobile layout or child nodes inserted by older
-    // releases. Replace the name alone; leave every other child untouched.
-    const end=uiNew.indexOf(',e.jsx("small"');
-    if(end<0)throw Error('[R1752] generated name row template invalid');
-    const row=uiNew.slice(0,end);
-    ui=ui.slice(0,childAt)+row+ui.slice(childAt+child.length);
-   }else{
-    // The name is already wrapped: add a sibling edit control to the same
-    // identity-copy slot rather than guessing or rewriting that markup.
-    const begin=uiNew.indexOf('h.temporary_name_editable&&e.jsx("button"');
-    const end=uiNew.indexOf(']}),e.jsx("small"',begin);
-    if(begin<0||end<0)throw Error('[R1752] generated edit button template invalid');
-    const button=uiNew.slice(begin,end);
-    ui=ui.slice(0,slotAt)+button+','+ui.slice(slotAt);
-   }
-   console.log('[R1752] recovered '+root+' name edit UI from identity slot despite earlier markup changes');
-  }
-  if(!ui.includes('pbR1752NameEdit'))throw Error('[R1752] edit control was not installed in '+root);
+ if(!ui.includes('function PB1755TemporaryNameEdit(')){
+  const tableStart=ui.indexOf('function PB1585PhotographersTable(');
+  const tableEnd=tableStart<0?-1:ui.indexOf('\n}',tableStart);
+  if(tableStart<0||tableEnd<0||tableEnd-tableStart>16000)
+   throw Error('[R1755] '+root+' rendered R1585 photographers table missing');
+  const table=ui.slice(tableStart,tableEnd+2);
+  const patched=once(table,uiOld,uiNew,root+' active photographers table name');
+  ui=ui.slice(0,tableStart)+patched+ui.slice(tableEnd+2)+editHelper;
   fs.writeFileSync(bundle,ui);
  }
+ if(!ui.includes('e.jsx(PB1755TemporaryNameEdit,{customer,onSaved})'))
+  throw Error('[R1755] '+root+' live customer name edit is missing');
  let html=fs.readFileSync(index,'utf8');
  if(!html.includes('pbR1752TemporaryNameStyle'))html=once(html,'</head>',tag+'</head>',root+' style');
  const source=/assets\/index-UIRefine-v655-r84\.js\?[^"'<>\s]*/g;
  const found=[...html.matchAll(source)];
  if(found.length!==1)throw Error('[R1752] '+root+' module cache URL count '+found.length);
- html=html.replace(source,url=>url.includes('&pendingName=r1752')?url:url+'&pendingName=r1752');
+ html=html.replace(source,url=>url.includes('&pendingName=r1755')?url:url+'&pendingName=r1755');
  fs.writeFileSync(index,html);
  const manifestFile=root+'/manifest.json';
  if(fs.existsSync(manifestFile)){
@@ -145,4 +128,4 @@ for(const root of roots){
  }
  modified++;
 }
-console.log('[R1752] pending photographer names editable in '+modified+' lab UI packages; invoice/SMS/manual-intake untouched.');
+console.log('[R1755] pending photographer names editable in '+modified+' live lab photographer tables; invoice/SMS/manual-intake untouched.');

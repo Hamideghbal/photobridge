@@ -1,0 +1,81 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const crypto=require('node:crypto');
+const path=require('node:path');
+const {execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+const src=name=>fs.readFileSync(path.join(root,name),'utf8');
+const api=src('dist/api/server.js');
+const ui=src('dist/web/assets/index-UIRefine-v655-r84.js');
+test('R1753: completed lab deletion notifies all Lab windows only after commit',()=>{
+ const start=api.indexOf("if (labOrder && req.method === 'DELETE')");
+ const end=api.indexOf("if (labOrder && req.method === 'PATCH')",start);
+ assert(start>0&&end>start);
+ const block=api.slice(start,end);
+ const emit=block.indexOf("publishLabEvent(labId, 'order_cancelled'");
+ const commit=block.lastIndexOf("await c.query('COMMIT');",emit);
+ const cleanup=block.indexOf('await Promise.all(storageKeys.map(',emit);
+ const response=block.indexOf('return sendJson(res, 200,',emit);
+ assert(commit>0&&emit>commit&&cleanup>emit&&response>emit,'broadcast only follows a committed deletion and precedes response');
+ for(const field of ["source: 'lab_delete'","status: 'cancelled'","orderId","number: cancelled?.number"])assert(block.includes(field),field);
+ assert(block.includes("'order.lab_delete_before_download'"));
+ assert(block.includes("publishCustomerEvent(labId, String(cancelled?.customer_id || ''), 'order_status'"));
+ const get=api.slice(api.indexOf("url.pathname === '/api/lab/orders'"),api.indexOf("url.pathname === '/api/lab/orders'")+5000);
+ assert(get.includes("o.status NOT IN ('uploading','cancelled')"),'cancelled orders must not reappear in authoritative queue');
+});
+test('R1753: existing order-cancel event refreshes web and Windows, no false new-order toast for lab delete',()=>{
+ assert(ui.includes('N==="order_cancelled"&&(Fe(),W(ve=>ve+1)'));
+ assert(ui.includes('pe?.source!=="lab_delete"'));
+ assert(ui.includes('N==="ready"&&W(ve=>ve+1)'),'SSE reconnect re-fetch');
+ assert(ui.includes('window.addEventListener("focus",resume)'));
+ assert(ui.includes('document.addEventListener("visibilitychange",resume)'));
+ assert(ui.includes('now-last<2500'),'foreground refresh throttled');
+ assert(ui.includes('window.removeEventListener("focus",resume)'));
+ const copy=api.slice(api.indexOf('function labEventNotificationCopy('),api.indexOf('function customerEventNotificationCopy('));
+ assert(copy.includes("event === 'order_cancelled' && data?.source === 'lab_delete'"));
+ assert(copy.includes('توسط لابراتوار از صف حذف شد'));
+ assert(copy.includes('توسط عکاس لغو شد'));
+});
+test('R1753: website and Windows Lab bundles use fresh cache and verified manifest',()=>{
+ const site=src('dist/web/index.html');
+ const winRoot='dist/web/lab-desktop-ui/';
+ const native=src(winRoot+'index.html');
+ for(const h of [site,native])assert.equal(h.split('&orderDelete=r1753').length-1,1);
+ const winUi=src(winRoot+'assets/index-UIRefine-v655-r84.js');
+ assert(winUi.includes('/* PB1753 synced lab deletes */'));
+ assert(winUi.includes('N==="ready"&&W(ve=>ve+1)'));
+ const manifest=JSON.parse(src(winRoot+'manifest.json'));
+ assert.equal(manifest.channel,'lab');
+ for(const file of ['index.html','assets/index-UIRefine-v655-r84.js']){
+  const entry=manifest.files.find(f=>f.name===file);
+  assert(entry,file);
+  const expected=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,winRoot,file))).digest('hex');
+  assert.equal(entry.sha256,expected,'native manifest SHA '+file);
+ }
+ assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'));
+ execFileSync(process.execPath,['--check','dist/api/server.js'],{cwd:root,stdio:'pipe'});
+ execFileSync(process.execPath,['--check','dist/web/assets/index-UIRefine-v655-r84.js'],{cwd:root,stdio:'pipe'});
+ execFileSync(process.execPath,['--check','dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js'],{cwd:root,stdio:'pipe'});
+});
+test('R1753: existing financial corrections and original local photo protection remain unchanged',()=>{
+ const begin=api.indexOf("if (labOrder && req.method === 'DELETE')");
+ const end=api.indexOf("if (labOrder && req.method === 'PATCH')",begin);
+ const block=api.slice(begin,end);
+ assert(block.includes("await postBalancedFinanceTransaction(c,"));
+ assert(block.includes("invoice_decrease"));
+ assert(block.includes("UPDATE orders SET status='cancelled'"));
+ assert(block.includes("order_already_downloaded"));
+ assert(block.includes("order_not_deletable"));
+ assert(!block.includes('DELETE FROM orders'));
+ assert(!block.includes('removeEntry('));
+ assert(!block.includes('rmSync('));
+ const patch=src('scripts/enable-r1753-sync-lab-deleted-orders.mjs');
+ assert(!patch.includes("fs.writeFileSync('dist/web/photobridge-r1137-lab-local-intake.js'"));
+ assert(!patch.includes("DELETE FROM"));
+ assert(!patch.includes('UPDATE finance_'));
+ const nativeIntake=src(winRootForTest()+'photobridge-r1137-lab-local-intake.js');
+ assert(nativeIntake.includes("button.id='pb1137LocalIntakeButton'"));
+ function winRootForTest(){return 'dist/web/lab-desktop-ui/'}
+});

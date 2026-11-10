@@ -67,6 +67,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  ui=once(ui,'customerDir=await Hl(dateDir,Tg(order)),dir=await Hl(customerDir,Uy(detail,file))',
   'customerDir=await pb1769CustomerDir(dateDir,order),pb1769Dir=pb1769OrderFirst(order)?await Hl(customerDir,pb1769OrderFolder(order)):customerDir,dir=await Hl(pb1769Dir,Uy(detail,file))',
   'Windows native bridge target');
+ ui=once(ui,'s.dir.getFileHandle(Ya(a.original_name,"file"),{create:!1})',
+  's.dir.getFileHandle(pb1769DownloadName(a,a.original_name,t.order),{create:!1})',
+  'local archive reads from the new exact copied filename');
  ui+='\n'+marker+'\n';
  fs.writeFileSync(bundle,ui);
  execFileSync(process.execPath,['--check',bundle],{stdio:'inherit'});

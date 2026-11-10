@@ -157,7 +157,7 @@ $('invoice-form').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!confirm('فاکتور صادر شود؟ بعد از صدور ریز خدمات ثابت می‌ماند.'))return;
  try{
-  const result=await request('invoices','POST',{customerId:$('invoice-customer').value,items:itemsFromForm(),discountToman:Number($('invoice-discount').value||0),paidToman:Number($('invoice-paid').value||0),notes:$('invoice-notes').value});
+  const result=await request('invoices','POST',{customerId:$('invoice-customer').value,items:itemsFromForm(),discountToman:Number($('invoice-discount').value||0),paidToman:Number($('invoice-paid').value||0),businessPhone:$('invoice-business-phone').value,businessAddress:$('invoice-business-address').value,notes:$('invoice-notes').value});
   toast('فاکتور شماره '+fa(result.invoiceNumber)+' صادر شد. اکنون می‌توانید آن را چاپ کنید.');
   await reload();printInvoice(result.id,'a4');
  }catch(e){toast(e.message,true)}

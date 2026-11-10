@@ -26,3 +26,11 @@
     outline:2px solid #315efb!important;outline-offset:-2px!important;border-radius:10px!important;
   }
 }
+
+/* R1767: desktop Photographer entry follows the existing navigation's button geometry. */
+@media(min-width:821px){
+ html body #root :is(.photographerHomeModeNav,.photographerHeaderNav)>button.pb1761CrmDesktopTab{
+   display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+   font-family:inherit!important;font-weight:inherit;
+ }
+}

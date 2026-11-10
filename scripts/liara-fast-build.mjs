@@ -1092,3 +1092,6 @@ runR1314(process.execPath,['--test','scripts/test-r1763-mobile-print-rows.cjs'],
 
 // R1764: protect per-photo chassis choices and photographer mobile cards without touching labs.
 runR1314(process.execPath,['--test','scripts/test-r1764-chassis-order-mobile.cjs'],{stdio:'inherit'});
+
+// R1766: isolated customers page redesign and consent/date regression.
+runR1314(process.execPath,['--test','scripts/test-r1766-crm-unified.cjs'],{stdio:'inherit'});

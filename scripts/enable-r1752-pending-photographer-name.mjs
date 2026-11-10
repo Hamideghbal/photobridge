@@ -21,13 +21,24 @@ if(!server.includes(marker)){
     'pending_i.target_name temporary_name,('+eligible+
     ') temporary_name_editable,u.email,u.mobile,COALESCE(pp.location_lat,u.location_lat)';
   server=once(server,fromName,toName,'lab dashboard customer display name');
-  const fromJoin="LEFT JOIN photographer_profiles pp ON pp.user_id=u.id WHERE m.lab_id=$1 AND m.role='customer' ORDER BY m.created_at DESC";
-  const toJoin="LEFT JOIN photographer_profiles pp ON pp.user_id=u.id LEFT JOIN LATERAL ("+
+  // Earlier releases may extend this SQL WHERE clause. Limit the injection
+  // to the single dashboard customer SELECT rather than replacing the full JOIN/WHERE.
+  const pendingSelect=server.indexOf('pending_i.target_name temporary_name');
+  const endOfCustomerQuery=pendingSelect<0?-1:server.indexOf('ORDER BY m.created_at DESC',pendingSelect);
+  const profileJoin='LEFT JOIN photographer_profiles pp ON pp.user_id=u.id';
+  if(pendingSelect<0||endOfCustomerQuery<0||endOfCustomerQuery-pendingSelect>5000)
+    throw Error('[R1752] lab dashboard customer query boundary changed');
+  const customerQuery=server.slice(pendingSelect,endOfCustomerQuery);
+  if(customerQuery.split(profileJoin).length!==2)
+    throw Error('[R1752] dashboard photographer profile JOIN not uniquely found');
+  const invitationJoin=" LEFT JOIN LATERAL ("+
     "SELECT i.target_name FROM invitations i WHERE i.lab_id=m.lab_id AND i.target_mobile IS NOT NULL AND u.mobile IS NOT NULL "+
     "AND right(regexp_replace(i.target_mobile,'[^0-9]','','g'),10)=right(regexp_replace(u.mobile,'[^0-9]','','g'),10) "+
     "AND i.active=true AND i.uses=0 ORDER BY i.created_at DESC LIMIT 1"+
-    ") pending_i ON true WHERE m.lab_id=$1 AND m.role='customer' ORDER BY m.created_at DESC";
-  server=once(server,fromJoin,toJoin,'lab dashboard preregistration lookup');
+    ") pending_i ON true";
+  server=server.slice(0,pendingSelect)+
+    customerQuery.replace(profileJoin,profileJoin+invitationJoin)+
+    server.slice(endOfCustomerQuery);
   const fromPatch="if (cm && req.method === 'PATCH') {\n            const b = await bodyJson(req);\n            const hasActive";
   const extra=[
     "if (cm && req.method === 'PATCH') {",

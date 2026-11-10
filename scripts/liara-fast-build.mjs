@@ -1095,3 +1095,8 @@ runR1314(process.execPath,['--test','scripts/test-r1764-chassis-order-mobile.cjs
 
 // R1766: isolated customers page redesign and consent/date regression.
 runR1314(process.execPath,['--test','scripts/test-r1766-crm-unified.cjs'],{stdio:'inherit'});
+
+// R1767: single Customers tab switch shared by Photographer + Lab; after all legacy rewrites.
+await deployStep('./enable-r1767-shared-customers-tabs.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1099-tab-settings.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1767-shared-customers-tabs.cjs'],{stdio:'inherit'});

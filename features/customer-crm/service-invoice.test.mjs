@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {prepareServiceInvoice,renderServiceInvoiceHtml} from './service-invoice.mjs';
+const sample={invoiceNumber:12,customerName:'مریم',customerMobile:'09123456789',businessName:'آتلیه',issuedAt:'2026-11-10T08:00:00Z',items:[{description:'عکاسی کودک',quantity:2,unitPriceToman:200000}],discountToman:30000,paidToman:100000};
+test('invoice totals in Toman',()=>{const x=prepareServiceInvoice(sample);assert.equal(x.subtotalToman,400000);assert.equal(x.totalToman,370000);assert.equal(x.dueToman,270000)});
+test('reject empty invoice',()=>assert.throws(()=>prepareServiceInvoice({items:[]})));
+test('reject unsafe amounts',()=>{for(const v of [-1,1.4,99999999999999])assert.throws(()=>prepareServiceInvoice({...sample,paidToman:v}))});
+test('reject zero quantity',()=>assert.throws(()=>prepareServiceInvoice({...sample,items:[{description:'item',quantity:0,unitPriceToman:100}]})));
+test('reject discount above subtotal',()=>assert.throws(()=>prepareServiceInvoice({...sample,discountToman:900000})));
+test('reject payment above total',()=>assert.throws(()=>prepareServiceInvoice({...sample,paidToman:900000})));
+test('A4 and thermal both include details',()=>{for(const format of ['a4','thermal']){const html=renderServiceInvoiceHtml(sample,format);assert.match(html,/چاپ فاکتور/);assert.match(html,/عکاسی کودک/);assert.match(html,/تومان/);assert.ok(html.includes('class="'+format+'"'))}});
+test('escape customer and service HTML',()=>{const html=renderServiceInvoiceHtml({...sample,customerName:'<script>alert(1)</script>',items:[{description:'<img src=x onerror=1>',quantity:1,unitPriceToman:1}],discountToman:0,paidToman:0});assert.ok(!html.includes('<script>alert(1)</script>'));assert.ok(!html.includes('<img src=x onerror'));assert.match(html,/&lt;script&gt;/)});
+test('immutable source',()=>{const before=structuredClone(sample);renderServiceInvoiceHtml(sample);assert.deepEqual(sample,before)});

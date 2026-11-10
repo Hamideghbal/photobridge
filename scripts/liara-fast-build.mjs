@@ -1075,3 +1075,9 @@ runR1314(process.execPath,['--test','scripts/test-r1749-native-intake-header-saf
 // R1751: CSS-only selected-photographer/account layout. No JS, native header or SMS rewrite.
 await deployStep('./enable-r1751-intake-css-only.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1751-intake-css-only.cjs'],{stdio:'inherit'});
+
+
+// R1752: edit the lab-specific temporary name on pending photographer cards.
+// This runs after all historical bundle mutations and the native snapshot checksum pass.
+await deployStep('./enable-r1752-pending-photographer-name.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1752-pending-photographer-name.cjs'],{stdio:'inherit'});

@@ -54,7 +54,7 @@ const uiNew=[
  'const initial=String(h.temporary_name||"");',
  'const answer=prompt("نام موقت عکاس یا عکاسی را وارد کنید:",initial);',
  'if(answer===null)return;',
- 'const name=String(answer).trim().replace(/\s+/g," ");',
+ 'const name=String(answer).trim().replace(/\\s+/g," ");',
  'if(!name||name.length>140){alert("نام موقت را بین ۱ تا ۱۴۰ کاراکتر وارد کنید.");return;}',
  'try{await Me("/api/lab/customers/"+h.id,{method:"PATCH",body:JSON.stringify({temporaryName:name})});o();}',
  'catch(error){const code=error?.data?.error;alert(code==="customer_not_preregistered"?"این عکاس دیگر در وضعیت پیش‌عضویت نیست.":',

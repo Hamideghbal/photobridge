@@ -18,8 +18,9 @@ export async function updatePendingLabCustomerName({pool,crypto,labId,userId,act
       await c.query('ROLLBACK');
       return {ok:false,status:409,error:'customer_not_preregistered'};
     }
-    const mobile=String(member.rows[0].mobile||'').trim();
-    if(!/^09\d{9}$/.test(mobile)){
+    const digits=String(member.rows[0].mobile||'').replace(/\D/g,'');
+    const mobile=/^09\d{9}$/.test(digits)?digits:/^989\d{9}$/.test(digits)?'0'+digits.slice(2):/^00989\d{9}$/.test(digits)?'0'+digits.slice(4):/^9\d{9}$/.test(digits)?'0'+digits:'';
+    if(!mobile){
       await c.query('ROLLBACK');
       return {ok:false,status:409,error:'preregistered_mobile_invalid'};
     }

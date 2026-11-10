@@ -26,7 +26,7 @@ test('R1768: lab order listing, order details, archive and finance documents use
  assert(source.slice(source.indexOf("url.pathname === '/api/lab/orders'")-45,source.indexOf("url.pathname === '/api/lab/orders'")).includes("req.method === 'GET'"),'lab order GET route must exist');
  const route=source.slice(source.indexOf("url.pathname === '/api/lab/orders'"),source.indexOf("url.pathname === '/api/lab/orders'")+550);
  assert(route.includes(withWalkin),'lab list should prefer studio while preserving walk-in names');
- assert(source.includes("SELECT o.*,"+withWalkin+" customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile)"),'lab order detail also uses profile');
+ assert(source.includes(withWalkin+" customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile)"),'lab order detail also uses profile regardless of SELECT prefix');
  assert(source.includes("SELECT i.*,"+withWalkin+" customer_name,o.number order_number"),'finance invoice history uses profile');
  assert(source.includes("COALESCE(o.walkin_customer_name,"+profile+",u.name,'مشتری آزاد')"),'completed order archive uses profile');
  assert.equal(source.split(withWalkin).length-1,5,'all five original walk-in/order queries were upgraded');

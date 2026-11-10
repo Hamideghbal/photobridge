@@ -84,6 +84,19 @@ test('header rebuild saves the native button and never removes it as proxy',()=>
  assert(css.includes('.pb1148SecondaryHeader.pb1174QueueNav>#pb1137LocalIntakeButton{display:inline-flex!important'));
  assert(css.includes('.labSingleHeader>#pb1137LocalIntakeButton{display:inline-flex!important'));
 });
+test('retired queue toolbar is never used as a native launcher target',()=>{
+ const begin=intake.indexOf('function mount(){');
+ const end=intake.indexOf('let primaryState=',begin);
+ const mounted=intake.slice(begin,end);
+ assert(mounted.includes("const target=desktopQueue?(header||visibleFallback):host.querySelector('.ordersWorkspace');"));
+ assert(!/const target=[^;]*mainQueueFilters/.test(mounted),
+  'launcher must never fall back to the hidden old toolbar');
+ assert(!mounted.includes('header||visibleFallback||('));
+ assert(css.includes('.labRoleWorkspace .mainQueueFilters{display:none!important;visibility:hidden!important}'),
+  'legacy queue toolbar must not show as a second desktop header');
+ assert(header.includes("document.querySelector('.mainQueueFilters')"),
+  'old React tab controls must continue to drive unified navigation until migrated');
+});
 test('authorization, real click handler, original site UI and orders remain unchanged',()=>{
  assert(intake.includes('/api/lab/download-device'));
  assert(intake.includes('primaryState'));

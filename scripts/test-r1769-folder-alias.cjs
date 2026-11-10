@@ -9,7 +9,7 @@ test('R1769: Latin names accept safe user-provided Windows folder labels',async(
  for(const value of ['My Studio','Mahan_2026','A','Studio-17','Atelier 2026','Atelier.Test'])
   assert.equal(clean(value),value);
  for(const invalid of ['آرمان','ABC/XYZ','Hi\\There','CON','lpt2','A|B','a:b','..','ab.','a ','a?b','a'.repeat(65),3])
-  if(invalid==='a ')assert.equal(clean(invalid),'a');else if(invalid==='ab.')assert.equal(clean(invalid),'ab.');else assert.equal(clean(invalid),null,JSON.stringify(invalid));
+  if(invalid==='a ')assert.equal(clean(invalid),'a');else assert.equal(clean(invalid),null,JSON.stringify(invalid));
  assert.equal(clean(''),'');
  assert.equal(clean('    '),'');
 });

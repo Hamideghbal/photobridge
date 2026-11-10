@@ -15,7 +15,7 @@ server=once(server,"import {createGalleryMessaging} from './gallery-messaging.js
  "import {updateLabPhotographerFolderAlias} from './lab-photographer-folder-alias.js';\nimport {createGalleryMessaging} from './gallery-messaging.js';",'server import');
 const join=String.raw`(SELECT NULLIF(BTRIM(ps.value->>'folderLatinName'),'')
  FROM platform_settings ps WHERE ps.key='lab_photographer_folder_alias:'||m.lab_id::text||':'||u.id::text LIMIT 1)`;
-const folderQuery=join.replace(/\\s*\\n\\s*/g,' ');
+const folderQuery=join.replace(/\s*\n\s*/g,' ');
 server=once(server,') temporary_name_editable,u.email,u.mobile',
  ') temporary_name_editable,'+folderQuery+' folder_latin_name,u.email,u.mobile','lab customer list Latin alias');
 const patchFrom="return sendJson(res,200,{ok:true,name:renamed.name});\n            }\n            const hasActive";

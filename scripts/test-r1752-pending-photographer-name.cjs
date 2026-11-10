@@ -9,13 +9,13 @@ const api=fs.readFileSync(path.join(root,'dist/api/server.js'),'utf8');
 const ui=fs.readFileSync(path.join(root,'dist/web/assets/index-UIRefine-v655-r84.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'dist/web/index.html'),'utf8');
 const modulePath='file://'+path.join(root,'dist/api/lab-pending-customer-name.js').replace(/\\/g,'/');
-function db({pending=true,existing=true}={}){
+function db({pending=true,existing=true,mobile='09120000000'}={}){
  const queries=[],rows=items=>({rows:items,rowCount:items.length});
  const c={
   async query(sql,args=[]){
    queries.push({sql,args});
    if(sql.includes('SELECT u.mobile FROM lab_memberships'))
-    return rows(pending?[{mobile:'09120000000'}]:[]);
+    return rows(pending?[{mobile}]:[]);
    if(sql.includes('UPDATE invitations SET target_name'))return rows(existing?[{id:'inv'}]:[]);
    return rows([]);
   },
@@ -47,6 +47,14 @@ test('R1752: unlabelled pending member gets a local name without SMS dispatch',a
  assert.equal(insert.args[4],'نام جدید');
  assert.match(insert.sql,/'not_sent'/);
  assert(!state.queries.some(q=>/sms_delivery|sendSms|wallet/i.test(q.sql)));
+});
+test('R1752: international mobile is normalized without affecting the global identity',async()=>{
+ const {updatePendingLabCustomerName}=await import(modulePath);
+ const state=db({mobile:'+989120000000'});
+ const result=await updatePendingLabCustomerName({pool:state.pool,crypto,labId:'lab-A',userId:'user-A',actorId:'staff-A',name:'آتلیه جدید'});
+ assert.equal(result.ok,true);
+ const query=state.queries.find(q=>q.sql.includes('UPDATE invitations SET target_name'));
+ assert.deepEqual(query.args,['lab-A','09120000000','آتلیه جدید']);
 });
 test('R1752: registered or suspended real photographers cannot be renamed as preregistrations',async()=>{
  const {updatePendingLabCustomerName}=await import(modulePath);

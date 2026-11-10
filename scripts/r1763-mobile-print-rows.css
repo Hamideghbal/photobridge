@@ -1,0 +1,179 @@
+/* R1763: Android-like, in-flow two-button photographer print actions on small iPhones.
+   Presentation only: do not alter file selection, upload, prices or the Windows UI. */
+@media screen and (max-width:820px){
+  html body #root main.photographerMain .photographerMobileOrderLaunch{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    direction:rtl!important;
+    align-items:stretch!important;
+    gap:clamp(5px,1.8vw,9px)!important;
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    margin:0 0 10px!important;
+    box-sizing:border-box!important;
+  }
+  html body #root main.photographerMain .photographerMobileOrderLaunch>.photographerMobileOrderAction{
+    position:static!important;
+    transform:none!important;
+    z-index:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:40px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:8px clamp(3px,1.5vw,11px)!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    font-size:clamp(9px,2.8vw,12px)!important;
+    line-height:1.4!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    box-sizing:border-box!important;
+  }
+  /* The portal header is a normal-flow block ABOVE print-size cards, never an overlay. */
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode>.simplePrintPilotMobileHeaderHost{
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    left:auto!important;
+    transform:none!important;
+    display:block!important;
+    flex:0 0 auto!important;
+    float:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0 0 10px!important;
+    padding:0 8px!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+    z-index:2!important;
+    background:transparent!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode>.simplePrintPilotMobileHeaderHost>.simplePrintPilotHeader{
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    background:transparent!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderActions{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:auto!important;
+    grid-template-areas:"add send"!important;
+    direction:rtl!important;
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    gap:clamp(5px,1.8vw,9px)!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost :is(.simplePrintPilotLabSelect,.simplePrintPilotLabStatic){
+    display:none!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotPrimaryAdd{
+    grid-area:add!important;
+    grid-column:1!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmitMobile{
+    grid-area:send!important;
+    grid-column:2!important;
+    display:inline-flex!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost :is(.simplePrintPilotPrimaryAdd,.simplePrintPilotHeaderSubmitMobile){
+    position:static!important;
+    transform:none!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:clamp(2px,1vw,6px)!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:40px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:8px clamp(3px,1.3vw,9px)!important;
+    box-sizing:border-box!important;
+    font-size:clamp(9px,2.8vw,12px)!important;
+    line-height:1.35!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    border-radius:10px!important;
+    box-shadow:none!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotPrimaryAdd>span{
+    flex:0 0 auto!important;
+    width:clamp(15px,4.5vw,22px)!important;
+    min-width:0!important;
+    height:clamp(15px,4.5vw,22px)!important;
+    line-height:1!important;
+    display:inline-grid!important;
+    place-items:center!important;
+    margin:0!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmitMobile svg{
+    flex:0 0 16px!important;
+    width:16px!important;
+    height:16px!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderCancelMobile{
+    grid-column:1/-1!important;
+    grid-row:auto!important;
+    position:static!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    min-height:36px!important;
+  }
+  /* One actionable toolbar only. A React inline copy previously remained
+     beneath the portal header and could cover the first selected-size card. */
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode>.simplePrintPilotMobileHeaderHost ~ .photographerRolePageScrollArea .simplePrintPilotMobileInlineActions{
+    display:none!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode>.photographerRolePageScrollArea{
+    position:relative!important;
+    z-index:1!important;
+    min-width:0!important;
+    margin-top:0!important;
+    padding-top:0!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotMain{
+    min-width:0!important;
+    margin-top:0!important;
+    padding-top:0!important;
+  }
+  html body #root main.photographerMain.simplePrintPilotWorkspaceMode .simplePrintPilotGroups{
+    margin-top:0!important;
+    min-width:0!important;
+  }
+}

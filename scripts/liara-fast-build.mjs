@@ -1085,3 +1085,7 @@ runR1314(process.execPath,['--test','scripts/test-r1752-pending-photographer-nam
 // R1753: reconcile cancelled orders in the live Lab and installed Windows queues.
 await deployStep('./enable-r1753-deleted-orders-native-sync.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1753-deleted-orders-native-sync.cjs'],{stdio:'inherit'});
+
+// R1763: after Windows snapshots, CSS-only iPhone/compact phone Print toolbar.
+await deployStep('./enable-r1763-mobile-print-rows.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1763-mobile-print-rows.cjs'],{stdio:'inherit'});

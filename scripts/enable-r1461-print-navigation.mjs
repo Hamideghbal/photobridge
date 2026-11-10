@@ -9,6 +9,23 @@ if(!nav.includes('/* PB1461 refresh route */')){
  nav=nav.replace("else{const q=new URLSearchParams(key==='store'?","else{\n   const q=new URLSearchParams(key==='store'?");
  once("   const q=new URLSearchParams(key==='store'?", "   /* PB1461 refresh route */\n   const savedPrint=key==='print'?new URLSearchParams(location.search).get('pbPrintRoute'):null;\n   let restoredPrint=null;try{if(savedPrint?.startsWith('/')&&!savedPrint.startsWith('//')){const u=new URL(savedPrint,location.origin);if(u.origin===location.origin&&/^\\/photographer\\/(?:orders\\/(?:flow|needs_fix|ready|completed)|upload|album|archive|finance)\\/?$/.test(u.pathname)&&u.searchParams.get('pbLabChooser')!=='1'){u.searchParams.set('pbDesktopContent','1');u.searchParams.set('workspace','print');restoredPrint=u.pathname+u.search}}}catch{}\n   const q=new URLSearchParams(key==='store'?");
  once("frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;", "frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;");
+ // R1763: the older navigation stages can rebuild the original Print-only
+ // handler before this installer runs. Reattach CRM to the same genuine tab
+ // action instead of weakening the CRM regression test.
+ const crmDispatch="if(key==='print'||key==='crm'){open(key);return;}";
+ if(!nav.includes(crmDispatch)){
+  const handler=' function navigate(key){';
+  if(nav.split(handler).length!==2)throw Error('R1763 desktop navigate handler missing');
+  nav=nav.replace(handler,handler+"\n  /* PB1763 CRM desktop navigation compatibility */\n  "+crmDispatch);
+ }
+ const crmHistory="['store','print','crm'].includes(panel)";
+ if(!nav.includes(crmHistory)){
+  const oldHistory="['store','print'].includes(panel)";
+  if(!nav.includes(oldHistory))throw Error('R1763 desktop CRM history routing missing');
+  nav=nav.replaceAll(oldHistory,crmHistory);
+ }
+ if(!nav.includes("if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{"))
+  throw Error('R1763 CRM iframe must remain isolated from Print routing');
  fs.writeFileSync(navFile,nav);
 }
 fs.copyFileSync('scripts/r1461-print-navigation.js','dist/web/photobridge-r1461-print-navigation.js');

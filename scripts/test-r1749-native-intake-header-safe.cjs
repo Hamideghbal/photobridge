@@ -94,8 +94,13 @@ test('retired queue toolbar is never used as a native launcher target',()=>{
  assert(!mounted.includes('header||visibleFallback||('));
  assert(css.includes('.labRoleWorkspace .mainQueueFilters{display:none!important;visibility:hidden!important}'),
   'legacy queue toolbar must not show as a second desktop header');
- assert(header.includes("document.querySelector('.mainQueueFilters')"),
-  'old React tab controls must continue to drive unified navigation until migrated');
+ const sourceLine=(header.match(/const\s+source\s*=[^\n]+/)||[])[0]||'';
+ assert(sourceLine.includes('mainQueueFilters'),
+  'unified header must still locate the React queue tab source');
+ assert(header.includes("source.querySelectorAll(':scope>button')"),
+  'unified header must still read the React tab buttons');
+ assert(header.includes('live.click()'),
+  'unified header must forward tab clicks to the original React controls');
 });
 test('authorization, real click handler, original site UI and orders remain unchanged',()=>{
  assert(intake.includes('/api/lab/download-device'));

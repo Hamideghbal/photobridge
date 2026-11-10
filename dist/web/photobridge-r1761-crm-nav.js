@@ -59,7 +59,7 @@
       if(!response.ok)throw Error('tab-settings-unavailable');
       const data=await response.json();
       if(requestEpoch!==epoch)return;
-      enabled=data?.tabs?.customers!==false;
+      enabled=data?.tabs?.customers===true;
       fetchedPortal=portal;
     }catch{
       if(requestEpoch!==epoch)return;

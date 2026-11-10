@@ -52,6 +52,11 @@ test('R1769: lab-specific Latin alias is saved literally, while blank aliases us
  assert.equal((await ctx.pb1769CustomerDir(dir,{...incoming,folder_latin_name:''})).name,'persian-original');
  assert.deepEqual(names,['My Studio 2026','persian-original']);
 });
+test('R1769: QR/walk-in customer folders remain separate from photographer aliases',async()=>{
+ const {ctx,dir}=harness();
+ const order={id:'walkin-1',number:201,source:'walkin',customer_name:'Walk-in Person',customer_mobile:'09120000000',folder_latin_name:'A Studio'};
+ assert.equal((await ctx.pb1769CustomerDir(dir,order)).name,'walk-in-person-09120000000');
+});
 test('R1769: printed files use equals before the extension for multiple copies',()=>{
  const {ctx,states}=harness();
  const order={id:'fresh',number:123};

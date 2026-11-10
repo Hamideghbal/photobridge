@@ -9,6 +9,12 @@
 !dist/**
 !migrations/
 !migrations/**
+# Only the three runtime CRM helpers; tests and prototypes remain outside image.
+!features/
+!features/customer-crm/
+!features/customer-crm/service-invoice.mjs
+!features/customer-crm/sms-personalization.mjs
+!features/customer-crm/sms-segment-counter.mjs
 !scripts/
 !scripts/**
 !apps/

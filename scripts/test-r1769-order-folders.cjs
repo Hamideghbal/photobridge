@@ -91,6 +91,15 @@ test('R1769: final site cache token updated and old orders retain original workf
  assert.match(ui,/PB1769 ORDER-FIRST DOWNLOAD FOLDERS/);
  assert.match(html,/&orderFolders=r1769/);
  assert.match(ui,/pathLayout:old.pathLayout \|\| \(old.startedAt \|\| detail.order.downloaded_at \? 'legacy' : 'order-v2'\)/);
- assert.match(ui,/pb1769CustomerDir\(dateDir,order\)/);
- assert.match(ui,/pb1769CustomerDir\(c,r\)/);
+ // R1550 owns both browser and Windows target paths; R1769 extends that
+ // active target instead of patching the obsolete el()/bridge implementation.
+ const at=ui.indexOf('async function pb1550Target(');
+ const end=ui.indexOf('const pb1550DefaultRoot=',at);
+ assert(at>=0&&end>at,'R1550 shared web/Windows storage target exists');
+ const active=ui.slice(at,end);
+ assert.match(active,/pb1769CustomerDir\(dir,detail\.order\)/);
+ assert.match(active,/orderFirst\?\[pb1769OrderFolder\(detail\.order\)\]:\[\]/);
+ assert.match(active,/saved\.customer=dir\.name/);
+ assert.match(active,/saved\.pathLayout=orderFirst\?'order-v2':'legacy'/);
+ assert.match(ui,/window\.pbLabLocalIntakeStorage\.target=pb1550Target/);
 });

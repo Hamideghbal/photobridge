@@ -1112,4 +1112,8 @@ await deployStep('./enable-r1769-folder-alias.mjs');
 await deployStep('./enable-r1769-order-folders.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1769-folder-alias.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1769-order-folders.cjs'],{stdio:'inherit'});
+// R1770: verify the FINAL (post-all-mutations) print handlers in site and
+// installed Windows UI, and protect against a no-guard print PATCH.
+await deployStep('./verify-r1770-final-print-stage-guard.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1770-final-print-stage-guard.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','--test-reporter=spec','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});

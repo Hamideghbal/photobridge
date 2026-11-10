@@ -18,7 +18,7 @@ test('R1767: both navigation assets use fresh versions and do not affect unrelat
  assert.equal((html.match(/photobridge-r1761-crm-nav\.js\?v=r1767/g)||[]).length,1);
  assert.equal((html.match(/photobridge-r1761-crm-nav\.css\?v=r1767/g)||[]).length,1);
  assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=1767/g)||[]).length,1);
- assert.match(nav,/enabled=data\?\.tabs\?\.customers!==false/);
+ assert.match(nav,/enabled=data\?\.tabs\?\.customers===true/);
  assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);return;\}/);
  assert.match(nav,/credentials:'include',cache:'no-store'/);
  new vm.Script(nav);

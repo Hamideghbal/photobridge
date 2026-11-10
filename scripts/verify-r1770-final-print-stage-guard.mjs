@@ -18,11 +18,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const a=ui.indexOf(start),b=ui.indexOf(next,a+start.length);
  if(a<0||b<=a||b-a>1600)throw Error('[R1770] print stage handler missing '+root);
  const handler=ui.slice(a,b);
- const index=handler.indexOf('pb1450AllowStage(');
  const patch=handler.indexOf('method:"PATCH"');
  if(patch<0)throw Error('[R1770] print PATCH missing '+root);
- if(index<0)ui=ui.slice(0,a)+start+guard+ui.slice(a+start.length);
- else if(index>patch)throw Error('[R1770] print-stage guard runs after PATCH '+root);
+ // Prefer one guard at the very start. A previous stage may have left the
+ // exact same guard later in this handler: relocate it without duplicating it.
+ if(!handler.startsWith(start+guard)){
+  let body=handler.slice(start.length);
+  if(body.includes(guard))body=body.replace(guard,'');
+  ui=ui.slice(0,a)+start+guard+body+ui.slice(b);
+ }
  const verify=ui.slice(ui.indexOf(start),ui.indexOf(next,ui.indexOf(start)));
  if(!verify.startsWith(start+guard))throw Error('[R1770] print stage not protected on entry '+root);
  ui+='\n'+marker+'\n';

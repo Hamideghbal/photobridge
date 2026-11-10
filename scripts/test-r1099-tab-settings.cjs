@@ -33,6 +33,11 @@ test('persisted photographer tab settings include one shared Customers switch fo
   assert.deepEqual((await request('GET','platform_admin',null,'/api/photographer/navigation-tabs')).body,
    {tabs:{...defaults,customers:tabs.customers},adminBypass:true});
  }
+ // A cached old admin dialog that sends only 3 keys must NOT re-enable Customers.
+ const legacyUpdate={ai:false,album:true,instagram:true};
+ assert.equal((await request('PUT','platform_admin',legacyUpdate)).status,200);
+ assert.deepEqual(saved,{...legacyUpdate,customers:false});
+ assert.equal((await request('GET','lab',null,'/api/photographer/navigation-tabs')).body.tabs.customers,false);
  // Old installations only stored three keys. Customers defaults to ON for both roles.
  saved={ai:true,album:false,instagram:true};
  assert.deepEqual((await request('GET','platform_admin')).body.tabs,{...saved,customers:true});

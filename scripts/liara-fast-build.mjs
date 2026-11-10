@@ -1067,3 +1067,7 @@ runR1314(process.execPath,['--test','scripts/test-r1726-mobile-login.cjs'],{stdi
 // Keep the existing keyboard-safe top anchor, login behavior and installed-app banner.
 await deployStep('./enable-r1727-mobile-login-header.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'],{stdio:'inherit'});
+
+// R1749 EXPERIMENTAL: Windows-only native intake button placement; no R1740 UI/SMS patch.
+await deployStep('./enable-r1749-native-intake-header-safe.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1749-native-intake-header-safe.cjs'],{stdio:'inherit'});

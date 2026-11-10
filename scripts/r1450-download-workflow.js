@@ -128,7 +128,7 @@ async function pb1450Download(detail, progress = () => {}, options = {}) {
     root = await pb1450Root(true);
     const old = yc(id) || {};
     detail.order._local_download_started_at = old.startedAt || new Date().toISOString();
-    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,localComplete:false,lastError:null});
+    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,pathLayout:old.pathLayout || (old.startedAt || detail.order.downloaded_at ? 'legacy' : 'order-v2'),localComplete:false,lastError:null});
     report = await pb1450Verify(detail,root,receipts,progress);
     if (report.collisions.length) throw Object.assign(Error('local_download_incomplete'),{report});
     const force = options.force === true, already = new Set(report.completedIds), targets = new Map();

@@ -77,6 +77,28 @@ CREATE TABLE IF NOT EXISTS pb_crm.sessions (
 CREATE INDEX IF NOT EXISTS pb_crm_sessions_by_owner
   ON pb_crm.sessions (owner_kind, owner_id, shoot_type_id, shoot_date DESC);
 
+-- Optional SMS draft for EACH owner's photography category.
+-- A category can exist without a template. Templates are editable by the owner.
+-- No automatic delivery, scheduling, SMS provider, or billing is implemented.
+CREATE TABLE IF NOT EXISTS pb_crm.sms_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_kind TEXT NOT NULL CHECK (owner_kind IN ('lab', 'photographer')),
+  owner_id TEXT NOT NULL CHECK (length(btrim(owner_id)) > 0),
+  shoot_type_id UUID NOT NULL,
+  message_text TEXT NOT NULL CHECK (char_length(btrim(message_text)) BETWEEN 1 AND 1000),
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT pb_crm_sms_templates_shoot_type_owner_fk
+    FOREIGN KEY (shoot_type_id, owner_kind, owner_id)
+    REFERENCES pb_crm.shoot_types(id, owner_kind, owner_id)
+    ON DELETE RESTRICT,
+  CONSTRAINT pb_crm_sms_templates_one_per_type UNIQUE
+    (owner_kind, owner_id, shoot_type_id)
+);
+CREATE INDEX IF NOT EXISTS pb_crm_sms_templates_menu
+  ON pb_crm.sms_templates (owner_kind, owner_id, enabled);
+
 -- An occasion's year may be unknown. Month/day are kept in the ORIGINAL
 -- calendar. Never treat a Jalali month/day as a Gregorian month/day.
 CREATE TABLE IF NOT EXISTS pb_crm.occasions (
@@ -137,6 +159,19 @@ CREATE POLICY pb_crm_customers_scope ON pb_crm.customers
 ALTER TABLE pb_crm.shoot_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pb_crm.shoot_types FORCE ROW LEVEL SECURITY;
 CREATE POLICY pb_crm_shoot_types_scope ON pb_crm.shoot_types
+  FOR ALL
+  USING (
+    owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')
+    AND owner_id = nullif(current_setting('pb_crm.owner_id', true), '')
+  )
+  WITH CHECK (
+    owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')
+    AND owner_id = nullif(current_setting('pb_crm.owner_id', true), '')
+  );
+
+ALTER TABLE pb_crm.sms_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pb_crm.sms_templates FORCE ROW LEVEL SECURITY;
+CREATE POLICY pb_crm_sms_templates_scope ON pb_crm.sms_templates
   FOR ALL
   USING (
     owner_kind = nullif(current_setting('pb_crm.owner_kind', true), '')

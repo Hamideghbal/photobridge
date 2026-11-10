@@ -20,6 +20,11 @@ const helper=[
  " const number=String(order?.number||order?.id||'').trim();",
  " if(!number)throw Error('order_folder_number_missing');",
  " return Ya('order-'+number,'order');",
+ "}",
+ "async function pb1769CustomerDir(dateDir,order){",
+ " const alias=pb1769OrderFirst(order)?String(order?.folder_latin_name||'').trim():'';",
+ " if(alias&&alias.length<=64&&(/^[A-Za-z0-9][A-Za-z0-9 ._-]*[A-Za-z0-9]$/.test(alias)||/^[A-Za-z0-9]$/.test(alias)))return dateDir.getDirectoryHandle(alias,{create:true});",
+ " return Hl(dateDir,Tg(order));",
  "}"
 ].join('\n')+'\n';
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -57,10 +62,10 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  ui=ui.slice(0,tgStart)+tg+ui.slice(tgEnd);
  ui=once(ui,'function Uy(',helper+'function Uy(','new order layout helper');
  ui=once(ui,'m=await Hl(c,Tg(r)),g=await Hl(m,Uy(t,a))',
-  'm=await Hl(c,Tg(r)),pb1769Dir=pb1769OrderFirst(r)?await Hl(m,pb1769OrderFolder(r)):m,g=await Hl(pb1769Dir,Uy(t,a))',
+  'm=await pb1769CustomerDir(c,r),pb1769Dir=pb1769OrderFirst(r)?await Hl(m,pb1769OrderFolder(r)):m,g=await Hl(pb1769Dir,Uy(t,a))',
   'web browser target');
  ui=once(ui,'customerDir=await Hl(dateDir,Tg(order)),dir=await Hl(customerDir,Uy(detail,file))',
-  'customerDir=await Hl(dateDir,Tg(order)),pb1769Dir=pb1769OrderFirst(order)?await Hl(customerDir,pb1769OrderFolder(order)):customerDir,dir=await Hl(pb1769Dir,Uy(detail,file))',
+  'customerDir=await pb1769CustomerDir(dateDir,order),pb1769Dir=pb1769OrderFirst(order)?await Hl(customerDir,pb1769OrderFolder(order)):customerDir,dir=await Hl(pb1769Dir,Uy(detail,file))',
   'Windows native bridge target');
  ui+='\n'+marker+'\n';
  fs.writeFileSync(bundle,ui);

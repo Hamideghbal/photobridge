@@ -16,13 +16,14 @@
   const stock=raw===null||raw===''?0:Number(raw);
   // A count below the number of selected photos is not enough for this size.
   // No option is exposed until the authoritative price/stock has loaded.
-  const shortage=!group||!master||!Number.isFinite(stock)||stock<=0||stock<labels.length;
+  const needed=labels.reduce((total,label)=>{const n=Number(label.getAttribute('data-pb1765-copies'));return total+(Number.isInteger(n)&&n>=1?n:1);},0);
+  const shortage=!group||!master||!Number.isFinite(stock)||stock<=0||stock<needed;
   const disabled=!!master?.disabled;
   const allChecks=card.querySelectorAll('.simplePrintCardAddonCheck input[type="checkbox"]');
   // During an in-flight send all controls may temporarily be disabled. Do not
   // mutate already chosen add-ons during that transient disabled state.
   const busy=stock>0&&allChecks.length>0&&[...allChecks].every(input=>input.disabled);
-  return {labels,unavailable:shortage||disabled,clear:shortage||(disabled&&!busy)};
+  return {labels,unavailable:shortage||(disabled&&!busy),clear:shortage||(disabled&&!busy)};
  }
  let syncing=false,pending=false;
  function sync(){
@@ -74,7 +75,7 @@
    if(mutations.some(m=>m.type==='childList'||(m.type==='attributes'&&m.attributeName!=='class')))
     schedule();
    else if(mutations.some(m=>m.target?.closest?.('.simplePrintSizeCard')))schedule();
-  }).observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:['class','disabled','hidden','aria-disabled','data-pb1764-stock']});
+  }).observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:['class','disabled','hidden','aria-disabled','data-pb1764-stock','data-pb1765-copies']});
   schedule();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});

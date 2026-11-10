@@ -4,7 +4,10 @@ import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 const sha=data=>crypto.createHash('sha256').update(data).digest('hex');
 const bundle='assets/index-UIRefine-v655-r84.js';
-// R1631 wraps the active live queue with a transition-preserving state setter.\n// Match that actual post-build code rather than the removed pre-R1631 setter.\nconst old="f(previous=>window.pb1631PreserveExits?.((data.orders||[]).filter(row=>String(row.mode||'print')===o),previous)||(data.orders||[]).filter(row=>String(row.mode||'print')===o));";\nconst fresh="f(previous=>window.pb1631PreserveExits?.(pb1753VisibleLabOrders(data.orders||[],o),previous)||pb1753VisibleLabOrders(data.orders||[],o));";
+// R1631 wraps the active live queue with a transition-preserving state setter.
+// Match that actual post-build code rather than the removed pre-R1631 setter.
+const old="f(previous=>window.pb1631PreserveExits?.((data.orders||[]).filter(row=>String(row.mode||'print')===o),previous)||(data.orders||[]).filter(row=>String(row.mode||'print')===o));";
+const fresh="f(previous=>window.pb1631PreserveExits?.(pb1753VisibleLabOrders(data.orders||[],o),previous)||pb1753VisibleLabOrders(data.orders||[],o));";
 const helper="function pb1753VisibleLabOrders(rows,mode){return (Array.isArray(rows)?rows:[]).filter(row=>row&&String(row.mode||'print')===mode&&!['cancelled','canceled','deleted'].includes(String(row.status||'').toLowerCase())&&!row.deleted_at);}";
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const uiFile=root+'/'+bundle,indexFile=root+'/index.html';
@@ -21,7 +24,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const pattern=/assets\/index-UIRefine-v655-r84\.js\?[^"'<>\s]*/g;
  const links=[...html.matchAll(pattern)];
  if(links.length!==1)throw Error('[R1753] expected one Lab bundle URL in '+root);
- html=html.replace(pattern,value=>value.includes('&deletedOrders=r1756')?value:value+'&deletedOrders=r1756');
+ html=html.replace(pattern,value=>value.includes('&deletedOrders=r1757')?value:value+'&deletedOrders=r1757');
  fs.writeFileSync(indexFile,html);
  const manifestFile=root+'/manifest.json';
  if(fs.existsSync(manifestFile)){
@@ -37,4 +40,4 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   fs.writeFileSync(manifestFile,JSON.stringify(manifest));
  }
 }
-console.log('[R1756] Site and Windows Lab queues reconcile cancelled/deleted orders while preserving R1631 transitions and downloaded files.');
+console.log('[R1757] Deleted orders reconcile across site and Windows, preserving R1631 transitions and saved local files.');

@@ -17,7 +17,7 @@ test('R1753: cancelled or deleted orders disappear from live site and Windows qu
   const context={};
   vm.runInNewContext(helper+'\nresult=pb1753VisibleLabOrders([{id:"ok",mode:"print",status:"downloaded"},{id:"cancelled",mode:"print",status:"cancelled"},{id:"removed",mode:"print",deleted_at:"2026-11-10"},{id:"album",mode:"album",status:"sent"}],"print")',context);
   assert.deepEqual(Array.from(context.result,row=>row.id),['ok']);
-  assert(fs.readFileSync(root+'/index.html','utf8').includes('deletedOrders=r1756'));
+  assert(fs.readFileSync(root+'/index.html','utf8').includes('deletedOrders=r1757'));
  }
 });
 test('R1753: native hot update checksums are valid and no local files are removed',()=>{
@@ -45,4 +45,15 @@ test('R1756: patch the actual R1631 live refresh without removing transitions',(
   assert(!ui.includes(old));
   assert(ui.includes('window.pb1631PreserveExits?.('));
  }
+});
+
+test('R1757: real installer declares live queue anchors on separate physical lines',()=>{
+ const script=fs.readFileSync('scripts/enable-r1753-deleted-orders-native-sync.mjs','utf8');
+ assert.match(script,/^const old=/m);
+ assert.match(script,/^const fresh=/m);
+ assert.equal(script.split('const old=').length,2);
+ assert.equal(script.split('const fresh=').length,2);
+ assert(!script.includes('setter.\\n// Match'));
+ assert(!script.includes('setter.\\nconst old='));
+ assert(!script.includes('setter.\\nconst fresh='));
 });

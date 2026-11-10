@@ -1081,3 +1081,7 @@ runR1314(process.execPath,['--test','scripts/test-r1751-intake-css-only.cjs'],{s
 // This runs after all historical bundle mutations and the native snapshot checksum pass.
 await deployStep('./enable-r1752-pending-photographer-name.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1752-pending-photographer-name.cjs'],{stdio:'inherit'});
+
+// R1753: reconcile cancelled orders in the live Lab and installed Windows queues.
+await deployStep('./enable-r1753-deleted-orders-native-sync.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1753-deleted-orders-native-sync.cjs'],{stdio:'inherit'});

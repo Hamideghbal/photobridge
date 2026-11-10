@@ -1,4 +1,6 @@
 // R1749 — experimental Windows-only real intake button visibility guard.
+// Retire the obsolete queue toolbar as a native launcher target: the old tab DOM
+// remains only as a hidden data/event source until migrated to the unified header.
 // This does not change order submission, account details, SMS, site UI, or device authorization.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -43,7 +45,7 @@ if(!intake.includes('/* PB1749 native visible intake */')){
  mount=mount.replace(h[0][0],
   "const header=desktopQueue?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'):null;");
  mount=mount.replace(t[0][0],
-  "const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;\n const target=header||visibleFallback||("+t[0][1].trim()+");");
+  "const visibleFallback=desktopQueue?document.querySelector('.labRoleWorkspace .labSingleHeader'):null;\n const target=desktopQueue?(header||visibleFallback):host.querySelector('.ordersWorkspace');");
  intake=intake.slice(0,begin)+'/* PB1749 native visible intake */\n'+mount+intake.slice(end);
  fs.writeFileSync(intakePath,intake);
 }
@@ -78,6 +80,9 @@ if(!css.includes('/* PB1749 visible real native intake */')){
  css += 'html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>#pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;order:-1!important;flex:0 0 auto!important;margin-inline-end:auto!important;position:relative!important;z-index:2!important}\n';
  css += 'html body #root .labRoleWorkspace .labSingleHeader>#pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important}\n';
  css += '}\n';
+ // The former queue toolbar is kept only as an invisible source of tab callbacks/counts.
+ // It must not act as a visible header or native intake mounting target.
+ css += '@media(min-width:821px) and (hover:hover) and (pointer:fine){html body #root .labRoleWorkspace .mainQueueFilters{display:none!important;visibility:hidden!important}}\n';
  fs.writeFileSync(cssPath,css);
 }
 const manifestPath=root+'/manifest.json';

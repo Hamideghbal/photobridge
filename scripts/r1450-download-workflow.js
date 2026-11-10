@@ -39,8 +39,10 @@ function pb1769DownloadName(file, incomingName, order) {
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
  stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
- const clean=Ya(stem+ext,'file'),p=clean.lastIndexOf('.'),outExt=p>0?clean.slice(p):'',base=p>0?clean.slice(0,p):clean;
- return base.slice(0,Math.max(1,96-outExt.length-String(copies).length))+' = '+copies+outExt;
+ // Sanitize the stem once, then keep the literal ' = N' suffix intact.
+ // Passing the whole result through Ya() would turn ' = ' into '-' on Windows.
+ const base=Ya(stem,'file');
+ return base.slice(0,Math.max(1,96-ext.length-String(copies).length-3))+' = '+copies+ext;
 }
 function pb1450Meta(file, receipts) {
   const receipt = receipts?.[String(file.id)];

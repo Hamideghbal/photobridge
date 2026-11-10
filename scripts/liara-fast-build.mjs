@@ -1089,3 +1089,6 @@ runR1314(process.execPath,['--test','scripts/test-r1753-deleted-orders-native-sy
 // R1763: after Windows snapshots, CSS-only iPhone/compact phone Print toolbar.
 await deployStep('./enable-r1763-mobile-print-rows.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1763-mobile-print-rows.cjs'],{stdio:'inherit'});
+
+// R1764: protect per-photo chassis choices and photographer mobile cards without touching labs.
+runR1314(process.execPath,['--test','scripts/test-r1764-chassis-order-mobile.cjs'],{stdio:'inherit'});

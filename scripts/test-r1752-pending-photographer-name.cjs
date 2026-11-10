@@ -95,3 +95,13 @@ test('R1752: site and generated Lab UI offer the edit button only for eligible p
   }
  }
 });
+
+test('R1754: alternate lab customer identity markup keeps the pencil edit while preserving all badges and mobile text',()=>{
+ const source=fs.readFileSync(path.join(root,'scripts/enable-r1752-pending-photographer-name.mjs'),'utf8');
+ assert(source.includes('const slot=\'className:"labPhotographerIdentityCopy",children:[\''));
+ assert(source.includes('const childAt=ui.indexOf(child,slotAt)'));
+ assert(source.includes('ui=ui.slice(0,childAt)+row+ui.slice(childAt+child.length)'));
+ assert(source.includes('ui=ui.slice(0,slotAt)+button+\',\'+ui.slice(slotAt)'));
+ assert(source.includes('if(!ui.includes(\'pbR1752NameEdit\'))throw Error'));
+ assert(source.includes("if(slotMatches!==1)throw Error"),'must not silently skip missing UI');
+});

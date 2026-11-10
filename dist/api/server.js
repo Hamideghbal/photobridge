@@ -1,6 +1,7 @@
 import {createGalleryMessaging} from './gallery-messaging.js';
 import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
+import {handleCustomerCRM} from './customer-crm.js';
 import {issueEquipmentStoreHandoff,consumeEquipmentStoreHandoff,readEquipmentHandoffPost,equipmentHandoffOriginAllowed} from './equipment-office-handoff.js';
 import {renderEquipmentPage} from './equipment-site-content.js';
 import {getEquipmentSiteState} from './equipment-site-management.js';
@@ -12242,6 +12243,8 @@ async function api(req, res, url) {
         }
     }
     const a = await auth(req);
+    // Independent owner-scoped CRM endpoints; legacy lab/photographer flows unchanged.
+    if(await handleCustomerCRM({req,res,url,a,pool,bodyJson,sendJson,portal:requestPortal(req)}))return;
     if(await handleStorefrontManagement(req,res,url,a,storefrontDependencies()))return;
     /* PB_R1099_PHOTOGRAPHER_TABS */
     if (await handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit})) return;

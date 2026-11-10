@@ -73,7 +73,7 @@ const uiNew=[
  '},children:"✎"})',
  ']}),e.jsx("small",{dir:"ltr",children:h.mobile||"بدون شماره موبایل"})'
 ].join('');
-const css='.pbR1752NameRow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}.pbR1752NameRow>b{min-width:0;overflow-wrap:anywhere}.pbR1752NameEdit{width:29px;height:29px;min-width:29px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:20px;line-height:1;cursor:pointer}.pbR1752NameEdit:hover,.pbR1752NameEdit:focus-visible{background:#e2e8f0;outline:2px solid transparent;border-color:#64748b}';
+const css='.pbR1752NameRow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}.labPhotographerIdentityCopy{position:relative}.labPhotographerIdentityCopy:has(>.pbR1752NameEdit){padding-inline-end:34px}.labPhotographerIdentityCopy>.pbR1752NameEdit{position:absolute;inset-inline-end:0;top:0}.pbR1752NameRow>b{min-width:0;overflow-wrap:anywhere}.pbR1752NameEdit{width:29px;height:29px;min-width:29px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:20px;line-height:1;cursor:pointer}.pbR1752NameEdit:hover,.pbR1752NameEdit:focus-visible{background:#e2e8f0;outline:2px solid transparent;border-color:#64748b}';
 const tag='<style id="pbR1752TemporaryNameStyle">'+css+'</style>';
 const sha=buffer=>crypto.createHash('sha256').update(buffer).digest('hex');
 const roots=['dist/web','dist/web/lab-desktop-ui'];
@@ -88,7 +88,39 @@ for(const root of roots){
  }
  let ui=fs.readFileSync(bundle,'utf8');
  if(!ui.includes('pbR1752NameEdit')){
-  ui=once(ui,uiOld,uiNew,root+' photographer name row');
+  // The older name + mobile pair is not stable: other release scripts can
+  // add a badge/wrapper between these children. Prefer the original form,
+  // then anchor on the customer card's identity-copy slot instead.
+  if(ui.split(uiOld).length===2){
+   ui=ui.replace(uiOld,uiNew);
+  }else{
+   const slot='className:"labPhotographerIdentityCopy",children:[';
+   const slotMatches=ui.split(slot).length-1;
+   if(slotMatches!==1)throw Error('[R1752] '+root+' photographer identity slot count '+slotMatches);
+   const slotAt=ui.indexOf(slot)+slot.length;
+   const cardAt=ui.lastIndexOf('t.customers.map(',slotAt);
+   if(cardAt<0||slotAt-cardAt>1900)throw Error('[R1752] '+root+' identity slot is not on the lab customer card');
+   const child='e.jsx("b",{children:h.name})';
+   const childAt=ui.indexOf(child,slotAt);
+   if(childAt>=slotAt&&childAt-slotAt<400){
+    // Retain any extra badges, mobile layout or child nodes inserted by older
+    // releases. Replace the name alone; leave every other child untouched.
+    const end=uiNew.indexOf(',e.jsx("small"');
+    if(end<0)throw Error('[R1752] generated name row template invalid');
+    const row=uiNew.slice(0,end);
+    ui=ui.slice(0,childAt)+row+ui.slice(childAt+child.length);
+   }else{
+    // The name is already wrapped: add a sibling edit control to the same
+    // identity-copy slot rather than guessing or rewriting that markup.
+    const begin=uiNew.indexOf('h.temporary_name_editable&&e.jsx("button"');
+    const end=uiNew.indexOf(']}),e.jsx("small"',begin);
+    if(begin<0||end<0)throw Error('[R1752] generated edit button template invalid');
+    const button=uiNew.slice(begin,end);
+    ui=ui.slice(0,slotAt)+button+','+ui.slice(slotAt);
+   }
+   console.log('[R1752] recovered '+root+' name edit UI from identity slot despite earlier markup changes');
+  }
+  if(!ui.includes('pbR1752NameEdit'))throw Error('[R1752] edit control was not installed in '+root);
   fs.writeFileSync(bundle,ui);
  }
  let html=fs.readFileSync(index,'utf8');

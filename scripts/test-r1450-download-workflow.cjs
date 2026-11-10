@@ -2,7 +2,19 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const production=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
 const marker='/* PB1450 verified download workflow */';
 assert.equal(production.split(marker).length,2);
-const helper=production.split(marker)[1];
+// Only evaluate the R1450 download helper in the isolated VM. Many later
+// releases append unrelated browser/UI code after it; evaluating that code
+// without the full browser runtime causes ReferenceError (for example 'x').
+const helperStart=production.indexOf(marker);
+assert(helperStart>=0,'R1450 helper marker missing');
+const helperBodyStart=helperStart+marker.length;
+const lastHelper=production.indexOf('async function pb1450AllowStage(',helperBodyStart);
+assert(lastHelper>helperBodyStart,'R1450 final helper function missing');
+const helperEnd=production.indexOf('\n}\n',lastHelper);
+assert(helperEnd>lastHelper&&helperEnd-lastHelper<2500,'R1450 helper boundary changed');
+const helper=production.slice(helperBodyStart,helperEnd+2);
+assert(helper.includes('function pb1769DownloadName('),'download naming helper retained');
+assert(helper.includes('async function pb1450Download('),'verified downloader retained');
 function setup({files,stored={},extra={},native=false}={}){
  files=files||[{id:'a',original_name:'a.jpg',bytes:3,group:'one'},{id:'b',original_name:'b.jpg',bytes:3,group:'one'}];
  const disk=new Map(Object.entries(stored)),state=new Map(),alerts=[],requests=[],downloads=[],dirs=new Map();let primary=true,fail=null,statCalls=0;

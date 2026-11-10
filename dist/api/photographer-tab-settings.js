@@ -1,12 +1,15 @@
 // Photographer navigation settings use the existing platform_settings table.
 export const PHOTOGRAPHER_TABS_KEY='photographer_navigation_tabs';
-export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram'];
+export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram','customers'];
 export function normalizePhotographerTabs(value){
  return Object.fromEntries(PHOTOGRAPHER_TAB_KEYS.map(key=>[key,value?.[key]!==false]));
 }
 export function photographerTabsForUser(settings,user){
  const adminBypass=user?.platformRole==='platform_admin';
- return {tabs:adminBypass?normalizePhotographerTabs(null):normalizePhotographerTabs(settings),adminBypass};
+ const effective=normalizePhotographerTabs(settings);
+ // Other photographer tabs keep their existing admin preview bypass, but the
+ // shared Customers switch must be respected for both portals, even admins.
+ return {tabs:adminBypass?{...normalizePhotographerTabs(null),customers:effective.customers}:effective,adminBypass};
 }
 export async function handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit}){
  const admin=url.pathname==='/api/admin/photographer-tabs';
@@ -21,8 +24,13 @@ export async function handlePhotographerTabSettings({req,res,url,a,pool,requireR
  }
  if(admin&&req.method==='PUT'){
   const b=await bodyJson(req);
-  if(!b?.tabs||PHOTOGRAPHER_TAB_KEYS.some(key=>typeof b.tabs[key]!=='boolean')||Object.keys(b.tabs).some(key=>!PHOTOGRAPHER_TAB_KEYS.includes(key))){sendJson(res,400,{error:'invalid_photographer_tabs'});return true}
-  const tabs=normalizePhotographerTabs(b.tabs);
+  if(!b?.tabs||['ai','album','instagram'].some(key=>typeof b.tabs[key]!=='boolean')||
+    ('customers' in b.tabs&&typeof b.tabs.customers!=='boolean')||
+    Object.keys(b.tabs).some(key=>!PHOTOGRAPHER_TAB_KEYS.includes(key))){sendJson(res,400,{error:'invalid_photographer_tabs'});return true}
+  // Older open admin pages submit only three keys. Preserve the current shared
+  // Customers choice instead of implicitly turning it back on.
+  const previous=('customers' in b.tabs)?null:await pool.query('SELECT value FROM platform_settings WHERE key=$1 LIMIT 1',[PHOTOGRAPHER_TABS_KEY]);
+  const tabs=normalizePhotographerTabs({...normalizePhotographerTabs(previous?.rows[0]?.value),...b.tabs});
   await pool.query('INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()',[PHOTOGRAPHER_TABS_KEY,JSON.stringify(tabs)]);
   await audit(a.userId,undefined,'platform_admin.photographer_tabs_update','platform_setting',PHOTOGRAPHER_TABS_KEY,tabs).catch(()=>{});
   res.setHeader('cache-control','no-store');sendJson(res,200,{ok:true,tabs});return true;

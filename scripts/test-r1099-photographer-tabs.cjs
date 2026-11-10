@@ -34,13 +34,13 @@ test('admin can edit all three settings in the rendered dialog',async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
  const page=await browser.newPage();let saved;
  await page.route('**/*',r=>{const p=new URL(r.request().url()).pathname;
- if(p==='/api/admin/photographer-tabs'){if(r.request().method()==='PUT')saved=r.request().postDataJSON().tabs;return r.fulfill({json:{tabs:saved||{ai:true,album:true,instagram:true},ok:true}})}
+ if(p==='/api/admin/photographer-tabs'){if(r.request().method()==='PUT')saved=r.request().postDataJSON().tabs;return r.fulfill({json:{tabs:saved||{ai:true,album:true,instagram:true,customers:true},ok:true}})}
  if(p==='/feature.js')return r.fulfill({path:file});
  return r.fulfill({contentType:'text/html; charset=utf-8',body:'<div class="adminTabs adminTabsUnified"><button>عکاس‌ها</button></div><script src="/feature.js"></script>'});});
  await page.goto('https://tabs.test/admin/labs');await page.getByRole('button',{name:'تب‌های عکاس',exact:true}).click();
  await page.waitForFunction(()=>!document.querySelector('#pb1099TabsDialog [type=submit]').disabled);
- await page.locator('[name=ai]').uncheck();await page.locator('[name=instagram]').uncheck();await page.getByRole('button',{name:'ذخیره',exact:true}).click();
+ await page.locator('[name=ai]').uncheck();await page.locator('[name=instagram]').uncheck();await page.locator('[name=customers]').uncheck();await page.getByRole('button',{name:'ذخیره',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#pb1099TabsDialog [role=status]').textContent==='تنظیمات ذخیره شد.');
- assert.deepEqual(saved,{ai:false,album:true,instagram:false});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
+ assert.deepEqual(saved,{ai:false,album:true,instagram:false,customers:false});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
  }finally{await browser.close()}
 });

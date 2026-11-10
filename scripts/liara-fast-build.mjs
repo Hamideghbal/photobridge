@@ -1112,4 +1112,4 @@ await deployStep('./enable-r1769-folder-alias.mjs');
 await deployStep('./enable-r1769-order-folders.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1769-folder-alias.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1769-order-folders.cjs'],{stdio:'inherit'});
-runR1314(process.execPath,['--test','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','--test-reporter=spec','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});

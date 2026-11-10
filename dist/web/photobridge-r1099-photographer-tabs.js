@@ -1,7 +1,7 @@
 /* Photographer tab controls; the admin bypass comes from the authenticated server response. */
 (()=>{
 'use strict';
-const keys=['ai','album','instagram'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام'};
+const keys=['ai','album','instagram','customers'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام',customers:'مشتریان (عکاس و لابراتوار)'};
 let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false,sessionEpoch=0;
 const previousDisplay=new WeakMap();
 const admin=()=>location.pathname.startsWith('/admin');
@@ -62,7 +62,7 @@ function mountAdmin(){
 }
 async function openAdmin(){
  let dialog=document.querySelector('#pb1099TabsDialog');
- if(!dialog){dialog=document.createElement('dialog');dialog.id='pb1099TabsDialog';dialog.className='pb1099TabsDialog';dialog.innerHTML='<form><h3>تب‌های عکاس</h3><p>هر تب را جداگانه فعال یا غیرفعال کنید. حساب عکاسی ادمین همیشه به هر سه تب دسترسی دارد.</p>'+keys.map(key=>'<label><input type="checkbox" name="'+key+'">'+labels[key]+'</label>').join('')+'<p class="pb1099TabsMessage" role="status"></p><div class="pb1099TabsActions"><button type="submit">ذخیره</button><button type="button" data-close>بستن</button></div></form>';document.body.append(dialog);
+ if(!dialog){dialog=document.createElement('dialog');dialog.id='pb1099TabsDialog';dialog.className='pb1099TabsDialog';dialog.innerHTML='<form><h3>تب‌های عکاس</h3><p>هر تب را جداگانه فعال یا غیرفعال کنید. تب مشتریان برای عکاس و لابراتوار با یک کلید مشترک کنترل می‌شود. سایر تب‌های عکاس تنظیمات مستقل خودشان را دارند.</p>'+keys.map(key=>'<label><input type="checkbox" name="'+key+'">'+labels[key]+'</label>').join('')+'<p class="pb1099TabsMessage" role="status"></p><div class="pb1099TabsActions"><button type="submit">ذخیره</button><button type="button" data-close>بستن</button></div></form>';document.body.append(dialog);
  dialog.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
  dialog.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const save=dialog.querySelector('[type=submit]'),msg=dialog.querySelector('[role=status]');save.disabled=true;try{await api('/api/admin/photographer-tabs',{method:'PUT',body:JSON.stringify({tabs:Object.fromEntries(keys.map(key=>[key,dialog.querySelector('[name='+key+']').checked]))})});msg.textContent='تنظیمات ذخیره شد.'}catch{msg.textContent='ذخیره انجام نشد؛ دوباره تلاش کنید.'}finally{save.disabled=false}});
  }

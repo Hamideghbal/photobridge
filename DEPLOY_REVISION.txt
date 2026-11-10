@@ -1,1 +1,1 @@
-2026-11-10-r1750-native-header-legacy-source-test-fix
+2026-11-10-r1751-responsive-manual-intake-css-only

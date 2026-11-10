@@ -1071,3 +1071,7 @@ runR1314(process.execPath,['--test','scripts/test-r1727-mobile-login-header.cjs'
 // R1749 EXPERIMENTAL: Windows-only native intake button placement; no R1740 UI/SMS patch.
 await deployStep('./enable-r1749-native-intake-header-safe.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1749-native-intake-header-safe.cjs'],{stdio:'inherit'});
+
+// R1751: CSS-only selected-photographer/account layout. No JS, native header or SMS rewrite.
+await deployStep('./enable-r1751-intake-css-only.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1751-intake-css-only.cjs'],{stdio:'inherit'});

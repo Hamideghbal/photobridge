@@ -1,0 +1,107 @@
+/* R1751: responsive layout only; no intake launcher, order, or SMS changes. */
+/* R1740: TWO rows maximum for normal Lab desktop intake. Flex wrapping only
+   when picker + account facts do not fit; never force a second row. */
+.pb1137Intake .pb1137Settings.pb1139EntryRow > .pb1365CustomerAccountRow {
+  grid-column:1 / -1!important;
+  display:flex!important; flex-wrap:wrap!important;
+  align-items:flex-end!important; align-content:start!important;
+  gap:8px 12px!important; width:100%!important; min-width:0!important;
+  box-sizing:border-box!important; overflow:visible!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1139Customer {
+  flex:1 1 236px!important; min-width:min(100%,236px)!important;
+  width:auto!important; max-width:100%!important;
+  margin:0!important; align-self:stretch!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+  flex:2 1 440px!important; min-width:min(100%,440px)!important;
+  max-width:100%!important; width:auto!important;
+  display:flex!important; flex-wrap:nowrap!important;
+  align-items:center!important; justify-content:space-between!important;
+  gap:8px!important; margin:0!important; padding:6px 8px!important;
+  overflow:visible!important; box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails[hidden] {
+  display:none!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountSummary {
+  display:flex!important; flex:1 1 175px!important;
+  flex-wrap:nowrap!important; min-width:0!important; gap:7px!important;
+  align-items:center!important; max-width:100%!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta {
+  display:flex!important; flex-direction:column!important;
+  flex:1 1 0!important; min-width:0!important;
+  gap:2px!important; padding:1px 5px!important;
+  border:0!important; border-inline-start:1px solid #e0e8f3!important;
+  border-radius:0!important; background:transparent!important;
+  overflow-wrap:anywhere!important; white-space:normal!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta:first-child { border-inline-start:0!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > strong {
+  max-width:100%!important; overflow-wrap:anywhere!important;
+  font-size:11px!important; line-height:1.5!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > span { font-size:10px!important; line-height:1.5!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1586IntakeDebtDate {
+  display:block!important; max-width:100%!important; font-size:10px!important;
+  line-height:1.5!important; white-space:normal!important; overflow-wrap:anywhere!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+  display:flex!important; flex:0 1 auto!important; flex-wrap:wrap!important;
+  align-items:center!important; align-content:center!important;
+  justify-content:flex-end!important; max-width:56%!important;
+  min-width:0!important; gap:5px!important; margin:0!important;
+  position:static!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions > button {
+  flex:0 0 auto!important; width:auto!important; max-width:100%!important;
+  min-height:30px!important; height:auto!important;
+  padding:4px 7px!important; font-size:11px!important;
+  white-space:normal!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1365SmsChoice {
+  display:inline-flex!important; flex:0 0 auto!important;
+  gap:4px!important; align-items:center!important; white-space:nowrap!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit {
+  position:static!important; inset:auto!important; top:auto!important;
+  flex:1 0 100%!important; width:100%!important; max-width:100%!important;
+  margin-top:4px!important; box-sizing:border-box!important;
+  z-index:auto!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit input {
+  min-width:0!important; max-width:100%!important; box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit[hidden] { display:none!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1294ActionNotice:not(:empty) {
+  position:static!important; inset:auto!important; top:auto!important;
+  flex:1 0 100%!important; width:100%!important; max-width:100%!important;
+  box-sizing:border-box!important; padding:4px 6px!important;
+  white-space:normal!important; overflow-wrap:anywhere!important;
+}
+/* Very narrow viewport: still one account row beneath picker, while allowing
+   controls to wrap within that row so text stays readable rather than colliding. */
+@media(max-width:620px) {
+  .pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+    flex-wrap:wrap!important;
+  }
+  .pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+    max-width:100%!important; justify-content:flex-start!important;
+  }
+}
+
+/* R1741: override the older R1467 nowrap action strip that caused overlap. */
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow {
+  display:flex!important; flex-flow:row wrap!important;
+  align-items:center!important; gap:5px 7px!important;
+  white-space:normal!important; min-width:0!important; max-width:100%!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > button {
+  width:auto!important; max-width:100%!important;
+  height:auto!important; min-height:29px!important;
+  white-space:normal!important; line-height:1.45!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > .pb1365SmsChoice {
+  min-width:0!important; max-width:100%!important;
+}

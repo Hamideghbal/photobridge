@@ -66,12 +66,38 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 ].join('\n');
  ui=ui.slice(0,tgStart)+tg+ui.slice(tgEnd);
  ui=once(ui,'function Uy(',helper+'function Uy(','new order layout helper');
- ui=once(ui,'m=await Hl(c,Tg(r)),g=await Hl(m,Uy(t,a))',
-  'm=await pb1769CustomerDir(c,r),pb1769Dir=pb1769OrderFirst(r)?await Hl(m,pb1769OrderFolder(r)):m,g=await Hl(pb1769Dir,Uy(t,a))',
-  'web browser target');
- ui=once(ui,'customerDir=await Hl(dateDir,Tg(order)),dir=await Hl(customerDir,Uy(detail,file))',
-  'customerDir=await pb1769CustomerDir(dateDir,order),pb1769Dir=pb1769OrderFirst(order)?await Hl(customerDir,pb1769OrderFolder(order)):customerDir,dir=await Hl(pb1769Dir,Uy(detail,file))',
-  'Windows native bridge target');
+ // R1550 replaced the original browser and bridge paths with pb1550Target.
+ // Update the ACTIVE per-order target instead of obsolete el()/bridge anchors.
+ const oldTarget=[
+  '  const day=Ic(new Date(saved.pathDate));saved.customer||=Tg(detail.order);',
+  '  let dir=root;',
+  '  for(const name of [pb1664StorageBucket(detail.order),day,saved.customer,Uy(detail,file)]){',
+  '   try{dir=await dir.getDirectoryHandle(Ya(name),{create:false})}',
+  '   catch(error){if(!pb1450Missing(error))throw error;dir=await dir.getDirectoryHandle(Ya(name),{create:true});}',
+  '  }'
+ ].join('\n');
+ const newTarget=[
+  '  const day=Ic(new Date(saved.pathDate));',
+  '  const storedState=yc(String(detail.order.id))||{};',
+  '  const alreadyHasFiles=Object.keys(saved.targets||{}).length>0;',
+  "  const orderFirst=saved.pathLayout==='order-v2'||(saved.pathLayout!=='legacy'&&!alreadyHasFiles&&pb1769OrderFirst(detail.order));",
+  "  saved.pathLayout=orderFirst?'order-v2':'legacy';",
+  '  if(storedState.pathLayout!==saved.pathLayout)hr(detail.order.id,{...storedState,pathLayout:saved.pathLayout});',
+  '  let dir=root;',
+  '  for(const name of [pb1664StorageBucket(detail.order),day]){',
+  '   try{dir=await dir.getDirectoryHandle(Ya(name),{create:false})}',
+  '   catch(error){if(!pb1450Missing(error))throw error;dir=await dir.getDirectoryHandle(Ya(name),{create:true});}',
+  '  }',
+  '  if(saved.customer){',
+  '   try{dir=await dir.getDirectoryHandle(saved.customer,{create:false})}',
+  '   catch(error){if(!pb1450Missing(error))throw error;dir=await dir.getDirectoryHandle(saved.customer,{create:true});}',
+  '  }else{dir=await pb1769CustomerDir(dir,detail.order);saved.customer=dir.name;}',
+  '  for(const name of [...(orderFirst?[pb1769OrderFolder(detail.order)]:[]),Uy(detail,file)]){',
+  '   try{dir=await dir.getDirectoryHandle(Ya(name),{create:false})}',
+  '   catch(error){if(!pb1450Missing(error))throw error;dir=await dir.getDirectoryHandle(Ya(name),{create:true});}',
+  '  }'
+ ].join('\n');
+ ui=once(ui,oldTarget,newTarget,'R1550 active per-order web and Windows target');
  ui=once(ui,'s.dir.getFileHandle(Ya(a.original_name,"file"),{create:!1})',
   's.dir.getFileHandle(pb1769DownloadName(a,a.original_name,t.order),{create:!1})',
   'local archive reads from the new exact copied filename');

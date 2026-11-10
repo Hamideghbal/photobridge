@@ -1,1 +1,1 @@
-2026-11-10-r1757-fix-live-queue-installer-comment-newline
+2026-11-10-crm-customer-service-invoice-a4-thermal-r1760

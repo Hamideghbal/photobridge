@@ -1,12 +1,15 @@
 // Photographer navigation settings use the existing platform_settings table.
 export const PHOTOGRAPHER_TABS_KEY='photographer_navigation_tabs';
-export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram'];
+export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram','customers'];
 export function normalizePhotographerTabs(value){
  return Object.fromEntries(PHOTOGRAPHER_TAB_KEYS.map(key=>[key,value?.[key]!==false]));
 }
 export function photographerTabsForUser(settings,user){
  const adminBypass=user?.platformRole==='platform_admin';
- return {tabs:adminBypass?normalizePhotographerTabs(null):normalizePhotographerTabs(settings),adminBypass};
+ const effective=normalizePhotographerTabs(settings);
+ // Other photographer tabs keep their existing admin preview bypass, but the
+ // shared Customers switch must be respected for both portals, even admins.
+ return {tabs:adminBypass?{...normalizePhotographerTabs(null),customers:effective.customers}:effective,adminBypass};
 }
 export async function handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit}){
  const admin=url.pathname==='/api/admin/photographer-tabs';

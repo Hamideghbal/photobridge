@@ -23,7 +23,7 @@ test('R1768: finance invoices, receipts and ledgers prefer a valid profile studi
 });
 test('R1768: lab order listing, order details, archive and finance documents use the same display fallback',()=>{
  const orders=sliceFrom("url.pathname === '/api/lab/orders'","const q =",1000);
- assert(orders.includes("req.method === 'GET'"),'lab order GET route must exist');
+ assert(source.slice(source.indexOf("url.pathname === '/api/lab/orders'")-45,source.indexOf("url.pathname === '/api/lab/orders'")).includes("req.method === 'GET'"),'lab order GET route must exist');
  const route=source.slice(source.indexOf("url.pathname === '/api/lab/orders'"),source.indexOf("url.pathname === '/api/lab/orders'")+550);
  assert(route.includes(withWalkin),'lab list should prefer studio while preserving walk-in names');
  assert(source.includes("SELECT o.*,"+withWalkin+" customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile)"),'lab order detail also uses profile');

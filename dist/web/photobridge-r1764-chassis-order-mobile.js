@@ -16,8 +16,8 @@
   const stock=raw===null||raw===''?0:Number(raw);
   // A count below the number of selected photos is not enough for this size.
   // No option is exposed until the authoritative price/stock has loaded.
-  const shortage=!group||!master||!Number.isFinite(stock)||stock<=0||stock<needed;
   const needed=labels.reduce((total,label)=>{const n=Number(label.getAttribute('data-pb1765-copies'));return total+(Number.isInteger(n)&&n>=1?n:1);},0);
+  const shortage=!group||!master||!Number.isFinite(stock)||stock<=0||stock<needed;
   const disabled=!!master?.disabled;
   const allChecks=card.querySelectorAll('.simplePrintCardAddonCheck input[type="checkbox"]');
   // During an in-flight send all controls may temporarily be disabled. Do not

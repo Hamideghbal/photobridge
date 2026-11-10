@@ -21,20 +21,19 @@ test('R1768: finance invoices, receipts and ledgers prefer a valid profile studi
  assert(!resolver.includes('      ELSE u.name END'),'mobile placeholder must not take precedence');
  assert(source.includes('${labFinanceCustomerNameSql()} customer_name'),'invoice/finance queries still share the resolver');
 });
-test('R1768: lab order listing, order details, archive and finance documents use the same display fallback',()=>{
- const orders=sliceFrom("url.pathname === '/api/lab/orders'","const q =",1000);
- assert(source.slice(source.indexOf("url.pathname === '/api/lab/orders'")-45,source.indexOf("url.pathname === '/api/lab/orders'")).includes("req.method === 'GET'"),'lab order GET route must exist');
- const route=source.slice(source.indexOf("url.pathname === '/api/lab/orders'"),source.indexOf("url.pathname === '/api/lab/orders'")+550);
- assert(route.includes(withWalkin),'lab list should prefer studio while preserving walk-in names');
- const detailAt=source.indexOf('const orderId = labOrder[1]');
- assert(detailAt>=0,'lab order detail route must exist');
- const detail=source.slice(detailAt,detailAt+1800);
- assert(detail.includes(withWalkin+' customer_name'),'lab order detail must prefer registered studio name');
- assert(source.includes("SELECT i.*,"+withWalkin+" customer_name,o.number order_number"),'finance invoice history uses profile');
- assert(source.includes("COALESCE(o.walkin_customer_name,"+profile+",u.name,'مشتری آزاد')"),'completed order archive uses profile');
- assert.equal(source.split(withWalkin).length-1,5,'all five original walk-in/order queries were upgraded');
- assert(!source.includes('COALESCE(o.walkin_customer_name,u.name)'),'old mobile-first order display remains');
+test('R1768: every legacy lab order and invoice walk-in name resolver receives the studio fallback',()=>{
+ // The R1768 patch upgrades exactly five existing expressions. Check their
+ // resulting SQL aliases, not the exact surrounding SELECT/join formatting;
+ // later independent releases may legitimately add fields to those queries.
+ const uses=source.split(withWalkin);
+ assert.equal(uses.length-1,5,'all five original walk-in/order queries were upgraded');
+ for(const [i,tail] of uses.slice(1).entries()){
+   assert.match(tail.slice(0,80),/^\\s+customer_name\\b/,'upgraded display expression #'+(i+1)+' must still supply customer_name');
+ }
+ assert(source.includes("COALESCE(o.walkin_customer_name,"+profile+",u.name,'مشتری آزاد')"),'completed order archive uses studio while retaining walk-in and free-customer fallbacks');
+ assert(!source.includes('COALESCE(o.walkin_customer_name,u.name)'),'no old mobile-first walk-in display remains');
 });
+
 test('R1768: pending and delegated lab order labels prefer studio without modifying order data',()=>{
  assert(source.includes('o.priority,o.delivery,COALESCE('+profile+',u.name) customer_name'));
  assert(source.includes('SELECT o.*,COALESCE('+profile+',u.name) customer_name FROM orders o\n                    JOIN lab_delegated_order_intakes'));

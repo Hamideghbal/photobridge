@@ -85,7 +85,11 @@
         .filter(el=>!el.closest('[data-pb1318-stale]')).at(-1)||null;
     }
     if(portal==='lab')return document.querySelector('#root .labRoleWorkspace .pb1147LabNav');
-    return document.querySelector('#root .photographerHomeModeNav')||document.querySelector('#root .photographerHeaderNav');
+    const home=document.querySelector('#root .photographerHomeModeNav');
+    const header=document.querySelector('#root .photographerHeaderNav');
+    if(home&&getComputedStyle(home).display!=='none')return home;
+    if(header&&getComputedStyle(header).display!=='none')return header;
+    return header||home;
   }
   function render(){
     pending=false;

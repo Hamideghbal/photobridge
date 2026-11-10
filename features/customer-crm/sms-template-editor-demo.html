@@ -19,6 +19,12 @@ button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px sol
 .preview{border:1px solid #e1e7ee;background:#f9fbff;padding:12px;margin:12px 0;border-radius:10px;white-space:pre-wrap;line-height:1.9}
 .bad{border-color:#c47a7a;background:#fff6f6}
 .note{font-size:13px;color:#7a4054}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}
+.metric{background:#f6f9ff;border:1px solid #dfe7f4;border-radius:10px;padding:12px}
+.metric strong{display:block;font-size:20px;margin-top:6px}
+.rate-label{margin-top:16px}
+input[type=number]{box-sizing:border-box;width:100%;font:16px Tahoma,Arial,sans-serif;border:1px solid #aebed1;border-radius:10px;padding:10px}
+.caption{font-size:13px;color:#596c84;line-height:1.8}
 </style>
 </head>
 <body>
@@ -30,6 +36,12 @@ button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px sol
 <select id="category"><option value="birthday">تولد کودک</option><option value="wedding">عروسی</option><option value="engagement">نامزدی</option><option value="custom">عکس پرسنلی</option></select>
 <label for="message" style="margin-top:16px">متن قابل ویرایش پیامک</label>
 <textarea id="message" aria-label="متن پیامک"></textarea>
+<div class="metrics" aria-live="polite">
+<div class="metric">تعداد بخش‌های پیامک قالب<strong id="draft-parts">۰</strong></div>
+<div class="metric">طول پیامک قالب (واحد رمزگذاری)<strong id="draft-units">۰</strong></div>
+<div class="metric">نوع پیامک<strong id="draft-encoding">—</strong></div>
+</div>
+<p class="caption" id="draft-note">تعداد بخش‌های قالب تخمینی است؛ پس از جایگزینی نام هر مشتری ممکن است تغییر کند.</p>
 <div class="controls">
 <button type="button" data-token="{نام_مشتری}">+ درج نام مشتری</button>
 <button type="button" data-token="{مناسبت}">+ درج مناسبت</button>
@@ -40,11 +52,20 @@ button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px sol
 <section>
 <h2 style="font-size:18px;margin-top:0">پیش‌نمایش برای دو مشتری نمونه</h2>
 <div id="previews" aria-live="polite"></div>
+<div class="metrics" aria-live="polite">
+<div class="metric">گیرندگان نمونهٔ معتبر<strong id="group-recipients">۰</strong></div>
+<div class="metric">مجموع بخش‌های پیامک<strong id="group-parts">۰</strong></div>
+<div class="metric">برآورد هزینه<strong id="group-cost">تعرفه نامشخص</strong></div>
+</div>
+<label class="rate-label" for="demo-rate">تعرفه آزمایشی هر بخش (ریال) — فقط برای دیدن نحوهٔ محاسبه</label>
+<input id="demo-rate" type="number" min="0" step="1" inputmode="numeric" placeholder="اختیاری؛ تعرفه واقعی از سرور دریافت می‌شود">
+<p class="caption">هزینهٔ نمایش‌داده‌شده در این نمونه فقط بر اساس تعرفهٔ واردشده محاسبه می‌شود و قیمت واقعی ارسال نیست. در نسخهٔ عملیاتی هزینه باید از سرویس پیامک گرفته شود و پیش از تأیید نهایی بررسی شود.</p>
 <p class="note">این بخش فقط پیش‌نمایش است؛ برای ارسال گروهی واقعی، رضایت مخاطب و تأیید گیرندگان و هزینه لازم خواهد بود.</p>
 </section>
 </main>
 <script type="module">
 import { insertTemplateToken, previewSmsForCustomers } from './sms-personalization.mjs';
+import { countSmsSegments, estimateSmsBatch } from './sms-segment-counter.mjs';
 const samples = {
   birthday: 'سلام {نام_مشتری} عزیز، به مناسبت {مناسبت} بهترین آرزوها را برای شما داریم. {نام_مجموعه}',
   wedding: 'سلام {نام_مشتری} عزیز، {مناسبت} مبارک! از طرف {نام_مجموعه}',
@@ -56,15 +77,30 @@ const customers=[{id:'demo1',fullName:'نگار احمدی'},{id:'demo2',fullNam
 const category=document.querySelector('#category');
 const textarea=document.querySelector('#message');
 const previews=document.querySelector('#previews');
+const demoRate=document.querySelector('#demo-rate');
+const formatter = new Intl.NumberFormat('fa-IR');
+const showNumber = value => formatter.format(value);
 const edits={};
 function preview(){
   previews.replaceChildren();
+  const draftCount=countSmsSegments(textarea.value);
+  document.querySelector('#draft-parts').textContent=showNumber(draftCount.segments);
+  document.querySelector('#draft-units').textContent=showNumber(draftCount.units);
+  document.querySelector('#draft-encoding').textContent=draftCount.encoding;
   const out=previewSmsForCustomers(textarea.value,customers,occasions[category.value],'آتلیه نمونه');
+  const batch=estimateSmsBatch(out,demoRate.value);
+  document.querySelector('#group-recipients').textContent=showNumber(batch.validRecipients)+' از '+showNumber(batch.recipients);
+  document.querySelector('#group-parts').textContent=showNumber(batch.totalSegments);
+  document.querySelector('#group-cost').textContent=batch.estimatedCostRials===null?'تعرفه نامشخص':showNumber(batch.estimatedCostRials)+' ریال';
   out.forEach((p,i)=>{
     const wrap=document.createElement('div');wrap.className='preview'+(p.valid?'':' bad');
     const title=document.createElement('strong');title.textContent=customers[i].fullName;
     const line=document.createElement('div');line.textContent=p.text;
-    wrap.append(title,line);
+    const part=document.createElement('div');
+    const detail=batch.details[i];
+    part.className='caption';
+    part.textContent='تعداد بخش‌ها: '+showNumber(detail.segments)+' | '+detail.encoding;
+    wrap.append(title,line,part);
     if(!p.valid){
       const issue=document.createElement('div');
       issue.className='note';
@@ -79,6 +115,7 @@ function onCategory(){
   preview();
 }
 category.addEventListener('change',onCategory);
+demoRate.addEventListener('input',preview);
 textarea.addEventListener('input',()=>{edits[category.value]=textarea.value;preview()});
 document.querySelectorAll('button[data-token]').forEach(button=>button.addEventListener('click',()=>{
   const result=insertTemplateToken(textarea.value,button.dataset.token,textarea.selectionStart,textarea.selectionEnd);

@@ -1,5 +1,5 @@
-/* R1761 — one CRM entry in the existing mobile dock, and lab desktop header.
-   Each lab/photographer stays within its own authenticated portal. */
+/* R1767: one shared admin-controlled Customers tab for both Photographer and Lab.
+   Enabled/disabled together. Fail closed while loading; never create duplicate docks. */
 (()=>{
   'use strict';
   if(window.pb1761CrmNavigation)return;
@@ -7,10 +7,12 @@
   const media=matchMedia('(max-width:820px)');
   const path=()=>location.pathname;
   const lab=()=>/^\/lab(?:\/|$)/.test(path())&&!/^\/lab\/(?:login|signup|register)(?:\/|$)/.test(path())&&!!document.querySelector('#root .labRoleWorkspace .labSingleHeader');
-  const photo=()=>(
-    /^\/photographer(?:\/|$)/.test(path())&&!/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(path())&&
+  const photo=()=>(/^\/photographer(?:\/|$)/.test(path())&&!/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(path())&&
     (!!document.querySelector('#root main.photographerMain')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))
   )||(path()==='/equipment-rental/book'&&document.body.classList.contains('rentalPhotographerMode')&&!!document.querySelector('#photographerStoreBottomNav'));
+  const activePortal=()=>lab()?'lab':photo()?'photographer':null;
+  let enabled=null,fetchedPortal=null,loading=false,epoch=0,pending=false;
+
   function make(portal,desktop){
     const b=document.createElement('button');
     b.type='button';
@@ -30,48 +32,97 @@
     b.addEventListener('click',()=>location.assign('/customer-crm.html?portal='+portal));
     return b;
   }
-  function ensureMobile(grid,portal){
-    if(!grid||grid.querySelector(':scope > button[data-pb1761-crm]'))return;
-    grid.append(make(portal,false));
-    // The photographer dock owns its own tab-count CSS variable; preserve one row.
-    if(portal==='photographer'){
-      const count=[...grid.children].filter(el=>!el.hidden&&el.dataset.pb1099Hidden!=='1'&&getComputedStyle(el).display!=='none').length;
-      if(count)grid.style.setProperty('--pb1099-tabs',String(count));
+
+  function recount(grid){
+    if(!grid||!grid.classList.contains('photographerBottomAppNavGrid'))return;
+    const count=[...grid.children].filter(el=>!el.hidden&&el.dataset.pb1099Hidden!=='1'&&getComputedStyle(el).display!=='none').length;
+    if(count)grid.style.setProperty('--pb1099-tabs',String(count));
+  }
+  function removeButton(button){
+    const parent=button.parentElement;
+    button.remove();
+    recount(parent);
+  }
+  function clearButtons(){
+    document.querySelectorAll('button[data-pb1761-crm]').forEach(removeButton);
+  }
+  async function loadVisibility(portal){
+    if(!portal||loading)return;
+    loading=true;
+    const requestEpoch=epoch;
+    try{
+      let token='';try{token=sessionStorage.getItem('lablink_test_session')||''}catch{}
+      const response=await fetch('/api/photographer/navigation-tabs',{
+        credentials:'include',cache:'no-store',
+        headers:{'x-photobridge-portal':portal,...(token?{authorization:'Bearer '+token}:{})}
+      });
+      if(!response.ok)throw Error('tab-settings-unavailable');
+      const data=await response.json();
+      if(requestEpoch!==epoch)return;
+      enabled=data?.tabs?.customers!==false;
+      fetchedPortal=portal;
+    }catch{
+      if(requestEpoch!==epoch)return;
+      // Never display a disabled or unverified tab during a network/auth error.
+      enabled=false;
+      fetchedPortal=portal;
+    }finally{
+      loading=false;
+      schedule();
     }
+  }
+  function refresh(){
+    epoch++;
+    fetchedPortal=null;
+    enabled=null;
+    clearButtons();
+    schedule();
+  }
+  function targetFor(portal){
+    if(media.matches){
+      if(portal==='lab')return [...document.querySelectorAll('#root .labRoleWorkspace .labBottomAppNavGrid')].at(-1)||null;
+      return [...document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) .photographerBottomAppNavGrid')]
+        .filter(el=>!el.closest('[data-pb1318-stale]')).at(-1)||null;
+    }
+    if(portal==='lab')return document.querySelector('#root .labRoleWorkspace .pb1147LabNav');
+    return document.querySelector('#root .photographerHomeModeNav')||document.querySelector('#root .photographerHeaderNav');
   }
   function render(){
     pending=false;
-    if(media.matches){
-      if(lab()){
-        const grids=[...document.querySelectorAll('#root .labRoleWorkspace .labBottomAppNavGrid')];
-        ensureMobile(grids.at(-1),'lab');
-      }else if(photo()){
-        const grids=[...document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) .photographerBottomAppNavGrid')]
-          .filter(el=>!el.closest('[data-pb1318-stale]'));
-        ensureMobile(grids.at(-1),'photographer');
-      }
-      return;
+    const portal=activePortal();
+    if(!portal){clearButtons();return;}
+    if(fetchedPortal!==portal){clearButtons();void loadVisibility(portal);return;}
+    if(enabled!==true){clearButtons();return;}
+    const target=targetFor(portal),kind=media.matches?'pb1761CrmMobileTab':'pb1761CrmDesktopTab';
+    // Remove stale or differently sized copies before inserting the current one.
+    for(const button of document.querySelectorAll('button[data-pb1761-crm]')){
+      if(button.parentElement!==target||button.dataset.pb1761Crm!==portal||!button.classList.contains(kind))removeButton(button);
     }
-    if(lab()){
-      const nav=document.querySelector('#root .labRoleWorkspace .pb1147LabNav');
-      if(nav&&!nav.querySelector(':scope > button[data-pb1761-crm]')){
-        const button=make('lab',true);
-        const album=nav.querySelector('button[data-source=".albumTopNav"]');
-        if(album)album.after(button);else nav.insertBefore(button,nav.firstElementChild);
-      }
-    }
+    if(!target||target.querySelector(':scope > button[data-pb1761-crm]'))return;
+    const button=make(portal,!media.matches);
+    if(portal==='lab'&&!media.matches){
+      const album=target.querySelector('button[data-source=".albumTopNav"]');
+      if(album)album.after(button);else target.insertBefore(button,target.firstElementChild);
+    }else target.append(button);
+    recount(target);
   }
-  let pending=false;
-  function schedule(){if(!pending){pending=true;requestAnimationFrame(render);}}
+  function schedule(){
+    if(pending)return;
+    pending=true;
+    requestAnimationFrame(render);
+  }
   function boot(){
-    schedule();
     const root=document.getElementById('root')||document.body;
     new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
-    window.addEventListener('popstate',schedule);
-    window.addEventListener('pageshow',schedule);
+    schedule();
+    window.addEventListener('popstate',refresh);
+    window.addEventListener('pageshow',refresh);
+    window.addEventListener('focus',refresh);
+    window.addEventListener('photobridge-auth-session-changed',refresh);
     window.addEventListener('resize',schedule,{passive:true});
-    window.addEventListener('photobridge-auth-session-changed',schedule);
-    media.addEventListener('change',schedule);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+    if(media.addEventListener)media.addEventListener('change',schedule);
+    else if(media.addListener)media.addListener(schedule);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();

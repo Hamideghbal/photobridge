@@ -1,7 +1,7 @@
 // Runs inside the Lab bundle, sharing the existing authenticated transport and folder adapter.
-async function pb1445WriteDownload(dir, name, response, progress, expectedBytes) {
+async function pb1445WriteDownload(dir, name, response, progress, expectedBytes, exactName = false) {
   const expected = Number(expectedBytes || response.pbDownloadBytes || response.headers?.get('content-length') || 0);
-  const writer = await (await dir.getFileHandle(Ya(name, 'file'), {create:true})).createWritable();
+  const writer = await (await dir.getFileHandle(exactName ? name : Ya(name, 'file'), {create:true})).createWritable();
   let received = 0, reader;
   const accept = async bytes => {
     received += bytes.byteLength;

@@ -72,10 +72,18 @@ CREATE TABLE IF NOT EXISTS pb_crm.occasions (
   repeats_yearly BOOLEAN NOT NULL DEFAULT TRUE,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Leap-day validity (29 Feb / 30 Esfand) is validated for the
+  -- specific year in the service. Yearless recurring dates may use it.
   CONSTRAINT pb_crm_occasions_valid_month_day CHECK (
-    (event_month BETWEEN 1 AND 6 AND event_day BETWEEN 1 AND 31) OR
-    (event_month BETWEEN 7 AND 11 AND event_day BETWEEN 1 AND 30) OR
-    (event_month = 12 AND event_day BETWEEN 1 AND 30)
+    (calendar_kind = 'jalali' AND (
+      (event_month BETWEEN 1 AND 6 AND event_day BETWEEN 1 AND 31) OR
+      (event_month BETWEEN 7 AND 12 AND event_day BETWEEN 1 AND 30)
+    )) OR
+    (calendar_kind = 'gregorian' AND (
+      (event_month IN (1,3,5,7,8,10,12) AND event_day BETWEEN 1 AND 31) OR
+      (event_month IN (4,6,9,11) AND event_day BETWEEN 1 AND 30) OR
+      (event_month = 2 AND event_day BETWEEN 1 AND 29)
+    ))
   ),
   CONSTRAINT pb_crm_occasions_customer_owner_fk
     FOREIGN KEY (customer_id, owner_kind, owner_id)

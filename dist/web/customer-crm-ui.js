@@ -7,7 +7,7 @@ const header={'x-photobridge-portal':portal};
 const state={customers:[],shootTypes:[],sessions:[],occasions:[],templates:[],invoices:[]};
 const fa=n=>Number(n||0).toLocaleString('fa-IR');
 const escaped=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const errors={invalid_customer:'نام یا موبایل نامعتبر است؛ برای رضایت تبلیغاتی، منبع رضایت را هم ثبت کنید.',crm_duplicate:'این مورد قبلاً ثبت شده است.',crm_forbidden:'ابتدا از بخش عکاسی یا لابراتوار وارد حساب خود شوید.',crm_origin_required:'اجازه تغییر اطلاعات از این صفحه داده نشد.',crm_internal_error:'خطای سرور؛ تغییرات انجام نشد.',sms_template_unavailable:'برای این مدل پیامک فعالی ثبت نشده است.',invalid_message_text:'متن پیامک نامعتبر است.',invalid_occasion:'تاریخ مناسبت معتبر نیست.',invalid_invoice_amount:'مبلغ یا تعداد نامعتبر است.',invoice_missing:'فاکتور پیدا نشد.',service_wallet_insufficient:'اعتبار کافی نیست.'};
+const errors={invalid_customer:'نام یا موبایل نامعتبر است یا اطلاعات رضایت پیامک کامل نیست.',crm_duplicate:'این مورد قبلاً ثبت شده است.',crm_forbidden:'ابتدا از بخش عکاسی یا لابراتوار وارد حساب خود شوید.',crm_origin_required:'اجازه تغییر اطلاعات از این صفحه داده نشد.',crm_internal_error:'خطای سرور؛ تغییرات انجام نشد.',sms_template_unavailable:'برای این مدل پیامک فعالی ثبت نشده است.',invalid_message_text:'متن پیامک نامعتبر است.',invalid_occasion:'تاریخ مناسبت معتبر نیست.',invalid_invoice_amount:'مبلغ یا تعداد نامعتبر است.',invoice_missing:'فاکتور پیدا نشد.',service_wallet_insufficient:'اعتبار کافی نیست.'};
 function toast(t,error=false){const el=$('status');el.textContent=t;el.className='status '+(error?'error':'success');}
 async function request(path,method='GET',data){
  const response=await fetch('/api/crm/'+path,{method,headers:{...header,...(data!==undefined?{'content-type':'application/json'}:{})},body:data===undefined?undefined:JSON.stringify(data),credentials:'same-origin',cache:'no-store'});
@@ -54,14 +54,36 @@ function renderInvoices(){
  document.querySelectorAll('[data-void]').forEach(b=>b.addEventListener('click',()=>{const reason=prompt('علت ابطال فاکتور (در سوابق نگهداری می‌شود)');if(reason?.trim())handle(request('invoices/'+b.dataset.void+'/void','POST',{reason}),'فاکتور با حفظ سابقه باطل شد')}));
 }
 function renderAll(){renderCustomers();renderTypes();renderInvoices();onTypeChanged()}
+let editingCustomerId=null;
+function updateCustomerFormMode(){
+ const editing=!!editingCustomerId;
+ $('customer-form-title').textContent=editing?'ویرایش مشخصات مشتری':'ثبت مشتری جدید';
+ $('customer-submit').textContent=editing?'ذخیره تغییرات':'ثبت مشتری';
+ $('customer-cancel').hidden=!editing;
+}
+function resetCustomerForm(){
+ editingCustomerId=null;
+ $('customer-form').reset();
+ updateCustomerFormMode();
+}
+function buildCustomerPayload(fullName,mobile,consented,previous=null){
+ const marketingPermission=consented?'opted_in':previous?.marketingPermission==='opted_out'?'opted_out':'unknown';
+ const permissionSource=consented
+  ? (previous?.marketingPermission==='opted_in'&&previous.permissionSource
+    ? previous.permissionSource
+    : 'اعلام رضایت مشتری و ثبت توسط اپراتور')
+  : '';
+ return {fullName:fullName.trim(),mobile:mobile.trim(),marketingPermission,permissionSource,notes:previous?.notes||''};
+}
 function editCustomer(id){
  const c=state.customers.find(x=>x.id===id);if(!c)return;
- const fullName=prompt('نام مشتری',c.fullName);if(fullName===null)return;
- const mobile=prompt('موبایل',c.mobile);if(mobile===null)return;
- const marketingPermission=prompt('رضایت تبلیغاتی: opted_in / opted_out / unknown',c.marketingPermission);if(marketingPermission===null)return;
- const permissionSource=marketingPermission==='opted_in'?prompt('منبع رضایت معتبر',c.permissionSource||''):c.permissionSource||'';
- if(permissionSource===null)return;
- handle(request('customers/'+id,'PUT',{fullName,mobile,marketingPermission,permissionSource,notes:c.notes||''}),'مشخصات مشتری به‌روز شد');
+ editingCustomerId=id;
+ $('customer-name').value=c.fullName;
+ $('customer-mobile').value=c.mobile;
+ $('marketing-consent').checked=c.marketingPermission==='opted_in';
+ updateCustomerFormMode();
+ $('customer-editor').scrollIntoView({behavior:'smooth',block:'start'});
+ $('customer-name').focus({preventScroll:true});
 }
 function deleteCustomer(id){if(confirm('این مشتری از فهرست جدید پنهان شود؟ سوابق فاکتور حفظ می‌شود.'))handle(request('customers/'+id,'DELETE',{}),'مشتری از فهرست پنهان شد')}
 function onTypeChanged(){
@@ -115,9 +137,25 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.addEventListener
  document.querySelectorAll('.view').forEach(x=>x.hidden=x.id!==b.dataset.view);
  if(b.dataset.view==='events')showDue('month');
 }));
-$('customer-form').addEventListener('submit',e=>{
- e.preventDefault();const f=Object.fromEntries(new FormData(e.target).entries());
- handle(request('customers','POST',f),'مشتری ثبت شد');e.target.reset();
+$('customer-form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const savedId=editingCustomerId;
+ const existing=savedId?state.customers.find(c=>c.id===savedId):null;
+ const data=buildCustomerPayload($('customer-name').value,$('customer-mobile').value,$('marketing-consent').checked,existing);
+ const button=$('customer-submit');
+ button.disabled=true;
+ try{
+  await request(savedId?'customers/'+savedId:'customers',savedId?'PUT':'POST',data);
+  toast(savedId?'مشخصات مشتری به‌روز شد.':'مشتری ثبت شد.');
+  resetCustomerForm();
+  await reload();
+ }catch(error){toast(error.message,true)}
+ finally{button.disabled=false}
+});
+$('customer-cancel').addEventListener('click',resetCustomerForm);
+$('session-date').addEventListener('change',()=>{
+ const value=$('session-date').value;
+ $('session-date-display').textContent=value?'تاریخ میلادی: '+value:'فرمت میلادی: YYYY-MM-DD';
 });
 $('search').addEventListener('input',renderCustomers);
 $('add-shoot').addEventListener('click',()=>{const name=$('shoot-name').value.trim();if(name)handle(request('types','POST',{name}),'مدل عکاسی اضافه شد')});

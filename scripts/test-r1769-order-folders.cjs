@@ -63,6 +63,8 @@ test('R1769: printed files use equals before the extension for multiple copies',
  assert.equal(ctx.pb1769DownloadName(multiple,multiple.original_name,order),'photo-3.jpg');
  assert.match(ui,/exactName \? name : Ya\(name, 'file'\)/);
  assert.match(ui,/expected,pb1769OrderFirst\(detail.order\)/);
+ assert.match(ui,/s.dir.getFileHandle\(pb1769DownloadName\(a,a.original_name,t.order\),\{create:!1\}\)/);
+ assert.match(ui,/function pb1445ValidLocal\(file, meta, order\)/);
 });
 test('R1769: album pages share the same order folder and unchanged size details',()=>{
  const {ctx}=harness(),order={id:'fresh',number:515,mode:'album',album_data:{size:{label:'30x60'},cover:{name:'Leather'}}};

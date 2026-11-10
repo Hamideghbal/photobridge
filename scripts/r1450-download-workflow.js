@@ -141,7 +141,14 @@ async function pb1450Download(detail, progress = () => {}, options = {}) {
     root = await pb1450Root(true);
     const old = yc(id) || {};
     detail.order._local_download_started_at = old.startedAt || new Date().toISOString();
-    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,pathLayout:old.pathLayout || (old.startedAt || detail.order.downloaded_at ? 'legacy' : 'order-v2'),localComplete:false,lastError:null});
+    const latin=String(detail.order.folder_latin_name||'').trim(),initialFolder=latin||String(detail.order.customer_name||'مشتری').trim()||'مشتری';
+    // Pin both layout and photographer directory at the first write. Subsequent
+    // lab alias/name changes must only affect future orders, never live files.
+    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,
+      pathLayout:old.pathLayout || (old.startedAt || detail.order.downloaded_at ? 'legacy' : 'order-v2'),
+      pathCustomerName:old.pathCustomerName??initialFolder,
+      pathLatinAlias:old.pathCustomerName!=null ? old.pathLatinAlias===true : !!latin,
+      localComplete:false,lastError:null});
     report = await pb1450Verify(detail,root,receipts,progress);
     if (report.collisions.length) throw Object.assign(Error('local_download_incomplete'),{report});
     const force = options.force === true, already = new Set(report.completedIds), targets = new Map();

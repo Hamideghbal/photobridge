@@ -3,6 +3,10 @@ const navFile='dist/web/photobridge-r1126-desktop-navigation.js';let nav=fs.read
 const once=(a,b)=>{if(nav.split(a).length!==2)throw Error('R1461 anchor '+a.slice(0,100));nav=nav.replace(a,b)};
 if(!nav.includes('/* PB1461 refresh route */')){
  once("  const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();", "  const row=chrome.querySelector('.pb1126Secondary'),doc=currentDocument();\n  document.documentElement.classList.toggle('pb1461ParentThird',active==='print'&&!!doc?.querySelector('.pb1461Orders,.simplePrintPilotWorkspaceMode'));\n");
+ // R1762: CRM opens in its own frame; normalize the original Print frame's
+ // inline else block so the legacy route restoration still applies to Print.
+ // This must leave the CRM iframe URL and its isolated portal untouched.
+ nav=nav.replace("else{const q=new URLSearchParams(key==='store'?","else{\n   const q=new URLSearchParams(key==='store'?");
  once("   const q=new URLSearchParams(key==='store'?", "   /* PB1461 refresh route */\n   const savedPrint=key==='print'?new URLSearchParams(location.search).get('pbPrintRoute'):null;\n   let restoredPrint=null;try{if(savedPrint?.startsWith('/')&&!savedPrint.startsWith('//')){const u=new URL(savedPrint,location.origin);if(u.origin===location.origin&&/^\\/photographer\\/(?:orders\\/(?:flow|needs_fix|ready|completed)|upload|album|archive|finance)\\/?$/.test(u.pathname)&&u.searchParams.get('pbLabChooser')!=='1'){u.searchParams.set('pbDesktopContent','1');u.searchParams.set('workspace','print');restoredPrint=u.pathname+u.search}}}catch{}\n   const q=new URLSearchParams(key==='store'?");
  once("frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;", "frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;");
  fs.writeFileSync(navFile,nav);

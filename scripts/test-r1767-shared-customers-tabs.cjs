@@ -29,6 +29,7 @@ function scene(portal,mobile){
  const target={
   children:[],dataset:{},hidden:false,
   classList:{contains:x=>mobile&&x==='photographerBottomAppNavGrid'},
+  closest:()=>null,
   style:{values:{},setProperty(k,v){this.values[k]=v}},
   append(b){b.parentElement=this;this.children.push(b);buttons.push(b)},
   insertBefore(b){this.append(b)},

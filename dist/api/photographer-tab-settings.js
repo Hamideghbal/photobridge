@@ -24,8 +24,13 @@ export async function handlePhotographerTabSettings({req,res,url,a,pool,requireR
  }
  if(admin&&req.method==='PUT'){
   const b=await bodyJson(req);
-  if(!b?.tabs||PHOTOGRAPHER_TAB_KEYS.some(key=>typeof b.tabs[key]!=='boolean')||Object.keys(b.tabs).some(key=>!PHOTOGRAPHER_TAB_KEYS.includes(key))){sendJson(res,400,{error:'invalid_photographer_tabs'});return true}
-  const tabs=normalizePhotographerTabs(b.tabs);
+  if(!b?.tabs||['ai','album','instagram'].some(key=>typeof b.tabs[key]!=='boolean')||
+    ('customers' in b.tabs&&typeof b.tabs.customers!=='boolean')||
+    Object.keys(b.tabs).some(key=>!PHOTOGRAPHER_TAB_KEYS.includes(key))){sendJson(res,400,{error:'invalid_photographer_tabs'});return true}
+  // Older open admin pages submit only three keys. Preserve the current shared
+  // Customers choice instead of implicitly turning it back on.
+  const previous=('customers' in b.tabs)?null:await pool.query('SELECT value FROM platform_settings WHERE key=$1 LIMIT 1',[PHOTOGRAPHER_TABS_KEY]);
+  const tabs=normalizePhotographerTabs({...normalizePhotographerTabs(previous?.rows[0]?.value),...b.tabs});
   await pool.query('INSERT INTO platform_settings(key,value,updated_at) VALUES($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()',[PHOTOGRAPHER_TABS_KEY,JSON.stringify(tabs)]);
   await audit(a.userId,undefined,'platform_admin.photographer_tabs_update','platform_setting',PHOTOGRAPHER_TABS_KEY,tabs).catch(()=>{});
   res.setHeader('cache-control','no-store');sendJson(res,200,{ok:true,tabs});return true;

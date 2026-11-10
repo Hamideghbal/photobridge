@@ -29,6 +29,19 @@ async function pb1450Root(choose = false) {
   }
   return root;
 }
+// New order filenames show real print copies with a literal equals sign.
+// Previously saved orders retain the exact legacy sanitized filename.
+function pb1769DownloadName(file, incomingName, order) {
+ const source=String(incomingName||file?.original_name||'file');
+ if(typeof pb1769OrderFirst==='function'&&!pb1769OrderFirst(order))return Ya(source,'file');
+ const copies=Number(file?.print_copies??file?.printCopies??1);
+ if(!Number.isSafeInteger(copies)||copies<2||copies>99)return Ya(source,'file');
+ const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
+ let stem=ext?source.slice(0,-ext.length):source;
+ stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
+ const clean=Ya(stem+ext,'file'),p=clean.lastIndexOf('.'),outExt=p>0?clean.slice(p):'',base=p>0?clean.slice(0,p):clean;
+ return base.slice(0,Math.max(1,96-outExt.length-String(copies).length))+' = '+copies+outExt;
+}
 function pb1450Meta(file, receipts) {
   const receipt = receipts?.[String(file.id)];
   if (receipt && receipt.serverName === file.original_name && receipt.serverBytes === Number(file.bytes || 0))
@@ -54,7 +67,7 @@ async function pb1450Verify(detail, root, receipts = {}, progress) {
     throw Object.assign(Error('download_manifest_incomplete'),{report});
   for (const file of files) {
     const meta = pb1450Meta(file,receipts), target = await pb1450Target(root,detail,file,targets);
-    const key = Uy(detail,file), name = Ya(meta.original_name,'file');
+    const key = Uy(detail,file), name = pb1769DownloadName(file,meta.original_name,detail.order);
     report.day = target.day || report.day;
     if (!groups.has(key)) groups.set(key,{target,names:new Set()});
     const group = groups.get(key);
@@ -128,7 +141,14 @@ async function pb1450Download(detail, progress = () => {}, options = {}) {
     root = await pb1450Root(true);
     const old = yc(id) || {};
     detail.order._local_download_started_at = old.startedAt || new Date().toISOString();
-    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,localComplete:false,lastError:null});
+    const latin=String(detail.order.folder_latin_name||'').trim(),initialFolder=latin||String(detail.order.customer_name||'مشتری').trim()||'مشتری';
+    // Pin both layout and photographer directory at the first write. Subsequent
+    // lab alias/name changes must only affect future orders, never live files.
+    hr(id,{...old,startedAt:detail.order._local_download_started_at,pathDate:old.pathDate || detail.order.downloaded_at || detail.order._local_download_started_at,
+      pathLayout:old.pathLayout || (old.startedAt || detail.order.downloaded_at ? 'legacy' : 'order-v2'),
+      pathCustomerName:old.pathCustomerName??initialFolder,
+      pathLatinAlias:old.pathCustomerName!=null ? old.pathLatinAlias===true : !!latin,
+      localComplete:false,lastError:null});
     report = await pb1450Verify(detail,root,receipts,progress);
     if (report.collisions.length) throw Object.assign(Error('local_download_incomplete'),{report});
     const force = options.force === true, already = new Set(report.completedIds), targets = new Map();
@@ -137,11 +157,11 @@ async function pb1450Download(detail, progress = () => {}, options = {}) {
     for (const file of files) {
       if (!force && already.has(String(file.id))) continue;
       const target = await pb1450Target(root,detail,file,targets), response = await Ky(file.id);
-      const name = response.pbDownloadName || file.original_name, expected = Number(response.pbDownloadBytes || file.bytes || 0);
+      const name = pb1769DownloadName(file,response.pbDownloadName || file.original_name,detail.order), expected = Number(response.pbDownloadBytes || file.bytes || 0);
       const publish = () => progress({phase:'downloading',done,total:files.length,current:file.original_name,loadedBytes:bytes,totalBytes:files.reduce((sum,f)=>sum+Number(f.bytes || 0),0),percent:Math.round(done/files.length*100)});
       publish();
-      await pb1445WriteDownload(target.dir,name,response,chunk=>{bytes+=chunk;publish();},expected);
-      const saved = await pb1450FileInfo(await target.dir.getFileHandle(Ya(name,'file'),{create:false}));
+      await pb1445WriteDownload(target.dir,name,response,chunk=>{bytes+=chunk;publish();},expected,pb1769OrderFirst(detail.order));
+      const saved = await pb1450FileInfo(await target.dir.getFileHandle(pb1769OrderFirst(detail.order)?name:Ya(name,'file'),{create:false}));
       if (!saved.size || expected > 0 && saved.size !== expected) throw Error('download_size_mismatch');
       receipts[String(file.id)] = {serverName:file.original_name,serverBytes:Number(file.bytes || 0),name,bytes:saved.size};
       done++;

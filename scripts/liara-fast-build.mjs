@@ -1100,3 +1100,16 @@ runR1314(process.execPath,['--test','scripts/test-r1766-crm-unified.cjs'],{stdio
 await deployStep('./enable-r1767-shared-customers-tabs.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1099-tab-settings.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1767-shared-customers-tabs.cjs'],{stdio:'inherit'});
+
+// R1768: preserve existing account identity; repair display-only studio names
+// for lab orders and invoice/finance views after all historical server rewrites.
+await deployStep('./enable-r1768-invited-photographer-display.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1768-invited-photographer-display.cjs'],{stdio:'inherit'});
+
+// R1769: per-Lab editable Latin aliases, then numbered order folders on all web/Windows snapshots.
+// Run after all historical UI and server rewrites; preserve old on-disk order paths.
+await deployStep('./enable-r1769-folder-alias.mjs');
+await deployStep('./enable-r1769-order-folders.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1769-folder-alias.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1769-order-folders.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});

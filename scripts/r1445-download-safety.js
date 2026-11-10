@@ -1,7 +1,7 @@
 // Runs inside the Lab bundle, sharing the existing authenticated transport and folder adapter.
-async function pb1445WriteDownload(dir, name, response, progress, expectedBytes) {
+async function pb1445WriteDownload(dir, name, response, progress, expectedBytes, exactName = false) {
   const expected = Number(expectedBytes || response.pbDownloadBytes || response.headers?.get('content-length') || 0);
-  const writer = await (await dir.getFileHandle(Ya(name, 'file'), {create:true})).createWritable();
+  const writer = await (await dir.getFileHandle(exactName ? name : Ya(name, 'file'), {create:true})).createWritable();
   let received = 0, reader;
   const accept = async bytes => {
     received += bytes.byteLength;
@@ -26,16 +26,20 @@ async function pb1445WriteDownload(dir, name, response, progress, expectedBytes)
 }
 async function pb1445DownloadFile(detail, file, progress) {
   const target = await el(detail, file), response = await Ky(file.id);
-  const name = response.pbDownloadName || file.original_name;
+  const name = typeof pb1769DownloadName==='function' ? pb1769DownloadName(file,response.pbDownloadName || file.original_name,detail.order) : response.pbDownloadName || file.original_name;
   const expected = Number(response.pbDownloadBytes || file.bytes || 0);
-  await pb1445WriteDownload(target.dir, name, response, progress, expected);
-  const saved = await (await target.dir.getFileHandle(Ya(name,'file'),{create:false})).getFile();
+  const exact=typeof pb1769OrderFirst==='function'&&pb1769OrderFirst(detail.order);
+  await pb1445WriteDownload(target.dir, name, response, progress, expected, exact);
+  const saved = await (await target.dir.getFileHandle(exact?name:Ya(name,'file'),{create:false})).getFile();
   if (!saved.size || expected > 0 && saved.size !== expected) throw Error('download_size_mismatch');
   return {rootName:target.root.name,day:target.day,size:saved.size,downloadName:name,fallbackOriginal:!!response.pbFallbackOriginal};
 }
-function pb1445ValidLocal(file, meta) {
-  const expected = Number(meta.bytes || 0);
-  return !!file && file.size > 0 && (!expected || file.size === expected) && Ya(file.name,'file') === Ya(meta.original_name,'file');
+function pb1445ValidLocal(file, meta, order) {
+  const expected=Number(meta.bytes||0);
+  const fresh=typeof pb1769OrderFirst==='function'&&pb1769OrderFirst(order)&&typeof pb1769DownloadName==='function';
+  const match=fresh ? file?.name===pb1769DownloadName(meta,meta.original_name,order)
+    : Ya(file?.name,'file')===Ya(meta.original_name,'file');
+  return !!file && file.size>0 && (!expected||file.size===expected) && match;
 }
 async function pb1445ReadArchive(detail, progress) {
   if (!ai()) return null;
@@ -46,9 +50,9 @@ async function pb1445ReadArchive(detail, progress) {
   for (const meta of detail.files || []) {
     progress?.({done:result.length,total:detail.files.length,current:meta.original_name});
     let file;
-    try { const local = await tl(detail,meta); if (pb1445ValidLocal(local.file,meta)) file = local.file; }
+    try { const local = await tl(detail,meta); if (pb1445ValidLocal(local.file,meta,detail.order)) file = local.file; }
     catch (error) { if (error?.name !== 'NotFoundError') throw error; }
-    if (!file) { const found = await Eg(root,detail,meta); if (pb1445ValidLocal(found,meta)) file = found; }
+    if (!file) { const found = await Eg(root,detail,meta); if (pb1445ValidLocal(found,meta,detail.order)) file = found; }
     if (!file) {
       try {
         // Refill missing/short local files BEFORE creating a reprint order.
@@ -57,8 +61,13 @@ async function pb1445ReadArchive(detail, progress) {
         if (!blob.size || expected > 0 && blob.size !== expected) throw Error('download_size_mismatch');
         file = new File([blob],meta.original_name,{type:blob.type || meta.content_type || 'application/octet-stream'});
         const target = await el(detail,meta);
-        await jc(target.dir,meta.original_name,file);
-        const saved = await (await target.dir.getFileHandle(Ya(meta.original_name,'file'),{create:false})).getFile();
+        const exact=typeof pb1769OrderFirst==='function'&&pb1769OrderFirst(detail.order)&&typeof pb1769DownloadName==='function';
+        const savedName=exact?pb1769DownloadName(meta,meta.original_name,detail.order):Ya(meta.original_name,'file');
+        if(exact){
+          const writer=await (await target.dir.getFileHandle(savedName,{create:true})).createWritable();
+          try{await writer.write(file);await writer.close()}catch(error){try{await writer.abort()}catch{}throw error}
+        }else await jc(target.dir,meta.original_name,file);
+        const saved = await (await target.dir.getFileHandle(savedName,{create:false})).getFile();
         if (saved.size !== file.size) throw Error('download_size_mismatch');
       } catch (error) {
         const code = String(error?.data?.error || error?.message || '');

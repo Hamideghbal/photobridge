@@ -38,7 +38,7 @@ function pb1769DownloadName(file, incomingName, order) {
  if(!Number.isSafeInteger(copies)||copies<2||copies>99)return Ya(source,'file');
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
- stem=stem.replace(new RegExp('\\s*=\\s*'+copies+'$'),'');
+ stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
  const clean=Ya(stem+ext,'file'),p=clean.lastIndexOf('.'),outExt=p>0?clean.slice(p):'',base=p>0?clean.slice(0,p):clean;
  return base.slice(0,Math.max(1,96-outExt.length-String(copies).length))+' = '+copies+outExt;
 }

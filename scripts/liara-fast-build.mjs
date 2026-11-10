@@ -1081,3 +1081,7 @@ runR1314(process.execPath,['--test','scripts/test-r1751-intake-css-only.cjs'],{s
 // This runs after all historical bundle mutations and the native snapshot checksum pass.
 await deployStep('./enable-r1752-pending-photographer-name.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1752-pending-photographer-name.cjs'],{stdio:'inherit'});
+
+// R1753: propagate completed Lab web deletions to open Windows queues and resync after reconnect.
+await deployStep('./enable-r1753-sync-lab-deleted-orders.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1753-sync-lab-deleted-orders.cjs'],{stdio:'inherit'});

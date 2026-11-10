@@ -42,6 +42,9 @@ test('an unregistered/non-primary system cannot authorize a production transitio
 test('empty or count-inconsistent server manifest cannot claim successful download',async()=>{for(const detail of [{order:{id:'279'},files:[]},{order:{id:'279',file_count:3},files:[{id:'a',original_name:'a.jpg',bytes:3}]}]){const r=setup();await assert.rejects(r.c.pb1450Verify(detail,{name:'folder'}),/download_manifest_incomplete/)}});
 test('fallback transport receipts identify the actual saved filename and size, but still inspect disk',async()=>{const r=setup({files:[{id:'a',original_name:'prepared.jpg',bytes:3}],stored:{'one/source.tif':5}}),receipts={a:{serverName:'prepared.jpg',serverBytes:3,name:'source.tif',bytes:5}};assert.equal((await r.c.pb1450Verify(r.detail,{name:'folder'},receipts)).complete,true);r.disk.set('one/source.tif',2);assert.equal((await r.c.pb1450Verify(r.detail,{name:'folder'},receipts)).complete,false)});
 const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+// This suite runs twice: before R1583 is deployed and after all release patches.
+// Require its native retry integration only when that capability is installed.
+const hasR1583Retry=/\bfunction pb1583CanRetry\(/.test(ui);
 function expression(start,end){const a=ui.indexOf(start),b=ui.indexOf(end,a+start.length);assert(a>0&&b>a,start);return ui.slice(a+start.indexOf('=')+1,b)}
 function handler(start,end,extra={}){const effects=[],guardCalls=[],ctx={console,Date,Number,String,Error,JSON,V:String,ai:()=>true,yc:()=>({startedAt:'2026-10-25',localComplete:false}),C:()=>{},F:()=>{},B:()=>{},E:'',alert:m=>effects.push(['alert',m]),Me:async(path,opt)=>{effects.push(['api',path,opt?.method||'GET']);return {order:{id:'279',mode:'print',status:'ready',downloaded_at:'2026-10-25'},files:[{id:'a',bytes:3}]}},Dg:async(_,__,options)=>{effects.push(['download',options]);return {done:1}},pb1450Notify:e=>effects.push(['error',e.message]),pb1450AllowStage:async order=>{guardCalls.push(order?.id);return false},pb1450Retry:()=>true,pb1450CanDownload:()=>true,pb1483Phone:()=>false,pb1603StageInvoicePending:()=>false,pb1529StageReason:()=>'',f:()=>{},pb1578Pending:null,pb1578RunStage:async(_,stage,work)=>work(),pb1583CanRetry:()=>false,t:{id:'lab-test'},window:{dispatchEvent:()=>{}},ye:async()=>{},It:async()=>effects.push(['It']),Gt:async()=>effects.push(['Gt']),P:()=>effects.push(['success']),o:'print',...extra};vm.createContext(ctx);vm.runInContext('globalThis.run='+expression(start,end),ctx);return {c:ctx,effects,guardCalls}}
 // The sixteen tests above execute the actual R1450 download/verification helpers
@@ -97,7 +100,8 @@ test('existing order actions still route redownload through the verified downloa
  assert.match(code,/download_print/);
  assert.match(code,/pb1450Retry\(/);
  assert.match(code,/Vn\(/);
- assert.match(code,/pb1583CanRetry\(/,'native retries still use their own retry handler');
+ if(hasR1583Retry)assert.match(code,/pb1583CanRetry\(/,'installed R1583 must retain native retry routing');
+ else assert.doesNotMatch(code,/pb1583CanRetry\(/,'R1450 baseline must not invoke R1583 before installation');
 });
 test('timeline exposes a real retry action without restoring duplicate repair buttons',()=>{
  const start=ui.indexOf('e.jsx("div",{className:"labActionTimeline"');
@@ -105,7 +109,8 @@ test('timeline exposes a real retry action without restoring duplicate repair bu
  assert(start>=0&&end>start,'canonical order timeline remains present');
  const code=ui.slice(start,end);
  assert.match(code,/pb1450Retry\(/);
- assert.match(code,/pb1583CanRetry\(/);
+ if(hasR1583Retry)assert.match(code,/pb1583CanRetry\(/,'installed R1583 must expose its retry label');
+ else assert.doesNotMatch(code,/pb1583CanRetry\(/,'pre-R1583 timeline must use R1450 retry label');
  assert.match(code,/aa\(le,Jt.key\)/,'timeline download is a wired action');
  assert(!ui.includes('pb1445RepairDownload'),'obsolete duplicate repair button must stay removed');
 });

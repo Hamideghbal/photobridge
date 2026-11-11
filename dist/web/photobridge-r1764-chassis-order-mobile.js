@@ -1,3 +1,4 @@
+/* R1773: per-photo partial stock and unlimited inventory. */
 /* R1764: Share the authoritative size-level chassis availability with photo rows.
    Do not modify prices, upload payloads, or the other add-on controls. */
 (()=>{
@@ -13,17 +14,17 @@
   const master=group?.querySelector('input[type="checkbox"]');
   const labels=[...card.querySelectorAll(photoSelector)].filter(isChassis);
   const raw=group?.getAttribute('data-pb1764-stock');
-  const stock=raw===null||raw===''?0:Number(raw);
+  const stock=raw==='unlimited'?Infinity:raw===null||raw===''?NaN:Number(raw);
   // A count below the number of selected photos is not enough for this size.
   // No option is exposed until the authoritative price/stock has loaded.
-  const needed=labels.reduce((total,label)=>{const n=Number(label.getAttribute('data-pb1765-copies'));return total+(Number.isInteger(n)&&n>=1?n:1);},0);
-  const shortage=!group||!master||!Number.isFinite(stock)||stock<=0||stock<needed;
+  const selected=labels.reduce((total,label)=>{if(!label.querySelector('input[type="checkbox"]')?.checked)return total;const n=Number(label.getAttribute('data-pb1765-copies'));return total+(Number.isInteger(n)&&n>=1?n:1);},0);
+  const shortage=!group||!master||(!Number.isFinite(stock)&&stock!==Infinity)||stock<=0||stock<selected;
   const disabled=!!master?.disabled;
   const allChecks=card.querySelectorAll('.simplePrintCardAddonCheck input[type="checkbox"]');
   // During an in-flight send all controls may temporarily be disabled. Do not
   // mutate already chosen add-ons during that transient disabled state.
   const busy=stock>0&&allChecks.length>0&&[...allChecks].every(input=>input.disabled);
-  return {labels,unavailable:shortage||(disabled&&!busy),clear:shortage||(disabled&&!busy)};
+  return {labels,stock,selected,unavailable:shortage,clear:shortage&&!busy};
  }
  let syncing=false,pending=false;
  function sync(){
@@ -36,9 +37,12 @@
     for(const label of state.labels){
      const input=label.querySelector('input[type="checkbox"]');
      if(!input)continue;
-     if(label.classList.contains('pb1764ChassisUnavailable')!==state.unavailable)
-      label.classList.toggle('pb1764ChassisUnavailable',state.unavailable);
-     if(!state.unavailable){attempts.delete(input);continue;}
+     const n=Number(label.getAttribute('data-pb1765-copies'));
+     const copies=Number.isInteger(n)&&n>=1?n:1;
+     const unavailable=state.unavailable||(!input.checked&&state.stock<state.selected+copies);
+     if(label.classList.contains('pb1764ChassisUnavailable')!==unavailable)
+      label.classList.toggle('pb1764ChassisUnavailable',unavailable);
+     if(!unavailable){attempts.delete(input);continue;}
      // Use the original React change handler. Toggling DOM.checked alone leaves
      // a stale chassisOverride in React state and still fails during upload.
      if(state.clear&&input.checked&&!input.disabled&&(attempts.get(input)||0)<2){
@@ -62,7 +66,9 @@
   if(input&&clearing.has(input))return;
   const card=label.closest('.simplePrintSizeCard');
   if(!card)return;
-  if(evaluate(card).unavailable){
+  const state=evaluate(card),n=Number(label.getAttribute('data-pb1765-copies'));
+  const copies=Number.isInteger(n)&&n>=1?n:1;
+  if(state.unavailable||(!input?.checked&&state.stock<state.selected+copies)){
    event.preventDefault();
    event.stopImmediatePropagation();
    schedule();

@@ -73,7 +73,7 @@ test('R1775: shared Customers navigation is server controlled for both roles and
 test('R1775: disabled Customers setting handles saved false values and keeps other tabs',()=>{
  const fake=settings.replace(/export\s+/g,'');
  const src=fake.slice(fake.indexOf('function pb1775DisabledCustomerSetting('),fake.indexOf('export async function')>=0?fake.indexOf('export async function'):fake.indexOf('async function handlePhotographerTabSettings('));
- const normalized=vm.runInNewContext(src+';({normalizePhotographerTabs,photographerTabsForUser})');
+ const normalized=vm.runInNewContext(src+';({normalizePhotographerTabs,photographerTabsForUser})',{PHOTOGRAPHER_TAB_KEYS:['ai','album','instagram','customers']});
  for(const off of [false,0,'false','0']){
   assert.equal(normalized.normalizePhotographerTabs({customers:off}).customers,false);
   assert.equal(normalized.photographerTabsForUser({customers:off},{platformRole:'platform_admin'}).tabs.customers,false);

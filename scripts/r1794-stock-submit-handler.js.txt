@@ -1,0 +1,57 @@
+const stockReq=albumMode?{rows:[]}:await c.query(
+ "SELECT print_size_id,chassis,frame,COALESCE(print_copies,1)::int copies,addon_selection FROM order_files WHERE order_id=$1 AND customer_id=$2 AND original_state=$3",
+ [submitCustomerOrder[1],a.userId,'active']);
+const baseRequirements=new Map(),modelRequirements=new Map();
+for(const file of stockReq.rows){
+ const size=String(file.print_size_id||''),copies=Number(file.copies||1);
+ if(!size||!Number.isSafeInteger(copies)||copies<1||copies>99)throw new Error('invalid_addon_stock_count');
+ const saved=file.addon_selection&&typeof file.addon_selection==='object'?file.addon_selection:{};
+ for(const kind of ['chassis','frame']){
+  if(!file[kind])continue;
+  const modelId=String(saved[kind]?.id||kind);
+  const key=size+'|'+modelId;
+  if(modelId===kind){
+   const row=baseRequirements.get(size)||{chassis:0,frame:0};
+   row[kind]+=copies;baseRequirements.set(size,row);
+  }else{
+   const row=modelRequirements.get(key)||{size,id:modelId,kind,count:0};
+   row.count+=copies;modelRequirements.set(key,row);
+  }
+ }
+}
+for(const [size,row] of baseRequirements){
+ const pq=await c.query(
+  'SELECT chassis,chassis_stock,frame,frame_stock FROM lab_prices WHERE lab_id=$1 AND size_id=$2 FOR UPDATE',
+  [labId,size]);
+ const price=pq.rows[0]||{};
+ if(row.chassis>0&&(price.chassis==null||(price.chassis_stock!=null&&Number(price.chassis_stock)<row.chassis))){
+  await c.query('ROLLBACK');
+  return sendJson(res,409,{error:'stock_unavailable',message:'موجودی شاسی پایه برای یکی از سایزهای سفارش کافی نیست.'});
+ }
+ if(row.frame>0&&(price.frame==null||(price.frame_stock!=null&&Number(price.frame_stock)<row.frame))){
+  await c.query('ROLLBACK');
+  return sendJson(res,409,{error:'stock_unavailable',message:'موجودی قاب پایه برای یکی از سایزهای سفارش کافی نیست.'});
+ }
+ if(row.chassis>0&&price.chassis_stock!=null)
+  await c.query('UPDATE lab_prices SET chassis_stock=chassis_stock-$3,updated_at=now() WHERE lab_id=$1 AND size_id=$2',[labId,size,row.chassis]);
+ if(row.frame>0&&price.frame_stock!=null)
+  await c.query('UPDATE lab_prices SET frame_stock=frame_stock-$3,updated_at=now() WHERE lab_id=$1 AND size_id=$2',[labId,size,row.frame]);
+}
+if(modelRequirements.size){
+ const prefs=await c.query('SELECT ui_preferences FROM labs WHERE id=$1 FOR UPDATE',[labId]);
+ const catalog=normalizePrintCatalog(prefs.rows[0]?.ui_preferences?.printTariffCatalog);
+ let modified=false;
+ for(const req of modelRequirements.values()){
+  const stock=catalog.stocks?.[req.size]?.[req.id];
+  if(stock==null)continue;
+  if(!Number.isSafeInteger(Number(stock))||Number(stock)<req.count){
+   await c.query('ROLLBACK');
+   return sendJson(res,409,{error:'stock_unavailable',message:'موجودی مدل '+req.id+' برای سایز انتخاب‌شده کافی نیست.'});
+  }
+  catalog.stocks[req.size][req.id]=Number(stock)-req.count;
+  modified=true;
+ }
+ if(modified)await c.query(
+  "UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",
+  [labId,JSON.stringify(catalog)]);
+}

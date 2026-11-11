@@ -68,3 +68,11 @@ test('R1777: two tariffs expose separate model price columns and frame color-pic
  assert(html.includes('/photobridge-r1777-frame-color-picker.css?v=r1777'));
  assert(pricing.includes('JSON.stringify({kind,name:name.trim()})'));
 });
+
+test('R1783: walk-in model catalog keeps R1540 loading errors and retry available',()=>{
+ const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+ assert(ui.includes('pb1540SetError'),'R1540 error state must remain intact');
+ assert(ui.includes('if(!I||!I.lab)throw Error("walkin_data_incomplete")'),'walk-in payload validation must be retained');
+ assert(ui.includes('Me("/api/lab/print-catalog").catch(()=>({catalog:{types:[],walkinRates:{}}}))'),'missing model catalog must not hide customer-free settings');
+ assert(ui.includes('pb1777SetCatalog(K.catalog||{types:[],walkinRates:{}})'),'custom models must be loaded into the model selector');
+});

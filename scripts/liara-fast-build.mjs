@@ -1132,3 +1132,7 @@ runR1314(process.execPath,['--test','scripts/test-r1775-native-headers-editors-c
 // R1776: login password clearance after all previous login styles.
 await deployStep('./enable-r1776-login-password-clearance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1776-login-password-clearance.cjs'],{stdio:'inherit'});
+
+// R1777: chassis/frame model catalogs for colleague and walk-in pricing, after all legacy UI patches.
+await deployStep('./enable-r1777-chassis-frame-model-pricing.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1777-chassis-frame-models.cjs'],{stdio:'inherit'});

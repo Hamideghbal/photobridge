@@ -22,7 +22,7 @@ fs.writeFileSync(file,server);
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 console.log('[R1777] walk-in model prices stored separately from colleague prices');
 
-function addUi(src){
+export function pb1777AddPricingUi(src){
 const once=(s,a,b,name)=>{const n=s.split(a).length-1;if(n!==1)throw Error('[R1777] '+name+': '+n);return s.replace(a,b)};
 let a=src.indexOf('function tw({data:t,onSaved:a,labName:s=""}){'),b=src.indexOf('function Na(t)',a);if(a<0||b<=a)throw Error('lab pricing component missing');
 let c=src.slice(a,b);
@@ -57,7 +57,7 @@ c=once(c,'c!==void 0&&e.jsx(wb,{size:c,onClose:()=>m(void 0),onSaved:g})','c!==v
 return src.slice(0,a)+c+src.slice(b);
 }
 const uiPath='dist/web/assets/index-UIRefine-v655-r84.js';
-fs.writeFileSync(uiPath,addUi(fs.readFileSync(uiPath,'utf8'))+'\n'+fs.readFileSync('scripts/r1777-frame-model-editor.js.txt','utf8'));
+fs.writeFileSync(uiPath,pb1777AddPricingUi(fs.readFileSync(uiPath,'utf8'))+'\n'+fs.readFileSync('scripts/r1777-frame-model-editor.js.txt','utf8'));
 let html=fs.readFileSync('dist/web/index.html','utf8');
 if(!html.includes('/photobridge-r1777-frame-color-picker.css'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1777-frame-color-picker.css?v=r1777"></head>');
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,v=>v.includes('&frameModel=r1777')?v:v+'&frameModel=r1777');

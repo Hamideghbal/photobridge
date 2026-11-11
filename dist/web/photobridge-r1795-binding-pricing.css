@@ -1,0 +1,8 @@
+.pb1795BindingPricing{margin:12px 0;padding:16px;border:1px solid #dbe5f1;border-radius:12px;background:#f8fbff;color:#26344b;text-align:right}
+.pb1795BindingPricing h3{margin:0 0 12px;font-size:1rem}
+.pb1795BindingPricing label{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.pb1795BindingPricing select{font:inherit;min-height:42px;max-width:100%;padding:6px 10px;background:#fff;border:1px solid #b6c8df;border-radius:8px}
+.pb1795BindingPricing p{margin:10px 0;line-height:1.8}
+.pb1795BindingPricing small{display:block;line-height:1.8;color:#52647a}
+.pb1795BindingPricing [role=alert]{color:#b42318}
+@media(max-width:480px){.pb1795BindingPricing label,.pb1795BindingPricing select{width:100%}}

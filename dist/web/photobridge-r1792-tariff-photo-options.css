@@ -32,7 +32,23 @@ html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb177
  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important
 }
 /* The model controls stay inside their own photo card; never overlap action buttons. */
-html body #root main.photographerMain .simplePrintPhotoCard{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPhotoCard{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ grid-template-areas:"thumb" "info" "copies" "paper" "addons" "actions"!important;
+ grid-template-rows:auto!important;grid-auto-rows:auto!important;
+ align-items:stretch!important;gap:8px!important;
+ min-width:0!important;max-width:100%!important;box-sizing:border-box!important
+}
+html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPhotoCard>.simplePrintPhotoCopies{
+ grid-area:copies!important;min-width:0!important;width:100%!important;box-sizing:border-box!important
+}
+html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPhotoCard>.simplePrintPhotoPaper{
+ grid-area:paper!important;min-width:0!important;width:100%!important;box-sizing:border-box!important
+}
+html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPhotoCard>.simplePrintPhotoAddonOverrides{
+ grid-area:addons!important;width:100%!important;min-width:0!important;max-width:100%!important;
+ align-self:stretch!important;justify-content:stretch!important
+}
 html body #root main.photographerMain .simplePrintPhotoCard .simplePrintPhotoAddonOverrides{
  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
  align-items:stretch!important;gap:6px!important;min-width:0!important;

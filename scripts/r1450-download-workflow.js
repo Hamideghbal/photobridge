@@ -43,11 +43,11 @@ function pb1780Latin(value,fallback='item'){
   'نقره':'Noghrei','مشکی':'Meshki','سفید':'Sefid','قرمز':'Ghermez',
   'آبی':'Abi','سبز':'Sabz','قهوه‌ای':'Gahvei','قهوه':'Gahve',
   'گردویی':'Gerdooyi','طوسی':'Toosi','کرم':'Kerem','زرد':'Zard',
-  'صورتی':'Soorati','بنفش':'Banafsh','مات':'Mat','براق':'Baragh',
+  'صورتی':'Soorati','بنفش':'Banafsh','مات':'Mat','براق':'Baragh','مدل':'Model','ای':'Ei',
   'باریک':'Barik','پهن':'Pahn','مدرن':'Modern','طرح':'Tarh',
   'طرح‌دار':'Tarhdar','فندقی':'Fandoghi','دودی':'Doodi'
  };
- let input=String(value??'').normalize('NFKC').replace(/[\u200c\u200d]/g,' ').trim();
+ let input=String(value??'').normalize('NFKC').replace(/[\u200c\u200d]/g,' ').replace(/[\\/:*?"<>|,;،؛]+/g,' ').trim();
  input=input.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)))
   .replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
  const chunks=input.split(/\s+/).filter(Boolean);

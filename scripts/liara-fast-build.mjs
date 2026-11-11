@@ -1172,3 +1172,7 @@ runR1314(process.execPath,['--test','scripts/test-r1792-tariff-photo-options.cjs
 // R1793: replace split customer tariff grids with one CSS grid and add independent no-photo products.
 await deployStep('./enable-r1793-single-grid-standalone-addon.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1793-single-grid-standalone-addon.cjs'],{stdio:'inherit'});
+
+// R1794: maintain physical model stock isolation at final order submission.
+await deployStep('./enable-r1794-model-stock-transaction.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1794-model-stock-transaction.cjs'],{stdio:'inherit'});

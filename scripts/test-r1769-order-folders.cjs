@@ -15,9 +15,13 @@ function harness(){
  assert(a>=0&&b>a&&c>b&&c-b<5000,'folder helpers loaded from the shipped bundle');
  vm.createContext(ctx);
  vm.runInContext(ui.slice(a,b)+ui.slice(b,c),ctx);
- const fnA=ui.indexOf('function pb1769DownloadName('),fnB=ui.indexOf('function pb1450Meta(',fnA);
- assert(fnA>=0&&fnB>fnA);
- vm.runInContext(ui.slice(fnA,fnB),ctx);
+ // R1778/R1780 added model and frame-color filename helpers. Execute the
+ // real shipped dependency block, not only the final filename function.
+ const fnHelpers=ui.indexOf('function pb1780Latin(');
+ const fnA=ui.indexOf('function pb1769DownloadName(',fnHelpers),fnB=ui.indexOf('function pb1450Meta(',fnA);
+ assert(fnHelpers>=0&&fnA>fnHelpers&&fnA-fnHelpers<5000&&fnB>fnA&&fnB-fnHelpers<8000,
+  'download filename helpers and their dependencies loaded from the shipped bundle');
+ vm.runInContext(ui.slice(fnHelpers,fnB),ctx);
  return {ctx,states,dir,names};
 }
 test('R1769: fresh orders get their own numbered folder, containing all print sizes',()=>{
@@ -76,6 +80,13 @@ test('R1769: printed files use equals before the extension for multiple copies',
  assert.equal(ctx.pb1769DownloadName({original_name:'photo.jpg',print_copies:1},'photo.jpg',order),'photo.jpg');
  states.set('fresh',{pathLayout:'legacy',startedAt:'2026-10-01'});
  assert.equal(ctx.pb1769DownloadName(multiple,multiple.original_name,order),'photo-3.jpg');
+ // A newly downloaded photo keeps the exact selected model/color after "=".
+ states.delete('fresh');
+ assert.equal(ctx.pb1769DownloadName({original_name:'photo.jpg',print_copies:2,chassis:true,addon_selection:{chassis:{name:'شاسی 4000'}}},'photo.jpg',order),'photo = 2 = Shasi 4000.jpg');
+ assert.equal(ctx.pb1769DownloadName({original_name:'photo.jpg',print_copies:1,frame:true,addon_selection:{frame:{name:'قاب کلاسیک',colorName:'طلایی'}}},'photo.jpg',order),'photo = Ghab Classic Talaei.jpg');
+ // Already downloaded folders and filenames must never be relabeled.
+ states.set('fresh',{pathLayout:'legacy',startedAt:'2026-10-01'});
+ assert.equal(ctx.pb1769DownloadName({original_name:'photo.jpg',chassis:true,frame:true},'photo.jpg',order),'photo.jpg');
  assert.match(ui,/exactName \? name : Ya\(name, 'file'\)/);
  assert.match(ui,/expected,pb1769OrderFirst\(detail.order\)/);
  assert.match(ui,/s.dir.getFileHandle\(pb1769DownloadName\(a,a.original_name,t.order\),\{create:!1\}\)/);

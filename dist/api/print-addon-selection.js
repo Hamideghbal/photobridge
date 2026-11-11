@@ -35,7 +35,7 @@ export function snapshotPrintAddons(catalog,body,context={}){
   if(colors.length){
    const available=colors.filter(c=>c.available!==false);
    if(!available.length)err('frame_color_unavailable');
-   const colorId=safe(input.frameColorId)|| (available.length===1?available[0].id:'');
+   const colorId=safe(input.frameColorId)|| (available.length===1||model.legacy?available[0].id:'');
    const color=available.find(c=>c.id===colorId);
    if(!color)err('invalid_frame_color');
    snapshot.colorId=color.id;

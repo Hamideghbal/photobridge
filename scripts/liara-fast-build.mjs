@@ -1139,3 +1139,6 @@ runR1314(process.execPath,['--test','scripts/test-r1777-chassis-frame-models.cjs
 // R1778: photo filename S/F tags after final model selectors; native and site manifest refreshed.
 await deployStep('./enable-r1778-photo-addon-filename-markers.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1778-photo-filename-markers.cjs'],{stdio:'inherit'});
+// R1779: server preserves the exact chosen model/color names with each uploaded file.
+await deployStep('./enable-r1779-addon-selection-snapshot.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1779-addon-selection-snapshot.cjs'],{stdio:'inherit'});

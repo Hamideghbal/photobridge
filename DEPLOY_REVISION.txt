@@ -1,1 +1,1 @@
-2026-11-11-r1792-customer-tariff-photo-options
+2026-11-11-r1793-single-grid-standalone-addon

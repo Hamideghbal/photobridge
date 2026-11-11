@@ -23,6 +23,9 @@ test('R1778: actual selected model names and frame color appear before extension
  const both={original_name:'photo.jpg',print_copies:3,chassis:true,frame:true,chassis_model_name:'شاسی 4000',frame_model_name:'قاب چوبی',frame_color_name:'گردویی'};
  assert.equal(result(both),'photo = 3 = شاسی 4000 = قاب چوبی گردویی.jpg');
  assert.equal(result({...both,original_name:result(both)}),result(both));
+ const snapshot={original_name:'example.jpg',print_copies:2,chassis:true,frame:true,addon_selection:{chassis:{modelId:'chassis-1',name:'شاسی 8000'},frame:{modelId:'frame-2',name:'قاب کلاسیک',colorId:'brown',colorName:'گردویی'}}};
+ assert.equal(result(snapshot),'example = 2 = شاسی 8000 = قاب کلاسیک گردویی.jpg');
+ assert.equal(result({...snapshot,original_name:result(snapshot)}),result(snapshot));
  assert.equal(result({...both,original_name:'photo.png',print_copies:2}),'photo = 2 = شاسی 4000 = قاب چوبی گردویی.png');
  assert.equal(result({...both,frame_model_name:'قاب/مشکی:مدل'}),'photo = 3 = شاسی 4000 = قاب مشکی مدل گردویی.jpg');
 });
@@ -38,6 +41,7 @@ test('R1778: Lab web and Windows display selected model labels in detail and upl
   assert.doesNotThrow(()=>new vm.Script(code),root);
   assert(code.includes('/* PB1778 CHASSIS FRAME FILE MARKERS */'),root+' marker');
   assert.equal(code.split('title:le.original_name,children:pb1778DisplayName(le)').length-1,2,root+' Lab names');
+  assert(code.includes('file?.addon_selection?.frame?.name'),'Lab should use immutable order model snapshot');
   assert.equal(code.split('pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)').length-1,3,root+' photographer names');
   assert(read(root+'/index.html').includes('&addonNames=r1778'));
   if(root.includes('desktop-ui')){

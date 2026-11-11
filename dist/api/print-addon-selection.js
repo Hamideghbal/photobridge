@@ -26,11 +26,11 @@ export function snapshotPrintAddons(catalog,body,context={}){
  };
  if(selected(input.chassis)){
   const model=pick(catalog,'chassis',input.chassisModelId);
-  result.chassis={id:model.id,name:String(model.name||'شاسی').slice(0,70),...priceFor(model,'chassis')};
+  result.chassis={id:model.id,name:String(model.name||'شاسی').slice(0,70),...(model.latinName?{latinName:model.latinName}:{}),...priceFor(model,'chassis')};
  }
  if(selected(input.frame)){
   const model=pick(catalog,'frame',input.frameModelId);
-  const snapshot={id:model.id,name:String(model.name||'قاب').slice(0,70),...priceFor(model,'frame')};
+  const snapshot={id:model.id,name:String(model.name||'قاب').slice(0,70),...(model.latinName?{latinName:model.latinName}:{}),...priceFor(model,'frame')};
   const colors=Array.isArray(model.colors)?model.colors:[];
   if(colors.length){
    const available=colors.filter(c=>c.available!==false);

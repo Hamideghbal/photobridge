@@ -10,6 +10,8 @@ const defaults=[
 ];
 const fail=code=>{throw Object.assign(Error(code),{status:400})};
 const text=v=>String(v??'').normalize('NFC').trim();
+// R1791: optional lab-defined ASCII filename label; never trust paths or separators.
+const pb1791LatinName=(value,strict=true)=>{const name=text(value).replace(/\s+/g,' ');if(!name)return '';if(name.length>70||!/^[A-Za-z0-9][A-Za-z0-9 ._-]*[A-Za-z0-9]$/.test(name)&&!/^[A-Za-z0-9]$/.test(name)){if(strict)fail('print_catalog_invalid_latin_name');return '';}return name;};
 /* R1777 frame preview: one optional compressed raster image, no SVG/remote URL. */
 const pb1777ImageLimit=1_600_000;
 function pb1777FrameImage(raw,strict=true){
@@ -63,7 +65,7 @@ export function setPrintFrameImage(catalog,id,imageData){
 export function normalizePrintCatalog(raw){
  const data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const originals=Array.isArray(data.types)?data.types:[];
- const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return [d.id,{...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{}),...(d.kind==='frame'?{colors:pb1777CleanColors(source?.colors,false)}:{})}]}));
+ const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return [d.id,{...d,name:text(source?.name)||d.name,...(pb1791LatinName(source?.latinName,false)?{latinName:pb1791LatinName(source.latinName,false)}:{}),...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{}),...(d.kind==='frame'?{colors:pb1777CleanColors(source?.colors,false)}:{})}]}));
  const limits={binding:0,chassis:0,frame:0};
  for(const row of originals){
   if(!row||typeof row!=='object'||!['binding','chassis','frame'].includes(row.kind)||!row.id)continue;
@@ -71,7 +73,7 @@ export function normalizePrintCatalog(raw){
   if(known.has(id))continue;
   if(!/^c_[0-9a-f-]{36}$/.test(id)||!name||name.length>70)continue;
   if(limits[row.kind]++>=30)continue;
-  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false,...(row.kind==='frame'&&pb1777FrameImage(row.imageData,false)?{imageData:pb1777FrameImage(row.imageData,false)}:{}),...(row.kind==='frame'?{colors:pb1777CleanColors(row.colors,false)}:{})});
+  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false,...(pb1791LatinName(row.latinName,false)?{latinName:pb1791LatinName(row.latinName,false)}:{}),...(row.kind==='frame'&&pb1777FrameImage(row.imageData,false)?{imageData:pb1777FrameImage(row.imageData,false)}:{}),...(row.kind==='frame'?{colors:pb1777CleanColors(row.colors,false)}:{})});
  }
  const types=[...known.values()];
  const allowed=types.filter(t=>!t.legacy);
@@ -96,19 +98,20 @@ export function normalizePrintCatalog(raw){
 }
 function cleanName(value){const name=text(value);if(!name||name.length>70||/[<>\x00-\x1f]/.test(name))fail('print_catalog_invalid_name');return name;}
 function ensureUnique(types,kind,name,except=''){if(types.some(t=>t.active&&t.kind===kind&&t.id!==except&&t.name.localeCompare(name,'fa',{sensitivity:'base'})===0))fail('print_catalog_duplicate_name');}
-export function addPrintType(catalog,{kind,name}){
+export function addPrintType(catalog,{kind,name,latinName}){
  if(!['binding','chassis','frame'].includes(kind))fail('print_catalog_invalid_kind');
  name=cleanName(name);
  if(catalog.types.filter(t=>t.kind===kind&&!t.legacy).length>=30)fail('print_catalog_limit');
  ensureUnique(catalog.types,kind,name);
- return {...catalog,types:[...catalog.types,{id:'c_'+crypto.randomUUID(),kind,name,legacy:false,active:true}]};
+ return {...catalog,types:[...catalog.types,{id:'c_'+crypto.randomUUID(),kind,name,legacy:false,active:true,...(pb1791LatinName(latinName)?{latinName:pb1791LatinName(latinName)}:{})}]};
 }
-export function renamePrintType(catalog,id,name){
- name=cleanName(name);
+export function renamePrintType(catalog,id,name,latinName){
  const current=catalog.types.find(t=>t.id===id);
  if(!current||!['binding','chassis','frame'].includes(current.kind))fail('print_catalog_not_found');
+ name=name===undefined?current.name:cleanName(name);
+ if(latinName!==undefined)latinName=pb1791LatinName(latinName);
  ensureUnique(catalog.types,current.kind,name,id);
- return {...catalog,types:catalog.types.map(t=>t.id===id?{...t,name}:t)};
+ return {...catalog,types:catalog.types.map(t=>t.id===id?{...t,name,...(latinName===undefined?{}:{latinName})}:t)};
 }
 // Never hard-delete an album model: historic invoice snapshots and prices may reference its ID.
 export function archivePrintBinding(catalog,id){
@@ -171,7 +174,7 @@ export async function handleLabPrintCatalog({req,res,url,pool,labId,bodyJson,sen
    if(Object.hasOwn(body,'imageData'))updated=setPrintFrameImage(updated,text(body.id),body.imageData);
    if(Object.hasOwn(body,'colors'))updated=setPrintFrameColors(updated,text(body.id),body.colors);
   }else{
-   updated=renamePrintType(catalog,text(body.id),body.name);
+   updated=renamePrintType(catalog,text(body.id),body.name,body.latinName);
   }
   await c.query("UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",[labId,JSON.stringify(updated)]);
   await c.query('COMMIT');

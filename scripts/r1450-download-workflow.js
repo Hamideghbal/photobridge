@@ -80,7 +80,8 @@ function pb1779ReadModel(file,kind){
   (data.name||data.modelName||file?.frame_model_name||file?.frameModelName);
  const color=kind==='frame'?
   (data.colorName||data.color_name||file?.frame_color_name||file?.frameColorName):null;
- return pb1779ModelName(primary,kind==='chassis'?'شاسی':'قاب')+
+ const latin=String(data.latinName||data.modelLatinName||'').trim();
+ return pb1779ModelName(latin||primary,kind==='chassis'?'شاسی':'قاب')+
   (color?' '+pb1779ModelName(color,''):'');
 }
 function pb1778PhotoFlags(file){

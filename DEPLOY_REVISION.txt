@@ -1,1 +1,1 @@
-2026-11-11-r1790-fix-native-manifest-hash
+2026-11-11-r1791-frame-base-image-latin-label-stock-pairs

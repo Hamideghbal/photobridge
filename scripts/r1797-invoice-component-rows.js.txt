@@ -1,0 +1,16 @@
+// Use only prices captured during invoice creation; never infer historic prices from live tariffs.
+function pb1797InvoiceComponentRows(items){
+ return items.flatMap(item=>{
+  const p=item.priceComponents;
+  if(!p||item.componentKind)return [item];
+  const qty=Number(item.quantity),paper=Number(p.paper),chassis=Number(p.chassis),frame=Number(p.frame);
+  if(![qty,paper,chassis,frame].every(Number.isFinite)||qty<=0||[paper,chassis,frame].some(n=>n<0)||paper+chassis+frame!==Number(item.unitPrice)||(paper+chassis+frame)*qty!==Number(item.lineTotal))return [item];
+  const {priceComponents,...base}=item;
+  const size=String(item.sizeLabel||'سایز نامشخص'),rows=[];
+  const add=(kind,price,label)=>rows.push({...base,kind:kind==='print'?'print':kind,componentKind:kind,chassis:false,frame:false,printType:kind==='print'?item.printType:kind,printTypeLabel:label,description:size+' · '+label,unitPrice:price,lineTotal:price*qty});
+  if(item.printType!=='none'||paper!==0)add('print',paper,String(item.printTypeLabel||item.printType||'چاپ عکس'));
+  if(item.chassis){const name=String(item.chassisModelName||'').trim();add('chassis',chassis,name.includes('شاسی')?name:'شاسی'+(name?' · '+name:''))}
+  if(item.frame){const name=String(item.frameModelName||'').trim(),color=String(item.frameColorName||'').trim();add('frame',frame,(name.includes('قاب')?name:'قاب'+(name?' · '+name:''))+(color?' · '+color:''))}
+  return rows.length&&rows.reduce((sum,row)=>sum+row.lineTotal,0)===Number(item.lineTotal)?rows:[item];
+ });
+}

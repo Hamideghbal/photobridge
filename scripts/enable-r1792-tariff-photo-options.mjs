@@ -31,7 +31,7 @@ for(const root of roots){
  const path=root+'/index.html';
  let html=read(path);
  if(!html.includes(name))html=one(html,'</head>','<link rel="stylesheet" href="/'+name+'?v=r1792"></head>',root+' stylesheet');
- html=html.replace(/(index-UIRefine-v655-r84\\.js\\?[^"']*)/g,url=>url.includes('&tariffCards=r1792')?url:url+'&tariffCards=r1792');
+ html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,url=>url.includes('&tariffCards=r1792')?url:url+'&tariffCards=r1792');
  write(path,html);
 }
 fs.copyFileSync('dist/web/'+name,'dist/web/lab-desktop-ui/'+name);

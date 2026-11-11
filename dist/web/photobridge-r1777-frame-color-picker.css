@@ -66,3 +66,6 @@
  .pb1777EditorFooter{position:sticky;bottom:0;background:#fff;border-top:1px solid #e5ebf2;padding:12px 0 2px;z-index:5}
  .pb1777EditorFooter button{flex:1;min-width:0}
 }
+
+/* Override the historical fixed eight-column walk-in grid for custom models. */
+html body #root .labRoleWorkspace .walkinPricingCard .pb1437WalkinGrid.pb1777ModelGrid{grid-template-columns:minmax(140px,1.5fr) repeat(var(--pb1777-columns,8),minmax(110px,1fr))!important}

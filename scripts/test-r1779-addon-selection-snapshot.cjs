@@ -49,6 +49,8 @@ test('R1779 server retains exact names in both upload routes and exposes snapsho
  assert(server.includes("import {snapshotPrintAddons} from './print-addon-selection.js'"));
  assert(server.includes('JSON.stringify(pb1779AddonSelection)'));
  assert(server.includes('f.frame,f.addon_selection,f.crop_handling'));
+ assert(server.includes('f.frame,f.addon_selection,f.print_copies,f.crop_handling,f.original_state,f.created_at'),'Lab detail must retain print copies alongside the snapshot');
+ assert(server.includes("f.print_copies,f.chassis,f.frame,f.addon_selection,f.crop_handling,f.original_state,COALESCE(f.offline_metadata->>'size_label',s.label) size_label"),'customer detail must retain copies and offline size labels');
  assert(server.includes("$19::jsonb,'pending'"));
  assert(server.includes("$18::jsonb,'pending'"));
  assert(builder.includes('photographer route'));

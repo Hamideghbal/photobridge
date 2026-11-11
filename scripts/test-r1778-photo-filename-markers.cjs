@@ -6,7 +6,7 @@ const vm=require('node:vm');
 const crypto=require('node:crypto');
 const read=p=>fs.readFileSync(p,'utf8');
 function exported(){
- const source=read('scripts/r1450-download-workflow.js'),a=source.indexOf('function pb1778IsSelected('),b=source.indexOf('function pb1450Meta(',a);
+ const source=read('scripts/r1450-download-workflow.js'),a=source.indexOf('function pb1780Latin('),b=source.indexOf('function pb1450Meta(',a);
  assert(a>=0&&b>a,'the active download filename function must carry exact model labels');
  const context={
   ii:raw=>String(raw||'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))),
@@ -48,7 +48,7 @@ test('R1780: actual selected model names, colors and original photo names become
 test('R1780: name preview for photographer and lab is Latin too',()=>{
  const ctx=exported();
  const code=read('scripts/enable-r1778-photo-addon-filename-markers.mjs');
- const a=code.indexOf('function pb1778SelectedName('),b=code.indexOf('const helper=',a);
+ const a=code.indexOf('function pb1778Latin('),b=code.indexOf('const helper=',a);
  assert(a>0&&b>a);
  vm.runInContext(code.slice(a,b),ctx);
  const result=ctx.pb1778SelectedName('عکس.jpg',2,true,true,'شاسی 4000','قاب کلاسیک','طلایی');
@@ -59,7 +59,8 @@ test('R1780: name preview for photographer and lab is Latin too',()=>{
 test('R1778: downloaded older orders preserve original paths',()=>{
  const fn=exported().pb1769DownloadName,old={fresh:false};
  assert.equal(fn({original_name:'photo.jpg',print_copies:1,chassis:true},'photo.jpg',old),'photo.jpg');
- assert.equal(fn({original_name:'photo = 3.jpg',print_copies:3,chassis:true,frame:true},'photo = 3.jpg',old),'photo - 3.jpg');
+ // The shipped Ya sanitizer has always collapsed legacy separators to a hyphen.
+ assert.equal(fn({original_name:'photo = 3.jpg',print_copies:3,chassis:true,frame:true},'photo = 3.jpg',old),'photo-3.jpg');
 });
 test('R1778: Lab web and Windows display selected model labels in detail and upload views',()=>{
  const hash=v=>crypto.createHash('sha256').update(v).digest('hex');

@@ -18,6 +18,7 @@ test('R1781: photographer and public walk-in have model picker, immutable upload
  assert(ui.includes('chassisModelId:Z.chassis?(Z.chassisModelId||"chassis"):null'));
  assert(ui.includes('frameColorId:Z.frame?(Z.frameColorId||null):null'));
  assert(ui.includes('withoutPrint:!!(tt.withoutPrint&&(yt||Tt))'));
+ assert(ui.includes('withoutPrint:!!(tt.withoutPrint&&(yt||Tt)),cropHandling:"lab"'),'model identifiers must preserve current delegated crop handling');
  assert(ui.includes('withoutPrint:!!(Z.withoutPrint&&(Z.chassis||Z.frame))'));
  assert(html.includes('/photobridge-r1781-model-order-ui.css?v=r1781'));
  assert(html.includes('modelOrder=r1781'));

@@ -25,8 +25,8 @@
   },
   {
     "scope": "ej",
-    "from": "frame:Tt,cropHandling:\"none\"})",
-    "to": "frame:Tt,chassisModelId:yt?(tt.chassisModelId||\"chassis\"):null,frameModelId:Tt?(tt.frameModelId||\"frame\"):null,frameColorId:Tt?(tt.frameColorId||null):null,withoutPrint:!!(tt.withoutPrint&&(yt||Tt)),cropHandling:\"none\"})",
+    "from": "frame:Tt,cropHandling:\"lab\"})",
+    "to": "frame:Tt,chassisModelId:yt?(tt.chassisModelId||\"chassis\"):null,frameModelId:Tt?(tt.frameModelId||\"frame\"):null,frameColorId:Tt?(tt.frameColorId||null):null,withoutPrint:!!(tt.withoutPrint&&(yt||Tt)),cropHandling:\"lab\"})",
     "id": "photographer upload selected IDs"
   },
   {

@@ -11,6 +11,8 @@ for(const [start,end,label] of [
  ["if (labOrder && req.method === 'GET')", "if (labOrder && req.method === 'DELETE')",'lab detail'],
  ["if (req.method === 'GET' && url.pathname === '/api/customer/orders')", "if (req.method === 'GET' && url.pathname === '/api/customer/archive')",'customer list']
 ])server=region(server,start,end,s=>{s=one(s,'SELECT o.*,','SELECT o.*,${noPrintOrderSql(\'o\')} no_print_order,',label);if(label==='lab list')s=one(s,'AND op.unit_price IS NULL)','AND op.unit_price IS NULL AND f.print_type<>\'none\')','no phantom paper-price requirement');return s},label);
+server=one(server,'SELECT o.*,i.id invoice_id,COALESCE(i.offline_reference,i.number::text)','SELECT o.*,${noPrintOrderSql(\'o\')} no_print_order,i.id invoice_id,COALESCE(i.offline_reference,i.number::text)','customer detail workflow metadata');
+server=one(server,'SELECT o.id,o.number,o.status,o.priority,o.created_at,COALESCE(o.walkin_customer_name,pp.studio_name,u.name) customer_name,','SELECT o.id,o.number,o.status,o.priority,o.created_at,${noPrintOrderSql(\'o\')} no_print_order,COALESCE(o.walkin_customer_name,pp.studio_name,u.name) customer_name,','dashboard workflow metadata');
 server=region(server,"if (labOrder && req.method === 'PATCH')",'// PB1181 mark removed photos',s=>{
  s=one(s,"const status = String(b.status || '');","let status = String(b.status || '');",'mapped product stages');
  s=one(s,'const oldOrder = before.rows[0];',`const oldOrder = before.rows[0];

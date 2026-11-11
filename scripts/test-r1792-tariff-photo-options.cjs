@@ -23,6 +23,7 @@ test('R1792: customer columns and horizontal scroll match colleague physical gri
  assert(css.includes('overflow-x:auto!important'));
  assert(css.includes('width:max(100%,calc(148px + var(--pb1777-columns,8)*110px))'));
  assert(css.includes('simplePrintPhotoAddonOverrides')&&css.includes('grid-column:1/-1'));
+ assert(css.includes('grid-template-areas:"thumb" "info" "copies" "paper" "addons" "actions"'),'paper and photo model controls must occupy different grid rows');
  assert.equal(read('dist/web/lab-desktop-ui/photobridge-r1792-tariff-photo-options.css'),css);
  for(const root of ['dist/web','dist/web/lab-desktop-ui'])assert(read(root+'/index.html').includes('photobridge-r1792-tariff-photo-options.css'));
 });

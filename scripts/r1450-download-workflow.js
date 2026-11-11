@@ -69,6 +69,7 @@ function pb1769DownloadName(file,incomingName,order){
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
  // Remove legacy S/F codes only if they were previously generated, avoid duplicates.
+ if(marks&&stem.endsWith(marks))stem=stem.slice(0,-marks.length);
  stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
  if(copyValid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
  const suffix=(copyValid?' = '+copies:'')+marks;

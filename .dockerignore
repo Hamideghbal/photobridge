@@ -2,6 +2,8 @@
 **
 # Required by the R1352 build supervisor regression suite inside Docker.
 !Dockerfile
+# R1776 validates the deploy-cache allowlist during the in-image build.
+!.dockerignore
 !package.json
 !.npmrc
 !DEPLOY_REVISION.txt

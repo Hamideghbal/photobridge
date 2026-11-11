@@ -81,5 +81,7 @@ test('R1776 is last in the build, preserves Windows snapshots, and busts deploy 
  const docker=read('Dockerfile');
  assert(docker.includes('COPY . ./'));
  assert(docker.indexOf('COPY . ./')<docker.indexOf('cat DEPLOY_REVISION.txt'));
- assert(!read('.dockerignore').split(/\r?\n/).some(line=>line.trim()==='DEPLOY_REVISION.txt'));
+ const contextRules=read('.dockerignore').split(/\r?\n/).map(line=>line.trim());
+ for(const file of ['Dockerfile','.dockerignore','DEPLOY_REVISION.txt'])
+  assert(contextRules.includes('!'+file),file+' must be available to the in-image regression test');
 });

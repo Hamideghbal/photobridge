@@ -148,6 +148,7 @@ function pb1772ReceiptFile(file,receipts) {
  if(!name){
   if(original&&bytes===Number(file.bytes))name=original;
   else if(printable&&bytes===Number(file.print_bytes))name=printable;
+  else if(file.source_original_name&&bytes>0)name=String(file.source_original_name);
   else{
    // Old receipt metadata may carry a copy suffix; only the server may
    // confirm that an inferred canonical filename/size is truly valid.

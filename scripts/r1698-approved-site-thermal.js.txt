@@ -37,7 +37,11 @@ function pbR1698ApprovedThermal(t,customer) {
   const date=Number.isNaN(d.getTime())?String(issued||'—'):d.toLocaleString('fa-IR',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
   const items=typeof vh==='function'?vh(t):(Array.isArray(t.items)?t.items:[]);
   const rows=items.map(x=>{
-    const label=typeof ph==='function'?ph(x):first(x.description,x.sizeLabel,x.kind,'چاپ عکس');
+    const baseLabel=typeof ph==='function'?ph(x):first(x.description,x.sizeLabel,x.kind,'چاپ عکس');
+    const additions=[];
+    if(x.chassis===true&&!/(شاسی|chassis)/i.test(baseLabel))additions.push('شاسی');
+    if(x.frame===true&&!/(قاب|frame)/i.test(baseLabel))additions.push('قاب');
+    const label=baseLabel+(additions.length?' · '+additions.join(' · '):'');
     const qty=x.quantity??1,unit=first(x.unitLabel,x.unit_name,x.unit,'عدد');
     const price=x.unitPrice??x.unit_price??0;
     const total=x.lineTotal??x.line_total??Number(qty)*Number(price);

@@ -1,1 +1,4 @@
 function pb1608ChassisState(group){const files=group.files||[];if(!files.length)return group.chassis?'all':'none';const selected=files.filter(file=>Wr(group,file,'chassis')).length;return selected===0?'none':selected===files.length?'all':'mixed'}
+
+// R1773: null inventory is unlimited, as in the backend. Bulk option needs all print copies.
+function pb1773ChassisGroupShortage(group,price){if(!price)return true;const raw=price.chassis_stock;if(raw==null)return false;const n=Number(raw);return !Number.isFinite(n)||n<group.files.reduce((sum,file)=>sum+pbPrintCopies(file),0)}

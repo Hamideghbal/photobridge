@@ -1,0 +1,54 @@
+/* Keep the native password text viewport separate from the visibility button.
+   Explicit physical properties also work in older Safari and in RTL forms. */
+html body #root .unifiedLoginPage .passwordField,
+html body .authBg .passwordField,
+html body #loginView .passwordField{
+ display:flex!important;flex-direction:row-reverse!important;direction:ltr!important;
+ align-items:center!important;width:100%!important;min-width:0!important;
+}
+html body #root .unifiedLoginPage .passwordField input,
+html body .authBg .passwordField input,
+html body #loginView .passwordField input{
+ flex:1 1 0%!important;width:0!important;min-width:0!important;max-width:100%!important;
+ padding-left:12px!important;padding-right:12px!important;box-sizing:border-box!important;
+}
+html body #root .unifiedLoginPage .passwordField .passwordToggle,
+html body .authBg .passwordField .passwordToggle,
+html body #loginView .passwordField .passwordToggle{
+ position:static!important;top:auto!important;left:auto!important;right:auto!important;
+ transform:none!important;flex:0 0 54px!important;width:54px!important;
+ min-width:54px!important;max-width:54px!important;height:32px!important;
+ margin:0 6px 0 0!important;padding:0 4px!important;box-sizing:border-box!important;
+}
+/* Mode classes are derived from mounted content, without :has(), :is(),
+   dynamic viewport units, or device-model-specific breakpoints. */
+@media(max-width:820px){
+ html body.pb1777PrintOverview #root main.photographerMain.photographerPrintWorkspace .photographerMobileOrderLaunch,
+ html body.pb1777PrintComposer #root main.photographerMain.photographerPrintWorkspace .photographerMobileOrderLaunch,
+ html body.pb1777PrintOverview #pbF37PrintComposerActions,
+ html body.pb1777PrintOverview #pb761-mode-actions,
+ html body.pb1777PrintOverview #pb742-print-actions,
+ html body #pb765-add[data-pb1777-owned][hidden]{display:none!important}
+ html body.pb1777PrintOverview #pb765-add{
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ html body.pb1777PrintComposer #pb765-add,
+ html body.pb1777PrintComposer #pb762-add{display:none!important}
+ html body.pb1777PrintComposer #pbF37PrintComposerActions{
+  display:grid!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ html body.pb1777PrintComposer #pbF37PrintComposerActions button{min-width:0!important;white-space:normal!important}
+ html body.pb1777PrintOverview #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea,
+ html body.pb1777PrintComposer #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+  min-height:0!important;max-height:none!important;margin-bottom:0!important;padding-bottom:0!important;
+ }
+}
+
+/* Older Safari understands CSS grid before it understands clamp(). */
+@supports not (grid-template-columns:clamp(84px,24vw,104px) minmax(0,1fr)){
+ @media(max-width:820px){
+  html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .liveOrderMainRow{
+   grid-template-columns:84px minmax(0,1fr)!important;
+  }
+ }
+}

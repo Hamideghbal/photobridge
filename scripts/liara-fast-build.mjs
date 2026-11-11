@@ -1128,3 +1128,10 @@ runR1314(process.execPath,['--test','scripts/test-r1774-native-thermal-chassis.c
 // shared admin Customers visibility, with native update-manifest integrity.
 await deployStep('./enable-r1775-native-order-edit-customers-visibility.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1775-native-headers-editors-customers.cjs'],{stdio:'inherit'});
+
+// Final mobile web correction after native snapshots and legacy layout rewrites.
+await deployStep('./enable-r1776-mobile-print-flow.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1776-mobile-print-flow.cjs','scripts/test-r1776-heic-runtime.cjs'],{stdio:'inherit'});
+
+await deployStep('./enable-r1777-mobile-browser.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1777-mobile-browser.cjs'],{stdio:'inherit'});

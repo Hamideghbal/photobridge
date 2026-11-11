@@ -1,0 +1,25 @@
+/* R1776: the order overview owns only the +; the composer owns file actions.
+   Keep React's source controls mounted for the shared header's click proxies. */
+@media screen and (max-width:820px){
+ html body.pbF37PrintMode #root main.photographerMain.photographerPrintWorkspace .photographerMobileOrderLaunch,
+ html body.pbF37PrintMode #root main.photographerMain.photographerPrintWorkspace>.simplePrintPilotMobileHeaderHost{
+  display:none!important;
+ }
+ html body.pbF37PrintMode #pbF37PrintComposerActions{display:none!important}
+ html body.pbF37PrintMode.pbF37PrintComposer:not(.pbR100F14ChoosingLab) #pbF37PrintComposerActions:not([hidden]){display:grid!important}
+ html body.pbF37PrintMode:not(.pbF37PrintComposer):not(.pbR100F14ChoosingLab) #pb765-add:not([hidden]){
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ html body.pbF37PrintMode.pbF37PrintComposer :is(#pb765-add,#pb762-add){display:none!important}
+ /* R1763's relative-position rule must not detach the content from its
+    measured header and dock. R1310 supplies both safe-area-aware edges. */
+ html.pb1310MobilePrint body.pbF37PrintMode #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+  position:fixed!important;top:var(--pb1310-print-top)!important;
+  bottom:var(--pb1310-print-bottom)!important;left:0!important;right:0!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding-bottom:0!important;box-sizing:border-box!important;
+ }
+ html.pb1310MobilePrint body.pbF37PrintMode #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea>.ordersWorkspace.liveCustomerOrders{
+  min-height:100%!important;box-sizing:border-box!important;
+ }
+}

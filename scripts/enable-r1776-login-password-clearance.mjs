@@ -14,7 +14,7 @@ for(const path of pages){
  if(!html.includes('</head>'))throw Error('[R1776] missing head '+path);
  // Idempotent relocation is intentional; later build scripts insert CSS at </head>.
  html=html.replaceAll(cssTag,'').replaceAll(jsTag,'');
- html=html.replace('</head>',cssTag+'\\n'+jsTag+'\\n</head>'.replaceAll('\\n','\n'));
+ html=html.replace('</head>',cssTag+"\n"+jsTag+"\n"+'</head>');
  if(html.split(css).length!==2||html.split(js).length!==2)throw Error('[R1776] duplicate assets '+path);
  if(path==='dist/web/index.html'&&html.includes('/photobridge-r1726-mobile-login.css')&&html.indexOf(css)<html.indexOf('/photobridge-r1726-mobile-login.css'))
   throw Error('[R1776] old mobile login CSS must load first');

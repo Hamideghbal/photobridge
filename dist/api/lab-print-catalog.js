@@ -10,10 +10,34 @@ const defaults=[
 ];
 const fail=code=>{throw Object.assign(Error(code),{status:400})};
 const text=v=>String(v??'').normalize('NFC').trim();
+/* R1777 frame preview: one optional compressed raster image, no SVG/remote URL. */
+const pb1777ImageLimit=1_600_000;
+function pb1777FrameImage(raw,strict=true){
+ if(raw===null||raw==='')return null;
+ const src=typeof raw==='string'?raw.trim():'';
+ if(src.length>pb1777ImageLimit){if(strict)fail('print_frame_image_too_large');return null;}
+ const m=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(src);
+ if(!m){if(strict)fail('print_frame_image_invalid');return null}
+ const format=m[1].toLowerCase(),bytes=Buffer.from(m[2],'base64');
+ const validBytes=bytes.length>0&&bytes.length<=1_150_000
+   &&Buffer.from(bytes).toString('base64')===m[2]
+   &&(format==='jpeg'?bytes.length>3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255:
+      format==='png'?bytes.length>8&&bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):
+      bytes.length>12&&bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP');
+ if(!validBytes){if(strict)fail('print_frame_image_invalid');return null}
+ return 'data:image/'+format+';base64,'+m[2];
+}
+export function setPrintFrameImage(catalog,id,imageData){
+ const selected=catalog.types.find(t=>t.id===id&&t.kind==='frame'&&t.active!==false);
+ if(!selected)fail('print_frame_model_not_found');
+ const safe=pb1777FrameImage(imageData);
+ const types=catalog.types.map(t=>t.id!==id?t:({...t,...(safe?{imageData:safe}:{}),...(safe?{}:{imageData:null})}));
+ return {...catalog,types};
+}
 export function normalizePrintCatalog(raw){
  const data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const originals=Array.isArray(data.types)?data.types:[];
- const known=new Map(defaults.map(d=>[d.id,{...d,name:text(originals.find(t=>t?.id===d.id)?.name)||d.name}]));
+ const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return {...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{})}}));
  const limits={binding:0,chassis:0,frame:0};
  for(const row of originals){
   if(!row||typeof row!=='object'||!['binding','chassis','frame'].includes(row.kind)||!row.id)continue;
@@ -21,7 +45,7 @@ export function normalizePrintCatalog(raw){
   if(known.has(id))continue;
   if(!/^c_[0-9a-f-]{36}$/.test(id)||!name||name.length>70)continue;
   if(limits[row.kind]++>=30)continue;
-  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false});
+  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false,...(row.kind==='frame'&&pb1777FrameImage(row.imageData,false)?{imageData:pb1777FrameImage(row.imageData,false)}:{})});
  }
  const types=[...known.values()];
  const allowed=types.filter(t=>!t.legacy);
@@ -101,7 +125,7 @@ export async function handleLabPrintCatalog({req,res,url,pool,labId,bodyJson,sen
   return sendJson(res,200,{catalog:normalizePrintCatalog(row?.ui_preferences?.printTariffCatalog)}),true;
  }
  if(!(root&&method==='POST'||!root&&method==='PATCH'))return sendJson(res,405,{error:'method_not_allowed'}),true;
- const body=await bodyJson(req);
+ const body=await bodyJson(req,2_000_000);
  const c=await pool.connect();
  try{
   await c.query('BEGIN');
@@ -109,10 +133,20 @@ export async function handleLabPrintCatalog({req,res,url,pool,labId,bodyJson,sen
   if(!q.rowCount)fail('lab_not_found');
   const prefs=q.rows[0].ui_preferences||{};
   const catalog=normalizePrintCatalog(prefs.printTariffCatalog);
-  const updated=method==='POST'?addPrintType(catalog,body):body.active===false?archivePrintBinding(catalog,text(body.id)):renamePrintType(catalog,text(body.id),body.name);
+  let updated;
+  if(method==='POST'){
+   updated=addPrintType(catalog,body);
+   if(Object.hasOwn(body,'imageData'))updated=setPrintFrameImage(updated,updated.types.at(-1).id,body.imageData);
+  }else if(body.active===false){
+   updated=archivePrintBinding(catalog,text(body.id));
+  }else if(Object.hasOwn(body,'imageData')){
+   updated=setPrintFrameImage(catalog,text(body.id),body.imageData);
+  }else{
+   updated=renamePrintType(catalog,text(body.id),body.name);
+  }
   await c.query("UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",[labId,JSON.stringify(updated)]);
   await c.query('COMMIT');
-  await audit(userId,labId,method==='POST'?'print_catalog.type_create':body.active===false?'print_catalog.type_archive':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
+  await audit(userId,labId,method==='POST'?'print_catalog.type_create':body.active===false?'print_catalog.type_archive':Object.hasOwn(body,'imageData')?'print_catalog.frame_image':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
   sendJson(res,200,{ok:true,catalog:updated});return true;
  }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message}),true;throw e}finally{c.release()}
 }

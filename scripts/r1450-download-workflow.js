@@ -31,6 +31,37 @@ async function pb1450Root(choose = false) {
 }
 // New order filenames show real print copies with a literal equals sign.
 // Previously saved orders retain the exact legacy sanitized filename.
+// R1780: filenames and production labels are ASCII-only. Model names stay
+// Persian in tariffs and immutable order snapshots; only the disk/UI label
+// is transliterated. Reuse PhotoBridge's existing Tf() romanizer for unknown
+// words and map common print-product words for more readable results.
+function pb1780Latin(value,fallback='item'){
+ const named={
+  'شاسی':'Shasi','شاسی‌':'Shasi','قاب':'Ghab','کلاسیک':'Classic',
+  'چوبی':'Choobi','چوب':'Choob','فلزی':'Felezi','فلز':'Felez',
+  'ساده':'Sade','طلایی':'Talaei','طلائي':'Talaei','نقره‌ای':'Noghrei',
+  'نقره':'Noghrei','مشکی':'Meshki','سفید':'Sefid','قرمز':'Ghermez',
+  'آبی':'Abi','سبز':'Sabz','قهوه‌ای':'Gahvei','قهوه':'Gahve',
+  'گردویی':'Gerdooyi','طوسی':'Toosi','کرم':'Kerem','زرد':'Zard',
+  'صورتی':'Soorati','بنفش':'Banafsh','مات':'Mat','براق':'Baragh',
+  'باریک':'Barik','پهن':'Pahn','مدرن':'Modern','طرح':'Tarh',
+  'طرح‌دار':'Tarhdar','فندقی':'Fandoghi','دودی':'Doodi'
+ };
+ let input=String(value??'').normalize('NFKC').replace(/[\u200c\u200d]/g,' ').trim();
+ input=input.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)))
+  .replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
+ const chunks=input.split(/\s+/).filter(Boolean);
+ const latin=chunks.map(word=>{
+  if(named[word])return named[word];
+  if(/^[A-Za-z0-9._-]+$/.test(word))return word;
+  return (typeof Tf==='function'?Tf(word):'')
+   .replace(/-/g,' ');
+ }).join(' ')
+  .replace(/[^A-Za-z0-9 ._-]/g,' ')
+  .replace(/\s+/g,' ').trim();
+ const safe=latin.replace(/^[ ._-]+|[ ._-]+$/g,'').slice(0,90);
+ return safe||String(fallback).replace(/[^A-Za-z0-9._-]/g,'')||'item';
+}
 function pb1778IsSelected(value){
  return value===true||value===1||value==='true'||value==='1';
 }
@@ -56,7 +87,7 @@ function pb1778PhotoFlags(file){
  const tags=[];
  if(pb1778IsSelected(file?.chassis))tags.push(pb1779ReadModel(file,'chassis'));
  if(pb1778IsSelected(file?.frame))tags.push(pb1779ReadModel(file,'frame'));
- return tags.map(tag=>' = '+tag).join('');
+ return tags.map((tag,i)=>' = '+pb1780Latin(tag,i===0?'Shasi':'Ghab')).join('');
 }
 function pb1769DownloadName(file,incomingName,order){
  const source=String(incomingName||file?.original_name||'file');

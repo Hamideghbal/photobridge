@@ -8,8 +8,8 @@ const hash=v=>crypto.createHash('sha256').update(v).digest('hex');
 const original='title:le.original_name,children:le.original_name';
 const source='pbPrintCopyFilename(Be.file.name,pbPrintCopies(Be))';
 const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)';
-function pb1780Latin(value,fallback='photo'){
- // Match the existing Lab download romanizer. Display names and saved filenames
+function pb1778Latin(value,fallback='photo'){
+ // Match the existing Lab download romanizer without overriding the download function. Display names and saved filenames
  // must agree, including Persian digits, model labels and frame color names.
  const named={
   'شاسی':'Shasi','شاسی‌':'Shasi','قاب':'Ghab','کلاسیک':'Classic',
@@ -37,7 +37,7 @@ function pb1780Latin(value,fallback='photo'){
 function pb1778SelectedName(name,copies,chassis,frame,chassisName,frameName,frameColor){
  const raw=String(name||'file'),match=raw.match(/\.[A-Za-z0-9]{1,12}$/),ext=match?.[0]||'';
  let stem=ext?raw.slice(0,-ext.length):raw;
- const clean=(v,fallback)=>v?pb1780Latin(v,fallback):fallback;
+ const clean=(v,fallback)=>v?pb1778Latin(v,fallback):fallback;
  const entries=[];
  if(chassis)entries.push(clean(chassisName,'Shasi'));
  if(frame)entries.push([clean(frameName,'Ghab'),clean(frameColor,'')].filter(Boolean).join(' '));
@@ -46,7 +46,7 @@ function pb1778SelectedName(name,copies,chassis,frame,chassisName,frameName,fram
  const n=Number(copies),valid=Number.isSafeInteger(n)&&n>1&&n<=99;
  if(valid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+n+'$'),'');
  const suffix=(valid?' = '+n:'')+names;
- return pb1780Latin(stem,'photo').slice(0,Math.max(1,180-ext.length-suffix.length)).trim()+suffix+ext;
+ return pb1778Latin(stem,'photo').slice(0,Math.max(1,180-ext.length-suffix.length)).trim()+suffix+ext;
 }
 function pb1778DisplayName(file){
  return pb1778SelectedName(
@@ -56,7 +56,7 @@ function pb1778DisplayName(file){
   file?.addon_selection?.frame?.name||file?.addon_selection?.frame?.modelName||file?.frame_model_name||file?.frameModelName,
   file?.addon_selection?.frame?.colorName||file?.addon_selection?.frame?.color_name||file?.frame_color_name||file?.frameColorName);
 }
-const helper='/* PB1778 CHASSIS FRAME FILE MARKERS */\n'+pb1780Latin.toString()+'\n'+pb1778SelectedName.toString()+'\n'+pb1778DisplayName.toString()+'\n';
+const helper='/* PB1778 CHASSIS FRAME FILE MARKERS */\n'+pb1778Latin.toString()+'\n'+pb1778SelectedName.toString()+'\n'+pb1778DisplayName.toString()+'\n';
 const pageToken='addonNames=r1778';
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const bundle=root+'/assets/index-UIRefine-v655-r84.js',page=root+'/index.html';

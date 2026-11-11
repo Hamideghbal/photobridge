@@ -1151,6 +1151,8 @@ runR1314(process.execPath,['--test','scripts/test-r1780-model-price-invoice.cjs'
 await deployStep('./enable-r1781-photo-model-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1781-model-order-ui.cjs'],{stdio:'inherit'});
 
-// R1787: final Lab album pricing mode, signed advance receipts and grouped opening debt.
-await deployStep('./enable-r1787-album-combined-credit-thousands.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1787-album-combined-credit-thousands.cjs'],{stdio:'inherit'});
+// R1787 withheld at user request: do not apply combined binding pricing, credit, or opening debt changes.
+
+// R1788: carry new chassis/frame tariff columns to Windows and fix once-per-model header actions.
+await deployStep('./enable-r1788-tariff-native-icons-labels.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1788-tariff-native-icons-labels.cjs'],{stdio:'inherit'});

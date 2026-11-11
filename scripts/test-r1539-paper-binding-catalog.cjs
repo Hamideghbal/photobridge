@@ -6,7 +6,7 @@ async function catalog(){return import(pathToFileURL(path.resolve('dist/api/lab-
 test('lab-specific catalog keeps paper defaults and permits multiple custom bindings only',async()=>{
  const {normalizePrintCatalog,addPrintType,renamePrintType,applyPrintRates}=await catalog();
  const original=normalizePrintCatalog();
- assert.equal(original.types.length,4);assert(original.types.some(t=>t.id==='album_binding_price'&&t.name==='صحافی آلبوم'));
+ assert.equal(original.types.length,6);assert(original.types.some(t=>t.kind==='chassis'&&t.id==='chassis'));assert(original.types.some(t=>t.kind==='frame'&&t.id==='frame'));assert(original.types.some(t=>t.id==='album_binding_price'&&t.name==='صحافی آلبوم'));
  const withOne=addPrintType(original,{kind:'binding',name:'صحافی ضخیم ۳۰۰ گرم'});
  const withTwo=addPrintType(withOne,{kind:'binding',name:'صحافی سیلک نازک'});
  assert.throws(()=>addPrintType(withTwo,{kind:'paper',name:'فتوگلاسه صدفی'}),/print_catalog_invalid_kind/);
@@ -58,7 +58,7 @@ test('authorized lab catalog API isolates data by lab and retains renamed defaul
  const renamed=await request('labA','PATCH','/api/lab/print-catalog/type',{id:'album_binding_price',name:'صحافی ژورنال'});
  assert.equal(renamed.catalog.types.find(x=>x.id==='album_binding_price').name,'صحافی ژورنال');
  const other=await request('labB','GET','/api/lab/print-catalog',{});
- assert.equal(other.catalog.types.length,4);
+ assert.equal(other.catalog.types.length,6);
  assert.equal(other.catalog.types.find(x=>x.id==='album_binding_price').name,'صحافی آلبوم');
  const found=await request('labA','GET','/api/lab/print-catalog',{});
  assert(found.catalog.types.some(x=>x.id===id));

@@ -1,0 +1,11 @@
+
+/* R1781: selectable, priced chassis models for each photo or an entire size card. */
+function PB1781ChassisSelector({models=[],value=null,priceOf,onClose,onSelect}){
+ const choices=models.filter(m=>m.kind==="chassis"&&m.active!==false&&priceOf(m)!=null);
+ const [id,setId]=x.useState(value?.modelId||choices[0]?.id||"");
+ const chosen=choices.find(m=>m.id===id)||choices[0]||null;
+ return e.jsx(On,{title:"انتخاب مدل شاسی",onClose,children:e.jsxs("div",{className:"pb1781AddonSelector",children:[
+  choices.length?e.jsx("div",{className:"pb1781AddonOptions",children:choices.map(m=>e.jsxs("button",{type:"button",className:"pb1781AddonOption"+(chosen?.id===m.id?" selected":""),onClick:()=>setId(m.id),children:[e.jsx("strong",{children:m.name}),e.jsx("small",{children:V(Number(priceOf(m)))+" تومان"})]},m.id))}):e.jsx("p",{role:"status",children:"برای این سایز مدل شاسی قیمت‌گذاری‌شده‌ای وجود ندارد."}),
+  e.jsxs("footer",{className:"pb1777EditorFooter",children:[e.jsx("button",{type:"button",onClick:onClose,children:"بازگشت"}),e.jsx("button",{type:"button",className:"primary",disabled:!chosen,onClick:()=>chosen&&onSelect({modelId:chosen.id,modelName:chosen.name,unitPrice:Number(priceOf(chosen))}),children:"ثبت مدل شاسی"})]})
+ ]})});
+}

@@ -31,18 +31,81 @@ async function pb1450Root(choose = false) {
 }
 // New order filenames show real print copies with a literal equals sign.
 // Previously saved orders retain the exact legacy sanitized filename.
-function pb1769DownloadName(file, incomingName, order) {
+// R1780: filenames and production labels are ASCII-only. Model names stay
+// Persian in tariffs and immutable order snapshots; only the disk/UI label
+// is transliterated. Reuse PhotoBridge's existing Tf() romanizer for unknown
+// words and map common print-product words for more readable results.
+function pb1780Latin(value,fallback='item'){
+ const named={
+  'شاسی':'Shasi','شاسی‌':'Shasi','قاب':'Ghab','کلاسیک':'Classic',
+  'چوبی':'Choobi','چوب':'Choob','فلزی':'Felezi','فلز':'Felez',
+  'ساده':'Sade','طلایی':'Talaei','طلائي':'Talaei','نقره‌ای':'Noghrei',
+  'نقره':'Noghrei','مشکی':'Meshki','سفید':'Sefid','قرمز':'Ghermez',
+  'آبی':'Abi','سبز':'Sabz','قهوه‌ای':'Gahvei','قهوه':'Gahve',
+  'گردویی':'Gerdooyi','طوسی':'Toosi','کرم':'Kerem','زرد':'Zard',
+  'صورتی':'Soorati','بنفش':'Banafsh','مات':'Mat','براق':'Baragh','مدل':'Model','ای':'Ei',
+  'باریک':'Barik','پهن':'Pahn','مدرن':'Modern','طرح':'Tarh',
+  'طرح‌دار':'Tarhdar','فندقی':'Fandoghi','دودی':'Doodi'
+ };
+ let input=String(value??'').normalize('NFKC').replace(/[\u200c\u200d]/g,' ').replace(/[\\/:*?"<>|,;،؛]+/g,' ').trim();
+ input=input.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)))
+  .replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
+ const chunks=input.split(/\s+/).filter(Boolean);
+ const latin=chunks.map(word=>{
+  if(named[word])return named[word];
+  if(/^[A-Za-z0-9._-]+$/.test(word))return word;
+  return (typeof Tf==='function'?Tf(word):'')
+   .replace(/-/g,' ');
+ }).join(' ')
+  .replace(/[^A-Za-z0-9 ._-]/g,' ')
+  .replace(/\s+/g,' ').trim();
+ const safe=latin.replace(/^[ ._-]+|[ ._-]+$/g,'').slice(0,90);
+ return safe||String(fallback).replace(/[^A-Za-z0-9._-]/g,'')||'item';
+}
+function pb1778IsSelected(value){
+ return value===true||value===1||value==='true'||value==='1';
+}
+// R1779: Snapshot the model names at order creation, not the live edited tariffs.
+// Existing files with a single chassis/frame still show the human-readable base name.
+function pb1779ModelName(value,fallback){
+ const name=String(value||'').normalize('NFC').replace(/[<>:"/\\|?*\u0000-\u001F\u007F]/g,' ')
+    .replace(/\s+/g,' ').replace(/\.+$/g,'').trim().slice(0,64);
+ return name||fallback;
+}
+function pb1779ReadModel(file,kind){
+ const selection=file?.addon_selection||file?.addonSelection||{};
+ const data=selection[kind]||{};
+ const primary=kind==='chassis'?
+  (data.name||data.modelName||file?.chassis_model_name||file?.chassisModelName):
+  (data.name||data.modelName||file?.frame_model_name||file?.frameModelName);
+ const color=kind==='frame'?
+  (data.colorName||data.color_name||file?.frame_color_name||file?.frameColorName):null;
+ return pb1779ModelName(primary,kind==='chassis'?'شاسی':'قاب')+
+  (color?' '+pb1779ModelName(color,''):'');
+}
+function pb1778PhotoFlags(file){
+ const tags=[];
+ if(pb1778IsSelected(file?.chassis))tags.push(pb1780Latin(pb1779ReadModel(file,'chassis'),'Shasi'));
+ if(pb1778IsSelected(file?.frame))tags.push(pb1780Latin(pb1779ReadModel(file,'frame'),'Ghab'));
+ return tags.map(tag=>' = '+tag).join('');
+}
+function pb1769DownloadName(file,incomingName,order){
  const source=String(incomingName||file?.original_name||'file');
+ // Never rename an older order's local files after a tariff/model change.
  if(typeof pb1769OrderFirst==='function'&&!pb1769OrderFirst(order))return Ya(source,'file');
  const copies=Number(file?.print_copies??file?.printCopies??1);
- if(!Number.isSafeInteger(copies)||copies<2||copies>99)return Ya(source,'file');
+ const copyValid=Number.isSafeInteger(copies)&&copies>=2&&copies<=99;
+ const marks=pb1778PhotoFlags(file);
+ if(!copyValid&&!marks)return Ya(source,'file');
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
- stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
- // Sanitize the stem once, then keep the literal ' = N' suffix intact.
- // Passing the whole result through Ya() would turn ' = ' into '-' on Windows.
+ // Remove legacy S/F codes only if they were previously generated, avoid duplicates.
+ if(marks&&stem.endsWith(marks))stem=stem.slice(0,-marks.length);
+ stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
+ if(copyValid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
+ const suffix=(copyValid?' = '+copies:'')+marks;
  const base=Ya(stem,'file');
- return base.slice(0,Math.max(1,96-ext.length-String(copies).length-3))+' = '+copies+ext;
+ return base.slice(0,Math.max(1,180-ext.length-suffix.length))+suffix+ext;
 }
 function pb1450Meta(file, receipts) {
   const receipt = receipts?.[String(file.id)];

@@ -1,0 +1,152 @@
+[
+  {
+    "scope": "ul",
+    "from": "const k=!!(h&&!h._custom&&(h==null?void 0:h.chassis)!=null&&((h==null?void 0:h.chassis_stock)==null||Number(h.chassis_stock)>0)),E=!!(h&&!h._custom&&(h==null?void 0:h.frame)!=null&&((h==null?void 0:h.frame_stock)==null||Number(h.frame_stock)>0));",
+    "to": "const pb1781Available=kind=>!!(h&&!h._custom&&(a.addonCatalog?.types||[]).some(model=>model.kind===kind&&model.active!==false&&!model.legacy&&a.addonCatalog?.walkinRates?.[p]?.[model.id]!=null)),k=!!(h&&!h._custom&&(h==null?void 0:h.chassis)!=null&&((h==null?void 0:h.chassis_stock)==null||Number(h.chassis_stock)>0))||pb1781Available(\"chassis\"),E=!!(h&&!h._custom&&(h==null?void 0:h.frame)!=null&&((h==null?void 0:h.frame_stock)==null||Number(h.frame_stock)>0))||pb1781Available(\"frame\");",
+    "id": "walkin custom model availability"
+  },
+  {
+    "scope": "ej",
+    "from": "[De,pt]=x.useState(null);x.useEffect",
+    "to": "[De,pt]=x.useState(null),[pb1781Catalog,pb1781SetCatalog]=x.useState({types:[],rates:{}}),[pb1781Picker,pb1781SetPicker]=x.useState(null);x.useEffect",
+    "id": "photographer state"
+  },
+  {
+    "scope": "ej",
+    "from": "x.useEffect(()=>()=>{for(const ue of E.current)for(const P of ue.files)zs(P)},[]);const ot=",
+    "to": "x.useEffect(()=>()=>{for(const ue of E.current)for(const P of ue.files)zs(P)},[]);\nx.useEffect(()=>{let active=true;pb1781SetCatalog({types:[],rates:{}});Me(\"/api/customer/print-addon-catalog\").then(v=>{if(active)pb1781SetCatalog(v.catalog||{types:[],rates:{}})}).catch(()=>{});return()=>{active=false}},[t?.lab?.id]);\nconst pb1781Rate=(model,group)=>{const row=Zu(group,t)||{};if(model?.legacy||model?.id===model?.kind)return row[model.kind]==null?null:Number(row[model.kind]);const raw=pb1781Catalog.rates?.[group?.sizeId]?.[model?.id];return raw==null?null:Number(raw)};\nconst pb1781Models=(kind,group)=>(pb1781Catalog.types||[]).filter(model=>model.kind===kind&&model.active!==false&&pb1781Rate(model,group)!=null);\nconst pb1781Unit=(group,file,kind,row)=>{const id=file[kind+\"ModelId\"]||kind;if(id===kind)return row?.[kind]==null?null:Number(row[kind]);const raw=pb1781Catalog.rates?.[group.sizeId]?.[id];return raw==null?null:Number(raw)};\nconst pb1781Apply=sel=>{const pick=pb1781Picker;if(!pick)return;k(groups=>groups.map(group=>group.id!==pick.groupId?group:{...group,...(pick.fileId?{}:{[pick.kind]:true}),files:group.files.map(file=>pick.fileId&&file.id!==pick.fileId?file:{...file,[pick.kind+\"Override\"]:\"1\",[pick.kind+\"ModelId\"]:sel.modelId,[pick.kind+\"ModelName\"]:sel.modelName,...(pick.kind===\"frame\"?{frameColorId:sel.colorId||null,frameColorName:sel.colorName||null}:{})})}));pb1781SetPicker(null)};\nconst pb1781FileSet=(groupId,fileId,field,value)=>k(groups=>groups.map(group=>group.id===groupId?{...group,files:group.files.map(file=>file.id===fileId?{...file,[field]:value}:file)}:group));\nconst ot=",
+    "id": "photographer catalog loader and pick state"
+  },
+  {
+    "scope": "ej",
+    "from": "Nt==null||String(Nt).trim()===\"\"?oe=!0:b+=Number(Nt||0)*PBcount,Be&&(ee+=PBcount,(P==null?void 0:P.chassis)==null||String(P.chassis).trim()===\"\"?oe=!0:b+=Number(P.chassis||0)*PBcount),bt&&(Q+=PBcount,(P==null?void 0:P.frame)==null||String(P.frame).trim()===\"\"?oe=!0:b+=Number(P.frame||0)*PBcount)",
+    "to": "Ye.withoutPrint&&(Be||bt)?null:Nt==null||String(Nt).trim()===\"\"?oe=!0:b+=Number(Nt||0)*PBcount,Be&&(ee+=PBcount,pb1781Unit(ue,Ye,\"chassis\",P)==null?oe=!0:b+=pb1781Unit(ue,Ye,\"chassis\",P)*PBcount),bt&&(Q+=PBcount,pb1781Unit(ue,Ye,\"frame\",P)==null?oe=!0:b+=pb1781Unit(ue,Ye,\"frame\",P)*PBcount)",
+    "id": "photographer quote custom unit"
+  },
+  {
+    "scope": "ej",
+    "from": "frame:Tt,cropHandling:\"none\"})",
+    "to": "frame:Tt,chassisModelId:yt?(tt.chassisModelId||\"chassis\"):null,frameModelId:Tt?(tt.frameModelId||\"frame\"):null,frameColorId:Tt?(tt.frameColorId||null):null,withoutPrint:!!(tt.withoutPrint&&(yt||Tt)),cropHandling:\"none\"})",
+    "id": "photographer upload selected IDs"
+  },
+  {
+    "scope": "ej",
+    "from": "ee=tg(oe,\"chassis\"),Q=tg(oe,\"frame\"),ye=ue.files.filter",
+    "to": "ee=tg(oe,\"chassis\")||pb1781Models(\"chassis\",ue).length>0,Q=tg(oe,\"frame\")||pb1781Models(\"frame\",ue).length>0,ye=ue.files.filter",
+    "id": "photographer show custom addons"
+  },
+  {
+    "scope": "ej",
+    "from": "onChange:Be=>Ne(ue.id,\"chassis\",Be.target.checked)",
+    "to": "onChange:Be=>Be.target.checked&&pb1781Models(\"chassis\",ue).length?pb1781SetPicker({groupId:ue.id,fileId:null,kind:\"chassis\"}):Ne(ue.id,\"chassis\",Be.target.checked)",
+    "id": "group chassis picker"
+  },
+  {
+    "scope": "ej",
+    "from": "onChange:Be=>Ne(ue.id,\"frame\",Be.target.checked)",
+    "to": "onChange:Be=>Be.target.checked&&pb1781Models(\"frame\",ue).length?pb1781SetPicker({groupId:ue.id,fileId:null,kind:\"frame\"}):Ne(ue.id,\"frame\",Be.target.checked)",
+    "id": "group frame picker"
+  },
+  {
+    "scope": "ej",
+    "from": "onChange:tt=>Y(ue.id,Be.id,\"chassisOverride\",tt.target.checked===ue.chassis?\"\":tt.target.checked?\"1\":\"0\")",
+    "to": "onChange:tt=>tt.target.checked&&pb1781Models(\"chassis\",ue).length?pb1781SetPicker({groupId:ue.id,fileId:Be.id,kind:\"chassis\"}):Y(ue.id,Be.id,\"chassisOverride\",tt.target.checked===ue.chassis?\"\":tt.target.checked?\"1\":\"0\")",
+    "id": "photo chassis picker"
+  },
+  {
+    "scope": "ej",
+    "from": "onChange:tt=>Y(ue.id,Be.id,\"frameOverride\",tt.target.checked===ue.frame?\"\":tt.target.checked?\"1\":\"0\")",
+    "to": "onChange:tt=>tt.target.checked&&pb1781Models(\"frame\",ue).length?pb1781SetPicker({groupId:ue.id,fileId:Be.id,kind:\"frame\"}):Y(ue.id,Be.id,\"frameOverride\",tt.target.checked===ue.frame?\"\":tt.target.checked?\"1\":\"0\")",
+    "id": "photo frame picker"
+  },
+  {
+    "scope": "ej",
+    "from": "e.jsx(\"span\",{children:\"قاب\"})]})]}),e.jsxs(\"div\",{className:\"simplePrintPhotoActions\"",
+    "to": "e.jsx(\"span\",{children:\"قاب\"})]}),bt&&e.jsx(\"button\",{type:\"button\",className:\"pb1781SelectModel\",disabled:W,onClick:()=>pb1781SetPicker({groupId:ue.id,fileId:Be.id,kind:\"chassis\"}),children:Be.chassisModelName||\"انتخاب مدل شاسی\"}),Nt&&e.jsx(\"button\",{type:\"button\",className:\"pb1781SelectModel\",disabled:W,onClick:()=>pb1781SetPicker({groupId:ue.id,fileId:Be.id,kind:\"frame\"}),children:[Be.frameModelName||\"انتخاب مدل قاب\",Be.frameColorName?\" · \"+Be.frameColorName:\"\"]})]}),e.jsxs(\"div\",{className:\"simplePrintPhotoActions\"",
+    "id": "photo buttons for models"
+  },
+  {
+    "scope": "ej",
+    "from": "(ee||Q)&&e.jsxs(\"div\",{className:\"simplePrintPhotoAddonOverrides\",children:[",
+    "to": "e.jsxs(\"label\",{className:\"pb1781WithoutPrint\",children:[e.jsx(\"input\",{type:\"checkbox\",disabled:W||!(bt||Nt),checked:!!(Be.withoutPrint&&(bt||Nt)),onChange:ev=>pb1781FileSet(ue.id,Be.id,\"withoutPrint\",ev.target.checked)}),\"فقط قاب / شاسی، بدون چاپ عکس\"]}),(ee||Q)&&e.jsxs(\"div\",{className:\"simplePrintPhotoAddonOverrides\",children:[",
+    "id": "photo without paper"
+  },
+  {
+    "scope": "ej",
+    "from": "children:[F&&e.jsx(zv,{title:\"انتخاب سایز چاپ\"",
+    "to": "children:[pb1781Picker&&(()=>{const grp=T.find(g=>g.id===pb1781Picker.groupId);if(!grp)return null;const selected=grp.files.find(f=>f.id===pb1781Picker.fileId)||grp.files[0];const config={models:(pb1781Catalog.types||[]).filter(m=>m.kind===pb1781Picker.kind&&m.active!==false),priceOf:model=>pb1781Rate(model,grp),value:{modelId:selected?.[pb1781Picker.kind+\"ModelId\"]},onClose:()=>pb1781SetPicker(null),onSelect:pb1781Apply};return pb1781Picker.kind===\"frame\"?e.jsx(PB1777FrameSelector,config):e.jsx(PB1781ChassisSelector,config)})(),F&&e.jsx(zv,{title:\"انتخاب سایز چاپ\"",
+    "id": "photographer model modal"
+  },
+  {
+    "scope": "sw",
+    "from": "[y,I]=x.useState(null),T=x.useRef(null);if(x.useEffect",
+    "to": "[y,I]=x.useState(null),T=x.useRef(null),[pb1781Picker,pb1781SetPicker]=x.useState(null);if(x.useEffect",
+    "id": "walkin chooser hook"
+  },
+  {
+    "scope": "sw",
+    "from": "const k=!0,E=async me=>",
+    "to": "const pb1781Rate=(model,file)=>{const base=a.prices.find(r=>r.id===file.sizeId)||{};if(model?.legacy||model?.id===model?.kind)return base[model.kind]==null?null:Number(base[model.kind]);const p=a.addonCatalog?.walkinRates?.[file.sizeId]?.[model?.id];return p==null?null:Number(p)};\nconst pb1781Unit=(file,kind)=>{if(!file[kind])return 0;const modelId=file[kind+\"ModelId\"]||kind;const m=a.addonCatalog?.types?.find(t=>t.id===modelId&&t.kind===kind);const price=m?pb1781Rate(m,file):null;return price==null?null:price};\nconst pb1781Pick=sel=>{const chosen=pb1781Picker;if(!chosen)return;w(chosen.fileId,{[chosen.kind]:true,[chosen.kind+\"ModelId\"]:sel.modelId,[chosen.kind+\"ModelName\"]:sel.modelName,...(chosen.kind===\"frame\"?{frameColorId:sel.colorId||null,frameColorName:sel.colorName||null}:{})});pb1781SetPicker(null)};\nconst k=!0,E=async me=>",
+    "id": "walkin model price helpers"
+  },
+  {
+    "scope": "sw",
+    "from": "return me+Number(v[ae.printType]||0)+(ae.chassis?Number(v.chassis||0):0)+(ae.frame?Number(v.frame||0):0)",
+    "to": "return me+(ae.withoutPrint&&(ae.chassis||ae.frame)?0:Number(v[ae.printType]||0))+pb1781Unit(ae,\"chassis\")+pb1781Unit(ae,\"frame\")",
+    "id": "walkin quote per model"
+  },
+  {
+    "scope": "sw",
+    "from": "printType:Z.printType,chassis:Z.chassis,frame:Z.frame,cropHandling:Z.cropHandling||\"none\"",
+    "to": "printType:Z.printType,chassis:Z.chassis,frame:Z.frame,chassisModelId:Z.chassis?(Z.chassisModelId||\"chassis\"):null,frameModelId:Z.frame?(Z.frameModelId||\"frame\"):null,frameColorId:Z.frame?(Z.frameColorId||null):null,withoutPrint:!!(Z.withoutPrint&&(Z.chassis||Z.frame)),cropHandling:Z.cropHandling||\"none\"",
+    "id": "walkin upload selected model"
+  },
+  {
+    "scope": "sw",
+    "from": "onChange:re=>w(me.id,{chassis:re.target.checked})",
+    "to": "onChange:re=>re.target.checked?pb1781SetPicker({fileId:me.id,kind:\"chassis\"}):w(me.id,{chassis:false})",
+    "id": "walkin chassis chooser on check"
+  },
+  {
+    "scope": "sw",
+    "from": "onChange:re=>w(me.id,{frame:re.target.checked})",
+    "to": "onChange:re=>re.target.checked?pb1781SetPicker({fileId:me.id,kind:\"frame\"}):w(me.id,{frame:false})",
+    "id": "walkin frame chooser on check"
+  },
+  {
+    "scope": "sw",
+    "from": "e.jsxs(\"div\",{className:\"walkinAddons\",children:[",
+    "to": "e.jsxs(\"div\",{className:\"walkinAddons pb1781WalkinAddons\",children:[",
+    "id": "walkin addon css"
+  },
+  {
+    "scope": "sw",
+    "from": "\" قاب\"]})]}),e.jsx(\"button\",{className:\"walkinRemove\"",
+    "to": "\" قاب\"]}),me.chassis&&e.jsx(\"button\",{type:\"button\",className:\"pb1781SelectModel\",onClick:()=>pb1781SetPicker({fileId:me.id,kind:\"chassis\"}),children:me.chassisModelName||\"مدل شاسی\"}),me.frame&&e.jsx(\"button\",{type:\"button\",className:\"pb1781SelectModel\",onClick:()=>pb1781SetPicker({fileId:me.id,kind:\"frame\"}),children:[me.frameModelName||\"مدل قاب\",me.frameColorName?\" · \"+me.frameColorName:\"\"]}),e.jsxs(\"label\",{className:\"pb1781WithoutPrint\",children:[e.jsx(\"input\",{type:\"checkbox\",checked:!!(me.withoutPrint&&(me.chassis||me.frame)),disabled:!(me.chassis||me.frame),onChange:ev=>w(me.id,{withoutPrint:ev.target.checked})}),\"فقط قاب / شاسی، بدون چاپ عکس\"]})]}),e.jsx(\"button\",{className:\"walkinRemove\"",
+    "id": "walkin selected model buttons"
+  },
+  {
+    "scope": "sw",
+    "from": "y&&e.jsx(rb,{item:y,d:a,onClose:()=>I(null)",
+    "to": "pb1781Picker&&(()=>{const file=l.find(row=>row.id===pb1781Picker.fileId);if(!file)return null;const config={models:(a.addonCatalog?.types||[]).filter(model=>model.kind===pb1781Picker.kind&&model.active!==false),priceOf:model=>pb1781Rate(model,file),value:{modelId:file[pb1781Picker.kind+\"ModelId\"]},onClose:()=>pb1781SetPicker(null),onSelect:pb1781Pick};return pb1781Picker.kind===\"frame\"?e.jsx(PB1777FrameSelector,config):e.jsx(PB1781ChassisSelector,config)})(),y&&e.jsx(rb,{item:y,d:a,onClose:()=>I(null)",
+    "id": "walkin chooser modal"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin chassis custom availability checkbox",
+    "from": "disabled:ae.chassis==null||ae.chassis_stock!=null&&Number(ae.chassis_stock)<=0",
+    "to": "disabled:!(a.addonCatalog?.types||[]).some(m=>m.kind==='chassis'&&m.active!==false&&pb1781Rate(m,me)!=null)||ae.chassis_stock!=null&&Number(ae.chassis_stock)<=0"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin frame custom availability checkbox",
+    "from": "disabled:ae.frame==null||ae.frame_stock!=null&&Number(ae.frame_stock)<=0",
+    "to": "disabled:!(a.addonCatalog?.types||[]).some(m=>m.kind==='frame'&&m.active!==false&&pb1781Rate(m,me)!=null)||ae.frame_stock!=null&&Number(ae.frame_stock)<=0"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin no-paper validation",
+    "from": "l.every(me=>me.sizeId&&me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType)&&me.state!==\"error\")",
+    "to": "l.every(me=>me.sizeId&&(me.withoutPrint&&(me.chassis||me.frame)||me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType))&&me.state!==\"error\"&&(!me.chassis||pb1781Unit(me,'chassis')!=null)&&(!me.frame||pb1781Unit(me,'frame')!=null))"
+  }
+]

@@ -1,1 +1,1 @@
-2026-11-11-r1793-single-grid-standalone-addon
+2026-11-11-r1794-stable-tariff-standalone-no-print

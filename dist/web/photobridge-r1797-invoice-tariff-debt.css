@@ -8,3 +8,4 @@ html body #root .labRoleWorkspace .pb1797TariffTable .pb1541TariffActions{displa
 html body #root .labRoleWorkspace .pb1797TariffTable input{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;height:38px!important;text-align:center!important;padding:7px 5px!important;font-size:13px!important}
 html body #root .labRoleWorkspace .pb1797TariffTable tbody th>*{display:block!important;margin:3px auto!important}
 html body #root .labRoleWorkspace .pb1797TariffTable button{font:inherit;cursor:pointer;border:1px solid #dbe5f1;border-radius:6px;background:#fff;color:#31538c;padding:3px 6px}
+html body #root .labRoleWorkspace .pb1797TariffTable .pb1541TariffActions button{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 26px!important;width:26px!important;height:26px!important;padding:3px!important;line-height:1!important;white-space:nowrap!important}

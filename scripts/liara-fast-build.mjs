@@ -1118,3 +1118,5 @@ await deployStep('./verify-r1770-final-print-stage-guard.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1770-final-print-stage-guard.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','--test-reporter=spec','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1772-download-thermal.cjs'],{stdio:'inherit'});
+// R1773: actual photo chassis options respect unlimited/partial stock; thermal items show only selected chassis.
+runR1314(process.execPath,['--test','scripts/test-r1773-chassis-thermal.cjs'],{stdio:'inherit'});

@@ -1,4 +1,4 @@
-/* R1778: visible S/F markers for selected chassis/frame photos.
+/* R1778: visible chassis/frame model and color names after each photo.
  * Native + web names are shown consistently. No original media renamed.
  */
 import fs from 'node:fs';
@@ -7,22 +7,27 @@ import {execFileSync} from 'node:child_process';
 const hash=v=>crypto.createHash('sha256').update(v).digest('hex');
 const original='title:le.original_name,children:le.original_name';
 const source='pbPrintCopyFilename(Be.file.name,pbPrintCopies(Be))';
-const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"))';
-function pb1778SelectedName(name,copies,chassis,frame){
- const raw=String(name||'file');
- const extMatch=raw.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
+const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)';
+function pb1778SelectedName(name,copies,chassis,frame,chassisName,frameName,frameColor){
+ const raw=String(name||'file'),match=raw.match(/\.[A-Za-z0-9]{1,12}$/),ext=match?.[0]||'';
  let stem=ext?raw.slice(0,-ext.length):raw;
- const marks=(chassis?' = S':'')+(frame?' = F':'');
- if(!marks)return pbPrintCopyFilename(raw,copies);
- stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
+ const clean=(v,fallback)=>String(v||fallback||'').normalize('NFC').replace(/[\\/:*?"<>|\u0000-\u001F]/g,' ').replace(/\s+/g,' ').trim().slice(0,65);
+ const entries=[];
+ if(chassis)entries.push(clean(chassisName,'شاسی'));
+ if(frame)entries.push([clean(frameName,'قاب'),clean(frameColor,'')].filter(Boolean).join(' '));
+ const names=entries.length?' = '+entries.join(' = '):'';
+ if(names&&stem.endsWith(names))stem=stem.slice(0,-names.length);
  const n=Number(copies),valid=Number.isSafeInteger(n)&&n>1&&n<=99;
- const suffix=(valid?' = '+n:'')+marks;
  if(valid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+n+'$'),'');
- return stem.slice(0,Math.max(1,96-ext.length-suffix.length))+suffix+ext;
+ const suffix=(valid?' = '+n:'')+names;
+ return stem.slice(0,Math.max(1,180-ext.length-suffix.length)).trim()+suffix+ext;
 }
 function pb1778DisplayName(file){
- const name=String(file?.original_name||file?.name||'file');
- return pb1778SelectedName(name,Number(file?.print_copies||file?.printCopies||1),file?.chassis===true||file?.chassis===1,file?.frame===true||file?.frame===1);
+ return pb1778SelectedName(
+  String(file?.original_name||file?.name||'file'), Number(file?.print_copies||file?.printCopies||1),
+  file?.chassis===true||file?.chassis===1,file?.frame===true||file?.frame===1,
+  file?.chassis_model_name||file?.chassisModelName,file?.frame_model_name||file?.frameModelName,
+  file?.frame_color_name||file?.frameColorName);
 }
 const helper='/* PB1778 CHASSIS FRAME FILE MARKERS */\n'+pb1778SelectedName.toString()+'\n'+pb1778DisplayName.toString()+'\n';
 const pageToken='addonNames=r1778';
@@ -61,4 +66,4 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   fs.writeFileSync(manifest,JSON.stringify(obj));
  }
 }
-console.log('[R1778] S/F flags in photographer upload, Lab file cards, and downloaded photo names.');
+console.log('[R1778] full selected chassis/frame model names beside photo names.');

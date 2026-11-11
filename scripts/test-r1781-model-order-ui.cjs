@@ -11,6 +11,7 @@ test('R1781: photographer and public walk-in have model picker, immutable upload
  assert(ui.includes('function PB1781ChassisSelector('));
  assert(ui.includes('function PB1777FrameSelector('));
  assert(ui.includes('pb1781SetPicker({groupId:ue.id,fileId:Be.id,kind:"frame"})'));
+ assert(ui.includes('[pick.kind+"Override"]:"1"'),"a photo-level model choice must activate that add-on");
  assert(ui.includes('pb1781SetPicker({fileId:me.id,kind:"frame"})'));
  assert(ui.includes('chassisModelId:yt?(tt.chassisModelId||"chassis"):null'));
  assert(ui.includes('frameColorId:Tt?(tt.frameColorId||null):null'));

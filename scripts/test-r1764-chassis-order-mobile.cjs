@@ -10,10 +10,10 @@ const css=fs.readFileSync(root+'photobridge-r1764-chassis-order-mobile.css','utf
 test('R1764: compiler exposes each size stock and loads only photographer-scoped assets',()=>{
  const bundle=fs.readFileSync(root+'assets/index-UIRefine-v655-r84.js','utf8');
  const html=fs.readFileSync(root+'index.html','utf8');
- assert(bundle.includes('"data-pb1764-stock":oe==null?0:oe.chassis_stock'),'size-level live price stock reaches photo rows');
+ assert(bundle.includes('"data-pb1764-stock":oe==null?"unknown":oe.chassis_stock==null?"unlimited":oe.chassis_stock'),'size-level live price stock reaches photo rows');
  assert(bundle.includes('"data-pb1765-copies":pbPrintCopies(Be)'),'per-photo copy quantity reaches stock guard');
  assert(html.includes('&chassisCopies=r1765'),'main JS cache key updates for copy-level stock');
- assert(html.includes('/photobridge-r1764-chassis-order-mobile.js?v=r1765'),'guard URL cache key refreshed');
+ assert(html.includes('/photobridge-r1764-chassis-order-mobile.js?v=r1773'),'guard URL cache key refreshed');
  assert.equal((html.match(/photobridge-r1764-chassis-order-mobile\.js/g)||[]).length,1);
  assert.equal((html.match(/photobridge-r1764-chassis-order-mobile\.css/g)||[]).length,1);
  assert(css.includes('.simplePrintPhotoAddonCheck.pb1764ChassisUnavailable'));
@@ -72,9 +72,12 @@ test('R1764: busy-send disabled state does not clear valid chassis choices',()=>
 
 test('R1765: chassis stock is checked against the sum of print copies, not only distinct image files',()=>{
  const shortage=scenario({stock:3,checked:[true,false],copies:[3,2]});
- assert.deepEqual(shortage.hidden,[true,true]);
- assert.deepEqual(shortage.checked,[false,false]);
+ assert.deepEqual(shortage.hidden,[false,true]);
+ assert.deepEqual(shortage.checked,[true,false]);
  const enough=scenario({stock:5,checked:[true,false],copies:[3,2]});
  assert.deepEqual(enough.hidden,[false,false]);
  assert.deepEqual(enough.checked,[true,false]);
+ const unlimited=scenario({stock:'unlimited',checked:[true,false],copies:[3,80]});
+ assert.deepEqual(unlimited.hidden,[false,false]);
+ assert.deepEqual(unlimited.checked,[true,false]);
 });

@@ -27,7 +27,9 @@ test('R1776 keeps the clearance after password is revealed without touching othe
  password.type='text';rerun();
  assert(attrs.has('data-pb1776-password-clearance'));
  assert.equal(phone.hasAttribute('data-pb1776-password-clearance'),false);
- assert(!/\\.value\\s*=|addEventListener\\(['"]click/.test(source));
+ assert(!source.includes('.value='));
+ assert(!source.includes("addEventListener('click'"));
+ assert(!source.includes('addEventListener("click"'));
 });
 test('R1776 assets are unique and load after old login styles',()=>{
  const css='/photobridge-r1776-login-password-clearance.css?v=r1776',js='/photobridge-r1776-login-password-clearance.js?v=r1776';

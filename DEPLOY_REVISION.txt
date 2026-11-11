@@ -1,1 +1,1 @@
-2026-11-11-r1788-frame-chassis-native-tariff-ui-fixes
+2026-11-11-r1789-walkin-tariff-header-model-stock

@@ -1,5 +1,5 @@
 // R1543: asynchronous first-party dialogs also work where Electron has no prompt().
-function pb1543CatalogDialog({title,description,initialValue='',submitLabel='ذخیره',onSubmit,confirmation=false}){
+function pb1543CatalogDialog({title,description,inputLabel='نام مدل',initialValue='',submitLabel='ذخیره',onSubmit,confirmation=false}){
  const existing=document.querySelector('.pb1543CatalogDialog');if(existing){existing.focus();return Promise.resolve(false)}
  return new Promise(resolve=>{
   const previous=document.activeElement,dialog=document.createElement('dialog');let busy=false,settled=false;
@@ -8,14 +8,14 @@ function pb1543CatalogDialog({title,description,initialValue='',submitLabel='ذ�
   const head=node('header','pb1543DialogHead',undefined,dialog);node('span','pb1543DialogIcon','▤',head);const titles=node('div','',undefined,head);node('small','','تعرفه چاپ و صحافی',titles);node('h2','',title,titles).id='pb1543CatalogTitle';
   const close=node('button','pb1543DialogClose','×',head);close.type='button';close.setAttribute('aria-label','بستن');
   const form=node('form','pb1543DialogBody',undefined,dialog);node('p','pb1543DialogDescription',description,form).id='pb1543CatalogDescription';let input;
-  if(!confirmation){const label=node('label','pb1543DialogField','نام مدل صحافی',form);input=node('input','',undefined,label);input.type='text';input.value=initialValue;input.maxLength=70;input.required=true;input.placeholder='مثلاً صحافی آلبوم ۶۰ گرم';input.autocomplete='off';input.setAttribute('aria-describedby','pb1543CatalogError');}
+  if(!confirmation){const label=node('label','pb1543DialogField',inputLabel,form);input=node('input','',undefined,label);input.type='text';input.value=initialValue;input.maxLength=70;input.required=true;input.placeholder='نام مدل را وارد کنید';input.autocomplete='off';input.setAttribute('aria-describedby','pb1543CatalogError');}
   const error=node('p','pb1543DialogError','',form);error.id='pb1543CatalogError';error.setAttribute('role','alert');
   const footer=node('footer','pb1543DialogActions',undefined,form),cancel=node('button','','انصراف',footer),submit=node('button','primary',submitLabel,footer);cancel.type='button';submit.type='submit';
   const finish=value=>{if(settled)return;settled=true;if(dialog.open)dialog.close();dialog.remove();if(previous?.isConnected)previous.focus?.();resolve(value)};
   const cancelDialog=()=>{if(!busy)finish(false)};cancel.onclick=cancelDialog;close.onclick=cancelDialog;dialog.addEventListener('cancel',event=>{event.preventDefault();cancelDialog()});
-  form.onsubmit=async event=>{event.preventDefault();if(busy)return;const value=input?.value.trim()||'';if(!confirmation&&!value){error.textContent='نام مدل صحافی را وارد کنید.';input.focus();return}
+  form.onsubmit=async event=>{event.preventDefault();if(busy)return;const value=input?.value.trim()||'';if(!confirmation&&!value){error.textContent='نام مدل را وارد کنید.';input.focus();return}
    busy=true;error.textContent='';for(const button of [cancel,close,submit])button.disabled=true;if(input)input.disabled=true;submit.textContent='در حال ذخیره…';
-   try{await onSubmit(value);finish(true)}catch(err){const code=err?.data?.error||err?.message;error.textContent=code==='print_catalog_duplicate_name'?'مدلی با این نام وجود دارد؛ نام دیگری انتخاب کنید.':code==='print_catalog_limit'?'تعداد مدل‌های صحافی به سقف مجاز رسیده است.':code==='print_catalog_invalid_name'?'نام معتبر تا ۷۰ نویسه وارد کنید.':'ذخیره انجام نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.';}
+   try{await onSubmit(value);finish(true)}catch(err){const code=err?.data?.error||err?.message;error.textContent=code==='print_catalog_duplicate_name'?'مدلی با این نام وجود دارد؛ نام دیگری انتخاب کنید.':code==='print_catalog_limit'?'تعداد مدل‌ها به سقف مجاز رسیده است.':code==='print_catalog_invalid_name'?'نام معتبر تا ۷۰ نویسه وارد کنید.':'ذخیره انجام نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.';}
    finally{busy=false;if(!settled){for(const button of [cancel,close,submit])button.disabled=false;if(input){input.disabled=false;input.focus()}submit.textContent=submitLabel}}
   };
   document.body.append(dialog);try{dialog.showModal();if(input){input.focus();input.select()}else cancel.focus()}catch{finish(false)}

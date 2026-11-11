@@ -30,6 +30,8 @@
   return null;
  }
  function protect(input){
+  // Only mobile has this overlap; never adjust desktop input padding.
+  if(!window.matchMedia?.('(max-width:767px)')?.matches)return;
   if(input.tagName!=='INPUT'||!input.closest(authScope))return;
   if(!input.hasAttribute('data-pb1776-password-clearance'))input.setAttribute('data-pb1776-password-clearance','');
   const box=input.getBoundingClientRect?.();

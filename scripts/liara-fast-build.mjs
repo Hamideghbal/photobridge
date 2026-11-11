@@ -1156,3 +1156,7 @@ runR1314(process.execPath,['--test','scripts/test-r1781-model-order-ui.cjs'],{st
 // R1788: carry new chassis/frame tariff columns to Windows and fix once-per-model header actions.
 await deployStep('./enable-r1788-tariff-native-icons-labels.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1788-tariff-native-icons-labels.cjs'],{stdio:'inherit'});
+
+// R1789: physical inventory per model/size and aligned walk-in pricing grid on both platforms.
+await deployStep('./enable-r1789-walkin-header-model-stock.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1789-walkin-header-model-stock.cjs'],{stdio:'inherit'});

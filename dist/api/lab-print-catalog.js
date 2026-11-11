@@ -63,7 +63,7 @@ export function setPrintFrameImage(catalog,id,imageData){
 export function normalizePrintCatalog(raw){
  const data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const originals=Array.isArray(data.types)?data.types:[];
- const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return {...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{}),...(d.kind==='frame'?{colors:pb1777CleanColors(source?.colors,false)}:{})}}));
+ const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return [d.id,{...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{}),...(d.kind==='frame'?{colors:pb1777CleanColors(source?.colors,false)}:{})}]}));
  const limits={binding:0,chassis:0,frame:0};
  for(const row of originals){
   if(!row||typeof row!=='object'||!['binding','chassis','frame'].includes(row.kind)||!row.id)continue;

@@ -44,7 +44,7 @@ test('R1774: previously issued lab finance documents and order detail decorate a
 });
 test('R1774: web receipt still prints chassis only for selected items',()=>{
  const source=fs.readFileSync('scripts/r1698-approved-site-thermal.js.txt','utf8');
- const ctx={vh:t=>t.items||[],ph:x=>x.description||x.sizeLabel||'چاپ'};
+ const ctx={vh:t=>t.items||[],ph:x=>x.description||[x.sizeLabel,x.printTypeLabel||({luster:'لاستر',silk:'سیلک',metallic:'متالیک'}[x.printType])||'چاپ'].filter(Boolean).join(' · ')||'چاپ'};
  vm.createContext(ctx);vm.runInContext(source,ctx);
  const items=decorate([{sizeLabel:'۲۰×۳۰',printType:'luster',printTypeLabel:'لاستر',chassis:true,quantity:3,unitPrice:260000,lineTotal:780000},
  {sizeLabel:'۱۰×۱۵',printTypeLabel:'سیلک',chassis:false,quantity:1,unitPrice:40000,lineTotal:40000}]);
@@ -53,4 +53,5 @@ test('R1774: web receipt still prints chassis only for selected items',()=>{
  assert(!html.includes('شاسی · شاسی'));
  assert(html.includes('۱۰×۱۵'));
  assert(html.includes('سیلک'));
+ assert(!html.includes('۱۰×۱۵ · سیلک · شاسی'),'non-chassis photo must not be marked chassis');
 });

@@ -52,7 +52,7 @@ function updateUi(source,root){
  if(!oldHeader.includes('pb1777FrameEditLaunch'))throw Error('[R1788] '+root+' frame editor not found');
  const header='pb1777Fields.map(([k,label])=>e.jsxs("b",{children:[e.jsx("span",{className:"pb1541TariffTitle",children:label}),e.jsxs("span",{className:"pb1541TariffActions",children:['
  + '(k==="chassis"||k==="frame"||k.startsWith("pb1539_"))&&e.jsx("button",{type:"button",className:"pb1539Rename",title:"ویرایش نام مدل","aria-label":"ویرایش نام "+label,onClick:()=>pb1788Rename(k.startsWith("pb1539_")?k.slice(7):k,label),children:"✎"}),'
- + '(k==="frame"||k.startsWith("pb1539_")&&pb1777Models.find(v=>v.id===k.slice(7))?.kind==="frame")&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",title:"عکس و رنگ","aria-label":"ویرایش عکس و رنگ قاب",onClick:()=>pb1777SetEdit((pb1777Catalog.types||[]).find(v=>v.id===(k==="frame"?"frame":k.slice(7)))),children:'+photoIcon+'}),'
+ + '(k==="frame"&&(pb1777Catalog.types||[]).some(v=>v.id==="frame")||k.startsWith("pb1539_")&&pb1777Models.find(v=>v.id===k.slice(7))?.kind==="frame")&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",title:"عکس و رنگ","aria-label":"ویرایش عکس و رنگ قاب",onClick:()=>pb1777SetEdit((pb1777Catalog.types||[]).find(v=>v.id===(k==="frame"?"frame":k.slice(7)))),children:'+photoIcon+'}),'
  + 'k.startsWith("pb1539_")&&e.jsx("button",{type:"button",className:"pb1540BindingDelete",title:"حذف مدل","aria-label":"حذف "+label,onClick:()=>pb1788Delete(k.slice(7),label),children:"×"})'
  + ']})]},k))';
  walkin=once(walkin,oldHeader,header,'walk-in header controls');

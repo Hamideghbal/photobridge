@@ -1,0 +1,11 @@
+/* R1781: accessible photo-level chassis/frame model chooser, responsive on small phones. */
+.pb1781AddonSelector{display:grid;gap:14px;min-width:0;max-width:100%;direction:rtl}
+.pb1781AddonOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;max-height:55vh;overflow:auto;padding:4px}
+.pb1781AddonOption{border:1px solid #d1dbea;background:#fff;color:#19355c;border-radius:12px;min-height:65px;padding:12px;display:flex;gap:7px;flex-direction:column;align-items:flex-start;justify-content:center;font:inherit;text-align:right;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.pb1781AddonOption.selected{border:2px solid #2164ba;background:#f0f6ff}
+.pb1781AddonOption strong{font-weight:800;font-size:14px}.pb1781AddonOption small{font-weight:700;font-size:12px;color:#436281}
+.pb1781SelectModel{display:inline-flex;justify-content:center;align-items:center;max-width:100%;padding:5px 8px;border-radius:8px;border:1px solid #a4bde2;color:#184a8e;background:#eff6ff;font:700 12px/1.6 inherit;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+.pb1781WithoutPrint{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#2c4a70;white-space:normal;padding:5px 3px}.pb1781WithoutPrint input{width:16px;height:16px;flex:none}
+.pb1781WalkinAddons{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.pb1781WalkinAddons .pb1781SelectModel{min-height:30px}
+@media(max-width:650px){.pb1781AddonOptions{grid-template-columns:1fr 1fr;gap:7px}.pb1781AddonOption{min-height:58px;padding:8px}.simplePrintPhotoAddonOverrides{flex-wrap:wrap}.simplePrintPhotoAddonOverrides>.pb1781SelectModel{width:100%}.pb1781WalkinAddons>.pb1781SelectModel{max-width:100%}}
+@media(max-width:380px){.pb1781AddonOptions{grid-template-columns:1fr}.pb1781WalkinAddons{display:grid;grid-template-columns:1fr 1fr}.pb1781WalkinAddons>.pb1781SelectModel,.pb1781WalkinAddons>.pb1781WithoutPrint{grid-column:1/-1}}

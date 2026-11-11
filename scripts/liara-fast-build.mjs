@@ -1124,3 +1124,7 @@ runR1314(process.execPath,['--test','scripts/test-r1773-chassis-thermal.cjs'],{s
 // decorate invoice items at API read-time for both historic and fresh invoices.
 await deployStep('./enable-r1774-thermal-native-chassis-description.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1774-native-thermal-chassis.cjs'],{stdio:'inherit'});
+// R1775: final post-build Windows-only order detail/editor fixes and
+// shared admin Customers visibility, with native update-manifest integrity.
+await deployStep('./enable-r1775-native-order-edit-customers-visibility.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1775-native-headers-editors-customers.cjs'],{stdio:'inherit'});

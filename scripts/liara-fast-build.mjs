@@ -1142,6 +1142,3 @@ runR1314(process.execPath,['--test','scripts/test-r1778-photo-filename-markers.c
 // R1779: capture immutable chassis/frame model and frame colour at upload-time.
 await deployStep('./enable-r1779-addon-selection-snapshot.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1779-addon-selection-snapshot.cjs'],{stdio:'inherit'});
-// R1779: server preserves the exact chosen model/color names with each uploaded file.
-await deployStep('./enable-r1779-addon-selection-snapshot.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1779-addon-selection-snapshot.cjs'],{stdio:'inherit'});

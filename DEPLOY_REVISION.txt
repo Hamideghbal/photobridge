@@ -1,1 +1,1 @@
-2026-11-11-r1789-walkin-tariff-header-model-stock
+2026-11-11-r1790-fix-native-manifest-hash

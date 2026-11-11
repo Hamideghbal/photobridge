@@ -5,14 +5,16 @@ const bundle='assets/index-UIRefine-v655-r84.js',css='photobridge-r1543-lab-dial
 let js=fs.readFileSync('dist/web/'+bundle,'utf8');
 if(!js.includes('/* PB1543 styled catalog dialogs and customer details */')){
  const one=(a,b)=>{if(js.split(a).length!==2)throw Error('R1543 changed anchor: '+a.slice(0,100));js=js.replace(a,b)};
- const a=js.indexOf('const pb1539Create=async()=>'),b=js.indexOf('const h=[["luster",pb1539Label',a);if(a<0||b<a)throw Error('R1543 catalog handlers unavailable');
- js=js.slice(0,a)+`const pb1539Create=async()=>pb1543CatalogDialog({title:"صحافی جدید",description:"نام مدل صحافی را وارد کنید؛ می‌توانید نوع و ضخامت را در نام بنویسید.",submitLabel:"افزودن صحافی",onSubmit:async name=>{await Me("/api/lab/print-catalog",{method:"POST",body:JSON.stringify({kind:"binding",name})});await pb1539Reload()}});
-const pb1539Rename=async(id,old)=>pb1543CatalogDialog({title:"ویرایش نام صحافی",description:"نام جدید این مدل را وارد کنید.",initialValue:old,submitLabel:"ذخیره نام",onSubmit:async name=>{if(name===old)return;await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id,name})});await pb1539Reload()}});
-const pb1539Delete=async(id,name)=>pb1543CatalogDialog({title:"حذف مدل صحافی",description:"مدل «"+name+"» از تعرفه‌های قابل انتخاب حذف شود؟ سفارش‌ها، قیمت‌های ثبت‌شده و فاکتورهای قبلی حفظ می‌شوند.",confirmation:true,submitLabel:"حذف مدل",onSubmit:async()=>{await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id,active:false})});await pb1539Reload()}});
+ const a=js.indexOf('const pb1539Create=async(kind="binding")=>'),b=js.indexOf('const h=[["luster",pb1539Label',a);if(a<0||b<a)throw Error('R1543 catalog handlers unavailable');
+ js=js.slice(0,a)+`const pb1539Create=async(kind="binding")=>pb1543CatalogDialog({title:kind==="chassis"?"شاسی جدید":kind==="frame"?"قاب جدید":"صحافی جدید",description:"نام مدل را وارد کنید؛ می‌توانید مشخصات آن را در نام بنویسید.",inputLabel:"نام مدل",submitLabel:"افزودن مدل",onSubmit:async name=>{await Me("/api/lab/print-catalog",{method:"POST",body:JSON.stringify({kind,name})});await pb1539Reload()}});
+const pb1539Rename=async(id,old)=>pb1543CatalogDialog({title:"ویرایش نام مدل",description:"نام جدید این مدل را وارد کنید.",inputLabel:"نام مدل",initialValue:old,submitLabel:"ذخیره نام",onSubmit:async name=>{if(name===old)return;await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id,name})});await pb1539Reload()}});
+const pb1539Delete=async(id,name)=>pb1543CatalogDialog({title:"حذف مدل",description:"مدل «"+name+"» از تعرفه‌های قابل انتخاب حذف شود؟ سفارش‌ها، قیمت‌های ثبت‌شده و فاکتورهای قبلی حفظ می‌شوند.",confirmation:true,submitLabel:"حذف مدل",onSubmit:async()=>{await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id,active:false})});await pb1539Reload()}});
 `+js.slice(b);
  one('children:"+ مدل صحافی جدید"','children:"صحافی جدید"');
  one('e.jsx(On,{title:f?"ویرایش سایز چاپ":"افزودن سایز چاپ",onClose:a,children:', 'e.jsx(On,{title:f?"ویرایش سایز چاپ":"افزودن سایز چاپ",dialogClassName:"pb1543SizeDialog",onClose:a,children:');
- one("if(!confirm('پوشه‌های تاریخ‌دار قدیمی‌تر از مدت نگهداری، در مسیر فعال همین سیستم پاک شوند؟'))return;",'if(!await pb1540CleanupConfirm())return;');
+ const cleanupOld="if(!confirm('پوشه‌های تاریخ‌دار قدیمی‌تر از مدت نگهداری، در مسیر فعال همین سیستم پاک شوند؟'))return;";
+ if(js.includes(cleanupOld))one(cleanupOld,'if(!await pb1540CleanupConfirm())return;');
+ else if(!js.includes('if(!await pb1540CleanupConfirm())return;'))throw Error('R1543 cleanup confirmation missing');
  const tag='h.registrationPending&&e.jsx("span",{className:"pb1446PendingTag",title:"عکاس هنوز دعوت‌نامه را نپذیرفته است",children:"پیش‌ثبت‌نام"})';
  one('e.jsxs("b",{className:"pb1446PhotographerName",children:[h.name,'+tag+']})','e.jsx("b",{className:"pb1446PhotographerName",children:h.name})');
  one('e.jsx("small",{dir:"ltr",children:h.mobile||"بدون شماره موبایل"})','e.jsx("small",{dir:"ltr",children:h.mobile||"بدون شماره موبایل"}),'+tag);

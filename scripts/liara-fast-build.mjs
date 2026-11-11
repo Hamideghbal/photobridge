@@ -1164,3 +1164,7 @@ runR1314(process.execPath,['--test','scripts/test-r1789-walkin-header-model-stoc
 // R1791: original frame image, Latin model names in files, single circle and compact chooser.
 await deployStep('./enable-r1791-frame-latin-picker-polish.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1791-frame-latin-picker.cjs'],{stdio:'inherit'});
+
+// R1792: exact customer tariff tracks, responsive model tags and group-only no-paper setting.
+await deployStep('./enable-r1792-tariff-photo-options.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1792-tariff-photo-options.cjs'],{stdio:'inherit'});

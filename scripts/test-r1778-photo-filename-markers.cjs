@@ -7,20 +7,20 @@ const crypto=require('node:crypto');
 const read=p=>fs.readFileSync(p,'utf8');
 function exported(){
  const source=read('scripts/r1450-download-workflow.js'),a=source.indexOf('function pb1778IsSelected('),b=source.indexOf('function pb1450Meta(',a);
- assert(a>=0&&b>a,'the active download filename function must carry S/G flags');
+ assert(a>=0&&b>a,'the active download filename function must carry S/F flags');
  const context={Ya:(input)=>String(input).replace(/[^A-Za-z0-9._ -]/g,'-').replace(/\s*=\s*/g,'-'),pb1769OrderFirst:o=>o?.fresh!==false};
  vm.createContext(context);vm.runInContext(source.slice(a,b),context);return context;
 }
-test('R1778: exact S for chassis and G for frame, before photo extension',()=>{
+test('R1778: exact S for chassis and F for frame, before photo extension',()=>{
  const fn=exported().pb1769DownloadName,order={fresh:true};
  const result=(file)=>fn(file,file.original_name,order);
  assert.equal(result({original_name:'photo.jpg',print_copies:1}),'photo.jpg');
  assert.equal(result({original_name:'photo.jpg',print_copies:1,chassis:true}),'photo = S.jpg');
- assert.equal(result({original_name:'photo.jpg',print_copies:1,frame:true}),'photo = G.jpg');
- assert.equal(result({original_name:'photo.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = G.jpg');
- assert.equal(result({original_name:'photo = 3.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = G.jpg');
- assert.equal(result({original_name:'photo = 3 = S = G.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = G.jpg');
- assert.equal(result({original_name:'photo.png',print_copies:2,frame:true}),'photo = 2 = G.png');
+ assert.equal(result({original_name:'photo.jpg',print_copies:1,frame:true}),'photo = F.jpg');
+ assert.equal(result({original_name:'photo.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = F.jpg');
+ assert.equal(result({original_name:'photo = 3.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = F.jpg');
+ assert.equal(result({original_name:'photo = 3 = S = F.jpg',print_copies:3,chassis:true,frame:true}),'photo = 3 = S = F.jpg');
+ assert.equal(result({original_name:'photo.png',print_copies:2,frame:true}),'photo = 2 = F.png');
 });
 test('R1778: downloaded older orders preserve original paths',()=>{
  const fn=exported().pb1769DownloadName,old={fresh:false};

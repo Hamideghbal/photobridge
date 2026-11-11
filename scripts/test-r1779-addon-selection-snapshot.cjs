@@ -42,3 +42,16 @@ test('R1779 downloader and Lab cards use a stored snapshot instead of current ta
  assert(installer.includes('file?.addon_selection?.frame?.name'));
  assert(installer.includes('file?.addon_selection?.chassis?.name'));
 });
+test('R1779 server retains exact names in both upload routes and exposes snapshots in file detail',()=>{
+ const server=read('dist/api/server.js');
+ const builder=read('scripts/enable-r1779-addon-selection-snapshot.mjs');
+ assert(server.includes('/* PB1779 ORDER-IMMUTABLE ADDON SNAPSHOT */'));
+ assert(server.includes("import {snapshotPrintAddons} from './print-addon-selection.js'"));
+ assert(server.includes('JSON.stringify(pb1779AddonSelection)'));
+ assert(server.includes('f.frame,f.addon_selection,f.crop_handling'));
+ assert(server.includes("$19::jsonb,'pending'"));
+ assert(server.includes("$18::jsonb,'pending'"));
+ assert(builder.includes('photographer route'));
+ assert(builder.includes('walkin route'));
+});
+

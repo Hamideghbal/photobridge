@@ -76,5 +76,10 @@ test('R1776 is last in the build, preserves Windows snapshots, and busts deploy 
  assert(installer.includes("html=html.replaceAll(cssTag,'').replaceAll(jsTag,'')"));
  assert(installer.includes("html=html.replace('</head>'"));
  assert(!installer.includes("lab-desktop-ui"),'do not alter installed native Windows files');
- assert(read('DEPLOY_REVISION.txt').includes('r1776'));
+ // The cache token advances with every release; it must not stay pinned to R1776.
+ assert.match(read('DEPLOY_REVISION.txt').trim(),/^\d{4}-\d{2}-\d{2}-r[\w.-]+$/);
+ const docker=read('Dockerfile');
+ assert(docker.includes('COPY . ./'));
+ assert(docker.indexOf('COPY . ./')<docker.indexOf('cat DEPLOY_REVISION.txt'));
+ assert(!read('.dockerignore').split(/\r?\n/).some(line=>line.trim()==='DEPLOY_REVISION.txt'));
 });

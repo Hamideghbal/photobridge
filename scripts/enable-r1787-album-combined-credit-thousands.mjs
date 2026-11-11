@@ -39,6 +39,10 @@ server=region(server,'async function albumOrderSnapshot(','\nasync function ',pa
  'const manualPrintRequired = !pb1787Combined && Boolean(missingPaperTariff);',
  'combined skips print tariff');
  part=once(part,
+ "missingPaperTariff ? 'missing_print_tariff' :",
+ "!pb1787Combined && missingPaperTariff ? 'missing_print_tariff' :",
+ 'combined missing tariff reason');
+ part=once(part,
  'const total = manualRequired ? null : knownPrintTotal + Number(bindingTotal || 0)',
  'const total = manualRequired ? null : (pb1787Combined?0:knownPrintTotal) + Number(bindingTotal || 0)',
  'combined total');
@@ -117,6 +121,10 @@ ui=once(ui,
  'label:'+tick+'${Je.name} · مانده ${Xe(Je.balance)}'+tick,
  'label:'+tick+'${Je.name} · ${Number(Je.balance)<0?"بستانکار":"بدهکار"} ${Xe(Math.abs(Je.balance))}'+tick,
  'customer credit label');
+ui=once(ui,
+ 'ja=!!(Tt||ka),Va=ja?null:',
+ 'ja=!!((Tt&&l.printTariffCatalog?.albumPricingMode!=="combined")||ka),Va=ja?null:',
+ 'combined preview availability');
 // Receipt form keeps the existing payment behavior and adds an explicit credit label.
 ui=once(ui,
  'placeholder:"پرداخت علی‌الحساب / بدون اتصال به فاکتور"',

@@ -103,6 +103,10 @@ test('R1777: rendered walk-in columns and save retain binding, stock, and indepe
  const nodes=[];
  function visit(node){if(Array.isArray(node))return node.forEach(visit);if(!node||typeof node!=='object')return;nodes.push(node);visit(node.props?.children)}
  visit(render({pricingOnly:true}));
+ const grids=nodes.filter(n=>n.props?.className?.includes('pb1777ModelGrid'));
+ assert.equal(grids.length,2,'header and data row must use the same dynamic grid');
+ assert(grids.every(n=>n.props.style['--pb1777-columns']===10));
+ assert(fs.readFileSync('dist/web/photobridge-r1777-frame-color-picker.css','utf8').includes('repeat(var(--pb1777-columns,8),minmax(110px,1fr))!important'),'model column count must override the historic fixed grid');
  const inputs=nodes.filter(n=>n.type==='input'&&n.props['aria-label']);
  assert.equal(inputs.length,10,'all eight existing fields plus two custom model columns');
  assert(inputs.some(n=>n.props['aria-label']==='قاب چوبی 20x30'&&n.props.value==='205000'));

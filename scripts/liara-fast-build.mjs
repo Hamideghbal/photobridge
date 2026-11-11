@@ -1160,3 +1160,7 @@ runR1314(process.execPath,['--test','scripts/test-r1788-tariff-native-icons-labe
 // R1789: physical inventory per model/size and aligned walk-in pricing grid on both platforms.
 await deployStep('./enable-r1789-walkin-header-model-stock.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1789-walkin-header-model-stock.cjs'],{stdio:'inherit'});
+
+// R1791: original frame image, Latin model names in files, single circle and compact chooser.
+await deployStep('./enable-r1791-frame-latin-picker-polish.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1791-frame-latin-picker.cjs'],{stdio:'inherit'});

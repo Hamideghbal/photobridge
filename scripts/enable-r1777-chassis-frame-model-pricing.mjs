@@ -1,5 +1,6 @@
 /* R1777: separate per-model walk-in prices from colleague tariff. */
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 const file='dist/api/server.js';
 let server=fs.readFileSync(file,'utf8');
@@ -29,10 +30,10 @@ let c=src.slice(a,b);
 c=once(c,'[p,f]=x.useState(!1);x.useEffect','[p,f]=x.useState(!1),[pb1777Edit,pb1777SetEdit]=x.useState(null);x.useEffect','lab model state');
 const button='e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"صحافی جدید"}),';
 c=once(c,button,button+'e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1539Create("chassis"),children:"+ شاسی جدید"}),e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1539Create("frame"),children:"+ قاب جدید"}),','lab add buttons');
+const frameIcon='e.jsx("svg",{viewBox:"0 0 24 24",width:18,height:18,fill:"none",stroke:"currentColor",strokeWidth:1.8,strokeLinecap:"round",strokeLinejoin:"round",children:e.jsxs("g",{children:[e.jsx("rect",{x:3,y:3,width:18,height:18,rx:3}),e.jsx("circle",{cx:8.5,cy:8.5,r:1.5}),e.jsx("path",{d:"m4 19 6-6 4 3 3-4 3 3"})]})})';
 const edit='k.startsWith("pb1539_")&&e.jsx("button",{type:"button",className:"pb1540BindingDelete"';
-c=once(c,edit,'k.startsWith("pb1539_")&&pb1539Types.find(t=>t.id===k.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1539Types.find(t=>t.id===k.slice(7))),children:"عکس و رنگ"}),'+edit,'lab frame header');
-const editMobile='C.startsWith("pb1539_")&&e.jsx("button",{type:"button",className:"pb1540BindingDelete"';
-c=once(c,editMobile,'C.startsWith("pb1539_")&&pb1539Types.find(t=>t.id===C.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1539Types.find(t=>t.id===C.slice(7))),children:"عکس و رنگ"}),'+editMobile,'lab mobile photo');
+c=once(c,edit,'k.startsWith("pb1539_")&&pb1539Types.find(t=>t.id===k.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1539Types.find(t=>t.id===k.slice(7))),title:"عکس و رنگ","aria-label":"ویرایش عکس و رنگ قاب",children:'+frameIcon+'}),'+edit,'lab frame header');
+// Frame image and colours are configured once per model in the column header.
 const tail='m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTariffs:!0})';
 c=once(c,tail,tail+',pb1777Edit&&e.jsx(PB1777FrameModelEditor,{model:pb1777Edit,onClose:()=>pb1777SetEdit(null),onSaved:pb1539Reload})','lab editor render');
 src=src.slice(0,a)+c+src.slice(b);
@@ -48,7 +49,7 @@ c=once(c,'k=PB1437TariffFields()','k=pb1777Fields','walkin print');
 const add='e.jsx("button",{className:"pbActionButton secondary",onClick:()=>m(null),children:"+ سایز جدید"}),';
 c=once(c,add,add+'e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1777Create("chassis"),children:"+ شاسی جدید"}),e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1777Create("frame"),children:"+ قاب جدید"}),','walkin add buttons');
 const headers='className:"priceGrid inventoryPriceGrid pb1437WalkinGrid head",children:[e.jsx("b",{children:"سایز"}),PB1437TariffFields().map(([key,label])=>e.jsx("b",{children:label},key))]';
-c=once(c,headers,'className:"priceGrid inventoryPriceGrid pb1437WalkinGrid pb1777ModelGrid head",style:{"--pb1777-columns":pb1777Fields.length,gridTemplateColumns:"minmax(140px,1.5fr) repeat("+pb1777Fields.length+",minmax(110px,1fr))"},children:[e.jsx("b",{children:"سایز"}),pb1777Fields.map(([k,label])=>e.jsxs("b",{children:[label,k.startsWith("pb1539_")&&pb1777Models.find(v=>v.id===k.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1777Models.find(v=>v.id===k.slice(7))),children:"عکس و رنگ"})]},k))]','walkin headers');
+c=once(c,headers,'className:"priceGrid inventoryPriceGrid pb1437WalkinGrid pb1777ModelGrid head",style:{"--pb1777-columns":pb1777Fields.length,gridTemplateColumns:"minmax(140px,1.5fr) repeat("+pb1777Fields.length+",minmax(110px,1fr))"},children:[e.jsx("b",{children:"سایز"}),pb1777Fields.map(([k,label])=>e.jsxs("b",{children:[label,k.startsWith("pb1539_")&&pb1777Models.find(v=>v.id===k.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1777Models.find(v=>v.id===k.slice(7))),title:"عکس و رنگ","aria-label":"ویرایش عکس و رنگ قاب",children:'+frameIcon+'})]},k))]','walkin headers');
 c=once(c,'className:"priceGrid inventoryPriceGrid pb1437WalkinGrid",children:','className:"priceGrid inventoryPriceGrid pb1437WalkinGrid pb1777ModelGrid",style:{"--pb1777-columns":pb1777Fields.length,gridTemplateColumns:"minmax(140px,1.5fr) repeat("+pb1777Fields.length+",minmax(110px,1fr))"},children:','walkin grid');
 c=once(c,'PB1437TariffFields().map(([k,E])=>','pb1777Fields.map(([k,E])=>','walkin cells');
 c=once(c,'E=(F,M)=>F[M]==null||String(F[M])===""||Number(F[M])===0?"—":`${V(Number(F[M]))} تومان`','E=(F,M)=>{const value=pb1777Value(F,M);return value==null||String(value)===""||Number(value)===0?"—":`${V(Number(value))} تومان`}','walkin print values');
@@ -63,3 +64,30 @@ if(!html.includes('/photobridge-r1777-frame-color-picker.css'))html=html.replace
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,v=>v.includes('&frameModel=r1777')?v:v+'&frameModel=r1777');
 fs.writeFileSync('dist/web/index.html',html);
 execFileSync(process.execPath,['--check',uiPath],{stdio:'inherit'});
+
+// Keep the independently versioned Windows Lab tariff UI in sync with the
+// site's per-model pricing controls; do not replace its other desktop views.
+const nativeRoot='dist/web/lab-desktop-ui',nativeJsPath=nativeRoot+'/assets/index-UIRefine-v655-r84.js';
+let nativeJs=fs.readFileSync(nativeJsPath,'utf8');
+if(nativeJs.includes('function PB1777FrameModelEditor('))throw Error('[R1777] native model editor already present');
+nativeJs=addUi(nativeJs)+'\n'+fs.readFileSync('scripts/r1777-frame-model-editor.js.txt','utf8');
+fs.writeFileSync(nativeJsPath,nativeJs);
+execFileSync(process.execPath,['--check',nativeJsPath],{stdio:'inherit'});
+const nativeCss='photobridge-r1777-frame-color-picker.css';
+fs.copyFileSync('dist/web/'+nativeCss,nativeRoot+'/'+nativeCss);
+const nativeIndex=nativeRoot+'/index.html';
+let nativeHtml=fs.readFileSync(nativeIndex,'utf8');
+if(!nativeHtml.includes(nativeCss))nativeHtml=nativeHtml.replace('</head>','<link rel="stylesheet" href="/'+nativeCss+'?v=r1777"></head>');
+nativeHtml=nativeHtml.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,u=>u.includes('&frameModel=r1777')?u:u+'&frameModel=r1777');
+fs.writeFileSync(nativeIndex,nativeHtml);
+const manifestPath=nativeRoot+'/manifest.json',manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+if(manifest.channel!=='lab'||manifest.protocol!==1)throw Error('[R1777] native manifest invalid');
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+for(const name of ['assets/index-UIRefine-v655-r84.js',nativeCss,'index.html']){
+ const digest=sha(fs.readFileSync(nativeRoot+'/'+name)),entry=manifest.files.find(f=>f.name===name);
+ if(entry)entry.sha256=digest;else manifest.files.push({name,url:'/lab-desktop-ui/'+name,sha256:digest});
+}
+manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
+manifest.build=sha(JSON.stringify(manifest.files));manifest.generatedAt=new Date().toISOString();
+fs.writeFileSync(manifestPath,JSON.stringify(manifest));
+console.log('[R1777] Windows Lab now includes chassis/frame tariff columns and one icon per frame model');

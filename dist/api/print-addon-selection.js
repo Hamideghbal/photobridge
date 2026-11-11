@@ -9,16 +9,28 @@ function pick(catalog,kind,modelId){
  if(!value)err('invalid_'+kind+'_model');
  return value;
 }
-export function snapshotPrintAddons(catalog,body){
+export function snapshotPrintAddons(catalog,body,context={}){
  const input=body&&typeof body==='object'&&!Array.isArray(body)?body:{};
  const result={};
+ // Prices are resolved on the server from the Lab's selected audience and size.
+ // They travel with the order so later tariff edits cannot reprice a saved photo.
+ const sizeId=String(context?.sizeId||'');
+ const rates=context?.audience==='walkin'?catalog?.walkinRates:catalog?.rates;
+ const priceFor=(model,kind)=>{
+  if(!sizeId||model.legacy||model.id===kind)return {};
+  const value=rates?.[sizeId]?.[model.id];
+  if(value===undefined||value===null||value==='')err('addon_model_price_unavailable');
+  const unitPrice=Number(value);
+  if(!Number.isSafeInteger(unitPrice)||unitPrice<0||unitPrice>9000000000)err('addon_model_price_invalid');
+  return {unitPrice};
+ };
  if(selected(input.chassis)){
   const model=pick(catalog,'chassis',input.chassisModelId);
-  result.chassis={id:model.id,name:String(model.name||'شاسی').slice(0,70)};
+  result.chassis={id:model.id,name:String(model.name||'شاسی').slice(0,70),...priceFor(model,'chassis')};
  }
  if(selected(input.frame)){
   const model=pick(catalog,'frame',input.frameModelId);
-  const snapshot={id:model.id,name:String(model.name||'قاب').slice(0,70)};
+  const snapshot={id:model.id,name:String(model.name||'قاب').slice(0,70),...priceFor(model,'frame')};
   const colors=Array.isArray(model.colors)?model.colors:[];
   if(colors.length){
    const available=colors.filter(c=>c.available!==false);

@@ -1136,6 +1136,6 @@ runR1314(process.execPath,['--test','scripts/test-r1776-login-password-clearance
 // R1777: chassis/frame model catalogs for colleague and walk-in pricing, after all legacy UI patches.
 await deployStep('./enable-r1777-chassis-frame-model-pricing.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1777-chassis-frame-models.cjs'],{stdio:'inherit'});
-// R1778: photo filename S/G tags after final model selectors; native and site manifest refreshed.
+// R1778: photo filename S/F tags after final model selectors; native and site manifest refreshed.
 await deployStep('./enable-r1778-photo-addon-filename-markers.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1778-photo-filename-markers.cjs'],{stdio:'inherit'});

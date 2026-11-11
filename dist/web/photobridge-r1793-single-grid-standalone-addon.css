@@ -1,0 +1,120 @@
+/* R1793: true single-track customer tariff, no CSS race between header and rows. */
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller{
+ display:grid!important;
+ grid-template-columns:148px repeat(var(--pb1793-columns,8),minmax(110px,1fr))!important;
+ grid-auto-flow:row!important;
+ gap:0!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ box-sizing:border-box!important;
+ overflow-x:auto!important;
+ overflow-y:hidden!important;
+ overscroll-behavior-x:contain!important;
+ scrollbar-width:thin!important;
+ padding:0 0 12px!important;
+ direction:rtl!important;
+ align-items:stretch!important
+}
+/* display:contents makes the header and every price row use one physical grid. */
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid,
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid.head,
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.priceGrid.pb1777ModelGrid{
+ display:contents!important;
+ width:auto!important;
+ min-width:0!important;
+ max-width:none!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid>*{
+ grid-column:auto!important;
+ grid-row:auto!important;
+ min-width:0!important;
+ box-sizing:border-box!important;
+ align-self:stretch!important;
+ margin:0!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid.head>b{
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:space-between!important;
+ align-items:center!important;
+ gap:5px!important;
+ padding:10px 6px!important;
+ min-height:87px!important;
+ white-space:normal!important;
+ overflow-wrap:anywhere!important;
+ text-align:center!important;
+ border-block-end:1px solid #dfe6f1!important;
+ border-inline-start:1px solid #e8edf6!important;
+ background:#f7f9fd!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid.head .pb1541TariffTitle{
+ white-space:normal!important;
+ overflow:visible!important;
+ overflow-wrap:anywhere!important;
+ text-overflow:clip!important;
+ text-align:center!important;
+ line-height:1.5!important;
+ max-width:100%!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid:not(.head)>label{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:stretch!important;
+ justify-content:center!important;
+ padding:9px 6px!important;
+ min-width:0!important;
+ background:#fff!important;
+ border-block-end:1px solid #edf1f6!important;
+ border-inline-start:1px solid #edf1f6!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid:not(.head)>label>input{
+ display:block!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ height:39px!important;
+ box-sizing:border-box!important;
+ text-align:center!important;
+ margin:0!important;
+ padding:6px 4px!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid .priceSizeIdentity{
+ display:flex!important;flex-direction:column!important;
+ justify-content:center!important;align-items:flex-start!important;
+ min-height:70px!important;
+ padding:10px 12px!important;
+ background:#fff!important;
+ border-block-end:1px solid #edf1f6!important;
+ min-width:0!important;
+ box-sizing:border-box!important
+}
+html body #root .labRoleWorkspace .walkinPricingCard .walkinPriceScroller>.pb1777ModelGrid.head>b:first-child{
+ background:#f7f9fd!important;
+ align-items:flex-start!important;
+ justify-content:center!important
+}
+/* Standalone, no-print product button, independent of photo group controls. */
+html body #root main.photographerMain .simplePrintPilotHeaderActions .pb1793StandaloneLaunch{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 1 auto!important;min-height:39px!important;
+ max-width:100%!important;white-space:normal!important;line-height:1.5!important;
+ background:#eef5ff!important;color:#194b87!important;
+ border:1px solid #a8c6ea!important;border-radius:9px!important;
+ padding:7px 11px!important;font:inherit!important;font-weight:800!important;cursor:pointer!important
+}
+html body #root main.photographerMain .simplePrintPilotHeaderActions .pb1793StandaloneLaunch:disabled{opacity:.5!important;cursor:not-allowed!important}
+.pb1793AddonDialog{display:grid;gap:12px;direction:rtl;min-width:min(430px,78vw);max-width:100%;color:#263d5a;font-family:Vazirmatn,Tahoma,sans-serif}
+.pb1793AddonDialog label{display:grid;gap:5px;font-size:12px;font-weight:800;min-width:0}
+.pb1793AddonDialog select,.pb1793AddonDialog input{display:block;box-sizing:border-box;min-height:42px;width:100%;min-width:0;max-width:100%;padding:7px 10px;border:1px solid #cbd7e7;border-radius:9px;background:#fff;color:#203d62;font:inherit;font-size:13px}
+.pb1793AddonDialog .pb1793Hint{font-size:11px;color:#5c708e;line-height:1.8}
+.pb1793AddonDialog .pb1793Error{color:#b42335;font-size:12px;padding:7px;background:#fff2f3;border-radius:8px}
+.pb1793AddonDialog .pb1793Total{background:#f1f6ff;border-radius:9px;padding:10px 12px;font-size:13px;font-weight:800;display:flex;justify-content:space-between;gap:10px}
+.pb1793AddonDialog .pb1793Actions{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}
+.pb1793AddonDialog .pb1793Actions button{min-height:40px;border-radius:9px;padding:8px 15px;font:inherit;font-weight:800;cursor:pointer}
+.pb1793AddonDialog .pb1793Actions .primary{background:#2763bb;color:#fff;border:1px solid #2763bb}
+html body #root main.photographerMain .simplePrintPhotoCard .pb1793NoPaper{display:flex;align-items:center;min-height:38px;padding:7px 10px;border-radius:9px;background:#eaf2fc;color:#22548f;font-weight:850;font-size:12px}
+@media(max-width:760px){
+ html body #root main.photographerMain .simplePrintPilotHeaderActions .pb1793StandaloneLaunch{min-height:38px!important;padding:7px 9px!important;font-size:11px!important}
+ .pb1793AddonDialog{min-width:0;width:100%}
+}

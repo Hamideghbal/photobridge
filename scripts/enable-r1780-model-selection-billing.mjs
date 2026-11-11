@@ -49,6 +49,11 @@ section("if (req.method === 'POST' && url.pathname === '/api/customer/uploads/pr
  'photographer no paper');
  return part;
 },'photographer presign');
+// A deliberate add-on-only order has no paper-price requirement. Do not raise
+// invoice_pricing_required for its explicit printType "none".
+section("const q = await c.query(`WITH priced AS (","function invoicePricingRequiredError(",part=>{
+ return localOne(part,"WHERE base_price IS NULL","WHERE base_price IS NULL AND print_type<>'none'",'addon-only invoice requirements');
+},'no-paper invoice pricing');
 // Invoice must use saved model prices, not renamed/edited tariffs.
 // Keep the original legacy fallback for previously recorded orders.
 section("const fq = await c.query(`SELECT f.print_size_id,","const items = [...grouped.values()];",part=>{

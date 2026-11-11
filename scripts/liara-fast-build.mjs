@@ -1176,3 +1176,7 @@ runR1314(process.execPath,['--test','scripts/test-r1793-single-grid-standalone-a
 // R1794: maintain physical model stock isolation at final order submission.
 await deployStep('./enable-r1794-model-stock-transaction.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1794-model-stock-transaction.cjs'],{stdio:'inherit'});
+
+// R1795: selectable separate/combined album binding prices after all legacy UI changes.
+await deployStep('./enable-r1795-binding-pricing-modes.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1795-binding-pricing-modes.cjs'],{stdio:'inherit'});

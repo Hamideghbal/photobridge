@@ -1154,3 +1154,7 @@ runR1314(process.execPath,['--test','scripts/test-r1781-model-order-ui.cjs'],{st
 // R1787: final Lab album pricing mode, signed advance receipts and grouped opening debt.
 await deployStep('./enable-r1787-album-combined-credit-thousands.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1787-album-combined-credit-thousands.cjs'],{stdio:'inherit'});
+
+// R1788: synchronize site/native chassis and frame tariff editors after every historic UI patch.
+await deployStep('./enable-r1788-frame-chassis-tariff-parity.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1788-frame-chassis-tariff-parity.cjs'],{stdio:'inherit'});

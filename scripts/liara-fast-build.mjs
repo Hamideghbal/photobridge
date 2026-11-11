@@ -1168,3 +1168,7 @@ runR1314(process.execPath,['--test','scripts/test-r1791-frame-latin-picker.cjs']
 // R1792: exact customer tariff tracks, responsive model tags and group-only no-paper setting.
 await deployStep('./enable-r1792-tariff-photo-options.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1792-tariff-photo-options.cjs'],{stdio:'inherit'});
+
+// R1793: replace split customer tariff grids with one CSS grid and add independent no-photo products.
+await deployStep('./enable-r1793-single-grid-standalone-addon.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1793-single-grid-standalone-addon.cjs'],{stdio:'inherit'});

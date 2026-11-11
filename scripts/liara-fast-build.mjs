@@ -1117,3 +1117,4 @@ runR1314(process.execPath,['--test','scripts/test-r1769-order-folders.cjs'],{std
 await deployStep('./verify-r1770-final-print-stage-guard.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1770-final-print-stage-guard.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','--test-reporter=spec','scripts/test-r1450-download-workflow.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1772-download-thermal.cjs'],{stdio:'inherit'});

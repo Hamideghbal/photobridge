@@ -1,0 +1,7 @@
+function pb1798NoPrintOrder(order){return order?.mode!=='album'&&order?.no_print_order===true}
+function pb1798NoPrintInvoice(invoice){
+ let items=invoice?.items;if(typeof items==='string'){try{items=JSON.parse(items)}catch{return false}}
+ return Array.isArray(items)&&items.length>0&&items.every(item=>['chassis','frame'].includes(item?.componentKind)||item?.printType==='none'&&(item.chassis===true||item.frame===true));
+}
+function pb1798OrderStatus(order){return pb1798NoPrintOrder(order)?({uploading:'در حال ثبت',awaiting_payment:'در انتظار تسویه',received:'در حال بسته‌بندی',completed:'تحویل شد',cancelled:'لغو شده'})[order.status]||'ثبت‌شده · بدون چاپ عکس':br[order?.status]}
+function PB1798ThermalColumnsPreview(){return e.jsxs('section',{className:'pb1798ThermalPreview',children:[e.jsx('h3',{children:'قالب فاکتور حرارتی'}),e.jsx('p',{children:'فی هر خدمت در ستون مستقل نمایش داده می‌شود؛ چاپ، شاسی و قاب ردیف‌های جدا دارند.'}),e.jsxs('table',{children:[e.jsx('thead',{children:e.jsxs('tr',{children:['کالا / خدمات','فی','تعداد','قیمت کل'].map(label=>e.jsx('th',{children:label},label))})}),e.jsx('tbody',{children:e.jsxs('tr',{children:[e.jsx('td',{children:'۱۰×۱۵ · لاستر'}),e.jsx('td',{children:'۱۰٬۰۰۰'}),e.jsx('td',{children:'۲'}),e.jsx('td',{children:'۲۰٬۰۰۰'})]})})]}),e.jsx('small',{children:'سفارش صرفاً شاسی یا قاب، رسید مشخص «بدون چاپ عکس» و مسیر بسته‌بندی و تحویل دارد.'})]})}

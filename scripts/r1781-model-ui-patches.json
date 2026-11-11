@@ -130,5 +130,23 @@
     "from": "y&&e.jsx(rb,{item:y,d:a,onClose:()=>I(null)",
     "to": "pb1781Picker&&(()=>{const file=l.find(row=>row.id===pb1781Picker.fileId);if(!file)return null;const config={models:(a.addonCatalog?.types||[]).filter(model=>model.kind===pb1781Picker.kind&&model.active!==false),priceOf:model=>pb1781Rate(model,file),value:{modelId:file[pb1781Picker.kind+\"ModelId\"]},onClose:()=>pb1781SetPicker(null),onSelect:pb1781Pick};return pb1781Picker.kind===\"frame\"?e.jsx(PB1777FrameSelector,config):e.jsx(PB1781ChassisSelector,config)})(),y&&e.jsx(rb,{item:y,d:a,onClose:()=>I(null)",
     "id": "walkin chooser modal"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin chassis custom availability checkbox",
+    "from": "disabled:ae.chassis==null||ae.chassis_stock!=null&&Number(ae.chassis_stock)<=0",
+    "to": "disabled:!(a.addonCatalog?.types||[]).some(m=>m.kind==='chassis'&&m.active!==false&&pb1781Rate(m,me)!=null)||ae.chassis_stock!=null&&Number(ae.chassis_stock)<=0"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin frame custom availability checkbox",
+    "from": "disabled:ae.frame==null||ae.frame_stock!=null&&Number(ae.frame_stock)<=0",
+    "to": "disabled:!(a.addonCatalog?.types||[]).some(m=>m.kind==='frame'&&m.active!==false&&pb1781Rate(m,me)!=null)||ae.frame_stock!=null&&Number(ae.frame_stock)<=0"
+  },
+  {
+    "scope": "sw",
+    "id": "walkin no-paper validation",
+    "from": "l.every(me=>me.sizeId&&me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType)&&me.state!==\"error\")",
+    "to": "l.every(me=>me.sizeId&&(me.withoutPrint&&(me.chassis||me.frame)||me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType))&&me.state!==\"error\"&&(!me.chassis||pb1781Unit(me,'chassis')>=0)&&(!me.frame||pb1781Unit(me,'frame')>=0))"
   }
 ]

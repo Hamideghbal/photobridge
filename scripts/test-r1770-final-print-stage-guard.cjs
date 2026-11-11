@@ -43,3 +43,27 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   }
  });
 }
+
+test('R1770: final ready, completed and album transitions verify before any mutation',async()=>{
+ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+  const s=fs.readFileSync(root+'/'+asset,'utf8');
+  for(const item of [
+   {begin:'un=async le=>{',end:',Cn=async(le,nt)=>',stage:undefined,guard:'if(!await pb1450AllowStage(le))'},
+   {begin:'gn=async le=>{',end:',Vn=async',stage:undefined,guard:'if(!await pb1450AllowStage(le))'},
+   {begin:'Cn=async(le,nt)=>{',end:',aa=async(le,nt)=>',stage:'ready',guard:'if(["printing","binding","ready","completed"].includes(nt)&&!await pb1450AllowStage(le))'}
+  ]){
+   const a=s.indexOf(item.begin),b=s.indexOf(item.end,a+item.begin.length);
+   assert(a>=0&&b>a&&b-a<18000,root+' '+item.begin+' handler');
+   const h=s.slice(a,b);
+   assert(h.startsWith(item.begin+item.guard),root+' '+item.begin+' guard not at entry');
+   const events=[];
+   const ctx={pb1450AllowStage:async()=>{events.push('verify');return false},B:()=>events.push('redraw'),
+    Me:async()=>{events.push('api');throw Error('mutation before verification')},
+    It:async()=>{events.push('stage');throw Error('stage before verification')},
+    Gt:async()=>{events.push('refresh');throw Error('transition before verification')}};
+   const fn=vm.runInNewContext('('+h.slice(item.begin.indexOf('=')+1)+')',ctx);
+   await fn({id:'test-order'},item.stage);
+   assert.deepEqual(events,['verify','redraw'],root+' '+item.begin+' must block before mutations');
+  }
+ }
+});

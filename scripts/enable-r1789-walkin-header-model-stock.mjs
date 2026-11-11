@@ -112,7 +112,7 @@ for(const name of [uiFile,'photobridge-r1789-walkin-stock-grid.css','index.html'
  if(entry)entry.sha256=digest;else manifest.files.push({name,url:'/lab-desktop-ui/'+name,sha256:digest});
 }
 manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
-manifest.build=hash(Buffer.from(JSON.stringify(manifest.files)));
+manifest.build=crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex');
 manifest.generatedAt=new Date().toISOString();
 write(manifestFile,JSON.stringify(manifest));
 execFileSync(process.execPath,['--check',catalogPath],{stdio:'inherit'});

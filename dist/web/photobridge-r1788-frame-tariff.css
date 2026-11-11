@@ -1,0 +1,18 @@
+/* R1788: compact, accessible model actions; photo/colors exist once per frame model. */
+.labPrintPricingCard .pb1541TariffActions,
+.walkinPricingCard .pb1541TariffActions{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:4px!important;flex-wrap:nowrap!important;min-height:27px}
+.labPrintPricingCard .pb1541TariffActions>.pb1788PaletteIcon,
+.walkinPricingCard .pb1541TariffActions>button{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 26px!important;width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important;margin:0!important;padding:0!important;border-radius:7px!important;line-height:1!important;cursor:pointer!important}
+.labPrintPricingCard .pb1541TariffActions>.pb1788PaletteIcon,
+.walkinPricingCard .pb1541TariffActions>.pb1788PaletteIcon{background:#f0f8ff!important;border:1px solid #a9cced!important;color:#28648f!important}
+.labPrintPricingCard .pb1541TariffActions>.pb1788PaletteIcon:hover,
+.walkinPricingCard .pb1541TariffActions>.pb1788PaletteIcon:hover{background:#e1f1ff!important}
+.walkinPricingCard .pb1541TariffActions>.pb1539Rename{background:#f0f5fe!important;border:1px solid #d6e2f5!important;color:#315ecb!important}
+.walkinPricingCard .pb1541TariffActions>.pb1540BindingDelete{background:#fff5d6!important;border:1px solid #efcf76!important;color:#956000!important}
+.walkinPricingCard .pb1788WalkinHeader{vertical-align:middle;text-align:center!important;white-space:nowrap!important}
+.walkinPricingCard .pb1788WalkinHeader .pb1541TariffTitle{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.walkinPricingCard .pb1788WalkinHeader .pb1541TariffActions{margin-top:4px}
+.labPrintPricingCard .pb1541TariffActions>button>svg,
+.walkinPricingCard .pb1541TariffActions>button>svg{display:block;width:15px;height:15px;flex-shrink:0}
+.walkinPricingCard .pb1541TariffActions>button:focus-visible,
+.labPrintPricingCard .pb1541TariffActions>button:focus-visible{outline:3px solid #93adf0!important;outline-offset:2px}

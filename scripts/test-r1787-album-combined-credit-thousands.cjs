@@ -43,6 +43,7 @@ test('website exposes combined mode and advances with existing grouped payment f
  assert.match(ui,/pb1539\.albumPricingMode==="combined"/);
  assert.match(ui,/چاپ و صحافی · /);
  assert.match(ui,/پیش‌پرداخت \/ بستانکاری \(بدون فاکتور\)/);
+ assert.match(ui,/Number\(Je.balance\)<0\?"بستانکار":"بدهکار"/);
  assert.match(ui,/ma=Tt\|\|l\.printTariffCatalog\?\.albumPricingMode==="combined"\?0/);
 });
 test('opening debt remains grouped when typed and when field loses focus',()=>{

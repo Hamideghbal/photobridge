@@ -1,0 +1,49 @@
+/* R1791: model bilingual name dialog, one clickable color circle, compact paged frame chooser. */
+.pb1791ModelNameDialog{display:grid;gap:13px;direction:rtl;min-width:min(390px,78vw);max-width:100%;padding:5px 2px;color:#25354b;font-family:Vazirmatn,Tahoma,sans-serif}
+.pb1791ModelNameDialog>label{display:grid;gap:5px;min-width:0}
+.pb1791ModelNameDialog>label>b{font-size:13px}
+.pb1791ModelNameDialog>label>input{box-sizing:border-box;width:100%;min-width:0;min-height:41px;padding:8px 10px;background:#fff;border:1px solid #cdd8e6;border-radius:9px;color:#213149;font:inherit}
+.pb1791ModelNameDialog>label>input:focus-visible{outline:2px solid #82a9f4;outline-offset:1px}
+.pb1791ModelNameDialog>small{font-size:11px;line-height:1.8;color:#65758b}
+.pb1791DialogError{font-size:12px;color:#b53348;padding:8px 10px;background:#fff2f4;border-radius:8px}
+.pb1791DialogActions{display:flex;justify-content:flex-end;gap:9px;margin-top:3px}
+.pb1791DialogActions>button{min-height:39px;min-width:84px;padding:7px 14px;border-radius:8px;cursor:pointer}
+
+/* Only ONE swatch: the native circular color input is itself clickable. */
+html body .pb1777ColorSwatchLine input.pb1791ColorCircle{order:0;appearance:none;-webkit-appearance:none;box-sizing:border-box;flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:2px!important;overflow:hidden;border:1px solid #c2cdda!important;border-radius:50%!important;background:#fff!important;cursor:pointer}
+html body .pb1777ColorSwatchLine input.pb1791ColorCircle::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
+html body .pb1777ColorSwatchLine input.pb1791ColorCircle::-webkit-color-swatch{border:0;border-radius:50%}
+html body .pb1777ColorSwatchLine input.pb1791ColorCircle::-moz-color-swatch{border:0;border-radius:50%}
+.pb1777ColorSwatchLine>.pb1777ColorName{flex:1 1 auto;min-width:0}
+
+/* Six model choices per page — compact instead of a tall scrolling selector. */
+html body .pb1777FrameChooser{display:flex;flex-direction:column;gap:7px;box-sizing:border-box;width:min(690px,calc(100vw - 44px));min-width:0!important;max-width:100%;padding:0;overflow:visible}
+html body .pb1777FrameChooser .pb1777ChoiceModels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:row;gap:7px;max-height:none;overflow:visible;padding:0}
+html body .pb1777FrameChooser .pb1777ChoiceModel{display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto;align-items:center;gap:7px;box-sizing:border-box;min-height:64px;min-width:0;max-width:none;width:100%;padding:5px;text-align:right;border-radius:9px}
+html body .pb1777FrameChooser .pb1777ChoiceModel img,
+html body .pb1777FrameChooser .pb1777PlaceholderFrame{width:58px;height:50px;min-width:0;border-radius:6px;object-fit:contain;font-size:19px}
+html body .pb1777FrameChooser .pb1777ChoiceModel strong{font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+html body .pb1777FrameChooser .pb1777ChoiceDetails{display:grid;grid-template-columns:156px minmax(0,1fr);gap:10px;padding:4px 0 0;align-items:stretch}
+html body .pb1777FrameChooser .pb1777ChoiceHero{height:134px;min-height:0;max-height:134px;width:100%;aspect-ratio:auto;object-fit:contain}
+html body .pb1777FrameChooser .pb1777ChoiceColorPanel{gap:6px}
+html body .pb1777FrameChooser .pb1777ChoiceColors{gap:6px}
+html body .pb1777FrameChooser .pb1777ColorChoice{min-height:32px;padding:4px 7px;border-radius:8px}
+html body .pb1777FrameChooser .pb1777ColorChoice i{width:17px;height:17px}
+html body .pb1777FrameChooser .pb1777ChoiceColorPanel>p{font-size:12px;margin:0}
+html body .pb1777FrameChooser .pb1777EditorFooter{display:flex;position:static;margin:1px 0 0;padding:5px 0 0;background:transparent}
+.pb1791ModelPages{display:flex;justify-content:center;align-items:center;gap:12px;font-size:12px;color:#62758d}
+.pb1791ModelPages button{border:1px solid #d2dcec;border-radius:7px;background:#f4f8fe;color:#264c83;padding:4px 13px;min-height:26px;cursor:pointer}
+.pb1791ModelPages button:disabled{opacity:.4;cursor:default}
+@media(max-width:760px){
+ .pb1791ModelNameDialog{min-width:0;width:100%}
+ html body .pb1777FrameChooser{width:min(440px,calc(100vw - 28px));gap:6px}
+ html body .pb1777FrameChooser .pb1777ChoiceModels{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;overflow:visible!important;max-height:none!important}
+ html body .pb1777FrameChooser .pb1777ChoiceModel{flex:none!important;min-width:0!important;max-width:none!important;width:100%!important;grid-template-columns:43px minmax(0,1fr);min-height:56px;padding:4px;gap:4px}
+ html body .pb1777FrameChooser .pb1777ChoiceModel img,
+ html body .pb1777FrameChooser .pb1777PlaceholderFrame{width:43px;height:43px}
+ html body .pb1777FrameChooser .pb1777ChoiceDetails{display:grid!important;grid-template-columns:100px minmax(0,1fr)!important;gap:8px;padding:3px 0}
+ html body .pb1777FrameChooser .pb1777ChoiceHero{height:105px;max-height:105px;aspect-ratio:auto}
+ html body .pb1777FrameChooser .pb1777ChoiceColorPanel{gap:4px}
+ html body .pb1777FrameChooser .pb1777ColorChoice{min-height:29px;padding:3px 6px}
+ html body .pb1777FrameChooser .pb1777EditorFooter{position:static;padding:5px 0 0}
+}

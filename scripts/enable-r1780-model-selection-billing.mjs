@@ -35,11 +35,11 @@ section("const publicWalkinPresign = url.pathname.match(","const publicWalkinLoc
  part=localOne(part,'SELECT ${printType} value,chassis,frame FROM walkin_prices',
  'SELECT ${printType===\'none\'?\'luster\':printType} value,chassis,frame FROM walkin_prices','walkin sql paper fallback');
  part=localOne(part,'if (!price.rowCount || price.rows[0].value == null)',
- 'if (!price.rowCount || !withoutPrint && price.rows[0].value == null)','walkin paper price');
+ 'if (!price.rowCount && !withoutPrint || !withoutPrint && price.rows[0].value == null)','walkin paper price');
  part=localOne(part,'Boolean(b.chassis) && price.rows[0].chassis == null',
- 'Boolean(b.chassis) && price.rows[0].chassis == null && pb1779AddonSelection?.chassis?.unitPrice == null','walkin chassis tariff');
+ 'Boolean(b.chassis) && price.rows[0]?.chassis == null && pb1779AddonSelection?.chassis?.unitPrice == null','walkin chassis tariff');
  part=localOne(part,'Boolean(b.frame) && price.rows[0].frame == null',
- 'Boolean(b.frame) && price.rows[0].frame == null && pb1779AddonSelection?.frame?.unitPrice == null','walkin frame tariff');
+ 'Boolean(b.frame) && price.rows[0]?.frame == null && pb1779AddonSelection?.frame?.unitPrice == null','walkin frame tariff');
  return part;
 },'walkin presign prices');
 section("if (req.method === 'POST' && url.pathname === '/api/customer/uploads/presign') {","const localUpload = url.pathname.match(",part=>{

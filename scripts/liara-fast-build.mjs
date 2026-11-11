@@ -1180,3 +1180,6 @@ runR1314(process.execPath,['--test','scripts/test-r1794-model-stock-transaction.
 // R1795: selectable separate/combined album binding prices after all legacy UI changes.
 await deployStep('./enable-r1795-binding-pricing-modes.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1795-binding-pricing-modes.cjs'],{stdio:'inherit'});
+
+// R1796: test the composed checkout route so stock rewrites cannot remove settlement locks.
+runR1314(process.execPath,['--test','scripts/test-r1796-print-submit-terms.cjs'],{stdio:'inherit'});

@@ -13,12 +13,14 @@ const transaction=transactionStart>=0&&transactionEnd>transactionStart
  ?server.slice(transactionStart,transactionEnd):'';
 const stockMatch=/\bconst\s+stockReq\s*=/.exec(transaction);
 const start=stockMatch?transactionStart+stockMatch.index:-1;
-const prepaidMatch=start>=0?/\bconst\s+prepaid\s*=/.exec(server.slice(start,transactionEnd)):null;
-const end=prepaidMatch?start+prepaidMatch.index:-1;
+// R1444 reads settlement terms under the order lock immediately after stock.
+// Preserve that declaration as well as the prepaid calculation that uses it.
+const termsMatch=start>=0?/\bconst\s+liveTerms\s*=/.exec(server.slice(start,transactionEnd)):null;
+const end=termsMatch?start+termsMatch.index:-1;
 if(region<0||nextRoute<region||transactionStart<region||transactionEnd<transactionStart||
    transactionEnd>nextRoute||start<transactionStart||end<=start||end>=transactionEnd)
  throw Error('[R1794] stock transaction boundary not found: '+JSON.stringify({
-  region,nextRoute,transactionStart,transactionEnd,stockMatch:!!stockMatch,prepaidMatch:!!prepaidMatch,
+  region,nextRoute,transactionStart,transactionEnd,stockMatch:!!stockMatch,termsMatch:!!termsMatch,
   transactionPreview:transaction.slice(0,180)}));
 const old=server.slice(start,end);
 if(!old.includes('chassis_qty')||!old.includes('stockReq.rows'))

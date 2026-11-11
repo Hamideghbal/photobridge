@@ -17,12 +17,12 @@ replace("if (req.method === 'POST' && url.pathname === '/api/customer/uploads/pr
  "if (req.method === 'GET' && url.pathname === '/api/customer/print-addon-catalog') {\n"+
  " const q=await pool.query('SELECT ui_preferences FROM labs WHERE id=$1',[labId]);\n"+
  " const catalog=normalizePrintCatalog(q.rows[0]?.ui_preferences?.printTariffCatalog);\n"+
- " return sendJson(res,200,{catalog});\n"+
+ " return sendJson(res,200,{catalog:{types:catalog.types,rates:catalog.rates}});\n"+
  "}\n        if (req.method === 'POST' && url.pathname === '/api/customer/uploads/presign') {",
  'photographer catalog endpoint');
 // Public walk-in catalog is scoped by a validated active lab slug.
 section("const publicWalkinInfo = url.pathname.match(","const publicWalkinCreate = url.pathname.match(",part=>{
- part=localOne(part,"        return sendJson(res, 200, { lab:","        const addonQ=await pool.query('SELECT ui_preferences FROM labs WHERE id=$1',[lab.id]);\n        const addonCatalog=normalizePrintCatalog(addonQ.rows[0]?.ui_preferences?.printTariffCatalog);\n        return sendJson(res, 200, { addonCatalog, lab:",'public catalog');
+ part=localOne(part,"        return sendJson(res, 200, { lab:","        const addonQ=await pool.query('SELECT ui_preferences FROM labs WHERE id=$1',[lab.id]);\n        const addonCatalog=normalizePrintCatalog(addonQ.rows[0]?.ui_preferences?.printTariffCatalog);\n        return sendJson(res, 200, { addonCatalog:{types:addonCatalog.types,walkinRates:addonCatalog.walkinRates}, lab:",'public catalog');
  return part;
 },'walkin public info');
 // Photo-optional: a file can represent chassis/frame fabrication without paper printing.

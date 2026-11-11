@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 const hash=v=>crypto.createHash('sha256').update(v).digest('hex');
 const original='title:le.original_name,children:le.original_name';
 const source='pbPrintCopyFilename(Be.file.name,pbPrintCopies(Be))';
-const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)';
+const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelLatinName||ue.chassisModelLatinName||Be.chassisModelName||ue.chassisModelName,Be.frameModelLatinName||ue.frameModelLatinName||Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)';
 function pb1778Latin(value,fallback='photo'){
  // Match the existing Lab download romanizer without overriding the download function. Display names and saved filenames
  // must agree, including Persian digits, model labels and frame color names.
@@ -52,8 +52,8 @@ function pb1778DisplayName(file){
  return pb1778SelectedName(
   String(file?.original_name||file?.name||'file'), Number(file?.print_copies||file?.printCopies||1),
   file?.chassis===true||file?.chassis===1,file?.frame===true||file?.frame===1,
-  file?.addon_selection?.chassis?.name||file?.addon_selection?.chassis?.modelName||file?.chassis_model_name||file?.chassisModelName,
-  file?.addon_selection?.frame?.name||file?.addon_selection?.frame?.modelName||file?.frame_model_name||file?.frameModelName,
+  file?.addon_selection?.chassis?.latinName||file?.addon_selection?.chassis?.name||file?.addon_selection?.chassis?.modelName||file?.chassis_model_name||file?.chassisModelName,
+  file?.addon_selection?.frame?.latinName||file?.addon_selection?.frame?.name||file?.addon_selection?.frame?.modelName||file?.frame_model_name||file?.frameModelName,
   file?.addon_selection?.frame?.colorName||file?.addon_selection?.frame?.color_name||file?.frame_color_name||file?.frameColorName);
 }
 const helper='/* PB1778 CHASSIS FRAME FILE MARKERS */\n'+pb1778Latin.toString()+'\n'+pb1778SelectedName.toString()+'\n'+pb1778DisplayName.toString()+'\n';

@@ -86,7 +86,7 @@
   {
     "scope": "sw",
     "from": "const k=!0,E=async me=>",
-    "to": "const pb1781Rate=(model,file)=>{const base=a.prices.find(r=>r.id===file.sizeId)||{};if(model?.legacy||model?.id===model?.kind)return base[model.kind]==null?null:Number(base[model.kind]);const p=a.addonCatalog?.walkinRates?.[file.sizeId]?.[model?.id];return p==null?null:Number(p)};\nconst pb1781Unit=(file,kind)=>{if(!file[kind])return 0;const modelId=file[kind+\"ModelId\"]||kind;const m=a.addonCatalog?.types?.find(t=>t.id===modelId&&t.kind===kind);const price=m?pb1781Rate(m,file):null;return price==null?0:price};\nconst pb1781Pick=sel=>{const chosen=pb1781Picker;if(!chosen)return;w(chosen.fileId,{[chosen.kind]:true,[chosen.kind+\"ModelId\"]:sel.modelId,[chosen.kind+\"ModelName\"]:sel.modelName,...(chosen.kind===\"frame\"?{frameColorId:sel.colorId||null,frameColorName:sel.colorName||null}:{})});pb1781SetPicker(null)};\nconst k=!0,E=async me=>",
+    "to": "const pb1781Rate=(model,file)=>{const base=a.prices.find(r=>r.id===file.sizeId)||{};if(model?.legacy||model?.id===model?.kind)return base[model.kind]==null?null:Number(base[model.kind]);const p=a.addonCatalog?.walkinRates?.[file.sizeId]?.[model?.id];return p==null?null:Number(p)};\nconst pb1781Unit=(file,kind)=>{if(!file[kind])return 0;const modelId=file[kind+\"ModelId\"]||kind;const m=a.addonCatalog?.types?.find(t=>t.id===modelId&&t.kind===kind);const price=m?pb1781Rate(m,file):null;return price==null?null:price};\nconst pb1781Pick=sel=>{const chosen=pb1781Picker;if(!chosen)return;w(chosen.fileId,{[chosen.kind]:true,[chosen.kind+\"ModelId\"]:sel.modelId,[chosen.kind+\"ModelName\"]:sel.modelName,...(chosen.kind===\"frame\"?{frameColorId:sel.colorId||null,frameColorName:sel.colorName||null}:{})});pb1781SetPicker(null)};\nconst k=!0,E=async me=>",
     "id": "walkin model price helpers"
   },
   {
@@ -147,6 +147,6 @@
     "scope": "sw",
     "id": "walkin no-paper validation",
     "from": "l.every(me=>me.sizeId&&me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType)&&me.state!==\"error\")",
-    "to": "l.every(me=>me.sizeId&&(me.withoutPrint&&(me.chassis||me.frame)||me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType))&&me.state!==\"error\"&&(!me.chassis||pb1781Unit(me,'chassis')>=0)&&(!me.frame||pb1781Unit(me,'frame')>=0))"
+    "to": "l.every(me=>me.sizeId&&(me.withoutPrint&&(me.chassis||me.frame)||me.printType&&js(a.prices.find(ae=>ae.id===me.sizeId)).includes(me.printType))&&me.state!==\"error\"&&(!me.chassis||pb1781Unit(me,'chassis')!=null)&&(!me.frame||pb1781Unit(me,'frame')!=null))"
   }
 ]

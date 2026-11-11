@@ -96,6 +96,7 @@ test('R1789: rendered free-customer tariff has matching header/row columns and s
 test('R1789: Windows hot update manifest hashes match the exact new assets',()=>{
  const manifest=JSON.parse(read(lab+'/manifest.json'));
  assert.equal(manifest.channel,'lab');
+ assert.equal(manifest.build,crypto.createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex'),'native build hash must be calculated from manifest content');
  for(const name of [file,'index.html','photobridge-r1789-walkin-stock-grid.css']){
   const item=manifest.files.find(e=>e.name===name);
   assert(item,'missing '+name);

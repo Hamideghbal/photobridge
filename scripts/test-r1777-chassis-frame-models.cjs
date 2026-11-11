@@ -51,3 +51,20 @@ test('R1777: server patches independent walk-in pricing after legacy binding cat
  const build=fs.readFileSync('scripts/liara-fast-build.mjs','utf8');
  assert(build.includes("await deployStep('./enable-r1777-chassis-frame-model-pricing.mjs')"));
 });
+
+test('R1777: two tariffs expose separate model price columns and frame color-picture editor',()=>{
+ const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const pricing=fs.readFileSync('scripts/r1539-pricing-react.js.txt','utf8');
+ assert(ui.includes('function PB1777FrameModelEditor('));
+ assert(ui.includes('function PB1777FrameSelector('));
+ assert(ui.includes('pb1777Fields'));
+ assert(ui.includes('pb1777Value'));
+ assert(ui.includes('pb1777Create("chassis")'));
+ assert(ui.includes('pb1777Create("frame")'));
+ assert(ui.includes('pb1539Create("chassis")'));
+ assert(ui.includes('pb1539Create("frame")'));
+ assert(ui.includes('pb1777SetEdit'));
+ assert(html.includes('/photobridge-r1777-frame-color-picker.css?v=r1777'));
+ assert(pricing.includes('JSON.stringify({kind,name:name.trim()})'));
+});

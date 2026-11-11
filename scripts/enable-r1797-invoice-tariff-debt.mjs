@@ -19,7 +19,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const jsFile=root+'/assets/index-UIRefine-v655-r84.js';let ui=read(jsFile);
  ui=region(ui,'function pbR1698ApprovedThermal(','function Vy(',part=>{
   part=one(part,'<td class="qty">${number(qty)}</td><td class="unit">${esc(unit)}</td><td class="price">${number(price)}</td>','<td class="price">${number(price)}</td><td class="qty">${number(qty)}</td>','thermal fee then quantity');
-  part=one(part,'.desc{text-align:right;width:36%}.qty{width:11%}.unit{width:11%}.price{width:20%}.amount{width:22%}', '.desc{text-align:right;width:42%}.price{width:24%}.qty{width:10%}.amount{width:24%}','thermal four-column widths');
+  part=one(part,'.desc{text-align:right;width:36%}.qty{width:11%}.unit{width:11%}.price{width:20%}.amount{width:22%}', '.desc{text-align:right;width:40%}.price{width:24%}.qty{width:12%;white-space:nowrap}.amount{width:24%}','thermal four-column widths');
   part=one(part,'<th class="qty">تعداد</th><th class="unit">واحد</th><th class="price">قیمت</th>','<th class="price">فی</th><th class="qty">تعداد</th>','thermal fee heading');
   part=one(part,'colspan="5"','colspan="4"','thermal empty state');
   return part;

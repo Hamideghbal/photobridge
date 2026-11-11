@@ -26,8 +26,9 @@ function pb1778DisplayName(file){
  return pb1778SelectedName(
   String(file?.original_name||file?.name||'file'), Number(file?.print_copies||file?.printCopies||1),
   file?.chassis===true||file?.chassis===1,file?.frame===true||file?.frame===1,
-  file?.chassis_model_name||file?.chassisModelName,file?.frame_model_name||file?.frameModelName,
-  file?.frame_color_name||file?.frameColorName);
+  file?.addon_selection?.chassis?.name||file?.addon_selection?.chassis?.modelName||file?.chassis_model_name||file?.chassisModelName,
+  file?.addon_selection?.frame?.name||file?.addon_selection?.frame?.modelName||file?.frame_model_name||file?.frameModelName,
+  file?.addon_selection?.frame?.colorName||file?.addon_selection?.frame?.color_name||file?.frame_color_name||file?.frameColorName);
 }
 const helper='/* PB1778 CHASSIS FRAME FILE MARKERS */\n'+pb1778SelectedName.toString()+'\n'+pb1778DisplayName.toString()+'\n';
 const pageToken='addonNames=r1778';

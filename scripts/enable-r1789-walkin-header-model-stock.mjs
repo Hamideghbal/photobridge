@@ -43,6 +43,18 @@ function patchUi(ui,root){
    const newest='pb1539Custom.filter(t=>t.kind==="'+kind+'").flatMap(t=>[["pb1539_"+t.id,t.name],["pb1789_stock_"+t.id,"موجودی "+t.name]])';
    part=one(part,old,newest,root+' stock next to '+kind+' price');
   }
+  // Pair original and custom stock with the price of the SAME model.
+  // Previous order placed the original stock after all custom models.
+  for(const [kind,priceLabel,stockKey,stockLabel] of [
+   ["chassis","قیمت شاسی","chassis_stock","موجودی شاسی"],
+   ["frame","قیمت قاب","frame_stock","موجودی قاب"]
+  ]){
+   const base='["'+kind+'",pb1539Label("'+kind+'","'+priceLabel+'")]';
+   const stock='["'+stockKey+'","'+stockLabel+'"]';
+   part=one(part,base+',',base+','+stock+',',root+' pair base stock with '+kind);
+   const custom='pb1539Custom.filter(t=>t.kind==="'+kind+'").flatMap(t=>[["pb1539_"+t.id,t.name],["pb1789_stock_"+t.id,"موجودی "+t.name]])';
+   part=one(part,custom+','+stock,custom,root+' remove distant '+kind+' stock');
+  }
   const rates='customRates:Object.fromEntries(pb1539Custom.map(t=>[t.id,Na(Object.hasOwn(F,"pb1539_"+t.id)?F["pb1539_"+t.id]:pb1539.rates?.[F.id]?.[t.id]??null)]))';
   const stocks='customStocks:Object.fromEntries(pb1539Custom.filter(t=>t.kind==="chassis"||t.kind==="frame").map(t=>[t.id,pb1789StockValue(Object.hasOwn(F,"pb1789_stock_"+t.id)?F["pb1789_stock_"+t.id]:pb1539.stocks?.[F.id]?.[t.id])]))';
   part=one(part,rates,rates+','+stocks,root+' atomic colleague stock save');

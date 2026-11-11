@@ -85,9 +85,9 @@ function pb1779ReadModel(file,kind){
 }
 function pb1778PhotoFlags(file){
  const tags=[];
- if(pb1778IsSelected(file?.chassis))tags.push(pb1779ReadModel(file,'chassis'));
- if(pb1778IsSelected(file?.frame))tags.push(pb1779ReadModel(file,'frame'));
- return tags.map((tag,i)=>' = '+pb1780Latin(tag,i===0?'Shasi':'Ghab')).join('');
+ if(pb1778IsSelected(file?.chassis))tags.push(pb1780Latin(pb1779ReadModel(file,'chassis'),'Shasi'));
+ if(pb1778IsSelected(file?.frame))tags.push(pb1780Latin(pb1779ReadModel(file,'frame'),'Ghab'));
+ return tags.map(tag=>' = '+tag).join('');
 }
 function pb1769DownloadName(file,incomingName,order){
  const source=String(incomingName||file?.original_name||'file');

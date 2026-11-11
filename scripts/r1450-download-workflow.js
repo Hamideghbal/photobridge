@@ -34,10 +34,10 @@ async function pb1450Root(choose = false) {
 function pb1778IsSelected(value){
  return value===true||value===1||value==='true'||value==='1';
 }
-// Short production flags are reserved before the file extension: = S (شاسی), = G (قاب).
+// Short production flags are reserved before the file extension: = S (شاسی), = F (قاب).
 // Do NOT rewrite files in previously downloaded orders or alter original_name in Postgres.
 function pb1778PhotoFlags(file){
- return (pb1778IsSelected(file?.chassis)?' = S':'')+(pb1778IsSelected(file?.frame)?' = G':'');
+ return (pb1778IsSelected(file?.chassis)?' = S':'')+(pb1778IsSelected(file?.frame)?' = F':'');
 }
 function pb1769DownloadName(file, incomingName, order) {
  const source=String(incomingName||file?.original_name||'file');
@@ -49,7 +49,7 @@ function pb1769DownloadName(file, incomingName, order) {
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
  // If the uploaded original already carries our flags, keep exactly one copy.
- stem=stem.replace(/(?:\s*=\s*(?:S|G))+$/ig,'');
+ stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
  if(copyValid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
  const suffix=(copyValid?' = '+copies:'')+marks;
  const base=Ya(stem,'file');

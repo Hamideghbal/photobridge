@@ -9,9 +9,30 @@ const original='title:le.original_name,children:le.original_name';
 const source='pbPrintCopyFilename(Be.file.name,pbPrintCopies(Be))';
 const replacement='pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)';
 function pb1780Latin(value,fallback='photo'){
- // Preserve the exact user-defined Persian or Latin model label; only strip unsafe path chars.
- const cleaned=String(value??'').normalize('NFC').replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim();
- return cleaned||fallback;
+ // Match the existing Lab download romanizer. Display names and saved filenames
+ // must agree, including Persian digits, model labels and frame color names.
+ const named={
+  'شاسی':'Shasi','شاسی‌':'Shasi','قاب':'Ghab','کلاسیک':'Classic',
+  'چوبی':'Choobi','چوب':'Choob','فلزی':'Felezi','فلز':'Felez',
+  'ساده':'Sade','طلایی':'Talaei','طلائي':'Talaei','نقره‌ای':'Noghrei',
+  'نقره':'Noghrei','مشکی':'Meshki','سفید':'Sefid','قرمز':'Ghermez',
+  'آبی':'Abi','سبز':'Sabz','قهوه‌ای':'Gahvei','قهوه':'Gahve',
+  'گردویی':'Gerdooyi','طوسی':'Toosi','کرم':'Kerem','زرد':'Zard',
+  'صورتی':'Soorati','بنفش':'Banafsh','مات':'Mat','براق':'Baragh',
+  'مدل':'Model','ای':'Ei','باریک':'Barik','پهن':'Pahn','مدرن':'Modern',
+  'طرح':'Tarh','طرح‌دار':'Tarhdar','فندقی':'Fandoghi','دودی':'Doodi'
+ };
+ let input=String(value??'').normalize('NFKC').replace(/[\u200c\u200d]/g,' ')
+  .replace(/[\\/:*?"<>|,;،؛]+/g,' ').trim();
+ input=input.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)))
+  .replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
+ const latin=input.split(/\s+/).filter(Boolean).map(word=>{
+  if(named[word])return named[word];
+  if(/^[A-Za-z0-9._-]+$/.test(word))return word;
+  return (typeof Tf==='function'?Tf(word):'').replace(/-/g,' ');
+ }).join(' ').replace(/[^A-Za-z0-9 ._-]/g,' ').replace(/\s+/g,' ').trim();
+ return latin.replace(/^[ ._-]+|[ ._-]+$/g,'').slice(0,180)
+  ||String(fallback).replace(/[^A-Za-z0-9._-]/g,'')||'photo';
 }
 function pb1778SelectedName(name,copies,chassis,frame,chassisName,frameName,frameColor){
  const raw=String(name||'file'),match=raw.match(/\.[A-Za-z0-9]{1,12}$/),ext=match?.[0]||'';

@@ -11,9 +11,9 @@ const transactionStart=region<0?-1:server.indexOf("await c.query('BEGIN')",regio
 const transactionEnd=transactionStart<0?-1:server.indexOf("await c.query('COMMIT')",transactionStart);
 const transaction=transactionStart>=0&&transactionEnd>transactionStart
  ?server.slice(transactionStart,transactionEnd):'';
-const stockMatch=/\\bconst\\s+stockReq\\s*=/.exec(transaction);
+const stockMatch=/\bconst\s+stockReq\s*=/.exec(transaction);
 const start=stockMatch?transactionStart+stockMatch.index:-1;
-const prepaidMatch=start>=0?/\\bconst\\s+prepaid\\s*=/.exec(server.slice(start,transactionEnd)):null;
+const prepaidMatch=start>=0?/\bconst\s+prepaid\s*=/.exec(server.slice(start,transactionEnd)):null;
 const end=prepaidMatch?start+prepaidMatch.index:-1;
 if(region<0||nextRoute<region||transactionStart<region||transactionEnd<transactionStart||
    transactionEnd>nextRoute||start<transactionStart||end<=start||end>=transactionEnd)

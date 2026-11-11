@@ -19,6 +19,7 @@ test('album order snapshots freeze combined mode and avoid counting printed leav
  const album=part(api,'async function albumOrderSnapshot(','\nasync function ');
  assert.match(album,/pb1787Combined = !customSize && catalog\.printTariffCatalog\?\.albumPricingMode === 'combined'/);
  assert.match(album,/manualPrintRequired = !pb1787Combined/);
+ assert.match(album,/!pb1787Combined && missingPaperTariff/);
  assert.match(album,/\(pb1787Combined\?0:knownPrintTotal\) \+ Number\(bindingTotal/);
  assert.match(album,/albumPricingMode: pb1787Combined \? 'combined' : 'separate'/);
 });
@@ -45,6 +46,7 @@ test('website exposes combined mode and advances with existing grouped payment f
  assert.match(ui,/پیش‌پرداخت \/ بستانکاری \(بدون فاکتور\)/);
  assert.match(ui,/Number\(Je.balance\)<0\?"بستانکار":"بدهکار"/);
  assert.match(ui,/ma=Tt\|\|l\.printTariffCatalog\?\.albumPricingMode==="combined"\?0/);
+ assert.match(ui,/ja=!!\(\(Tt&&l\.printTariffCatalog\?\.albumPricingMode!=="combined"\)\|\|ka\)/);
 });
 test('opening debt remains grouped when typed and when field loses focus',()=>{
  assert.match(intake,/debt\.oninput=\(\)=>\{debt\.value=formatMoney\(debt\.value\);\}/);

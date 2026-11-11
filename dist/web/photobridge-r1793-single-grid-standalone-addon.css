@@ -118,3 +118,11 @@ html body #root main.photographerMain .simplePrintPhotoCard .pb1793NoPaper{displ
  html body #root main.photographerMain .simplePrintPilotHeaderActions .pb1793StandaloneLaunch{min-height:38px!important;padding:7px 9px!important;font-size:11px!important}
  .pb1793AddonDialog{min-width:0;width:100%}
 }
+
+/* Product-only tickets are not customer photos and have their own clear label. */
+html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>.pb1793TicketName{
+ display:block!important;font-size:12px!important;font-weight:900!important;white-space:normal!important;
+ overflow-wrap:anywhere!important;color:#245687!important;line-height:1.7!important
+}
+html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>b:not(.pb1793TicketName),
+html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>small{display:none!important}

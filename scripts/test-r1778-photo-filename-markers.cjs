@@ -69,7 +69,8 @@ test('R1778: Lab web and Windows display selected model labels in detail and upl
   assert(code.includes('/* PB1778 CHASSIS FRAME FILE MARKERS */'),root+' marker');
   assert.equal(code.split('title:le.original_name,children:pb1778DisplayName(le)').length-1,2,root+' Lab names');
   assert(code.includes('file?.addon_selection?.frame?.name'),'Lab should use immutable order model snapshot');
-  assert(code.includes("pb1780Latin(stem,'photo')"),'all displayed filenames must be Latin');
+  assert(code.includes("pb1778Latin(stem,'photo')"),'all displayed filenames must be Latin');
+  assert(code.includes('function pb1778Latin('),'preview must not override the verified download romanizer');
   assert.equal(code.split('pb1778SelectedName(Be.file.name,pbPrintCopies(Be),Wr(ue,Be,"chassis"),Wr(ue,Be,"frame"),Be.chassisModelName||ue.chassisModelName,Be.frameModelName||ue.frameModelName,Be.frameColorName||ue.frameColorName)').length-1,3,root+' photographer names');
   assert(read(root+'/index.html').includes('&addonNames=r1778'));
   if(root.includes('desktop-ui')){

@@ -3,3 +3,5 @@
 .pb1798ThermalPreview table{border-collapse:collapse;width:100%;min-width:320px}
 .pb1798ThermalPreview th,.pb1798ThermalPreview td{padding:8px;border:1px solid #dce5f1;text-align:center}
 .pb1798ThermalPreview small{display:block;margin-top:10px;line-height:1.7}
+html body #root .photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .pb1464OrderProgress.pb1798ProductProgress{display:block!important;grid-column:1/-1!important;margin:8px 0!important}
+html body #root .photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .pb1798ProductProgress .liveTimeline{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}

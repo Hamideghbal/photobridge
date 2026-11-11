@@ -31,29 +31,45 @@ async function pb1450Root(choose = false) {
 }
 // New order filenames show real print copies with a literal equals sign.
 // Previously saved orders retain the exact legacy sanitized filename.
-function pb1778IsSelected(value){
- return value===true||value===1||value==='true'||value==='1';
+function pb1778IsSelected(value){return value===true||value===1||value==='true'||value==='1'}
+function pb1778ProductionLabel(raw,fallback){
+ const name=String(raw||'').normalize('NFC').trim().replace(/[\\/:*?"<>|\u0000-\u001F]/g,' ').replace(/\s+/g,' ');
+ return (name||fallback).slice(0,65);
 }
-// Short production flags are reserved before the file extension: = S (شاسی), = F (قاب).
-// Do NOT rewrite files in previously downloaded orders or alter original_name in Postgres.
+function pb1778Selection(file,kind){
+ const on=pb1778IsSelected(file?.[kind]);
+ if(!on)return '';
+ const name=kind==='chassis'?
+  (file.chassis_model_name||file.chassisModelName||file.chassis_model?.name||file.chassisModel?.name):
+  (file.frame_model_name||file.frameModelName||file.frame_model?.name||file.frameModel?.name);
+ const label=pb1778ProductionLabel(name,kind==='chassis'?'شاسی':'قاب');
+ if(kind==='frame'){
+  const color=file.frame_color_name||file.frameColorName||file.frame_color?.name||file.frameColor?.name;
+  if(color)return label+' '+pb1778ProductionLabel(color,'');
+ }
+ return label;
+}
 function pb1778PhotoFlags(file){
- return (pb1778IsSelected(file?.chassis)?' = S':'')+(pb1778IsSelected(file?.frame)?' = F':'');
+ const names=['chassis','frame'].map(kind=>pb1778Selection(file,kind)).filter(Boolean);
+ return names.length?' = '+names.join(' = '):'';
 }
-function pb1769DownloadName(file, incomingName, order) {
+function pb1769DownloadName(file, incomingName, order){
  const source=String(incomingName||file?.original_name||'file');
  if(typeof pb1769OrderFirst==='function'&&!pb1769OrderFirst(order))return Ya(source,'file');
  const copies=Number(file?.print_copies??file?.printCopies??1);
- const copyValid=Number.isSafeInteger(copies)&&copies>=2&&copies<=99;
- const marks=pb1778PhotoFlags(file);
- if(!copyValid&&!marks)return Ya(source,'file');
+ const validCopies=Number.isSafeInteger(copies)&&copies>1&&copies<=99;
+ const tags=pb1778PhotoFlags(file);
+ if(!tags&&!validCopies)return Ya(source,'file');
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
- // If the uploaded original already carries our flags, keep exactly one copy.
- stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
- if(copyValid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
- const suffix=(copyValid?' = '+copies:'')+marks;
- const base=Ya(stem,'file');
- return base.slice(0,Math.max(1,96-ext.length-suffix.length))+suffix+ext;
+ // Repeated download of the same record must never double-append model names.
+ if(tags&&stem.endsWith(tags))stem=stem.slice(0,-tags.length);
+ if(validCopies)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
+ // Keep Persian model titles; Windows-illegal characters are rejected.
+ stem=stem.normalize('NFC').replace(/[\\/:*?"<>|\u0000-\u001F]/g,'-').trim().replace(/\s+/g,' ');
+ if(!stem)stem='photo';
+ const suffix=(validCopies?' = '+copies:'')+tags;
+ return stem.slice(0,Math.max(1,180-ext.length-suffix.length)).trim()+suffix+ext;
 }
 function pb1450Meta(file, receipts) {
   const receipt = receipts?.[String(file.id)];

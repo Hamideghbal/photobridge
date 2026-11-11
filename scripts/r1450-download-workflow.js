@@ -31,18 +31,29 @@ async function pb1450Root(choose = false) {
 }
 // New order filenames show real print copies with a literal equals sign.
 // Previously saved orders retain the exact legacy sanitized filename.
+function pb1778IsSelected(value){
+ return value===true||value===1||value==='true'||value==='1';
+}
+// Short production flags are reserved before the file extension: = S (شاسی), = G (قاب).
+// Do NOT rewrite files in previously downloaded orders or alter original_name in Postgres.
+function pb1778PhotoFlags(file){
+ return (pb1778IsSelected(file?.chassis)?' = S':'')+(pb1778IsSelected(file?.frame)?' = G':'');
+}
 function pb1769DownloadName(file, incomingName, order) {
  const source=String(incomingName||file?.original_name||'file');
  if(typeof pb1769OrderFirst==='function'&&!pb1769OrderFirst(order))return Ya(source,'file');
  const copies=Number(file?.print_copies??file?.printCopies??1);
- if(!Number.isSafeInteger(copies)||copies<2||copies>99)return Ya(source,'file');
+ const copyValid=Number.isSafeInteger(copies)&&copies>=2&&copies<=99;
+ const marks=pb1778PhotoFlags(file);
+ if(!copyValid&&!marks)return Ya(source,'file');
  const extMatch=source.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?source.slice(0,-ext.length):source;
- stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
- // Sanitize the stem once, then keep the literal ' = N' suffix intact.
- // Passing the whole result through Ya() would turn ' = ' into '-' on Windows.
+ // If the uploaded original already carries our flags, keep exactly one copy.
+ stem=stem.replace(/(?:\s*=\s*(?:S|G))+$/ig,'');
+ if(copyValid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+copies+'$'),'');
+ const suffix=(copyValid?' = '+copies:'')+marks;
  const base=Ya(stem,'file');
- return base.slice(0,Math.max(1,96-ext.length-String(copies).length-3))+' = '+copies+ext;
+ return base.slice(0,Math.max(1,96-ext.length-suffix.length))+suffix+ext;
 }
 function pb1450Meta(file, receipts) {
   const receipt = receipts?.[String(file.id)];

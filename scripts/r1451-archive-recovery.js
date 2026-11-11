@@ -137,9 +137,31 @@ async function pb1451OpenArchiveFile(detail,meta) {
   if(!opened)throw Error('مرورگر پنجره پیش‌نمایش را مسدود کرده است؛ اجازه بازکردن پنجره را بدهید.');
   alert('نسخه این عکس روی هارد پیدا نشد؛ پیش‌نمایش آن از سرور باز شد. برای ذخیره روی هارد، دریافت مجدد فایل‌ها را بزنید.');
 }
+// R1772: Files saved with " = copies" must still acknowledge the exact
+// source transfer name. Never treat a local display filename as server identity.
+function pb1772ReceiptFile(file,receipts) {
+ const actual=pb1450Meta(file,receipts),receipt=receipts[String(file.id)]||{};
+ const bytes=Number(actual.bytes);
+ const original=String(file.original_name||'');
+ const printable=String(file.print_name||'');
+ let name=String(receipt.transportName||'');
+ if(!name){
+  if(original&&bytes===Number(file.bytes))name=original;
+  else if(printable&&bytes===Number(file.print_bytes))name=printable;
+  else{
+   // Old receipt metadata may carry a copy suffix; only the server may
+   // confirm that an inferred canonical filename/size is truly valid.
+   const local=String(actual.original_name||'');
+   const copies=Number(file.print_copies??file.printCopies??1);
+   const match=Number.isSafeInteger(copies)&&copies>1?local.match(/^(.*) = ([0-9]+)(\.[A-Za-z0-9]{1,12})$/):null;
+   name=match&&Number(match[2])===copies?match[1]+match[3]:local;
+  }
+ }
+ return {id:file.id,name,bytes};
+}
 async function pb1451AcknowledgeDownload(detail) {
   const receipts=yc(detail.order.id)?.localFiles || {};
-  const files=(detail.files||[]).map(file=>{const actual=pb1450Meta(file,receipts);return {id:file.id,name:actual.original_name,bytes:Number(actual.bytes)}});
+  const files=(detail.files||[]).map(file=>pb1772ReceiptFile(file,receipts));
   const result=await pb1451LiveRecovery('/api/lab/orders/'+detail.order.id+'/download-receipt',{files});
   if(!result.order?.downloaded_at||result.verifiedFiles!==files.length)throw Error('تأیید دانلود کامل توسط سرور انجام نشد؛ دوباره تلاش کنید.');
   return result;

@@ -165,7 +165,7 @@ async function pb1450Download(detail, progress = () => {}, options = {}) {
       await pb1445WriteDownload(target.dir,name,response,chunk=>{bytes+=chunk;publish();},expected,pb1769OrderFirst(detail.order));
       const saved = await pb1450FileInfo(await target.dir.getFileHandle(pb1769OrderFirst(detail.order)?name:Ya(name,'file'),{create:false}));
       if (!saved.size || expected > 0 && saved.size !== expected) throw Error('download_size_mismatch');
-      receipts[String(file.id)] = {serverName:file.original_name,serverBytes:Number(file.bytes || 0),name,bytes:saved.size};
+      receipts[String(file.id)] = {serverName:file.original_name,serverBytes:Number(file.bytes || 0),name,bytes:saved.size,transportName:response.pbDownloadName || file.original_name,transportBytes:expected};
       done++;
       const state = yc(id) || {};
       hr(id,{...state,done,total:files.length,remaining:files.length-done,localFiles:receipts,localComplete:false,lastError:null});

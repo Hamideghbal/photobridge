@@ -38,6 +38,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    part=one(part,'(ee||Q)&&e.jsxs("div",{className:"simplePrintPhotoAddonOverrides"',
     '(ee||Q)&&!Be.isAddonOnly&&e.jsxs("div",{className:"simplePrintPhotoAddonOverrides"',
     'no model checkboxes for independent product');
+   part=one(part,'className:"simplePrintPhotoCard "+(Number(Be.progress',
+    'className:"simplePrintPhotoCard "+(Be.isAddonOnly?"pb1793ProductCard ":"")+(Number(Be.progress',
+    'standalone product distinct card marker');
+   part=one(part,'className:"simplePrintPhotoInfo",children:[e.jsx("b"',
+    'className:"simplePrintPhotoInfo",children:[Be.isAddonOnly&&e.jsx("b",{className:"pb1793TicketName",children:["بدون چاپ عکس · ",Be.chassisModelName||"",Be.frameModelName?" · "+Be.frameModelName:"",Be.frameColorName?" · "+Be.frameColorName:""]}),e.jsx("b"',
+    'human-readable standalone product title');
+   part=one(part,'className:"simplePrintPhotoCopies",children:[e.jsx("span",{children:"تعداد چاپ"})',
+    'className:"simplePrintPhotoCopies",children:[e.jsx("span",{children:Be.isAddonOnly?"تعداد محصول":"تعداد چاپ"})',
+    'standalone product quantity label');
    part=one(part,'disabled:W,onClick:()=>pe(ue.id,Be.id),children:"جایگزین"',
     'disabled:W||Be.isAddonOnly,onClick:()=>pe(ue.id,Be.id),children:Be.isAddonOnly?"بدون عکس":"جایگزین"',
     'do not replace work order ticket with user photo');

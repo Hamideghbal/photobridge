@@ -14,6 +14,7 @@ catalog=one(catalog,"  if(method==='POST'){\n   updated=addPrintType(catalog,bod
   }else if(method==='POST'){
    updated=addPrintType(catalog,body);`,'mode update');
 catalog=one(catalog,"method==='POST'?'print_catalog.type_create':body.active===false?","method==='POST'?'print_catalog.type_create':Object.hasOwn(body,'albumPricingMode')?'print_catalog.album_pricing_mode':body.active===false?",'mode audit');
+catalog=one(catalog,'{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});',"(Object.hasOwn(body,'albumPricingMode')?{previousMode:catalog.albumPricingMode,albumPricingMode:updated.albumPricingMode}:{kind:body.kind,id:body.id||updated.types.at(-1)?.id})).catch(()=>{});",'mode audit detail');
 changes.set('dist/api/lab-print-catalog.js',catalog);
 
 let server=read('dist/api/server.js');

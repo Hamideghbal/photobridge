@@ -20,11 +20,14 @@ test('R1795 mode defaults to separate and persists per lab without changing mode
  assert.equal(mod.normalizePrintCatalog({albumPricingMode:'forged'}).albumPricingMode,'separate');
  const labs=new Map([['A',{printTariffCatalog:mod.normalizePrintCatalog({albumPricingMode:'separate',rates:{},stocks:{}}),otherSetting:true}],['B',{printTariffCatalog:mod.normalizePrintCatalog()}]]);
  const pool={async query(sql,args){const prefs=labs.get(args[0]);return {rowCount:1,rows:[{ui_preferences:prefs}]}},async connect(){return {query:async(sql,args)=>{if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK')return {rows:[]};if(sql.includes('FOR UPDATE'))return pool.query(sql,args);if(sql.startsWith('UPDATE labs SET ui_preferences=jsonb_set')){labs.get(args[0]).printTariffCatalog=JSON.parse(args[1]);return {rowCount:1,rows:[]}}throw Error(sql)},release(){}}}};
- async function request(labId,body){let response;await mod.handleLabPrintCatalog({req:{method:'PATCH'},res:{},url:{pathname:'/api/lab/print-catalog/type'},pool,labId,bodyJson:async()=>body,sendJson:(res,status,data)=>{response={status,data}},audit:async()=>{},userId:'manager'});return response}
+ const events=[];
+ async function request(labId,body){let response;await mod.handleLabPrintCatalog({req:{method:'PATCH'},res:{},url:{pathname:'/api/lab/print-catalog/type'},pool,labId,bodyJson:async()=>body,sendJson:(res,status,data)=>{response={status,data}},audit:async(...args)=>{events.push(args)},userId:'manager'});return response}
  const original=plain(labs.get('A'));
  assert.equal((await request('A',{albumPricingMode:'combined'})).status,200);
  assert.equal(labs.get('A').printTariffCatalog.albumPricingMode,'combined');
  assert.equal(labs.get('B').printTariffCatalog.albumPricingMode,'separate');
+ assert.equal(events[0][2],'print_catalog.album_pricing_mode');
+ assert.deepEqual(events[0][5],{previousMode:'separate',albumPricingMode:'combined'});
  assert.deepEqual(labs.get('A'),{...original,printTariffCatalog:{...original.printTariffCatalog,albumPricingMode:'combined'}});
  assert.equal((await request('A',{albumPricingMode:'invalid'})).status,400);
  assert.equal(labs.get('A').printTariffCatalog.albumPricingMode,'combined');

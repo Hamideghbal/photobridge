@@ -40,6 +40,9 @@ test('R1795 mixed papers charge separately by default, but combined mode uses on
  assert.equal(bundle.pricing.printTotal,0);
  assert.equal(bundle.pricing.total,365);
  assert.equal(bundle.pricing.manualPrintRequired,false);
+ const withPackage={...combined(),packages:[{id:'box',sizeId:'size1',modelName:'باکس',price:70}]};
+ const packed=await snapshot(withPackage)('lab',{...input,packageId:'box'});
+ assert.equal(packed.pricing.packagePrice,70);assert.equal(packed.pricing.total,435);
  assert.equal(bundle.paperBreakdown.length,2,'production paper choices remain recorded');
  assert(bundle.paperBreakdown.every(p=>p.unitPrice===0&&p.lineTotal===0));
  const custom=await snapshot(combined())('lab',{...input,bindingTypeId:customId,albumPricingMode:'separate'});
@@ -68,6 +71,8 @@ test('R1795 actual invoices have one combined line, preserve custom model names,
  const line=bundled.items.find(i=>i.kind==='album_binding');
  assert.equal(line.unitPrice,100);assert.equal(line.quantity,3);assert.match(line.description,/چاپ و صحافی/);
  assert.equal((await invoice(await snapshot(base)('lab',input))).result.total,405);
+ const legacy=await snapshot(base)('lab',input);delete legacy.pricing.albumPricingMode;
+ assert.equal((await invoice(legacy)).result.total,405,'pre-feature snapshots keep separate print and binding lines');
  const custom=await snapshot(combined())('lab',{...input,bindingTypeId:customId});
  assert.match((await invoice(custom)).result.items.find(i=>i.kind==='album_binding').description,/فلت ضخیم/);
  const prior={id:'old',total:123,items:[{description:'original'}],pdf_ready:true,account_balance_at_issue:0};

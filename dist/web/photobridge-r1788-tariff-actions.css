@@ -1,0 +1,9 @@
+/* R1788: one compact, accessible action cluster per tariff model. */
+.pb1541TariffActions{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;vertical-align:middle}
+.pb1541TariffActions>button{width:29px;min-width:29px;height:29px;min-height:29px;padding:4px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 29px;border-radius:7px;line-height:1;cursor:pointer}
+.pb1541TariffActions>.pb1777FrameEditLaunch{font-size:0;background:#f2f7ff;border:1px solid #bed2ec;color:#284c7e}
+.pb1541TariffActions>.pb1777FrameEditLaunch svg{display:block;width:18px;height:18px;pointer-events:none}
+.pb1541TariffActions>.pb1539Rename,.pb1541TariffActions>.pb1540BindingDelete{font-size:15px}
+.pb1777ModelGrid.head>b{display:flex;align-items:center;justify-content:center;gap:5px;min-width:110px;flex-wrap:wrap}
+.pb1777ModelGrid.head .pb1541TariffTitle{min-width:0;flex:1 1 100%;text-align:center;overflow-wrap:anywhere}
+@media(max-width:760px){.pb1541TariffActions{gap:3px}.pb1541TariffActions>button{width:28px;min-width:28px;height:28px;min-height:28px;flex-basis:28px}}

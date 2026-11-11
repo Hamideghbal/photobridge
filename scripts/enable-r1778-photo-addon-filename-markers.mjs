@@ -1,4 +1,4 @@
-/* R1778: visible S/G markers for selected chassis/frame photos.
+/* R1778: visible S/F markers for selected chassis/frame photos.
  * Native + web names are shown consistently. No original media renamed.
  */
 import fs from 'node:fs';
@@ -12,9 +12,9 @@ function pb1778SelectedName(name,copies,chassis,frame){
  const raw=String(name||'file');
  const extMatch=raw.match(/\.[A-Za-z0-9]{1,12}$/),ext=extMatch?.[0]||'';
  let stem=ext?raw.slice(0,-ext.length):raw;
- const marks=(chassis?' = S':'')+(frame?' = G':'');
+ const marks=(chassis?' = S':'')+(frame?' = F':'');
  if(!marks)return pbPrintCopyFilename(raw,copies);
- stem=stem.replace(/(?:\s*=\s*(?:S|G))+$/ig,'');
+ stem=stem.replace(/(?:\s*=\s*(?:S|F))+$/ig,'');
  const n=Number(copies),valid=Number.isSafeInteger(n)&&n>1&&n<=99;
  const suffix=(valid?' = '+n:'')+marks;
  if(valid)stem=stem.replace(new RegExp('(?:\\s*=\\s*|\\s+_\\s+)'+n+'$'),'');
@@ -61,4 +61,4 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   fs.writeFileSync(manifest,JSON.stringify(obj));
  }
 }
-console.log('[R1778] S/G flags in photographer upload, Lab file cards, and downloaded photo names.');
+console.log('[R1778] S/F flags in photographer upload, Lab file cards, and downloaded photo names.');

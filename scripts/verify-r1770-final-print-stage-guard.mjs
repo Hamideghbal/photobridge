@@ -9,6 +9,20 @@ const asset='assets/index-UIRefine-v655-r84.js';
 const start='It=async(le,nt,xt)=>{';
 const next=',gn=async le=>';
 const guard='if(nt==="printing"&&!await pb1450AllowStage(le)){B(value=>value+1);return{blocked:true}}';
+
+const readyGuard='if(!await pb1450AllowStage(le)){B(value=>value+1);return}';
+const albumGuard='if(["printing","binding","ready","completed"].includes(nt)&&!await pb1450AllowStage(le)){B(value=>value+1);return}';
+function protectFinalHandler(source,begin,end,check,label,maxLength=18000){
+ const a=source.indexOf(begin),b=source.indexOf(end,a+begin.length);
+ if(a<0||b<=a||b-a>maxLength)throw Error('[R1770] missing final '+label+' handler');
+ let handler=source.slice(a,b);
+ // Relocate a previously installed matching guard instead of running it twice.
+ if(handler.includes(check))handler=handler.replace(check,'');
+ handler=begin+check+handler.slice(begin.length);
+ if(!handler.startsWith(begin+check))throw Error('[R1770] missing final '+label+' guard');
+ return source.slice(0,a)+handler+source.slice(b);
+}
+
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
@@ -29,6 +43,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  }
  const verify=ui.slice(ui.indexOf(start),ui.indexOf(next,ui.indexOf(start)));
  if(!verify.startsWith(start+guard))throw Error('[R1770] print stage not protected on entry '+root);
+
+ // Later releases rewrite these handlers after R1450. Restore the guard
+ // before any ready/completed/album mutation or invoice creation, on both
+ // website and the frozen Windows UI payload.
+ ui=protectFinalHandler(ui,'un=async le=>{',',Cn=async(le,nt)=>',readyGuard,'ready');
+ ui=protectFinalHandler(ui,'gn=async le=>{',',Vn=async',readyGuard,'completed',4500);
+ ui=protectFinalHandler(ui,'Cn=async(le,nt)=>{',',aa=async(le,nt)=>',albumGuard,'album');
  ui+='\n'+marker+'\n';
  fs.writeFileSync(path,ui);
  execFileSync(process.execPath,['--check',path],{stdio:'inherit'});

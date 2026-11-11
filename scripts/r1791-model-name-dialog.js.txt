@@ -1,0 +1,32 @@
+/* PB1791: Persian model label + optional exact Latin filename label. */
+function PB1791ModelNameDialog({model,onClose,onSaved}){
+ const [name,setName]=x.useState(model?.name||"");
+ const [latinName,setLatinName]=x.useState(model?.latinName||"");
+ const [error,setError]=x.useState(""),[busy,setBusy]=x.useState(false);
+ const kind=model?.kind||"frame",editing=!!model?.id;
+ const save=async()=>{
+  const title=String(name||"").trim(),latin=String(latinName||"").trim().replace(/\s+/g," ");
+  if(!title){setError("نام مدل را وارد کنید.");return}
+  if(latin&&(!/^[A-Za-z0-9](?:[A-Za-z0-9 ._-]*[A-Za-z0-9])?$/.test(latin)||latin.length>70)){setError("نام لاتین فقط می‌تواند شامل حروف انگلیسی، عدد، فاصله، خط تیره و زیرخط باشد (حداکثر ۷۰ کاراکتر).");return}
+  if(busy)return;
+  setBusy(true);setError("");
+  try{
+   const body=editing?{id:model.id,name:title,latinName:latin}:{kind,name:title,latinName:latin};
+   await Me(editing?"/api/lab/print-catalog/type":"/api/lab/print-catalog",{method:editing?"PATCH":"POST",body:JSON.stringify(body)});
+   await Promise.resolve(onSaved());onClose();
+  }catch(err){
+   const code=String(err?.data?.error||err?.message||"");
+   setError(code==="print_catalog_duplicate_name"?"مدلی با این نام وجود دارد.":code==="print_catalog_invalid_latin_name"?"نام لاتین معتبر نیست.":"ذخیره نام مدل انجام نشد. دوباره تلاش کنید.");
+  }finally{setBusy(false)}
+ };
+ return e.jsx(On,{title:(editing?"ویرایش ":"افزودن ")+(kind==="frame"?"قاب":kind==="chassis"?"شاسی":"مدل"),onClose,children:e.jsxs("div",{className:"pb1791ModelNameDialog",children:[
+  e.jsxs("label",{children:[e.jsx("b",{children:"نام فارسی مدل"}),e.jsx("input",{type:"text",value:name,maxLength:70,autoFocus:true,placeholder:kind==="frame"?"مثلاً قاب کلاسیک":"مثلاً شاسی ۴۰۰۰",onChange:ev=>setName(ev.target.value)})]}),
+  e.jsxs("label",{children:[e.jsx("b",{children:"نام لاتین روی فایل عکس (اختیاری)"}),e.jsx("input",{type:"text",value:latinName,maxLength:70,dir:"ltr",autoComplete:"off",placeholder:"Classic Frame 4000",onChange:ev=>setLatinName(ev.target.value)})]}),
+  e.jsx("small",{children:"اگر نام لاتین ثبت شود، همان کنار شماره و نام فایل عکس نوشته می‌شود؛ در غیر این صورت نام فارسی مانند قبل خودکار تبدیل می‌شود. سفارش‌های قبلی تغییر نمی‌کنند."}),
+  error&&e.jsx("p",{role:"alert",className:"pb1791DialogError",children:error}),
+  e.jsxs("footer",{className:"pb1791DialogActions",children:[
+   e.jsx("button",{type:"button",disabled:busy,onClick:onClose,children:"انصراف"}),
+   e.jsx("button",{type:"button",className:"primary",disabled:busy,onClick:save,children:busy?"در حال ذخیره…":"ذخیره مدل"})
+  ]})
+ ]})});
+}

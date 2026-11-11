@@ -1128,3 +1128,7 @@ runR1314(process.execPath,['--test','scripts/test-r1774-native-thermal-chassis.c
 // shared admin Customers visibility, with native update-manifest integrity.
 await deployStep('./enable-r1775-native-order-edit-customers-visibility.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1775-native-headers-editors-customers.cjs'],{stdio:'inherit'});
+
+// R1776: login password clearance after all previous login styles.
+await deployStep('./enable-r1776-login-password-clearance.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1776-login-password-clearance.cjs'],{stdio:'inherit'});

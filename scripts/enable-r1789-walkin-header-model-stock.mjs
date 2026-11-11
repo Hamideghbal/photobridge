@@ -31,7 +31,7 @@ write(catalogPath,catalog);
 
 // Late UI patch for website and independently installed Windows Lab.
 const roots=['dist/web','dist/web/lab-desktop-ui'],uiFile='assets/index-UIRefine-v655-r84.js';
-const coerce='pb1789StockValue=v=>v==null||String(v).trim()===""?null:Number(String(v).replace(/[,٬]/g,""))';
+const coerce='pb1789StockValue=v=>v==null||String(v).trim()===""?null:Na(v)';
 function patchUi(ui,root){
  ui=section(ui,'function tw({data:t,onSaved:a,labName:s=""}){','function Na(t)',part=>{
   part=one(part,

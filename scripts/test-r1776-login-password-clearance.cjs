@@ -14,9 +14,11 @@ test('R1776 protects login password padding against the historical mobile reset'
   'form.labLogin input[data-pb1776-password-clearance]'])
   assert(css.includes(name));
  assert(css.includes('padding-left:94px!important'));
- assert(css.includes('padding-left:112px!important'));
+ assert(css.includes('@media screen and (max-width:767px)'));
+ assert(!css.includes('padding-left:112px!important'),'desktop must remain untouched');
  assert(css.includes('padding-right:12px!important'));
  assert(!css.includes('.pb1536PasswordEye{'), 'must not reposition the reveal control');
+ assert(!css.slice(0,css.indexOf('@media')).includes('input[data-pb1776-password-clearance]'),'no desktop rules');
 });
 
 test('R1776 dynamically measures the real reveal button without reading the password',()=>{
@@ -48,6 +50,7 @@ test('R1776 dynamically measures the real reveal button without reading the pass
  assert.equal(styles.get('padding-right'),'104px','also support right-side reveal placement');
  assert(!/\\.value\\s*=/.test(script),'never modify credentials');
  assert(!script.includes('addEventListener(\'click\''),'never intercept the reveal control');
+ assert(script.includes("if(!window.matchMedia?.('(max-width:767px)')?.matches)return;"),'do nothing on desktop');
 });
 
 test('R1776 assets are installed uniquely in auth entrypoints, after mobile rules',()=>{

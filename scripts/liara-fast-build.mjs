@@ -1120,3 +1120,7 @@ runR1314(process.execPath,['--test','--test-reporter=spec','scripts/test-r1450-d
 runR1314(process.execPath,['--test','scripts/test-r1772-download-thermal.cjs'],{stdio:'inherit'});
 // R1773: actual photo chassis options respect unlimited/partial stock; thermal items show only selected chassis.
 runR1314(process.execPath,['--test','scripts/test-r1773-chassis-thermal.cjs'],{stdio:'inherit'});
+// R1774: native PB R1710 PDF label uses a printTypeLabel/description snapshot;
+// decorate invoice items at API read-time for both historic and fresh invoices.
+await deployStep('./enable-r1774-thermal-native-chassis-description.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1774-native-thermal-chassis.cjs'],{stdio:'inherit'});

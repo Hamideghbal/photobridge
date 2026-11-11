@@ -1150,3 +1150,7 @@ runR1314(process.execPath,['--test','scripts/test-r1780-model-price-invoice.cjs'
 // R1781: after R1777/R1778 UI, wire photo-level model selectors for photographer and public customer.
 await deployStep('./enable-r1781-photo-model-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1781-model-order-ui.cjs'],{stdio:'inherit'});
+
+// R1787: final Lab album pricing mode, signed advance receipts and grouped opening debt.
+await deployStep('./enable-r1787-album-combined-credit-thousands.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1787-album-combined-credit-thousands.cjs'],{stdio:'inherit'});

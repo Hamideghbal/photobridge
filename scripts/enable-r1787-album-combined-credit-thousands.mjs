@@ -111,6 +111,12 @@ ui=once(ui,
  'ma=Tt?0:yt.reduce(($e,gt)=>$e+Number(gt.unitPrice||0)*Number(gt.count||0),0)',
  'ma=Tt||l.printTariffCatalog?.albumPricingMode==="combined"?0:yt.reduce(($e,gt)=>$e+Number(gt.unitPrice||0)*Number(gt.count||0),0)',
  'album preview no double count');
+// Show a signed credit as bستانکار, never as a negative unlabeled debt.
+const tick=String.fromCharCode(96);
+ui=once(ui,
+ 'label:'+tick+'${Je.name} · مانده ${Xe(Je.balance)}'+tick,
+ 'label:'+tick+'${Je.name} · ${Number(Je.balance)<0?"بستانکار":"بدهکار"} ${Xe(Math.abs(Je.balance))}'+tick,
+ 'customer credit label');
 // Receipt form keeps the existing payment behavior and adds an explicit credit label.
 ui=once(ui,
  'placeholder:"پرداخت علی‌الحساب / بدون اتصال به فاکتور"',

@@ -1,0 +1,78 @@
+
+/* R1777: shared designer for frame models & colour palettes.
+   The model editor is used in tariff settings. The selector is designed for
+   mobile sheets and desktop dialogs, with image fallback to model photo. */
+function PB1777FrameModelEditor({model,onClose,onSaved}){
+ const [image,setImage]=x.useState(model.imageData||"");
+ const [colors,setColors]=x.useState(()=>Array.isArray(model.colors)?model.colors.map(v=>({...v})) : []);
+ const [busy,setBusy]=x.useState(false);
+ const [error,setError]=x.useState("");
+ const update=(id,field,value)=>setColors(list=>list.map(c=>c.id===id?{...c,[field]:value}:c));
+ const chooseImage=async(file,updateFn)=>{
+  if(!file)return;
+  setError("");
+  try{const uri=await Us(file);updateFn(uri)}
+  catch(err){setError(err?.message==="album_cover_image_too_large"?"حجم عکس بیشتر از حد مجاز است.":"فقط فایل JPG، PNG یا WebP انتخاب کن.")}
+ };
+ const add=()=>setColors(list=>list.length>=16?list:[...list,{id:"color_"+crypto.randomUUID().replace(/-/g,"").slice(0,14),name:"رنگ جدید",hex:"#BBBBBB",available:true}]);
+ const save=async()=>{
+  if(busy)return;
+  setError("");
+  const normalized=colors.map(c=>({...c,name:String(c.name||"").trim(),hex:String(c.hex||"").toUpperCase()}));
+  if(normalized.some(c=>!c.name||!/^#[0-9A-F]{6}$/.test(c.hex))){setError("برای هر رنگ نام و کد رنگ معتبر مشخص کن.");return}
+  if(new Set(normalized.map(c=>c.name.toLocaleLowerCase("fa-IR"))).size!==normalized.length){setError("نام رنگ‌ها باید متفاوت باشد.");return}
+  setBusy(true);
+  try{
+   await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({id:model.id,imageData:image||null,colors:normalized})});
+   await Promise.resolve(onSaved());onClose();
+  }catch(err){
+   const code=String(err?.data?.error||err?.message||"");
+   setError(code==="print_frame_colors_too_large"?"حجم تصاویر رنگ‌ها زیاد است؛ عکس‌ها را کم یا کوچک‌تر کن.":code==="print_frame_image_too_large"?"حجم تصویر مدل زیاد است.":"ذخیره تصویر و رنگ‌های قاب انجام نشد.");
+  }finally{setBusy(false)}
+ };
+ return e.jsx(On,{title:"مدل قاب · "+model.name,onClose,children:e.jsxs("div",{className:"pb1777FrameEditor",children:[
+  e.jsxs("section",{className:"pb1777FramePreview",children:[
+   e.jsx("span",{className:"pb1777SectionEyebrow",children:"پیش‌نمایش مدل"}),
+   image?e.jsx("img",{src:image,alt:"عکس قاب "+model.name,className:"pb1777MainPhoto"}):e.jsx("div",{className:"pb1777NoPhoto",children:"تصویر اصلی مدل ثبت نشده"}),
+   e.jsxs("label",{className:"pb1777UploadBtn",children:["انتخاب یا تغییر عکس مدل",e.jsx("input",{type:"file",accept:"image/jpeg,image/png,image/webp",onChange:ev=>{const file=ev.target.files?.[0];ev.target.value="";chooseImage(file,setImage)}})]}),
+   image&&e.jsx("button",{type:"button",className:"pb1777QuietBtn",onClick:()=>setImage(""),children:"حذف عکس مدل"}),
+   e.jsx("small",{children:"عکس‌ها در مرورگر به WebP بهینه تبدیل می‌شوند. عکس مدل و تصاویر رنگ‌ها اختیاری‌اند."})
+  ]}),
+  e.jsxs("section",{className:"pb1777ColorSection",children:[
+   e.jsxs("div",{className:"pb1777ColorHeader",children:[e.jsxs("div",{children:[e.jsx("span",{className:"pb1777SectionEyebrow",children:"رنگ‌بندی قاب"}),e.jsx("strong",{children:"رنگ‌های قابل انتخاب"}),e.jsx("small",{children:"فقط رنگ‌های موجود هنگام سفارش قابل انتخاب هستند."})]}),e.jsx("button",{type:"button",className:"pb1777AddColor",disabled:colors.length>=16,onClick:add,children:"+ افزودن رنگ"})]}),
+   colors.length?e.jsx("div",{className:"pb1777ColorEditorGrid",children:colors.map(color=>e.jsxs("article",{className:"pb1777ColorEditorCard"+(color.available===false?" isUnavailable":""),children:[
+    e.jsxs("div",{className:"pb1777ColorSwatchLine",children:[e.jsx("span",{className:"pb1777Swatch",style:{backgroundColor:color.hex}}),e.jsx("input",{type:"text",className:"pb1777ColorName",value:color.name,placeholder:"نام رنگ",maxLength:40,onChange:ev=>update(color.id,"name",ev.target.value)}),e.jsx("input",{type:"color",value:color.hex,onChange:ev=>update(color.id,"hex",ev.target.value)})]}),
+    e.jsxs("div",{className:"pb1777ColorMeta",children:[e.jsx("span",{dir:"ltr",children:color.hex}),e.jsxs("label",{className:"pb1777Available",children:[e.jsx("input",{type:"checkbox",checked:color.available!==false,onChange:ev=>update(color.id,"available",ev.target.checked)}),e.jsx("span",{children:color.available!==false?"موجود":"ناموجود"})]})]}),
+    e.jsxs("div",{className:"pb1777ColorImage",children:[e.jsx("img",{src:color.imageData||image||"",alt:"پیش‌نمایش "+color.name,style:{display:color.imageData||image?"block":"none"}}),e.jsxs("label",{className:"pb1777UploadBtn",children:["عکس همین رنگ",e.jsx("input",{type:"file",accept:"image/jpeg,image/png,image/webp",onChange:ev=>{const file=ev.target.files?.[0];ev.target.value="";chooseImage(file,src=>update(color.id,"imageData",src))}})]}),color.imageData&&e.jsx("button",{type:"button",className:"pb1777QuietBtn",onClick:()=>update(color.id,"imageData",null),children:"حذف عکس رنگ"})]}),
+    e.jsx("button",{type:"button",className:"pb1777RemoveColor",onClick:()=>setColors(list=>list.filter(c=>c.id!==color.id)),children:"حذف رنگ"})
+   ]},color.id))}):e.jsx("p",{className:"pb1777EmptyColors",children:"هنوز رنگی اضافه نشده است. در این حالت قاب فقط با نام مدل قابل انتخاب خواهد بود."}),
+   e.jsx("p",{className:"pb1777Hint",children:"اگر برای یک رنگ عکس نگذاری، عکس اصلی مدل قاب نمایش داده می‌شود."})
+  ]}),
+  error&&e.jsx("p",{role:"alert",className:"pb1777Error",children:error}),
+  e.jsxs("footer",{className:"pb1777EditorFooter",children:[e.jsx("button",{type:"button",onClick:onClose,disabled:busy,children:"انصراف"}),e.jsx("button",{type:"button",className:"primary",disabled:busy,onClick:save,children:busy?"در حال ذخیره…":"ذخیره عکس و رنگ‌ها"})]})
+ ]})});
+}
+function PB1777FrameSelector({models=[],value=null,priceOf,onClose,onSelect}){
+ const active=models.filter(m=>m.kind==="frame"&&m.active!==false);
+ const [chosen,setChosen]=x.useState(()=>value?.modelId||active[0]?.id||"");
+ const selected=active.find(m=>m.id===chosen)||active[0];
+ const availableColors=(selected?.colors||[]).filter(c=>c.available!==false);
+ const [colorId,setColorId]=x.useState(()=>value?.colorId||"");
+ x.useEffect(()=>{setColorId(v=>availableColors.some(c=>c.id===v)?v:availableColors[0]?.id||"")},[selected?.id]);
+ const color=availableColors.find(c=>c.id===colorId)||availableColors[0]||null;
+ const image=color?.imageData||selected?.imageData||"";
+ const amount=selected&&typeof priceOf==="function"?priceOf(selected):null;
+ const confirm=()=>{if(!selected||(!amount&&amount!==0)||selected.colors?.length&&!availableColors.length)return;
+  onSelect({modelId:selected.id,modelName:selected.name,colorId:color?.id||null,colorName:color?.name||null,unitPrice:Number(amount)});
+ };
+ return e.jsx(On,{title:"انتخاب مدل و رنگ قاب",onClose,children:e.jsxs("div",{className:"pb1777FrameChooser",children:[
+  e.jsxs("div",{className:"pb1777ChoiceModels",children:active.map(m=>e.jsxs("button",{type:"button",className:"pb1777ChoiceModel"+(chosen===m.id?" chosen":""),onClick:()=>setChosen(m.id),children:[m.imageData?e.jsx("img",{src:m.imageData,alt:m.name}):e.jsx("span",{className:"pb1777PlaceholderFrame",children:"▣"}),e.jsx("strong",{children:m.name})]},m.id))}),
+  selected&&e.jsxs("div",{className:"pb1777ChoiceDetails",children:[
+   image?e.jsx("img",{className:"pb1777ChoiceHero",src:image,alt:selected.name+(color?" "+color.name:"")}):e.jsx("div",{className:"pb1777ChoiceHero pb1777BlankHero",children:"تصویر قاب ثبت نشده"}),
+   e.jsxs("div",{className:"pb1777ChoiceColorPanel",children:[e.jsx("b",{children:"رنگ‌های موجود"}),availableColors.length?e.jsx("div",{className:"pb1777ChoiceColors",children:availableColors.map(c=>e.jsxs("button",{type:"button",className:"pb1777ColorChoice"+(color?.id===c.id?" selected":""),onClick:()=>setColorId(c.id),children:[e.jsx("i",{style:{backgroundColor:c.hex}}),e.jsx("span",{children:c.name})]},c.id))}):e.jsx("small",{children:selected.colors?.length?"در حال حاضر رنگ موجود نیست.":"این مدل بدون انتخاب رنگ عرضه می‌شود."}),
+    e.jsx("p",{children:"قیمت مدل: "+(amount==null?"قیمت‌گذاری نشده":V(Number(amount))+" تومان")})
+   ]})
+  ]}),
+  e.jsxs("footer",{className:"pb1777EditorFooter",children:[e.jsx("button",{type:"button",onClick:onClose,children:"بازگشت"}),e.jsx("button",{type:"button",className:"primary",disabled:!selected||amount==null||!!(selected.colors?.length&&!availableColors.length),onClick:confirm,children:"تأیید مدل و رنگ"})]})
+ ]})});
+}

@@ -126,3 +126,38 @@ html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>.
 }
 html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>b:not(.pb1793TicketName),
 html body #root main.photographerMain .pb1793ProductCard .simplePrintPhotoInfo>small{display:none!important}
+
+/* Respect the photographer's pre-existing desktop/mobile header grid: the new
+   sibling needs a declared cell or it gets auto-placed over other buttons. */
+@media(min-width:821px){
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotHeaderActions{
+  grid-template-columns:minmax(125px,1fr) auto auto minmax(125px,1fr)!important;
+  gap:8px!important;align-items:center!important
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotLabSelect,
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotLabStatic{grid-column:4!important;grid-row:1!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotPrimaryAdd{grid-column:3!important;grid-row:1!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .pb1793StandaloneLaunch{grid-column:2!important;grid-row:1!important;justify-self:center!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotHeaderSubmit{grid-column:1!important;grid-row:1!important}
+}
+@media(min-width:761px) and (max-width:820px){
+ html body #root main.photographerMain.photographerPrintWorkspace .simplePrintPilotMain>.simplePrintPilotHeader .simplePrintPilotHeaderActions{flex-wrap:wrap!important;row-gap:7px!important}
+}
+@media(max-width:760px){
+ html body #root .photographerPrintWorkspace .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderActions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-areas:"add addon" "send send"!important;gap:7px!important
+ }
+ html body #root .photographerPrintWorkspace .simplePrintPilotMobileHeaderHost .simplePrintPilotPrimaryAdd{
+  grid-area:add!important;grid-column:1!important;min-width:0!important;width:100%!important;
+  font-size:11px!important;padding:6px!important;white-space:normal!important
+ }
+ html body #root .photographerPrintWorkspace .simplePrintPilotMobileHeaderHost .pb1793StandaloneLaunch{
+  grid-area:addon!important;grid-column:2!important;grid-row:1!important;
+  width:100%!important;min-width:0!important;min-height:42px!important;
+  font-size:11px!important;padding:6px!important;text-align:center!important
+ }
+ html body #root .photographerPrintWorkspace .simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmit{
+  grid-area:send!important;grid-column:1/-1!important;grid-row:2!important
+ }
+}

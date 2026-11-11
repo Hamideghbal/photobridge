@@ -1142,3 +1142,11 @@ runR1314(process.execPath,['--test','scripts/test-r1778-photo-filename-markers.c
 // R1779: capture immutable chassis/frame model and frame colour at upload-time.
 await deployStep('./enable-r1779-addon-selection-snapshot.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1779-addon-selection-snapshot.cjs'],{stdio:'inherit'});
+
+// R1780: catalogue availability, immutable price snapshots, custom model invoice and no-paper orders.
+await deployStep('./enable-r1780-model-selection-billing.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1780-model-price-invoice.cjs'],{stdio:'inherit'});
+
+// R1781: after R1777/R1778 UI, wire photo-level model selectors for photographer and public customer.
+await deployStep('./enable-r1781-photo-model-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1781-model-order-ui.cjs'],{stdio:'inherit'});

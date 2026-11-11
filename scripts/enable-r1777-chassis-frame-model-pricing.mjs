@@ -27,7 +27,7 @@ const once=(s,a,b,name)=>{const n=s.split(a).length-1;if(n!==1)throw Error('[R17
 let a=src.indexOf('function tw({data:t,onSaved:a,labName:s=""}){'),b=src.indexOf('function Na(t)',a);if(a<0||b<=a)throw Error('lab pricing component missing');
 let c=src.slice(a,b);
 c=once(c,'[p,f]=x.useState(!1);x.useEffect','[p,f]=x.useState(!1),[pb1777Edit,pb1777SetEdit]=x.useState(null);x.useEffect','lab model state');
-const button='e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ مدل صحافی جدید"}),';
+const button='e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"صحافی جدید"}),';
 c=once(c,button,button+'e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1539Create("chassis"),children:"+ شاسی جدید"}),e.jsx("button",{className:"pbActionButton secondary",onClick:()=>pb1539Create("frame"),children:"+ قاب جدید"}),','lab add buttons');
 const edit='k.startsWith("pb1539_")&&e.jsx("button",{type:"button",className:"pb1540BindingDelete"';
 c=once(c,edit,'k.startsWith("pb1539_")&&pb1539Types.find(t=>t.id===k.slice(7))?.kind==="frame"&&e.jsx("button",{type:"button",className:"pb1777FrameEditLaunch",onClick:()=>pb1777SetEdit(pb1539Types.find(t=>t.id===k.slice(7))),children:"عکس و رنگ"}),'+edit,'lab frame header');

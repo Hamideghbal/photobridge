@@ -2,6 +2,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
+const crypto=require('node:crypto');
 test('R1781: photographer and public walk-in have model picker, immutable upload identifiers and colour',()=>{
  const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
  const html=fs.readFileSync('dist/web/index.html','utf8');
@@ -20,4 +21,10 @@ test('R1781: photographer and public walk-in have model picker, immutable upload
  assert(html.includes('/photobridge-r1781-model-order-ui.css?v=r1781'));
  assert(html.includes('modelOrder=r1781'));
  assert(css.includes('@media(max-width:380px)'));
+ assert(ui.includes('none:"بدون چاپ عکس"'));
+ const native=fs.readFileSync('dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js','utf8');
+ const manifest=JSON.parse(fs.readFileSync('dist/web/lab-desktop-ui/manifest.json','utf8'));
+ const entry=manifest.files.find(x=>x.name==='assets/index-UIRefine-v655-r84.js');
+ assert(native.includes('none:"بدون چاپ عکس"'));
+ assert.equal(entry.sha256,crypto.createHash('sha256').update(native).digest('hex'));
 });

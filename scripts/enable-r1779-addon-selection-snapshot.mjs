@@ -42,10 +42,10 @@ function patch(original){
    "cropHandling, albumMode ? 1 : printCopies, JSON.stringify(pb1779AddonSelection)]);",'photographer params');
   return s;
  },'photographer route');
- server=once(server,"f.print_size_id,f.print_type,f.chassis,f.frame,f.crop_handling,f.original_state,f.created_at",
-  "f.print_size_id,f.print_type,f.chassis,f.frame,f.addon_selection,f.crop_handling,f.original_state,f.created_at",'lab file details');
- server=once(server,"f.print_size_id,f.print_type,f.chassis,f.frame,f.crop_handling,f.original_state,s.label size_label",
-  "f.print_size_id,f.print_type,f.chassis,f.frame,f.addon_selection,f.crop_handling,f.original_state,s.label size_label",'customer file details');
+ server=once(server,"f.print_size_id,f.print_type,f.chassis,f.frame,f.print_copies,f.crop_handling,f.original_state,f.created_at",
+  "f.print_size_id,f.print_type,f.chassis,f.frame,f.addon_selection,f.print_copies,f.crop_handling,f.original_state,f.created_at",'lab file details');
+ server=once(server,"f.print_size_id,f.print_type,f.print_copies,f.chassis,f.frame,f.crop_handling,f.original_state,COALESCE(f.offline_metadata->>'size_label',s.label) size_label",
+  "f.print_size_id,f.print_type,f.print_copies,f.chassis,f.frame,f.addon_selection,f.crop_handling,f.original_state,COALESCE(f.offline_metadata->>'size_label',s.label) size_label",'customer file details');
  return server;
 }
 const file='dist/api/server.js';

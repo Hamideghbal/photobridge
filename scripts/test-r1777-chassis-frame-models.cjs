@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {pathToFileURL}=require('node:url');
+const vm=require('node:vm');
 const load=()=>import(pathToFileURL(path.resolve('dist/api/lab-print-catalog.js')));
 test('R1777: custom chassis/frame models and separate colleague/walk-in prices',async()=>{
  const {normalizePrintCatalog,addPrintType,renamePrintType,archivePrintBinding,applyPrintRates,applyWalkinPrintRates}=await load();
@@ -80,4 +81,39 @@ test('R1783: walk-in model catalog keeps R1540 loading errors and retry availabl
  assert(ui.includes('if(!I||!I.lab)throw Error("walkin_data_incomplete")'),'walk-in payload validation must be retained');
  assert(ui.includes('Me("/api/lab/print-catalog").catch(()=>({catalog:{types:[],walkinRates:{}}}))'),'missing model catalog must not hide customer-free settings');
  assert(ui.includes('pb1777SetCatalog(K.catalog||{types:[],walkinRates:{}})'),'custom models must be loaded into the model selector');
+});
+
+test('R1777: rendered walk-in columns and save retain binding, stock, and independent model rates',async()=>{
+ const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+ const start=ui.indexOf('function Qj('),end=ui.indexOf('function Zj(',start);
+ const fieldsStart=ui.indexOf('function PB1437TariffFields('),fieldsEnd=ui.indexOf('\nfunction ',fieldsStart);
+ const catalog={types:[{id:'wood',kind:'frame',name:'قاب چوبی'},{id:'board',kind:'chassis',name:'شاسی جدید'}],walkinRates:{size1:{wood:205000,board:260000}}};
+ const row={id:'size1',label:'20x30',width_cm:20,height_cm:30,luster:10000,silk:11000,metallic:12000,chassis:13000,frame:14000,album_binding_price:15000,chassis_stock:7,frame_stock:8};
+ const requests=[],printed=[];
+ let stateIndex=0;
+ const context={
+  x:{useState(initial){const index=stateIndex++;return [index===0?{lab:{name:'Lab'},url:'/walkin'}:Array.isArray(initial)?[row]:initial?.walkinRates?catalog:initial,()=>{}]},useRef:v=>({current:v}),useEffect(){}},
+  e:{jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},
+  Me:async(url,options)=>{requests.push({url,options});return url==='/api/lab/print-catalog'?{catalog}:{lab:{},prices:[row]}},
+  Na:Number,Bn:String,Mn:Number,V:String,gr:String,alert(){},
+  window:{open:()=>({document:{open(){},write:html=>printed.push(html),close(){}}})}
+ };
+ const render=vm.runInNewContext('('+ui.slice(start,end)+')',context);
+ context.PB1437TariffFields=vm.runInNewContext('('+ui.slice(fieldsStart,fieldsEnd)+')',context);
+ const nodes=[];
+ function visit(node){if(Array.isArray(node))return node.forEach(visit);if(!node||typeof node!=='object')return;nodes.push(node);visit(node.props?.children)}
+ visit(render({pricingOnly:true}));
+ const inputs=nodes.filter(n=>n.type==='input'&&n.props['aria-label']);
+ assert.equal(inputs.length,10,'all eight existing fields plus two custom model columns');
+ assert(inputs.some(n=>n.props['aria-label']==='قاب چوبی 20x30'&&n.props.value==='205000'));
+ assert(inputs.some(n=>n.props['aria-label']==='شاسی جدید 20x30'&&n.props.value==='260000'));
+ await nodes.find(n=>n.type==='button'&&n.props.children==='ذخیره تعرفه').props.onClick();
+ const saved=JSON.parse(requests.find(r=>r.url==='/api/lab/walkin/prices').options.body).rows[0];
+ assert.equal(saved.albumBindingPrice,15000);
+ assert.equal(saved.chassisStock,7);
+ assert.equal(saved.frameStock,8);
+ assert.deepEqual(saved.customRates,{wood:205000,board:260000});
+ nodes.find(n=>n.type==='button'&&n.props.children==='چاپ تعرفه').props.onClick();
+ assert(printed[0].includes('205000 تومان')&&printed[0].includes('260000 تومان'),'printed model prices must match displayed walk-in prices');
+ assert(printed[0].includes('صحافی آلبوم')&&printed[0].includes('موجودی قاب'));
 });

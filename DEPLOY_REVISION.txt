@@ -1,1 +1,1 @@
-2026-11-11-r1773-chassis-stock-and-thermal-items
+2026-11-11-r1774-native-thermal-chassis-label

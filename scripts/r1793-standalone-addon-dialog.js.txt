@@ -1,0 +1,46 @@
+/* R1793: standalone chassis/frame order composer. No user photo is needed. */
+function PB1793AddonOnlyDialog({prices=[],catalog={},onClose,onAdd}){
+ const [sizeId,setSizeId]=x.useState(""),[chassisId,setChassisId]=x.useState(""),[frameId,setFrameId]=x.useState(""),[colorId,setColorId]=x.useState("");
+ const [quantity,setQuantity]=x.useState(1),[busy,setBusy]=x.useState(false),[error,setError]=x.useState("");
+ const row=prices.find(p=>String(p.id)===String(sizeId));
+ const all=Array.isArray(catalog.types)?catalog.types:[];
+ const priceFor=model=>{
+  if(!row||!model)return null;
+  const raw=model.legacy||model.id===model.kind?row[model.kind]:catalog.rates?.[row.id]?.[model.id];
+  return raw==null||raw===""||!Number.isSafeInteger(Number(raw))||Number(raw)<0?null:Number(raw);
+ };
+ const stockFor=model=>!model?null:model.legacy||model.id===model.kind?row?.[model.kind+"_stock"]:catalog.stocks?.[row.id]?.[model.id];
+ const models=kind=>all.filter(model=>model.kind===kind&&model.active!==false&&priceFor(model)!=null);
+ const chassis=models("chassis").find(model=>model.id===chassisId)||null;
+ const frame=models("frame").find(model=>model.id===frameId)||null;
+ const colors=(frame?.colors||[]).filter(color=>color.available!==false);
+ const effectiveColor=colors.find(color=>color.id===colorId)||(colors.length===1||frame?.legacy?colors[0]:null);
+ const unit=(chassis?priceFor(chassis):0)+(frame?priceFor(frame):0);
+ const qty=Number(quantity);
+ const qtyOkay=Number.isSafeInteger(qty)&&qty>=1&&qty<=99;
+ const lowStock=[chassis,frame].some(model=>{
+  if(!model)return false;
+  const stock=stockFor(model);
+  return stock!=null&&stock!==""&&Number(stock)<qty;
+ });
+ const canSubmit=!!row&&!!(chassis||frame)&&(!frame||!colors.length||!!effectiveColor)&&qtyOkay&&!lowStock;
+ const save=async()=>{
+  if(busy)return;
+  if(!canSubmit){setError(!row?"ابتدا سایز را انتخاب کنید.":!chassis&&!frame?"حداقل یک مدل شاسی یا قاب انتخاب کنید.":!qtyOkay?"تعداد باید بین ۱ تا ۹۹ باشد.":lowStock?"موجودی این مدل برای تعداد انتخاب‌شده کافی نیست.":"رنگ قاب را انتخاب کنید.");return}
+  setBusy(true);setError("");
+  try{await onAdd({row,chassis,frame,color:effectiveColor||null,quantity:qty})}
+  catch(err){setError(String(err?.message||"ثبت سفارش بدون چاپ انجام نشد."))}
+  finally{setBusy(false)}
+ };
+ return e.jsx(On,{title:"سفارش شاسی و قاب بدون چاپ",onClose,children:e.jsxs("div",{className:"pb1793AddonDialog",children:[
+  e.jsx("p",{className:"pb1793Hint",children:"برای خرید شاسی یا قاب خالی، ابتدا سایز را انتخاب کنید. می‌توانید یک مدل یا هر دو را انتخاب کنید؛ هیچ عکس شخصی لازم نیست."}),
+  e.jsxs("label",{children:["سایز محصول",e.jsxs("select",{value:sizeId,onChange:ev=>{setSizeId(ev.target.value);setChassisId("");setFrameId("");setColorId("");setError("")},children:[e.jsx("option",{value:"",children:"انتخاب سایز"}),...prices.map(p=>e.jsx("option",{value:String(p.id),children:String(p.label||p.id)},p.id))]})]}),
+  !!row&&e.jsxs("label",{children:["مدل شاسی (اختیاری)",e.jsxs("select",{value:chassisId,onChange:ev=>{setChassisId(ev.target.value);setError("")},children:[e.jsx("option",{value:"",children:"بدون شاسی"}),...models("chassis").map(m=>e.jsx("option",{value:m.id,children:m.name+" · "+V(priceFor(m))+" تومان"},m.id))]})]}),
+  !!row&&e.jsxs("label",{children:["مدل قاب (اختیاری)",e.jsxs("select",{value:frameId,onChange:ev=>{setFrameId(ev.target.value);setColorId("");setError("")},children:[e.jsx("option",{value:"",children:"بدون قاب"}),...models("frame").map(m=>e.jsx("option",{value:m.id,children:m.name+" · "+V(priceFor(m))+" تومان"},m.id))]})]}),
+  !!frame&&colors.length>0&&e.jsxs("label",{children:["رنگ قاب",e.jsxs("select",{value:effectiveColor?.id||"",onChange:ev=>{setColorId(ev.target.value);setError("")},children:[e.jsx("option",{value:"",children:"انتخاب رنگ قاب"}),...colors.map(c=>e.jsx("option",{value:c.id,children:c.name||"رنگ قاب"},c.id))]})]}),
+  !!row&&e.jsxs("label",{children:["تعداد محصول",e.jsx("input",{type:"number",min:1,max:99,step:1,inputMode:"numeric",value:quantity,onChange:ev=>setQuantity(ev.target.value)})]}),
+  !!row&&e.jsxs("div",{className:"pb1793Total",children:[e.jsx("span",{children:"جمع محصولات بدون چاپ عکس"}),e.jsx("strong",{children:V(qtyOkay?unit*qty:0)+" تومان"})]}),
+  error&&e.jsx("p",{role:"alert",className:"pb1793Error",children:error}),
+  e.jsxs("div",{className:"pb1793Actions",children:[e.jsx("button",{type:"button",disabled:busy,onClick:onClose,children:"انصراف"}),e.jsx("button",{type:"button",className:"primary",disabled:busy||!canSubmit,onClick:save,children:busy?"در حال افزودن…":"افزودن به سفارش"})]})
+ ]})});
+}

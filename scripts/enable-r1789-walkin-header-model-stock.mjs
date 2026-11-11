@@ -82,6 +82,9 @@ function patchUi(ui,root){
    'E=(F,M)=>{const value=pb1777Value(F,M);return value==null||String(value)===""||Number(value)===0?"—":',
    'E=(F,M)=>{const value=pb1777Value(F,M);return M.startsWith("pb1789_stock_")?(value==null||String(value)===""?"—":V(Number(value))+" عدد"):value==null||String(value)===""||Number(value)===0?"—":',
    root+' printed stock units');
+  const gridStyle='style:{"--pb1777-columns":pb1777Fields.length,gridTemplateColumns:';
+  if(part.split(gridStyle).length!==3)throw Error("[R1789] "+root+" walk-in header/row column style mismatch");
+  part=part.replaceAll(gridStyle,'style:{"--pb1777-columns":pb1777Fields.length,"--pb1789-min-width":(148+pb1777Fields.length*110)+"px",gridTemplateColumns:');
   part=one(part,
    'e.jsx("span",{className:"pb1541TariffTitle",children:label})',
    'e.jsx("span",{className:"pb1541TariffTitle",title:label,children:label})',

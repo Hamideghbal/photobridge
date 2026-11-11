@@ -27,6 +27,32 @@ function pb1777FrameImage(raw,strict=true){
  if(!validBytes){if(strict)fail('print_frame_image_invalid');return null}
  return 'data:image/'+format+';base64,'+m[2];
 }
+function pb1777CleanColors(raw,strict=true){
+ if(raw===undefined||raw===null)return [];
+ if(!Array.isArray(raw)||raw.length>16){if(strict)fail('print_frame_colors_invalid');return [];}
+ const values=[],names=new Set(),ids=new Set();
+ for(let i=0;i<raw.length;i++){
+  const item=raw[i];
+  if(!item||typeof item!=='object'||Array.isArray(item)){if(strict)fail('print_frame_colors_invalid');continue;}
+  const id=text(item.id||'color_'+(i+1)),name=text(item.name),hex=text(item.hex).toUpperCase();
+  if(!/^[a-zA-Z0-9_-]{1,40}$/.test(id)||!name||name.length>40||!/^#[0-9A-F]{6}$/.test(hex)||/[<>\x00-\x1f]/.test(name)||ids.has(id)||names.has(name.toLocaleLowerCase('fa-IR'))){
+   if(strict)fail('print_frame_colors_invalid');continue;
+  }
+  const photo=item.imageData==null||item.imageData===''?null:pb1777FrameImage(item.imageData,strict);
+  const next={id,name,hex,available:item.available!==false};
+  if(photo)next.imageData=photo;
+  values.push(next);names.add(name.toLocaleLowerCase('fa-IR'));ids.add(id);
+ }
+ // Protect the JSONB settings row and read payload from unusually large images.
+ if(JSON.stringify(values).length>3_600_000){if(strict)fail('print_frame_colors_too_large');return [];}
+ return values;
+}
+export function setPrintFrameColors(catalog,id,colors){
+ const selected=catalog.types.find(t=>t.id===id&&t.kind==='frame'&&t.active!==false);
+ if(!selected)fail('print_frame_model_not_found');
+ const clean=pb1777CleanColors(colors,true);
+ return {...catalog,types:catalog.types.map(t=>t.id===id?{...t,colors:clean}:t)};
+}
 export function setPrintFrameImage(catalog,id,imageData){
  const selected=catalog.types.find(t=>t.id===id&&t.kind==='frame'&&t.active!==false);
  if(!selected)fail('print_frame_model_not_found');
@@ -37,7 +63,7 @@ export function setPrintFrameImage(catalog,id,imageData){
 export function normalizePrintCatalog(raw){
  const data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const originals=Array.isArray(data.types)?data.types:[];
- const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return {...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{})}}));
+ const known=new Map(defaults.map(d=>{const source=originals.find(t=>t?.id===d.id);return {...d,name:text(source?.name)||d.name,...(d.kind==='frame'&&pb1777FrameImage(source?.imageData,false)?{imageData:pb1777FrameImage(source.imageData,false)}:{}),...(d.kind==='frame'?{colors:pb1777CleanColors(source?.colors,false)}:{})}}));
  const limits={binding:0,chassis:0,frame:0};
  for(const row of originals){
   if(!row||typeof row!=='object'||!['binding','chassis','frame'].includes(row.kind)||!row.id)continue;
@@ -45,7 +71,7 @@ export function normalizePrintCatalog(raw){
   if(known.has(id))continue;
   if(!/^c_[0-9a-f-]{36}$/.test(id)||!name||name.length>70)continue;
   if(limits[row.kind]++>=30)continue;
-  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false,...(row.kind==='frame'&&pb1777FrameImage(row.imageData,false)?{imageData:pb1777FrameImage(row.imageData,false)}:{})});
+  known.set(id,{id,kind:row.kind,name,legacy:false,active:row.active!==false,...(row.kind==='frame'&&pb1777FrameImage(row.imageData,false)?{imageData:pb1777FrameImage(row.imageData,false)}:{}),...(row.kind==='frame'?{colors:pb1777CleanColors(row.colors,false)}:{})});
  }
  const types=[...known.values()];
  const allowed=types.filter(t=>!t.legacy);
@@ -137,16 +163,19 @@ export async function handleLabPrintCatalog({req,res,url,pool,labId,bodyJson,sen
   if(method==='POST'){
    updated=addPrintType(catalog,body);
    if(Object.hasOwn(body,'imageData'))updated=setPrintFrameImage(updated,updated.types.at(-1).id,body.imageData);
+   if(Object.hasOwn(body,'colors'))updated=setPrintFrameColors(updated,updated.types.at(-1).id,body.colors);
   }else if(body.active===false){
    updated=archivePrintBinding(catalog,text(body.id));
-  }else if(Object.hasOwn(body,'imageData')){
-   updated=setPrintFrameImage(catalog,text(body.id),body.imageData);
+  }else if(Object.hasOwn(body,'imageData')||Object.hasOwn(body,'colors')){
+   updated=catalog;
+   if(Object.hasOwn(body,'imageData'))updated=setPrintFrameImage(updated,text(body.id),body.imageData);
+   if(Object.hasOwn(body,'colors'))updated=setPrintFrameColors(updated,text(body.id),body.colors);
   }else{
    updated=renamePrintType(catalog,text(body.id),body.name);
   }
   await c.query("UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",[labId,JSON.stringify(updated)]);
   await c.query('COMMIT');
-  await audit(userId,labId,method==='POST'?'print_catalog.type_create':body.active===false?'print_catalog.type_archive':Object.hasOwn(body,'imageData')?'print_catalog.frame_image':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
+  await audit(userId,labId,method==='POST'?'print_catalog.type_create':body.active===false?'print_catalog.type_archive':Object.hasOwn(body,'imageData')||Object.hasOwn(body,'colors')?'print_catalog.frame_media':'print_catalog.type_rename','lab',labId,{kind:body.kind,id:body.id||updated.types.at(-1)?.id}).catch(()=>{});
   sendJson(res,200,{ok:true,catalog:updated});return true;
  }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message}),true;throw e}finally{c.release()}
 }

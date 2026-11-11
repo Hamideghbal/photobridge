@@ -37,7 +37,8 @@ const tail='m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTar
 c=once(c,tail,tail+',pb1777Edit&&e.jsx(PB1777FrameModelEditor,{model:pb1777Edit,onClose:()=>pb1777SetEdit(null),onSaved:pb1539Reload})','lab editor render');
 src=src.slice(0,a)+c+src.slice(b);
 // Walk-in models share the same lab catalogue but prices use an independent rate matrix.
-a=src.indexOf('function Qj(){');b=src.indexOf('function Zj(',a);if(a<0||b<=a)throw Error('walk-in tariffs missing');c=src.slice(a,b);
+// R1436 added the pricingOnly argument; preserve that signature and its navigation behavior.
+a=src.indexOf('function Qj(');b=src.indexOf('function Zj(',a);if(a<0||b<=a)throw Error('walk-in tariffs missing');c=src.slice(a,b);
 // R1540 retains its walk-in error/retry handler; R1777 must not replace it with the pre-R1540 handler.
 c=once(c,'[c,m]=x.useState(void 0),','[c,m]=x.useState(void 0),[pb1777Catalog,pb1777SetCatalog]=x.useState({types:[],walkinRates:{}}),[pb1777Edit,pb1777SetEdit]=x.useState(null),','walkin model hooks');
 c=once(c,'g=()=>Me("/api/lab/walkin").then(I=>{','g=()=>Promise.all([Me("/api/lab/walkin"),Me("/api/lab/print-catalog").catch(()=>({catalog:{types:[],walkinRates:{}}}))]).then(([I,K])=>{pb1777SetCatalog(K.catalog||{types:[],walkinRates:{}});','walkin catalog fetch');

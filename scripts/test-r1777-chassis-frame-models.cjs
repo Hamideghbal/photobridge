@@ -71,6 +71,11 @@ test('R1777: two tariffs expose separate model price columns and frame color-pic
 
 test('R1783: walk-in model catalog keeps R1540 loading errors and retry available',()=>{
  const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
+ const start=ui.indexOf('function Qj({pricingOnly=false}){');
+ const end=ui.indexOf('function Zj(',start);
+ assert(start>=0&&end>start,'R1436 pricing-only component signature must survive the model installer');
+ const walkin=ui.slice(start,end);
+ assert(walkin.includes('pb1777Fields'),'model columns must be installed in the real walk-in component');
  assert(ui.includes('pb1540SetError'),'R1540 error state must remain intact');
  assert(ui.includes('if(!I||!I.lab)throw Error("walkin_data_incomplete")'),'walk-in payload validation must be retained');
  assert(ui.includes('Me("/api/lab/print-catalog").catch(()=>({catalog:{types:[],walkinRates:{}}}))'),'missing model catalog must not hide customer-free settings');

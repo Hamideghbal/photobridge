@@ -23,6 +23,7 @@
 !apps/web/public/**
 !apps/store-desktop/
 !apps/store-desktop/desktop-overlay.js
+!apps/store-desktop/frame-orders-ui.js
 !apps/lab-desktop/
 !apps/lab-desktop/desktop-overlay.js
 # Regenerate desktop UI copies and jsQR from verified inputs during image build.

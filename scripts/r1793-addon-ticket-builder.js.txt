@@ -1,0 +1,34 @@
+const pb1793Add=async({row,chassis,frame,color,quantity})=>{
+ const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=800;
+ const ctx=canvas.getContext("2d");if(!ctx)throw Error("ساخت برگه سفارش در این مرورگر ممکن نیست.");
+ ctx.fillStyle="#fff";ctx.fillRect(0,0,1200,800);
+ ctx.fillStyle="#e5eefc";ctx.fillRect(30,30,1140,120);
+ ctx.fillStyle="#143c70";ctx.textAlign="right";ctx.direction="rtl";
+ ctx.font="bold 55px Vazirmatn, Tahoma, sans-serif";ctx.fillText("سفارش بدون چاپ عکس",1110,110);
+ ctx.fillStyle="#283b54";ctx.font="bold 37px Vazirmatn, Tahoma, sans-serif";
+ ctx.fillText("سایز: "+String(row.label||row.id),1110,230);
+ ctx.fillText("شاسی: "+(chassis?.name||"ندارد"),1110,316);
+ ctx.fillText("قاب: "+(frame?.name||"ندارد"),1110,402);
+ ctx.fillText("رنگ قاب: "+(color?.name||"—"),1110,488);
+ ctx.fillText("تعداد: "+String(quantity),1110,574);
+ ctx.fillStyle="#ad2525";ctx.textAlign="center";ctx.direction="ltr";ctx.font="bold 43px Arial";
+ ctx.fillText("NO PHOTO / DO NOT PRINT",600,704);
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.90));
+ if(!blob?.size)throw Error("برگه سفارش بدون چاپ ساخته نشد.");
+ const filename="NO_PRINT_ADDON_"+String(row.id).replace(/[^A-Za-z0-9_-]/g,"_")+"_"+crypto.randomUUID().slice(0,8)+".jpg";
+ const file=new File([blob],filename,{type:"image/jpeg"}),url=URL.createObjectURL(file);
+ const item={id:crypto.randomUUID(),file,width:1200,height:800,dpi:300,
+  thumbUrl:url,previewUrl:url,relativePath:filename,paperOverride:"none",
+  chassisOverride:!!chassis,frameOverride:!!frame,
+  chassisModelId:chassis?.id||null,chassisModelName:chassis?.name||null,chassisModelLatinName:chassis?.latinName||null,
+  frameModelId:frame?.id||null,frameModelName:frame?.name||null,frameModelLatinName:frame?.latinName||null,
+  frameColorId:color?.id||null,frameColorName:color?.name||null,
+  withoutPrint:true,isAddonOnly:true,printCopies:quantity,progress:0};
+ k(groups=>{
+  const existing=groups.find(g=>String(g.sizeId)===String(row.id));
+  if(existing)return groups.map(g=>g.id===existing.id?{...g,open:true,files:[...g.files,item]}:g);
+  return [...groups,{id:crypto.randomUUID(),sizeId:String(row.id),label:eg(row),customSize:null,
+   paperType:js(row)[0]||Kr(t)[0]||"luster",chassis:false,frame:false,files:[item],open:true}];
+ });
+ pb1793SetStandalone(false);Ze("");
+};

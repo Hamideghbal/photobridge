@@ -1,0 +1,245 @@
+
+/* R1816 – full-height tariff matrix between compact header and fixed footer.
+   Both audience dialogs share these selectors; no change to saved tariffs. */
+html body .pb1811AlbumModal.pb1810AlbumModal {
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+}
+html body .pb1811AlbumModal .pb1810AlbumModalHead.pb1816ModalHeader{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(250px,370px) 36px!important;
+  align-items:center!important;
+  gap:10px 15px!important;
+  padding:9px 15px!important;
+  min-height:56px!important;
+  box-sizing:border-box!important;
+  flex:0 0 auto!important;
+}
+.pb1816ModalHeader .pb1816HeaderTitle{min-width:0!important}
+.pb1816ModalHeader .pb1816HeaderTitle h2{
+  margin:0 0 3px!important;
+  font-size:16px!important;
+  line-height:1.45!important;
+}
+.pb1816ModalHeader .pb1816HeaderTitle small{
+  font-size:11px!important;
+  color:#64748b!important;
+}
+.pb1816ModalHeader .pb1816HeaderMode{
+  display:flex!important;
+  gap:7px!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+.pb1816ModalHeader .pb1816HeaderMode label{
+  flex:0 0 auto!important;
+  margin:0!important;
+  white-space:nowrap!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+.pb1816ModalHeader .pb1816HeaderMode select{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  max-width:100%!important;
+  width:100%!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:4px 9px!important;
+  border-radius:9px!important;
+  border:1px solid #cbd5e1!important;
+  background:#fff!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+  box-sizing:border-box!important;
+}
+.pb1816ModalHeader .pb1810Close{
+  justify-self:end!important;
+  margin:0!important;
+  height:34px!important;
+  min-height:34px!important;
+  width:34px!important;
+  min-width:34px!important;
+}
+html body .pb1811AlbumModal .pb1810AlbumModalScroll{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  padding:7px 13px!important;
+  gap:0!important;
+}
+html body .pb1811AlbumModal .pb1810AlbumModalScroll table{
+  width:100%!important;
+  margin:0!important;
+  border-spacing:0!important;
+  table-layout:fixed!important;
+}
+html body .pb1811AlbumModal .pb1810AlbumModalScroll th,
+html body .pb1811AlbumModal .pb1810AlbumModalScroll td{
+  padding:6px 8px!important;
+}
+html body .pb1811AlbumModal .pb1810AlbumModalScroll td input{
+  height:34px!important;
+  min-height:34px!important;
+  padding:4px 9px!important;
+  font-size:13px!important;
+  font-variant-numeric:tabular-nums!important;
+  direction:ltr!important;
+  text-align:center!important;
+}
+/* Model selector is the RIGHT-hand part of the footer; Save/Close on LEFT. */
+html body .pb1811AlbumModal .pb1810AlbumModalActions.pb1816ModalFooter{
+  display:flex!important;
+  flex-direction:row!important;
+  direction:rtl!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:nowrap!important;
+  min-height:59px!important;
+  max-height:87px!important;
+  gap:10px!important;
+  padding:8px 12px!important;
+  box-sizing:border-box!important;
+  flex:0 0 auto!important;
+  overflow:hidden!important;
+}
+.pb1816FooterModels{
+  min-width:0!important;
+  flex:1 1 auto!important;
+  display:flex!important;
+  flex-direction:row!important;
+  direction:rtl!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  gap:5px!important;
+  padding:4px 1px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:thin!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+}
+.pb1816FooterLabel{
+  flex:0 0 auto!important;
+  font-size:11px!important;
+  padding-inline-end:3px!important;
+  white-space:nowrap!important;
+}
+.pb1816ModelUnit{
+  display:inline-flex!important;
+  position:relative!important;
+  flex:0 0 auto!important;
+  align-items:center!important;
+  padding:2px 1px!important;
+}
+html body .pb1816FooterModels .pb1811ModelChip,
+html body .pb1816FooterModels .pb1816RenameModel{
+  flex:0 0 auto!important;
+  min-height:34px!important;
+  height:34px!important;
+  margin:0!important;
+  padding:6px 10px!important;
+  border-radius:9px!important;
+  white-space:nowrap!important;
+  font-size:11px!important;
+  line-height:1.4!important;
+  border:1px solid #d0dce8!important;
+  background:#fff!important;
+  color:#30445f!important;
+  cursor:pointer!important;
+}
+html body .pb1816FooterModels .pb1811ModelChip.is-active{
+  background:#e6efff!important;
+  color:#17428e!important;
+  border-color:#7ba5ec!important;
+}
+html body .pb1816FooterModels .pb1816ModelUnit:has(.pb1816ModelRemove) .pb1811ModelChip{
+  padding-inline-end:22px!important;
+}
+html body .pb1816FooterModels .pb1816ModelRemove{
+  position:absolute!important;
+  top:0!important;
+  inset-inline-end:0!important;
+  min-height:19px!important;
+  height:19px!important;
+  min-width:19px!important;
+  width:19px!important;
+  padding:0!important;
+  border:1px solid #f0b8b8!important;
+  border-radius:50%!important;
+  background:#fff3f3!important;
+  color:#ad2828!important;
+  font-size:16px!important;
+  font-weight:800!important;
+  line-height:16px!important;
+  display:inline-flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  cursor:pointer!important;
+  z-index:2!important;
+}
+html body .pb1816FooterModels .pb1816ModelRemove:focus-visible,
+html body .pb1816FooterModels .pb1811ModelChip:focus-visible{
+  outline:2px solid #3b82f6!important;
+  outline-offset:1px!important;
+}
+html body .pb1816FooterModels .pb1811AddModel{
+  border-style:dashed!important;
+  font-weight:800!important;
+}
+html body .pb1816FooterModels .pb1816RenameModel{
+  font-size:10px!important;
+  background:#f8fafc!important;
+}
+.pb1816FooterActions{
+  flex:0 0 auto!important;
+  display:flex!important;
+  direction:rtl!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+  white-space:nowrap!important;
+}
+.pb1816FooterActions button{
+  min-height:35px!important;
+  padding:7px 10px!important;
+  white-space:nowrap!important;
+  font-size:11px!important;
+}
+@media(max-width:760px){
+  html body .pb1811AlbumModal .pb1810AlbumModalHead.pb1816ModalHeader{
+    grid-template-columns:minmax(0,1fr) 34px!important;
+    gap:5px 7px!important;
+    padding:7px 9px!important;
+  }
+  .pb1816ModalHeader .pb1816HeaderTitle h2{font-size:14px!important}
+  .pb1816ModalHeader .pb1816HeaderMode{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    width:100%!important;
+  }
+  .pb1816ModalHeader .pb1810Close{grid-column:2!important;grid-row:1!important}
+  html body .pb1811AlbumModal .pb1810AlbumModalScroll{padding:5px 7px!important}
+  html body .pb1811AlbumModal .pb1810AlbumModalScroll th,
+  html body .pb1811AlbumModal .pb1810AlbumModalScroll td{padding:5px 5px!important}
+  html body .pb1811AlbumModal .pb1810AlbumModalActions.pb1816ModalFooter{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:4px!important;
+    padding:5px 8px!important;
+    min-height:0!important;
+    max-height:111px!important;
+  }
+  .pb1816FooterModels{width:100%!important;min-height:34px!important;flex:0 0 auto!important}
+  .pb1816FooterActions{justify-content:flex-start!important;flex:0 0 auto!important}
+  .pb1816FooterActions button{min-height:32px!important}
+}

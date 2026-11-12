@@ -6,7 +6,7 @@ function pb1810BindingFields(fields,catalog) {
 }
 function PB1810AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],onClose,onSaved}){
  const combined=catalog.albumPricingMode==="combined";
- const papers=[["luster","گلاسه"],["silk","سیلک"],["metallic","متالیک"]];
+ const papers=[["luster","لاستر"],["silk","سیلک"],["metallic","متالیک"]];
  const types=(catalog.types||[]).filter(t=>t.kind==="binding"&&t.active!==false);
  const columns=combined?papers:[["album_binding_price",(types.find(t=>t.id==="album_binding_price")?.name||"صحافی اصلی")],...types.filter(t=>t.id!=="album_binding_price").map(t=>[String(t.id),t.name])];
  const source=combined?(audience==="walkin"?catalog.walkinAlbumCombinedRates:catalog.albumCombinedRates):audience==="walkin"?catalog.walkinAlbumBindingRates:catalog.rates;

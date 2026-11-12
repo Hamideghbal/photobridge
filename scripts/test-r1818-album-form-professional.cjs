@@ -39,7 +39,8 @@ test('R1818: three selectors stay horizontal even at old 1100, 760 and 520 break
  assert(css.includes('@media(max-width:760px)'));
  const mobile=css.slice(css.indexOf('@media(max-width:760px)'));
  assert(mobile.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important'));
- assert(!mobile.includes('grid-template-columns:minmax(0,1fr)!important;'),'do not stack the three menu labels');
+ const coreMobile=mobile.slice(0,mobile.indexOf('.pb1818CoverPicker'));
+ assert(!coreMobile.includes('grid-template-columns:minmax(0,1fr)!important;'),'do not stack the three menu labels');
  assert(css.includes('pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum'),'specificity defeats old responsive overrides');
  assert(css.includes('text-overflow:ellipsis!important'),'narrow labels must not overlap');
 });

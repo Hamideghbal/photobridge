@@ -28,8 +28,12 @@ test('R1803: the fallback never mutates catalog pricing or legacy row objects',(
  const cat=fixture(), legacy=[];const before=JSON.stringify(cat);recover(legacy,cat);assert.equal(JSON.stringify(cat),before);assert.equal(legacy.length,0);
 });
 test('R1803: actual composed catalog and invoice snapshot use authoritative saved cover price',async()=>{
- const server=fs.readFileSync('dist/api/server.js','utf8');const marker='async function albumCatalogForLab(',start=server.indexOf(marker),end=server.indexOf('\nasync function albumOrderSnapshot(',start);
- assert(start>=0&&end>start);assert(server.includes('covers: pb1803RecoverPricedCovers(cq.rows.map('));
+ const server=fs.readFileSync('dist/api/server.js','utf8');const originalMark='async function albumCatalogForLabOriginal(';
+ const start=server.indexOf(originalMark);
+ const wrapperStart=server.indexOf('\nasync function albumCatalogForLab(',start+originalMark.length);
+ const snapshotStart=server.indexOf('\nasync function albumOrderSnapshot(',wrapperStart);
+ assert(start>=0&&wrapperStart>start&&snapshotStart>wrapperStart,'R1539 wrapper and original must both exist');
+ assert(server.slice(start,wrapperStart).includes('covers: pb1803RecoverPricedCovers(cq.rows.map('));
  const cat=fixture();const pool={query:async sql=>{
   if(sql.includes('FROM labs WHERE id'))return {rows:[{album_enabled:true,ui_preferences:{albumCoverCatalogEnabled:true}}]};
   if(sql.includes('FROM lab_album_sizes a'))return {rows:[{id:'s',print_size_id:'p',label:'20×30',binding_price:35000,luster:8000,silk:8000,metallic:8000,min_spreads:1,max_spreads:500,active:true,width_cm:20,height_cm:30}]};
@@ -37,7 +41,9 @@ test('R1803: actual composed catalog and invoice snapshot use authoritative save
   return {rows:[]};
  }};
  const shared={pool,syncLabAlbumSizesFromPrintTariffs:async()=>{},albumCoverCatalogV2ForLab:async()=>cat,pb1803RecoverPricedCovers:ctx.pb1803RecoverPricedCovers,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date};
- const fn=vm.runInNewContext('('+server.slice(start,end)+')',shared);const result=await fn('lab');assert.equal(result.covers.length,1);assert.equal(result.covers[0].price,125000);
+ const originalFn=vm.runInNewContext('('+server.slice(start,wrapperStart).trim()+')',shared);
+ const fn=vm.runInNewContext('('+server.slice(wrapperStart,snapshotStart).trim()+')',{pool,albumCatalogForLabOriginal:originalFn,normalizePrintCatalog:()=>({types:[],rates:{}})});
+ const result=await fn('lab');assert.equal(result.covers.length,1);assert.equal(result.covers[0].price,125000);
  const sStart=server.indexOf('async function albumOrderSnapshot('),sEnd=server.indexOf('\nasync function ',sStart+20);
  assert(sStart>=0&&sEnd>sStart);const orderSnapshot=vm.runInNewContext('('+server.slice(sStart,sEnd)+')',{albumCatalogForLab:fn,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date});
  const cover=result.covers[0];const snap=await orderSnapshot('lab',{sizeId:'s',spreads:2,paperType:'luster',coverId:cover.id,colorId:cover.colors[0].id});

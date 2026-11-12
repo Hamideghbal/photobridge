@@ -1248,3 +1248,9 @@ runR1314(process.execPath,['--test','scripts/test-r1815-album-order-repair.cjs']
 // moving model selection into the footer and pricing mode into the header.
 await deployStep('./enable-r1816-album-pricing-compact.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1816-album-pricing-compact.cjs'],{stdio:'inherit'});
+
+
+// R1817: album model/size/paper in one row, compact cover controls,
+// photo model cards and short title field. No tariff or invoice changes.
+await deployStep('./enable-r1817-album-submit-layout.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1817-album-submit-layout.cjs'],{stdio:'inherit'});

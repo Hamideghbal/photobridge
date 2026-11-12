@@ -1,0 +1,51 @@
+/* Fill summary documents only from the matching, already-issued order invoice. */
+async function pb1802CompleteInvoice(invoice,{role='lab',orderId}={}){
+ if(!invoice?.id||vh(invoice).length||invoice.document_type&&invoice.document_type!=='invoice')return invoice;
+ const id=invoice.order_id||orderId;if(!id)return invoice;
+ const data=await Me('/api/'+(role==='lab'?'lab':'customer')+'/orders/'+encodeURIComponent(id));
+ const fresh=data?.invoice;
+ if(!fresh||String(fresh.id)!==String(invoice.serverId||invoice.id)||!vh(fresh).length)return invoice;
+ return {...invoice,...fresh,id:invoice.id,order_id:invoice.order_id||id,items:vh(fresh)};
+}
+function pb1802MergeInvoice(previous,fresh){
+ if(!previous||String(previous.id)!==String(fresh.id)||vh(fresh).length||Number(previous.total)!==Number(fresh.total))return fresh;
+ return {...previous,...fresh,items:vh(previous)};
+}
+function pb1802CoversForColor(covers,color){
+ return covers.filter(cover=>{
+  const all=Array.isArray(cover.colors)?cover.colors:[];
+  const active=all.filter(row=>row.active!==false);
+  // Legacy covers without color variants are valid; covers with disabled colors stay unavailable.
+  return all.length===0||active.some(row=>ci(row)===color);
+ });
+}
+/* Album receipts are independent of downloading design sheets or changing print stages. */
+function pb1802ReceiptState(lab,id){try{return JSON.parse(localStorage.getItem('pb1802-album-receipt:'+lab+':'+id)||'null')||{}}catch{return {}}}
+function pb1802ReceiptSave(lab,id,data){localStorage.setItem('pb1802-album-receipt:'+lab+':'+id,JSON.stringify(data))}
+async function pb1802AlbumReceipt(lab,order,settings){
+ const id=order.id,task=pb1802ReceiptState(lab,id);
+ if(!settings.autoPrintInvoice||task.albumReceiptDone||(task.retryAt>Date.now()&&!order.invoice_id))return;
+ if(['uploading','cancelled','completed'].includes(String(order.status||'')))return;
+ if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return;
+ try{
+  const data=await Me('/api/lab/orders/'+encodeURIComponent(id)+'/automation-invoice',{method:'POST',body:'{}'});
+  if(!data?.invoice?.id)throw Error('issued_invoice_missing');
+  await pb1568PersistPdf(data.invoice,id);
+  await pb1568Thermal('invoice',id,data.invoice.id);
+  pb1802ReceiptSave(lab,id,{...task,albumReceiptDone:true,invoiceId:data.invoice.id,attempts:0,error:null,retryAt:0});
+ }catch(error){
+  const attempts=Math.min(8,(task.attempts||0)+1),message=pb1568Problem(error);
+  pb1802ReceiptSave(lab,id,{...task,attempts,error:message,retryAt:Date.now()+(message==='invoice_pricing_required'?60000:Math.min(600000,30000*2**Math.min(attempts,4)))});pb1568Work.lastError=message;
+  if(message==='invoice_pricing_required'){
+   if(!task.pricingPrompted){pb1576QueuePrice(lab,id);pb1802ReceiptSave(lab,id,{...pb1802ReceiptState(lab,id),pricingPrompted:true})}
+   if(settings.autoPrintMissingPriceTicket&&!task.ticketDone)try{await pb1568Thermal('ticket',id,null);pb1802ReceiptSave(lab,id,{...pb1802ReceiptState(lab,id),ticketDone:true})}catch(printError){pb1568Work.lastError=pb1568Problem(printError)}
+  }
+ }
+}
+function PB1802CoverCatalogSetting({settings,setSettings,busy,setBusy,setNotice,setError}){
+ const inactive=settings.coverCatalogEnabled===false;
+ return e.jsxs('label',{className:'pb1802CoverCatalogSetting',children:[e.jsx('input',{type:'checkbox',checked:inactive,disabled:busy,onChange:async event=>{
+  const enabled=!event.target.checked;setBusy(true);setError('');
+  try{const result=await Me('/api/lab/album-settings/menus',{method:'PUT',body:JSON.stringify({key:'coverCatalogEnabled',enabled})});if(result?.ok!==true||result.key!=='coverCatalogEnabled'||result.enabled!==enabled)throw Error('ذخیره وضعیت انتخاب جلد هنوز توسط سرور تأیید نشده است.');setSettings(old=>({...old,enabled:true,coverCatalogEnabled:enabled}));setNotice(enabled?'انتخاب مدل جلد فعال شد.':'انتخاب جلد غیرفعال شد؛ مشتری توضیح جلد را می‌نویسد و قیمت بعداً ثبت می‌شود.')}catch(error){setError(error?.message||'ذخیره وضعیت انجام نشد.')}finally{setBusy(false)}
+ }}),e.jsxs('span',{children:[e.jsx('b',{children:'غیرفعال کردن انتخاب مدل جلد'}),e.jsx('small',{children:'با فعال‌کردن این گزینه، مشتری فقط مشخصات جلد دلخواه را تایپ می‌کند؛ قیمت‌گذاری با لابراتوار است.'})]})]});
+}

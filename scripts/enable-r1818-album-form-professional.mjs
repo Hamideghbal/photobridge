@@ -29,6 +29,10 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const material='e.jsx("label",{className:"albumCoverOrderMaterial",children:e.jsx(wn,{value:Nn,options:on.map($e=>({value:String($e),label:String($e)})),onChange:Ka})})';
   const materialNew='e.jsxs("label",{className:"albumCoverOrderMaterial",children:[e.jsx("span",{className:"pb1818CoverFieldLabel",children:"جنس جلد"}),e.jsx(wn,{value:Nn,options:on.map($e=>({value:String($e),label:String($e)})),onChange:Ka})]})';
   kv=one(kv,material,materialNew,root+' clear material field label');
+  kv=one(kv,'e.jsx("div",{className:"albumCoverOrderColor",children:Tn.length?',
+   'e.jsxs("div",{className:"albumCoverOrderColor",children:[e.jsx("span",{className:"pb1818CoverFieldLabel",children:"رنگ جلد"}),Tn.length?',root+' color field label');
+  kv=one(kv,'children:"برای این جنس و سایز رنگ قیمت‌گذاری‌شده‌ای وجود ندارد."})})]})',
+   'children:"برای این جنس و سایز رنگ قیمت‌گذاری‌شده‌ای وجود ندارد."})]})]})',root+' color field close');
   kv=one(kv,'className:"albumCoverOrderSteps albumCoverOrderStepsCompactV409"','className:"albumCoverOrderSteps albumCoverOrderStepsCompactV409 pb1818CoverPicker"',root+' distinct cover layout');
   kv=one(kv,'className:"albumCoverOrderMaterialColorRowV409"','className:"albumCoverOrderMaterialColorRowV409 pb1818CoverControls"',root+' cover controls');
   kv=one(kv,'e.jsxs("div",{className:"albumCoverOrderModels",children:[',selectedPreview+'e.jsxs("div",{className:"albumCoverOrderModels pb1818CoverModelBrowser",children:[',root+' selected preview before catalog thumbnails');

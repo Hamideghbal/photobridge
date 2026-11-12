@@ -64,7 +64,7 @@ test('R1811 album snapshot chooses priced custom model and freezes mixed-paper a
   albumMoney:n=>Math.max(0,Math.round(Number(n||0))),
   invoicePrintTypeLabel:p=>({luster:'لاستر',silk:'سیلک',metallic:'متالیک'}[p]||p),Date
  });
- const result=await fn('lab',{sizeId:'s',bindingTypeId:custom,spreads:3,paperCounts:{luster:2,silk:1},coverId:'cover'});
+ const result=await fn('lab',{sizeId:'s',bindingTypeId:custom,spreads:3,paperType:'luster',paperCounts:{luster:2,silk:1,metallic:0},coverId:'cover'});
  assert.equal(result.binding.id,custom);
  assert.equal(result.pricing.albumPricingMode,'combined');
  assert.equal(result.pricing.bindingTotal,444);

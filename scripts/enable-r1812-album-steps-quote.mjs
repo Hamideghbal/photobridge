@@ -31,19 +31,24 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    'children:[!pb1795Combined&&yt.map($e=>',
    'children:[pb1795Combined&&yt.map($e=>{const pb1812Line=pb1812BundledPaperLine(pb1539Catalog,String((Be==null?void 0:Be.printSizeId)||""),String(pb1539Chosen.id),$e.value,$e.count);return e.jsxs("div",{className:pb1812Line.known?"":"albumQuotePaperPending",children:[e.jsxs("span",{children:["چاپ و صحافی ",$e.label," · ",V($e.count)," صفحه"]}),e.jsx("b",{children:pb1812Line.known?V(pb1812Line.total):"قیمت‌گذاری لابراتوار"})]},$e.value)}),!pb1795Combined&&yt.map($e=>',
    'display one bundled rate for each selected paper');
-  // The R1795/R1811 composition may rewrite the inner price/label expression.
-  // Locate the binding row by its visible label inside the quote, not a brittle
-  // byte-for-byte match of its entire minified subtree.
+  // The R1795 step intentionally replaces the literal "صحافی " with a
+  // selected-model label. Locate the binding charge by its unique V(_a)
+  // price expression inside the quote; its label is allowed to change.
   const quoteAt=s.indexOf('className:"albumQuoteRows"');
-  if(quoteAt<0)throw Error('[R1812] album quote missing');
-  const bindingLabel='children:["صحافی "';
-  const labelAt=s.indexOf(bindingLabel,quoteAt);
-  if(labelAt<0||labelAt-quoteAt>1200)throw Error('[R1812] standalone binding quote label missing');
+  const quoteEnd=quoteAt<0?-1:s.indexOf('className:"albumQuoteTotal"',quoteAt);
+  const bindingPrice='V(_a)';
+  const priceAt=quoteAt<0?-1:s.indexOf(bindingPrice,quoteAt);
+  if(quoteAt<0||priceAt<quoteAt||priceAt-quoteAt>1800||
+     (quoteEnd>=0&&priceAt>=quoteEnd)||
+     s.indexOf(bindingPrice,priceAt+bindingPrice.length)>=0)
+    throw Error('[R1812] could not uniquely locate standalone binding price in album quote');
   const rowOpen='e.jsxs("div",{children:[e.jsxs("span",';
-  const rowAt=s.lastIndexOf(rowOpen,labelAt);
-  if(rowAt<quoteAt||labelAt-rowAt>110)throw Error('[R1812] standalone binding quote row missing');
+  const rowAt=s.lastIndexOf(rowOpen,priceAt);
+  if(rowAt<quoteAt||priceAt-rowAt>550||
+     (s.slice(rowAt,priceAt).match(/e\\.jsxs\\("div",\\{children:/g)||[]).length!==1)
+    throw Error('[R1812] standalone binding row structure changed');
   if(s.slice(Math.max(quoteAt,rowAt-30),rowAt).endsWith('!pb1795Combined&&'))
-   throw Error('[R1812] standalone binding row already conditional');
+    throw Error('[R1812] binding row already conditional');
   s=s.slice(0,rowAt)+'!pb1795Combined&&'+s.slice(rowAt);
   return s;
  },root+' photographer album');

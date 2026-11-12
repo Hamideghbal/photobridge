@@ -1260,3 +1260,9 @@ runR1314(process.execPath,['--test','scripts/test-r1817-album-submit-layout.cjs'
 // organize cover material/color, selected-photo preview and clickable model gallery.
 await deployStep('./enable-r1818-album-form-professional.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1818-album-form-professional.cjs'],{stdio:'inherit'});
+
+
+// R1819: size-arrow inline layout, cover model directly in the material/color
+// controls, and no redundant cover gallery or album-page bulk selection.
+await deployStep('./enable-r1819-album-cover-controls.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1819-album-cover-controls.cjs'],{stdio:'inherit'});

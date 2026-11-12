@@ -1,0 +1,11 @@
+
+/* R1812: quote the exact same bundled rate used by albumOrderSnapshot.
+   Do not fall back to the ordinary print price or a legacy binding price. */
+function pb1812BundledPaperLine(catalog,sizeId,modelId,paper,count){
+ const prices=pb1811AlbumPaperPrices(catalog,"colleague",String(sizeId||""),String(modelId||"album_binding_price"));
+ const raw=prices?.[String(paper||"")];
+ const rate=raw===null||raw===undefined||String(raw).trim()===""?NaN:Number(raw);
+ const quantity=Math.max(0,Math.floor(Number(count)||0));
+ const known=Number.isSafeInteger(rate)&&rate>0&&quantity>0;
+ return {known,total:known?rate*quantity:null,unitPrice:known?rate:null};
+}

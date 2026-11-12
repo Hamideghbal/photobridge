@@ -1,0 +1,22 @@
+
+/* R1811: legacy combined price fields stay unchanged; additional models have isolated size/model/paper matrices. */
+function pb1811CleanCombinedModelRates(raw){
+ const result={};
+ if(!raw||typeof raw!=="object"||Array.isArray(raw))return result;
+ for(const [sizeId,models] of Object.entries(raw)){
+  if(!/^[a-zA-Z0-9_-]{1,110}$/.test(sizeId)||!models||typeof models!=="object"||Array.isArray(models))continue;
+  const cleanModels={};
+  for(const [modelId,papers] of Object.entries(models)){
+   if(!/^c_[0-9a-f-]{36}$/.test(modelId)||!papers||typeof papers!=="object"||Array.isArray(papers))continue;
+   const cleanPapers={};
+   for(const paper of ["luster","silk","metallic"]){
+    const value=papers[paper];
+    if(value===null||value===""){cleanPapers[paper]=null;continue}
+    if(value!==undefined&&Number.isSafeInteger(Number(value))&&Number(value)>=0&&Number(value)<=9000000000)cleanPapers[paper]=Number(value);
+   }
+   if(Object.keys(cleanPapers).length)cleanModels[modelId]=cleanPapers;
+  }
+  if(Object.keys(cleanModels).length)result[sizeId]=cleanModels;
+ }
+ return result;
+}

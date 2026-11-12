@@ -1242,3 +1242,9 @@ runR1314(process.execPath,['--test','scripts/test-r1812-album-steps-quote.cjs'],
 // use only the selected model/size/paper's saved combined tariff throughout.
 await deployStep('./enable-r1815-album-order-repair.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1815-album-order-repair.cjs'],{stdio:'inherit'});
+
+
+// R1816: add thousand separators and preserve more visible price rows by
+// moving model selection into the footer and pricing mode into the header.
+await deployStep('./enable-r1816-album-pricing-compact.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1816-album-pricing-compact.cjs'],{stdio:'inherit'});

@@ -1211,3 +1211,7 @@ runR1314(process.execPath,['--test','scripts/test-r1802-product-invoice-album-fl
 // R1803: recover priced album covers missing from the generated legacy display rows.
 await deployStep('./enable-r1803-album-priced-cover-recovery.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1803-album-priced-cover-recovery.cjs'],{stdio:'inherit'});
+
+// R1804: responsive RTL album arrangement, photo files full page-width, invoice below.
+await deployStep('./enable-r1804-album-order-layout.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1804-album-order-layout.cjs'],{stdio:'inherit'});

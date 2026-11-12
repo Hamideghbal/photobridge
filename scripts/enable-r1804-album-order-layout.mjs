@@ -11,7 +11,7 @@ for(const root of [web,native]){
   const htmlFile=root+'/index.html',html=read(htmlFile);
   const marker='</head>';
   if(html.includes(cssFile)||html.split(marker).length!==2)throw Error('[R1804] expected one HTML insertion point: '+root);
-  const link='<link rel="stylesheet" href="/'+cssFile+'?v=r1804" />';
+  const link='<link rel="stylesheet" href="/'+cssFile+'?v=r1804a" />';
   fs.writeFileSync(htmlFile,html.replace(marker,link+marker));
 }
 fs.copyFileSync(web+'/'+cssFile,native+'/'+cssFile);

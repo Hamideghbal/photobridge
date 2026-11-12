@@ -1,0 +1,14 @@
+function pb1800IsStock(key){return key==='chassis_stock'||key==='frame_stock'||key.startsWith('pb1789_stock_')}
+/* Pair inventory by field identity; never by translated labels or visual position. */
+function pb1800TariffFields(fields,models=[]){
+ const byKey=new Map(fields),used=new Set(),out=[];
+ const stockFor=key=>key==='chassis'||key==='frame'?key+'_stock':key.startsWith('pb1539_')&&(['chassis','frame'].includes(models.find(m=>m.id===key.slice(7))?.kind)||byKey.has('pb1789_stock_'+key.slice(7)))?'pb1789_stock_'+key.slice(7):null;
+ const isStock=key=>key==='chassis_stock'||key==='frame_stock'||key.startsWith('pb1789_stock_');
+ for(const field of fields){const [key,label]=field;if(isStock(key)||used.has(key))continue;out.push(field);used.add(key);const stock=stockFor(key);if(stock){out.push([stock,'موجودی '+String(label).replace(/^قیمت\s+/, '')]);used.add(stock)}}
+ for(const field of fields)if(!used.has(field[0]))out.push(field);
+ return out;
+}
+function PB1800TariffTitle({fieldKey,label}){
+ const stock=fieldKey==='chassis_stock'||fieldKey==='frame_stock'||fieldKey.startsWith('pb1789_stock_');
+ return stock?e.jsxs('span',{className:'pb1800StockTitle',children:[e.jsx('span',{children:'موجودی'}),e.jsx('span',{children:String(label).replace(/^موجودی\s+/, '')})]}):label;
+}

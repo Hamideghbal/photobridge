@@ -1,0 +1,39 @@
+
+/* R1805: three explicit per-paper prices for the single combined album binding.
+   Preserve separately priced models and their historical rows when switching modes. */
+const pb1805PaperTypes=['luster','silk','metallic'];
+function pb1805CleanCombinedRates(input){
+ const out={};
+ if(!input||typeof input!=='object'||Array.isArray(input))return out;
+ for(const [sizeId,values] of Object.entries(input)){
+  if(!/^[a-zA-Z0-9_-]{1,110}$/.test(sizeId)||!values||typeof values!=='object'||Array.isArray(values))continue;
+  const row={};
+  for(const paper of pb1805PaperTypes){
+   const raw=values[paper];
+   if(raw===null||raw===''){row[paper]=null;continue;}
+   if(raw!==undefined&&Number.isSafeInteger(Number(raw))&&Number(raw)>=0&&Number(raw)<=9000000000)row[paper]=Number(raw);
+  }
+  if(Object.keys(row).length)out[sizeId]=row;
+ }
+ return out;
+}
+function pb1805ApplyCombinedRates(catalog,rows,sizeIds){
+ const accepted=new Set(sizeIds.map(String)),next={...(catalog.albumCombinedRates||{})};
+ for(const row of rows){
+  if(!row||!Object.hasOwn(row,'combinedAlbumRates'))continue;
+  if(catalog.albumPricingMode!=='combined')fail('album_combined_mode_required');
+  const sizeId=String(row.sizeId||'');
+  if(!accepted.has(sizeId))fail('invalid_print_size');
+  const supplied=row.combinedAlbumRates;
+  if(!supplied||typeof supplied!=='object'||Array.isArray(supplied)||Object.keys(supplied).some(key=>!pb1805PaperTypes.includes(key)))fail('album_combined_prices_invalid');
+  const updated={...(next[sizeId]||{})};
+  for(const [paper,raw] of Object.entries(supplied)){
+   if(raw===null||raw===''){updated[paper]=null;continue;}
+   const n=Number(raw);
+   if(!Number.isSafeInteger(n)||n<0||n>9000000000)fail('album_combined_price_invalid');
+   updated[paper]=n;
+  }
+  next[sizeId]=updated;
+ }
+ return {...catalog,albumCombinedRates:next};
+}

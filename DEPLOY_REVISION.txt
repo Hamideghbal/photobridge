@@ -1,1 +1,1 @@
-2026-11-12-r1806-restore-album-left-quote
+2026-11-12-r1805b-bind-action-build-fix

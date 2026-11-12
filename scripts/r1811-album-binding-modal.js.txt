@@ -118,7 +118,12 @@ function PB1811AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],o
    ]}),
    e.jsx("small",{children:combined?"برای هر مدل و سایز، سه قیمت مستقل لاستر، سیلک و متالیک ثبت می‌شود.":"قیمت چاپ عکس در جدول اصلی است؛ اینجا فقط قیمت صحافی هر مدل را وارد کنید."})
   ]}),
-  e.jsxs("div",{className:"pb1810AlbumModalScroll",children:[
+   e.jsxs("div",{className:"pb1811ModelBar",children:[
+    e.jsx("strong",{children:"مدل‌های صحافی"}),
+    ...models.map(t=>e.jsx("button",{type:"button",className:"pb1811ModelChip"+(String(t.id)===activeId?" is-active":""),disabled:busy,
+     onClick:()=>setChosen(String(t.id)),children:t.name},String(t.id))),
+    e.jsx("button",{type:"button",className:"pb1811ModelChip pb1811AddModel",disabled:busy,onClick:()=>action("create"),children:"+ افزودن مدل جدید"})
+   ]}),  e.jsxs("div",{className:"pb1810AlbumModalScroll",children:[
    e.jsx("table",{children:[
     e.jsx("thead",{children:e.jsxs("tr",{children:[
      e.jsx("th",{scope:"col",children:"سایز آلبوم"}),
@@ -132,12 +137,6 @@ function PB1811AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],o
       onChange:ev=>update(String(row.id),combined?key:"price",String(Mn(ev.target.value)??""))
      })},key))
     ]},String(row.id)))})
-   ]}),
-   e.jsxs("div",{className:"pb1811ModelBar",children:[
-    e.jsx("strong",{children:"مدل‌های صحافی"}),
-    ...models.map(t=>e.jsx("button",{type:"button",className:"pb1811ModelChip"+(String(t.id)===activeId?" is-active":""),disabled:busy,
-     onClick:()=>setChosen(String(t.id)),children:t.name},String(t.id))),
-    e.jsx("button",{type:"button",className:"pb1811ModelChip pb1811AddModel",disabled:busy,onClick:()=>action("create"),children:"+ افزودن مدل جدید"})
    ]}),
    e.jsxs("div",{className:"pb1811ModelToolsBottom",children:[
     e.jsx("span",{children:"مدل انتخاب‌شده: "+model.name}),

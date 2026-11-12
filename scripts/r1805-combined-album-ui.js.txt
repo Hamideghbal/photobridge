@@ -1,21 +1,10 @@
 
 /* R1805: combined album mode has one binding type and three per-paper size prices. */
 function pb1805TariffFields(fields,catalog){
- if(catalog?.albumPricingMode!=='combined')return fields;
- const bindingIds=new Set((catalog.types||[]).filter(type=>type.kind==='binding').map(type=>String(type.id)));
- const out=[];
- for(const [key,label] of fields){
-  if(['luster','silk','metallic'].includes(key))continue;
-  if(key==='album_binding_price'){
-   out.push(['pb1805_combined_luster','چاپ و صحافی · گلاسه']);
-   out.push(['pb1805_combined_silk','چاپ و صحافی · سیلک']);
-   out.push(['pb1805_combined_metallic','چاپ و صحافی · متالیک']);
-   continue;
-  }
-  if(key.startsWith('pb1539_')&&bindingIds.has(key.slice(7)))continue;
-  out.push([key,label]);
- }
- return out;
+ // R1810: never replace/hide the three ordinary photo-print prices.
+ // All binding-only columns now live in the dedicated album price modal.
+ const bindingIds=new Set((catalog?.types||[]).filter(type=>type.kind==='binding').map(type=>String(type.id)));
+ return fields.filter(([key])=>key!=='album_binding_price'&&!String(key).startsWith('pb1805_combined_')&&!(String(key).startsWith('pb1539_')&&bindingIds.has(String(key).slice(7))));
 }
 function pb1805RateValue(row,catalog,key){
  const paper=String(key).replace(/^pb1805_combined_/,'');

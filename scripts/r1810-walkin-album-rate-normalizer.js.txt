@@ -1,0 +1,18 @@
+
+/* R1810: a separate, validated pricing matrix for walk-in album binding. */
+function pb1810CleanWalkinBindingRates(raw) {
+ const result={};
+ if(!raw||typeof raw!=="object"||Array.isArray(raw))return result;
+ for(const [sizeId,prices] of Object.entries(raw)){
+  if(!/^[a-zA-Z0-9_-]{1,110}$/.test(sizeId)||!prices||typeof prices!=="object"||Array.isArray(prices))continue;
+  const cleaned={};
+  for(const [modelId,value] of Object.entries(prices)){
+   if(modelId!=="album_binding_price"&&!/^c_[0-9a-f-]{36}$/.test(modelId))continue;
+   if(value===null||value===""){cleaned[modelId]=null;continue}
+   const n=Number(value);
+   if(Number.isSafeInteger(n)&&n>=0&&n<=9000000000)cleaned[modelId]=n;
+  }
+  if(Object.keys(cleaned).length)result[sizeId]=cleaned;
+ }
+ return result;
+}

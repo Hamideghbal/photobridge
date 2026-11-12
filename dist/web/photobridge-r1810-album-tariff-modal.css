@@ -1,0 +1,83 @@
+
+/* R1810: the print/chassis/frame tariff stays in the original scrollable grid. */
+html body #root .pricingSettingsCard .priceCatalogActions .pb1810BindingOpen{
+ white-space:nowrap!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ font-weight:750!important;
+}
+/* The same modal is used in the colleague and walk-in settings, without affecting their independent rates. */
+.pb1810AlbumModalLayer{
+ position:fixed!important;inset:0!important;z-index:24000!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ padding:16px!important;background:rgba(15,23,42,.58)!important;box-sizing:border-box!important;direction:rtl!important;
+}
+.pb1810AlbumModal{
+ width:min(840px,100%)!important;max-height:min(88vh,900px)!important;min-height:260px!important;
+ display:flex!important;flex-direction:column!important;overflow:hidden!important;
+ background:#fff!important;color:#172236!important;border-radius:16px!important;
+ box-shadow:0 22px 70px rgba(0,0,0,.24)!important;border:1px solid #e1e8f2!important;
+}
+.pb1810AlbumModalHead{
+ display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:16px!important;
+ border-bottom:1px solid #e3eaf4!important;padding:16px 18px 12px!important;flex-shrink:0!important;
+}
+.pb1810AlbumModalHead h2{font-size:18px!important;margin:0 0 6px!important;font-weight:850!important}
+.pb1810AlbumModalHead p{font-size:12px!important;margin:0 0 5px!important;line-height:1.7!important;color:#42536b!important}
+.pb1810AlbumModalHead small{font-size:12px!important;color:#64748b!important}
+.pb1810AlbumModalHead .pb1810Close{
+ border:1px solid #d8e2ed!important;border-radius:9px!important;background:#fff!important;color:#334155!important;
+ font-size:25px!important;line-height:1!important;cursor:pointer!important;min-width:36px!important;height:36px!important;flex-shrink:0!important;
+}
+.pb1810AlbumModalScroll{overflow:auto!important;min-height:90px!important;flex:1!important;padding:12px 14px!important}
+.pb1810AlbumModalScroll table{width:100%!important;min-width:420px!important;border-collapse:separate!important;border-spacing:0!important;table-layout:fixed!important}
+.pb1810AlbumModalScroll th,.pb1810AlbumModalScroll td{
+ border-bottom:1px solid #e5ebf3!important;text-align:center!important;vertical-align:middle!important;
+ padding:9px 7px!important;font-size:13px!important;line-height:1.5!important;
+}
+.pb1810AlbumModalScroll thead th{position:sticky!important;top:0!important;background:#f0f5fb!important;z-index:2!important;font-weight:800!important}
+.pb1810AlbumModalScroll th:first-child{min-width:126px!important;max-width:170px!important;text-align:right!important;white-space:normal!important}
+.pb1810AlbumModalScroll td input{
+ box-sizing:border-box!important;width:100%!important;max-width:165px!important;min-width:72px!important;
+ min-height:37px!important;text-align:center!important;padding:7px 8px!important;
+ border:1px solid #cfdaea!important;border-radius:8px!important;background:#fff!important;
+ color:#172236!important;font-size:13px!important;
+}
+.pb1810AlbumModalScroll tbody tr:nth-child(even){background:#fafcff!important}
+.pb1810ModelTools{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;flex-wrap:wrap!important;margin-top:5px!important}
+.pb1810ModelTools .pb1810ModelTool{border:1px solid #dce5ef!important;border-radius:6px!important;padding:2px 6px!important;font-size:10px!important;min-height:25px!important;background:#fff!important;color:#40536c!important;cursor:pointer!important}
+.pb1810AlbumModalActions{
+ display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:10px!important;
+ padding:12px 16px!important;border-top:1px solid #e3eaf4!important;background:#fff!important;flex-shrink:0!important;
+}
+.pb1810AlbumModalError{color:#b42318!important;font-size:13px!important;padding:0 18px!important;margin:6px 0!important}
+/* R1810: 1,2,3,4 are vertically ordered INSIDE the RIGHT-side album settings.
+   Do not change the OUTER two-column grid or left-side quote from R1806. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum>.albumConfigurator.albumConfigurator{
+ grid-template-columns:minmax(0,1fr)!important;gap:9px!important;padding:12px!important;
+ align-items:start!important;align-content:start!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum>.albumConfigurator.albumConfigurator>*{
+ grid-column:1!important;grid-row:auto!important;order:0!important;align-self:auto!important;
+ min-width:0!important;width:100%!important;box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum>.albumConfigurator>.albumConfigBlock{
+ padding:10px 12px!important;min-height:0!important;margin:0!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum .albumConfigurator h3{
+ font-size:14px!important;margin:0 0 6px!important;line-height:1.45!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum .albumConfigurator .albumCoreFields{
+ gap:8px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum .albumConfigurator .albumFilesQcBlock{
+ min-height:144px!important;padding:10px!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum .albumConfigurator textarea{
+ min-height:55px!important;height:60px!important;
+}
+@media(max-width:900px){
+ .pb1810AlbumModalLayer{padding:8px!important}
+ .pb1810AlbumModal{max-height:92vh!important;border-radius:12px!important}
+ .pb1810AlbumModalHead{padding:12px!important}
+ .pb1810AlbumModalScroll{padding:8px!important}
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum>.albumConfigurator .albumCoreFields{grid-template-columns:minmax(0,1fr)!important}
+}

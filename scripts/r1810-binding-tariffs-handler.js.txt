@@ -1,0 +1,82 @@
+
+/* R1810: tariff-only writes. This endpoint never touches the photo/chassis/frame price columns.
+   The two audiences have independent binding rates, with no migration and no invoice rewrite. */
+async function pb1810SaveAlbumBindingPrices({req,res,pool,labId,bodyJson,sendJson,audit,userId}) {
+ const body=await bodyJson(req,2000000);
+ const audience=String(body?.audience||"");
+ const rows=body?.rows;
+ if(!["colleague","walkin"].includes(audience)||!Array.isArray(rows)||rows.length<1||rows.length>300)
+  return sendJson(res,400,{error:"album_binding_tariffs_invalid_input"});
+ const c=await pool.connect();
+ const bad=(reason)=>Object.assign(new Error(reason),{status:400});
+ const clean=(raw)=>{
+  if(raw===null||raw==="")return null;
+  const n=Number(raw);
+  if(!Number.isSafeInteger(n)||n<0||n>9000000000)throw bad("album_binding_tariff_invalid_price");
+  return n;
+ };
+ try{
+  await c.query("BEGIN");
+  const locked=await c.query("SELECT ui_preferences FROM labs WHERE id=$1 FOR UPDATE",[labId]);
+  if(!locked.rowCount)throw bad("lab_not_found");
+  const prefs=locked.rows[0].ui_preferences||{};
+  const catalog=normalizePrintCatalog(prefs.printTariffCatalog);
+  const combined=catalog.albumPricingMode==="combined";
+  const sizeIds=[];
+  const seen=new Set();
+  for(const row of rows){
+   const id=String(row?.sizeId||"");
+   if(!id||seen.has(id)||!await labCanUsePrintSize(c,labId,id))throw bad("invalid_print_size");
+   seen.add(id);sizeIds.push(id);
+  }
+  let updated=catalog;
+  if(combined){
+   for(const row of rows){
+    if(!row||!Object.hasOwn(row,"combinedAlbumRates"))throw bad("album_binding_combined_rates_required");
+   }
+   if(audience==="colleague"){
+    updated=applyPrintRates(catalog,rows,sizeIds);
+   }else{
+    const projected={...catalog,albumCombinedRates:catalog.walkinAlbumCombinedRates||{}};
+    const next=applyPrintRates(projected,rows,sizeIds);
+    updated={...catalog,walkinAlbumCombinedRates:next.albumCombinedRates};
+   }
+  }else{
+   const allowed=new Set((catalog.types||[]).filter(t=>t.kind==="binding"&&t.active!==false).map(t=>String(t.id)));
+   const nextWalkin={...(catalog.walkinAlbumBindingRates||{})};
+   const colleagueRows=[];
+   for(const row of rows){
+    if(!Object.hasOwn(row,"basePrice"))throw bad("album_binding_base_required");
+    const basePrice=clean(row.basePrice);
+    const input=row.customRates??{};
+    if(!input||typeof input!=="object"||Array.isArray(input))throw bad("album_binding_custom_rates_invalid");
+    const custom={};
+    for(const [id,raw] of Object.entries(input)){
+     if(id==="album_binding_price"||!allowed.has(String(id)))throw bad("album_binding_unknown_model");
+     custom[id]=clean(raw);
+    }
+    if(audience==="colleague"){
+     colleagueRows.push({sizeId:row.sizeId,customRates:custom});
+     await c.query(
+      "INSERT INTO lab_prices(lab_id,size_id,album_binding_price,updated_at) VALUES($1,$2,$3,now()) ON CONFLICT(lab_id,size_id) DO UPDATE SET album_binding_price=EXCLUDED.album_binding_price,updated_at=now()",
+      [labId,String(row.sizeId),basePrice]
+     );
+    }else{
+     nextWalkin[String(row.sizeId)]={...(nextWalkin[String(row.sizeId)]||{}),album_binding_price:basePrice,...custom};
+    }
+   }
+   if(audience==="colleague")updated=applyPrintRates(catalog,colleagueRows,sizeIds);
+   else updated={...catalog,walkinAlbumBindingRates:nextWalkin};
+  }
+  await c.query("UPDATE labs SET ui_preferences=jsonb_set(COALESCE(ui_preferences,'{}'::jsonb),'{printTariffCatalog}',$2::jsonb,true),updated_at=now() WHERE id=$1",[labId,JSON.stringify(updated)]);
+  if(audience==="colleague"&&!combined)await syncLabAlbumSizesFromPrintTariffs(c,labId);
+  await c.query("COMMIT");
+  await audit(userId,labId,"album.binding.tariffs","lab",labId,{audience,mode:combined?"combined":"separate",sizeCount:rows.length}).catch(()=>{});
+  return sendJson(res,200,{ok:true,catalog:updated});
+ }catch(error){
+  await c.query("ROLLBACK").catch(()=>{});
+  throw error;
+ }finally{
+  c.release();
+ }
+}

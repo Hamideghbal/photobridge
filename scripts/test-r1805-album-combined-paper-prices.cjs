@@ -105,7 +105,7 @@ test('R1805: single-model combined UI, mode chooser only in album settings and p
   assert(a>=0&&b>a);
   assert(!tariff.includes('PB1795BindingPricingSettings,{onSaved:'));
   assert(tariff.includes('pb1805TariffFields(pb1800TariffFields('));
-  assert(tariff.includes('pb1539.albumPricingMode!=="combined"&&e.jsx("button"'));
+  assert(tariff.includes('pb1539.albumPricingMode!=="combined"&&e.jsx("button"')||tariff.includes('pb1810Open&&e.jsx(PB1810AlbumBindingPriceModal'),"R1805 legacy model action or R1810 relocated modal is present");
   assert(tariff.includes('combinedAlbumRates:Object.fromEntries('));
   assert(s.includes('PB1795BindingPricingSettings,{settings,onSaved:'));
   assert(s.includes('pb1805Missing=pb1795Combined'));

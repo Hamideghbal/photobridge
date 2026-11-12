@@ -40,7 +40,13 @@ test('R1812: no standalone binding fee displayed or added in combined photograph
   assert(album.includes('_a=pb1795Combined?yt.reduce('),'combined price is once per selected paper');
   assert(album.includes('pb1795Combined&&yt.map($e=>{const pb1812Line=pb1812BundledPaperLine('));
   assert(album.includes('!pb1795Combined&&yt.map($e=>'));
-  assert(album.includes('!pb1795Combined&&e.jsxs("div",{children:[e.jsxs("span",{children:["صحافی "'));
+  const quoteAt=album.indexOf('className:"albumQuoteRows"');
+  const priceAt=album.indexOf('V(_a)',quoteAt);
+  const bindingRow=album.lastIndexOf('!pb1795Combined&&e.jsxs("div",{children:[e.jsxs("span",',priceAt);
+  assert(quoteAt>=0&&priceAt>quoteAt&&bindingRow>quoteAt&&priceAt-bindingRow<600,
+   'standalone binding row must be hidden in combined quotes');
+  assert(album.slice(bindingRow,priceAt).includes('PB1795BindingLabel('),
+   'test the actual post-R1795 model-specific label rather than old static text');
   assert(album.includes('children:["چاپ و صحافی ",$e.label'));
   assert(source.includes('function pb1812BundledPaperLine('));
  }

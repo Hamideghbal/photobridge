@@ -45,7 +45,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const rowOpen='e.jsxs("div",{children:[e.jsxs("span",';
   const rowAt=s.lastIndexOf(rowOpen,priceAt);
   if(rowAt<quoteAt||priceAt-rowAt>550||
-     (s.slice(rowAt,priceAt).match(/e\\.jsxs\\("div",\\{children:/g)||[]).length!==1)
+     s.slice(rowAt,priceAt).split(rowOpen).length!==2)
     throw Error('[R1812] standalone binding row structure changed');
   if(s.slice(Math.max(quoteAt,rowAt-30),rowAt).endsWith('!pb1795Combined&&'))
     throw Error('[R1812] binding row already conditional');

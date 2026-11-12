@@ -20,7 +20,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(formatterStart<0||formatterEnd<=formatterStart||formatterEnd-formatterStart>1200)throw Error('[R1805 UI] print tariff formatter bounds changed');
   s=s.slice(0,formatterStart)+'w=(B,L)=>{const n=L.startsWith("pb1805_combined_")?pb1805RateValue(B,pb1539,L):L.startsWith("pb1539_")?(Object.hasOwn(B,L)?B[L]:pb1539.rates?.[B.id]?.[L.slice(7)]):B[L];return n==null||String(n)===""||Number(n)===0?"—":V(Number(n))+" تومان"}'+s.slice(formatterEnd);
   s=one(s,':k[C])',':C.startsWith("pb1805_combined_")?(Object.hasOwn(k,C)?k[C]:pb1805RateValue(k,pb1539,C)):k[C])','mobile and desktop combined numeric value');
-  s=one(s,'e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ مدل صحافی جدید"})','pb1539.albumPricingMode!=="combined"&&e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ مدل صحافی جدید"})','hide model add in combined mode');
+  // R1777 changed this button's visible text from "+ مدل صحافی جدید" to "صحافی جدید".
+  // Guard the behavior by its unique action in the tariff component, accepting both labels.
+  const pb1805CreateButton=/e\.jsx\("button",\{className:"pbActionButton secondary",type:"button",onClick:\(\)=>pb1539Create\(\),children:"(?:\+ مدل )?صحافی جدید"\}\)/g;
+  const pb1805CreateMatches=[...s.matchAll(pb1805CreateButton)];
+  if(pb1805CreateMatches.length!==1)throw Error('[R1805 UI] binding create action count '+pb1805CreateMatches.length);
+  s=s.replace(pb1805CreateButton,full=>'pb1539.albumPricingMode!=="combined"&&'+full);
   s=one(s,'m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTariffs:!0})','m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTariffs:pb1539.albumPricingMode!=="combined"})','size dialog only edits dimensions in combined mode; prices in main 3-column grid');
   return s;
  },root+' tariff');

@@ -1183,3 +1183,11 @@ runR1314(process.execPath,['--test','scripts/test-r1795-binding-pricing-modes.cj
 
 // R1796: test the composed checkout route so stock rewrites cannot remove settlement locks.
 runR1314(process.execPath,['--test','scripts/test-r1796-print-submit-terms.cjs'],{stdio:'inherit'});
+
+// R1797: separate invoice fees, physical customer tariff columns and grouped opening debt.
+await deployStep('./enable-r1797-invoice-tariff-debt.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1797-invoice-tariff-debt.cjs'],{stdio:'inherit'});
+
+// R1798: product-only orders use packing/delivery rather than photo-print stages.
+await deployStep('./enable-r1798-no-print-workflow.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1798-no-print-workflow.cjs'],{stdio:'inherit'});

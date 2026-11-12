@@ -1,1 +1,1 @@
-2026-11-12-r1818-album-core-cover-redesign
+2026-11-12-r1819-album-cover-controls-cleanup

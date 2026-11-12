@@ -1191,3 +1191,7 @@ runR1314(process.execPath,['--test','scripts/test-r1797-invoice-tariff-debt.cjs'
 // R1798: product-only orders use packing/delivery rather than photo-print stages.
 await deployStep('./enable-r1798-no-print-workflow.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1798-no-print-workflow.cjs'],{stdio:'inherit'});
+
+// R1799: goods invoice and receipt do not depend on photo downloading.
+await deployStep('./enable-r1799-product-auto-invoice.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1799-product-auto-invoice.cjs'],{stdio:'inherit'});

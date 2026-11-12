@@ -1,0 +1,23 @@
+/* R1799: goods need an invoice and receipt, never the photo-download pipeline.
+   Printing uses the native host's existing durable spool/idempotency mechanism. */
+async function pb1799ProcessProduct(lab,order,settings){
+ const id=order.id,previous=pb1568State(lab,id)||{};
+ if(previous.productReceiptDone||previous.retryAt>Date.now())return;
+ if(!settings.autoPrintInvoice||!['sent','received'].includes(String(order.status||'')))return;
+ if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return;
+ try{
+  const data=await Me('/api/lab/orders/'+encodeURIComponent(id)+'/automation-invoice',{method:'POST',body:'{}'});
+  if(!data?.invoice?.id)throw Error('issued_invoice_missing');
+  pb1568Save(lab,id,{...previous,phase:'product_invoice',invoiceId:data.invoice.id,attempts:0});
+  await pb1568PersistPdf(data.invoice,id);
+  await pb1568Thermal('invoice',id,data.invoice.id);
+  pb1568Save(lab,id,{phase:'complete',productReceiptDone:true,invoiceId:data.invoice.id,attempts:0});
+ }catch(error){
+  const current=pb1568State(lab,id)||previous,attempts=Math.min(8,(current.attempts||0)+1),message=pb1568Problem(error);
+  pb1568Save(lab,id,{...current,phase:'product_invoice',attempts,error:message,retryAt:Date.now()+Math.min(600000,30000*2**Math.min(attempts,4))});
+  pb1568Work.lastError=message;
+  if(message==='invoice_pricing_required'&&!current.pricingPrompted){
+   pb1576QueuePrice(lab,id);pb1568Save(lab,id,{...pb1568State(lab,id),pricingPrompted:true});
+  }
+ }
+}

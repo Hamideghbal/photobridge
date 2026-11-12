@@ -33,7 +33,7 @@ test('R1797 composed invoice creation freezes actual component rates and conserv
 });
 test('R1797 approved thermal has explicit fee then quantity columns and no inline-price dependency',()=>{
  const ui=read('dist/web/assets/index-UIRefine-v655-r84.js'),start=ui.indexOf('function pbR1698Words('),end=ui.indexOf('function Vy(',start);
- const ctx={vh:t=>t.items,ph:r=>r.description};vm.createContext(ctx);vm.runInContext(ui.slice(start,end),ctx);
+ const ctx={vh:t=>t.items,ph:r=>r.description};vm.createContext(ctx);vm.runInContext((ui.includes('function pb1798NoPrintInvoice(')?read('scripts/r1798-no-print-ui.js.txt'):'')+ui.slice(start,end),ctx);
  const invoice={number:1,total:300,subtotal:300,items:split([item]),lab_name:'Lab',customer_name:'Customer'};
  const html=ctx.pbR1698ApprovedThermal(invoice,false);
  assert(html.includes('<th class="price">فی</th><th class="qty">تعداد</th>'));assert(!html.includes('<th class="unit">'));

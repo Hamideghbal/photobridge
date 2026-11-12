@@ -14,7 +14,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   s=one(s,'e.jsx(PB1795BindingPricingSettings,{onSaved:next=>pb1539Set(next.printTariffCatalog)}),','','remove mode control from main tariff');
   s=one(s,'customRates:Object.fromEntries(pb1539Custom.map(t=>[t.id,Na(Object.hasOwn(F,"pb1539_"+t.id)?F["pb1539_"+t.id]:pb1539.rates?.[F.id]?.[t.id]??null)]))',
   '...(pb1539.albumPricingMode==="combined"?{combinedAlbumRates:Object.fromEntries(["luster","silk","metallic"].map(paper=>[paper,Na(Object.hasOwn(F,"pb1805_combined_"+paper)?F["pb1805_combined_"+paper]:pb1539.albumCombinedRates?.[String(F.id)]?.[paper]??null)]))}:{}),customRates:Object.fromEntries(pb1539Custom.map(t=>[t.id,Na(Object.hasOwn(F,"pb1539_"+t.id)?F["pb1539_"+t.id]:pb1539.rates?.[F.id]?.[t.id]??null)]))','save three combined prices with existing atomic tariff rows');
-  s=one(s,'w=(B,L)=>{const n=L.startsWith("pb1539_")?','w=(B,L)=>{const n=L.startsWith("pb1805_combined_")?pb1805RateValue(B,pb1539,L):L.startsWith("pb1539_")?','print tariff preview prices');
+  // R1805 hotfix: R1790–R1800 can rewrite the printable tariff formatter.
+  // Replace the bounded formatter, not its brittle minified inner expression.
+  const formatterStart=s.indexOf('w=(B,L)=>'),formatterEnd=formatterStart<0?-1:s.indexOf(',F=c.current.map',formatterStart);
+  if(formatterStart<0||formatterEnd<=formatterStart||formatterEnd-formatterStart>1200)throw Error('[R1805 UI] print tariff formatter bounds changed');
+  s=s.slice(0,formatterStart)+'w=(B,L)=>{const n=L.startsWith("pb1805_combined_")?pb1805RateValue(B,pb1539,L):L.startsWith("pb1539_")?(Object.hasOwn(B,L)?B[L]:pb1539.rates?.[B.id]?.[L.slice(7)]):B[L];return n==null||String(n)===""||Number(n)===0?"—":V(Number(n))+" تومان"}'+s.slice(formatterEnd);
   s=one(s,':k[C])',':C.startsWith("pb1805_combined_")?(Object.hasOwn(k,C)?k[C]:pb1805RateValue(k,pb1539,C)):k[C])','mobile and desktop combined numeric value');
   s=one(s,'e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ مدل صحافی جدید"})','pb1539.albumPricingMode!=="combined"&&e.jsx("button",{className:"pbActionButton secondary",type:"button",onClick:()=>pb1539Create(),children:"+ مدل صحافی جدید"})','hide model add in combined mode');
   s=one(s,'m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTariffs:!0})','m!==void 0&&e.jsx(wb,{size:m,onClose:()=>g(void 0),onSaved:S,showTariffs:pb1539.albumPricingMode!=="combined"})','size dialog only edits dimensions in combined mode; prices in main 3-column grid');

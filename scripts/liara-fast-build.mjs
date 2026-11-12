@@ -1232,3 +1232,7 @@ await deployStep('./enable-r1811-album-binding-api.mjs');
 await deployStep('./enable-r1811-album-binding-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1811-album-binding-models.cjs'],{stdio:'inherit'});
 
+
+// R1812: numbered album cards must not overlap; bundled printing/binding is one amount in preview.
+await deployStep('./enable-r1812-album-steps-quote.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1812-album-steps-quote.cjs'],{stdio:'inherit'});

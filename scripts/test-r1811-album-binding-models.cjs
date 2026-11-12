@@ -85,7 +85,7 @@ test('R1811 both modals have correct Luster label, modes and selectable models',
   assert(!ui.includes('e.jsx(PB1795BindingPricingSettings,{settings,onSaved:'));
   const html=read(root+'/index.html');
   assert(html.includes('photobridge-r1811-album-binding-modal.css?v=r1811'));
-  assert(read(root+'/photobridge-r1811-album-binding-modal.css').includes('top:max(104px'));
+  assert(read(root+'/photobridge-r1811-album-binding-modal.css').includes('top:max(140px'));
  }
 });
 test('R1811 hot-update includes new CSS and exact hashes for web/Windows',()=>{

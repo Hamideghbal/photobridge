@@ -2,11 +2,11 @@
 /* R1811: keep the album definition dialog below all sticky lab headers. */
 html body #root .labRoleWorkspace:has(.pb1811AlbumModalLayer),
 html body #root .pricingSettingsCard:has(.pb1811AlbumModalLayer){
- isolation:auto!important;overflow:visible!important;
+ isolation:auto!important;overflow:visible!important;position:relative!important;z-index:2147482000!important;
 }
 html body .pb1810AlbumModalLayer.pb1811AlbumModalLayer{
  position:fixed!important;
- top:max(104px, calc(env(safe-area-inset-top, 0px) + 90px))!important;
+ top:max(140px, calc(env(safe-area-inset-top, 0px) + 128px))!important;
  right:0!important;bottom:0!important;left:0!important;inset-inline:0!important;
  z-index:2147483000!important;box-sizing:border-box!important;
  align-items:flex-start!important;justify-content:center!important;
@@ -70,7 +70,7 @@ html body .pb1810AlbumModal.pb1811AlbumModal{
 html body #root .photographerMain .pb1805CombinedAlbum .pb1539BindingField{display:block!important}
 @media (max-width:760px){
  html body .pb1810AlbumModalLayer.pb1811AlbumModalLayer{
-  top:max(84px, calc(env(safe-area-inset-top, 0px) + 75px))!important;
+  top:max(108px, calc(env(safe-area-inset-top, 0px) + 95px))!important;
   padding:8px 8px max(10px,env(safe-area-inset-bottom,0px))!important;
  }
  html body .pb1810AlbumModal.pb1811AlbumModal{width:100%!important;border-radius:12px!important}

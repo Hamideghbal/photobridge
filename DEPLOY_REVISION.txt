@@ -1,1 +1,1 @@
-2026-11-12-r1802-product-invoice-album-flow
+2026-11-12-r1803-priced-album-cover-recovery

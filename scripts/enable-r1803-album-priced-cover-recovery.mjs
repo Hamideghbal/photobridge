@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const path = 'dist/api/server.js';
+let source = fs.readFileSync(path, 'utf8');
+const marker = 'async function albumCatalogForLab(labId, includeInactive = false) {';
+if (source.split(marker).length !== 2) throw Error('[R1803] catalog function anchor mismatch');
+const mapping = /(covers: cq\.rows\.map\(\(r\) => \(\{[\s\S]*?\}\)\)), coverCatalog, extras:/g;
+if ([...source.matchAll(mapping)].length !== 1) throw Error('[R1803] derived covers mapping anchor mismatch');
+source = source.replace(marker, fs.readFileSync('scripts/r1803-album-cover-helper.js.txt','utf8')+'\n'+marker);
+source = source.replace(mapping, (_, legacy) => 'covers: pb1803RecoverPricedCovers('+legacy.slice('covers: '.length)+', coverCatalog, sq.rows), coverCatalog, extras:');
+fs.writeFileSync(path, source);
+execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
+console.log('[R1803] read-only priced album cover catalog fallback installed');

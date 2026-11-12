@@ -1,0 +1,54 @@
+/* R1803: recover priced catalog covers at read-time if their legacy projection is absent.
+   This is a read-only fallback; it never edits a tariff or creates a DB row. */
+function pb1803RecoverPricedCovers(legacyCovers, catalog, sizeRows) {
+  const result = Array.isArray(legacyCovers) ? [...legacyCovers] : [];
+  if (!catalog || !Array.isArray(catalog.variants)) return result;
+  const active = row => row && row.active !== false;
+  const sizes = new Map((sizeRows || []).filter(row => active(row) && Number(row.binding_price || 0) > 0)
+    .map(row => [String(row.id), row]));
+  const materials = new Map((catalog.materials || []).filter(active).map(row => [String(row.id), row]));
+  const types = new Map((catalog.types || []).filter(active).map(row => [String(row.id), row]));
+  const colors = new Map((catalog.colors || []).filter(active).map(row => [String(row.id), row]));
+  for (const variant of catalog.variants) {
+    if (!active(variant)) continue;
+    const material = materials.get(String(variant.materialId));
+    const type = types.get(String(variant.typeId));
+    if (!material || !type || type.name === '__PB_COLOR_PALETTE__') continue;
+    const chosen = new Set((variant.colorIds || []).map(String));
+    const buckets = new Map();
+    for (const tariff of variant.prices || []) {
+      const size = sizes.get(String(tariff.sizeId));
+      const color = colors.get(String(tariff.colorId));
+      const price = Number(tariff.price);
+      if (!size || !color || !chosen.has(String(color.id)) || !Number.isFinite(price) || price <= 0) continue;
+      const key = String(size.id);
+      if (!buckets.has(key)) buckets.set(key, {size, rows: []});
+      const bucket = buckets.get(key);
+      if (!bucket.rows.some(row => String(row.color.id) === String(color.id))) bucket.rows.push({color, price});
+    }
+    for (const {size, rows} of buckets.values()) {
+      const represented = result.some(cover =>
+        String(cover.sizeId || '') === String(size.id) &&
+        String(cover.materialName || cover.name || '') === String(material.name || '') &&
+        String(cover.modelName || 'استاندارد') === String(type.name || '') &&
+        (!(cover.colors || []).length || rows.some(({color}) => (cover.colors || []).some(existing =>
+          String(existing.colorValue || '').toUpperCase() === String(color.colorValue || '').toUpperCase()))));
+      if (represented) continue;
+      result.push({
+        id: 'catalog:' + variant.id + ':' + size.id,
+        name: type.name === 'استاندارد' ? material.name : material.name + ' · ' + type.name,
+        materialName: material.name, modelName: type.name,
+        sizeId: size.id, sizeLabel: size.label,
+        price: Math.min(...rows.map(row => row.price)),
+        imageData: type.imageData || '', previewPresetKey: type.previewPresetKey || 'simple',
+        active: true, sortOrder: Number(variant.sortOrder || 0),
+        colors: rows.map(({color, price}) => ({
+          id: 'catalog-color:' + variant.id + ':' + size.id + ':' + color.id,
+          name: color.name, colorValue: color.colorValue || '',
+          price, active: true, sortOrder: Number(color.sortOrder || 0)
+        }))
+      });
+    }
+  }
+  return result;
+}

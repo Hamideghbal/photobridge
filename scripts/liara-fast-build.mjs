@@ -1226,3 +1226,9 @@ runR1314(process.execPath,['--test','scripts/test-r1805-album-combined-paper-pri
 await deployStep('./enable-r1810-album-binding-api.mjs');
 await deployStep('./enable-r1810-album-binding-ui.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1810-album-binding-pricing-modal.cjs'],{stdio:'inherit'});
+
+// R1811: model-selectable paper-specific combined prices and below-header definition dialog.
+await deployStep('./enable-r1811-album-binding-api.mjs');
+await deployStep('./enable-r1811-album-binding-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1811-album-binding-models.cjs'],{stdio:'inherit'});
+

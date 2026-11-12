@@ -1,0 +1,74 @@
+
+/* R1810: album binding pricing is its own workflow; print prices stay on both main tables. */
+function pb1810BindingFields(fields,catalog) {
+ const bindingIds=new Set((catalog?.types||[]).filter(t=>t.kind==="binding").map(t=>String(t.id)));
+ return fields.filter(([key])=>key!=="album_binding_price"&&!String(key).startsWith("pb1805_combined_")&&!(String(key).startsWith("pb1539_")&&bindingIds.has(String(key).slice(7))));
+}
+function PB1810AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],onClose,onSaved}){
+ const combined=catalog.albumPricingMode==="combined";
+ const papers=[["luster","گلاسه"],["silk","سیلک"],["metallic","متالیک"]];
+ const types=(catalog.types||[]).filter(t=>t.kind==="binding"&&t.active!==false);
+ const columns=combined?papers:[["album_binding_price",(types.find(t=>t.id==="album_binding_price")?.name||"صحافی اصلی")],...types.filter(t=>t.id!=="album_binding_price").map(t=>[String(t.id),t.name])];
+ const source=combined?(audience==="walkin"?catalog.walkinAlbumCombinedRates:catalog.albumCombinedRates):audience==="walkin"?catalog.walkinAlbumBindingRates:catalog.rates;
+ const initial=()=>{
+  const values={};
+  for(const row of rows){
+   const id=String(row.id),saved=source?.[id]||{};
+   values[id]={};
+   for(const [key] of columns){
+    let raw=saved[key];
+    if(!combined&&audience==="colleague"&&key==="album_binding_price")raw=row.album_binding_price;
+    values[id][key]=raw===null||raw===undefined?"":String(raw);
+   }
+  }
+  return values;
+ };
+ const [draft,setDraft]=x.useState(initial);
+ const [busy,setBusy]=x.useState(false),[message,setMessage]=x.useState("");
+ const update=(size,key,value)=>setDraft(prev=>({...prev,[size]:{...(prev[size]||{}),[key]:value}}));
+ const clean=value=>{
+  if(value==null||String(value).trim()==="")return null;
+  const n=Number(value);
+  if(!Number.isSafeInteger(n)||n<0||n>9000000000)throw Error("قیمت باید یک عدد صحیح و غیرمنفی باشد.");
+  return n;
+ };
+ const save=async()=>{
+  if(busy)return;
+  setBusy(true);setMessage("");
+  try{
+   const prices=rows.map(row=>{
+    const sizeId=String(row.id),current=draft[sizeId]||{};
+    if(combined)return{sizeId,combinedAlbumRates:Object.fromEntries(papers.map(([key])=>[key,clean(current[key])]))};
+    const customRates=Object.fromEntries(columns.filter(([key])=>key!=="album_binding_price").map(([key])=>[key,clean(current[key])]));
+    return{sizeId,basePrice:clean(current.album_binding_price),customRates};
+   });
+   await Me("/api/lab/album-binding-prices",{method:"PUT",body:JSON.stringify({audience,rows:prices})});
+   await Promise.resolve(onSaved?.());
+   onClose();
+  }catch(error){
+   setMessage(error?.message||"ثبت قیمت صحافی انجام نشد. دوباره تلاش کنید.");
+  }finally{setBusy(false)}
+ };
+ return e.jsx("div",{className:"pb1810AlbumModalLayer",children:e.jsxs("section",{className:"pb1810AlbumModal",role:"dialog","aria-modal":true,"aria-label":"ثبت قیمت صحافی",children:[
+  e.jsxs("header",{className:"pb1810AlbumModalHead",children:[
+   e.jsxs("div",{children:[
+    e.jsx("h2",{children:"ثبت قیمت صحافی"}),
+    e.jsx("p",{children:combined?"قیمت چاپ و صحافی با هم، به تفکیک سایز و نوع کاغذ. قیمت چاپ عکس به‌صورت جداگانه در جدول اصلی باقی می‌ماند.":"قیمت صحافی به تفکیک سایز و مدل؛ مستقل از قیمت چاپ عکس."}),
+    e.jsx("small",{children:audience==="walkin"?"تعرفه مخصوص مشتری آزاد":"تعرفه مخصوص همکار"})
+   ]}),
+   e.jsx("button",{type:"button",className:"pb1810Close",onClick:onClose,disabled:busy,"aria-label":"بستن پنجره",children:"×"})
+  ]}),
+  e.jsx("div",{className:"pb1810AlbumModalScroll",children:e.jsxs("table",{children:[
+   e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{scope:"col",children:"سایز آلبوم"}),...columns.map(([key,label])=>e.jsx("th",{scope:"col",children:label},key))]})}),
+   e.jsx("tbody",{children:rows.map(row=>e.jsxs("tr",{children:[
+    e.jsx("th",{scope:"row",children:gr(row.label)}),
+    ...columns.map(([key,label])=>e.jsx("td",{children:e.jsx("input",{type:"text",inputMode:"numeric",dir:"ltr","aria-label":label+" "+gr(row.label),value:draft[String(row.id)]?.[key]??"",placeholder:"—",onChange:ev=>update(String(row.id),key,String(Mn(ev.target.value)??""))})},key))
+   ]},String(row.id)))})
+  ]})}),
+  message&&e.jsx("p",{className:"pb1810AlbumModalError",role:"alert",children:message}),
+  e.jsxs("footer",{className:"pb1810AlbumModalActions",children:[
+   e.jsx("button",{type:"button",className:"pbActionButton secondary",onClick:onClose,disabled:busy,children:"انصراف"}),
+   e.jsx("button",{type:"button",className:"primary",onClick:save,disabled:busy||!rows.length,children:busy?"در حال ثبت…":"ذخیره قیمت صحافی"})
+  ]})
+ ]})});
+}

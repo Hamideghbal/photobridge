@@ -7,8 +7,8 @@ const api=read('dist/api/server.js');
 const printApi=()=>import(pathToFileURL(path.resolve('dist/api/lab-print-catalog.js')));
 const baseCatalog={
  albumPricingMode:'combined',
- types:[{id:'album_binding_price',name:'صحافی اصلی',kind:'binding',legacy:true,active:true}],
- rates:{p:{chassis:300}},walkinRates:{p:{frame:400}},
+ types:[{id:'album_binding_price',name:'صحافی اصلی',kind:'binding',legacy:true,active:true},{id:'c_12345678-1234-4123-8123-123456789abc',name:'شاسی مدل اول',kind:'chassis',active:true},{id:'c_22345678-1234-4123-8123-123456789abc',name:'قاب مدل اول',kind:'frame',active:true}],
+ rates:{p:{'c_12345678-1234-4123-8123-123456789abc':300}},walkinRates:{p:{'c_22345678-1234-4123-8123-123456789abc':400}},
  albumCombinedRates:{p:{luster:100,silk:200,metallic:300}},
  walkinAlbumCombinedRates:{p:{luster:11,silk:22,metallic:33}},
  walkinAlbumBindingRates:{p:{album_binding_price:55}}
@@ -20,8 +20,8 @@ test('R1810: both audience matrices normalize independently, never changing orig
  assert.equal(catalog.albumCombinedRates.p.luster,100);
  assert.equal(catalog.walkinAlbumCombinedRates.p.luster,11);
  assert.equal(catalog.walkinAlbumBindingRates.p.album_binding_price,55);
- assert.equal(catalog.rates.p.chassis,300);
- assert.equal(catalog.walkinRates.p.frame,400);
+ assert.equal(catalog.rates.p['c_12345678-1234-4123-8123-123456789abc'],300);
+ assert.equal(catalog.walkinRates.p['c_22345678-1234-4123-8123-123456789abc'],400);
 });
 const getHandler=()=>{
  const begin=api.indexOf('async function pb1810SaveAlbumBindingPrices('),end=api.indexOf('async function albumOrderSnapshot(',begin+20);
@@ -60,7 +60,7 @@ test('R1810: colleague combined modal writes ONLY colleague binding rates',async
  assert.equal(output.status,200);
  assert.equal(saved.catalog.albumCombinedRates.p.silk,202);
  assert.equal(saved.catalog.walkinAlbumCombinedRates.p.silk,22);
- assert.equal(saved.catalog.walkinRates.p.frame,400);
+ assert.equal(saved.catalog.walkinRates.p['c_22345678-1234-4123-8123-123456789abc'],400);
  assert.equal(saved.labBinding,undefined);
 });
 test('R1810: walk-in combined rates remain separate from colleague catalog',async()=>{

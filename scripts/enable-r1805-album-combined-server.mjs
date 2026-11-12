@@ -50,7 +50,7 @@ server=region(server,'const paperBreakdown = Array.isArray(ad?.paperBreakdown) &
  '                    if(!qty||!unit)continue;',
  '                    items.push({kind:"album_binding",description:"چاپ و صحافی · "+String(ad?.size?.label||"").trim()+" · کاغذ "+String(row.paperTypeLabel||invoicePrintTypeLabel(row.paperType)||row.paperType||"").trim(),quantity:qty,unitPrice:unit,lineTotal:unit*qty});',
  '                }',
- '            }else'+old.trimStart()
+ '            }else '+old.trimStart()
  ].join('\n');
  return s.replace(old,newer);
 },'album invoice');

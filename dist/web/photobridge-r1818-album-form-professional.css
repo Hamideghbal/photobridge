@@ -1,0 +1,434 @@
+
+/* R1818: the album submission dialog has exactly three real controls in row one,
+   plus a clear cover-selection flow: material/color, selected preview, model gallery.
+   CSS is scoped to the photographer's album order editor, not lab tariffs. */
+
+/* Dedicated markup class (legacy grid2 was removed from the actual component).
+   Specificity also defeats R1810's triple pb1802CompactAlbum selector. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator.albumConfigurator .albumConfigBlockCompactV409 .albumCoreFields.pb1818AlbumCoreThree{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:auto!important;
+  grid-auto-flow:row!important;
+  align-items:start!important;
+  align-content:start!important;
+  justify-items:stretch!important;
+  column-gap:10px!important;
+  row-gap:5px!important;
+  min-width:0!important;
+  max-width:100%!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  direction:rtl!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator.albumConfigurator .pb1818AlbumCoreThree>label{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  grid-column:auto!important;
+  grid-row:1!important;
+  flex:0 1 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  gap:6px!important;
+  box-sizing:border-box!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator .pb1818AlbumCoreThree>label :is(select,input,.pbSelectTrigger,.pbSelectButton,.albumPaperNativeSelect){
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  min-height:38px!important;
+  height:38px!important;
+  margin:0!important;
+  padding-inline:8px!important;
+  font-size:12px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .pb1818AlbumCoreThree .albumCustomSizeEdit{
+  align-self:flex-start!important;
+  flex:0 0 auto!important;
+  min-height:27px!important;
+  max-height:30px!important;
+  margin-top:3px!important;
+}
+
+/* Cover picker: right-hand inputs, left-hand currently selected preview,
+   entire second row for model thumbnails. No overlapping, tall cards or empty gaps. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator.albumConfigurator .albumCoverConfigBlock .pb1818CoverPicker{
+  display:grid!important;
+  direction:rtl!important;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;
+  grid-template-rows:auto auto!important;
+  grid-auto-flow:row!important;
+  gap:10px 12px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  align-items:stretch!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls{
+  grid-area:1 / 1 / 2 / 2!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:11px!important;
+  min-width:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:13px!important;
+  border:1px solid #dde6f1!important;
+  border-radius:13px!important;
+  background:#f8fafd!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls
+:is(.albumCoverOrderMaterial,.albumCoverOrderColor){
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  align-items:stretch!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  gap:7px!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverFieldLabel{
+  display:block!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.5!important;
+  color:#334155!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls
+.albumCoverOrderMaterial :is(select,.pbSelectTrigger,.pbSelectButton){
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  min-height:38px!important;
+  height:38px!important;
+  border-radius:9px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls .albumCoverOrderColorChoices{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  gap:6px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:visible!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls .albumCoverOrderColorChoices>button{
+  display:inline-flex!important;
+  flex:0 0 auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  min-height:32px!important;
+  padding:4px 8px!important;
+  border-radius:9px!important;
+  font-size:11px!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls .albumCoverOrderColorChoices>button.selected{
+  background:#eef3ff!important;
+  border-color:#6a87e8!important;
+  box-shadow:0 0 0 2px #466eea20!important;
+}
+
+/* Large preview reflects the *current selected model and color*, not an
+   independent image choice. Reuses exactly the image already resolved by Kv. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreview{
+  grid-area:1 / 2 / 2 / 3!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  min-width:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:11px 13px!important;
+  gap:7px!important;
+  border:1px solid #dbe5f2!important;
+  border-radius:13px!important;
+  background:#fff!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewHeading{
+  display:block!important;
+  color:#52637b!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  line-height:1.5!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewImage{
+  display:grid!important;
+  place-items:center!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:142px!important;
+  height:155px!important;
+  max-height:185px!important;
+  padding:6px!important;
+  overflow:hidden!important;
+  border-radius:10px!important;
+  background:#f5f7fb!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewImage>img{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-height:0!important;
+  height:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverImageMissing{
+  color:#8290a5!important;
+  text-align:center!important;
+  font-size:11px!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewCaption{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:3px!important;
+  min-width:0!important;
+  width:100%!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewCaption>strong{
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.5!important;
+  overflow-wrap:anywhere!important;
+  color:#243349!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewCaption>small{
+  font-size:11px!important;
+  color:#64748b!important;
+  line-height:1.5!important;
+  overflow-wrap:anywhere!important;
+}
+
+/* Model thumbnails are the action: tap a picture to select it. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser{
+  grid-area:2 / 1 / 3 / 3!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:10px 12px!important;
+  border:1px solid #e4eaf3!important;
+  border-radius:13px!important;
+  background:#fff!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser>span{
+  font-size:12px!important;
+  font-weight:800!important;
+  color:#344054!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fill,minmax(112px,1fr))!important;
+  align-items:start!important;
+  justify-content:stretch!important;
+  gap:9px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:0!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button{
+  display:grid!important;
+  grid-template-rows:88px auto auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  padding:7px!important;
+  gap:5px!important;
+  position:relative!important;
+  border:1px solid #dfe6f0!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  overflow:hidden!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+  transition:background-color .12s,border-color .12s!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button.selected{
+  border-color:#5477e6!important;
+  background:#f1f5ff!important;
+  box-shadow:0 0 0 2px #577beb22!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button.selected::after{
+  content:"✓"!important;
+  position:absolute!important;
+  top:5px!important;
+  inset-inline-start:5px!important;
+  width:20px!important;
+  height:20px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  background:#456ad8!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button>img,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button>.albumCoverOrderColorFallback{
+  display:block!important;
+  width:100%!important;
+  height:88px!important;
+  min-height:88px!important;
+  max-height:88px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  border-radius:7px!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button>b,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser .albumCoverOrderModelGrid>button>small{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  font-size:11px!important;
+  line-height:1.4!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+/* Text on cover should be a normal single-line field, not a tall card. */
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock>label{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  min-height:0!important;
+  max-width:400px!important;
+  width:100%!important;
+  height:auto!important;
+  align-items:stretch!important;
+  align-self:start!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+> .albumConfigurator .albumCoverConfigBlock>label>input{
+  height:38px!important;
+  min-height:38px!important;
+  max-height:38px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* Mobile retains the three selectors in one row: do not revive the old
+   breakpoint that collapsed them to two and then one. */
+@media(max-width:760px){
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum.pb1802CompactAlbum.pb1802CompactAlbum
+ > .albumConfigurator.albumConfigurator .albumConfigBlockCompactV409 .albumCoreFields.pb1818AlbumCoreThree{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .pb1818AlbumCoreThree>label{
+  font-size:10.5px!important;
+  gap:4px!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .pb1818AlbumCoreThree>label :is(select,input,.pbSelectTrigger,.pbSelectButton,.albumPaperNativeSelect){
+  font-size:10px!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding-inline:3px!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .albumCoverConfigBlock .pb1818CoverPicker{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:9px!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .albumCoverConfigBlock .pb1818CoverControls{
+  grid-area:1 / 1 / 2 / 2!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreview{
+  grid-area:2 / 1 / 3 / 2!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .albumCoverConfigBlock .pb1818CoverModelBrowser{
+  grid-area:3 / 1 / 4 / 2!important;
+ }
+ html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum
+ > .albumConfigurator .albumCoverConfigBlock .pb1818CoverPreviewImage{
+  height:165px!important;
+  max-height:165px!important;
+ }
+}

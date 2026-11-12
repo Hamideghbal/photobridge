@@ -1,0 +1,175 @@
+
+/* R1811: cohesive album binding modal; model selection and both pricing modes live here. */
+function pb1811AlbumPaperPrices(catalog,audience,sizeId,modelId){
+ const id=String(sizeId),model=String(modelId);
+ if(model==="album_binding_price")return (audience==="walkin"?catalog.walkinAlbumCombinedRates:catalog.albumCombinedRates)?.[id]||{};
+ return (audience==="walkin"?catalog.walkinAlbumCombinedModelRates:catalog.albumCombinedModelRates)?.[id]?.[model]||{};
+}
+
+/* R1816: display grouped prices, keep raw integer digits for API validation. */
+function pb1816DigitsOnly(value){
+ const latin=String(value??"").replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-1776)).replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-1632));
+ return latin.replace(/[^\d]/g,"");
+}
+function pb1816GroupedMoney(value){
+ const digits=pb1816DigitsOnly(value);
+ return digits.replace(/\B(?=(\d{3})+(?!\d))/g,",");
+}
+function PB1811AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],onClose,onSaved}){
+ const papers=[["luster","لاستر"],["silk","سیلک"],["metallic","متالیک"]];
+ const models=(catalog.types||[]).filter(t=>t.kind==="binding"&&t.active!==false);
+ const [chosen,setChosen]=x.useState("album_binding_price");
+ const [busy,setBusy]=x.useState(false),[error,setError]=x.useState(""),[notice,setNotice]=x.useState("");
+ const mode=catalog.albumPricingMode==="combined"?"combined":"separate";
+ const model=models.find(t=>String(t.id)===chosen)||models[0]||{id:"album_binding_price",name:"صحافی اصلی"};
+ const activeId=String(model.id);
+ const combined=mode==="combined";
+ const source=audience==="walkin"?catalog.walkinAlbumBindingRates:catalog.rates;
+ const baseFor=row=>{
+  const id=String(row.id);
+  return audience==="walkin"?catalog.walkinAlbumBindingRates?.[id]?.album_binding_price:row.album_binding_price;
+ };
+ const getValue=(row,modelId,key)=>{
+  const id=String(row.id);
+  if(combined)return pb1811AlbumPaperPrices(catalog,audience,id,modelId)[key];
+  if(modelId==="album_binding_price")return baseFor(row);
+  return source?.[id]?.[modelId];
+ };
+ const initial=()=>{
+  const data={};
+  for(const row of rows){
+   data[String(row.id)]={};
+   for(const [key] of combined?papers:[["price"]]){
+    const raw=getValue(row,activeId,key);
+    data[String(row.id)][key]=raw==null?"":String(raw);
+   }
+  }
+  return data;
+ };
+ const [draft,setDraft]=x.useState(initial);
+ x.useEffect(()=>{setDraft(initial());setError("");setNotice("")},[catalog,activeId,audience,mode,rows.map(r=>String(r.id)).join("|")]);
+ const update=(size,key,value)=>setDraft(prev=>({...prev,[size]:{...(prev[size]||{}),[key]:value}}));
+ const clean=raw=>{
+  if(raw==null||String(raw).trim()==="")return null;
+  const n=Number(raw);
+  if(!Number.isSafeInteger(n)||n<0||n>9000000000)throw Error("قیمت باید عدد صحیح و غیرمنفی باشد.");
+  return n;
+ };
+ const refresh=async()=>{await Promise.resolve(onSaved?.())};
+ const changeMode=async next=>{
+  if(busy||next===mode)return;
+  if(!window.confirm("روش قیمت‌گذاری تغییر کند؟ قیمت‌های قبلی هر دو حالت حفظ می‌شوند؛ تغییرات ذخیره‌نشده این پنجره از دست می‌روند."))return;
+  setBusy(true);setError("");setNotice("");
+  try{
+   const response=await Me("/api/lab/print-catalog/type",{method:"PATCH",body:JSON.stringify({albumPricingMode:next})});
+   if(response?.ok!==true||response?.catalog?.albumPricingMode!==next)throw Error("ثبت روش قیمت‌گذاری تایید نشد.");
+   await refresh();
+   setNotice("روش قیمت‌گذاری تغییر کرد. قیمت‌های مدل را برای حالت انتخاب‌شده بررسی کنید.");
+  }catch(err){setError(err?.message||"تغییر روش قیمت‌گذاری انجام نشد.");}
+  finally{setBusy(false)}
+ };
+ const action=async(kind,targetId=activeId)=>{
+  const target=models.find(t=>String(t.id)===String(targetId))||model;
+  const resolvedId=String(target.id);
+  if(busy)return;
+  if(kind==="archive"&&resolvedId==="album_binding_price")return;
+  let name="";
+  if(kind==="create"||kind==="rename"){
+   const entered=window.prompt(kind==="create"?"نام مدل جدید صحافی:":"نام مدل صحافی:",kind==="rename"?target.name:"");
+   if(entered===null)return;
+   name=String(entered).trim();
+   if(!name||name.length>70){setError("نام مدل باید بین ۱ تا ۷۰ نویسه باشد.");return}
+   if(kind==="rename"&&name===target.name)return;
+  }else if(!window.confirm("مدل «"+target.name+"» از فهرست فعال حذف شود؟ قیمت‌ها و سفارش‌های قبلی حفظ می‌شوند."))return;
+  setBusy(true);setError("");setNotice("");
+  try{
+   const create=kind==="create";
+   const url=create?"/api/lab/print-catalog":"/api/lab/print-catalog/type";
+   const body=create?{kind:"binding",name,allowCombinedModel:true}:kind==="rename"?{id:resolvedId,name}:{id:resolvedId,active:false};
+   const result=await Me(url,{method:create?"POST":"PATCH",body:JSON.stringify(body)});
+   if(result?.ok!==true)throw Error("ذخیره مدل تایید نشد.");
+   if(create){
+    const next=result.catalog?.types?.filter(t=>t.kind==="binding").at(-1);
+    if(next?.id)setChosen(String(next.id));
+   }else if(kind==="archive"&&String(chosen)===resolvedId)setChosen("album_binding_price");
+   await refresh();
+   setNotice(create?"مدل جدید اضافه شد؛ قیمت‌های آن را در جدول وارد کنید.":"تغییر مدل ذخیره شد.");
+  }catch(err){setError(err?.message||"مدل صحافی ذخیره نشد.");}
+  finally{setBusy(false)}
+ };
+ const save=async()=>{
+  if(busy||!rows.length)return;
+  setBusy(true);setError("");setNotice("");
+  try{
+   const resultRows=rows.map(row=>{
+    const sizeId=String(row.id),entry=draft[sizeId]||{};
+    if(combined){
+     const values=Object.fromEntries(papers.map(([paper])=>[paper,clean(entry[paper])]));
+     return activeId==="album_binding_price"?{sizeId,combinedAlbumRates:values}:{sizeId,combinedModelRates:{[activeId]:values}};
+    }
+    const basePrice=activeId==="album_binding_price"?clean(entry.price):clean(baseFor(row));
+    return {sizeId,basePrice,customRates:activeId==="album_binding_price"?{}:{[activeId]:clean(entry.price)}};
+   });
+   const response=await Me("/api/lab/album-binding-prices",{method:"PUT",body:JSON.stringify({audience,rows:resultRows})});
+   if(response?.ok!==true)throw Error("ذخیره قیمت‌ها تایید نشد.");
+   await refresh();
+   setNotice("قیمت‌های «"+model.name+"» ذخیره شد.");
+  }catch(err){setError(err?.message||"ثبت قیمت صحافی انجام نشد.")}
+  finally{setBusy(false)}
+ };
+ return e.jsx("div",{className:"pb1810AlbumModalLayer pb1811AlbumModalLayer",children:e.jsxs("section",{className:"pb1810AlbumModal pb1811AlbumModal",role:"dialog","aria-modal":true,"aria-label":"تعریف و قیمت‌گذاری صحافی",children:[
+
+  e.jsxs("header",{className:"pb1810AlbumModalHead pb1816ModalHeader",children:[
+   e.jsxs("div",{className:"pb1816HeaderTitle",children:[
+    e.jsx("h2",{children:"تعریف و قیمت‌گذاری صحافی"}),
+    e.jsx("small",{children:audience==="walkin"?"تعرفه مشتری آزاد":"تعرفه همکار"})
+   ]}),
+   e.jsxs("div",{className:"pb1816HeaderMode",children:[
+    e.jsx("label",{htmlFor:"pb1811Mode",children:"روش قیمت‌گذاری"}),
+    e.jsxs("select",{id:"pb1811Mode","aria-label":"روش قیمت‌گذاری صحافی",value:mode,disabled:busy,onChange:event=>changeMode(event.target.value),children:[
+     e.jsx("option",{value:"separate",children:"چاپ و صحافی جداگانه"}),
+     e.jsx("option",{value:"combined",children:"چاپ و صحافی با هم"})
+    ]})
+   ]}),
+   e.jsx("button",{type:"button",className:"pb1810Close",onClick:onClose,disabled:busy,"aria-label":"بستن پنجره",children:"×"})
+  ]}),
+  e.jsxs("div",{className:"pb1810AlbumModalScroll",children:[
+   e.jsx("table",{children:[
+    e.jsx("thead",{children:e.jsxs("tr",{children:[
+     e.jsx("th",{scope:"col",children:"سایز آلبوم"}),
+     ...(combined?papers:[[activeId,"قیمت صحافی"]]).map(([key,title])=>e.jsx("th",{scope:"col",children:title},key))
+    ]})}),
+    e.jsx("tbody",{children:rows.map(row=>e.jsxs("tr",{children:[
+     e.jsx("th",{scope:"row",children:gr(row.label)}),
+     ...(combined?papers:[[activeId,"قیمت صحافی"]]).map(([key,title])=>e.jsx("td",{children:e.jsx("input",{
+      type:"text",inputMode:"numeric",dir:"ltr",value:pb1816GroupedMoney(draft[String(row.id)]?.[combined?key:"price"]??""),
+      "aria-label":model.name+" "+title+" "+gr(row.label),placeholder:"—",
+      onChange:ev=>update(String(row.id),combined?key:"price",pb1816DigitsOnly(ev.target.value))
+     })},key))
+    ]},String(row.id)))})
+   ]}),
+  ]}),
+  error&&e.jsx("p",{className:"pb1810AlbumModalError",role:"alert",children:error}),
+  notice&&e.jsx("p",{className:"pb1811AlbumModalNotice",role:"status",children:notice}),
+
+  e.jsxs("footer",{className:"pb1810AlbumModalActions pb1816ModalFooter",children:[
+   e.jsxs("div",{className:"pb1816FooterModels",children:[
+    e.jsx("strong",{className:"pb1816FooterLabel",children:"مدل‌ها"}),
+    ...models.map(t=>e.jsxs("span",{className:"pb1816ModelUnit",children:[
+     e.jsx("button",{type:"button",className:"pb1811ModelChip"+(String(t.id)===activeId?" is-active":""),disabled:busy,
+      onClick:()=>setChosen(String(t.id)),title:"مدل "+t.name,children:t.name}),
+     String(t.id)!=="album_binding_price"&&e.jsx("button",{type:"button",className:"pb1816ModelRemove",
+      disabled:busy,title:"حذف مدل "+t.name,"aria-label":"حذف مدل صحافی "+t.name,
+      onClick:()=>action("archive",String(t.id)),children:"×"})
+    ]},String(t.id))),
+    e.jsx("button",{type:"button",className:"pb1811ModelChip pb1811AddModel",disabled:busy,onClick:()=>action("create"),children:"+ مدل"}),
+    e.jsx("button",{type:"button",className:"pb1816RenameModel",disabled:busy,onClick:()=>action("rename"),title:"ویرایش نام مدل انتخاب‌شده",children:"ویرایش نام"})
+   ]}),
+   e.jsxs("div",{className:"pb1816FooterActions",children:[
+    e.jsx("button",{type:"button",className:"pbActionButton secondary",onClick:onClose,disabled:busy,children:"بستن"}),
+    e.jsx("button",{type:"button",className:"primary",onClick:save,disabled:busy||!rows.length,children:busy?"در حال ثبت…":"ذخیره قیمت‌های "+model.name})
+   ]})
+  ]})
+
+ ]})});
+}

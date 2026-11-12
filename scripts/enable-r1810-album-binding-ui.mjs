@@ -24,6 +24,10 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   s=one(s,'e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),',
     'e.jsx("button",{type:"button",className:"pbActionButton secondary pb1810BindingOpen",onClick:()=>pb1810SetOpen(!0),children:"ثبت قیمت صحافی"}),e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),',
     'colleague header modal button');
+  // Only photo-print, chassis and frame prices remain in this grid and printable tariff.
+  const headingCount=s.split('تعرفه چاپ و صحافی').length-1;
+  if(headingCount<2||headingCount>5)throw Error('[R1810 UI] colleague heading variants '+headingCount);
+  s=s.replaceAll('تعرفه چاپ و صحافی','تعرفه چاپ، شاسی و قاب');
   const edit='pb1777Edit&&e.jsx(PB1777FrameModelEditor,{model:pb1777Edit,onClose:()=>pb1777SetEdit(null),onSaved:pb1539Reload})';
   s=one(s,edit,edit+',pb1810Open&&e.jsx(PB1810AlbumBindingPriceModal,{audience:"colleague",catalog:pb1539,rows:o,onClose:()=>pb1810SetOpen(!1),onSaved:async()=>{await Promise.resolve(a());await pb1539Reload()}})','colleague render');
   s=one(s,

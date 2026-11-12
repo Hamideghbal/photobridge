@@ -1215,3 +1215,9 @@ runR1314(process.execPath,['--test','scripts/test-r1803-album-priced-cover-recov
 // R1804: responsive RTL album arrangement, photo files full page-width, invoice below.
 await deployStep('./enable-r1804-album-order-layout.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1804-album-order-layout.cjs'],{stdio:'inherit'});
+
+// R1805: keep separate mode as default; in combined mode use exactly one binding and three paper prices.
+await deployStep('./enable-r1805-album-combined-server.mjs');
+await deployStep('./enable-r1805-album-combined-ui.mjs');
+await deployStep('./enable-r1805-album-walkin.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1805-album-combined-paper-prices.cjs'],{stdio:'inherit'});

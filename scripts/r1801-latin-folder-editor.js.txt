@@ -1,0 +1,24 @@
+function PB1769LatinFolderEdit({customer,onSaved}){
+ const [confirmed,setConfirmed]=x.useState(null),[busy,setBusy]=x.useState(false);
+ x.useEffect(()=>setConfirmed(null),[customer.id,customer.folder_latin_name]);
+ const alias=confirmed??String(customer.folder_latin_name||'');
+ return e.jsx('button',{type:'button',className:'pbR1769LatinFolderEdit',disabled:busy,
+  title:alias?'نام لاتین پوشه: '+alias:'تعیین نام لاتین پوشه‌های عکاسی',
+  'aria-label':'ویرایش نام لاتین پوشه برای '+(customer.name||'عکاس'),
+  onClick:async()=>{
+   if(busy)return;
+   const title='نام لاتین پوشه‌های این عکاسی را وارد کنید (برای تبدیل خودکار خالی بگذارید):';
+   const answer=typeof pb1775NativeEditDialog==='function'?await pb1775NativeEditDialog(title,alias):prompt(title,alias);
+   if(answer===null)return;
+   const value=String(answer).trim().replace(/\s+/g,' ');
+   if(value&&(value.length>64||!(/^[A-Za-z0-9][A-Za-z0-9 ._-]*[A-Za-z0-9]$/.test(value)||/^[A-Za-z0-9]$/.test(value))||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(value))){alert('نام لاتین پوشه معتبر نیست؛ فقط حروف انگلیسی، عدد، فاصله، خط تیره و زیرخط مجاز است.');return}
+   setBusy(true);
+   try{
+    const result=await Me('/api/lab/photographer-folder-alias/'+customer.id,{method:'PUT',body:JSON.stringify({folderLatinName:value})});
+    if(result?.ok!==true||result.folderLatinName!==value){alert(result?.desktopPending||result?.offline||result?.operationId||result?.id?'نام لاتین در صف همگام‌سازی است و هنوز ذخیره آن روی سرور تأیید نشده است.':'ذخیره نام لاتین توسط سرور تأیید نشد.');return}
+    setConfirmed(result.folderLatinName);
+    try{await onSaved()}catch{alert('نام لاتین ذخیره شد؛ بازخوانی لیست انجام نشد. برای دریافت لیست تازه صفحه را دوباره باز کنید.')}
+   }catch(error){alert(error?.data?.message|| (error?.data?.error==='invalid_folder_latin_name'?'نام لاتین پوشه معتبر نیست.':'ذخیره نام لاتین پوشه انجام نشد؛ اتصال اینترنت را بررسی کنید.'))}
+   finally{setBusy(false)}
+  },children:busy?'در حال ذخیره…':alias?'LAT: '+alias:'LAT ✎'});
+}

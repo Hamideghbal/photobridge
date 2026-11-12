@@ -1207,3 +1207,7 @@ runR1314(process.execPath,['--test','scripts/test-r1801-native-latin-folder-save
 // R1802: authoritative invoice rows, compact album choices and automatic album receipts.
 await deployStep('./enable-r1802-product-invoice-album-flow.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1802-product-invoice-album-flow.cjs'],{stdio:'inherit'});
+
+// R1803: recover priced album covers missing from the generated legacy display rows.
+await deployStep('./enable-r1803-album-priced-cover-recovery.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1803-album-priced-cover-recovery.cjs'],{stdio:'inherit'});

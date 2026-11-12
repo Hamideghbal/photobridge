@@ -24,7 +24,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   kv=one(kv,'className:"grid2 albumCoreFields"','className:"albumCoreFields pb1818AlbumCoreThree"',root+' remove the legacy two-column class');
   if(!kv.includes('className:"pb1539BindingField"')||
      !kv.includes('className:"albumPaperField"')||
-     !kv.includes('className:"albumConfigBlockCompactV409"'))
+     !kv.includes('albumConfigBlockCompactV409'))
    throw Error('[R1818] '+root+' binding, size or paper labels missing');
   const material='e.jsx("label",{className:"albumCoverOrderMaterial",children:e.jsx(wn,{value:Nn,options:on.map($e=>({value:String($e),label:String($e)})),onChange:Ka})})';
   const materialNew='e.jsxs("label",{className:"albumCoverOrderMaterial",children:[e.jsx("span",{className:"pb1818CoverFieldLabel",children:"جنس جلد"}),e.jsx(wn,{value:Nn,options:on.map($e=>({value:String($e),label:String($e)})),onChange:Ka})]})';

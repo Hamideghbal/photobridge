@@ -32,6 +32,23 @@ function PB1810AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],o
   if(!Number.isSafeInteger(n)||n<0||n>9000000000)throw Error("قیمت باید یک عدد صحیح و غیرمنفی باشد.");
   return n;
  };
+ const modelAction=async(kind,id,label)=>{
+  if(combined||busy)return;
+  let name="";
+  if(kind==="create"||kind==="rename"){
+   const old=kind==="rename"?label:"";
+   name=String(window.prompt(kind==="create"?"نام مدل صحافی جدید:":"ویرایش نام مدل صحافی:",old)||"").trim();
+   if(!name||kind==="rename"&&name===old)return;
+  }else if(!window.confirm("مدل صحافی «"+label+"» غیرفعال شود؟ سفارش‌ها و فاکتورهای قبلی حفظ می‌شوند."))return;
+  setBusy(true);setMessage("");
+  try{
+   const url=kind==="create"?"/api/lab/print-catalog":"/api/lab/print-catalog/type";
+   const body=kind==="create"?{kind:"binding",name}:kind==="rename"?{id,name}:{id,active:false};
+   await Me(url,{method:kind==="create"?"POST":"PATCH",body:JSON.stringify(body)});
+   await Promise.resolve(onSaved?.());
+  }catch(error){setMessage(error?.message||"ویرایش مدل صحافی انجام نشد.");}
+  finally{setBusy(false)}
+ };
  const save=async()=>{
   if(busy)return;
   setBusy(true);setMessage("");
@@ -59,7 +76,13 @@ function PB1810AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],o
    e.jsx("button",{type:"button",className:"pb1810Close",onClick:onClose,disabled:busy,"aria-label":"بستن پنجره",children:"×"})
   ]}),
   e.jsx("div",{className:"pb1810AlbumModalScroll",children:e.jsxs("table",{children:[
-   e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{scope:"col",children:"سایز آلبوم"}),...columns.map(([key,label])=>e.jsx("th",{scope:"col",children:label},key))]})}),
+   e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{scope:"col",children:"سایز آلبوم"}),...columns.map(([key,label])=>e.jsxs("th",{scope:"col",children:[
+    e.jsx("span",{children:label}),
+    !combined&&e.jsxs("span",{className:"pb1810ModelTools",children:[
+     e.jsx("button",{type:"button",className:"pb1810ModelTool",disabled:busy,onClick:()=>modelAction("rename",key,label),"aria-label":"ویرایش "+label,children:"ویرایش"}),
+     key!=="album_binding_price"&&e.jsx("button",{type:"button",className:"pb1810ModelTool",disabled:busy,onClick:()=>modelAction("remove",key,label),"aria-label":"حذف "+label,children:"حذف"})
+    ]})
+   ]},key))]})}),
    e.jsx("tbody",{children:rows.map(row=>e.jsxs("tr",{children:[
     e.jsx("th",{scope:"row",children:gr(row.label)}),
     ...columns.map(([key,label])=>e.jsx("td",{children:e.jsx("input",{type:"text",inputMode:"numeric",dir:"ltr","aria-label":label+" "+gr(row.label),value:draft[String(row.id)]?.[key]??"",placeholder:"—",onChange:ev=>update(String(row.id),key,String(Mn(ev.target.value)??""))})},key))
@@ -67,6 +90,7 @@ function PB1810AlbumBindingPriceModal({audience="colleague",catalog={},rows=[],o
   ]})}),
   message&&e.jsx("p",{className:"pb1810AlbumModalError",role:"alert",children:message}),
   e.jsxs("footer",{className:"pb1810AlbumModalActions",children:[
+   !combined&&e.jsx("button",{type:"button",className:"pbActionButton secondary",onClick:()=>modelAction("create"),disabled:busy,children:"+ مدل صحافی جدید"}),
    e.jsx("button",{type:"button",className:"pbActionButton secondary",onClick:onClose,disabled:busy,children:"انصراف"}),
    e.jsx("button",{type:"button",className:"primary",onClick:save,disabled:busy||!rows.length,children:busy?"در حال ثبت…":"ذخیره قیمت صحافی"})
   ]})

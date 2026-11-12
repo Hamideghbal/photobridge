@@ -131,3 +131,16 @@ test('R1805: Windows Lab hot-update checksums match all modified final assets',(
  }
  assert.equal(m.build,crypto.createHash('sha256').update(JSON.stringify(m.files)).digest('hex'));
 });
+
+test('R1805b install guard hides binding creation regardless of its historical button label',()=>{
+ const installer=read('scripts/enable-r1805-album-combined-ui.mjs');
+ const begin=installer.indexOf('  const pb1805CreateButton='),end=installer.indexOf('\n  s=s.replace(pb1805CreateButton,',begin);
+ assert(begin>=0&&end>begin,'combined-mode binding action guard is present');
+ const sample=read('scripts/enable-r1777-chassis-frame-model-pricing.mjs').match(/const button='([^']+)'/);
+ assert(sample,'R1777 changed the binding action');
+ const action=installer.slice(begin,end);
+ const testAction=label=>vm.runInNewContext('(function(s){'+action+';return [...s.matchAll(pb1805CreateButton)].length})('+JSON.stringify(label)+')');
+ assert.equal(testAction(sample[1]),1,'new button label matches');
+ assert.equal(testAction(sample[1].replace('children:"صحافی جدید"','children:"+ مدل صحافی جدید"')),1,'legacy button label matches');
+ assert(installer.includes("s=s.replace(pb1805CreateButton,full=>'pb1539.albumPricingMode!==\"combined\"&&'+full)"));
+});

@@ -16,6 +16,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let src=read(root+'/'+asset);
  src=region(src,'function tw(','function Na(t)',s=>{
   s=one(s,'[p,f]=x.useState(!1),[pb1777Edit,','[p,f]=x.useState(!1),[pb1810Open,pb1810SetOpen]=x.useState(!1),[pb1777Edit,','colleague modal state');
+  const oldBindingCreate=/,pb1539\\.albumPricingMode!=="combined"&&e\\.jsx\\("button",\\{className:"pbActionButton secondary",type:"button",onClick:\\(\\)=>pb1539Create\\(\\),children:"(?:\\+ مدل )?صحافی جدید"\\}\\)/g;
+  const removedBindingCreate=[...s.matchAll(oldBindingCreate)];
+  if(removedBindingCreate.length!==1)throw Error('[R1810 UI] colleague model creation button count '+removedBindingCreate.length);
+  // Create/rename/archive binding models has moved to the modal, not the main grid toolbar.
+  s=s.replace(oldBindingCreate,'');
   s=one(s,'e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),',
     'e.jsx("button",{type:"button",className:"pbActionButton secondary pb1810BindingOpen",onClick:()=>pb1810SetOpen(!0),children:"ثبت قیمت صحافی"}),e.jsx("button",{className:"pbActionButton secondary",onClick:T,children:"چاپ تعرفه"}),',
     'colleague header modal button');

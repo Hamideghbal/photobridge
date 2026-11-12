@@ -24,7 +24,7 @@ function pb1802ReceiptState(lab,id){try{return JSON.parse(localStorage.getItem('
 function pb1802ReceiptSave(lab,id,data){localStorage.setItem('pb1802-album-receipt:'+lab+':'+id,JSON.stringify(data))}
 async function pb1802AlbumReceipt(lab,order,settings){
  const id=order.id,task=pb1802ReceiptState(lab,id);
- if(!settings.autoPrintInvoice||task.albumReceiptDone||pb1568State(lab,id)?.phase==='complete'||task.retryAt>Date.now())return;
+ if(!settings.autoPrintInvoice||task.albumReceiptDone||(task.retryAt>Date.now()&&!order.invoice_id))return;
  if(['uploading','cancelled','completed'].includes(String(order.status||'')))return;
  if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return;
  try{
@@ -35,7 +35,7 @@ async function pb1802AlbumReceipt(lab,order,settings){
   pb1802ReceiptSave(lab,id,{...task,albumReceiptDone:true,invoiceId:data.invoice.id,attempts:0,error:null,retryAt:0});
  }catch(error){
   const attempts=Math.min(8,(task.attempts||0)+1),message=pb1568Problem(error);
-  pb1802ReceiptSave(lab,id,{...task,attempts,error:message,retryAt:Date.now()+Math.min(600000,30000*2**Math.min(attempts,4))});pb1568Work.lastError=message;
+  pb1802ReceiptSave(lab,id,{...task,attempts,error:message,retryAt:Date.now()+(message==='invoice_pricing_required'?60000:Math.min(600000,30000*2**Math.min(attempts,4)))});pb1568Work.lastError=message;
   if(message==='invoice_pricing_required'){
    if(!task.pricingPrompted){pb1576QueuePrice(lab,id);pb1802ReceiptSave(lab,id,{...pb1802ReceiptState(lab,id),pricingPrompted:true})}
    if(settings.autoPrintMissingPriceTicket&&!task.ticketDone)try{await pb1568Thermal('ticket',id,null);pb1802ReceiptSave(lab,id,{...pb1802ReceiptState(lab,id),ticketDone:true})}catch(printError){pb1568Work.lastError=pb1568Problem(printError)}

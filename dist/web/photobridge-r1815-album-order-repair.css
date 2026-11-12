@@ -1,0 +1,93 @@
+
+/* R1815: keep the scroll container INSIDE the bounded album workspace.
+   R1812 stacked the cards but accidentally made the scroller overflow visible;
+   the workspace's parent still has height:100% and overflow:hidden. */
+html body #root .photographerAlbumCreateWorkspaceMode .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator.albumConfigurator,
+html body #root .photographerMain.photographerAlbumCreateWorkspaceMode .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator.albumConfigurator,
+html body #root .photographerAlbumCreateWorkspaceMode .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator.albumConfigurator{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  height:100%!important;
+  max-height:100%!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:stable!important;
+  scroll-padding-top:55px!important;
+  box-sizing:border-box!important;
+}
+/* Do not force children to stretch to the full parent height or escape the scroller. */
+html body #root .photographerAlbumCreateWorkspaceMode .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator > .albumConfigBlock,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator > .albumConfigBlock{
+  flex:0 0 auto!important;
+  height:auto!important;
+  max-height:none!important;
+  min-height:0!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  overflow-wrap:anywhere!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoreFields,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoverOrderSteps,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoverOrderModelGrid{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoverOrderMaterialColorRowV409{
+  flex-wrap:wrap!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoreFields > label,
+html body #root .photographerMain .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator .albumCoverOrderSteps label{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+}
+/* Binding model selector and add action stay visible above the price table,
+   for both combined and separate modes; only the rate matrix scrolls. */
+html body .pb1811AlbumModal > .pb1811ModelBar{
+  display:flex!important;
+  flex:0 0 auto!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  padding:10px 17px!important;
+  max-height:min(25vh,155px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:#fff!important;
+  border-top:0!important;
+  border-bottom:1px solid #e2e8f0!important;
+  box-sizing:border-box!important;
+}
+html body .pb1811AlbumModal > .pb1811ModelBar > .pb1811AddModel{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+  min-height:36px!important;
+  white-space:nowrap!important;
+  font-size:13px!important;
+}
+html body .pb1811AlbumModal > .pb1810AlbumModalScroll{
+  min-height:0!important;
+  flex:1 1 auto!important;
+  overflow-y:auto!important;
+  overflow-x:auto!important;
+}
+@media(max-width:900px){
+  html body .pb1811AlbumModal > .pb1811ModelBar{padding:9px 11px!important;max-height:145px!important}
+  html body #root .photographerAlbumCreateWorkspaceMode .albumOrderGrid.pb1802CompactAlbum > .albumConfigurator.albumConfigurator{
+    scroll-padding-top:42px!important;
+  }
+}

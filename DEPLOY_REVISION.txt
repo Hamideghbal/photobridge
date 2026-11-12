@@ -1,1 +1,1 @@
-2026-11-12-r1803-priced-album-cover-recovery
+2026-11-12-r1804-album-responsive-layout

@@ -10,12 +10,19 @@ const block=(selector,from=css)=>{
   assert(end>start,'unterminated CSS selector: '+selector);
   return from.slice(start+selector.length+1,end);
 };
-test('R1804 outer album order grid is full width, RTL and safely scoped to photographer',()=>{
-  assert.match(block(scope),/grid-template-columns:minmax\(0,1fr\)!important/);
+test('R1806 album keeps configurator on the RIGHT and the original quote on the LEFT',()=>{
+  const outer=block(scope);
+  assert.match(outer,/direction:rtl!important/);
+  assert.match(outer,/grid-template-columns:minmax\(0,1fr\) minmax\(280px,330px\)!important/);
   const b=block(scope+'>.albumConfigurator');
+  assert.match(b,/grid-column:1!important/);
+  assert.match(b,/grid-row:1!important/);
   assert.match(b,/direction:rtl!important/);
   assert.match(b,/grid-template-columns:minmax\(0,1\.15fr\) minmax\(0,1fr\)!important/);
-  assert.match(block(scope+'>.albumQuoteCard'),/grid-column:1\/-1!important/);
+  const quote=block(scope+'>.albumQuoteCard');
+  assert.match(quote,/grid-column:2!important/);
+  assert.match(quote,/grid-row:1!important/);
+  assert.doesNotMatch(quote,/position:static/);
 });
 test('R1804 right section 1, left sections 2 and 3 and full-width design files',()=>{
   const prefix=scope+'>.albumConfigurator>';
@@ -36,13 +43,15 @@ test('R1804 optional extras use left column and push notes/files below',()=>{
 test('R1804 phones and tablets retain a single-column accessible reading order',()=>{
   const mobile=css.slice(css.indexOf('@media(max-width:900px)'));
   assert(mobile.includes('grid-template-columns:minmax(0,1fr)!important'));
+  assert.match(block(scope+'>.albumQuoteCard',mobile),/grid-column:1!important;grid-row:2!important/);
+  assert.match(block(scope+'>.albumConfigurator',mobile),/grid-column:1!important;grid-row:1!important/);
   for(const name of ['albumConfigBlockCompactV409','albumCoverConfigBlock','albumLabInstructions','albumFilesQcBlock'])assert(mobile.includes(name),name);
   assert(mobile.includes('grid-row:auto!important'));
 });
 test('R1804 final site and Windows HTML and manifest include the shipped CSS',()=>{
   for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     const html=fs.readFileSync(root+'/index.html','utf8');
-    assert.equal(html.split(file+'?v=r1804').length,2);
+    assert.equal(html.split(file+'?v=r1804a').length,2);
     assert(html.indexOf('photobridge-r1802-album-compact.css')<html.indexOf(file));
     assert.equal(fs.readFileSync(root+'/'+file,'utf8'),css);
   }

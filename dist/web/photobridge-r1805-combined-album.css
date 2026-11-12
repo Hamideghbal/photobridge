@@ -1,0 +1,23 @@
+
+/* R1805: the pricing-mode switch lives only inside Album pricing settings. */
+html body #root .albumSettingsWorkspace .pb1795BindingPricing{
+ margin:8px 0 14px!important;
+ padding:10px 12px!important;
+ border:1px solid #dce6f3!important;
+ border-radius:10px!important;
+ background:#f8fbff!important;
+}
+html body #root .albumSettingsWorkspace .pb1795BindingPricing h3{font-size:14px!important;margin:0 0 8px!important}
+html body #root .albumSettingsWorkspace .pb1795BindingPricing p{font-size:12px!important;margin:6px 0!important}
+html body #root .photographerMain .pb1805CombinedAlbum .pb1539BindingField{display:none!important}
+/* Three independent combined prices remain readable even in a dense tariff grid. */
+html body #root .labRoleWorkspace [data-pb1800-key^="pb1805_combined_"]{
+ min-width:105px!important;
+}
+html body #root .labRoleWorkspace .pricingSettingsCard [data-pb1800-key^="pb1805_combined_"] .pb1541TariffTitle{
+ white-space:normal!important;
+ line-height:1.4!important;
+}
+@media(max-width:760px){
+ html body #root .labRoleWorkspace [data-pb1800-key^="pb1805_combined_"]{min-width:0!important}
+}

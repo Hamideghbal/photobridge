@@ -40,7 +40,9 @@ test('R1803: actual composed catalog and invoice snapshot use authoritative save
   if(sql.includes('FROM lab_album_covers c'))return {rows:[]};
   return {rows:[]};
  }};
- const shared={pool,syncLabAlbumSizesFromPrintTariffs:async()=>{},albumCoverCatalogV2ForLab:async()=>cat,pb1803RecoverPricedCovers:ctx.pb1803RecoverPricedCovers,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date};
+ // The real catalog calls this image-enrichment helper; include it in the VM just as the live server does.
+ const {applyAlbumColorImages}=await import('../dist/api/album-color-images.js');
+ const shared={pool,syncLabAlbumSizesFromPrintTariffs:async()=>{},albumCoverCatalogV2ForLab:async()=>cat,pb1803RecoverPricedCovers:ctx.pb1803RecoverPricedCovers,applyAlbumColorImages,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date};
  const originalFn=vm.runInNewContext('('+server.slice(start,wrapperStart).trim()+')',shared);
  const fn=vm.runInNewContext('('+server.slice(wrapperStart,snapshotStart).trim()+')',{pool,albumCatalogForLabOriginal:originalFn,normalizePrintCatalog:()=>({types:[{id:'album_binding_price',kind:'binding',name:'صحافی آلبوم',active:true}],rates:{}})});
  const result=await fn('lab');assert.equal(result.covers.length,1);assert.equal(result.covers[0].price,125000);

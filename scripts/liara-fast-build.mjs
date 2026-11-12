@@ -1254,3 +1254,9 @@ runR1314(process.execPath,['--test','scripts/test-r1816-album-pricing-compact.cj
 // photo model cards and short title field. No tariff or invoice changes.
 await deployStep('./enable-r1817-album-submit-layout.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1817-album-submit-layout.cjs'],{stdio:'inherit'});
+
+
+// R1818: replace the legacy grid2 album fields with real three-column JSX;
+// organize cover material/color, selected-photo preview and clickable model gallery.
+await deployStep('./enable-r1818-album-form-professional.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1818-album-form-professional.cjs'],{stdio:'inherit'});

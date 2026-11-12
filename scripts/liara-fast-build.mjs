@@ -1221,3 +1221,8 @@ await deployStep('./enable-r1805-album-combined-server.mjs');
 await deployStep('./enable-r1805-album-combined-ui.mjs');
 await deployStep('./enable-r1805-album-walkin.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1805-album-combined-paper-prices.cjs'],{stdio:'inherit'});
+
+// R1810: normal print/chassis/frame prices remain in each audience's main tariff.
+await deployStep('./enable-r1810-album-binding-api.mjs');
+await deployStep('./enable-r1810-album-binding-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1810-album-binding-pricing-modal.cjs'],{stdio:'inherit'});

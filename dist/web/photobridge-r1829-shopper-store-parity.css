@@ -1,0 +1,28 @@
+/* R1829: camera equipment photographer storefront only; lab and frame/chassis remain untouched. */
+@media (min-width:821px){
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreRoleHeader :is(.photographerHeaderTools,.photographerPrintModeUtilityCluster,.pb1125SecondaryActions){display:none!important;visibility:hidden!important;pointer-events:none!important}
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreRoleHeader #pbR1123StoreDesktopNav{
+  grid-column:2!important;grid-row:1!important;min-width:0!important;
+  max-width:min(640px,calc(100vw - 415px))!important;
+  overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;
+  justify-content:safe center!important;white-space:nowrap!important;scrollbar-width:thin!important;
+ }
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreRoleHeader #pbR1123StoreDesktopNav>button{flex:0 0 auto!important;white-space:nowrap!important}
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreIdentityBar{min-width:0!important;box-sizing:border-box!important}
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreIdentityBar #storeIdentityToggle{
+  box-sizing:border-box!important;min-width:0!important;
+  max-width:calc(100% - 225px)!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  margin-inline:auto!important;white-space:nowrap!important;
+ }
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreIdentityBar #photographerStoreHeaderName{
+  min-width:0!important;max-width:100%!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important
+ }
+}
+@media (max-width:820px){
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreRoleHeader :is(.photographerPrintModeUtilityCluster,.pb1125SecondaryActions){display:none!important}
+ html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreIdentityBar #storeIdentityToggle{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
+}
+/* Remove only duplicate category action next to the cart; retain functional catalogue selectors. */
+html body.rentalPhotographerMode.pbR1829CameraShopper #photographerStoreIdentityBar :is(#saleCategoryBtnR68,[data-r67-cat],.storeHeaderCategoryAction){display:none!important}
+html body.rentalPhotographerMode.pbR1829CameraShopper #salesPanel .pbR67FilterToolbar [data-r67-cat]~[data-r67-brand]{display:flex}
+html body.rentalPhotographerMode.pbR1829CameraShopper #saleFilterBarR68 #saleCategoryBtnR68[hidden]{display:none!important}

@@ -62,10 +62,43 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  js=once(js,'e.jsx("span",{className:"invoicePaperBrand",children:"PhotoBridge"})',
   'e.jsx("span",{className:"invoicePaperBrand",children:pb1821LabInvoiceIssuer(a)})',
   root+' onscreen invoice preview');
+ // R1823: customer invoice renderers live between Wu and Vy.
+ // Their issuer/attribution must also be the lab, never a platform heading.
+ js=region(js,'function pb1674CustomerA4(t){','function pb1674CustomerThermal(t){',part=>{
+  part=once(part,'<div class="brand">PhotoBridge</div>',
+   '<div class="brand">${esc(pb1821LabInvoiceIssuer(t))}</div>',root+' customer A4 issuer');
+  part=once(part,'با سپاس از اعتماد شما · PhotoBridge',
+   'با سپاس از اعتماد شما · ${esc(pb1821LabInvoiceIssuer(t))}',root+' customer A4 footer');
+  return part;
+ },root+' direct-customer A4');
+ js=region(js,'function pb1674CustomerThermal(t){','async function pb1674CustomerPdf(t){',part=>
+  once(part,'سپاس از اعتماد شما<br>PhotoBridge',
+   'سپاس از اعتماد شما<br>${esc(pb1821LabInvoiceIssuer(t))}',root+' customer thermal footer'),root+' customer thermal');
+ js=region(js,'async function pb1674CustomerPdf(t){','function Vy(t,a){',part=>{
+  part=once(part,"g.fillText('PhotoBridge',right,90)",
+   "g.fillText(pb1821LabInvoiceIssuer(t),right,90,800)",root+' customer PDF issuer');
+  part=once(part,"'این فاکتور خدمات برای مشتری آزاد صادر شده است · PhotoBridge'",
+   "'این فاکتور خدمات برای مشتری آزاد صادر شده است · '+pb1821LabInvoiceIssuer(t)",root+' customer PDF footer');
+  return part;
+ },root+' customer PDF');
+ js=region(js,'function pb1665Thermal(t,a){','function pb1674CustomerA4(t){',part=>
+  once(part,'سپاس از اعتماد شما<br>PhotoBridge',
+   'سپاس از اعتماد شما<br>${esc(pb1821LabInvoiceIssuer(t))}',root+' partner thermal footer'),root+' partner thermal');
  const start=js.indexOf('async function Wu(t){'),end=js.indexOf('function Wy(t,a){',start);
  const invoice=js.slice(start,end);
- if(!invoice.includes('pb1821LabInvoiceIssuer(t)')||invoice.includes('<div class="brand">PhotoBridge</div>')||invoice.includes('فاکتور توسط PhotoBridge')||js.split('function pb1821LabInvoiceIssuer(').length!==2)
-  throw Error('[R1821] '+root+' invoice contract validation failed');
+ const checks={
+  missingPdfIssuer:!invoice.includes('s.fillText(pb1821LabInvoiceIssuer(t),o,c,720)'),
+  missingCustomerA4Issuer:!invoice.includes('<div class="brand">${esc(pb1821LabInvoiceIssuer(t))}</div>'),
+  missingCustomerPdfIssuer:!invoice.includes('g.fillText(pb1821LabInvoiceIssuer(t),right,90,800)'),
+  missingCustomerThermalIssuer:!invoice.includes('سپاس از اعتماد شما<br>${esc(pb1821LabInvoiceIssuer(t))}'),
+  remainingPlatformA4:invoice.includes('<div class="brand">PhotoBridge</div>'),
+  remainingPlatformPdf:invoice.includes("g.fillText('PhotoBridge',right,90)"),
+  remainingPlatformThermal:invoice.includes('سپاس از اعتماد شما<br>PhotoBridge'),
+  remainingPlatformCaption:invoice.includes('فاکتور توسط PhotoBridge')||invoice.includes('مشتری آزاد صادر شده است · PhotoBridge'),
+  duplicateResolver:js.split('function pb1821LabInvoiceIssuer(').length!==2
+ };
+ const failed=Object.keys(checks).filter(name=>checks[name]);
+ if(failed.length)throw Error('[R1821] '+root+' invoice contract validation failed: '+failed.join(', '));
  write(file,js);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  const htmlPath=root+'/index.html';

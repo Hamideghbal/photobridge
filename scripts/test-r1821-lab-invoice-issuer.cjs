@@ -42,6 +42,19 @@ test('R1821: invoice preview, print and browser PDF use same issuing lab name',(
    root+' printed footer has no platform issuer');
   assert(render.includes('<div class="brand">${_n(pb1821LabInvoiceIssuer(t))}</div>'),
    root+' print invoice heading escaped for HTML');
+  assert(render.includes('<div class="brand">${esc(pb1821LabInvoiceIssuer(t))}</div>'),
+   root+' direct-customer A4 must use lab name');
+  assert(render.includes('با سپاس از اعتماد شما · ${esc(pb1821LabInvoiceIssuer(t))}'),
+   root+' direct-customer A4 footer must use lab name');
+  assert(render.includes('سپاس از اعتماد شما<br>${esc(pb1821LabInvoiceIssuer(t))}'),
+   root+' thermal invoice templates must use lab name');
+  assert(render.includes('g.fillText(pb1821LabInvoiceIssuer(t),right,90,800)'),
+   root+' direct-customer canvas PDF must use lab name');
+  assert(render.includes("'این فاکتور خدمات برای مشتری آزاد صادر شده است · '+pb1821LabInvoiceIssuer(t)"),
+   root+' direct-customer PDF footer must use lab name');
+  assert(!render.includes("g.fillText('PhotoBridge',right,90)"));
+  assert(!render.includes('سپاس از اعتماد شما<br>PhotoBridge'));
+  assert(!render.includes('مشتری آزاد صادر شده است · PhotoBridge'));
   assert(!render.includes('<div class="brand">PhotoBridge</div>'));
   assert(!render.includes('این فاکتور توسط PhotoBridge صادر شده است.'));
   assert(!render.includes('s.fillText("PhotoBridge",o,c)'));

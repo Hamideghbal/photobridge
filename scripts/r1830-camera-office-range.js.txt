@@ -68,6 +68,9 @@
    const rows=typeof pb843BookingsForIso==='function'?pb843BookingsForIso(iso):[];
    document.querySelectorAll('#pb843BookingDetailBody .pb843BookingDetailCard').forEach((card,index)=>{
     const id=rows[index]?.id;if(!id||card.querySelector('.pb1830ModalActions'))return;
+    card.dataset.pb1830ModalSelectId=String(id);
+    card.setAttribute('tabindex','0');
+    card.setAttribute('role','group');
     const actions=document.createElement('div');actions.className='pb1830ModalActions';
     const select=document.createElement('button');select.type='button';select.className='pb1830ModalSelect';
     select.dataset.pb1830ModalSelectId=String(id);select.textContent='نمایش روزهای آفیش';
@@ -80,6 +83,7 @@
   window.pb843OpenBookingDay=pb843OpenBookingDay;
  }
  document.addEventListener('click',event=>{
+  if(event.target.closest?.('[data-pb1830-invoice-id]'))return;
   const button=event.target.closest?.('[data-pb1830-modal-select-id]');
   if(!button||!isCamera())return;
   event.preventDefault();
@@ -103,6 +107,8 @@
  },true);
  document.addEventListener('keydown',event=>{
   if(!isCamera()||!['Enter',' '].includes(event.key))return;
+  const modal=event.target.closest?.('#pb843BookingDetailBody .pb843BookingDetailCard[data-pb1830-modal-select-id]');
+  if(modal){event.preventDefault();if(window.pb1830SelectOfficeBooking(modal.dataset.pb1830ModalSelectId))pb843CloseBookingDay?.();return}
   const card=event.target.closest?.('#pb904r2DayPanelBody [data-pb904r5-booking-id]');
   if(card){event.preventDefault();window.pb1830SelectOfficeBooking(card.dataset.pb904r5BookingId)}
  },true);

@@ -28,11 +28,10 @@ test('R1834: detached old controls never block navigation; fallback uses current
  assert.equal(called,1);
  assert.equal(clicked,1,'direct routing preferred when loaded');
 });
-test('R1834: photographer Store main tab preserves selection and Store header has no lab chips',()=>{
+test('R1834: photographer Store main tab opens selection explicitly and Store header has no lab chips',()=>{
  const nav=read('dist/web/photobridge-r1126-desktop-navigation.js');
  assert(nav.includes('pb1834OpenCameraPanel(panelId,doc)'));
  assert(nav.includes('copy.dataset.storePanel=panelId'));
- assert(nav.includes("if(doc?.body?.classList?.contains('rentalPhotographerMode')&&!doc.body.classList.contains('frameCustomerStore'))return true;"));
  assert(/function\s+navigate\s*\(\s*key\s*\)/.test(nav),'main navigation remains defined');
  const chooserStart=nav.search(/function\s+openStoreChooser\s*\(\s*doc\s*\)\s*\{/);
  assert(chooserStart>=0,'Store chooser function is present');
@@ -46,10 +45,10 @@ test('R1834: photographer Store main tab preserves selection and Store header ha
  const chooser=new Function('return '+nav.slice(chooserStart,ending))();
  let chooserClicks=0;
  const makeDoc=(frame)=>({body:{classList:{contains:name=>name==='rentalPhotographerMode'||(frame&&name==='frameCustomerStore')}},querySelector:()=>({click:()=>chooserClicks++})});
- assert.equal(chooser(makeDoc(false)),true,'camera store is already selected');
- assert.equal(chooserClicks,0,'camera main Store tab must not reopen chooser');
+ assert.equal(chooser(makeDoc(false)),true,'camera Store chooser opens on an explicit main tab click');
+ assert.equal(chooserClicks,1,'explicit camera main Store tab opens the chooser');
  assert.equal(chooser(makeDoc(true)),true,'frame store still opens chooser');
- assert.equal(chooserClicks,1);
+ assert.equal(chooserClicks,2);
  assert(nav.includes("for(const original of (active==='store'||storeHeader)?[]:visible)"));
  assert(nav.includes("const cameraStoreControls=cameraStore?visible:[]"));
  for(const label of ["equipmentPanel:'اجاره تجهیزات'","salesPanel:'فروش تجهیزات'","bookingsPanel:'آفیش‌های من'","financePanel:'مالی'"])assert(nav.includes(label));

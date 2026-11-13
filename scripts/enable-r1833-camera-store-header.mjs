@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const read=p=>fs.readFileSync(p,'utf8'),write=(p,s)=>fs.writeFileSync(p,s);
-function once(s,from,to,label){const n=s.split(from).length-1;if(n!==1)throw Error('[R1833] '+label+' anchor count '+n);return s.replace(from,to)}
+// Preserve literal $$ query helpers in generated JavaScript.
+function once(s,from,to,label){const n=s.split(from).length-1;if(n!==1)throw Error('[R1833] '+label+' anchor count '+n);return s.replace(from,()=>to)}
 const navPath='dist/web/photobridge-r1126-desktop-navigation.js';
 let nav=read(navPath);
 nav=once(nav,'  row.hidden=choosing;', "  row.hidden=choosing||(active==='store'&&!storeHeader);",'store subheader hidden while shop selection is loading');

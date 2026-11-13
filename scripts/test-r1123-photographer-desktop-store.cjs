@@ -21,11 +21,11 @@ function route(mobile,id){
  function button(id){const b={dataset:{storePanel:id},attrs:{},active:false};b.classList={toggle(_c,on){b.active=on}};b.setAttribute=(k,v)=>b.attrs[k]=v;b.removeAttribute=k=>delete b.attrs[k];return b}
  const navButtons=ids.slice(1).map(button),headButtons=ids.slice(1).map(button),nav={dataset:{}};
  const context={
-  window:{matchMedia:()=>({matches:mobile})},
+  window:{matchMedia:()=>({matches:mobile})},document:{body:{classList:{toggle:()=>{}}}},
   $:q=>q==='#storeSectionNavV673'?nav:q==='.storePhotographerWorkspace>.shell'?{scrollTo:()=>{}}:q==='#rentalHero'?{classList:{toggle:()=>{}}}:panels.find(p=>q==='#'+p.id),
   $$:q=>q==='.rentalPanel'?panels:q.includes('#pbR1123StoreDesktopNav')?[...navButtons,...headButtons]:[],
   selectedShopRecord:()=>({rental_enabled:true,sale_enabled:true}),updateMobilePanelTitle:()=>{},
-  syncStoreHeaderActionsV809:()=>{},closeSaleCart:()=>{}
+  persistStoreLocationR1835:()=>{},syncStoreHeaderActionsV809:()=>{},closeSaleCart:()=>{}
  };
  vm.runInNewContext(source,context);context.openStoreSection(id);
  return {active:panels.filter(p=>p.active).map(p=>p.id),header:headButtons.filter(b=>b.active).map(b=>b.dataset.storePanel),nav:nav.dataset.pb706Active};

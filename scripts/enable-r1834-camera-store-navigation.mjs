@@ -16,38 +16,14 @@ nav=replaceOnce(nav,
  "      copy.onclick=()=>{if(pb1834OpenCameraPanel(panelId,doc))requestAnimationFrame(()=>{schedule();reveal(motionContent(panels.get('store')?.querySelector('iframe')?.contentDocument||doc));});};\n"+
  "     }else copy.onclick=()=>{original.click();requestAnimationFrame(()=>{schedule();reveal(motionContent(doc));});};",
  'live camera Store tab action');
-const navStart=nav.indexOf(" function navigate(key){\n  if(key==='store'){");
-const navEnd=nav.indexOf("  if(key==='print'||key==='crm')",navStart);
-if(navStart<0||navEnd<0)throw Error('[R1834] Store main-tab navigation bounds not found');
-nav=nav.slice(0,navStart)+
- " function navigate(key){\n"+
- "  if(key==='store'){\n"+
- "   const frame=panels.get('store')?.querySelector('iframe');\n"+
- "   const liveDoc=frame?.contentDocument;\n"+
- "   // Staying in a selected camera Store must never reopen the chooser.\n"+
- "   if(selected==='store'){\n"+
- "    if(liveDoc?.body?.classList.contains('frameCustomerStore'))openStoreChooser(liveDoc);\n"+
- "    else schedule();\n"+
- "    return;\n"+
- "   }\n"+
- "   open('store');\n"+
- "   if(frame){\n"+
- "    const chooseFrameStoreOnly=()=>{\n"+
- "     const d=frame.contentDocument;\n"+
- "     if(d?.body?.classList.contains('frameCustomerStore'))openStoreChooser(d);\n"+
- "    };\n"+
- "    if(liveDoc?.readyState==='complete')chooseFrameStoreOnly();\n"+
- "    else frame.addEventListener('load',chooseFrameStoreOnly,{once:true});\n"+
- "   }else{\n"+
- "    const newFrame=panels.get('store')?.querySelector('iframe');\n"+
- "    newFrame?.addEventListener('load',()=>{\n"+
- "     const d=newFrame.contentDocument;\n"+
- "     if(d?.body?.classList.contains('frameCustomerStore'))openStoreChooser(d);\n"+
- "    },{once:true});\n"+
- "   }\n"+
- "   return;\n"+
- "  }\n"+
- nav.slice(navEnd);
+// Leave navigate() intact; earlier release patches may have reformatted its body.
+// Camera photographers retain their selected Store on a main-tab click.
+// Frame/chassis keeps the existing store chooser semantics.
+const chooserDeclaration=/function\s+openStoreChooser\s*\(\s*doc\s*\)\s*\{/g;
+const chooserMatches=[...nav.matchAll(chooserDeclaration)];
+if(chooserMatches.length!==1)throw Error('[R1834] Store chooser declaration count '+chooserMatches.length);
+nav=nav.replace(chooserDeclaration,match=>match+
+ "if(doc?.body?.classList?.contains('rentalPhotographerMode')&&!doc.body.classList.contains('frameCustomerStore'))return true;");
 if(!nav.includes("const cameraStoreControls=cameraStore?visible:[]")||
  !nav.includes("for(const original of (active==='store'||storeHeader)?[]:visible)"))
  throw Error('[R1834] expected R1831/R1833 Store isolation missing');

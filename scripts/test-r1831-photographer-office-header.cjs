@@ -39,5 +39,6 @@ test('R1831: cache invalidation, final build order and protected modules',()=>{
  const p=read('scripts/enable-r1831-photographer-office-header.mjs');
  assert(!/dist\/api\/server\.js|lab-desktop|frame-orders|equipment-rental-portal\.html/.test(p));
  const a=b.lastIndexOf("deployStep('./enable-r1830-camera-office-booking-selection.mjs')"),r=b.lastIndexOf("deployStep('./enable-r1831-photographer-office-header.mjs')"),c=b.lastIndexOf("runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs']");
- assert(a>=0&&r>a&&c>r);assert(read('DEPLOY_REVISION.txt').includes('-r1831-'));
+ assert(a>=0&&r>a&&c>r);const revision=Number(read('DEPLOY_REVISION.txt').match(/-r(\d+)-/)?.[1]);
+ assert(Number.isInteger(revision)&&revision>=1831,'R1831 must remain installed in current or later releases');
 });

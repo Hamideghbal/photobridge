@@ -96,5 +96,6 @@ test('R1830: final build regenerates Windows hot update after both patches',()=>
  const c=build.lastIndexOf("runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'})");
  assert(build.includes('An ESM import is cached'),'final snapshot must run in a fresh Node process');
  assert(a>=0&&b>a&&c>b,'store snapshot must include R1829 + R1830');
- assert(read('DEPLOY_REVISION.txt').includes('-r1830-'));
+ const revision=Number(read('DEPLOY_REVISION.txt').match(/-r(\d+)-/)?.[1]);
+ assert(Number.isInteger(revision)&&revision>=1830,'R1830 must remain installed in current or later releases');
 });

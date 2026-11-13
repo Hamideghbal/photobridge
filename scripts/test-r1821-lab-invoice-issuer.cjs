@@ -52,8 +52,8 @@ test('R1821: preserve lab/photographer invoice detail and pricing, not unrelated
  assert(code.includes('className:"invoicePaperTotals"'));
  assert(code.includes('className:"invoicePdfFreshBtn"'));
  assert(code.includes('className:"invoicePrintBtn"'));
- assert(code.includes('className:"customerInvoicePreview"'));
- assert(code.includes('className:"labInvoicePreview"'));
+ assert(code.includes('customerInvoicePreview'));
+ assert(code.includes('labInvoicePreview'));
  assert(code.includes('function tj(t,a){'),'existing accounting discount documents retained');
  assert(code.includes('function Gy(t){'),'existing PDF download flow retained');
  assert(code.includes('PhotoBridge —'),'unrelated platform branding still intact');

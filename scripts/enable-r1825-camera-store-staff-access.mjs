@@ -71,7 +71,26 @@ const pb1825TrialAddAfter = "        if (existing) {\n"+
 "            if (mq.rowCount) return sendJson(res, 409, { error: 'rental_admin_already_exists' });\n"+
 "            if(pb1825CameraTrial){const st=await pool.query(\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='handover_staff' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`,[existing.id]);if(st.rowCount)return sendJson(res,409,{error:'rental_staff_cannot_be_manager'})}\n"+
 "        }";
-s=once(s,pb1825TrialAddBefore,pb1825TrialAddAfter,'camera store OTP signup blocks staff/ignores deleted owners');
+// Earlier signup-sms-identity rewrites the rental signup route before R1825 runs.
+// Keep the exact legacy replacement for old builds; on identity-upgraded builds,
+// insert the camera-only guard immediately before the unchanged OTP challenge.
+// Do not relax or rewrite any lab or frame/chassis routes.
+if(s.includes(pb1825TrialAddBefore)){
+  s=once(s,pb1825TrialAddBefore,pb1825TrialAddAfter,'camera store OTP signup blocks staff/ignores deleted owners');
+}else{
+  const pb1827ChallengeAnchor="            const challenge = await createSignupMobileChallenge('equipment_rental_trial', mobile, ";
+  const pb1827ChallengeGuard=
+    "            const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+
+    "            if(pb1825CameraTrial){\n"+
+    "              if(existing){\n"+
+    "                const memberships=await pool.query(\`SELECT m.role FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops shop ON shop.id=m.shop_id WHERE m.user_id=$1 AND m.role IN ('shop_admin','handover_staff') AND m.active=true AND shop.deleted_at IS NULL LIMIT 2\`,[existing.id]);\n"+
+    "                if(memberships.rows.some(x=>x.role==='shop_admin'))return sendJson(res,409,{error:'rental_admin_already_exists'});\n"+
+    "                if(memberships.rows.some(x=>x.role==='handover_staff'))return sendJson(res,409,{error:'rental_staff_cannot_be_manager'});\n"+
+    "              }\n"+
+    "            }\n"+
+    pb1827ChallengeAnchor;
+  s=once(s,pb1827ChallengeAnchor,pb1827ChallengeGuard,'camera store OTP challenge identity-upgrade compatibility');
+}
 const pb1825TrialVerifyBefore = "                const mq = await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n                if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });";
 const pb1825TrialVerifyAfter = "                const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+
 "                const mq = await c.query(pb1825CameraTrial?\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='shop_admin' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`:\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n"+

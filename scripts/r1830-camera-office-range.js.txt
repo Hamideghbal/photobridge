@@ -58,6 +58,33 @@
   if(!target||!dateRange(target))return false;
   selectedId=String(id);update();return true;
  };
+ // On mobile the day's bookings are in a modal rather than the desktop side panel.
+ // Preserve the original modal and provide separate selection and invoice actions.
+ if(typeof pb843OpenBookingDay==='function'){
+  const previousOpen=pb843OpenBookingDay;
+  pb843OpenBookingDay=function(iso){
+   const result=previousOpen.apply(this,arguments);
+   if(!isCamera()||!matchMedia('(max-width:850px)').matches)return result;
+   const rows=typeof pb843BookingsForIso==='function'?pb843BookingsForIso(iso):[];
+   document.querySelectorAll('#pb843BookingDetailBody .pb843BookingDetailCard').forEach((card,index)=>{
+    const id=rows[index]?.id;if(!id||card.querySelector('.pb1830ModalActions'))return;
+    const actions=document.createElement('div');actions.className='pb1830ModalActions';
+    const select=document.createElement('button');select.type='button';select.className='pb1830ModalSelect';
+    select.dataset.pb1830ModalSelectId=String(id);select.textContent='نمایش روزهای آفیش';
+    const invoice=document.createElement('button');invoice.type='button';invoice.className='pb1830ModalInvoice';
+    invoice.dataset.pb1830InvoiceId=String(id);invoice.textContent='فاکتور';
+    actions.append(select,invoice);card.append(actions);
+   });
+   return result;
+  };
+  window.pb843OpenBookingDay=pb843OpenBookingDay;
+ }
+ document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-pb1830-modal-select-id]');
+  if(!button||!isCamera())return;
+  event.preventDefault();
+  if(window.pb1830SelectOfficeBooking(button.dataset.pb1830ModalSelectId))pb843CloseBookingDay?.();
+ },true);
  // Calendar month navigation recreates all day cells; repaint after every redraw.
  if(typeof pb843RenderCalendar==='function'){
   const prev=pb843RenderCalendar;

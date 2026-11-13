@@ -29,6 +29,16 @@
    if(active){day.title='روزهای آفیش انتخاب‌شده';day.dataset.pb1830RangeTitle='1'}
    else if(day.dataset.pb1830RangeTitle==='1'){day.removeAttribute('title');delete day.dataset.pb1830RangeTitle}
   });
+  // The legacy R1052 action renderer owns the immediate children of this panel.
+  // Add Invoice into its existing action row; never wrap or replace booking cards.
+  document.querySelectorAll('#pb904r2DayPanelBody [data-pb904r5-booking-id]').forEach(card=>{
+   const actions=card.closest?.('.pbR1052DayGroup')?.querySelector?.('.pbR1052DayActions');
+   if(!actions||actions.querySelector('[data-pb1830-invoice-id],[data-office-action="invoice"]'))return;
+   const invoice=document.createElement('button');
+   invoice.type='button';invoice.className='pb1830InvoiceAction';
+   invoice.dataset.pb1830InvoiceId=card.dataset.pb904r5BookingId;
+   invoice.textContent='فاکتور';actions.append(invoice);
+  });
   document.querySelectorAll('#pb904r2DayPanelBody [data-pb904r5-booking-id]').forEach(card=>{
    const active=!!range&&card.dataset.pb904r5BookingId===selectedId;
    if(card.classList.contains('pb1830BookingSelected')!==active)card.classList.toggle('pb1830BookingSelected',active);
@@ -115,7 +125,7 @@
  function observe(){
   for(const selector of ['#pb843CalendarGrid','#pb904r2DayPanelBody']){
    const el=document.querySelector(selector);
-   if(el)new MutationObserver(queue).observe(el,{childList:true});
+   if(el)new MutationObserver(queue).observe(el,{childList:true,subtree:true});
   }
   queue();
  }

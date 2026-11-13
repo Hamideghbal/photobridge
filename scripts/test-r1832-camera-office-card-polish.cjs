@@ -24,7 +24,7 @@ test('R1832: body scope selects only camera Store, not frame/chassis',()=>{
  const state={shop:{business_category:'equipment_rental'},bookings:[]};
  const classes=new Set(),listeners={},observers=[];
  const doc={readyState:'loading',body:{classList:{toggle:(k,v)=>v?classes.add(k):classes.delete(k)}},
-  addEventListener:(k,fn)=>{listeners[k]=fn},getElementById:id=>id==='pb843CalendarGrid'?{}:null,querySelectorAll:()=>[]};
+  addEventListener:(k,fn)=>{listeners[k]=fn},getElementById:()=>null,querySelector:selector=>selector==='#pb843CalendarGrid'?{}:null,querySelectorAll:()=>[]};
  const win={addEventListener:()=>{}};
  vm.runInNewContext(read('scripts/r1830-camera-office-range.js.txt'),{
   window:win,document:doc,data:state,MutationObserver:class{constructor(fn){observers.push(fn)} observe(){}},

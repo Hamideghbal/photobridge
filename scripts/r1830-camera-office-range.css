@@ -53,3 +53,10 @@ html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalSelect{
 html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalInvoice{
  flex:0 0 74px;border:1px solid #d5dbe5;background:#f8fafc;color:#344054;
 }
+
+html body.rentalAppReady #pb843BookingDetailBody .pb843BookingDetailCard[data-pb1830-modal-select-id]{
+ cursor:pointer;
+}
+html body.rentalAppReady #pb843BookingDetailBody .pb843BookingDetailCard[data-pb1830-modal-select-id]:focus-visible{
+ outline:2px solid #2563b6;outline-offset:2px;
+}

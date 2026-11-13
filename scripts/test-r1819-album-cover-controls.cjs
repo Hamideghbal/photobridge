@@ -59,7 +59,9 @@ test('R1819: no album-page selection controls remain; single removal, per-page p
   assert(js.includes('onChange:ht=>qt(String($e.id),ht.target.value)'),'paper change still works');
   assert(js.includes('multiple:!0'),'adding multiple files at once is still supported');
   assert(js.includes('className:"albumFileActionFile"')||js.includes('albumFileActionFile'));
-  assert(js.includes('albumFileActionFolder'));
+  // R1658 intentionally removed Add Folder and renamed Add File to Add Album Page.
+  assert(!js.includes('albumFileActionFolder'),'obsolete folder action must stay removed');
+  assert(js.includes('افزودن برگه آلبوم'),'Add Album Page control must remain visible');
  }
  assert(css.includes('.albumFileToolbarActions'));
  assert(css.includes('grid-template-columns:none!important'));

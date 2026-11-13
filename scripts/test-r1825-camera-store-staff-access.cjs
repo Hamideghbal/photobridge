@@ -18,7 +18,8 @@ test('R1825 edits only rental camera store API and portal; protects lab and fram
   assert(!src.includes("write('dist/web/lab-"));
   assert(!src.includes("write('dist/web/index.html'"));
   assert(src.includes("['equipment_rental','equipment_sale','equipment_rental_sale']"));
-  assert(read('DEPLOY_REVISION.txt').includes('r1825-camera-store-staff-access'));
+  const revisionNumber=Number(read('DEPLOY_REVISION.txt').match(/-r(\d+)-/)?.[1]);
+  assert(Number.isInteger(revisionNumber)&&revisionNumber>=1825,'R1825 release must be present in the current or a newer deploy revision');
 });
 
 test('R1825 rental session: deleted camera store membership cannot override current staff; frame behavior preserved', () => {

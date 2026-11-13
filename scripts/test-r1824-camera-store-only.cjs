@@ -103,5 +103,6 @@ test('R1824: installer is after all previous lab and album release steps',()=>{
  const build=read('scripts/liara-fast-build.mjs');
  assert(build.indexOf("deployStep('./enable-r1824-camera-store-only.mjs')")>build.indexOf("deployStep('./enable-r1822-finance-newest-first.mjs')"));
  assert(read('dist/web/index.html').includes('photobridge-v904r19-admin-stores.js?v=r1824'));
- assert(read('DEPLOY_REVISION.txt').includes('r1824-camera-store-only'));
+ const revisionNumber=Number(read('DEPLOY_REVISION.txt').match(/-r(\d+)-/)?.[1]);
+ assert(Number.isInteger(revisionNumber)&&revisionNumber>=1824,'R1824 release must be present in the current or a newer deploy revision');
 });

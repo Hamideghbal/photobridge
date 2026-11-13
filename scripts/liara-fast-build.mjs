@@ -1281,3 +1281,7 @@ runR1314(process.execPath,['--test','scripts/test-r1822-finance-newest-first.cjs
 // R1824: CAMERA equipment stores only. Do not touch lab or frame/chassis behavior.
 await deployStep('./enable-r1824-camera-store-only.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1824-camera-store-only.cjs'],{stdio:'inherit'});
+
+// R1825: camera equipment shop staff rights only. Lab and frame/chassis behavior frozen.
+await deployStep('./enable-r1825-camera-store-staff-access.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1825-camera-store-staff-access.cjs'],{stdio:'inherit'});

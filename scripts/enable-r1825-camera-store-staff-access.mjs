@@ -78,6 +78,24 @@ const pb1825TrialVerifyAfter = "                const pb1825CameraTrial="+camera
 "                if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });\n"+
 "                if(pb1825CameraTrial){const st=await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='handover_staff' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`,[userId]);if(st.rowCount)throw Object.assign(new Error('rental_staff_cannot_be_manager'),{status:409})}";
 s=once(s,pb1825TrialVerifyBefore,pb1825TrialVerifyAfter,'camera store OTP verify blocks active personnel');
+// Even a profile-only admin store record must not label an active camera-store
+// staff account as manager of another camera store without granting access.
+const pb1825StaffIdentityQuery = "SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops shop ON shop.id=m.shop_id JOIN users u ON u.id=m.user_id WHERE m.role='handover_staff' AND m.active=true AND shop.deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) LIMIT 1";
+s=once(s,
+ "        if (!name) return sendJson(res, 400, { error: 'shop_name_required' });\n        let slug = slugify(String(b.slug || name));",
+ "        if (!name) return sendJson(res, 400, { error: 'shop_name_required' });\n"+
+ "        const pb1825ManagerMobile=normalizeMobile(String(b.managerMobile||''));\n"+
+ "        if(pb1825ManagerMobile){const staff=await pool.query("+JSON.stringify(pb1825StaffIdentityQuery)+",[pb1825ManagerMobile]);if(staff.rowCount)return sendJson(res,409,{error:'rental_staff_cannot_be_manager'});}\n"+
+ "        let slug = slugify(String(b.slug || name));",
+ 'admin camera store creation refuses manager number belonging to active staff');
+s=once(s,
+ "        if (!next.name) return sendJson(res, 400, { error: 'shop_name_required' });\n        if (b.active === true",
+ "        if (!next.name) return sendJson(res, 400, { error: 'shop_name_required' });\n"+
+ "        if("+camera+".includes(String(current.business_category||'equipment_rental_sale')) && b.managerMobile!==undefined && String(next.managerMobile||'')!==String(current.manager_mobile||'')){\n"+
+ "            const managerMobile=normalizeMobile(String(next.managerMobile||''));if(managerMobile){const staff=await pool.query("+JSON.stringify(pb1825StaffIdentityQuery)+",[managerMobile]);if(staff.rowCount)return sendJson(res,409,{error:'rental_staff_cannot_be_manager'});}\n"+
+ "        }\n"+
+ "        if (b.active === true",
+ 'admin camera store edit refuses staff manager mobile');
 write('dist/api/server.js',s);
 execFileSync(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'});
 

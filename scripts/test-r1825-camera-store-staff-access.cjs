@@ -133,3 +133,54 @@ test('R1825 admin camera-store creation/edit cannot register an active staff pho
  assert(patch.includes("shop.deleted_at IS NULL"));
  assert(patch.includes("error:'rental_staff_cannot_be_manager'"));
 });
+
+
+test('R1827: camera OTP signup patch works after signup SMS identity rewrite without changing frame or lab',async()=>{
+  const installer=read('scripts/enable-r1825-camera-store-staff-access.mjs');
+  const start=installer.indexOf('const pb1825TrialAddBefore ='),end=installer.indexOf('const pb1825TrialVerifyBefore',start);
+  assert(start>0&&end>start,'isolated rental signup patch block');
+  const onlySignupPatch=installer.slice(start,end);
+  const apply=new Function('s','camera','once',onlySignupPatch+'\nreturn s;');
+  const anchor="            const challenge = await createSignupMobileChallenge('equipment_rental_trial', mobile, ";
+  const identityUpgraded="if (req.method === 'POST' && url.pathname === '/api/public/equipment-rental-trial') {\n"+
+    "        let existing;try{existing=signupSmsIdentity(credentialRecords)}catch(error){}\n"+
+    "        try {\n"+anchor+"shopPayload);\n        }\n    }\n"+
+    "if (req.method === 'POST' && url.pathname === '/api/public/lab-trial') {const challenge = await createSignupMobileChallenge('lab_trial', mobile, shopPayload);}";
+  const once=(s,from,to,label)=>{
+    assert.equal(s.split(from).length,2,label);
+    return s.replace(from,to);
+  };
+  const updated=apply(identityUpgraded,"['equipment_rental','equipment_sale','equipment_rental_sale']",once);
+  assert(updated.includes("if(pb1825CameraTrial)"));
+  assert(updated.includes("shop.deleted_at IS NULL"));
+  assert(updated.includes("m.role IN ('shop_admin','handover_staff')"));
+  assert(updated.includes("rental_staff_cannot_be_manager"));
+  assert(updated.includes("rental_admin_already_exists"));
+  assert(updated.includes("createSignupMobileChallenge('lab_trial', mobile, shopPayload)"));
+  assert.equal(updated.split("const pb1825CameraTrial=").length-1,1);
+  const guard=updated.slice(updated.indexOf("            const pb1825CameraTrial"),updated.indexOf(anchor));
+  const check=new Function('businessCategory','existing','pool','sendJson','res','return (async()=>{'+guard+'return {ok:true}})()');
+  const call=async(category,role)=>{
+    const queries=[];
+    const pool={query:async(sql)=>{
+      queries.push(sql);
+      return {rows:role==='deleted'||!role?[]:[{role}]};
+    }};
+    const out=await check(category,{id:'test-user'},pool,(_res,status,body)=>({status,...body}),null);
+    return {out,queries};
+  };
+  assert.equal((await call('equipment_sale','shop_admin')).out.error,'rental_admin_already_exists');
+  assert.equal((await call('equipment_rental','handover_staff')).out.error,'rental_staff_cannot_be_manager');
+  assert.equal((await call('equipment_sale','deleted')).out.ok,true,'deleted manager is eligible');
+  for(const category of ['frame','chassis','frame_chassis']){
+    const x=await call(category,'handover_staff');
+    assert.equal(x.out.ok,true,category);
+    assert.equal(x.queries.length,0,category+' never enters the camera role guard');
+  }
+  const legacy="        if (existing) {\n"+
+    "            const mq = await pool.query(\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [existing.id]);\n"+
+    "            if (mq.rowCount) return sendJson(res, 409, { error: 'rental_admin_already_exists' });\n"+
+    "        }\n";
+  const legacyPatched=apply(legacy+anchor,"['equipment_rental','equipment_sale','equipment_rental_sale']",once);
+  assert(legacyPatched.includes('if(pb1825CameraTrial)'),'legacy signup path also receives camera protections');
+});

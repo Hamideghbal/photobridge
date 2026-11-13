@@ -23,6 +23,10 @@ html=once(html,
  "function showMobilePanel(id){\n $$('.rentalPanel').forEach(p=>p.classList.toggle('mobileActive',p.id===id));",
  "function showMobilePanel(id){\n const activeShop=typeof selectedShopRecord==='function'?selectedShopRecord():null;\n const isCamera=['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(activeShop?.business_category||''));\n document.body.classList.toggle('pb1833CameraStore',isCamera);\n $$('.rentalPanel').forEach(p=>p.classList.toggle('mobileActive',p.id===id));",
  'selected equipment Store must keep its active panel');
+html=once(html,
+ "closeRentalRequestV809();await loadBookings();renderItems();showMobilePanel('bookingsPanel')",
+ "closeRentalRequestV809();await loadBookings();renderItems();const currentStore=selectedShopRecord();const stayInStore=['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(currentStore?.business_category||''));showMobilePanel(stayInStore?'equipmentPanel':'bookingsPanel')",
+ 'camera photographer remains in equipment Store after successful rental order');
 if(html.includes('pb1833CameraStoreFilterStyle'))throw Error('[R1833] already patched');
 const end=html.lastIndexOf('</body>');
 if(end<0||html.lastIndexOf('</html>')<end)throw Error('[R1833] valid Store HTML closing tags missing');

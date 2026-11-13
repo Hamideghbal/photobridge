@@ -23,6 +23,8 @@ test('R1833: shop chooser and category/brand filters never share the same visibl
  assert(css.includes('#rentalFilterBarR68'));
  assert(css.includes('#saleFilterBarR68'));
  assert(css.includes('.pbR96ChangeStore'));
+ assert(html.includes("showMobilePanel(stayInStore?'equipmentPanel':'bookingsPanel')"),'after successful camera booking stay in Store, not tracking');
+ assert(html.includes("const currentStore=selectedShopRecord()"),'store category determines success navigation');
 });
 test('R1833: build after R1832, before Windows hash snapshot; no lab/frame or server routes modified',()=>{
  const build=read('scripts/liara-fast-build.mjs');

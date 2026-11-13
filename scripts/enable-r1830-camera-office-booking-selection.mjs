@@ -10,13 +10,9 @@ function once(source,from,to,label){
 }
 let html=read('dist/api/equipment-rental-portal.html');
 const camera="['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(data?.shop?.business_category||''))";
-const dollar=String.fromCharCode(36,123),tick=String.fromCharCode(96);
-const dayButton='<button type="button" class="pb904r2DayBooking" data-pb904r5-booking-id="'+dollar+'esc(b.id)}">';
-const wrap=dollar+camera+"?'<div class=\"pb1830BookingRow\">':''}";
-html=once(html,dayButton,wrap+dayButton,'camera-only booking wrapper');
-const end='</button>'+tick+").join(''):'<div class=\"empty\">برای این روز آفیشی ثبت نشده است.</div>';";
-const newEnd='</button>'+dollar+camera+"?'<button type=\"button\" class=\"pb1830InvoiceAction\" data-pb1830-invoice-id=\"'+esc(b.id)+'\">فاکتور</button></div>':''}"+tick+").join(''):'<div class=\"empty\">برای این روز آفیشی ثبت نشده است.</div>';";
-html=once(html,end,newEnd,'camera-only booking invoice action');
+// Keep booking cards as DIRECT children of the day panel. R1052 wraps these cards
+// to attach handover, return and invoice actions; wrapping them here loses those controls.
+// R1830 adds a separate invoice action to the existing R1052 action container instead.
 const invoiceOpen='e.preventDefault();openBookingInvoice(card.dataset.pb904r5BookingId)},true);';
 const selectedOpen='e.preventDefault();if('+camera+'&&window.pb1830SelectOfficeBooking)window.pb1830SelectOfficeBooking(card.dataset.pb904r5BookingId);else openBookingInvoice(card.dataset.pb904r5BookingId)},true);';
 const invoiceClick="document.addEventListener('click',e=>{const button=e.target.closest?.('[data-pb1830-invoice-id]');if(!button)return;e.preventDefault();e.stopPropagation();openBookingInvoice(button.dataset.pb1830InvoiceId)},true);";
@@ -27,7 +23,7 @@ const css=read('scripts/r1830-camera-office-range.css'),js=read('scripts/r1830-c
 new Function(js);
 const injection='<style id="pb1830OfficeBookingRangeStyle">'+css+'</style>\n<script id="pb1830OfficeBookingRangeRuntime">'+js+'</script>\n';
 html=html.slice(0,last)+injection+html.slice(last);
-if(!html.includes('data-pb1830-invoice-id=')||!html.includes('pb1830SelectOfficeBooking')||!html.includes('pb1830BookingRange'))throw Error('[R1830] final office range handlers missing');
+if(!html.includes('[data-pb1830-invoice-id]')||!html.includes('pb1830SelectOfficeBooking')||!html.includes('pb1830BookingRange'))throw Error('[R1830] final office range handlers missing');
 if(!html.includes(camera))throw Error('[R1830] camera-only selection guard missing');
 write('dist/api/equipment-rental-portal.html',html);
 execFileSync(process.execPath,['--check','apps/store-desktop/desktop-overlay.js'],{stdio:'inherit'});

@@ -62,6 +62,22 @@ s=once(s,
  "\`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE id=$1 AND shop_id=$2 AND role='handover_staff' AND active=true RETURNING id,user_id\`:"+
  "\`UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE id=$1 AND shop_id=$2 AND role='handover_staff' RETURNING id,user_id\`,[id,shop.id]);",
  'revocation updates active camera staff membership only');
+// Camera-store signup has a second manager-grant path. Reject active staff there too,
+// before OTP and at OTP verification under the same users-row lock as staff creation.
+const pb1825TrialAddBefore = "        if (existing) {\n            const mq = await pool.query(\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [existing.id]);\n            if (mq.rowCount) return sendJson(res, 409, { error: 'rental_admin_already_exists' });\n        }";
+const pb1825TrialAddAfter = "        if (existing) {\n"+
+"            const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+
+"            const mq = await pool.query(pb1825CameraTrial?\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='shop_admin' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`:\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [existing.id]);\n"+
+"            if (mq.rowCount) return sendJson(res, 409, { error: 'rental_admin_already_exists' });\n"+
+"            if(pb1825CameraTrial){const st=await pool.query(\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='handover_staff' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`,[existing.id]);if(st.rowCount)return sendJson(res,409,{error:'rental_staff_cannot_be_manager'})}\n"+
+"        }";
+s=once(s,pb1825TrialAddBefore,pb1825TrialAddAfter,'camera store OTP signup blocks staff/ignores deleted owners');
+const pb1825TrialVerifyBefore = "                const mq = await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n                if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });";
+const pb1825TrialVerifyAfter = "                const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+
+"                const mq = await c.query(pb1825CameraTrial?\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='shop_admin' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`:\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n"+
+"                if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });\n"+
+"                if(pb1825CameraTrial){const st=await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='handover_staff' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`,[userId]);if(st.rowCount)throw Object.assign(new Error('rental_staff_cannot_be_manager'),{status:409})}";
+s=once(s,pb1825TrialVerifyBefore,pb1825TrialVerifyAfter,'camera store OTP verify blocks active personnel');
 write('dist/api/server.js',s);
 execFileSync(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'});
 

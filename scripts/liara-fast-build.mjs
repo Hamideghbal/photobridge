@@ -1334,6 +1334,11 @@ await deployStep("./enable-r1837-store-chooser.mjs");
 await deployStep("./enable-r1838-unified-launch.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1838-user-launch.cjs'],{stdio:'inherit'});
 
+// R1839: remove three public services from HOME ONLY; preserve feature pages and all portal routes.
+console.log('[PhotoBridge Docker build] START R1839 homepage service cleanup');
+runR1314(process.execPath,['scripts/enable-r1839-home-service-trim.mjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK R1839 homepage service cleanup');
+
 // PB_PERF_FIX_V1 — run after all release/UI writers so HTML and server are final.
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});

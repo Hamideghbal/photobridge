@@ -1293,6 +1293,9 @@ await deployStep('./enable-r1829-camera-scroll-refresh.mjs');
 // Preserve invoice action and remove the blue header wash only in Windows camera shops.
 await deployStep('./enable-r1830-camera-office-booking-selection.mjs');
 
+// R1831: camera photographer's Sales/Office navigation; no laboratory or frame logic.
+await deployStep('./enable-r1831-photographer-office-header.mjs');
+
 // Store Windows uses a hash-pinned hot-update manifest; refresh AFTER every camera patch.
 // The first preparation ran at R1158. An ESM import is cached, so do NOT call
 // deployStep() again: execute in a fresh Node process to regenerate the snapshot
@@ -1302,3 +1305,5 @@ runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inher
 console.log('[PhotoBridge Docker build] OK final Windows store desktop snapshot');
 runR1314(process.execPath,['--test','scripts/test-r1829-camera-scroll-refresh.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1830-camera-office-booking-selection.cjs'],{stdio:'inherit'});
+
+runR1314(process.execPath,['--test','scripts/test-r1831-photographer-office-header.cjs'],{stdio:'inherit'});

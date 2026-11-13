@@ -1,1 +1,1 @@
-2026-11-13-r1830-camera-office-range-header-refresh-snapshot-fix
+2026-11-13-r1831-photographer-store-office-header

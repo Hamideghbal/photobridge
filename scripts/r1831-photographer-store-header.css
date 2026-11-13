@@ -1,0 +1,13 @@
+/* R1831: the camera photographer's second header is navigation only.
+   The Sales cart and filters remain in the Sales section. Frame and lab unaffected. */
+@media(min-width:821px){
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary{
+  display:flex!important;direction:rtl!important;justify-content:flex-start!important;
+  padding-inline:14px!important;background:#fff!important;isolation:isolate!important;
+ }
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>.pb1126FrameStoreTabs{
+  position:static!important;inset:auto!important;max-width:100%!important;
+  width:auto!important;height:100%!important;margin:0!important;flex-wrap:nowrap!important;
+ }
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>:is(.pb1126FrameStoreCart,.pb1126FrameStoreTitle){display:none!important}
+}

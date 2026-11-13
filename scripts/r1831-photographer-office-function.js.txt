@@ -1,0 +1,24 @@
+  function openOffice(){
+    if(!rs)return;
+    const shop=typeof selectedShopRecord==='function'?selectedShopRecord():null;
+    const camera=['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(shop?.business_category||''));
+    const flow=q('#equipmentFlow'),panel=q('#equipmentPanel');
+    if(camera&&(!flow||flow.style.display==='none')){
+      panel?.classList.remove('pbR63OfficeOpen');
+      q('[data-store-home]')?.click();
+      return;
+    }
+    const end=re||rs,s=q('#start'),e=q('#end');
+    try{
+      if(s)s.value=typeof window.isoToJalaliInput==='function'?window.isoToJalaliInput(rs):rs;
+      if(e)e.value=typeof window.isoToJalaliInput==='function'?window.isoToJalaliInput(end):end;
+    }catch{}
+    if(camera&&typeof onRentalDateChangedV811==='function')onRentalDateChangedV811('start');
+    panel?.classList.add('pbR63OfficeOpen');
+    const sm=q('#pbR63OfficeTop small');
+    if(sm)sm.textContent=rs+(end!==rs?' تا '+end:'');
+    try{if(typeof window.renderItems==='function')window.renderItems()}catch{}
+    if(camera&&typeof openRentalDateConfirmV811==='function'){
+      requestAnimationFrame(()=>{if(panel?.classList.contains('pbR63OfficeOpen'))openRentalDateConfirmV811()});
+    }
+  }

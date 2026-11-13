@@ -24,7 +24,7 @@ test('R1832: body scope selects only camera Store, not frame/chassis',()=>{
  const state={shop:{business_category:'equipment_rental'},bookings:[]};
  const classes=new Set(),listeners={},observers=[];
  const doc={readyState:'loading',body:{classList:{toggle:(k,v)=>v?classes.add(k):classes.delete(k)}},
-  addEventListener:(k,fn)=>{listeners[k]=fn},getElementById:()=>null,querySelectorAll:()=>[]};
+  addEventListener:(k,fn)=>{listeners[k]=fn},getElementById:id=>id==='pb843CalendarGrid'?{}:null,querySelectorAll:()=>[]};
  const win={addEventListener:()=>{}};
  vm.runInNewContext(read('scripts/r1830-camera-office-range.js.txt'),{
   window:win,document:doc,data:state,MutationObserver:class{constructor(fn){observers.push(fn)} observe(){}},
@@ -32,11 +32,13 @@ test('R1832: body scope selects only camera Store, not frame/chassis',()=>{
  });
  listeners.DOMContentLoaded();
  assert(classes.has('pb1832CameraOffice'));
+ assert(observers.length>0,'manager calendar observer must be attached');
  state.shop.business_category='frame_chassis';
- win.pb1830SelectOfficeBooking('missing');
- // A new manager UI mount reevaluates the camera category.
+ observers[0]();
+ assert(!classes.has('pb1832CameraOffice'),'frame/chassis must never receive camera styling');
  state.shop.business_category='equipment_sale';
- assert(!classes.has('pb1832CameraOffice')===false || state.shop.business_category==='equipment_sale');
+ observers[0]();
+ assert(classes.has('pb1832CameraOffice'),'switching back to camera refreshes scoped styling');
  assert(read('scripts/r1830-camera-office-range.js.txt').includes("document.body?.classList?.toggle('pb1832CameraOffice',isCamera())"));
 });
 test('R1832: patch follows R1830/R1831 before Windows snapshot and never edits lab or frame',()=>{

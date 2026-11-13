@@ -184,3 +184,56 @@ test('R1827: camera OTP signup patch works after signup SMS identity rewrite wit
   const legacyPatched=apply(legacy+anchor,"['equipment_rental','equipment_sale','equipment_rental_sale']",once);
   assert(legacyPatched.includes('if(pb1825CameraTrial)'),'legacy signup path also receives camera protections');
 });
+
+
+test('R1828: OTP verify compatibility handles exact and reformatted manager gate without changing labs or frame stores', async () => {
+  const installer=read('scripts/enable-r1825-camera-store-staff-access.mjs');
+  const a=installer.indexOf('const pb1825TrialVerifyBefore'),b=installer.indexOf('// Even a profile-only',a);
+  assert(a>0&&b>a);
+  const apply=new Function('s','camera','once',installer.slice(a,b)+'\nreturn s;');
+  const once=(s,from,to,label)=>{assert.equal(s.split(from).length,2,label);return s.replace(from,to)};
+  const open="if (req.method === 'POST' && url.pathname === '/api/public/equipment-rental-trial/verify') {";
+  const end="if (req.method === 'POST' && url.pathname === '/api/public/lab-trial') {";
+  const legacyCheck="if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });";
+  const fixture=open+"\n"+
+    "  const businessCategory='equipment_sale',userId='existing';\n"+
+    "  const uq=await c.query(\`SELECT id,mobile,active FROM users WHERE id=$1 FOR UPDATE\`,[userId]);\n"+
+    "                const mq = await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n"+
+    "                "+legacyCheck+"\n"+
+    "}\n"+end+"/* original laboratory block must stay intact */}";
+  const versions=[
+    fixture,
+    fixture.replace(legacyCheck,"if( mq.rowCount )\n throw Object.assign( new Error( 'rental_admin_already_exists' ), { status : 409 } );"),
+    fixture.replace(legacyCheck,"if( mq.rowCount )\n throw Object.assign( new Error( 'rental_admin_already_exists' ), { status : 409 } );")
+      .replace('const mq = await c.query','const mq=await c.query').replace("role='shop_admin'","role = 'shop_admin'")
+  ];
+  for(const source of versions){
+    const output=apply(source,"['equipment_rental','equipment_sale','equipment_rental_sale']",once);
+    assert.equal(output.slice(output.indexOf(end)),source.slice(source.indexOf(end)),'lab route unchanged');
+    const verify=output.slice(output.indexOf(open),output.indexOf(end));
+    assert(verify.includes('const pb1825CameraTrial='));
+    assert(verify.includes('if(pb1825CameraTrial)'));
+    assert(verify.includes("new Error('rental_staff_cannot_be_manager')"));
+    assert(verify.includes("s.deleted_at IS NULL"),'deleted managers excluded');
+    const p=verify.indexOf('const pb1825CameraTrial=');
+    const e=verify.indexOf('\n',verify.indexOf('if(pb1825CameraTrial)',p));
+    const guard=verify.slice(p,e<0?verify.length:e);
+    const check=new Function('businessCategory','userId','mq','c','return (async()=>{'+guard+'\nreturn "allowed"})()');
+    const call=(category,legacyCount,roles)=>check(category,'existing',{rowCount:legacyCount},{
+      query:async sql=>{
+        const q=String(sql);
+        if(q.includes('s.deleted_at IS NULL')){
+          const active=q.includes("m.role='shop_admin'")?roles.filter(x=>x==='shop_admin'):
+            q.includes("m.role='handover_staff'")?roles.filter(x=>x==='handover_staff'):roles;
+          return {rowCount:active.length,rows:active.map(role=>({role}))};
+        }
+        return {rowCount:legacyCount,rows:[]};
+      }
+    });
+    assert.equal(await call('equipment_sale',1,[]),'allowed','deleted camera manager can return');
+    await assert.rejects(()=>call('equipment_rental',1,['shop_admin']),/rental_admin_already_exists/);
+    await assert.rejects(()=>call('equipment_sale',0,['handover_staff']),/rental_staff_cannot_be_manager/);
+    await assert.rejects(()=>call('frame',1,[]),/rental_admin_already_exists/);
+    assert.equal(await call('frame',0,['handover_staff']),'allowed','frame legacy behavior unchanged');
+  }
+});

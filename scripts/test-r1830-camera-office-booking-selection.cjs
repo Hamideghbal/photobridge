@@ -41,7 +41,7 @@ test('R1830: frame/chassis shops never activate the new booking selection',()=>{
 test('R1830: mobile website booking dialog provides selection plus an independent invoice button',()=>{
  const booking={id:'mobile-one',rental_start:'2026-11-13',rental_end:'2026-11-16',status:'reserved'};
  const data={shop:{business_category:'equipment_rental'},bookings:[booking]};
- const listeners=[],card={children:[],querySelector:()=>null,append(x){this.children.push(x)}};
+ const listeners=[],card={dataset:{},attributes:{},children:[],querySelector:()=>null,append(x){this.children.push(x)},setAttribute(k,v){this.attributes[k]=v}};
  let closed=0;
  const doc={readyState:'loading',
   addEventListener:(type,fn)=>listeners.push({type,fn}),
@@ -57,6 +57,7 @@ test('R1830: mobile website booking dialog provides selection plus an independen
  });
  window.pb843OpenBookingDay('2026-11-13');
  assert.equal(card.children.length,1);
+ assert.equal(card.dataset.pb1830ModalSelectId,'mobile-one','the whole card is selectable');
  const buttons=card.children[0].children;
  assert.equal(buttons[0].dataset.pb1830ModalSelectId,'mobile-one');
  assert.equal(buttons[1].dataset.pb1830InvoiceId,'mobile-one');

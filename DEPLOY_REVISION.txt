@@ -1,1 +1,1 @@
-2026-11-13-r1828-camera-otp-verify-compat
+2026-11-13-r1829-camera-scroll-stable-refresh

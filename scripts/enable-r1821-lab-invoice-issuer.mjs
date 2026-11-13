@@ -16,6 +16,32 @@ const region=(s,start,end,fn,label)=>{
  if(a<0||b<=a)throw Error('[R1821] '+label+' bounds changed');
  return s.slice(0,a)+fn(s.slice(a,b))+s.slice(b);
 };
+/* Earlier invoice patches can change the PDF footer wording. Only the issuer
+   brand is replaced; do not match an entire historical sentence. */
+function pb1821PatchCanvasCaption(src,label){
+ let changed=0;
+ const out=src.replace(/s\.fillText\("([^"]*PhotoBridge[^"]*)",o,(\d+)(?:,\d+)?\)/g,(full,caption,y)=>{
+  if(Number(y)<1000)return full;
+  changed++;
+  const quote=String.fromCharCode(96);
+  return 's.fillText('+quote+caption.replaceAll('PhotoBridge','${pb1821LabInvoiceIssuer(t)}')+quote+',o,'+y+',1050)';
+ });
+ if(changed>1)throw Error('[R1821] '+label+' duplicate PDF issuer captions '+changed);
+ if(/s\.fillText\("[^"]*PhotoBridge[^"]*",o,(?:1[0-9]{3}|[2-9][0-9]{3})/.test(out))
+  throw Error('[R1821] '+label+' unhandled branded PDF footer');
+ return out;
+}
+function pb1821PatchHtmlCaption(src,label){
+ let changed=0;
+ const out=src.replace(/<div class="note">([^<]*PhotoBridge[^<]*)<\/div>/g,(full,caption)=>{
+  changed++;
+  return '<div class="note">'+caption.replaceAll('PhotoBridge','${_n(pb1821LabInvoiceIssuer(t))}')+'</div>';
+ });
+ if(changed>1)throw Error('[R1821] '+label+' duplicate printable issuer captions '+changed);
+ if(/<div class="note">[^<]*PhotoBridge/.test(out))
+  throw Error('[R1821] '+label+' unhandled branded print footer');
+ return out;
+}
 const asset='assets/index-UIRefine-v655-r84.js';
 const helper='function pb1821LabInvoiceIssuer(t){return String((t==null?void 0:t.lab_name)||(t==null?void 0:t.labName)||"").trim()||"لابراتوار";}';
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
@@ -24,16 +50,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  js=once(js,'async function Wu(t){',helper+'async function Wu(t){',root+' invoice issuer resolver');
  js=region(js,'async function Wu(t){','function Vy(t,a){',s=>{
   s=once(s,'s.fillText("PhotoBridge",o,c)','s.fillText(pb1821LabInvoiceIssuer(t),o,c,720)',root+' invoice PDF heading');
-  s=once(s,'s.fillText("فاکتور صادرشده در PhotoBridge · مبلغ‌ها بر اساس تعرفه ثبت‌شده در زمان صدور فاکتور است.",o,1640)',
-   's.fillText(\`فاکتور صادرشده توسط \${pb1821LabInvoiceIssuer(t)} · مبلغ‌ها بر اساس تعرفه ثبت‌شده در زمان صدور فاکتور است.\`,o,1640,1050)',
-   root+' invoice PDF issuer caption');
+  s=pb1821PatchCanvasCaption(s,root+' invoice PDF issuer caption');
   return s;
  },root+' PDF canvas');
  js=region(js,'function Vy(t,a){','function Wy(t,a){',s=>{
   s=once(s,'<div class="brand">PhotoBridge</div>',
    '<div class="brand">\${_n(pb1821LabInvoiceIssuer(t))}</div>',root+' printable invoice heading');
-  s=once(s,'<div class="note">این فاکتور توسط PhotoBridge صادر شده است.</div>',
-   '<div class="note">این فاکتور توسط \${_n(pb1821LabInvoiceIssuer(t))} صادر شده است.</div>',root+' printable invoice issuer caption');
+  s=pb1821PatchHtmlCaption(s,root+' printable invoice issuer caption');
   return s;
  },root+' print HTML');
  js=once(js,'e.jsx("span",{className:"invoicePaperBrand",children:"PhotoBridge"})',

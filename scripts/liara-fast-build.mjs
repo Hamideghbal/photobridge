@@ -1294,6 +1294,11 @@ await deployStep('./enable-r1829-camera-scroll-refresh.mjs');
 await deployStep('./enable-r1830-camera-office-booking-selection.mjs');
 
 // Store Windows uses a hash-pinned hot-update manifest; refresh AFTER every camera patch.
-await deployStep('./prepare-store-desktop-ui.mjs');
+// The first preparation ran at R1158. An ESM import is cached, so do NOT call
+// deployStep() again: execute in a fresh Node process to regenerate the snapshot
+// after R1829/R1830, and fail the build if regeneration fails.
+console.log('[PhotoBridge Docker build] START final Windows store desktop snapshot');
+runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK final Windows store desktop snapshot');
 runR1314(process.execPath,['--test','scripts/test-r1829-camera-scroll-refresh.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1830-camera-office-booking-selection.cjs'],{stdio:'inherit'});

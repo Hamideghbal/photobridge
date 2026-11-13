@@ -93,7 +93,8 @@ test('R1830: final build regenerates Windows hot update after both patches',()=>
  const build=read('scripts/liara-fast-build.mjs');
  const a=build.lastIndexOf("deployStep('./enable-r1829-camera-scroll-refresh.mjs')");
  const b=build.lastIndexOf("deployStep('./enable-r1830-camera-office-booking-selection.mjs')");
- const c=build.lastIndexOf("deployStep('./prepare-store-desktop-ui.mjs')");
+ const c=build.lastIndexOf("runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'})");
+ assert(build.includes('An ESM import is cached'),'final snapshot must run in a fresh Node process');
  assert(a>=0&&b>a&&c>b,'store snapshot must include R1829 + R1830');
  assert(read('DEPLOY_REVISION.txt').includes('-r1830-'));
 });

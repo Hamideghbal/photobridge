@@ -1,0 +1,30 @@
+/* R1833 — camera equipment store only; filters remain in their own panel below store chooser. */
+@media(min-width:821px){
+ body.rentalPhotographerMode.pb1833CameraStore:not(.pbR96ChoosingStore) #app>.rentalPanel:not(.mobileActive){display:none!important}
+ body.rentalPhotographerMode.pb1833CameraStore:not(.pbR96ChoosingStore) #app>.rentalPanel.mobileActive{display:block!important}
+ body.rentalPhotographerMode.pb1833CameraStore #equipmentPanel.mobileActive .storeFilterDockV809,
+ body.rentalPhotographerMode.pb1833CameraStore #salesPanel.mobileActive .storeFilterDockV809{
+  position:relative!important;top:auto!important;right:auto!important;left:auto!important;inset:auto!important;
+  z-index:1!important;float:none!important;clear:both!important;transform:none!important;
+  width:100%!important;max-width:100%!important;box-sizing:border-box!important;
+  margin:10px 0 14px!important;padding:10px 12px!important;
+  background:#f8fafc!important;border:1px solid #e4e7ec!important;border-radius:12px!important;box-shadow:none!important
+ }
+ body.rentalPhotographerMode.pb1833CameraStore :is(#rentalFilterBarR68,#saleFilterBarR68){
+  position:static!important;top:auto!important;left:auto!important;right:auto!important;inset:auto!important;
+  display:grid!important;direction:rtl!important;min-width:0!important;width:100%!important;
+  max-width:100%!important;box-sizing:border-box!important;transform:none!important;margin:0!important;gap:8px!important
+ }
+ body.rentalPhotographerMode.pb1833CameraStore #rentalFilterBarR68{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ body.rentalPhotographerMode.pb1833CameraStore #saleFilterBarR68{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.rentalPhotographerMode.pb1833CameraStore :is(#rentalFilterBarR68,#saleFilterBarR68) button{
+  position:relative!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+  min-height:40px!important;height:auto!important;overflow-wrap:anywhere!important;
+  margin:0!important;white-space:normal!important
+ }
+ body.rentalPhotographerMode.pb1833CameraStore #storePanel .pbR96ChangeStore{
+  position:static!important;clear:both!important;display:flex!important;justify-content:center!important;align-items:center!important;
+  width:100%!important;max-width:100%!important;min-height:40px!important;margin:12px 0 0!important;box-sizing:border-box!important
+ }
+ body.rentalPhotographerMode.pb1833CameraStore.pbR96ChoosingStore #app>.rentalPanel:not(#storeChooserPanelR96){display:none!important}
+}

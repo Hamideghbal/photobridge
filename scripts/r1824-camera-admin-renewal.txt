@@ -1,0 +1,25 @@
+    // R1824: explicit administrator credit extension for CAMERA EQUIPMENT stores only.
+    // Never apply to frame/chassis stores or to lab subscriptions.
+    const pb1824AdminCameraRenew=url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})\/grant-renewal$/i);
+    if(req.method==='POST'&&pb1824AdminCameraRenew){
+        if(!requireRole(a,'platform_admin'))return sendJson(res,403,{error:'forbidden'});
+        const b=await bodyJson(req,10_000),months=Number(b.months);
+        if(!Number.isInteger(months)||months<1||months>24)return sendJson(res,400,{error:'invalid_renewal_months'});
+        const c=await pool.connect();let prior=null,after=null;
+        try{
+            await c.query('BEGIN');
+            const q=await c.query('SELECT id,name,business_category,active_until,deleted_at FROM equipment_rental_shops WHERE id=$1 FOR UPDATE',[pb1824AdminCameraRenew[1]]);
+            const shop=q.rows[0];
+            if(!shop||shop.deleted_at){await c.query('ROLLBACK');return sendJson(res,404,{error:'rental_shop_not_found'});}
+            if(!['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(shop.business_category||''))){
+                await c.query('ROLLBACK');return sendJson(res,403,{error:'camera_store_only'});
+            }
+            if(shop.active_until===null){await c.query('ROLLBACK');return sendJson(res,409,{error:'unlimited_subscription'});}
+            prior=shop.active_until;
+            const u=await c.query("UPDATE equipment_rental_shops SET active_until=GREATEST(COALESCE(active_until,now()),now()) + ($2::int * interval '1 month'),updated_at=now() WHERE id=$1 RETURNING active_until",[shop.id,months]);
+            after=u.rows[0].active_until;
+            await c.query('COMMIT');
+            await audit(a.userId,undefined,'platform_admin.camera_store_credit_grant','equipment_rental_shop',shop.id,{months,free:true,previousActiveUntil:prior,newActiveUntil:after}).catch(()=>{});
+            return sendJson(res,200,{ok:true,months,free:true,previousActiveUntil:prior,activeUntil:after});
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e}finally{c.release()}
+    }

@@ -74,7 +74,7 @@ test('R1830: daily office card selects range, invoice remains accessible via its
  assert(html.includes('rows.map(b=>`<button type="button" class="pb904r2DayBooking"'),'existing R1052 cards stay direct children');
  const rangeJS=read('scripts/r1830-camera-office-range.js.txt');
  assert(rangeJS.includes("card.closest?.('.pbR1052DayGroup')"),'new invoice uses existing booking action group');
- assert(rangeJS.includes("data-office-action=\\\"invoice\\\""),'does not duplicate existing invoice action');
+ assert(rangeJS.includes('[data-office-action="invoice"]'),'does not duplicate existing invoice action');
  assert(html.includes('window.pb1830SelectOfficeBooking(card.dataset.pb904r5BookingId)'));
  assert(html.includes('openBookingInvoice(button.dataset.pb1830InvoiceId)'));
  assert(html.includes("['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(data?.shop?.business_category||''))"));

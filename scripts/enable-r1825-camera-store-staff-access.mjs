@@ -96,7 +96,33 @@ const pb1825TrialVerifyAfter = "                const pb1825CameraTrial="+camera
 "                const mq = await c.query(pb1825CameraTrial?\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='shop_admin' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`:\`SELECT 1 FROM equipment_rental_shop_memberships WHERE user_id=$1 AND role='shop_admin' AND active=true LIMIT 1\`, [userId]);\n"+
 "                if (mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });\n"+
 "                if(pb1825CameraTrial){const st=await c.query(\`SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role='handover_staff' AND m.active=true AND s.deleted_at IS NULL LIMIT 1\`,[userId]);if(st.rowCount)throw Object.assign(new Error('rental_staff_cannot_be_manager'),{status:409})}";
-s=once(s,pb1825TrialVerifyBefore,pb1825TrialVerifyAfter,'camera store OTP verify blocks active personnel');
+if(s.includes(pb1825TrialVerifyBefore)){
+  s=once(s,pb1825TrialVerifyBefore,pb1825TrialVerifyAfter,'camera store OTP verify blocks active personnel');
+}else{
+  // R1828: earlier installers may change whitespace or the manager query in OTP verify.
+  // Change only the legacy manager-conflict condition inside the rental verify route.
+  // Its original behavior is retained verbatim for frame/chassis categories.
+  const pb1828Start="if (req.method === 'POST' && url.pathname === '/api/public/equipment-rental-trial/verify') {";
+  const pb1828End="if (req.method === 'POST' && url.pathname === '/api/public/lab-trial') {";
+  const a=s.indexOf(pb1828Start),b=s.indexOf(pb1828End,a+pb1828Start.length);
+  if(a<0||b<=a)throw Error('[R1828] rental OTP verify route boundary missing');
+  let route=s.slice(a,b);
+  const gate=/if\s*\(\s*mq\.rowCount\s*\)\s*throw\s+Object\.assign\(\s*new Error\(\s*'rental_admin_already_exists'\s*\)\s*,\s*\{\s*status\s*:\s*409\s*\}\s*\)\s*;/g;
+  const matches=[...route.matchAll(gate)];
+  if(matches.length!==1)throw Error('[R1828] rental OTP manager conflict guard count '+matches.length);
+  const prior=route.slice(Math.max(0,matches[0].index-1500),matches[0].index);
+  if(!route.slice(0,matches[0].index).includes('SELECT id,mobile,active FROM users WHERE id=$1 FOR UPDATE')
+     ||!prior.includes("role='shop_admin'")||!prior.includes('mq = await c.query'))
+     throw Error('[R1828] rental OTP expected locked-user manager check not found');
+  const pb1828Replacement=
+    "const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+
+    "                if(!pb1825CameraTrial && mq.rowCount) throw Object.assign(new Error('rental_admin_already_exists'), { status: 409 });\n"+
+    "                if(pb1825CameraTrial){const live=await c.query(`SELECT m.role FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.role IN ('shop_admin','handover_staff') AND m.active=true AND s.deleted_at IS NULL LIMIT 2`,[userId]);"+
+    "if(live.rows.some(x=>x.role==='shop_admin'))throw Object.assign(new Error('rental_admin_already_exists'),{status:409});"+
+    "if(live.rows.some(x=>x.role==='handover_staff'))throw Object.assign(new Error('rental_staff_cannot_be_manager'),{status:409})}";
+  route=route.replace(gate,pb1828Replacement);
+  s=s.slice(0,a)+route+s.slice(b);
+}
 // Even a profile-only admin store record must not label an active camera-store
 // staff account as manager of another camera store without granting access.
 const pb1825StaffIdentityQuery = "SELECT 1 FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops shop ON shop.id=m.shop_id JOIN users u ON u.id=m.user_id WHERE m.role='handover_staff' AND m.active=true AND shop.deleted_at IS NULL AND right(regexp_replace(coalesce(u.mobile,''),'[^0-9]','','g'),10)=right(regexp_replace($1,'[^0-9]','','g'),10) LIMIT 1";

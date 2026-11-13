@@ -1,1 +1,1 @@
-2026-11-13-r1826-build-revision-compat
+2026-11-13-r1827-camera-otp-signup-compat

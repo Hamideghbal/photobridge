@@ -1285,3 +1285,15 @@ runR1314(process.execPath,['--test','scripts/test-r1824-camera-store-only.cjs'],
 // R1825: camera equipment shop staff rights only. Lab and frame/chassis behavior frozen.
 await deployStep('./enable-r1825-camera-store-staff-access.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1825-camera-store-staff-access.cjs'],{stdio:'inherit'});
+
+// R1829: avoid unnecessary redraw, restore real camera-store scroll and include photographer tab.
+await deployStep('./enable-r1829-camera-scroll-refresh.mjs');
+
+// R1830: selecting a daily booking highlights its inclusive rental days in site and Windows.
+// Preserve invoice action and remove the blue header wash only in Windows camera shops.
+await deployStep('./enable-r1830-camera-office-booking-selection.mjs');
+
+// Store Windows uses a hash-pinned hot-update manifest; refresh AFTER every camera patch.
+await deployStep('./prepare-store-desktop-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1829-camera-scroll-refresh.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1830-camera-office-booking-selection.cjs'],{stdio:'inherit'});

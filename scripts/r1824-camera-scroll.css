@@ -1,6 +1,21 @@
 /* R1824: show the desktop PAGE scrollbar only in the three CAMERA equipment store tabs.
    Never style lab pages, camera-store settings, frame/chassis stores or modal scrollbars. */
 @media (min-width:851px){
+  /* R1829: a styled scrollbar alone does not restore the actual scroll viewport. */
+  html.pb1824CameraScroll{
+    height:auto!important;min-height:100%!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+  }
+  html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen){
+    height:auto!important;min-height:100vh!important;
+    overflow-y:visible!important;overflow-x:hidden!important;
+  }
+  html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen) #app{
+    height:auto!important;min-height:0!important;overflow:visible!important;
+  }
+  html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen) #app>.panel.active{
+    height:auto!important;max-height:none!important;overflow:visible!important;
+  }
   html.pb1824CameraScroll,
   html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen){
     scrollbar-width:auto!important;

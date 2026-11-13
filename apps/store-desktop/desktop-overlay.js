@@ -2,6 +2,8 @@
  const fetch=window.__PB_DESKTOP_FETCH__||window.fetch.bind(window);
  if(window.__PB_DESKTOP_OVERLAY_101__)return;window.__PB_DESKTOP_OVERLAY_101__=true;
  const style=document.createElement('style');style.textContent=`
+ /* R1830: remove only the camera Windows app's blue header wash. Keep the selected-tab underline. */
+ body.rentalAppReady.pb1830CameraDesktop::before{display:none!important;content:none!important;background:none!important}
  body:not(.rentalAppReady) #rentalHeaderFilterHost{display:none!important}
  #desktopState{position:absolute;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(230px,32vw,450px);max-width:calc(100% - 570px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px 8px;color:#475467;direction:rtl;font:11px/1.5 Vazirmatn,Tahoma,sans-serif;z-index:8;background:transparent;border:0;box-shadow:none;padding:0}
  #desktopState[hidden]{display:none!important}#desktopState button{all:unset;cursor:pointer;font:inherit;color:#315efb;white-space:nowrap}#desktopState button:focus-visible{outline:2px solid #315efb;outline-offset:3px;border-radius:3px}#desktopState button:disabled{opacity:.55;cursor:wait}#desktopState button[hidden]{display:none}
@@ -61,7 +63,7 @@
   const snapshot=getOverview(),shop=snapshot?.shop,accountId=String(state?.shopId||'');
   const currentId=String(shop?.id||'');
   if(!state?.signedIn||!accountId||!currentId){
-   document.body.classList.remove('pbStoreFrameOwner','pbStoreNoRental','pbStoreNoSale','pbStoreAccountTransition');
+   document.body.classList.remove('pb1830CameraDesktop','pbStoreFrameOwner','pbStoreNoRental','pbStoreNoSale','pbStoreAccountTransition');
    return;
   }
   if(accountId!==currentId){
@@ -73,6 +75,7 @@
   document.body.classList.remove('pbStoreAccountTransition');
   const frame=frameCategory(shop.business_category),rental=!frame&&shop.rental_enabled!==false,sale=shop.sale_enabled!==false;
   document.body.classList.toggle('pbStoreFrameOwner',frame);
+  document.body.classList.toggle('pb1830CameraDesktop',!frame);
   document.body.classList.toggle('pbStoreNoRental',!rental);
   document.body.classList.toggle('pbStoreNoSale',!sale);
   const label=frame?'فروش و تولید قاب و شاسی':'فروشگاه تجهیزات عکاسی و فیلم‌برداری';
@@ -93,10 +96,60 @@
   }
   lastAccountId=accountId;lastBusinessMode=frame?'frame':'equipment';
  }
- async function refreshPage(){if(!refreshPending||painting||!state?.signedIn||!document.body.classList.contains('rentalAppReady')||formOpen())return;painting=true;try{const r=await fetch('/api/rental/overview');if(!r.ok)return;const next=await r.json();if(state?.shopId&&String(next?.shop?.id||'')!==String(state.shopId)){document.body.classList.add('pbStoreAccountTransition');return}if(typeof data!=='undefined'&&typeof render==='function'){data=next;render();applyBusinessMode();if(typeof rentalTabFromPath==='function'&&rentalTabFromPath()==='accounting'&&typeof loadAccounting==='function')await loadAccounting()}refreshPending=false;}catch{}finally{painting=false;paint()}}
+ // R1829: camera-store desktop updates keep the visible list and its viewport stable.
+ // Lab and frame/chassis shop refresh behavior is deliberately unchanged.
+ const pb1829Camera=shop=>['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(shop?.business_category||''));
+ function pb1829CaptureScroll(){
+  const root=document.getElementById('app'),items=[];
+  if(root)for(const el of [root,...root.querySelectorAll('*')]){
+   if(!el.scrollTop&&!el.scrollLeft)continue;
+   const path=[];let node=el;
+   for(;node&&node!==root;node=node.parentElement){
+    const parent=node.parentElement;if(!parent)break;
+    path.unshift(Array.prototype.indexOf.call(parent.children,node));
+   }
+   if(node===root)items.push({id:el.id,path,top:el.scrollTop,left:el.scrollLeft});
+  }
+  return {items,x:window.scrollX,y:window.scrollY,tab:root?.querySelector('.panel.active')?.id||''};
+ }
+ function pb1829RestoreScroll(saved){
+  const root=document.getElementById('app');
+  if(!root||root.querySelector('.panel.active')?.id!==saved?.tab)return;
+  for(const item of saved.items){
+   let el=item.path.reduce((node,index)=>node?.children?.[index],root);
+   if(item.id&&el?.id!==item.id)el=document.getElementById(item.id);
+   if(!el||!root.contains(el))continue;
+   el.scrollTop=item.top;el.scrollLeft=item.left;
+  }
+  if(window.scrollX!==saved.x||window.scrollY!==saved.y)window.scrollTo(saved.x,saved.y);
+ }
+ async function refreshPage(){
+  if(!refreshPending||painting||!state?.signedIn||!document.body.classList.contains('rentalAppReady')||formOpen())return;
+  painting=true;
+  try{
+   const r=await fetch('/api/rental/overview');if(!r.ok)return;
+   const next=await r.json();
+   if(state?.shopId&&String(next?.shop?.id||'')!==String(state.shopId)){document.body.classList.add('pbStoreAccountTransition');return}
+   if(typeof data!=='undefined'&&typeof render==='function'){
+    const camera=pb1829Camera(next?.shop)&&pb1829Camera(data?.shop);
+    const changed=!camera||JSON.stringify(data)!==JSON.stringify(next);
+    if(changed){
+     const scroll=camera?pb1829CaptureScroll():null;
+     data=next;render();
+     if(scroll){
+      pb1829RestoreScroll(scroll);
+      requestAnimationFrame(()=>{if(state?.shopId&&String(state.shopId)===String(next?.shop?.id))pb1829RestoreScroll(scroll)});
+     }
+    }
+    applyBusinessMode();
+    if(typeof rentalTabFromPath==='function'&&rentalTabFromPath()==='accounting'&&typeof loadAccounting==='function')await loadAccounting();
+   }
+   refreshPending=false;
+  }catch{}finally{painting=false;paint()}
+ }
  async function refresh(){if(reading)return;reading=true;try{const r=await fetch('/desktop/status',{cache:'no-store'});if(!r.ok)throw Error();state=await r.json();if(state.signedIn&&state.revision!==lastRevision){if(state.revision>0||lastRevision!==null)refreshPending=true;lastRevision=state.revision}if(state.signedIn&&state.shopId&&lastAccountId&&String(state.shopId)!==lastAccountId){refreshPending=true;document.body.classList.add('pbStoreAccountTransition')}paint();await refreshPage();applyBusinessMode()}catch{bar.hidden=false;bar.dataset.state='error';bar.children[0].textContent='ارتباط با پایگاه محلی قطع شد';bar.children[4].textContent='برنامه را دوباره باز کنید'}finally{reading=false}}
  async function synchronize(){if(manual)return;manual=true;paint();try{const r=await fetch('/desktop/sync',{method:'POST'});const report=await r.json();if(report.pulled)refreshPending=true;}catch{if(state)state.error=navigator.onLine===false?'internet_offline':'local_connection_failed'}finally{manual=false;await refresh();await refreshPage();paint()}}
- async function logout(){if(logoutBusy)return;logoutBusy=true;try{const r=await fetch('/api/auth/logout',{method:'POST'});const out=await r.json();if(!r.ok)throw Error(out.message||'خروج انجام نشد؛ دوباره تلاش کنید.');panel.hidden=true;refreshPending=false;lastRevision=null;lastAccountId=null;lastBusinessMode='';bar.hidden=true;document.body.classList.remove('pbStoreFrameOwner','pbStoreNoRental','pbStoreNoSale','pbStoreAccountTransition');history.replaceState({},'','/equipment-rental/portal');if(typeof showLogin==='function')showLogin();document.querySelector('#rentalHeaderFilterHost')?.style.setProperty('display','none','important');if(typeof data!=='undefined')data=null;if(typeof accountingData!=='undefined')accountingData=null;if(typeof smsData!=='undefined')smsData=null;document.querySelector('#loginForm input[type="password"]')?.setAttribute('value','');const password=document.querySelector('#loginForm input[type="password"]');if(password)password.value='';if(typeof message==='function')message('#loginMsg',out.pendingSaved?'از حساب خارج شدید. '+out.pendingSaved.toLocaleString('fa-IR')+' عملیات ارسال‌نشده محفوظ است؛ برای ارسال با همین حساب وارد شوید.':'از حساب خارج شدید.',true);state=null;location.reload();}catch(e){window.storeNotice?.(e.message,'خروج از حساب')}finally{logoutBusy=false}}
+ async function logout(){if(logoutBusy)return;logoutBusy=true;try{const r=await fetch('/api/auth/logout',{method:'POST'});const out=await r.json();if(!r.ok)throw Error(out.message||'خروج انجام نشد؛ دوباره تلاش کنید.');panel.hidden=true;refreshPending=false;lastRevision=null;lastAccountId=null;lastBusinessMode='';bar.hidden=true;document.body.classList.remove('pb1830CameraDesktop','pbStoreFrameOwner','pbStoreNoRental','pbStoreNoSale','pbStoreAccountTransition');history.replaceState({},'','/equipment-rental/portal');if(typeof showLogin==='function')showLogin();document.querySelector('#rentalHeaderFilterHost')?.style.setProperty('display','none','important');if(typeof data!=='undefined')data=null;if(typeof accountingData!=='undefined')accountingData=null;if(typeof smsData!=='undefined')smsData=null;document.querySelector('#loginForm input[type="password"]')?.setAttribute('value','');const password=document.querySelector('#loginForm input[type="password"]');if(password)password.value='';if(typeof message==='function')message('#loginMsg',out.pendingSaved?'از حساب خارج شدید. '+out.pendingSaved.toLocaleString('fa-IR')+' عملیات ارسال‌نشده محفوظ است؛ برای ارسال با همین حساب وارد شوید.':'از حساب خارج شدید.',true);state=null;location.reload();}catch(e){window.storeNotice?.(e.message,'خروج از حساب')}finally{logoutBusy=false}}
  window.rentalLogout=logout;document.addEventListener('click',e=>{if(e.target.closest?.('#logout,#rentalMobileLogout')){e.preventDefault();e.stopImmediatePropagation();void logout()}},true);
  bar.children[1].onclick=synchronize;bar.children[3].onclick=()=>{window.showLogin?.();bar.hidden=true};
 bar.children[2].onclick=()=>{panel.replaceChildren();const close=document.createElement('button');close.textContent='بستن';close.onclick=()=>panel.hidden=true;panel.append(close);for(const x of state.conflicts){const h=document.createElement('h3');h.textContent='عملیات محلی نیازمند بررسی است';const text=document.createElement('p');text.textContent='اطلاعات محلی حفظ شده است. علت: '+({record_changed_on_server:'این رکورد روی سرور یا موبایل تغییر کرده است.',booking_price_changed:'مبلغ آفیش با قیمت فعلی سرور یکسان نیست.',invalid_rental_transition:'وضعیت آفیش روی سرور تغییر کرده است.'}[x.error.error]||x.error.error);const pre=document.createElement('pre');pre.textContent=JSON.stringify(x.operation,null,2);const save=document.createElement('button');save.textContent='دانلود نسخه عملیات';save.onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(x,null,2)],{type:'application/json'}));a.href=url;a.download='PhotoBridge-conflict-'+x.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};const discard=document.createElement('button');discard.textContent='پذیرش اطلاعات سرور';discard.onclick=async()=>{if(!await window.pb920Confirm('این عملیات و تغییرات محلی وابسته به آن کنار گذاشته شوند و اطلاعات سرور پذیرفته شود؟ نسخهٔ عملیات در تاریخچهٔ محلی باقی می‌ماند.'))return;const r=await fetch('/desktop/discard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,cascade:true})});if(r.ok){panel.hidden=true;location.reload()}else window.storeNotice?.('عملیات وابسته دارد؛ ابتدا آن‌ها را بررسی کن.','همگام‌سازی')};const retry=document.createElement('button');retry.textContent=x.error.error==='booking_price_changed'?'پذیرش مبلغ سرور: '+x.error.serverTotal+' تومان':'اعمال تغییر محلی روی نسخه سرور';retry.hidden=!['booking_price_changed','record_changed_on_server'].includes(x.error.error);retry.onclick=async()=>{if(!await window.pb920Confirm(retry.textContent+'؟ این تصمیم ثبت خواهد شد.'))return;const r=await fetch('/desktop/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});if(r.ok){panel.hidden=true;location.reload()}};panel.append(h,text,pre,save,retry,discard)}panel.hidden=false}; const manualScript=document.createElement('script');manualScript.src='/frame-orders-ui.js';manualScript.async=true;document.body.appendChild(manualScript);

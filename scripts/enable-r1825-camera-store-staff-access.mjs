@@ -111,8 +111,8 @@ if(s.includes(pb1825TrialVerifyBefore)){
   const matches=[...route.matchAll(gate)];
   if(matches.length!==1)throw Error('[R1828] rental OTP manager conflict guard count '+matches.length);
   const prior=route.slice(Math.max(0,matches[0].index-1500),matches[0].index);
-  if(!route.slice(0,matches[0].index).includes('SELECT id,mobile,active FROM users WHERE id=$1 FOR UPDATE')
-     ||!prior.includes("role='shop_admin'")||!prior.includes('mq = await c.query'))
+  if(!/SELECT\s+id\s*,\s*mobile\s*,\s*active\s+FROM\s+users\s+WHERE\s+id=\$1\s+FOR\s+UPDATE/.test(route.slice(0,matches[0].index))
+     ||!/role\s*=\s*'shop_admin'/.test(prior)||!/\b(?:const|let)\s+mq\s*=\s*await\s+c\.query\(/.test(prior))
      throw Error('[R1828] rental OTP expected locked-user manager check not found');
   const pb1828Replacement=
     "const pb1825CameraTrial="+camera+".includes(String(businessCategory||''));\n"+

@@ -4,7 +4,7 @@ async function measure(browser,root,{ios=true,baseline=false}={}){
  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'}),page=await context.newPage();
  let start=Date.now(),cssReleased=0,firstRole=0,entryAt=0,documents=0;
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.isNavigationRequest()&&r.frame()===page.mainFrame())documents++});
- await page.addInitScript(({ios})=>{Object.defineProperty(navigator,'standalone',{get:()=>ios});if(!ios){const original=window.matchMedia.bind(window);window.matchMedia=query=>{const result=original(query);if(query.includes('display-mode: standalone'))Object.defineProperty(result,'matches',{value:true});return result;}};window.visibleStartupPaths=[];function sample(){const root=document.getElementById('root'),splash=document.getElementById('pbR1361MobileSplash');if(root?.childElementCount&&getComputedStyle(root).visibility!=='hidden'&&(!splash||getComputedStyle(splash).display==='none'))window.visibleStartupPaths.push(location.pathname);requestAnimationFrame(sample)}requestAnimationFrame(sample)},{ios});
+ await page.addInitScript(({ios})=>{Object.defineProperty(navigator,'standalone',{get:()=>ios});if(!ios){const original=window.matchMedia.bind(window);window.matchMedia=query=>{const result=original(query);if(query.includes('display-mode: standalone'))Object.defineProperty(result,'matches',{value:true});return result;}};window.visibleStartupPaths=[];function sample(){const root=document.getElementById('root'),splash=document.getElementById('pbR1361MobileSplash');if(root?.childElementCount&&getComputedStyle(root).visibility!=='hidden'&&(!splash||getComputedStyle(splash).display==='none'||getComputedStyle(splash).visibility==='hidden'))window.visibleStartupPaths.push(location.pathname);requestAnimationFrame(sample)}requestAnimationFrame(sample)},{ios});
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
   if(url.pathname.startsWith('/api/')){
@@ -25,7 +25,7 @@ async function measure(browser,root,{ios=true,baseline=false}={}){
  start=Date.now();await page.goto('https://startup.test/photographer',{waitUntil:'domcontentloaded'});
  await page.waitForURL('**/photographer/gallery');
  let stable=true;await page.waitForFunction(()=>document.querySelector('.clientGalleryListHead,.clientGalleryEmpty,.clientGalleryCards')&&!document.documentElement.classList.contains('pb1479Launching'),null,{timeout:baseline?4000:15000}).catch(async error=>{if(baseline){stable=false;return;}console.log('BOOT_DIAGNOSTIC',root,await page.evaluate(()=>({url:location.href,cls:document.documentElement.className,text:document.body.innerText.slice(0,1200),children:[...document.querySelector('#root')?.children||[]].map(n=>n.className)})),errors);throw error});
- const ready=Date.now()-start;await page.waitForTimeout(100);
+ const ready=Date.now()-start;await page.waitForTimeout(250);
  const state=await page.evaluate(()=>({paths:[...new Set(window.visibleStartupPaths)],desktopPrepaint:document.documentElement.classList.contains('pb1602PhotographerDesktop')}));
  await context.close();return {ready:stable?ready:null,stable,firstRole,entryAt,cssReleased,documents,errors,...state};
 }

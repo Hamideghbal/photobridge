@@ -1,0 +1,91 @@
+/* R1830 - select daily office bookings; mark the inclusive rental period on the calendar. */
+(()=>{
+ if(window.__pb1830OfficeRangeInstalled)return;
+ window.__pb1830OfficeRangeInstalled=true;
+ const cameraCategories=new Set(['equipment_rental','equipment_sale','equipment_rental_sale']);
+ let selectedId='',frame=0;
+ const shop=()=>typeof data==='undefined'?null:data?.shop;
+ const isCamera=()=>cameraCategories.has(String(shop()?.business_category||''));
+ const bookings=()=>typeof data==='undefined'?[]:(data?.bookings||[]);
+ function selectedBooking(){
+  if(!selectedId)return null;
+  return bookings().find(b=>String(b.id)===selectedId&&String(b.status||'')!=='cancelled')||null;
+ }
+ function dateRange(b){
+  const start=String(b?.rental_start||'').slice(0,10),end=String(b?.rental_end||'').slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||start>end)return null;
+  return {start,end};
+ }
+ function update(){
+  if(!isCamera())return;
+  const booking=selectedBooking(),range=booking&&dateRange(booking);
+  if(selectedId&&(!booking||!range))selectedId='';
+  document.querySelectorAll('#pb843CalendarGrid [data-pb843-cal-day]').forEach(day=>{
+   const iso=day.dataset.pb843CalDay||'';
+   const active=!!range&&iso>=range.start&&iso<=range.end;
+   for(const [name,enabled] of [['pb1830BookingRange',active],['pb1830BookingStart',active&&iso===range.start],['pb1830BookingEnd',active&&iso===range.end]]){
+    if(day.classList.contains(name)!==enabled)day.classList.toggle(name,enabled);
+   }
+   if(active){day.title='روزهای آفیش انتخاب‌شده';day.dataset.pb1830RangeTitle='1'}
+   else if(day.dataset.pb1830RangeTitle==='1'){day.removeAttribute('title');delete day.dataset.pb1830RangeTitle}
+  });
+  document.querySelectorAll('#pb904r2DayPanelBody [data-pb904r5-booking-id]').forEach(card=>{
+   const active=!!range&&card.dataset.pb904r5BookingId===selectedId;
+   if(card.classList.contains('pb1830BookingSelected')!==active)card.classList.toggle('pb1830BookingSelected',active);
+   if(card.getAttribute('aria-pressed')!==(active?'true':'false'))card.setAttribute('aria-pressed',active?'true':'false');
+  });
+  const panel=document.getElementById('pb904r2DayPanel');
+  const header=panel?.querySelector('.pb904r2DayPanelHead');
+  if(header){
+   let summary=panel.querySelector('#pb1830RangeSummary');
+   if(range&&booking){
+    if(!summary){summary=document.createElement('div');summary.id='pb1830RangeSummary';summary.className='pb1830RangeSummary';header.insertAdjacentElement('afterend',summary)}
+    const name=typeof pb843BookingName==='function'?pb843BookingName(booking):'آفیش';
+    const a=typeof dateFa==='function'?dateFa(range.start):range.start;
+    const z=typeof dateFa==='function'?dateFa(range.end):range.end;
+    const label='آفیش انتخاب‌شده: '+name+' · '+a+' تا '+z;
+    if(summary.textContent!==label)summary.textContent=label;
+   }else summary?.remove();
+  }
+ }
+ function queue(){
+  if(frame)return;
+  frame=requestAnimationFrame(()=>{frame=0;update()});
+ }
+ window.pb1830SelectOfficeBooking=id=>{
+  if(!isCamera())return false;
+  const target=bookings().find(b=>String(b.id)===String(id)&&String(b.status||'')!=='cancelled');
+  if(!target||!dateRange(target))return false;
+  selectedId=String(id);update();return true;
+ };
+ // Calendar month navigation recreates all day cells; repaint after every redraw.
+ if(typeof pb843RenderCalendar==='function'){
+  const prev=pb843RenderCalendar;
+  pb843RenderCalendar=function(...args){const result=prev.apply(this,args);queue();return result};
+ }
+ if(typeof pb904r2RenderDayPanel==='function'){
+  const prev=pb904r2RenderDayPanel;
+  pb904r2RenderDayPanel=function(...args){const result=prev.apply(this,args);queue();return result};
+  window.pb904r2RenderDayPanel=pb904r2RenderDayPanel;
+ }
+ document.addEventListener('click',event=>{
+  if(!isCamera())return;
+  if(event.target.closest?.('#pb843CalendarGrid [data-pb843-cal-day]')){
+   selectedId='';queue();
+  }
+ },true);
+ document.addEventListener('keydown',event=>{
+  if(!isCamera()||!['Enter',' '].includes(event.key))return;
+  const card=event.target.closest?.('#pb904r2DayPanelBody [data-pb904r5-booking-id]');
+  if(card){event.preventDefault();window.pb1830SelectOfficeBooking(card.dataset.pb904r5BookingId)}
+ },true);
+ function observe(){
+  for(const selector of ['#pb843CalendarGrid','#pb904r2DayPanelBody']){
+   const el=document.querySelector(selector);
+   if(el)new MutationObserver(queue).observe(el,{childList:true});
+  }
+  queue();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});
+ else observe();
+})();

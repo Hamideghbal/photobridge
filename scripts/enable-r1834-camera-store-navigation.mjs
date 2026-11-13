@@ -16,14 +16,7 @@ nav=replaceOnce(nav,
  "      copy.onclick=()=>{if(pb1834OpenCameraPanel(panelId,doc))requestAnimationFrame(()=>{schedule();reveal(motionContent(panels.get('store')?.querySelector('iframe')?.contentDocument||doc));});};\n"+
  "     }else copy.onclick=()=>{original.click();requestAnimationFrame(()=>{schedule();reveal(motionContent(doc));});};",
  'live camera Store tab action');
-// Leave navigate() intact; earlier release patches may have reformatted its body.
-// Camera photographers retain their selected Store on a main-tab click.
-// Frame/chassis keeps the existing store chooser semantics.
-const chooserDeclaration=/function\s+openStoreChooser\s*\(\s*doc\s*\)\s*\{/g;
-const chooserMatches=[...nav.matchAll(chooserDeclaration)];
-if(chooserMatches.length!==1)throw Error('[R1834] Store chooser declaration count '+chooserMatches.length);
-nav=nav.replace(chooserDeclaration,match=>match+
- "if(doc?.body?.classList?.contains('rentalPhotographerMode')&&!doc.body.classList.contains('frameCustomerStore'))return true;");
+// Explicit Store navigation opens selection; refresh persistence is handled by R1835.
 if(!nav.includes("const cameraStoreControls=cameraStore?visible:[]")||
  !nav.includes("for(const original of (active==='store'||storeHeader)?[]:visible)"))
  throw Error('[R1834] expected R1831/R1833 Store isolation missing');

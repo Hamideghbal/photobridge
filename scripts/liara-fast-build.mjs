@@ -1304,6 +1304,7 @@ await deployStep('./enable-r1833-camera-store-header.mjs');
 
 // R1834: direct navigation from photographer camera Store header to the live Store panels.
 await deployStep('./enable-r1834-camera-store-navigation.mjs');
+await deployStep('./enable-r1835-store-refresh.mjs');
 
 // Store Windows uses a hash-pinned hot-update manifest; refresh AFTER every camera patch.
 // The first preparation ran at R1158. An ESM import is cached, so do NOT call
@@ -1322,3 +1323,5 @@ runR1314(process.execPath,['--test','scripts/test-r1832-camera-office-card-polis
 runR1314(process.execPath,['--test','scripts/test-r1833-camera-store-header.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1834-camera-store-navigation.cjs'],{stdio:'inherit'});
+
+runR1314(process.execPath,['--test','scripts/test-r1123-photographer-desktop-store.cjs'],{stdio:'inherit'});

@@ -1,1 +1,1 @@
-2026-11-13-r1834-camera-store-live-tab-navigation
+2026-11-14-r1835-photographer-store-refresh

@@ -1266,3 +1266,9 @@ runR1314(process.execPath,['--test','scripts/test-r1818-album-form-professional.
 // controls, and no redundant cover gallery or album-page bulk selection.
 await deployStep('./enable-r1819-album-cover-controls.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1819-album-cover-controls.cjs'],{stdio:'inherit'});
+
+
+// R1821: lab-owned invoices show their actual laboratory issuer on preview,
+// browser print and generated PDF; do not brand the lab's invoice PhotoBridge.
+await deployStep('./enable-r1821-lab-invoice-issuer.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1821-lab-invoice-issuer.cjs'],{stdio:'inherit'});

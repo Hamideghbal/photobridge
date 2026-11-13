@@ -1325,3 +1325,6 @@ runR1314(process.execPath,['--test','scripts/test-r1833-camera-store-header.cjs'
 runR1314(process.execPath,['--test','scripts/test-r1834-camera-store-navigation.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1123-photographer-desktop-store.cjs'],{stdio:'inherit'});
+
+await deployStep("./enable-r1836-mobile-startup.mjs");
+runR1314(process.execPath,['--test','scripts/test-r1836-mobile-startup.cjs','scripts/test-r1721-mobile-first-entry.cjs'],{stdio:'inherit'});

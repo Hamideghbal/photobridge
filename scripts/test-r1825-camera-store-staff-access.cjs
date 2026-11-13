@@ -220,7 +220,15 @@ test('R1828: OTP verify compatibility handles exact and reformatted manager gate
     const guard=verify.slice(p,e<0?verify.length:e);
     const check=new Function('businessCategory','userId','mq','c','return (async()=>{'+guard+'\nreturn "allowed"})()');
     const call=(category,legacyCount,roles)=>check(category,'existing',{rowCount:legacyCount},{
-      query:async()=>({rows:roles.map(role=>({role}))})
+      query:async sql=>{
+        const q=String(sql);
+        if(q.includes('s.deleted_at IS NULL')){
+          const active=q.includes("m.role='shop_admin'")?roles.filter(x=>x==='shop_admin'):
+            q.includes("m.role='handover_staff'")?roles.filter(x=>x==='handover_staff'):roles;
+          return {rowCount:active.length,rows:active.map(role=>({role}))};
+        }
+        return {rowCount:legacyCount,rows:[]};
+      }
     });
     assert.equal(await call('equipment_sale',1,[]),'allowed','deleted camera manager can return');
     await assert.rejects(()=>call('equipment_rental',1,['shop_admin']),/rental_admin_already_exists/);

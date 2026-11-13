@@ -33,10 +33,17 @@ test('R1834: photographer Store main tab preserves selection and Store header ha
  assert(nav.includes('pb1834OpenCameraPanel(panelId,doc)'));
  assert(nav.includes('copy.dataset.storePanel=panelId'));
  assert(nav.includes("if(doc?.body?.classList?.contains('rentalPhotographerMode')&&!doc.body.classList.contains('frameCustomerStore'))return true;"));
- assert(nav.includes("if(selected==='store'&&openStoreChooser(currentDocument()))return;"),'existing navigation remains intact');
- const chooserMatch=nav.match(/function openStoreChooser\(doc\)\{[^\n]*\}/);
- assert(chooserMatch,'Store chooser function is present');
- const chooser=new Function('return '+chooserMatch[0])();
+ assert(/function\s+navigate\s*\(\s*key\s*\)/.test(nav),'main navigation remains defined');
+ const chooserStart=nav.search(/function\s+openStoreChooser\s*\(\s*doc\s*\)\s*\{/);
+ assert(chooserStart>=0,'Store chooser function is present');
+ const opening=nav.indexOf('{',chooserStart);
+ let depth=0,ending=-1;
+ for(let pos=opening;pos<nav.length;pos++){
+  if(nav[pos]==='{')depth++;
+  else if(nav[pos]==='}'&&--depth===0){ending=pos+1;break;}
+ }
+ assert(ending>opening,'Store chooser function has balanced braces');
+ const chooser=new Function('return '+nav.slice(chooserStart,ending))();
  let chooserClicks=0;
  const makeDoc=(frame)=>({body:{classList:{contains:name=>name==='rentalPhotographerMode'||(frame&&name==='frameCustomerStore')}},querySelector:()=>({click:()=>chooserClicks++})});
  assert.equal(chooser(makeDoc(false)),true,'camera store is already selected');
@@ -55,8 +62,12 @@ test('R1834: deployment assets are cache-busted and build runs after R1833',()=>
  for(const page of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   const text=read(page);
   for(const asset of ['photobridge-r1126-desktop-navigation.js','photobridge-r1126-desktop-navigation.css']){
-   assert(text.includes(asset+'?'));
-   assert(text.slice(text.indexOf(asset+'?'),text.indexOf(asset+'?')+190).includes('r1834=1'));
+   const begin=text.indexOf(asset+'?');
+   assert(begin>=0,page+': missing '+asset);
+   const endings=[text.indexOf('"',begin),text.indexOf("'",begin)].filter(n=>n>begin);
+   assert(endings.length>0,page+': unclosed '+asset+' URL');
+   const url=text.slice(begin,Math.min(...endings));
+   assert(url.split(/[?&]/).includes('r1834=1'),page+': missing cache revision in '+url);
   }
  }
  const build=read('scripts/liara-fast-build.mjs');

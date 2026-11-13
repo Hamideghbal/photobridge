@@ -17,6 +17,7 @@
   return {start,end};
  }
  function update(){
+  document.body?.classList?.toggle('pb1832CameraOffice',isCamera());
   if(!isCamera())return;
   const booking=selectedBooking(),range=booking&&dateRange(booking);
   if(selectedId&&(!booking||!range))selectedId='';

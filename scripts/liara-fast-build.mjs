@@ -1296,6 +1296,9 @@ await deployStep('./enable-r1830-camera-office-booking-selection.mjs');
 // R1831: camera photographer's Sales/Office navigation; no laboratory or frame logic.
 await deployStep('./enable-r1831-photographer-office-header.mjs');
 
+// R1832: camera Store Office card and calendar selection layout only.
+await deployStep('./enable-r1832-camera-office-card-polish.mjs');
+
 // Store Windows uses a hash-pinned hot-update manifest; refresh AFTER every camera patch.
 // The first preparation ran at R1158. An ESM import is cached, so do NOT call
 // deployStep() again: execute in a fresh Node process to regenerate the snapshot
@@ -1307,3 +1310,5 @@ runR1314(process.execPath,['--test','scripts/test-r1829-camera-scroll-refresh.cj
 runR1314(process.execPath,['--test','scripts/test-r1830-camera-office-booking-selection.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1831-photographer-office-header.cjs'],{stdio:'inherit'});
+
+runR1314(process.execPath,['--test','scripts/test-r1832-camera-office-card-polish.cjs'],{stdio:'inherit'});

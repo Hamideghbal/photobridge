@@ -1,1 +1,1 @@
-2026-11-13-r1824-camera-store-only
+2026-11-13-r1825-camera-store-staff-access

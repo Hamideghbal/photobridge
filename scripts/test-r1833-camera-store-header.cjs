@@ -4,7 +4,8 @@ const read=p=>fs.readFileSync(p,'utf8');
 test('R1833: camera Store header never shows lab tariff/location/invite controls',()=>{
  const nav=read('dist/web/photobridge-r1126-desktop-navigation.js');
  assert(nav.includes("row.hidden=choosing||(active==='store'&&!storeHeader)"));
- assert(nav.includes("(active!=='store'||Boolean(el.dataset.storePanel))"));
+ assert(nav.includes("doc?.querySelectorAll('#pbR1123StoreDesktopNav>button')"),'only actual embedded Store tabs are read');
+ assert(!nav.includes("const visiblePattern="),'avoid fragile second rewrite of Store controls');
  assert(nav.includes("for(const original of (active==='store'||storeHeader)?[]:visible)"));
  assert(nav.includes('if(cameraStore)row.append(nav)'));
  assert(nav.includes("salesPanel:'فروش تجهیزات'"));

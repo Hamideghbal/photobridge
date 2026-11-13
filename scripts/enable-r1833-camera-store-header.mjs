@@ -6,10 +6,12 @@ function once(s,from,to,label){const n=s.split(from).length-1;if(n!==1)throw Err
 const navPath='dist/web/photobridge-r1126-desktop-navigation.js';
 let nav=read(navPath);
 nav=once(nav,'  row.hidden=choosing;', "  row.hidden=choosing||(active==='store'&&!storeHeader);",'store subheader hidden while shop selection is loading');
-nav=once(nav,
- "  const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));",
- "  const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack')&&(active!=='store'||Boolean(el.dataset.storePanel)));",
- 'restrict Store tabs to Store controls');
+// Match the visible-controls declaration, independent of its filter formatting.
+const visiblePattern=/^([ \t]*const visible\s*=\s*)([^\r\n;]+)(;[ \t]*)$/gm;
+const declarations=[...nav.matchAll(visiblePattern)];
+if(declarations.length!==1)throw Error('[R1833] Store visible-controls declaration count '+declarations.length);
+nav=nav.replace(visiblePattern,(_all,prefix,expression,semicolon)=>
+ prefix+'('+expression+").filter(el=>(active!=='store'||Boolean(el.dataset.storePanel)))"+semicolon);
 nav=once(nav,
  '   for(const original of storeHeader?[]:visible){',
  "   for(const original of (active==='store'||storeHeader)?[]:visible){",

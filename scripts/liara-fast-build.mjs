@@ -1285,3 +1285,7 @@ runR1314(process.execPath,['--test','scripts/test-r1824-camera-store-only.cjs'],
 // R1825: camera equipment shop staff rights only. Lab and frame/chassis behavior frozen.
 await deployStep('./enable-r1825-camera-store-staff-access.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1825-camera-store-staff-access.cjs'],{stdio:'inherit'});
+
+// R1829: camera equipment shopper storefront only. Keep Lab and frame/chassis untouched.
+await deployStep('./enable-r1829-shopper-store-parity.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1829-shopper-store-parity.cjs'],{stdio:'inherit'});

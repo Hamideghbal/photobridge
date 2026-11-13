@@ -112,3 +112,23 @@ test('R1825 build order is after existing PhotoBridge and camera-store releases'
   assert(build.indexOf("deployStep('./enable-r1825-camera-store-staff-access.mjs')")>build.indexOf("deployStep('./enable-r1824-camera-store-only.mjs')"));
   assert(build.includes("scripts/test-r1825-camera-store-staff-access.cjs"));
 });
+
+test('R1825 admin camera-store creation/edit cannot register an active staff phone as manager',()=>{
+ const server=read('dist/api/server.js');
+ const create=server.indexOf("if (req.method === 'POST' && url.pathname === '/api/admin/equipment-rental/shops')");
+ const manager=server.indexOf('const managerAccessRoute=',create);
+ assert(create>0&&manager>create);
+ const section=server.slice(create,manager);
+ assert(section.includes('const pb1825ManagerMobile=normalizeMobile'));
+ assert(section.includes("shop.deleted_at IS NULL"));
+ assert(section.includes("m.role='handover_staff' AND m.active=true"));
+ assert(section.includes("error:'rental_staff_cannot_be_manager'"));
+ const edit=server.indexOf("if (req.method === 'PATCH' && adminRentalShop)");
+ const end=server.indexOf("if (req.method === 'DELETE' && adminRentalShop)",edit);
+ assert(edit>0&&end>edit);
+ const patch=server.slice(edit,end);
+ assert(patch.includes("['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(current.business_category||'equipment_rental_sale'))"));
+ assert(patch.includes("b.managerMobile!==undefined"));
+ assert(patch.includes("shop.deleted_at IS NULL"));
+ assert(patch.includes("error:'rental_staff_cannot_be_manager'"));
+});

@@ -11,7 +11,8 @@
     "start": "node scripts/migrate.mjs && node --expose-gc dist/api/server.js",
     "migrate": "node scripts/migrate.mjs",
     "verify": "node scripts/liara-fast-build.mjs",
-    "verify:full": "node scripts/verify-deploy.mjs && node scripts/verify-onnx-runtime.mjs && node scripts/verify-lab-desktop-package.mjs"
+    "verify:full": "node scripts/verify-deploy.mjs && node scripts/verify-onnx-runtime.mjs && node scripts/verify-lab-desktop-package.mjs",
+    "perf:fix": "node scripts/photobridge-perf-fix.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.536.0",

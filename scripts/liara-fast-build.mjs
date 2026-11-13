@@ -1333,3 +1333,8 @@ await deployStep("./enable-r1837-store-chooser.mjs");
 
 await deployStep("./enable-r1838-unified-launch.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1838-user-launch.cjs'],{stdio:'inherit'});
+
+// PB_PERF_FIX_V1 — run after all release/UI writers so HTML and server are final.
+console.log('[PhotoBridge Docker build] START first-load perf fix');
+runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK first-load perf fix');

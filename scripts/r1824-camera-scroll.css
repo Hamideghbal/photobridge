@@ -1,0 +1,17 @@
+/* R1824: show the desktop PAGE scrollbar only in the three CAMERA equipment store tabs.
+   Never style lab pages, camera-store settings, frame/chassis stores or modal scrollbars. */
+@media (min-width:851px){
+  html.pb1824CameraScroll,
+  html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen){
+    scrollbar-width:auto!important;
+    scrollbar-gutter:stable!important;
+  }
+  html.pb1824CameraScroll::-webkit-scrollbar,
+  html.pb1824CameraScroll body.rentalAppReady:not(.rentalItemModalOpen):not(.saleItemModalOpen):not(.storeNoticeOpen)::-webkit-scrollbar{
+    width:12px!important;height:auto!important;display:block!important;
+  }
+  html.pb1824CameraScroll::-webkit-scrollbar-thumb,
+  html.pb1824CameraScroll body.rentalAppReady::-webkit-scrollbar-thumb{
+    background:#b7c5d8!important;border:3px solid #f4f6fa!important;border-radius:9px!important;
+  }
+}

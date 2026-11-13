@@ -11,15 +11,15 @@ html body.rentalAppReady #bookings .pb843CalendarDay.pb1830BookingEnd {
 html body.rentalAppReady #bookings .pb843CalendarDay.pb1830BookingRange.pb904r2SelectedDay {
  background:#d7e9ff!important;border-color:#2563b6!important;
 }
-html body.rentalAppReady #bookings .pb1830BookingRow {
- display:flex;gap:7px;align-items:stretch;min-width:0;width:100%;
-}
-html body.rentalAppReady #bookings .pb1830BookingRow .pb904r2DayBooking {
- flex:1 1 auto;min-width:0;width:auto!important;margin:0!important;text-align:right;
-}
-html body.rentalAppReady #bookings .pb1830BookingRow .pb904r2DayBooking.pb1830BookingSelected {
+/* R1052 keeps each booking button inside its existing action group. */
+html body.rentalAppReady #bookings #pb904r2DayPanelBody .pbR1052DayGroup:has(>.pb904r2DayBooking.pb1830BookingSelected){
  background:#e7f0ff!important;border:2px solid #2563b6!important;
  box-shadow:inset 0 0 0 1px #c6dcff!important;
+}
+html body.rentalAppReady.pb899MainBookings #bookings #pb904r2DayPanelBody .pbR1052DayGroup>.pb904r2DayBooking.pb1830BookingSelected,
+html body.rentalAppReady #bookings #pb904r2DayPanelBody>.pb904r2DayBooking.pb1830BookingSelected{
+ outline:2px solid #2563b6!important;outline-offset:-2px!important;
+ background:#e7f0ff!important;color:#17417b!important;
 }
 html body.rentalAppReady #bookings .pb1830InvoiceAction {
  flex:0 0 66px;align-self:stretch;min-width:0;padding:4px 5px;

@@ -1285,3 +1285,9 @@ runR1314(process.execPath,['--test','scripts/test-r1824-camera-store-only.cjs'],
 // R1825: camera equipment shop staff rights only. Lab and frame/chassis behavior frozen.
 await deployStep('./enable-r1825-camera-store-staff-access.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1825-camera-store-staff-access.cjs'],{stdio:'inherit'});
+
+// R1829: camera equipment shop list redraw and true page scroll fix.
+// Regenerate the store Windows hot-update AFTER the final camera portal transform.
+await deployStep('./enable-r1829-camera-scroll-refresh.mjs');
+await deployStep('./prepare-store-desktop-ui.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1829-camera-scroll-refresh.cjs'],{stdio:'inherit'});

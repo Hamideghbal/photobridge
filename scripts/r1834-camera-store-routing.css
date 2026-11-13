@@ -1,0 +1,20 @@
+/* R1834: camera Store tabs are interactive and isolated from print/lab shortcuts. */
+@media(min-width:821px){
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary{
+  position:relative!important;pointer-events:auto!important;overflow:visible!important;
+ }
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>.pb1126FrameStoreTabs{
+  position:relative!important;inset:auto!important;z-index:2!important;
+  display:flex!important;align-items:center!important;flex-wrap:nowrap!important;
+  min-width:0!important;width:max-content!important;max-width:100%!important;
+  pointer-events:auto!important;
+ }
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>.pb1126FrameStoreTabs>button[data-store-panel]{
+  position:relative!important;z-index:3!important;pointer-events:auto!important;
+  cursor:pointer!important;touch-action:manipulation!important;
+ }
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>.pb1126FrameStoreTitle,
+ html.pb1126CameraStore body #pb1126ChromeHost #pb1126DesktopHeader.pb1126CameraStore>.pb1126Secondary>.pb1126FrameStoreCart{
+  display:none!important;pointer-events:none!important;
+ }
+}

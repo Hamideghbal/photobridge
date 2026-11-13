@@ -1,0 +1,20 @@
+/* R1834: always route camera Store header tabs into the LIVE embedded Store document. */
+function pb1834OpenCameraPanel(panelId, fallbackDoc){
+ const allowed=['equipmentPanel','salesPanel','bookingsPanel','financePanel'];
+ if(!allowed.includes(panelId))return false;
+ const liveDoc=panels.get('store')?.querySelector('iframe')?.contentDocument||fallbackDoc;
+ if(!liveDoc?.body?.classList?.contains('rentalPhotographerMode')||
+    liveDoc.body.classList.contains('frameCustomerStore'))return false;
+ const liveWindow=liveDoc.defaultView;
+ if(typeof liveWindow?.openStoreSection==='function'){
+  liveWindow.openStoreSection(panelId);
+  return true;
+ }
+ const original=liveDoc.querySelector('#pbR1123StoreDesktopNav>button[data-store-panel="'+panelId+'"]');
+ if(original?.isConnected){original.click();return true;}
+ if(typeof liveWindow?.showMobilePanel==='function'){
+  liveWindow.showMobilePanel(panelId);
+  return true;
+ }
+ return false;
+}

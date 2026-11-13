@@ -1277,3 +1277,7 @@ runR1314(process.execPath,['--test','scripts/test-r1821-lab-invoice-issuer.cjs']
 // Do not change accounting order or ledger balances; sync Windows hot-update hashes.
 await deployStep('./enable-r1822-finance-newest-first.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1822-finance-newest-first.cjs'],{stdio:'inherit'});
+
+// R1824: CAMERA equipment stores only. Do not touch lab or frame/chassis behavior.
+await deployStep('./enable-r1824-camera-store-only.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1824-camera-store-only.cjs'],{stdio:'inherit'});

@@ -1,0 +1,12 @@
+function pb1824CameraInviteCopy(out){
+ const existing=document.getElementById('pb1824CameraInviteCopy');
+ if(existing)existing.remove();
+ const messageHost=document.getElementById('photographerMsg');
+ if(!messageHost)return;
+ message('#photographerMsg','دعوت‌نامه برای این شماره ساخته شد، اما پیامک ارسال نشد ('+String(out?.sms?.error||'خطای سرویس')+'). لینک اختصاصی را کپی و برای همان شماره ارسال کنید.');
+ const box=document.createElement('div');box.id='pb1824CameraInviteCopy';box.style.cssText='display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:8px 0;padding:9px;border:1px solid #fed7aa;border-radius:9px;background:#fffaf2';
+ const input=document.createElement('input');input.readOnly=true;input.dir='ltr';input.value=String(out?.url||'');input.setAttribute('aria-label','لینک اختصاصی دعوت‌نامه');input.style.cssText='flex:1 1 240px;min-width:0;padding:7px;border:1px solid #d0d5dd;border-radius:7px';
+ const btn=document.createElement('button');btn.type='button';btn.textContent='کپی لینک دعوت';btn.style.cssText='padding:8px 11px;border:0;border-radius:7px;background:#315efb;color:#fff';
+ btn.onclick=async()=>{try{await navigator.clipboard.writeText(input.value);btn.textContent='کپی شد'}catch{input.select();document.execCommand('copy');btn.textContent='لینک انتخاب شد'}};
+ box.append(input,btn);messageHost.insertAdjacentElement('afterend',box);
+}

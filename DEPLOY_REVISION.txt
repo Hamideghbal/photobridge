@@ -1,1 +1,1 @@
-2026-11-13-r1823-invoice-issuer-all-formats
+2026-11-13-r1824-camera-store-only

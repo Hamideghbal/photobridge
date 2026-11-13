@@ -1,0 +1,17 @@
+async function pb1824RenewCameraShop(s){
+ if(!['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(s?.business_category||'')))return alert('این تمدید فقط برای فروشگاه تجهیزات دوربین است.');
+ const raw=prompt('تعداد ماه تمدید رایگان فروشگاه «'+String(s.name||'فروشگاه')+'» (۱ تا ۲۴ ماه):','1');
+ if(raw===null)return;
+ const normalized=String(raw).trim().replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+ const months=Number(normalized);
+ if(!Number.isInteger(months)||months<1||months>24)return alert('تعداد ماه باید عدد صحیح بین ۱ تا ۲۴ باشد.');
+ if(!confirm('اعتبار فروشگاه «'+String(s.name||'فروشگاه')+'» '+months+' ماه، بدون پرداخت، از تاریخ انقضای فعلی یا امروز تمدید شود؟ این اقدام وضعیت تعلیق و سایر اطلاعات فروشگاه را تغییر نمی‌دهد.'))return;
+ try{
+  const out=await api('/api/admin/equipment-rental/shops/'+encodeURIComponent(s.id)+'/grant-renewal',{method:'POST',body:JSON.stringify({months})});
+  alert('تمدید رایگان ثبت شد. اعتبار جدید تا '+dt(out.activeUntil)+' است.');
+  await load();
+ }catch(e){
+  const message=e?.data?.error==='camera_store_only'?'این فروشگاه از نوع تجهیزات دوربین نیست.':e?.data?.error==='unlimited_subscription'?'این فروشگاه از قبل اعتبار نامحدود دارد.':e?.data?.error==='invalid_renewal_months'?'تعداد ماه نامعتبر است.':e?.data?.message||e?.data?.error||e?.message||'خطای نامشخص';
+  alert('تمدید اعتبار انجام نشد: '+message);
+ }
+}

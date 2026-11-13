@@ -39,3 +39,17 @@ html body.rentalAppReady #bookings .pb1830RangeSummary {
  html body.rentalAppReady #bookings .pb1830BookingRow{gap:4px}
  html body.rentalAppReady #bookings .pb1830InvoiceAction{flex-basis:54px;font-size:9px}
 }
+/* Mobile website: select a booking first, or open its invoice independently. */
+html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalActions{
+ display:flex;align-items:center;gap:7px;margin-top:10px;
+}
+html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalActions button{
+ min-height:33px;border-radius:8px;padding:5px 10px;
+ font:850 10px Vazirmatn,Tahoma,Arial,sans-serif;cursor:pointer;
+}
+html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalSelect{
+ flex:1;border:1px solid #8eb2e8;background:#eaf3ff;color:#17417b;
+}
+html body.rentalAppReady #pb843BookingDetailBody .pb1830ModalInvoice{
+ flex:0 0 74px;border:1px solid #d5dbe5;background:#f8fafc;color:#344054;
+}

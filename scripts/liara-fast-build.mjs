@@ -1328,3 +1328,5 @@ runR1314(process.execPath,['--test','scripts/test-r1123-photographer-desktop-sto
 
 await deployStep("./enable-r1836-mobile-startup.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1836-mobile-startup.cjs','scripts/test-r1721-mobile-first-entry.cjs'],{stdio:'inherit'});
+
+await deployStep("./enable-r1837-store-chooser.mjs");

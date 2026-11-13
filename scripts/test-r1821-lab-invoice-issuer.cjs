@@ -34,12 +34,14 @@ test('R1821: invoice preview, print and browser PDF use same issuing lab name',(
    root+' invoice preview heading');
   assert(render.includes('s.fillText(pb1821LabInvoiceIssuer(t),o,c,720)'),
    root+' canvas invoice PDF title');
-  assert(render.includes('فاکتور صادرشده توسط \${pb1821LabInvoiceIssuer(t)}'),
-   root+' invoice PDF issuer caption');
-  assert(render.includes('<div class="brand">\${_n(pb1821LabInvoiceIssuer(t))}</div>'),
+  // Older builds use a different sentence, or omit the footer entirely.
+  // In either case the invoice PDF / print area must not attribute issuance to PhotoBridge.
+  assert(!/s\.fillText\("[^"]*PhotoBridge[^"]*",o,(?:1[0-9]{3}|[2-9][0-9]{3})/.test(render),
+   root+' PDF footer has no platform issuer');
+  assert(!/<div class="note">[^<]*PhotoBridge/.test(render),
+   root+' printed footer has no platform issuer');
+  assert(render.includes('<div class="brand">${_n(pb1821LabInvoiceIssuer(t))}</div>'),
    root+' print invoice heading escaped for HTML');
-  assert(render.includes('این فاکتور توسط \${_n(pb1821LabInvoiceIssuer(t))} صادر شده است.'),
-   root+' invoice print footer attribution');
   assert(!render.includes('<div class="brand">PhotoBridge</div>'));
   assert(!render.includes('این فاکتور توسط PhotoBridge صادر شده است.'));
   assert(!render.includes('s.fillText("PhotoBridge",o,c)'));
@@ -71,4 +73,26 @@ test('R1821: lab Windows update manifest includes byte-exact new frontend and in
   const html=read(root+'/index.html');
   assert(html.includes('invoiceIssuer=r1821'),root+' must invalidate frontend cache');
  }
+});
+
+test('R1821: changed and missing invoice captions no longer break build',()=>{
+ const installer=read('scripts/enable-r1821-lab-invoice-issuer.mjs');
+ const begin=installer.indexOf('function pb1821PatchCanvasCaption(');
+ const end=installer.indexOf("const asset='assets/index-UIRefine-v655-r84.js';",begin);
+ assert(begin>0&&end>begin,'guarded invoice caption helpers in installer');
+ const context={};
+ vm.runInNewContext(installer.slice(begin,end),context);
+ const pdfSource='s.fillText("فاکتور صادرشده در PhotoBridge · مبلغ‌ها ثابت هستند.",o,1640)';
+ const pdf=context.pb1821PatchCanvasCaption(pdfSource,'fixture');
+ assert(pdf.includes('${pb1821LabInvoiceIssuer(t)}'),'lab name in historical PDF footer');
+ assert(!pdf.includes('PhotoBridge'));
+ const revised=context.pb1821PatchCanvasCaption('s.fillText("سند صادرشده با PhotoBridge",o,1640)','revised');
+ assert(revised.includes('${pb1821LabInvoiceIssuer(t)}'),'later PDF wording accepted');
+ const noFooter='s.fillText("مطابق تعرفه",o,1640)';
+ assert.equal(context.pb1821PatchCanvasCaption(noFooter,'absent'),noFooter);
+ const print='<div class="note">صادرشده با PhotoBridge</div>';
+ const changed=context.pb1821PatchHtmlCaption(print,'fixture');
+ assert(changed.includes('${_n(pb1821LabInvoiceIssuer(t))}'),'escaped lab name in changed HTML footer');
+ assert(!changed.includes('PhotoBridge'));
+ assert.equal(context.pb1821PatchHtmlCaption('<div class="note">فاکتور معتبر است</div>','absent'),'<div class="note">فاکتور معتبر است</div>');
 });

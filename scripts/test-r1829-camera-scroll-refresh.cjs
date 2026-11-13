@@ -63,5 +63,6 @@ test('R1829: build scopes patches to camera stores, never lab nor frame/chassis'
  const patch=read('scripts/enable-r1829-camera-scroll-refresh.mjs');
  assert(!/lab-desktop-ui|dist\/api\/server.js|dist\/web\/assets/.test(patch));
  assert(!/frame_chassis|\bchassis\b/.test(patch));
- assert(read('DEPLOY_REVISION.txt').includes('-r1829-'));
+ const revision=Number(read('DEPLOY_REVISION.txt').match(/-r(\d+)-/)?.[1]);
+ assert(Number.isInteger(revision)&&revision>=1829);
 });

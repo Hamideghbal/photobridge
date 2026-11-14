@@ -7,13 +7,15 @@ if(!html.includes('window.__PB1848StartLabEntry=function')){
  entry=once(entry," const q=new URLSearchParams(location.search)"," window.__PB1848StartLabEntry=function(){\n const q=new URLSearchParams(location.search)",'entry initializer');
  entry=once(entry,"resource+(entry.labId?'?_lab='+encodeURIComponent(entry.labId):'')","resource+(entry.labId?(resource.includes('?')?'&':'?')+'_lab='+encodeURIComponent(entry.labId):'')",'paged prefetch URL');
  entry=once(entry,'controller.abort();if(window.__PB1847EntryEarly===entry)',"if(!entry.ordersDelivered)controller.abort();if(window.__PB1847EntryEarly===entry)",'do not cancel optional home after first orders paint');
- entry=once(entry,"load('orders')","load('orders?pageSize=30&offset=0&view=flow&mode=print')",'prefetch first active page');
+ entry=once(entry,"entry.orders=load('orders');","const supplied=window.__PB1848SelectedEntry;delete window.__PB1848SelectedEntry;const cached=supplied&&String(supplied.userId||'')===String(window.__PB1848AuthUserId||'')&&supplied.userId&&(!entry.labId||String(supplied.labId)===entry.labId)&&Date.now()-Number(supplied.at||0)<12000?supplied:null;entry.ordersUserId=cached?String(cached.userId):'';entry.orders=cached?Promise.resolve(cached):load('orders?pageSize=30&offset=0&view=flow&mode=print');",'use in-memory select page or prefetch first active page');
  entry=once(entry,' check();\n})();'," check();\n };\n window.__PB1848StartLabEntry();\n})();",'initializer close');
  html=html.replace(/(<script id="pb1847LabEntry">)[\s\S]*?(<\/script>)/,(_all,start,end)=>start+entry+end);
 }
 if(!js.includes('/* R1848 SPA entry */')){
+ const selectCall="const selected=await api('/api/customer/labs/'+encodeURIComponent(id)+'/select',{method:'POST',body:'{}'});";
+ js=once(js,selectCall,"const PB1848WantEntry=window===window.top&&!new URLSearchParams(location.search).has('pbDesktopContent')&&!new URLSearchParams(location.search).has('pbUtilityWindow')&&window.__PB1848AuthUserId&&window.__PB1848PrintEntryReady;const selected=await api('/api/customer/labs/'+encodeURIComponent(id)+'/select',{method:'POST',body:'{}',headers:{'Content-Type':'application/json',...(PB1848WantEntry?{'x-photobridge-print-entry':'1'}:{})}});",'optional first page on ready SPA select');
  const previous="location.replace(u.pathname+'?'+u.searchParams.toString())";
- const next=`/* R1848 SPA entry */const target=u.pathname+'?'+u.searchParams.toString();const embedded=window!==window.top||u.searchParams.get('pbDesktopContent')==='1'||u.searchParams.has('pbUtilityWindow')||document.documentElement.classList.contains('pb1126Embedded');if(!embedded&&window.__PB1848PrintEntryReady&&window.__PB1848StartLabEntry&&document.querySelector('#root .photographerMain')){history.pushState(history.state,'',target);window.__PB1848StartLabEntry();dispatchEvent(new CustomEvent('photobridge-lab-entry',{detail:{labId:id,lab:selected?.lab||{id}}}));dispatchEvent(new CustomEvent('photobridge-lab-selected',{detail:{labId:id}}));dispatchEvent(new PopStateEvent('popstate'))}else location.replace(target)`;
+ const next=`/* R1848 SPA entry */if(PB1848WantEntry&&selected.entry&&String(selected.entry.labId)===String(id))window.__PB1848SelectedEntry=selected.entry;const target=u.pathname+'?'+u.searchParams.toString();const embedded=window!==window.top||u.searchParams.get('pbDesktopContent')==='1'||u.searchParams.has('pbUtilityWindow')||document.documentElement.classList.contains('pb1126Embedded');if(!embedded&&window.__PB1848PrintEntryReady&&window.__PB1848StartLabEntry&&document.querySelector('#root .photographerMain')){history.pushState(history.state,'',target);window.__PB1848StartLabEntry();dispatchEvent(new CustomEvent('photobridge-lab-entry',{detail:{labId:id,lab:selected?.lab||{id}}}));dispatchEvent(new CustomEvent('photobridge-lab-selected',{detail:{labId:id}}));dispatchEvent(new PopStateEvent('popstate'))}else location.replace(target)`;
  js=once(js,previous,next,'chooser SPA transition with embedded fallback');
 }
 if(!app.includes('/* R1848 active-lab state swap */')){
@@ -35,6 +37,14 @@ if(!server.includes("from './customer-orders-page.js'")){
  server="import {customerOrdersPage} from './customer-orders-page.js';\n"+server;
  const anchor="        if (req.method === 'GET' && url.pathname === '/api/customer/orders') {";
  server=once(server,anchor,anchor+"\n            const page=await customerOrdersPage(pool,labId,a.userId,url.searchParams);if(page)return sendJson(res,page.status,page.body);",'optional orders page handler');
+ const selectReply='            return sendJson(res, 200, { ok: true, lab: publicRow });';
+ const entryReply=`            let entry=null;
+            if(req.headers['x-photobridge-print-entry']==='1'){
+                try{const page=await customerOrdersPage(pool,targetLab,a.userId,new URLSearchParams('pageSize=30&offset=0&view=flow&mode=print'));if(page?.status===200)entry={...page.body,userId:a.userId,role:'customer',at:Date.now()}}catch(error){console.warn('[PhotoBridge entry page]',String(error?.message||error))}
+            }
+            return sendJson(res,200,{ok:true,lab:publicRow,...(entry?{entry}:{})});`;
+ server=once(server,selectReply,entryReply,'opt-in first page after all original select authorization and audit checks');
+
  fs.writeFileSync(serverFile,server);
 }
 let start=app.indexOf('function Zg('),end=app.indexOf('function ',start+15);
@@ -67,9 +77,11 @@ if(!app.includes('const PB1848EntryUI=')){
 // An old workspace request must not release a newer entry skeleton or abort its prefetch.
 start=app.indexOf('async function Me(');end=app.indexOf('async function PB1847OriginalApi(',start);let api=app.slice(start,end);
 api=once(api,'const early=window.__PB1847EntryEarly;','const PB1848EntryUI=window.__PB1847EntryUI;const early=window.__PB1847EntryEarly;','capture entry generation');
+api=once(api,'try{const data=await PB1847OriginalApi(t,a);',"try{const data=await PB1847OriginalApi(t,a);if(new URL(t,location.origin).pathname==='/api/auth/me')window.__PB1848AuthUserId=String(data?.user?.id||data?.user?.userId||'');",'bind in-memory payload to authenticated user');
+api=once(api,"catch(error){if(error.status===401||error.status===403)window.__PB1847EntryUI?.remove();throw error}","catch(error){if(error.status===401||error.status===403){delete window.__PB1848AuthUserId;delete window.__PB1848SelectedEntry;window.__PB1847EntryUI?.remove()}throw error}",'discard entry identity on authorization failure');
 api=api.replaceAll('window.__PB1847EntryUI?.ordersReady()', '(PB1848EntryUI===window.__PB1847EntryUI&&PB1848EntryUI?.ordersReady())');
 app=app.slice(0,start)+api+app.slice(end);
-app=once(app,"if(key&&early[key]&&(!requested||!early.labId||requested===early.labId)){","if(key&&early[key]&&(!requested||!early.labId||requested===early.labId)&&(key!=='orders'||(url.searchParams.get('pageSize')==='30'&&Number(url.searchParams.get('offset')||0)===0&&(url.searchParams.get('view')||'flow')==='flow'&&(url.searchParams.get('mode')||'print')==='print'))){",'only reuse matching first page');
+app=once(app,"if(key&&early[key]&&(!requested||!early.labId||requested===early.labId)){","if(key&&early[key]&&(!requested||!early.labId||requested===early.labId)&&(key!=='orders'||!early.ordersUserId||early.ordersUserId===window.__PB1848AuthUserId)&&(key!=='orders'||(url.searchParams.get('pageSize')==='30'&&Number(url.searchParams.get('offset')||0)===0&&(url.searchParams.get('view')||'flow')==='flow'&&(url.searchParams.get('mode')||'print')==='print'))){",'only reuse matching first page');
 }
 fs.writeFileSync(index,html);fs.writeFileSync(chooser,js);fs.writeFileSync(bundle,app);
 console.log('R1848: reuse loaded SPA for website lab entry; full navigation for embedded/unready documents');

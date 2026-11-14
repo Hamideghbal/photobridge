@@ -6,8 +6,8 @@ test('legacy requests are untouched and malformed optional pagination cannot iss
  assert.equal(await customerOrdersPage(pool,'lab','user',new URLSearchParams()),null);
  for(const query of ['pageSize=0','pageSize=101','pageSize=7&offset=-1','pageSize=7&view=all','pageSize=7&mode=other'])assert.equal((await customerOrdersPage(pool,'lab','user',new URLSearchParams(query))).status,400);
 });
-test('real PostgreSQL paging preserves legacy 300-order scope, user/lab isolation, counts, ordering and payment shape',{skip:!process.env.DATABASE_URL},async()=>{
- const {Client}=require('pg'),client=new Client({connectionString:process.env.DATABASE_URL,ssl:false});await client.connect();
+test('real PostgreSQL paging preserves legacy 300-order scope, user/lab isolation, counts, ordering and payment shape',{skip:!process.env.PB_ORDERS_TEST_DATABASE_URL},async()=>{
+ const {Client}=require('pg'),client=new Client({connectionString:process.env.PB_ORDERS_TEST_DATABASE_URL,ssl:false});await client.connect();
  try{
   await client.query('BEGIN');
   await client.query('CREATE TEMP TABLE orders(id text,lab_id text,customer_id text,status text,mode text,source text,created_at timestamptz,number integer) ON COMMIT DROP');
@@ -48,4 +48,5 @@ test('compiled entry cache only supplies the matching first page and leaves lega
  token='impersonation';assert.deepEqual((await context.api('/api/customer/orders?_lab=lab&pageSize=30')).orders,['native']);token='';assert.equal(native.length,4);
  assert.equal(await context.api('/api/customer/orders?_lab=lab&pageSize=30&offset=0&view=flow&mode=print'),flow);assert.equal(context.window.__PB1847EntryEarly,undefined);assert.equal(native.length,4);
  await context.api('/api/customer/orders?_lab=lab&pageSize=30');assert.equal(native.length,5);
+ context.window.__PB1848AuthUserId='other';context.window.__PB1847EntryEarly={labId:'lab',ordersUserId:'owner',orders:Promise.resolve(flow)};assert.deepEqual((await context.api('/api/customer/orders?_lab=lab&pageSize=30')).orders,['native'],'private select page cannot cross users');assert.equal(native.length,6);context.window.__PB1848AuthUserId='owner';assert.equal(await context.api('/api/customer/orders?_lab=lab&pageSize=30'),flow);
 });

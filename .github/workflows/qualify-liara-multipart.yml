@@ -32,6 +32,8 @@ jobs:
         run: |
           cp tools/qualification/diagnose-liara-access.mjs /tmp/pb-multipart-qualification/diagnose.mjs
           node /tmp/pb-multipart-qualification/diagnose.mjs
+          cp tools/qualification/diagnose-liara-multipart.mjs /tmp/pb-multipart-qualification/multipart-diagnose.mjs
+          node /tmp/pb-multipart-qualification/multipart-diagnose.mjs
       - name: Save redacted qualification result
         if: always()
         uses: actions/upload-artifact@v4
@@ -40,5 +42,7 @@ jobs:
           path: |
             work/liara-multipart-capability-report.json
             work/liara-access-diagnostics.json
+            work/liara-multipart-diagnostics.json
+            work/liara-empty-probe-recovery.json
           if-no-files-found: ignore
           retention-days: 7

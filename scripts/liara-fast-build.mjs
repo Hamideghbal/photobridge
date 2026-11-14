@@ -1354,6 +1354,9 @@ await deployStep("./enable-r1850-error-alerts.mjs");
 // R1851: additive upload health instrumentation, after R1850 and before HTML finalizers.
 await deployStep("./enable-r1851-upload-health.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1851-upload-health.cjs'],{stdio:'inherit'});
+// R1852: suppress duplicate administrator SMS before contacting the paid provider.
+await deployStep("./enable-r1852-alert-sms-dedup.mjs");
+runR1314(process.execPath,['--test','scripts/test-r1852-sms-alert-guard.cjs','scripts/test-r1850-error-monitor.mjs'],{stdio:'inherit'});
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");
 // Refresh hash-pinned Store bytes after every final HTML writer.

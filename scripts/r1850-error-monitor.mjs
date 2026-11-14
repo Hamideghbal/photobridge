@@ -27,7 +27,7 @@ export function cleanIncident(raw = {}) {
     labId:scopeUuid(raw.labId),photographerId:scopeUuid(raw.photographerId),
     reference: token(raw.reference, 40), revision: token(raw.revision, 100) };
 }
-export function createErrorMonitor({ directory, alert, now = Date.now, cooldown = 600000, maxAlerts = 6, persistExternal, log = console }) {
+export function createErrorMonitor({ directory, alert, shouldAlert = () => true, now = Date.now, cooldown = 600000, maxAlerts = 6, persistExternal, log = console }) {
   const incidents = new Map(), rate = new Map();
   let writes = Promise.resolve(), ready, alertTimes = [], activeAlert = false, draining = false;
   const pending = new Map(), external = new Map();
@@ -70,6 +70,15 @@ export function createErrorMonitor({ directory, alert, now = Date.now, cooldown 
     }).catch(e => log.error('[error-monitor] persistence failed', e.code || 'write_failed')).finally(()=>{draining=false;if(pending.size)persist([...pending.values()][0]);});
   }
   function maybeAlert(row) {
+    // Non-actionable client/network errors are still counted but never consume
+    // the limited paid-SMS budget or block real download incidents.
+    if(!shouldAlert(row)){
+      if(row.alertState!=='suppressed'){
+        row.alertState='suppressed'; row.alertError='not_actionable';
+        persist({ ...row });
+      }
+      return;
+    }
     const at = now(); alertTimes = alertTimes.filter(t => at - t < 3600000);
     // One SMS attempt per incident fingerprint in this runtime; the DB guard
     // blocks replays after process restarts or across Liara instances.

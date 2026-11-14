@@ -1,0 +1,86 @@
+<div id="pb-splash" role="status" aria-live="polite" aria-label="در حال بارگذاری PhotoBridge">
+  <div class="pb1842-aurora a"></div>
+  <div class="pb1842-aurora b"></div>
+  <div class="pb1842-bokeh" id="pb1842-bokeh"></div>
+  <div class="pb1842-grain"></div>
+
+  <!-- لوگوی اصلی: پل + دیافراگم دوربین -->
+  <div class="pb1842-mark">
+    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <mask id="pbIrisMask" maskUnits="userSpaceOnUse" x="-60" y="-60" width="120" height="120">
+          <circle cx="0" cy="0" r="50" fill="#fff"/>
+          <g stroke="#000" stroke-width="4.5" stroke-linecap="round">
+            <line x1="0" y1="-19" x2="44.1" y2="-23.5"/>
+            <line x1="16.5" y1="-9.5" x2="42.4" y2="26.5"/>
+            <line x1="16.5" y1="9.5" x2="-1.7" y2="50"/>
+            <line x1="0" y1="19" x2="-44.1" y2="23.5"/>
+            <line x1="-16.5" y1="9.5" x2="-42.4" y2="-26.5"/>
+            <line x1="-16.5" y1="-9.5" x2="1.7" y2="-50"/>
+          </g>
+          <polygon class="pb1842-iris" points="0,-19 16.5,-9.5 16.5,9.5 0,19 -16.5,9.5 -16.5,-9.5" fill="#000"/>
+        </mask>
+      </defs>
+
+      <g fill="none" stroke="#ffffff" stroke-linecap="round">
+        <!-- عرشهٔ پل -->
+        <path class="pb1842-draw" style="--d:.15s" pathLength="1" stroke-width="7" d="M52 270 Q300 258 548 270"/>
+        <path class="pb1842-draw" style="--d:.5s"  pathLength="1" stroke-width="6" d="M52 270 V252 M548 270 V252"/>
+        <!-- برج‌ها -->
+        <path class="pb1842-draw" style="--d:.35s" pathLength="1" stroke-width="9" d="M118 268 V190 M111 190 H125"/>
+        <path class="pb1842-draw" style="--d:.35s" pathLength="1" stroke-width="9" d="M482 268 V190 M475 190 H489"/>
+        <!-- کابل‌های اصلی -->
+        <path class="pb1842-draw" style="--d:.45s" pathLength="1" stroke-width="5.5" d="M56 264 C75 240 95 210 118 190"/>
+        <path class="pb1842-draw" style="--d:.55s" pathLength="1" stroke-width="5.5" d="M118 190 C160 232 210 228 255 173"/>
+        <path class="pb1842-draw" style="--d:.45s" pathLength="1" stroke-width="5.5" d="M544 264 C525 240 505 210 482 190"/>
+        <path class="pb1842-draw" style="--d:.55s" pathLength="1" stroke-width="5.5" d="M482 190 C440 232 390 228 345 173"/>
+        <!-- کابل‌های آویز -->
+        <g stroke-width="3.2">
+          <path class="pb1842-draw" style="--d:.62s" pathLength="1" d="M79 233 V268"/>
+          <path class="pb1842-draw" style="--d:.68s" pathLength="1" d="M98 210 V267"/>
+          <path class="pb1842-draw" style="--d:.74s" pathLength="1" d="M151 213 V266"/>
+          <path class="pb1842-draw" style="--d:.80s" pathLength="1" d="M168 217 V265"/>
+          <path class="pb1842-draw" style="--d:.86s" pathLength="1" d="M185 218 V265"/>
+          <path class="pb1842-draw" style="--d:.92s" pathLength="1" d="M203 213 V264"/>
+          <path class="pb1842-draw" style="--d:.98s" pathLength="1" d="M220 205 V264"/>
+          <path class="pb1842-draw" style="--d:.62s" pathLength="1" d="M521 233 V268"/>
+          <path class="pb1842-draw" style="--d:.68s" pathLength="1" d="M502 210 V267"/>
+          <path class="pb1842-draw" style="--d:.74s" pathLength="1" d="M449 213 V266"/>
+          <path class="pb1842-draw" style="--d:.80s" pathLength="1" d="M432 217 V265"/>
+          <path class="pb1842-draw" style="--d:.86s" pathLength="1" d="M415 218 V265"/>
+          <path class="pb1842-draw" style="--d:.92s" pathLength="1" d="M397 213 V264"/>
+          <path class="pb1842-draw" style="--d:.98s" pathLength="1" d="M380 205 V264"/>
+        </g>
+      </g>
+
+      <!-- دیافراگم دوربین (چرخان + تنفس ایریس) -->
+      <g transform="translate(300 128)">
+        <path class="pb1842-draw" style="--d:.2s" pathLength="1" fill="none"
+              stroke="#ffffff" stroke-width="7.5" d="M-64 0 a64 64 0 1 1 128 0 a64 64 0 1 1 -128 0"/>
+        <path class="pb1842-draw" style="--d:.6s" pathLength="1" fill="none"
+              stroke="#ffffff" stroke-width="3" d="M-54 0 a54 54 0 1 1 108 0 a54 54 0 1 1 -108 0"/>
+        <g class="pb1842-spin">
+          <circle class="pb1842-disc" cx="0" cy="0" r="50" fill="#ffffff" mask="url(#pbIrisMask)"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="pb1842-wordmark" aria-label="PhotoBridge">
+    <span style="--i:0">P</span><span style="--i:1">h</span><span style="--i:2">o</span><span style="--i:3">t</span><span style="--i:4">o</span><span style="--i:5">B</span><span style="--i:6">r</span><span style="--i:7">i</span><span style="--i:8">d</span><span style="--i:9">g</span><span style="--i:10">e</span>
+  </div>
+  <div class="pb1842-tagline">Capture&nbsp;Memories</div>
+  <div class="pb1842-divider"><i></i><b></b><i></i></div>
+
+  <div class="pb1842-progress">
+    <div class="pb1842-track" id="pb1842-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="pb1842-fill" id="pb1842-fill"></div>
+    </div>
+    <div class="pb1842-meta">
+      <span id="pb-status">در حال آماده‌سازی محیط…</span>
+      <span id="pb-pct">۰٪</span>
+    </div>
+  </div>
+
+  <div class="pb1842-flash"></div>
+</div>

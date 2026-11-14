@@ -62,13 +62,16 @@ export async function recordUploadHealthEvents(pool,{photographerId,labId,events
     for(const e of rows){
       if(e.orderId&&!orders.has(e.orderId)){
         const result=await client.query('SELECT 1 FROM orders WHERE id=$1 AND customer_id=$2 AND lab_id=$3',[e.orderId,photographerId,labId]);
-        if(!result.rowCount)throw bad('upload_order_not_owned',403);
-        orders.add(e.orderId);
+        // A failed upload can delete its draft before queued telemetry arrives.
+        // Retain the event/session, but never accept an unowned operational ID.
+        if(!result.rowCount)e.orderId=null;
+        else orders.add(e.orderId);
       }
       if(e.serverFileId&&!fileIds.has(e.serverFileId)){
         const result=await client.query('SELECT 1 FROM order_files WHERE id=$1 AND customer_id=$2 AND lab_id=$3',[e.serverFileId,photographerId,labId]);
-        if(!result.rowCount)throw bad('upload_file_not_owned',403);
-        fileIds.add(e.serverFileId);
+        // A deleted pending file must not erase the failure event.
+        if(!result.rowCount)e.serverFileId=null;
+        else fileIds.add(e.serverFileId);
       }
       const session=await client.query(
         `INSERT INTO upload_health_sessions(id,photographer_id,lab_id,order_id,client_kind)

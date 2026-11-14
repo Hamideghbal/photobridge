@@ -1345,6 +1345,13 @@ runR1314(process.execPath,['scripts/enable-r1841-login-blue.mjs'],{stdio:'inheri
 runR1314(process.execPath,['--test','scripts/test-r1841-login-blue.cjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK blue login theme');
 
+// R1842 — replace the previous web splash with the supplied animated blue design.
+// Run AFTER R1838 cream splash tests and R1841 login CSS, BEFORE CSS packaging.
+console.log('[PhotoBridge Docker build] START user animated blue splash');
+runR1314(process.execPath,['scripts/enable-r1842-blue-splash.mjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1842-blue-splash.cjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK user animated blue splash');
+
 // PB_PERF_FIX_V1 — run after all release/UI writers so HTML and server are final.
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});

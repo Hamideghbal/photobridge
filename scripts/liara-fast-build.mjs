@@ -1350,6 +1350,8 @@ console.log('[PhotoBridge Docker build] OK blue login theme');
 console.log('[PhotoBridge Docker build] START user animated blue splash');
 runR1314(process.execPath,['scripts/enable-r1842-blue-splash.mjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1842-blue-splash.cjs'],{stdio:'inherit'});
+// R1843 — verify only the confirmed GPU compositing optimization from the Hub audit.
+runR1314(process.execPath,['--test','scripts/test-r1843-splash-gpu-audit.cjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK user animated blue splash');
 
 // PB_PERF_FIX_V1 — run after all release/UI writers so HTML and server are final.

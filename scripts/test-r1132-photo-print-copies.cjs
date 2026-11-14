@@ -42,8 +42,8 @@ test('quotes multiply physical copies including chassis and frames',()=>{
 test('backend validates, persists, renames and invoices all copies',()=>{
  assert.ok(api.includes("error: 'invalid_print_copies'"));
  // Column count grew when frame/chassis model selection was persisted.
- const inserts=[...api.matchAll(/INSERT INTO order_files\\s*\\(([^)]+)\\)\\s*VALUES\\s*\\(([^;]+?)\\)/g)];
- assert(inserts.some(([,columns,values])=>/\\bprint_copies\\b/.test(columns)&&/\\boriginal_state\\b/.test(columns)&&/['"]pending['"]/.test(values)), 'file insertion must persist print copy count and initial pending state');
+ const inserts=[...api.matchAll(/INSERT INTO order_files\s*\(([^)]+)\)\s*VALUES\s*\(([^;]+?)\)/g)];
+ assert(inserts.some(([,columns,values])=>/\bprint_copies\b/.test(columns)&&/\boriginal_state\b/.test(columns)&&/['"]pending['"]/.test(values)), 'file insertion must persist print copy count and initial pending state');
  assert.ok(api.includes('const name = orderPrintCopyName(safeFileName'));
  assert.ok(api.includes('.replace(/[^/]+$/, name).slice(0, 900)'));
  assert.ok(api.includes('sum(copies)::int quantity'));

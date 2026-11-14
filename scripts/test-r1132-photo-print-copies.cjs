@@ -56,7 +56,15 @@ test('migration and responsive dock settings are present',()=>{
  assert.ok(sql.includes('print_copies BETWEEN 1 AND 99'));
  assert.ok(css.includes('flex:1 1 0!important'));
  assert.ok(css.includes('flex-wrap:nowrap!important'));
- assert.ok(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134'));
+ // In final production output the CSS remains present inside the hashed boot bundle.
+ if(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134')) {
+  assert.ok(html.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134'));
+ } else {
+  const manifest=JSON.parse(read('dist/web/assets/photobridge-boot-manifest.json'));
+  assert.ok(manifest.sources.includes('/photobridge-r1132-photo-copies-mobile.css?v=r1134'));
+  assert.ok(html.includes('/assets/'+manifest.boot));
+  assert.ok(read('dist/web/assets/'+manifest.boot).includes('photobridge-r1132-photo-copies-mobile.css'));
+ }
  assert.ok(html.includes('assets/index-UIRefine-v655-r84.js?v=r1159'));
  assert.ok(header.includes('bottom:17px!important'));
 });

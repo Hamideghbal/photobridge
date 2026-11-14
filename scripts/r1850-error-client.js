@@ -26,6 +26,7 @@
     queue = queue.slice(-20); save(); void flush();
   }
   function describe(error) {
+    if(error?.pbStage==='submit'&&[0,502,503,504].includes(Number(error?.status||0)))return 'پاسخ ثبت نهایی سفارش دریافت نشد؛ ممکن است سفارش ثبت شده باشد. پیش از ارسال دوباره، فهرست سفارش‌ها را بررسی کنید. کد پیگیری: '+(error.pbLocalReference||'در حال ثبت');
     var label = labels[error?.pbStage] || 'ارسال سفارش';
     var name = error?.pbFile ? ' «' + String(error.pbFile).slice(0,120) + '»' : '';
     var code = error?.status ? '؛ کد ' + error.status : '';

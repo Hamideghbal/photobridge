@@ -102,6 +102,6 @@ visit('dist/web');
 visit('dist/api');
 // Main JS is immutable: a new URL is required for existing browsers.
 let html=fs.readFileSync('dist/web/index.html','utf8');
-html=html.replace(/(src=["'])([^"']*\/assets\/index-[^"']+\.js)(\?[^"']*)?(["'])/g,(_,open,url,query,close)=>open+url+'?pbErrorRev='+encodeURIComponent(revision)+close);
+html=html.replace(/(src=["'])([^"']*\/assets\/index-[^"']+\.js)(\?[^"']*)?(["'])/g,(_,open,url,query,close)=>{const params=new URLSearchParams((query||'').slice(1).replaceAll('&amp;','&'));params.set('pbErrorRev',revision);return open+url+'?'+params.toString()+close;});
 fs.writeFileSync('dist/web/index.html',html);
 console.log('[R1850] bounded error reports, private incident viewer, deduplicated administrator SMS');

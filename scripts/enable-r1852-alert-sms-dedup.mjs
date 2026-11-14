@@ -54,9 +54,14 @@ if(!server.includes('R1852: durable administrator SMS guard')){
   // Lab download: resolve the actual photographer from the authorized order,
   // not from any browser field. Carry that trusted scope through the opaque
   // one-use stream token because S3 GET errors occur on /api/public-download.
-  const downloadSql="o.settlement_mode,o.payment_status FROM order_files f JOIN orders o";
-  server=once(server,downloadSql,
-    "o.settlement_mode,o.payment_status,o.customer_id AS pb1852_photographer_id FROM order_files f JOIN orders o");
+  const downloadStart=server.indexOf("const labFileDownload = url.pathname.match(");
+  const downloadEnd=server.indexOf("const labFileEditPresign =",downloadStart);
+  if(downloadStart<0||downloadEnd<downloadStart)throw Error('R1852 lab download route not found');
+  let downloadBlock=server.slice(downloadStart,downloadEnd);
+  const downloadJoin=" FROM order_files f JOIN orders o ON o.id=f.order_id";
+  downloadBlock=once(downloadBlock,downloadJoin,
+    ",o.customer_id AS pb1852_photographer_id"+downloadJoin);
+  server=server.slice(0,downloadStart)+downloadBlock+server.slice(downloadEnd);
   const downloadRow="            const row = q.rows[0];\n            if (row.settlement_mode === 'prepaid' && row.payment_status !== 'paid')";
   server=once(server,downloadRow,
     "            const row = q.rows[0];\n"+

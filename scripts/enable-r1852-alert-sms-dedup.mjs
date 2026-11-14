@@ -50,6 +50,26 @@ if(!server.includes('R1852: durable administrator SMS guard')){
   const labScope="        const access = await pool.query(`SELECT active,active_from,active_until,service_only FROM labs l WHERE id=$1";
   server=once(server,labScope,
     "        req.PB1852labId=labId;\n"+labScope);
+  // Lab download: resolve the actual photographer from the authorized order,
+  // not from any browser field. Carry that trusted scope through the opaque
+  // one-use stream token because S3 GET errors occur on /api/public-download.
+  const downloadSql="o.settlement_mode,o.payment_status FROM order_files f JOIN orders o";
+  server=once(server,downloadSql,
+    "o.settlement_mode,o.payment_status,o.customer_id AS pb1852_photographer_id FROM order_files f JOIN orders o");
+  const downloadRow="            const row = q.rows[0];\n            if (row.settlement_mode === 'prepaid' && row.payment_status !== 'paid')";
+  server=once(server,downloadRow,
+    "            const row = q.rows[0];\n"+
+    "            req.PB1852photographerId=row.pb1852_photographer_id||null;\n"+
+    "            if (row.settlement_mode === 'prepaid' && row.payment_status !== 'paid')");
+  const localToken="downloadTokens.set(token, { kind: 'local', path: filePath, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type });";
+  server=once(server,localToken,
+    "downloadTokens.set(token, { kind: 'local', path: filePath, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type, labId, photographerId:req.PB1852photographerId });");
+  const s3Token="downloadTokens.set(token, { kind: 's3', key: row.object_key, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type });";
+  server=once(server,s3Token,
+    "downloadTokens.set(token, { kind: 's3', key: row.object_key, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type, labId, photographerId:req.PB1852photographerId });");
+  const streamToken="        const item = downloadTokens.get(publicDownload[1]);";
+  server=once(server,streamToken,
+    streamToken+"\n        if(item){req.PB1852labId=item.labId||null;req.PB1852photographerId=item.photographerId||null;}");
   // Scope error reports to the authenticated principal (never to client data).
   const reporter="userId:actor.userId,revision:process.env.DEPLOY_REVISION||'r1850'";
   server=once(server,reporter,

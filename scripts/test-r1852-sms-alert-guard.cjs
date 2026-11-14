@@ -111,9 +111,32 @@ test('R1852 build generated server has authenticated context and download classi
   assert.match(server,/if\(item\)\{req\.PB1852labId=item\.labId\|\|null/);
   assert.match(server,/reserveAdminAlert\(pool,incident/);
   assert.match(server,/shouldNotifySms\(incident\)/);
+  assert.match(server,/shouldAlert:shouldNotifySms/);
   assert.match(server,/photographerId:requestPortal\(req\)==='photographer'\?actor\.userId:null/);
   for(const file of ['dist/api/server.js','dist/api/sms-alert-guard.mjs','dist/api/error-monitor.mjs']){
     const result=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});
     assert.equal(result.status,0,result.stderr);
   }
+});
+
+test('R1852 ignores browser errors before the SMS budget and keeps incident counts',async t=>{
+  const fsPromises=require('node:fs/promises');
+  const os=require('node:os'),path=require('node:path');
+  const folder=await fsPromises.mkdtemp(path.join(os.tmpdir(),'pb1852-sms-'));
+  let current=1000000,sent=0;
+  const monitor=incident.createErrorMonitor({directory:folder,now:()=>current,
+    shouldAlert:guard.shouldNotifySms,alert:async()=>{sent++;},log:{error(){}}});
+  t.after(async()=>{monitor.close();await monitor.flush();await fsPromises.rm(folder,{recursive:true,force:true});});
+  for(let i=0;i<15;i++)await monitor.record({source:'browser',stage:'browser',code:'error_'+i,status:0});
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(sent,0);
+  await monitor.record(error());
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(sent,1);
+  current+=700000; // after the previous 10-minute cooldown
+  await monitor.record(error());
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(sent,1);
+  const row=(await monitor.list()).find(x=>x.code==='StorageTimeout');
+  assert.equal(row.count,2);
 });

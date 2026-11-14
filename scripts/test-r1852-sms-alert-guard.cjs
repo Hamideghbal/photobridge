@@ -107,8 +107,7 @@ test('R1852 build generated server has authenticated context and download classi
   const server=fs.readFileSync('dist/api/server.js','utf8');
   assert.match(server,/stage:stageFromErrorPath\(req.url\)/);
   assert.match(server,/req\.PB1852labId=labId/);
-  assert.match(server,/req\.PB1852photographerId=row\.pb1852_photographer_id/);
-  assert.match(server,/if\(item\)\{req\.PB1852labId=item\.labId\|\|null/);
+  assert.ok(server.includes("fileId:String(req.url||'').split('?')[0].split('/').find"));
   assert.match(server,/reserveAdminAlert\(pool,incident/);
   assert.match(server,/shouldNotifySms\(incident\)/);
   assert.match(server,/shouldAlert:shouldNotifySms/);
@@ -139,4 +138,20 @@ test('R1852 ignores browser errors before the SMS budget and keeps incident coun
   assert.equal(sent,1);
   const row=(await monitor.list()).find(x=>x.code==='StorageTimeout');
   assert.equal(row.count,2);
+});
+
+test('R1852 resolves the photographer of a lab download only after an actionable error',async()=>{
+  let queries=[];
+  const localPool={async query(sql,params){
+    queries.push({sql,params});
+    if(sql.includes('FROM order_files WHERE id=$1'))return {rows:[{customer_id:B}]};
+    return {rows:[{lab_name:'لابراتوار یک',photographer_name:'آتلیه دو'}]};
+  }};
+  const result=await guard.loadSmsOrigin(localPool,{
+    labId:A,fileId:'33333333-3333-4333-8333-333333333333'});
+  assert.equal(result.lab,'لابراتوار یک');
+  assert.equal(result.photographer,'آتلیه دو');
+  assert.equal(result.photographerId,B);
+  assert.equal(queries.length,2);
+  assert.equal(queries[0].params[1],A);
 });

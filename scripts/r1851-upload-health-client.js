@@ -6,7 +6,7 @@
   var nativeFetch=window.fetch.bind(window);
   var nativeOpen=XMLHttpRequest.prototype.open,nativeSend=XMLHttpRequest.prototype.send;
   var eventKey='pb1851-events-v1',sessionKey='pb1851-session-v1';
-  var queue=[],flushing=false,scheduled=0,disabled=false,orderId=null;
+  var queue=[],flushing=false,scheduled=0,disabled=false,orderId=null,labContext=null;
   var byServerFile=new Map(),bySignedUrl=new Map(),active=null,card=null;
   var uuid=function(){return crypto.randomUUID();};
   function saved(k){try{return JSON.parse(sessionStorage.getItem(k)||'null');}catch(_){return null;}}
@@ -38,7 +38,7 @@
     try{
       while(queue.length&&online()){
         var batch=queue.slice(0,16);
-        var response=await nativeFetch('/api/customer/uploads/health-events',{
+        var response=await nativeFetch('/api/customer/uploads/health-events'+(labContext?'?_lab='+encodeURIComponent(labContext):''),{
           method:'POST',credentials:'same-origin',
           headers:{'content-type':'application/json','x-photobridge-portal':'photographer'},
           body:JSON.stringify({events:batch}),signal:AbortSignal.timeout(8000)});
@@ -118,6 +118,7 @@
     var method=String(init?.method||input?.method||'GET').toUpperCase();
     var stage=url.origin===location.origin?watchStage(url.pathname,method):'';
     if(!stage)return nativeFetch(input,init);
+    if(url.searchParams.has('_lab'))labContext=url.searchParams.get('_lab');
     var body=bodyObject(init),begin=performance.now(),attemptId=uuid();
     var existing=fileMeta(body.fileId),logicalFileId=existing&&existing.fileId||null;
     var order=body.orderId||orderId||null;

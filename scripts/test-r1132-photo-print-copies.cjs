@@ -33,26 +33,17 @@ test('upload keeps a single file and sends quantity as metadata',()=>{
  assert.ok(app.includes('className:"simplePrintFinalCopies"'));
  assert.ok(app.includes('className:"simplePrintPhotoCopies"'));
 });
-// Temporary on-failure diagnostics: locate current price and INSERT shapes so
-// regression assertions can follow the shipped R1791+ model-aware implementation.
-if(!app.includes('b+=Number(P.chassis||0)*PBcount') || !api.includes("original_state)\\n        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'pending')")){
- const nearby=(s,key,n=240)=>{const i=s.indexOf(key);return i<0?'NOT_FOUND':s.slice(Math.max(0,i-n),i+n);};
- console.log('[R1132 diagnostic] UI old photo-copy anchor:',nearby(app,'b+=Number(Nt||0)*PBcount',650));
- console.log('[R1132 diagnostic] UI PBcount:',[...app.matchAll(/PBcount/g)].slice(0,14).map(m=>sTrim(app.slice(Math.max(0,m.index-120),m.index+200))));
- console.log('[R1132 diagnostic] API original_state:',nearby(api,'original_state)',780));
- console.log('[R1132 diagnostic] API orderPrintCopyName:',nearby(api,'orderPrintCopyName(safeFileName',300));
-}
-function sTrim(s){return s.replace(/\\s+/g,' ').slice(0,320);}
-
 test('quotes multiply physical copies including chassis and frames',()=>{
  assert.ok(app.includes('b+=Number(Nt||0)*PBcount'));
- assert.ok(app.includes('b+=Number(P.chassis||0)*PBcount'));
- assert.ok(app.includes('b+=Number(P.frame||0)*PBcount'));
+ assert.ok(app.includes('b+=pb1781Unit(ue,Ye,"chassis",P)*PBcount'),'model-specific chassis price must multiply by copies');
+ assert.ok(app.includes('b+=pb1781Unit(ue,Ye,"frame",P)*PBcount'),'model-specific frame price must multiply by copies');
  assert.ok(app.includes('count:ue.files.reduce((n,f)=>n+pbPrintCopies(f),0)'));
 });
 test('backend validates, persists, renames and invoices all copies',()=>{
  assert.ok(api.includes("error: 'invalid_print_copies'"));
- assert.ok(api.includes('original_state)\n        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,\'pending\')'));
+ // Column count grew when frame/chassis model selection was persisted.
+ const inserts=[...api.matchAll(/INSERT INTO order_files\\s*\\(([^)]+)\\)\\s*VALUES\\s*\\(([^;]+?)\\)/g)];
+ assert(inserts.some(([,columns,values])=>/\\bprint_copies\\b/.test(columns)&&/\\boriginal_state\\b/.test(columns)&&/['"]pending['"]/.test(values)), 'file insertion must persist print copy count and initial pending state');
  assert.ok(api.includes('const name = orderPrintCopyName(safeFileName'));
  assert.ok(api.includes('.replace(/[^/]+$/, name).slice(0, 900)'));
  assert.ok(api.includes('sum(copies)::int quantity'));

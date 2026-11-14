@@ -46,16 +46,19 @@ test('R1851 persists authorized events within a single transaction',async()=>{
   assert.ok(statements.some(x=>x.sql.includes('ON CONFLICT(id) DO NOTHING')));
   assert.equal(released,true);
 });
-test('R1851 rejects a file not owned by the photographer and rolls back',async()=>{
+test('R1851 scrubs an unverified file ID but retains failure diagnostics',async()=>{
   const statements=[];let released=false;
   const conn={async query(sql,params){
     statements.push(sql);
     if(sql.startsWith('SELECT 1 FROM order_files'))return {rowCount:0};
     return {rowCount:1};
   },release(){released=true;}};
-  await assert.rejects(helpers.recordUploadHealthEvents({async connect(){return conn;}},{
-    photographerId:A,labId:B,events:[event()]}),/upload_file_not_owned/);
-  assert.ok(statements.includes('ROLLBACK'));assert.equal(released,true);
+  const result=await helpers.recordUploadHealthEvents({async connect(){return conn;}},{
+    photographerId:A,labId:B,events:[event()]});
+  assert.equal(result.accepted,1);
+  assert.ok(statements.includes('COMMIT'));
+  assert.ok(!statements.includes('ROLLBACK'));
+  assert.equal(released,true);
 });
 test('R1851 rejects unbounded batches before opening a DB connection',async()=>{
   let opened=false;

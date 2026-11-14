@@ -25,6 +25,7 @@ export function cleanIncident(raw = {}) {
     status: Number.isInteger(status) && status >= 0 && status <= 599 ? status : 0,
     dependency: raw.dependency==='database'?'database':'', providerRequestId: token(raw.providerRequestId, 120), userId: token(raw.userId),
     labId:scopeUuid(raw.labId),photographerId:scopeUuid(raw.photographerId),
+    fileId:scopeUuid(raw.fileId),
     reference: token(raw.reference, 40), revision: token(raw.revision, 100) };
 }
 export function createErrorMonitor({ directory, alert, shouldAlert = () => true, now = Date.now, cooldown = 600000, maxAlerts = 6, persistExternal, log = console }) {
@@ -108,6 +109,7 @@ export function createErrorMonitor({ directory, alert, shouldAlert = () => true,
     if(data.userId)row.userId=data.userId;
     if(data.labId)row.labId=data.labId;
     if(data.photographerId)row.photographerId=data.photographerId;
+    if(data.fileId)row.fileId=data.fileId;
     row.references = [...new Set([...(row.references||[]),data.reference].filter(Boolean))].slice(-20);
     while (incidents.size > 500) incidents.delete(incidents.keys().next().value);
     persist({ ...row });

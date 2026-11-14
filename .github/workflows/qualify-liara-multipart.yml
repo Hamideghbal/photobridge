@@ -1,0 +1,42 @@
+name: Qualify Liara multipart for Phase 2
+on:
+  push:
+    branches: [feature/phase2-durable-multipart-upload]
+    paths:
+      - tools/qualification/**
+      - .github/workflows/qualify-liara-multipart.yml
+permissions:
+  contents: read
+concurrency:
+  group: phase2-liara-provider-qualification
+  cancel-in-progress: false
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated qualification dependencies
+        run: npm install --prefix /tmp/pb-multipart-qualification --no-save --no-audit --no-fund @aws-sdk/client-s3@3.536.0 @aws-sdk/s3-request-presigner@3.536.0
+      - name: Verify real provider continuation, checksums and browser CORS
+        env:
+          S3_ENDPOINT: ${{ secrets.PHASE2_S3_ENDPOINT }}
+          S3_BUCKET: ${{ secrets.PHASE2_S3_BUCKET }}
+          S3_ACCESS_KEY: ${{ secrets.PHASE2_S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.PHASE2_S3_SECRET_KEY }}
+          PB_MULTIPART_PROBE_ISOLATED_PREFIX: '1'
+          PB_MULTIPART_PROBE_ORIGIN: https://photobridge.ir
+        run: |
+          cp tools/qualification/probe-liara-multipart.mjs /tmp/pb-multipart-qualification/probe.mjs
+          node /tmp/pb-multipart-qualification/probe.mjs
+      - name: Save redacted qualification result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liara-multipart-capability-report
+          path: work/liara-multipart-capability-report.json
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,88 @@
+/* PhotoBridge R1841 — unified blue LOGIN theme only.
+ * Scope is deliberately restricted to auth views. No changes to layout, inputs'
+ * padding, password reveal controls, keyboard movement, app splash or dashboards. */
+html body #root .unifiedLoginPage,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) #loginView.rentalLoginOverlay:not(.hidden),
+html body.pbR100F28PortalLogin:not(.rentalAppReady) #loginView.authBg:not(.hidden),
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .authBg:not(.hidden),
+html body #root>.authBg:has(.passwordResetCard) {
+  --pb-auth-primary:#315efb;
+  --pb-auth-primary-hover:#244fc7;
+  --pb-auth-ink:#172b52;
+  --pb-auth-muted:#607392;
+  --pb-auth-line:#d6e4fa;
+  background:radial-gradient(ellipse at 50% 4%,#dceaff 0%,#ecf4ff 36%,#f5f9ff 73%,#f8fbff 100%)!important;
+  color:var(--pb-auth-ink)!important;
+}
+html body.pbR100F28PortalLogin:not(.rentalAppReady) {
+  background:#f3f8ff!important;
+}
+html body #root .unifiedLoginPage form.unifiedLoginCard,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form.unifiedLoginCard,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form.rentalUnifiedLogin,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form.labLogin,
+html body #root .passwordResetCard {
+  background:#fff!important;
+  border:1px solid var(--pb-auth-line,#d6e4fa)!important;
+  color:var(--pb-auth-ink,#172b52)!important;
+  box-shadow:0 18px 48px rgba(35,79,169,.11),0 3px 12px rgba(49,94,251,.05)!important;
+}
+html body #root .unifiedLoginPage .unifiedLoginBrand,
+html body #root .unifiedLoginPage .unifiedLoginBrand b,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .unifiedLoginBrand,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .unifiedLoginBrand b,
+html body #root .unifiedLoginPage .authTitle h1,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .authTitle h1,
+html body #root .passwordResetCard .authTitle h1 {
+  color:#17376f!important;
+}
+html body #root .unifiedLoginPage .authTitle p,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .authTitle p,
+html body #root .passwordResetCard .authTitle p,
+html body #root .unifiedLoginPage form label,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form label {
+  color:#506784!important;
+}
+html body #root .unifiedLoginPage form input:not([type="checkbox"]),
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form input:not([type="checkbox"]),
+html body #root .passwordResetCard input:not([type="checkbox"]) {
+  background:#f9fbff!important;
+  border-color:#cbdcf5!important;
+  color:#172b52!important;
+  /* Preserve R1776 password reveal clearance and R1726 keyboard-safe sizing. */
+}
+html body #root .unifiedLoginPage form input:not([type="checkbox"]):focus,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form input:not([type="checkbox"]):focus,
+html body #root .passwordResetCard input:not([type="checkbox"]):focus {
+  outline:2px solid rgba(49,94,251,.38)!important;
+  outline-offset:1px!important;
+  border-color:#315efb!important;
+  background:#fff!important;
+}
+html body #root .unifiedLoginPage form button.primary,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form button.primary,
+html body #root .passwordResetCard button.primary,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form button[type="submit"].primary {
+  background:linear-gradient(135deg,#315efb 0%,#244fc7 100%)!important;
+  border-color:#315efb!important;
+  color:#fff!important;
+  box-shadow:0 6px 18px rgba(49,94,251,.18)!important;
+}
+html body #root .unifiedLoginPage form button.primary:not(:disabled):hover,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form button.primary:not(:disabled):hover,
+html body #root .passwordResetCard button.primary:not(:disabled):hover {
+  background:#244fc7!important;
+}
+html body #root .unifiedLoginPage a,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) form a,
+html body #root .passwordResetCard a,
+html body #root .unifiedLoginPage .forgotPasswordLink,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) .forgotPasswordLink {
+  color:#315efb!important;
+}
+html body #root .unifiedLoginPage :is(a,button,input):focus-visible,
+html body.pbR100F28PortalLogin:not(.rentalAppReady) :is(a,button,input):focus-visible,
+html body #root .passwordResetCard :is(a,button,input):focus-visible {
+  outline-color:#315efb!important;
+}
+/* R1726 mobile install prompt already uses the same brand blue: leave its layout untouched. */

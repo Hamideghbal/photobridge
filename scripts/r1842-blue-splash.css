@@ -1,4 +1,4 @@
-/* R1842 — based on the user's supplied animated blue PhotoBridge splash.
+/* R1843: reduce mobile splash GPU overdraw; the gradients themselves are already soft.\n * R1842 — based on the user's supplied animated blue PhotoBridge splash.
    All color tokens and animations apply only to the launch overlay. */
 #pb-splash{
   --pb-navy:#071f47;--pb-deep:#0a2f6b;--pb-royal:#1553b0;--pb-blue:#2f7fe0;
@@ -27,7 +27,7 @@ html.pb1842SplashActive,html.pb1842SplashActive body{background:#071f47!importan
   #pb-splash.pb1842-hide{opacity:0;transform:scale(1.035);filter:blur(8px);pointer-events:none}
 
   /* پس‌زمینهٔ زنده: شفق + دانه + بوکه */
-  .pb1842-aurora{position:absolute;border-radius:50%;filter:blur(46px);pointer-events:none}
+  .pb1842-aurora{position:absolute;border-radius:50%;pointer-events:none}
   .pb1842-aurora.a{width:58vmax;height:58vmax;right:-16vmax;bottom:-22vmax;
     background:radial-gradient(circle, rgba(99,179,255,.34), transparent 62%);
     animation:pb1842_pbDrift 16s ease-in-out infinite alternate}
@@ -35,7 +35,7 @@ html.pb1842SplashActive,html.pb1842SplashActive body{background:#071f47!importan
     background:radial-gradient(circle, rgba(21,83,176,.45), transparent 62%);
     animation:pb1842_pbDrift 21s ease-in-out infinite alternate-reverse}
   @keyframes pb1842_pbDrift{from{transform:translate(0,0)}to{transform:translate(4vmax,-3vmax)}}
-  .pb1842-grain{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  .pb1842-grain{position:absolute;inset:0;pointer-events:none;opacity:.05;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")}
   .pb1842-bokeh{position:absolute;inset:0;pointer-events:none;overflow:hidden}
   .pb1842-bokeh span{position:absolute;bottom:-50px;border-radius:50%;

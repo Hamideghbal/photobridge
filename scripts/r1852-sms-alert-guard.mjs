@@ -35,8 +35,18 @@ export function fingerprintSms(incident){
   return createHash('sha256').update(JSON.stringify(base)).digest('hex').slice(0,48);
 }
 export async function loadSmsOrigin(pool,incident){
-  const labId=uuid(incident.labId),photographerId=uuid(incident.photographerId);
-  if(!labId&&!photographerId)return {lab:'نامشخص',photographer:'نامشخص'};
+  const labId=uuid(incident.labId);
+  let photographerId=uuid(incident.photographerId);
+  // Only resolve a download file against the authenticated laboratory.
+  // This query runs for an actionable error, not on every normal file download.
+  const fileId=uuid(incident.fileId);
+  if(!photographerId&&labId&&fileId){
+    const file=await pool.query(
+      'SELECT customer_id FROM order_files WHERE id=$1 AND lab_id=$2 LIMIT 1',
+      [fileId,labId]);
+    photographerId=uuid(file.rows[0]?.customer_id);
+  }
+  if(!labId&&!photographerId)return {lab:'نامشخص',photographer:'نامشخص',photographerId:null};
   // Read names only from existing authoritative DB rows.
   const sql=`SELECT
       (SELECT NULLIF(name,'') FROM labs WHERE id=$1::uuid) AS lab_name,
@@ -45,7 +55,8 @@ export async function loadSmsOrigin(pool,incident){
          WHERE u.id=$2::uuid) AS photographer_name`;
   const result=await pool.query(sql,[labId,photographerId]);
   return {lab:cleanName(result.rows[0]?.lab_name)||'نامشخص',
-    photographer:cleanName(result.rows[0]?.photographer_name)||'نامشخص'};
+    photographer:cleanName(result.rows[0]?.photographer_name)||'نامشخص',
+    photographerId};
 }
 export function formatAlertSms(incident,origin){
   const kind=PERSIAN_STAGE[String(incident.stage)]||'خطای برنامه';

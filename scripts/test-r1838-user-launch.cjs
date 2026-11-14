@@ -10,7 +10,7 @@ test('user cream splash is the only web launch, with local typography and the su
  // Only one animated HTML splash; old static splash styling must not survive.
  assert(!html.includes('id="pbR1361MobileSplashStyle"'));
  assert(!html.includes('class="pb1479Identity"'));
- const oldLaunch=html.match(/<style id="pbR1284LaunchStyle">([\\s\\S]*?)<\\/style>/)?.[1];
+ const oldLaunch=html.match(/<style id="pbR1284LaunchStyle">([\s\S]*?)<\/style>/)?.[1];
  assert(oldLaunch,'existing empty-root fallback remains for installed PWA/iOS');
  assert(oldLaunch.includes('#F7F1E7'),'empty-root canvas matches animated/OS cream');
  assert(!/#(?:040e1a|2674ff)/i.test(oldLaunch),'no old navy/blue startup flash');

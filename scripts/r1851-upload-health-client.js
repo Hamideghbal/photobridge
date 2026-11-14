@@ -5,8 +5,8 @@
   if(window.PB1851||!/^\/(photographer|customer)(\/|$)/.test(location.pathname))return;
   var nativeFetch=window.fetch.bind(window);
   var nativeOpen=XMLHttpRequest.prototype.open,nativeSend=XMLHttpRequest.prototype.send;
-  var eventKey='pb1851-events-v1',sessionKey='pb1851-session-v1';
-  var queue=[],flushing=false,scheduled=0,disabled=false,orderId=null,labContext=null;
+  var eventKey='pb1851-events-v1',sessionKey='pb1851-session-v1',historyKey='pb1851-history-v1';
+  var queue=[],history=[],flushing=false,scheduled=0,disabled=false,orderId=null,labContext=null;
   var byServerFile=new Map(),bySignedUrl=new Map(),active=null,card=null;
   var uuid=function(){return crypto.randomUUID();};
   function saved(k){try{return JSON.parse(sessionStorage.getItem(k)||'null');}catch(_){return null;}}
@@ -14,6 +14,7 @@
   var oldSession=saved(sessionKey),session=oldSession&&Date.now()-oldSession.at<21600000?oldSession:{id:uuid(),at:Date.now()};
   store(sessionKey,session);
   queue=Array.isArray(saved(eventKey))?saved(eventKey).slice(-120):[];
+  history=Array.isArray(saved(historyKey))?saved(historyKey).slice(-120):[];
   function online(){return navigator.onLine!==false;}
   function emit(stage,state,extra){
     extra=extra||{};
@@ -26,7 +27,9 @@
       durationMs:Number.isSafeInteger(extra.durationMs)?extra.durationMs:null,
       errorCode:extra.errorCode?String(extra.errorCode).replace(/[^A-Za-z0-9_.:-]/g,'_').slice(0,80):null,
       httpStatus:Number.isInteger(extra.httpStatus)?extra.httpStatus:null};
-    queue.push(ev);queue=queue.slice(-120);store(eventKey,queue);schedule();
+    queue.push(ev);queue=queue.slice(-120);store(eventKey,queue);
+    history.push(ev);history=history.slice(-120);store(historyKey,history);
+    schedule();
   }
   function schedule(){
     if(disabled||scheduled)return;
@@ -90,7 +93,7 @@
   }
   function exportDiagnostics(){
     var data={version:'r1851',sessionId:session.id,exportedAt:new Date().toISOString(),
-      events:queue.map(function(e){return {eventId:e.eventId,stage:e.stage,state:e.state,
+      events:history.map(function(e){return {eventId:e.eventId,stage:e.stage,state:e.state,
         errorCode:e.errorCode,httpStatus:e.httpStatus,durationMs:e.durationMs,
         totalBytes:e.totalBytes,sentBytes:e.sentBytes,online:e.online};})};
     var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -117,6 +120,28 @@
     var url;try{url=new URL(raw,location.href);}catch(_){return nativeFetch(input,init);}
     var method=String(init?.method||input?.method||'GET').toUpperCase();
     var stage=url.origin===location.origin?watchStage(url.pathname,method):'';
+    var signed=method==='PUT'&&(bySignedUrl.get(raw)||bySignedUrl.get(url.href));
+    if(signed){
+      var putAttemptId=uuid(),putStart=performance.now();
+      show('در حال انتقال فایل به لابراتوار…',NaN,false);
+      emit('transfer','started',{...signed,attemptId:putAttemptId,totalBytes:signed.bytes});
+      return nativeFetch(input,init).then(function(response){
+        emit('transfer',response.ok?'ok':'failed',{...signed,attemptId:putAttemptId,
+          httpStatus:response.status,durationMs:Math.round(performance.now()-putStart),
+          totalBytes:signed.bytes,sentBytes:response.ok?signed.bytes:null,
+          errorCode:response.ok?null:'http_'+response.status});
+        if(!response.ok)show(failText(response.status,online()),NaN,true);
+        else show('فایل منتقل شد؛ در حال تأیید دریافت…',100,false);
+        return response;
+      },function(error){
+        emit('transfer',error?.name==='AbortError'?'aborted':'failed',{...signed,
+          attemptId:putAttemptId,httpStatus:0,
+          durationMs:Math.round(performance.now()-putStart),
+          errorCode:error?.name==='AbortError'?'aborted':'network_error'});
+        if(error?.name!=='AbortError')show(failText(0,online()),NaN,true);
+        throw error;
+      });
+    }
     if(!stage)return nativeFetch(input,init);
     if(url.searchParams.has('_lab'))labContext=url.searchParams.get('_lab');
     var body=bodyObject(init),begin=performance.now(),attemptId=uuid();
@@ -155,7 +180,7 @@
   XMLHttpRequest.prototype.open=function(method,url){
     var value=String(url||''),meta=bySignedUrl.get(value);
     if(!meta){try{meta=bySignedUrl.get(new URL(value,location.href).href);}catch(_){}}
-    if(String(method).toUpperCase()==='PUT'&&meta)this.__pb1851=meta;
+    this.__pb1851=String(method).toUpperCase()==='PUT'?meta||null:null;
     return nativeOpen.apply(this,arguments);
   };
   XMLHttpRequest.prototype.send=function(){

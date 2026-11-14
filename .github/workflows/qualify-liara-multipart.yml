@@ -30,13 +30,15 @@ jobs:
           PB_MULTIPART_PROBE_ISOLATED_PREFIX: '1'
           PB_MULTIPART_PROBE_ORIGIN: https://photobridge.ir
         run: |
-          cp tools/qualification/probe-liara-multipart.mjs /tmp/pb-multipart-qualification/probe.mjs
-          node /tmp/pb-multipart-qualification/probe.mjs
+          cp tools/qualification/diagnose-liara-access.mjs /tmp/pb-multipart-qualification/diagnose.mjs
+          node /tmp/pb-multipart-qualification/diagnose.mjs
       - name: Save redacted qualification result
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: liara-multipart-capability-report
-          path: work/liara-multipart-capability-report.json
+          path: |
+            work/liara-multipart-capability-report.json
+            work/liara-access-diagnostics.json
           if-no-files-found: ignore
           retention-days: 7

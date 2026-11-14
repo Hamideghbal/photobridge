@@ -1352,7 +1352,6 @@ runR1314(process.execPath,['--test','scripts/test-r1844-restore-animated-launch.
 
 await deployStep("./enable-r1847-lab-entry.mjs");
 await deployStep("./enable-r1848-lab-spa-entry.mjs");
-await deployStep("./enable-r1849-entry-recovery.mjs");
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");
 // Refresh hash-pinned Store bytes after every final HTML writer.

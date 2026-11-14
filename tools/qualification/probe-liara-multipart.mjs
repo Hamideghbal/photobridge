@@ -5,7 +5,11 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import {S3Client,CreateMultipartUploadCommand,UploadPartCommand,ListPartsCommand,CompleteMultipartUploadCommand,HeadObjectCommand,GetObjectCommand,AbortMultipartUploadCommand,DeleteObjectCommand} from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-for(const name of ['S3_ENDPOINT','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY'])assert(process.env[name],name+' is required; supply credentials through environment, never command arguments');
+for(const name of ['S3_ENDPOINT','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY']){
+ process.env[name]=String(process.env[name]||'').trim();
+ assert(process.env[name],name+' is required; supply credentials through environment, never command arguments');
+}
+assert(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(process.env.S3_BUCKET),'Bucket must be its plain DNS name, without URL or interior whitespace');
 assert.equal(process.env.PB_MULTIPART_PROBE_ISOLATED_PREFIX,'1','Explicit isolated-prefix qualification required');
 await fs.mkdir('work',{recursive:true});
 const endpoint=new URL(process.env.S3_ENDPOINT);assert.equal(endpoint.protocol,'https:');

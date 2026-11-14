@@ -24,6 +24,7 @@ if(!server.includes('R1852: durable administrator SMS guard')){
   catch(_){origin={lab:'نامشخص',photographer:'نامشخص'};}
   // Reserve the right to send BEFORE contacting the paid provider. A failed DB
   // claim always fails closed, preventing duplicate billed SMS on retries.
+  if(origin?.photographerId)incident.photographerId=origin.photographerId;
   const claimed=await reserveAdminAlert(pool,incident,{
     provider:cfg.provider,mobile:normalizeMobile(admin.mobile),adminId:admin.id});
   if(!claimed.reserved)return {state:'suppressed',reason:claimed.reason};
@@ -51,31 +52,6 @@ if(!server.includes('R1852: durable administrator SMS guard')){
   const labScope="        const access = await pool.query(`SELECT active,active_from,active_until,service_only FROM labs l WHERE id=$1";
   server=once(server,labScope,
     "        req.PB1852labId=labId;\n"+labScope);
-  // Lab download: resolve the actual photographer from the authorized order,
-  // not from any browser field. Carry that trusted scope through the opaque
-  // one-use stream token because S3 GET errors occur on /api/public-download.
-  const downloadStart=server.indexOf("const labFileDownload = url.pathname.match(");
-  const downloadEnd=server.indexOf("const labFileEditPresign =",downloadStart);
-  if(downloadStart<0||downloadEnd<downloadStart)throw Error('R1852 lab download route not found');
-  let downloadBlock=server.slice(downloadStart,downloadEnd);
-  const downloadJoin=" FROM order_files f JOIN orders o ON o.id=f.order_id";
-  downloadBlock=once(downloadBlock,downloadJoin,
-    ",o.customer_id AS pb1852_photographer_id"+downloadJoin);
-  server=server.slice(0,downloadStart)+downloadBlock+server.slice(downloadEnd);
-  const downloadRow="            const row = q.rows[0];\n            if (row.settlement_mode === 'prepaid' && row.payment_status !== 'paid')";
-  server=once(server,downloadRow,
-    "            const row = q.rows[0];\n"+
-    "            req.PB1852photographerId=row.pb1852_photographer_id||null;\n"+
-    "            if (row.settlement_mode === 'prepaid' && row.payment_status !== 'paid')");
-  const localToken="downloadTokens.set(token, { kind: 'local', path: filePath, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type });";
-  server=once(server,localToken,
-    "downloadTokens.set(token, { kind: 'local', path: filePath, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type, labId, photographerId:req.PB1852photographerId });");
-  const s3Token="downloadTokens.set(token, { kind: 's3', key: row.object_key, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type });";
-  server=once(server,s3Token,
-    "downloadTokens.set(token, { kind: 's3', key: row.object_key, name: row.original_name, expires: Date.now() + 5 * 60 * 1000, contentType: row.content_type, labId, photographerId:req.PB1852photographerId });");
-  const streamToken="        const item = downloadTokens.get(publicDownload[1]);";
-  server=once(server,streamToken,
-    streamToken+"\n        if(item){req.PB1852labId=item.labId||null;req.PB1852photographerId=item.photographerId||null;}");
   // Scope error reports to the authenticated principal (never to client data).
   const reporter="userId:actor.userId,revision:process.env.DEPLOY_REVISION||'r1850'";
   server=once(server,reporter,
@@ -84,7 +60,7 @@ if(!server.includes('R1852: durable administrator SMS guard')){
   server=once(server,stage,"stage:stageFromErrorPath(req.url)");
   const context="route:req.url,reference:PB1850reference";
   server=once(server,context,
-    "route:req.url,reference:PB1850reference,userId:req.PB1852userId,labId:req.PB1852labId,photographerId:req.PB1852photographerId");
+    "route:req.url,reference:PB1850reference,fileId:String(req.url||'').split('?')[0].split('/').find((v,i,a)=>a[i-1]==='order-files'&&a[i+1]==='download'),userId:req.PB1852userId,labId:req.PB1852labId,photographerId:req.PB1852photographerId");
   fs.writeFileSync(serverFile,server);
 }
 console.log('[R1852] persistent SMS suppression; per-lab/studio origin; low-noise download/upload alerts');

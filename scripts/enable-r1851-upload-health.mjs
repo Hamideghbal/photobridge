@@ -36,6 +36,9 @@ async function api(req, res, url) {
   const route=String.raw`
         if (req.method === 'POST' && url.pathname === '/api/customer/uploads/health-events') {
             if(process.env.PB_UPLOAD_HEALTH_ENABLED==='0')return sendJson(res,503,{error:'upload_health_disabled'});
+            const reportOrigin=String(req.headers.origin||'');
+            if(reportOrigin && (()=>{try{return new URL(reportOrigin).host!==req.headers.host}catch{return true}})())
+                return sendJson(res,403,{error:'invalid_origin'});
             if(!String(req.headers['content-type']||'').startsWith('application/json'))
                 return sendJson(res,415,{error:'json_required'});
             if(!PB1851allowUploadHealth(a.userId))return sendJson(res,429,{error:'upload_health_rate_limit'});

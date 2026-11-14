@@ -13,11 +13,25 @@ let oldHtml,oldServer;
 function ok(v,m){if(!v)throw new Error('PB_PERF_FIX_V1 '+m)}
 function asset(u){const relative=decodeURIComponent(u.split(/[?#]/)[0]).replace(/^\/+/,'');const p=path.resolve(web,relative);ok(p.startsWith(web+path.sep),'unsafe asset '+u);return p}
 function adjusted(u,from){if(/^(\/|#|data:|https?:|\/\/)/i.test(u))return u;const m=u.match(/^([^?#]*)(.*)$/);return path.posix.normalize(path.posix.join(path.posix.dirname('/'+path.relative(web,from).split(path.sep).join('/')),m[1]))+m[2]}
-function zipped(p){if(!fs.existsSync(p)||!/\.(js|css)$/i.test(p))return;const bytes=fs.readFileSync(p);if(bytes.length<256||bytes.length>16000000)return;fs.writeFileSync(p+'.gz',zlib.gzipSync(bytes,{level:4}));fs.writeFileSync(p+'.br',zlib.brotliCompressSync(bytes,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:4}}))}
+function zipped(p){if(!fs.existsSync(p)||!/\.(js|css|html)$/i.test(p))return;const bytes=fs.readFileSync(p);if(bytes.length<256||bytes.length>16000000)return;fs.writeFileSync(p+'.gz',zlib.gzipSync(bytes,{level:bytes.length>256*1024?9:4}));fs.writeFileSync(p+'.br',zlib.brotliCompressSync(bytes,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:bytes.length>256*1024?11:4}}))}
+function zipAssetTree(dir){
+ for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+  const file=path.join(dir,entry.name);
+  if(entry.isDirectory())zipAssetTree(file);
+  else if(entry.isFile()&&/\.(?:js|css)$/i.test(entry.name))zipped(file);
+ }
+}
+function zipRentalHtml(){
+ for(const f of fs.readdirSync(path.resolve('dist/api')))if(/^(?:equipment-rental-.*|admin-equipment-rental)\.html$/.test(f))zipped(path.resolve('dist/api',f));
+}
 try{
  ok(fs.existsSync(index)&&fs.existsSync(server),'missing dist outputs');
  oldHtml=fs.readFileSync(index,'utf8');oldServer=fs.readFileSync(server,'utf8');
- if(oldServer.includes(marker)){console.log('[PB_PERF_FIX_V1] already installed');process.exit(0)}
+ if(oldServer.includes(marker)){
+  for(const f of fs.readdirSync(web))if(/\.(?:js|css)$/i.test(f))zipped(path.join(web,f));
+  zipAssetTree(assets);zipRentalHtml();
+  console.log('[PB_PERF_FIX_V1] refreshed compressed outputs');process.exit(0)
+ }
  const sheets=[];
  let html=oldHtml.replace(/<link\b[^>]*>/gi,t=>{
    if(!/\brel\s*=\s*["']stylesheet["']/i.test(t))return t;
@@ -73,6 +87,8 @@ try{
  ok(fs.existsSync(path.join(assets,name+'.gz'))&&fs.existsSync(path.join(assets,name+'.br')),'boot compression failed');
  for(const m of oldHtml.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi))if(!/^(?:https?:)?\/\//i.test(m[1])){const f=asset(m[1]);if(fs.existsSync(f))zipped(f)}
  for(const f of fs.readdirSync(web))if(/\.(js|css)$/i.test(f))zipped(path.join(web,f));
+ zipAssetTree(assets);
+ zipRentalHtml();
  fs.writeFileSync(path.join(assets,'photobridge-boot-manifest.json'),JSON.stringify({boot:name,sources:sheets},null,2)+'\n');
  console.log('[PB_PERF_FIX_V1] PASS '+sheets.length+' stylesheets -> '+name+'; br/gzip generated; syntax OK');
 }catch(error){

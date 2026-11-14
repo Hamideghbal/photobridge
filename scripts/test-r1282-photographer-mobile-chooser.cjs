@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const read=p=>fs.readFileSync(p,'utf8');
+const {readDeploymentPage:read}=require('./deployment-page-test-helpers.cjs');
 const script=read('dist/web/photobridge-r1282-photographer-mobile-navigation.js');
 const CSS=read('dist/web/photobridge-r1282-photographer-mobile-navigation.css');
 const STORE='/equipment-rental/book?pbStoreChooser=1';

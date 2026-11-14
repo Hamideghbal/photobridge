@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const read=p=>fs.readFileSync(p,'utf8');
+const {readDeploymentPage:read}=require('./deployment-page-test-helpers.cjs');
 test('R1834: all 4 camera Store tabs route to live iframe, not stale cloned controls',()=>{
  const helper=read('scripts/r1834-camera-store-routing.js.txt');
  const routed=[],old={rentalPhotographerMode:true,frameCustomerStore:false};

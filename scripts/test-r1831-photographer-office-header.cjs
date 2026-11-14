@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const read=p=>fs.readFileSync(p,'utf8');
+const {readDeploymentPage:read}=require('./deployment-page-test-helpers.cjs');
 test('R1831: camera Sales restored and purchase tools removed from photographer header',()=>{
  const js=read('dist/web/photobridge-r1126-desktop-navigation.js');
  assert(js.includes("const cameraStoreControls=cameraStore?visible:[]"));

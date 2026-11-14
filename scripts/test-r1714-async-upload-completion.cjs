@@ -47,7 +47,7 @@ test('R1714 browser polls processing and treats gateway timeouts as unknown, not
         assert(js.includes('await pb1714AwaitUploadReady(Me,An.fileId,ht.signal,Un.file)'));
         if (js.includes('const PB1588verifyUpload=')) {
             assert(js.includes('complete:(fileId,file)=>pb1714AwaitUploadReady(Me,fileId,ue.signal,file)'));
-            assert(js.includes('await PB1588verifyUpload(Gt.fileId,tt.file)'),
+            assert(js.includes('await PB1588verifyUpload(Gt.fileId,tt.file)') || js.includes('await PB1850stage(PB1588verifyUpload(Gt.fileId,tt.file),"complete",tt.file)'),
                 'preserve R1588 serialized completion queue');
             assert(!js.includes('complete:fileId=>Me("/api/customer/uploads/complete"'));
         } else {

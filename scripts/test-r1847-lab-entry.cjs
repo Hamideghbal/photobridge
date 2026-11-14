@@ -6,12 +6,12 @@ async function fixture(browser,{width=390,deep=false,unauthorized=false,slowModu
  page.setDefaultTimeout(10000);page.setDefaultNavigationTimeout(10000);
  const calls=[],errors=[];let selects=0,selected=deep,entryDocument=0,identityDone=0,entryIdentityDone=false;
  page.on('pageerror',error=>errors.push(error.message));
- await page.addInitScript(()=>{window.entryStarted=performance.now();window.pb1847FirstSkeleton=null;window.pb1847CoverGone=null;function sample(){const el=document.getElementById('pb1847EntrySkeleton');if(el&&getComputedStyle(el).display!=='none'&&window.pb1847FirstSkeleton===null)window.pb1847FirstSkeleton=performance.now();if(window.__PB1847EntryUI&&!document.documentElement.classList.contains('pbR100F37LabEnterBoot')&&window.pb1847CoverGone===null)window.pb1847CoverGone=performance.now();requestAnimationFrame(sample)}requestAnimationFrame(sample)});
+ await page.addInitScript(()=>{window.entryStarted=performance.now();window.pb1847FirstSkeletonAt=0;window.pb1847FirstSkeleton=null;window.pb1847CoverGone=null;function sample(){const el=document.getElementById('pb1847EntrySkeleton');if(el&&getComputedStyle(el).display!=='none'&&window.pb1847FirstSkeleton===null){window.pb1847FirstSkeleton=performance.now();window.pb1847FirstSkeletonAt=Date.now()}if(window.__PB1847EntryUI&&!document.documentElement.classList.contains('pbR100F37LabEnterBoot')&&window.pb1847CoverGone===null)window.pb1847CoverGone=performance.now();requestAnimationFrame(sample)}requestAnimationFrame(sample)});
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url()),p=url.pathname;
   if(p.startsWith('/api/')){
    calls.push({path:p,at:Date.now(),entry:selected});
-   if(p==='/api/auth/me'){await new Promise(r=>setTimeout(r,1500));if(selected){identityDone=Date.now();entryIdentityDone=true;}return route.fulfill({status:unauthorized?401:200,json:unauthorized?{error:'unauthorized'}:{user:{id:'photographer',userId:'photographer',name:'عکاسی آزمایشی',photographerName:'عکاسی آزمایشی',labRole:'customer',platformRole:'user'},lab}})}
+   if(p==='/api/auth/me'){const forEntry=selected;await new Promise(r=>setTimeout(r,1500));if(forEntry){if(!identityDone)identityDone=Date.now();entryIdentityDone=true;}return route.fulfill({status:unauthorized?401:200,json:unauthorized?{error:'unauthorized'}:{user:{id:'photographer',userId:'photographer',name:'عکاسی آزمایشی',photographerName:'عکاسی آزمایشی',labRole:'customer',platformRole:'user'},lab}})}
    if(p===`/api/customer/labs/${lab.id}/select`){selects++;selected=true;return route.fulfill({json:{ok:true,lab}})}
    if(p==='/api/customer/labs')return route.fulfill({json:{activeLabId:lab.id,memberships:[{...lab,selected:true}],labs:[],canDiscoverLabs:false}});
    if(p==='/api/customer/home')return route.fulfill({json:{lab,profile:{studio_name:'عکاسی آزمایشی'},prices:[],status:{open:true},orderStats:{total:1,active:1,ready:0},recentOrders:[],walletBalance:0}});
@@ -36,7 +36,7 @@ for(const width of [390,1366])test('actual lab card enters with one select, earl
   await page.locator('[data-select]').waitFor();
   const started=Date.now();await page.locator('[data-select]').click();await page.waitForURL('**pbEntryDone=lab**');
   await page.locator('#pb1847EntrySkeleton').waitFor();
-  assert.equal(h.identityResolved(),false,'lab header and orders skeleton precede delayed identity');assert.match(await page.locator('#pb1847EntrySkeleton').innerText(),/لابراتوار آزمایشی/);
+  await page.waitForFunction(()=>window.pb1847FirstSkeletonAt>0);const firstSkeletonAt=await page.evaluate(()=>window.pb1847FirstSkeletonAt);assert(!h.identityDone()||firstSkeletonAt<h.identityDone(),'lab header and orders skeleton precede delayed identity');assert.match(await page.locator('#pb1847EntrySkeleton').innerText(),/لابراتوار آزمایشی/);
   await page.waitForFunction(()=>window.pb1847CoverGone!==null);assert((await page.evaluate(()=>window.pb1847CoverGone))<=2500,'legacy cover bounded from destination head');
   await page.locator('.photographerMain.photographerPrintWorkspace').waitFor().catch(async error=>{console.log('WORKSPACE_DIAG',await page.evaluate(()=>({url:location.href,body:document.body.innerText.slice(0,1800),root:document.getElementById('root')?.innerHTML.slice(0,1500)})),h.errors,h.calls);throw error});await page.waitForFunction(()=>!document.getElementById('pb1847EntrySkeleton'));
   await page.locator('[data-order-id="order-one"]').waitFor();

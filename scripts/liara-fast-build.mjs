@@ -1350,9 +1350,7 @@ console.log('[PhotoBridge Docker build] OK blue login theme');
 // Preserve the R1841 blue LOGIN palette; this rollback affects only startup.
 runR1314(process.execPath,['--test','scripts/test-r1844-restore-animated-launch.cjs'],{stdio:'inherit'});
 
-await deployStep("./enable-r1847-lab-entry.mjs");
-await deployStep("./enable-r1848-lab-spa-entry.mjs");
-await deployStep("./enable-r1849-entry-recovery.mjs");
+await deployStep("./enable-r1850-error-alerts.mjs");
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");
 // Refresh hash-pinned Store bytes after every final HTML writer.

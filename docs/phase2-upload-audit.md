@@ -35,6 +35,10 @@ PR #865 و تغییرات R1852 بازنویسی، ادغام یا منتشر ن
 | CompleteMultipartUpload، HEAD نهایی و تطبیق بایت‌ها | به علت شکست پیش‌شرط ListParts اجرا و تأیید نشده |
 | سناریوهای بازیابی A تا R | پیاده‌سازی نشده؛ ادعای قبولی وجود ندارد |
 
+آزمون مستقل با Python boto3 1.40.74 نیز روی همان نشست خالی انجام شد، بدون ایجاد آپلود تازه: در regionهای `default` و `us-east-1` و هر دو قالب path/virtual، خواندن فهرست فایل‌های عادی ۲۰۰ و ListParts همواره ۴۰۳ بود. بنابراین مشکل صرفاً SDK جاوااسکریپت کمتر محتمل است؛ علت قطعی میان مجوز اختصاصی multipart، سیاست باکت/سرویس و محدودیت provider هنوز مشخص نیست.
+
+[نتیجهٔ آزمون مستقل پایتون](https://github.com/Hamideghbal/photobridge/actions/runs/43639393529). Request ID نمونه: `18E8046720538B07`.
+
 شناسهٔ درخواست نمونهٔ ListParts: `18E8037E63BDA025`؛ Abort: `18E803800C4B0C97`.
 Endpoint: `storage.c2.liara.site`؛ region: `default`.
 

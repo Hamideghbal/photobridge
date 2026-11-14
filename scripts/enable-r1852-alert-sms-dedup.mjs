@@ -14,6 +14,7 @@ if(!server.includes('R1852: durable administrator SMS guard')){
     "  const adapter=SMS_PROVIDER_ADAPTERS[cfg.provider];if(!adapter)throw Error('sms_provider_unsupported');\n"+
     "  // R1852: durable administrator SMS guard: only server-confirmed transfer failures.\n"+
     "  if(!shouldNotifySms(incident))return {state:'suppressed',reason:'not_actionable_server_transfer_error'};");
+  server=once(server,"const PB1850monitor=createErrorMonitor({directory:","const PB1850monitor=createErrorMonitor({shouldAlert:shouldNotifySms,directory:");
   const oldMessage="  const message='هشدار PhotoBridge\\n'+incident.id+'\\n'+incident.channel+' / '+incident.stage+' / '+incident.code+' / '+incident.status+'\\nتعداد: '+incident.count+'\\nپیگیری: photobridge.ir/admin/error-monitor';\n"+
     "  const result=await adapter(normalizeMobile(admin.mobile),message+'\\n'+cfg.footer,cfg);\n"+
     "  void logSms({provider:cfg.provider,purpose:'admin_alert',eventKey:'application_error',mobile:admin.mobile,userId:admin.id,status:'sent',reference:result.reference,metadata:{incidentId:incident.id}}).catch(()=>{});";

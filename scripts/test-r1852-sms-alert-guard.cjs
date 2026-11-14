@@ -107,6 +107,8 @@ test('R1852 build generated server has authenticated context and download classi
   const server=fs.readFileSync('dist/api/server.js','utf8');
   assert.match(server,/stage:stageFromErrorPath\(req.url\)/);
   assert.match(server,/req\.PB1852labId=labId/);
+  assert.match(server,/req\.PB1852photographerId=row\.pb1852_photographer_id/);
+  assert.match(server,/if\(item\)\{req\.PB1852labId=item\.labId\|\|null/);
   assert.match(server,/reserveAdminAlert\(pool,incident/);
   assert.match(server,/shouldNotifySms\(incident\)/);
   assert.match(server,/photographerId:requestPortal\(req\)==='photographer'\?actor\.userId:null/);

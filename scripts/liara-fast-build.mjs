@@ -1350,6 +1350,11 @@ console.log('[PhotoBridge Docker build] OK blue login theme');
 // Preserve the R1841 blue LOGIN palette; this rollback affects only startup.
 runR1314(process.execPath,['--test','scripts/test-r1844-restore-animated-launch.cjs'],{stdio:'inherit'});
 
+await deployStep("./enable-r1845-labs-prefetch.mjs");
+await deployStep("./enable-r1845-html-compression.mjs");
+// Refresh hash-pinned Store bytes after every final HTML writer.
+runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
+
 // PB_PERF_FIX_V1 — run after all release/UI writers so HTML and server are final.
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});

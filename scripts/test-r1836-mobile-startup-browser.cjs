@@ -17,7 +17,7 @@ async function measure(browser,root,{ios=true,baseline=false}={}){
    if(url.pathname==='/api/photographer/navigation-tabs')return route.fulfill({json:{tabs:{ai:false,album:false,instagram:false},adminBypass:false}});
    return route.fulfill({json:{labs:[],galleries:[],items:[],notifications:[],jobs:[],models:[],settings:{},stats:{},transactions:[],shops:[]}});
   }
-  if(url.pathname==='/assets/index-UIRefine-v586.css'){await new Promise(r=>setTimeout(r,700));cssReleased=Date.now()-start;}
+  if(url.pathname==='/assets/index-UIRefine-v586.css'||/^\/assets\/photobridge-boot-[a-f0-9]+\.css$/.test(url.pathname)){await new Promise(r=>setTimeout(r,700));cssReleased=Date.now()-start;}
   const file=path.join(root,'dist/web',url.pathname.startsWith('/photographer')?'index.html':url.pathname.slice(1));
   if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({path:file});
   return route.fulfill({status:404,body:''});

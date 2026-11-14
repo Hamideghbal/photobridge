@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سلامت ارسال عکس‌ها | PhotoBridge</title>
+<style>
+body{margin:0;background:#f4f7fc;color:#18344f;font:14px/1.85 Tahoma,sans-serif}
+header{padding:18px 24px;background:#e7effd;border-bottom:1px solid #cbdaef}
+h1{font-size:21px;margin:0}h2{font-size:17px;margin:0 0 12px}
+p{margin:5px 0}a{color:#1c5fae}main{padding:20px;max-width:1250px;margin:auto}
+section{background:#fff;border:1px solid #d5e0ee;border-radius:14px;padding:16px;margin:0 0 16px}
+button{font:inherit;border:0;border-radius:9px;background:#2464a7;color:white;padding:7px 15px;cursor:pointer}
+.scroll{max-width:100%;overflow:auto}
+table{border-collapse:collapse;min-width:760px;width:100%}th,td{padding:9px 11px;text-align:right;border-bottom:1px solid #e5edf7;white-space:nowrap}
+th{background:#f0f5fb}td.number{direction:ltr;text-align:center;font-variant-numeric:tabular-nums}
+#state{font-weight:bold}small{color:#536a7f}code{direction:ltr;unicode-bidi:plaintext}
+@media(max-width:600px){main{padding:10px}section{padding:10px}header{padding:14px}}
+</style></head>
+<body>
+<header><h1>سلامت آپلود عکس‌ها</h1>
+<p>گزارش مرحلهٔ اول: تلاش‌های ارسال، خطاهای ثبت‌شده و زمان انتقال فایل (۱۴ روز اخیر).</p>
+<a href="/admin/error-monitor">مشاهدهٔ خطاهای عمومی برنامه</a></header>
+<main>
+<section><p><button type="button" id="refresh">تازه‌سازی گزارش</button></p>
+<p id="state">در حال دریافت اطلاعات…</p>
+<small>اطلاعات نام فایل، محتوای تصویر و لینک ذخیره‌سازی ثبت نمی‌شود. نبودِ خطا لزوماً به معنای موفقیت تمام آپلودها نیست؛ گزارش فقط درخواست‌هایی را نشان می‌دهد که رویدادشان به سرور رسیده است.</small></section>
+<section><h2>وضعیت روزانهٔ لابراتوارها</h2><div class="scroll"><table>
+<thead><tr><th>روز</th><th>لابراتوار</th><th>جلسه</th><th>فایل</th><th>تلاش انتقال</th><th>انتقال موفق</th><th>رویداد خطا</th><th>میانهٔ زمان انتقال</th><th>۹۵٪ زمان انتقال</th></tr></thead>
+<tbody id="summary"></tbody></table></div></section>
+<section><h2>دسته‌بندی خطاها</h2><div class="scroll"><table>
+<thead><tr><th>دسته</th><th>مرحله</th><th>کد</th><th>HTTP</th><th>تعداد</th><th>آخرین رخداد</th></tr></thead><tbody id="errors"></tbody></table></div></section>
+</main><script>
+(function(){
+const $=id=>document.getElementById(id);
+const categories={offline:'قطع اینترنت',timeout:'مهلت پاسخ‌گویی',size_or_quota:'حجم یا سهمیه',derivative:'تبدیل عکس',storage_or_network:'فضای ذخیره‌سازی یا مسیر شبکه',presign:'دریافت مجوز ارسال',order_submit:'ثبت سفارش',verify:'تأیید فایل',application:'برنامه',cancelled:'لغو عملیات'};
+const stages={create:'ساخت سفارش',presign:'مجوز انتقال',transfer:'انتقال فایل',complete:'تأیید فایل',submit:'ثبت نهایی',cleanup:'پاک‌سازی',derivative:'تبدیل تصویر',session:'جلسه'};
+const n=x=>x==null?'—':Number(x).toLocaleString('fa-IR');
+const ms=x=>x==null?'—':(Number(x)/1000).toLocaleString('fa-IR',{maximumFractionDigits:2})+' ثانیه';
+function cell(row,value,number){const td=document.createElement('td');td.textContent=String(value??'—');if(number)td.className='number';row.append(td);}
+async function load(){
+$('state').textContent='در حال دریافت اطلاعات…';
+try{
+const r=await fetch('/api/admin/upload-health',{credentials:'same-origin',headers:{'x-photobridge-portal':'admin'}});
+if(!r.ok)throw Error(r.status===401||r.status===403?'ابتدا با حساب ادمین وارد شوید.':'خطا در دریافت گزارش: '+r.status);
+const data=await r.json();$('summary').replaceChildren();$('errors').replaceChildren();
+for(const item of data.summary||[]){const row=document.createElement('tr');
+cell(row,item.day);cell(row,item.lab_name);cell(row,n(item.sessions),true);cell(row,n(item.files),true);
+cell(row,n(item.transfer_attempts),true);cell(row,n(item.successful_transfers),true);
+cell(row,n(item.failures),true);cell(row,ms(item.p50_transfer_ms),true);cell(row,ms(item.p95_transfer_ms),true);$('summary').append(row);}
+for(const item of data.failures||[]){const row=document.createElement('tr');
+cell(row,categories[item.category]||item.category);cell(row,stages[item.stage]||item.stage);
+cell(row,item.error_code);cell(row,item.http_status||'—',true);cell(row,n(item.events),true);
+cell(row,new Date(item.last_at).toLocaleString('fa-IR'));$('errors').append(row);}
+$('state').textContent='آخرین تازه‌سازی: '+new Date().toLocaleString('fa-IR')+
+((data.summary||[]).length?'':' — هنوز داده‌ای از آپلودهای جدید دریافت نشده است.');
+}catch(e){$('state').textContent=e.message;}
+}
+$('refresh').onclick=load;load();
+})();
+</script></body></html>

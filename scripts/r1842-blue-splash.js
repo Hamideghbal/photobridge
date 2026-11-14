@@ -21,7 +21,7 @@
   function later(fn, ms) { var id = setTimeout(fn, ms); S.timers.push(id); return id; }
   function clearTimers() { S.timers.forEach(clearTimeout); S.timers = []; }
   function fa(n) { return Math.round(n).toLocaleString('fa-IR') + '٪'; }
-  function setStage(v, msg) { S.target = v; if (msg) status.textContent = msg; }
+  function setStage(v, msg) { if(S.ready || S.done)return; S.target = v; if (msg) status.textContent = msg; }
 
   /* R1842: obsolete HTML was removed at build time, not by sweeping
      runtime DOM: generic #loading or .splash might belong to live panels. */
@@ -67,14 +67,15 @@
     if(root.offsetHeight>40)ready();
   }
   var mo = new MutationObserver(checkRoot);
-  if (root) mo.observe(root, { childList: true, subtree: true });
+  if (root) mo.observe(root, { childList: true, subtree: true, characterData:true });
+  mo.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
   window.addEventListener('load', checkRoot);
   window.addEventListener('photobridge:ready', function () { ready(); });
 
   function ready() {
     if (S.ready || splash.hidden) return;
     S.ready = true;
-    setStage(100, 'آماده است');
+    S.target = 100; status.textContent = 'آماده است';
     var wait = Math.max(0, MIN - (performance.now() - S.t0));
     later(exit, wait + 380);
   }

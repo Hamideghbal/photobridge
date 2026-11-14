@@ -22,6 +22,24 @@ for(const file of [root+'index.html','dist/api/equipment-rental-book.html','dist
  if(start>=0&&end>start){
   html=html.slice(0,start)+fs.readFileSync('scripts/r1838-unified-launch.html','utf8').replace('<!-- PB1838_USER_VECTOR -->',()=>fs.readFileSync('scripts/r1838-user-logo.svg','utf8').trim()).trim()+html.slice(end);
   html=html.replace(/<style id="pb1479ApprovedLaunch">[\s\S]*?<\/style>/,()=>'<style id="pb1479ApprovedLaunch">'+fs.readFileSync('scripts/r1838-unified-launch.css','utf8')+'</style>');
+  // R1840: R1361 was a static branded *web* placeholder, superseded by the
+  // animated R1838 splash. Remove ONLY its obsolete CSS, not its iOS detection
+  // script and never the animated pbR1361MobileSplash element.
+  html=html.replace(/<style id="pbR1361MobileSplashStyle">[\s\S]*?<\/style>/g,'');
+  // R1284/R1359 left a dark/blue empty-root canvas in the document. Keep its
+  // non-branded fallback but make it cream, identical to the animated canvas
+  // and the OS-managed PWA launch background.
+  html=html.replace(/<style id="pbR1284LaunchStyle">[\s\S]*?<\/style>/g,block=>
+    block.replace(/#(?:040e1a|2674ff|f8fbff)/gi,background)
+         .replace(/#(?:9fb5ce|fff)(?=!important)/gi,'#3B2E24'));
+  if(file===root+'index.html'){
+    if((html.match(/id="pbR1361MobileSplash"/g)||[]).length!==1 ||
+       !html.includes('data-launch="r1838-user"') ||
+       !html.includes('id="pb1479ApprovedLaunch"'))
+      throw Error('[R1840] animated web splash missing or duplicated');
+    if(html.includes('id="pbR1361MobileSplashStyle"'))
+      throw Error('[R1840] obsolete static splash CSS remained');
+  }
   html=html.replace(/<link rel="preload" as="image" href="\/photobridge-(?:launch-mark-r1479|app-192-r1838)\.png"[^>]*>/g,'<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/playfair-display-latin-700-r1838.woff2">');
   if(!html.includes('const pb1838Theme='))html=html.replace("html.classList.add('pb1479Launching');",()=>"const pb1838Theme=document.querySelector('meta[name=\"theme-color\"]'),pb1838PreviousTheme=pb1838Theme?.getAttribute('content');pb1838Theme?.setAttribute('content','#F7F1E7');html.classList.add('pb1479Launching');");
   const finish="const finish=()=>{if(finished)return;finished=true;observer?.disconnect();clearTimeout(timer);html.classList.remove('pb1479Launching')};";

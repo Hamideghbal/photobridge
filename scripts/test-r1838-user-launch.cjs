@@ -7,6 +7,14 @@ test('user cream splash is the only web launch, with local typography and the su
  for(let i=0;i<6;i++)assert(html.includes('id="pb1838Userblade'+i+'"'));
  assert(html.includes('CAPTURE MEMORIES'));assert(html.includes('PBLaunchPlayfair'));
  assert(!html.includes('pb1838Orbit'));assert(!html.includes('id="sndBtn"'));assert(!html.includes('id="controls"'));
+ // Only one animated HTML splash; old static splash styling must not survive.
+ assert(!html.includes('id="pbR1361MobileSplashStyle"'));
+ assert(!html.includes('class="pb1479Identity"'));
+ const oldLaunch=html.match(/<style id="pbR1284LaunchStyle">([\s\S]*?)<\/style>/)?.[1];
+ assert(oldLaunch,'existing empty-root fallback remains for installed PWA/iOS');
+ assert(oldLaunch.includes('#F7F1E7'),'empty-root canvas matches animated/OS cream');
+ assert(!/#(?:040e1a|2674ff)/i.test(oldLaunch),'no old navy/blue startup flash');
+
  const splash=fs.readFileSync('scripts/r1838-unified-launch.html','utf8');assert(!/https?:|setTimeout|AudioContext|canvas/.test(splash));
  assert(!fs.readFileSync('scripts/r1838-unified-launch.css','utf8').includes('fonts.googleapis.com'));
  for(const f of ['playfair-display-latin-700-r1838.woff2','montserrat-latin-300-r1838.woff2'])assert(fs.statSync('dist/web/assets/'+f).size<30000);

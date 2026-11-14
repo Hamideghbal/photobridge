@@ -102,6 +102,7 @@ export async function recordUploadHealthEvents(pool,{photographerId,labId,events
           `INSERT INTO upload_health_attempts(id,session_id,file_id,stage,state,error_code,http_status)
            VALUES($1,$2,$3,$4,$5,$6,$7)
            ON CONFLICT(id) DO UPDATE SET
+            file_id=COALESCE(upload_health_attempts.file_id,EXCLUDED.file_id),
             stage=EXCLUDED.stage,state=EXCLUDED.state,error_code=EXCLUDED.error_code,
             http_status=EXCLUDED.http_status,updated_at=now()
            WHERE upload_health_attempts.session_id=EXCLUDED.session_id

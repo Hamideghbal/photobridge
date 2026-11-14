@@ -1,0 +1,132 @@
+/* R1842 — based on the user's supplied animated blue PhotoBridge splash.
+   All color tokens and animations apply only to the launch overlay. */
+#pb-splash{
+  --pb-navy:#071f47;--pb-deep:#0a2f6b;--pb-royal:#1553b0;--pb-blue:#2f7fe0;
+  --pb-sky:#63b3ff;--pb-ice:#dbeeff;--pb-white:#ffffff;
+  --pb-glow:rgba(99,179,255,.55);
+  --pb-success:#3ddc97;--pb-warn:#ffc24b;--pb-danger:#ff5d73;--pb-info:#59c2ff;
+  box-sizing:border-box;color:#fff;font-family:Vazirmatn,Tahoma,Arial,sans-serif;
+}
+#pb-splash *,#pb-splash *::before,#pb-splash *::after{box-sizing:border-box}
+#pb-splash{display:none!important}
+html.pb1842SplashActive #pb-splash{display:flex!important}
+html.pb1842SplashActive,html.pb1842SplashActive body{background:#071f47!important;overflow:hidden!important}
+@font-face{font-family:PB1842Playfair;src:url('/assets/playfair-display-latin-700-r1838.woff2') format('woff2');font-display:swap;font-weight:700}
+/* ═══════════ اسپلش ═══════════ */
+  #pb-splash{
+    position:fixed; inset:0; z-index:2147483647;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:0; padding:24px; overflow:hidden; overscroll-behavior:none;
+    background:
+      radial-gradient(120% 90% at 88% 92%, rgba(47,127,224,.9) 0%, transparent 55%),
+      radial-gradient(100% 80% at 8% 0%, rgba(4,16,38,.95) 0%, transparent 60%),
+      linear-gradient(135deg, var(--pb-navy) 0%, var(--pb-deep) 42%, var(--pb-royal) 76%, var(--pb-blue) 100%);
+    transition:opacity .6s ease, transform .6s ease, filter .6s ease;
+  }
+  #pb-splash[hidden]{display:none}
+  #pb-splash.pb1842-hide{opacity:0;transform:scale(1.035);filter:blur(8px);pointer-events:none}
+
+  /* پس‌زمینهٔ زنده: شفق + دانه + بوکه */
+  .pb1842-aurora{position:absolute;border-radius:50%;filter:blur(46px);pointer-events:none}
+  .pb1842-aurora.a{width:58vmax;height:58vmax;right:-16vmax;bottom:-22vmax;
+    background:radial-gradient(circle, rgba(99,179,255,.34), transparent 62%);
+    animation:pb1842_pbDrift 16s ease-in-out infinite alternate}
+  .pb1842-aurora.b{width:46vmax;height:46vmax;left:-14vmax;top:-16vmax;
+    background:radial-gradient(circle, rgba(21,83,176,.45), transparent 62%);
+    animation:pb1842_pbDrift 21s ease-in-out infinite alternate-reverse}
+  @keyframes pb1842_pbDrift{from{transform:translate(0,0)}to{transform:translate(4vmax,-3vmax)}}
+  .pb1842-grain{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")}
+  .pb1842-bokeh{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .pb1842-bokeh span{position:absolute;bottom:-50px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, rgba(219,238,255,.9), rgba(99,179,255,.25) 60%, transparent 75%);
+    animation:pb1842_pbRise linear infinite}
+  @keyframes pb1842_pbRise{
+    0%{transform:translateY(0) translateX(0);opacity:0}
+    12%{opacity:var(--o,.2)}
+    88%{opacity:var(--o,.2)}
+    100%{transform:translateY(-118vh) translateX(var(--sway,20px));opacity:0}
+  }
+
+  /* ═══════════ لوگو: پل + دیافراگم ═══════════ */
+  .pb1842-mark{width:min(76vw,360px);position:relative;
+    animation:pb1842_pbGlow 3.4s ease-in-out 1.4s infinite}
+  @keyframes pb1842_pbGlow{
+    0%,100%{filter:drop-shadow(0 0 10px rgba(99,179,255,.25))}
+    50%{filter:drop-shadow(0 0 26px rgba(99,179,255,.6))}
+  }
+  .pb1842-mark svg{display:block;width:100%;height:auto}
+  .pb1842-draw{stroke-dasharray:1;stroke-dashoffset:1;
+    animation:pb1842_pbDraw 1s cubic-bezier(.4,0,.2,1) forwards;animation-delay:var(--d,0s)}
+  @keyframes pb1842_pbDraw{to{stroke-dashoffset:0}}
+  .pb1842-spin{transform-box:fill-box;transform-origin:center;
+    animation:pb1842_pbSpin 14s linear 1.2s infinite}
+  @keyframes pb1842_pbSpin{to{transform:rotate(360deg)}}
+  .pb1842-disc{opacity:0;transform-box:fill-box;transform-origin:center;
+    animation:pb1842_pbPop .8s cubic-bezier(.2,.8,.3,1.2) .85s forwards}
+  @keyframes pb1842_pbPop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+  .pb1842-iris{transform-box:fill-box;transform-origin:center;transform:scale(1);
+    animation:pb1842_pbIris 3.6s ease-in-out 1.5s infinite}
+  @keyframes pb1842_pbIris{0%,100%{transform:scale(.78)}50%{transform:scale(1.14)}}
+  /* بسته‌شدن شاتر هنگام آماده‌شدن برنامه */
+  #pb-splash.pb1842-done .pb1842-iris{animation:none;transform:scale(.05);
+    transition:transform .38s cubic-bezier(.6,0,.9,.4)}
+  .pb1842-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  #pb-splash.pb1842-done .pb1842-flash{animation:pb1842_pbFlash .55s ease-out}
+  @keyframes pb1842_pbFlash{0%{opacity:0}28%{opacity:.5}100%{opacity:0}}
+
+  /* ═══════════ نوشته‌ها ═══════════ */
+  .pb1842-wordmark{direction:ltr;font-family:PB1842Playfair,Georgia,'Times New Roman',serif;
+    font-weight:700;font-size:clamp(2.5rem,8.5vw,3.7rem);letter-spacing:.01em;
+    margin-top:14px;text-shadow:0 3px 22px rgba(3,14,34,.55);display:flex}
+  .pb1842-wordmark span{display:inline-block;opacity:0;
+    animation:pb1842_pbLetter .7s cubic-bezier(.2,.7,.2,1) forwards;
+    animation-delay:calc(.55s + var(--i)*.05s)}
+  @keyframes pb1842_pbLetter{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+  .pb1842-tagline{direction:ltr;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;
+    color:var(--pb-ice);text-transform:uppercase;margin-top:10px;opacity:0;
+    animation:pb1842_pbTag 1s ease 1.15s forwards}
+  @keyframes pb1842_pbTag{from{opacity:0;letter-spacing:.62em}to{opacity:.92;letter-spacing:.38em}}
+  .pb1842-divider{display:flex;align-items:center;gap:10px;margin-top:16px;opacity:0;
+    animation:pb1842_pbFade .8s ease 1.35s forwards}
+  .pb1842-divider i{display:block;width:78px;height:2px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--pb-sky));transform:scaleX(0);
+    animation:pb1842_pbLine .7s ease 1.4s forwards}
+  .pb1842-divider i:last-child{background:linear-gradient(90deg,var(--pb-sky),transparent);transform-origin:left}
+  .pb1842-divider i:first-child{transform-origin:right}
+  @keyframes pb1842_pbLine{to{transform:scaleX(1)}}
+  .pb1842-divider b{width:12px;height:12px;border:2.5px solid var(--pb-ice);border-radius:50%;
+    box-shadow:0 0 12px var(--pb-glow)}
+  @keyframes pb1842_pbFade{to{opacity:1}}
+
+  /* ═══════════ پیشرفت ═══════════ */
+  .pb1842-progress{margin-top:38px;width:min(280px,72vw);opacity:0;
+    animation:pb1842_pbFade .8s ease 1.55s forwards}
+  .pb1842-track{height:4px;border-radius:3px;background:rgba(255,255,255,.16);overflow:hidden;position:relative}
+  .pb1842-fill{height:100%;width:0%;border-radius:3px;position:relative;
+    background:linear-gradient(90deg,var(--pb-sky),var(--pb-ice));
+    box-shadow:0 0 14px var(--pb-glow)}
+  .pb1842-fill::after{content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent);
+    animation:pb1842_pbShimmer 1.6s ease-in-out infinite}
+  @keyframes pb1842_pbShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  .pb1842-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;
+    font-size:.8rem;color:rgba(219,238,255,.85)}
+  #pb-pct{direction:ltr;font-variant-numeric:tabular-nums;color:var(--pb-ice)}
+
+  
+@media (max-height:640px){
+    .pb1842-mark{width:min(58vw,250px)}
+    .pb1842-progress{margin-top:24px}
+    .pb1842-wordmark{margin-top:8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .pb1842-spin,.pb1842-iris,.pb1842-aurora,.pb1842-bokeh span,.pb1842-fill::after,.pb1842-mark{animation:none!important}
+    .pb1842-draw{animation-duration:.01s;animation-delay:0s}
+    .pb1842-wordmark span,.pb1842-tagline,.pb1842-divider,.pb1842-divider i,.pb1842-progress,.pb1842-disc{
+      animation-duration:.01s;animation-delay:0s}
+  }
+
+/* Respect the existing standalone/iframe guard; the splash never runs in ordinary desktop/browser tabs. */
+#pb-splash[hidden]{display:none!important}
+

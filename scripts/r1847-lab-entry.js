@@ -2,7 +2,7 @@
 (()=>{
  if(!/^\/photographer(?:\/|$)/.test(location.pathname))return;
  const q=new URLSearchParams(location.search),pendingKey='photobridge:r100f37:lab-enter-pending',hintKey='photobridge:r1847:entry-lab';
- let hint=null,pending=0;try{pending=Number(sessionStorage.getItem(pendingKey)||0);hint=JSON.parse(sessionStorage.getItem(hintKey)||'null');if(!hint||Date.now()-hint.at>12000)hint=null}catch{}
+ let hint=null,pending=0;try{pending=Number(sessionStorage.getItem(pendingKey)||0);hint=JSON.parse(sessionStorage.getItem(hintKey)||'null');if(!hint||Date.now()-hint.at>12000||String(hint.id)!==String(sessionStorage.getItem('photobridge:r99:selected-lab')||''))hint=null}catch{hint=null}
  if(q.get('pbEntryDone')!=='lab'&&!(pending&&Date.now()-pending<12000))return;
  if(q.get('pbLabChooser')==='1')return;
  const entry={labId:String(hint?.id||''),home:null,orders:null};

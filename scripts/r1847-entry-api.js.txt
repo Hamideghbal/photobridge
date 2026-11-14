@@ -1,0 +1,15 @@
+async function Me(t,a={}){
+ const early=window.__PB1847EntryEarly;
+ if(early&&!Sr()&&!yg()&&(!a.method||a.method==='GET')){
+  const url=new URL(t,location.origin),key=url.pathname==='/api/customer/home'?'home':url.pathname==='/api/customer/orders'?'orders':'';
+  const requested=url.searchParams.get('_lab')||'';
+  if(key&&early[key]&&(!requested||!early.labId||requested===early.labId)){
+   const promise=early[key];delete early[key];
+   if(!early.home&&!early.orders)delete window.__PB1847EntryEarly;
+   const data=await promise;
+   const actual=String(key==='home'?data?.lab?.id||'':data?.labId||'');
+   if(data&&(!early.labId||actual===early.labId)&&(!requested||actual===requested)){if(key==='orders')window.__PB1847EntryUI?.ordersReady();return data;}
+  }
+ }
+ try{const data=await PB1847OriginalApi(t,a);if(new URL(t,location.origin).pathname==='/api/customer/orders'&&(!a.method||a.method==='GET'))window.__PB1847EntryUI?.ordersReady();return data}catch(error){if(error.status===401||error.status===403)window.__PB1847EntryUI?.remove();throw error}
+}

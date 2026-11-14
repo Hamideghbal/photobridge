@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 
 const token = (v, n = 80) => String(v || '').replace(/[^a-zA-Z0-9_.:-]/g, '_').slice(0, n);
+const scopeUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||'')) ? String(value).toLowerCase() : '';
 // Never store request bodies, cookies, signed URLs, query strings or raw errors.
 export function classifyIncident(data) {
   const code=String(data.code||'');
@@ -23,6 +24,7 @@ export function cleanIncident(raw = {}) {
     stage: token(raw.stage), code: token(raw.code), route,
     status: Number.isInteger(status) && status >= 0 && status <= 599 ? status : 0,
     dependency: raw.dependency==='database'?'database':'', providerRequestId: token(raw.providerRequestId, 120), userId: token(raw.userId),
+    labId:scopeUuid(raw.labId),photographerId:scopeUuid(raw.photographerId),
     reference: token(raw.reference, 40), revision: token(raw.revision, 100) };
 }
 export function createErrorMonitor({ directory, alert, now = Date.now, cooldown = 600000, maxAlerts = 6, persistExternal, log = console }) {
@@ -69,10 +71,14 @@ export function createErrorMonitor({ directory, alert, now = Date.now, cooldown 
   }
   function maybeAlert(row) {
     const at = now(); alertTimes = alertTimes.filter(t => at - t < 3600000);
-    if (activeAlert || (row.alertAttemptAt && at - row.alertAttemptAt < cooldown) || alertTimes.length >= maxAlerts) return;
+    // One SMS attempt per incident fingerprint in this runtime; the DB guard
+    // blocks replays after process restarts or across Liara instances.
+    if (['sent','suppressed','failed','pending'].includes(row.alertState) || activeAlert || (row.alertAttemptAt && at - row.alertAttemptAt < cooldown) || alertTimes.length >= maxAlerts) return;
     row.alertAttemptAt = at; row.alertState = 'pending'; activeAlert = true; alertTimes.push(at); persist({ ...row });
-    Promise.resolve().then(() => alert({ ...row })).then(() => {
-      row.alertState = 'sent'; row.alertSentAt = now();
+    Promise.resolve().then(() => alert({ ...row })).then(outcome => {
+      row.alertState = outcome?.state === 'suppressed' ? 'suppressed' : 'sent';
+      row.alertSentAt = now();
+      if(outcome?.reason) row.alertError=token(outcome.reason);
     }, e => { row.alertState = 'failed'; row.alertError = token(e?.code || e?.message || 'sms_failed');
       log.error('[error-monitor] SMS failed', row.id, row.alertError);
     }).finally(() => { activeAlert = false; persist({ ...row }); });
@@ -81,16 +87,18 @@ export function createErrorMonitor({ directory, alert, now = Date.now, cooldown 
     await ready;
     const data = cleanIncident(raw), at = now();
     // Client supplied IDs cannot select or modify another user's incident.
-    let fingerprint = createHash('sha256').update(JSON.stringify([data.source, data.stage, data.code, data.status, data.route])).digest('hex').slice(0, 24);
+    let fingerprint = createHash('sha256').update(JSON.stringify([data.source, data.stage, data.code, data.status, data.route, data.labId, data.photographerId])).digest('hex').slice(0, 24);
     const correlated=data.reference&&[...incidents.values()].find(r=>(r.references||[]).includes(data.reference));
     if(correlated)fingerprint=correlated.fingerprint;
     let row = incidents.get(fingerprint);
-    if (!row || at - row.lastAt > cooldown) {
+    if (!row) {
       row = { ...data, ...classifyIncident(data), id: 'PB-' + randomUUID().replaceAll('-', '').slice(0, 16).toUpperCase(), fingerprint, firstAt: at, lastAt: at, count: 0, alertState: 'queued' };
       incidents.delete(fingerprint); incidents.set(fingerprint, row);
     }
     row.lastAt = at; if(!correlated)row.count++;
     if(data.userId)row.userId=data.userId;
+    if(data.labId)row.labId=data.labId;
+    if(data.photographerId)row.photographerId=data.photographerId;
     row.references = [...new Set([...(row.references||[]),data.reference].filter(Boolean))].slice(-20);
     while (incidents.size > 500) incidents.delete(incidents.keys().next().value);
     persist({ ...row });
@@ -106,7 +114,7 @@ export function createErrorMonitor({ directory, alert, now = Date.now, cooldown 
     finally { syncing=false; }
   }
   const mirror=setInterval(()=>{void sync();},15000);mirror.unref?.();
-  const retry = setInterval(() => { for (const row of incidents.values()) if (row.alertState !== 'sent' && now() - row.lastAt < 86400000) maybeAlert(row); }, 60000);
+  const retry = setInterval(() => { for (const row of incidents.values()) if (row.alertState === 'queued' && now() - row.lastAt < 86400000) maybeAlert(row); }, 60000);
   retry.unref?.();
   return { record, allow, async list() { await ready; return [...incidents.values()].sort((a,b) => b.lastAt-a.lastAt).slice(0,200).map(r=>({...r})); },
     async flush() { await ready; await writes; }, sync, close() { clearInterval(retry); clearInterval(mirror); } };

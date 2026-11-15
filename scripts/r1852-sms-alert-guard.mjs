@@ -23,7 +23,8 @@ export function stageFromErrorPath(value){
 export function shouldNotifySms(incident){
   // Browser retries, outages and incident duplicates must never generate paid SMS.
   // Restrict SMS to server-confirmed failures in the photo-transfer pipeline.
-  if(!incident||incident.source!=='server'||Number(incident.status)<500)return false;
+  const status=Number(incident?.status);
+  if(!incident||incident.source!=='server'||!Number.isInteger(status)||status<500||status>599)return false;
   if(incident.channel==='network_path'||incident.channel==='browser')return false;
   return ['download','presign','complete','submit','upload'].includes(String(incident.stage));
 }
@@ -83,10 +84,10 @@ export async function reserveAdminAlert(pool,incident,options){
       await client.query('COMMIT');tx=false;
       return {reserved:false,reason:'duplicate',fingerprint:key};
     }
+    // Include older release deliveries too: an upgrade must not reset today's budget.
     const budget=await client.query(
       `SELECT count(*)::int AS cnt FROM sms_delivery_log
         WHERE purpose='admin_alert' AND event_key='application_error'
-          AND metadata->>'alertPolicy'='r1852'
           AND created_at>=now()-interval '24 hours'`);
     if(Number(budget.rows[0]?.cnt||0)>=3){
       await client.query('COMMIT');tx=false;

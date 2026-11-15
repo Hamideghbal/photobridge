@@ -35,6 +35,7 @@ test('R1852 alerts only for server-confirmed download/upload 5xx, not noisy brow
   assert.equal(guard.shouldNotifySms(error({source:'api'})),false);
   assert.equal(guard.shouldNotifySms(error({stage:'browser'})),false);
   assert.equal(guard.shouldNotifySms(error({status:404})),false);
+  for(const status of [undefined,null,'invalid',NaN,Infinity,500.5,600])assert.equal(guard.shouldNotifySms(error({status})),false,'only confirmed HTTP 5xx may notify');
   assert.equal(guard.shouldNotifySms(error({stage:'api'})),false);
   assert.equal(guard.shouldNotifySms(error({channel:'network_path'})),false);
   assert.equal(guard.stageFromErrorPath('/api/lab/files/download?token=secret'),'download');

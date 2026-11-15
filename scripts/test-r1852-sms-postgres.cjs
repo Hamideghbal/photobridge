@@ -15,6 +15,9 @@ test('real PostgreSQL: durable dedup across processes, concurrent three-per-day 
   const child=`import pg from 'pg';const guard=await import(process.env.PB_GUARD_FILE);const pool=new pg.Pool({connectionString:process.env.PB_TEST_DATABASE_URL,options:'-c search_path='+process.env.PB_TEST_SCHEMA});try{console.log(JSON.stringify(await guard.reserveAdminAlert(pool,JSON.parse(process.env.PB_TEST_INCIDENT),JSON.parse(process.env.PB_TEST_OPTIONS))))}finally{await pool.end()}`;
   const restarted=spawnSync(process.execPath,['--input-type=module','-e',child],{cwd:process.cwd(),encoding:'utf8',timeout:20000,env:{...process.env,PB_GUARD_FILE:require('node:url').pathToFileURL(path.resolve('scripts/r1852-sms-alert-guard.mjs')).href,PB_TEST_SCHEMA:schema,PB_TEST_INCIDENT:JSON.stringify({...incident,id:'after-restart'}),PB_TEST_OPTIONS:JSON.stringify(options)}});
   assert.equal(restarted.status,0,restarted.stderr);assert.equal(JSON.parse(restarted.stdout).reason,'duplicate');
+  // Already-sent error alerts from older releases consume the same rolling budget.
+  await pool.query("INSERT INTO sms_delivery_log(provider,purpose,event_key,target_mobile,status,metadata) VALUES('legacy','admin_alert','application_error','09120000000','sent','{}'),('legacy','admin_alert','application_error','09120000000','sent','{}')");
+  assert.equal((await guard.reserveAdminAlert(pool,{...incident,code:'AfterUpgrade'},options)).reason,'daily_cap','release upgrade must not reset the administrator SMS allowance');
   await pool.query('TRUNCATE sms_delivery_log');
   const claims=await Promise.all(Array.from({length:8},(_,i)=>guard.reserveAdminAlert(pool,{...incident,code:'Concurrent'+i},options)));
   assert.equal(claims.filter(c=>c.reserved).length,3);assert.equal(claims.filter(c=>c.reason==='daily_cap').length,5);assert.equal((await pool.query('SELECT count(*)::int AS n FROM sms_delivery_log')).rows[0].n,3);

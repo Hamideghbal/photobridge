@@ -6,12 +6,13 @@ const digest=value=>crypto.createHash('sha256').update(value).digest('hex');
 const fetchSafe=(url,options={})=>fetch(url,{redirect:'manual',signal:AbortSignal.timeout(15000),...options});
 const errorCode=error=>({error:String(error.name||'Error'),status:Number(error.$metadata?.httpStatusCode||0)});
 const corsOrigin=response=>['*',origin].includes(response.headers.get('access-control-allow-origin'));
-function clientOptions(credentials,region,endpoint,bucketEndpoint=false){return {credentials,region,endpoint,bucketEndpoint,forcePathStyle:bucketEndpoint,requestChecksumCalculation:'WHEN_REQUIRED',responseChecksumValidation:'WHEN_REQUIRED',maxAttempts:1}}
+function clientOptions(credentials,region,endpoint,bucketEndpoint=false){return {credentials,region,endpoint,bucketEndpoint,forcePathStyle:true,requestChecksumCalculation:'WHEN_REQUIRED',responseChecksumValidation:'WHEN_REQUIRED',maxAttempts:1}}
 async function qualify(){
+ for(const name of ['S3_ENDPOINT','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY','S3_REGION'])if(process.env[name])process.env[name]=process.env[name].trim();
  const required=['S3_ENDPOINT','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY'],missing=required.filter(name=>!process.env[name]);if(missing.length)throw Object.assign(Error('missing_configuration'),{missing});
  const endpoint=new URL(process.env.S3_ENDPOINT),bucket=process.env.S3_BUCKET;if(endpoint.protocol!=='https:'||!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(bucket))throw Error('invalid_configuration');
  const credentials={accessKeyId:process.env.S3_ACCESS_KEY,secretAccessKey:process.env.S3_SECRET_KEY},region=process.env.S3_REGION||'default',base=new S3Client(clientOptions(credentials,region,endpoint.href)),custom=new S3Client(clientOptions(credentials,region,domain,true));
- const id=crypto.randomUUID(),prefix='photobridge/qualification/custom-domain/'+id,keys=[prefix+'/control.png',prefix+'/browser-put.png'],report={version:1,correlationId:id,hostname:new URL(domain).hostname,checks:{},cleanup:[]};
+ const id=crypto.randomUUID(),prefix='photobridge-compatibility-probes/'+id,keys=[prefix+'/custom-domain-control.png',prefix+'/custom-domain-put.png'],report={version:1,correlationId:id,hostname:new URL(domain).hostname,checks:{},cleanup:[]};
  try{
   await base.send(new PutObjectCommand({Bucket:bucket,Key:keys[0],Body:bytes,ContentType:'image/png'}));report.checks.backendControl=true;
   const unsigned=await fetchSafe(domain+'/'+keys[0]);report.checks.privateUnsignedGet=unsigned.status===403||unsigned.status===404||unsigned.status===401;report.unsignedStatus=unsigned.status;await unsigned.body?.cancel();

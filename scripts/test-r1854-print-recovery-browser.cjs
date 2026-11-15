@@ -9,7 +9,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   const context=await browser.newContext({viewport:{width,height:960},serviceWorkers:'block'}),orders=new Map(),files=new Map(),puts=new Map(),writes=[],errors=[];let failName='photo-2.png',submits=0,signedUser='33333333-3333-4333-8333-333333333333';
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),body=request.postData()&&request.method()!=='PUT'?JSON.parse(request.postData()):{};
-   if(url.pathname.startsWith('/objects/')){const row=files.get(url.pathname.split('/')[2]);puts.set(row.name,(puts.get(row.name)||0)+1);if(failName===row.name||controls&&row.name==='photo-4.png')return route.fulfill({status:503,body:'temporary'});row.bytes=Buffer.from(request.postDataBuffer());return route.fulfill({status:200,body:''})}
+   if(url.pathname.startsWith('/objects/')){const row=files.get(url.pathname.split('/')[2]);puts.set(row.name,(puts.get(row.name)||0)+1);if(controls&&row.name==='photo-4.png')return;if(failName===row.name)return route.fulfill({status:503,body:'temporary'});row.bytes=Buffer.from(request.postDataBuffer());return route.fulfill({status:200,body:''})}
    if(url.pathname.startsWith('/api/')){
     if(request.method()!=='GET')writes.push({method:request.method(),path:url.pathname});
     if(url.pathname==='/api/auth/me')return route.fulfill({json:{user:{userId:signedUser,labRole:'customer'}}});
@@ -41,13 +41,14 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   signedUser='33333333-3333-4333-8333-333333333333';await page.evaluate(()=>dispatchEvent(new Event('photobridge-auth-session-changed')));await page.waitForFunction(()=>__print.ready&&__print.rows[0]?.files?.length===5);
 
 
-  await page.evaluate(()=>{window.__send=__print.send()});await page.waitForFunction(()=>__print.snapshot?.state==='needs_attention',null,{timeout:30000});await page.evaluate(()=>__send);
+  await page.evaluate(()=>{window.__send=__print.send()});await page.waitForFunction(controls=>controls?(__print.snapshot?.groups?.[0]?.files?.some(file=>file.name==='photo-2.png'&&file.state==='needs_attention'&&file.attempts>=3)&&__print.snapshot.groups[0].files.some(file=>file.name==='photo-4.png'&&file.state==='uploading'&&file.registered)):__print.snapshot?.state==='needs_attention',controls,{timeout:30000});if(!controls)await page.evaluate(()=>__send);
   assert.equal(orders.size,1);assert.equal(submits,0);assert.equal(files.size,5);assert.equal(await page.locator('.pb1854File').count(),5);assert.equal(await page.evaluate(()=>__print.snapshot.groups.flatMap(g=>g.files).filter(f=>f.state==='done').length),controls?3:4);
   const failed=await page.evaluate(()=>__print.snapshot.groups.flatMap(g=>g.files).find(f=>f.name==='photo-2.png').id);
   if(controls){
    const row=page.locator('.pb1854File').filter({hasText:'photo-2.png'});await row.getByRole('button',{name:'پیش‌نمایش',exact:true}).click();
    await page.locator('.simplePrintPreviewModal img').waitFor();assert(await page.locator('.simplePrintPreviewModal img').evaluate(img=>img.complete&&img.naturalWidth>0));await page.locator('.simplePrintPreviewModal button').click();
    await page.locator('[data-pb1855-file="'+failed+'"] .simplePrintThumb').click();await page.locator('.simplePrintPreviewModal img').waitFor();await page.locator('.simplePrintPreviewModal button').click();
+   failName=null;await row.getByRole('button',{name:'توقف و تلاش مجدد این عکس',exact:true}).click();await page.waitForFunction(()=>__print.snapshot.groups[0].files.find(file=>file.name==='photo-2.png').state==='done');await page.evaluate(()=>__send);
    await page.locator('.pb1854File').filter({hasText:'photo-4.png'}).getByRole('button',{name:'حذف از ارسال',exact:true}).click();await page.waitForFunction(()=>__print.snapshot.groups[0].files.length===4);assert.equal([...files.values()].find(f=>f.name==='photo-4.png').state,'deleted');
   }
 
@@ -57,6 +58,6 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await page.locator('.pb1854Reselect input').setInputFiles({name:'photo-2.png',mimeType:'image/png',buffer:Buffer.alloc(original.length,1)});await page.waitForFunction(()=>__print.snapshot.groups[0].files.find(f=>f.name==='photo-2.png').error?.code==='identity_mismatch');
   await page.locator('.pb1854Reselect input').setInputFiles({name:'photo-2.png',mimeType:'image/png',buffer:original});await page.waitForFunction(()=>!__print.snapshot.groups[0].files.find(f=>f.name==='photo-2.png').missing);failName=null;
   await page.getByRole('button',{name:'تلاش مجدد و ادامهٔ ارسال',exact:true}).click();await page.getByText('سفارش برای لابراتوار ارسال شد',{exact:true}).waitFor();
-  assert.equal(orders.size,1);assert.equal(submits,1);assert.equal(files.size,5);assert.equal(puts.get('photo-2.png'),4);for(const [name,n]of puts)if(name!=='photo-2.png'&&(!controls||name!=='photo-4.png'))assert.equal(n,1);assert(!writes.some(w=>w.method==='DELETE'));assert.deepEqual(errors,[]);await page.screenshot({path:'/tmp/photobridge-r1854-recovery-'+width+'.png'});await context.close();console.log('PASS real print '+width+': 4 verified originals preserved across closure; evicted fifth reselected by SHA-256; only remaining file retried; one final order');
+  assert.equal(orders.size,1);assert.equal(submits,1);assert.equal(files.size,5);assert.equal(puts.get('photo-2.png'),4);for(const [name,n]of puts)if(name!=='photo-2.png'&&(!controls||name!=='photo-4.png'))assert.equal(n,1);assert(!writes.some(w=>w.method==='DELETE'));assert.deepEqual(errors,[]);await page.screenshot({path:'/tmp/photobridge-r1854-recovery-'+width+'.png'});await context.close();console.log(controls?'PASS controls '+width+': preview while uploading; one-click retry pauses stalled transfer; explicit failed-file removal; verified files preserved; one final order':'PASS real print '+width+': 4 verified originals preserved across closure; evicted fifth reselected by SHA-256; only remaining file retried; one final order');
  }}finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});

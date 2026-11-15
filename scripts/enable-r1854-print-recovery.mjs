@@ -79,15 +79,24 @@ component=once(component,'const ot=T.reduce(',hooks+'const ot=T.reduce(');
 const runStart=component.indexOf('const ue=new AbortController;',component.indexOf('he=async()=>'));
 const runEnd=component.indexOf('},qe=()=>',runStart);if(runStart<0||runEnd<runStart)throw Error('R1854 submit bounds missing');
 component=component.slice(0,runStart)+fs.readFileSync('scripts/r1854-react-send.js.txt','utf8')+component.slice(runEnd);
-// Recovery controls belong to the existing price details, never a separate top panel.
-component=once(component,'className:"simplePrintMobileQuoteModal",children:[','className:"simplePrintMobileQuoteModal",children:[PB1854panel,');
-component=once(component,'children:[e.jsx("h3",{children:"ریز قیمت"}),','children:[e.jsx("h3",{children:"ریز قیمت"}),!He&&PB1854panel,');
+// Keep only the original send/cancel actions; photo cards show durable status.
+component=once(component,'className:"simplePrintPilot",dir:"rtl",children:[','className:"simplePrintPilot",dir:"rtl",children:[PB1858reselect,');
 component=once(component,'children:"هنوز فایلی اضافه نشده"','children:!PB1854ready?"در حال بازیابی ارسال…":"هنوز فایلی اضافه نشده"');
-component=once(component,'className:"simplePrintPilotEmpty",children:[','className:"simplePrintPilotEmpty",children:[PB1854initError&&e.jsx("button",{type:"button",onClick:()=>ft(true),children:"ریز قیمت و وضعیت ارسال"}),');
+component=once(component,'qe=()=>{','qe=()=>{if(PB1858retry){PB1858resume();return}');
+component=once(component,'className:"primary simplePrintPilotQuoteSubmit",','className:"primary simplePrintPilotQuoteSubmit","data-pb1858-primary":"true",');
 
-component=component.replaceAll('children:"لغو ارسال"','children:"توقف و حفظ ارسال"');
+component=component.replaceAll('disabled:W||ie||!ot||c','disabled:W||!!PB1855action||ie||(!ot&&!PB1854initError)||c');
+component=component.replaceAll('children:W?"در حال ارسال…":"ارسال فایل چاپ"','children:W?"در حال ارسال…":PB1858retry?"تلاش مجدد":"ارسال فایل چاپ"');
+component=component.replaceAll('children:W?"در حال ارسال…":e.jsxs','children:W?"در حال ارسال…":PB1858retry?"تلاش مجدد":e.jsxs');
+component=once(component,'children:"تأیید و ارسال فایل چاپ"','children:PB1858retry?"تلاش مجدد":"تأیید و ارسال فایل چاپ"');
+component=once(component,'W&&e.jsx("button",{type:"button",className:"simplePrintPilotCancel",onClick:ce,children:"لغو ارسال"})','(W||ot>0)&&e.jsx("button",{type:"button",className:"simplePrintPilotCancel",disabled:!!PB1855action,onClick:PB1858cancel,children:W?"لغو ارسال":"حذف ارسال"})');
+component=once(component,'W&&e.jsx("button",{type:"button",className:"simplePrintPilotHeaderCancel simplePrintPilotHeaderCancelMobile",onClick:ce,children:"لغو"})','(W||ot>0)&&e.jsx("button",{type:"button",className:"simplePrintPilotHeaderCancel simplePrintPilotHeaderCancelMobile",disabled:!!PB1855action,onClick:PB1858cancel,children:W?"لغو ارسال":"حذف ارسال"})');
+
 component=once(component,'onClick:()=>re(Be)','onClick:()=>PB1855preview(Be.id)');
+component=once(component,'className:"simplePrintPhotoInfo",children:[','className:"simplePrintPhotoInfo",children:[PB1858state(Be.id)&&e.jsx("small",{className:"pb1858PhotoState",role:PB1858state(Be.id)?.error?"alert":"status",children:PB1858status(Be.id)}),');
+
 component=once(component,'className:"simplePrintPhotoCard "+','"data-pb1855-file":Be.id,className:"simplePrintPhotoCard "+');
+component=once(component,'\"data-pb1855-file\":Be.id,className:', '\"data-pb1855-file\":Be.id,\"data-upload-state\":PB1858state(Be.id)?.state,className:');
 
 component=component.replace('با تغییر لابراتوار، فایل‌های انتخاب‌شده این صفحه پاک می‌شوند. ادامه می‌دهی؟','انتخاب‌ها و پیشرفت ارسال این لابراتوار ذخیره می‌ماند. به لابراتوار دیگری برویم؟');
 // Handler guards also protect programmatic and desktop proxy controls.
@@ -129,7 +138,10 @@ js=js.slice(0,orderStart)+orderUI+js.slice(orderEnd);
 js=fs.readFileSync('scripts/r1854-print-recovery.cjs','utf8')+'\n'+js;
 fs.writeFileSync(bundle,js);execFileSync(process.execPath,['--check',bundle]);
 fs.copyFileSync('scripts/r1854-print-recovery.css',directory+'/photobridge-print-recovery-r1854.css');
-let html=fs.readFileSync(directory+'/index.html','utf8');const prefix=directory==='dist/web'?'/':'./';html=once(html,'</head>',`<link rel="stylesheet" href="${prefix}photobridge-print-recovery-r1854.css?v=r1857"></head>`);html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&printRecovery=r1857');fs.writeFileSync(directory+'/index.html',html);
+let html=fs.readFileSync(directory+'/index.html','utf8');const prefix=directory==='dist/web'?'/':'./';html=once(html,'</head>',`<link rel="stylesheet" href="${prefix}photobridge-print-recovery-r1854.css?v=r1858"></head>`);html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&printRecovery=r1858');html=html.replace(/(photobridge-v904r100f40-mobile-polish\.js|photobridge-ui-fixes-v755\.js)(\?[^"']*)?/g,value=>value+(value.includes('?')?'&':'?')+'printActions=r1858');fs.writeFileSync(directory+'/index.html',html);
+const mobilePath=directory+'/photobridge-v904r100f40-mobile-polish.js';let mobile=fs.readFileSync(mobilePath,'utf8');mobile=once(mobile,"r.querySelector('.pbF37Send').textContent=album?'ارسال آلبوم برای چاپ':'ارسال فایل برای چاپ'",`const label=album?'ارسال آلبوم برای چاپ':b?.dataset.pb1858Primary==='true'?b.textContent:'ارسال فایل برای چاپ';if(r.querySelector('.pbF37Send').textContent!==label)r.querySelector('.pbF37Send').textContent=label;window.PB1854PrintRecovery?.syncPrintActions(r,r.querySelector('.pbF37Send'),b,!album)`);fs.writeFileSync(mobilePath,mobile);execFileSync(process.execPath,['--check',mobilePath]);
+const actionsPath=directory+'/photobridge-ui-fixes-v755.js';let actions=fs.readFileSync(actionsPath,'utf8');actions=once(actions,"send.textContent=isAlbum?'ارسال آلبوم برای چاپ':'ارسال فایل برای چاپ';",`const retrySource=actionSource(w,mode,1),label=isAlbum?'ارسال آلبوم برای چاپ':retrySource?.dataset.pb1858Primary==='true'?retrySource.textContent:'ارسال فایل برای چاپ';if(send.textContent!==label)send.textContent=label;`);actions=once(actions,'const chooseSource=actionSource(w,mode,0), sendSource=actionSource(w,mode,1);','const chooseSource=actionSource(w,mode,0), sendSource=actionSource(w,mode,1);window.PB1854PrintRecovery?.syncPrintActions(row,send,sendSource,!isAlbum&&printCreate(w));');fs.writeFileSync(actionsPath,actions);execFileSync(process.execPath,['--check',actionsPath]);
+
 }
 // Extend passive telemetry to the fresh URL issued after probing the same file.
 const health='dist/web/photobridge-upload-health-r1851.js';let monitor=fs.readFileSync(health,'utf8');monitor=once(monitor,"    if(method!=='POST')return '';","    if(method!=='POST')return '';\n    if(path==='/api/customer/recovery-orders')return 'create';\n    if(path==='/api/customer/uploads/recovery-presign')return 'presign';\n    if(/^\\/api\\/customer\\/uploads\\/[0-9a-f-]+\\/retry$/.test(path))return 'presign';");monitor=once(monitor,'var existing=fileMeta(body.fileId),','var existing=fileMeta(body.fileId||body.clientFileId||url.pathname.match(/uploads\\/([0-9a-f-]+)\\/retry$/)?.[1]),');monitor=once(monitor,'logicalFileId=uuid();','logicalFileId=existing?.fileId||uuid();');monitor=once(monitor,'orderId:order,bytes:Number.isSafeInteger(body.bytes)?body.bytes:null','orderId:order||existing?.orderId,bytes:Number.isSafeInteger(body.bytes)?body.bytes:existing?.bytes||null');monitor=once(monitor,'    ensureCard();if(!card)return;','    if(window.__PB1854PrintActive)return;\n    ensureCard();if(!card)return;');fs.writeFileSync(health,monitor);
@@ -137,7 +149,7 @@ console.log('[R1854] Print originals and verified file IDs survive retries; no d
 
 const frozen='dist/web/lab-desktop-ui',manifestPath=frozen+'/manifest.json',manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
-for(const name of ['index.html','assets/index-UIRefine-v655-r84.js','photobridge-print-recovery-r1854.css']){
+for(const name of ['index.html','assets/index-UIRefine-v655-r84.js','photobridge-print-recovery-r1854.css','photobridge-v904r100f40-mobile-polish.js','photobridge-ui-fixes-v755.js']){
  let item=manifest.files.find(item=>item.name===name);if(!item){item={name,url:'/lab-desktop-ui/'+name};manifest.files.push(item)}item.sha256=sha(fs.readFileSync(frozen+'/'+name));
 }
 manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));manifest.build=sha(JSON.stringify(manifest.files));fs.writeFileSync(manifestPath,JSON.stringify(manifest));

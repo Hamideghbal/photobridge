@@ -1,1 +1,1 @@
-2026-11-15-r1857-recovery-in-price-details
+2026-11-15-r1858-compact-print-actions

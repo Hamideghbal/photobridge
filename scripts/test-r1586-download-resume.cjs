@@ -10,7 +10,8 @@ function setup({files,stored={},extra={},native=false}={}){
  const detail={order:{id:'279',number:279,status:'ready',downloaded_at:'2026-10-25'},files};
  const context={pb1581Report(){},console,Date,Set,Map,Error,String,Number,Math,Uint8Array,File,Blob,V:String,Ya:x=>x,Uy:(_,f)=>f.group||'one',ai:()=>true,Hu:async()=>({registered:true,isThisDevice:primary}),qs:async()=>({name:'Lab folder'}),Vs:async()=>true,no:async()=>({name:'Lab folder'}),vc:async()=>{},yc:id=>state.get(id)||null,hr:(id,s)=>state.set(id,s),alert:msg=>alerts.push(msg),Me:async(path,opts)=>{requests.push([path,opts]);return detail},Ky:async id=>{downloads.push(id);if(fail)throw fail;const f=files.find(f=>f.id===id);return {pbDownloadName:f.original_name,pbDownloadBytes:f.bytes,body:{getReader(){let read=false;return {async read(){if(read)return {done:true};read=true;return {done:false,value:new Uint8Array(f.bytes)}},async cancel(){},releaseLock(){}}}}}},window:{pbLabLocalIntakeStorage:{target:async(root,detail,f)=>({root,dir:dir(f.group||'one'),day:'today'})}},...extra};
  if(native)context.window.pbNativeStorage={invoke:async(action,{parts})=>{statCalls++;assert.equal(action,'stat');const key=parts.join('/');return disk.has(key)?{ok:true,value:{size:disk.get(key)}}:{ok:false,error:{code:'ENOENT',name:'Error',message:'not found'}}}};
- vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/r1445-download-safety.js','utf8')+'\n'+helper,context);
+ const layoutStart=production.indexOf('function pb1769OrderFirst('),layoutEnd=production.indexOf('function pb1769OrderFolder(',layoutStart);assert(layoutStart>0&&layoutEnd>layoutStart);
+ vm.createContext(context);vm.runInContext(production.slice(layoutStart,layoutEnd)+'\n'+fs.readFileSync('scripts/r1445-download-safety.js','utf8')+'\n'+helper,context);
  return {c:context,disk,state,alerts,requests,downloads,detail,dir,setPrimary:v=>primary=v,setFailure:e=>fail=e,get statCalls(){return statCalls}};
 }
 

@@ -11,7 +11,12 @@ for(const htmlFile of ['dist/web/index.html','dist/api/equipment-rental-portal.h
   if(!html.trim())continue;
   if(!html.includes('</head>')||!html.includes('</body>'))throw Error('[R1726] incomplete HTML: '+htmlFile);
   if(!html.includes(css))html=html.replace('</head>','<link rel="stylesheet" href="'+css+'">\n</head>');
-  if(!html.includes(js))html=html.replace('</body>','<script defer src="'+js+'"></script>\n</body>');
+  // Printed-document templates may contain </body> inside an inline script.
+  // Install at the real page's final body close, never inside those templates.
+  const scriptTag='<script defer src="'+js+'"></script>';
+  html=html.replace(scriptTag,'');
+  const bodyClose=html.lastIndexOf('</body>');
+  html=html.slice(0,bodyClose)+scriptTag+'\n'+html.slice(bodyClose);
   if(html.split(css).length!==2||html.split(js).length!==2)
     throw Error('[R1726] login assets not uniquely installed: '+htmlFile);
   fs.writeFileSync(htmlFile,html);

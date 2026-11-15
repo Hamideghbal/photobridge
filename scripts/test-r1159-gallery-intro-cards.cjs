@@ -16,7 +16,7 @@ test('photographer gallery overview starts collapsed and stays blue',()=>{
  assert.match(css,/\.pb1159Intro>summary\{[\s\S]*?background:linear-gradient/);
  assert.match(css,/\.pb1159Intro \.pb1159IntroPreview\{[\s\S]*?-webkit-line-clamp:2/);
  assert.match(css,/@media\(max-width:820px\)\{[\s\S]*?-webkit-line-clamp:3/);
- assert.match(html,/photobridge-r1159-gallery-intro-cards\.css\?v=r1159/);
+ require('./assert-css-delivery.cjs')(html,'/photobridge-r1159-gallery-intro-cards.css?v=r1159');
 });
 test('cost, photo ceiling and wallet remain in explanation, not separate tiles',()=>{
  assert.doesNotMatch(intro,/className:"clientGalleryIntroFacts"/);
@@ -49,6 +49,6 @@ test('gallery card uses two exact action rows with icon-only deletion',()=>{
  const refinedCss=fs.readFileSync('dist/web/photobridge-r1332-gallery-cards.css','utf8');
  assert.match(refinedCss,/\.pb1332PrimaryRow\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(refinedCss,/\.pb1332SecondaryRow\{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) 40px/);
- assert(html.includes('gallery-intro-cards.css?v=r1159&cards=r1161'));
+ require('./assert-css-delivery.cjs')(html,'/photobridge-r1159-gallery-intro-cards.css?v=r1159&cards=r1161');
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159(?=[^"\s]*&wallet=r1238)(?=[^"\s]*&cards=r1333)/);
 });

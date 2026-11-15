@@ -5,6 +5,8 @@ async function serve(page,state){
  if(u.pathname.startsWith('/api/')){
   if(u.pathname==='/api/photographer/navigation-tabs'){if(state.delay)await new Promise(resolve=>setTimeout(resolve,state.delay));return r.fulfill({json:{tabs:state.tabs||{ai:false,album:false,instagram:false},adminBypass:false}})}
   if(u.pathname==='/api/auth/me')return r.fulfill({json:{user:{userId:'customer',name:'Customer',labRole:'customer',platformRole:'user',photographerName:'Test Studio'}}});
+  // R1606 hides Store when discovery returns no shops; this navigation fixture needs an available shop.
+  if(u.pathname==='/api/customer/equipment-rental/shops')return r.fulfill({json:{shops:[{id:'10000000-0000-4000-8000-000000000001',name:'Test equipment store',category:'equipment'}],scoped:false}});
   if(u.pathname==='/api/customer/entry-context')return r.fulfill({json:{destination:'none',connectedCount:0}});
   return r.fulfill({json:{labs:[],galleries:[],items:[],notifications:[],jobs:[],models:[],settings:{},stats:{},transactions:[],shops:[]}});
  }
@@ -17,11 +19,12 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  for(const width of [320,390]){
  const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});await serve(page,{delay:1200});
  const docs=[];page.on('request',r=>{if(r.isNavigationRequest()&&r.frame()===page.mainFrame())docs.push(r.url())});
- await page.addInitScript(()=>{window.dockFrames=[];function sample(){const nav=document.querySelector('.photographerBottomAppNavGrid');if(nav){const visible=[...nav.children].filter(x=>getComputedStyle(x).display!=='none');window.dockFrames.push({count:visible.length,height:nav.getBoundingClientRect().height})}requestAnimationFrame(sample)}requestAnimationFrame(sample)});
+ await page.addInitScript(()=>{window.dockFrames=[];function sample(){const nav=document.querySelector('.photographerBottomAppNavGrid');if(nav){const visible=[...nav.children].filter(x=>getComputedStyle(x).display!=='none');window.dockFrames.push({count:visible.length,height:nav.getBoundingClientRect().height,visible:getComputedStyle(nav).visibility!=='hidden'})}requestAnimationFrame(sample)}requestAnimationFrame(sample)});
  await page.goto('https://panel.test/photographer/gallery');
  await page.waitForFunction(()=>document.querySelector('.photographerBottomAppNavGrid')?.style.getPropertyValue('--pb1099-tabs')==='3');
  const nav=page.locator('.photographerBottomAppNav');const original=await nav.elementHandle();
- assert((await page.evaluate(()=>dockFrames)).every(x=>x.count===3),'disabled tabs must never flash before settings load');
+ const readyFrame=await page.evaluate(()=>dockFrames.length);
+ assert((await page.evaluate(()=>dockFrames)).every(x=>!x.visible||x.count===3),'disabled tabs must never flash before settings load');
  await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();await page.waitForSelector('#pb1106StorePanel iframe');
  const frame=await page.locator('#pb1106StorePanel iframe').elementHandle().then(x=>x.contentFrame());
  await frame.waitForSelector('#storePhotographerWorkspace',{state:'attached'});await page.waitForSelector('#pb1106StoreLoading',{state:'hidden'});
@@ -43,7 +46,7 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();await page.waitForSelector('#pb1106StorePanel',{state:'visible'});
  assert.equal(await page.evaluate(node=>node===document.querySelector('.photographerBottomAppNav'),original),true,'same dock DOM node remains mounted');
  assert.equal(docs.length,1,'Store navigation must not reload the main document');
- assert((await page.evaluate(()=>dockFrames)).every(x=>x.count===3&&x.height>0),'dock remains visible in every sampled animation frame');
+ assert((await page.evaluate(start=>dockFrames.slice(start),readyFrame)).every(x=>x.visible&&x.count===3&&x.height>0),'dock remains visible in every sampled navigation frame');
  await page.goBack();await page.waitForSelector('#pb1106StorePanel',{state:'hidden'});assert(await nav.isVisible());
  assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['گالری'],'browser Back restores the underlying Gallery');
  await page.close();

@@ -35,8 +35,8 @@ test('R1802 cover disable checkbox persists explicit menu setting without discar
 });
 test('R1802 the actual PDF renderer draws description, quantity, fee and amount from a hydrated goods invoice',async()=>{
  const s=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),a=s.indexOf('async function Wu('),b=s.indexOf('function ',a+25),texts=[],g=new Proxy({fillText:text=>texts.push(String(text))},{get:(o,k)=>o[k]||(()=>{})});
- const c=context({Me:async()=>({invoice:{id:'invoice',items,total:100000,subtotal:100000}}),oh:()=> 'lab',pb1674DirectCustomer:()=>false,document:{fonts:{ready:Promise.resolve()},createElement:()=>({getContext:()=>g})},V:v=>String(v),ph:i=>i.description,vn:()=>'',mh:async()=>new Uint8Array([1]),hh:()=>new Uint8Array([1]),Blob});
- vm.runInContext(s.slice(a,b),c);await c.Wu({id:'invoice',order_id:'order',total:100000});for(const text of [items[0].description,'2','50000','100000'])assert(texts.includes(text),text);
+ const c=context({Me:async()=>({invoice:{id:'invoice',items,total:100000,subtotal:100000,lab_name:'لابراتوار آزمون'}}),oh:()=> 'lab',pb1674DirectCustomer:()=>false,document:{fonts:{ready:Promise.resolve()},createElement:()=>({getContext:()=>g})},V:v=>String(v),ph:i=>i.description,vn:()=>'',mh:async()=>new Uint8Array([1]),hh:()=>new Uint8Array([1]),Blob});
+ const issuerStart=s.indexOf('function pb1821LabInvoiceIssuer('),issuer=issuerStart>=0?s.slice(issuerStart,a):'';if(s.slice(a,b).includes('pb1821LabInvoiceIssuer'))assert(issuer.startsWith('function pb1821LabInvoiceIssuer('));vm.runInContext(issuer+s.slice(a,b),c);await c.Wu({id:'invoice',order_id:'order',total:100000});for(const text of ['لابراتوار آزمون',items[0].description,'2','50000','100000'])assert(texts.includes(text),text);
 });
 async function albumAutomation({device='primary',active=2,pending=0,paid=true,missing=false,existing=false}={}){
  const {handleLabAutomation}=await import('../dist/api/lab-auto-processing.js');let response,issued=0;const queries=[];

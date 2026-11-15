@@ -18,7 +18,15 @@ test('mobile print order statuses remain reachable through the existing React fi
   assert.doesNotMatch(js,/\/api\/customer\/orders/);
 });
 test('R1122 assets are included in the served photographer page',()=>{
-  assert.match(html,/photobridge-r1122-mobile-print-orders\.css\?v=r1137/);
+  // Final production build consolidates CSS into one content-addressed boot stylesheet.
+  if(html.includes('photobridge-r1122-mobile-print-orders.css?v=r1137')) {
+    assert(html.includes('photobridge-r1122-mobile-print-orders.css?v=r1137'));
+  } else {
+    const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+    assert(manifest.sources.some(s=>s.includes('photobridge-r1122-mobile-print-orders.css?v=r1137')));
+    assert(html.includes('/assets/'+manifest.boot));
+    assert(fs.readFileSync('dist/web/assets/'+manifest.boot,'utf8').includes('photobridge-r1122-mobile-print-orders.css'));
+  }
   assert.match(html,/photobridge-r1122-mobile-print-orders\.js\?v=r1122/);
 });
 

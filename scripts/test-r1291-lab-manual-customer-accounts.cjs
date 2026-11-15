@@ -20,7 +20,15 @@ test('R1294 keeps authenticated customer-account endpoints and keeps details bes
  assert(!ui.includes('invoiceChoice'));
  assert(server.includes('handleLabManualCustomerAccounts({req,url,res,pool,labId,a,bodyJson,sendJson'));
  assert(server.includes("from './lab-manual-customer-controls.js'"));
- assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
+ // CSS is merged into one content-hashed boot asset at the final performance stage.
+ if(html.includes('/photobridge-r1291-lab-account-picker.css')) {
+   assert(html.includes('/photobridge-r1291-lab-account-picker.css'));
+ } else {
+   const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+   assert(manifest.sources.some(s=>s.split(/[?#]/)[0]==='/photobridge-r1291-lab-account-picker.css'));
+   assert(html.includes('/assets/'+manifest.boot));
+   assert(fs.readFileSync('dist/web/assets/'+manifest.boot,'utf8').includes('photobridge-r1291-lab-account-picker.css'));
+ }
  // Later native-intake releases intentionally rotate this cache-bust token.
  assert.match(html,/<script\b[^>]*\bsrc="\/photobridge-r1137-lab-local-intake\.js\?v=r[0-9]+[^"<>]*"[^>]*><\/script>/);
 });

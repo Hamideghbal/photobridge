@@ -116,7 +116,7 @@ test('Windows parent frame-store mode uses the parent title row and starts the i
  try{const page=await browser.newPage({viewport:{width:1440,height:900}});await openStore(page,true,true);
   const bounds=await page.evaluate(()=>{const box=s=>document.querySelector(s).getBoundingClientRect(),active=document.querySelector('#frameCustomerNav button.active:not([data-frame-customer-cart])');return {host:document.documentElement.classList.contains('pb1126FrameStoreHost'),titleDisplay:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).display,tabsTop:box('#frameCustomerNav').top,contentTop:box('#storePhotographerWorkspace>.shell').top,background:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).backgroundColor,backgroundImage:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).backgroundImage,shellTopBorder:getComputedStyle(document.querySelector('#storePhotographerWorkspace>.shell')).borderTopWidth,navBackground:getComputedStyle(document.querySelector('#frameCustomerNav')).backgroundColor,activeBackground:getComputedStyle(active).backgroundColor,activeUnderline:getComputedStyle(active,'::after').content,glow:getComputedStyle(document.getElementById('photographerStoreIdentityBar')).boxShadow};});
   assert.equal(bounds.host,true);assert.equal(bounds.titleDisplay,'none');assert.equal(bounds.tabsTop,0);assert.equal(bounds.contentTop,0);assert.equal(bounds.background,'rgb(244, 246, 250)','same background as store owner');assert(bounds.backgroundImage.includes('linear-gradient'),'owner-matched fade visible in iframe');assert(bounds.backgroundImage.includes('49, 94, 251')&&bounds.backgroundImage.includes('92px'),'same 92px blue fade as owner');assert.equal(bounds.shellTopBorder,'0px','no doubled line at the iframe top');assert.equal(bounds.navBackground,'rgba(0, 0, 0, 0)');assert.equal(bounds.activeBackground,'rgb(255, 255, 255)');assert.equal(bounds.activeUnderline,'none');assert.equal(bounds.glow,'none');
-  const header=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');assert.match(header,/storeHeader\?\[\]:visible/);assert.match(header,/className='pb1126FrameStoreTitle'/);assert.match(header,/className='pb1126FrameStoreTabs'/);assert.match(header,/className='pb1126FrameStoreCart'/);assert.match(header,/q\.set\('pbDesktopFrameStore','1'\)/);
+  const header=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');assert.match(header,/\(active==='store'\|\|storeHeader\)\?\[\]:visible/);assert.match(header,/className='pb1126FrameStoreTitle'/);assert.match(header,/className='pb1126FrameStoreTabs'/);assert.match(header,/className='pb1126FrameStoreCart'/);assert.match(header,/q\.set\('pbDesktopFrameStore','1'\)/);
  }finally{await browser.close()}
 });
 
@@ -140,18 +140,26 @@ test('Windows parent centers the frame store title, keeps four sections right, a
  }finally{await browser.close()}
 });
 
-test('Windows camera store puts shop name centered, actions right, and an available cart left',async()=>{
+test('Windows camera store uses the current navigation-only parent and keeps the real cart in Sales',async()=>{
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   const cameraShop={...shop,id:'10000000-0000-4000-8000-000000000002',name:'دوربین مرکزی',business_category:'equipment_rental_sale',rental_enabled:true,sale_enabled:true,connected:true,canRent:true,canBuy:true};
   await openStore(page,true,false,true,cameraShop);
-  const title=page.locator('.pb1126FrameStoreTitle'),tabs=page.locator('.pb1126FrameStoreTabs .pb1126FrameStoreControl'),cart=page.locator('.pb1126FrameStoreCart .pb1126FrameStoreControl:not(.pb1249CameraCategory)').filter({hasText:'سبد خرید'}),category=page.locator('.pb1126FrameStoreCart .pb1249CameraCategory');
-  assert.equal(await title.locator('.pb1126FrameStoreCategory').textContent(),'فروشگاه تجهیزات عکاسی و فیلمبرداری');assert.equal(await title.locator('.pb1126FrameStoreShopName').textContent(),'دوربین مرکزی');const titleBox=await title.boundingBox();assert(Math.abs(titleBox.x+titleBox.width/2-720)<3);
+  const tabs=page.locator('.pb1126FrameStoreTabs .pb1126FrameStoreControl');
+  assert.equal(await page.locator('.pb1126FrameStoreTitle').count(),0,'camera identity belongs to the store, not a duplicate parent title');
+  assert.equal(await page.locator('.pb1126FrameStoreCart').count(),0,'parent must not clone a second camera cart');
   assert.equal(await page.locator('#pb1126DesktopHeader').evaluate(el=>el.classList.contains('pb1126CameraStore')),true);
-  assert.equal(await cart.count(),1);assert((await cart.boundingBox()).x<150);assert.equal(await tabs.count(),3);assert((await tabs.first().boundingBox()).x>900);
-  assert.deepEqual((await tabs.allTextContents()).map(x=>x.trim()).filter(Boolean).slice(0,3),['اجاره تجهیزات','آفیش‌های من','مالی']);
-  await cart.click();await page.frameLocator('.pb1126ContentPanel iframe[title="فروشگاه"]').locator('#saleCartDrawer').waitFor({state:'visible'});await page.locator('.pb1126ContentPanel.pb1126CartOpen').waitFor();assert((await page.locator('.pb1126ContentPanel.pb1126CartOpen').evaluate(el=>getComputedStyle(el).zIndex))>2147483500);
+  assert.equal(await tabs.count(),4);assert((await tabs.first().boundingBox()).x>900);
+  assert.deepEqual((await tabs.allTextContents()).map(x=>x.trim()),['اجاره تجهیزات','فروش تجهیزات','آفیش‌های من','مالی']);
+  const frame=page.frameLocator('.pb1126ContentPanel iframe[title="فروشگاه"]');
+  assert.equal(await frame.locator('#photographerStoreHeaderName').textContent(),cameraShop.name);
+  await tabs.filter({hasText:'آفیش‌های من'}).click();await frame.locator('#bookingsPanel').waitFor({state:'visible'});
+  await tabs.filter({hasText:'مالی'}).click();await frame.locator('#financePanel').waitFor({state:'visible'});
+  await tabs.filter({hasText:'اجاره تجهیزات'}).click();await frame.locator('#equipmentPanel').waitFor({state:'visible'});
+  await tabs.filter({hasText:'فروش تجهیزات'}).click();await frame.locator('#salesPanel').waitFor({state:'visible'});
+  await frame.locator('#saleCartBtn').click();await frame.locator('#saleCartDrawer').waitFor({state:'visible'});
+  await frame.locator('#saleCartClose').click();assert.equal(await frame.locator('#saleCartDrawer').evaluate(el=>el.classList.contains('open')),false,'the actual Sales cart remains interactive and closes');
  }finally{await browser.close()}
 });
 

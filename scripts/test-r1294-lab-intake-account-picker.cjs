@@ -18,7 +18,15 @@ test('lab intake picker has only customer identity/status while account summary 
  assert(ui.includes("adjust-initial-debt"));
  assert(!ui.includes("api('/api/lab/delegated-customers/balances')"));
  assert(ui.includes('cachedPrimary?Promise.resolve'));
- assert(html.includes('photobridge-r1291-lab-account-picker.css?v=r1294'));
+ // The final build folds original CSS (with cache tag) into the hashed boot bundle.
+ if(html.includes('photobridge-r1291-lab-account-picker.css?v=r1294')) {
+   assert(html.includes('photobridge-r1291-lab-account-picker.css?v=r1294'));
+ } else {
+   const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+   assert(manifest.sources.some(s=>s.includes('photobridge-r1291-lab-account-picker.css?v=r1294')));
+   assert(html.includes('/assets/'+manifest.boot));
+   assert(fs.readFileSync('dist/web/assets/'+manifest.boot,'utf8').includes('photobridge-r1291-lab-account-picker.css'));
+ }
  // Later native-intake releases intentionally rotate this cache-bust token.
  assert.match(html,/<script\b[^>]*\bsrc="\/photobridge-r1137-lab-local-intake\.js\?v=r[0-9]+[^"<>]*"[^>]*><\/script>/);
 });

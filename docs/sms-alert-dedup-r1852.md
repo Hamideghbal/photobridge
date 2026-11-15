@@ -16,7 +16,11 @@
 - برای یک امضای خطای کاملاً یکسان با همان منشأ، پیامک بعدی به صورت خودکار ارسال نخواهد شد تا زمانی که سابقه به‌طور جداگانه طبق فرآیند پشتیبانی بازنشانی شود.
 
 ## آزمون‌ها
-`node --test scripts/test-r1852-sms-alert-guard.cjs scripts/test-r1850-error-monitor.mjs`.
+`node --test scripts/test-r1852-sms-alert-guard.cjs scripts/test-r1852-frozen-instrumentation.cjs scripts/test-r1850-error-monitor.mjs`.
+
+با `PB_TEST_DATABASE_URL` روی دیتابیس محلی موقت `photobridge_test`، آزمون `scripts/test-r1852-sms-postgres.cjs` تکرار پس از اجرای یک پروسهٔ جدید، سقف سه هشدار در درخواست‌های هم‌زمان و شناسایی منشأ محدود به لابراتوار را با PostgreSQL واقعی بررسی می‌کند؛ هیچ پیامکی ارسال نمی‌کند.
+
+ابزارهای درج مانیتورینگ، snapshot ثابت Windows را بازنویسی نمی‌کنند؛ بررسی checksum بستهٔ لابراتوار همچنان اجباری است. callback اختیاری پیشرفت آپلود نیز در wrapper مانیتورینگ اختیاری باقی می‌ماند.
 تست syntax سرور ساخته‌شده، تکرار بین دو instance، سقف ۳ پیامک، خطاهای مرورگر، پاک‌سازی اسامی و اصل نقش‌های احراز هویت‌شده را پوشش می‌دهد.
 
 ## محدودیت‌ها

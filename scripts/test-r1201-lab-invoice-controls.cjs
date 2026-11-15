@@ -57,5 +57,5 @@ test('birthday entry is only inside general settings; both walk-in modes show lo
  assert(i>0&&j>i);
  assert(intake.includes("const [primary,root,data]=await Promise.all(["));
  assert(html.includes('/photobridge-r1201-lab-invoice-export.js?v=r1201'));
- assert(html.includes('/photobridge-r1201-lab-finance-invoice.css?v=r1201'));
+ require('./assert-css-delivery.cjs')(html,'/photobridge-r1201-lab-finance-invoice.css?v=r1201');
 });

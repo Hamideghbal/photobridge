@@ -16,7 +16,7 @@ test('desktop photographer tools omit duplicate invite and retain settings and n
  assert.match(css,/\.photographerHeaderIdentity h1\{[\s\S]*?font-size:12\.5px!important/);
  assert.match(css,/\.pb1163HeaderTools\{/);
  assert.match(css,/\.pb1163ProfileButton\{/);
- assert.match(html,/photobridge-r1124-photographer-desktop-header\.css\?v=r1165/);
+ require('./assert-css-delivery.cjs')(html,'/photobridge-r1124-photographer-desktop-header.css?v=r1165');
  assert.match(html,/photobridge-r1163-desktop-gallery-header\.js\?v=r1165/);
 });
 test('gallery manager uses back, all photos and selected photos in desktop secondary header',()=>{
@@ -43,7 +43,7 @@ test('gallery studio image alone invokes existing file input and the password is
  assert.match(fields,/رمز قبلی به‌صورت امن نگهداری می‌شود و قابل نمایش نیست/);
  assert.doesNotMatch(fields,/رمز جدید \(اختیاری\)/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?v=r1159(?=[^"\s]*&wallet=r1238)(?=[^"\s]*&cards=r1333)/);
- assert.match(html,/photobridge-r1153-gallery-manager\.css\?v=r1165/);
+ require('./assert-css-delivery.cjs')(html,'/photobridge-r1153-gallery-manager.css?v=r1165');
 });
 
 test('wallet and settings utility frames are reused between opens and invite route is removed',()=>{

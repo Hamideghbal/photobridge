@@ -27,7 +27,7 @@ test('R1780: invoice and presign handlers read immutable prices and explicit no-
  const server=fs.readFileSync('dist/api/server.js','utf8');
  assert(server.includes("url.pathname === '/api/customer/print-addon-catalog'"));
  assert(server.includes("addonCatalog:{types:addonCatalog.types,walkinRates:addonCatalog.walkinRates}, lab:"));
- assert(server.includes("catalog:{types:catalog.types,rates:catalog.rates}"));
+ assert.match(server,/catalog:\{types:catalog.types,rates:catalog.rates(?:,stocks:catalog.stocks)?\}/,'both staged and final catalog responses preserve model rates');
  assert(!server.includes("addonCatalog, lab:"),"public QR must not expose colleague pricing");
  assert(server.includes("f.chassis,f.frame,f.addon_selection,COALESCE(f.print_copies"));
  assert(server.includes("addon.chassis?.unitPrice"));

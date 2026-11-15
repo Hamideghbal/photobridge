@@ -30,7 +30,7 @@ test('build preserves existing desktop nav and provides R1134 CSS on both entryp
   if(isIndex&&!entry.includes('photobridge-r1132-photo-copies-mobile.css?v=r1134')){
    const manifest=JSON.parse(read('dist/web/assets/photobridge-boot-manifest.json'));
    for(const expected of ['/photobridge-r1132-photo-copies-mobile.css?v=r1134','/photobridge-r1126-desktop-navigation.css?v=r1242-bank-payments-wallet-ui']){
-    assert(manifest.sources.includes(expected),'missing boot CSS '+expected);
+    assert(manifest.sources.some(source=>source===expected||source.startsWith(expected+'&')),'missing boot CSS '+expected);
    }
    assert(entry.includes('/assets/'+manifest.boot));
    const bundled=read('dist/web/assets/'+manifest.boot);

@@ -75,7 +75,7 @@ async function api(req, res, url) {
 function visit(directory){
   for(const entry of fs.readdirSync(directory,{withFileTypes:true})){
     const file=directory+'/'+entry.name;
-    if(entry.isDirectory()){visit(file);continue;}
+    if(entry.isDirectory()){if(!['desktop-ui','lab-desktop-ui'].includes(entry.name))visit(file);continue;}
     if(!entry.name.endsWith('.html'))continue;
     let html=fs.readFileSync(file,'utf8');
     if(html.includes('photobridge-error-monitor-r1850.js')&&!html.includes('photobridge-upload-health-r1851.js')){

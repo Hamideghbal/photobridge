@@ -53,6 +53,8 @@ jobs:
         run: node --test scripts/test-r1296-native-alerts.cjs scripts/test-r1296-lab-settings.cjs scripts/test-r1297-lab-settings-speed.cjs scripts/test-r1298-lab-header-navigation.cjs scripts/test-r1300-lab-header-build-compat.cjs scripts/test-r1301-lab-site-general.cjs
       - name: Run production build
         run: npm run build
+      - name: Verify durable administrator SMS guards and frozen desktop instrumentation
+        run: node --test scripts/test-r1852-sms-alert-guard.cjs scripts/test-r1852-frozen-instrumentation.cjs scripts/test-r1852-html-integrity.cjs
       - name: Verify primary-device binding in laboratory internet downloads
         run: node --test scripts/test-r1290-lab-online-download-primary.cjs
       - name: Verify cross-device automatic commitment print receiver
@@ -135,8 +137,8 @@ jobs:
         run: |
           node --check dist/web/photobridge-r1122-mobile-print-orders.js
           node --test scripts/test-r1122-mobile-print-orders.cjs
-      - name: Verify photo print quantities, filename and mobile navigation
-        run: node --test scripts/test-r1132-photo-print-copies.cjs
+      - name: Verify photo print quantities, model pricing, invoices and mobile navigation
+        run: node --test scripts/test-r1132-photo-print-copies.cjs scripts/test-r1780-model-price-invoice.cjs scripts/test-r1794-model-stock-transaction.cjs scripts/test-r1796-print-submit-terms.cjs scripts/test-r1799-product-auto-invoice.cjs scripts/test-r1802-product-invoice-album-flow.cjs
       - name: Verify photographer mobile bottom navigation never wraps into two rows
         run: |
           # Browser-backed regression tests run before the later browser suite.
@@ -220,6 +222,10 @@ jobs:
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'photobridge_test'"
           sudo -u postgres createdb photobridge_test
+      - name: Verify persistent SMS deduplication and origin lookup in PostgreSQL
+        env:
+          PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
+        run: node --test scripts/test-r1852-sms-postgres.cjs
       - name: Verify atomic frame model concurrent edits
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
@@ -288,7 +294,7 @@ jobs:
 
   verify-frame-live-publication:
     name: Verify shared frame cards on live site
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/aaa-liara-release'
     needs: deploy-verification
     runs-on: ubuntu-latest
     timeout-minutes: 10

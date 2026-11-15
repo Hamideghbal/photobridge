@@ -2,16 +2,18 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const {readFileSync}=require('node:fs');
+const {createHandoffServer}=require('./equipment-handoff-test-server.cjs');
 const shopId='10000000-0000-4000-8000-000000000001';
 const token='A'.repeat(43);
 for(const width of [390,1440])test('local storefront login POST handoff reaches exact shop without repeating password at '+width,async()=>{
  const {renderEquipmentPage}=await import('../dist/api/equipment-site-content.js');
  const shop={id:shopId,name:'فروشگاه دوربین تست',sale_enabled:true,rental_enabled:true,city:'تهران'};
- const html=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:'studio.example.test',pathname:'/'}).html;
- const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  let checkedPassword=false,receivedHandoff=false;
+ const handoff=await createHandoffServer(shopId,data=>{assert.equal(checkedPassword,true);assert.equal(data.get('ticket'),token);assert.equal(data.get('origin'),'https://studio.example.test');assert.equal(data.has('password'),false);receivedHandoff=true});
+ const html=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:'studio.example.test',pathname:'/'}).html;
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox',...handoff.chromiumArgs]});
  try{
-  const page=await browser.newPage({viewport:{width,height:900}});
+  const page=await browser.newPage({viewport:{width,height:900},ignoreHTTPSErrors:true});
   // Navigation may cancel auxiliary scripts from the old page; assert the actual login exchange and destination instead.
   await page.route('https://studio.example.test/**',route=>{
    const url=new URL(route.request().url()),p=url.pathname;
@@ -30,37 +32,26 @@ for(const width of [390,1440])test('local storefront login POST handoff reaches 
    }
    return route.fulfill({status:200,contentType:'text/plain',body:''});
   });
-  await page.route('https://photobridge.ir/**',route=>{
-   const url=new URL(route.request().url());
-   if(url.pathname==='/api/auth/equipment-site-handoff'){
-    const data=new URLSearchParams(route.request().postData());
-    assert.equal(data.get('ticket'),token);
-    assert.equal(data.get('origin'),'https://studio.example.test');
-    assert.equal(data.has('password'),false);
-    receivedHandoff=true;
-    return route.fulfill({status:303,headers:{location:'https://photobridge.ir/equipment-rental/book?panel=rental&pbDirectShop='+shopId,'cache-control':'no-store'},body:''});
-   }
-   return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta charset="utf-8"></head><body><main id="officeReached">PhotoBridge rental</main></body></html>'});
-  });
   await page.goto('https://studio.example.test/');
   await page.locator('.photographer-dropdown summary').click();
   await page.locator('#equipmentHeaderLogin [name=mobile]').fill('09121234567');
   await page.locator('#equipmentHeaderLogin [name=password]').fill('correct-password');
   await page.locator('#equipmentHeaderLogin [type=submit]').click();
   await page.waitForURL(url=>url.hostname==='photobridge.ir'&&url.searchParams.get('pbDirectShop')===shopId,{timeout:15000});
-  assert(checkedPassword);assert(receivedHandoff);
+  assert(checkedPassword);assert(receivedHandoff);handoff.verify();
   assert.equal(new URL(page.url()).searchParams.get('pbDirectShop'),shopId,'the exact originating shop must be in destination URL');
- }finally{await browser.close()}
+ }finally{await browser.close();await handoff.close()}
 });
 
 for(const width of [390,1440])test('centered office form signs in from original shop, stays readable at '+width,async()=>{
  const {renderEquipmentPage}=await import('../dist/api/equipment-site-content.js');
  const shop={id:shopId,name:'فروشگاه دوربین تست',sale_enabled:true,rental_enabled:true,city:'تهران'};
- const pageHtml=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:'studio.example.test',pathname:'/rental-equipment'}).html;
- const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  let authenticated=false,exchanged=false;
+ const handoff=await createHandoffServer(shopId,data=>{assert(authenticated);assert.equal(data.get('ticket'),token);assert.equal(data.get('origin'),'https://studio.example.test');assert(!data.has('password'));exchanged=true});
+ const pageHtml=renderEquipmentPage(shop,{},'https://photobridge.ir',{hostname:'studio.example.test',pathname:'/rental-equipment'}).html;
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox',...handoff.chromiumArgs]});
  try{
-  const page=await browser.newPage({viewport:{width,height:900}});
+  const page=await browser.newPage({viewport:{width,height:900},ignoreHTTPSErrors:true});
   await page.route('https://studio.example.test/**',route=>{
    const p=new URL(route.request().url()).pathname;
    if(p==='/rental-equipment')return route.fulfill({status:200,contentType:'text/html; charset=utf-8',headers:{'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; form-action 'self' https://photobridge.ir; img-src 'self' data:"},body:pageHtml});
@@ -78,15 +69,6 @@ for(const width of [390,1440])test('centered office form signs in from original 
    }
    return route.fulfill({status:200,contentType:'text/plain',body:''});
   });
-  await page.route('https://photobridge.ir/**',route=>{
-   if(new URL(route.request().url()).pathname==='/api/auth/equipment-site-handoff'){
-    const data=new URLSearchParams(route.request().postData());
-    assert.equal(data.get('ticket'),token);assert.equal(data.get('origin'),'https://studio.example.test');
-    assert(!data.has('password'));exchanged=true;
-    return route.fulfill({status:303,headers:{location:'https://photobridge.ir/equipment-rental/book?panel=rental&pbDirectShop='+shopId},body:''});
-   }
-   return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta charset="utf-8"></head><body>Office</body></html>'});
-  });
   await page.goto('https://studio.example.test/rental-equipment');
   await page.locator('#equipmentOfficePageLogin').waitFor({state:'visible'});
   assert.equal(await page.locator('[data-open-equipment-login],.equipment-office-cta').count(),0);
@@ -98,6 +80,6 @@ for(const width of [390,1440])test('centered office form signs in from original 
   await page.locator('#equipmentOfficePageLogin input[name=password]').fill('correct-password');
   await page.locator('#equipmentOfficePageLogin button[type=submit]').click();
   await page.waitForURL(u=>u.hostname==='photobridge.ir'&&u.searchParams.get('pbDirectShop')===shopId,{timeout:15000});
-  assert(authenticated&&exchanged);
- }finally{await browser.close();}
+  assert(authenticated&&exchanged);handoff.verify();
+ }finally{await browser.close();await handoff.close();}
 });

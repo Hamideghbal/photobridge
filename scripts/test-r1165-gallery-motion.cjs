@@ -46,7 +46,8 @@ test('gallery motion asset cache survives all build transforms',()=>{
   ['photobridge-r1124-photographer-desktop-header','css'],
   ['photobridge-r1163-desktop-gallery-header','js']
  ]){
-  assert(html.includes(file+'.'+ext+'?v=r1165'),file+' HTML cache version');
+  if(ext==='css')require('./assert-css-delivery.cjs')(html,'/'+file+'.css?v=r1165');
+  else assert(html.includes(file+'.'+ext+'?v=r1165'),file+' HTML cache version');
   assert(guard.includes(file+'.'+ext+'?v=r1165'),file+' build cache version');
  }
 });

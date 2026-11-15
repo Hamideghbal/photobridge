@@ -1357,6 +1357,8 @@ runR1314(process.execPath,['--test','scripts/test-r1851-upload-health.cjs'],{std
 // R1852: suppress duplicate administrator SMS before contacting the paid provider.
 await deployStep("./enable-r1852-alert-sms-dedup.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1852-sms-alert-guard.cjs','scripts/test-r1850-error-monitor.mjs'],{stdio:'inherit'});
+await deployStep("./enable-r1854-print-recovery.mjs");
+runR1314(process.execPath,["--test","scripts/test-r1854-print-recovery.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");
 // Refresh hash-pinned Store bytes after every final HTML writer.

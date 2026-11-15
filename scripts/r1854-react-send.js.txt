@@ -1,0 +1,5 @@
+if(!PB1854ready||!PB1854manager.current)return Ze(PB1854initError||'هنوز وضعیت ارسال قبلی بررسی نشده است.');
+try{await PB1854persist.current;
+if(!PB1854manager.current.snapshot()?.orderId)await PB1854manager.current.selection(E.current,{delivery:Z,priority:Se});
+await PB1854retry();
+}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}

@@ -1,0 +1,27 @@
+// R1854: preserve print drafts and retry the same file; no schema changes.
+function pb1854Uuid(value) { return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '')); }
+function pb1854Identity(body) {
+    const fields = ['name','relativePath','bytes','contentType','width','height','dpi','printSizeId','customSize','printType','chassis','frame','chassisModelId','frameModelId','frameColorId','withoutPrint','cropHandling','printCopies','checksum'];
+    const canonical = value => value && typeof value === 'object' ? Array.isArray(value) ? value.map(canonical) : Object.fromEntries(Object.keys(value).sort().map(key => [key,canonical(value[key])])) : value;
+    return crypto.createHash('sha256').update(JSON.stringify(canonical(Object.fromEntries(fields.filter(key => body[key] !== undefined).map(key => [key,body[key]]))))).digest('hex');
+}
+async function pb1854ExistingFile(id, orderId, labId, customerId, body) {
+    const q = await pool.query('SELECT * FROM order_files WHERE id=$1 AND order_id=$2 AND lab_id=$3 AND customer_id=$4', [id,orderId,labId,customerId]);
+    if (!q.rowCount) return null;
+    const file = q.rows[0];
+    if (file.addon_selection?._uploadRecovery?.identity !== pb1854Identity(body))
+        throw Object.assign(new Error('upload_identity_conflict'),{status:409});
+    if (!['pending','active'].includes(file.original_state)) throw Object.assign(new Error('upload_not_recoverable'),{status:409});
+    return file;
+}
+async function pb1854Stored(row) {
+    if (String(row.object_key || '').startsWith('local/')) {
+        try { const st=await fs.promises.stat(localPathForKey(row.object_key));return st.isFile() && st.size === Number(row.bytes); }
+        catch(error) { if (error.code === 'ENOENT') return false;throw error; }
+    }
+    try { const st=await storageStat(row.object_key);return Number(st?.ContentLength) === Number(row.bytes); }
+    catch(error) {
+        if (Number(error?.$metadata?.httpStatusCode || error?.statusCode) === 404 || ['NoSuchKey','NotFound'].includes(error?.name)) return false;
+        throw error;
+    }
+}

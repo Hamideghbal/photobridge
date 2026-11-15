@@ -85,7 +85,7 @@ ORDER BY e.received_at DESC,e.id DESC
 LIMIT $4 OFFSET $5`;
 // Durable order success metrics are written exactly once when an order enters 'sent'.
 // Legacy successful orders can survive order deletion, but their studio/amount will then be unknown.
-export const dailySuccessSummarySql=\`
+export const dailySuccessSummarySql=`
 SELECT m.lab_id::text AS lab_id,
        COALESCE(NULLIF(l.name,''),NULLIF(max(m.lab_name),''),'لابراتوار نامشخص') AS lab_name,
        o.customer_id::text AS photographer_id,
@@ -103,10 +103,10 @@ LEFT JOIN labs l ON l.id=m.lab_id
 LEFT JOIN orders o ON o.id=m.order_id AND o.lab_id=m.lab_id
 LEFT JOIN users u ON u.id=o.customer_id
 LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
-WHERE m.mode='print' AND m.sent_at>=\${dayStart} AND m.sent_at<\${dayEnd}
+WHERE m.mode='print' AND m.sent_at>=${dayStart} AND m.sent_at<${dayEnd}
 GROUP BY m.lab_id,l.name,o.customer_id,pp.studio_name,u.name
-ORDER BY successful_orders DESC,last_at DESC LIMIT 3001\`;
-export const dailySuccessSql=\`
+ORDER BY successful_orders DESC,last_at DESC LIMIT 3001`;
+export const dailySuccessSql=`
 SELECT m.order_id::text AS order_id,m.sent_at,
        m.lab_id::text AS lab_id,
        COALESCE(NULLIF(l.name,''),NULLIF(m.lab_name,''),'لابراتوار نامشخص') AS lab_name,
@@ -121,10 +121,10 @@ LEFT JOIN labs l ON l.id=m.lab_id
 LEFT JOIN orders o ON o.id=m.order_id AND o.lab_id=m.lab_id
 LEFT JOIN users u ON u.id=o.customer_id
 LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
-WHERE m.mode='print' AND m.sent_at>=\${dayStart} AND m.sent_at<\${dayEnd}
+WHERE m.mode='print' AND m.sent_at>=${dayStart} AND m.sent_at<${dayEnd}
   AND ($2::text IS NULL OR m.lab_id::text=$2)
   AND ($3::text IS NULL OR o.customer_id::text=$3)
-ORDER BY m.sent_at DESC,m.order_id DESC LIMIT $4 OFFSET $5\`;
+ORDER BY m.sent_at DESC,m.order_id DESC LIMIT $4 OFFSET $5`;
 export const dailyIncidentsSql=`
 SELECT i.id,i.last_at,i.payload,
        COALESCE(NULLIF(l.name,''),'نامشخص') AS lab_name,

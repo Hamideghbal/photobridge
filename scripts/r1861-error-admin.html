@@ -28,6 +28,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:var(--blue);text-
 .lab summary{cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:13px 14px;background:#f9fbfe;list-style:none}
 .lab summary::-webkit-details-marker{display:none}.lab summary::before{content:"⌄";display:inline-block;font-size:17px;color:var(--muted);transition:transform .2s}
 .lab[open] summary::before{transform:rotate(180deg)}.lab summary b{font-size:14.5px}.lab summary .pill{padding:2px 10px;border-radius:30px;background:var(--red-soft);color:var(--red);font-size:12px;font-weight:700}
+.lab summary .pill.ok{background:#e9f7f1;color:#147450}
 .lab summary .extra{font-size:12.5px;color:var(--muted);margin-inline-start:auto}
 .scroll{overflow:auto;max-width:100%;border:1px solid #e8eef4;border-radius:12px}
 .lab .scroll{margin:10px;border-radius:8px}table{border-collapse:separate;border-spacing:0;width:100%;min-width:1010px;text-align:right}
@@ -39,7 +40,7 @@ td.number{font-variant-numeric:tabular-nums;white-space:nowrap}.dim{font-size:12
 .status-failed{background:var(--red-soft);color:#9e2635;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;white-space:nowrap}
 .minibtn{border:1px solid #b9cdeb;background:var(--blue-soft);color:#1c549b;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap}
 .empty{padding:22px;text-align:center;color:var(--muted);font-size:14px}
-#moreEvents,#moreIncidents{margin-top:13px}.incident-detail{padding:13px;border:1px solid var(--line);background:#f8fafc;border-radius:10px;font-size:13px;line-height:1.9}
+#moreEvents,#moreIncidents,#moreSuccesses{margin-top:13px}.incident-detail{padding:13px;border:1px solid var(--line);background:#f8fafc;border-radius:10px;font-size:13px;line-height:1.9}
 .incident-detail p{margin:3px 0;word-break:break-word}.incident-detail code{direction:ltr;unicode-bidi:plaintext;display:inline-block;max-width:100%;overflow-wrap:anywhere}
 #incident-note{margin:0 0 10px;color:#6b7480;font-size:12.6px}
 .warn{color:#94600e}
@@ -70,6 +71,10 @@ td.number{font-variant-numeric:tabular-nums;white-space:nowrap}.dim{font-size:12
 <div class="metric"><span>لابراتوارهای درگیر</span><strong id="metricLabs">—</strong></div>
 <div class="metric"><span>عکاسی‌های درگیر</span><strong id="metricStudios">—</strong></div>
 <div class="metric"><span>نمونه‌های خطای برنامه (آخرین رخداد در روز)</span><strong id="metricIncidents">—</strong></div>
+<div class="metric"><span>سفارش‌های چاپ ارسال‌شده</span><strong id="metricSuccesses">—</strong></div>
+<div class="metric"><span>عکس‌های سفارش‌های موفق</span><strong id="metricSuccessFiles">—</strong></div>
+<div class="metric"><span>حجم کل ارسال موفق</span><strong id="metricSuccessBytes">—</strong></div>
+<div class="metric"><span>جمع مبلغ سفارش‌های موجود</span><strong id="metricSuccessAmount">—</strong></div>
 </div>
 <section class="panel">
 <div class="panel-head"><h2>گزارش روزانه به تفکیک لابراتوار و عکاسی</h2><p>برای مشاهدهٔ عکاسی‌های هر لابراتوار، نام لابراتوار را باز کنید.</p></div>
@@ -84,6 +89,13 @@ td.number{font-variant-numeric:tabular-nums;white-space:nowrap}.dim{font-size:12
 <p class="hint">هر ردیف یک رویداد خطای ثبت‌شده است. مبلغ فقط برای سفارش‌های موجود نشان داده می‌شود. حجم، بایت‌های گزارش‌شده در همان تلاش است، نه حجم قطعی فایل روی سرور.</p>
 </section>
 <section class="panel">
+<div class="panel-head"><h2>جزئیات سفارش‌های ارسال‌شده با موفقیت</h2><p id="successMeta">—</p></div>
+<div class="scroll"><table><thead><tr><th>زمان ثبت ارسال (تهران)</th><th>لابراتوار</th><th>عکاسی</th><th>سفارش</th><th>مبلغ</th><th>عکس‌ها</th><th>حجم فایل‌های اصلی</th><th>فایل با حجم نامشخص</th><th>نوع ثبت</th></tr></thead>
+<tbody id="successes"><tr><td class="empty" colspan="9">در حال دریافت…</td></tr></tbody></table></div>
+<button id="moreSuccesses" class="btn secondary" type="button" hidden>نمایش ارسال‌های موفق بیشتر</button>
+<p class="hint">«موفق» یعنی سفارش چاپ در سرور وارد وضعیت «ارسال‌شده» شده است؛ این شاخص به‌تنهایی تأیید دانلود در لابراتوار نیست. برای سفارش‌های قدیمی که اطلاعاتشان پاک شده است، نام عکاسی، شماره و مبلغ ممکن است نامشخص باشد.</p>
+</section>
+<section class="panel">
 <div class="panel-head"><h2>خطاهای عمومی برنامه و سرویس</h2><p id="incidentsMeta">—</p></div>
 <p id="incident-note">تعداد تکرار این بخش از زمان ایجاد نمونهٔ خطا محاسبه شده، نه فقط برای روز انتخاب‌شده. تاریخ نشان‌دهندهٔ آخرین وقوع نمونه در آن روز است.</p>
 <div class="scroll"><table>
@@ -95,7 +107,7 @@ td.number{font-variant-numeric:tabular-nums;white-space:nowrap}.dim{font-size:12
 (function(){
 'use strict';
 const el=id=>document.getElementById(id);
-const state={summary:[],events:[],incidents:[],eventsTotal:0,incidentsTotal:0,pageSize:200,loading:false};
+const state={summary:[],successSummary:[],events:[],incidents:[],successes:[],eventsTotal:0,incidentsTotal:0,successesTotal:0,pageSize:200,loading:false};
 const timeFmt=new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 const nf=new Intl.NumberFormat('fa-IR'), money=new Intl.NumberFormat('fa-IR',{maximumFractionDigits:0});
 const stage={session:'جلسه',create:'ساخت سفارش',presign:'دریافت مجوز',transfer:'انتقال فایل',complete:'تأیید فایل',submit:'ثبت سفارش',cleanup:'پاک‌سازی',derivative:'تبدیل عکس',download:'دانلود',upload:'آپلود',browser:'مرورگر',api:'API'};
@@ -111,56 +123,78 @@ const clear=node=>node.replaceChildren();
 function td(tr,value,cls){const cell=document.createElement('td');cell.textContent=safe(value);if(cls)cell.className=cls;tr.append(cell);return cell;}
 function noRows(node,count,message){const tr=document.createElement('tr'),c=td(tr,message,'empty');c.colSpan=count;node.append(tr);}
 function option(select,value,label){const o=document.createElement('option');o.value=value;o.textContent=label;select.append(o);}
-function query(offsetEvent,offsetIncident){
+function query(offsetEvent,offsetIncident,offsetSuccess){
  const p=new URLSearchParams();if(el('day').value)p.set('day',el('day').value);
  if(el('lab').value)p.set('labId',el('lab').value);
  if(el('studio').value)p.set('photographerId',el('studio').value);
- p.set('eventOffset',String(offsetEvent));p.set('incidentOffset',String(offsetIncident));
+ p.set('eventOffset',String(offsetEvent));p.set('incidentOffset',String(offsetIncident));p.set('successOffset',String(offsetSuccess));
  return '/api/admin/error-daily?'+p.toString();
+}
+function combinedRows(){
+ const map=new Map();
+ const add=(r,success)=>{
+  const key=r.lab_id+':'+(r.photographer_id||'unknown');
+  let out=map.get(key);
+  if(!out){out={lab_id:r.lab_id,lab_name:r.lab_name,photographer_id:r.photographer_id,photographer_name:r.photographer_name,
+   failures:0,orders:0,files:0,sessions:0,reported_sent_bytes:0,first_at:null,last_at:null,
+   successful_orders:0,successful_files:0,successful_bytes:0,historical_orders:0,success_last_at:null};map.set(key,out)}
+  if(success){out.successful_orders+=Number(r.successful_orders||0);out.successful_files+=Number(r.successful_files||0);
+   out.successful_bytes+=Number(r.successful_bytes||0);out.historical_orders+=Number(r.historical_orders||0);out.success_last_at=r.last_at||out.success_last_at;}
+  else {out.failures+=Number(r.failures||0);out.orders+=Number(r.orders||0);out.files+=Number(r.files||0);
+   out.sessions+=Number(r.sessions||0);out.reported_sent_bytes+=Number(r.reported_sent_bytes||0);out.first_at=r.first_at;out.last_at=r.last_at;}
+ };
+ for(const r of state.summary)add(r,false);
+ for(const r of state.successSummary)add(r,true);
+ return [...map.values()];
 }
 function groupData(rows){
  const groups=new Map();
- for(const r of rows){let g=groups.get(r.lab_id);if(!g){g={id:r.lab_id,name:r.lab_name,total:0,studios:[]};groups.set(r.lab_id,g)}
- g.total+=Number(r.failures||0);g.studios.push(r);}
- return [...groups.values()].sort((a,b)=>b.total-a.total);
+ for(const r of rows){let g=groups.get(r.lab_id);if(!g){g={id:r.lab_id,name:r.lab_name,total:0,success:0,studios:[]};groups.set(r.lab_id,g)}
+ g.total+=Number(r.failures||0);g.success+=Number(r.successful_orders||0);g.studios.push(r);}
+ return [...groups.values()].sort((a,b)=>(b.total+b.success)-(a.total+a.success));
 }
 function drawFilters(){
- const oldLab=el('lab').value,oldStudio=el('studio').value,groups=groupData(state.summary);
+ const oldLab=el('lab').value,oldStudio=el('studio').value,groups=groupData(combinedRows());
  clear(el('lab'));option(el('lab'),'','همهٔ لابراتوارها');
  for(const g of groups)option(el('lab'),g.id,g.name+' ('+n(g.total)+')');
  if(groups.some(g=>g.id===oldLab))el('lab').value=oldLab;
  clear(el('studio'));option(el('studio'),'','همهٔ عکاسی‌ها');
- const allowed=state.summary.filter(x=>!el('lab').value||x.lab_id===el('lab').value);
- const known=new Set();for(const r of allowed)if(!known.has(r.photographer_id)){known.add(r.photographer_id);option(el('studio'),r.photographer_id,r.photographer_name)}
+ const allowed=combinedRows().filter(x=>!el('lab').value||x.lab_id===el('lab').value);
+ const known=new Set();for(const r of allowed)if(r.photographer_id&&!known.has(r.photographer_id)){known.add(r.photographer_id);option(el('studio'),r.photographer_id,r.photographer_name)}
  if(known.has(oldStudio))el('studio').value=oldStudio;
 }
 function drawGroups(){
  const container=el('groups');clear(container);
- const groups=groupData(state.summary);
- if(!groups.length){const div=document.createElement('div');div.className='empty';div.textContent='برای این روز هنوز خطای آپلود دارای شناسهٔ لابراتوار ثبت نشده است. موارد عمومی را در جدول پایین بررسی کنید.';container.append(div);return}
+ const groups=groupData(combinedRows());
+ if(!groups.length){const div=document.createElement('div');div.className='empty';div.textContent='برای این روز هنوز ارسال موفق یا رویداد خطای آپلود ثبت نشده است.';container.append(div);return}
  for(const [index,g] of groups.entries()){
   const details=document.createElement('details');details.className='lab';details.open=index===0||g.id===el('lab').value;
   const summary=document.createElement('summary');const title=document.createElement('b');title.textContent=g.name;summary.append(title);
   const badge=document.createElement('span');badge.className='pill';badge.textContent=n(g.total)+' خطا';summary.append(badge);
-  const caption=document.createElement('span');caption.className='extra';caption.textContent=n(g.studios.length)+' عکاسی دارای خطا';summary.append(caption);details.append(summary);
+  const ok=document.createElement('span');ok.className='pill ok';ok.textContent=n(g.success)+' سفارش موفق';summary.append(ok);
+  const caption=document.createElement('span');caption.className='extra';caption.textContent=n(g.studios.length)+' عکاسی';summary.append(caption);details.append(summary);
   const scroll=document.createElement('div');scroll.className='scroll';
-  const table=document.createElement('table');table.innerHTML='<thead><tr><th>عکاسی</th><th>خطاهای همان روز</th><th>سفارش‌های ثبت‌شده</th><th>فایل‌ها</th><th>جلسه‌ها</th><th>اولین خطا</th><th>آخرین خطا</th><th>بایت‌های گزارش‌شده</th><th>جزئیات</th></tr></thead>';
+  const table=document.createElement('table');table.innerHTML='<thead><tr><th>عکاسی</th><th>سفارش موفق</th><th>عکس موفق</th><th>حجم موفق</th><th>خطاهای همان روز</th><th>سفارش‌های دارای خطای ثبت‌شده</th><th>جلسه‌های خطادار</th><th>اولین خطا</th><th>آخرین خطا</th><th>آخرین ارسال موفق</th><th>جزئیات</th></tr></thead>';
   const tbody=document.createElement('tbody');
   for(const r of g.studios){
-   const tr=document.createElement('tr');td(tr,r.photographer_name);td(tr,n(r.failures),'number');td(tr,n(r.orders),'number');
-   td(tr,n(r.files),'number');td(tr,n(r.sessions),'number');td(tr,ts(r.first_at),'number');td(tr,ts(r.last_at),'number');td(tr,byte(r.reported_sent_bytes),'number');
+   const tr=document.createElement('tr');td(tr,r.photographer_name);td(tr,n(r.successful_orders),'number');td(tr,n(r.successful_files),'number');td(tr,byte(r.successful_bytes),'number');
+   td(tr,n(r.failures),'number');td(tr,n(r.orders),'number');td(tr,n(r.sessions),'number');td(tr,ts(r.first_at),'number');td(tr,ts(r.last_at),'number');td(tr,ts(r.success_last_at),'number');
    const action=td(tr,'');const b=document.createElement('button');b.type='button';b.className='minibtn';b.textContent='دیدن خطاها';
-   b.onclick=()=>{el('lab').value=r.lab_id;drawFilters();el('studio').value=r.photographer_id;load();el('events').closest('section').scrollIntoView({behavior:'smooth'})};action.append(b);tbody.append(tr);
+   b.onclick=()=>{el('lab').value=r.lab_id;drawFilters();el('studio').value=r.photographer_id||'';load();el('events').closest('section').scrollIntoView({behavior:'smooth'})};action.append(b);tbody.append(tr);
   }
   table.append(tbody);scroll.append(table);details.append(scroll);container.append(details);
  }
 }
 function drawMetrics(){
- const filtered=state.summary.filter(x=>(!el('lab').value||x.lab_id===el('lab').value)&&(!el('studio').value||x.photographer_id===el('studio').value));
+ const filtered=combinedRows().filter(x=>(!el('lab').value||x.lab_id===el('lab').value)&&(!el('studio').value||x.photographer_id===el('studio').value));
  el('metricErrors').textContent=n(filtered.reduce((v,x)=>v+Number(x.failures||0),0))+(state.summaryTruncated?' +':'');
  el('metricLabs').textContent=n(new Set(filtered.map(x=>x.lab_id)).size);
  el('metricStudios').textContent=n(new Set(filtered.map(x=>x.photographer_id)).size);
  el('metricIncidents').textContent=n(state.incidentsTotal);
+ el('metricSuccesses').textContent=n(filtered.reduce((a,x)=>a+x.successful_orders,0));
+ el('metricSuccessFiles').textContent=n(filtered.reduce((a,x)=>a+x.successful_files,0));
+ el('metricSuccessBytes').textContent=byte(filtered.reduce((a,x)=>a+x.successful_bytes,0));
+ el('metricSuccessAmount').textContent=cash(state.successes.filter(x=>!el('lab').value||x.lab_id===el('lab').value).reduce((a,x)=>a+Number(x.order_total||0),0))+(state.successes.length<state.successesTotal?' (نمایش فعلی)':'');
 }
 function drawEvents(){
  const body=el('events');clear(body);
@@ -175,6 +209,20 @@ function drawEvents(){
  if(!state.events.length)noRows(body,12,'برای فیلتر انتخاب‌شده رویداد خطای ارسال ثبت نشده است.');
  el('eventsMeta').textContent=n(state.events.length)+' مورد از '+n(state.eventsTotal);
  el('moreEvents').hidden=state.events.length>=state.eventsTotal;
+}
+function drawSuccesses(){
+ const body=el('successes');clear(body);
+ for(const e of state.successes){
+  const tr=document.createElement('tr');
+  td(tr,ts(e.sent_at),'number');td(tr,e.lab_name);td(tr,e.photographer_name);
+  td(tr,e.order_number==null?'—':'#'+n(e.order_number),'number');
+  td(tr,cash(e.order_total),'number');td(tr,n(e.file_count),'number');
+  td(tr,byte(e.original_bytes),'number');td(tr,n(e.unknown_size_files),'number');
+  td(tr,e.historical_snapshot?'بازسازی تاریخی':'ثبت قطعی سفارش');body.append(tr);
+ }
+ if(!state.successes.length)noRows(body,9,'برای این تاریخ سفارش چاپ موفقی با فیلتر انتخاب‌شده ثبت نشده است.');
+ el('successMeta').textContent=n(state.successes.length)+' مورد از '+n(state.successesTotal);
+ el('moreSuccesses').hidden=state.successes.length>=state.successesTotal;
 }
 function detailsForIncident(row,anchor){
  const d=document.createElement('div');d.className='incident-detail';
@@ -212,20 +260,20 @@ function drawIncidents(){
 }
 async function load(mode){
  if(state.loading)return;state.loading=true;el('refresh').disabled=true;
- const moreEvent=mode==='event',moreIncident=mode==='incident';
- if(!moreEvent&&!moreIncident)el('state').textContent='در حال دریافت گزارش…';
+ const moreEvent=mode==='event',moreIncident=mode==='incident',moreSuccess=mode==='success';
+ if(!moreEvent&&!moreIncident&&!moreSuccess)el('state').textContent='در حال دریافت گزارش…';
  try{
- const offsetEvent=moreEvent?state.events.length:0,offsetIncident=moreIncident?state.incidents.length:0;
- const r=await fetch(query(offsetEvent,offsetIncident),{credentials:'same-origin',headers:{'x-photobridge-portal':'admin'}});
+ const offsetEvent=moreEvent?state.events.length:0,offsetIncident=moreIncident?state.incidents.length:0,offsetSuccess=moreSuccess?state.successes.length:0;
+ const r=await fetch(query(offsetEvent,offsetIncident,offsetSuccess),{credentials:'same-origin',headers:{'x-photobridge-portal':'admin'}});
  if(!r.ok)throw Error(r.status===403||r.status===401?'برای مشاهدهٔ این صفحه باید با حساب ادمین وارد شوید.':'خطای دریافت گزارش: HTTP '+r.status);
  const data=await r.json();el('day').value=data.day;
  state.summary=data.summary||[];state.summaryTruncated=Boolean(data.summaryTruncated);
- if(moreEvent)state.events.push(...(data.events||[]));else if(!moreIncident)state.events=data.events||[];
- if(moreIncident)state.incidents.push(...(data.incidents||[]));else if(!moreEvent)state.incidents=data.incidents||[];
- state.eventsTotal=moreIncident?state.eventsTotal:Number(data.eventsTotal||0);
- state.incidentsTotal=moreEvent?state.incidentsTotal:Number(data.incidentsTotal||0);
- if(!moreEvent&&!moreIncident)drawFilters();
- drawMetrics();drawGroups();drawEvents();drawIncidents();
+ state.successSummary=data.successSummary||[];state.successSummaryTruncated=Boolean(data.successSummaryTruncated);
+ if(moreEvent)state.events.push(...(data.events||[]));else if(!moreIncident&&!moreSuccess)state.events=data.events||[];
+ if(moreIncident)state.incidents.push(...(data.incidents||[]));else if(!moreEvent&&!moreSuccess)state.incidents=data.incidents||[];
+ if(moreSuccess)state.successes.push(...(data.successes||[]));else if(!moreEvent&&!moreIncident)state.successes=data.successes||[];
+ if(!moreEvent&&!moreIncident&&!moreSuccess){state.eventsTotal=Number(data.eventsTotal||0);state.incidentsTotal=Number(data.incidentsTotal||0);state.successesTotal=Number(data.successesTotal||0);drawFilters()}
+ drawMetrics();drawGroups();drawEvents();drawSuccesses();drawIncidents();
  el('state').textContent='آخرین تازه‌سازی: '+ts(new Date())+(state.summaryTruncated?' — تعداد گروه‌ها زیاد است؛ برای بررسی دقیق‌تر یک لابراتوار انتخاب کنید.':'');
  }catch(e){el('state').textContent=e.message}
  finally{state.loading=false;el('refresh').disabled=false}
@@ -235,10 +283,10 @@ el('day').onchange=()=>{el('lab').value='';el('studio').value='';load()};
 el('lab').onchange=()=>{drawFilters();load()};
 el('studio').onchange=()=>load();
 el('clear').onclick=()=>{el('lab').value='';el('studio').value='';drawFilters();load()};
-el('moreEvents').onclick=()=>load('event');el('moreIncidents').onclick=()=>load('incident');
+el('moreEvents').onclick=()=>load('event');el('moreIncidents').onclick=()=>load('incident');el('moreSuccesses').onclick=()=>load('success');
 load();
 })();
 </script>
-<script src="/photobridge-upload-statistics-r1850.js?v=1850"></script>
+
 </div>
 </body></html>

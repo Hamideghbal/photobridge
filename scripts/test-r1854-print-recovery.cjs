@@ -88,3 +88,13 @@ test('pause aborts a stalled request and releases the queue for a new attempt',a
 test('preview never returns a stale replacement blob after a cache quota failure',async()=>{
  const f=fixture(),groups=f.groups(1);let m=f.manager();await m.selection(groups,{});f.store.putFile=async()=>{throw Error('quota')};groups[0].files[0].file=new File(['new original bytes'],'photo-0.jpg',{type:'image/jpeg'});await m.selection(groups,{});m=f.manager();await m.restore();await assert.rejects(m.getOriginal('local-0'),error=>error.message==='needs_reselection');assert.equal(m.snapshot().groups[0].files[0].missing,true);assert.equal(f.puts.size,0);
 });
+
+// A transient browser-store read error must never be interpreted as an empty queue.
+for(const fallback of [null,{id:'saved',updatedAt:1,state:'needs_attention',groups:[]}])test('browser restore read failure preserves existing checkpoints: '+Boolean(fallback),async()=>{
+ const vm=require('node:vm'),fs=require('node:fs');let writes=0;
+ const context=vm.createContext({module:{exports:{}},indexedDB:{open(){throw Error('temporarily_unavailable')}},localStorage:{getItem:()=>fallback?JSON.stringify(fallback):null,setItem:()=>writes++},navigator:{}});
+ vm.runInContext(fs.readFileSync(require.resolve('./r1854-print-recovery.cjs'),'utf8'),context);
+ const store=context.module.exports.browserStore('restore-scope');
+ if(fallback)assert.equal((await store.load()).id,'saved');else await assert.rejects(store.load(),/local_restore_failed/);
+ assert.equal(writes,0);
+});

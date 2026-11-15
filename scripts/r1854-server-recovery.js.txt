@@ -19,7 +19,12 @@ async function pb1854Stored(row) {
         try { const st=await fs.promises.stat(localPathForKey(row.object_key));return st.isFile() && st.size === Number(row.bytes); }
         catch(error) { if (error.code === 'ENOENT') return false;throw error; }
     }
-    try { const st=await storageStat(row.object_key);return Number(st?.ContentLength) === Number(row.bytes); }
+    // The legacy storageStat wrapper replaces the S3 exception with
+    // Error('storage_stat_failed'), discarding its 404/403/5xx metadata.
+    // Probe this recovery-only object directly so a genuinely missing original
+    // receives a fresh upload URL instead of a false 503 retry loop.
+    if (!s3) throw new Error('storage_not_configured');
+    try { const st=await s3.send(new HeadObjectCommand({Bucket:S3_BUCKET,Key:row.object_key}));return Number(st?.ContentLength) === Number(row.bytes); }
     catch(error) {
         if (Number(error?.$metadata?.httpStatusCode || error?.statusCode) === 404 || ['NoSuchKey','NotFound'].includes(error?.name)) return false;
         throw error;

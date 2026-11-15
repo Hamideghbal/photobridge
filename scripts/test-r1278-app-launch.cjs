@@ -1,2 +1,31 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{chromium}=require('playwright');
-test('native app launch has no duplicate web splash, and its startup canvas matches the white-on-blue PWA icon',async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{const page=await browser.newPage({viewport:{width:390,height:844}});await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{get:()=>true}));await page.route('https://photobridge.test/**',route=>{const u=new URL(route.request().url());if(u.pathname.endsWith('.js'))return route.fulfill({contentType:'application/javascript',body:''});const file=u.pathname.startsWith('/photographer')?'dist/web/index.html':path.join('dist/web',u.pathname);return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});});await page.goto('https://photobridge.test/photographer/gallery');assert.equal(await page.locator('#pbAppSplashV780').count(),0);assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(38, 116, 255)');await page.evaluate(()=>document.getElementById('root').innerHTML='<div class="center">در حال بارگذاری…</div>');assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(38, 116, 255)');await page.evaluate(()=>{const frame=document.createElement('iframe');frame.id='embeddedTest';frame.src='/photographer/gallery';document.body.append(frame);});await page.frameLocator('#embeddedTest').locator('#root').waitFor({state:'attached'});assert.equal(await page.frameLocator('#embeddedTest').locator('#pbAppSplashV780').count(),0);await page.evaluate(()=>document.getElementById('root').innerHTML='<main>برنامه آماده است</main>');assert.notEqual(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(38, 116, 255)');const sharp=require('sharp');const {data,info}=await sharp('dist/web/photobridge-native-512-r1359.png').raw().toBuffer({resolveWithObject:true});for(let x=0;x<512;x++){for(const y of [0,511]){const offset=(y*512+x)*info.channels;assert.deepEqual([...data.subarray(offset,offset+3)],[38,116,255]);}}}finally{await browser.close();}});
+test('installed launch uses one user-approved cream cover, matching its icon, and hides it after readiness',async()=>{
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844}});
+  await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{get:()=>true}));
+  await page.route('https://photobridge.test/**',route=>{
+   const u=new URL(route.request().url());if(u.pathname.endsWith('.js'))return route.fulfill({contentType:'application/javascript',body:''});
+   const file=u.pathname.startsWith('/photographer')?'dist/web/index.html':path.join('dist/web',u.pathname);
+   return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});
+  });
+  await page.goto('https://photobridge.test/photographer/gallery');
+  assert.equal(await page.locator('#pbAppSplashV780').count(),0);
+  const cover=page.locator('#pbR1361MobileSplash');assert.equal(await cover.count(),1);assert.equal(await cover.isVisible(),true);
+  assert.equal(await cover.getAttribute('data-launch'),'r1838-user');
+  assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 241, 231)');
+  await page.evaluate(()=>document.getElementById('root').innerHTML='<div class="center">در حال بارگذاری…</div>');
+  assert.equal(await cover.isVisible(),true);
+  await page.evaluate(()=>{const frame=document.createElement('iframe');frame.id='embeddedTest';frame.src='/photographer/gallery';document.body.append(frame)});
+  const embedded=page.frameLocator('#embeddedTest');await embedded.locator('#root').waitFor({state:'attached'});
+  assert.equal(await embedded.locator('#pbAppSplashV780').count(),0);assert.equal(await embedded.locator('#pbR1361MobileSplash').isVisible(),false,'embedded content must not add another visible splash');
+  await page.evaluate(()=>{document.getElementById('root').innerHTML='<button id="readyAction" onclick="window.readyClicked=true">برنامه آماده است</button>';window.__PB1836RoleHandoff=false;document.documentElement.classList.remove('pb1493SessionResumePending','pb1721MobileEntryPending')});
+  await page.waitForFunction(()=>!document.documentElement.classList.contains('pb1479Launching')&&!document.documentElement.classList.contains('pb1838LaunchLeaving'));
+  assert.equal(await cover.isVisible(),false);await page.locator('#readyAction').click();assert.equal(await page.evaluate(()=>window.readyClicked),true);
+  const manifest=JSON.parse(fs.readFileSync('dist/web/photobridge.webmanifest','utf8'));assert.equal(manifest.background_color,'#F7F1E7');
+  const icon=manifest.icons.find(icon=>icon.sizes==='512x512'&&icon.purpose==='maskable');assert(icon);
+  const {data,info}=await require('sharp')(path.join('dist/web',icon.src)).raw().toBuffer({resolveWithObject:true});
+  assert.equal(info.width,512);assert.equal(info.height,512);
+  for(let x=0;x<512;x++)for(const y of [0,511]){const offset=(y*512+x)*info.channels;assert.deepEqual([...data.subarray(offset,offset+3)],[247,241,231]);}
+ }finally{await browser.close()}
+});

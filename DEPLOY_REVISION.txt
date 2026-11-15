@@ -1,1 +1,1 @@
-2026-11-15-r1856-refresh-order-recovery
+2026-11-15-r1857-recovery-in-price-details

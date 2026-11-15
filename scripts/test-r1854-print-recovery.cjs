@@ -8,7 +8,7 @@ function fixture(){
  const request=async(path,options={})=>{
   const body=options.body?JSON.parse(options.body):{};
   if(path==='/api/customer/recovery-orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});if(lostCreate){lostCreate=false;throw Object.assign(Error('lost'),{status:504})}return {order:copy(orders.get(body.recoveryId))}}
-  if(path.endsWith('/submit')){const order=orders.get(path.split('/')[4]);assert([...rows.values()].filter(row=>row.state!=='deleted').every(row=>row.state==='active'));if(order.status==='uploading'){order.status='sent';submitCount++}if(lostSubmit){lostSubmit=false;throw Object.assign(Error('lost'),{status:504})}return{order:copy(order)}}
+  if(path.endsWith('/submit')){if(fail==='submit')throw Object.assign(Error('submit_unavailable'),{status:503});const order=orders.get(path.split('/')[4]);assert([...rows.values()].filter(row=>row.state!=='deleted').every(row=>row.state==='active'));if(order.status==='uploading'){order.status='sent';submitCount++}if(lostSubmit){lostSubmit=false;throw Object.assign(Error('lost'),{status:504})}return{order:copy(order)}}
   if(path.startsWith('/api/customer/orders/'))return {order:copy(orders.get(path.split('/')[4])),files:[...rows.values()].map(row=>({id:row.id,original_state:row.state}))};
   if(path==='/api/customer/uploads/recovery-presign'){if(!rows.has(body.clientFileId))rows.set(body.clientFileId,{id:body.clientFileId,name:body.name,body,state:'pending',stored:false});if(lostPresign){lostPresign=false;throw Object.assign(Error('lost'),{status:504})}return{fileId:body.clientFileId}}
   if(path.endsWith('/exclude')){const row=rows.get(path.split('/')[4]);if(row?.state==='active')throw Object.assign(Error('verified'),{status:409,data:{error:'upload_already_verified'}});if(row)row.state='deleted';return{excluded:true}}
@@ -98,3 +98,11 @@ for(const fallback of [null,{id:'saved',updatedAt:1,state:'needs_attention',grou
  if(fallback)assert.equal((await store.load()).id,'saved');else await assert.rejects(store.load(),/local_restore_failed/);
  assert.equal(writes,0);
 });
+
+test('explicit discard is durable, preserves stored originals and permits a fresh selection',async()=>{
+ const f=fixture(),m=f.manager();await m.selection(f.groups(2),{});f.fail('photo-1.jpg');await m.run(f.payload);const rows=copy([...f.rows.values()]),puts=copy([...f.puts]);await m.discard();assert.equal(f.record.state,'empty');assert(f.record.discarded.at);assert.equal(f.record.discarded.groups[0].files.length,2);assert.equal(f.record.orderId,null);assert.deepEqual([...f.rows.values()],rows);assert.deepEqual([...f.puts],puts);assert.equal(f.submits,0);const restored=f.manager();await restored.restore();assert.deepEqual(await restored.restoredGroups(),[]);restored.reset();await restored.selection(f.groups(1),{});assert.equal(restored.snapshot().groups[0].files.length,1);
+});
+
+test('failed discard checkpoint leaves the recoverable queue intact',async()=>{const f=fixture(),m=f.manager();await m.selection(f.groups(2),{});f.fail('photo-1.jpg');await m.run(f.payload);f.store.save=async()=>{throw Error('checkpoint_failed')};await assert.rejects(m.discard(),/checkpoint_failed/);assert.equal(m.snapshot().state,'needs_attention');assert.equal(m.snapshot().groups[0].files.length,2);assert.equal(f.record.state,'needs_attention');assert.equal(f.submits,0)});
+
+test('ambiguous finalization cannot be discarded into a fresh duplicate order',async()=>{const f=fixture(),m=f.manager();await m.selection(f.groups(1),{});f.fail('submit');await assert.rejects(m.run(f.payload),/submit_unavailable/);const id=m.snapshot().orderId;assert.equal(m.snapshot().finalizationAttempted,true);await assert.rejects(m.discard(),/finalization_pending/);assert.equal(m.snapshot().orderId,id);assert.equal(m.snapshot().groups[0].files[0].state,'done');f.fail(null);await m.run(f.payload);assert.equal(f.orders.size,1);assert.equal(f.submits,1);assert.equal(f.puts.get('photo-0.jpg'),1)});

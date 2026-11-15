@@ -40,7 +40,7 @@ x.useEffect(()=>{
   if(node.matches('.simplePrintThumb'))setDisabled(node,PB1855action);
   else if(node.matches('.simplePrintPhotoActions .dangerAction')){
    const file=states.get(node.closest('[data-pb1855-file]')?.dataset.pb1855File);setDisabled(node,!!PB1855action||locked&&file?.state==='done');
-  }else setDisabled(node,locked||W);
+  }else setDisabled(node,locked||W||!!PB1855action);
  });
  document.querySelectorAll('.simplePrintPilotPrimaryAdd,.pb1793StandaloneLaunch').forEach(node=>setDisabled(node,locked||W||c));
 },[PB1855fileKeys,PB1854snapshot,PB1854ready,W,c,PB1855action]);
@@ -56,16 +56,6 @@ const PB1854retry=async(ids)=>{
   const snap=manager.snapshot(),files=snap.groups.flatMap(g=>g.files),total=files.reduce((n,file)=>n+file.size,0),done=files.filter(file=>file.state==='done').reduce((n,file)=>n+file.size,0);
   if(PB1854manager.current!==manager)return;be(result?100:Math.min(99,Math.round(100*done/Math.max(1,total))));if(result)Ge(result);
  }catch(error){if(PB1854manager.current===manager)Ze(window.PB1854PrintRecovery.failure(error).reason)}finally{if(f.current===controller){f.current=null;h.current=false}if(PB1854manager.current===manager)O(false)}
-};
-const PB1855retryOne=async id=>{
- const manager=PB1854manager.current;if(!manager||PB1855actionRef.current)return;
- const file=manager.snapshot()?.groups.flatMap(group=>group.files).find(file=>file.id===id);if(!file)return;
- if(file.missing&&!manager.isBusy()){document.querySelector('.pb1854Reselect input')?.click();return}
- const token=Symbol();PB1855actionRef.current=token;PB1855setAction('retry:'+id);Ze('');
- try{await manager.pause()}finally{if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
- if(PB1854manager.current!==manager)return;
- if(file.missing){Ze('ارسال متوقف شد. اکنون اصل همین عکس را انتخاب کن؛ فایل‌های موفق حفظ شده‌اند.');return}
- await PB1854retry([id]);
 };
 const PB1855preview=async id=>{
  const manager=PB1854manager.current;if(!manager||PB1855actionRef.current)return;
@@ -91,14 +81,14 @@ const PB1855remove=async id=>{
  }finally{if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
 };
 const PB1854files=PB1854snapshot?.groups?.flatMap(group=>group.files)||[];
-const PB1854panel=(PB1854initError||PB1854snapshot?.groups?.some(group=>group.files.length))&&e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854snapshot?.orderId,'aria-live':'polite',children:[
- e.jsx('b',{children:!PB1854ready?(PB1854initError||'در حال بررسی ارسال ذخیره‌شده…'):PB1854snapshot?.orderId?'ادامهٔ ارسال ذخیره‌شده':'وضعیت نگهداری عکس‌های چاپ'}),
- !PB1854ready&&PB1854initError&&e.jsx('button',{type:'button',onClick:()=>PB1854setInitVersion(n=>n+1),children:'دوباره بررسی وضعیت ارسال'}),
- PB1854snapshot?.warning&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.warning}),
- PB1854snapshot?.orderId&&e.jsx('p',{children:'عکس‌های تأییدشده دوباره ارسال نمی‌شوند. تا تکمیل این ارسال، مشخصات چاپ ثابت می‌ماند.'}),
- PB1854files.length>0&&e.jsx('small',{children:V(PB1854files.filter(file=>file.state==='done').length)+' از '+V(PB1854files.length)+' عکس تأیید شده'}),
- e.jsx('div',{className:'pb1854Files',children:PB1854files.map(file=>e.jsxs('div',{className:'pb1854File',children:[e.jsx('span',{children:file.name}),e.jsx('b',{children:{queued:'در انتظار ارسال',uploading:'در حال ارسال',paused:'متوقف؛ وضعیت حفظ شده',verifying:'در حال تأیید دریافت',done:'تأیید شد · ۱۰۰٪',needs_attention:'نیاز به تلاش مجدد'}[file.state]||file.state}),e.jsx('button',{type:'button',disabled:!!PB1855action,onClick:()=>PB1855preview(file.id),children:PB1855action==='preview:'+file.id?'در حال آماده‌کردن پیش‌نمایش…':'پیش‌نمایش'}),file.state!=='done'&&e.jsx('button',{type:'button',disabled:!!PB1855action,onClick:()=>PB1855remove(file.id),children:PB1855action==='remove:'+file.id?'در حال حذف از ارسال…':'حذف از ارسال'}),file.error&&e.jsxs('small',{children:[file.error.reason,' · کد پیگیری: ',file.error.reference]}),PB1854snapshot?.orderId&&file.state!=='done'&&e.jsx('button',{type:'button',disabled:!!PB1855action||(W&&!['needs_attention','paused'].includes(file.state)),onClick:()=>PB1855retryOne(file.id),children:file.missing?'انتخاب اصل این عکس':W?'توقف و تلاش مجدد این عکس':'تلاش مجدد این عکس'})]},file.id))}),
- PB1854snapshot?.error&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.error.reason}),
- PB1854snapshot?.orderId&&e.jsx('button',{type:'button',disabled:W||!!PB1855action,onClick:()=>PB1854retry(),children:W?'در حال ادامهٔ ارسال…':'تلاش مجدد و ادامهٔ ارسال'}),
- PB1854snapshot?.groups?.some(group=>group.files.some(file=>file.missing))&&e.jsxs('label',{className:'pb1854Reselect',children:['انتخاب دوبارهٔ همان عکس‌های در دسترس نیست',e.jsx('input',{type:'file',multiple:true,accept:'image/*,.heic,.heif,.tif,.tiff',disabled:W,onChange:async event=>{const files=Array.from(event.target.files||[]);try{const groups=await PB1854manager.current.reselect(files);if(groups)k(groups)}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}event.target.value=''}})]})
-]});
+const PB1858retry=!!PB1854initError||!!PB1854snapshot?.orderId||PB1854files.some(file=>file.missing||['needs_attention','paused'].includes(file.state));
+const PB1858states=new Map(PB1854files.map(file=>[file.id,file]));
+const PB1858state=id=>PB1858states.get(id);
+const PB1858status=id=>{const file=PB1858state(id);if(!file)return '';return file.error?file.error.reason+' · کد پیگیری: '+file.error.reference:({done:'ارسال شد · ۱۰۰٪',uploading:'در حال ارسال…',verifying:'در حال تأیید دریافت…',paused:'متوقف؛ آمادهٔ ادامه',queued:'در انتظار ارسال',needs_attention:'نیاز به تلاش مجدد'}[file.state]||'')};
+const PB1858resume=()=>{if(PB1854initError){PB1854setInitVersion(n=>n+1);return}if(PB1854files.some(file=>file.missing&&file.state!=='done')){document.querySelector('.pb1854Reselect')?.click();return}void PB1854retry()};
+const PB1858cancel=async()=>{
+ if(W){ce();return}const manager=PB1854manager.current;if(!manager||PB1855actionRef.current||!window.confirm('این ارسال از صف کنار گذاشته شود؟ عکس‌های اصلیِ ذخیره‌شده در سرور پاک نمی‌شوند.'))return;
+ const token=Symbol();PB1855actionRef.current=token;PB1855setAction('discard');
+ try{await manager.discard();if(PB1854manager.current!==manager)return;for(const group of E.current)for(const file of group.files)zs(file);manager.reset();PB1854setSnapshot(null);k([]);Ge(null);be(0);Ze('');ft(false)}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}finally{if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
+};
+const PB1858reselect=PB1854files.some(file=>file.missing)&&e.jsx('input',{className:'pb1854Reselect',hidden:true,type:'file',multiple:true,accept:'image/*,.heic,.heif,.tif,.tiff',onChange:async event=>{const input=event.target,manager=PB1854manager.current;try{const groups=await manager.reselect(Array.from(input.files||[]));if(PB1854manager.current!==manager)return;if(groups)k(groups);if(manager.snapshot().groups.some(group=>group.files.some(file=>file.missing&&file.state!=='done')))Ze('همان عکس‌های باقی‌مانده را انتخاب کنید؛ فایل انتخاب‌شده باید با اصل عکس یکسان باشد.');else if(manager.snapshot()?.orderId)await PB1854retry()}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}input.value=''}});

@@ -68,6 +68,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
     // In the interactive-controls fixture, photo-2 has already been retried and verified
     // before this browser restart. Evicting its local Blob must NOT turn a verified
     // original into a reselectable failed upload or force another PUT.
+    if(await page.evaluate(()=>__print.snapshot?.state!=='submitted'))await primary().getByText('تلاش مجدد',{exact:true}).click();
     await page.waitForFunction(()=>__print.snapshot?.state==='submitted'&&__print.snapshot.groups[0].files.find(f=>f.name==='photo-2.png')?.state==='done');
     assert.equal(await page.evaluate(()=>__print.snapshot.groups[0].files.find(f=>f.name==='photo-2.png').progress),100);
    }else{

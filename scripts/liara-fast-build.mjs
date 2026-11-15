@@ -1361,6 +1361,8 @@ runR1314(process.execPath,['--test','scripts/test-r1852-sms-alert-guard.cjs','sc
 await deployStep('./enable-r1861-error-monitor.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1861-error-dashboard.cjs'],{stdio:'inherit'});
 await deployStep("./enable-r1854-print-recovery.mjs");
+await deployStep("./enable-storage-browser-host.mjs");
+runR1314(process.execPath,["--test","scripts/test-storage-browser-host.mjs"],{stdio:"inherit"});
 runR1314(process.execPath,["--test","scripts/test-r1854-print-recovery.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");

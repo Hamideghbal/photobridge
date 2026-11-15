@@ -80,6 +80,9 @@ const runStart=component.indexOf('const ue=new AbortController;',component.index
 const runEnd=component.indexOf('},qe=()=>',runStart);if(runStart<0||runEnd<runStart)throw Error('R1854 submit bounds missing');
 component=component.slice(0,runStart)+fs.readFileSync('scripts/r1854-react-send.js.txt','utf8')+component.slice(runEnd);
 component=once(component,'className:"simplePrintPilot",dir:"rtl",children:[','className:"simplePrintPilot",dir:"rtl",children:[PB1854panel,');
+// Keep the saved draft discoverable when the parent opens the order list after reload.
+component=once(component,'return s?Le?',`if(!s&&['/photographer/orders','/photographer/archive'].some(path=>location.pathname.startsWith(path))&&(PB1854initError||PB1854snapshot?.state!=='submitted'&&PB1854snapshot?.groups?.some(group=>group.files.length))){const notice=e.jsxs('aside',{className:'pb1856RecoveryNotice pb1854Queue',role:'status',children:[e.jsx('b',{children:PB1854initError?'بازیابی ارسال ذخیره‌شده':'ارسال ناتمام شما محفوظ است'}),e.jsx('p',{children:PB1854initError||'عکس‌ها و پیشرفت ارسال قبلی ذخیره شده‌اند. برای مشاهده و ادامهٔ ارسال وارد صف شوید.'}),e.jsx('button',{type:'button',onClick:()=>r?.(),children:'مشاهده و ادامهٔ ارسال قبلی'})]}),slot=document.getElementById('pb1856-recovery-slot');return slot?ra.createPortal(notice,slot):notice}return s?Le?`);
+
 component=component.replaceAll('children:"لغو ارسال"','children:"توقف و حفظ ارسال"');
 component=once(component,'onClick:()=>re(Be)','onClick:()=>PB1855preview(Be.id)');
 component=once(component,'className:"simplePrintPhotoCard "+','"data-pb1855-file":Be.id,className:"simplePrintPhotoCard "+');
@@ -100,10 +103,31 @@ component=once(component,'const[oe]=await d([b]);','const[oe]=await d([b]);if(PB
 // A submitted queue is replaced only when the photographer explicitly starts a new selection.
 component=once(component,'k([]),Ge(null),be(0)', 'PB1854manager.current?.reset(),PB1854setSnapshot(null),k([]),Ge(null),be(0)');
 js=js.slice(0,start)+component+js.slice(end);
+// Start the order request alongside home, scoped to the authenticated lab.
+const parentStart=js.indexOf('function Hf('),parentEnd=js.indexOf('function Vf(',parentStart);let parent=js.slice(parentStart,parentEnd);
+parent=once(parent,'const r="09125678720",',"const PB1856orders=x.useRef(null);const r=\"09125678720\",");
+parent=once(parent,'x.useEffect(()=>{De(),pt()},[])',`x.useEffect(()=>{const lab=String(t?.lab?.id||'');if(lab&&location.pathname.startsWith('/photographer/orders'))PB1856orders.current={lab,promise:Me('/api/customer/orders?_lab='+encodeURIComponent(lab)+'&_prefetch='+Date.now()).then(data=>data,()=>null)};De(),pt()},[])`);
+parent=once(parent,'e.jsx(Zg,{labId:_e,',"e.jsx(Zg,{prefetch:PB1856orders.current,labId:_e,");
+js=js.slice(0,parentStart)+parent+js.slice(parentEnd);
+const orderStart=js.indexOf('function Zg('),orderEnd=js.indexOf('function ',orderStart+10);let orderUI=js.slice(orderStart,orderEnd);
+orderUI=once(orderUI,'modeFilter:l="print"})',`modeFilter:l="print",prefetch:PB1856prefetch})`);
+orderUI=once(orderUI,'const[c,m]=x.useState([]),',"const PB1856consumed=x.useRef(false);const[c,m]=x.useState([]),");
+orderUI=once(orderUI,"return Me(`/api/customer/orders?_lab=${encodeURIComponent(o||\"\")}&_seq=${De}-${Date.now()}`).then(pt=>","const load=()=>Me(`/api/customer/orders?_lab=${encodeURIComponent(o||'')}&_seq=${De}-${Date.now()}`),cached=!PB1856consumed.current&&PB1856prefetch?.lab===String(o)?PB1856prefetch.promise:null;PB1856consumed.current=true;if(cached)PB1856prefetch.promise=null;return (cached?cached.then(value=>value||load()):load()).then(pt=>");
+orderUI=once(orderUI,'const[c,m]=x.useState([]),',"const[PB1856load,PB1856setLoad]=x.useState('loading'),[PB1856error,PB1856setError]=x.useState(''),[c,m]=x.useState([]),");
+orderUI=once(orderUI,'if(De!==v.current||o&&String((pt==null?void 0:pt.labId)||"")!==String(o))return J.current;',`if(De!==v.current)return J.current;if(o&&String(pt?.labId||'')!==String(o))throw Error('order_lab_context_mismatch');PB1856setLoad('ready');PB1856setError('');`);
+orderUI=once(orderUI,'T(pt.paymentSettings||null),Ee})};',`T(pt.paymentSettings||null),Ee}).catch(error=>{if(De===v.current){PB1856setLoad('error');PB1856setError('دریافت سفارش‌های قبلی انجام نشد. سفارش‌ها حذف نشده‌اند؛ دوباره تلاش کنید.')}return J.current})};`);
+orderUI=once(orderUI,'m([]),T(null),re();',"m([]),T(null),PB1856setLoad('loading'),PB1856setError(''),re();");
+orderUI=once(orderUI,'className:"ordersWorkspace customerOrders liveCustomerOrders",children:[',`className:"ordersWorkspace customerOrders liveCustomerOrders",children:[e.jsx('div',{id:'pb1856-recovery-slot'}),PB1856error&&e.jsxs('div',{className:'pb1854Queue pb1856OrderError',role:'alert',children:[e.jsx('p',{children:PB1856error}),e.jsx('button',{type:'button',onClick:()=>{PB1856setLoad('loading');PB1856setError('');void re()},children:'دریافت دوبارهٔ سفارش‌ها'})]}),`);
+orderUI=once(orderUI,'text:c.length?"سفارشی در این وضعیت نیست.":"هنوز سفارشی ثبت نشده است."',`text:PB1856load==='loading'?'در حال دریافت سفارش‌ها…':PB1856load==='error'?'فهرست سفارش‌ها هنوز دریافت نشده است.':c.length?"سفارشی در این وضعیت نیست.":"هنوز سفارشی ثبت نشده است."`);
+// Avoid cumulative 105ms-per-row reveal delays and empty-list flashes.
+orderUI=once(orderUI,'const Fe=Ce.slice(0,B),','const Fe=Ce,');
+const revealStart=orderUI.indexOf('x.useEffect(()=>{if(L(0),!Ce.length)return;'),revealEnd=orderUI.indexOf('},[a,l,o,Se]);',revealStart);if(revealStart<0||revealEnd<0)throw Error('R1856 reveal bounds missing');orderUI=orderUI.slice(0,revealStart)+orderUI.slice(revealEnd+'},[a,l,o,Se]);'.length);
+js=js.slice(0,orderStart)+orderUI+js.slice(orderEnd);
+
 js=fs.readFileSync('scripts/r1854-print-recovery.cjs','utf8')+'\n'+js;
 fs.writeFileSync(bundle,js);execFileSync(process.execPath,['--check',bundle]);
 fs.copyFileSync('scripts/r1854-print-recovery.css',directory+'/photobridge-print-recovery-r1854.css');
-let html=fs.readFileSync(directory+'/index.html','utf8');const prefix=directory==='dist/web'?'/':'./';html=once(html,'</head>',`<link rel="stylesheet" href="${prefix}photobridge-print-recovery-r1854.css?v=r1855"></head>`);html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&printRecovery=r1855');fs.writeFileSync(directory+'/index.html',html);
+let html=fs.readFileSync(directory+'/index.html','utf8');const prefix=directory==='dist/web'?'/':'./';html=once(html,'</head>',`<link rel="stylesheet" href="${prefix}photobridge-print-recovery-r1854.css?v=r1856"></head>`);html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&printRecovery=r1856');fs.writeFileSync(directory+'/index.html',html);
 }
 // Extend passive telemetry to the fresh URL issued after probing the same file.
 const health='dist/web/photobridge-upload-health-r1851.js';let monitor=fs.readFileSync(health,'utf8');monitor=once(monitor,"    if(method!=='POST')return '';","    if(method!=='POST')return '';\n    if(path==='/api/customer/recovery-orders')return 'create';\n    if(path==='/api/customer/uploads/recovery-presign')return 'presign';\n    if(/^\\/api\\/customer\\/uploads\\/[0-9a-f-]+\\/retry$/.test(path))return 'presign';");monitor=once(monitor,'var existing=fileMeta(body.fileId),','var existing=fileMeta(body.fileId||body.clientFileId||url.pathname.match(/uploads\\/([0-9a-f-]+)\\/retry$/)?.[1]),');monitor=once(monitor,'logicalFileId=uuid();','logicalFileId=existing?.fileId||uuid();');monitor=once(monitor,'orderId:order,bytes:Number.isSafeInteger(body.bytes)?body.bytes:null','orderId:order||existing?.orderId,bytes:Number.isSafeInteger(body.bytes)?body.bytes:existing?.bytes||null');monitor=once(monitor,'    ensureCard();if(!card)return;','    if(window.__PB1854PrintActive)return;\n    ensureCard();if(!card)return;');fs.writeFileSync(health,monitor);

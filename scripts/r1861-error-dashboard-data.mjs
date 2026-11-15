@@ -94,6 +94,8 @@ SELECT m.lab_id::text AS lab_id,
        sum(m.file_count)::text AS successful_files,
        sum(m.original_bytes)::text AS successful_bytes,
        sum(m.unknown_size_files)::text AS unknown_size_files,
+       COALESCE(sum(o.total),0)::text AS order_total_amount,
+       count(*) FILTER(WHERE o.total IS NOT NULL)::int AS orders_with_amount,
        count(*) FILTER(WHERE m.historical_snapshot)::int AS historical_orders,
        min(m.sent_at) AS first_at,max(m.sent_at) AS last_at
 FROM upload_success_metrics m

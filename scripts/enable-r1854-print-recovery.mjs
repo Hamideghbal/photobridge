@@ -82,7 +82,8 @@ for(const marker of ['de=(ue,P)=>k(','Ne=(ue,P,b)=>k(','Ie=(ue,P,b)=>k(','Y=(ue,
 for(const marker of ['_=async(ue,P)=>{','A=(ue,P)=>{','D=ue=>{','ve=async ue=>{'])if(component.includes(marker))component=once(component,marker,marker+'if(PB1854snapshot?.orderId)return;');
 // A delayed image decoder must not append photographs after the account/lab changed.
 for(const marker of ['_=async(ue,P)=>{','ve=async ue=>{'])component=once(component,marker,marker+'const PB1854photoContext=PB1854context.current;');
-component=once(component,'const oe=await d(b);','const oe=await d(b);if(PB1854photoContext!==PB1854context.current){oe.forEach(zs);return}');
+const photoRead=component.includes('const oe=await d(b);')?'const oe=await d(b);':'const oe=await d(fresh.map(row=>row.file));';
+component=once(component,photoRead,photoRead+'if(PB1854photoContext!==PB1854context.current){oe.forEach(zs);return}');
 component=once(component,'const[oe]=await d([b]);','const[oe]=await d([b]);if(PB1854photoContext!==PB1854context.current){zs(oe);return}');
 // A submitted queue is replaced only when the photographer explicitly starts a new selection.
 component=once(component,'k([]),Ge(null),be(0)', 'PB1854manager.current?.reset(),PB1854setSnapshot(null),k([]),Ge(null),be(0)');

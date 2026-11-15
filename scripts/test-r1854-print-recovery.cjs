@@ -7,10 +7,10 @@ function fixture(){
  const store={load:async()=>copy(record),save:async s=>{record=copy(s)},putFile:async(id,b)=>blobs.set(id,b),getFile:async id=>blobs.get(id),deleteFile:async id=>blobs.delete(id)};
  const request=async(path,options={})=>{
   const body=options.body?JSON.parse(options.body):{};
-  if(path==='/api/customer/orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});if(lostCreate){lostCreate=false;throw Object.assign(Error('lost'),{status:504})}return {order:copy(orders.get(body.recoveryId))}}
+  if(path==='/api/customer/recovery-orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});if(lostCreate){lostCreate=false;throw Object.assign(Error('lost'),{status:504})}return {order:copy(orders.get(body.recoveryId))}}
   if(path.endsWith('/submit')){const order=orders.get(path.split('/')[4]);assert([...rows.values()].every(row=>row.state==='active'));if(order.status==='uploading'){order.status='sent';submitCount++}if(lostSubmit){lostSubmit=false;throw Object.assign(Error('lost'),{status:504})}return{order:copy(order)}}
   if(path.startsWith('/api/customer/orders/'))return {order:copy(orders.get(path.split('/')[4])),files:[...rows.values()].map(row=>({id:row.id,original_state:row.state}))};
-  if(path==='/api/customer/uploads/presign'){if(!rows.has(body.clientFileId))rows.set(body.clientFileId,{id:body.clientFileId,name:body.name,body,state:'pending',stored:false});if(lostPresign){lostPresign=false;throw Object.assign(Error('lost'),{status:504})}return{fileId:body.clientFileId}}
+  if(path==='/api/customer/uploads/recovery-presign'){if(!rows.has(body.clientFileId))rows.set(body.clientFileId,{id:body.clientFileId,name:body.name,body,state:'pending',stored:false});if(lostPresign){lostPresign=false;throw Object.assign(Error('lost'),{status:504})}return{fileId:body.clientFileId}}
   if(path.endsWith('/retry')){const row=rows.get(path.split('/')[4]);return{fileId:row.id,uploaded:row.stored,uploadUrl:row.id}}
   throw Error('Unexpected API '+path);
  };
@@ -60,4 +60,14 @@ test('stalled whole-file transfer times out, clears its timer, and aborts only t
 test('provider capacity error is distinct from browser quota and is not blindly retried',async()=>{
  const vm=require('node:vm'),fs=require('node:fs');let last;class XHR{constructor(){this.upload={};last=this}open(){}setRequestHeader(){}send(){}abort(){this.onabort?.()}}
  const context={module:{exports:{}},XMLHttpRequest:XHR,crypto:globalThis.crypto,Blob,File,setTimeout,clearTimeout};vm.runInNewContext(fs.readFileSync('scripts/r1854-print-recovery.cjs','utf8'),context);const lib=context.module.exports,task=lib.transferFile('https://objects.invalid/photo',new File(['original'],'photo.jpg'),()=>{});last.status=503;last.responseText='<Error><Code>InsufficientStorage</Code><RequestId>test-only</RequestId></Error>';last.onload();await assert.rejects(task,error=>{assert.equal(error.data.error,'storage_capacity_exceeded');assert.equal(lib.failure(error).retryable,false);assert.match(lib.failure(error).reason,/ظرفیت سرویس/);return true});
+});
+test('editing copies and paper before submission preserves the latest photographer selections',async()=>{
+ const f=fixture(),m=f.manager(),groups=f.groups(2);await m.selection(groups,{});const checksum=m.snapshot().groups[0].files[0].checksum;groups[0].files[0].printCopies=7;groups[0].paperType='silk';await m.selection(groups,{});assert.equal(m.snapshot().groups[0].files[0].checksum,checksum);await m.run(f.payload);const row=[...f.rows.values()].find(row=>row.name==='photo-0.jpg');assert.equal(row.body.printCopies,7);assert.equal(row.body.printType,'silk');assert.equal(f.submits,1);
+});
+test('replacing a selected file before draft creation refreshes its content identity',async()=>{
+ const f=fixture(),m=f.manager(),groups=f.groups(1);await m.selection(groups,{});const before=m.snapshot().groups[0].files[0];groups[0].files[0].file=new File(['replacement-same-photo-name'],'photo-0.jpg',{type:'image/jpeg',lastModified:1});await m.selection(groups,{});const after=m.snapshot().groups[0].files[0];assert.notEqual(after.checksum,before.checksum);assert.notEqual(after.serverId,before.serverId);assert.equal(after.checksum,await digest(groups[0].files[0].file));await m.run(f.payload);assert.equal(f.submits,1);
+});
+test('older server cannot silently ignore recovery IDs or create a duplicate draft during rollout',async()=>{
+ let saved=null;const calls=[],store={load:async()=>saved,save:async value=>{saved=structuredClone(value)},putFile:async()=>{},getFile:async()=>null,deleteFile:async()=>{}};
+ const manager=createManager({store,locks:null,hash:digest,request:async(path,options)=>{calls.push([path,options.method]);throw Object.assign(Error('not_found'),{status:404})},transfer:async()=>{throw Error('Unexpected PUT')},verify:async()=>{throw Error('Unexpected completion')}});await manager.selection([{id:'group',files:[{id:'photo',file:new File(['unchanged'],'photo.jpg')}]}],{});await assert.rejects(manager.run(()=>({name:'photo.jpg'})));assert.deepEqual(calls,[['/api/customer/recovery-orders','POST']]);assert.equal(manager.snapshot().groups[0].files.length,1);assert.equal(manager.snapshot().orderCreated,undefined);
 });

@@ -12,10 +12,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    if(url.pathname.startsWith('/api/')){
     if(request.method()!=='GET')writes.push({method:request.method(),path:url.pathname});
     if(url.pathname==='/api/auth/me')return route.fulfill({json:{user:{userId:signedUser,labRole:'customer'}}});
-    if(url.pathname==='/api/customer/orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});return route.fulfill({json:{order:orders.get(body.recoveryId)}})}
+    if(url.pathname==='/api/customer/recovery-orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});return route.fulfill({json:{order:orders.get(body.recoveryId)}})}
     if(/\/orders\/.+\/submit$/.test(url.pathname)){assert([...files.values()].every(f=>f.state==='active'));const order=orders.get(url.pathname.split('/')[4]);if(order.status==='uploading'){order.status='sent';submits++}return route.fulfill({json:{order}})}
     if(url.pathname.startsWith('/api/customer/orders/')){const order=orders.get(url.pathname.split('/')[4]);return route.fulfill({status:order?200:404,json:order?{order,files:[...files.values()].map(f=>({id:f.id,original_state:f.state}))}:{error:'not_found'}})}
-    if(url.pathname==='/api/customer/uploads/presign'){if(!files.has(body.clientFileId))files.set(body.clientFileId,{id:body.clientFileId,name:body.name,state:'pending',expected:body.bytes});return route.fulfill({json:{fileId:body.clientFileId}})}
+    if(url.pathname==='/api/customer/uploads/recovery-presign'){if(!files.has(body.clientFileId))files.set(body.clientFileId,{id:body.clientFileId,name:body.name,state:'pending',expected:body.bytes});return route.fulfill({json:{fileId:body.clientFileId}})}
     if(/\/uploads\/.+\/retry$/.test(url.pathname)){const row=files.get(url.pathname.split('/')[4]);return route.fulfill({json:{fileId:row.id,uploaded:row.bytes?.length===row.expected,uploadUrl:'/objects/'+row.id}})}
     if(url.pathname==='/api/customer/uploads/complete'){const row=files.get(body.fileId);assert.equal(row.bytes.length,row.expected);row.state='active';return route.fulfill({json:{ok:true}})}
     return route.fulfill({json:{ok:true,items:[],models:[],types:[]}});

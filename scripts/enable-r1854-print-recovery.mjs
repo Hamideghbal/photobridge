@@ -4,9 +4,11 @@ import {execFileSync} from 'node:child_process';
 const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('R1854 anchor mismatch: '+a.slice(0,110));return s.replace(a,b)};
 const apiFile='dist/api/server.js';let api=fs.readFileSync(apiFile,'utf8');
 api=once(api,'async function api(req, res, url) {',fs.readFileSync('scripts/r1854-server-recovery.js.txt','utf8')+'\nasync function api(req, res, url) {');
+const orderAlias="        // R1854 recovery-only paths fail closed on older servers.\n        if(req.method==='POST'&&url.pathname==='/api/customer/recovery-orders'){req.PB1854recoveryOnly='order';url.pathname='/api/customer/orders';}\n";
 const create="if (req.method === 'POST' && url.pathname === '/api/customer/orders') {";
 let start=api.indexOf(create),end=api.indexOf('const customerOrder =',start),part=api.slice(start,end);
 part=once(part,"            let albumData = null;",`            const recoveryId=b.recoveryId;
+            if(req.PB1854recoveryOnly==='order'&&!recoveryId)return sendJson(res,400,{error:'recovery_id_required'});
             if(recoveryId && (mode!=='print'||!pb1854Uuid(recoveryId)))return sendJson(res,400,{error:'invalid_recovery_id'});
             if(recoveryId){
                 const existing=await pool.query('SELECT * FROM orders WHERE id=$1 AND lab_id=$2 AND customer_id=$3',[recoveryId,labId,a.userId]);
@@ -26,11 +28,12 @@ part=once(part,"            await audit(a.userId, labId, 'order.create_draft'",`
                 return sendJson(res,200,{order:saved,replay:true});
             }
             await audit(a.userId, labId, 'order.create_draft'`);
-api=api.slice(0,start)+part+api.slice(end);
+api=api.slice(0,start)+part+api.slice(end);api=once(api,create,orderAlias+create);
 const presign="        if (req.method === 'POST' && url.pathname === '/api/customer/uploads/presign') {";
-api=once(api,presign,fs.readFileSync('scripts/r1854-retry-route.js.txt','utf8')+presign);
+api=once(api,presign,fs.readFileSync('scripts/r1854-retry-route.js.txt','utf8')+"        if(req.method==='POST'&&url.pathname==='/api/customer/uploads/recovery-presign'){req.PB1854recoveryOnly='file';url.pathname='/api/customer/uploads/presign';}\n"+presign);
 start=api.indexOf(presign);end=api.indexOf('const localUpload =',start);part=api.slice(start,end);
-part=once(part,'            const id = crypto.randomUUID();',`            if(b.clientFileId && (albumMode||!pb1854Uuid(b.clientFileId)||!/^[0-9a-f]{64}$/.test(String(b.checksum||''))))return sendJson(res,400,{error:'invalid_recovery_file'});
+part=once(part,'            const id = crypto.randomUUID();',`            if(req.PB1854recoveryOnly==='file'&&!b.clientFileId)return sendJson(res,400,{error:'recovery_file_required'});
+            if(b.clientFileId && (albumMode||!pb1854Uuid(b.clientFileId)||!/^[0-9a-f]{64}$/.test(String(b.checksum||''))))return sendJson(res,400,{error:'invalid_recovery_file'});
             if(b.clientFileId){
                 try{const existing=await pb1854ExistingFile(b.clientFileId,orderId,labId,a.userId,b);if(existing)return sendJson(res,200,{fileId:existing.id,replay:true,state:existing.original_state});}
                 catch(error){return sendJson(res,error.status||409,{error:error.message});}
@@ -77,6 +80,10 @@ component=once(component,'_e=(ue,P=null)=>{','_e=(ue,P=null)=>{if(!PB1854ready||
 for(const marker of ['de=(ue,P)=>k(','Ne=(ue,P,b)=>k(','Ie=(ue,P,b)=>k(','Y=(ue,P,b,oe)=>k('])if(component.includes(marker))component=once(component,marker,marker.replace('=>k(','=>PB1854snapshot?.orderId?undefined:k('));
 
 for(const marker of ['_=async(ue,P)=>{','A=(ue,P)=>{','D=ue=>{','ve=async ue=>{'])if(component.includes(marker))component=once(component,marker,marker+'if(PB1854snapshot?.orderId)return;');
+// A delayed image decoder must not append photographs after the account/lab changed.
+for(const marker of ['_=async(ue,P)=>{','ve=async ue=>{'])component=once(component,marker,marker+'const PB1854photoContext=PB1854context.current;');
+component=once(component,'const oe=await d(b);','const oe=await d(b);if(PB1854photoContext!==PB1854context.current){oe.forEach(zs);return}');
+component=once(component,'const[oe]=await d([b]);','const[oe]=await d([b]);if(PB1854photoContext!==PB1854context.current){zs(oe);return}');
 // A submitted queue is replaced only when the photographer explicitly starts a new selection.
 component=once(component,'k([]),Ge(null),be(0)', 'PB1854manager.current?.reset(),PB1854setSnapshot(null),k([]),Ge(null),be(0)');
 js=js.slice(0,start)+component+js.slice(end);
@@ -86,7 +93,7 @@ fs.copyFileSync('scripts/r1854-print-recovery.css',directory+'/photobridge-print
 let html=fs.readFileSync(directory+'/index.html','utf8');const prefix=directory==='dist/web'?'/':'./';html=once(html,'</head>',`<link rel="stylesheet" href="${prefix}photobridge-print-recovery-r1854.css?v=r1854"></head>`);html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,'$1&printRecovery=r1854');fs.writeFileSync(directory+'/index.html',html);
 }
 // Extend passive telemetry to the fresh URL issued after probing the same file.
-const health='dist/web/photobridge-upload-health-r1851.js';let monitor=fs.readFileSync(health,'utf8');monitor=once(monitor,"    if(method!=='POST')return '';","    if(method!=='POST')return '';\n    if(/^\\/api\\/customer\\/uploads\\/[0-9a-f-]+\\/retry$/.test(path))return 'presign';");monitor=once(monitor,'var existing=fileMeta(body.fileId),','var existing=fileMeta(body.fileId||body.clientFileId||url.pathname.match(/uploads\\/([0-9a-f-]+)\\/retry$/)?.[1]),');monitor=once(monitor,'logicalFileId=uuid();','logicalFileId=existing?.fileId||uuid();');monitor=once(monitor,'orderId:order,bytes:Number.isSafeInteger(body.bytes)?body.bytes:null','orderId:order||existing?.orderId,bytes:Number.isSafeInteger(body.bytes)?body.bytes:existing?.bytes||null');monitor=once(monitor,'    ensureCard();if(!card)return;','    if(window.__PB1854PrintActive)return;\n    ensureCard();if(!card)return;');fs.writeFileSync(health,monitor);
+const health='dist/web/photobridge-upload-health-r1851.js';let monitor=fs.readFileSync(health,'utf8');monitor=once(monitor,"    if(method!=='POST')return '';","    if(method!=='POST')return '';\n    if(path==='/api/customer/recovery-orders')return 'create';\n    if(path==='/api/customer/uploads/recovery-presign')return 'presign';\n    if(/^\\/api\\/customer\\/uploads\\/[0-9a-f-]+\\/retry$/.test(path))return 'presign';");monitor=once(monitor,'var existing=fileMeta(body.fileId),','var existing=fileMeta(body.fileId||body.clientFileId||url.pathname.match(/uploads\\/([0-9a-f-]+)\\/retry$/)?.[1]),');monitor=once(monitor,'logicalFileId=uuid();','logicalFileId=existing?.fileId||uuid();');monitor=once(monitor,'orderId:order,bytes:Number.isSafeInteger(body.bytes)?body.bytes:null','orderId:order||existing?.orderId,bytes:Number.isSafeInteger(body.bytes)?body.bytes:existing?.bytes||null');monitor=once(monitor,'    ensureCard();if(!card)return;','    if(window.__PB1854PrintActive)return;\n    ensureCard();if(!card)return;');fs.writeFileSync(health,monitor);
 console.log('[R1854] Print originals and verified file IDs survive retries; no draft deletion on failure.');
 
 const frozen='dist/web/lab-desktop-ui',manifestPath=frozen+'/manifest.json',manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

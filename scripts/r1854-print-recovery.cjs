@@ -75,7 +75,7 @@ function createManager({store,request,transfer,verify,sleep=wait,hash=digest,onC
       f.state='uploading';f.error=null;f.attempts=(f.attempts||0)+1;await save();
       f.stage='presign';const registered=await request('/api/customer/uploads/recovery-presign',{method:'POST',body:JSON.stringify({...f.payload,orderId:session.orderId,clientFileId:f.serverId,checksum:f.checksum}),signal});if(registered.fileId!==f.serverId)throw Error('file_identity_mismatch');
       f.registered=true;f.stage='transfer';const probe=await request('/api/customer/uploads/'+f.serverId+'/retry',{method:'POST',signal});
-      if(!probe.uploaded){const blob=await original(f);await transfer(probe.uploadUrl,blob,n=>onProgress(f.id,Math.min(94,Math.round(n*.94))),signal)}
+      if(!probe.uploaded){const blob=await original(f);if(await checksum(blob)!==f.checksum)throw Error('needs_reselection');await transfer(probe.uploadUrl,blob,n=>onProgress(f.id,Math.min(94,Math.round(n*.94))),signal)}
       f.stage='complete';f.state='verifying';onProgress(f.id,95);await save();
       const confirmation=verifyTail.catch(()=>{}).then(()=>verify(f.serverId,bytes.get(f.id),signal));verifyTail=confirmation;await confirmation;
       f.state='done';f.progress=100;f.error=null;onProgress(f.id,100);await save();break;

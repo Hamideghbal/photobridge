@@ -83,6 +83,8 @@ component=component.slice(0,runStart)+fs.readFileSync('scripts/r1854-react-send.
 component=once(component,'className:"simplePrintPilot",dir:"rtl",children:[','className:"simplePrintPilot",dir:"rtl",children:[PB1858reselect,');
 component=once(component,'children:"هنوز فایلی اضافه نشده"','children:!PB1854ready?"در حال بازیابی ارسال…":"هنوز فایلی اضافه نشده"');
 component=once(component,'qe=()=>{','qe=()=>{if(PB1858retry){PB1858resume();return}');
+component=once(component,'children:"در حال ارسال به لابراتوار"','children:PB1854snapshot?.state==="verifying"?"در حال تأیید و ثبت سفارش…":"در حال انتقال عکس‌ها به لابراتوار"');
+component=once(component,'className:"simplePrintPilotOverall",children:', 'className:"simplePrintPilotOverall",role:"progressbar","aria-label":"پیشرفت تأیید ارسال","aria-valuemin":0,"aria-valuemax":100,"aria-valuenow":fe,children:');
 component=once(component,'className:"primary simplePrintPilotQuoteSubmit",','className:"primary simplePrintPilotQuoteSubmit","data-pb1858-primary":"true",');
 
 component=component.replaceAll('disabled:W||ie||!ot||c','disabled:W||!!PB1855action||ie||(!ot&&!PB1854initError)||c');

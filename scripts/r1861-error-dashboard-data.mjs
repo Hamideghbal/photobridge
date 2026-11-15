@@ -1,3 +1,4 @@
+import {dailyBatchesSql} from './r1863-error-actions.mjs';
 // R1861: read-only, administrator-only daily error report. No schema changes.
 // Calendar boundaries use Asia/Tehran; incident fingerprints are NOT per-day counts.
 const TEHRAN='Asia/Tehran';
@@ -45,6 +46,9 @@ SELECT s.lab_id::text AS lab_id, COALESCE(NULLIF(l.name,''),'لابراتوار 
        s.photographer_id::text AS photographer_id,
        COALESCE(NULLIF(pp.studio_name,''),NULLIF(u.name,''),'عکاسی نامشخص') AS photographer_name,
        count(*)::int AS failures,
+       count(DISTINCT COALESCE(orig.order_id::text,s.order_id::text,'session:'||s.id::text))::int AS batches,
+       max(u.mobile) AS photographer_mobile,
+       (SELECT lu.mobile FROM lab_memberships lm JOIN users lu ON lu.id=lm.user_id WHERE lm.lab_id=s.lab_id AND lm.role='lab_admin' AND lm.active=true AND lu.active=true AND lu.mobile IS NOT NULL AND lu.mobile<>'' ORDER BY lm.created_at,lu.id LIMIT 1) AS lab_mobile,
        count(DISTINCT e.session_id)::int AS sessions,
        count(DISTINCT e.file_id) FILTER(WHERE e.file_id IS NOT NULL)::int AS files,
        count(DISTINCT s.order_id) FILTER(WHERE s.order_id IS NOT NULL)::int AS orders,
@@ -52,6 +56,8 @@ SELECT s.lab_id::text AS lab_id, COALESCE(NULLIF(l.name,''),'لابراتوار 
        sum(COALESCE(e.sent_bytes,0))::text AS reported_sent_bytes
 FROM upload_health_timeline_events e
 JOIN upload_health_sessions s ON s.id=e.session_id
+LEFT JOIN upload_health_files hf ON hf.id=e.file_id AND hf.session_id=s.id
+LEFT JOIN order_files orig ON orig.id=hf.server_file_id AND orig.lab_id=s.lab_id AND orig.customer_id=s.photographer_id
 LEFT JOIN labs l ON l.id=s.lab_id
 LEFT JOIN users u ON u.id=s.photographer_id
 LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
@@ -126,7 +132,8 @@ WHERE m.mode='print' AND m.sent_at>=${dayStart} AND m.sent_at<${dayEnd}
   AND ($3::text IS NULL OR o.customer_id::text=$3)
 ORDER BY m.sent_at DESC,m.order_id DESC LIMIT $4 OFFSET $5`;
 export const dailyIncidentsSql=`
-SELECT i.id,i.last_at,i.payload,
+SELECT i.id,i.last_at,i.payload,l.id::text AS lab_id,u.id::text AS photographer_id,u.mobile AS photographer_mobile,
+       (SELECT lu.mobile FROM lab_memberships lm JOIN users lu ON lu.id=lm.user_id WHERE lm.lab_id=l.id AND lm.role='lab_admin' AND lm.active=true AND lu.active=true AND lu.mobile IS NOT NULL AND lu.mobile<>'' ORDER BY lm.created_at,lu.id LIMIT 1) AS lab_mobile,
        COALESCE(NULLIF(l.name,''),'نامشخص') AS lab_name,
        COALESCE(NULLIF(pp.studio_name,''),NULLIF(u.name,''),'نامشخص') AS photographer_name,
        o.number AS order_number,o.total AS order_total,
@@ -147,17 +154,19 @@ export async function getDailyErrorReport(pool,input={},now=new Date()){
   const filter=normalizeDailyFilters(input,now);
   // Only existing, server-recorded events and incident payloads are queried.
   // Never include file names, S3 object keys, signed URLs or request bodies.
-  const [summaryQ,eventsQ,incidentsQ,successSummaryQ,successesQ]=await Promise.all([
+  const [summaryQ,eventsQ,incidentsQ,successSummaryQ,successesQ,batchesQ]=await Promise.all([
     pool.query(dailyStudiosSql,[filter.day]),
     pool.query(dailyEventsSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.eventOffset]),
     pool.query(dailyIncidentsSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.incidentOffset]),
     pool.query(dailySuccessSummarySql,[filter.day]),
-    pool.query(dailySuccessSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.successOffset])
+    pool.query(dailySuccessSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.successOffset]),
+    pool.query(dailyBatchesSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.eventOffset])
   ]);
   const summary=summaryQ.rows.slice(0,3000),events=eventsQ.rows,incidents=incidentsQ.rows;
   const successSummary=successSummaryQ.rows.slice(0,3000),successes=successesQ.rows;
   return {
     day:filter.day,timezone:TEHRAN,
+    batches:batchesQ.rows,batchesTotal:Number(batchesQ.rows[0]?.total_rows||0),
     labId:filter.labId,photographerId:filter.photographerId,
     summary,summaryTruncated:summaryQ.rows.length>3000,
     successSummary,successSummaryTruncated:successSummaryQ.rows.length>3000,

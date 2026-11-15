@@ -1359,7 +1359,7 @@ await deployStep("./enable-r1852-alert-sms-dedup.mjs");
 runR1314(process.execPath,['--test','scripts/test-r1852-sms-alert-guard.cjs','scripts/test-r1850-error-monitor.mjs'],{stdio:'inherit'});
 // R1861: daily administrator error breakdown, read-only and isolated from uploads.
 await deployStep('./enable-r1861-error-monitor.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1861-error-dashboard.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1861-error-dashboard.cjs','scripts/test-r1863-error-actions.cjs'],{stdio:'inherit'});
 await deployStep("./enable-r1854-print-recovery.mjs");
 await deployStep("./enable-storage-browser-host.mjs");
 runR1314(process.execPath,["--test","scripts/test-storage-browser-host.mjs"],{stdio:"inherit"});

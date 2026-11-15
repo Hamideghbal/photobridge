@@ -20,7 +20,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
     if(url.pathname==='/api/customer/uploads/recovery-presign'){if(!files.has(body.clientFileId))files.set(body.clientFileId,{id:body.clientFileId,name:body.name,state:'pending',expected:body.bytes});return route.fulfill({json:{fileId:body.clientFileId}})}
     if(/\/uploads\/.+\/retry$/.test(url.pathname)){const row=files.get(url.pathname.split('/')[4]);return route.fulfill({json:{fileId:row.id,uploaded:row.bytes?.length===row.expected,uploadUrl:'/objects/'+row.id}})}
     if(/\/uploads\/.+\/exclude$/.test(url.pathname)){const row=files.get(url.pathname.split('/')[4]);if(row?.state==='active')return route.fulfill({status:409,json:{error:'upload_already_verified'}});if(row)row.state='deleted';return route.fulfill({json:{excluded:true}})}
-    if(url.pathname==='/api/customer/uploads/complete'){const row=files.get(body.fileId);assert.equal(row.bytes.length,row.expected);row.state='active';return route.fulfill({json:{ok:true}})}
+    if(url.pathname==='/api/customer/uploads/complete'){await new Promise(done=>setTimeout(done,350));const row=files.get(body.fileId);assert.equal(row.bytes.length,row.expected);row.state='active';return route.fulfill({json:{ok:true}})}
     return route.fulfill({json:{ok:true,items:[],models:[],types:[]}});
    }
    if(url.pathname==='/'+file)return route.fulfill({body:source,contentType:'text/javascript'});
@@ -42,7 +42,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   signedUser='33333333-3333-4333-8333-333333333333';await page.evaluate(()=>dispatchEvent(new Event('photobridge-auth-session-changed')));await page.waitForFunction(()=>__print.ready&&__print.rows[0]?.files?.length===5);
 
 
-  await page.evaluate(()=>{window.__send=__print.send()});await page.waitForFunction(controls=>controls?(__print.snapshot?.groups?.[0]?.files?.some(file=>file.name==='photo-2.png'&&file.state==='needs_attention'&&file.attempts>=3)&&__print.snapshot.groups[0].files.some(file=>file.name==='photo-4.png'&&file.state==='uploading'&&file.registered)):__print.snapshot?.state==='needs_attention',controls,{timeout:30000});if(!controls)await page.evaluate(()=>__send);
+  await page.evaluate(()=>{window.__send=__print.send()});
+  await page.waitForFunction(()=>[...document.querySelectorAll('[role=progressbar]')].some(bar=>Number(bar.getAttribute('aria-valuenow'))>0&&Number(bar.getAttribute('aria-valuenow'))<100));
+  const during=await page.locator('.simplePrintPilotOverall[role=progressbar]').first().getAttribute('aria-valuenow');assert(Number(during)>0&&Number(during)<100,'overall bar must advance before send resolves');
+  await page.waitForFunction(controls=>controls?(__print.snapshot?.groups?.[0]?.files?.some(file=>file.name==='photo-2.png'&&file.state==='needs_attention'&&file.attempts>=3)&&__print.snapshot.groups[0].files.some(file=>file.name==='photo-4.png'&&file.state==='uploading'&&file.registered)):__print.snapshot?.state==='needs_attention',controls,{timeout:30000});if(!controls)await page.evaluate(()=>__send);
   const primary=()=>page.locator(width===390?'#simple-print-pilot-mobile-header-slot .simplePrintPilotHeaderSubmitMobile':'.simplePrintPilotQuoteSubmit'),cancel=()=>page.locator(width===390?'#simple-print-pilot-mobile-header-slot .simplePrintPilotHeaderCancelMobile':'.simplePrintPilotCancel');
   assert.equal(orders.size,1);assert.equal(submits,0);assert.equal(files.size,5);assert.equal(await page.locator('[data-upload-state]').count(),5);assert.equal(await page.locator('.pb1854Queue,.pb1854File,.pb1856RecoveryNotice').count(),0);
   assert.equal(await page.getByRole('button',{name:'پیش‌نمایش',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'حذف از ارسال',exact:true}).count(),0);

@@ -3,8 +3,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
-let report;
-test.before(async()=>{report=await import('./r1861-error-dashboard-data.mjs')});
+let report,actions;
+test.before(async()=>{report=await import('./r1861-error-dashboard-data.mjs');actions=await import('./r1863-error-actions.mjs')});
 const day='2026-11-15',lab='11111111-1111-4111-8111-111111111111',studio='22222222-2222-4222-8222-222222222222';
 test('Gregorian day is Tehran local and rejects invalid or malicious dates',()=>{
  assert.equal(report.reportDate(day),day);
@@ -39,11 +39,11 @@ test('daily report includes successful sends with bytes plus errors without muta
  const calls=[];
  const pool={query:async(sql,args)=>{
   calls.push({sql,args});
-  const key=sql===report.dailyStudiosSql?'errors':sql===report.dailyEventsSql?'events':sql===report.dailyIncidentsSql?'incidents':sql===report.dailySuccessSummarySql?'successesSummary':sql===report.dailySuccessSql?'successes':null;
-  assert(key,'unknown SQL');return {rows:rowsByKind[key]};
+  const key=sql===report.dailyStudiosSql?'errors':sql===report.dailyEventsSql?'events':sql===report.dailyIncidentsSql?'incidents':sql===report.dailySuccessSummarySql?'successesSummary':sql===report.dailySuccessSql?'successes':sql===actions.dailyBatchesSql?'batches':null;
+  assert(key,'unknown SQL');return {rows:rowsByKind[key]||[]};
  }};
  const result=await report.getDailyErrorReport(pool,{day,labId:lab,photographerId:studio,eventOffset:'0',incidentOffset:'0',successOffset:'0'});
- assert.equal(calls.length,5);
+ assert.equal(calls.length,6);
  for(const c of calls)assert.equal(c.args[0],day);
  assert.deepEqual(calls[4].args,[day,lab,studio,200,0]);
  assert.equal(result.summary[0].failures,3);

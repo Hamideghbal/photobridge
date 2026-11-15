@@ -1,3 +1,4 @@
+const PB1863progress=x.useRef({sessionId:null,files:{}});
 const PB1855actionRef=x.useRef(null),[PB1855action,PB1855setAction]=x.useState(''),PB1854context=x.useRef(''),PB1854manager=x.useRef(null),PB1854persist=x.useRef(Promise.resolve()),[PB1854snapshot,PB1854setSnapshot]=x.useState(null),[PB1854ready,PB1854setReady]=x.useState(false),[PB1854initError,PB1854setInitError]=x.useState(''),[PB1854initVersion,PB1854setInitVersion]=x.useState(0);PB1854context.current=String(t?.lab?.id||'')+':'+PB1854initVersion;
 x.useEffect(()=>{
  let mounted=true,unsubscribe=()=>{};PB1854setReady(false);PB1854manager.current=null;PB1854setSnapshot(null);for(const group of E.current)for(const file of group.files)zs(file);k([]);Ce('pickup');Fe('normal');window.__PB1854PrintActive=true;
@@ -28,6 +29,7 @@ x.useEffect(()=>{
  const warn=event=>{if(ie||PB1854manager.current?.hasUnsavedAccess()){event.preventDefault();event.returnValue=''}};
  window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);
 },[ie]);
+x.useEffect(()=>{if(PB1863progress.current.sessionId!==PB1854snapshot?.id)PB1863progress.current={sessionId:PB1854snapshot?.id,files:{}};be(window.PB1854PrintRecovery.uploadProgress(PB1854snapshot,PB1863progress.current.files))},[PB1854snapshot]);
 const PB1855fileKeys=T.flatMap(group=>group.files).map(file=>file.id).join(':');
 x.useEffect(()=>{
  if(!PB1854ready)return;
@@ -52,7 +54,7 @@ const PB1854retry=async(ids)=>{
   if(!manager.snapshot()?.orderId)await manager.selection(E.current,{delivery:Z,priority:Se});
   if(PB1854manager.current!==manager)return;
   if(controller.signal.aborted){Ze('ارسال متوقف شد؛ انتخاب عکس‌ها حفظ شده است.');return}
-  const result=await manager.run(PB1854payload,{signal:controller.signal,fileIds:ids,onProgress:(id,progress)=>{if(PB1854manager.current!==manager)return;const group=E.current.find(g=>g.files.some(photo=>photo.id===id));if(group)ke(group.id,id,progress)}});
+  const result=await manager.run(PB1854payload,{signal:controller.signal,fileIds:ids,onProgress:(id,progress)=>{if(PB1854manager.current!==manager)return;const snapshot=manager.snapshot();if(PB1863progress.current.sessionId!==snapshot?.id)PB1863progress.current={sessionId:snapshot?.id,files:{}};PB1863progress.current.files[id]=progress;be(window.PB1854PrintRecovery.uploadProgress(snapshot,PB1863progress.current.files));const group=E.current.find(g=>g.files.some(photo=>photo.id===id));if(group)ke(group.id,id,progress)}});
   const snap=manager.snapshot(),files=snap.groups.flatMap(g=>g.files),total=files.reduce((n,file)=>n+file.size,0),done=files.filter(file=>file.state==='done').reduce((n,file)=>n+file.size,0);
   if(PB1854manager.current!==manager)return;be(result?100:Math.min(99,Math.round(100*done/Math.max(1,total))));if(result)Ge(result);
  }catch(error){if(PB1854manager.current===manager)Ze(window.PB1854PrintRecovery.failure(error).reason)}finally{if(f.current===controller){f.current=null;h.current=false}if(PB1854manager.current===manager)O(false)}

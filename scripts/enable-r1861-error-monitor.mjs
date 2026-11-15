@@ -1,15 +1,23 @@
 // R1861 is additive to R1850-R1852 and runs before final HTML writers.
-// It changes only the administrator report and introduces a read-only, role-gated API.
+// R1863 adds explicit administrator follow-up SMS alongside the role-gated report.
 import fs from 'node:fs';
 const serverFile='dist/api/server.js';
 const routeAnchor="    if(url.pathname==='/api/admin/error-incidents' && req.method==='GET'){";
-const importLine="import {getDailyErrorReport} from './error-dashboard-data.mjs';\n";
+const importLine="import {sendErrorResolution} from './r1863-error-actions.mjs';\nimport {getDailyErrorReport} from './error-dashboard-data.mjs';\n";
+fs.copyFileSync('scripts/r1863-error-actions.mjs','dist/api/r1863-error-actions.mjs');
 fs.copyFileSync('scripts/r1861-error-dashboard-data.mjs','dist/api/error-dashboard-data.mjs');
 fs.copyFileSync('scripts/r1861-error-admin.html','dist/api/error-monitor.html');
 let server=fs.readFileSync(serverFile,'utf8');
 if(!server.includes("url.pathname==='/api/admin/error-daily'")){
   if(server.split(routeAnchor).length!==2)throw Error('R1861 route anchor mismatch');
   const route=`
+    if(url.pathname==='/api/admin/error-resolution-sms' && req.method==='POST'){
+      const actor=await auth(req);
+      if(!requireRole(actor,'platform_admin'))return sendJson(res,403,{error:'forbidden'});
+      res.setHeader('cache-control','no-store');
+      try{return sendJson(res,200,await sendErrorResolution({pool,sendSms,normalizeMobile,actorId:actor.userId,input:await bodyJson(req)}));}
+      catch(error){return sendJson(res,error.status||500,{error:error.status?error.message:'followup_unavailable'});}
+    }
     // R1861: read-only aggregated telemetry, only for the existing platform_admin role.
     if(url.pathname==='/api/admin/error-daily' && req.method==='GET'){
       const actor=await auth(req);

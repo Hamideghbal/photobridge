@@ -91,7 +91,7 @@ const PB1855remove=async id=>{
  }finally{if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
 };
 const PB1854files=PB1854snapshot?.groups?.flatMap(group=>group.files)||[];
-const PB1854panel=e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854snapshot?.orderId,'aria-live':'polite',children:[
+const PB1854panel=(PB1854initError||PB1854snapshot?.groups?.some(group=>group.files.length))&&e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854snapshot?.orderId,'aria-live':'polite',children:[
  e.jsx('b',{children:!PB1854ready?(PB1854initError||'در حال بررسی ارسال ذخیره‌شده…'):PB1854snapshot?.orderId?'ادامهٔ ارسال ذخیره‌شده':'وضعیت نگهداری عکس‌های چاپ'}),
  !PB1854ready&&PB1854initError&&e.jsx('button',{type:'button',onClick:()=>PB1854setInitVersion(n=>n+1),children:'دوباره بررسی وضعیت ارسال'}),
  PB1854snapshot?.warning&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.warning}),

@@ -8,9 +8,10 @@ function fixture(){
  const request=async(path,options={})=>{
   const body=options.body?JSON.parse(options.body):{};
   if(path==='/api/customer/recovery-orders'){if(!orders.has(body.recoveryId))orders.set(body.recoveryId,{id:body.recoveryId,status:'uploading'});if(lostCreate){lostCreate=false;throw Object.assign(Error('lost'),{status:504})}return {order:copy(orders.get(body.recoveryId))}}
-  if(path.endsWith('/submit')){const order=orders.get(path.split('/')[4]);assert([...rows.values()].every(row=>row.state==='active'));if(order.status==='uploading'){order.status='sent';submitCount++}if(lostSubmit){lostSubmit=false;throw Object.assign(Error('lost'),{status:504})}return{order:copy(order)}}
+  if(path.endsWith('/submit')){const order=orders.get(path.split('/')[4]);assert([...rows.values()].filter(row=>row.state!=='deleted').every(row=>row.state==='active'));if(order.status==='uploading'){order.status='sent';submitCount++}if(lostSubmit){lostSubmit=false;throw Object.assign(Error('lost'),{status:504})}return{order:copy(order)}}
   if(path.startsWith('/api/customer/orders/'))return {order:copy(orders.get(path.split('/')[4])),files:[...rows.values()].map(row=>({id:row.id,original_state:row.state}))};
   if(path==='/api/customer/uploads/recovery-presign'){if(!rows.has(body.clientFileId))rows.set(body.clientFileId,{id:body.clientFileId,name:body.name,body,state:'pending',stored:false});if(lostPresign){lostPresign=false;throw Object.assign(Error('lost'),{status:504})}return{fileId:body.clientFileId}}
+  if(path.endsWith('/exclude')){const row=rows.get(path.split('/')[4]);if(row?.state==='active')throw Object.assign(Error('verified'),{status:409,data:{error:'upload_already_verified'}});if(row)row.state='deleted';return{excluded:true}}
   if(path.endsWith('/retry')){const row=rows.get(path.split('/')[4]);return{fileId:row.id,uploaded:row.stored,uploadUrl:row.id}}
   throw Error('Unexpected API '+path);
  };
@@ -73,4 +74,14 @@ test('older server cannot silently ignore recovery IDs or create a duplicate dra
 });
 test('a failed replacement cache write cannot upload an older cached original with the same local photo ID',async()=>{
  const f=fixture(),groups=f.groups(1);let m=f.manager();await m.selection(groups,{});const replacement=new File(['replacement-customer-original'],'photo-0.jpg',{type:'image/jpeg',lastModified:1});f.store.putFile=async()=>{throw Error('quota')};groups[0].files[0].file=replacement;await m.selection(groups,{});m=f.manager();await m.restore();await m.run(f.payload);assert.equal(f.puts.size,0);assert(m.snapshot().groups[0].files[0].missing);await m.reselect([replacement]);await m.run(f.payload);assert.equal(f.puts.get('photo-0.jpg'),1);assert.equal(f.orders.size,1);assert.equal(f.submits,1);
+});
+test('failed photo can be explicitly removed; completed originals and their PUT counts remain untouched',async()=>{
+ const f=fixture(),m=f.manager();await m.selection(f.groups(5),{});f.fail('photo-2.jpg');await m.run(f.payload);const failed=m.snapshot().groups[0].files.find(file=>file.name==='photo-2.jpg');const groups=await m.exclude(failed.id);assert.equal(groups[0].files.length,4);assert.equal(m.snapshot().excluded.length,1);assert.equal(f.rows.get(failed.serverId).state,'deleted');assert.equal(m.snapshot().groups[0].files.filter(file=>file.state==='done').length,4);await m.run(f.payload);assert.equal(f.submits,1);for(const [name,n]of f.puts)if(name!=='photo-2.jpg')assert.equal(n,1);
+});
+test('verified photo cannot be removed as failed and excluding the last queued photo permits a fresh selection',async()=>{
+ const f=fixture(),m=f.manager();await m.selection(f.groups(2),{});f.fail('photo-1.jpg');await m.run(f.payload);await assert.rejects(m.exclude('local-0'),error=>error.message==='upload_already_verified');assert.equal(m.snapshot().groups[0].files.length,2);
+ const fresh=f.manager();const emptyStore=fixture(),only=emptyStore.manager();await only.selection(emptyStore.groups(1),{});await only.exclude('local-0');assert.equal(only.snapshot().state,'empty');only.reset();await only.selection(emptyStore.groups(1),{});assert.equal(only.snapshot().groups[0].files.length,1);
+});
+test('pause aborts a stalled request and releases the queue for a new attempt',async()=>{
+ let saved=null,started;const ready=new Promise(resolve=>started=resolve),store={save:async value=>{saved=structuredClone(value)},load:async()=>saved,putFile:async()=>{},getFile:async()=>null,deleteFile:async()=>{}};const m=createManager({store,locks:null,request:(path,options)=>new Promise((resolve,reject)=>{started();options.signal.addEventListener('abort',()=>reject(Object.assign(Error('aborted'),{name:'AbortError'})),{once:true})}),transfer:async()=>{},verify:async()=>{}});await m.selection([{id:'group',files:[{id:'photo',file:new File(['original'],'photo.jpg')}]}],{});const running=m.run(()=>({}));await ready;await m.pause();await running.catch(()=>{});assert.equal(m.isBusy(),false);assert.equal(m.snapshot().groups[0].files.length,1);assert.equal(m.snapshot().state,'paused');
 });

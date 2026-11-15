@@ -8,7 +8,7 @@ function failure(error){
  const code=String(error?.data?.error||error?.code||error?.message||'upload_failed');
  const status=Number(error?.status||0);
  const temporary=error?.data?.retryable!==false&&!['needs_reselection','identity_mismatch','local_checkpoint_failed','selection_locked','session_changed_in_another_tab','file_read_failed'].includes(code)&&(error?.data?.retryable===true||!status||[408,425,429,500,502,503,504].includes(status));
- const reasons={storage_capacity_exceeded:'ظرفیت سرویس ذخیره‌سازی کافی نیست. عکس‌های تأییدشده حفظ شده‌اند؛ فضای سرویس باید بررسی شود.',upload_url_rejected:'سرویس ذخیره‌سازی لینک ارسال را نپذیرفت؛ لینک تازه دریافت می‌شود. اگر ادامه داشت، مجوز ذخیره‌سازی باید بررسی شود.',file_read_failed:'خواندن اصل این عکس از مرورگر انجام نشد؛ همان عکس را دوباره انتخاب کنید.',storage_access_denied:'سرویس ذخیره‌سازی اجازهٔ دسترسی به عکس را نداد. فایل‌ها حفظ شده‌اند؛ پشتیبانی باید دسترسی سرویس را بررسی کند.',storage_temporarily_unavailable:'سرویس ذخیره‌سازی موقتاً پاسخ نمی‌دهد. فایل‌های تأییدشده حفظ شده‌اند.',upload_missing:'این عکس هنوز به‌طور کامل در ذخیره‌سازی دریافت نشده است.',size_mismatch:'اندازهٔ فایل دریافت‌شده با عکس اصلی یکسان نیست؛ فقط همین عکس دوباره ارسال می‌شود.',file_too_large:'حجم این عکس از حد مجاز ارسال بیشتر است.',upload_not_configured:'سرویس ارسال فایل در دسترس نیست.',needs_reselection:'دسترسی مرورگر به اصل عکس از بین رفته است؛ همان عکس را دوباره انتخاب کنید.',identity_mismatch:'عکس انتخاب‌شده با اصل عکس ذخیره‌شده یکسان نیست.',local_checkpoint_failed:'ذخیرهٔ وضعیت ارسال در مرورگر ممکن نشد. این صفحه را باز نگه دارید.',session_changed_in_another_tab:'وضعیت این ارسال در صفحهٔ دیگری تغییر کرده است. همین صفحه را تازه‌سازی کنید؛ فایل‌های تأییدشده محفوظ‌اند.',selection_locked:'این انتخاب به پیش‌نویس ارسال متصل است؛ ابتدا ارسال باقی‌مانده را ادامه دهید.'};
+ const reasons={preview_unavailable:'پیش‌نمایش این عکس آماده نشد؛ فایل حفظ شده و می‌توانید دوباره تلاش کنید یا آن را از ارسال حذف کنید.',upload_already_verified:'این عکس قبلاً تأیید شده و از بخش فایل‌های ناموفق حذف نمی‌شود.',upload_open_in_other_tab:'این ارسال در صفحهٔ دیگری فعال است؛ ابتدا آن صفحه را متوقف کنید.',order_no_longer_uploading:'این سفارش قبلاً ثبت شده است؛ فهرست سفارش‌ها را بررسی کنید.',storage_capacity_exceeded:'ظرفیت سرویس ذخیره‌سازی کافی نیست. عکس‌های تأییدشده حفظ شده‌اند؛ فضای سرویس باید بررسی شود.',upload_url_rejected:'سرویس ذخیره‌سازی لینک ارسال را نپذیرفت؛ لینک تازه دریافت می‌شود. اگر ادامه داشت، مجوز ذخیره‌سازی باید بررسی شود.',file_read_failed:'خواندن اصل این عکس از مرورگر انجام نشد؛ همان عکس را دوباره انتخاب کنید.',storage_access_denied:'سرویس ذخیره‌سازی اجازهٔ دسترسی به عکس را نداد. فایل‌ها حفظ شده‌اند؛ پشتیبانی باید دسترسی سرویس را بررسی کند.',storage_temporarily_unavailable:'سرویس ذخیره‌سازی موقتاً پاسخ نمی‌دهد. فایل‌های تأییدشده حفظ شده‌اند.',upload_missing:'این عکس هنوز به‌طور کامل در ذخیره‌سازی دریافت نشده است.',size_mismatch:'اندازهٔ فایل دریافت‌شده با عکس اصلی یکسان نیست؛ فقط همین عکس دوباره ارسال می‌شود.',file_too_large:'حجم این عکس از حد مجاز ارسال بیشتر است.',upload_not_configured:'سرویس ارسال فایل در دسترس نیست.',needs_reselection:'دسترسی مرورگر به اصل عکس از بین رفته است؛ همان عکس را دوباره انتخاب کنید.',identity_mismatch:'عکس انتخاب‌شده با اصل عکس ذخیره‌شده یکسان نیست.',local_checkpoint_failed:'ذخیرهٔ وضعیت ارسال در مرورگر ممکن نشد. این صفحه را باز نگه دارید.',session_changed_in_another_tab:'وضعیت این ارسال در صفحهٔ دیگری تغییر کرده است. همین صفحه را تازه‌سازی کنید؛ فایل‌های تأییدشده محفوظ‌اند.',selection_locked:'این انتخاب به پیش‌نویس ارسال متصل است؛ ابتدا ارسال باقی‌مانده را ادامه دهید.'};
  return {code,status,retryable:temporary&&code!=='storage_access_denied',reason:reasons[code]||error?.data?.reason||error?.data?.message||(status===401?'برای ادامهٔ همین ارسال دوباره وارد حساب شوید.':status===403?'اجازهٔ دسترسی به این ارسال تأیید نشد.':temporary?'ارتباط قطع شد یا سرور پاسخ نداد. عکس‌های تأییدشده محفوظ‌اند.':'ارسال این عکس کامل نشد؛ دوباره تلاش کنید.'),reference:error?.data?.correlationId||uuid()};
 }
 function browserStore(scope){
@@ -34,7 +34,7 @@ function browserStore(scope){
 }
 async function digest(file){return Array.from(new Uint8Array(await root.crypto.subtle.digest('SHA-256',await file.arrayBuffer())),b=>b.toString(16).padStart(2,'0')).join('')}
 function createManager({store,request,transfer,verify,sleep=wait,hash=digest,onChange=()=>{},recordFailure=async()=>{},online=()=>root.navigator?.onLine!==false,locks=root.navigator?.locks}){
- let session=null,bytes=new Map(),busy=null,saves=Promise.resolve(),selectionTail=Promise.resolve(),verifyTail=Promise.resolve(),hashTail=Promise.resolve(),lastUpdated=0,savingSelection=0;const listeners=new Set();
+ let session=null,bytes=new Map(),busy=null,saves=Promise.resolve(),selectionTail=Promise.resolve(),verifyTail=Promise.resolve(),hashTail=Promise.resolve(),lastUpdated=0,savingSelection=0,activeController=null;const listeners=new Set();
  const emit=()=>{const value=session?clone(session):null;onChange(value);listeners.forEach(fn=>fn(value))};
  const save=()=>{session.version=(session.version||0)+1;session.updatedAt=lastUpdated=Math.max(Date.now(),lastUpdated+1);const value=clone(session);saves=saves.catch(()=>{}).then(()=>store.save(value));emit();return saves};
  const all=()=>session.groups.flatMap(g=>g.files);
@@ -47,7 +47,26 @@ function createManager({store,request,transfer,verify,sleep=wait,hash=digest,onC
   snapshot:()=>session?clone(session):null,
   isBusy:()=>!!busy,
   hasUnsavedAccess:()=>savingSelection>0||!!busy||!!session&&all().some(f=>f.state!=='done'&&!f.persisted),
-  reset(){if(session&&session.state!=='submitted')throw Error('selection_locked');session=null;bytes.clear();emit()},
+  reset(){if(session&&!['submitted','empty'].includes(session.state))throw Error('selection_locked');session=null;bytes.clear();emit()},
+  async pause(){activeController?.abort();if(busy)await busy.catch(()=>{})},
+  async getOriginal(id){const f=all().find(file=>file.id===id);if(!f)throw Error('photo_not_found');return original(f)},
+  async exclude(id){
+   await api.pause();await selectionTail;
+   const file=all().find(file=>file.id===id);if(!file)return api.restoredGroups();
+   if(file.state==='done')throw Object.assign(Error('upload_already_verified'),{status:409});
+   const remove=async()=>{
+    if(session.orderId){
+     const controller=new root.AbortController(),timeout=setTimeout(()=>controller.abort(),15000);let result;try{result=await request('/api/customer/uploads/'+file.serverId+'/exclude',{method:'POST',body:JSON.stringify({orderId:session.orderId}),signal:controller.signal})}finally{clearTimeout(timeout)};
+     if(!result.excluded)throw Error('exclusion_not_confirmed');
+    }
+    session.excluded=[...(session.excluded||[]),{...file,state:'excluded',excludedAt:Date.now()}];
+    session.groups=session.groups.map(group=>({...group,files:group.files.filter(f=>f.id!==id)})).filter(group=>group.files.length);
+    session.state=all().length?'paused':'empty';session.error=null;await save();
+    bytes.delete(id);await store.deleteFile(id).catch(()=>{});return api.restoredGroups();
+   };
+   try{return await (locks?.request?locks.request('pb1854:'+session.id,{mode:'exclusive',ifAvailable:true},lock=>{if(!lock)throw Error('upload_open_in_other_tab');return remove()}):remove())}
+   catch(error){if(error?.data?.error==='upload_already_verified'){file.state='done';file.progress=100;file.error=null;await save()}throw error}
+  },
   async restore(){session=await store.load();if(!session)return null;lastUpdated=Number(session.updatedAt||0);bytes=new Map();if(session.state!=='submitted')for(const f of all()){if(['uploading','verifying'].includes(f.state))f.state='paused';try{await original(f);f.missing=false}catch{f.missing=true;f.persisted=false;if(f.state!=='done'){f.state='needs_attention';f.error=failure(Error('needs_reselection'))}}}emit();return session},
   async selection(groups,settings){
    if(session?.orderId){if(JSON.stringify(groups.map(g=>[g.id,g.files.map(f=>f.id)]))!==JSON.stringify(session.groups.map(g=>[g.id,g.files.map(f=>f.id)])))throw Error('selection_locked');return}
@@ -60,6 +79,8 @@ function createManager({store,request,transfer,verify,sleep=wait,hash=digest,onC
   async reselect(files){if(!session)return;for(const blob of files){const matches=all().filter(f=>f.missing&&f.name===blob.name&&f.size===blob.size);if(!matches.length)continue;const checksum=await hash(blob);for(const f of matches){if(!f.checksum||f.checksum!==checksum){f.error=failure(Error('identity_mismatch'));continue}bytes.set(f.id,blob);try{await store.putFile(f.id,blob);f.persisted=true}catch{f.persisted=false}f.missing=false;f.error=null;f.state=f.state==='done'?'done':'queued'}}await save();return api.restoredGroups()},
   run(makePayload,{signal,fileIds,onProgress=()=>{}}={}){
    if(busy)return busy;
+   const externalSignal=signal,controller=new root.AbortController(),forwardAbort=()=>controller.abort();
+   activeController=controller;if(externalSignal?.aborted)controller.abort();else externalSignal?.addEventListener('abort',forwardAbort,{once:true});signal=controller.signal;
    const execute=async()=>{
     await selectionTail;if(!session||!all().length)throw Error('no_files');assertActive(signal);
     session.error=null;if(!session.orderId&&all().some(f=>!f.checksum)){session.state='needs_attention';session.error=failure(Error('file_read_failed'));await save();return null}if(!online()){session.state='paused';session.error=failure(Error('network_offline'));for(const f of all())if(f.state!=='done')f.state='paused';await save();return null}const previous=await reconcileOrder();if(session.state==='submitted')return session.result;
@@ -89,7 +110,7 @@ function createManager({store,request,transfer,verify,sleep=wait,hash=digest,onC
     session.state='submitted';session.result=result;await save();for(const f of all())await store.deleteFile(f.id).catch(()=>{});return result;
    };
    const locked=()=>locks?.request?locks.request('pb1854:'+session?.id,{mode:'exclusive',ifAvailable:true},lock=>{if(!lock)throw Error('upload_open_in_other_tab');return execute()}):execute();
-   busy=Promise.resolve().then(locked).catch(async error=>{if(session){session.error=failure(error);session.state=signal?.aborted?'paused':'needs_attention';try{await save()}catch{}}throw error}).finally(()=>{busy=null;emit()});return busy;
+   busy=Promise.resolve().then(locked).catch(async error=>{if(session){session.error=failure(error);session.state=signal?.aborted?'paused':'needs_attention';try{await save()}catch{}}throw error}).finally(()=>{externalSignal?.removeEventListener('abort',forwardAbort);if(activeController===controller)activeController=null;busy=null;emit()});return busy;
   }
  };
  const select=api.selection;api.selection=(...args)=>{savingSelection++;return selectionTail=selectionTail.catch(()=>{}).then(()=>select(...args)).finally(()=>savingSelection--)};

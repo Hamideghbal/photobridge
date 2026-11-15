@@ -1,4 +1,4 @@
-const PB1854context=x.useRef(''),PB1854manager=x.useRef(null),PB1854persist=x.useRef(Promise.resolve()),[PB1854snapshot,PB1854setSnapshot]=x.useState(null),[PB1854ready,PB1854setReady]=x.useState(false),[PB1854initError,PB1854setInitError]=x.useState(''),[PB1854initVersion,PB1854setInitVersion]=x.useState(0);PB1854context.current=String(t?.lab?.id||'')+':'+PB1854initVersion;
+const PB1855actionRef=x.useRef(null),[PB1855action,PB1855setAction]=x.useState(''),PB1854context=x.useRef(''),PB1854manager=x.useRef(null),PB1854persist=x.useRef(Promise.resolve()),[PB1854snapshot,PB1854setSnapshot]=x.useState(null),[PB1854ready,PB1854setReady]=x.useState(false),[PB1854initError,PB1854setInitError]=x.useState(''),[PB1854initVersion,PB1854setInitVersion]=x.useState(0);PB1854context.current=String(t?.lab?.id||'')+':'+PB1854initVersion;
 x.useEffect(()=>{
  let mounted=true,unsubscribe=()=>{};PB1854setReady(false);PB1854manager.current=null;PB1854setSnapshot(null);for(const group of E.current)for(const file of group.files)zs(file);k([]);Ce('pickup');Fe('normal');window.__PB1854PrintActive=true;
  (async()=>{
@@ -28,14 +28,24 @@ x.useEffect(()=>{
  const warn=event=>{if(ie||PB1854manager.current?.hasUnsavedAccess()){event.preventDefault();event.returnValue=''}};
  window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);
 },[ie]);
+const PB1855fileKeys=T.flatMap(group=>group.files).map(file=>file.id).join(':');
 x.useEffect(()=>{
  if(!PB1854ready)return;
+ const setDisabled=(node,value)=>{if(node.disabled!==!!value)node.disabled=!!value};
  const locked=!!PB1854snapshot?.orderId;
- document.querySelectorAll('.simplePrintSizeCard').forEach(node=>{node.inert=locked});
- document.querySelectorAll('.simplePrintPilotPrimaryAdd,.pb1793StandaloneLaunch').forEach(node=>{node.disabled=locked||W||c});
-},[T,PB1854snapshot?.orderId,PB1854ready,W,c]);
+ document.querySelectorAll('.simplePrintSizeCard').forEach(node=>{if(node.inert)node.inert=false});
+ const states=new Map((PB1854snapshot?.groups||[]).flatMap(group=>group.files).map(file=>[file.id,file]));
+ document.querySelectorAll('.simplePrintSizeCard input,.simplePrintSizeCard select,.simplePrintSizeCard button').forEach(node=>{
+  if(node.inert)node.inert=false;
+  if(node.matches('.simplePrintThumb'))setDisabled(node,PB1855action);
+  else if(node.matches('.simplePrintPhotoActions .dangerAction')){
+   const file=states.get(node.closest('[data-pb1855-file]')?.dataset.pb1855File);setDisabled(node,!!PB1855action||locked&&file?.state==='done');
+  }else setDisabled(node,locked||W);
+ });
+ document.querySelectorAll('.simplePrintPilotPrimaryAdd,.pb1793StandaloneLaunch').forEach(node=>setDisabled(node,locked||W||c));
+},[PB1855fileKeys,PB1854snapshot,PB1854ready,W,c,PB1855action]);
 const PB1854retry=async(ids)=>{
- const manager=PB1854manager.current;if(!manager||manager.contextLab!==String(t?.lab?.id||'')||manager.isBusy())return;
+ const manager=PB1854manager.current;if(PB1855actionRef.current||!manager||manager.contextLab!==String(t?.lab?.id||'')||manager.isBusy())return;
  const controller=new AbortController();f.current=controller;h.current=false;O(true);Ze('');
  try{
   await PB1854persist.current;if(PB1854manager.current!==manager)return;
@@ -47,6 +57,29 @@ const PB1854retry=async(ids)=>{
   if(PB1854manager.current!==manager)return;be(result?100:Math.min(99,Math.round(100*done/Math.max(1,total))));if(result)Ge(result);
  }catch(error){if(PB1854manager.current===manager)Ze(window.PB1854PrintRecovery.failure(error).reason)}finally{if(f.current===controller){f.current=null;h.current=false}if(PB1854manager.current===manager)O(false)}
 };
+const PB1855preview=async id=>{
+ const manager=PB1854manager.current;if(!manager||PB1855actionRef.current)return;
+ const token=Symbol();let previewTimer;PB1855actionRef.current=token;PB1855setAction('preview:'+id);Ze('');
+ try{
+  const record=E.current.flatMap(group=>group.files).find(file=>file.id===id);if(!record)throw Error('photo_not_found');
+  const picture=(async()=>{const blob=await manager.getOriginal(id),file=blob instanceof File?blob:new File([blob],record.file.name,{type:blob.type}),meta=await Hc(file,720);return {...record,file,previewUrl:meta.thumbUrl||record.thumbUrl||record.previewUrl,thumbUrl:meta.thumbUrl||record.thumbUrl||''}})();
+  const ready=await Promise.race([picture,new Promise((resolve,reject)=>{previewTimer=setTimeout(()=>reject(Error('preview_unavailable')),10000)})]);
+  if(PB1854manager.current===manager)re(ready);
+ }catch(error){if(PB1854manager.current===manager)Ze(window.PB1854PrintRecovery.failure(error).reason)}
+ finally{clearTimeout(previewTimer);if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
+};
+const PB1855remove=async id=>{
+ const manager=PB1854manager.current;if(!manager||PB1855actionRef.current)return;
+ const token=Symbol();PB1855actionRef.current=token;PB1855setAction('remove:'+id);Ze('');
+ try{
+  const groups=await manager.exclude(id);
+  if(PB1854manager.current!==manager)return;
+  for(const group of E.current)for(const file of group.files)zs(file);
+  k(groups);if(manager.snapshot()?.state==='empty')manager.reset();
+ }catch(error){
+  if(PB1854manager.current===manager){Ze(window.PB1854PrintRecovery.failure(error).reason);const groups=await manager.restoredGroups();k(groups)}
+ }finally{if(PB1855actionRef.current===token){PB1855actionRef.current=null;PB1855setAction('')}}
+};
 const PB1854files=PB1854snapshot?.groups?.flatMap(group=>group.files)||[];
 const PB1854panel=e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854snapshot?.orderId,'aria-live':'polite',children:[
  e.jsx('b',{children:!PB1854ready?(PB1854initError||'در حال بررسی ارسال ذخیره‌شده…'):PB1854snapshot?.orderId?'ادامهٔ ارسال ذخیره‌شده':'وضعیت نگهداری عکس‌های چاپ'}),
@@ -54,8 +87,8 @@ const PB1854panel=e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854
  PB1854snapshot?.warning&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.warning}),
  PB1854snapshot?.orderId&&e.jsx('p',{children:'عکس‌های تأییدشده دوباره ارسال نمی‌شوند. تا تکمیل این ارسال، مشخصات چاپ ثابت می‌ماند.'}),
  PB1854files.length>0&&e.jsx('small',{children:V(PB1854files.filter(file=>file.state==='done').length)+' از '+V(PB1854files.length)+' عکس تأیید شده'}),
- e.jsx('div',{className:'pb1854Files',children:PB1854files.map(file=>e.jsxs('div',{className:'pb1854File',children:[e.jsx('span',{children:file.name}),e.jsx('b',{children:{queued:'در انتظار ارسال',uploading:'در حال ارسال',paused:'متوقف؛ وضعیت حفظ شده',verifying:'در حال تأیید دریافت',done:'تأیید شد · ۱۰۰٪',needs_attention:'نیاز به تلاش مجدد'}[file.state]||file.state}),file.error&&e.jsxs('small',{children:[file.error.reason,' · کد پیگیری: ',file.error.reference]}),PB1854snapshot?.orderId&&file.state!=='done'&&e.jsx('button',{type:'button',disabled:W,onClick:()=>PB1854retry([file.id]),children:'تلاش مجدد این عکس'})]},file.id))}),
+ e.jsx('div',{className:'pb1854Files',children:PB1854files.map(file=>e.jsxs('div',{className:'pb1854File',children:[e.jsx('span',{children:file.name}),e.jsx('b',{children:{queued:'در انتظار ارسال',uploading:'در حال ارسال',paused:'متوقف؛ وضعیت حفظ شده',verifying:'در حال تأیید دریافت',done:'تأیید شد · ۱۰۰٪',needs_attention:'نیاز به تلاش مجدد'}[file.state]||file.state}),e.jsx('button',{type:'button',disabled:!!PB1855action,onClick:()=>PB1855preview(file.id),children:PB1855action==='preview:'+file.id?'در حال آماده‌کردن پیش‌نمایش…':'پیش‌نمایش'}),file.state!=='done'&&e.jsx('button',{type:'button',disabled:!!PB1855action,onClick:()=>PB1855remove(file.id),children:PB1855action==='remove:'+file.id?'در حال حذف از ارسال…':'حذف از ارسال'}),file.error&&e.jsxs('small',{children:[file.error.reason,' · کد پیگیری: ',file.error.reference]}),PB1854snapshot?.orderId&&file.state!=='done'&&e.jsx('button',{type:'button',disabled:W||!!PB1855action,onClick:()=>file.missing?document.querySelector('.pb1854Reselect input')?.click():PB1854retry([file.id]),children:file.missing?'انتخاب اصل این عکس':'تلاش مجدد این عکس'})]},file.id))}),
  PB1854snapshot?.error&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.error.reason}),
- PB1854snapshot?.orderId&&e.jsx('button',{type:'button',disabled:W,onClick:()=>PB1854retry(),children:W?'در حال ادامهٔ ارسال…':'تلاش مجدد و ادامهٔ ارسال'}),
+ PB1854snapshot?.orderId&&e.jsx('button',{type:'button',disabled:W||!!PB1855action,onClick:()=>PB1854retry(),children:W?'در حال ادامهٔ ارسال…':'تلاش مجدد و ادامهٔ ارسال'}),
  PB1854snapshot?.groups?.some(group=>group.files.some(file=>file.missing))&&e.jsxs('label',{className:'pb1854Reselect',children:['انتخاب دوبارهٔ همان عکس‌های در دسترس نیست',e.jsx('input',{type:'file',multiple:true,accept:'image/*,.heic,.heif,.tif,.tiff',disabled:W,onChange:async event=>{const files=Array.from(event.target.files||[]);try{const groups=await PB1854manager.current.reselect(files);if(groups)k(groups)}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}event.target.value=''}})]})
 ]});

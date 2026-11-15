@@ -1,0 +1,44 @@
+name: Qualify private custom storage domain
+on:
+  push:
+    branches: [diagnose/custom-storage-domain]
+    paths:
+      - tools/qualification/custom-storage-domain.cjs
+      - tools/qualification/test-custom-storage-domain.cjs
+      - .github/workflows/qualify-custom-storage-domain.yml
+permissions:
+  contents: read
+concurrency:
+  group: custom-storage-domain-qualification
+  cancel-in-progress: false
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated signing SDK
+        run: npm install --prefix work/storage-sdk --no-audit --no-fund @aws-sdk/client-s3@3.536.0 @aws-sdk/s3-request-presigner@3.536.0
+      - name: Verify custom hostname signing locally
+        env:
+          QUALIFICATION_NODE_ROOT: work/storage-sdk
+        run: node --test tools/qualification/test-custom-storage-domain.cjs
+      - name: Test private signed GET, browser PUT, CORS and original bytes
+        env:
+          QUALIFICATION_NODE_ROOT: work/storage-sdk
+          S3_ENDPOINT: ${{ secrets.PHASE2_S3_ENDPOINT }}
+          S3_BUCKET: ${{ secrets.PHASE2_S3_BUCKET }}
+          S3_ACCESS_KEY: ${{ secrets.PHASE2_S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.PHASE2_S3_SECRET_KEY }}
+        run: node tools/qualification/custom-storage-domain.cjs
+      - name: Save redacted compatibility result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-custom-storage-domain-report
+          path: work/custom-storage-domain-report.json
+          if-no-files-found: ignore
+          retention-days: 7

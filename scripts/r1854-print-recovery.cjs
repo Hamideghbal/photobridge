@@ -134,5 +134,11 @@ function syncPrintActions(row,send,source,active){
  if(cancel){if(cancel.hidden===!!actual)cancel.hidden=!actual;if(actual){if(cancel.textContent!==actual.textContent)cancel.textContent=actual.textContent;if(cancel.disabled!==actual.disabled)cancel.disabled=actual.disabled}}
  if(row.classList.contains('pb1858HasCancel')!==!!actual)row.classList.toggle('pb1858HasCancel',!!actual);
 }
-const exported={syncPrintActions,createManager,browserStore,failure,digest,transferFile};root.PB1854PrintRecovery=exported;if(typeof module!=='undefined')module.exports=exported;
+// Transient transfer is capped below verification; after reload only verified bytes remain.
+function uploadProgress(snapshot,transmitted={}){
+ const files=(snapshot?.groups||[]).flatMap(g=>g.files);if(!files.length)return 0;if(snapshot.state==='submitted')return 100;
+ const total=files.reduce((n,f)=>n+Math.max(1,Number(f.size)||0),0);
+ return Math.min(99,Math.floor(files.reduce((n,f)=>n+Math.max(1,Number(f.size)||0)*(f.state==='done'?100:f.state==='verifying'?95:Math.max(0,Math.min(94,Number(transmitted[f.id])||0))),0)/total));
+}
+const exported={uploadProgress,syncPrintActions,createManager,browserStore,failure,digest,transferFile};root.PB1854PrintRecovery=exported;if(typeof module!=='undefined')module.exports=exported;
 })(globalThis);

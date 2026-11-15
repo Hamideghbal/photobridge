@@ -215,6 +215,7 @@ jobs:
           PB1856_REFRESH=1 PB1854_NATIVE=1 node scripts/test-r1854-print-recovery-browser.cjs
           node scripts/test-r1856-orders-browser.cjs
           PB1854_NATIVE=1 node scripts/test-r1856-orders-browser.cjs
+          node scripts/test-r1863-admin-browser.cjs
           node scripts/test-r1858-mobile-actions.cjs
           PB1854_NATIVE=1 node scripts/test-r1858-mobile-actions.cjs
       - name: Verify lab read-only details and invoice gate before production
@@ -244,7 +245,7 @@ jobs:
       - name: Verify persistent SMS deduplication and origin lookup in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
-        run: node --test scripts/test-r1852-sms-postgres.cjs
+        run: node --test scripts/test-r1852-sms-postgres.cjs scripts/test-r1863-error-actions.cjs
       - name: Verify concurrent print recovery submission in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

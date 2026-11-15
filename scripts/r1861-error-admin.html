@@ -137,9 +137,9 @@ function combinedRows(){
   let out=map.get(key);
   if(!out){out={lab_id:r.lab_id,lab_name:r.lab_name,photographer_id:r.photographer_id,photographer_name:r.photographer_name,
    failures:0,orders:0,files:0,sessions:0,reported_sent_bytes:0,first_at:null,last_at:null,
-   successful_orders:0,successful_files:0,successful_bytes:0,historical_orders:0,success_last_at:null};map.set(key,out)}
+   successful_orders:0,successful_files:0,successful_bytes:0,order_total_amount:0,orders_with_amount:0,historical_orders:0,success_last_at:null};map.set(key,out)}
   if(success){out.successful_orders+=Number(r.successful_orders||0);out.successful_files+=Number(r.successful_files||0);
-   out.successful_bytes+=Number(r.successful_bytes||0);out.historical_orders+=Number(r.historical_orders||0);out.success_last_at=r.last_at||out.success_last_at;}
+   out.successful_bytes+=Number(r.successful_bytes||0);out.order_total_amount+=Number(r.order_total_amount||0);out.orders_with_amount+=Number(r.orders_with_amount||0);out.historical_orders+=Number(r.historical_orders||0);out.success_last_at=r.last_at||out.success_last_at;}
   else {out.failures+=Number(r.failures||0);out.orders+=Number(r.orders||0);out.files+=Number(r.files||0);
    out.sessions+=Number(r.sessions||0);out.reported_sent_bytes+=Number(r.reported_sent_bytes||0);out.first_at=r.first_at;out.last_at=r.last_at;}
  };
@@ -194,7 +194,7 @@ function drawMetrics(){
  el('metricSuccesses').textContent=n(filtered.reduce((a,x)=>a+x.successful_orders,0));
  el('metricSuccessFiles').textContent=n(filtered.reduce((a,x)=>a+x.successful_files,0));
  el('metricSuccessBytes').textContent=byte(filtered.reduce((a,x)=>a+x.successful_bytes,0));
- el('metricSuccessAmount').textContent=cash(state.successes.filter(x=>!el('lab').value||x.lab_id===el('lab').value).reduce((a,x)=>a+Number(x.order_total||0),0))+(state.successes.length<state.successesTotal?' (نمایش فعلی)':'');
+ el('metricSuccessAmount').textContent=cash(filtered.reduce((a,x)=>a+x.order_total_amount,0));
 }
 function drawEvents(){
  const body=el('events');clear(body);

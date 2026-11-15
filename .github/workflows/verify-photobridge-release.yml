@@ -199,6 +199,7 @@ jobs:
           node --test scripts/test-r1602-photo-preparation.cjs
           node scripts/test-r1602-photographer-browser.cjs
           node scripts/test-r1602-layout-prepaint-browser.cjs
+          node --test --test-name-pattern="desktop.*Print|desktop parent" scripts/test-r1318-ui.cjs
       - name: Verify lab read-only details and invoice gate before production
         run: |
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
@@ -324,7 +325,9 @@ jobs:
               if(!production.text.includes('scrollbar-gutter:stable')||!store.text.includes('pbFrameConfirmCheckout')||!store.text.includes('frameSizeSheet')||!store.text.includes('frameOrdersPanel')||!store.text.includes('grid-area:2/1/3/5')||!store.text.includes('فروشگاه قاب و شاسی')||!catalog.text.includes('direction:ltr;unicode-bidi:isolate')||!catalog.text.includes('frameSizePriceRow')||!catalog.text.includes('framePhotoViewport')||!store.text.includes('frameCustomerNav')||!catalog.text.includes('price(i.sale_price,{money,esc})')||!owner.text.includes('frameModelTopRow')||!owner.text.includes('frameColorImages')||!owner.text.includes('sizeOnly:true')||!owner.text.includes('colorImages')||!catalog.text.includes('repeat(3,minmax(0,1fr))')||!catalog.text.includes('color_image_urls')||!owner.text.includes('framePaletteColor')||!owner.text.includes('frameSelectMenu')||!owner.text.includes('colors:[...colors]')||!store.text.includes('C.card(')||!owner.text.includes('deleteModel(')||!catalog.text.includes('frameColorCircle')||!catalog.text.includes('cardStyles')||!catalog.text.includes('pricingRows'))throw Error('Live frame assets are incomplete');
               const publicPage=await get('/storefront.html?v='+encodeURIComponent(expected)),publicCss=await get('/storefront.css?v='+encodeURIComponent(expected)),publicScript=await get('/storefront.js?v='+encodeURIComponent(expected));
               if(!publicPage.text.includes('photobridge-r1207-frame-catalog.js')||!publicPage.text.includes('storefront.css')||!publicCss.text.includes('/assets/photobridge-handover-vazirmatn.woff2')||!publicCss.text.includes('.framePurchaseControls')||!publicScript.text.includes('C.card('))throw Error('Live public storefront assets are incomplete');
-              console.log('LIVE VERIFIED: '+expected+'; shared model cards, photographer store and public storefront design assets are served by photobridge.ir.');process.exit(0);
+              const printPage=await get('/photographer/orders/flow?workspace=print'),printInset=await get('/photobridge-r1318-print-insets.js?v=r1853');
+              if(!printPage.text.includes('photobridge-r1318-print-insets.js?v=r1853')||!printInset.text.includes("getComputedStyle(area).position==='fixed'?window.pb1318PrintInset():0"))throw Error('Live print layout correction or cache version is missing');
+              console.log('LIVE VERIFIED: '+expected+'; shared model cards, photographer store, public storefront and stable print-layout assets are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
             if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));
           }

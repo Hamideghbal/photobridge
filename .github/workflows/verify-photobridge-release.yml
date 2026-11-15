@@ -206,7 +206,7 @@ jobs:
         run: |
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
           export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
-          node --test scripts/test-r1854-print-recovery.cjs scripts/test-r1854-print-recovery-api.cjs
+          node --test scripts/test-r1854-print-recovery.cjs scripts/test-r1854-print-recovery-api.cjs scripts/test-storage-browser-host.mjs
           node scripts/test-r1854-print-recovery-browser.cjs
           PB1854_NATIVE=1 node scripts/test-r1854-print-recovery-browser.cjs
           PB1855_CONTROLS=1 node scripts/test-r1854-print-recovery-browser.cjs
@@ -353,6 +353,7 @@ jobs:
               const uploadPage=await get('/photographer/upload?workspace=print'),uploadControls=await get('/assets/index-UIRefine-v655-r84.js?printRecovery=r1858');
               if(!uploadPage.text.includes('printRecovery=r1858')||!uploadControls.text.includes('PB1855preview')||!uploadControls.text.includes('PB1855remove')||!uploadControls.text.includes('PB1858resume')||!uploadControls.text.includes('pb1858PhotoState')||uploadControls.text.includes('className:\'pb1854File\'')||!uploadControls.text.includes('async exclude(id)')||uploadControls.text.includes('pb1856RecoveryNotice')||!uploadControls.text.includes('pb1856OrderError')||!uploadControls.text.includes('PB1856orders'))throw Error('Live failed-photo preview/removal controls are missing');
               const mobileActions=await get('/photobridge-v904r100f40-mobile-polish.js?printActions=r1858'),headerActions=await get('/photobridge-ui-fixes-v755.js?printActions=r1858');compact.verifyCompactAssets({page:uploadPage.text,app:uploadControls.text,mobile:mobileActions.text,header:headerActions.text});
+              const storageHealth=JSON.parse((await get('/api/health')).text);if(!storageHealth.ok||!storageHealth.storage||storageHealth.storageBrowserHost!=='files.photobridge.ir')throw Error('Private browser storage hostname is not active: '+JSON.stringify({storage:storageHealth.storage,host:storageHealth.storageBrowserHost??null}));
               console.log('LIVE VERIFIED: '+expected+'; shared model cards, photographer store, public storefront, stable print layout, failed-photo controls and saved-order recovery are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
             if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));

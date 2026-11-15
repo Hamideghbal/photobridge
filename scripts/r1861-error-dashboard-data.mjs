@@ -34,6 +34,7 @@ export function normalizeDailyFilters(input={},now=new Date()){
     photographerId:uuidFilter(input.photographerId,'photographer_id'),
     eventOffset:offset(input.eventOffset),
     incidentOffset:offset(input.incidentOffset),
+    successOffset:offset(input.successOffset),
     pageSize:PAGE_SIZE
   };
 }
@@ -82,6 +83,46 @@ WHERE e.state='failed' AND e.received_at>=${dayStart}
   AND ($3::text IS NULL OR s.photographer_id::text=$3)
 ORDER BY e.received_at DESC,e.id DESC
 LIMIT $4 OFFSET $5`;
+// Durable order success metrics are written exactly once when an order enters 'sent'.
+// Legacy successful orders can survive order deletion, but their studio/amount will then be unknown.
+export const dailySuccessSummarySql=\`
+SELECT m.lab_id::text AS lab_id,
+       COALESCE(NULLIF(l.name,''),NULLIF(max(m.lab_name),''),'لابراتوار نامشخص') AS lab_name,
+       o.customer_id::text AS photographer_id,
+       COALESCE(NULLIF(pp.studio_name,''),NULLIF(u.name,''),'عکاسی نامشخص / سفارش قدیمی') AS photographer_name,
+       count(*)::int AS successful_orders,
+       sum(m.file_count)::text AS successful_files,
+       sum(m.original_bytes)::text AS successful_bytes,
+       sum(m.unknown_size_files)::text AS unknown_size_files,
+       count(*) FILTER(WHERE m.historical_snapshot)::int AS historical_orders,
+       min(m.sent_at) AS first_at,max(m.sent_at) AS last_at
+FROM upload_success_metrics m
+LEFT JOIN labs l ON l.id=m.lab_id
+LEFT JOIN orders o ON o.id=m.order_id AND o.lab_id=m.lab_id
+LEFT JOIN users u ON u.id=o.customer_id
+LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+WHERE m.mode='print' AND m.sent_at>=\${dayStart} AND m.sent_at<\${dayEnd}
+GROUP BY m.lab_id,l.name,o.customer_id,pp.studio_name,u.name
+ORDER BY successful_orders DESC,last_at DESC LIMIT 3001\`;
+export const dailySuccessSql=\`
+SELECT m.order_id::text AS order_id,m.sent_at,
+       m.lab_id::text AS lab_id,
+       COALESCE(NULLIF(l.name,''),NULLIF(m.lab_name,''),'لابراتوار نامشخص') AS lab_name,
+       o.customer_id::text AS photographer_id,
+       COALESCE(NULLIF(pp.studio_name,''),NULLIF(u.name,''),'عکاسی نامشخص / سفارش قدیمی') AS photographer_name,
+       o.number AS order_number,o.total AS order_total,
+       m.file_count::text AS file_count,m.original_bytes::text AS original_bytes,
+       m.unknown_size_files::text AS unknown_size_files,m.historical_snapshot,
+       count(*) OVER()::int AS total_rows
+FROM upload_success_metrics m
+LEFT JOIN labs l ON l.id=m.lab_id
+LEFT JOIN orders o ON o.id=m.order_id AND o.lab_id=m.lab_id
+LEFT JOIN users u ON u.id=o.customer_id
+LEFT JOIN photographer_profiles pp ON pp.user_id=u.id
+WHERE m.mode='print' AND m.sent_at>=\${dayStart} AND m.sent_at<\${dayEnd}
+  AND ($2::text IS NULL OR m.lab_id::text=$2)
+  AND ($3::text IS NULL OR o.customer_id::text=$3)
+ORDER BY m.sent_at DESC,m.order_id DESC LIMIT $4 OFFSET $5\`;
 export const dailyIncidentsSql=`
 SELECT i.id,i.last_at,i.payload,
        COALESCE(NULLIF(l.name,''),'نامشخص') AS lab_name,
@@ -104,16 +145,21 @@ export async function getDailyErrorReport(pool,input={},now=new Date()){
   const filter=normalizeDailyFilters(input,now);
   // Only existing, server-recorded events and incident payloads are queried.
   // Never include file names, S3 object keys, signed URLs or request bodies.
-  const [summaryQ,eventsQ,incidentsQ]=await Promise.all([
+  const [summaryQ,eventsQ,incidentsQ,successSummaryQ,successesQ]=await Promise.all([
     pool.query(dailyStudiosSql,[filter.day]),
     pool.query(dailyEventsSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.eventOffset]),
-    pool.query(dailyIncidentsSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.incidentOffset])
+    pool.query(dailyIncidentsSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.incidentOffset]),
+    pool.query(dailySuccessSummarySql,[filter.day]),
+    pool.query(dailySuccessSql,[filter.day,filter.labId,filter.photographerId,filter.pageSize,filter.successOffset])
   ]);
   const summary=summaryQ.rows.slice(0,3000),events=eventsQ.rows,incidents=incidentsQ.rows;
+  const successSummary=successSummaryQ.rows.slice(0,3000),successes=successesQ.rows;
   return {
     day:filter.day,timezone:TEHRAN,
     labId:filter.labId,photographerId:filter.photographerId,
     summary,summaryTruncated:summaryQ.rows.length>3000,
+    successSummary,successSummaryTruncated:successSummaryQ.rows.length>3000,
+    successes,successesTotal:Number(successes[0]?.total_rows||0),successOffset:filter.successOffset,
     events,eventsTotal:Number(events[0]?.total_rows||0),
     eventOffset:filter.eventOffset,
     incidents,incidentsTotal:Number(incidents[0]?.total_rows||0),

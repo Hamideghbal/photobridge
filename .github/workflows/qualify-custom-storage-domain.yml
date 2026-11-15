@@ -14,7 +14,7 @@ concurrency:
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 6
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +29,7 @@ jobs:
       - name: Test private signed GET, browser PUT, CORS and original bytes
         env:
           QUALIFICATION_NODE_ROOT: work/storage-sdk
+          QUALIFY_LARGE_UPLOAD: '1'
           S3_ENDPOINT: ${{ secrets.PHASE2_S3_ENDPOINT }}
           S3_BUCKET: ${{ secrets.PHASE2_S3_BUCKET }}
           S3_ACCESS_KEY: ${{ secrets.PHASE2_S3_ACCESS_KEY }}

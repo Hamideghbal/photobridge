@@ -51,6 +51,8 @@ jobs:
           node --check dist/web/storefront.js
       - name: Test integrated lab alerts and settings
         run: node --test scripts/test-r1296-native-alerts.cjs scripts/test-r1296-lab-settings.cjs scripts/test-r1297-lab-settings-speed.cjs scripts/test-r1298-lab-header-navigation.cjs scripts/test-r1300-lab-header-build-compat.cjs scripts/test-r1301-lab-site-general.cjs
+      - name: Verify publication asset checks
+        run: node --test .github/scripts/test-verify-compact-assets.cjs
       - name: Run production build
         run: npm run build
       - name: Verify durable administrator SMS guards and frozen desktop instrumentation
@@ -328,6 +330,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
+          import compact from './.github/scripts/verify-compact-assets.cjs';
           const expected=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
           const get=async path=>{const r=await fetch('https://photobridge.ir'+path,{signal:AbortSignal.timeout(15000),headers:{'cache-control':'no-cache'}});if(!r.ok)throw Error(path+' returned HTTP '+r.status);return {text:await r.text(),revision:r.headers.get('x-photobridge-deploy-revision')};};
           let last='';
@@ -349,7 +352,7 @@ jobs:
               if(!printPage.text.includes('photobridge-r1318-print-insets.js?v=r1853')||!printInset.text.includes("getComputedStyle(area).position==='fixed'?window.pb1318PrintInset():0"))throw Error('Live print layout correction or cache version is missing');
               const uploadPage=await get('/photographer/upload?workspace=print'),uploadControls=await get('/assets/index-UIRefine-v655-r84.js?printRecovery=r1858');
               if(!uploadPage.text.includes('printRecovery=r1858')||!uploadControls.text.includes('PB1855preview')||!uploadControls.text.includes('PB1855remove')||!uploadControls.text.includes('PB1858resume')||!uploadControls.text.includes('pb1858PhotoState')||uploadControls.text.includes('className:\'pb1854File\'')||!uploadControls.text.includes('async exclude(id)')||uploadControls.text.includes('pb1856RecoveryNotice')||!uploadControls.text.includes('pb1856OrderError')||!uploadControls.text.includes('PB1856orders'))throw Error('Live failed-photo preview/removal controls are missing');
-              const mobileActions=await get('/photobridge-v904r100f40-mobile-polish.js?printActions=r1858'),headerActions=await get('/photobridge-ui-fixes-v755.js?printActions=r1858');if(!uploadPage.text.includes('printActions=r1858')||!mobileActions.text.includes('syncPrintActions')||!headerActions.text.includes('syncPrintActions'))throw Error('Live compact mobile actions are missing');
+              const mobileActions=await get('/photobridge-v904r100f40-mobile-polish.js?printActions=r1858'),headerActions=await get('/photobridge-ui-fixes-v755.js?printActions=r1858');compact.verifyCompactAssets({page:uploadPage.text,app:uploadControls.text,mobile:mobileActions.text,header:headerActions.text});
               console.log('LIVE VERIFIED: '+expected+'; shared model cards, photographer store, public storefront, stable print layout, failed-photo controls and saved-order recovery are served by photobridge.ir.');process.exit(0);
             }catch(error){last=error.message;console.log('Publication check '+attempt+': '+last);}
             if(attempt<24)await new Promise(resolve=>setTimeout(resolve,20000));

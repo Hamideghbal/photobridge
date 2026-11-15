@@ -27,7 +27,7 @@ async function submit({live='ledger',draftTerms='ledger',missingPrice=false,albu
   if(sql.startsWith('SELECT payment_card_number'))return {rows:[{payment_account_holder:'Lab'}]};
   throw Error('unexpected pool query: '+sql);
  },connect:async()=>c};
- const context={req:{method:'POST'},submitCustomerOrder:['','order'],pool,labId:'lab',a:{userId:'customer',name:'Customer'},res:{},
+ const context={req:{method:'POST',headers:{}},submitCustomerOrder:['','order'],pool,labId:'lab',a:{userId:'customer',name:'Customer'},res:{},
   sendJson:(res,status,body)=>{response={status,body};return response},simplePrintUploadPilotEnabled:async()=>true,
   normalizePrintCatalog:raw=>raw,orderInvoicePriceRequirements:async()=>missingPrice?[{key:'missing',resolved:false}]:[],
   productInvoiceRequired:order=>order.invoice_required!==false,isNoPrintOrder:async()=>pure,

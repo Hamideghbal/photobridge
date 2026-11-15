@@ -200,6 +200,13 @@ jobs:
           node scripts/test-r1602-photographer-browser.cjs
           node scripts/test-r1602-layout-prepaint-browser.cjs
           node --test --test-name-pattern="desktop.*Print|desktop parent" scripts/test-r1318-ui.cjs
+      - name: Verify durable whole-file print recovery in browser and API
+        run: |
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node --test scripts/test-r1854-print-recovery.cjs scripts/test-r1854-print-recovery-api.cjs
+          node scripts/test-r1854-print-recovery-browser.cjs
+          PB1854_NATIVE=1 node scripts/test-r1854-print-recovery-browser.cjs
       - name: Verify lab read-only details and invoice gate before production
         run: |
           export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
@@ -217,6 +224,7 @@ jobs:
             /tmp/r1207-owner-*.png
             /tmp/r1210-owner-card-*.png
             /tmp/r1216-mobile-*.png
+            /tmp/photobridge-r1854-recovery-*.png
           if-no-files-found: ignore
       - name: Prepare runner PostgreSQL for migration smoke test
         run: |
@@ -227,6 +235,10 @@ jobs:
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
         run: node --test scripts/test-r1852-sms-postgres.cjs
+      - name: Verify concurrent print recovery submission in PostgreSQL
+        env:
+          PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
+        run: node --test scripts/test-r1854-print-recovery-postgres.cjs
       - name: Verify atomic frame model concurrent edits
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

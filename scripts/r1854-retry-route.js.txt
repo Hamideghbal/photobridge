@@ -1,0 +1,15 @@
+        const pb1854Retry = url.pathname.match(/^\/api\/customer\/uploads\/([0-9a-f-]+)\/retry$/);
+        if (pb1854Retry && req.method === 'POST') {
+            const q=await pool.query("SELECT f.* FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND f.lab_id=$2 AND f.customer_id=$3 AND o.mode='print' AND o.status='uploading' AND f.original_state IN ('pending','active')",[pb1854Retry[1],labId,a.userId]);
+            if(!q.rowCount)return sendJson(res,404,{error:'recoverable_upload_not_found'});
+            const row=q.rows[0];
+            try {
+                const uploaded=row.original_state==='active'||await pb1854Stored(row);
+                const uploadUrl=uploaded?null:String(row.object_key||'').startsWith('local/')?`/api/customer/uploads/local/${row.id}?_lab=${encodeURIComponent(labId)}`:await storagePresign('upload',row.object_key);
+                return sendJson(res,200,{fileId:row.id,uploaded,uploadUrl,bytes:Number(row.bytes),expiresIn:900});
+            } catch(error) {
+                const status=Number(error?.$metadata?.httpStatusCode||error?.statusCode||0),denied=status===403||error?.name==='AccessDenied',full=status===507||/^(InsufficientStorage|QuotaExceeded|StorageFull|DiskFull)$/.test(String(error?.name||'')),correlationId=crypto.randomUUID();
+                console.warn('[print-upload-recovery]',{correlationId,fileId:row.id,labId,photographerId:a.userId,stage:'storage-probe',category:denied?'access_denied':full?'capacity':'temporary_storage_error',status});
+                return sendJson(res,503,{error:denied?'storage_access_denied':full?'storage_capacity_exceeded':'storage_temporarily_unavailable',retryable:!denied&&!full,correlationId});
+            }
+        }

@@ -1,0 +1,61 @@
+const PB1854context=x.useRef(''),PB1854manager=x.useRef(null),PB1854persist=x.useRef(Promise.resolve()),[PB1854snapshot,PB1854setSnapshot]=x.useState(null),[PB1854ready,PB1854setReady]=x.useState(false),[PB1854initError,PB1854setInitError]=x.useState(''),[PB1854initVersion,PB1854setInitVersion]=x.useState(0);PB1854context.current=String(t?.lab?.id||'')+':'+PB1854initVersion;
+x.useEffect(()=>{
+ let mounted=true,unsubscribe=()=>{};PB1854setReady(false);PB1854manager.current=null;PB1854setSnapshot(null);for(const group of E.current)for(const file of group.files)zs(file);k([]);Ce('pickup');Fe('normal');window.__PB1854PrintActive=true;
+ (async()=>{
+  const auth=await Me('/api/auth/me'),owner=auth.user?.userId||auth.user?.id,lab=String(t?.lab?.id||'');
+  if(!owner||!lab)throw Error('upload_owner_unavailable');
+  const scope=String(owner)+':'+lab,lib=window.PB1854PrintRecovery;
+  const request=(path,options={})=>Me(path+(path.includes('?')?'&':'?')+'_lab='+encodeURIComponent(lab),options);
+  window.__PB1854Managers=window.__PB1854Managers||new Map();
+  let manager=window.__PB1854Managers.get(scope);
+  if(!manager){manager=lib.createManager({store:lib.browserStore(scope),request,recordFailure:event=>request('/api/customer/uploads/health-events',{method:'POST',body:JSON.stringify({events:[event]})}),transfer:(url,file,progress,signal)=>lib.transferFile(url,file,progress,signal,Sr()),verify:(id,file,signal)=>pb1714AwaitUploadReady(request,id,signal,file)});window.__PB1854Managers.set(scope,manager);manager.initialized=manager.restore().catch(error=>{window.__PB1854Managers.delete(scope);throw error})}await manager.initialized;
+  if(!mounted)return;manager.contextLab=lab;PB1854manager.current=manager;unsubscribe=manager.subscribe(snapshot=>{if(mounted)PB1854setSnapshot(snapshot)});
+  const snapshot=manager.snapshot();if(snapshot?.state!=='submitted'){const groups=await manager.restoredGroups();if(mounted&&groups.length){k(groups);Ce(snapshot.settings?.delivery||'pickup');Fe(snapshot.settings?.priority||'normal')}}
+  else manager.reset();
+  if(mounted){PB1854setReady(true);PB1854setInitError('')}
+ })().catch(error=>{if(mounted)PB1854setInitError(window.PB1854PrintRecovery.failure(error).reason)});
+ return()=>{mounted=false;unsubscribe();window.__PB1854PrintActive=false};
+},[t?.lab?.id,PB1854initVersion]);
+x.useEffect(()=>{
+ const changed=()=>{PB1854context.current+=':changed';PB1854setReady(false);PB1854manager.current=null;PB1854setSnapshot(null);k([]);PB1854setInitVersion(n=>n+1)};
+ window.addEventListener('photobridge-auth-session-changed',changed);return()=>window.removeEventListener('photobridge-auth-session-changed',changed);
+},[]);
+x.useEffect(()=>{
+ const manager=PB1854manager.current;if(!PB1854ready||!manager||manager.snapshot()?.orderId)return;
+ PB1854persist.current=manager.selection(T,{delivery:Z,priority:Se});PB1854persist.current.catch(error=>Ze(window.PB1854PrintRecovery.failure(error).reason));
+},[T,Z,Se,PB1854ready]);
+x.useEffect(()=>{
+ const warn=event=>{if(ie||PB1854manager.current?.hasUnsavedAccess()){event.preventDefault();event.returnValue=''}};
+ window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);
+},[ie]);
+x.useEffect(()=>{
+ if(!PB1854ready)return;
+ const locked=!!PB1854snapshot?.orderId;
+ document.querySelectorAll('.simplePrintSizeCard').forEach(node=>{node.inert=locked});
+ document.querySelectorAll('.simplePrintPilotPrimaryAdd,.pb1793StandaloneLaunch').forEach(node=>{node.disabled=locked||W||c});
+},[T,PB1854snapshot?.orderId,PB1854ready,W,c]);
+const PB1854retry=async(ids)=>{
+ const manager=PB1854manager.current;if(!manager||manager.contextLab!==String(t?.lab?.id||'')||manager.isBusy())return;
+ const controller=new AbortController();f.current=controller;h.current=false;O(true);Ze('');
+ try{
+  await PB1854persist.current;if(PB1854manager.current!==manager)return;
+  if(!manager.snapshot()?.orderId)await manager.selection(E.current,{delivery:Z,priority:Se});
+  if(PB1854manager.current!==manager)return;
+  if(controller.signal.aborted){Ze('ارسال متوقف شد؛ انتخاب عکس‌ها حفظ شده است.');return}
+  const result=await manager.run(PB1854payload,{signal:controller.signal,fileIds:ids,onProgress:(id,progress)=>{if(PB1854manager.current!==manager)return;const group=E.current.find(g=>g.files.some(photo=>photo.id===id));if(group)ke(group.id,id,progress)}});
+  const snap=manager.snapshot(),files=snap.groups.flatMap(g=>g.files),total=files.reduce((n,file)=>n+file.size,0),done=files.filter(file=>file.state==='done').reduce((n,file)=>n+file.size,0);
+  if(PB1854manager.current!==manager)return;be(result?100:Math.min(99,Math.round(100*done/Math.max(1,total))));if(result)Ge(result);
+ }catch(error){if(PB1854manager.current===manager)Ze(window.PB1854PrintRecovery.failure(error).reason)}finally{if(f.current===controller){f.current=null;h.current=false}if(PB1854manager.current===manager)O(false)}
+};
+const PB1854files=PB1854snapshot?.groups?.flatMap(group=>group.files)||[];
+const PB1854panel=e.jsxs('aside',{className:'pb1854Queue','data-locked':!!PB1854snapshot?.orderId,'aria-live':'polite',children:[
+ e.jsx('b',{children:!PB1854ready?(PB1854initError||'در حال بررسی ارسال ذخیره‌شده…'):PB1854snapshot?.orderId?'ادامهٔ ارسال ذخیره‌شده':'وضعیت نگهداری عکس‌های چاپ'}),
+ !PB1854ready&&PB1854initError&&e.jsx('button',{type:'button',onClick:()=>PB1854setInitVersion(n=>n+1),children:'دوباره بررسی وضعیت ارسال'}),
+ PB1854snapshot?.warning&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.warning}),
+ PB1854snapshot?.orderId&&e.jsx('p',{children:'عکس‌های تأییدشده دوباره ارسال نمی‌شوند. تا تکمیل این ارسال، مشخصات چاپ ثابت می‌ماند.'}),
+ PB1854files.length>0&&e.jsx('small',{children:V(PB1854files.filter(file=>file.state==='done').length)+' از '+V(PB1854files.length)+' عکس تأیید شده'}),
+ e.jsx('div',{className:'pb1854Files',children:PB1854files.map(file=>e.jsxs('div',{className:'pb1854File',children:[e.jsx('span',{children:file.name}),e.jsx('b',{children:{queued:'در انتظار ارسال',uploading:'در حال ارسال',paused:'متوقف؛ وضعیت حفظ شده',verifying:'در حال تأیید دریافت',done:'تأیید شد · ۱۰۰٪',needs_attention:'نیاز به تلاش مجدد'}[file.state]||file.state}),file.error&&e.jsxs('small',{children:[file.error.reason,' · کد پیگیری: ',file.error.reference]}),PB1854snapshot?.orderId&&file.state!=='done'&&e.jsx('button',{type:'button',disabled:W,onClick:()=>PB1854retry([file.id]),children:'تلاش مجدد این عکس'})]},file.id))}),
+ PB1854snapshot?.error&&e.jsx('p',{className:'pb1854Warning',children:PB1854snapshot.error.reason}),
+ PB1854snapshot?.orderId&&e.jsx('button',{type:'button',disabled:W,onClick:()=>PB1854retry(),children:W?'در حال ادامهٔ ارسال…':'تلاش مجدد و ادامهٔ ارسال'}),
+ PB1854snapshot?.groups?.some(group=>group.files.some(file=>file.missing))&&e.jsxs('label',{className:'pb1854Reselect',children:['انتخاب دوبارهٔ همان عکس‌های در دسترس نیست',e.jsx('input',{type:'file',multiple:true,accept:'image/*,.heic,.heif,.tif,.tiff',disabled:W,onChange:async event=>{const files=Array.from(event.target.files||[]);try{const groups=await PB1854manager.current.reselect(files);if(groups)k(groups)}catch(error){Ze(window.PB1854PrintRecovery.failure(error).reason)}event.target.value=''}})]})
+]});

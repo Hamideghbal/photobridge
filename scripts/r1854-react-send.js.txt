@@ -1,0 +1,2 @@
+if(!PB1854ready||!PB1854manager.current)return Ze(PB1854initError||'هنوز وضعیت ارسال قبلی بررسی نشده است.');
+await PB1854retry();

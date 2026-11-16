@@ -47,6 +47,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   'st.current=String(An.fileId||""),await rs(',
   'st.current=String(An.fileId||""),ce.current=ce.current.map(fn=>fn.id===Yn.id?{...fn,serverFileId:String(An.fileId),progress:1}:fn),pt(ce.current),await P(!1,ce.current).catch(()=>{}),await rs(',
   root+' persist assigned upload ID');
+ // Browser PUT progress can reach 100 before /uploads/complete verifies the
+ // object. Hold UI transfer progress below 100 until the server accepts it.
+ kv=once(kv,
+  'Ba.id===Yn.id?{...Ba,progress:fn}:Ba',
+  'Ba.id===Yn.id?{...Ba,progress:Math.min(99,fn)}:Ba',
+  root+' never label unverified PUT as complete');
  // A cancelled partial page must not look uploaded; preserve only completed
  // rows, and persist this truthful state for the next page load.
  kv=once(kv,

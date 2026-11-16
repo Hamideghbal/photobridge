@@ -81,10 +81,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   root+' verified status text');
  // One sending/retrying action beside the price summary; keep status notice,
  // but remove its duplicate top-of-page button.
- kv=once(kv,
-  'e.jsx("button",{type:"button",onClick:()=>void xe(),children:"↻ ادامه ارسال"})',
-  'null',
-  root+' remove duplicate retry action');
+ const resumeStart=kv.indexOf('Y==="error"&&e.jsxs("div",{className:"albumUploadResumeNotice"');
+ const resumeEnd=kv.indexOf(',h&&e.jsx(sb',resumeStart);
+ if(resumeStart<0||resumeEnd<=resumeStart)throw Error('[R1866] resume banner changed '+root);
+ const originalBanner=kv.slice(resumeStart,resumeEnd);
+ kv=once(kv,originalBanner,
+  'Y==="error"&&e.jsx("div",{className:"albumUploadResumeNotice",role:"alert",children:N})',
+  root+' single-action status banner');
  kv=once(kv,
   'children:je?"در حال ارسال…":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
   'children:je?"در حال ارسال…":Y==="error"&&he.current?"ادامه ارسال":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',

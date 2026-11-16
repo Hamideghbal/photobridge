@@ -23,6 +23,7 @@ test('R1865: cancel stops transfer while keeping original cached pages and compl
   assert(s.includes('className:"pb1865AlbumFileStatus "+'));
   assert(s.includes('✓ ارسال شد و تأیید شد'));
   assert(s.includes('در حال ارسال · '));
+  assert(s.includes('je&&Number($e.progress||0)>0?"در حال ارسال'), 'cancelled partial page must show as not sent');
   assert(s.includes('ارسال نشده'));
  }
 });

@@ -94,8 +94,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // Allow editing and bulk removal after STOP/error, not during a transfer.
   kv=once(kv,'nt=()=>{if(je||Y!=="idle"||!ot.size)return;',
     'nt=()=>{if(je||!ot.size)return;',root+' bulk remove while stopped');
-  kv=once(kv,'disabled:je||Y!=="idle"||!ot.size,onClick:nt',
-    'disabled:je||!ot.size,onClick:nt',root+' bulk delete button');
+  const bulkOnClick=kv.indexOf('onClick:nt'),bulkDisabled=kv.lastIndexOf('disabled:',bulkOnClick);
+  if(bulkOnClick<0||bulkDisabled<0||bulkOnClick-bulkDisabled>160||
+     !/^disabled:[^,]+,$/.test(kv.slice(bulkDisabled,bulkOnClick)))
+    throw Error('[R1866] unexpected bulk delete button shape '+root);
+  kv=kv.slice(0,bulkDisabled)+'disabled:je||!ot.size,'+kv.slice(bulkOnClick);
 
   const lastRemoved=':(Pt.current=!1,Tu(Xe))';
   if(kv.split(lastRemoved).length-1!==2)

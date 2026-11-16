@@ -30,57 +30,55 @@ function populate(sel,options){const old=sel.value;sel.innerHTML=options;if([...
 function renderCustomers(){
  const q=$('search').value.trim().toLowerCase();
  const entries=state.customers.filter(c=>(c.fullName+' '+c.mobile).toLowerCase().includes(q));
- $('customer-rows').innerHTML=entries.map(c=>'<tr><td>'+escaped(c.fullName)+'</td><td dir="ltr">'+escaped(c.mobile)+'</td><td>'+(c.marketingPermission==='opted_in'?'موافق':c.marketingPermission==='opted_out'?'انصراف داده':'نامشخص')+'</td><td><button data-edit="'+c.id+'">ویرایش</button> <button data-delete="'+c.id+'">حذف</button></td></tr>').join('')||'<tr><td colspan="4">مشتری ثبت نشده است.</td></tr>';
+ $('customer-rows').innerHTML=entries.map(c=>'<tr><td>'+escaped(c.fullName)+'</td><td dir="ltr">'+escaped(c.mobile)+'</td><td><button data-edit="'+c.id+'">ویرایش</button> <button data-delete="'+c.id+'">حذف</button> <button data-new-invoice="'+c.id+'">فاکتور جدید</button></td></tr>').join('')||'<tr><td colspan="3">مشتری ثبت نشده است.</td></tr>';
  document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editCustomer(b.dataset.edit)));
  document.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>deleteCustomer(b.dataset.delete)));
- for(const s of ['session-customer','event-customer','invoice-customer','sms-customers'])populate($(s),customerOptions());
+ document.querySelectorAll('[data-new-invoice]').forEach(b=>b.addEventListener('click',()=>{editCustomer(b.dataset.newInvoice);$('invoice-form').reset();$('invoice-lines').replaceChildren();addInvoiceLine();$('invoice-form').scrollIntoView({behavior:'smooth',block:'start'});}));
+ for(const s of ['sms-customers'])populate($(s),customerOptions());
 }
 function renderTypes(){
- $('shoot-list').replaceChildren();
- state.shootTypes.forEach(t=>{
-  const box=document.createElement('div');box.className='tag';box.textContent=t.name+' ';
-  const edit=document.createElement('button');edit.textContent='ویرایش';edit.onclick=()=>{const name=prompt('نام جدید مدل عکاسی',t.name);if(name!==null)handle(request('types/'+t.id,'PUT',{name}),'نام مدل تغییر کرد')};
-  const del=document.createElement('button');del.textContent='بایگانی';del.onclick=()=>{if(confirm('این مدل در انتخاب‌های جدید پنهان شود؟ سوابق مشتری حفظ می‌شود.'))handle(request('types/'+t.id,'DELETE',{}),'مدل بایگانی شد')};
-  box.append(edit,del);$('shoot-list').append(box);
- });
  for(const key of ['session-type','template-type'])populate($(key),typeOptions());
 }
 function renderInvoices(){
- $('invoice-rows').innerHTML=state.invoices.map(i=>{
+ $('invoice-rows').innerHTML=state.invoices.filter(i=>i.customer_id===editingCustomerId).map(i=>{
  const id=i.id,cid=i.customer_id,status=i.status;
  return '<tr><td>'+fa(i.invoice_number)+'</td><td>'+escaped(labelCustomer(cid))+'</td><td>'+fa(i.total_toman)+' تومان</td><td>'+fa(i.due_toman)+' تومان</td><td>'+(status==='void'?'باطل‌شده':'صادرشده')+'</td><td>'+ (status==='issued'?'<button data-print="'+id+'" data-format="a4">A4</button> <button data-print="'+id+'" data-format="thermal">حرارتی</button> <button data-void="'+id+'">ابطال</button>':'—')+'</td></tr>';
  }).join('')||'<tr><td colspan="6">هنوز فاکتوری ثبت نشده است.</td></tr>';
  document.querySelectorAll('[data-print]').forEach(b=>b.addEventListener('click',()=>printInvoice(b.dataset.print,b.dataset.format)));
  document.querySelectorAll('[data-void]').forEach(b=>b.addEventListener('click',()=>{const reason=prompt('علت ابطال فاکتور (در سوابق نگهداری می‌شود)');if(reason?.trim())handle(request('invoices/'+b.dataset.void+'/void','POST',{reason}),'فاکتور با حفظ سابقه باطل شد')}));
 }
-function renderAll(){renderCustomers();renderTypes();renderInvoices();onTypeChanged()}
+function renderAll(){renderCustomers();renderTypes();renderInvoices();renderCustomerSessions();onTypeChanged()}
 let editingCustomerId=null;
 function updateCustomerFormMode(){
  const editing=!!editingCustomerId;
  $('customer-form-title').textContent=editing?'ویرایش مشخصات مشتری':'ثبت مشتری جدید';
  $('customer-submit').textContent=editing?'ذخیره تغییرات':'ثبت مشتری';
  $('customer-cancel').hidden=!editing;
+ $('customer-details').hidden=!editing;
 }
 function resetCustomerForm(){
+ $('invoice-form').reset();$('invoice-lines').replaceChildren();addInvoiceLine();
  editingCustomerId=null;
  $('customer-form').reset();
  updateCustomerFormMode();
 }
-function buildCustomerPayload(fullName,mobile,consented,previous=null){
- const marketingPermission=consented?'opted_in':previous?.marketingPermission==='opted_out'?'opted_out':'unknown';
- const permissionSource=consented
-  ? (previous?.marketingPermission==='opted_in'&&previous.permissionSource
-    ? previous.permissionSource
-    : 'اعلام رضایت مشتری و ثبت توسط اپراتور')
-  : '';
- return {fullName:fullName.trim(),mobile:mobile.trim(),marketingPermission,permissionSource,notes:previous?.notes||''};
+function buildCustomerPayload(fullName,mobile,previous=null){
+ return {fullName:fullName.trim(),mobile:mobile.trim(),marketingPermission:previous?.marketingPermission||'unknown',permissionSource:previous?.permissionSource||'',notes:previous?.notes||''};
+}
+function renderCustomerSessions(){
+ $('customer-sessions').textContent=state.sessions.filter(s=>s.customer_id===editingCustomerId).map(s=>(state.shootTypes.find(t=>t.id===s.shoot_type_id)?.name||'خدمت')+' · '+(s.shoot_date?new Intl.DateTimeFormat('fa-IR',{dateStyle:'long',timeZone:'Asia/Tehran'}).format(new Date(s.shoot_date)):'بدون تاریخ')).join(' | ');
 }
 function editCustomer(id){
  const c=state.customers.find(x=>x.id===id);if(!c)return;
+ if(editingCustomerId!==id){$('invoice-form').reset();$('invoice-lines').replaceChildren();addInvoiceLine();}
  editingCustomerId=id;
  $('customer-name').value=c.fullName;
  $('customer-mobile').value=c.mobile;
- $('marketing-consent').checked=c.marketingPermission==='opted_in';
+ $('session-form').reset();
+ $('session-date').value='';
+ $('session-date-trigger').textContent='انتخاب تاریخ شمسی';
+ $('session-calendar').hidden=true;
+ renderInvoices();renderCustomerSessions();
  updateCustomerFormMode();
  $('customer-editor').scrollIntoView({behavior:'smooth',block:'start'});
  $('customer-name').focus({preventScroll:true});
@@ -125,7 +123,7 @@ async function showDue(range){
   data.occasions.forEach(o=>{
    const box=document.createElement('div');box.className='card';
    const strong=document.createElement('strong');strong.textContent=o.customer_name;
-   const body=document.createElement('div');body.textContent=(o.title||o.occasion_type)+' · '+fa(o.daysUntil)+' روز دیگر · '+o.dueAt;
+   const body=document.createElement('div');body.textContent=(o.title||o.occasion_type)+' · '+fa(o.daysUntil)+' روز دیگر · '+new Intl.DateTimeFormat('fa-IR',{dateStyle:'long',timeZone:'Asia/Tehran'}).format(new Date(o.dueAt+'T12:00:00Z'));
    const note=document.createElement('small');note.textContent='پیامک تبلیغاتی: '+(o.marketing_permission==='opted_in'?'رضایت ثبت شده':'فاقد رضایت');
    box.append(strong,body,note);$('due-list').append(box);
   });
@@ -141,30 +139,25 @@ $('customer-form').addEventListener('submit',async e=>{
  e.preventDefault();
  const savedId=editingCustomerId;
  const existing=savedId?state.customers.find(c=>c.id===savedId):null;
- const data=buildCustomerPayload($('customer-name').value,$('customer-mobile').value,$('marketing-consent').checked,existing);
+ const data=buildCustomerPayload($('customer-name').value,$('customer-mobile').value,existing);
  const button=$('customer-submit');
  button.disabled=true;
  try{
-  await request(savedId?'customers/'+savedId:'customers',savedId?'PUT':'POST',data);
+  const result=await request(savedId?'customers/'+savedId:'customers',savedId?'PUT':'POST',data);
   toast(savedId?'مشخصات مشتری به‌روز شد.':'مشتری ثبت شد.');
-  resetCustomerForm();
   await reload();
+  editCustomer(savedId||result.id);
  }catch(error){toast(error.message,true)}
  finally{button.disabled=false}
 });
 $('customer-cancel').addEventListener('click',resetCustomerForm);
-$('session-date').addEventListener('change',()=>{
- const value=$('session-date').value;
- $('session-date-display').textContent=value?'تاریخ میلادی: '+value:'فرمت میلادی: YYYY-MM-DD';
-});
 $('search').addEventListener('input',renderCustomers);
-$('add-shoot').addEventListener('click',()=>{const name=$('shoot-name').value.trim();if(name)handle(request('types','POST',{name}),'مدل عکاسی اضافه شد')});
-$('seed-shoot').addEventListener('click',()=>handle(request('types/seed','POST',{}),'مدل‌های پیشنهادی اضافه شدند'));
-$('session-form').addEventListener('submit',e=>{
- e.preventDefault();handle(request('sessions','POST',{customerId:$('session-customer').value,shootTypeId:$('session-type').value,shootDate:$('session-date').value||null}),'نوع عکاسی مشتری ثبت شد');
-});
-$('event-form').addEventListener('submit',e=>{
- e.preventDefault();handle(request('occasions','POST',{customerId:$('event-customer').value,occasionType:$('event-type').value,title:$('event-title').value,calendarKind:$('event-calendar').value,eventYear:$('event-year').value,eventMonth:$('event-month').value,eventDay:$('event-day').value,repeatsYearly:true}),'مناسبت ثبت شد');
+$('session-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(!editingCustomerId)return;
+ if(!$('session-date').value){toast('تاریخ شمسی خدمت را انتخاب کنید.',true);return}
+ const button=e.submitter;button.disabled=true;
+ try{await request('sessions','POST',{customerId:editingCustomerId,shootTypeId:$('session-type').value,shootDate:$('session-date').value||null,createOccasion:true});toast('خدمت و مناسبت مشتری ثبت شد.');await reload();}
+ catch(error){toast(error.message,true)}finally{button.disabled=false}
 });
 document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>showDue(b.dataset.range)));
 $('template-type').addEventListener('change',onTypeChanged);
@@ -193,15 +186,37 @@ $('sms-preview').addEventListener('click',async()=>{
 $('invoice-add-line').addEventListener('click',()=>addInvoiceLine());
 $('invoice-form').addEventListener('submit',async e=>{
  e.preventDefault();
+ if(!editingCustomerId)return;
  if(!confirm('فاکتور صادر شود؟ بعد از صدور ریز خدمات ثابت می‌ماند.'))return;
+ const button=e.submitter;button.disabled=true;
  try{
-  const result=await request('invoices','POST',{customerId:$('invoice-customer').value,items:itemsFromForm(),discountToman:Number($('invoice-discount').value||0),paidToman:Number($('invoice-paid').value||0),businessPhone:$('invoice-business-phone').value,businessAddress:$('invoice-business-address').value,notes:$('invoice-notes').value});
+  const result=await request('invoices','POST',{customerId:editingCustomerId,items:itemsFromForm(),discountToman:Number($('invoice-discount').value||0),paidToman:Number($('invoice-paid').value||0),businessPhone:$('invoice-business-phone').value,businessAddress:$('invoice-business-address').value,notes:$('invoice-notes').value});
   toast('فاکتور شماره '+fa(result.invoiceNumber)+' صادر شد. اکنون می‌توانید آن را چاپ کنید.');
-  await reload();printInvoice(result.id,'a4');
- }catch(e){toast(e.message,true)}
+  await reload();$('invoice-form').reset();$('invoice-lines').replaceChildren();addInvoiceLine();printInvoice(result.id,'a4');
+ }catch(e){toast(e.message,true)}finally{button.disabled=false}
 });
 $('role').textContent=portal==='lab'?'لابراتوار':portal==='photographer'?'عکاس':'';
 $('back').href=portal==='lab'?'/lab':portal==='photographer'?'/photographer':'/';
 addInvoiceLine();
 if(!['lab','photographer'].includes(portal)){toast('از نشانی مخصوص لابراتوار یا عکاس وارد شوید.',true);document.querySelectorAll('button').forEach(b=>b.disabled=true)}
 else reload().catch(e=>toast(e.message,true));
+
+// Persian calendar: Saturday first, Tehran dates and Gregorian storage only.
+function persianParts(date){return Object.fromEntries(new Intl.DateTimeFormat('en-US-u-ca-persian',{timeZone:'Asia/Tehran',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(date).filter(p=>['year','month','day'].includes(p.type)).map(p=>[p.type,Number(p.value)]));}
+let calendarMonth=new Date();
+function renderCalendar(){
+ const first=new Date(calendarMonth);first.setUTCDate(first.getUTCDate()+1-persianParts(first).day);
+ const head=document.createElement('div');head.className='crmCalendarHead';
+ const prev=document.createElement('button'),next=document.createElement('button'),title=document.createElement('b');
+ prev.type=next.type='button';prev.textContent='›';next.textContent='‹';
+ title.textContent=new Intl.DateTimeFormat('fa-IR',{month:'long',year:'numeric',timeZone:'Asia/Tehran'}).format(first);
+ prev.onclick=()=>{calendarMonth=new Date(first.getTime()-86400000);renderCalendar()};
+ next.onclick=()=>{calendarMonth=new Date(first.getTime()+32*86400000);calendarMonth.setUTCDate(calendarMonth.getUTCDate()+1-persianParts(calendarMonth).day);renderCalendar()};
+ head.append(prev,title,next);const grid=document.createElement('div');grid.className='crmCalendarGrid';
+ for(const day of ['ش','ی','د','س','چ','پ','ج']){const el=document.createElement('span');el.textContent=day;grid.append(el)}
+ for(let i=0;i<(first.getUTCDay()+1)%7;i++)grid.append(document.createElement('span'));
+ for(let i=0;i<32;i++){const date=new Date(first.getTime()+i*86400000);if(persianParts(date).month!==persianParts(first).month)break;const button=document.createElement('button');button.type='button';button.textContent=fa(i+1);const value=date.toISOString().slice(0,10);button.classList.toggle('selected',value===$('session-date').value);button.onclick=()=>{$('session-date').value=value;$('session-date-trigger').textContent=new Intl.DateTimeFormat('fa-IR',{dateStyle:'long',timeZone:'Asia/Tehran'}).format(date);$('session-calendar').hidden=true};grid.append(button)}
+ const today=document.createElement('button');today.type='button';today.textContent='امروز';today.onclick=()=>{calendarMonth=new Date(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())+'T12:00:00Z');renderCalendar()};
+ $('session-calendar').replaceChildren(head,grid,today);
+}
+$('session-date-trigger').onclick=()=>{calendarMonth=new Date(($('session-date').value||new Date().toISOString().slice(0,10))+'T12:00:00Z');renderCalendar();$('session-calendar').hidden=!$('session-calendar').hidden};

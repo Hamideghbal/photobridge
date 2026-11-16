@@ -149,6 +149,12 @@ export async function handleCustomerCRM(ctx){
   else if(p==='/api/crm/sessions'&&method==='POST'){
    if(!asId(body.customerId)||!asId(body.shootTypeId)||body.shootDate&&!/^\d{4}-\d{2}-\d{2}$/.test(String(body.shootDate)))fail('invalid_session');
    const r=await c.query('INSERT INTO pb_crm.sessions(owner_kind,owner_id,customer_id,shoot_type_id,shoot_date,notes) VALUES($1,$2,$3,$4,$5,$6) RETURNING id',[kind,id,body.customerId,body.shootTypeId,body.shootDate||null,txt(body.notes,1000)]);
+   if(body.createOccasion&&body.shootDate){
+    const date=new Date(body.shootDate+'T12:00:00Z');
+    if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==body.shootDate)fail('invalid_session');
+    const parts=dateParts(date,'jalali');
+    await c.query("INSERT INTO pb_crm.occasions(owner_kind,owner_id,customer_id,occasion_type,title,calendar_kind,event_year,event_month,event_day,repeats_yearly,notes) SELECT $1,$2,$3,'shoot_anniversary',name,'jalali',$5,$6,$7,true,'' FROM pb_crm.shoot_types WHERE owner_kind=$1 AND owner_id=$2 AND id=$4",[kind,id,body.customerId,body.shootTypeId,parts.year,parts.month,parts.day]);
+   }
    status=201;value={ok:true,id:r.rows[0].id};
   }
   else if(match(/^\/api\/crm\/sessions\/([0-9a-f-]{36})$/i)&&method==='DELETE'){

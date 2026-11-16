@@ -55,3 +55,18 @@ test('invoice rejects a request that cannot resolve its customer within owner sc
  const q=x.calls.find(c=>c.sql.includes('FROM pb_crm.customers')&&c.sql.includes('full_name'));
  assert.deepEqual(q.args,['lab',L,C]);
 });
+
+for(const [portal,user] of [['lab',lab],['photographer',photographer]])test(portal+' saves service and Persian anniversary in one transaction',async()=>{
+ const x=setup({portal,user,method:'POST',path:'/api/crm/sessions',body:{customerId:C,shootTypeId:P,shootDate:'2026-03-21',createOccasion:true},rowsFor:sql=>({rows:[{id:C}],rowCount:1})});
+ await handleCustomerCRM(x.ctx);assert.equal(x.state.reply.status,201);
+ const occasion=x.calls.find(q=>q.sql.includes('INSERT INTO pb_crm.occasions'));
+ assert.deepEqual(occasion.args.slice(4),[1405,1,1]);
+ assert.equal(x.calls.at(-1).sql,'COMMIT');
+});
+test('anniversary failure rolls back service too',async()=>{
+ const x=setup({user:lab,method:'POST',path:'/api/crm/sessions',body:{customerId:C,shootTypeId:P,shootDate:'2026-03-21',createOccasion:true},rowsFor:sql=>{
+ if(sql.includes('INSERT INTO pb_crm.occasions')){const error=new Error('invalid_occasion');error.status=400;throw error}
+ return {rows:[{id:C}],rowCount:1};
+ }});
+ await handleCustomerCRM(x.ctx);assert.equal(x.state.reply.status,400);assert.equal(x.calls.at(-1).sql,'ROLLBACK');
+});

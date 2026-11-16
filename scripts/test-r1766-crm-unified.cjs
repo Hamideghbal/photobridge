@@ -1,50 +1,29 @@
-'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const html=fs.readFileSync('dist/web/customer-crm.html','utf8');
 const js=fs.readFileSync('dist/web/customer-crm-ui.js','utf8');
-const css=fs.readFileSync('dist/web/photobridge-r1766-crm-unified.css','utf8');
-test('R1766 CRM has one consent checkbox, no permission source or notes inputs, and a shared edit form',()=>{
- assert.match(html,/<input id="marketing-consent" name="marketingConsent" type="checkbox"/);
- assert.doesNotMatch(html,/<input[^>]+name="permissionSource"/);
- assert.doesNotMatch(html,/<input[^>]+name="notes"/);
- assert.doesNotMatch(html,/<select[^>]+name="marketingPermission"/);
- assert.match(html,/id="customer-cancel"/);
- assert.match(js,/function editCustomer\(id\)[\s\S]*?editingCustomerId=id/);
- assert.match(js,/function resetCustomerForm\(/);
+test('CRM unified editor removes redundant entry points',()=>{
+ assert.doesNotMatch(html,/id="marketing-consent"|id="shoot-name"|id="event-form"|data-view="invoices"/);
+ assert.match(html,/id="customer-details"/);
+ assert.match(html,/id="session-form"/);assert.match(html,/id="invoice-form"/);
  new vm.Script(js);
 });
-test('R1766 keeps Gregorian date input and explicitly shows the ISO Gregorian value',()=>{
- assert.match(html,/<input id="session-date" type="date" lang="en-CA" dir="ltr"/);
- assert.match(html,/id="session-date-display"/);
- assert.match(js,/session-date-display'\)\.textContent=value\?'تاریخ میلادی: '\+value/);
- assert.match(js,/shootDate:\$\('session-date'\)\.value\|\|null/);
+test('hidden consent UI preserves all recorded permissions and notes',()=>{
+ const a=js.indexOf('function buildCustomerPayload('),b=js.indexOf('function renderCustomerSessions(',a);
+ const build=vm.runInNewContext(js.slice(a,b)+';buildCustomerPayload');
+ for(const permission of ['unknown','opted_in','opted_out']){
+ const old={marketingPermission:permission,permissionSource:'سند قبلی',notes:'یادداشت'};
+ const result=build(' ندا ','09123456789',old);
+ assert.equal(result.marketingPermission,permission);assert.equal(result.permissionSource,old.permissionSource);assert.equal(result.notes,old.notes);
+ }
+ assert.equal(build('ندا','09123456789').marketingPermission,'unknown');
 });
-test('R1766 preserves SMS opt-in protection and old customer notes',()=>{
- const a=js.indexOf('function buildCustomerPayload('),b=js.indexOf('\nfunction editCustomer(',a);
- assert(a>=0&&b>a);
- const build=vm.runInNewContext(js.slice(a,b)+'\nbuildCustomerPayload;');
- const empty=build('ندا','09121234567',false);
- assert.equal(empty.marketingPermission,'unknown');
- assert.equal(empty.permissionSource,'');
- const yes=build('ندا','09121234567',true);
- assert.equal(yes.marketingPermission,'opted_in');
- assert.ok(yes.permissionSource);
- const prev={marketingPermission:'opted_in',permissionSource:'رضایت کتبی قبلی',notes:'یادداشت قبلی'};
- const updated=build('ندا','09121234567',true,prev);
- assert.equal(updated.permissionSource,prev.permissionSource);
- assert.equal(updated.notes,prev.notes);
- assert.equal(build('ندا','09121234567',false,prev).marketingPermission,'unknown');
- assert.equal(build('ندا','09121234567',false,{marketingPermission:'opted_out'}).marketingPermission,'opted_out');
-});
-test('R1766 isolated styles use PhotoBridge fonts and are loaded with distinct cache keys',()=>{
- assert.match(css,/@font-face/);
- assert.match(css,/photobridge-handover-vazirmatn\.woff2/);
- assert.match(css,/\.crmConsentRow/);
- assert.match(css,/@media\(max-width:700px\)/);
- assert.equal((html.match(/photobridge-r1766-crm-unified\.css\?v=r1766/g)||[]).length,1);
- assert.equal((html.match(/customer-crm-ui\.js\?v=r1766/g)||[]).length,1);
- assert.doesNotMatch(css,/#root|\.labRoleWorkspace/);
+test('Persian calendar crosses Nowruz and Esfand correctly',()=>{
+ const a=js.indexOf('function persianParts('),b=js.indexOf('let calendarMonth',a);
+ const parts=vm.runInNewContext(js.slice(a,b)+';persianParts');
+ assert.deepEqual(JSON.parse(JSON.stringify(parts(new Date('2026-03-21T12:00:00Z')))),{year:1405,month:1,day:1});
+ assert.equal(parts(new Date('2026-03-20T12:00:00Z')).month,12);
+ assert.doesNotMatch(html,/type="date"/);
 });

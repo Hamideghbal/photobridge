@@ -57,7 +57,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  // rows, and persist this truthful state for the next page load.
  kv=once(kv,
   'pb1865Cancel=()=>{if(!je)return;dt.current+=1;try{qe.current?.abort()}catch{};qe.current=null;d(!1);Re("error");pe("ارسال متوقف شد. برگه‌های تأییدشده حفظ شدند؛ برای ادامه «ادامه ارسال» را بزن.");}',
-  'pb1865Cancel=()=>{if(!je)return;dt.current+=1;try{qe.current?.abort()}catch{};qe.current=null;ce.current=ce.current.map(fn=>fn.serverFileId?{...fn,progress:100}:{...fn,progress:0,serverFileId:null});pt(ce.current);void P(!1,ce.current).catch(()=>{});d(!1);Re("error");pe("ارسال متوقف شد؛ فایل‌های تأییدشده حفظ شدند. از دکمه پایین ادامه دهید.");}',
+  'pb1865Cancel=()=>{if(!je)return;dt.current+=1;try{qe.current?.abort()}catch{};qe.current=null;ce.current=ce.current.map(fn=>fn.serverFileId&&Number(fn.progress||0)>=100?{...fn,progress:100}:{...fn,progress:0});pt(ce.current);void P(!1,ce.current).catch(()=>{});d(!1);Re("error");pe("ارسال متوقف شد؛ فایل‌های تأییدشده حفظ شدند. از دکمه پایین ادامه دهید.");}',
   root+' cancel state');
  // Clearing the very last page is a new-order boundary. Keep the old order
  // on the server untouched for support, but never reuse its stale ID.

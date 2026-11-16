@@ -1272,6 +1272,9 @@ runR1314(process.execPath,['--test','scripts/test-r1864-album-binding-visible-se
 // R1865: album-only cancel, verified page statuses and consistent old draft/page counts.
 await deployStep('./enable-r1865-album-safe-upload.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1865-album-safe-upload.cjs'],{stdio:'inherit'});
+// R1866: ensure resumed album upload keeps server-proven files and permits draft changes.
+await deployStep('./enable-r1866-album-resume-after-edit.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1866-album-resume-after-edit.cjs'],{stdio:'inherit'});
 
 
 // R1821: lab-owned invoices show their actual laboratory issuer on preview,

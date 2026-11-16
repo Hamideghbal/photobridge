@@ -67,8 +67,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 
   // Reopen: show "not yet reverified" until the exact active server rows
   // have been checked. Errors must not silently trigger a full resend.
-  kv=once(kv,'progress:Number(Yt.progress||0)}));ht.sizeId',
-    'progress:gt.order?.id?0:Number(Yt.progress||0),legacyCompleted:Boolean(Yt.legacyCompleted||Number(Yt.progress||0)>=100)}));ht.sizeId',
+  kv=once(kv,'progress:Number(Yt.progress||0)',
+    'progress:gt.order?.id?0:Number(Yt.progress||0),legacyCompleted:Boolean(Yt.legacyCompleted||Number(Yt.progress||0)>=100)',
     root+' no optimistic verified status');
   const recovery='pe("ارسال نیمه‌کاره بازیابی شد؛ فایل‌های کامل حفظ شده‌اند. بعد از وصل‌شدن اینترنت «ادامه ارسال» را بزن.")';
   kv=once(kv,recovery,

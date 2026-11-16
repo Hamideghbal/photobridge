@@ -17,8 +17,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let kv=source.slice(start,end);
  // Until the server verifies a recovered file, no persisted local percentage
  // is proof of a complete object. This is also important after cancelled PUTs.
- kv=once(kv,'progress:Number(Yt.progress||0)}));ht.sizeId',
-  'progress:0,serverFileId:null}));ht.sizeId',root+' unverified restored progress');
+ kv=once(kv,'progress:Number(Yt.progress||0)',
+  'progress:0,serverFileId:null',root+' unverified restored progress');
  // The UI refresh is read-only: do not discard any pending server upload simply
  // because the user reopened the editor. On retry, pending uploads may be reset.
  kv=once(kv,'Bt=async($e,gt)=>{try{',

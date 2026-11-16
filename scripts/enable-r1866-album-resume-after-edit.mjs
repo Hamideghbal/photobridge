@@ -35,6 +35,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
       throw Object.assign(new Error("album_draft_not_found"),{data:{error:"album_draft_not_found"}});
     const Lt=(Array.isArray(ht?.files)?ht.files:[]).filter(row=>["active","pending"].includes(String(row.original_state)));
     const pn=new Set(),Kt=[];
+    const active=Lt.filter(row=>row.original_state==='active');
     const jn=gt.map(Yt=>{
       const sn=String(Yt?.file?.name||"");
       const ta=String(Yt?.path||sn).replace(/\\/g,"/");
@@ -47,11 +48,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
           (path===ta||path.endsWith("/"+sn));
       };
       const Ln=!Yt.needsReupload && (explicit
-        ? Lt.find(row=>String(row.original_state)==="active"&&String(row.id).toLowerCase()===explicit&&matchesPaper(row))
-        : Lt.find(row=>String(row.original_state)==="active"&&!pn.has(String(row.id))&&matchesPaper(row)&&matchesLegacy(row)));
+        ? active.find(row=>String(row.id).toLowerCase()===explicit&&matchesPaper(row))
+        : (Yt.legacyCompleted||Number(Yt.progress||0)>=100?active.find(row=>!pn.has(String(row.id))&&matchesPaper(row)&&matchesLegacy(row)):null));
       if(Ln){
         pn.add(String(Ln.id));
-        return {...Yt,progress:100,serverFileId:String(Ln.id),needsReupload:false};
+        return {...Yt,progress:100,serverFileId:String(Ln.id),needsReupload:false,legacyCompleted:false};
       }
       const pending=Lt.find(row=>String(row.original_state)==="pending"&&!Kt.includes(String(row.id))&&
         (explicit?String(row.id).toLowerCase()===explicit:matchesLegacy(row)));
@@ -67,7 +68,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // Reopen: show "not yet reverified" until the exact active server rows
   // have been checked. Errors must not silently trigger a full resend.
   kv=once(kv,'progress:Number(Yt.progress||0)}));ht.sizeId',
-    'progress:gt.order?.id?0:Number(Yt.progress||0)}));ht.sizeId',
+    'progress:gt.order?.id?0:Number(Yt.progress||0),legacyCompleted:Boolean(Yt.legacyCompleted||Number(Yt.progress||0)>=100)}));ht.sizeId',
     root+' no optimistic verified status');
   const recovery='pe("ارسال نیمه‌کاره بازیابی شد؛ فایل‌های کامل حفظ شده‌اند. بعد از وصل‌شدن اینترنت «ادامه ارسال» را بزن.")';
   kv=once(kv,recovery,
@@ -83,7 +84,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const paper=String.raw`qt=($e,gt)=>{
     const chosen=R.some(row=>row.value===gt)?gt:Nt||"luster";
     const rows=ce.current.map(row=>String(row.id)===String($e)&&String(row.paperOverride||Nt)!==chosen
-      ? {...row,paperOverride:chosen,progress:0,serverFileId:null,needsReupload:true}
+      ? {...row,paperOverride:chosen,progress:0,serverFileId:null,needsReupload:true,legacyCompleted:false}
       :row);
     ce.current=rows;pt(rows);
     void P(!1,rows).catch(()=>{});

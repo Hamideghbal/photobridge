@@ -7249,7 +7249,7 @@ function customerEventNotificationCopy(event, data) {
     return null;
 }
 function webPushTargetUrl(kind, event, data) {
-    if(event==='crm_appointment_reminder')return '/customer-crm.html?portal='+(kind==='lab'?'lab':'photographer')+'&view=calendar&date='+encodeURIComponent(String(data?.date||''));
+    if(event==='crm_appointment_reminder')return (kind==='lab'?'/lab?pbCrmTab=1':'/photographer/gallery?pbCrmTab=1&pbDesktopPanel=crm')+'&view=calendar&date='+encodeURIComponent(String(data?.date||''));
     if (kind === 'lab') {
         if (String(data?.mode || '') === 'album') return data?.orderId ? `/lab/album/flow/${encodeURIComponent(String(data.orderId))}` : '/lab/album/flow';
         if (event === 'ai-job') return '/lab/ai/skin-retouch';

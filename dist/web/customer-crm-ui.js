@@ -196,7 +196,6 @@ $('invoice-form').addEventListener('submit',async e=>{
  }catch(e){toast(e.message,true)}finally{button.disabled=false}
 });
 $('role').textContent=portal==='lab'?'لابراتوار':portal==='photographer'?'عکاس':'';
-$('back').href=portal==='lab'?'/lab':portal==='photographer'?'/photographer':'/';
 addInvoiceLine();
 if(!['lab','photographer'].includes(portal)){toast('از نشانی مخصوص لابراتوار یا عکاس وارد شوید.',true);document.querySelectorAll('button').forEach(b=>b.disabled=true)}
 else reload().catch(e=>toast(e.message,true));

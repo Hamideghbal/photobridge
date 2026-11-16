@@ -15,9 +15,11 @@ test('R1767: one Customers checkbox exists in admin photographer tab settings',(
  assert.doesNotMatch(admin,/حساب عکاسی ادمین همیشه به هر سه تب دسترسی دارد/);
 });
 test('R1767: both navigation assets use fresh versions and do not affect unrelated pages',()=>{
- assert.equal((html.match(/photobridge-r1761-crm-nav\.js\?v=r1767/g)||[]).length,1);
- assert.equal((html.match(/photobridge-r1761-crm-nav\.css\?v=r1767/g)||[]).length,1);
- assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=1767/g)||[]).length,1);
+ assert.equal((html.match(/photobridge-r1761-crm-nav\.js\?v=(?:r1767|r1867-crm-delivery)/g)||[]).length,1);
+ const crmCssLinks=(html.match(/photobridge-r1761-crm-nav\.css\?v=(?:r1767|r1867-crm-delivery)/g)||[]).length;
+ const boot=html.match(/href="(\/assets\/photobridge-boot-[a-f0-9]+\.css)[^"]*"/);
+ assert(crmCssLinks===1||!!boot&&fs.readFileSync('dist/web'+boot[1],'utf8').includes(fs.readFileSync('dist/web/photobridge-r1761-crm-nav.css','utf8')));
+ assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=(?:1767|r1775)/g)||[]).length,1);
  assert.match(nav,/enabled=data\?\.tabs\?\.customers===true/);
  assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);return;\}/);
  assert.match(nav,/credentials:'include',cache:'no-store'/);
@@ -69,7 +71,7 @@ function scene(portal,mobile){
   addEventListener(name,fn){events['doc:'+name]=fn}
  };
  const context={
-  document,location:{pathname:portal==='lab'?'/lab':'/photographer',assign(){}},
+  URLSearchParams,document,location:{pathname:portal==='lab'?'/lab':'/photographer',assign(){}},
   matchMedia:()=>({matches:mobile,addEventListener(){}}),
   MutationObserver:class{observe(){}},requestAnimationFrame:fn=>frames.push(fn),
   getComputedStyle:()=>({display:'flex'}),

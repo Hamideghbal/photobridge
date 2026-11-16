@@ -87,13 +87,6 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   root+' verified status text');
  // One sending/retrying action beside the price summary; keep status notice,
  // but remove its duplicate top-of-page button.
- const resumeStart=kv.indexOf('Y==="error"&&e.jsxs("div",{className:"albumUploadResumeNotice"');
- const resumeEnd=kv.indexOf(',h&&e.jsx(sb',resumeStart);
- if(resumeStart<0||resumeEnd<=resumeStart)throw Error('[R1866] resume banner changed '+root);
- const originalBanner=kv.slice(resumeStart,resumeEnd);
- kv=once(kv,originalBanner,
-  'Y==="error"&&e.jsx("div",{className:"albumUploadResumeNotice",role:"alert",children:N})',
-  root+' single-action status banner');
  kv=once(kv,
   'children:je?"در حال ارسال…":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
   'children:je?"در حال ارسال…":Y==="error"&&he.current?"ادامه ارسال":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
@@ -119,11 +112,13 @@ source=source.slice(0,start)+kv+source.slice(end)+'\n'+helper+'\n';
  html=once(html,'</head>','<meta name="pb-album-resume" content="r1866"></head>',root+' cache marker');
  html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,match=>match.includes('&albumResume=r1866')?match:match+'&albumResume=r1866');
  fs.writeFileSync(htmlFile,html);
+ const cssFile=root+'/photobridge-r1865-album-upload.css';
+ fs.appendFileSync(cssFile,'\n.albumUploadResumeNotice button{display:none!important}\n');
 }
 const native='dist/web/lab-desktop-ui',manifestPath=native+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
-for(const name of [asset,'index.html']){
+for(const name of [asset,'index.html','photobridge-r1865-album-upload.css']){
  const row=manifest.files.find(f=>f.name===name);
  if(!row)throw Error('[R1866] missing Windows asset '+name);
  row.sha256=hash(fs.readFileSync(native+'/'+name));

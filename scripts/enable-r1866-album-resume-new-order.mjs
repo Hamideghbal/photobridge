@@ -1,0 +1,95 @@
+// R1866: preserve verified album pages on resume, separate a cleared draft
+// from a new order, and use the single action beside the price summary.
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+const asset='assets/index-UIRefine-v655-r84.js';
+function once(source,oldText,newText,label){
+ const count=source.split(oldText).length-1;
+ if(count!==1)throw Error('[R1866] '+label+' expected one match, saw '+count);
+ return source.replace(oldText,newText);
+}
+for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+ const file=root+'/'+asset;
+ let source=fs.readFileSync(file,'utf8');
+ const start=source.indexOf('function Kv('),end=source.indexOf('function ',start+12);
+ if(start<0||end<=start)throw Error('[R1866] album editor missing');
+ let kv=source.slice(start,end);
+ // Until the server verifies a recovered file, no persisted local percentage
+ // is proof of a complete object. This is also important after cancelled PUTs.
+ kv=once(kv,'progress:Number(Yt.progress||0)}));ht.sizeId',
+  'progress:0,serverFileId:null}));ht.sizeId',root+' unverified restored progress');
+ // The UI refresh is read-only: do not discard any pending server upload simply
+ // because the user reopened the editor. On retry, pending uploads may be reset.
+ kv=once(kv,'Bt=async($e,gt)=>{try{',
+  'Bt=async($e,gt,pb1866InspectOnly=!1)=>{try{',root+' inspection parameter');
+ kv=once(kv,'for(const Yt of Kt)await Me(',
+  'for(const Yt of Kt)pb1866InspectOnly||await Me(',root+' no remote mutation on restore');
+ kv=once(kv,
+  '(jn=gt.order)!=null&&jn.id&&(Re("error"),pe("ارسال نیمه‌کاره بازیابی شد؛ فایل‌های کامل حفظ شده‌اند. بعد از وصل‌شدن اینترنت «ادامه ارسال» را بزن."))',
+  '(jn=gt.order)!=null&&jn.id&&(Re("error"),pe("ارسال نیمه‌کاره بازیابی شد؛ وضعیت فایل‌ها از سرور بررسی می‌شود."),void Bt(String(jn.id),pn,!0).catch(()=>pe("ارتباط با سرور برقرار نشد؛ برای بررسی و ادامه از دکمه پایین استفاده کنید.")))',
+  root+' verify recovered files without resending');
+ // A cancelled partial page must not look uploaded; preserve only completed
+ // rows, and persist this truthful state for the next page load.
+ kv=once(kv,
+  'pb1865Cancel=()=>{if(!je)return;dt.current+=1;try{qe.current?.abort()}catch{};qe.current=null;d(!1);Re("error");pe("ارسال متوقف شد. برگه‌های تأییدشده حفظ شدند؛ برای ادامه «ادامه ارسال» را بزن.");}',
+  'pb1865Cancel=()=>{if(!je)return;dt.current+=1;try{qe.current?.abort()}catch{};qe.current=null;ce.current=ce.current.map(fn=>fn.serverFileId?{...fn,progress:100}:{...fn,progress:0,serverFileId:null});pt(ce.current);void P(!1,ce.current).catch(()=>{});d(!1);Re("error");pe("ارسال متوقف شد؛ فایل‌های تأییدشده حفظ شدند. از دکمه پایین ادامه دهید.");}',
+  root+' cancel state');
+ // Clearing the very last page is a new-order boundary. Keep the old order
+ // on the server untouched for support, but never reuse its stale ID.
+ const reset='he.current=null,Re("idle"),pe(""),A(0),Pt.current=!1,Tu(Xe)';
+ kv=once(kv,
+  'gt.length?P(!1,gt).catch(()=>{}):(Pt.current=!1,Tu(Xe))',
+  'gt.length?P(!1,gt).catch(()=>{}):('+reset+')',
+  root+' last page removal');
+ kv=once(kv,
+  '$e.length?P(!1,$e).catch(()=>{}):(Pt.current=!1,Tu(Xe))',
+  '$e.length?P(!1,$e).catch(()=>{}):('+reset+')',
+  root+' bulk removal');
+ // Convert-to-JPEG changes the file name and byte count. The recovered local
+ // Blob MUST match the uploaded Blob, or a valid server file will be missed.
+ kv=once(kv,
+  'Yn=ta[In],ce.current=ta,pt(ta)),ce.current=ce.current.map',
+  'Yn=ta[In],ce.current=ta,pt(ta),await P(!0,ce.current)),ce.current=ce.current.map',
+  root+' cache actual converted bytes');
+ // A local 100% progress value alone never declares a page sent.
+ kv=once(kv,
+  'Number($e.progress||0)>=100?"success":je&&Number($e.progress||0)>0?"sending":"waiting"',
+  'Number($e.progress||0)>=100&&$e.serverFileId?"success":je&&Number($e.progress||0)>0?"sending":"waiting"',
+  root+' verified green status');
+ kv=once(kv,
+  'Number($e.progress||0)>=100?"✓ ارسال شد و تأیید شد":je&&Number($e.progress||0)>0?',
+  'Number($e.progress||0)>=100&&$e.serverFileId?"✓ ارسال شد و تأیید شد":je&&Number($e.progress||0)>0?',
+  root+' verified status text');
+ // One sending/retrying action beside the price summary; keep status notice,
+ // but remove its duplicate top-of-page button.
+ kv=once(kv,
+  'e.jsx("button",{type:"button",onClick:()=>void xe(),children:"↻ ادامه ارسال"})',
+  'null',
+  root+' remove duplicate retry action');
+ kv=once(kv,
+  'children:je?"در حال ارسال…":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
+  'children:je?"در حال ارسال…":Y==="error"&&he.current?"ادامه ارسال":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
+  root+' main action label');
+ source=source.slice(0,start)+kv+source.slice(end);
+ fs.writeFileSync(file,source);
+ execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+ const htmlFile=root+'/index.html';
+ let html=fs.readFileSync(htmlFile,'utf8');
+ html=once(html,'</head>','<meta name="pb-album-resume" content="r1866"></head>',root+' cache marker');
+ html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,match=>match.includes('&albumResume=r1866')?match:match+'&albumResume=r1866');
+ fs.writeFileSync(htmlFile,html);
+}
+const native='dist/web/lab-desktop-ui',manifestPath=native+'/manifest.json';
+const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+for(const name of [asset,'index.html']){
+ const row=manifest.files.find(f=>f.name===name);
+ if(!row)throw Error('[R1866] missing Windows asset '+name);
+ row.sha256=hash(fs.readFileSync(native+'/'+name));
+}
+manifest.files.sort((a,b)=>a.name.localeCompare(b.name,'en'));
+manifest.build=hash(JSON.stringify(manifest.files));
+manifest.generatedAt=new Date().toISOString();
+fs.writeFileSync(manifestPath,JSON.stringify(manifest));
+console.log('[R1866] verified album resume, cleared order isolation, bottom retry only');

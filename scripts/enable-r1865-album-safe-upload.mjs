@@ -67,7 +67,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    root+' cancellation button');
  kv=once(kv,
    'e.jsxs("label",{className:"albumFilePaperSelect",onClick:ht=>ht.stopPropagation()',
-   'e.jsx("div",{className:"'+statusClass+' "+(Number($e.progress||0)>=100?"success":Number($e.progress||0)>0?"sending":"waiting"),role:"status",children:Number($e.progress||0)>=100?"✓ ارسال شد و تأیید شد":Number($e.progress||0)>0?"در حال ارسال · "+V(Math.round(Number($e.progress||0)))+"٪":"ارسال نشده"}),e.jsxs("label",{className:"albumFilePaperSelect",onClick:ht=>ht.stopPropagation()',
+   'e.jsx("div",{className:"'+statusClass+' "+(Number($e.progress||0)>=100?"success":je&&Number($e.progress||0)>0?"sending":"waiting"),role:"status",children:Number($e.progress||0)>=100?"✓ ارسال شد و تأیید شد":je&&Number($e.progress||0)>0?"در حال ارسال · "+V(Math.round(Number($e.progress||0)))+"٪":"ارسال نشده"}),e.jsxs("label",{className:"albumFilePaperSelect",onClick:ht=>ht.stopPropagation()',
    root+' per-page status label');
  source=source.slice(0,start)+kv+source.slice(end);
  fs.writeFileSync(file,source);

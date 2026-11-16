@@ -29,6 +29,24 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   '(jn=gt.order)!=null&&jn.id&&(Re("error"),pe("ارسال نیمه‌کاره بازیابی شد؛ فایل‌های کامل حفظ شده‌اند. بعد از وصل‌شدن اینترنت «ادامه ارسال» را بزن."))',
   '(jn=gt.order)!=null&&jn.id&&(Re("error"),pe("ارسال نیمه‌کاره بازیابی شد؛ وضعیت فایل‌ها از سرور بررسی می‌شود."),void Bt(String(jn.id),pn,!0).catch(()=>pe("ارتباط با سرور برقرار نشد؛ برای بررسی و ادامه از دکمه پایین استفاده کنید.")))',
   root+' verify recovered files without resending');
+ // A newly chosen page must not steal an old active row merely because its
+ // name/size match a prior removed page. Older cached drafts retain the
+ // compatibility fallback; new selections require their own upload file ID.
+ kv=once(kv,
+  'paperOverride:Nt||"luster",progress:0};return Bu(',
+  'paperOverride:Nt||"luster",progress:0,pb1866New:!0};return Bu(',
+  root+' mark new file');
+ kv=once(kv,
+  'if(!In||pn.has(In)||String(($n==null?void 0:$n.original_name)||"")!==sn',
+  'if((Yt.pb1866New&&!Yt.serverFileId)||(Yt.serverFileId&&In!==String(Yt.serverFileId))||!In||pn.has(In)||String(($n==null?void 0:$n.original_name)||"")!==sn',
+  root+' match by real file ID when available');
+ // Save the presigned file ID BEFORE the PUT. If the browser closes after the
+ // server completes the file but before the UI stores 100%, recovery can still
+ // find the exact active row without uploading a duplicate.
+ kv=once(kv,
+  'st.current=String(An.fileId||""),await rs(',
+  'st.current=String(An.fileId||""),ce.current=ce.current.map(fn=>fn.id===Yn.id?{...fn,serverFileId:String(An.fileId),progress:1}:fn),pt(ce.current),await P(!1,ce.current).catch(()=>{}),await rs(',
+  root+' persist assigned upload ID');
  // A cancelled partial page must not look uploaded; preserve only completed
  // rows, and persist this truthful state for the next page load.
  kv=once(kv,

@@ -26,6 +26,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  if(start<0||end<=start)throw Error('[R1865] album editor missing '+root);
  let kv=source.slice(start,end);
  kv=once(kv,'Ga=$e=>{if(je||Y!=="idle")return;','Ga=$e=>{if(je)return;',root+' allow remove after error');
+ kv=once(kv,'Fa=async $e=>{var Lt,pn;if(!$e)return;','Fa=async $e=>{var Lt,pn;if(!$e||je)return;',root+' do not add new pages mid-transfer');
+ kv=once(kv,'className:"albumFileToolAction add albumFileActionFile",','className:"albumFileToolAction add albumFileActionFile",disabled:je,',root+' disable adding during transfer');
  kv=once(kv,'className:"albumFileRemove","aria-label":"حذف",disabled:je||Y!=="idle"',
    'className:"albumFileRemove","aria-label":"حذف",disabled:je',root+' enable removal');
  kv=once(kv,

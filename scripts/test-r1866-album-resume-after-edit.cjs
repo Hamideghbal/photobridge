@@ -40,7 +40,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     assert.equal(s.split('he.current=null,st.current="",A(0),Re("idle")').length-1,2);
     assert(s.includes('await pb1866Reset.current'));
     assert(s.includes('nt=()=>{if(je||!ot.size)return;'));
-    assert(s.includes('albumFileActionDelete')&&s.includes('disabled:je||!ot.size'));
+    assert(s.includes('className:"albumFileRemove","aria-label":"حذف",disabled:je'));
     assert(s.includes('Y==="error"?"ادامه ارسال"'));
     assert(!s.includes('children:"↻ ادامه ارسال"'));
     assert(s.includes('pb1866ResumeHint'));

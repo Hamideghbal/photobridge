@@ -1358,6 +1358,10 @@ console.log('[PhotoBridge Docker build] OK blue login theme');
 // R1842/R1843 are intentionally not invoked: avoid replacing R1838 again.
 // Preserve the R1841 blue LOGIN palette; this rollback affects only startup.
 runR1314(process.execPath,['--test','scripts/test-r1844-restore-animated-launch.cjs'],{stdio:'inherit'});
+ // R1867: force Android WebAPK to refresh its cached navy launch to the
+ // already-approved cream animated splash palette. No second web overlay.
+ await deployStep('./enable-r1867-mobile-splash-refresh.mjs');
+ runR1314(process.execPath,['--test','scripts/test-r1867-mobile-splash-refresh.cjs'],{stdio:'inherit'});
 
 await deployStep("./enable-r1850-error-alerts.mjs");
 // R1851: additive upload health instrumentation, after R1850 and before HTML finalizers.

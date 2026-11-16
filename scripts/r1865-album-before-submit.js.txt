@@ -1,0 +1,16 @@
+if(gt!==dt.current||ht.signal.aborted)throw Object.assign(new Error("upload_aborted"),{name:"AbortError"});
+const pb1865Keep=ce.current.map(f=>String(f.serverFileId||""));
+if(pb1865Keep.length!==ce.current.length||pb1865Keep.some(id=>!/^[0-9a-f-]{36}$/i.test(id)))
+ throw Object.assign(new Error("album_server_file_id_missing"),{data:{error:"album_server_file_id_missing"}});
+// The draft snapshot must match the current selection AFTER pages have been removed.
+await Me("/api/customer/orders/"+sn.id+"/draft",{method:"PATCH",body:JSON.stringify({delivery:Ke,priority:He,albumData:pb1865AlbumData()})});
+const pb1865Path="/api/customer/orders/"+sn.id+"/album/reconcile";
+try{await Me(pb1865Path,{method:"POST",body:JSON.stringify({keepFileIds:pb1865Keep})})}
+catch(pb1865Err){
+ if(pb1865Err?.data?.error!=="album_stale_files_detected")throw pb1865Err;
+ const extras=Number(pb1865Err.data.extra||0);
+ if(!window.confirm("در سرور "+extras+" برگه از ارسال‌های قبلی وجود دارد که دیگر در فهرست فعلی نیست.\nآن‌ها فقط از این سفارش کنار گذاشته شوند؟\nفایل اصلی در فضای ذخیره‌سازی حذف نمی‌شود."))
+  throw Object.assign(new Error("album_stale_files_need_review"),{data:{error:"album_stale_files_need_review"}});
+ await Me(pb1865Path,{method:"POST",body:JSON.stringify({keepFileIds:pb1865Keep,confirmExcludeStale:true})});
+}
+if(gt!==dt.current||ht.signal.aborted)throw Object.assign(new Error("upload_aborted"),{name:"AbortError"});

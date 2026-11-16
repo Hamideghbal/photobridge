@@ -1269,6 +1269,9 @@ runR1314(process.execPath,['--test','scripts/test-r1819-album-cover-controls.cjs
 // R1864: album submit must use the active binding visibly selected in the form.
 await deployStep('./enable-r1864-album-binding-visible-selection.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1864-album-binding-visible-selection.cjs'],{stdio:'inherit'});
+// R1865: album-only cancel, verified page statuses and consistent old draft/page counts.
+await deployStep('./enable-r1865-album-safe-upload.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1865-album-safe-upload.cjs'],{stdio:'inherit'});
 
 
 // R1821: lab-owned invoices show their actual laboratory issuer on preview,

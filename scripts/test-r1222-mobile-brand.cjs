@@ -1,9 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),sharp=require('sharp');
 const read=x=>fs.readFileSync(x,'utf8');
-// Build checks R1359; the deployed user-approved launch is R1838.
-const revision=process.env.PB_TEST_PWA_REVISION||'r1838';
-assert(['r1359','r1481','r1838'].includes(revision),'unknown PWA build stage');
-const pwa={r1359:{background:'#2674ff',touch:'/photobridge-native-touch-r1359.png'},r1481:{background:'#f8fbff',touch:'/photobridge-app-180-r1481.png'},r1838:{background:'#F7F1E7',touch:'/photobridge-app-180-r1838.png'}}[revision];
+// Early build checks R1359; R1838 remains the approved animated web launch,
+// while R1867 only refreshes the installed Android/WebAPK manifest/icon URLs.
+const revision=process.env.PB_TEST_PWA_REVISION||'r1867';
+assert(['r1359','r1481','r1838','r1867'].includes(revision),'unknown PWA build stage');
+const pwa={r1359:{background:'#2674ff',touch:'/photobridge-native-touch-r1359.png'},r1481:{background:'#f8fbff',touch:'/photobridge-app-180-r1481.png'},r1838:{background:'#F7F1E7',touch:'/photobridge-app-180-r1838.png'},r1867:{background:'#F7F1E6',touch:'/photobridge-app-180-r1838.png'}}[revision];
 test('PhotoBridge PWA keeps all icon sizes as original bridge/aperture brand assets',async()=>{
  const manifest=JSON.parse(read('dist/web/photobridge.webmanifest'));
  assert.equal(manifest.background_color,pwa.background);

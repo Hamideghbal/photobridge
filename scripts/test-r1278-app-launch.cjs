@@ -22,8 +22,8 @@ test('installed launch uses one user-approved cream cover, matching its icon, an
   await page.evaluate(()=>{document.getElementById('root').innerHTML='<button id="readyAction" onclick="window.readyClicked=true">برنامه آماده است</button>';window.__PB1836RoleHandoff=false;document.documentElement.classList.remove('pb1493SessionResumePending','pb1721MobileEntryPending')});
   await page.waitForFunction(()=>!document.documentElement.classList.contains('pb1479Launching')&&!document.documentElement.classList.contains('pb1838LaunchLeaving'));
   assert.equal(await cover.isVisible(),false);await page.locator('#readyAction').click();assert.equal(await page.evaluate(()=>window.readyClicked),true);
-  const manifest=JSON.parse(fs.readFileSync('dist/web/photobridge.webmanifest','utf8'));assert.equal(manifest.background_color,'#F7F1E7');
-  const icon=manifest.icons.find(icon=>icon.sizes==='512x512'&&icon.purpose==='maskable');assert(icon);
+  const manifest=JSON.parse(fs.readFileSync('dist/web/photobridge.webmanifest','utf8'));assert.equal(manifest.background_color,'#F7F1E6');
+  const icon=manifest.icons.find(icon=>icon.sizes==='512x512'&&icon.purpose==='maskable');assert(icon);assert.equal(icon.src,'/photobridge-app-512-r1867.png');
   const {data,info}=await require('sharp')(path.join('dist/web',icon.src)).raw().toBuffer({resolveWithObject:true});
   assert.equal(info.width,512);assert.equal(info.height,512);
   for(let x=0;x<512;x++)for(const y of [0,511]){const offset=(y*512+x)*info.channels;assert.deepEqual([...data.subarray(offset,offset+3)],[247,241,231]);}

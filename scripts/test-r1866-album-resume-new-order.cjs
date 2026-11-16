@@ -41,7 +41,7 @@ test('R1866: interrupted transfers only retain confirmed pages',()=>{
  for(const root of roots){
   const {kv,code}=album(root);
   assert(kv.includes('pb1865Cancel=()=>{if(!je)return;dt.current+=1'));
-  assert(kv.includes('fn.serverFileId?{...fn,progress:100}:{...fn,progress:0,serverFileId:null}'));
+  assert(kv.includes('fn.serverFileId&&Number(fn.progress||0)>=100?{...fn,progress:100}:{...fn,progress:0}'));
   assert(kv.includes('void P(!1,ce.current).catch(()=>{})'));
   assert(kv.includes('await PB1866CacheConvertedFile(Xe,Yn)'));
   assert(kv.includes('Ba.id===Yn.id?{...Ba,progress:Math.min(99,fn)}:Ba'));

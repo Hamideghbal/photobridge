@@ -19,6 +19,7 @@ test('R1865: cancel stops transfer while keeping original cached pages and compl
   assert(s.includes('className:"pb1865AlbumCancel",onClick:pb1865Cancel'));
   assert(!s.includes('pb1865Cancel=()=>{Tu('));
   assert(s.includes('Ga=$e=>{if(je)return;'),'previous failure must not prevent removing a page');
+  assert(s.includes('Fa=async $e=>{var Lt,pn;if(!$e||je)return;'),'new pages cannot race upload');
   assert(s.includes('className:"albumFileRemove","aria-label":"حذف",disabled:je'));
   assert(s.includes('className:"pb1865AlbumFileStatus "+'));
   assert(s.includes('✓ ارسال شد و تأیید شد'));

@@ -1,0 +1,48 @@
+        // R1865: explicit, reversible-in-metadata exclusion of orphaned album pages.
+        // Preserve S3 originals; do not remove or overwrite objects on this endpoint.
+        const pb1865Reconcile = url.pathname.match(/^\/api\/customer\/orders\/([0-9a-f-]+)\/album\/reconcile$/);
+        if (pb1865Reconcile && req.method === 'POST') {
+            const body = await bodyJson(req);
+            const keep = body?.keepFileIds;
+            if (!Array.isArray(keep) || !keep.length || keep.length > 500 ||
+                keep.some(id => typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) ||
+                new Set(keep.map(id => id.toLowerCase())).size !== keep.length)
+                return sendJson(res, 400, { error: 'invalid_album_file_ids' });
+            const orderId = pb1865Reconcile[1];
+            const c = await pool.connect();
+            let excluded = 0, currentCount = 0;
+            try {
+                await c.query('BEGIN');
+                const oq = await c.query("SELECT id FROM orders WHERE id=$1 AND lab_id=$2 AND customer_id=$3 AND status='uploading' AND mode='album' FOR UPDATE", [orderId, labId, a.userId]);
+                if (!oq.rowCount) {
+                    await c.query('ROLLBACK');
+                    return sendJson(res, 404, { error: 'album_draft_not_found' });
+                }
+                const fq = await c.query("SELECT id FROM order_files WHERE order_id=$1 AND lab_id=$2 AND customer_id=$3 AND original_state='active' FOR UPDATE", [orderId, labId, a.userId]);
+                const activeIds = new Set(fq.rows.map(row => String(row.id).toLowerCase()));
+                const keepIds = new Set(keep.map(id => id.toLowerCase()));
+                currentCount = activeIds.size;
+                if ([...keepIds].some(id => !activeIds.has(id))) {
+                    await c.query('ROLLBACK');
+                    return sendJson(res, 409, { error: 'album_reconcile_missing_uploads', expected: keepIds.size, actual: currentCount });
+                }
+                const stale = [...activeIds].filter(id => !keepIds.has(id));
+                if (stale.length && body.confirmExcludeStale !== true) {
+                    await c.query('ROLLBACK');
+                    return sendJson(res, 409, { error: 'album_stale_files_detected', expected: keepIds.size, actual: currentCount, extra: stale.length });
+                }
+                if (stale.length) {
+                    // Exclude only the user-confirmed orphaned draft records. Keep file
+                    // object keys and bytes intact for support/recovery; never S3 DELETE.
+                    const update = await c.query("UPDATE order_files SET original_state='deleted',deleted_at=now() WHERE order_id=$1 AND lab_id=$2 AND customer_id=$3 AND original_state='active' AND id=ANY($4::uuid[]) RETURNING id", [orderId, labId, a.userId, stale]);
+                    excluded = update.rowCount;
+                    if (excluded !== stale.length) throw new Error('album_reconcile_concurrent_change');
+                }
+                await c.query('COMMIT');
+            } catch (error) {
+                await c.query('ROLLBACK').catch(() => {});
+                throw error;
+            } finally { c.release(); }
+            if (excluded) await audit(a.userId, labId, 'album.draft_exclude_stale_files', 'order', orderId, { excluded, preservedOriginals: true }).catch(() => {});
+            return sendJson(res, 200, { ok: true, active: currentCount - excluded, excluded, preservedOriginals: true });
+        }

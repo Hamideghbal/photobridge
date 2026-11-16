@@ -20,7 +20,7 @@ test('R1865: cancel stops transfer while keeping original cached pages and compl
   assert(!s.includes('pb1865Cancel=()=>{Tu('));
   assert(s.includes('Ga=$e=>{if(je)return;'),'previous failure must not prevent removing a page');
   assert(s.includes('className:"albumFileRemove","aria-label":"حذف",disabled:je'));
-  assert(s.includes('className:"pb1865AlbumFileStatus"'));
+  assert(s.includes('className:"pb1865AlbumFileStatus "+'));
   assert(s.includes('✓ ارسال شد و تأیید شد'));
   assert(s.includes('در حال ارسال · '));
   assert(s.includes('ارسال نشده'));
@@ -98,7 +98,7 @@ test('R1865: cannot exclude or pretend a file belongs to another draft',async()=
 });
 test('R1865: strict owner/status guards in server and matching Windows hot-update manifest',()=>{
  const server=read('dist/api/server.js');
- assert(server.includes('album/reconcile'));
+ assert(server.includes('pb1865Reconcile'));
  assert(server.includes("status='uploading' AND mode='album' FOR UPDATE"));
  assert(server.includes("original_state='active' FOR UPDATE"));
  const m=JSON.parse(read('dist/web/lab-desktop-ui/manifest.json'));

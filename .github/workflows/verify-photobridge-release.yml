@@ -226,6 +226,11 @@ jobs:
           node scripts/test-r1603-lab-pricing-browser.cjs
       - name: Verify lab manager role is preserved during customer enrollment
         run: PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-lab-admin-role-preservation.cjs
+      - name: Verify mobile and desktop customer appointment calendar
+        run: |
+          export NODE_PATH=/tmp/photobridge-frame-browser/node_modules
+          export PB_BROWSER_EXECUTABLE="$(node -p "require('playwright').chromium.executablePath()")"
+          node scripts/test-customer-calendar-browser.cjs
       - name: Save frame editor screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -242,6 +247,10 @@ jobs:
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'photobridge_test'"
           sudo -u postgres createdb photobridge_test
+      - name: Verify customer calendar scopes and reminder delivery in PostgreSQL
+        env:
+          DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test
+        run: node --test scripts/test-customer-calendar-postgres.mjs
       - name: Verify persistent SMS deduplication and origin lookup in PostgreSQL
         env:
           PB_TEST_DATABASE_URL: postgresql://postgres:photobridge_test@127.0.0.1:5432/photobridge_test

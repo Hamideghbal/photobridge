@@ -25,5 +25,5 @@ test('insufficient balance never contacts paid SMS provider',async()=>{
 test('push links open the correct owner calendar and appointment day',()=>{
  const code=extract('function webPushTargetUrl(', 'async function sendWebPushToRecipient(');
  const target=vm.runInNewContext(code+';webPushTargetUrl');
- for(const kind of ['lab','customer'])assert.equal(target(kind,'crm_appointment_reminder',{date:'2026-12-01'}),'/customer-crm.html?portal='+(kind==='lab'?'lab':'photographer')+'&view=calendar&date=2026-12-01');
+ for(const kind of ['lab','customer'])assert.equal(target(kind,'crm_appointment_reminder',{date:'2026-12-01'}),(kind==='lab'?'/lab?pbCrmTab=1':'/photographer/gallery?pbCrmTab=1&pbDesktopPanel=crm')+'&view=calendar&date=2026-12-01');
 });

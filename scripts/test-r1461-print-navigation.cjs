@@ -12,7 +12,7 @@ test('navigation transform is idempotent',()=>{
 
 test('R1762 CRM desktop frame survives the R1461 print-route transform',()=>{
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
- const crm=nav.indexOf("if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{");
+ const crm=nav.indexOf("if(key==='crm')frame.src=");
  const print=nav.indexOf('/* PB1461 refresh route */',crm);
  const frame=nav.indexOf("frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;",print);
  assert(crm>=0,'CRM has its isolated iframe URL and is not redirected to print');

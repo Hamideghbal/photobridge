@@ -40,7 +40,7 @@ test('build preserves existing desktop nav and provides R1134 CSS on both entryp
    assert.equal((entry.match(/photobridge-r1132-photo-copies-mobile\.css\?v=r1134/g)||[]).length,1);
    assert.ok(entry.includes('photobridge-r1126-desktop-navigation.css?v=r1242-bank-payments-wallet-ui'));
   }
-  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.js?v=r1242-bank-payments-wallet-ui'));
+  assert.ok(entry.includes('photobridge-r1126-desktop-navigation.js?v=r1242-bank-payments-wallet-ui')||entry.includes('photobridge-r1126-desktop-navigation.js?v=r1867-crm-delivery'),'desktop navigation keeps its existing controller with a current cache key');
  }
  assert.ok(build.includes('photobridge-r1132-photo-copies-mobile.css?v=r1134'));
  assert.ok(build.includes("html=html.replace(navigationPattern,'$1r1242-bank-payments-wallet-ui')"));

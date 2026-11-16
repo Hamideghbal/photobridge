@@ -1381,6 +1381,9 @@ runR1314(process.execPath,["--test","scripts/test-storage-browser-host.mjs"],{st
 runR1314(process.execPath,["--test","scripts/test-r1854-print-recovery.cjs"],{stdio:"inherit"});
 await deployStep("./enable-r1845-labs-prefetch.mjs");
 await deployStep("./enable-r1845-html-compression.mjs");
+// CRM HTML must never be pinned in a browser cache; apply after all old tab writers.
+await deployStep('./enable-crm-delivery.mjs');
+runR1314(process.execPath,['--test','scripts/test-crm-delivery.cjs'],{stdio:'inherit'});
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 

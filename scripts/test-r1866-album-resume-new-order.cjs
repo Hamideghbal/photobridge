@@ -13,7 +13,7 @@ function album(root){
 test('R1866: never trust cached 100% before read-only server verification',()=>{
  for(const root of roots){
   const {kv}=album(root);
-  assert(kv.includes('progress:0,serverFileId:null'));
+  assert(kv.includes('ce.current=pn.map(row=>({...row,progress:0})),pt(ce.current),Ze('));
   assert(kv.includes('Bt=async($e,gt,pb1866InspectOnly=!1)'));
   assert(kv.includes('for(const Yt of Kt)pb1866InspectOnly||await Me('));
   assert(kv.includes('Bt(String(jn.id),pn,!0).catch('));

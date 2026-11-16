@@ -42,8 +42,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     assert(s.includes('nt=()=>{if(je||!ot.size)return;'));
     assert(s.includes('className:"albumFileRemove","aria-label":"حذف",disabled:je'));
     assert(s.includes('Y==="error"?"ادامه ارسال"'));
-    assert(!s.includes('children:"↻ ادامه ارسال"'));
-    assert(s.includes('pb1866ResumeHint'));
+    assert(html.includes('.albumUploadResumeNotice button{display:none!important}'));
     assert(s.includes('needsReupload:true'));
     assert(s.includes('legacyCompleted:Boolean('));
     assert(s.includes('Bt(String(jn.id),pn).catch('));

@@ -50,7 +50,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  // Blob MUST match the uploaded Blob, or a valid server file will be missed.
  kv=once(kv,
   'Yn=ta[In],ce.current=ta,pt(ta)),ce.current=ce.current.map',
-  'Yn=ta[In],ce.current=ta,pt(ta),await P(!0,ce.current)),ce.current=ce.current.map',
+  'Yn=ta[In],ce.current=ta,pt(ta),await PB1866CacheConvertedFile(Xe,Yn)),ce.current=ce.current.map',
   root+' cache actual converted bytes');
  // A local 100% progress value alone never declares a page sent.
  kv=once(kv,
@@ -71,7 +71,20 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   'children:je?"در حال ارسال…":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
   'children:je?"در حال ارسال…":Y==="error"&&he.current?"ادامه ارسال":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
   root+' main action label');
- source=source.slice(0,start)+kv+source.slice(end);
+ const helper=[
+ 'async function PB1866CacheConvertedFile(key,row){',
+ ' if(!row?.id||!row.file)return;',
+ ' const db=await dh();',
+ ' await new Promise((resolve,reject)=>{',
+ '  const tx=db.transaction(Ws,"readwrite");',
+ '  tx.objectStore(Ws).put(row.file,key+":"+row.id);',
+ '  tx.oncomplete=()=>resolve();',
+ '  tx.onerror=()=>reject(tx.error);',
+ '  tx.onabort=()=>reject(tx.error||new Error("album_file_cache_failed"));',
+ ' });',
+ '}'
+].join('\n');
+source=source.slice(0,start)+kv+source.slice(end)+'\n'+helper+'\n';
  fs.writeFileSync(file,source);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  const htmlFile=root+'/index.html';

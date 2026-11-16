@@ -110,14 +110,15 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     'ce.current=ce.current.map(fn=>fn.id===Yn.id?{...fn,progress:100,serverFileId:String(An.fileId)}:fn),ce.current=ce.current.map(fn=>fn.id===Yn.id?{...fn,needsReupload:false}:fn),pt(ce.current)',
     root+' edited file completed');
 
-  // One send/continue action, placed at the bottom of the quote panel.
-  kv=once(kv,'e.jsx("button",{type:"button",onClick:()=>void xe(),children:"↻ ادامه ارسال"})',
-    'e.jsx("span",{className:"pb1866ResumeHint",children:"برای ادامه ارسال از دکمه پایینِ ریزقیمت استفاده کنید."})',
-    root+' remove duplicate upper action');
-  kv=once(kv,
-    'je?"در حال ارسال…":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
-    'je?"در حال ارسال…":Y==="error"?"ادامه ارسال":Q?"ثبت سایز آزاد و ارسال آلبوم":"ثبت و ارسال سفارش آلبوم"',
-    root+' bottom continue label');
+  // Different earlier UI transforms may rewrite the banner's button markup.
+  // Never rely on its minified callback name; hide the redundant top action
+  // and keep the actual resume trigger on the quote-panel's primary button.
+  const quote=kv.indexOf('albumQuoteCard');
+  const sendButton=quote<0?-1:kv.indexOf('e.jsx("button",{className:"primary"',quote);
+  const child=sendButton<0?-1:kv.indexOf('children:',sendButton);
+  if(quote<0||sendButton<0||child<0||child-sendButton>250)
+    throw Error('[R1866] quote primary action missing '+root);
+  kv=kv.slice(0,child)+'children:Y==="error"?"ادامه ارسال":'+kv.slice(child+'children:'.length);
 
   source=source.slice(0,start)+kv+source.slice(end);
   fs.writeFileSync(file,source);
@@ -125,7 +126,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 
   const html=root+'/index.html';
   let page=fs.readFileSync(html,'utf8');
-  page=once(page,'</head>','<meta name="pb-album-resume-fix" content="r1866"></head>',root+' asset marker');
+  page=once(page,'</head>','<style>.albumUploadResumeNotice button{display:none!important}</style><meta name="pb-album-resume-fix" content="r1866"></head>',root+' asset marker');
   page=page.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,
     url=>url.includes('&albumResume=r1866')?url:url+'&albumResume=r1866');
   fs.writeFileSync(html,page);

@@ -1,3 +1,4 @@
+import {deliverAppointmentReminders,reminderCopy} from './customer-appointments.js';
 import {createGalleryMessaging} from './gallery-messaging.js';
 import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
@@ -5298,7 +5299,7 @@ async function sendSms(args) {
         }
     }
     else if (args.chargePhotographerId && args.serviceKey) {
-        charge = await reservePhotographerWalletCharge({userId:args.chargePhotographerId,serviceKey:args.serviceKey,expectedAmount:args.quotedAmount,referenceType:'gallery_sms',referenceId:args.referenceId,metadata:{purpose:args.purpose,eventKey:args.eventKey,mobile,...args.metadata}});
+        charge = await reservePhotographerWalletCharge({userId:args.chargePhotographerId,serviceKey:args.serviceKey,expectedAmount:args.quotedAmount,referenceType:args.referenceType||'gallery_sms',referenceId:args.referenceId,metadata:{purpose:args.purpose,eventKey:args.eventKey,mobile,...args.metadata}});
         if(charge)charge.photographerId=args.chargePhotographerId;
     }
     else if (args.chargeLabId && args.serviceKey) {
@@ -7248,6 +7249,7 @@ function customerEventNotificationCopy(event, data) {
     return null;
 }
 function webPushTargetUrl(kind, event, data) {
+    if(event==='crm_appointment_reminder')return '/customer-crm.html?portal='+(kind==='lab'?'lab':'photographer')+'&view=calendar&date='+encodeURIComponent(String(data?.date||''));
     if (kind === 'lab') {
         if (String(data?.mode || '') === 'album') return data?.orderId ? `/lab/album/flow/${encodeURIComponent(String(data.orderId))}` : '/lab/album/flow';
         if (event === 'ai-job') return '/lab/ai/skin-retouch';
@@ -7320,6 +7322,30 @@ async function storeCustomerSystemNotification(customerId, event, data, labId = 
     const metadata = { ...(data && typeof data === 'object' ? data : {}), labId: labId || undefined };
     const q = await pool.query(`INSERT INTO system_notifications(recipient_user_id,event_key,title,message,metadata) VALUES($1,$2,$3,$4,$5::jsonb) RETURNING *`, [customerId, event, copy.title, copy.message, JSON.stringify(metadata)]).catch(() => ({ rows: [] }));
     const row = q.rows[0] || null; if (row) void sendWebPushToRecipient('customer', customerId, row, event, metadata); return row;
+}
+// Customer calendar reminders reuse existing owner wallets and push subscriptions.
+async function crmReminderRecipient(kind,id){
+ const q=kind==='lab'
+  ? await pool.query(`SELECT u.id,u.mobile FROM lab_memberships m JOIN users u ON u.id=m.user_id WHERE m.lab_id=$1 AND m.role='lab_admin' AND m.active=true AND u.active=true ORDER BY m.created_at LIMIT 1`,[id])
+  : await pool.query('SELECT id,mobile FROM users WHERE id=$1 AND active=true',[id]);
+ return q.rows[0]||null;
+}
+async function crmReminderQuote(kind,id){
+ const [service,cfg,recipient]=await Promise.all([kind==='lab'?serviceEffectivePrice(pool,id,'sms_customer_notification'):photographerEffectivePrice(pool,id,'sms_customer_notification'),resolvedSMSSettings(),crmReminderRecipient(kind,id)]);
+ const wallet=kind==='lab'?await pool.query('SELECT balance FROM lab_service_wallets WHERE lab_id=$1',[id]):await pool.query('SELECT balance FROM photographer_service_wallets WHERE user_id=$1',[id]);
+ return {available:!!cfg.configured&&!!service.enabled&&!!(kind==='lab'?service.lab_enabled:service.customer_enabled)&&/^09\d{9}$/.test(normalizeMobile(recipient?.mobile||'')),unitPrice:Math.max(0,Math.round(Number(service.effective_price||0))),balance:Number(wallet.rows[0]?.balance||0),recipientMobile:normalizeMobile(recipient?.mobile||'')};
+}
+async function sendCrmReminderSms(job,appointment){
+ const quote=await crmReminderQuote(job.owner_kind,job.owner_id);
+ if(!quote.available)throw new Error('appointment_sms_unavailable');
+ const recipient=await crmReminderRecipient(job.owner_kind,job.owner_id);
+ return sendSms({mobile:quote.recipientMobile,message:'PhotoBridge: '+reminderCopy(appointment).message,purpose:'crm_appointment_reminder',eventKey:'crm_appointment_reminder',userId:recipient.id,labId:job.owner_kind==='lab'?job.owner_id:null,chargeLabId:job.owner_kind==='lab'?job.owner_id:undefined,chargePhotographerId:job.owner_kind==='photographer'?job.owner_id:undefined,serviceKey:'sms_customer_notification',quotedAmount:quote.unitPrice,referenceType:'crm_appointment_reminder',referenceId:job.id,metadata:{appointmentId:appointment.id,reminderId:job.id}});
+}
+let crmReminderSweepBusy=false;
+async function crmReminderSweep(){
+ if(crmReminderSweepBusy)return;
+ crmReminderSweepBusy=true;
+ try{await deliverAppointmentReminders({pool,push:sendWebPushToRecipient,sendOwnerSms:sendCrmReminderSms})}finally{crmReminderSweepBusy=false}
 }
 const galleryMessaging=createGalleryMessaging({pool,sendSms,price:(userId,key)=>photographerEffectivePrice(pool,userId,key),configured:async()=>!!(await resolvedSMSSettings()).configured,normalizeMobile,publicAppUrl:PUBLIC_APP_URL});
 async function notifyGalleryOwner(ownerId,event,data,labId){
@@ -12244,7 +12270,7 @@ async function api(req, res, url) {
     }
     const a = await auth(req);
     // Independent owner-scoped CRM endpoints; legacy lab/photographer flows unchanged.
-    if(await handleCustomerCRM({req,res,url,a,pool,bodyJson,sendJson,portal:requestPortal(req)}))return;
+    if(await handleCustomerCRM({req,res,url,a,pool,bodyJson,sendJson,portal:requestPortal(req),getReminderQuote:crmReminderQuote}))return;
     if(await handleStorefrontManagement(req,res,url,a,storefrontDependencies()))return;
     /* PB_R1099_PHOTOGRAPHER_TABS */
     if (await handlePhotographerTabSettings({req,res,url,a,pool,requireRole,bodyJson,sendJson,audit})) return;
@@ -26190,6 +26216,8 @@ async function bootstrap() {
     void publicAiReadyDeliverySweep().catch(console.error);
     setTimeout(() => equipmentRentalBirthdaySmsSweep().catch(console.error), 15 * 1000).unref();
     setTimeout(() => labBirthdaySmsSweep().catch(console.error), 20 * 1000).unref();
+    setTimeout(() => crmReminderSweep().catch(console.error), 10 * 1000).unref();
+    setInterval(() => crmReminderSweep().catch(console.error), 60 * 1000).unref();
     setInterval(() => recoverAiJobs().catch(console.error), 30 * 1000).unref();
     setInterval(() => recoverGuidedRetouchQueue(false).catch(console.error), 30 * 1000).unref();
     setInterval(() => wakeGuidedRetouchQueue(0), 2 * 1000).unref();

@@ -1,3 +1,4 @@
+import {handleAppointments} from './customer-appointments.js';
 // Isolated authenticated CRM API. The caller must pass the server-validated portal
 // session. No user-supplied owner ids are ever used.
 import {prepareServiceInvoice,renderServiceInvoiceHtml} from '../../features/customer-crm/service-invoice.mjs';
@@ -102,7 +103,9 @@ export async function handleCustomerCRM(ctx){
   const p=url.pathname,method=req.method,body=['POST','PUT','DELETE'].includes(method)?await bodyJson(req,32000):{};
   const args=[kind,id],match=(expr)=>p.match(expr);
   let status=200,value;
-  if(p==='/api/crm/bootstrap'&&method==='GET'){
+  const appointmentResult=await handleAppointments({c,p,method,body,kind,id,url,getReminderQuote:ctx.getReminderQuote});
+  if(appointmentResult){status=appointmentResult.status;value=appointmentResult.value;}
+  else if(p==='/api/crm/bootstrap'&&method==='GET'){
    const queries=await Promise.all([
     c.query('SELECT id,full_name "fullName",mobile,notes,marketing_permission "marketingPermission",permission_source "permissionSource" FROM pb_crm.customers WHERE owner_kind=$1 AND owner_id=$2 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1000',args),
     c.query('SELECT id,name,is_preset "isPreset",sort_order "sortOrder" FROM pb_crm.shoot_types WHERE owner_kind=$1 AND owner_id=$2 AND archived_at IS NULL ORDER BY sort_order,created_at LIMIT 200',args),

@@ -94,11 +94,13 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // Allow editing and bulk removal after STOP/error, not during a transfer.
   kv=once(kv,'nt=()=>{if(je||Y!=="idle"||!ot.size)return;',
     'nt=()=>{if(je||!ot.size)return;',root+' bulk remove while stopped');
-  const bulkOnClick=kv.indexOf('onClick:nt'),bulkDisabled=kv.lastIndexOf('disabled:',bulkOnClick);
-  if(bulkOnClick<0||bulkDisabled<0||bulkOnClick-bulkDisabled>160||
-     !/^disabled:[^,]+,$/.test(kv.slice(bulkDisabled,bulkOnClick)))
-    throw Error('[R1866] unexpected bulk delete button shape '+root);
-  kv=kv.slice(0,bulkDisabled)+'disabled:je||!ot.size,'+kv.slice(bulkOnClick);
+  const bulkMarker=kv.indexOf('albumFileActionDelete');
+  const bulkDisabled=bulkMarker<0?-1:kv.indexOf('disabled:',bulkMarker);
+  const bulkComma=bulkDisabled<0?-1:kv.indexOf(',',bulkDisabled);
+  if(bulkMarker<0||bulkDisabled<0||bulkDisabled-bulkMarker>320||
+     bulkComma<0||bulkComma-bulkDisabled>150)
+    throw Error('[R1866] missing bulk delete disabled property '+root);
+  kv=kv.slice(0,bulkDisabled)+'disabled:je||!ot.size'+kv.slice(bulkComma);
 
   const lastRemoved=':(Pt.current=!1,Tu(Xe))';
   if(kv.split(lastRemoved).length-1!==2)

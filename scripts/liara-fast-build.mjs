@@ -1266,6 +1266,9 @@ runR1314(process.execPath,['--test','scripts/test-r1818-album-form-professional.
 // controls, and no redundant cover gallery or album-page bulk selection.
 await deployStep('./enable-r1819-album-cover-controls.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1819-album-cover-controls.cjs'],{stdio:'inherit'});
+// R1864: album submit must use the active binding visibly selected in the form.
+await deployStep('./enable-r1864-album-binding-visible-selection.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1864-album-binding-visible-selection.cjs'],{stdio:'inherit'});
 
 
 // R1821: lab-owned invoices show their actual laboratory issuer on preview,

@@ -54,7 +54,7 @@ test('R1866: only bottom price summary provides retry',()=>{
  for(const root of roots){
   const {kv}=album(root);
   assert(kv.includes('className:"albumUploadResumeNotice"'));
-  assert(!kv.includes('children:"↻ ادامه ارسال"'));
+  assert(read(root+'/photobridge-r1865-album-upload.css').includes('.albumUploadResumeNotice button{display:none!important}'));
   assert(kv.includes('children:je?"در حال ارسال…":Y==="error"&&he.current?"ادامه ارسال"'));
   assert(kv.includes('className:"pb1865AlbumCancel",onClick:pb1865Cancel'));
   const html=read(root+'/index.html');
@@ -65,7 +65,7 @@ test('R1866: only bottom price summary provides retry',()=>{
 test('R1866: Windows manifest reflects actual patched assets',()=>{
  const m=JSON.parse(read('dist/web/lab-desktop-ui/manifest.json'));
  const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
- for(const name of ['assets/index-UIRefine-v655-r84.js','index.html']){
+ for(const name of ['assets/index-UIRefine-v655-r84.js','index.html','photobridge-r1865-album-upload.css']){
   const row=m.files.find(f=>f.name===name);
   assert(row,'missing '+name);
   assert.equal(row.sha256,hash(fs.readFileSync('dist/web/lab-desktop-ui/'+name)));

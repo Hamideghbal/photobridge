@@ -85,6 +85,16 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   'Number($e.progress||0)>=100?"✓ ارسال شد و تأیید شد":je&&Number($e.progress||0)>0?',
   'Number($e.progress||0)>=100&&$e.serverFileId?"✓ ارسال شد و تأیید شد":je&&Number($e.progress||0)>0?',
   root+' verified status text');
+ // Existing R1865 drafts that were already poisoned by removed pages need
+ // an explicit escape hatch, without deleting their old server files.
+ kv=once(kv,
+  'pe("ارسال متوقف شد؛ فایل‌های تأییدشده حفظ شدند. از دکمه پایین ادامه دهید.");},xe=async()=>',
+  'pe("ارسال متوقف شد؛ فایل‌های تأییدشده حفظ شدند. از دکمه پایین ادامه دهید.");},pb1866StartFresh=()=>{if(je)return;if(!window.confirm("سفارش جدید با فایل‌های فعلی ساخته شود؟ ارسال‌های قبلی این سفارش دوباره استفاده نمی‌شوند و فایل‌های سرور حذف نخواهند شد."))return;he.current=null;ce.current=ce.current.map(fn=>({...fn,progress:0,serverFileId:null,pb1866New:!0}));pt(ce.current);A(0);Re("idle");pe("");void P(!1,ce.current).catch(()=>{});},xe=async()=>',
+  root+' explicit fresh order');
+ kv=once(kv,
+  'je&&e.jsx("button",{type:"button",className:"pb1865AlbumCancel",onClick:pb1865Cancel',
+  'Y==="error"&&he.current&&e.jsx("button",{type:"button",className:"pb1866AlbumFresh",onClick:pb1866StartFresh,children:"شروع سفارش جدید"}),je&&e.jsx("button",{type:"button",className:"pb1865AlbumCancel",onClick:pb1865Cancel',
+  root+' new order action next to price');
  // One sending/retrying action beside the price summary; keep status notice,
  // but remove its duplicate top-of-page button.
  kv=once(kv,
@@ -113,7 +123,7 @@ source=source.slice(0,start)+kv+source.slice(end)+'\n'+helper+'\n';
  html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"']*)/g,match=>match.includes('&albumResume=r1866')?match:match+'&albumResume=r1866');
  fs.writeFileSync(htmlFile,html);
  const cssFile=root+'/photobridge-r1865-album-upload.css';
- fs.appendFileSync(cssFile,'\n.albumUploadResumeNotice button{display:none!important}\n');
+ fs.appendFileSync(cssFile,'\n.albumUploadResumeNotice button{display:none!important}\n.pb1866AlbumFresh{display:block;width:100%;margin:8px 0;padding:9px 12px;background:#f5f7fb;border:1px solid #cad4e0;border-radius:10px;font:inherit;font-weight:700;cursor:pointer}\n');
 }
 const native='dist/web/lab-desktop-ui',manifestPath=native+'/manifest.json';
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));

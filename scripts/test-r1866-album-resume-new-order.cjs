@@ -34,6 +34,10 @@ test('R1866: both single and bulk clear start a fresh order',()=>{
   assert(kv.includes('gt.length?P(!1,gt).catch(()=>{}):('+reset+')'));
   assert(kv.includes('$e.length?P(!1,$e).catch(()=>{}):('+reset+')'));
   assert(kv.includes('sn=he.current;sn||(sn=(await Me('));
+  assert(kv.includes('pb1866StartFresh=()=>{if(je)return;'));
+  assert(kv.includes('he.current=null;ce.current=ce.current.map(fn=>({...fn,progress:0,serverFileId:null,pb1866New:!0}))'));
+  assert(kv.includes('className:"pb1866AlbumFresh",onClick:pb1866StartFresh'));
+
   assert(kv.includes('album/reconcile'));
  }
 });

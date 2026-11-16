@@ -18,6 +18,10 @@ test('R1866: never trust cached 100% before read-only server verification',()=>{
   assert(kv.includes('for(const Yt of Kt)pb1866InspectOnly||await Me('));
   assert(kv.includes('Bt(String(jn.id),pn,!0).catch('));
   assert(kv.includes('String(Ln.original_state||"")==="active"?{...Yt,progress:100,serverFileId:String(Ln.id)}'));
+  assert(kv.includes('paperOverride:Nt||"luster",progress:0,pb1866New:!0'));
+  assert(kv.includes('Yt.pb1866New&&!Yt.serverFileId'));
+  assert(kv.includes('Yt.serverFileId&&In!==String(Yt.serverFileId)'));
+  assert(kv.includes('serverFileId:String(An.fileId),progress:1'));
   assert(kv.includes('Number($e.progress||0)>=100&&$e.serverFileId?"success"'));
   assert(kv.includes('Number($e.progress||0)>=100&&$e.serverFileId?"✓ ارسال شد و تأیید شد"'));
  }

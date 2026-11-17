@@ -41,7 +41,7 @@ if(!code.includes(mark)){
  // Close only the top-level three-request bootstrap Promise.all. Later optional
  // live customer enrichment remains a separate guarded request.
  const start=code.indexOf("const [primary,root,data]=await pb1884Bounded(Promise.all([");
- const end=code.indexOf("   if(!primary.registered",start);
+ const end=code.indexOf("  if(!primary.registered",start);
  if(start<0||end<0)throw Error('[R1884] device bootstrap section unavailable');
  const section=code.slice(start,end);
  if(section.split("  ]);").length!==2)throw Error('[R1884] bootstrap Promise.all terminator changed');

@@ -15,6 +15,8 @@ test('R1877: mobile dock reveals once after both navigation providers settle',()
  assert(features.includes("classList.remove('pbR1877DockPending')"));
  assert(crm.includes('window.pbR1877CrmNavReady=true'));
  assert(crm.includes("new Event('pb-r1877-crm-ready')"));
+ assert(crm.includes("typeof window.dispatchEvent==='function'&&typeof Event==='function'"),
+  'real browser signal must be guarded for isolated Node tests without DOM Event');
  for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   const html=read(file);
   assert(html.includes('pbR1877DockPrepaint'),file);

@@ -119,6 +119,8 @@
   }
   function isVisible(el){if(!el||!el.isConnected)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
   function isPhotographerPortal(){
+    // Embedded Print/Store frames must not create a SECOND account header.
+    if(window.self!==window.top)return false;
     const p=location.pathname;
     if(/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(p))return false;
     const authenticatedRole=document.body.classList.contains('pbAuthenticatedPhotographerPortal');

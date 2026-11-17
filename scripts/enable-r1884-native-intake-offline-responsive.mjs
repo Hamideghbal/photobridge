@@ -93,10 +93,27 @@ if(!code.includes(mark)){
   "let primaryState=null,checking=false,primaryCheckedAt=0;",
   "let primaryState=null,checking=false,primaryCheckedAt=0,pb1884PrimaryFailAt=0;",
   'native primary-check backoff');
- code=once(code,
-  "if(primaryState===null){checkPrimary();return;}if(!primaryState){old?.remove();return;}",
-  "if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}else if(!primaryState){old?.remove();return;}",
-  'native provisional launcher visibility');
+ // R1886: the Windows build can alter this guard before R1884 runs.
+ // Only rewrite a recognized authorization gate in mount(), and never let
+ // cosmetic launcher availability block the whole production deployment.
+ const mountStart=code.indexOf('function mount(){');
+ const mountEnd=code.indexOf('\nlet primaryState=',mountStart);
+ if(mountStart<0||mountEnd<=mountStart)throw Error('[R1886] native launcher function boundary missing');
+ const mountCode=code.slice(mountStart,mountEnd);
+ const guardPattern=/if\s*\(\s*primaryState\s*===\s*null\s*\)\s*\{[\s\S]{0,350}?\}\s*(?:else\s*)?if\s*\(\s*!primaryState\s*\)\s*\{[\s\S]{0,180}?\}/g;
+ const guards=[...mountCode.matchAll(guardPattern)];
+ const guard=guards.length===1?guards[0][0]:null;
+ const safeGuard=guard&&/checkPrimary\s*\(/.test(guard)&&/old\?\.remove\s*\(/.test(guard)&&
+   (guard.match(/\breturn\s*;/g)||[]).length>=2;
+ if(safeGuard){
+  const next="if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}else if(!primaryState){old?.remove();return;}";
+  code=code.slice(0,mountStart)+mountCode.replace(guard,next)+code.slice(mountEnd);
+  console.log('[R1886] Native launcher authorized-state guard updated.');
+ }else{
+  // The original guard is retained untouched. Other offline/slow-server
+  // improvements still apply, without risking access from an unverified PC.
+  console.warn('[R1886] Native launcher gate differs; preserving original device check.');
+ }
  code=once(code,
   "const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();",
   "const state=await Promise.race([api('/api/lab/download-device'),new Promise((_,reject)=>setTimeout(()=>reject(Error('offline')),2600))]);if(state?.queued||state?.operationId)throw Error('offline');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();pb1884PrimaryFailAt=0;",

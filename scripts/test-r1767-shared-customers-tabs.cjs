@@ -21,7 +21,9 @@ test('R1767: both navigation assets use fresh versions and do not affect unrelat
  assert(crmCssLinks===1||!!boot&&fs.readFileSync('dist/web'+boot[1],'utf8').includes(fs.readFileSync('dist/web/photobridge-r1761-crm-nav.css','utf8')));
  assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=(?:1767|r1775)/g)||[]).length,1);
  assert.match(nav,/enabled=data\?\.tabs\?\.customers===true/);
- assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);return;\}/);
+ // R1877 keeps the fail-closed policy while waiting for the final mobile dock.
+ assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);(?:settleDock\(\);)?return;\}/);
+ assert.match(nav,/if\(typeof window\.dispatchEvent==='function'&&typeof Event==='function'\)/);
  assert.match(nav,/credentials:'include',cache:'no-store'/);
  new vm.Script(nav);
 });

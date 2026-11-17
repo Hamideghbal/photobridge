@@ -21,7 +21,11 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
  assert(native.includes("هیچ سفارشی ثبت نشده است"));
  assert(native.includes("if(primaryState!==true)primaryState=false"));
  assert(native.includes('not_primary_download_device'));
- assert(native.includes('clientOrderId'));
+ assert(native.includes("manualPreflight='+Date.now()"),'submit checks live server before posting');
+ assert(native.includes('if(pb1884PreflightBusy)return;'),'duplicate submit checks are suppressed');
+ assert(native.includes('if(active!==modal)return;'),'closed dialogs never begin mutations');
+ assert(native.includes('2600'),'read-only preflight is time-limited');
+  assert(native.includes('clientOrderId'));
  assert(native.includes('/files/presign'));
  assert(native.includes('/submit'));
  assert(!website.includes('PB1884 native intake immediate preparation'),'web frontend should remain unchanged');

@@ -4,6 +4,12 @@
  if(window.self!==window.top||window.pbCrmOpen)return;
  const REV='r1867-crm-delivery';
  let host=null,frame=null,owner=null,pending=false,frameUrl=null,lastHeaderBottom=0;
+ const notifyHeader=()=>window.dispatchEvent(new Event('pb-crm-header-change'));
+ window.pbCrmHeaderAction=(action)=>{
+  const doc=frame?.contentDocument;if(!doc)return;
+  const target=action==='book'?doc.querySelector('#cal-create'):doc.querySelector('#nav button[data-view="'+action+'"]');
+  if(target&&!target.disabled){target.click();if(action!=='book')window.pbCrmInnerView=action;notifyHeader()}
+ };
  const params=()=>new URLSearchParams(location.search);
  window.pbCrmFrameUrl=(portal,pane)=>{
   const q=new URLSearchParams({portal,pbDesktopContent:'1',pbCrmEmbedded:'1',crmRev:REV});
@@ -43,6 +49,7 @@
  function schedule(){if(!pending){pending=true;requestAnimationFrame(layout)}}
  function close(update=false){
   if(host)host.hidden=true;document.documentElement.classList.remove('pbCrmTabOpen');
+  window.pbCrmActivePane=null;window.pbCrmInnerView=null;notifyHeader();
   for(const b of document.querySelectorAll('[data-pb1761-crm]')){b.classList.remove('active');b.removeAttribute('aria-current')}
   if(update&&params().get('pbCrmTab')==='1'){const u=new URL(location.href);u.searchParams.delete('pbCrmTab');u.searchParams.delete('pbCrmPane');history.replaceState(history.state,'',u);}
  }
@@ -53,6 +60,7 @@
   const native=portal==='photographer'&&document.querySelector('#pb1126ChromeHost [data-pb1126-kind="crm"]');
   if(native&&shown(native)){close();native.click();return;}
   pane??=params().get('pbCrmPane')||(params().get('view')==='calendar'?'calendar':'customers');
+  window.pbCrmActivePane=pane;window.pbCrmInnerView=pane==='calendar'?'calendar':'customers';notifyHeader();
   const url=window.pbCrmFrameUrl(portal,pane);
   if(!host){host=document.createElement('section');host.id='pbCrmTabContent';host.setAttribute('aria-label','مشتریان');host.hidden=true;document.body.append(host)}
   if(!frame||owner!==portal){
@@ -64,6 +72,7 @@
      if(target.origin!==location.origin||target.pathname!=='/customer-crm.html'){location.assign(target.href);return;}
      if(target.href!==new URL(frameUrl,location.href).href)return;
      host.removeAttribute('aria-busy');
+     try{frame.contentDocument?.querySelector('#nav')?.addEventListener('click',ev=>{const b=ev.target.closest('[data-view]');if(b){window.pbCrmInnerView=b.dataset.view;notifyHeader()}})}catch{}
      frame.contentWindow.addEventListener('click',event=>{
       const a=event.target.closest?.('a[href]');if(!a||a.target==='_blank')return;
       const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.pathname!=='/customer-crm.html'){event.preventDefault();location.assign(u.href);}

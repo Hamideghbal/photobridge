@@ -2,7 +2,7 @@
    No measured geometry; Print uses fixed top positions to avoid resize/refresh loops. */
 (()=>{
   'use strict';
-  if(window.PBStorePhotographerHeaderCore?.version==='R100F44') return;
+  if(window.PBStorePhotographerHeaderCore?.version==='R1875') return;
 
   const setText=(el,value)=>{if(el&&el.textContent!==value)el.textContent=value;};
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -10,14 +10,21 @@
   const txt=n=>String(n?.textContent||'').replace(/\s+/g,' ').trim();
   const fa=n=>Number(n||0).toLocaleString('fa-IR');
   const mobile=()=>matchMedia('(max-width:820px)').matches;
-  let me=null,avatarData='',walletBalance=null,walletLoading=false,unreadNotificationCount=null,notificationSyncing=false,lastNotificationSync=0,renderTimer=0,lastSig='',sourceMap=new Map(),sourceSeq=0,pendingMode='',pendingUntil=0;
+  let me=null,avatarData='',walletBalance=null,walletLoading=false,unreadNotificationCount=null,notificationSyncing=false,lastNotificationSync=0,renderTimer=0,lastSig='',sourceMap=new Map(),sourceSeq=0,pendingMode='',pendingUntil=0,previousMode='';
   // R100F48: tab navigation has no cover, spinner or artificial wait.
   try{sessionStorage.removeItem('photobridge:r100f44:tab-transition');document.documentElement.classList.remove('pbF41TabTransition')}catch{}
 
   function visible(el){if(!el||!el.isConnected||el.hidden)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
   function photographerRoute(){return /^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register|login)(?:\/|$)/.test(location.pathname)||/^\/equipment-rental(?:\/|$)/.test(location.pathname)}
-  function isPortal(){return photographerRoute()&&!!($('.photographerMain')||$('#storePhotographerWorkspace')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
+  function isPortal(){return photographerRoute()&&!!($('.photographerMain')||$('#storePhotographerWorkspace')||document.body.classList.contains('pbAuthenticatedPhotographerPortal')||chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1')}
   function chooserVisible(){const c=$('#pbR99LabChooser');return visible(c)&&c.getBoundingClientRect().height>8}
+  function crmPane(){
+    const host=$('#pbCrmTabContent'),q=new URLSearchParams(location.search);
+    const active=!!(window.pbCrmActivePane||document.documentElement.classList.contains('pbCrmTabOpen')||(host&&!host.hidden));
+    if(!active)return '';
+    const pane=window.pbCrmActivePane||q.get('pbCrmPane')||(q.get('view')==='calendar'?'calendar':'customers');
+    return pane==='calendar'?'calendar':'customers';
+  }
   function labelMode(t){
     t=String(t||'').replace(/\s+/g,' ').trim();
     if(/اینستاگرام/.test(t))return 'instagram';
@@ -33,7 +40,8 @@
     return labelMode(txt(a)||a?.getAttribute?.('aria-label'));
   }
   function mode(){
-    if(window.pbCrmActivePane==='customers'||window.pbCrmActivePane==='calendar')return window.pbCrmActivePane;
+    const crm=crmPane();if(crm)return crm;
+    if(chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1')return 'labchooser';
     if(pendingMode&&Date.now()<pendingUntil)return pendingMode;
     if(pendingMode){pendingMode='';pendingUntil=0}
     const p=location.pathname.replace(/\/+$/,'')||'/',q=new URLSearchParams(location.search);
@@ -51,7 +59,7 @@
     if(store&&visible(store)&&!/^\/photographer(?:\/|$)/.test(p))return 'store';
     return 'home';
   }
-  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m==='store'&&!/^\/equipment-rental(?:\/|$)/.test(location.pathname)){if(mobile()&&isPortal()){e.preventDefault();e.stopImmediatePropagation();location.assign('/equipment-rental/book')}return}if(m){const leavingStore=/^\/equipment-rental(?:\/|$)/.test(location.pathname)&&m!=='store'&&!!el?.dataset?.mainHref;if(leavingStore){e.preventDefault();e.stopImmediatePropagation();location.assign(el.dataset.mainHref);return}if(m==='print'&&mode()!=='print'){pendingMode=mode();pendingUntil=Infinity;return}pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
+  function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m==='store'&&!/^\/equipment-rental(?:\/|$)/.test(location.pathname)){if(mobile()&&isPortal()){e.preventDefault();e.stopImmediatePropagation();location.assign('/equipment-rental/book')}return}if(m){const leavingStore=/^\/equipment-rental(?:\/|$)/.test(location.pathname)&&m!=='store'&&!!el?.dataset?.mainHref;if(leavingStore){e.preventDefault();e.stopImmediatePropagation();location.assign(el.dataset.mainHref);return}if(m==='print'&&mode()!=='print'){pendingMode='print';pendingUntil=Date.now()+1500;schedule(0);return}pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
   function nativeHeader(){return mode()==='store'?($('#photographerStoreRoleHeader')||$('#photographerRoleHeaderV710')):($('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader'))}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
   function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
@@ -63,6 +71,7 @@
   function context(m){
     if(m==='customers')return{title:'مشتریان',meta:''};
     if(m==='calendar')return{title:'تقویم مشتریان',meta:''};
+    if(m==='labchooser')return{title:'انتخاب لابراتوار',meta:''};
     if(m==='print')return{title:labName(),meta:'لابراتوار'};
     if(m==='instagram')return{title:'طراحی اینستاگرام',meta:modelCount()};
     if(m==='album')return{title:'طراحی آلبوم',meta:modelCount()};
@@ -75,7 +84,7 @@
   function gridButtons(){const t=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar');const a=t?$$('.albumDesignMobileGridToggle button',t):[];return a.length>=2?a:$$('.photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle button').slice(0,2)}
   function actions(m){
     sourceMap=new Map();sourceSeq=0;const out=[];
-    if(m==='customers')return ['customers','events','templates'].map((id,i)=>({id:'crm:'+id,label:['مشتریان','مناسبت‌ها','پیامک'][i],active:window.pbCrmInnerView===id||(i===0&&!window.pbCrmInnerView)}));
+    if(m==='customers')return ['customers','events','templates'].map((id,i)=>({id:'crm:'+id,label:['مشتریان','مناسبت‌ها','قالب پیامک'][i],active:window.pbCrmInnerView===id||(i===0&&!window.pbCrmInnerView)}));
     if(m==='calendar')return [{id:'crm:book',label:'＋ ثبت نوبت',active:false}];
     if(m==='print'){
       const photo=$('.photographerPrintModeNav .photographerPrintPhotoTab'),album=$('.photographerPrintModeNav .photographerPrintAlbumTab'),finance=$('.photographerPrintCommonAction.finance');
@@ -149,7 +158,7 @@
   }
 
   function render(){
-    const galleryManager=mobile()&&location.pathname.startsWith('/photographer/gallery')&&!!$('.clientGalleryManager');
+    const galleryManager=mobile()&&!crmPane()&&location.pathname.startsWith('/photographer/gallery')&&!!$('.clientGalleryManager');
     document.body.classList.toggle('pb1156GalleryManager',galleryManager);
     if(!galleryManager)$('#pb1156GalleryBack')?.remove();
     if(!mobile()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
@@ -158,6 +167,12 @@
     document.body.classList.remove('pbF37LabChooserVisible');document.body.classList.add('pbF37UnifiedActive');
     const m=mode(),storeHeader=$('#photographerStoreRoleHeader');
     document.body.classList.toggle('pbF37StoreMode',m==='store');
+    document.body.classList.toggle('pbF37CrmMode',m==='customers'||m==='calendar');
+    document.body.classList.toggle('pbF37CustomersMode',m==='customers');
+    document.body.classList.toggle('pbF37CalendarMode',m==='calendar');
+    document.body.classList.toggle('pbF37ChooserMode',m==='labchooser');
+    if(m==='store'&&previousMode!=='store'){const shell=$('#storePhotographerWorkspace>.shell');if(shell)shell.scrollTop=0;}
+    previousMode=m;
     if(m==='store'){
       // R1873: keep the very same account header used by Gallery/Print/AI.
       // The native Store header remains mounted as the source of its existing
@@ -207,7 +222,7 @@
     setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F37LabEnterBoot'))document.documentElement.classList.remove('pbR100F37LabEnterBoot')},5200);
   }
   window.PBPhotographerAvatarInput=avatarInput;
-  window.PBStorePhotographerHeaderCore={version:'R100F44',mount:render,refresh:()=>schedule(0),getMode:mode};
+  window.PBStorePhotographerHeaderCore={version:'R1875',mount:render,refresh:()=>schedule(0),getMode:mode};
   // Update outgoing chrome before older document-level navigation interceptors run.
   window.addEventListener('click',handleSectionClick,true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

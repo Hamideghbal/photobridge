@@ -9,6 +9,13 @@ function one(before,after,label){
   if(n!==1)throw Error('[R1722] '+label+' anchor count '+n);
   source=source.replace(before,after);
 }
+// R1877 may have already integrated the R1722 grouping logic into the
+// stationary, non-scrolling city rail. Avoid applying the old in-card patch.
+if(source.includes('/* PB1877 stationary city filters:')){
+  for(const marker of ['/* PB1722 city filters */','function cityGrouping(all,active,primary)','class="pbR99LabCities"','const listedConnected=group.filter?','const listedAvailable=group.filter?']){
+    if(!source.includes(marker))throw Error('[R1722] incomplete R1877 city compatibility: '+marker);
+  }
+}
 if(!source.includes('/* PB1722 city filters */')){
   one(
     "  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false;",

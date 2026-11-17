@@ -14,7 +14,11 @@ test('R1873: one Gallery account component survives all mobile routes',()=>{
  assert(header.includes("if(m==='store'){"));
  assert(header.includes("ensureHeader();ensureMenu();"));
  assert(header.includes("$('#pbF37Subheader')?.remove();"));
- assert(header.includes("function nativeHeader(){return mode()==='store'?"));
+ // R1876: Store chooser has its own second header but shares the account source.
+ // Verify both Store modes, rather than pinning the pre-chooser function body.
+ assert(header.includes("function nativeHeader(){const m=mode();"));
+ assert(header.includes("(m==='store'||m==='storechooser')?"));
+ assert(header.includes("$('#photographerStoreRoleHeader')||$('#photographerRoleHeaderV710')"));
  assert(css.includes('body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader'));
  assert(css.includes('body.pbF37UnifiedActive.pbF37StoreMode #pbF37PhotographerHeader'));
  assert(css.includes('z-index:2147483300!important'));

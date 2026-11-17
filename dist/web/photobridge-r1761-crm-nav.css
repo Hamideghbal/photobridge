@@ -41,8 +41,22 @@
   html body #root .photographerBottomAppNav .photographerBottomAppNavGrid:has(>button[data-pb-crm-pane="calendar"]){
     grid-template-columns:repeat(var(--pb1099-tabs),minmax(0,1fr))!important;
   }
-  html body :is(.labBottomAppNavGrid,.photographerBottomAppNavGrid)>button.pb1761CrmMobileTab[aria-current="page"]{
-    color:#254fc6!important;background:#eaf0ff!important;
+  /* R1872: Customers and Calendar share the native mobile dock's selected
+     blue gradient (#315efb → #244fcf), including icon and label. */
+  html body #root :is(.labBottomAppNavGrid,.photographerBottomAppNavGrid)>button.pb1761CrmMobileTab[aria-current="page"],
+  html.pb1448LabPhoneMode body>.pb1448LabPhoneDock .labBottomAppNavGrid>button.pb1761CrmMobileTab[aria-current="page"],
+  html body #photographerStoreBottomNav .photographerBottomAppNavGrid>button.pb1761CrmMobileTab[aria-current="page"]{
+    background:linear-gradient(135deg,#315efb,#244fcf)!important;
+    color:#fff!important;
+    border-color:transparent!important;
+    border-radius:13px!important;
+    box-shadow:none!important;
+  }
+  html body :is(.labBottomAppNavGrid,.photographerBottomAppNavGrid)>button.pb1761CrmMobileTab[aria-current="page"] :is(svg,em),
+  html.pb1448LabPhoneMode body>.pb1448LabPhoneDock .labBottomAppNavGrid>button.pb1761CrmMobileTab[aria-current="page"] :is(svg,em){
+    color:#fff!important;
+    stroke:currentColor!important;
+    opacity:1!important;
   }
   html body :is(.labBottomAppNavGrid,.photographerBottomAppNavGrid)>button.pb1761CrmMobileTab>em{
     color:inherit!important;opacity:1!important;visibility:visible!important;

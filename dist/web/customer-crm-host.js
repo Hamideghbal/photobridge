@@ -22,8 +22,8 @@
    '#root .labRoleWorkspace .labSingleHeader,'+
    '#root main.photographerMain > .unifiedRoleHeader,'+
    '#root main.photographerMain .photographerPrintModeHeader,'+
-   '#root #photographerRoleHeaderV710,'+
-   '#root #photographerStoreRoleHeader,'+
+   '#photographerRoleHeaderV710,'+
+   '#photographerStoreRoleHeader,'+
    '#pb1126DesktopHeader'
   ))].filter(shown).map(node=>node.getBoundingClientRect())
     .filter(rect=>rect.bottom>0&&rect.top<innerHeight*.45);

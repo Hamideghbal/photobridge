@@ -32,7 +32,18 @@ test('R1873: HTML entrypoints always refresh Gallery account header + CRM host',
    'photobridge-v904r100f41-header-date-name-fit.css',
    'customer-crm-host.js',
    'customer-crm-host.css'
-  ])assert(html.includes('/'+name+'?rev='+encodeURIComponent(rev)),file+': '+name);
+  ]){
+   if(html.includes('/'+name+'?rev='+encodeURIComponent(rev)))continue;
+   if(name.endsWith('.css')){
+    // The final perf step merges individual stylesheets into a hash-named
+    // first-paint CSS bundle, leaving no standalone CSS link in HTML.
+    const boot=html.match(/href="(\/assets\/photobridge-boot-[a-f0-9]+[.]css)[^"]*"/);
+    const bundle=boot&&read('dist/web'+boot[1]);
+    assert(bundle&&bundle.includes(read('dist/web/'+name)),file+': missing bundled '+name);
+    continue;
+   }
+   assert.fail(file+': '+name);
+  }
  }
 });
 test('R1873: visible Gallery header is not covered by Customers/Calendar',async t=>{
@@ -82,6 +93,7 @@ test('R1873: visible Gallery header is not covered by Customers/Calendar',async 
     });
     assert(await page.locator('#pbF37PhotographerHeader').isVisible());
     assert.equal(await page.locator('#pbF37PhotographerHeader').count(),1);
+    await page.waitForFunction(()=>{const overlay=document.getElementById('pbCrmTabContent');return overlay&&!overlay.hasAttribute('aria-busy')},{timeout:12000});
     assert(await page.locator('#pbCrmTabContent iframe').isVisible(),kind+' '+pane+' content must be visible');
     // Account tools remain interactive above the iframe even on CRM pages.
     if(pane==='customers'){

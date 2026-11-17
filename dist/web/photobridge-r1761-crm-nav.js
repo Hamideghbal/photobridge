@@ -14,7 +14,7 @@
   let enabled=null,fetchedPortal=null,loading=false,epoch=0,pending=false;
   // A single initial reveal is coordinated with photographer feature tabs.
   function settleDock(){
-    if(!media.matches)return;
+    if(!media.matches||window.pbR1877CrmNavReady)return;
     window.pbR1877CrmNavReady=true;
     window.dispatchEvent(new Event('pb-r1877-crm-ready'));
   }

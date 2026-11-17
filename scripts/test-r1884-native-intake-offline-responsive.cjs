@@ -29,7 +29,7 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
 
 function simulateOffline(cancel){
  const start=native.indexOf('async function open(){');
- const end=native.indexOf(' function mount(){',start);
+ const end=native.indexOf('function mount(){',start);
  assert(start>=0&&end>start,'manual dialog entrypoint must exist');
  const code=native.slice(start,end);
  const shown=[],timers=[],nodes=[],requests=[];

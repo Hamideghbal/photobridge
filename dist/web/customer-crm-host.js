@@ -15,8 +15,19 @@
  const shown=node=>node&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
  function layout(){
   pending=false;if(!host||host.hidden)return;
-  const headers=[...document.querySelectorAll('#root .labSingleHeader,#photographerRoleHeaderV710,#photographerStoreRoleHeader,#pb1126DesktopHeader')].filter(shown);
-  const top=Math.max(0,...headers.map(node=>Math.min(node.getBoundingClientRect().bottom,innerHeight-120)));
+  // R1872: identify the actual portal header on EVERY mobile tab.
+  // Print uses .photographerPrintModeHeader (not #photographerRoleHeaderV710).
+  // Only the parent portal owns the header; the embedded CRM header stays hidden.
+  const headers=[...new Set(document.querySelectorAll(
+   '#root .labRoleWorkspace .labSingleHeader,'+
+   '#root main.photographerMain > .unifiedRoleHeader,'+
+   '#root main.photographerMain .photographerPrintModeHeader,'+
+   '#root #photographerRoleHeaderV710,'+
+   '#root #photographerStoreRoleHeader,'+
+   '#pb1126DesktopHeader'
+  ))].filter(shown).map(node=>node.getBoundingClientRect())
+    .filter(rect=>rect.bottom>0&&rect.top<innerHeight*.45);
+  const top=Math.max(0,...headers.map(rect=>Math.min(rect.bottom,innerHeight-120)));
   const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav,body>.pb1448LabPhoneDock')].filter(shown):[];
   const bottom=Math.max(0,...docks.map(node=>innerHeight-node.getBoundingClientRect().top));
   if(host.style.top!==top+'px')host.style.top=top+'px';
@@ -79,5 +90,5 @@
  window.addEventListener('popstate',()=>{if(params().get('pbCrmTab')==='1'&&owner)window.pbCrmOpen(owner,false);else close()});
  window.addEventListener('resize',schedule,{passive:true});window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('photobridge-auth-session-changed',()=>{close(true);host?.remove();host=null;frame=null;owner=null});
- new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
+ new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
 })();

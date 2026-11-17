@@ -62,3 +62,20 @@ test('R1877: the deployed build pins updated selectors and navigation scripts',(
  assert(fin.includes('photobridge-r1099-photographer-tabs.js'));
  assert(fin.includes('photobridge-r1761-crm-nav.js'));
 });
+
+test('R1879: lab chooser ends at the actual visible mobile dock',()=>{
+ const chooser=read('dist/web/photobridge-v904r99-lab-chooser.js');
+ const css=read('dist/web/photobridge-v904r100f41-header-date-name-fit.css');
+ const html=read('dist/web/index.html');
+ const rev=read('DEPLOY_REVISION.txt').trim();
+ assert.doesNotThrow(()=>new vm.Script(chooser));
+ assert(chooser.includes('function pbR1879FitChooserToDock()'));
+ assert(chooser.includes("document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) button:not([hidden])')"));
+ assert(chooser.includes('dockTop-chooserTop-8'));
+ assert(chooser.includes("chooser.style.setProperty('height',height+'px','important')"));
+ assert(css.includes('R1879 — lab chooser'));
+ assert(css.includes('height:calc(100dvh - 132px - 78px - env(safe-area-inset-bottom,0px))!important'));
+ assert(rev.includes('r1879-lab-chooser-viewport'));
+ assert(html.includes('photobridge-v904r99-lab-chooser.js?rev='+rev));
+ assert(html.includes('photobridge-v904r100f41-header-date-name-fit.css?rev='+rev));
+});

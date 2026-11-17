@@ -60,6 +60,28 @@ if(!code.includes(mark)){
   " form.onsubmit=async e=>{\n  e.preventDefault();if(submitting)return;",
   " form.onsubmit=async e=>{\n  e.preventDefault();if(submitting)return;\n  if(typeof navigator!=='undefined'&&navigator.onLine===false){error.textContent='این فرم هنوز برای ثبت نهایی به اتصال سرور نیاز دارد. هیچ سفارشی ثبت نشده است؛ پس از اتصال دوباره اقدام کنید.';return;}",
   'no false offline order success');
+ // R1884: on Windows 7 a disconnected cable can still report navigator.onLine=true.
+ // Verify connectivity with a bounded read-only request BEFORE any order/files
+ // POST. This avoids a long unresponsive "submit" with no accidental writes.
+ code=once(code,
+  " form.onsubmit=async e=>{",
+  " let pb1884PreflightBusy=false;\n form.onsubmit=async e=>{",
+  'single-flight submission readiness');
+ code=once(code,
+  "  busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';",
+  [
+   "  if(pb1884PreflightBusy)return;",
+   "  pb1884PreflightBusy=true;submit.disabled=true;",
+   "  error.textContent='در حال بررسی ارتباط با سرور…';",
+   "  try{",
+   "   const device=await pb1884Bounded(api('/api/lab/download-device?manualPreflight='+Date.now()),2600);",
+   "   if(!device?.registered||!device?.isThisDevice)throw Error('primary_device_required');",
+   "  }catch{error.textContent='ارتباط با سرور برای ثبت سفارش برقرار نیست یا دستگاه اصلی تأیید نشد؛ هیچ سفارش جدیدی ثبت نشده است.';return;}",
+   "  finally{pb1884PreflightBusy=false;submit.disabled=false;}",
+   "  if(active!==modal)return;",
+   "  busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';"
+  ].join('\n'),
+  'bounded submit preflight with no side effects');
  // A previously validated primary device must keep its launcher during
  // temporary connectivity loss; never grant new primary authorization offline.
  code=once(code,

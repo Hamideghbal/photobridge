@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
+import {softenCss} from './soften-blue-shadows.mjs';
 const hash=text=>crypto.createHash('sha256').update(text).digest('hex');
 const revision='r1867-crm-delivery';
 export async function verifyLiveCrm({inspect=false,base='https://photobridge.ir',expectedRevision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim()}={}){
@@ -18,7 +19,8 @@ export async function verifyLiveCrm({inspect=false,base='https://photobridge.ir'
  }
  for(const name of ['customer-crm-ui.js','customer-calendar.js','customer-calendar.css','customer-crm-host.js','customer-crm-host.css',...menus]){
   const asset=await get('/'+name+'?'+(menus.includes(name)?'':'v='+revision+'&')+'rev='+encodeURIComponent(expectedRevision));
-  const expected=hash(fs.readFileSync('dist/web/'+name,'utf8'));
+  const source=fs.readFileSync('dist/web/'+name,'utf8');
+  const expected=hash(name==='customer-crm-service-menus-r1868.css'?softenCss(source):source);
   console.log('CRM asset '+JSON.stringify({name,sha256:asset.sha256,expected,exact:asset.sha256===expected}));
   if(!inspect&&(!/(javascript|css)/i.test(asset.type)||asset.sha256!==expected))throw Error('CRM asset differs from reviewed source: '+name);
  }

@@ -18,7 +18,7 @@ test('final portal entry points bust the previously immutable navigation URLs',(
  assert.match(html,/photobridge-r1761-crm-nav\.js\?v=r1867-crm-delivery/);assert.match(html,/photobridge-r1126-desktop-navigation\.js\?v=r1867-crm-delivery/);
  }
  const nav=read('dist/web/photobridge-r1126-desktop-navigation.js');assert.match(nav,/window\.pbCrmFrameUrl/);assert.match(nav,/crmRev=r1867-crm-delivery/);assert.match(nav,/if\(key==='crm'&&u\.pathname!=='.customer-crm.html'\)/);
- assert.match(read('dist/web/photobridge-r1761-crm-nav.js'),/window\.pbCrmOpen\(portal\)/);
+ assert.match(read('dist/web/photobridge-r1761-crm-nav.js'),/window\.pbCrmOpen\(portal,true,pane\)/);
 });
 test('CRM content has no back link and suppresses its separate header inside the portal',()=>{
  const html=read('dist/web/customer-crm.html');assert.doesNotMatch(html,/id="back"|بازگشت به PhotoBridge/);assert.match(html,/window\.self!==window\.top/);assert.match(html,/html\.crmEmbedded body>header/);assert.match(html,/customer-crm-ui\.js\?v=r1867/);

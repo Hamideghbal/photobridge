@@ -13,12 +13,15 @@
   const activePortal=()=>lab()?'lab':photo()?'photographer':null;
   let enabled=null,fetchedPortal=null,loading=false,epoch=0,pending=false;
 
-  function make(portal,desktop){
+  function make(portal,desktop,pane){
     const b=document.createElement('button');
     b.type='button';
     b.className=desktop?'pb1761CrmDesktopTab':'pb1761CrmMobileTab';
     b.dataset.pb1761Crm=portal;
-    b.setAttribute('aria-label','مشتریان');
+    b.dataset.pbCrmPane=pane;
+    const calendar=pane==='calendar';
+    const title=calendar?'تقویم':'مشتریان';
+    b.setAttribute('aria-label',title);
     if(desktop){
       // Match the existing lab header tab styling, without claiming a native tab source.
       b.dataset.source='.pb1761CrmNotANativeTab';
@@ -27,14 +30,22 @@
       label.textContent='مشتریان';
       b.append(label);
     }else{
-      b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.2A5.8 5.8 0 0 1 9.3 12h.4a5.8 5.8 0 0 1 5.8 5.8V19"/><path d="M16.8 5.5a3 3 0 0 1 0 5.7M18 13a5.3 5.3 0 0 1 2.5 4.5V19"/></svg><em>مشتریان</em>';
+      const customersIcon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.2A5.8 5.8 0 0 1 9.3 12h.4a5.8 5.8 0 0 1 5.8 5.8V19"/><path d="M16.8 5.5a3 3 0 0 1 0 5.7M18 13a5.3 5.3 0 0 1 2.5 4.5V19"/></svg>';
+      const calendarIcon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-14 5h3m4 0h3"/></svg>';
+      b.innerHTML=(calendar?calendarIcon:customersIcon)+'<em>'+title+'</em>';
     }
-    b.addEventListener('click',()=>location.assign('/customer-crm.html?portal='+portal));
+    b.addEventListener('click',()=>{
+      if(window.pbCrmOpen){window.pbCrmOpen(portal,true,pane);return;}
+      const query=new URLSearchParams({portal,crmRev:'r1867-crm-delivery'});
+      if(calendar)query.set('view','calendar');
+      if(!desktop)query.set('pbCrmMobile','1');
+      location.assign('/customer-crm.html?'+query);
+    });
     return b;
   }
 
   function recount(grid){
-    if(!grid||!grid.classList.contains('photographerBottomAppNavGrid'))return;
+    if(!grid)return;
     const count=[...grid.children].filter(el=>!el.hidden&&el.dataset.pb1099Hidden!=='1'&&getComputedStyle(el).display!=='none').length;
     if(count)grid.style.setProperty('--pb1099-tabs',String(count));
   }
@@ -78,11 +89,13 @@
     clearButtons();
     schedule();
   }
+  function visibleDock(selector){
+    return [...document.querySelectorAll(selector)].filter(grid=>grid.getClientRects().length).at(-1)||null;
+  }
   function targetFor(portal){
     if(media.matches){
-      if(portal==='lab')return [...document.querySelectorAll('#root .labRoleWorkspace .labBottomAppNavGrid')].at(-1)||null;
-      return [...document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) .photographerBottomAppNavGrid')]
-        .filter(el=>!el.closest('[data-pb1318-stale]')).at(-1)||null;
+      if(portal==='lab')return visibleDock('#root .labRoleWorkspace .labBottomAppNavGrid,body>.pb1448LabPhoneDock .labBottomAppNavGrid');
+      return visibleDock('#root .photographerBottomAppNav:not(.labBottomAppNav):not([data-pb1318-stale]) .photographerBottomAppNavGrid');
     }
     if(portal==='lab')return document.querySelector('#root .labRoleWorkspace .pb1147LabNav');
     const home=document.querySelector('#root .photographerHomeModeNav');
@@ -102,13 +115,19 @@
     for(const button of document.querySelectorAll('button[data-pb1761-crm]')){
       if(button.parentElement!==target||button.dataset.pb1761Crm!==portal||!button.classList.contains(kind))removeButton(button);
     }
-    if(!target||target.querySelector(':scope > button[data-pb1761-crm]'))return;
-    const button=make(portal,!media.matches);
-    if(portal==='lab'&&!media.matches){
-      const album=target.querySelector('button[data-source=".albumTopNav"]');
-      if(album)album.after(button);else target.insertBefore(button,target.firstElementChild);
-    }else target.append(button);
+    if(!target)return;
+    let mounted=false;
+    for(const pane of media.matches?['customers','calendar']:['customers']){
+      if(target.querySelector(':scope > button[data-pb-crm-pane="'+pane+'"]'))continue;
+      const button=make(portal,!media.matches,pane);
+      if(portal==='lab'&&!media.matches){
+        const album=target.querySelector('button[data-source=".albumTopNav"]');
+        if(album)album.after(button);else target.prepend(button);
+      }else target.append(button);
+      mounted=true;
+    }
     recount(target);
+    if(mounted&&new URLSearchParams(location.search).get('pbCrmTab')==='1')window.pbCrmOpen?.(portal,false);
   }
   function schedule(){
     if(pending)return;
@@ -116,8 +135,7 @@
     requestAnimationFrame(render);
   }
   function boot(){
-    const root=document.getElementById('root')||document.body;
-    new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
+    new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
     schedule();
     window.addEventListener('popstate',refresh);
     window.addEventListener('pageshow',refresh);

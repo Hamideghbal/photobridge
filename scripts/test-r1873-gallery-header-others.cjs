@@ -20,6 +20,7 @@ test('R1873: CRM overlay respects Gallery shared header and native fallback',()=
  assert(s.includes('sourceMap=new Map();const out=[]'));
  assert(s.includes('function activeMobilePanel()'));
  assert(s.includes('function placeSharedHeader()'));
+ assert(s.includes('if(window.self!==window.top)return false'));
  assert(s.includes('placeSharedHeader();'));
  assert(!s.includes('sourceMap=new Map();sourceSeq=0'));
 });

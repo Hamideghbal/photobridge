@@ -710,3 +710,115 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
     padding-top:12px!important;
   }
 }
+
+
+/* R1877 — canonical white mobile headers, separated stationary filter rows. */
+@media(max-width:820px){
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader{
+    background:#fff!important;background-image:none!important;
+    border-bottom:1px solid #dde4ee!important;
+  }
+  html body.pbF37UnifiedActive #pbF37Subheader,
+  html body.pbF37UnifiedActive #pbF37ContextTitle{
+    background:#fff!important;background-image:none!important;
+  }
+  html body.pbF37UnifiedActive #pbF37ContextTitle{
+    border-bottom:1px solid #dde4ee!important;
+  }
+
+  /* Print: no maximum-height clipping or dead white zone above phone dock.
+     The city row does not belong to the lab-cards scrolling pane. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    inset:132px 0 calc(78px + env(safe-area-inset-bottom,0px)) 0!important;
+    top:132px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    height:auto!important;max-height:none!important;min-height:0!important;
+    overflow:hidden!important;display:block!important;
+    background:linear-gradient(180deg,#e5f2ff 0%,#f5faff 140px,#fff 450px)!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser>.pbR99LabWrap{
+    height:100%!important;max-height:100%!important;min-height:0!important;
+    width:100%!important;padding:0 12px 0!important;margin:0 auto!important;
+    display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabIntro{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabCities:not([hidden]){
+    flex:0 0 auto!important;display:flex!important;flex-wrap:wrap!important;
+    align-items:center!important;justify-content:center!important;gap:6px!important;
+    margin:0 -12px 7px!important;padding:9px 12px!important;
+    background:#fff!important;border-bottom:1px solid #dde4ee!important;
+    position:relative!important;z-index:3!important;
+  }
+  #pbR99LabChooser .pbR99LabCities[hidden]{display:none!important}
+  #pbR99LabChooser .pbR99LabCities>span{
+    font:900 11px Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
+    margin-inline-end:5px!important;
+  }
+  #pbR99LabChooser .pbR99LabCities>button{
+    min-width:0!important;min-height:34px!important;padding:5px 11px!important;
+    border-radius:10px!important;border:1px solid #d5e1ee!important;
+    background:#fff!important;color:#334155!important;
+    font:850 11px Vazirmatn,Tahoma,sans-serif!important;
+  }
+  #pbR99LabChooser .pbR99LabCities>button.active{
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard{
+    flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+    overflow-y:auto!important;overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    margin:8px 0 0!important;padding:9px 8px 18px!important;
+    background:transparent!important;border:0!important;box-shadow:none!important;
+  }
+  #pbR99LabChooser .pbR99LabCard{
+    background:#fff!important;
+  }
+
+  /* Store chooser: white second header and a fixed third category header. */
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37Subheader,
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37ContextTitle{
+    background:#fff!important;border-bottom:1px solid #dde4ee!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231{
+    position:fixed!important;top:132px!important;left:0!important;right:0!important;
+    z-index:2147481470!important;height:54px!important;min-height:54px!important;
+    margin:0!important;padding:7px 9px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;
+    background:#fff!important;border:0!important;border-bottom:1px solid #dde4ee!important;
+    box-sizing:border-box!important;overflow:hidden!important;direction:rtl!important;
+  }
+  html body.pbF37UnifiedActive #storeChooserFiltersR1231:not(:is(body.pbR96ChoosingStore *)){
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button{
+    flex:1 1 0!important;min-width:0!important;max-width:190px!important;
+    height:38px!important;padding:4px 5px!important;border-radius:12px!important;
+    border:1px solid #dbe3ef!important;background:#fff!important;color:#475467!important;
+    font:850 11.6px Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button[aria-pressed="true"]{
+    border-color:#315efb!important;background:#eaf0ff!important;color:#2957cc!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button:disabled{opacity:.35!important}
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 small{font-size:10px!important}
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storePhotographerWorkspace>.shell{
+    top:186px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    background:linear-gradient(180deg,#e7f3ff 0%,#f4f9ff 150px,#fff 450px)!important;
+    padding:12px 11px 30px!important;scroll-padding-top:10px!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    background:transparent!important;border:0!important;box-shadow:none!important;
+    padding-top:0!important;
+  }
+
+  /* CRM: one white second row, and blue depth only AFTER that row. */
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37Subheader,
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37ContextTitle{
+    background:#fff!important;background-image:none!important;
+    border-bottom:1px solid #dde4ee!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbCrmTabContent{
+    background:linear-gradient(180deg,#e7f3ff 0%,#f4f9ff 130px,#fff 420px)!important;
+  }
+}

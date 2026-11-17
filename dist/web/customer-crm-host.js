@@ -15,17 +15,21 @@
  const shown=node=>node&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
  function layout(){
   pending=false;if(!host||host.hidden)return;
-  // R1872: identify the actual portal header on EVERY mobile tab.
-  // Print uses .photographerPrintModeHeader (not #photographerRoleHeaderV710).
-  // Only the parent portal owns the header; the embedded CRM header stays hidden.
-  const headers=[...new Set(document.querySelectorAll(
+  // R1873: keep the SAME shared header shown on Gallery above Customers
+  // and Calendar. The native photographer headers are deliberately hidden by
+  // PBSharedPhotographerHeader; they cannot determine our frame's top edge.
+  const shared=matchMedia('(max-width:820px)').matches&&
+    document.body.classList.contains('pbSharedPhotographerHeaderActive')?
+    [...document.querySelectorAll('#pbSharedPhotographerHeader,#pbSharedPhotographerSubheader')].filter(shown):[];
+  const ownHeaders=shared.length?shared:[...new Set(document.querySelectorAll(
    '#root .labRoleWorkspace .labSingleHeader,'+
    '#root main.photographerMain > .unifiedRoleHeader,'+
    '#root main.photographerMain .photographerPrintModeHeader,'+
    '#photographerRoleHeaderV710,'+
    '#photographerStoreRoleHeader,'+
    '#pb1126DesktopHeader'
-  ))].filter(shown).map(node=>node.getBoundingClientRect())
+  ))].filter(shown);
+  const headers=ownHeaders.map(node=>node.getBoundingClientRect())
     .filter(rect=>rect.bottom>0&&rect.top<innerHeight*.45);
   const top=Math.max(0,...headers.map(rect=>Math.min(rect.bottom,innerHeight-120)));
   const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav,body>.pb1448LabPhoneDock')].filter(shown):[];

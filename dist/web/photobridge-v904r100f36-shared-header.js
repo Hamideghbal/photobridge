@@ -11,6 +11,7 @@
   const fa=n=>Number(n||0).toLocaleString('fa-IR');
   const MOBILE='(max-width:820px)';
   let me=null, avatarData='', walletBalance=null, walletLoading=false, renderQueued=false, timer=null, sourceMap=new Map(), sourceSeq=0;
+  let persistentHeader=null,persistentSubheader=null;
 
   const STYLE=`
   @media(max-width:820px){
@@ -117,7 +118,16 @@
     if(s.textContent!==STYLE)s.textContent=STYLE;
   }
   function isVisible(el){if(!el||!el.isConnected)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
-  function isPhotographerPortal(){return !!($('#storePhotographerWorkspace')||$('.photographerMain')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
+  function isPhotographerPortal(){
+    // Embedded Print/Store frames must not create a SECOND account header.
+    if(window.self!==window.top)return false;
+    const p=location.pathname;
+    if(/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(p))return false;
+    const authenticatedRole=document.body.classList.contains('pbAuthenticatedPhotographerPortal');
+    const rentalPhoto=p==='/equipment-rental/book'&&document.body.classList.contains('rentalPhotographerMode');
+    if(!/^\/photographer(?:\/|$)/.test(p)&&!rentalPhoto&&!authenticatedRole)return false;
+    return !!($('#storePhotographerWorkspace')||$('.photographerMain')||authenticatedRole);
+  }
   function isLabChooserVisible(){
     const c=$('#pbR99LabChooser');
     if(!c||!c.isConnected||c.hidden)return false;
@@ -126,7 +136,34 @@
     const r=c.getBoundingClientRect();
     return r.width>8&&r.height>8;
   }
+  // The phone Print and Store pages are full-screen panels above Gallery.
+  // Move the SAME header nodes into the active panel rather than cloning them
+  // or leaving them underneath its stacking context.
+  function activeMobilePanel(){
+    for(const id of ['#pb1106StorePanel','#pb1106PrintPanel']){
+      const panel=$(id),rect=panel?.getBoundingClientRect();
+      if(panel&&isVisible(panel)&&rect?.width>8&&rect?.height>8)return panel;
+    }
+    return null;
+  }
+  function placeSharedHeader(){
+    const owner=activeMobilePanel()||document.body;
+    for(const id of ['#pbSharedPhotographerHeader','#pbSharedPhotographerSubheader']){
+      const node=$(id);
+      if(node&&node.parentNode!==owner)owner.appendChild(node);
+    }
+  }
   function mode(){
+    // CRM is an in-portal overlay: keep Gallery's exact shared header while
+    // describing the active Customers/Calendar pane, not the underlying route.
+    if(document.documentElement.classList.contains('pbCrmTabOpen')){
+      const pane=new URLSearchParams(location.search).get('pbCrmPane')||
+        $('[data-pb-crm-pane][aria-current="page"]')?.dataset.pbCrmPane;
+      return pane==='calendar'?'calendar':'customers';
+    }
+    const overlay=activeMobilePanel();
+    if(overlay?.id==='pb1106StorePanel')return 'store';
+    if(overlay?.id==='pb1106PrintPanel')return 'print';
     if($('#storePhotographerWorkspace')&&isVisible($('#storePhotographerWorkspace')))return 'store';
     const main=$('.photographerMain');
     if(main?.classList.contains('photographerPrintWorkspace'))return 'print';
@@ -165,6 +202,8 @@
   function modelCount(){const b=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar>b');if(b?.textContent?.trim())return b.textContent.trim();const n=$$('.photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard').length;return n?`${fa(n)} مدل`:''}
   function galleryCount(){const n=$$('.clientGalleryCards>.clientGalleryCard').length;return n?`${fa(n)} پروژه`:''}
   function contextInfo(m){
+    if(m==='customers')return{title:'مشتریان',meta:''};
+    if(m==='calendar')return{title:'تقویم',meta:''};
     if(m==='store')return{title:`فروشگاه تجهیزات تصویربرداری ${shopName()}`,meta:''};
     if(m==='print')return{title:labName(),meta:'لابراتوار'};
     if(m==='instagram')return{title:'طراحی اینستاگرام',meta:modelCount()};
@@ -184,7 +223,8 @@
     return a.length>=2?a:$$('.photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle button').slice(0,2);
   }
   function actionSources(m){
-    sourceMap=new Map();sourceSeq=0;const out=[];
+    // R1873: keep stable unique source IDs while panels swap without reload.
+    sourceMap=new Map();const out=[];
     if(m==='store'){
       $$('#storeSectionNavV673>button').slice(0,4).forEach(b=>out.push(sourceButton(b,String(b.textContent||'').trim())));
     }else if(m==='print'){
@@ -232,9 +272,10 @@
   }
   async function refreshWallet(){if(walletLoading)return;walletLoading=true;const small=$('#pbSharedPhotographerMenu [data-pb-shared-menu="wallet"] small');if(small&&walletBalance==null)small.textContent='معادل پولی: در حال دریافت…';try{const r=await fetch('/api/customer/services-wallet',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){const d=await r.json();walletBalance=Math.max(0,Number(d?.balance||0));if(small)small.textContent=`اعتبار ${fa(walletBalance)} · معادل پولی ${fa(walletBalance)} تومان`}}catch{}finally{walletLoading=false}}
   function ensureShell(){
-    let h=$('#pbSharedPhotographerHeader');if(h)return h;
+    let h=$('#pbSharedPhotographerHeader')||persistentHeader;
+    if(h){persistentHeader=h;if(!h.isConnected)document.body.append(h);return h;}
     h=document.createElement('header');h.id='pbSharedPhotographerHeader';h.innerHTML=`<div class="pbSharedAccountRow"><button id="pbSharedAvatar" class="pbSharedAvatar" type="button" aria-label="انتخاب عکس پروفایل"></button><div class="pbSharedIdentity"><h1 id="pbSharedStudioName"></h1><small class="pbSharedRole" id="pbSharedRole"></small><span class="pbSharedDate" id="pbSharedDate"></span><span class="pbSharedTime" id="pbSharedTime"></span></div><button id="pbSharedMenuButton" class="pbSharedMenuButton" type="button" aria-label="منو" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg><i id="pbSharedMenuBadge" class="pbSharedMenuBadge" hidden></i></button></div>`;
-    document.body.appendChild(h);ensureMenu();
+    persistentHeader=h;document.body.appendChild(h);ensureMenu();
     $('#pbSharedAvatar').addEventListener('click',()=>ensureAvatarInput().click());
     $('#pbSharedMenuButton').addEventListener('click',e=>{e.stopPropagation();const menu=ensureMenu(),open=!menu.classList.contains('open');menu.classList.toggle('open',open);$('#pbSharedMenuButton').setAttribute('aria-expanded',open?'true':'false');if(open)void refreshWallet()});
     ensureMenu().addEventListener('click',e=>{const b=e.target.closest('[data-pb-shared-menu]');if(!b)return;ensureMenu().classList.remove('open');$('#pbSharedMenuButton')?.setAttribute('aria-expanded','false');menuSource(b.dataset.pbSharedMenu)?.click()});
@@ -242,9 +283,10 @@
     return h;
   }
   function ensureSubheader(){
-    let sh=$('#pbSharedPhotographerSubheader');if(sh)return sh;
+    let sh=$('#pbSharedPhotographerSubheader')||persistentSubheader;
+    if(sh){persistentSubheader=sh;if(!sh.isConnected)document.body.append(sh);return sh;}
     sh=document.createElement('section');sh.id='pbSharedPhotographerSubheader';sh.innerHTML=`<div class="pbSharedContextTitle"><b id="pbSharedContextTitleText"></b><span id="pbSharedContextMeta" class="pbSharedContextMeta" hidden></span></div><nav id="pbSharedTabs" class="pbSharedTabs" aria-label="دکمه‌های بخش"></nav>`;
-    document.body.appendChild(sh);
+    persistentSubheader=sh;document.body.appendChild(sh);
     $('#pbSharedTabs',sh).addEventListener('click',e=>{const b=e.target.closest('[data-pb-shared-source]');if(!b)return;const src=sourceMap.get(b.dataset.pbSharedSource);if(src){src.click();setTimeout(refresh,20);setTimeout(refresh,120)}});
     return sh;
   }
@@ -330,6 +372,7 @@
   function refresh(){
     if(!matchMedia(MOBILE).matches||!isPhotographerPortal()){document.body.classList.remove('pbSharedPhotographerHeaderActive','pbSharedLabChooserVisible');$('#pbSharedPhotographerHeader')?.remove();$('#pbSharedPhotographerSubheader')?.remove();$('#pbSharedPhotographerMenu')?.remove();return}
     ensureStyle();ensureShell();ensureSubheader();document.body.classList.add('pbSharedPhotographerHeaderActive');
+    placeSharedHeader();
     const chooserVisible=isLabChooserVisible();
     document.body.classList.toggle('pbSharedLabChooserVisible',chooserVisible);
     if(chooserVisible){
@@ -381,7 +424,7 @@
   function wrapHistory(name){const old=history[name];if(!old||old.__pbSharedHeader)return;const fn=function(...args){const out=old.apply(this,args);queue(20);queue(130);return out};fn.__pbSharedHeader=true;history[name]=fn}
   function start(){
     ensureStyle();void loadMe();refresh();enforcePhysicalMenuLeft();enforceSharedPrintGeometry();settleLabEnterBoot();setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F36LabEnterBoot')){document.documentElement.classList.remove('pbR100F36LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f36:lab-enter-pending')}catch{}}},5200);try{wrapHistory('pushState');wrapHistory('replaceState')}catch{}
-    const root=$('#root')||document.documentElement,mo=new MutationObserver(()=>queue(30));mo.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','aria-current','aria-selected']});
+    const root=$('#root')||document.documentElement,mo=new MutationObserver(()=>queue(30));mo.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden','aria-current','aria-selected']});
     addEventListener('popstate',()=>queue(20),{passive:true});addEventListener('pageshow',()=>queue(20),{passive:true});addEventListener('resize',()=>queue(70),{passive:true});addEventListener('orientationchange',()=>queue(120),{passive:true});
     setInterval(()=>{syncClockAndBadge();settleLabEnterBoot()},10000);
   }

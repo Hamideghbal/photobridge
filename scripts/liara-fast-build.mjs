@@ -1390,6 +1390,9 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
  // R1872: same selected blue for CRM and native tabs; preserve the portal's
  // existing mobile header above Customers/Calendar and every embedded CRM view.
  runR1314(process.execPath,['--test','scripts/test-r1872-mobile-crm-header.cjs'],{stdio:'inherit'});
+// R1873: the same mobile top header as Gallery is shared by all photographer panes.
+await deployStep('./enable-r1873-gallery-shared-header.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1873-gallery-header-others.cjs'],{stdio:'inherit'});
 
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});

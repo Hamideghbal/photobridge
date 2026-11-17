@@ -822,3 +822,47 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
     background:linear-gradient(180deg,#e7f3ff 0%,#f4f9ff 130px,#fff 420px)!important;
   }
 }
+
+/* R1878 — remove the blue seam below the third mobile row and
+   release the reserved blank strip above the persistent bottom dock. */
+@media (max-width:820px){
+  /* Store chooser: filters form the third fixed row at 132–186px. Cards begin
+     immediately below it, with no blue gutter or artificial extra padding. */
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storePhotographerWorkspace>.shell{
+    top:186px!important;
+    bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;
+    padding:0 11px 8px!important;
+    scroll-padding-top:0!important;
+    background:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96,
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    margin-top:0!important;padding-top:0!important;
+  }
+  /* Lab chooser: the city filter is its third row. Do not insert another
+     colored band before the list and let the scroll area reach the dock. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;
+    background:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabCities:not([hidden]){
+    margin-bottom:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard{
+    margin-top:0!important;
+    padding:0 8px 8px!important;
+    background:#fff!important;
+  }
+  /* Remaining scrollports must occupy the usable area rather than reserve
+     the earlier 78px clearance after the dock height was reduced. */
+  html body.pbF37UnifiedActive:not(.pbF37StoreMode) #root .photographerMain.pbFixedRoleHeader>.photographerRolePageScrollArea{
+    bottom:64px!important;
+  }
+  html body.pbF37PrintMode #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    bottom:64px!important;
+    inset:181px 0 64px 0!important;
+  }
+  html body.pbF37PrintMode.pbF37PrintComposer #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    inset:241px 0 64px 0!important;
+  }
+}

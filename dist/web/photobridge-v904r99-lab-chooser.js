@@ -4,7 +4,7 @@
   const ROOT_ID='pbR99LabChooser';
   const SESSION_KEY='photobridge:r99:selected-lab';
   const CACHE_KEY='photobridge:r100f14:lab-chooser';
-  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false,cityFilter='all';
+  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false,selectedCityKey='';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isPhotographerRoute=()=>/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register)(?:\/|$)/.test(location.pathname);
   const isPrintRoute=()=>{if(!isPhotographerRoute())return false;const q=new URLSearchParams(location.search);return q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(location.pathname)};
@@ -19,6 +19,13 @@
       #${ROOT_ID}{position:fixed;inset:0;z-index:2147483500;background:linear-gradient(180deg,#e7f3ff 0,#eef7ff 150px,#f7f9fc 360px,#f7f9fc 100%);overflow:auto;-webkit-overflow-scrolling:touch;direction:rtl;font-family:Vazirmatn,Tahoma,Arial,sans-serif;color:#101828}
       #${ROOT_ID} *{box-sizing:border-box}
       .pbR99LabWrap{width:min(840px,100%);margin:0 auto;padding:28px 16px 42px}.pbR99LabIntro{position:relative;overflow:hidden;text-align:center;margin:0 auto 15px;max-width:760px;padding:22px 18px;border:1px solid rgba(49,94,251,.16);border-radius:24px;background:linear-gradient(145deg,#f5faff 0%,#deefff 100%);box-shadow:0 18px 48px rgba(37,99,235,.18)}.pbR99LabIntro:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;top:-115px;right:-55px;background:rgba(49,94,251,.13)}.pbR99LabIntro:after{content:"";position:absolute;width:130px;height:130px;border-radius:50%;bottom:-88px;left:-35px;background:rgba(22,119,255,.10)}.pbR99LabIntro>*{position:relative;z-index:1}.pbR99LabIntroIcon{width:48px;height:48px;margin:0 auto 10px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#1677ff,#315efb);box-shadow:0 10px 24px rgba(49,94,251,.28);color:#fff;font-size:24px;font-weight:950}.pbR99LabIntro h1{margin:0 0 7px;font-size:21px;color:#173b6c}.pbR99LabIntro p{margin:0 auto;color:#55708f;font-size:10.5px;line-height:2;max-width:560px}
+      /* PB1722 city selector shared by mobile and desktop web; R1877 puts it outside lab scrolling. */
+      .pbR99LabCities{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fff;border-bottom:1px solid #dbe3ee;padding:9px 12px}
+      .pbR99LabCities[hidden]{display:none!important}
+      .pbR99CityTab{border:1px solid #d5deec;background:#fff;color:#344054;border-radius:10px;padding:7px 10px;cursor:pointer}
+      .pbR99CityTab.active,.pbR99CityTab[aria-pressed="true"]{border-color:#315efb;background:#315efb;color:#fff}
+      .pbR99CityCount{font-size:10px;padding-inline-start:4px}
+      @media(max-width:820px){.pbR99CityChooser{position:sticky;top:0;background:#fff}}
       .pbR99LabBoard{padding:13px;border:1px solid #cfe3fb;border-radius:22px;background:rgba(232,243,255,.82);box-shadow:0 12px 34px rgba(37,99,235,.10);min-height:54px}.pbR99LabList{display:grid;gap:10px}.pbR99LabCard{background:rgba(255,255,255,.96);border:1px solid #d7e6f7;border-radius:17px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;box-shadow:0 4px 14px rgba(30,64,175,.045)}.pbR99LabCard.current{border-color:#78a8f5;background:#f5f9ff;box-shadow:0 0 0 2px rgba(49,94,251,.07)}.pbR99LabInfo{min-width:0}.pbR99LabInfo h3{margin:0 0 4px;font-size:14px}.pbR99LabMeta{color:#667085;font-size:9.5px;line-height:1.8}.pbR99LabBadge{display:inline-flex;margin-top:7px;padding:4px 8px;border-radius:999px;font-size:8.5px;font-weight:900;background:#eef4fb;color:#475467}.pbR99LabBadge.ok{background:#ecfdf3;color:#027a48}.pbR99LabBadge.pending{background:#fff7ed;color:#b54708}.pbR99LabBadge.rejected{background:#fef3f2;color:#b42318}.pbR99LabActions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.pbR99LabBtn{min-height:39px;padding:0 14px;border-radius:11px;border:1px solid #315efb;background:linear-gradient(135deg,#1677ff,#315efb);color:#fff;font:900 9.5px Vazirmatn;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(49,94,251,.16)}.pbR99LabBtn.secondary{background:#fff;color:#315efb;border-color:#a8c8f5;box-shadow:none}.pbR99LabBtn:disabled{opacity:.55;cursor:default}.pbR99LabSectionTitle{margin:16px 2px 9px;font-size:11px;color:#475467}.pbR99LabEmpty{padding:25px;text-align:center;background:rgba(255,255,255,.88);border:1px dashed #a9c8ea;border-radius:16px;color:#667085;font-size:10px;line-height:2}.pbR99LabMsg{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:2147483600;min-width:min(420px,calc(100vw - 28px));padding:11px 14px;border-radius:12px;background:#101828;color:#fff;text-align:center;font-size:9.5px;box-shadow:0 14px 35px rgba(16,24,40,.24)}
       @media(max-width:820px){body.pbR100F14ChoosingLab #root .photographerMain.photographerPrintWorkspace>:not(.photographerBottomAppNav),body.pbR100F14ChoosingLab #root .aiAssistantLauncher{visibility:hidden!important;pointer-events:none!important}body.pbR100F14ChoosingLab #pb762-add,body.pbR100F14ChoosingLab #pb765-add,body.pbR100F14ChoosingLab #pb742-print-actions,body.pbR100F14ChoosingLab #pb737-mobile-print-dock,body.pbR100F14ChoosingLab #pb761-mode-actions{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}#${ROOT_ID}{bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:350}.pbR99LabWrap{padding:14px 12px max(22px,env(safe-area-inset-bottom))}.pbR99LabIntro{padding:18px 13px 16px;border-radius:20px;margin-bottom:12px}.pbR99LabIntroIcon{width:43px;height:43px;border-radius:14px;font-size:21px}.pbR99LabIntro h1{font-size:17px}.pbR99LabIntro p{font-size:9.5px;line-height:1.9}.pbR99LabBoard{padding:9px;border-radius:18px}.pbR99LabCard{grid-template-columns:1fr;padding:12px;border-radius:14px}.pbR99LabActions{justify-content:stretch}.pbR99LabBtn{flex:1;min-height:41px}.pbR99LabSectionTitle{margin-top:13px}.pbR99LabMsg{bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:510}}
       /* R1329: keep underlying payment and print layers out of the chooser. */
@@ -31,6 +38,29 @@
     `;document.head.appendChild(s);
   }
   function toast(text){document.querySelector('.pbR99LabMsg')?.remove();const x=document.createElement('div');x.className='pbR99LabMsg';x.textContent=text;document.body.appendChild(x);setTimeout(()=>x.remove(),3200)}
+  /* PB1722 city filters */
+  /* PB1877 stationary city filters: controls are outside the scrolling lab board. */
+  const noCityKey='__pb_city_unregistered__';
+  const cityName=x=>String(x?.city||'').normalize('NFKC').replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/\s+/g,' ').trim();
+  const cityKey=x=>cityName(x)?cityName(x).toLocaleLowerCase('fa'):noCityKey;
+  function cityGrouping(all,active,primary){
+    const cities=new Map();
+    for(const lab of all){
+      const name=cityName(lab),key=cityKey(lab);
+      const item=cities.get(key)||{key,name:name||'شهر نامشخص',count:0};
+      item.count++;cities.set(key,item);
+    }
+    // No city grouping when there is only one known city (including unknown locations).
+    if([...cities.keys()].filter(key=>key!==noCityKey).length<2){
+      selectedCityKey='';return {filter:null,cities:[]};
+    }
+    const sorted=[...cities.values()].sort((a,b)=>a.key===noCityKey?1:b.key===noCityKey?-1:a.name.localeCompare(b.name,'fa'));
+    if(!cities.has(selectedCityKey)){
+      const selected=all.find(x=>String(x.id)===active)||all.find(x=>String(x.id)===primary)||all.find(x=>x.connected)||all[0];
+      selectedCityKey=cityKey(selected);
+    }
+    return {filter:selectedCityKey,cities:sorted};
+  }
   const loc=x=>[x?.city,x?.province].filter(Boolean).join('، ')||'موقعیت ثبت نشده';
   function card(x,{connected=false,current=false,discover=false}={}){
     const status=String(x.request_status||'');
@@ -61,7 +91,7 @@
     return root;
   }
   function cleanup(){
-    runEpoch++;
+    runEpoch++;selectedCityKey='';
     document.getElementById(ROOT_ID)?.remove();
     document.body.classList.remove('pbR100F14ChoosingLab');
     document.documentElement.classList.remove('pbR100F14LabChooserBoot');
@@ -77,25 +107,28 @@
     for(const l of (Array.isArray(data.labs)?data.labs:[])){const id=String(l?.id||'');if(!id)continue;byId.set(id,{...(byId.get(id)||{}),...l,connected:Boolean(l.connected||membershipIds.has(id))})}
     const all=[...byId.values()];const primary=String(data.primaryLabId||'');const byPrimary=(a,b)=>Number(String(b?.id||'')===primary)-Number(String(a?.id||'')===primary);const connected=all.filter(x=>x.connected).sort(byPrimary);const available=all.filter(x=>!x.connected).sort(byPrimary);
     const active=String(data.activeLabId||connected.find(x=>x.selected)?.id||'');
-    // City choice is a stationary third row, outside the card scroll area.
-    const cityOf=x=>String(x?.city||'').trim()||'سایر شهرها';
-    const cities=[...new Set(all.map(cityOf))].sort((a,b)=>a.localeCompare(b,'fa'));
-    if(cityFilter!=='all'&&!cities.includes(cityFilter))cityFilter='all';
+    // The city controls occupy an independent fixed row; only cards scroll.
+    const group=cityGrouping(all,active,primary);
     const cityBar=root.querySelector('.pbR99LabCities');
     if(cityBar){
-      cityBar.hidden=cities.length===0;
-      cityBar.innerHTML=cities.length?
-        '<span>انتخاب شهر</span>'+
-        (cities.length===1?cities:['all',...cities]).map(city=>{
-          const label=city==='all'?'همه شهرها':city;
-          const active=cityFilter===city||(cities.length===1&&cityFilter==='all');
-          return '<button type="button" data-lab-city="'+esc(city)+'" class="'+(active?'active':'')+'">'+esc(label)+'</button>';
-        }).join(''):'';
+      cityBar.hidden=!group.cities.length;
+      cityBar.innerHTML=group.cities.length?
+        '<span>انتخاب شهر</span>'+group.cities.map(city=>
+          '<button type="button" class="pbR99CityTab'+(city.key===selectedCityKey?' active':'')+
+          '" data-lab-city="'+esc(city.key)+'" aria-pressed="'+(city.key===selectedCityKey?'true':'false')+'">'+
+          esc(city.name)+' <small class="pbR99CityCount">'+Number(city.count).toLocaleString('fa-IR')+'</small></button>'
+        ).join(''):'';
     }
-    const listedConnected=connected.filter(x=>cityFilter==='all'||cityOf(x)===cityFilter);
-    const listedAvailable=available.filter(x=>cityFilter==='all'||cityOf(x)===cityFilter);
+    const listedConnected=group.filter?connected.filter(lab=>cityKey(lab)===group.filter):connected;
+    const listedAvailable=group.filter?available.filter(lab=>cityKey(lab)===group.filter):available;
     const board=root.querySelector('.pbR99LabBoard');
-    board.innerHTML=`<div class="pbR99LabList">${listedConnected.length?listedConnected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join(''):'<div class="pbR99LabEmpty">هنوز به لابراتواری متصل نیستی.</div>'}</div>${listedAvailable.length?`<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">${listedAvailable.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')}</div>`:''}`;
+    const connectedMarkup=listedConnected.length?
+      '<div class="pbR99LabList">'+listedConnected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join('')+'</div>':
+      listedAvailable.length?'':'<div class="pbR99LabEmpty">هنوز به لابراتواری متصل نیستی.</div>';
+    const availableMarkup=listedAvailable.length?
+      '<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">'+
+      listedAvailable.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')+'</div>':'';
+    board.innerHTML=connectedMarkup+availableMarkup;
     try{sessionStorage.setItem(CACHE_KEY,JSON.stringify({data,at:Date.now()}))}catch{}
     return true;
   }
@@ -103,7 +136,7 @@
   async function handleClick(e){
     const root=document.getElementById(ROOT_ID);if(!root)return;
     const city=e.target.closest('[data-lab-city]');
-    if(city&&root.contains(city)){cityFilter=city.dataset.labCity||'all';if(currentData)paint(currentData);return}
+    if(city&&root.contains(city)){const key=city.dataset.labCity||'';if(key!==selectedCityKey&&currentData){selectedCityKey=key;paint(currentData)}return}
     const sel=e.target.closest('[data-select]');if(sel){const id=sel.dataset.select;sel.disabled=true;try{try{sessionStorage.setItem('photobridge:r100f37:lab-enter-pending',String(Date.now()))}catch{}document.documentElement.classList.add('pbR100F37LabEnterBoot');await api('/api/customer/labs/'+encodeURIComponent(id)+'/select',{method:'POST',body:'{}'});sessionStorage.setItem(SESSION_KEY,id);cleanup();const u=new URL(location.href);u.searchParams.delete('pbLabChooser');u.searchParams.set('pbEntryDone','lab');location.replace(u.pathname+'?'+u.searchParams.toString())}catch(err){try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{}document.documentElement.classList.remove('pbR100F37LabEnterBoot');sel.disabled=false;toast(err.status===403?'دسترسی این لابراتوار برای حساب شما فعال نیست.':'انتخاب لابراتوار انجام نشد؛ دوباره تلاش کن.')}return}
     const req=e.target.closest('[data-request]');if(req){const id=req.dataset.request;req.disabled=true;try{await api('/api/customer/labs/'+encodeURIComponent(id)+'/request',{method:'POST',body:'{}'});req.textContent='در انتظار تأیید';toast('درخواست همکاری برای لابراتوار ارسال شد.')}catch(err){req.disabled=false;toast(err.status===409?'قبلاً به این لابراتوار متصل هستی.':'ارسال درخواست همکاری انجام نشد.')}}
   }

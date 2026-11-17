@@ -15,7 +15,7 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  // revisions. Keep optional assets optional on the Store entrypoint.
  for(const name of ['photobridge-v904r99-lab-chooser.js','photobridge-r1099-photographer-tabs.js','photobridge-r1761-crm-nav.js']){
   const escaped=name.replaceAll('.','[.]');
-  const re=new RegExp('(["\\\\x27])(/'+escaped+')(?:[?][^"\\\\x27]*)?\\\\1','g');
+  const re=new RegExp('(["\\x27])(/'+escaped+')(?:[?][^"\\x27]*)?\\1','g');
   html=html.replace(re,(whole,quote,pathname)=>quote+pathname+'?rev='+encodeURIComponent(revision)+quote);
  }
  fs.writeFileSync(file,html);

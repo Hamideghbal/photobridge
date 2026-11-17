@@ -31,14 +31,15 @@ function scene(portal,mobile){
  const target={
   children:[],dataset:{},hidden:false,
   classList:{contains:x=>mobile&&x==='photographerBottomAppNavGrid'},
-  closest:()=>null,
+  getClientRects:()=>[{}],
   style:{values:{},setProperty(k,v){this.values[k]=v}},
   append(b){b.parentElement=this;this.children.push(b);buttons.push(b)},
-  insertBefore(b){this.append(b)},
+  prepend(b){this.append(b)},
   get firstElementChild(){return this.children[0]||null},
   querySelector(q){
    if(q==='button[data-source=".albumTopNav"]')return null;
-   if(q===':scope > button[data-pb1761-crm]')return this.children.find(x=>x.dataset.pb1761Crm)||null;
+   const pane=q.match(/^:scope > button\[data-pb-crm-pane="(customers|calendar)"\]$/)?.[1];
+   if(pane)return this.children.find(x=>x.dataset.pbCrmPane===pane)||null;
    return null;
   }
  };
@@ -94,24 +95,23 @@ function scene(portal,mobile){
   }
  };
 }
-test('R1767: one switch hides and restores Customers in both portals, mobile and desktop',async()=>{
+test('R1767: one switch controls Customers and its mobile calendar in both portals',async()=>{
  for(const portal of ['lab','photographer'])for(const mobile of [true,false]){
   const page=scene(portal,mobile);
+  const panes=()=>page.target.children.filter(b=>b.dataset.pb1761Crm===portal).map(b=>b.dataset.pbCrmPane);
+  const expected=mobile?['customers','calendar']:['customers'];
   await page.flush();
-  assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,1,
-   'ON: '+portal+' mobile='+mobile);
+  assert.deepEqual(panes(),expected,'ON: '+portal+' mobile='+mobile);
   page.setAllowed(false);page.events.focus();
   await page.flush();
   assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,0,
    'OFF: '+portal+' mobile='+mobile);
   page.setAllowed(true);page.events.focus();
   await page.flush();
-  assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,1,
-   'RESTORED: '+portal+' mobile='+mobile);
+  assert.deepEqual(panes(),expected,'RESTORED: '+portal+' mobile='+mobile);
   page.events.resize();
   await page.flush();
-  assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,1,
-   'no duplicate: '+portal+' mobile='+mobile);
+  assert.deepEqual(panes(),expected,'no duplicate: '+portal+' mobile='+mobile);
   assert(page.requests()>=3);
  }
 });

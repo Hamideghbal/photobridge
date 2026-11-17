@@ -25,14 +25,34 @@ function shell(portal){
   const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
   current=false;await page.goto(base+'/customer-crm.html?portal='+portal+'&pbDesktopContent=1');assert(await page.locator('#marketing-consent').isVisible());current=true;
   const root=portal==='lab'?'/lab':'/photographer/gallery';await page.goto(base+root);
-  const button=portal==='photographer'&&width>820?page.locator('#pb1126ChromeHost [data-pb1126-kind="crm"]'):page.locator('[data-pb1761-crm]').first();
+  const button=portal==='photographer'&&width>820?page.locator('#pb1126ChromeHost [data-pb1126-kind="crm"]'):page.locator('[data-pb-crm-pane="customers"]').first();
   await button.click();
   const frameElement=page.locator(portal==='photographer'&&width>820?'.pb1126ContentPanel[data-panel="crm"] iframe':'#pbCrmTabContent iframe');
   const frame=page.frameLocator(portal==='photographer'&&width>820?'.pb1126ContentPanel[data-panel="crm"] iframe':'#pbCrmTabContent iframe');
   await frame.locator('#customer-details').waitFor({state:'attached'});
   assert.match(await frameElement.getAttribute('src'),/crmRev=r1867-crm-delivery/);assert.equal(await frame.locator('#back').count(),0);assert.equal(await frame.locator('#marketing-consent').count(),0);assert(await frame.locator('body>header').isHidden());
   assert.equal(page.frames().length,2);assert.equal(new URL(page.url()).pathname,root);
-  await frame.locator('nav button[data-view="calendar"]').click();await frame.locator('.calDay').first().waitFor();assert.equal(await frame.locator('.calDay').count(),42);
+  if(width<=820){
+   const calendar=page.locator('[data-pb-crm-pane="calendar"]');
+   assert(await button.locator('em').isVisible());
+   assert.equal(await button.locator('em').textContent(),'مشتریان');
+   assert.equal(await button.getAttribute('aria-current'),'page');
+   assert(await frame.locator('nav button[data-view="calendar"]').isHidden());
+   await calendar.click();
+   assert.equal(await calendar.getAttribute('aria-current'),'page');
+   assert.equal(await button.getAttribute('aria-current'),null);
+   await frame.locator('.calDay').first().waitFor();
+   assert(await frame.locator('#nav').isHidden());
+   assert.equal(await frame.locator('.calDay').count(),42);
+   assert.equal(page.frames().length,2);
+   await button.click();
+   await frame.locator('nav button[data-view="customers"]').waitFor();
+   assert(await button.locator('em').isVisible());
+  }else{
+   await frame.locator('nav button[data-view="calendar"]').click();
+   await frame.locator('.calDay').first().waitFor();
+   assert.equal(await frame.locator('.calDay').count(),42);
+  }
   const visibleHeaders=await page.locator('header').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none'&&getComputedStyle(n).visibility!=='hidden'&&n.getBoundingClientRect().height>0).length);assert.equal(visibleHeaders,1);
   const other=portal==='photographer'&&width>820?page.locator('#pb1126ChromeHost [data-pb1126-kind="gallery"]'):page.locator(width<=820?'.photographerBottomAppNavGrid [data-other]':'.pb1147LabNav [data-other]').first();
   await other.click();assert(await frameElement.isHidden());await button.click();assert(await frameElement.isVisible());assert.equal(page.frames().length,2);

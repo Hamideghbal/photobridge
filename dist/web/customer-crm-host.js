@@ -3,11 +3,13 @@
  'use strict';
  if(window.self!==window.top||window.pbCrmOpen)return;
  const REV='r1867-crm-delivery';
- let host=null,frame=null,owner=null,pending=false;
+ let host=null,frame=null,owner=null,pending=false,frameUrl=null;
  const params=()=>new URLSearchParams(location.search);
- window.pbCrmFrameUrl=portal=>{
+ window.pbCrmFrameUrl=(portal,pane)=>{
   const q=new URLSearchParams({portal,pbDesktopContent:'1',pbCrmEmbedded:'1',crmRev:REV});
-  const source=params();if(source.get('view')==='calendar'){q.set('view','calendar');if(/^\d{4}-\d{2}-\d{2}$/.test(source.get('date')||''))q.set('date',source.get('date'));}
+  const source=params();
+  if(pane&&matchMedia('(max-width:820px)').matches)q.set('pbCrmMobile','1');
+  if((pane??source.get('view'))==='calendar'){q.set('view','calendar');if(/^\d{4}-\d{2}-\d{2}$/.test(source.get('date')||''))q.set('date',source.get('date'));}
   return '/customer-crm.html?'+q;
  };
  const shown=node=>node&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
@@ -15,7 +17,7 @@
   pending=false;if(!host||host.hidden)return;
   const headers=[...document.querySelectorAll('#root .labSingleHeader,#photographerRoleHeaderV710,#photographerStoreRoleHeader,#pb1126DesktopHeader')].filter(shown);
   const top=Math.max(0,...headers.map(node=>Math.min(node.getBoundingClientRect().bottom,innerHeight-120)));
-  const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav')].filter(shown):[];
+  const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav,body>.pb1448LabPhoneDock')].filter(shown):[];
   const bottom=Math.max(0,...docks.map(node=>innerHeight-node.getBoundingClientRect().top));
   host.style.top=top+'px';host.style.bottom=bottom+'px';
  }
@@ -23,14 +25,16 @@
  function close(update=false){
   if(host)host.hidden=true;document.documentElement.classList.remove('pbCrmTabOpen');
   for(const b of document.querySelectorAll('[data-pb1761-crm]')){b.classList.remove('active');b.removeAttribute('aria-current')}
-  if(update&&params().get('pbCrmTab')==='1'){const u=new URL(location.href);u.searchParams.delete('pbCrmTab');history.replaceState(history.state,'',u);}
+  if(update&&params().get('pbCrmTab')==='1'){const u=new URL(location.href);u.searchParams.delete('pbCrmTab');u.searchParams.delete('pbCrmPane');history.replaceState(history.state,'',u);}
  }
  window.pbCrmClose=close;
- window.pbCrmOpen=(portal,push=true)=>{
+ window.pbCrmOpen=(portal,push=true,pane)=>{
   if(!['lab','photographer'].includes(portal))return;
   // The desktop photographer already has a native CRM content panel.
   const native=portal==='photographer'&&document.querySelector('#pb1126ChromeHost [data-pb1126-kind="crm"]');
   if(native&&shown(native)){close();native.click();return;}
+  pane??=params().get('pbCrmPane')||(params().get('view')==='calendar'?'calendar':'customers');
+  const url=window.pbCrmFrameUrl(portal,pane);
   if(!host){host=document.createElement('section');host.id='pbCrmTabContent';host.setAttribute('aria-label','مشتریان');host.hidden=true;document.body.append(host)}
   if(!frame||owner!==portal){
    owner=portal;frame=document.createElement('iframe');frame.title='مشتریان';frame.className='pbCrmTabFrame';
@@ -44,11 +48,19 @@
      });
     }catch{}
    });
-   frame.src=window.pbCrmFrameUrl(portal);host.replaceChildren(frame);
+   frameUrl=null;host.replaceChildren(frame);
   }
+  if(frameUrl!==url){frameUrl=url;frame.src=url;}
   host.hidden=false;document.documentElement.classList.add('pbCrmTabOpen');
-  for(const b of document.querySelectorAll('[data-pb1761-crm]')){b.classList.add('active');b.setAttribute('aria-current','page')}
-  if(push&&params().get('pbCrmTab')!=='1'){const u=new URL(location.href);u.searchParams.set('pbCrmTab','1');history.pushState({pbCrmTab:true},'',u);}
+  for(const b of document.querySelectorAll('[data-pb1761-crm]')){
+   const selected=b.classList.contains('pb1761CrmDesktopTab')||b.dataset.pbCrmPane===pane;
+   b.classList.toggle('active',selected&&b.classList.contains('pb1761CrmDesktopTab'));
+   if(selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  }
+  if(push&&(params().get('pbCrmTab')!=='1'||params().get('pbCrmPane')!==pane)){
+   const u=new URL(location.href);u.searchParams.set('pbCrmTab','1');u.searchParams.set('pbCrmPane',pane);
+   history.pushState({pbCrmTab:true},'',u);
+  }
   schedule();
  };
  // Ordinary portal tabs keep their own routing and close only the CRM content layer.

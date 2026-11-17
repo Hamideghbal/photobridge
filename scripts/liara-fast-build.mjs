@@ -1414,3 +1414,9 @@ console.log('[PhotoBridge Docker build] OK first-load perf fix');
 await deployStep('./enable-r1884-native-intake-offline-responsive.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1884-native-intake-offline-responsive.cjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK R1884 native Lab intake offline responsiveness');
+
+// R1887: preserve both native Lab header rows while Customers/Calendar is open.
+// Run after final native UI writers and R1884, then verify the Windows manifest.
+await deployStep('./enable-r1887-native-lab-crm-header.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1887-native-lab-crm-header.cjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK R1887 native Lab CRM navigation');

@@ -16,7 +16,8 @@
   function settleDock(){
     if(!media.matches||window.pbR1877CrmNavReady)return;
     window.pbR1877CrmNavReady=true;
-    window.dispatchEvent(new Event('pb-r1877-crm-ready'));
+    // Real browsers deliver the one-time signal; isolated Node tests have no Event target.
+    if(typeof window.dispatchEvent==='function'&&typeof Event==='function')window.dispatchEvent(new Event('pb-r1877-crm-ready'));
   }
 
   function make(portal,desktop,pane){

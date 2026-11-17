@@ -33,6 +33,7 @@
     return labelMode(txt(a)||a?.getAttribute?.('aria-label'));
   }
   function mode(){
+    if(window.pbCrmActivePane==='customers'||window.pbCrmActivePane==='calendar')return window.pbCrmActivePane;
     if(pendingMode&&Date.now()<pendingUntil)return pendingMode;
     if(pendingMode){pendingMode='';pendingUntil=0}
     const p=location.pathname.replace(/\/+$/,'')||'/',q=new URLSearchParams(location.search);
@@ -60,6 +61,8 @@
   function modelCount(){const b=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar>b');if(txt(b))return txt(b);const n=$$('.photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard').length;return n?`${fa(n)} مدل`:''}
   function galleryCount(){const n=$$('.clientGalleryCards>.clientGalleryCard').length;return n?`${fa(n)} پروژه`:''}
   function context(m){
+    if(m==='customers')return{title:'مشتریان',meta:''};
+    if(m==='calendar')return{title:'تقویم مشتریان',meta:''};
     if(m==='print')return{title:labName(),meta:'لابراتوار'};
     if(m==='instagram')return{title:'طراحی اینستاگرام',meta:modelCount()};
     if(m==='album')return{title:'طراحی آلبوم',meta:modelCount()};
@@ -72,6 +75,8 @@
   function gridButtons(){const t=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar');const a=t?$$('.albumDesignMobileGridToggle button',t):[];return a.length>=2?a:$$('.photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle button').slice(0,2)}
   function actions(m){
     sourceMap=new Map();sourceSeq=0;const out=[];
+    if(m==='customers')return ['customers','events','templates'].map((id,i)=>({id:'crm:'+id,label:['مشتریان','مناسبت‌ها','پیامک'][i],active:window.pbCrmInnerView===id||(i===0&&!window.pbCrmInnerView)}));
+    if(m==='calendar')return [{id:'crm:book',label:'＋ ثبت نوبت',active:false}];
     if(m==='print'){
       const photo=$('.photographerPrintModeNav .photographerPrintPhotoTab'),album=$('.photographerPrintModeNav .photographerPrintAlbumTab'),finance=$('.photographerPrintCommonAction.finance');
       if(photo)out.push(src(photo,'چاپ عکس'));if(album)out.push(src(album,'صحافی آلبوم'));if(finance)out.push(src(finance,'مالی'));
@@ -108,7 +113,7 @@
     document.addEventListener('click',e=>{if(!e.target.closest('#pbF37MenuPanel,#pbF37MenuBtn'))closeMenu()},true);
     return h;
   }
-  function ensureSub(){let s=$('#pbF37Subheader');if(s)return s;s=document.createElement('section');s.id='pbF37Subheader';s.innerHTML='<div id="pbF37ContextTitle"><b id="pbF37ContextText"></b><span id="pbF37ContextMeta" hidden></span></div><nav id="pbF37Tabs" aria-label="دکمه‌های بخش"></nav>';document.body.appendChild(s);$('#pbF37Tabs').addEventListener('click',e=>{const b=e.target.closest('[data-f37-source]');if(!b)return;sourceMap.get(b.dataset.f37Source)?.click();schedule(60)});return s}
+  function ensureSub(){let s=$('#pbF37Subheader');if(s)return s;s=document.createElement('section');s.id='pbF37Subheader';s.innerHTML='<div id="pbF37ContextTitle"><b id="pbF37ContextText"></b><span id="pbF37ContextMeta" hidden></span></div><nav id="pbF37Tabs" aria-label="دکمه‌های بخش"></nav>';document.body.appendChild(s);$('#pbF37Tabs').addEventListener('click',e=>{const b=e.target.closest('[data-f37-source]');if(!b)return;if(b.dataset.f37Source.startsWith('crm:'))window.pbCrmHeaderAction?.(b.dataset.f37Source.slice(4));else sourceMap.get(b.dataset.f37Source)?.click();schedule(60)});return s}
   function clockBadge(){const d=$('#pbF37Date'),t=$('#pbF37Time'),bd=$('#pbF37MenuBadge');setText(d,pdate());setText(t,ptime());const b=badgeText();if(bd){bd.hidden=!b;if(b)bd.textContent=b}void syncNotificationBadge()}
   function fitHeaderName(root){
     const n=root?.querySelector?.('#pbF37StudioName,.workspaceIdentityCopy>h1');if(!n)return;
@@ -149,7 +154,7 @@
     if(!galleryManager)$('#pb1156GalleryBack')?.remove();
     if(!mobile()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
     if(!isPortal()){document.body.classList.remove('pbF37UnifiedActive','pbF37LabChooserVisible','pbF37HasTabs','pbF37NoTabs','pbF37StoreMode');lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return}
-    if(chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1'){
+    if(false && (chooserVisible()||new URLSearchParams(location.search).get('pbLabChooser')==='1')){
       document.body.classList.add('pbF37LabChooserVisible');document.body.classList.remove('pbF37UnifiedActive','pbF37StoreMode');lastSig='';sourceMap=new Map();
       $('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();$('#pbF37PrintComposerActions')?.remove();return;
     }
@@ -197,6 +202,7 @@
   function start(){
     for(const name of ['pushState','replaceState']){const old=history[name];if(typeof old==='function'&&!old.__pbR100F38){const fn=function(...args){const out=old.apply(this,args);pendingMode='';pendingUntil=0;schedule(0);return out};fn.__pbR100F38=true;history[name]=fn}}
     void loadMe();render();
+    addEventListener('pb-crm-header-change',()=>{lastSig='';schedule()});
     addEventListener('photobridge-auth-session-changed',()=>{if(photographerRoute()){void loadMe();schedule(0)}});
     const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
     addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});

@@ -198,7 +198,8 @@
     return a.length>=2?a:$$('.photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle button').slice(0,2);
   }
   function actionSources(m){
-    sourceMap=new Map();sourceSeq=0;const out=[];
+    // R1873: keep stable unique source IDs while panels swap without reload.
+    sourceMap=new Map();const out=[];
     if(m==='store'){
       $$('#storeSectionNavV673>button').slice(0,4).forEach(b=>out.push(sourceButton(b,String(b.textContent||'').trim())));
     }else if(m==='print'){

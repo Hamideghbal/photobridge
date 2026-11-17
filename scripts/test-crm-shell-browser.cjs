@@ -4,10 +4,10 @@ const web=path.resolve('dist/web'),read=name=>fs.readFileSync(path.join(web,name
 function shell(portal){
  const photo=portal==='photographer',header=photo?'<header id="photographerRoleHeaderV710" class="photographerHeaderRefined" data-pb1168-identity-ready="1"><div class="photographerHeaderIdentity"><h1>عکاسی آزمایشی</h1><small>پنل عکاسی</small></div><nav class="photographerHeaderNav"><button data-other>گالری</button></nav></header>':'<header class="labSingleHeader"><b>لابراتوار آزمایشی</b><nav class="pb1147LabNav"><button data-other>چاپ</button></nav></header>';
  const dock='<nav class="'+(photo?'photographerBottomAppNav':'labBottomAppNav')+'"><div class="photographerBottomAppNavGrid '+(photo?'':'labBottomAppNavGrid')+'"><button data-other>چاپ</button><button data-other>گالری</button></div></nav>';
- return '<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>body{margin:0;font:14px Tahoma}header{height:100px;background:white;box-sizing:border-box;padding:15px;border-bottom:1px solid #ddd}nav{display:flex;gap:15px}button{cursor:pointer;padding:10px}main{padding:20px;min-height:100vh}.photographerBottomAppNav,.labBottomAppNav{display:none}@media(max-width:820px){.photographerBottomAppNav,.labBottomAppNav{display:block;position:fixed;bottom:0;left:0;right:0;height:66px;background:white;z-index:2147483645}.photographerBottomAppNavGrid{display:flex}}</style><link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css"><link rel="stylesheet" href="/photobridge-r1761-crm-nav.css"><link rel="stylesheet" href="/photobridge-r1124-photographer-desktop-header.css"><link rel="stylesheet" href="/customer-crm-host.css"></head><body class="pbAuthenticatedPhotographerPortal"><div id="root"><div class="'+(photo?'':'labRoleWorkspace')+'">'+header+'<main class="'+(photo?'photographerMain':'')+'">محتوای بخش دیگر</main>'+dock+'</div></div><script src="/customer-crm-host.js"></script><script src="/photobridge-r1126-desktop-navigation.js"></script><script src="/photobridge-r1761-crm-nav.js"></script></body></html>';
+ return '<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>body{margin:0;font:14px Tahoma}header{height:100px;background:white;box-sizing:border-box;padding:15px;border-bottom:1px solid #ddd}nav{display:flex;gap:15px}button{cursor:pointer;padding:10px}main{padding:20px;min-height:100vh}.photographerBottomAppNav,.labBottomAppNav{display:none}@media(max-width:820px){.photographerBottomAppNav,.labBottomAppNav{display:block;position:fixed;bottom:0;left:0;right:0;height:66px;background:white;z-index:2147483645}.photographerBottomAppNavGrid{display:flex}}</style><link rel="stylesheet" href="/photobridge-r1126-desktop-navigation.css"><link rel="stylesheet" href="/photobridge-r1761-crm-nav.css"><link rel="stylesheet" href="/photobridge-r1124-photographer-desktop-header.css"><link rel="stylesheet" href="/customer-crm-host.css"></head><body class="'+(photo?'pbAuthenticatedPhotographerPortal':'')+'"><div id="root"><div class="'+(photo?'':'labRoleWorkspace')+'">'+header+'<main class="'+(photo?'photographerMain':'')+'">محتوای بخش دیگر</main>'+dock+'</div></div><script src="/photobridge-r1106-mobile-store-panel.js"></script><script src="/photobridge-r1099-photographer-tabs.js"></script><script src="/customer-crm-host.js"></script><script src="/photobridge-r1126-desktop-navigation.js"></script><script src="/photobridge-r1761-crm-nav.js"></script></body></html>';
 }
 (async()=>{
- let current=false;const requests=[];
+ let current=false,settingsUnavailable=false;const requests=[];
  const server=http.createServer((req,res)=>{
   const u=new URL(req.url,'http://test');requests.push(req.url);
   if(u.pathname==='/customer-crm.html'){
@@ -15,6 +15,7 @@ function shell(portal){
    res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':current?'no-store':'public, max-age=31536000, immutable'});res.end(current?read('customer-crm.html'):old);return;
   }
   if(['/lab','/photographer/gallery'].includes(u.pathname)){res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(shell(u.pathname==='/lab'?'lab':'photographer'));return}
+  if(settingsUnavailable&&u.pathname==='/api/photographer/navigation-tabs'){res.writeHead(503,{'content-type':'application/json'});res.end('{}');return}
   if(u.pathname.startsWith('/api/')){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(u.pathname.includes('navigation-tabs')?{tabs:{customers:true}}:u.pathname.includes('services-wallet')?{balance:1000}:u.pathname.includes('appointments')?{appointments:[]}:{customers:[],shootTypes:[],sessions:[],templates:[],invoices:[],occasions:[]}));return}
   const file=path.resolve(web,'.'+u.pathname);if(file.startsWith(web+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()){res.writeHead(200,{'content-type':file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.woff2')?'font/woff2':'application/octet-stream','cache-control':'no-cache'});fs.createReadStream(file).pipe(res);return}
   res.writeHead(404);res.end();
@@ -55,11 +56,25 @@ function shell(portal){
   }
   const visibleHeaders=await page.locator('header').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none'&&getComputedStyle(n).visibility!=='hidden'&&n.getBoundingClientRect().height>0).length);assert.equal(visibleHeaders,1);
   const other=portal==='photographer'&&width>820?page.locator('#pb1126ChromeHost [data-pb1126-kind="gallery"]'):page.locator(width<=820?'.photographerBottomAppNavGrid [data-other]':'.pb1147LabNav [data-other]').first();
-  await other.click();assert(await frameElement.isHidden());await button.click();assert(await frameElement.isVisible());assert.equal(page.frames().length,2);
+  await other.click();assert(await frameElement.isHidden());
+  const hasPrintPanel=portal==='photographer'&&width<=820;
+  if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isVisible());
+  await button.click();assert(await frameElement.isVisible());
+  if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isHidden());
+  assert.equal(page.frames().length,hasPrintPanel?3:2);
   // A portal navigation from inside CRM must leave the frame, never nest another portal shell.
   await (await frameElement.elementHandle()).contentFrame().then(child=>child.evaluate(path=>{location.href=path},root));
   await page.waitForURL(url=>url.pathname===root&&!url.searchParams.has('pbCrmTab')&&!url.searchParams.has('pbDesktopPanel'));
   assert(page.frames().every(f=>!f.parentFrame()||!f.parentFrame().parentFrame()));assert.deepEqual(errors,[]);
   assert(requests.some(url=>url.includes('crmRev=r1867-crm-delivery')));console.log('cached CRM tab, single header, calendar, tab switching, frame escape:',portal,width,'passed');await page.close();
- }}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
+ }
+ settingsUnavailable=true;
+ const page=await browser.newPage({viewport:{width:390,height:900}});
+ await page.addInitScript(()=>document.addEventListener('DOMContentLoaded',()=>{document.documentElement.dataset.pb1106TabsPending='1'},{once:true}));
+ await page.goto(base+'/photographer/gallery');
+ const print=page.locator('.photographerBottomAppNav').getByRole('button',{name:'چاپ',exact:true});
+ await print.click();
+ assert(await page.locator('#pb1106PrintPanel').isVisible(),'core tabs work when the settings API is unavailable');
+ await page.close();
+ }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
 })().catch(error=>{console.error(error);process.exit(1)});

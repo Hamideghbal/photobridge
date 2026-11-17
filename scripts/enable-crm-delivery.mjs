@@ -29,7 +29,7 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
 const deployRevision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html','dist/web/customer-crm.html']){
  let html=fs.readFileSync(file,'utf8');
- const names=['photobridge-r1761-crm-nav.js','photobridge-r1761-crm-nav.css','photobridge-r1126-desktop-navigation.js','customer-crm-host.js','customer-crm-host.css','customer-crm-ui.js','customer-calendar.js','customer-calendar.css','photobridge-r1766-crm-unified.css'];
+ const names=['photobridge-r1761-crm-nav.js','photobridge-r1761-crm-nav.css','photobridge-r1126-desktop-navigation.js','customer-crm-host.js','customer-crm-host.css','customer-crm-ui.js','customer-calendar.js','customer-calendar.css','photobridge-r1766-crm-unified.css','photobridge-r1106-mobile-store-panel.js','photobridge-r1099-photographer-tabs.js'];
  for(const name of names){const escaped=name.split('.').join('[.]');html=html.replace(new RegExp('/'+escaped+'[?][^"\\s>]+','g'),url=>{const q=new URLSearchParams(url.slice(url.indexOf('?')+1));q.set('rev',deployRevision);return '/'+name+'?'+q;});}
  fs.writeFileSync(file,html);
 }

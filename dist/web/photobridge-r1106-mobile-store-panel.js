@@ -87,7 +87,7 @@ function close(){
 // Head registration precedes both old full-document Store and Print click handlers.
 window.addEventListener('click',e=>{
  const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNav a,.photographerHomeModeNav button,.photographerStoreEntry,.photographerStoreMobileNav');if(!el)return;
- const kind=feature(el);if(kind){e.preventDefault();e.stopImmediatePropagation();open(kind,true,true);return}
+ const kind=feature(el);if(kind){window.pbCrmClose?.(true);e.preventDefault();e.stopImmediatePropagation();open(kind,true,true);return}
  if(selected)close(); // Other sections keep their normal React navigation.
 },true);
 window.addEventListener('popstate',()=>{const kind=restoreKind();if(kind)open(kind,false);else close()});

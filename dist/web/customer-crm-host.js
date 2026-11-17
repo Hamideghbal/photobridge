@@ -19,7 +19,8 @@
   const top=Math.max(0,...headers.map(node=>Math.min(node.getBoundingClientRect().bottom,innerHeight-120)));
   const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav,body>.pb1448LabPhoneDock')].filter(shown):[];
   const bottom=Math.max(0,...docks.map(node=>innerHeight-node.getBoundingClientRect().top));
-  host.style.top=top+'px';host.style.bottom=bottom+'px';
+  if(host.style.top!==top+'px')host.style.top=top+'px';
+  if(host.style.bottom!==bottom+'px')host.style.bottom=bottom+'px';
  }
  function schedule(){if(!pending){pending=true;requestAnimationFrame(layout)}}
  function close(update=false){

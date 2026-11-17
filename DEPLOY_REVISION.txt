@@ -1,1 +1,1 @@
-2026-11-17-r1869-mobile-calendar-dock
+2026-11-17-r1870-stable-mobile-tabs

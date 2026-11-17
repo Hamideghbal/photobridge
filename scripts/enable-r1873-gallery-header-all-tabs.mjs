@@ -11,6 +11,13 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
   html=html.replace(re,(whole,quote,pathname)=>{count++;return quote+pathname+'?rev='+encodeURIComponent(revision)+quote;});
   if(!count)throw Error('[R1873] entrypoint asset missing: '+name+' in '+file);
  }
+ // R1877: scripts added after the original mobile header have matching cache
+ // revisions. Keep optional assets optional on the Store entrypoint.
+ for(const name of ['photobridge-v904r99-lab-chooser.js','photobridge-r1099-photographer-tabs.js','photobridge-r1761-crm-nav.js']){
+  const escaped=name.replaceAll('.','[.]');
+  const re=new RegExp('(["\\\\x27])(/'+escaped+')(?:[?][^"\\\\x27]*)?\\\\1','g');
+  html=html.replace(re,(whole,quote,pathname)=>quote+pathname+'?rev='+encodeURIComponent(revision)+quote);
+ }
  fs.writeFileSync(file,html);
 }
 console.log('[R1873] unified Gallery account header + CRM clearance, revision',revision);

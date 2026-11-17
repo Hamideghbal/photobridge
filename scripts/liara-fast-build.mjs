@@ -1390,6 +1390,10 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
  // R1872: same selected blue for CRM and native tabs; preserve the portal's
  // existing mobile header above Customers/Calendar and every embedded CRM view.
  runR1314(process.execPath,['--test','scripts/test-r1872-mobile-crm-header.cjs'],{stdio:'inherit'});
+ // R1873: use Gallery's account header in all photographer mobile routes and
+ // keep embedded Customers/Calendar below that chrome (no duplicate headers).
+ await deployStep('./enable-r1873-gallery-header-all-tabs.mjs');
+ runR1314(process.execPath,['--test','scripts/test-r1873-gallery-header-all-tabs.cjs'],{stdio:'inherit'});
 
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});

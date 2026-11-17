@@ -422,7 +422,7 @@
   function wrapHistory(name){const old=history[name];if(!old||old.__pbSharedHeader)return;const fn=function(...args){const out=old.apply(this,args);queue(20);queue(130);return out};fn.__pbSharedHeader=true;history[name]=fn}
   function start(){
     ensureStyle();void loadMe();refresh();enforcePhysicalMenuLeft();enforceSharedPrintGeometry();settleLabEnterBoot();setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F36LabEnterBoot')){document.documentElement.classList.remove('pbR100F36LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f36:lab-enter-pending')}catch{}}},5200);try{wrapHistory('pushState');wrapHistory('replaceState')}catch{}
-    const root=$('#root')||document.documentElement,mo=new MutationObserver(()=>queue(30));mo.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','aria-current','aria-selected']});
+    const root=$('#root')||document.documentElement,mo=new MutationObserver(()=>queue(30));mo.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden','aria-current','aria-selected']});
     addEventListener('popstate',()=>queue(20),{passive:true});addEventListener('pageshow',()=>queue(20),{passive:true});addEventListener('resize',()=>queue(70),{passive:true});addEventListener('orientationchange',()=>queue(120),{passive:true});
     setInterval(()=>{syncClockAndBadge();settleLabEnterBoot()},10000);
   }

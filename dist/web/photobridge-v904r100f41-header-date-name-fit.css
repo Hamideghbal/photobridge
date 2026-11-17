@@ -566,4 +566,11 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37StoreMode #pbCrmTabContent{
    top:181px;
  }
+ /* The account menu must remain clickable over the CRM iframe when opened. */
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuPanel{
+   z-index:2147483300!important;
+ }
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuBtn{
+   z-index:2147483350!important;
+ }
 }

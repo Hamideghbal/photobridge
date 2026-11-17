@@ -1395,7 +1395,3 @@ runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inher
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK first-load perf fix');
-
-// Package the finished CRM and portal HTML for the Windows lab UI updater.
-await deployStep('./prepare-lab-desktop-ui.mjs?final-after-r1868');
-runR1314(process.execPath,['scripts/verify-lab-desktop-ui-freshness.mjs'],{stdio:'inherit'});

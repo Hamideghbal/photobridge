@@ -18,6 +18,9 @@ test('R1873: CRM overlay respects Gallery shared header and native fallback',()=
  assert(s.includes("if(m==='customers')return{title:'مشتریان'"));
  assert(s.includes("if(m==='calendar')return{title:'تقویم'"));
  assert(s.includes('sourceMap=new Map();const out=[]'));
+ assert(s.includes('function activeMobilePanel()'));
+ assert(s.includes('function placeSharedHeader()'));
+ assert(s.includes('placeSharedHeader();'));
  assert(!s.includes('sourceMap=new Map();sourceSeq=0'));
 });
 test('R1873: one Gallery header stays above both mobile CRM tabs',async t=>{
@@ -92,6 +95,19 @@ test('R1873: single Gallery header survives gallery, AI, album, print and CRM na
   assert.equal(await page.locator('#pbSharedContextTitleText').textContent(),'لابراتوار');
   assert.equal(await headers.count(),1);
   await page.evaluate(()=>document.querySelector('.photographerMain').classList.remove('photographerPrintWorkspace'));
+  for(const [id,expected] of [['pb1106StorePanel','store'],['pb1106PrintPanel','print']]){
+   await page.evaluate(id=>{
+    const panel=document.createElement('section');panel.id=id;
+    panel.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#fff';
+    document.body.append(panel);window.PBSharedPhotographerHeader.refresh();
+   },id);
+   assert.equal(await headers.evaluate(e=>e.parentElement.id),id,'shared header must live in active full-screen panel');
+   assert.equal(await page.evaluate(()=>document.elementFromPoint(20,25)?.closest('#pb1106StorePanel,#pb1106PrintPanel')?.id),id);
+   assert.equal(await page.evaluate(()=>window.PBSharedPhotographerHeader.getMode()),expected);
+   await page.evaluate(id=>{document.getElementById(id).remove();window.PBSharedPhotographerHeader.refresh()},id);
+   assert.equal(await headers.evaluate(e=>e.parentElement.tagName),'BODY','same header must return to Gallery');
+   assert.equal(await headers.count(),1);
+  }
   await page.addScriptTag({content:read('dist/web/customer-crm-host.js')});
   for(const pane of ['customers','calendar']){
    await page.evaluate(pane=>{window.pbCrmOpen('photographer',true,pane);window.PBSharedPhotographerHeader.refresh()},pane);

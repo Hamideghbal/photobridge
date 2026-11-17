@@ -83,12 +83,13 @@
     if(cityFilter!=='all'&&!cities.includes(cityFilter))cityFilter='all';
     const cityBar=root.querySelector('.pbR99LabCities');
     if(cityBar){
-      cityBar.hidden=cities.length<2;
-      cityBar.innerHTML=cities.length>1?
+      cityBar.hidden=cities.length===0;
+      cityBar.innerHTML=cities.length?
         '<span>انتخاب شهر</span>'+
-        ['all',...cities].map(city=>{
+        (cities.length===1?cities:['all',...cities]).map(city=>{
           const label=city==='all'?'همه شهرها':city;
-          return '<button type="button" data-lab-city="'+esc(city)+'" class="'+(cityFilter===city?'active':'')+'">'+esc(label)+'</button>';
+          const active=cityFilter===city||(cities.length===1&&cityFilter==='all');
+          return '<button type="button" data-lab-city="'+esc(city)+'" class="'+(active?'active':'')+'">'+esc(label)+'</button>';
         }).join(''):'';
     }
     const listedConnected=connected.filter(x=>cityFilter==='all'||cityOf(x)===cityFilter);

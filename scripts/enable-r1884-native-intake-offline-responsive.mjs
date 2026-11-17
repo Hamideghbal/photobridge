@@ -114,15 +114,24 @@ if(!code.includes(mark)){
   // improvements still apply, without risking access from an unverified PC.
   console.warn('[R1886] Native launcher gate differs; preserving original device check.');
  }
- code=once(code,
+ // R1886: an earlier native UI installer may have changed the device
+ // polling implementation as well. Preserve its verified-only authorization
+ // semantics instead of aborting the entire deployment on an unknown form.
+ const optionalOnce=(source,before,after,label)=>{
+  const count=source.split(before).length-1;
+  if(count===1)return source.replace(before,after);
+  console.warn('[R1886] '+label+' changed earlier; native device check retained (matches='+count+').');
+  return source;
+ };
+ code=optionalOnce(code,
   "const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();",
   "const state=await Promise.race([api('/api/lab/download-device'),new Promise((_,reject)=>setTimeout(()=>reject(Error('offline')),2600))]);if(state?.queued||state?.operationId)throw Error('offline');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();pb1884PrimaryFailAt=0;",
   'bounded primary-device read');
- code=once(code,
+ code=optionalOnce(code,
   "catch{primaryState=false;}finally{checking=false;schedule();}",
   "catch{if(primaryState!==true)primaryState=null;pb1884PrimaryFailAt=Date.now();}finally{checking=false;schedule();}",
   'retain verified state during temporary disconnect');
- code=once(code,
+ code=optionalOnce(code,
   "primaryState=null;primaryCheckedAt=0;schedule();",
   "primaryState=null;primaryCheckedAt=0;pb1884PrimaryFailAt=0;schedule();",
   'reset offline primary backoff after auth change');

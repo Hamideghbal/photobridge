@@ -583,3 +583,87 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
  html body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreIdentityBar{margin-top:90px!important}
  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace{scroll-padding-top:90px!important}
 }
+
+
+/* R1875: Mobile header ownership is by destination, never by the underlying Gallery page. */
+@media(max-width:820px){
+  /* Store uses a 90px shared account row, 42px identity row and 44px nav.
+     Position the scroll container below all three; a margin on a fixed bar
+     does not move the fixed scrollport and previously hid its blue introduction. */
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    position:fixed!important;top:90px!important;margin-top:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673{
+    position:fixed!important;top:132px!important;margin-top:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>.shell{
+    position:fixed!important;top:181px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    padding:12px 11px 24px!important;overflow-x:hidden!important;overflow-y:auto!important;
+    scroll-padding-top:12px!important;
+  }
+
+  /* The chooser has its own overlay, not a separate account header.
+     Keep only the shared photographer account + one chooser title above it. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37PhotographerHeader,
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37MenuBtn,
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37Subheader{
+    display:block!important;visibility:visible!important;opacity:1!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37Subheader{
+    height:42px!important;z-index:2147481490!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    position:fixed!important;top:132px!important;right:0!important;left:0!important;
+    bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+    max-height:calc(100dvh - 204px - env(safe-area-inset-bottom,0px))!important;
+    z-index:2147481400!important;overflow-y:auto!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37ContextTitle{
+    display:flex!important;height:42px!important;justify-content:center!important;
+  }
+
+  /* Customers and Calendar replace both stale Gallery rows with ONE second row. */
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode{
+    --pb-f37-content-top:142px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37Subheader{
+    display:block!important;visibility:visible!important;
+    top:90px!important;height:52px!important;min-height:52px!important;max-height:52px!important;
+    background:#eaf5ff!important;z-index:2147481490!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbCrmTabContent{
+    top:142px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pb1156GalleryBack{
+    display:none!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37ContextTitle{
+    display:none!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37Tabs{
+    position:absolute!important;top:0!important;left:9px!important;right:9px!important;
+    height:52px!important;min-height:52px!important;max-height:52px!important;
+    display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    padding:5px 0!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37Tabs button{
+    height:42px!important;min-height:42px!important;max-height:42px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37ContextTitle{
+    display:flex!important;height:52px!important;min-height:52px!important;max-height:52px!important;
+    align-items:center!important;justify-content:flex-start!important;
+    padding:6px 144px 6px 12px!important;text-align:right!important;background:#eaf5ff!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37ContextTitle b{
+    font-size:13px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37Tabs{
+    position:absolute!important;top:5px!important;left:9px!important;right:auto!important;
+    width:130px!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+    display:grid!important;grid-template-columns:1fr!important;padding:2px 0!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37Tabs button{
+    height:38px!important;min-height:38px!important;max-height:38px!important;
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+}

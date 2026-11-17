@@ -23,6 +23,7 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
  // R1886 must not bypass that authorization or abort the image build.
  assert(native.includes("let primaryState="),'native verified-device state retained');
  assert(native.includes("not_primary_download_device"),'secondary-device error retained');
+ assert(native.includes('/* PB1888 deny secondary lab device */'),'confirmed secondary device must not get native launcher');
  if(native.includes('Promise.race([api(\'/api/lab/download-device\')')){
   assert(native.includes("state?.queued||state?.operationId"));
  }

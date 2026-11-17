@@ -3,7 +3,7 @@
  'use strict';
  if(window.self!==window.top||window.pbCrmOpen)return;
  const REV='r1867-crm-delivery';
- let host=null,frame=null,owner=null,pending=false,frameUrl=null;
+ let host=null,frame=null,owner=null,pending=false,frameUrl=null,lastHeaderBottom=0;
  const params=()=>new URLSearchParams(location.search);
  window.pbCrmFrameUrl=(portal,pane)=>{
   const q=new URLSearchParams({portal,pbDesktopContent:'1',pbCrmEmbedded:'1',crmRev:REV});
@@ -15,19 +15,26 @@
  const shown=node=>node&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
  function layout(){
   pending=false;if(!host||host.hidden)return;
-  // R1872: identify the actual portal header on EVERY mobile tab.
-  // Print uses .photographerPrintModeHeader (not #photographerRoleHeaderV710).
-  // Only the parent portal owns the header; the embedded CRM header stays hidden.
+  // R1873: the gallery header is the mobile photographer chrome in every
+  // section. Unlike the old React source headers, F37 lives directly in
+  // document.body and its title/tabs extend below the 90px account row.
+  // Place the CRM iframe below the *visible* header AND subheader so neither
+  // Customers nor Calendar can cover them with the iframe's higher z-index.
   const headers=[...new Set(document.querySelectorAll(
+   '#pbF37PhotographerHeader,#pbF37Subheader,'+
+   '#pbSharedPhotographerHeader,#pbSharedPhotographerSubheader,'+
+   '#photographerStoreRoleHeader,#photographerStoreIdentityBar,#storeSectionNavV673,'+
    '#root .labRoleWorkspace .labSingleHeader,'+
    '#root main.photographerMain > .unifiedRoleHeader,'+
    '#root main.photographerMain .photographerPrintModeHeader,'+
-   '#photographerRoleHeaderV710,'+
-   '#photographerStoreRoleHeader,'+
-   '#pb1126DesktopHeader'
+   '#photographerRoleHeaderV710,#pb1126DesktopHeader'
   ))].filter(shown).map(node=>node.getBoundingClientRect())
     .filter(rect=>rect.bottom>0&&rect.top<innerHeight*.45);
-  const top=Math.max(0,...headers.map(rect=>Math.min(rect.bottom,innerHeight-120)));
+  const measuredTop=Math.max(0,...headers.map(rect=>Math.min(rect.bottom,innerHeight-120)));
+  // Keep the previous safe clearance through a one-frame SPA header swap;
+  // otherwise the CRM frame flashes over the gallery account row.
+  if(measuredTop>0)lastHeaderBottom=measuredTop;
+  const top=measuredTop||lastHeaderBottom;
   const docks=matchMedia('(max-width:820px)').matches?[...document.querySelectorAll('#root .labBottomAppNav,#root .photographerBottomAppNav,#photographerStoreBottomNav,body>.pb1448LabPhoneDock')].filter(shown):[];
   const bottom=Math.max(0,...docks.map(node=>innerHeight-node.getBoundingClientRect().top));
   if(host.style.top!==top+'px')host.style.top=top+'px';
@@ -49,7 +56,7 @@
   const url=window.pbCrmFrameUrl(portal,pane);
   if(!host){host=document.createElement('section');host.id='pbCrmTabContent';host.setAttribute('aria-label','مشتریان');host.hidden=true;document.body.append(host)}
   if(!frame||owner!==portal){
-   owner=portal;frame=document.createElement('iframe');frame.title='مشتریان';frame.className='pbCrmTabFrame';
+   owner=portal;lastHeaderBottom=0;frame=document.createElement('iframe');frame.title='مشتریان';frame.className='pbCrmTabFrame';
    frame.addEventListener('load',event=>{
     if(frame!==event.currentTarget)return;
     try{
@@ -90,5 +97,8 @@
  window.addEventListener('popstate',()=>{if(params().get('pbCrmTab')==='1'&&owner)window.pbCrmOpen(owner,false);else close()});
  window.addEventListener('resize',schedule,{passive:true});window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('photobridge-auth-session-changed',()=>{close(true);host?.remove();host=null;frame=null;owner=null});
- new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+ // Gallery's canonical header and Store's account header mount outside
+ // #root. Observe the portal DOM as a whole, without watching style changes
+ // written by layout() (which would create a self-triggered update loop).
+ new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
 })();

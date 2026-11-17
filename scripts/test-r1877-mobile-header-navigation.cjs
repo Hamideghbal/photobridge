@@ -27,7 +27,9 @@ test('R1877: lab city choices stay fixed above scrolling cards with no dead whit
  const css=read('dist/web/photobridge-v904r100f41-header-date-name-fit.css');
  assert.doesNotThrow(()=>new vm.Script(picker));
  assert(picker.includes('class="pbR99LabCities"'));
- assert(picker.includes("cityFilter=city.dataset.labCity||'all'"));
+ assert(picker.includes("selectedCityKey=key;paint(currentData)"));
+ assert(picker.includes('function cityGrouping(all,active,primary)'));
+ assert(picker.includes('/* PB1722 city filters */'));
  assert(picker.includes('listedConnected'));
  assert(css.includes('pbF37ChooserMode #pbR99LabChooser .pbR99LabCities:not([hidden])'));
  assert(css.includes('pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard'));

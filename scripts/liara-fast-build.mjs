@@ -1420,3 +1420,6 @@ console.log('[PhotoBridge Docker build] OK R1884 native Lab intake offline respo
 await deployStep('./enable-r1887-native-lab-crm-header.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1887-native-lab-crm-header.cjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK R1887 native Lab CRM navigation');
+
+await deployStep('./enable-lab-offline-intake.mjs');
+runR1314(process.execPath,['--test','scripts/test-lab-offline-intake.cjs'],{stdio:'inherit'});

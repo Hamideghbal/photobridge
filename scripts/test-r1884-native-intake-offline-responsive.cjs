@@ -37,11 +37,50 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
  assert(!website.includes('PB1884 native intake immediate preparation'),'web frontend should remain unchanged');
 });
 
+// Locate the async function containing R1884; intermediate installers can
+// relocate mount() ahead of open() or add intervening declarations.
+function extractPreparationEntry(source){
+ const marker=source.indexOf('/* PB1884 native intake immediate preparation */');
+ assert(marker>=0,'R1884 warmup marker must exist');
+ const declarations=[...source.slice(0,marker).matchAll(/\basync\s+function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g)];
+ const open=declarations.at(-1);
+ assert(open,'an async manual order entrypoint must precede the warmup');
+ const begin=open.index;
+ const brace=begin+open[0].lastIndexOf('{');
+ let depth=0,mode='code',regexClass=false,previous='',quote='';
+ for(let i=brace;i<source.length;i++){
+  const c=source[i],n=source[i+1];
+  if(mode==='line'){if(c==='\n')mode='code';continue;}
+  if(mode==='block'){if(c==='*'&&n==='/'){mode='code';i++;}continue;}
+  if(mode==='quote'){
+   if(c==='\\'){i++;continue;}
+   if(c===quote)mode='code';
+   continue;
+  }
+  if(mode==='regex'){
+   if(c==='\\'){i++;continue;}
+   if(c==='[')regexClass=true;
+   if(c===']')regexClass=false;
+   if(c==='/'&&!regexClass){mode='code';previous='x';}
+   continue;
+  }
+  if(c==='/'&&n==='/'){mode='line';i++;continue;}
+  if(c==='/'&&n==='*'){mode='block';i++;continue;}
+  if(c==="'"||c==='"'||c===String.fromCharCode(96)){mode='quote';quote=c;continue;}
+  if(c==='/'&&/[=(,:;!&|?{]/.test(previous)){mode='regex';regexClass=false;continue;}
+  if(c==='{')depth++;
+  if(c==='}'&&--depth===0){
+   const extracted=source.slice(begin,i+1);
+   assert(extracted.includes('pb1884Warmup.showModal()'),'isolated entrypoint must contain warmup');
+   assert.doesNotThrow(()=>new vm.Script(extracted));
+   return{code:extracted,name:open[1]};
+  }
+  if(!/\s/.test(c))previous=c;
+ }
+ throw Error('manual order async function is not balanced');
+}
 function simulateOffline(cancel){
- const start=native.indexOf('async function open(){');
- const end=native.indexOf('function mount(){',start);
- assert(start>=0&&end>start,'manual dialog entrypoint must exist');
- const code=native.slice(start,end);
+ const {code,name}=extractPreparationEntry(native);
  const shown=[],timers=[],nodes=[],requests=[];
  const node=(tag,text='',cls='')=>{
   const el={tag,textContent:text||'',className:cls,children:[],open:false,removed:false,dataset:{},style:{},
@@ -66,7 +105,7 @@ function simulateOffline(cancel){
   setTimeout(fn,delay){timers.push({fn,delay});return timers.length;},clearTimeout(){},Promise,Date,Error,URL,
  };
  vm.createContext(sandbox);
- vm.runInContext(code+'\nthis.runOpen=open;',sandbox);
+ vm.runInContext(code+'\nthis.runOpen='+name+';',sandbox);
  const pending=sandbox.runOpen();
  assert.equal(shown.length,1,'preparation dialog must appear before any server reply');
  assert.equal(shown[0].className,'pb1137Intake pb1884IntakeWarmup');

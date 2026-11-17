@@ -100,14 +100,24 @@ if(!code.includes(mark)){
  const mountEnd=code.indexOf('\nlet primaryState=',mountStart);
  if(mountStart<0||mountEnd<=mountStart)throw Error('[R1886] native launcher function boundary missing');
  const mountCode=code.slice(mountStart,mountEnd);
+ // R1888: The final Windows installer can expose the launcher despite a
+ // definitive negative primary-device response. Deny that state before any
+ // legacy mount rendering; offline "unknown" remains subject to the server
+ // verification in open() and before submit. Never authorize a secondary PC.
+ const denySecondary="/* PB1888 deny secondary lab device */if(primaryState===false){document.getElementById('pb1137LocalIntakeButton')?.remove();return;}";
+ if(!mountCode.includes('/* PB1888 deny secondary lab device */')){
+  code=code.slice(0,mountStart)+mountCode.replace('function mount(){','function mount(){\n '+denySecondary+'\n')+code.slice(mountEnd);
+ }
+ // Refresh the isolated mount source after inserting the explicit denial.
+ const currentMountCode=code.slice(mountStart,code.indexOf('\nlet primaryState=',mountStart));
  const guardPattern=/if\s*\(\s*primaryState\s*===\s*null\s*\)\s*\{[\s\S]{0,350}?\}\s*(?:else\s*)?if\s*\(\s*!primaryState\s*\)\s*\{[\s\S]{0,180}?\}/g;
- const guards=[...mountCode.matchAll(guardPattern)];
+ const guards=[...currentMountCode.matchAll(guardPattern)];
  const guard=guards.length===1?guards[0][0]:null;
  const safeGuard=guard&&/checkPrimary\s*\(/.test(guard)&&/old\?\.remove\s*\(/.test(guard)&&
    (guard.match(/\breturn\s*;/g)||[]).length>=2;
  if(safeGuard){
   const next="if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}else if(!primaryState){old?.remove();return;}";
-  code=code.slice(0,mountStart)+mountCode.replace(guard,next)+code.slice(mountEnd);
+  code=code.slice(0,mountStart)+currentMountCode.replace(guard,next)+code.slice(code.indexOf('\nlet primaryState=',mountStart));
   console.log('[R1886] Native launcher authorized-state guard updated.');
  }else{
   // The original guard is retained untouched. Other offline/slow-server

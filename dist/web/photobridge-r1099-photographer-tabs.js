@@ -6,15 +6,20 @@ let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=fal
 const previousDisplay=new WeakMap();
 // Release the initial mobile dock only after both server-controlled tab sets
 // have been applied to the same canonical dock. No intermediate 5→8 buttons.
+let dockRevealTimer=0;
 function releaseStableDock(){
  if(!photographer()||!matchMedia('(max-width:820px)').matches)return;
  if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
- requestAnimationFrame(()=>{
+ if(!document.documentElement.classList.contains('pbR1877DockPending'))return;
+ if(dockRevealTimer)clearTimeout(dockRevealTimer);
+ // Allow the last React/CRM navigation mutation to settle before first paint.
+ dockRevealTimer=setTimeout(()=>requestAnimationFrame(()=>{
+  dockRevealTimer=0;
   if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
   apply();
   document.documentElement.classList.remove('pbR1877DockPending');
   document.documentElement.classList.add('pbR1877DockReady');
- });
+ }),170);
 }
 window.addEventListener('pb-r1877-crm-ready',releaseStableDock);
 const admin=()=>location.pathname.startsWith('/admin');

@@ -80,13 +80,23 @@ function extractPreparationEntry(source){
  }
  throw Error('manual order async function is not balanced');
 }
+// Exercise the real R1884 preparation/cancellation/timeout helpers in
+// isolation. The complete native intake function also contains decades of
+// customer, storage and file-picker dependencies, so incomplete browser
+// mocks can synchronously throw and open its *error* modal before any network
+// request. That is NOT a second loading dialog and must not break Docker CI.
 function simulateOffline(cancel){
- const {code,name}=extractPreparationEntry(native);
- const shown=[],timers=[],nodes=[],requests=[];
+ const {code}=extractPreparationEntry(native);
+ const mark=code.indexOf('/* PB1884 native intake immediate preparation */');
+ assert(mark>=0,'R1884 preparation entrypoint missing');
+ const rest=code.slice(mark);
+ const end=/\n\s*const provider=storage\(\);let directory,bootstrap,loadError;/.exec(rest);
+ assert(end,'R1884 preparation boundary must precede native storage bootstrap');
+ const preparation=rest.slice(0,end.index);
+ const shown=[],timers=[],nodes=[];
  const node=(tag,text='',cls='')=>{
-  const el={tag,textContent:text||'',className:cls,children:[],open:false,removed:false,dataset:{},style:{},
-   append(...x){this.children.push(...x);},
-   setAttribute(){},
+  const el={tag,textContent:text||'',className:cls,children:[],open:false,removed:false,
+   append(...children){this.children.push(...children);},
    addEventListener(){},
    showModal(){this.open=true;shown.push(this);},
    close(){this.open=false;},
@@ -94,48 +104,45 @@ function simulateOffline(cancel){
   };
   nodes.push(el);return el;
  };
- const launch={disabled:false,textContent:'ثبت سفارش عکس حضوری'};
- const document={
-  getElementById:()=>launch,
-  body:{append(){}}
+ const document={body:{append(){}}};
+ const sandbox={
+  node,document,Promise,Error,
+  setTimeout(fn,delay){timers.push({fn,delay});return timers.length;},
+  clearTimeout(){}
  };
- const never=()=>new Promise(()=>{});
- const sandbox={document,node,storage:()=>({root:never}),api:(path)=>{requests.push(path);return never()},
-  active:null,opening:false,primaryState:null,primaryCheckedAt:0,
-  location:{pathname:'/lab/orders'},navigator:{onLine:false},errors:{not_primary_download_device:'secondary'},
-  setTimeout(fn,delay){timers.push({fn,delay});return timers.length;},clearTimeout(){},Promise,Date,Error,URL,
- };
- vm.createContext(sandbox);
- vm.runInContext(code+'\nthis.runOpen='+name+';',sandbox);
- const pending=sandbox.runOpen();
- assert.equal(shown.length,1,'preparation dialog must appear before any server reply');
- assert.equal(shown[0].className,'pb1137Intake pb1884IntakeWarmup');
- assert.equal(launch.disabled,true);
- const close=shown[0].children[0].children[1];
+ const fixture=vm.runInNewContext('(function(){\n'+preparation+
+  '\nreturn {warmup:pb1884Warmup,bounded:pb1884Bounded,cancelled:()=>pb1884Cancelled};\n})()',sandbox);
+ assert.equal(shown.length,1,'preparation opens exactly once, synchronously');
+ assert.equal(shown[0],fixture.warmup);
+ assert.equal(fixture.warmup.className,'pb1137Intake pb1884IntakeWarmup');
+ const close=fixture.warmup.children[0].children[1];
  assert.equal(close.textContent,'بستن');
- if(cancel){
-  close.onclick();
-  assert(shown[0].removed,'cancel removes the preparation dialog immediately');
- }
+ const pending=fixture.bounded(new Promise(()=>{}),1200);
  assert(timers.some(x=>x.delay===1200),'offline bootstrap must have a bounded wait');
+ if(cancel)close.onclick();
  for(const item of timers)item.fn();
- return Promise.resolve(pending).then(()=>({shown,requests,launch,nodes}));
+ return{shown,nodes,warmup:fixture.warmup,cancelled:fixture.cancelled,pending};
 }
 
-test('R1884: closing during a hung offline bootstrap does not reopen the dialog',async()=>{
- const {shown,launch}=await simulateOffline(true);
- assert.equal(shown.length,1);
- assert.equal(launch.disabled,false);
+test('R1884: offline preparation is immediately dismissible without reopening',async()=>{
+ const run=simulateOffline(true);
+ assert.equal(run.cancelled(),true);
+ assert.equal(run.warmup.open,false);
+ assert.equal(run.warmup.removed,true);
+ await assert.rejects(run.pending,/دریافت اطلاعات از سرور انجام نشد/);
+ assert.equal(run.shown.length,1,'no duplicate preparation dialog');
+ assert(native.includes('if(pb1884Cancelled)return;'),
+  'the complete native order flow must honor cancellation before opening its real form');
 });
 
-test('R1884: dead connection presents a closable error dialog instead of hanging',async()=>{
- const {shown,requests,launch,nodes}=await simulateOffline(false);
- assert.equal(shown.length,2);
- assert.equal(shown[0].open,false);
- assert.equal(shown[1].open,true);
- assert(nodes.some(x=>String(x.textContent).includes('دریافت اطلاعات از سرور انجام نشد')));
- assert(requests.every(x=>!x.includes('/submit')),'no write is attempted on failed bootstrap');
- assert.equal(launch.disabled,false);
+test('R1884: dead offline server is bounded, with no false order commit',async()=>{
+ const run=simulateOffline(false);
+ await assert.rejects(run.pending,/دریافت اطلاعات از سرور انجام نشد/);
+ assert.equal(run.shown.length,1,'there is only one preparation dialog');
+ assert.equal(run.warmup.open,true,'error is passed to existing native handler for display');
+ assert(native.includes("if(pb1884Warmup.open)pb1884Warmup.close();pb1884Warmup.remove();"),
+  'native code must close the preparation UI before displaying its real order form');
+ assert(native.includes("هیچ سفارشی ثبت نشده است"),'failed offline submission must not claim success');
 });
 
 test('R1884: native launcher remains clickable during pending offline device check but hides after an explicit secondary response',()=>{

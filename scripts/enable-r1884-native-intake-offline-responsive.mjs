@@ -31,8 +31,8 @@ if(!code.includes(mark)){
   "  const pb1884Bounded=(promise,ms)=>{let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('دریافت اطلاعات از سرور انجام نشد. اتصال را بررسی کنید و دوباره تلاش کنید.')),ms);})]).finally(()=>clearTimeout(timer));};"
  ].join('\n');
  code=once(code,
-  "  const provider=storage();let directory,bootstrap,loadError;",
-  prepare+"\n  const provider=storage();let directory,bootstrap,loadError;",
+  " const provider=storage();let directory,bootstrap,loadError;",
+  prepare+"\n const provider=storage();let directory,bootstrap,loadError;",
   'initial modal preparation');
  code=once(code,
   "const [primary,root,data]=await Promise.all([",
@@ -44,11 +44,11 @@ if(!code.includes(mark)){
  const end=code.indexOf("   if(!primary.registered",start);
  if(start<0||end<0)throw Error('[R1884] device bootstrap section unavailable');
  const section=code.slice(start,end);
- if(section.split("   ]);").length!==2)throw Error('[R1884] bootstrap Promise.all terminator changed');
- code=code.slice(0,start)+section.replace("   ]);","   ]),(typeof navigator!=='undefined'&&navigator.onLine===false)?1200:4500);")+code.slice(end);
+ if(section.split("  ]);").length!==2)throw Error('[R1884] bootstrap Promise.all terminator changed');
+ code=code.slice(0,start)+section.replace("  ]);","  ]),(typeof navigator!=='undefined'&&navigator.onLine===false)?1200:4500);")+code.slice(end);
  code=once(code,
-  "  finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}",
-  "  finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}\n  if(pb1884Cancelled)return;\n  if(pb1884Warmup.open)pb1884Warmup.close();pb1884Warmup.remove();",
+  " finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}",
+  " finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}\n if(pb1884Cancelled)return;\n  if(pb1884Warmup.open)pb1884Warmup.close();pb1884Warmup.remove();",
   'release preparation dialog');
  // Optional live-only enrichment in older installers can independently
  // wait for a dead connection, even after the normal bootstrap returned.
@@ -57,8 +57,8 @@ if(!code.includes(mark)){
   "try{const live=await pb1884Bounded(api('/api/lab/intake-live/download/bootstrap'+(albumMode?'':'?mode=print')),1200);",
   'optional live customer enrichment');
  code=once(code,
-  "  form.onsubmit=async e=>{\n   e.preventDefault();if(submitting)return;",
-  "  form.onsubmit=async e=>{\n   e.preventDefault();if(submitting)return;\n   if(typeof navigator!=='undefined'&&navigator.onLine===false){error.textContent='این فرم هنوز برای ثبت نهایی به اتصال سرور نیاز دارد. هیچ سفارشی ثبت نشده است؛ پس از اتصال دوباره اقدام کنید.';return;}",
+  " form.onsubmit=async e=>{\n  e.preventDefault();if(submitting)return;",
+  " form.onsubmit=async e=>{\n  e.preventDefault();if(submitting)return;\n  if(typeof navigator!=='undefined'&&navigator.onLine===false){error.textContent='این فرم هنوز برای ثبت نهایی به اتصال سرور نیاز دارد. هیچ سفارشی ثبت نشده است؛ پس از اتصال دوباره اقدام کنید.';return;}",
   'no false offline order success');
  // A previously validated primary device must keep its launcher during
  // temporary connectivity loss; never grant new primary authorization offline.

@@ -1384,6 +1384,10 @@ await deployStep("./enable-r1845-html-compression.mjs");
 // CRM HTML must never be pinned in a browser cache; apply after all old tab writers.
 await deployStep('./enable-crm-delivery.mjs');
 runR1314(process.execPath,['--test','scripts/test-crm-delivery.cjs'],{stdio:'inherit'});
+// R1868: modern RTL service selectors and non-scrolling customer tabs.
+await deployStep('./enable-r1868-crm-services.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdio:'inherit'});
+
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 
@@ -1391,3 +1395,7 @@ runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inher
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK first-load perf fix');
+
+// Package the finished CRM and portal HTML for the Windows lab UI updater.
+await deployStep('./prepare-lab-desktop-ui.mjs?final-after-r1868');
+runR1314(process.execPath,['scripts/verify-lab-desktop-ui-freshness.mjs'],{stdio:'inherit'});

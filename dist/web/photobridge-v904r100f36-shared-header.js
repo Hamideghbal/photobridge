@@ -127,6 +127,13 @@
     return r.width>8&&r.height>8;
   }
   function mode(){
+    // CRM is an in-portal overlay: keep Gallery's exact shared header while
+    // describing the active Customers/Calendar pane, not the underlying route.
+    if(document.documentElement.classList.contains('pbCrmTabOpen')){
+      const pane=new URLSearchParams(location.search).get('pbCrmPane')||
+        $('[data-pb-crm-pane][aria-current="page"]')?.dataset.pbCrmPane;
+      return pane==='calendar'?'calendar':'customers';
+    }
     if($('#storePhotographerWorkspace')&&isVisible($('#storePhotographerWorkspace')))return 'store';
     const main=$('.photographerMain');
     if(main?.classList.contains('photographerPrintWorkspace'))return 'print';
@@ -165,6 +172,8 @@
   function modelCount(){const b=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar>b');if(b?.textContent?.trim())return b.textContent.trim();const n=$$('.photographerAlbumDesignCatalog .albumDesignModelGrid>.albumDesignModelCard').length;return n?`${fa(n)} مدل`:''}
   function galleryCount(){const n=$$('.clientGalleryCards>.clientGalleryCard').length;return n?`${fa(n)} پروژه`:''}
   function contextInfo(m){
+    if(m==='customers')return{title:'مشتریان',meta:''};
+    if(m==='calendar')return{title:'تقویم',meta:''};
     if(m==='store')return{title:`فروشگاه تجهیزات تصویربرداری ${shopName()}`,meta:''};
     if(m==='print')return{title:labName(),meta:'لابراتوار'};
     if(m==='instagram')return{title:'طراحی اینستاگرام',meta:modelCount()};

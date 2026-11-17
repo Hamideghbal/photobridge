@@ -788,7 +788,7 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
     background:#fff!important;border:0!important;border-bottom:1px solid #dde4ee!important;
     box-sizing:border-box!important;overflow:hidden!important;direction:rtl!important;
   }
-  html body.pbF37UnifiedActive #storeChooserFiltersR1231:not(:is(body.pbR96ChoosingStore *)){
+  html body.pbF37UnifiedActive:not(.pbF37StoreChooserMode) #storeChooserFiltersR1231{
     display:none!important;
   }
   html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button{

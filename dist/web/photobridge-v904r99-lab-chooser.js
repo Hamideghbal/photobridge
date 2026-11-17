@@ -100,12 +100,20 @@
     chooser.style.setProperty('overflow','hidden','important');
   }
   function pbR1879SyncChooserViewport(){
+    // Browsers provide requestAnimationFrame; isolated Node build tests and
+    // older embedded runtimes may not. Never abort loading the lab list just
+    // because an optional viewport animation API is unavailable.
+    const schedule=()=>{
+      if(typeof requestAnimationFrame==='function'){
+        requestAnimationFrame(pbR1879FitChooserToDock);
+      }
+    };
     if(!pbR1879ViewportBound){
       pbR1879ViewportBound=true;
-      window.addEventListener('resize',()=>requestAnimationFrame(pbR1879FitChooserToDock),{passive:true});
-      window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(pbR1879FitChooserToDock),{passive:true});
+      window.addEventListener('resize',schedule,{passive:true});
+      window.visualViewport?.addEventListener('resize',schedule,{passive:true});
     }
-    requestAnimationFrame(pbR1879FitChooserToDock);
+    schedule();
   }
   function ensureRoot(){
     style();

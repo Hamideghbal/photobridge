@@ -69,7 +69,9 @@ function harness(data,simulateWindowEventRegistration=false){
     : script;
   vm.runInNewContext(runtimeScript,{
     window,document,location,sessionStorage,history,fetch,addEventListener,queueMicrotask,
-    setInterval(){},setTimeout(){},requestAnimationFrame(){},URLSearchParams,console:{warn(){}}
+    // requestAnimationFrame is intentionally absent: the Node VM is not a browser.
+    // Opening the lab list must work without the optional viewport frame API.
+    setInterval(){},setTimeout(){},URLSearchParams,console:{warn(){}}
   },{timeout:2000});
   const flush=async()=>{for(let i=0;i<28;i++)await Promise.resolve()};
   return {
@@ -156,6 +158,15 @@ test('late-stage scripts can register focus with window.addEventListener in real
   assert.equal(h.calls(),1);
   await h.refresh();
   assert.equal(h.calls(),2,'window focus event must trigger the same refresh callback');
+});
+test('R1882: the chooser opens and paints city cards without requestAnimationFrame in Node',async()=>{
+  // The standard VM fixture intentionally has no animation frame API.
+  const h=harness(fixture());
+  await h.start();
+  assert.equal(h.calls(),1);
+  assert(h.html().includes('چاپ الف'));
+  assert(h.html().includes('data-lab-city="تهران"'));
+  assert(script.includes("typeof requestAnimationFrame==='function'"));
 });
 test('responsive city filter works on web and keeps old chooser handlers',()=>{
   assert(script.includes('/* PB1722 city filters */'));

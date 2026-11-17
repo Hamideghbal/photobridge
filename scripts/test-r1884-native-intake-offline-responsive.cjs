@@ -131,7 +131,7 @@ test('R1884: native launcher remains clickable during pending offline device che
 
 test('R1885: native patch uses stable modal creation anchor instead of mutable finally block',()=>{
  const patch=fs.readFileSync('scripts/enable-r1884-native-intake-offline-responsive.mjs','utf8');
- assert(patch.includes('"const modal=node(\\'dialog\\',null,\\'pb1137Intake\\');"'));
+ assert(patch.includes("const modal=node('dialog',null,'pb1137Intake');"));
  assert(!patch.includes("'release preparation dialog expected once, got 0'"));
  assert(native.indexOf('if(pb1884Cancelled)return')<native.indexOf("const modal=node('dialog',null,'pb1137Intake')"),
   'cancel must be checked before building real modal');

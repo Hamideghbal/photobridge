@@ -12,6 +12,12 @@
   )||(path()==='/equipment-rental/book'&&document.body.classList.contains('rentalPhotographerMode')&&!!document.querySelector('#photographerStoreBottomNav'));
   const activePortal=()=>lab()?'lab':photo()?'photographer':null;
   let enabled=null,fetchedPortal=null,loading=false,epoch=0,pending=false;
+  // A single initial reveal is coordinated with photographer feature tabs.
+  function settleDock(){
+    if(!media.matches)return;
+    window.pbR1877CrmNavReady=true;
+    window.dispatchEvent(new Event('pb-r1877-crm-ready'));
+  }
 
   function make(portal,desktop,pane){
     const b=document.createElement('button');
@@ -91,6 +97,9 @@
     epoch++;
     fetchedPortal=null;
     enabled=null;
+    window.pbR1877CrmNavReady=false;
+    document.documentElement.classList.remove('pbR1877DockReady');
+    document.documentElement.classList.add('pbR1877DockPending');
     clearButtons();
     schedule();
   }
@@ -114,7 +123,7 @@
     const portal=activePortal();
     if(!portal){clearButtons();return;}
     if(fetchedPortal!==portal){clearButtons();void loadVisibility(portal);return;}
-    if(enabled!==true){clearButtons();return;}
+    if(enabled!==true){clearButtons();settleDock();return;}
     const target=targetFor(portal),kind=media.matches?'pb1761CrmMobileTab':'pb1761CrmDesktopTab';
     // Remove stale or differently sized copies before inserting the current one.
     for(const button of document.querySelectorAll('button[data-pb1761-crm]')){
@@ -132,6 +141,7 @@
       mounted=true;
     }
     recount(target);
+    settleDock();
     if(mounted&&new URLSearchParams(location.search).get('pbCrmTab')==='1')window.pbCrmOpen?.(portal,false);
   }
   function schedule(){

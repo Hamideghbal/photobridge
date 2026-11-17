@@ -47,7 +47,7 @@
   function recount(grid){
     if(!grid)return;
     const count=[...grid.children].filter(el=>!el.hidden&&el.dataset.pb1099Hidden!=='1'&&getComputedStyle(el).display!=='none').length;
-    if(count)grid.style.setProperty('--pb1099-tabs',String(count));
+    if(count&&grid.style.getPropertyValue('--pb1099-tabs')!==String(count))grid.style.setProperty('--pb1099-tabs',String(count));
   }
   function removeButton(button){
     const parent=button.parentElement;
@@ -135,7 +135,10 @@
     requestAnimationFrame(render);
   }
   function boot(){
-    new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+    const root=document.getElementById('root');
+    const observer=new MutationObserver(schedule);
+    observer.observe(root||document.body,{childList:true,subtree:true});
+    if(root)observer.observe(document.body,{childList:true});
     schedule();
     window.addEventListener('popstate',refresh);
     window.addEventListener('pageshow',refresh);

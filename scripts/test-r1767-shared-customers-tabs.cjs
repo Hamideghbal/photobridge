@@ -32,7 +32,7 @@ function scene(portal,mobile){
   children:[],dataset:{},hidden:false,
   classList:{contains:x=>mobile&&x==='photographerBottomAppNavGrid'},
   getClientRects:()=>[{}],
-  style:{values:{},setProperty(k,v){this.values[k]=v}},
+  style:{values:{},writes:0,getPropertyValue(k){return this.values[k]||''},setProperty(k,v){this.writes++;this.values[k]=v}},
   append(b){b.parentElement=this;this.children.push(b);buttons.push(b)},
   prepend(b){this.append(b)},
   get firstElementChild(){return this.children[0]||null},
@@ -109,9 +109,11 @@ test('R1767: one switch controls Customers and its mobile calendar in both porta
   page.setAllowed(true);page.events.focus();
   await page.flush();
   assert.deepEqual(panes(),expected,'RESTORED: '+portal+' mobile='+mobile);
+  const writes=page.target.style.writes;
   page.events.resize();
   await page.flush();
   assert.deepEqual(panes(),expected,'no duplicate: '+portal+' mobile='+mobile);
+  assert.equal(page.target.style.writes,writes,'unchanged dock does not write style again');
   assert(page.requests()>=3);
  }
 });

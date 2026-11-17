@@ -82,6 +82,14 @@ test('mobile chooser hides the stray receipt but retains the primary bottom dock
   assert(chooser.includes('body.pbR100F14ChoosingLab #root .photographerBottomAppNav *{visibility:visible!important;pointer-events:auto!important}'));
   assert(chooser.includes('.prepayOrderCard,.prepayUploadBox,.prepayUploadRow'));
   assert(chooser.includes("document.body.classList.remove('pbR100F14ChoosingLab')"));
-  assert(page.includes('photobridge-v904r99-lab-chooser.js?v=r1329'));
+  // R1879 uses a full release revision to refresh the chooser after layout fixes.
+  // Verify the script actually loads and carries the current revision rather
+  // than pinning a legacy ?v=r1329 value that is now intentionally replaced.
+  const tag=page.match(/<script\\b[^>]*\\bsrc=["']([^"']*photobridge-v904r99-lab-chooser\\.js(?:\\?[^"']*)?)["'][^>]*>/);
+  assert(tag, 'the mobile lab chooser script must be included in the page');
+  const url=new URL(tag[1], 'https://photobridge.ir');
+  assert.equal(url.pathname, '/photobridge-v904r99-lab-chooser.js');
+  const revision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
+  assert.equal(url.searchParams.get('rev'), revision, 'chooser must use the current release cache key');
   assert(build.includes('lab-chooser\\.js'));
 });

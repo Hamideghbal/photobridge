@@ -107,6 +107,7 @@ test('R1873: single Gallery header survives gallery, AI, album, print and CRM na
    await page.evaluate(id=>{document.getElementById(id).remove();window.PBSharedPhotographerHeader.refresh()},id);
    assert.equal(await headers.evaluate(e=>e.parentElement.tagName),'BODY','same header must return to Gallery');
    assert.equal(await headers.count(),1);
+   assert(await sameHandle.evaluate(el=>el===document.querySelector('#pbSharedPhotographerHeader')),'header must not be recreated after overlay removal');
   }
   await page.addScriptTag({content:read('dist/web/customer-crm-host.js')});
   for(const pane of ['customers','calendar']){

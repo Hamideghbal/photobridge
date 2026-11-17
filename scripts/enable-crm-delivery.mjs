@@ -8,8 +8,8 @@ nav=replace(nav,'if(!portal){clearButtons();return;}','if(!portal){clearButtons(
 // R1877: the new navigation settles the final dock before revealing it.
 if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
  nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
-   'if(enabled===false)window.pbCrmClose?.();\\n    if(enabled!==true){clearButtons();settleDock();return;}');
-}else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
+   'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
+}else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
 nav=replace(nav,"window.addEventListener('focus',refresh);","window.addEventListener('focus',()=>{if(document.documentElement?.classList?.contains('pbCrmTabOpen')||document.documentElement?.classList?.contains('pbCrmDesktopActive'))schedule();else refresh();});",'stable tab focus');
 fs.writeFileSync(shared,nav);
 const desktop='dist/web/photobridge-r1126-desktop-navigation.js';

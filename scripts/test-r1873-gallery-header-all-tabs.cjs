@@ -17,6 +17,7 @@ test('R1873: one Gallery account component survives all mobile routes',()=>{
  assert(header.includes("function nativeHeader(){return mode()==='store'?"));
  assert(css.includes('body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader'));
  assert(css.includes('body.pbF37UnifiedActive.pbF37StoreMode #pbF37PhotographerHeader'));
+ assert(css.includes('z-index:2147483300!important'));
  assert(crm.includes("'#pbF37PhotographerHeader,#pbF37Subheader,'"));
  assert(crm.includes("'#photographerStoreRoleHeader,#photographerStoreIdentityBar,#storeSectionNavV673,'"));
  assert(crm.includes('const top=measuredTop||lastHeaderBottom'));
@@ -82,6 +83,12 @@ test('R1873: visible Gallery header is not covered by Customers/Calendar',async 
     assert(await page.locator('#pbF37PhotographerHeader').isVisible());
     assert.equal(await page.locator('#pbF37PhotographerHeader').count(),1);
     assert(await page.locator('#pbCrmTabContent iframe').isVisible(),kind+' '+pane+' content must be visible');
+    // Account tools remain interactive above the iframe even on CRM pages.
+    if(pane==='customers'){
+     await page.locator('#pbF37MenuBtn').click();
+     await page.locator('#pbF37MenuPanel [data-f37-menu="settings"]').click();
+     assert.equal(await page.evaluate(()=>window.__settingsClicks),2,kind+' CRM tools blocked by iframe');
+    }
    }
    await page.evaluate(()=>window.pbCrmClose());
    assert(await page.locator('#pbCrmTabContent').isHidden());

@@ -1387,6 +1387,9 @@ runR1314(process.execPath,['--test','scripts/test-crm-delivery.cjs'],{stdio:'inh
 // R1868: modern RTL service selectors and non-scrolling customer tabs.
 await deployStep('./enable-r1868-crm-services.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdio:'inherit'});
+ // R1872: same selected blue for CRM and native tabs; preserve the portal's
+ // existing mobile header above Customers/Calendar and every embedded CRM view.
+ runR1314(process.execPath,['--test','scripts/test-r1872-mobile-crm-header.cjs'],{stdio:'inherit'});
 
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});

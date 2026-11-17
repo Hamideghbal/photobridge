@@ -4,7 +4,7 @@
   const ROOT_ID='pbR99LabChooser';
   const SESSION_KEY='photobridge:r99:selected-lab';
   const CACHE_KEY='photobridge:r100f14:lab-chooser';
-  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false;
+  let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false,cityFilter='all';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isPhotographerRoute=()=>/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register)(?:\/|$)/.test(location.pathname);
   const isPrintRoute=()=>{if(!isPhotographerRoute())return false;const q=new URLSearchParams(location.search);return q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(location.pathname)};
@@ -50,7 +50,7 @@
     let root=document.getElementById(ROOT_ID);
     if(!root){
       root=document.createElement('div');root.id=ROOT_ID;root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');
-      root.innerHTML=`<main class="pbR99LabWrap"><section class="pbR99LabIntro"><div class="pbR99LabIntroIcon" aria-hidden="true">▦</div><h1>انتخاب لابراتوار</h1><p>لابراتواری را که می‌خواهی برای چاپ استفاده کنی انتخاب کن. دکمه‌های اصلی پایین صفحه در دسترس می‌مانند.</p></section><section class="pbR99LabBoard"><div class="pbR99LabList"></div></section></main>`;
+      root.innerHTML=`<main class="pbR99LabWrap"><section class="pbR99LabIntro"><div class="pbR99LabIntroIcon" aria-hidden="true">▦</div><h1>انتخاب لابراتوار</h1><p>لابراتواری را که می‌خواهی برای چاپ استفاده کنی انتخاب کن. دکمه‌های اصلی پایین صفحه در دسترس می‌مانند.</p></section><nav class="pbR99LabCities" aria-label="انتخاب شهر" hidden></nav><section class="pbR99LabBoard"><div class="pbR99LabList"></div></section></main>`;
       document.body.appendChild(root);
       root.addEventListener('click',handleClick);
     }
@@ -77,14 +77,32 @@
     for(const l of (Array.isArray(data.labs)?data.labs:[])){const id=String(l?.id||'');if(!id)continue;byId.set(id,{...(byId.get(id)||{}),...l,connected:Boolean(l.connected||membershipIds.has(id))})}
     const all=[...byId.values()];const primary=String(data.primaryLabId||'');const byPrimary=(a,b)=>Number(String(b?.id||'')===primary)-Number(String(a?.id||'')===primary);const connected=all.filter(x=>x.connected).sort(byPrimary);const available=all.filter(x=>!x.connected).sort(byPrimary);
     const active=String(data.activeLabId||connected.find(x=>x.selected)?.id||'');
+    // City choice is a stationary third row, outside the card scroll area.
+    const cityOf=x=>String(x?.city||'').trim()||'سایر شهرها';
+    const cities=[...new Set(all.map(cityOf))].sort((a,b)=>a.localeCompare(b,'fa'));
+    if(cityFilter!=='all'&&!cities.includes(cityFilter))cityFilter='all';
+    const cityBar=root.querySelector('.pbR99LabCities');
+    if(cityBar){
+      cityBar.hidden=cities.length<2;
+      cityBar.innerHTML=cities.length>1?
+        '<span>انتخاب شهر</span>'+
+        ['all',...cities].map(city=>{
+          const label=city==='all'?'همه شهرها':city;
+          return '<button type="button" data-lab-city="'+esc(city)+'" class="'+(cityFilter===city?'active':'')+'">'+esc(label)+'</button>';
+        }).join(''):'';
+    }
+    const listedConnected=connected.filter(x=>cityFilter==='all'||cityOf(x)===cityFilter);
+    const listedAvailable=available.filter(x=>cityFilter==='all'||cityOf(x)===cityFilter);
     const board=root.querySelector('.pbR99LabBoard');
-    board.innerHTML=`<div class="pbR99LabList">${connected.length?connected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join(''):'<div class="pbR99LabEmpty">هنوز به لابراتواری متصل نیستی.</div>'}</div>${available.length?`<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">${available.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')}</div>`:''}`;
+    board.innerHTML=`<div class="pbR99LabList">${listedConnected.length?listedConnected.map(x=>card(x,{connected:true,current:String(x.id)===active})).join(''):'<div class="pbR99LabEmpty">هنوز به لابراتواری متصل نیستی.</div>'}</div>${listedAvailable.length?`<h2 class="pbR99LabSectionTitle">لابراتوارهای قابل درخواست</h2><div class="pbR99LabList">${listedAvailable.map(x=>card(x,{discover:Boolean(data.canDiscoverLabs)})).join('')}</div>`:''}`;
     try{sessionStorage.setItem(CACHE_KEY,JSON.stringify({data,at:Date.now()}))}catch{}
     return true;
   }
-  function paintError(text){const root=ensureRoot();const board=root.querySelector('.pbR99LabBoard');if(board)board.innerHTML=`<div class="pbR99LabEmpty">${esc(text)}</div>`}
+  function paintError(text){const root=ensureRoot();const cities=root.querySelector('.pbR99LabCities');if(cities)cities.hidden=true;const board=root.querySelector('.pbR99LabBoard');if(board)board.innerHTML=`<div class="pbR99LabEmpty">${esc(text)}</div>`}
   async function handleClick(e){
     const root=document.getElementById(ROOT_ID);if(!root)return;
+    const city=e.target.closest('[data-lab-city]');
+    if(city&&root.contains(city)){cityFilter=city.dataset.labCity||'all';if(currentData)paint(currentData);return}
     const sel=e.target.closest('[data-select]');if(sel){const id=sel.dataset.select;sel.disabled=true;try{try{sessionStorage.setItem('photobridge:r100f37:lab-enter-pending',String(Date.now()))}catch{}document.documentElement.classList.add('pbR100F37LabEnterBoot');await api('/api/customer/labs/'+encodeURIComponent(id)+'/select',{method:'POST',body:'{}'});sessionStorage.setItem(SESSION_KEY,id);cleanup();const u=new URL(location.href);u.searchParams.delete('pbLabChooser');u.searchParams.set('pbEntryDone','lab');location.replace(u.pathname+'?'+u.searchParams.toString())}catch(err){try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{}document.documentElement.classList.remove('pbR100F37LabEnterBoot');sel.disabled=false;toast(err.status===403?'دسترسی این لابراتوار برای حساب شما فعال نیست.':'انتخاب لابراتوار انجام نشد؛ دوباره تلاش کن.')}return}
     const req=e.target.closest('[data-request]');if(req){const id=req.dataset.request;req.disabled=true;try{await api('/api/customer/labs/'+encodeURIComponent(id)+'/request',{method:'POST',body:'{}'});req.textContent='در انتظار تأیید';toast('درخواست همکاری برای لابراتوار ارسال شد.')}catch(err){req.disabled=false;toast(err.status===409?'قبلاً به این لابراتوار متصل هستی.':'ارسال درخواست همکاری انجام نشد.')}}
   }

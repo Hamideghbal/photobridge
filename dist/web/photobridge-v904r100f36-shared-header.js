@@ -120,8 +120,10 @@
   function isPhotographerPortal(){
     const p=location.pathname;
     if(/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(p))return false;
-    if(p==='/equipment-rental/book'&&!document.body.classList.contains('rentalPhotographerMode'))return false;
-    return !!($('#storePhotographerWorkspace')||$('.photographerMain')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'));
+    const authenticatedRole=document.body.classList.contains('pbAuthenticatedPhotographerPortal');
+    const rentalPhoto=p==='/equipment-rental/book'&&document.body.classList.contains('rentalPhotographerMode');
+    if(!/^\/photographer(?:\/|$)/.test(p)&&!rentalPhoto&&!authenticatedRole)return false;
+    return !!($('#storePhotographerWorkspace')||$('.photographerMain')||authenticatedRole);
   }
   function isLabChooserVisible(){
     const c=$('#pbR99LabChooser');

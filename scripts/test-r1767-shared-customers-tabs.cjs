@@ -74,7 +74,7 @@ function scene(portal,mobile){
  const context={
   URLSearchParams,document,location:{pathname:portal==='lab'?'/lab':'/photographer',assign(){}},
   matchMedia:()=>({matches:mobile,addEventListener(){}}),
-  MutationObserver:class{observe(){}},requestAnimationFrame:fn=>frames.push(fn),
+  MutationObserver:class{observe(){}},queueMicrotask:fn=>frames.push(fn),
   getComputedStyle:()=>({display:'flex'}),
   sessionStorage:{getItem:()=>null},
   fetch:async()=>{calls++;return {ok:true,json:async()=>({tabs:{customers:allowed}})}},
@@ -102,6 +102,10 @@ test('R1767: one switch controls Customers and its mobile calendar in both porta
   const expected=mobile?['customers','calendar']:['customers'];
   await page.flush();
   assert.deepEqual(panes(),expected,'ON: '+portal+' mobile='+mobile);
+  const sameButtons=[...page.target.children];
+  page.events.focus();
+  assert.deepEqual(page.target.children,sameButtons,'buttons stay mounted while permissions refresh');
+  await page.flush();
   page.setAllowed(false);page.events.focus();
   await page.flush();
   assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,0,

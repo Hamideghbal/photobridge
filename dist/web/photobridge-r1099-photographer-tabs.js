@@ -4,6 +4,19 @@
 const keys=['ai','album','instagram','customers'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام',customers:'مشتریان (عکاس و لابراتوار)'};
 let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false,sessionEpoch=0;
 const previousDisplay=new WeakMap();
+// Release the initial mobile dock only after both server-controlled tab sets
+// have been applied to the same canonical dock. No intermediate 5→8 buttons.
+function releaseStableDock(){
+ if(!photographer()||!matchMedia('(max-width:820px)').matches)return;
+ if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
+ requestAnimationFrame(()=>{
+  if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
+  apply();
+  document.documentElement.classList.remove('pbR1877DockPending');
+  document.documentElement.classList.add('pbR1877DockReady');
+ });
+}
+window.addEventListener('pb-r1877-crm-ready',releaseStableDock);
 const admin=()=>location.pathname.startsWith('/admin');
 const photographer=()=>location.pathname.startsWith('/photographer')||location.pathname==='/equipment-rental/book';
 async function api(path,options={}){
@@ -71,12 +84,12 @@ async function openAdmin(){
 }
 async function load(){
  if(!photographer()||inFlight)return;const epoch=sessionEpoch;inFlight=true;loadedPath=location.pathname;
- try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch)inFlight=false}
+ try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
-window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;document.documentElement.dataset.pb1106TabsPending='1';void load();});
+window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

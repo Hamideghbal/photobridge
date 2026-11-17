@@ -2,7 +2,7 @@
 (()=>{
  'use strict';
  if(window.self!==window.top||window.pbCrmOpen)return;
- const REV='r1867-crm-delivery';
+ const REV='r1875-mobile-header-layout';
  let host=null,frame=null,owner=null,pending=false,frameUrl=null,lastHeaderBottom=0;
  const notifyHeader=()=>window.dispatchEvent(new Event('pb-crm-header-change'));
  window.pbCrmHeaderAction=(action)=>{
@@ -86,6 +86,7 @@
    frameUrl=url;frame.src=url;
   }
   host.hidden=false;document.documentElement.classList.add('pbCrmTabOpen');
+  window.PBStorePhotographerHeaderCore?.refresh?.();
   for(const b of document.querySelectorAll('[data-pb1761-crm]')){
    const selected=b.classList.contains('pb1761CrmDesktopTab')||b.dataset.pbCrmPane===pane;
    b.classList.toggle('active',selected&&b.classList.contains('pb1761CrmDesktopTab'));

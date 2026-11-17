@@ -19,7 +19,9 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
  assert(native.includes("await pb1884Bounded(Promise.all("));
  assert(native.includes("navigator.onLine===false)?1200:4500"));
  assert(native.includes("هیچ سفارشی ثبت نشده است"));
- assert(native.includes("if(primaryState!==true)primaryState=false"));
+ assert(native.includes("if(primaryState!==true)primaryState=null"));
+ assert(native.includes("if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}"));
+ assert(native.includes("state?.queued||state?.operationId"));
  assert(native.includes('not_primary_download_device'));
  assert(native.includes("manualPreflight='+Date.now()"),'submit checks live server before posting');
  assert(native.includes('if(pb1884PreflightBusy)return;'),'duplicate submit checks are suppressed');
@@ -90,6 +92,41 @@ test('R1884: dead connection presents a closable error dialog instead of hanging
  assert(nodes.some(x=>String(x.textContent).includes('دریافت اطلاعات از سرور انجام نشد')));
  assert(requests.every(x=>!x.includes('/submit')),'no write is attempted on failed bootstrap');
  assert.equal(launch.disabled,false);
+});
+
+test('R1884: native launcher remains clickable during pending offline device check but hides after an explicit secondary response',()=>{
+ const start=native.indexOf('function mount(){');
+ const end=native.indexOf('let primaryState=',start);
+ assert(start>=0&&end>start);
+ const mountSource=native.slice(start,end);
+ const run=state=>{
+  const header={children:[],append(el){this.children.push(el);el.parentElement=this;}};
+  const host={querySelector(){return null;}};
+  let checks=0;
+  const document={
+   querySelector(selector){
+    if(selector==='.labRoleWorkspace main')return host;
+    if(selector==='.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav')return header;
+    if(selector==='.labRoleWorkspace .stageQueueWorkspace')return host;
+    return null;
+   },
+   getElementById(){return null;}
+  };
+  const sandbox={document,location:{pathname:'/lab/orders'},window:{matchMedia:()=>({matches:true})},
+   storage:()=>({deviceId:()=> 'test-device'}),primaryState:state,checking:false,
+   pb1884PrimaryFailAt:0,checkPrimary(){checks++;},Date,open(){},node:(_tag,label,cls)=>({textContent:label,className:cls,id:'',type:'',onclick:null})
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(mountSource+'\nthis.runMount=mount;',sandbox);
+  sandbox.runMount();
+  return{header,checks};
+ };
+ const pending=run(null);
+ assert.equal(pending.checks,1);
+ assert.equal(pending.header.children.length,1,'offline launcher is visible before the HTTP check finishes');
+ assert.equal(typeof pending.header.children[0].onclick,'function');
+ const secondary=run(false);
+ assert.equal(secondary.header.children.length,0,'definitively unauthorized device stays blocked');
 });
 
 test('R1884: the Windows update manifest and loader serve exactly the native patch',()=>{

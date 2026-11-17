@@ -51,7 +51,7 @@
     return 'home';
   }
   function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m==='store'&&!/^\/equipment-rental(?:\/|$)/.test(location.pathname)){if(mobile()&&isPortal()){e.preventDefault();e.stopImmediatePropagation();location.assign('/equipment-rental/book')}return}if(m){const leavingStore=/^\/equipment-rental(?:\/|$)/.test(location.pathname)&&m!=='store'&&!!el?.dataset?.mainHref;if(leavingStore){e.preventDefault();e.stopImmediatePropagation();location.assign(el.dataset.mainHref);return}if(m==='print'&&mode()!=='print'){pendingMode=mode();pendingUntil=Infinity;return}pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
-  function nativeHeader(){return $('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader')}
+  function nativeHeader(){return mode()==='store'?($('#photographerStoreRoleHeader')||$('#photographerRoleHeaderV710')):($('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader'))}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
   function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
   function pdate(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{timeZone:'Asia/Tehran',weekday:'short',year:'numeric',month:'long',day:'numeric'}).format(new Date())}catch{return ''}}
@@ -156,8 +156,20 @@
     document.body.classList.remove('pbF37LabChooserVisible');document.body.classList.add('pbF37UnifiedActive');
     const m=mode(),storeHeader=$('#photographerStoreRoleHeader');
     document.body.classList.toggle('pbF37StoreMode',m==='store');
-    if(m==='store'){ // Store owns its native header only while Store is the authoritative section.
-      storeHeader?.classList.add('pbF37CoreHeader');if(!document.body.classList.contains('frameCustomerStore'))fitHeaderName(storeHeader);lastSig='';sourceMap=new Map();$('#pbF37PhotographerHeader')?.remove();$('#pbF37MenuBtn')?.remove();$('#pbF37Subheader')?.remove();$('#pbF37MenuPanel')?.remove();clearPrint();return;
+    if(m==='store'){
+      // R1873: keep the very same account header used by Gallery/Print/AI.
+      // The native Store header remains mounted as the source of its existing
+      // settings/wallet/notification/logout handlers, but it is not painted.
+      storeHeader?.classList.add('pbF37CoreHeader');
+      ensureHeader();ensureMenu();
+      setText($('#pbF37StudioName'),studioName());
+      setText($('#pbF37Manager'),managerName());
+      clockBadge();fitHeaderName($('#pbF37PhotographerHeader'));paintAvatar();
+      // Store already has its own lower identity/section navigation. Do not
+      // mount Gallery's second row on top of those real Store controls.
+      $('#pbF37Subheader')?.remove();
+      document.body.classList.remove('pbF37HasTabs','pbF37NoTabs');
+      lastSig='';sourceMap=new Map();clearPrint();return;
     }
     storeHeader?.classList.remove('pbF37CoreHeader');
     ensureHeader();ensureSub();ensureMenu();

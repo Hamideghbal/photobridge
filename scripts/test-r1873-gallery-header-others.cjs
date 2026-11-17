@@ -1,5 +1,5 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=p=>fs.readFileSync(p,'utf8');
 test('R1873: CRM overlay respects Gallery shared header and native fallback',()=>{
  const h=read('dist/web/customer-crm-host.js'),css=read('dist/web/customer-crm-host.css');
@@ -11,6 +11,8 @@ test('R1873: CRM overlay respects Gallery shared header and native fallback',()=
  assert.match(css,/#pbCrmTabContent\{[^}]*z-index:2147481400/);
  assert(read('dist/web/index.html').includes('photobridge-v904r100f36-shared-header.js?rev='+encodeURIComponent(read('DEPLOY_REVISION.txt').trim())));
  const s=read('dist/web/photobridge-v904r100f36-shared-header.js');
+ assert.doesNotThrow(()=>new vm.Script(s));
+ assert.doesNotThrow(()=>new vm.Script(h));
  assert(s.includes("document.documentElement.classList.contains('pbCrmTabOpen')"));
  assert(s.includes("pane==='calendar'?'calendar':'customers'"));
  assert(s.includes("if(m==='customers')return{title:'مشتریان'"));

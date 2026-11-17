@@ -18,7 +18,7 @@ function fixture({cityA='تهران',cityB='اصفهان',includeB=true,unknown=
 }
 function harness(data,simulateWindowEventRegistration=false){
   let calls=0,root=null,style=null;
-  const board={innerHTML:''},events={};
+  const board={innerHTML:''},cityBar={innerHTML:'',hidden:true},events={};
   const attrs={
     classList:{add(){},remove(){}},
     style:{}
@@ -32,7 +32,8 @@ function harness(data,simulateWindowEventRegistration=false){
       return {id:'',dataset:{},innerHTML:'',textContent:'',listeners:{},
         setAttribute(){},
         addEventListener(event,fn){this.listeners[event]=fn},
-        querySelector(selector){return selector==='.pbR99LabBoard'?board:null},
+        querySelector(selector){return selector==='.pbR99LabBoard'?board:selector==='.pbR99LabCities'?cityBar:null},
+        contains(){return true},
         remove(){root=null}
       };
     },
@@ -80,7 +81,8 @@ function harness(data,simulateWindowEventRegistration=false){
         return selector==='[data-lab-city]'?{dataset:{labCity:key}}:null;
       }}});
     },
-    html:()=>board.innerHTML,
+    // The fixed third header is intentionally outside the scrolling cards.
+    html:()=> (cityBar.hidden?'':'<nav class="pbR99CityChooser">'+cityBar.innerHTML+'</nav>')+board.innerHTML,
     css:()=>style?.textContent||'',
     calls:()=>calls
   };
@@ -110,7 +112,7 @@ test('an actual one-laboratory account stays ungrouped',async()=>{
   assert(!h.html().includes('چاپ ب'));
   assert(h.html().includes('data-select="a"'));
 });
-test('different cities expose city buttons; active lab city is selected by default',async()=>{
+test('different cities expose fixed city buttons; active lab city is selected by default',async()=>{
   const h=harness(fixture());
   await h.start();
   assert(h.html().includes('pbR99CityChooser'));
@@ -157,8 +159,11 @@ test('late-stage scripts can register focus with window.addEventListener in real
 });
 test('responsive city filter works on web and keeps old chooser handlers',()=>{
   assert(script.includes('/* PB1722 city filters */'));
+  assert(script.includes('/* PB1877 stationary city filters:'));
+  assert(script.includes('class="pbR99LabCities"'));
   assert(script.includes('PB1722 city selector shared by mobile and desktop'));
   assert(script.includes('@media(max-width:820px){.pbR99CityChooser'));
+  assert(script.indexOf('class="pbR99LabCities"')<script.indexOf('class="pbR99LabBoard"'), 'city row comes before scrolling cards');
   assert(script.includes("const sel=e.target.closest('[data-select]')"));
   assert(script.includes("const req=e.target.closest('[data-request]')"));
   assert.equal(html.split('photobridge-v904r99-lab-chooser.js?v=r1722').length-1,1);

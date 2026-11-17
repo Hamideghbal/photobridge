@@ -219,6 +219,10 @@
     addEventListener('pb-crm-header-change',()=>{lastSig='';schedule()});
     addEventListener('photobridge-auth-session-changed',()=>{if(photographerRoute()){void loadMe();schedule(0)}});
     const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
+    // Store chooser changes body class without changing the route; never keep
+    // the previous Store header when the selector opens or closes.
+    let wasChoosingStore=document.body.classList.contains('pbR96ChoosingStore');
+    new MutationObserver(()=>{const choosing=document.body.classList.contains('pbR96ChoosingStore');if(choosing!==wasChoosingStore){wasChoosingStore=choosing;schedule(0)}}).observe(document.body,{attributes:true,attributeFilter:['class']});
     addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});
     setInterval(()=>{clockBadge();settleBoot()},15000);
     setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F37LabEnterBoot'))document.documentElement.classList.remove('pbR100F37LabEnterBoot')},5200);

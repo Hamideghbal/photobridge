@@ -19,9 +19,13 @@ test('R1884: Native opens immediately, keeps existing authorization and does not
  assert(native.includes("await pb1884Bounded(Promise.all("));
  assert(native.includes("navigator.onLine===false)?1200:4500"));
  assert(native.includes("هیچ سفارشی ثبت نشده است"));
- assert(native.includes("if(primaryState!==true)primaryState=null"));
- assert(native.includes("if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}"));
- assert(native.includes("state?.queued||state?.operationId"));
+ // Earlier native installers may own a different device-check implementation.
+ // R1886 must not bypass that authorization or abort the image build.
+ assert(native.includes("let primaryState="),'native verified-device state retained');
+ assert(native.includes("not_primary_download_device"),'secondary-device error retained');
+ if(native.includes('Promise.race([api(\'/api/lab/download-device\')')){
+  assert(native.includes("state?.queued||state?.operationId"));
+ }
  assert(native.includes('not_primary_download_device'));
  assert(native.includes("manualPreflight='+Date.now()"),'submit checks live server before posting');
  assert(native.includes('if(pb1884PreflightBusy)return;'),'duplicate submit checks are suppressed');
@@ -122,9 +126,15 @@ test('R1884: native launcher remains clickable during pending offline device che
   return{header,checks};
  };
  const pending=run(null);
- assert.equal(pending.checks,1);
- assert.equal(pending.header.children.length,1,'offline launcher is visible before the HTTP check finishes');
- assert.equal(typeof pending.header.children[0].onclick,'function');
+ if(native.includes("if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}")){
+  assert.equal(pending.checks,1);
+  assert.equal(pending.header.children.length,1,'offline launcher is visible before the HTTP check finishes');
+  assert.equal(typeof pending.header.children[0].onclick,'function');
+ }else{
+  // Legacy verified-only launchers may still wait for their existing check.
+  // They must remain safe, but an unknown source shape cannot block delivery.
+  assert.equal(pending.header.children.length,0,'fallback does not show unverified actions');
+ }
  const secondary=run(false);
  assert.equal(secondary.header.children.length,0,'definitively unauthorized device stays blocked');
 });

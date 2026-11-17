@@ -97,9 +97,16 @@ execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 // Bump web loader URL for the city chooser but do not copy to the Windows bundles.
 const htmlFile='dist/web/index.html';
 let html=fs.readFileSync(htmlFile,'utf8');
-const url=/photobridge-v904r99-lab-chooser\.js\?v=[^"'<>\s]+/g;
+// Accept both historic "?v=" and the release-pinned "?rev=" URLs.
+// When the current release URL exists, preserve its cache key: later installers
+// and R1879 tests require the latest chooser, not the old R1722 cache entry.
+const url=/photobridge-v904r99-lab-chooser\.js\?(?:v|rev)=[^"'<>\\s]+/g;
 const found=[...html.matchAll(url)];
 if(found.length!==1)throw Error('[R1722] chooser script reference count '+found.length);
-html=html.replace(url,'photobridge-v904r99-lab-chooser.js?v=r1722');
+const revision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
+const replacement=found[0][0].includes('?rev=')
+  ? 'photobridge-v904r99-lab-chooser.js?rev='+encodeURIComponent(revision)
+  : 'photobridge-v904r99-lab-chooser.js?v=r1722';
+html=html.replace(url,replacement);
 fs.writeFileSync(htmlFile,html);
 console.log('[R1722] Conditional Lab city selector for mobile and desktop web, unchanged API and Windows.');

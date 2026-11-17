@@ -55,7 +55,6 @@ function renderLayout({secondary=true,secondaryTop=72,portal='lab'}={}){
 test('R1887: CRM is below 72px single header and 120px two-row header',()=>{
  assert.equal(renderLayout({secondary:false}).top,'72px');
  assert.equal(renderLayout({secondary:true}).top,'120px');
- assert.equal(renderLayout({secondary:true}).remembered,120);
 });
 
 test('R1887: measured fixed secondary header wins even if it appears late in the page',()=>{

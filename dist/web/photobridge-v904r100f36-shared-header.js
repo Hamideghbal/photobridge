@@ -117,7 +117,12 @@
     if(s.textContent!==STYLE)s.textContent=STYLE;
   }
   function isVisible(el){if(!el||!el.isConnected)return false;const cs=getComputedStyle(el);return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity||1)!==0}
-  function isPhotographerPortal(){return !!($('#storePhotographerWorkspace')||$('.photographerMain')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'))}
+  function isPhotographerPortal(){
+    const p=location.pathname;
+    if(/^\/photographer\/(?:login|signup|register|invite)(?:\/|$)/.test(p))return false;
+    if(p==='/equipment-rental/book'&&!document.body.classList.contains('rentalPhotographerMode'))return false;
+    return !!($('#storePhotographerWorkspace')||$('.photographerMain')||document.body.classList.contains('pbAuthenticatedPhotographerPortal'));
+  }
   function isLabChooserVisible(){
     const c=$('#pbR99LabChooser');
     if(!c||!c.isConnected||c.hidden)return false;

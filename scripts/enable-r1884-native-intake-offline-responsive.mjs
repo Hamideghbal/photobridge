@@ -82,12 +82,30 @@ if(!code.includes(mark)){
    "  busy(true);error.textContent='در حال ذخیره روی هارد و ثبت سفارش…';"
   ].join('\n'),
   'bounded submit preflight with no side effects');
- // A previously validated primary device must keep its launcher during
- // temporary connectivity loss; never grant new primary authorization offline.
+ // Native offline startup: show the launcher even while a read-only primary
+ // check is pending. A secondary device is still rejected after a definitive
+ // response; open() and submit both retain server-side authorization checks.
+ // Rate-limit read-only retries when the network is unreachable.
+ code=once(code,
+  "let primaryState=null,checking=false,primaryCheckedAt=0;",
+  "let primaryState=null,checking=false,primaryCheckedAt=0,pb1884PrimaryFailAt=0;",
+  'native primary-check backoff');
+ code=once(code,
+  "if(primaryState===null){checkPrimary();return;}if(!primaryState){old?.remove();return;}",
+  "if(primaryState===null){if(!checking&&Date.now()-pb1884PrimaryFailAt>30000)checkPrimary();}else if(!primaryState){old?.remove();return;}",
+  'native provisional launcher visibility');
+ code=once(code,
+  "const state=await api('/api/lab/download-device');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();",
+  "const state=await Promise.race([api('/api/lab/download-device'),new Promise((_,reject)=>setTimeout(()=>reject(Error('offline')),2600))]);if(state?.queued||state?.operationId)throw Error('offline');primaryState=state.registered&&state.isThisDevice;primaryCheckedAt=Date.now();pb1884PrimaryFailAt=0;",
+  'bounded primary-device read');
  code=once(code,
   "catch{primaryState=false;}finally{checking=false;schedule();}",
-  "catch{if(primaryState!==true)primaryState=false;}finally{checking=false;schedule();}",
-  'retain existing verified device state only');
+  "catch{if(primaryState!==true)primaryState=null;pb1884PrimaryFailAt=Date.now();}finally{checking=false;schedule();}",
+  'retain verified state during temporary disconnect');
+ code=once(code,
+  "primaryState=null;primaryCheckedAt=0;schedule();",
+  "primaryState=null;primaryCheckedAt=0;pb1884PrimaryFailAt=0;schedule();",
+  'reset offline primary backoff after auth change');
  fs.writeFileSync(path,code);
 }
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});

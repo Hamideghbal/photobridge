@@ -547,3 +547,30 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
   html.pbF49PhotographerRoute #photographerStoreIdentityBar,
   html.pbF49PhotographerRoute #storeSectionNavV673{display:none!important;visibility:hidden!important;pointer-events:none!important}
 }
+
+/* R1873: the Gallery account header remains the single visible account row
+   in Store as well. Keep the Store header mounted for its live action handlers. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader{
+   visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+ }
+ html body.pbF37UnifiedActive.pbF37StoreMode #pbF37PhotographerHeader,
+ html body.pbF37UnifiedActive.pbF37StoreMode #pbF37MenuBtn{
+   visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ /* A conservative first-paint offset until the CRM host measures the active
+    Gallery/Store title rows; its inline position subsequently takes priority. */
+ html.pbCrmTabOpen body.pbF37UnifiedActive:not(.pbF37StoreMode) #pbCrmTabContent{
+   top:var(--pb-f37-content-top,181px);
+ }
+ html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37StoreMode #pbCrmTabContent{
+   top:181px;
+ }
+ /* The account menu must remain clickable over the CRM iframe when opened. */
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuPanel{
+   z-index:2147483300!important;
+ }
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuBtn{
+   z-index:2147483350!important;
+ }
+}

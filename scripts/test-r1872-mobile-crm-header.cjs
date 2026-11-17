@@ -18,7 +18,7 @@ test('R1872: Customers and Calendar use native selected blue, not legacy pale bl
  assert(host.includes('#photographerStoreRoleHeader'));
  assert(host.includes('#photographerRoleHeaderV710'));
  assert(host.includes('rect.bottom>0&&rect.top<innerHeight*.45'));
- assert(host.includes("attributeFilter:['class','style']"));
+ assert(host.includes("attributeFilter:['class','hidden']"));
  const crm=read('dist/web/customer-crm.html');
  assert(crm.includes('html.crmEmbedded body>header'));
 });

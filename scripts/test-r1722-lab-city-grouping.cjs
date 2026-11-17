@@ -69,7 +69,7 @@ function harness(data,simulateWindowEventRegistration=false){
     : script;
   vm.runInNewContext(runtimeScript,{
     window,document,location,sessionStorage,history,fetch,addEventListener,queueMicrotask,
-    setInterval(){},setTimeout(){},URLSearchParams,console:{warn(){}}
+    setInterval(){},setTimeout(){},requestAnimationFrame(){},URLSearchParams,console:{warn(){}}
   },{timeout:2000});
   const flush=async()=>{for(let i=0;i<28;i++)await Promise.resolve()};
   return {
@@ -166,5 +166,8 @@ test('responsive city filter works on web and keeps old chooser handlers',()=>{
   assert(script.indexOf('class="pbR99LabCities"')<script.indexOf('class="pbR99LabBoard"'), 'city row comes before scrolling cards');
   assert(script.includes("const sel=e.target.closest('[data-select]')"));
   assert(script.includes("const req=e.target.closest('[data-request]')"));
-  assert.equal(html.split('photobridge-v904r99-lab-chooser.js?v=r1722').length-1,1);
+  // R1879 keeps the canonical release-pinned URL; R1722 must not regress it.
+  const revision=fs.readFileSync('DEPLOY_REVISION.txt','utf8').trim();
+  const expected='photobridge-v904r99-lab-chooser.js?rev='+revision;
+  assert.equal(html.split(expected).length-1,1, 'chooser is pinned to the deployed release');
 });

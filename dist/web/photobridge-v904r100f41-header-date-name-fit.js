@@ -2,7 +2,7 @@
    No measured geometry; Print uses fixed top positions to avoid resize/refresh loops. */
 (()=>{
   'use strict';
-  if(window.PBStorePhotographerHeaderCore?.version==='R1875') return;
+  if(window.PBStorePhotographerHeaderCore?.version==='R1876') return;
 
   const setText=(el,value)=>{if(el&&el.textContent!==value)el.textContent=value;};
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -47,7 +47,7 @@
     const p=location.pathname.replace(/\/+$/,'')||'/',q=new URLSearchParams(location.search);
     // Route and active bottom-nav state are authoritative. Store/Print DOM may remain
     // mounted briefly during SPA transitions and must never own the destination header.
-    if(/^\/equipment-rental(?:\/|$)/.test(p))return 'store';
+    if(/^\/equipment-rental(?:\/|$)/.test(p))return document.body.classList.contains('pbR96ChoosingStore')?'storechooser':'store';
     if(/^\/photographer\/ai(?:\/|$)/.test(p))return 'ai';
     if(p==='/photographer/gallery')return 'gallery';
     if(/^\/photographer\/album-design(?:\/|$)/.test(p))return q.get('pb_mode')==='instagram'?'instagram':'album';
@@ -60,7 +60,7 @@
     return 'home';
   }
   function handleSectionClick(e){const lab=e.target?.closest?.('#pbR99LabChooser [data-select]');if(lab){schedule(0);return}const el=e.target?.closest?.('.photographerBottomAppNav button,.photographerBottomAppNavGrid button,.pbHomeMobileAccountBar a,.photographerStoreEntry,.photographerStoreMobileNav,.pbRental656MobileBtn');const m=labelMode(txt(el)||el?.getAttribute?.('aria-label'));if(m==='store'&&!/^\/equipment-rental(?:\/|$)/.test(location.pathname)){if(mobile()&&isPortal()){e.preventDefault();e.stopImmediatePropagation();location.assign('/equipment-rental/book')}return}if(m){const leavingStore=/^\/equipment-rental(?:\/|$)/.test(location.pathname)&&m!=='store'&&!!el?.dataset?.mainHref;if(leavingStore){e.preventDefault();e.stopImmediatePropagation();location.assign(el.dataset.mainHref);return}if(m==='print'&&mode()!=='print'){pendingMode='print';pendingUntil=Date.now()+1500;schedule(0);return}pendingMode=m;pendingUntil=Date.now()+1000;if(m!=='store')document.body.classList.remove('pbF37StoreMode');schedule(0)}else schedule(70)}
-  function nativeHeader(){return mode()==='store'?($('#photographerStoreRoleHeader')||$('#photographerRoleHeaderV710')):($('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader'))}
+  function nativeHeader(){const m=mode();return (m==='store'||m==='storechooser')?($('#photographerStoreRoleHeader')||$('#photographerRoleHeaderV710')):($('#photographerRoleHeaderV710')||$('.photographerMain>.unifiedRoleHeader.photographerHeaderRefined')||$('#photographerStoreRoleHeader'))}
   function studioName(){return String(me?.user?.photographerName||me?.user?.studioName||me?.user?.studio_name||nativeHeader()?.querySelector('.workspaceIdentityCopy>h1')?.textContent||me?.user?.name||'عکاسی').trim()||'عکاسی'}
   function managerName(){return `مدیریت ${String(me?.user?.name||studioName()).trim()}`}
   function pdate(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{timeZone:'Asia/Tehran',weekday:'short',year:'numeric',month:'long',day:'numeric'}).format(new Date())}catch{return ''}}
@@ -72,6 +72,7 @@
     if(m==='customers')return{title:'مشتریان',meta:''};
     if(m==='calendar')return{title:'تقویم مشتریان',meta:''};
     if(m==='labchooser')return{title:'انتخاب لابراتوار',meta:''};
+    if(m==='storechooser')return{title:'انتخاب فروشگاه',meta:''};
     if(m==='print')return{title:labName(),meta:'لابراتوار'};
     if(m==='instagram')return{title:'طراحی اینستاگرام',meta:modelCount()};
     if(m==='album')return{title:'طراحی آلبوم',meta:modelCount()};
@@ -166,7 +167,8 @@
     // Keep the shared account header visible even while the laboratory chooser is open.
     document.body.classList.remove('pbF37LabChooserVisible');document.body.classList.add('pbF37UnifiedActive');
     const m=mode(),storeHeader=$('#photographerStoreRoleHeader');
-    document.body.classList.toggle('pbF37StoreMode',m==='store');
+    document.body.classList.toggle('pbF37StoreMode',m==='store'||m==='storechooser');
+    document.body.classList.toggle('pbF37StoreChooserMode',m==='storechooser');
     document.body.classList.toggle('pbF37CrmMode',m==='customers'||m==='calendar');
     document.body.classList.toggle('pbF37CustomersMode',m==='customers');
     document.body.classList.toggle('pbF37CalendarMode',m==='calendar');
@@ -188,7 +190,7 @@
       document.body.classList.remove('pbF37HasTabs','pbF37NoTabs');
       lastSig='';sourceMap=new Map();clearPrint();return;
     }
-    storeHeader?.classList.remove('pbF37CoreHeader');
+    storeHeader?.classList.toggle('pbF37CoreHeader',m==='storechooser');
     ensureHeader();ensureSub();ensureMenu();
     setText($('#pbF37StudioName'),studioName());setText($('#pbF37Manager'),managerName());clockBadge();fitHeaderName($('#pbF37PhotographerHeader'));paintAvatar();
     const info=context(m);setText($('#pbF37ContextText'),info.title);const meta=$('#pbF37ContextMeta');meta.hidden=!info.meta;if(info.meta)setText(meta,info.meta);
@@ -222,7 +224,7 @@
     setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F37LabEnterBoot'))document.documentElement.classList.remove('pbR100F37LabEnterBoot')},5200);
   }
   window.PBPhotographerAvatarInput=avatarInput;
-  window.PBStorePhotographerHeaderCore={version:'R1875',mount:render,refresh:()=>schedule(0),getMode:mode};
+  window.PBStorePhotographerHeaderCore={version:'R1876',mount:render,refresh:()=>schedule(0),getMode:mode};
   // Update outgoing chrome before older document-level navigation interceptors run.
   window.addEventListener('click',handleSectionClick,true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

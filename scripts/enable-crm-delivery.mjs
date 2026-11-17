@@ -23,6 +23,13 @@ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  }
  if(!html.includes('/photobridge-r1761-crm-nav.js?'))html=html.replace('</head>','<link rel="stylesheet" href="/photobridge-r1761-crm-nav.css?v='+revision+'"><script src="/photobridge-r1761-crm-nav.js?v='+revision+'" defer></script></head>');
  if(!html.includes('/customer-crm-host.js?'))html=html.replace('</head>','<link rel="stylesheet" href="/customer-crm-host.css?v='+revision+'"><script src="/customer-crm-host.js?v='+revision+'" defer></script></head>');
+ // R1875: the checked-in HTML may already include these assets with only a
+ // deploy-revision query. Normalize both version keys before the deploy-rev
+ // final pass, so the existing CRM contract and cache busting both survive.
+ for(const name of ['customer-crm-host.js','customer-crm-host.css']){
+  const escaped=name.split('.').join('[.]');
+  html=html.replace(new RegExp('/'+escaped+'(?:[?][^"\\s>]+)?','g'),'/'+name+'?v='+revision);
+ }
  fs.writeFileSync(file,html);
 }
 // CRM script names are stable; every deploy must also change their cache keys.

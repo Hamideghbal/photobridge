@@ -2,7 +2,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {chromium}=require('playwright');
+
 const read=path=>fs.readFileSync(path,'utf8');
 
 test('R1872: Customers and Calendar use native selected blue, not legacy pale blue',()=>{
@@ -21,8 +21,10 @@ test('R1872: Customers and Calendar use native selected blue, not legacy pale bl
  assert(crm.includes('html.crmEmbedded body>header'));
 });
 
-test('R1872: portal header survives both CRM mobile tabs without new or overlapping header',async()=>{
- const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
+test('R1872: portal header survives both CRM mobile tabs without new or overlapping header',async t=>{
+ if(!process.env.PB_BROWSER_EXECUTABLE)return t.skip('Browser-level test runs in the Chromium CI stage');
+ const {chromium}=require('playwright');
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE,args:['--no-sandbox']});
  try{
   for(const kind of ['photographer','lab']){
    const page=await browser.newPage({viewport:{width:390,height:844}});

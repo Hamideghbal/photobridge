@@ -15,6 +15,8 @@ test('R1873: CRM overlay respects Gallery shared header and native fallback',()=
  assert(s.includes("pane==='calendar'?'calendar':'customers'"));
  assert(s.includes("if(m==='customers')return{title:'مشتریان'"));
  assert(s.includes("if(m==='calendar')return{title:'تقویم'"));
+ assert(s.includes('sourceMap=new Map();const out=[]'));
+ assert(!s.includes('sourceMap=new Map();sourceSeq=0'));
 });
 test('R1873: one Gallery header stays above both mobile CRM tabs',async t=>{
  if(!process.env.PB_BROWSER_EXECUTABLE)return t.skip('Chromium stage only');

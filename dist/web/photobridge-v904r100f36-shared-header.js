@@ -133,6 +133,23 @@
     const r=c.getBoundingClientRect();
     return r.width>8&&r.height>8;
   }
+  // The phone Print and Store pages are full-screen panels above Gallery.
+  // Move the SAME header nodes into the active panel rather than cloning them
+  // or leaving them underneath its stacking context.
+  function activeMobilePanel(){
+    for(const id of ['#pb1106StorePanel','#pb1106PrintPanel']){
+      const panel=$(id),rect=panel?.getBoundingClientRect();
+      if(panel&&isVisible(panel)&&rect?.width>8&&rect?.height>8)return panel;
+    }
+    return null;
+  }
+  function placeSharedHeader(){
+    const owner=activeMobilePanel()||document.body;
+    for(const id of ['#pbSharedPhotographerHeader','#pbSharedPhotographerSubheader']){
+      const node=$(id);
+      if(node&&node.parentNode!==owner)owner.appendChild(node);
+    }
+  }
   function mode(){
     // CRM is an in-portal overlay: keep Gallery's exact shared header while
     // describing the active Customers/Calendar pane, not the underlying route.
@@ -141,6 +158,9 @@
         $('[data-pb-crm-pane][aria-current="page"]')?.dataset.pbCrmPane;
       return pane==='calendar'?'calendar':'customers';
     }
+    const overlay=activeMobilePanel();
+    if(overlay?.id==='pb1106StorePanel')return 'store';
+    if(overlay?.id==='pb1106PrintPanel')return 'print';
     if($('#storePhotographerWorkspace')&&isVisible($('#storePhotographerWorkspace')))return 'store';
     const main=$('.photographerMain');
     if(main?.classList.contains('photographerPrintWorkspace'))return 'print';
@@ -347,6 +367,7 @@
   function refresh(){
     if(!matchMedia(MOBILE).matches||!isPhotographerPortal()){document.body.classList.remove('pbSharedPhotographerHeaderActive','pbSharedLabChooserVisible');$('#pbSharedPhotographerHeader')?.remove();$('#pbSharedPhotographerSubheader')?.remove();$('#pbSharedPhotographerMenu')?.remove();return}
     ensureStyle();ensureShell();ensureSubheader();document.body.classList.add('pbSharedPhotographerHeaderActive');
+    placeSharedHeader();
     const chooserVisible=isLabChooserVisible();
     document.body.classList.toggle('pbSharedLabChooserVisible',chooserVisible);
     if(chooserVisible){

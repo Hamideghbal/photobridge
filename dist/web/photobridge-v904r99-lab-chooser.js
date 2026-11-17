@@ -75,6 +75,38 @@
         : discover?`<button class="pbR99LabBtn secondary" data-request="${esc(x.id)}">درخواست همکاری</button>`:'';
     return `<article class="pbR99LabCard${current?' current':''}" data-id="${esc(x.id)}"><div class="pbR99LabInfo"><h3>${esc(x.name||'لابراتوار')}</h3><div class="pbR99LabMeta">${esc(loc(x))}${esc(discountText)}</div><span class="pbR99LabBadge ${cls}">${esc(String(x.id)===String(window.__pbR100F5PrimaryLab||'')?'لابراتوار اصلی · '+badge:badge)}</span></div><div class="pbR99LabActions">${action}</div></article>`;
   }
+  /* R1879: size the lab chooser to the VISIBLE dock buttons, not a
+     legacy footer reservation (which leaves a full empty strip on mobile). */
+  let pbR1879ViewportBound=false;
+  function pbR1879FitChooserToDock(){
+    const chooser=document.getElementById(ROOT_ID);
+    if(!chooser||window.innerWidth>820||!document.body.classList.contains('pbR100F14ChoosingLab'))return;
+    const buttons=[...document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) button:not([hidden])')];
+    const tops=buttons.map(button=>{
+      const r=button.getBoundingClientRect();
+      const s=getComputedStyle(button);
+      return r.height>=28&&r.width>=22&&s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'?r.top:Infinity;
+    });
+    const dockTop=Math.min(...tops);
+    const chooserTop=chooser.getBoundingClientRect().top;
+    if(!Number.isFinite(dockTop)||dockTop-chooserTop<180)return;
+    // Keep an 8px visual clearance above the actual buttons; the dock
+    // retains its own background and receives every tap.
+    const height=Math.floor(dockTop-chooserTop-8);
+    chooser.style.setProperty('height',height+'px','important');
+    chooser.style.setProperty('max-height','none','important');
+    chooser.style.setProperty('min-height','0','important');
+    chooser.style.setProperty('bottom','auto','important');
+    chooser.style.setProperty('overflow','hidden','important');
+  }
+  function pbR1879SyncChooserViewport(){
+    if(!pbR1879ViewportBound){
+      pbR1879ViewportBound=true;
+      window.addEventListener('resize',()=>requestAnimationFrame(pbR1879FitChooserToDock),{passive:true});
+      window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(pbR1879FitChooserToDock),{passive:true});
+    }
+    requestAnimationFrame(pbR1879FitChooserToDock);
+  }
   function ensureRoot(){
     style();
     let root=document.getElementById(ROOT_ID);
@@ -83,11 +115,13 @@
       root.innerHTML=`<main class="pbR99LabWrap"><section class="pbR99LabIntro"><div class="pbR99LabIntroIcon" aria-hidden="true">▦</div><h1>انتخاب لابراتوار</h1><p>لابراتواری را که می‌خواهی برای چاپ استفاده کنی انتخاب کن. دکمه‌های اصلی پایین صفحه در دسترس می‌مانند.</p></section><nav class="pbR99LabCities" aria-label="انتخاب شهر" hidden></nav><section class="pbR99LabBoard"><div class="pbR99LabList"></div></section></main>`;
       document.body.appendChild(root);
       root.addEventListener('click',handleClick);
+      [100,400,1200,2500].forEach(ms=>setTimeout(pbR1879FitChooserToDock,ms));
     }
     document.body.classList.add('pbR100F14ChoosingLab');
     document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
     document.documentElement.classList.remove('pbR100F14LabChooserBoot');
     document.getElementById('pbAppSplashV780')?.remove();
+    pbR1879SyncChooserViewport();
     return root;
   }
   function cleanup(){

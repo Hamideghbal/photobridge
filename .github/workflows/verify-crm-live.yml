@@ -1,0 +1,18 @@
+name: Verify live customer delivery
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/crm-live-verification]
+permissions:
+  contents: read
+jobs:
+  verify-live:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify reviewed CRM bytes, document caching and both portal entry points
+        run: node scripts/verify-crm-live.mjs

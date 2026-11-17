@@ -46,9 +46,12 @@ if(!code.includes(mark)){
  const section=code.slice(start,end);
  if(section.split("  ]);").length!==2)throw Error('[R1884] bootstrap Promise.all terminator changed');
  code=code.slice(0,start)+section.replace("  ]);","  ]),(typeof navigator!=='undefined'&&navigator.onLine===false)?1200:4500);")+code.slice(end);
+ // All earlier installers can alter the launch button's finally block.
+ // Insert the cleanup at the *next stable stage* (construction of the real
+ // order modal) instead of pinning the obsolete finally statement exactly.
  code=once(code,
-  " finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}",
-  " finally{opening=false;if(launch){launch.disabled=false;launch.textContent='ثبت سفارش عکس حضوری';}}\n if(pb1884Cancelled)return;\n  if(pb1884Warmup.open)pb1884Warmup.close();pb1884Warmup.remove();",
+  "const modal=node('dialog',null,'pb1137Intake');",
+  "if(pb1884Cancelled)return;\n if(pb1884Warmup.open)pb1884Warmup.close();pb1884Warmup.remove();\n const modal=node('dialog',null,'pb1137Intake');",
   'release preparation dialog');
  // Optional live-only enrichment in older installers can independently
  // wait for a dead connection, even after the normal bootstrap returned.

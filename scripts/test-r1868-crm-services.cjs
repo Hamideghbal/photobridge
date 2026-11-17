@@ -42,7 +42,12 @@ test('the pinned Windows lab UI ships the CRM service menus', {skip:!fs.existsSy
       const page=bytes.toString('utf8');
       assert.match(page,/for="session-type">نوع خدمات/);
       assert.match(page,/for="template-type">نوع خدمات/);
-      for(const ext of ['js','css'])assert.ok(page.includes('customer-crm-service-menus-r1868.'+ext+'?rev='+encodeURIComponent(revision)+'"'));
+      // The Windows hot-update bundle is a frozen, hash-pinned snapshot.
+      // Its own service menu asset keys must agree, but are not required
+      // to change on a mobile-web-only DEPLOY_REVISION bump.
+      const pinnedRev=page.match(/customer-crm-service-menus-r1868[.]css[?]rev=([^"]+)/)?.[1];
+      assert.ok(pinnedRev,'Windows snapshot CRM cache revision missing');
+      for(const ext of ['js','css'])assert.ok(page.includes('customer-crm-service-menus-r1868.'+ext+'?rev='+pinnedRev+'"'));
     }else assert.deepEqual(bytes,fs.readFileSync('dist/web/'+name),name);
   }
 });

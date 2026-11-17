@@ -34,6 +34,8 @@ test('R1872: portal header survives both CRM mobile tabs without new or overlapp
     const url=new URL(route.request().url());
     if(url.pathname==='/customer-crm.html')
       return route.fulfill({contentType:'text/html',body:'<!doctype html><html class="crmEmbedded"><head><style>html.crmEmbedded body>header{display:none!important}</style></head><body><header>هدر دوم</header><main>مشتریان و تقویم</main></body></html>'});
+    if(url.pathname==='/photographer/gallery')
+      return route.fulfill({contentType:'text/html',body:'<!doctype html><html lang="fa"><head></head><body></body></html>'});
     return route.fulfill({status:404,body:''});
    });
    const isLab=kind==='lab',isStore=kind==='store',portal=isStore?'photographer':kind;
@@ -41,7 +43,7 @@ test('R1872: portal header survives both CRM mobile tabs without new or overlapp
      '<header id="photographerStoreRoleHeader" style="height:106px">هدر فروشگاه</header>':
      '<header class="unifiedRoleHeader photographerPrintModeHeader" style="height:112px">هدر عکاسی / چاپ</header>';
    const buttons='<button type="button" class="pb1761CrmMobileTab" data-pb1761-crm="'+portal+'" data-pb-crm-pane="customers"><svg viewBox="0 0 24 24"></svg><em>مشتریان</em></button><button type="button" class="pb1761CrmMobileTab" data-pb1761-crm="'+portal+'" data-pb-crm-pane="calendar"><svg viewBox="0 0 24 24"></svg><em>تقویم</em></button>';
-   await page.goto('https://photobridge.test/photographer/gallery', {waitUntil:'domcontentloaded'}).catch(()=>{});
+   await page.goto('https://photobridge.test/photographer/gallery',{waitUntil:'load'});
    await page.setContent('<!doctype html><html lang="fa" dir="rtl"><head><style>body{margin:0}header{display:block;background:white}nav{position:fixed;bottom:0;left:0;right:0;height:65px;display:block;background:white}nav>div{display:flex}nav button{height:50px;flex:1}#root{display:block}main{display:block}</style><style>'+
      read('dist/web/photobridge-r1761-crm-nav.css')+'</style><style>'+read('dist/web/customer-crm-host.css')+'</style></head><body>'+(isStore?header:'')+'<div id="root"><div class="'+(isLab?'labRoleWorkspace':'')+'"><main class="'+(isLab?'labWorkspace':'photographerMain')+'">'+(isStore?'':header)+'</main><nav class="'+(isLab?'labBottomAppNav':'photographerBottomAppNav')+'"><div class="'+(isLab?'labBottomAppNavGrid':'photographerBottomAppNavGrid')+'">'+buttons+'</div></nav></div></div></body></html>');
    await page.addScriptTag({content:read('dist/web/customer-crm-host.js')});

@@ -1396,6 +1396,8 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
  runR1314(process.execPath,['--test','scripts/test-r1873-gallery-header-all-tabs.cjs'],{stdio:'inherit'});
  // R1875: assert destination-owned mobile toolbar and Store/Lab stacking after HTML refresh.
  runR1314(process.execPath,['--test','scripts/test-r1875-mobile-headers.cjs'],{stdio:'inherit'});
+ // R1876: Store/Lab chooser heading is supplied only by the second mobile header.
+ runR1314(process.execPath,['--test','scripts/test-r1876-compact-mobile-choosers.cjs'],{stdio:'inherit'});
 
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});

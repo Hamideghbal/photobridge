@@ -39,10 +39,13 @@
   if(!host){host=document.createElement('section');host.id='pbCrmTabContent';host.setAttribute('aria-label','مشتریان');host.hidden=true;document.body.append(host)}
   if(!frame||owner!==portal){
    owner=portal;frame=document.createElement('iframe');frame.title='مشتریان';frame.className='pbCrmTabFrame';
-   frame.addEventListener('load',()=>{
+   frame.addEventListener('load',event=>{
+    if(frame!==event.currentTarget)return;
     try{
      const target=new URL(frame.contentWindow.location.href);if(target.href==='about:blank')return;
      if(target.origin!==location.origin||target.pathname!=='/customer-crm.html'){location.assign(target.href);return;}
+     if(target.href!==new URL(frameUrl,location.href).href)return;
+     host.removeAttribute('aria-busy');
      frame.contentWindow.addEventListener('click',event=>{
       const a=event.target.closest?.('a[href]');if(!a||a.target==='_blank')return;
       const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.pathname!=='/customer-crm.html'){event.preventDefault();location.assign(u.href);}
@@ -51,7 +54,10 @@
    });
    frameUrl=null;host.replaceChildren(frame);
   }
-  if(frameUrl!==url){frameUrl=url;frame.src=url;}
+  if(frameUrl!==url){
+   host.setAttribute('aria-busy','true');
+   frameUrl=url;frame.src=url;
+  }
   host.hidden=false;document.documentElement.classList.add('pbCrmTabOpen');
   for(const b of document.querySelectorAll('[data-pb1761-crm]')){
    const selected=b.classList.contains('pb1761CrmDesktopTab')||b.dataset.pbCrmPane===pane;

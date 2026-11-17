@@ -83,6 +83,11 @@
     }
   }
   function refresh(){
+    const portal=activePortal();
+    if(portal&&fetchedPortal===portal)void loadVisibility(portal);
+    else schedule();
+  }
+  function resetVisibility(){
     epoch++;
     fetchedPortal=null;
     enabled=null;
@@ -132,7 +137,7 @@
   function schedule(){
     if(pending)return;
     pending=true;
-    requestAnimationFrame(render);
+    queueMicrotask(render);
   }
   function boot(){
     const root=document.getElementById('root');
@@ -143,7 +148,7 @@
     window.addEventListener('popstate',refresh);
     window.addEventListener('pageshow',refresh);
     window.addEventListener('focus',refresh);
-    window.addEventListener('photobridge-auth-session-changed',refresh);
+    window.addEventListener('photobridge-auth-session-changed',resetVisibility);
     window.addEventListener('resize',schedule,{passive:true});
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
     if(media.addEventListener)media.addEventListener('change',schedule);

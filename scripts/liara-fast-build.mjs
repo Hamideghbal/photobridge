@@ -1408,3 +1408,9 @@ runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inher
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK first-load perf fix');
+
+// R1884: native-only lab manual intake responsiveness runs last, after all
+// Windows UI snapshot writers, header mutations and web performance bundlers.
+await deployStep('./enable-r1884-native-intake-offline-responsive.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1884-native-intake-offline-responsive.cjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK R1884 native Lab intake offline responsiveness');

@@ -34,6 +34,7 @@ function labIntakeOutbox() {
    }
    return records;
   },
+  put:record=>transact('readwrite',store=>store.put(record)),
   read:id=>transact('readonly',store=>store.get(id)),
   remove:id=>transact('readwrite',store=>store.delete(id))
  };
@@ -42,6 +43,45 @@ function labIntakeOutbox() {
 const labOutbox=labIntakeOutbox();
 const labOutboxOffline=()=>navigator.onLine===false;
 const labOutboxLiveDevice=()=>api('/api/lab/intake-live/download/device?check='+Date.now());
+
+/* Offline-first bootstrap: scoped to the signed-in lab/user/native device.
+   Keep customer IDs and price references available when the upstream server
+   is unreachable. This cache is not a server invoice or authorization grant. */
+async function labOutboxBootstrap(mode='print') {
+ const context=await labOutboxContext();
+ if(!context)throw Error('برای سفارش آفلاین، ابتدا با همین حساب یک‌بار وارد برنامه شوید.');
+ const kind=mode==='album'?'album':'print';
+ const key='bootstrap/'+context.key+'/'+kind;
+ const row=await labOutbox.read(key).catch(()=>null);
+ const cached=row?.labId===context.labId&&row?.userId===context.userId&&row?.data?.lab?.id===context.labId?row.data:null;
+ const cachedResult=()=>({...cached,__pbOfflineCached:true,__pbOfflineCachedAt:row.savedAt});
+ if(labOutboxOffline()){
+  if(cached)return cachedResult();
+  throw Error('اطلاعات مشتریان و تعرفه‌ها روی این دستگاه ذخیره نشده است. یک‌بار در حالت آنلاین وارد سفارش دستی شوید.');
+ }
+ const url='/api/lab/delegated-orders/bootstrap'+(kind==='album'?'':'?mode=print');
+ const request=api(url).then(async data=>{
+  if(!data||!Array.isArray(data.customers)||!Array.isArray(data.printSizes)||String(data.lab?.id)!==String(context.labId))
+   throw Error('اطلاعات اولیه سفارش دستی معتبر نیست.');
+  if((await labOutboxContext())?.key!==context.key)throw Error('حساب لابراتوار در زمان دریافت اطلاعات تغییر کرد.');
+  await labOutbox.put({id:key,labId:context.labId,userId:context.userId,data,savedAt:new Date().toISOString()});
+  return data;
+ });
+ let timer;
+ try{
+  return await Promise.race([request,new Promise((_,reject)=>{
+   timer=setTimeout(()=>reject(Object.assign(Error('offline_bootstrap_timeout'),{code:'online_connection_required'})),cached?350:2600);
+  })]);
+ }catch(problem){
+  if(cached&&labOutboxConnectionFailed(problem))return cachedResult();
+  throw problem;
+ }finally{clearTimeout(timer);}
+}
+function labOutboxWarmBootstrap(){
+ if(!window.pbNativeStorage||labOutboxOffline()||!/^\/lab(?:\/|$)/.test(location.pathname))return;
+ void labOutboxBootstrap('print').catch(()=>{});
+}
+
 let labOutboxSyncing=false;
 
 async function labOutboxContext() {
@@ -193,5 +233,7 @@ function labOutboxPendingNotice(notice) {
  void refresh();
 }
 
-window.addEventListener('online',()=>void labOutboxSync());
+window.addEventListener('online',()=>{void labOutboxSync();labOutboxWarmBootstrap();});
+window.addEventListener('photobridge-auth-session-changed',labOutboxWarmBootstrap);
+setTimeout(labOutboxWarmBootstrap,700);
 setInterval(()=>void labOutboxSync(),30000);

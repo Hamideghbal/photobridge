@@ -34,7 +34,7 @@
  const baseNotice=pb1586NoticeWake;
  pb1586NoticeWake=function(url,data){
   baseNotice(url,data);
-  if(!/^\\/api\\/lab\\/notifications(?:\\?|$)/.test(String(url||'')))return;
+  if(!/^\/api\/lab\/notifications(?:\?|$)/.test(String(url||'')))return;
   if((data?.notifications||[]).some(n=>n?.id&&!n.read_at))arm();
  };
  // The desktop SSE bridge may wake before the notifications HTTP read.

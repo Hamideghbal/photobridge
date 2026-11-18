@@ -32,6 +32,17 @@ if(!source.includes('const labOutbox=labIntakeOutbox();')){
  source=once(source,bootstrapCall,
   "labOutboxBootstrap(/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'album':'print')");
 
+ // Do not block the order editor on the configured-storage HTTP probe:
+ // an offline order is durably staged in IndexedDB and needs a disk root only
+ // on live submit/replay (where the saved files are checked).
+ source=once(source,'    provider.root(),','    labOutboxOpenRoot(provider),');
+ const rootRequired="if(!root)throw Error('مسیر همیشگی ذخیره هنوز تنظیم نشده است. آن را در تنظیمات «ذخیره روی هارد» لابراتوار مشخص کن.');";
+ source=once(source,rootRequired,'');
+ const rootPermission="if(!await provider.permission(directory))";
+ source=once(source,rootPermission,
+   "if(!directory)directory=await provider.root();if(!directory)throw Error('مسیر ذخیره روی هارد تنظیم نشده است. ابتدا پوشه اصلی را انتخاب کنید.');if(!await provider.permission(directory))");
+
+
  const primaryCheck="Promise.race([api('/api/lab/download-device'),";
  source=once(source,primaryCheck,"Promise.race([labOutboxPrimary(),");
  const start=source.indexOf(preflightStart),end=source.indexOf(preflightEnd,start);

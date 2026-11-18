@@ -1423,3 +1423,4 @@ console.log('[PhotoBridge Docker build] OK R1887 native Lab CRM navigation');
 
 await deployStep('./enable-lab-offline-intake.mjs');
 runR1314(process.execPath,['--test','scripts/test-lab-offline-intake.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs'],{stdio:'inherit'});

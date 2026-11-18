@@ -77,8 +77,22 @@ async function labOutboxBootstrap(mode='print') {
   throw problem;
  }finally{clearTimeout(timer);}
 }
+// Opening an offline form does not need a server route or even an activated
+// disk descriptor: durable local staging happens in IndexedDB, and the real
+// disk is rechecked before replay or any online submission.
+async function labOutboxOpenRoot(provider) {
+ if(labOutboxOffline())return null;
+ let timer;
+ try{
+  return await Promise.race([
+   Promise.resolve().then(()=>provider.root()).catch(()=>null),
+   new Promise(resolve=>{timer=setTimeout(()=>resolve(null),700);})
+  ]);
+ }finally{clearTimeout(timer);}
+}
 function labOutboxWarmBootstrap(){
  if(!window.pbNativeStorage||labOutboxOffline()||!/^\/lab(?:\/|$)/.test(location.pathname))return;
+ void labOutboxPrimary().catch(()=>{}); // Persist live, account/device-scoped primary identity.
  void labOutboxBootstrap('print').catch(()=>{});
 }
 

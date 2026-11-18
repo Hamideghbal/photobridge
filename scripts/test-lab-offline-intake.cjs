@@ -136,3 +136,22 @@ test('manual intake opens from native cached bootstrap and identifies provisiona
  assert.match(outbox,/id:key,labId:context.labId,userId:context.userId/);
  assert.match(outbox,/setTimeout\(labOutboxWarmBootstrap,700\)/);
 });
+
+test('native offline screen ignores unresponsive storage target while preserving submit root check',async()=>{
+ const begin=outbox.indexOf('async function labOutboxOpenRoot('),end=outbox.indexOf('\nfunction labOutboxWarmBootstrap()',begin);
+ assert(begin>=0&&end>begin);
+ const code=outbox.slice(begin,end);
+ let online=false,rootCalls=0;
+ const ctx={labOutboxOffline:()=>!online,Promise,setTimeout,clearTimeout};
+ vm.createContext(ctx);vm.runInContext(code+'\nthis.openRoot=labOutboxOpenRoot;',ctx);
+ const provider={root:()=>{rootCalls++;return new Promise(()=>{});}};
+ assert.equal(await ctx.openRoot(provider),null);
+ assert.equal(rootCalls,0,'known offline must never call configured-storage HTTP-backed root');
+ online=true;
+ const started=Date.now();
+ assert.equal(await ctx.openRoot(provider),null);
+ assert(Date.now()-started<1500,'online-but-hung root check must be bounded');
+ assert.equal(rootCalls,1);
+ assert(native.includes('labOutboxOpenRoot(provider)'));
+ assert(native.includes('if(!directory)directory=await provider.root()'),'online commit re-verifies the local root');
+});

@@ -1,0 +1,48 @@
+/* PB1892: follow a desktop order notice with bounded readiness probes.
+ * The initial wake still occurs synchronously in R1586. An order can be
+ * announced before its full manifest is visible in /api/lab/orders; without
+ * these probes that race waits for the 45-second periodic scan.
+ * All probes call the original serialized, authorization-checked worker. */
+(function pb1892InstallFastDownloadWake(){
+ if(typeof window==='undefined'||!window.pbNativeStorage||
+    typeof pb1586WakeDownloads!=='function'||typeof pb1586NoticeWake!=='function')return;
+ const followUps=[800,2400,5600,11000];
+ const timers=new Set();
+ let lastArm=0,epoch=0;
+ function clear(){
+  epoch++;
+  for(const timer of timers)clearTimeout(timer);
+  timers.clear();
+  lastArm=0;
+ }
+ function arm(){
+  if(typeof navigator!=='undefined'&&navigator.onLine===false)return;
+  const now=Date.now();
+  // A burst of repeated SSE/notification events uses one readiness window.
+  if(lastArm&&now-lastArm<4500)return;
+  lastArm=now;
+  // Immediate even if the SSE bridge registers only one change handler.
+  pb1586WakeDownloads();
+  const token=epoch;
+  for(const delay of followUps){
+   const timer=setTimeout(()=>{
+    timers.delete(timer);
+    if(token!==epoch||!window.pbNativeStorage)return;
+    pb1586WakeDownloads();
+   },delay);
+   timers.add(timer);
+  }
+ }
+ const baseNotice=pb1586NoticeWake;
+ pb1586NoticeWake=function(url,data){
+  baseNotice(url,data);
+  if(!/^\/api\/lab\/notifications(?:\?|$)/.test(String(url||'')))return;
+  if((data?.notifications||[]).some(n=>n?.id&&!n.read_at))arm();
+ };
+ // The desktop SSE bridge may wake before the notifications HTTP read.
+ // Follow the same event with limited readiness probes.
+ window.pbDesktopEvents?.onChange?.(arm);
+ addEventListener('online',arm);
+ addEventListener('photobridge-auth-session-changed',clear);
+ window.pb1892DownloadWakeState=()=>({pending:timers.size,lastNoticeAt:lastArm});
+})();

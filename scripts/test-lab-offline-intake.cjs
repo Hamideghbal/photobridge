@@ -93,3 +93,65 @@ test('offline order and photo survive a reload and retry a lost submit response 
    remaining:0,content:'original bytes',orders:['client-order','client-order'],photo:{clientFileId:'file',printCopies:2,chassis:true}});
  }finally{await browser.close();}
 });
+
+test('offline bootstrap reuses previously verified customer/tariff data without network waits',async()=>{
+ const begin=outbox.indexOf("async function labOutboxBootstrap(");
+ const end=outbox.indexOf("\nfunction labOutboxWarmBootstrap()",begin);
+ assert(begin>=0&&end>begin);
+ const helper=outbox.slice(begin,end);
+ const cache=new Map(),requests=[];
+ let online=false,labId='lab',userId='user',device='device';
+ const sandbox={
+  labOutboxContext:async()=>({labId,userId,key:[labId,userId,device].join('/')}),
+  labOutbox:{read:async key=>cache.get(key),put:async row=>cache.set(row.id,row)},
+  labOutboxOffline:()=>!online,
+  labOutboxConnectionFailed:()=>true,
+  api:async path=>{requests.push(path);return{lab:{id:labId},customers:[{id:'c1'}],printSizes:[{id:'s1'}]};},
+  Promise,Error,Date,setTimeout,clearTimeout
+ };
+ vm.createContext(sandbox);
+ vm.runInContext(helper+'\nthis.bootstrap=labOutboxBootstrap;',sandbox);
+ const key='bootstrap/lab/user/device/print';
+ await assert.rejects(sandbox.bootstrap('print'),/یک‌بار در حالت آنلاین/);
+ online=true;
+ const live=await sandbox.bootstrap('print');
+ assert.equal(live.customers.length,1);
+ assert.deepEqual(requests,['/api/lab/delegated-orders/bootstrap?mode=print']);
+ assert(cache.has(key));
+ online=false;
+ const fromDisk=await sandbox.bootstrap('print');
+ assert.equal(fromDisk.__pbOfflineCached,true);
+ assert.equal(fromDisk.customers[0].id,'c1');
+ assert.equal(requests.length,1,'offline must not call the server');
+ userId='other';
+ await assert.rejects(sandbox.bootstrap('print'),/یک‌بار در حالت آنلاین/);
+ assert.equal(requests.length,1,'a different account cannot see the cached data');
+});
+
+test('manual intake opens from native cached bootstrap and identifies provisional offline prices',()=>{
+ assert.match(native,/labOutboxBootstrap\(/);
+ assert(!native.includes("'fresh='+Date.now()"),'timestamp cache-busting must be removed from the native bootstrap');
+ assert.match(native,/__pbOfflineCached/);
+ assert.match(outbox,/labOutboxWarmBootstrap/);
+ assert.match(outbox,/id:key,labId:context.labId,userId:context.userId/);
+ assert.match(outbox,/setTimeout\(labOutboxWarmBootstrap,700\)/);
+});
+
+test('native offline screen ignores unresponsive storage target while preserving submit root check',async()=>{
+ const begin=outbox.indexOf('async function labOutboxOpenRoot('),end=outbox.indexOf('\nfunction labOutboxWarmBootstrap()',begin);
+ assert(begin>=0&&end>begin);
+ const code=outbox.slice(begin,end);
+ let online=false,rootCalls=0;
+ const ctx={labOutboxOffline:()=>!online,Promise,setTimeout,clearTimeout};
+ vm.createContext(ctx);vm.runInContext(code+'\nthis.openRoot=labOutboxOpenRoot;',ctx);
+ const provider={root:()=>{rootCalls++;return new Promise(()=>{});}};
+ assert.equal(await ctx.openRoot(provider),null);
+ assert.equal(rootCalls,0,'known offline must never call configured-storage HTTP-backed root');
+ online=true;
+ const started=Date.now();
+ assert.equal(await ctx.openRoot(provider),null);
+ assert(Date.now()-started<1500,'online-but-hung root check must be bounded');
+ assert.equal(rootCalls,1);
+ assert(native.includes('labOutboxOpenRoot(provider)'));
+ assert(native.includes('if(!directory)directory=await provider.root()'),'online commit re-verifies the local root');
+});

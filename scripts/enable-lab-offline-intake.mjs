@@ -70,9 +70,12 @@ if(!source.includes('const labOutbox=labIntakeOutbox();')){
   }
   busy(false);
 `);
+ // Later native installers may change the standard photo-storage message.
+ // Attach a clear offline/cache advisory to the stable order-dialog anchor.
  source=once(source,
-  " const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');modal.append(message);",
-  " const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');if(bootstrap?.__pbOfflineCached)message.textContent='حالت آفلاین: مشتریان و تعرفه‌ها از آخرین اطلاعات ذخیره‌شده‌اند. پیش‌فاکتور موقت است و هنگام همگام‌سازی بررسی می‌شود.';modal.append(message);");
+  "const modal=node('dialog',null,'pb1137Intake');",
+  "const modal=node('dialog',null,'pb1137Intake');if(bootstrap?.__pbOfflineCached){const warning=node('p','حالت آفلاین: اطلاعات مشتری و قیمت‌ها از حافظه دستگاه هستند؛ پیش‌فاکتور تا همگام‌سازی قطعی نیست.','pb1891OfflineNotice');modal.append(warning);}");
+
  source=once(source,' refreshInvoice();\n modal.showModal();',' refreshInvoice();\n const pendingNotice=node(\'p\');pendingNotice.hidden=true;pendingNotice.setAttribute(\'role\',\'status\');form.prepend(pendingNotice);labOutboxPendingNotice(pendingNotice);\n modal.showModal();');
  source=once(source,'const storage=()=>window.pbLabLocalIntakeStorage;',
   'const storage=()=>window.pbLabLocalIntakeStorage;\n'+fs.readFileSync('scripts/lab-offline-intake.js','utf8'));

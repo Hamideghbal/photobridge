@@ -29,13 +29,14 @@ test('fast wake schedules bounded readiness probes only after a fresh notificati
  const f=fixture();
  f.notice({notifications:[{id:'order-1'}]});
  assert.equal(f.stats().baseCalls,1);
+ assert.equal(f.stats().wakes,1,'first notification triggers immediate serialized worker');
  assert.deepEqual([...f.timers.values()].map(x=>x.ms),[800,2400,5600,11000]);
  f.notice({notifications:[{id:'order-1'}]});
  assert.equal(f.timers.size,4,'notification bursts coalesce');
- assert(f.runDelay(800));assert.equal(f.stats().wakes,1);
- assert(f.runDelay(2400));assert.equal(f.stats().wakes,2);
- assert(f.runDelay(5600));assert.equal(f.stats().wakes,3);
- assert(f.runDelay(11000));assert.equal(f.stats().wakes,4);
+ assert(f.runDelay(800));assert.equal(f.stats().wakes,2);
+ assert(f.runDelay(2400));assert.equal(f.stats().wakes,3);
+ assert(f.runDelay(5600));assert.equal(f.stats().wakes,4);
+ assert(f.runDelay(11000));assert.equal(f.stats().wakes,5);
  assert.equal(f.timers.size,0);
  f.after(4700);f.triggerSse();assert.equal(f.timers.size,4,'later event gets a new bounded window');
  f.events['photobridge-auth-session-changed']();

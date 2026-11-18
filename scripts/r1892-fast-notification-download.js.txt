@@ -21,6 +21,8 @@
   // A burst of repeated SSE/notification events uses one readiness window.
   if(lastArm&&now-lastArm<4500)return;
   lastArm=now;
+  // Immediate even if the SSE bridge registers only one change handler.
+  pb1586WakeDownloads();
   const token=epoch;
   for(const delay of followUps){
    const timer=setTimeout(()=>{

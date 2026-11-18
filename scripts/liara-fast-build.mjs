@@ -1424,3 +1424,8 @@ console.log('[PhotoBridge Docker build] OK R1887 native Lab CRM navigation');
 await deployStep('./enable-lab-offline-intake.mjs');
 runR1314(process.execPath,['--test','scripts/test-lab-offline-intake.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs'],{stdio:'inherit'});
+
+// R1892: foreground the serialized native downloader after an order notice,
+// including manifests that become visible shortly after the OS popup.
+await deployStep('./enable-r1892-fast-notification-download.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});

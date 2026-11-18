@@ -13,7 +13,10 @@ function installConfiguredStorage(storage){
   const current=()=>{const value=this.store.get(this.key(account));return value?.id===saved?.id&&value?.path===saved?.path};
   const retry=()=>{if(attempt>=2)throw fail('storage_busy','مسیر در حال تغییر است؛ دوباره بازخوانی کنید.',409);return this.status(attempt+1)};
   try{
-   // This is only a read of the already activated local root. Do not make an\n   // offline workstation wait for the 30-second remote request timeout.\n   // Activation, pairing and root changes still require a live server reply.\n   const target=await this.target({signal:AbortSignal.timeout(650)});this.checkAccount(account);
+   // This is only a read of the already activated local root. Do not make an
+   // offline workstation wait for the 30-second remote request timeout.
+   // Activation, pairing and root changes still require a live server reply.
+   const target=await this.target({signal:AbortSignal.timeout(650)});this.checkAccount(account);
    if(!current())return retry();
    if(target.paired){
     const matches=Boolean(saved&&target.isThisDevice&&await this.fs.readFile(path.join(saved.path,'.photobridge-folder-id.json'),'utf8').then(text=>JSON.parse(text).id===target.folderId).catch(()=>false));

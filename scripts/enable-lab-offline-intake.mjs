@@ -25,6 +25,13 @@ if(!source.includes('const labOutbox=labIntakeOutbox();')){
  source=once(source,offlineReturn,'');
  const primaryOpen="cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device')";
  source=once(source,primaryOpen,"cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):labOutboxPrimary()");
+ // The old fresh=Date.now() bootstrap URL cannot hit the offline cache.
+ // Read the last verified lab/customer/tariff snapshot from local IndexedDB
+ // before attempting an upstream request. Revalidate on sync and submit.
+ const bootstrapCall="api('/api/lab/delegated-orders/bootstrap'+(/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'?':'?mode=print&')+'fresh='+Date.now())";
+ source=once(source,bootstrapCall,
+  "labOutboxBootstrap(/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'album':'print')");
+
  const primaryCheck="Promise.race([api('/api/lab/download-device'),";
  source=once(source,primaryCheck,"Promise.race([labOutboxPrimary(),");
  const start=source.indexOf(preflightStart),end=source.indexOf(preflightEnd,start);
@@ -63,6 +70,9 @@ if(!source.includes('const labOutbox=labIntakeOutbox();')){
   }
   busy(false);
 `);
+ source=once(source,
+  " const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');modal.append(message);",
+  " const message=node('p','عکس‌ها روی هارد اصلی ذخیره می‌شوند.');if(bootstrap?.__pbOfflineCached)message.textContent='حالت آفلاین: مشتریان و تعرفه‌ها از آخرین اطلاعات ذخیره‌شده‌اند. پیش‌فاکتور موقت است و هنگام همگام‌سازی بررسی می‌شود.';modal.append(message);");
  source=once(source,' refreshInvoice();\n modal.showModal();',' refreshInvoice();\n const pendingNotice=node(\'p\');pendingNotice.hidden=true;pendingNotice.setAttribute(\'role\',\'status\');form.prepend(pendingNotice);labOutboxPendingNotice(pendingNotice);\n modal.showModal();');
  source=once(source,'const storage=()=>window.pbLabLocalIntakeStorage;',
   'const storage=()=>window.pbLabLocalIntakeStorage;\n'+fs.readFileSync('scripts/lab-offline-intake.js','utf8'));

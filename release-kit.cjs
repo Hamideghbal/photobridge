@@ -76,7 +76,19 @@ function pack({root=__dirname,webArchive,webCommit,requireSigned=false}={}){
  let update=null;
  try{
   fs.mkdirSync(nativeRoot,{recursive:true});fs.mkdirSync(webRoot,{recursive:true});
-  for(const rel of listTracked(root)){
+  // Native build CI injects the freshly rebuilt R1910 web UI over the old
+  // Git-tracked UI tree. Snapshot the ACTUAL verified files on disk, not just
+  // git ls-files entries from an older reconstructed source commit.
+  const bundledFiles=[];
+  const walk=(dir,prefix)=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+   const rel=path.posix.join(prefix,entry.name),file=path.join(dir,entry.name);
+   if(entry.isDirectory())walk(file,rel);
+   else if(entry.isFile())bundledFiles.push(rel);
+   else throw Error('unsafe_bundled_source_entry:'+rel);
+  }};
+  walk(path.join(root,'verified-ui'),'verified-ui');
+  const all=[...listTracked(root).filter(name=>!name.startsWith('verified-ui/')),...bundledFiles];
+  for(const rel of all){
    const src=path.join(root,rel);
    if(!fs.existsSync(src)||!fs.statSync(src).isFile())throw Error('tracked_source_missing:'+rel);
    // All tracked native source + exact, freshly injected verified-ui bytes.

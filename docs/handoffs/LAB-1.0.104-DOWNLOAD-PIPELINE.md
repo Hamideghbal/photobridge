@@ -138,3 +138,16 @@ Playwright is available at `/opt/codex/cua_node/lib/node_modules/playwright`; Ch
 3. Confirm unsigned Windows candidate construction, pin manifest hashes and packaged Electron smoke.
 4. Test new-order arrival to first actual byte write on installed Windows, including an artificially blocked invoice, offline/resume, repeated wakes and changed-account denial. Record timings and failure states.
 5. Keep PRs Draft; **never merge/deploy/publish stable before explicit real-user acceptance**.
+
+## R1907 candidate build gate — completed 2026-11-19
+
+**Artifact created, isolated for USER TEST ONLY; NOT installed-user acceptance. Do not merge, sign, ship stable or deploy production.**
+
+- [Draft PR #901](https://github.com/Hamideghbal/photobridge/pull/901) (Electron/native) includes Windows candidate source version `1.0.104`, built from full native `build/lab-1.0.94-complete` base with explicit reconstruction marker.
+- [Draft PR #902](https://github.com/Hamideghbal/photobridge/pull/902) (web/API native-only pipeline) has full regenerated native bundle + tests green at [run 44473674398](https://github.com/Hamideghbal/photobridge/actions/runs/44473674398), including blocked invoice A / independent download B, receipt SQL checks and preservation of legacy-client path.
+- [Native test run 44477390240](https://github.com/Hamideghbal/photobridge/actions/runs/44477390240) succeeded.
+- [End-to-end packaging workflow 44477390264](https://github.com/Hamideghbal/photobridge/actions/runs/44477390264) **succeeded** after adjusting Windows ZIP extraction in `expand-access-runtime.ps1` (Windows PowerShell overload) and native dependencies (install under Node16 ABI, build Electron under Node22). The **unsigned** x64 EXE is stored inside [artifact 14507336226](https://github.com/Hamideghbal/photobridge/actions/runs/44477390264/artifacts/14507336226); seven-day retention.
+- Installer filename: `PhotoBridge-Lab-Setup-1.0.104-x64.exe`. Installer EXE SHA-256 `B55739273265EEDFFD1CE46119E9467CCB3A4CE727C79F03F8F3580E4ADCBD98`. UI manifest build SHA-256 `a9c0012451db6d8d85def67d47866cbe7613bf8412ae095326c3ab5898b0e074`; 901 assets verified.
+- Packaged Electron startup smoke passed: `PB_COMPAT_SMOKE_PASS {"electron":"22.3.27","node":"16.17.1","sqlite":true,"network":true,"login":true}`.
+- **Still NOT done:** real first-byte timing from new order/preview on physical Windows device with actual backend server opt-in receipt protocol enabled in an isolated environment, downloaded file hash parity, restart/offline/resume, second order arriving during blocked invoice, account/device-denial, signing/provenance of installed 1.0.104. Current server branch is draft/not deployed, so testing the unsigned client against production cannot establish correct new receipt behavior and is not an approved production test.
+- #900, #901, #902 remain draft/unmerged. No production rollout or stable update is authorized by automated test success alone.

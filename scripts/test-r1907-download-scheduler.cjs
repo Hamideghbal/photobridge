@@ -4,10 +4,12 @@ const source=fs.readFileSync(path.join(__dirname,'r1907-native-download-schedule
 function context(processOrder){
  const listeners={};
  const env={Map,Promise,window:{pbNativeStorage:{}},pb1568Work:{labId:'lab-A',lastError:''},
- pb1568Problem:e=>e.message,pb1568ProcessOrder:processOrder,addEventListener:(n,f)=>listeners[n]=f};
+ pb1568Problem:e=>e.message,pb1568ProcessOrder:processOrder,pb1568AutoTick:()=>{},addEventListener:(n,f)=>listeners[n]=f};
  vm.createContext(env);vm.runInContext(source,env);
  return {...env,listeners,
  schedule:(...args)=>vm.runInContext('pb1907ScheduleOrder',env)(...args),
+ setTick:fn=>{env.pb1568AutoTick=fn},
+ preview:(...args)=>vm.runInContext('pb1907PreviewKick',env)(...args),
  slot:f=>vm.runInContext('pb1907WithDownloadSlot',env)(f)};
 }
 test('order B begins file request while order A invoice remains unresolved',async()=>{
@@ -46,4 +48,16 @@ test('pending scheduled work from previous account never starts',async()=>{
  let called=0;const ctx=context(async()=>called++);
  const a=ctx.schedule('lab-A',{id:'A'},{});ctx.listeners['photobridge-auth-session-changed']();
  await a;assert.equal(called,0);
+});
+
+test('opening a new order preview wakes scan instantly, dedupes and ignores other lab',()=>{
+ const ctx=context(async()=>{});let wakes=0;
+ ctx.setTick(()=>{wakes++});
+ const id='12345678-1234-4123-8123-123456789abc';
+ const path='/api/lab/orders/'+id;
+ ctx.preview(path,{order:{id,lab_id:'lab-A',status:'sent',downloaded_at:null}});
+ assert.equal(wakes,1);
+ ctx.preview(path,{order:{id,lab_id:'lab-A',status:'sent'}});assert.equal(wakes,1);
+ ctx.preview(path,{order:{id,lab_id:'lab-other',status:'sent'}});assert.equal(wakes,1);
+ ctx.preview(path,{order:{id,lab_id:'lab-A',status:'downloaded',downloaded_at:'2026-11-19T00:00:00Z'}});assert.equal(wakes,1);
 });

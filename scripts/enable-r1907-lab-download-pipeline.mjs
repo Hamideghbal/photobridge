@@ -59,8 +59,8 @@ if(!s.includes(marker)){
    'retry release');
   return part;
  });
- s=replaceOnce(s,"const phase=value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
-  "const phase=['invoice_issuing','invoice_issued','complete'].includes(value.phase)?value.phase:value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
+ s=replaceOnce(s,"phase=value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
+  "phase=['invoice_issuing','invoice_issued','complete'].includes(value.phase)?value.phase:value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
   'preserve explicit invoice/complete states');
  // PDF uploads queued by the offline host must never count as successful uploads.
  s=replaceOnce(s,

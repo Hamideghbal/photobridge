@@ -43,10 +43,15 @@ if(!s.includes(marker)){
    'successful final-stage feedback');
   return part;
  });
- s=rewriteSection(s,'async function pb1568AutoTick(',"if(typeof window!=='undefined'&&window.pbNativeStorage){",part=>
-  replaceOnce(part,'await pb1568ProcessOrder(lab,order,settings);',
-   'void pb1907ScheduleOrder(lab,order,settings);',
-   'nonblocking order discovery loop'));
+ s=rewriteSection(s,'async function pb1568AutoTick(',"if(typeof window!=='undefined'&&window.pbNativeStorage){",part=>{
+  part=replaceOnce(part,
+   "   const status=await fetch('/desktop/thermal/status',{cache:'no-store'});\n   if(!status.ok)return; // Installed legacy host cannot safely perform automated printing.\n   const printer=await status.json();if(!printer?.supported)return;",
+   "   if(!window.__PB_LAB104_NATIVE__){const status=await fetch('/desktop/thermal/status',{cache:'no-store'});if(!status.ok)return;const printer=await status.json();if(!printer?.supported)return;}",
+   'candidate downloader does not await printer status');
+  return replaceOnce(part,'await pb1568ProcessOrder(lab,order,settings);',
+   'if(window.__PB_LAB104_NATIVE__)void pb1907ScheduleOrder(lab,order,settings);else await pb1568ProcessOrder(lab,order,settings);',
+   'only candidate uses nonblocking per-order scan');
+ });
  s=rewriteSection(s,'async function pb1583DrainRetries(',"if(typeof window!=='undefined'&&window.pbNativeStorage)window.pbDesktopEvents",part=>{
   part=replaceOnce(part,'if(pb1568Work.running||!pb1583Queue.size)return;pb1568Work.running=true;',
    'if(pb1907RetryDraining||!pb1583Queue.size)return;pb1907RetryDraining=true;',

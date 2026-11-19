@@ -32,7 +32,7 @@ test('real notification DOM displays byte-progress during transfer, then removes
  app.render([order('invoice_issued',{downloadVerified:true,stage:'pdf'})]);
  assert(app.parts().some(x=>x.textContent==='فاکتور صادر شد'));
  app.render([order('complete',{downloadVerified:true})]);
- assert(app.parts().some(x=>x.textContent==='تمام مراحل با موفقیت انجام شد'));
+ assert(app.parts().some(x=>x.textContent==='سفارش تکمیل شد'));
 });
 test('a failed invoice or PDF is never rendered as final success',()=>{
  const app=view();

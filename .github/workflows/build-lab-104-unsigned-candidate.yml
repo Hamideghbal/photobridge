@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: b41d9f7d624a39922f07d2be889a4e506fa14873 # pin actual tested web source, never follow default/site hot-update
+          ref: 9138277571d036ae7c647a9456d8042edb0a95dc # pin actual tested web source, never follow default/site hot-update
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: lab-1.0.104-R1909-direct-order-notification-UNSIGNED
+          name: lab-1.0.104-R1910-fixed-download-disk-binding-UNSIGNED
           path: release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
           retention-days: 7
           if-no-files-found: error

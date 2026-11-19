@@ -164,7 +164,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
-        if(name==='assets/index-UIRefine-v655-r84.js'){const source=fs.readFileSync(file,'utf8'),proof=require('./ui-diagnostics.cjs').sourceMarker(source,require('./package.json').version);return res.end('window.__PB_LAB104_NATIVE__='+JSON.stringify(require('./package.json').version==='1.0.104')+';\n'+'window.__PB_NATIVE_SOURCE_PROOF__='+JSON.stringify(proof)+';\n'+require('./storage-bundle.cjs').patchStorageBundle(source));}
+        if(name==='assets/index-UIRefine-v655-r84.js'){const source=fs.readFileSync(file,'utf8'),proof=require('./ui-diagnostics.cjs').sourceMarker(source,require('./package.json').version);return res.end('window.__PB_LAB104_NATIVE__='+JSON.stringify(require('./lab104-candidate.cjs').pinnedOnly===true&&['1.0.104','1.0.105'].includes(require('./package.json').version))+';\n'+'window.__PB_NATIVE_SOURCE_PROOF__='+JSON.stringify(proof)+';\n'+require('./storage-bundle.cjs').patchStorageBundle(source));}
         return fs.createReadStream(file).pipe(res);
       }
       return json(res,404,{error:'not_found'});

@@ -66,3 +66,20 @@ test('order renderer appends to new-order card without overwriting original text
  assert(html.includes(".order span.orderCompletion"));
  assert(renderer.includes("const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;"));
 });
+
+
+test('unread new-order notification itself retains verified note beyond cache TTL until operator acknowledgment',async()=>{
+ const store=storage(),pendingKey='nativeAlertsPending:lab-a',notice=original();
+ store.set(pendingKey,[notice]);
+ assert(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true},when+1500));
+ const saved=store.get(pendingKey);
+ assert.equal(saved[0].completionNote,NOTE,'success must be saved in the ORIGINAL unread alert, not only a transient progress event');
+ assert.equal(decoratePending(store,'lab-a',saved,when+TTL+6*24*60*60*1000)[0].completionNote,NOTE,'unread order remains completed long after transient cache expires');
+ const controller=new AlertWindow({ipcMain:{handle(){}},store,getAccount:()=> 'lab-a'});
+ controller.account='lab-a';controller.items=saved;
+ assert.equal(controller.state().items[0].completionNote,NOTE);
+ const {NativeAlerts}=require('../native-alerts.cjs');
+ const alerts=new NativeAlerts({store,request:async()=>({ok:true,json:async()=>({ok:true})}),getAccount:()=> 'lab-a',notify:async()=>{},open:async()=>{}});
+ alerts.acknowledge('lab-a',[notice.id]);
+ assert.equal(store.get(pendingKey).length,0,'only explicit operator acknowledgment removes durable notice');
+});

@@ -34,3 +34,29 @@ test('R1913: read-only invoice proof failures cannot turn a pending invoice into
  const proof=createInvoiceProof({getAccount:()=> 'lab-a',request:async()=>{throw Error('offline')}});
  assert.equal(await proof({account:'lab-a',orderId:id}),false);
 });
+
+test('R1913: Electron Node16 invoice proof works even if AbortSignal.timeout is absent',async()=>{
+ const original=AbortSignal.timeout,issued={order:{id,invoice_id:'invoice-verified',invoice_issued_at:'2026-11-19T15:00:00Z'}};
+ try{
+  AbortSignal.timeout=undefined;
+  let calls=0;
+  const proof=createInvoiceProof({getAccount:()=> 'lab-a',request:async(route,options)=>{
+   calls++;
+   assert.equal(route,'/api/lab/orders/'+id);
+   assert.equal(options.signal.aborted,false);
+   return {ok:true,json:async()=>issued};
+  }});
+  assert.equal(await proof({account:'lab-a',orderId:id}),true);
+  assert.equal(calls,1);
+  issued.order.invoice_issued_at=null;
+  assert.equal(await proof({account:'lab-a',orderId:id}),false);
+ }finally{AbortSignal.timeout=original}
+});
+test('R1913: stalled invoice proof times out without reporting false success',async()=>{
+ let aborted=false;
+ const proof=createInvoiceProof({getAccount:()=> 'lab-a',timeoutMs:15,
+  request:async(_route,options)=>new Promise((_resolve,reject)=>
+   options.signal.addEventListener('abort',()=>{aborted=true;reject(Error('aborted'))},{once:true}))});
+ assert.equal(await proof({account:'lab-a',orderId:id}),false);
+ assert.equal(aborted,true);
+});

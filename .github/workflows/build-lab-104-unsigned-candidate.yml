@@ -116,7 +116,7 @@ jobs:
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip=[System.IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'release/PhotoBridge-Lab-FullSource-1.0.104.zip'))
           try {
-            $names=@($zip.Entries | ForEach-Object { $_.FullName })
+            $names=@($zip.Entries | ForEach-Object { $_.FullName.Replace('\','/') })
             foreach($required in @('SOURCE-MANIFEST.json','native/main.cjs','native/alert-order-status.cjs','native/package-lock.json','native/verified-ui/.pb-lab-bundle-manifest.json','web/web-source-9138277571d036ae7c647a9456d8042edb0a95dc.zip')){
               if(-not ($names -contains $required)){throw "Full source missing $required"}
             }

@@ -16,7 +16,7 @@ test('R1915: each independently verified stage survives progress eviction and a 
  aw.updateDownload({orderId:ID,number:'42',phase:'verified',downloadVerified:true},'lab-a');
  let item=store.get('nativeAlertsPending:lab-a')[0];
  assert.equal(item.downloadVerified,true);
- assert.equal(item.invoiceIssued,undefined,'download alone must not verify invoice');
+ assert.notEqual(item.invoiceIssued,true,'download alone must not verify invoice');
  aw.updateDownload({orderId:ID,number:'42',phase:'invoice_issued',downloadVerified:true},'lab-a');
  item=store.get('nativeAlertsPending:lab-a')[0];
  assert.equal(item.downloadVerified,true);

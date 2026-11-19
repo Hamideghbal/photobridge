@@ -24,7 +24,7 @@ function setup({online=true,writeAllowed=true,rootAllowed=true}={}){
  };
  const server=createHost({store,nativeStorage,request,roots:()=>[],token:'test',isOnline:()=>online,sync:{status:()=>store.status(),wake(){}}});
  const run=async(path,body,method=body?'POST':'GET')=>{
-  const response=await fetch('http://127.0.0.1:'+server.address().port+path,{method,headers:{Cookie:'desktop=test','Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  const response=await fetch('http://127.0.0.1:'+server.address().port+path,{method,headers:{Cookie:'desktop=test','Content-Type':'application/json',Connection:'close'},...(body?{body:JSON.stringify(body)}:{})});
   return{status:response.status,body:await response.json()};
  };
  return{store,server,calls,run,open:()=>new Promise(resolve=>server.listen(0,'127.0.0.1',resolve)),close:async()=>{await new Promise(resolve=>server.close(resolve));store.db.close()}};
@@ -67,7 +67,7 @@ test('R1916: no local folder or expired/unapproved account blocks manual order w
    const gate=await f.run('/api/lab/manual-intake/preflight');
    assert([403,409].includes(gate.status),JSON.stringify(gate.body));
    assert.equal(gate.body.allowed,false);
-   assert.equal(f.store.get('localBusinessActive:'+lab),undefined);
+   assert.equal(f.store.get('localBusinessActive:'+lab),null);
   }finally{await f.close()}
  }
 });

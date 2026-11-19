@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const source=fs.readFileSync(path.join(__dirname,'r1907-native-download-scheduler.js.txt'),'utf8');
 function context(processOrder){
  const listeners={};
- const env={Map,Promise,window:{pbNativeStorage:{}},pb1568Work:{labId:'lab-A',lastError:''},
+ const env={Map,Promise,window:{pbNativeStorage:{},__PB_LAB104_NATIVE__:true},pb1568Work:{labId:'lab-A',lastError:''},
  pb1568Problem:e=>e.message,pb1568ProcessOrder:processOrder,pb1568AutoTick:()=>{},addEventListener:(n,f)=>listeners[n]=f};
  vm.createContext(env);vm.runInContext(source,env);
  return {...env,listeners,

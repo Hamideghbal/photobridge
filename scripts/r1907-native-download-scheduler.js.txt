@@ -1,0 +1,210 @@
+/* LAB 1.0.104 candidate: independent scan and per-order single-flight.
+   This is loaded after the native worker and its existing integrity checks.
+   Never change the download manifest, native writer, entitlement or payment guards. */
+const pb1907OrderFlights=new Map();
+let pb1907TransferActive=0;
+const pb1907TransferWaiters=[];
+let pb1907RetryDraining=false;
+let pb1907SessionEpoch=0;
+async function pb1907WithDownloadSlot(action){
+ if(pb1907TransferActive>=2)await new Promise(resolve=>pb1907TransferWaiters.push(resolve));
+ pb1907TransferActive++;
+ try{return await action()}
+ finally{pb1907TransferActive--;const next=pb1907TransferWaiters.shift();if(next)next();}
+}
+function pb1907ScheduleOrder(lab,order,settings){
+ const key=String(lab)+':'+String(order?.id||'');
+ if(!order?.id)return Promise.resolve();
+ const current=pb1907OrderFlights.get(key);
+ if(current)return current;
+ const epoch=pb1907SessionEpoch;
+ let flight;
+ flight=Promise.resolve().then(()=>{
+  if(epoch!==pb1907SessionEpoch||!window.pbNativeStorage||String(pb1568Work.labId)!==String(lab))return;
+  return pb1568ProcessOrder(lab,order,settings);
+ }).catch(error=>{
+  pb1568Work.lastError=pb1568Problem(error);
+ }).finally(()=>{
+  if(pb1907OrderFlights.get(key)===flight)pb1907OrderFlights.delete(key);
+ });
+ pb1907OrderFlights.set(key,flight);
+ return flight;
+}
+// R1910 only: one-shot recovery of the bad R1908/R1909 checkpoint.
+// The older candidate startedAt BEFORE passing the order detail to the
+// per-order folder resolver. An unbound NEW order was then misclassified as
+// a historical disk order, failed before first GET, and got 30-60s retryAt.
+// Never auto-reset genuinely historical/partial locally verified orders.
+function pb1910RepairFalseHistoricalRetry(lab,id,order,task){
+ if(!window.__PB_LAB104_NATIVE__||!task||task.phase!=='pending_download'||task.r1910Repaired)return null;
+ if(order?.downloaded_at||!['sent','received'].includes(String(order?.status||'')))return null;
+ if(!/پوشه.{0,6}قبلی این سفارش پیدا نشد/u.test(String(task.error||'')))return null;
+ const state=yc(id)||{};
+ if(state.pathLayout!=='order-v2'||state.localComplete||Object.keys(state.localFiles||{}).length)return null;
+ const repaired={...task,r1910Repaired:true,retryAt:0,attempts:0,error:null};
+ pb1568Save(lab,id,repaired);
+ return repaired;
+}
+/* LAB104 R1908: targeted notification-to-first-byte path.
+   Native notification order IDs bypass the expensive accounts/settings/orders LIST scan.
+   Server authorization, exact download manifest, disk proof, and device checks remain
+   in the existing downloader. Finance never participates in this fast dispatch. */
+const pb1908ArrivalFlights=new Map(),pb1908DetailHints=new Map(),pb1908Timing=new Map();
+function pb1908Mark(orderId,stage,data){
+ const id=String(orderId||'');if(!id)return;
+ const entry=pb1908Timing.get(id)||{startAt:Date.now(),stages:{}};
+ if(!entry.stages[stage])entry.stages[stage]=Date.now();
+ if(data!==undefined)entry[stage+'Info']=String(data).slice(0,180);
+ pb1908Timing.set(id,entry);
+ while(pb1908Timing.size>60)pb1908Timing.delete(pb1908Timing.keys().next().value);
+ try{window.pbDesktopEvents?.downloadTrace?.({orderId:id,stage,elapsedMs:Date.now()-entry.startAt})}catch{}
+ if(stage==='first_byte'||stage==='failed'||stage==='complete'){
+  console.info('[LAB104 download latency]',JSON.stringify({orderId:id,stage,elapsedMs:Date.now()-entry.startAt,checkpoints:Object.fromEntries(Object.entries(entry.stages).map(([key,t])=>[key,t-entry.startAt])),info:entry[stage+'Info']||null}));
+ }
+}
+function pb1908Progress(id,value){
+ if(value?.phase!=='downloading')return;
+ const item=pb1908Timing.get(String(id));if(!item)return;
+ const bytes=Number(value.loadedBytes||0);
+ if(!item.stages.download_preparing)pb1908Mark(id,'download_preparing');
+ if(item.initialBytes===undefined)item.initialBytes=bytes;
+ // An already verified local file must not be mistaken for a new network byte.
+ if(bytes>item.initialBytes&&!item.stages.first_byte)pb1908Mark(id,'first_byte');
+}
+// Only skip O(file-count) pre-scan for a genuinely EMPTY, newly created
+// destination. Any existing/unknown file forces the established full verifier.
+async function pb1908EmptyPreflight(detail,root,receipts){
+ const files=detail?.files||[],order=detail?.order;
+ if(!window.__PB_LAB104_NATIVE__||!order||!files.length||
+     Number(order.file_count||0)!==files.length||Object.keys(receipts||{}).length)return null;
+ const cache=new Map(),groups=new Map(),missing=[];
+ let day='';
+ try{
+  for(const file of files){
+   const key=Uy(detail,file),target=await pb1450Target(root,detail,file,cache);
+   const name=pb1769DownloadName(file,file.original_name,order),folded=name.toLocaleLowerCase('en-US');
+   if(!groups.has(key))groups.set(key,{target,names:new Set()});
+   if(groups.get(key).names.has(folded))return null;
+   groups.get(key).names.add(folded);
+   missing.push(file.original_name);
+   day=target.day||day;
+  }
+  // A hidden temp/partial file, or any other entry, disables fast preflight.
+  for(const group of groups.values()){
+   for await(const _entry of group.target.dir.entries())return null;
+  }
+ }catch{return null} // Never bypass a failing storage check.
+ return {expected:files.length,valid:0,actual:0,missing,invalid:[],extra:[],collisions:[],
+  complete:false,rootName:root.displayPath||root.name||'',day,loadedBytes:0,completedIds:[]};
+}
+function pb1908TakeDetail(lab,id){
+ const key=String(lab)+':'+String(id),cached=pb1908DetailHints.get(key);
+ if(!cached)return null;pb1908DetailHints.delete(key);
+ return Date.now()-cached.at<15000&&cached.detail?.order?.id===id&&Array.isArray(cached.detail.files)?cached.detail:null;
+}
+// An early notification can arrive before the full server manifest commits.
+// Probe only this order, never refetch the whole order list in a retry burst.
+const pb1908RetryTimers=new Map(),pb1908RetryCounts=new Map();
+function pb1908StopRetry(key){
+ const timer=pb1908RetryTimers.get(key);if(timer!==undefined)clearTimeout(timer);
+ pb1908RetryTimers.delete(key);pb1908RetryCounts.delete(key);
+}
+function pb1908RetryDetail(lab,id,notifiedAt,why){
+ const key=String(lab)+':'+String(id);
+ if(pb1908RetryTimers.has(key))return;
+ const n=pb1908RetryCounts.get(key)||0,delays=[450,1200,3000,6500];
+ if(n>=delays.length)return;
+ pb1908RetryCounts.set(key,n+1);
+ pb1908Mark(id,'manifest_not_ready',why);
+ const timer=setTimeout(()=>{
+  pb1908RetryTimers.delete(key);
+  void pb1908FastArrival({labId:lab,orderId:id,notifiedAt,source:'manifest_retry'});
+ },delays[n]);
+ pb1908RetryTimers.set(key,timer);
+}
+function pb1908FastArrival(signal,previewDetail){
+ if(!window.__PB_LAB104_NATIVE__||!window.pbNativeStorage)return Promise.resolve(false);
+ const id=String(signal?.orderId||'');
+ const lab=String(signal?.labId||previewDetail?.order?.lab_id||pb1568Work.labId||'');
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!lab||pb1568Work.labId&&String(pb1568Work.labId)!==lab)return Promise.resolve(false);
+ const key=lab+':'+id,previous=pb1908ArrivalFlights.get(key)||pb1907OrderFlights.get(key);
+ if(previous)return previous;
+ const startedEpoch=pb1907SessionEpoch;
+ const notifiedAt=Number(signal?.notifiedAt)||Date.now();
+ if(!pb1908Timing.has(id))pb1908Timing.set(id,{startAt:notifiedAt,stages:{notification:notifiedAt}});
+ pb1908Mark(id,'dispatch');
+ const flight=(async()=>{
+  // Parallel auth (when not yet known), policy and order DETAIL. No listing scan.
+  const [account,config,detail]=await Promise.all([
+   String(pb1568Work.labId||'')===lab?Promise.resolve({lab:{id:lab}}):Me('/api/auth/me'),
+   Me('/api/lab/automation'),
+   previewDetail?.order?.id===id&&Array.isArray(previewDetail.files)?Promise.resolve(previewDetail):Me('/api/lab/orders/'+encodeURIComponent(id))
+  ]);
+  pb1908Mark(id,'detail_and_policy_ready');
+  if(startedEpoch!==pb1907SessionEpoch||!window.pbNativeStorage||String(pb1568Work.labId||lab)!==lab)return false;
+  if(String(account?.lab?.id||'')!==lab||String(detail?.order?.lab_id||lab)!==lab)return false;
+  const order=detail?.order,task=pb1568State(lab,id),settings=config?.settings;
+  if(!settings)return false;
+  if(!order){pb1908RetryDetail(lab,id,notifiedAt,'missing_order');return false;}
+  if(task?.phase==='complete'||!task&&order.downloaded_at){pb1908StopRetry(key);return false;}
+  if(!task){
+   if(!settings.autoDownloadEnabled||!['sent','received'].includes(String(order.status||''))||Number(order.file_count||0)<1)return false;
+   if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return false;
+   // A submission notification may be new even when the photographer's draft
+   // was CREATED much earlier. Do not reject the actual newly submitted order
+   // on its creation timestamp: the native notification is recent and scoped.
+   if(Date.now()-notifiedAt>2*60000||notifiedAt>Date.now()+10000)return false;
+   const enabledAt=Number(localStorage.getItem('pb1568:downloadEnabledAt:'+lab))||0;
+   if(!enabledAt)localStorage.setItem('pb1568:downloadEnabledAt:'+lab,String(Date.now()-120000));
+  }
+  if(!Array.isArray(detail.files)||detail.files.length!==Number(order.file_count||0)||!detail.files.length){
+   pb1908RetryDetail(lab,id,notifiedAt,'manifest_not_final');return false;
+  }
+  pb1908StopRetry(key);
+  // Earlier notification scans may have seen an incomplete upload/manifest
+  // and imposed 30-60s backoff. A NEW exact order notification with a complete
+  // manifest must be able to resume the safe downloader immediately.
+  if(task?.phase==='pending_download'&&Number(task.retryAt)>Date.now()){
+   const reason=String(task.error||'');
+   if(/^(?:download_manifest_incomplete|local_download_incomplete|file_not_found|internet_offline|Failed to fetch|fetch failed|ETIMEDOUT|ECONNRESET|download_failed)$/i.test(reason)){
+    pb1568Save(lab,id,{...task,retryAt:0,noticeFastRetryAt:Date.now()});
+    pb1908Mark(id,'retry_backoff_cleared',reason);
+   }
+  }
+  pb1568Work.labId=lab;
+  pb1908DetailHints.set(key,{at:Date.now(),detail});
+  pb1908Mark(id,'worker_scheduled');
+  await pb1907ScheduleOrder(lab,order,settings);
+  pb1908Mark(id,'worker_finished');
+  return true;
+ })().catch(error=>{
+  pb1908Mark(id,'failed',String(error?.message||error));
+  const code=String(error?.data?.error||error?.code||error?.message||'');
+  if(!/401|403|auth|account_changed|payment_required|not_primary_download_device|permission/i.test(code))
+   pb1908RetryDetail(lab,id,notifiedAt,'order_detail_error');
+  // The ordinary polling/retry path remains available after a transient fast-path error.
+  if(typeof pb1586WakeDownloads==='function')pb1586WakeDownloads();
+  return false;
+ }).finally(()=>{if(pb1908ArrivalFlights.get(key)===flight)pb1908ArrivalFlights.delete(key);pb1908DetailHints.delete(key)});
+ pb1908ArrivalFlights.set(key,flight);
+ return flight;
+}
+function pb1907PreviewKick(path,response){
+ if(!window.__PB_LAB104_NATIVE__||!window.pbNativeStorage||!/^\/api\/lab\/orders\/[0-9a-f-]{20,}(?:\?.*)?$/.test(String(path||'')))return;
+ const order=response?.order;
+ if(!order?.id||order.downloaded_at||!['sent','received'].includes(String(order.status||'')))return;
+ const lab=String(pb1568Work.labId||order.lab_id||'');
+ if(!lab||order.lab_id&&String(order.lab_id)!==lab)return;
+ void pb1908FastArrival({labId:lab,orderId:String(order.id),notifiedAt:Date.now()},response);
+}
+if(window.__PB_LAB104_NATIVE__&&window.pbDesktopEvents?.onOrderArrived){
+ window.pbDesktopEvents.onOrderArrived(value=>void pb1908FastArrival(value));
+}
+window.pb1908DownloadDiagnostics=()=>[...pb1908Timing].map(([orderId,value])=>({orderId,elapsedMs:Date.now()-value.startAt,stages:Object.fromEntries(Object.entries(value.stages).map(([name,at])=>[name,at-value.startAt]))}));
+addEventListener('photobridge-auth-session-changed',()=>{
+ pb1907SessionEpoch++;pb1908ArrivalFlights.clear();pb1908DetailHints.clear();pb1908Timing.clear();
+ for(const timer of pb1908RetryTimers.values())clearTimeout(timer);
+ pb1908RetryTimers.clear();pb1908RetryCounts.clear();
+ // Existing native storage and account validation still guard any active disk writes.
+ // Do not cancel an in-progress verified native write by reusing its file handle.
+});

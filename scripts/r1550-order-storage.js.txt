@@ -66,7 +66,17 @@ async function pb1550Root(detail,choose=false,candidate){
  return pb1550Serial(detail,async()=>{
   const saved=await pb1550Db(detail);
   if(saved){const root=pb1550Decode(saved.root);if(!await Vs(root))throw Error('پوشهٔ ثبت‌شدهٔ این سفارش در دسترس نیست؛ اتصال همان هارد و مجوز آن را بررسی کنید. مسیر پیش‌فرض جدید جایگزین آن نمی‌شود.');return root;}
-  const state=yc(detail.order.id)||{},legacy=!!(detail.order.downloaded_at||state.startedAt||state.localComplete);
+  const state=yc(detail.order.id)||{};
+  // R1910: A failed early auto-download may have written startedAt/pathLayout
+  // *before* the per-order IndexedDB disk binding. That does NOT mean the
+  // photographer's newly submitted order has a historical directory.
+  // Without this distinction a fresh order raises "previous folder not found"
+  // before requesting even its first file, then sleeps in 30s retry backoff.
+  const hasLocalProof=Object.keys(state.localFiles||{}).length>0||
+   (Array.isArray(detail.order.localFiles)&&detail.order.localFiles.length>0);
+  const newUnboundOrder=state.pathLayout==='order-v2'&&!detail.order.downloaded_at&&!state.localComplete&&!hasLocalProof;
+  const legacy=!!(detail.order.downloaded_at||state.localComplete||hasLocalProof||
+   state.pathLayout==='legacy'||(state.startedAt&&!newUnboundOrder));
   let local=(detail.files||[]).map(file=>pb1550LocalFile(detail,file)).find(Boolean);
   if(legacy&&!local&&window.pbNativeStorage){await pb1550NativeLegacy(detail);local=(detail.files||[]).map(file=>pb1550LocalFile(detail,file)).find(Boolean);}
   let root;

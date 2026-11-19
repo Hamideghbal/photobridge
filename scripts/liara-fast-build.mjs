@@ -1429,3 +1429,9 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// R1911: ADDITIVE signed installer/update metadata only; no modifications to
+// the now-working order photo downloader, receipt, finance, or client bundle.
+await deployStep('./enable-r1911-lab-update-json.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1911-lab-update-json.cjs'],{stdio:'inherit'});
+

@@ -1,7 +1,7 @@
 'use strict';
 const path=require('node:path');
 const {normalizeSettings,initializeSettings}=require('./alert-settings.cjs');
-const {noteComplete,decoratePending}=require('./alert-order-status.cjs');
+const {noteComplete,decoratePending,recordVerifiedStages}=require('./alert-order-status.cjs');
 class AlertWindow {
  constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,retryDownload=null,verifyInvoice=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
   Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,retryDownload,verifyInvoice,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.focusOrderId=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();this.revision=0;this.pendingRenderRevision=null;this.invoiceChecks=new Map();
@@ -20,13 +20,19 @@ class AlertWindow {
   // Only a confirmed invoice_issued phase (or a post-invoice PDF/print error)
   // may produce an invoice checkmark. A generic download-complete event does not.
   const previous=this.downloads.get(value.orderId);
-  const invoiceIssued=value.invoiceIssued===true||value.phase==='invoice_issued'||(value.phase==='failed'&&value.downloadVerified===true&&['pdf','print'].includes(value.stage))||previous?.invoiceIssued===true;
-  value={...value,invoiceIssued,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};
+  const verified=value.downloadVerified===true||previous?.downloadVerified===true;
+  const invoiceIssued=value.invoiceIssued===true||value.phase==='invoice_issued'||(value.phase==='failed'&&verified&&['pdf','print'].includes(value.stage))||previous?.invoiceIssued===true;
+  // Late progress from an older phase must not undo verified stages. Retain
+  // the most advanced non-error phase, while allowing explicit failure/retry.
+  const stale=previous?.invoiceIssued===true&&['checking','downloading','verified','invoice_issuing'].includes(value.phase)&&!value.queued;
+  value={...value,phase:stale?previous.phase:value.phase,downloadVerified:verified,invoiceIssued,
+   orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};
+  const stagesChanged=recordVerifiedStages(this.store,account,value);
   const completed=noteComplete(this.store,account,value);this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
   while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
   if(this.window&&!this.window.isDestroyed()){
    this.window.webContents.send('lab-alert-progress',this.visibleDownloads());
-   if(completed)this.window.webContents.send('lab-alert-change');
+   if(completed||stagesChanged)this.window.webContents.send('lab-alert-change');
   }
   if(value.downloadVerified===true&&!value.invoiceIssued&&['verified','complete','invoice_issuing'].includes(value.phase))this.scheduleInvoiceCheck(value.orderId,account);
  }

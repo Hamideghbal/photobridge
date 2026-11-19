@@ -31,7 +31,7 @@ test('real notification DOM displays byte-progress during transfer, then removes
  assert(app.parts().some(x=>x.textContent==='در حال صدور فاکتور'));
  app.render([order('invoice_issued',{downloadVerified:true,stage:'pdf'})]);
  assert(app.parts().some(x=>x.textContent==='فاکتور صادر شد'));
- app.render([order('complete',{downloadVerified:true})]);
+ app.render([order('complete',{downloadVerified:true,invoiceIssued:true})]);
  assert(app.parts().some(x=>x.textContent==='سفارش تکمیل شد'));
 });
 test('a failed invoice or PDF is never rendered as final success',()=>{
@@ -67,9 +67,15 @@ test('R1912: download and invoice have independent success/warning indicators, w
  checks=app.parts().find(x=>x.className==='stageChecks').children;
  assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','✓ صدور فاکتور']);
  assert(!app.parts().some(x=>x.tagName==='progress'));
- app.render([order('complete',{downloadVerified:true,stage:'pdf'})]);
+ app.render([order('complete',{downloadVerified:true,stage:'pdf',invoiceIssued:true})]);
  assert(app.parts().some(x=>x.tagName==='small'&&x.textContent==='سفارش تکمیل شد'));
  assert(!app.parts().some(x=>x.tagName==='small'&&x.textContent.includes('دانلود')));
  checks=app.parts().find(x=>x.className==='stageChecks').children;
  assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','✓ صدور فاکتور']);
+});
+
+test('R1912: a downloaded order without confirmed invoice must not display a false invoice check',()=>{
+ const app=view();app.render([order('complete',{downloadVerified:true,stage:'download'})]);
+ const checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','⚠ صدور فاکتور']);
 });

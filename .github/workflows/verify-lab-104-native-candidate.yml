@@ -16,4 +16,4 @@ jobs:
       - name: Native syntax checks
         run: node --check main.cjs && node --check main-preload.cjs && node --check fast-order-wake.cjs && node --check alert-content.cjs && node --check order-alert-dispatch.cjs && node --check native-alerts.cjs && node --check host.cjs && node --check alert-renderer.js && node --check receipt-forward.cjs
       - name: Real notifier DOM, receipt, and realtime behavior
-        run: node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/startup-ui.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs test/background-download.test.cjs
+        run: node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/alert-order-status.test.cjs test/startup-ui.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs test/background-download.test.cjs

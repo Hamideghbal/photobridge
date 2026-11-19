@@ -35,9 +35,9 @@ function inspect(root=__dirname){
  return {version:pkg.version,uiBuild:ui.build,uiFiles:ui.files.length,lockSHA256:digest(path.join(root,'package-lock.json'))};
 }
 function listTracked(root){
- const raw=run('git',['ls-files','-z'],{cwd:root,encoding:'buffer'});
- return Buffer.isBuffer(raw)?raw.toString('utf8').split('\0').filter(Boolean):
-  raw.split('\0').filter(Boolean);
+ const result=spawnSync('git',['ls-files','-z'],{cwd:root,maxBuffer:20*1024*1024});
+ if(result.error||result.status!==0)throw Error('git_tracked_source_unavailable');
+ return result.stdout.toString('utf8').split('\0').filter(Boolean);
 }
 function archiveDirectory(folder,out){
  // .NET ZipFile intentionally INCLUDES .github and dotfiles. PowerShell

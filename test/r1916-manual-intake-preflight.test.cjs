@@ -3,10 +3,11 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const crypto=require('node:crypto'),{fetch}=require('undici');
 const {LabStore}=require('../store.cjs'),{LocalBusiness}=require('../local-business.cjs');
 const {createHost}=require('../host.cjs'),{manualIntakePreflight}=require('../manual-intake-preflight.cjs');
+const {routePolicy}=require('../document-policy.cjs');
 const {patchOfflineIntake}=require('../offline-ui.cjs');
 const fs=require('node:fs'),path=require('node:path');
 const lab=crypto.randomUUID(),customer=crypto.randomUUID();
-function setup({online=true,writeAllowed=true,rootAllowed=true}={}){
+function setup({online=true,writeAllowed=true,rootAllowed=true,remotePrimary=false}={}){
  const store=new LabStore(':memory:'),now=Date.now(),calls=[];
  store.set('labId',lab);store.set('deviceId','machine-1');
  store.set('auth',{user:{labRole:'lab_admin'},lab:{id:lab}});
@@ -19,7 +20,7 @@ function setup({online=true,writeAllowed=true,rootAllowed=true}={}){
  const request=async(p,options={})=>{
   calls.push(p);
   if(p==='/api/lab/write-access')return{ok:writeAllowed,status:writeAllowed?200:403,json:async()=>({labId:lab,allowed:writeAllowed,serverNow:new Date().toISOString(),activeUntil:new Date(now+86400000).toISOString()})};
-  if(p==='/api/lab/download-device')return{ok:true,status:200,headers:{get:()=> 'application/json'},arrayBuffer:async()=>Buffer.from(JSON.stringify({registered:true,isThisDevice:false}))};
+  if(p==='/api/lab/download-device')return{ok:true,status:200,headers:{get:()=> 'application/json'},arrayBuffer:async()=>Buffer.from(JSON.stringify({registered:true,isThisDevice:remotePrimary}))};
   throw Error('other upstream not configured');
  };
  const server=createHost({store,nativeStorage,request,roots:()=>[],token:'test',isOnline:()=>online,sync:{status:()=>store.status(),wake(){}}});
@@ -47,6 +48,17 @@ test('R1916: online local walk-in opens even if server says PC is not primary fo
   assert.equal(doc.origin_offline,true);
   assert.equal(doc.localOnly,true);
   assert(!f.calls.includes('/api/lab/delegated-orders/download'),'a local manual order must not be remotely created before file proof');
+ }finally{await f.close()}
+});
+test('R1916: a confirmed primary keeps the existing online server-authoritative intake',async()=>{
+ const f=setup({remotePrimary:true});await f.open();
+ try{
+  const preflight=await f.run('/api/lab/manual-intake/preflight');
+  assert.equal(preflight.status,200,JSON.stringify(preflight.body));
+  assert.equal(preflight.body.remotePrimary,true);
+  assert.equal(preflight.body.localOnly,false);
+  const choice=routePolicy(f.store,'POST','/api/lab/delegated-orders',{clientOrderId:crypto.randomUUID(),localOnly:true,customerId:customer},false);
+  assert.equal(choice.kind,'remote','already-working online orders must still reach the server');
  }finally{await f.close()}
 });
 test('R1916: disconnected WAN uses verified cached subscription without a remote primary probe',async()=>{

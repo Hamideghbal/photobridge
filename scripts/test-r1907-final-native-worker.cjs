@@ -35,6 +35,7 @@ function harness(){
    }
    return {ok:true};
   },
+  pb1798NoPrintOrder:()=>false, // fixture is a real photo-print order, not a product-only workflow
   pb1450Root:async()=>{},
   pb1450Download:async detail=>{downloadStarts.push({id:detail.order.id,at:performance.now()});return {fallbackUsed:false}},
   pb1451AcknowledgeDownload:async()=>({order:{status:'downloaded',downloaded_at:'2026-11-19T00:00:00Z'},verifiedFiles:1}),

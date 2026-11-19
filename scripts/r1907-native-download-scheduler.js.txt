@@ -55,6 +55,32 @@ function pb1908Progress(id,value){
  // An already verified local file must not be mistaken for a new network byte.
  if(bytes>item.initialBytes&&!item.stages.first_byte)pb1908Mark(id,'first_byte');
 }
+// Only skip O(file-count) pre-scan for a genuinely EMPTY, newly created
+// destination. Any existing/unknown file forces the established full verifier.
+async function pb1908EmptyPreflight(detail,root,receipts){
+ const files=detail?.files||[],order=detail?.order;
+ if(!window.__PB_LAB104_NATIVE__||!order||!files.length||
+     Number(order.file_count||0)!==files.length||Object.keys(receipts||{}).length)return null;
+ const cache=new Map(),groups=new Map(),missing=[];
+ let day='';
+ try{
+  for(const file of files){
+   const key=Uy(detail,file),target=await pb1450Target(root,detail,file,cache);
+   const name=pb1769DownloadName(file,file.original_name,order),folded=name.toLocaleLowerCase('en-US');
+   if(!groups.has(key))groups.set(key,{target,names:new Set()});
+   if(groups.get(key).names.has(folded))return null;
+   groups.get(key).names.add(folded);
+   missing.push(file.original_name);
+   day=target.day||day;
+  }
+  // A hidden temp/partial file, or any other entry, disables fast preflight.
+  for(const group of groups.values()){
+   for await(const _entry of group.target.dir.entries())return null;
+  }
+ }catch{return null} // Never bypass a failing storage check.
+ return {expected:files.length,valid:0,actual:0,missing,invalid:[],extra:[],collisions:[],
+  complete:false,rootName:root.displayPath||root.name||'',day,loadedBytes:0,completedIds:[]};
+}
 function pb1908TakeDetail(lab,id){
  const key=String(lab)+':'+String(id),cached=pb1908DetailHints.get(key);
  if(!cached)return null;pb1908DetailHints.delete(key);

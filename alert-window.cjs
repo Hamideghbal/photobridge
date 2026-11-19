@@ -37,7 +37,8 @@ class AlertWindow {
   const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',e=>e.preventDefault());
-  win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide();void this.accept(this.items.map(n=>n.id),false).catch(()=>{})});
+  // Closing the window is NOT "همه را دیدم": keep unread alerts on disk and in memory.
+  win.on('close',e=>{e.preventDefault();this.hiddenByUser=true;win.hide();win.flashFrame?.(false)});
   win.once('ready-to-show',()=>{if(this.pendingRenderRevision===null&&!this.hiddenByUser&&(!this.account||this.account===this.getAccount())&&(this.items.length||this.settingsOnly)){win.show();win.focus()}});
   this.ready=win.loadFile(path.join(__dirname,'alert.html')).catch(error=>{if(this.window===win)this.window=null;win.destroy();throw error});
   void this.ready.catch(()=>{});

@@ -60,11 +60,17 @@ jobs:
         run: |
           node --test test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Install native dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2' # legacy better-sqlite3 8.7 uses Node16 ABI; Node22 V8 compilation fails
+      - name: Install native dependencies with compatible legacy Node ABI
         shell: pwsh
         run: |
           npm ci --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22' # preserve Electron builder/runtime smoke environment
       - name: Build UNSIGNED test installer only (no release or signing key)
         shell: pwsh
         env:

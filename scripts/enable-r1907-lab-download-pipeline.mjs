@@ -62,6 +62,12 @@ if(!s.includes(marker)){
  s=replaceOnce(s,"phase=value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
   "phase=['invoice_issuing','invoice_issued','complete'].includes(value.phase)?value.phase:value.phase==='failed'?'failed':value.phase==='verified'?'verified':value.phase==='downloading'?'downloading':'checking';",
   'preserve explicit invoice/complete states');
+ // The order preview GET can happen long before the tray/periodic scan.
+ // Trigger an independent guarded scan immediately when its response arrives.
+ s=replaceOnce(s,
+  'if(typeof pb1586NoticeWake==="function")pb1586NoticeWake(t,result);return result',
+  'if(typeof pb1586NoticeWake==="function")pb1586NoticeWake(t,result);if(typeof pb1907PreviewKick==="function")pb1907PreviewKick(t,result);return result',
+  'preview data immediate download wake');
  // PDF uploads queued by the offline host must never count as successful uploads.
  s=replaceOnce(s,
   "await Me('/api/lab/invoices/'+encodeURIComponent(invoice.id)+'/pdf-upload',{method:'POST',body:JSON.stringify({pdfBase64:b64})});",

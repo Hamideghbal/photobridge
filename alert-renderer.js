@@ -21,18 +21,18 @@ function renderDownloads(items){
   }
   panel.replaceChildren();
   const previouslyComplete=Boolean(notice.completionNote);
-  const downloadVerified=previouslyComplete||item?.downloadVerified===true;
+  const downloadVerified=previouslyComplete||notice.downloadVerified===true||item?.downloadVerified===true;
   // A generic "complete" or 100% byte progress is NOT proof of an invoice.
-  const invoiceDone=previouslyComplete||item?.invoiceIssued===true||item?.phase==='invoice_issued'||
+  const invoiceDone=previouslyComplete||notice.invoiceIssued===true||item?.invoiceIssued===true||item?.phase==='invoice_issued'||
     (downloadVerified&&item?.phase==='failed'&&['pdf','print'].includes(item.stage));
   const downloadFailed=item?.phase==='failed'&&!downloadVerified;
   const invoiceFailed=item?.phase==='failed'&&downloadVerified&&item.stage==='invoice';
   const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',
    invoice_issuing:'در حال صدور فاکتور',invoice_issued:'فاکتور صادر شد',complete:'سفارش تکمیل شد',failed:'نیازمند بررسی'};
   const failure=item?.stage==='invoice'?'دانلود تأیید شد؛ صدور فاکتور انجام نشد':item?.stage==='pdf'?'فاکتور صادر شد؛ ذخیره PDF انجام نشد':item?.stage==='print'?'فاکتور صادر شد؛ چاپ نیازمند بررسی است':'دانلود کامل نشد؛ نیازمند بررسی';
-  const description=previouslyComplete&&!item?'سفارش تکمیل شد':!item?'در انتظار شروع بررسی و دانلود':
+  const description=previouslyComplete&&!item?'سفارش تکمیل شد':!item&&invoiceDone?'فاکتور صادر شد':!item&&downloadVerified?'دانلود تأیید شد':!item?'در انتظار شروع بررسی و دانلود':
    item.phase==='complete'&&!invoiceDone?'صدور فاکتور هنوز تأیید نشده':
-   item.phase==='failed'?failure:(phase[item.phase]||phase.checking);
+   item.phase==='failed'?failure:invoiceDone&&['checking','downloading','verified','invoice_issuing'].includes(item.phase)?'فاکتور صادر شد':(phase[item.phase]||phase.checking);
   const label=document.createElement('small');label.className='orderStageLabel';
   const showBar=item?.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;
   label.textContent=(item?.queued?'در صف تلاش مجدد':description)

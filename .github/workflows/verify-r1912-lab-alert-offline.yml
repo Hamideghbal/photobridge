@@ -21,6 +21,8 @@ jobs:
         run: |
           node --check alert-window.cjs
           node --check alert-renderer.js
+          node --check invoice-proof.cjs
+          node --check lab-realtime.cjs
           node --check host.cjs
           node --check local-business-host.cjs
           node --check test/r1912-alert-no-flash.test.cjs
@@ -29,6 +31,7 @@ jobs:
         run: |
           node --test \
             test/alert-ready.test.cjs \
+            test/native-alerts.test.cjs \
             test/alert-ordering.test.cjs \
             test/alert-order-status.test.cjs \
             test/download-announcement-dom.test.cjs \
@@ -37,4 +40,6 @@ jobs:
             test/offline-orders.test.cjs \
             test/offline-host.test.cjs \
             test/r1912-alert-no-flash.test.cjs \
-            test/r1912-offline-preflight.test.cjs
+            test/r1912-offline-preflight.test.cjs \
+            test/r1913-fast-sse-wake.test.cjs \
+            test/r1913-invoice-proof.test.cjs

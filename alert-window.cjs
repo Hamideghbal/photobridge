@@ -44,9 +44,10 @@ class AlertWindow {
  async present(options,_onOpen,ack,account){
   if(this.getAccount()!==account)return;
   const previous=this.window&&!this.window.isDestroyed()?this.items.map(x=>x.id).join('|'):'';const incoming=options.items||[],current=incoming.find(item=>item.orderId&&item.orderAlert!==false);if(current)this.focusOrderId=current.orderId;const retained=this.account===account?this.items:[],seen=new Set();this.items=[...incoming,...retained].filter(item=>{if(seen.has(item.id))return false;seen.add(item.id);return true});this.account=account;this.ack=ack;this.settingsOnly=false;
-  const win=this.ensure();await this.ready;if(this.getAccount()!==account||this.window!==win||win.isDestroyed())throw Error('alert_account_changed');if(previous!==this.items.map(x=>x.id).join('|')){this.hiddenByUser=false;this.revision++;this.pendingRenderRevision=this.revision;win.hide();win.webContents.send('lab-alert-change')}
+  const changed=previous!==this.items.map(x=>x.id).join('|');if(changed){this.hiddenByUser=false;this.revision++;this.pendingRenderRevision=this.revision;}
+  const win=this.ensure();if(changed)win.hide?.();await this.ready;if(this.getAccount()!==account||this.window!==win||win.isDestroyed())throw Error('alert_account_changed');if(changed)win.webContents.send('lab-alert-change')
  }
- showSettings(){this.hiddenByUser=false;this.settingsOnly=!this.items.length;const win=this.ensure();this.revision++;this.pendingRenderRevision=this.revision;win.hide();void this.ready.then(()=>{if(this.window===win&&!win.isDestroyed())win.webContents.send('lab-alert-change')}).catch(()=>{})}
+ showSettings(){this.hiddenByUser=false;this.settingsOnly=!this.items.length;const win=this.ensure();this.revision++;this.pendingRenderRevision=this.revision;win.hide?.();void this.ready.then(()=>{if(this.window===win&&!win.isDestroyed())win.webContents.send('lab-alert-change')}).catch(()=>{})}
  async retryFailedDownload(id){
   const account=this.getAccount(),item=this.downloads.get(id);
   if(!account||this.downloadAccount!==account)throw Error('account_changed');

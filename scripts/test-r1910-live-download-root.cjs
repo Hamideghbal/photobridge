@@ -76,3 +76,29 @@ test('R1910: a REAL generated downloader function begins a file request with exa
  assert.equal(result.done,1);
  assert(phases.includes('downloading')&&phases.includes('complete'));
 });
+
+
+test('R1910: after updating an already failed order #896, clear only its artificial previous-folder retry backoff once',()=>{
+ const scheduler=fs.readFileSync('scripts/r1907-native-download-scheduler.js.txt','utf8');
+ const a=scheduler.indexOf('function pb1910RepairFalseHistoricalRetry(');
+ const b=scheduler.indexOf('/* LAB104 R1908:',a);
+ assert(a>0&&b>a,'missing actual repair helper');
+ const store=new Map(),saves=[],id='order-896',lab='lab-A',now='2026-11-19T08:15:00Z';
+ const initial={phase:'pending_download',error:'پوشهٔ قبلی این سفارش پیدا نشد؛ پوشه اصلی قبلی را انتخاب کنید',retryAt:Date.now()+60000,attempts:2};
+ const env={window:{__PB_LAB104_NATIVE__:true},yc:key=>store.get(key)||null,pb1568Save:(l,k,v)=>{saves.push({l,k,v})}};
+ vm.createContext(env);
+ vm.runInContext(scheduler.slice(a,b)+'\nthis.repair=pb1910RepairFalseHistoricalRetry',env);
+ const order={id,number:896,status:'sent',downloaded_at:null};
+ store.set(id,{startedAt:now,pathLayout:'order-v2',localFiles:{},localComplete:false});
+ const result=env.repair(lab,id,order,initial);
+ assert(result&&result.retryAt===0&&result.r1910Repaired&&result.error===null);
+ assert.equal(saves.length,1);
+ assert.equal(env.repair(lab,id,order,result),null,'only one automatic repair; never loop');
+ store.set(id,{startedAt:now,pathLayout:'legacy',localFiles:{},localComplete:false});
+ assert.equal(env.repair(lab,id,{...order,id:'legacy'},initial),null);
+ store.set(id,{startedAt:now,pathLayout:'order-v2',localFiles:{f1:{bytes:3}},localComplete:false});
+ assert.equal(env.repair(lab,id,order,initial),null,'local file receipt must never be discarded');
+ store.set(id,{startedAt:now,pathLayout:'order-v2',localFiles:{},localComplete:false});
+ assert.equal(env.repair(lab,id,{...order,downloaded_at:now},initial),null,'server-complete is not a new order');
+ assert.equal(saves.length,1);
+});

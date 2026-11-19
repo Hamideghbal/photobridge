@@ -1,0 +1,89 @@
+name: LAB104 reconstructed unsigned Windows candidate (NOT stable)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  patched-web-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/lab-104-web-pipeline-1907
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build patched native UI from exact web candidate branch
+        run: |
+          npm install --ignore-scripts --no-package-lock --no-audit --no-fund
+          npm run build
+          node --test scripts/test-r1907-download-scheduler.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab104-patched-ui
+          path: dist/web/lab-desktop-ui/
+          include-hidden-files: true
+          retention-days: 7
+  windows-test-artifact:
+    needs: patched-web-ui
+    runs-on: windows-2022
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/lab-104-native-candidate-1907
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - uses: actions/download-artifact@v4
+        with:
+          name: lab104-patched-ui
+          path: candidate-ui
+      - name: Replace stale 1.0.94 UI pin with verified candidate UI
+        shell: pwsh
+        run: |
+          if (-not (Test-Path candidate-ui/manifest.json)) { throw 'LAB104 patched web UI manifest unavailable' }
+          Remove-Item verified-ui -Recurse -Force
+          New-Item -ItemType Directory verified-ui | Out-Null
+          Copy-Item candidate-ui/* verified-ui/ -Recurse -Force
+          Rename-Item verified-ui/manifest.json .pb-lab-bundle-manifest.json
+          node -e "const fs=require('fs'),crypto=require('crypto'),p='verified-ui/.pb-lab-bundle-manifest.json',m=JSON.parse(fs.readFileSync(p));if(m.protocol!==1||m.channel!=='lab'||!m.files.length||crypto.createHash('sha256').update(JSON.stringify(m.files)).digest('hex')!==m.build)throw Error('manifest invalid');for(const f of m.files){const b=fs.readFileSync('verified-ui/'+f.name);if(crypto.createHash('sha256').update(b).digest('hex')!==f.sha256)throw Error('asset mismatch '+f.name)}fs.writeFileSync('verified-ui-pin.json',JSON.stringify({origin:'https://photobridge.ir',build:m.build}));console.log('LAB104_UI_BUILD',m.build)"
+      - name: Verify first-party regression tests
+        shell: pwsh
+        run: |
+          node --test test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install native dependencies
+        shell: pwsh
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build UNSIGNED test installer only (no release or signing key)
+        shell: pwsh
+        env:
+          PB_LAB_REFRESH_UI: '0'
+        run: |
+          npm run dist:unsigned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-FileHash release/PhotoBridge-Lab-Setup-1.0.104-x64.exe -Algorithm SHA256 | Format-List
+      - name: Test actual packaged Electron runtime
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'release/win-unpacked/PhotoBridge Lab.exe'
+          $p = Start-Process -FilePath $exe -ArgumentList '--compat-smoke','--enable-logging' -PassThru -Wait -RedirectStandardOutput 'compat-smoke.log' -RedirectStandardError 'compat-smoke-error.log'
+          Get-Content compat-smoke.log
+          Get-Content compat-smoke-error.log
+          if ($p.ExitCode -ne 0) { throw "Packaged smoke failed: $($p.ExitCode)" }
+          if (!(Select-String -Path compat-smoke.log -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) { throw 'Smoke completion missing' }
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: lab-1.0.104-reconstructed-UNSIGNED-test-installer
+          path: release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
+          retention-days: 7
+          if-no-files-found: error

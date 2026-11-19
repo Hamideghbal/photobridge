@@ -31,7 +31,7 @@ class AlertWindow {
   if(value.downloadVerified===true&&!value.invoiceIssued&&['verified','complete','invoice_issuing'].includes(value.phase))this.scheduleInvoiceCheck(value.orderId,account);
  }
  async scheduleInvoiceCheck(id,account){
-  if(!this.verifyInvoice||!account||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))return;
+  if(!this.verifyInvoice||!account||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))return;
   const key=account+':'+id;if(this.invoiceChecks.has(key))return;
   this.invoiceChecks.set(key,true);
   try{
@@ -48,7 +48,7 @@ class AlertWindow {
    }
   }finally{this.invoiceChecks.delete(key)}
  }
- visibleDownloads(){const rows=this.downloadAccount===this.getAccount()?[...this.downloads.values()]:[];if(this.focusOrderId)return rows.filter(row=>row.orderId===this.focusOrderId);return rows.sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0)).slice(0,1)}
+ visibleDownloads(){const rows=this.downloadAccount===this.getAccount()?[...this.downloads.values()]:[];/* State remains account-scoped; the renderer correlates each row to its ORIGINAL unread order card by UUID. */return rows.sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0)).slice(0,20)}
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}
  state(){const downloads=this.visibleDownloads(),account=this.getAccount();return {revision:this.revision,downloads,items:decoratePending(this.store,account,this.account===account?this.items:[]),settings:initializeSettings(this.store,account||'default'),settingsOnly:this.settingsOnly};}
  ensure(){

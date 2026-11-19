@@ -4,8 +4,8 @@ const url={pathname:'/api/lab/orders/12ab-34cd/download-receipt/download'};
 function harness({status=200,data={order:{downloaded_at:'2026-11-19T00:00:00Z'},verifiedFiles:2},offline=false}={}){
  let account='A',calls=0,reply,options;
  const store={get:key=>key==='labId'?account:key==='deviceId'?'D1':{id:'auth'}},
- json:(_res,code,body)=>{reply={code,body}},
- request:async(_path,o)=>{calls++;options=o;return {ok:status>=200&&status<300,status,json:async()=>data}};
+ json=(_res,code,body)=>{reply={code,body}},
+ request=async(_path,o)=>{calls++;options=o;return {ok:status>=200&&status<300,status,json:async()=>data}};
  const run=()=>forwardReceipt({req:{method:'POST',url:'/api/lab/orders/12ab-34cd/download-receipt/download'},res:{},url,bytes:Buffer.from('{}'),
  contentType:'application/json',store,request,offline:()=>offline,json,enabled:true});
  return {run,get reply(){return reply},get calls(){return calls},get options(){return options},switchAccount:()=>{account='B'}};

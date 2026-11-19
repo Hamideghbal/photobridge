@@ -57,7 +57,7 @@ function archiveDirectory(folder,out){
    '  [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip,$item.FullName,$rel,[IO.Compression.CompressionLevel]::Optimal)',
    ' }',
    '} finally { $zip.Dispose() }'
-  ].join('; ');
+  ].join('\n');
   run('powershell.exe',['-NoProfile','-NonInteractive','-Command',script]);
  }else{
   // CI/source verification on non-Windows machines; Python stdlib preserves

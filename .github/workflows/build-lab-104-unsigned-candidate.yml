@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: af542e634fc8651b28c7ca072b962d4d6a1321eb # pin actual tested web source, never follow default/site hot-update
+          ref: 32c9a1d96d5dc6707d6d456d018d1929caf2a5f6 # pin actual tested web source, never follow default/site hot-update
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

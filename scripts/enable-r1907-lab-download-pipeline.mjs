@@ -16,6 +16,19 @@ function rewriteSection(s,startMark,endMark,fn){
 }
 let s=fs.readFileSync(file,'utf8');
 if(!s.includes(marker)){
+ // Preserve all original disk/account proof but remove repeated device checks in
+ // unattended mode. For completely empty new folders only, the expensive per-file
+ // pre-verification is redundant; the FULL post-write verification is mandatory.
+ s=rewriteSection(s,'async function pb1450Download(','async function pb1450AllowStage(',part=>{
+  part=replaceOnce(part,'root = await pb1450Root(true);',
+   'root = await pb1450Root(options.silent===true?false:true);','no interactive picker for auto download');
+  const original='report = await pb1450Verify(detail,root,receipts,progress);';
+  if(part.split(original).length!==3)throw Error('LAB104 expected pre+post verification');
+  // Only the FIRST scan can use the proven empty-folder shortcut.
+  part=part.replace(original,
+   'report = await pb1908EmptyPreflight(detail,root,receipts) || await pb1450Verify(detail,root,receipts,progress);');
+  return part;
+ });
  s=rewriteSection(s,'async function pb1568ProcessOrder(','async function pb1568AutoTick(',part=>{
   part=replaceOnce(part,
    "const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));",

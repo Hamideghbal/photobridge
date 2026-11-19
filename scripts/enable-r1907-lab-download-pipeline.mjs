@@ -54,8 +54,8 @@ if(!s.includes(marker)){
   part=replaceOnce(part,'await pb1568ProcessOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});',
    'await pb1907ScheduleOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});',
    'retry joins active per-order flight');
-  part=replaceOnce(part,'}finally{pb1568Work.running=false;}',
-   '}finally{pb1907RetryDraining=false;}',
+  part=replaceOnce(part,'pb1568Work.running=false;',
+   'pb1907RetryDraining=false;',
    'retry release');
   return part;
  });

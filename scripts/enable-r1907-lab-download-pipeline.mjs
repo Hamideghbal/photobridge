@@ -18,9 +18,17 @@ let s=fs.readFileSync(file,'utf8');
 if(!s.includes(marker)){
  s=rewriteSection(s,'async function pb1568ProcessOrder(','async function pb1568AutoTick(',part=>{
   part=replaceOnce(part,
+   "const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));",
+   "const detail=pb1908TakeDetail(lab,id)||await Me('/api/lab/orders/'+encodeURIComponent(id));",
+   'accept authenticated notification detail without a redundant order fetch');
+  part=replaceOnce(part,
+   "await pb1450Root(false,detail);",
+   "pb1908Mark(id,'root_check_start');await pb1450Root(false,detail);pb1908Mark(id,'root_check_passed');",
+   'diagnose root/device readiness before downloader');
+  part=replaceOnce(part,
    "const outcome=await pb1450Download(detail,()=>{},{silent:true});",
-   "const outcome=await pb1907WithDownloadSlot(()=>pb1450Download(detail,()=>{},{silent:true}));",
-   'bound automatic transfer capacity');
+   "pb1908Mark(id,'transfer_scheduled');const outcome=await pb1907WithDownloadSlot(()=>pb1450Download(detail,value=>pb1908Progress(id,value),{silent:true}));",
+   'download slot and actual first-byte checkpoint');
   part=replaceOnce(part,
    "const ack=await pb1451AcknowledgeDownload(detail);",
    "const ack=await pb1451AcknowledgeDownload(detail);if(!Number.isSafeInteger(Number(ack?.verifiedFiles))||Number(ack.verifiedFiles)<1||ack.desktopPending||ack.offline)throw Error('receipt_not_server_verified');",

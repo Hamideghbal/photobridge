@@ -1,0 +1,148 @@
+name: Lab Windows FULL source + next-version candidate (MANUAL, NOT published)
+on:
+  workflow_dispatch:
+    inputs:
+      next_version:
+        description: 'NEW, strictly higher version, e.g. 1.0.105'
+        required: true
+        type: string
+      web_source_commit:
+        description: 'Full immutable 40-char Git SHA of tested website/API source'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  exact-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Validate immutable input before checkout
+        shell: bash
+        env:
+          NEXT: ${{ inputs.next_version }}
+          WEB_SHA: ${{ inputs.web_source_commit }}
+        run: |
+          [[ "$NEXT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 10
+          [[ "$WEB_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 11
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.web_source_commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exact pinned lab UI and run actual downloader regression tests
+        run: |
+          npm install --ignore-scripts --no-package-lock --no-audit --no-fund
+          npm run build
+          node --test scripts/test-r1907-download-scheduler.cjs scripts/test-r1907-final-native-worker.cjs scripts/test-r1910-live-download-root.cjs
+      - name: Preserve full immutable website/server source
+        shell: bash
+        run: |
+          git archive --format=zip --output="$RUNNER_TEMP/photobridge-web-source.zip" HEAD
+          sha256sum "$RUNNER_TEMP/photobridge-web-source.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-source-next
+          path: ${{ runner.temp }}/photobridge-web-source.zip
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-ui-next
+          path: dist/web/lab-desktop-ui/
+          include-hidden-files: true
+          retention-days: 30
+  unsigned-windows-with-all-sources:
+    needs: exact-web
+    runs-on: windows-2022
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-ui-next
+          path: candidate-ui
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-source-next
+          path: web-source-archive
+      - name: Pin exact UI, bump distinct version and verify full source coverage
+        shell: pwsh
+        env:
+          PB_NEXT_VERSION: ${{ inputs.next_version }}
+        run: |
+          if (-not (Test-Path candidate-ui/manifest.json)) { throw 'Missing tested native UI manifest' }
+          Remove-Item verified-ui -Recurse -Force
+          New-Item -ItemType Directory verified-ui | Out-Null
+          Copy-Item candidate-ui/* verified-ui/ -Recurse -Force
+          Rename-Item verified-ui/manifest.json .pb-lab-bundle-manifest.json
+          node prepare-next-version.cjs "$env:PB_NEXT_VERSION"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node -e "const fs=require('fs'),m=JSON.parse(fs.readFileSync('verified-ui/.pb-lab-bundle-manifest.json'));fs.writeFileSync('verified-ui-pin.json',JSON.stringify({origin:'https://photobridge.ir',build:m.build}));"
+          node release-kit.cjs inspect
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test/alert-order-status.test.cjs test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/startup-ui.test.cjs test/order-progress.test.cjs test/updater.test.cjs test/release-kit.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2'
+      - name: Install native SQLite with compatible Node16 ABI
+        shell: pwsh
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build unsigned, unreleased installer
+        shell: pwsh
+        env:
+          PB_LAB_REFRESH_UI: '0'
+        run: |
+          npm run dist:unsigned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Smoke-test ACTUAL Windows Electron package
+        shell: pwsh
+        run: |
+          $exe=Join-Path $PWD 'release/win-unpacked/PhotoBridge Lab.exe'
+          $p=Start-Process -FilePath $exe -ArgumentList '--compat-smoke','--enable-logging' -PassThru -Wait -RedirectStandardOutput 'compat-smoke.log' -RedirectStandardError 'compat-smoke-error.log'
+          Get-Content compat-smoke.log
+          Get-Content compat-smoke-error.log
+          if ($p.ExitCode -ne 0) { throw "Packaged smoke failure: $($p.ExitCode)" }
+          if (!(Select-String -Path compat-smoke.log -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) { throw 'Missing runtime smoke proof' }
+      - name: Package the ACTUAL full native source, exact web source, verified UI and EXE
+        shell: pwsh
+        env:
+          PB_WEB_SOURCE_ARCHIVE: ${{ github.workspace }}/web-source-archive/photobridge-web-source.zip
+          PB_WEB_SOURCE_COMMIT: ${{ inputs.web_source_commit }}
+          PB_REQUIRE_SIGNED_UPDATE: '0'
+          PB_NEXT_VERSION: ${{ inputs.next_version }}
+        run: |
+          node release-kit.cjs pack
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (Test-Path "release/PhotoBridge-Lab-Update-$env:PB_NEXT_VERSION.json") { throw 'Unsigned candidate cannot have an updater JSON' }
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: lab-windows-next-version-full-sources-UNSIGNED-NOT-PUBLISHED
+          path: |
+            release/*.exe
+            release/PhotoBridge-Lab-FullSource-*.zip
+            release/PhotoBridge-Lab-ReleaseInfo-*.json
+          if-no-files-found: error
+          retention-days: 30
+# This workflow intentionally NEVER creates a tag/release, never merges, never
+# uploads to PhotoBridge or Liara, and never signs a fake update JSON.
+# Actual rollout: original Ed25519 publisher key + optional Windows certificate,
+# operator acceptance, explicit manual publication of authenticated installer
+# and matching JSON from create-update-release.cjs.

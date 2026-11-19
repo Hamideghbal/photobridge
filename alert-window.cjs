@@ -1,6 +1,7 @@
 'use strict';
 const path=require('node:path');
 const {normalizeSettings,initializeSettings}=require('./alert-settings.cjs');
+const {noteComplete,decoratePending}=require('./alert-order-status.cjs');
 class AlertWindow {
  constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,retryDownload=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
   Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,retryDownload,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.focusOrderId=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();
@@ -16,13 +17,19 @@ class AlertWindow {
  updateDownload(value,account){
   if(!account||account!==this.getAccount())return;
   if(this.downloadAccount!==account){this.downloads.clear();if(this.account!==account)this.focusOrderId=null;this.downloadAccount=account}
+  // Verify the all-stages-complete signal before annotating any durable order
+  // notification. This does not touch the existing download/progress pipeline.
+  const completed=noteComplete(this.store,account,value);
   const previous=this.downloads.get(value.orderId);value={...value,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
   while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
-  if(this.window&&!this.window.isDestroyed())this.window.webContents.send('lab-alert-progress',this.visibleDownloads());
+  if(this.window&&!this.window.isDestroyed()){
+   this.window.webContents.send('lab-alert-progress',this.visibleDownloads());
+   if(completed)this.window.webContents.send('lab-alert-change');
+  }
  }
  visibleDownloads(){const rows=this.downloadAccount===this.getAccount()?[...this.downloads.values()]:[];if(this.focusOrderId)return rows.filter(row=>row.orderId===this.focusOrderId);return rows.sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0)).slice(0,1)}
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}
- state(){const downloads=this.visibleDownloads();return {downloads,items:this.items,settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
+ state(){const downloads=this.visibleDownloads(),account=this.getAccount();return {downloads,items:decoratePending(this.store,account,this.account===account?this.items:[]),settings:initializeSettings(this.store,account||'default'),settingsOnly:this.settingsOnly};}
  ensure(){
   if(this.window&&!this.window.isDestroyed())return this.window;
   const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Lab',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});

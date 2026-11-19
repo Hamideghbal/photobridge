@@ -1,0 +1,137 @@
+name: LAB104 reconstructed unsigned Windows candidate (NOT stable)
+on:
+  push:
+    branches: [fix/lab-104-native-candidate-1907]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  patched-web-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9138277571d036ae7c647a9456d8042edb0a95dc # pin actual tested web source, never follow default/site hot-update
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build patched native UI from exact web candidate branch
+        run: |
+          npm install --ignore-scripts --no-package-lock --no-audit --no-fund
+          npm run build
+          node --test scripts/test-r1907-download-scheduler.cjs
+      - name: Archive exact R1910 full web/server build source (for permanent release kit)
+        shell: bash
+        run: |
+          git archive --format=zip --output="$RUNNER_TEMP/photobridge-web-source.zip" HEAD
+          sha256sum "$RUNNER_TEMP/photobridge-web-source.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab104-web-source
+          path: ${{ runner.temp }}/photobridge-web-source.zip
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab104-patched-ui
+          path: dist/web/lab-desktop-ui/
+          include-hidden-files: true
+          retention-days: 7
+  windows-test-artifact:
+    needs: patched-web-ui
+    runs-on: windows-2022
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/lab-104-native-candidate-1907
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - uses: actions/download-artifact@v4
+        with:
+          name: lab104-patched-ui
+          path: candidate-ui
+      - uses: actions/download-artifact@v4
+        with:
+          name: lab104-web-source
+          path: web-source-archive
+      - name: Replace stale 1.0.94 UI pin with verified candidate UI
+        shell: pwsh
+        run: |
+          if (-not (Test-Path candidate-ui/manifest.json)) { throw 'LAB104 patched web UI manifest unavailable' }
+          Remove-Item verified-ui -Recurse -Force
+          New-Item -ItemType Directory verified-ui | Out-Null
+          Copy-Item candidate-ui/* verified-ui/ -Recurse -Force
+          Rename-Item verified-ui/manifest.json .pb-lab-bundle-manifest.json
+          node -e "const fs=require('fs'),crypto=require('crypto'),p='verified-ui/.pb-lab-bundle-manifest.json',m=JSON.parse(fs.readFileSync(p));if(m.protocol!==1||m.channel!=='lab'||!m.files.length||crypto.createHash('sha256').update(JSON.stringify(m.files)).digest('hex')!==m.build)throw Error('manifest invalid');for(const f of m.files){const b=fs.readFileSync('verified-ui/'+f.name);if(crypto.createHash('sha256').update(b).digest('hex')!==f.sha256)throw Error('asset mismatch '+f.name)}fs.writeFileSync('verified-ui-pin.json',JSON.stringify({origin:'https://photobridge.ir',build:m.build}));console.log('LAB104_UI_BUILD',m.build)"
+      - name: Verify first-party regression tests
+        shell: pwsh
+        run: |
+          node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/alert-order-status.test.cjs test/release-kit.test.cjs test/startup-ui.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2' # legacy better-sqlite3 8.7 uses Node16 ABI; Node22 V8 compilation fails
+      - name: Install native dependencies with compatible legacy Node ABI
+        shell: pwsh
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22' # preserve Electron builder/runtime smoke environment
+      - name: Build UNSIGNED test installer only (no release or signing key)
+        shell: pwsh
+        env:
+          PB_LAB_REFRESH_UI: '0'
+        run: |
+          npm run dist:unsigned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-FileHash release/PhotoBridge-Lab-Setup-1.0.104-x64.exe -Algorithm SHA256 | Format-List
+      - name: Test actual packaged Electron runtime
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'release/win-unpacked/PhotoBridge Lab.exe'
+          $p = Start-Process -FilePath $exe -ArgumentList '--compat-smoke','--enable-logging' -PassThru -Wait -RedirectStandardOutput 'compat-smoke.log' -RedirectStandardError 'compat-smoke-error.log'
+          Get-Content compat-smoke.log
+          Get-Content compat-smoke-error.log
+          if ($p.ExitCode -ne 0) { throw "Packaged smoke failed: $($p.ExitCode)" }
+          if (!(Select-String -Path compat-smoke.log -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) { throw 'Smoke completion missing' }
+      - name: Verify exact full source and produce source+installer release kit (NO updater JSON)
+        shell: pwsh
+        env:
+          PB_WEB_SOURCE_ARCHIVE: ${{ github.workspace }}/web-source-archive/photobridge-web-source.zip
+          PB_WEB_SOURCE_COMMIT: 9138277571d036ae7c647a9456d8042edb0a95dc
+          PB_REQUIRE_SIGNED_UPDATE: '0'
+        run: |
+          node release-kit.cjs inspect
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node release-kit.cjs pack
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip=[System.IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'release/PhotoBridge-Lab-FullSource-1.0.104.zip'))
+          try {
+            $names=@($zip.Entries | ForEach-Object { $_.FullName.Replace('\','/') })
+            foreach($required in @('SOURCE-MANIFEST.json','native/main.cjs','native/alert-order-status.cjs','native/package-lock.json','native/verified-ui/.pb-lab-bundle-manifest.json','web/web-source-9138277571d036ae7c647a9456d8042edb0a95dc.zip')){
+              if(-not ($names -contains $required)){throw "Full source missing $required"}
+            }
+            if($names.Count -lt 900){throw "Unexpectedly small source ZIP"}
+            $bad=@($names | Where-Object { $_.Contains('/.publisher/') -or $_.Contains('/node_modules/') -or $_.EndsWith('.pem') -or $_.EndsWith('.pfx') })
+            if($bad.Count -gt 0){throw 'Source ZIP contains restricted private files'}
+          } finally { $zip.Dispose() }
+          if (Test-Path 'release/PhotoBridge-Lab-Update-1.0.104.json') { throw 'Unsafe: an unsigned candidate must not publish a misleading update JSON' }
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: lab-1.0.104-R1911-alert-completion-FULL-SOURCE-UNSIGNED
+          path: |
+            release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
+            release/PhotoBridge-Lab-FullSource-1.0.104.zip
+            release/PhotoBridge-Lab-ReleaseInfo-1.0.104.json
+          retention-days: 30
+          if-no-files-found: error

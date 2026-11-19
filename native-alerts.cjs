@@ -1,11 +1,12 @@
 'use strict';
 const {alertContent}=require('./alert-content.cjs');
+const {decoratePending}=require('./alert-order-status.cjs');
 const {initializeSettings}=require('./alert-settings.cjs');
 const infoEvent=n=>['collaboration_request','photographer_invite_accepted','photographer_removed_by_admin','photographer_removed_by_lab'].includes(n?.event_key);
 const {collectChatAlerts}=require('./chat-alerts.cjs');
 // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
 class NativeAlerts {
- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,now});this.epoch=0;this.busy=false;this.timer=null;}
+ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;}
  start(){this.stop();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
  key(account){return 'nativeAlertsPending:'+account;}
@@ -72,6 +73,12 @@ class NativeAlerts {
    pending=(this.store.get(this.key(account))||[]).filter(n=>!infoIds.has(n.id)&&!infoEvent(n)&&!remotelyRead.has(n.id)&&!chatWasRead(n));
    const removed=pending.length!==(this.store.get(this.key(account))||[]).length;
    this.store.set(this.key(account),pending);if(removed)this.dismiss();
+   // The order's first download wake must be dispatched BEFORE popup rendering,
+   // chat history and any unrelated notification/info network action.
+   const justArrived=items.filter(n=>!infoEvent(n)&&n.id&&!n.read_at&&!seen.has(n.id));
+   if(justArrived.length&&epoch===this.epoch&&this.getAccount()===account){
+    try{this.onOrderNotice(account,justArrived)}catch{} // never delay/disable popup
+   }
    const deliveredInfo=new Set();
    for(const n of info)if(n.id&&!n.read_at&&!seen.has(n.id)){if(epoch!==this.epoch||this.getAccount()!==account)return;try{await this.notifyInfo(n,account);deliveredInfo.add(n.id)}catch{}}
    const fresh=items.filter(n=>!infoEvent(n)).filter(n=>n.id&&!n.read_at&&!seen.has(n.id)).map(alertContent);
@@ -79,6 +86,7 @@ class NativeAlerts {
    const locallyAcknowledged=new Set(this.store.get(this.receiptKey(account))||[]);
    const earlyIds=new Set(pending.map(n=>n.id));
    for(const n of fresh)if(!earlyIds.has(n.id)&&!locallyAcknowledged.has(n.id)){pending.push(n);earlyIds.add(n.id)}
+   pending=decoratePending(this.store,account,pending);
    this.store.set(this.key(account),pending);
    const orderPending=pending.filter(n=>!n.chatThread);
    if(orderPending.length)await this.present(account,orderPending,epoch);
@@ -97,6 +105,7 @@ class NativeAlerts {
    const locallyRead=new Set(this.store.get(this.receiptKey(account))||[]);
    const ids=new Set(pending.map(n=>n.id));
    for(const n of fresh)if(!ids.has(n.id)&&!locallyRead.has(n.id)&&!chatWasRead(n)){pending.push(n);ids.add(n.id);}
+   pending=decoratePending(this.store,account,pending);
    this.store.set(this.key(account),pending);
    for(const n of [...items,...fresh])if(n.id&&(!infoEvent(n)||n.read_at||deliveredInfo.has(n.id)))seen.add(n.id);
    if(chat)this.store.set(chat.key,chat.checkpoint);

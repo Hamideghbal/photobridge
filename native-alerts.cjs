@@ -1,5 +1,6 @@
 'use strict';
 const {alertContent}=require('./alert-content.cjs');
+const {decoratePending}=require('./alert-order-status.cjs');
 const {initializeSettings}=require('./alert-settings.cjs');
 const infoEvent=n=>['collaboration_request','photographer_invite_accepted','photographer_removed_by_admin','photographer_removed_by_lab'].includes(n?.event_key);
 const {collectChatAlerts}=require('./chat-alerts.cjs');
@@ -85,6 +86,7 @@ class NativeAlerts {
    const locallyAcknowledged=new Set(this.store.get(this.receiptKey(account))||[]);
    const earlyIds=new Set(pending.map(n=>n.id));
    for(const n of fresh)if(!earlyIds.has(n.id)&&!locallyAcknowledged.has(n.id)){pending.push(n);earlyIds.add(n.id)}
+   pending=decoratePending(this.store,account,pending);
    this.store.set(this.key(account),pending);
    const orderPending=pending.filter(n=>!n.chatThread);
    if(orderPending.length)await this.present(account,orderPending,epoch);
@@ -103,6 +105,7 @@ class NativeAlerts {
    const locallyRead=new Set(this.store.get(this.receiptKey(account))||[]);
    const ids=new Set(pending.map(n=>n.id));
    for(const n of fresh)if(!ids.has(n.id)&&!locallyRead.has(n.id)&&!chatWasRead(n)){pending.push(n);ids.add(n.id);}
+   pending=decoratePending(this.store,account,pending);
    this.store.set(this.key(account),pending);
    for(const n of [...items,...fresh])if(n.id&&(!infoEvent(n)||n.read_at||deliveredInfo.has(n.id)))seen.add(n.id);
    if(chat)this.store.set(chat.key,chat.checkpoint);

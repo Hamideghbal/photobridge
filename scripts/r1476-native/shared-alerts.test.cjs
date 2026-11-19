@@ -8,3 +8,26 @@ test('offline receipts survive restart and synchronize exact IDs without reading
 test('browser read removes durable orders including ones outside latest notifications',async()=>{const s=setup(),a=s.make();s.setRows([{id}]);await a.poll();s.setRows([]);s.setRead([id]);await a.poll();assert.deepEqual(s.disk.get('nativeAlertsPending:A'),[]);assert.ok(s.dismissed()>0)});
 test('browser chat cursor removes pending messages and native acknowledgment posts the selected thread IDs',async()=>{const s=setup(),a=s.make();s.disk.set('nativeAlertsPending:A',[{id:'chat:'+id,chatThread:id2,chatTime:100}]);s.setShared({[id2]:100});await a.poll();assert.deepEqual(s.disk.get('nativeAlertsPending:A'),[]);s.disk.set('nativeAlertsPending:A',[{id:'chat:'+id,chatThread:id2,chatTime:200}]);a.acknowledge('A',['chat:'+id]);await new Promise(r=>setImmediate(r));assert.deepEqual(s.posts.at(-1),{path:'/api/lab/notifications/chat-read',body:{thread:id2,ids:[id]}})});
 test('another account cannot acknowledge or upload the previous account receipts',async()=>{const s=setup(),a=s.make();s.disk.set('nativeAlertsPending:A',[{id}]);s.setAccount('B');a.acknowledge('A',[id]);await a.flushReceipts('A');assert.equal(s.posts.length,0);assert.equal(s.disk.get('nativeAlertsPending:A').length,1)});
+
+test('a new order waits for its own rendered revision before the native popup is visible',async()=>{
+ const handlers={};class Win{
+  constructor(){this.shows=0;this.hidden=true;this.webContents={on(){},send(){},setWindowOpenHandler(){}}}
+  isDestroyed(){return false}on(){}once(){}loadFile(){return Promise.resolve()}
+  show(){this.shows++;this.hidden=false}hide(){this.hidden=true}restore(){}focus(){}flashFrame(){}
+ }
+ const a=new AlertWindow({BrowserWindow:Win,ipcMain:{handle:(k,fn)=>handlers[k]=fn},store:{get(){}},getAccount:()=> 'A',open:async()=>{}});
+ const sender=()=>({sender:a.window.webContents});
+ a.present({items:[{id}]},null,async()=>{},'A');
+ const first=a.state().revision;assert.equal(a.window.shows,0);
+ await handlers['lab-alert-layout'](sender(),{height:320,revision:first});
+ assert.equal(a.window.shows,1);
+ await a.accept([id],false);assert.equal(a.window.hidden,true);
+ a.present({items:[{id:id2}]},null,async()=>{},'A');
+ const second=a.state().revision;assert.notEqual(second,first);
+ assert.equal(a.window.shows,1,'old order content must never flash while waiting for the new render');
+ await handlers['lab-alert-layout'](sender(),{height:320,revision:first});
+ assert.equal(a.window.shows,1,'late layouts from the old order must be ignored');
+ await handlers['lab-alert-layout'](sender(),{height:320,revision:second});
+ assert.equal(a.window.shows,2);
+ assert.equal(a.window.hidden,false);
+});

@@ -1,0 +1,37 @@
+/* LAB 1.0.104 candidate: independent scan and per-order single-flight.
+   This is loaded after the native worker and its existing integrity checks.
+   Never change the download manifest, native writer, entitlement or payment guards. */
+const pb1907OrderFlights=new Map();
+let pb1907TransferActive=0;
+const pb1907TransferWaiters=[];
+let pb1907RetryDraining=false;
+let pb1907SessionEpoch=0;
+async function pb1907WithDownloadSlot(action){
+ if(pb1907TransferActive>=2)await new Promise(resolve=>pb1907TransferWaiters.push(resolve));
+ pb1907TransferActive++;
+ try{return await action()}
+ finally{pb1907TransferActive--;const next=pb1907TransferWaiters.shift();if(next)next();}
+}
+function pb1907ScheduleOrder(lab,order,settings){
+ const key=String(lab)+':'+String(order?.id||'');
+ if(!order?.id)return Promise.resolve();
+ const current=pb1907OrderFlights.get(key);
+ if(current)return current;
+ const epoch=pb1907SessionEpoch;
+ let flight;
+ flight=Promise.resolve().then(()=>{
+  if(epoch!==pb1907SessionEpoch||!window.pbNativeStorage||String(pb1568Work.labId)!==String(lab))return;
+  return pb1568ProcessOrder(lab,order,settings);
+ }).catch(error=>{
+  pb1568Work.lastError=pb1568Problem(error);
+ }).finally(()=>{
+  if(pb1907OrderFlights.get(key)===flight)pb1907OrderFlights.delete(key);
+ });
+ pb1907OrderFlights.set(key,flight);
+ return flight;
+}
+addEventListener('photobridge-auth-session-changed',()=>{
+ pb1907SessionEpoch++;
+ // Existing native storage and account validation still guard any active disk writes.
+ // Do not cancel an in-progress verified native write by reusing its file handle.
+});

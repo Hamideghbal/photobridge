@@ -30,3 +30,22 @@ test('R1912: a disconnected WAN with a still-active network adapter opens a cach
   assert.equal(attempts,1,'offline order creation and bootstrap must not retry the disconnected WAN');
  }finally{await new Promise(resolve=>server.close(resolve));store.db.close();fs.rmSync(dir,{recursive:true,force:true})}
 });
+
+test('R1912: submitting the first manual order after a long offline editing session uses stored subscription approval',async()=>{
+ const store=new LabStore(':memory:'),lab=crypto.randomUUID(),customer=crypto.randomUUID(),now=Date.now();let attempts=0;
+ store.set('labId',lab);store.set('auth',{user:{labRole:'lab_admin'},lab:{id:lab,name:'Offline Lab'}});
+ store.set('writeAccess:'+lab,{labId:lab,allowed:true,serverTime:now,receivedAt:now,highWater:now,activeUntil:new Date(now+86400000).toISOString()});
+ store.cache('/api/lab/delegated-orders/bootstrap?mode=print',200,'application/json',Buffer.from(JSON.stringify({lab:{id:lab},customers:[{id:customer,name:'Customer'}],printSizes:[{id:'13x18',label:'13x18',luster:100}]})).toString('base64'));
+ const request=async(_url,{signal}={})=>{attempts++;return new Promise((_,reject)=>{if(!signal)return reject(Error('unbounded_WAN_call'));if(signal.aborted)return reject(signal.reason);signal.addEventListener('abort',()=>reject(signal.reason),{once:true});})};
+ const server=createHost({store,request,roots:()=>[],token:'test',isOnline:()=>true,sync:{status:()=>store.status(),wake(){}}});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const id=crypto.randomUUID(),started=Date.now();
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/lab/delegated-orders',{method:'POST',headers:{Cookie:'desktop=test','Content-Type':'application/json'},body:JSON.stringify({clientOrderId:id,localOnly:true,customerId:customer,mode:'print'})});
+  const body=await response.json();
+  assert.equal(response.status,200,JSON.stringify(body));
+  assert.equal(body.localCommitted,true);
+  assert(Date.now()-started<2700,'manual intake should fall back to confirmed cached authorization instead of hanging on WAN');
+  assert.equal(attempts,1,'only a bounded authorization probe may reach WAN');
+ }finally{await new Promise(resolve=>server.close(resolve));store.db.close()}
+});

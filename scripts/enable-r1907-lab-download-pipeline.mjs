@@ -54,13 +54,13 @@ if(!s.includes(marker)){
  });
  s=rewriteSection(s,'async function pb1583DrainRetries(',"if(typeof window!=='undefined'&&window.pbNativeStorage)window.pbDesktopEvents",part=>{
   part=replaceOnce(part,'if(pb1568Work.running||!pb1583Queue.size)return;pb1568Work.running=true;',
-   'if(pb1907RetryDraining||!pb1583Queue.size)return;pb1907RetryDraining=true;',
+   'if(pb1907RetryDraining||(!window.__PB_LAB104_NATIVE__&&pb1568Work.running)||!pb1583Queue.size)return;pb1907RetryDraining=true;if(!window.__PB_LAB104_NATIVE__)pb1568Work.running=true;',
    'separate retry flight lock');
   part=replaceOnce(part,'await pb1568ProcessOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});',
-   'await pb1907ScheduleOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});',
+   'if(window.__PB_LAB104_NATIVE__){pb1568Work.labId=entry.labId;await pb1907ScheduleOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});}else await pb1568ProcessOrder(entry.labId,detail.order,{...settings,autoDownloadEnabled:true});',
    'retry joins active per-order flight');
   part=replaceOnce(part,'pb1568Work.running=false;',
-   'pb1907RetryDraining=false;',
+   'pb1907RetryDraining=false;if(!window.__PB_LAB104_NATIVE__)pb1568Work.running=false;',
    'retry release');
   return part;
  });

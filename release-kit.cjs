@@ -44,8 +44,21 @@ function archiveDirectory(folder,out){
  // Compress-Archive skips hidden files, so it MUST NOT be used for source.
  if(process.platform==='win32'){
   const escaped=v=>v.replaceAll("'","''");
-  const cmd="Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory('"+escaped(folder)+"','"+escaped(out)+"')";
-  run('powershell.exe',['-NoProfile','-NonInteractive','-Command',cmd]);
+  // ZipFile.CreateFromDirectory on Windows can emit backslash entry names.
+  // Explicit forward-slash entries are portable to Linux/macOS unzip tools.
+  const script=[
+   'Add-Type -AssemblyName System.IO.Compression.FileSystem',
+   "$root=[IO.Path]::GetFullPath('"+escaped(folder)+"')",
+   "$dest=[IO.Path]::GetFullPath('"+escaped(out)+"')",
+   '$zip=[IO.Compression.ZipFile]::Open($dest,[IO.Compression.ZipArchiveMode]::Create)',
+   'try {',
+   ' foreach($item in (Get-ChildItem -LiteralPath $root -Recurse -File -Force)) {',
+   "  $rel=$item.FullName.Substring($root.Length).TrimStart([char]92,[char]47).Replace([char]92,[char]47)",
+   '  [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip,$item.FullName,$rel,[IO.Compression.CompressionLevel]::Optimal)',
+   ' }',
+   '} finally { $zip.Dispose() }'
+  ].join('; ');
+  run('powershell.exe',['-NoProfile','-NonInteractive','-Command',script]);
  }else{
   // CI/source verification on non-Windows machines; Python stdlib preserves
   // dotfiles and avoids archive dependencies.

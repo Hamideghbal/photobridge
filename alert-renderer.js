@@ -2,7 +2,10 @@
 const $=id=>document.getElementById(id);let state={items:[],settings:{}},timer=null,context=null,played=new Set(),saveChain=Promise.resolve(),refreshId=0;
 const replyDrafts=new Map(),replyBusy=new Set();
 const controls=['mode','tone','volume','interval'];
-function fit(){requestAnimationFrame(()=>void window.labAlert.layout({height:Math.ceil(document.body.getBoundingClientRect().height),revision:state.revision}).catch(()=>{}))}
+// Hidden Electron windows may suspend requestAnimationFrame: use a microtask
+// after the complete synchronous alert DOM update to acknowledge the revision.
+let layoutQueued=false;
+function fit(){if(layoutQueued)return;layoutQueued=true;queueMicrotask(()=>{layoutQueued=false;void window.labAlert.layout({height:Math.ceil(document.body.getBoundingClientRect().height),revision:state.revision}).catch(()=>{})})}
 function renderDownloads(items){
  const root=$('downloads');root.replaceChildren();root.hidden=!items?.length;
  let network=$('networkProblem');if(!network){network=document.createElement('aside');network.id='networkProblem';network.setAttribute('role','alert');root.before(network)}

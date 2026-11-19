@@ -37,3 +37,22 @@ test('R1915: numeric SSE dispatch fetches exact lab order before stalled generic
  assert(refresh,'normal fallback still receives the event');
  assert.deepEqual(sent,[{account:'lab-a',id:ID}]);
 });
+
+test('R1915: numeric order lookup starts immediately without AbortSignal.timeout in Electron Node16',async()=>{
+ const original=AbortSignal.timeout,received=[];
+ try{
+  AbortSignal.timeout=undefined;
+  let calls=0;
+  const dispatch=createOrderAlertDispatch({getAccount:()=> 'lab-a',now:()=>Date.now(),
+   deliver:(account,id)=>received.push(id),
+   request:async(_path,options)=>{
+    calls++;assert.equal(options.signal.aborted,false);
+    return {ok:true,json:async()=>({orders:[{id:ID,number:42,lab_id:'lab-a',status:'sent'}]})};
+   }});
+  dispatch.accept('lab-a',[{event_key:'order_submitted',order_number:42,created_at:new Date().toISOString()}]);
+  assert.equal(calls,1,'first order lookup must begin synchronously');
+  await new Promise(resolve=>setImmediate(resolve));
+  dispatch.reset();
+  assert.deepEqual(received,[ID]);
+ }finally{AbortSignal.timeout=original}
+});

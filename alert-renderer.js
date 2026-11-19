@@ -5,8 +5,39 @@ const controls=['mode','tone','volume','interval'];
 function fit(){requestAnimationFrame(()=>void window.labAlert.layout(Math.ceil(document.body.getBoundingClientRect().height)).catch(()=>{}))}
 function renderDownloads(items){
  const root=$('downloads');root.replaceChildren();root.hidden=!items?.length;
- let network=$('networkProblem');if(!network){network=document.createElement('aside');network.id='networkProblem';network.setAttribute('role','alert');root.before(network)}network.hidden=!(items||[]).some(item=>item.networkError);network.textContent='اتصال اینترنت یا ارتباط با سرور قطع شده است. فایل‌های سالم حفظ می‌شوند؛ پس از اتصال ادامهٔ دانلود خودکار انجام می‌شود. این هشدار پس از برگشت ارتباط بسته می‌شود.';
- const newest=[...(items||[])].sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0));for(const item of newest){const row=document.createElement('div');row.className='download '+item.phase;const title=document.createElement('strong'),label=document.createElement('small'),bar=document.createElement('progress');title.textContent='سفارش '+(item.number?'#'+item.number:'');const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',failed:'دانلود کامل نشد؛ نیازمند بررسی'};const failure=item.stage==='invoice'?'دانلود تأیید شد؛ صدور فاکتور انجام نشد':item.stage==='pdf'?'فاکتور صادر شد؛ ذخیره PDF انجام نشد':item.stage==='print'?'فاکتور صادر شد؛ چاپ نیازمند بررسی است':phase.failed;label.textContent=(item.queued?'در صف تلاش مجدد':(item.phase==='failed'?failure:(item.phase==='checking'&&item.stage&&item.stage!=='download'?(item.stage==='pricing'?'منتظر تعیین قیمت':'در حال ادامهٔ فاکتور'):phase[item.phase])))+(item.phase==='failed'&&item.reason?' — '+item.reason:'')+' · '+Number(item.percent||0).toLocaleString('fa-IR')+'٪'+(item.total?' · '+Number(item.done).toLocaleString('fa-IR')+' از '+Number(item.total).toLocaleString('fa-IR')+' فایل':'');bar.max=100;bar.value=item.percent;bar.setAttribute('aria-label',title.textContent+'؛ '+phase[item.phase]);row.append(title,label,bar);if(item.phase==='failed'&&item.retrySupported){const retry=document.createElement('button');retry.type='button';retry.className='retryDownload';const retryLabel=item.stage==='invoice'?'تلاش مجدد صدور فاکتور':item.stage==='pdf'?'تلاش مجدد ذخیره فاکتور':item.stage==='print'?'بررسی و تلاش مجدد چاپ':(item.networkError?'ادامهٔ دانلود':'تلاش مجدد دانلود');retry.textContent=retryLabel;retry.onclick=async()=>{retry.disabled=true;retry.textContent='در حال شروع…';try{await window.labAlert.retryDownload(item.orderId)}catch{status('شروع مجدد انجام نشد؛ برنامه و اتصال اینترنت را بررسی کنید.');retry.disabled=false;retry.textContent=retryLabel}};row.append(retry)}root.append(row)}fit();
+ let network=$('networkProblem');if(!network){network=document.createElement('aside');network.id='networkProblem';network.setAttribute('role','alert');root.before(network)}
+ network.hidden=!(items||[]).some(item=>item.networkError);
+ network.textContent='اتصال اینترنت یا ارتباط با سرور قطع شده است. فایل‌های سالم حفظ می‌شوند؛ پس از اتصال ادامهٔ دانلود خودکار انجام می‌شود. این هشدار پس از برگشت ارتباط بسته می‌شود.';
+ const newest=[...(items||[])].sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0));
+ for(const item of newest){
+  const row=document.createElement('div');row.className='download '+item.phase;
+  const title=document.createElement('strong'),label=document.createElement('small');
+  title.textContent='سفارش '+(item.number?'#'+item.number:'');
+  const downloadVerified=item.downloadVerified===true||['verified','invoice_issuing','invoice_issued','complete'].includes(item.phase);
+  const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',failed:'دانلود کامل نشد؛ نیازمند بررسی',invoice_issuing:'در حال صدور فاکتور',invoice_issued:'فاکتور صادر شد',complete:'تمام مراحل با موفقیت انجام شد'};
+  const failure=item.stage==='invoice'?'دانلود تأیید شد؛ صدور فاکتور انجام نشد':item.stage==='pdf'?'فاکتور صادر شد؛ ذخیره PDF انجام نشد':item.stage==='print'?'فاکتور صادر شد؛ چاپ نیازمند بررسی است':phase.failed;
+  const stageLabel={invoice:'در حال صدور فاکتور',pdf:'در حال ذخیره فاکتور',print:'در حال چاپ فاکتور',pricing:'منتظر تعیین قیمت'};
+  const description=item.phase==='failed'?failure:item.phase==='checking'&&downloadVerified?(stageLabel[item.stage]||'دانلود تأیید شد'):(phase[item.phase]||phase.checking);
+  // Only actual measured byte transfer gets a bar; never retain it in finance or failure states.
+  const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;
+  label.textContent=(item.queued?'در صف تلاش مجدد':description)
+   +(item.phase==='failed'&&item.reason?' — '+item.reason:'')
+   +(showBar?' · '+Number(item.percent||0).toLocaleString('fa-IR')+'٪':'')
+   +(showBar&&item.total?' · '+Number(item.done||0).toLocaleString('fa-IR')+' از '+Number(item.total).toLocaleString('fa-IR')+' فایل':'');
+  row.append(title,label);
+  if(showBar){const bar=document.createElement('progress');bar.max=100;bar.value=item.percent;bar.setAttribute('aria-label',title.textContent+'؛ در حال دانلود');row.append(bar)}
+  if(item.phase==='failed'&&item.retrySupported){
+   const retry=document.createElement('button');retry.type='button';retry.className='retryDownload';
+   const retryLabel=item.stage==='invoice'?'تلاش مجدد صدور فاکتور':item.stage==='pdf'?'تلاش مجدد ذخیره فاکتور':item.stage==='print'?'بررسی و تلاش مجدد چاپ':(item.networkError?'ادامهٔ دانلود':'تلاش مجدد دانلود');
+   retry.textContent=retryLabel;retry.onclick=async()=>{
+    retry.disabled=true;retry.textContent='در حال شروع…';
+    try{await window.labAlert.retryDownload(item.orderId)}
+    catch{status('شروع مجدد انجام نشد؛ برنامه و اتصال اینترنت را بررسی کنید.');retry.disabled=false;retry.textContent=retryLabel}
+   };row.append(retry);
+  }
+  root.append(row);
+ }
+ fit();
 }
 function status(message){$('status').textContent=message;fit();}
 function controlsState(){return {mode:$('mode').value,tone:$('tone').value,volume:Number($('volume').value),interval:Number($('interval').value)}}

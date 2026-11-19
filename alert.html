@@ -11,7 +11,17 @@
 .order span.orderCompletion{display:flex;flex-wrap:wrap;gap:10px}
 .order span.orderCompletion span{display:inline-block;color:inherit;font-weight:700}
 .retryDownload{margin-top:8px;min-height:30px;padding:4px 10px;border-color:#d1dfff;color:#245fd3;background:#fff;font-size:11px}
-#networkProblem{margin:10px 0;padding:10px;border:1px solid #f3be80;background:#fff6e9;border-radius:9px;color:#92572e;font-size:11px}.order span.orderCompletion{display:block;margin-top:7px;padding:7px 9px;border-radius:8px;border:1px solid #bee7d3;background:#effaf4;color:#166f47;font-size:11px;font-weight:700;white-space:normal}</style>
+#networkProblem{margin:10px 0;padding:10px;border:1px solid #f3be80;background:#fff6e9;border-radius:9px;color:#92572e;font-size:11px}.order span.orderCompletion{display:block;margin-top:7px;padding:7px 9px;border-radius:8px;border:1px solid #bee7d3;background:#effaf4;color:#166f47;font-size:11px;font-weight:700;white-space:normal}
+/* R1913: one persistent card per new order; status never floats above it. */
+#downloads{display:none!important}
+.order{background:#f6f9ff;border-color:#d8e5f8}
+.orderStage{margin-top:10px;padding:9px 10px;border:1px solid #d5e3f5;background:#fff;border-radius:9px}
+.orderStageLabel{display:block;font-size:11px;color:#466078;white-space:normal;line-height:1.9}
+.orderStage progress{display:block;width:100%;height:7px;accent-color:#245fd3;margin-top:8px}
+.orderNetworkWarning{display:block;margin-top:6px;color:#a26720}
+.order .stageChecks{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.order .stageChecks .stageCheck{white-space:nowrap;display:inline-block;overflow:visible}
+</style>
 <header><div class="mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 21h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="19" cy="4" r="3" fill="#245fd3" stroke="white" stroke-width="1.7"/></svg></div><div><div class="brand">PHOTOBRIDGE LAB</div><h1 id="title">سفارش چاپ جدید</h1></div></header>
 <p id="hint">این اعلان تا تأیید شما باز می‌ماند.</p><section id="downloads" aria-label="پیشرفت دانلود سفارش‌ها" hidden></section><section id="orders"><div id="items" aria-live="polite"></div><div class="actions"><button class="primary" id="open">باز کردن لابراتوار</button><button id="ack">همه را دیدم</button></div></section>
 <details id="preferences"><summary>تنظیم صدای اعلان</summary><div class="setting-fields"><label>حالت صدا<select id="mode"><option value="silent">بی‌صدا</option><option value="gentle">آرام و یک‌باره</option><option value="repeat">تکرار تا تأیید</option></select></label><label>نوع صدا<select id="tone"><option value="bell">زنگ</option><option value="soft">ملایم</option><option value="beep">بوق کوتاه</option></select></label><label>بلندی صدا<span><input id="volume" type="range" min="0" max="100" value="50" aria-label="بلندی صدا"><output id="volumeText">۵۰٪</output></span></label><label id="intervalRow">فاصلهٔ تکرار<select id="interval"><option value="5">۵ ثانیه</option><option value="10">۱۰ ثانیه</option><option value="30">۳۰ ثانیه</option><option value="60">۱ دقیقه</option></select></label><div class="settings-footer"><button id="test">تست صدا</button><small>تغییرات خودکار ذخیره می‌شوند</small></div></div></details><div id="status" role="status"></div><script src="alert-renderer.js"></script></html>

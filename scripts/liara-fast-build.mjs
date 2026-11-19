@@ -1433,4 +1433,4 @@ runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-downlo
 // LAB 1.0.104: final native-only download/finance split after R1892.
 // PR remains draft; this branch is never deployed or merged without Windows verification.
 await deployStep('./enable-r1907-lab-download-pipeline.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1907-download-scheduler.cjs','scripts/test-r1907-final-native-worker.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1907-download-scheduler.cjs','scripts/test-r1907-final-native-worker.cjs','scripts/test-r1907-verified-receipt.cjs'],{stdio:'inherit'});

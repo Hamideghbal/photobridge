@@ -23,9 +23,9 @@ function renderDownloads(items){
   const description=item.phase==='failed'?failure:item.phase==='checking'&&downloadVerified?(stageLabel[item.stage]||'دانلود تأیید شد'):(phase[item.phase]||phase.checking);
   // Only actual measured byte transfer gets a bar; never retain it in finance or failure states.
   const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;
-  const invoiceDone=['invoice_issued','complete'].includes(item.phase)||(item.phase==='failed'&&downloadVerified&&['pdf','print'].includes(item.stage));
+  const invoiceDone=item.invoiceIssued===true||item.phase==='invoice_issued'||(item.phase==='failed'&&downloadVerified&&['pdf','print'].includes(item.stage));
   const downloadFailed=item.phase==='failed'&&!downloadVerified;
-  const invoiceFailed=item.phase==='failed'&&downloadVerified&&item.stage==='invoice';
+  const invoiceFailed=(item.phase==='failed'&&downloadVerified&&item.stage==='invoice')||(item.phase==='complete'&&!invoiceDone);
   const checks=document.createElement('div');checks.className='stageChecks';checks.setAttribute('aria-label','وضعیت مستقل مراحل');
   const addCheck=(text,done,failed)=>{const tag=document.createElement('span');tag.className='stageCheck '+(done?'done':failed?'warning':'pending');tag.textContent=(done?'✓ ':failed?'⚠ ':'… ')+text;checks.append(tag);};
   addCheck('دانلود',downloadVerified,downloadFailed);

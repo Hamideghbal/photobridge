@@ -41,6 +41,10 @@ if(!s.includes(marker)){
  });
  s=rewriteSection(s,'async function pb1568ProcessOrder(','async function pb1568AutoTick(',part=>{
   part=replaceOnce(part,
+   " if(task?.retryAt&&Date.now()<task.retryAt)return;",
+   " if(task?.retryAt&&Date.now()<task.retryAt){const repaired=pb1910RepairFalseHistoricalRetry(lab,id,order,task);if(!repaired)return;task=repaired;}",
+   'existing R1910 false-historical folder failure must not impose stale 30-second backoff');
+  part=replaceOnce(part,
    "const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));",
    "const detail=pb1908TakeDetail(lab,id)||await Me('/api/lab/orders/'+encodeURIComponent(id));",
    'accept authenticated notification detail without a redundant order fetch');

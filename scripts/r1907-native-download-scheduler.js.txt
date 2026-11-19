@@ -32,7 +32,7 @@ function pb1907ScheduleOrder(lab,order,settings){
 }
 const pb1907PreviewSeen=new Map();
 function pb1907PreviewKick(path,response){
- if(!window.pbNativeStorage||!/^\/api\/lab\/orders\/[0-9a-f-]{20,}(?:\?.*)?$/.test(String(path||'')))return;
+ if(!window.__PB_LAB104_NATIVE__||!window.pbNativeStorage||!/^\/api\/lab\/orders\/[0-9a-f-]{20,}(?:\?.*)?$/.test(String(path||'')))return;
  const order=response?.order;
  if(!order?.id||order.downloaded_at||!['sent','received'].includes(String(order.status||'')))return;
  if(pb1568Work.labId&&order.lab_id&&String(order.lab_id)!==String(pb1568Work.labId))return;

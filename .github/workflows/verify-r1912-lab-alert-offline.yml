@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - fix/lab-104-r1912-alert-offline-regression
-      - fix/lab-manual-intake-local-preflight-r1916
   workflow_dispatch:
 permissions:
   contents: read
@@ -47,5 +46,4 @@ jobs:
             test/r1913-fast-sse-wake.test.cjs \
             test/r1913-invoice-proof.test.cjs \
             test/r1915-durable-checks.test.cjs \
-            test/r1915-fast-numeric-sse.test.cjs \
-            test/r1916-manual-intake-preflight.test.cjs
+            test/r1915-fast-numeric-sse.test.cjs

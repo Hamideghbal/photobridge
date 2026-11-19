@@ -57,7 +57,7 @@ test('real generated scan launches order B file transfer while invoice A is bloc
  const h=harness(),started=performance.now();
  await h.scan();
  await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(h.downloadStarts.map(v=>v.id),['A'],'order A must issue a real download operation');
+ assert.deepEqual(h.downloadStarts.map(v=>v.id),['A'],'order A must issue a real download operation; actual requests='+JSON.stringify(h.requests)+'; worker='+h.env.pb1568Work.lastError+'; tasks='+JSON.stringify([...h.tasks]));
  h.rows([h.order('A'),h.order('B')]);
  await h.scan();
  await new Promise(resolve=>setImmediate(resolve));
@@ -79,6 +79,6 @@ test('invoice failure in real generated worker does not announce success',async(
   return old(route,options);
  };
  h.rows([h.order('B')]);await h.scan();await new Promise(resolve=>setTimeout(resolve,30));
- assert(h.reports.some(p=>p.phase==='failed'&&p.stage!=='download'));
+ assert(h.reports.some(p=>p.phase==='failed'&&p.stage!=='download'),'reports='+JSON.stringify(h.reports)+' worker='+h.env.pb1568Work.lastError+' requests='+JSON.stringify(h.requests));
  assert(!h.reports.some(p=>p.phase==='complete'));
 });

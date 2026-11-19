@@ -42,6 +42,7 @@ function pb1908Mark(orderId,stage,data){
  if(data!==undefined)entry[stage+'Info']=String(data).slice(0,180);
  pb1908Timing.set(id,entry);
  while(pb1908Timing.size>60)pb1908Timing.delete(pb1908Timing.keys().next().value);
+ try{window.pbDesktopEvents?.downloadTrace?.({orderId:id,stage,elapsedMs:Date.now()-entry.startAt})}catch{}
  if(stage==='first_byte'||stage==='failed'||stage==='complete'){
   console.info('[LAB104 download latency]',JSON.stringify({orderId:id,stage,elapsedMs:Date.now()-entry.startAt,checkpoints:Object.fromEntries(Object.entries(entry.stages).map(([key,t])=>[key,t-entry.startAt])),info:entry[stage+'Info']||null}));
  }
@@ -134,16 +135,27 @@ function pb1908FastArrival(signal,previewDetail){
   if(!task){
    if(!settings.autoDownloadEnabled||!['sent','received'].includes(String(order.status||''))||Number(order.file_count||0)<1)return false;
    if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return false;
-   const enabledAt=Number(localStorage.getItem('pb1568:downloadEnabledAt:'+lab))||0,created=Date.parse(order.created_at||'');
-   if(enabledAt&&Number.isFinite(created)&&created<enabledAt)return false;
-   // A previously uninitialized device must not mass-download historical notifications.
-   if(!enabledAt&&(!Number.isFinite(created)||Date.now()-created>120000))return false;
+   // A submission notification may be new even when the photographer's draft
+   // was CREATED much earlier. Do not reject the actual newly submitted order
+   // on its creation timestamp: the native notification is recent and scoped.
+   if(Date.now()-notifiedAt>2*60000||notifiedAt>Date.now()+10000)return false;
+   const enabledAt=Number(localStorage.getItem('pb1568:downloadEnabledAt:'+lab))||0;
    if(!enabledAt)localStorage.setItem('pb1568:downloadEnabledAt:'+lab,String(Date.now()-120000));
   }
   if(!Array.isArray(detail.files)||detail.files.length!==Number(order.file_count||0)||!detail.files.length){
    pb1908RetryDetail(lab,id,notifiedAt,'manifest_not_final');return false;
   }
   pb1908StopRetry(key);
+  // Earlier notification scans may have seen an incomplete upload/manifest
+  // and imposed 30-60s backoff. A NEW exact order notification with a complete
+  // manifest must be able to resume the safe downloader immediately.
+  if(task?.phase==='pending_download'&&Number(task.retryAt)>Date.now()){
+   const reason=String(task.error||'');
+   if(/^(?:download_manifest_incomplete|local_download_incomplete|file_not_found|internet_offline|Failed to fetch|fetch failed|ETIMEDOUT|ECONNRESET|download_failed)$/i.test(reason)){
+    pb1568Save(lab,id,{...task,retryAt:0,noticeFastRetryAt:Date.now()});
+    pb1908Mark(id,'retry_backoff_cleared',reason);
+   }
+  }
   pb1568Work.labId=lab;
   pb1908DetailHints.set(key,{at:Date.now(),detail});
   pb1908Mark(id,'worker_scheduled');

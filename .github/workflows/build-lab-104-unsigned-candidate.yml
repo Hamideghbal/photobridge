@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 32c9a1d96d5dc6707d6d456d018d1929caf2a5f6 # pin actual tested web source, never follow default/site hot-update
+          ref: b41d9f7d624a39922f07d2be889a4e506fa14873 # pin actual tested web source, never follow default/site hot-update
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -58,7 +58,7 @@ jobs:
       - name: Verify first-party regression tests
         shell: pwsh
         run: |
-          node --test test/fast-order-wake.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
+          node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/setup-node@v4
         with:
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: lab-1.0.104-reconstructed-UNSIGNED-test-installer
+          name: lab-1.0.104-R1909-direct-order-notification-UNSIGNED
           path: release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
           retention-days: 7
           if-no-files-found: error

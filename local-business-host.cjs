@@ -7,7 +7,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  require('./document-policy.cjs').applyPolicy(store);
  const engine=new LocalBusiness(store),raw=url.pathname,p=canonical(req.url);let b={};try{b=bytes?.length?JSON.parse(bytes.toString()):{}}catch{}
  const isPrint=/^\/desktop\/local-invoices\//.test(raw);
- if(!offline&&!localActive(store)&&!isPrint&&['GET','HEAD'].includes(req.method))return false;
+ if(!offline&&!localActive(store)&&!isPrint&&['GET','HEAD'].includes(req.method)&&!(req.method==='GET'&&p==='/api/lab/delegated-orders/bootstrap'&&(store.cached(req.url)||store.cached(p)||store.cached(p+'?mode=print'))))return false;
  const canRead=['/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/summary','/api/lab/finance/ledger','/api/lab/finance/customer-statement','/api/lab/delegated-orders/bootstrap'].includes(p)||/^\/api\/lab\/(orders\/[^/]+(?:\/invoice-pricing)?|delegated-customers\/[^/]+\/account-summary)$/.test(p);
  const invoiceRoute=raw.match(/^\/api\/lab\/invoices\/([^/]+)\/(download|preview|pdf-upload|pdf-complete)$/),printRoute=raw.match(/^\/desktop\/local-invoices\/([^/]+)\/(pdf|print)$/);
  const businessWrite=!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(p);if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute&&!businessWrite)return false;
@@ -26,7 +26,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
   // customer profiles and always fall back to the local cache on outage.
   if(req.method==='GET'&&p==='/api/lab/delegated-orders/bootstrap'&&!offline&&request){
    try{
-    const upstream=await request(req.url,{signal:AbortSignal.timeout(3500)});
+    const upstream=await request(req.url,{signal:AbortSignal.timeout(1300)});
     if(upstream.ok){
      const live=await upstream.json();same();
      if(Array.isArray(live.printSizes)&&Array.isArray(live.customers)){

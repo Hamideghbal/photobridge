@@ -6,8 +6,8 @@ const infoEvent=n=>['collaboration_request','photographer_invite_accepted','phot
 const {collectChatAlerts}=require('./chat-alerts.cjs');
 // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
 class NativeAlerts {
- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;}
- start(){this.stop();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
+ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;this.presentedInProcess=new Set();}
+ start(){this.stop();this.presentedInProcess.clear();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
  key(account){return 'nativeAlertsPending:'+account;}
  receiptKey(account){return 'nativeAlertsReadOutbox:'+account;}
@@ -47,10 +47,12 @@ class NativeAlerts {
   if(epoch!==this.epoch||this.getAccount()!==account)return;
   if(!pending.length){this.dismiss();return;}
   const key='nativeAlertsPresented:'+account,delivered=new Set(this.store.get(key)||[]);
-  const fresh=pending.filter(n=>!delivered.has(n.id)).sort((a,b)=>(Date.parse(b.created_at)||b.chatTime||0)-(Date.parse(a.created_at)||a.chatTime||0)||String(b.id).localeCompare(String(a.id)));if(!fresh.length)return;
+  // Durable unread orders must reappear after an app restart, even if shown in a prior run.
+  // In-process dedupe still prevents repeated popups on every 10s poll.
+  const fresh=pending.filter(n=>!this.presentedInProcess.has(account+':'+n.id)).sort((a,b)=>(Date.parse(b.created_at)||b.chatTime||0)-(Date.parse(a.created_at)||a.chatTime||0)||String(b.id).localeCompare(String(a.id)));if(!fresh.length)return;
   pending=fresh;
   await this.notify({title:pending.length>1?'PhotoBridge Lab · '+pending.length+' اعلان جدید':String(pending[0].title||'PhotoBridge Lab'),body:pending.slice(0,3).map(n=>String(n.message||n.title||'اعلان جدید')).join(' · '),silent:true,items:pending},()=>this.open(),ids=>this.acknowledge(account,ids),account);
-  if(epoch===this.epoch&&this.getAccount()===account){for(const n of fresh)delivered.add(n.id);this.store.set(key,[...delivered]);}
+  if(epoch===this.epoch&&this.getAccount()===account){for(const n of fresh){delivered.add(n.id);this.presentedInProcess.add(account+':'+n.id)}this.store.set(key,[...delivered]);}
  }
  async poll(){
   const account=this.getAccount();if(this.busy||!account||!this.isSupported())return;

@@ -63,8 +63,13 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
     if(epoch!==generation||!valid(account))break;
     const awaiting=[...pending.values()].filter(x=>x.account===account);
     if(!awaiting.length)break;
+    let timer;
     try{
-     const res=await request('/api/lab/orders',{signal:AbortSignal.timeout(9000)});
+     const controller=new AbortController();
+     // Electron 22's embedded Node cannot always use AbortSignal.timeout.
+     // The first lookup must not wait nine seconds before trying again.
+     timer=setTimeout(()=>controller.abort(),delay===0?2500:5000);
+     const res=await request('/api/lab/orders',{signal:controller.signal});
      if(!res.ok)throw Error('order_list_http_'+res.status);
      const data=await res.json();
      if(epoch!==generation||!valid(account))break;
@@ -77,6 +82,7 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
      }
      if(![...pending.values()].some(x=>x.account===account))break;
     }catch(error){log('number_resolve_error',{account,error:String(error?.message||error).slice(0,100)});}
+    finally{if(timer)clearTimeout(timer)}
    }
    for(const [key,item] of pending)if(item.account===account){
     log('number_unresolved',{account,number:item.number,elapsedMs:now()-item.observedAt});

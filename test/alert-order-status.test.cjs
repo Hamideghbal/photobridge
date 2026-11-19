@@ -14,20 +14,21 @@ test('only an authenticated verified COMPLETE phase annotates the original order
  for(const phase of ['checking','downloading','verified','invoice_issuing','invoice_issued','failed'])
   assert.equal(noteComplete(store,'lab-a',{orderId:A,number:'896',phase,downloadVerified:true},when+1000),false);
  assert.equal(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:false},when+1000),false);
- assert.equal(noteComplete(store,'lab-a',{orderId:'invalid',number:'896',phase:'complete',downloadVerified:true},when+1000),false);
+ assert.equal(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:false},when+1000),false);
+ assert.equal(noteComplete(store,'lab-a',{orderId:'invalid',number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},when+1000),false);
  assert(!decoratePending(store,'lab-a',[notice],when+2000)[0].completionNote);
- assert.equal(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true},when+1000),true);
+ assert.equal(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},when+1000),true);
  assert.equal(decoratePending(store,'lab-a',[notice],when+2000)[0].completionNote,NOTE);
  assert.equal(decoratePending(store,'lab-b',[notice],when+2000)[0].completionNote,undefined);
  assert.equal(decoratePending(store,'lab-a',[{...notice,orderAlert:false}],when+2000)[0].completionNote,undefined);
 });
 test('number-only Persian order alert is correlated unambiguously and never marks another order as done',()=>{
  const store=storage(),notice=original({orderId:null,number:'۸۹۶'});
- noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true},when+1000);
+ noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},when+1000);
  assert.equal(decoratePending(store,'lab-a',[notice],when+2000)[0].completionNote,NOTE);
  assert(!decoratePending(store,'lab-a',[{...notice,orderNumber:'897'}],when+2000)[0].completionNote);
  assert(!decoratePending(store,'lab-a',[{...notice,created_at:new Date(when+500000).toISOString()}],when+500000)[0].completionNote,'older completion must not annotate newer notification');
- noteComplete(store,'lab-a',{orderId:B,number:'896',phase:'complete',downloadVerified:true},when+1100);
+ noteComplete(store,'lab-a',{orderId:B,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},when+1100);
  assert(!decoratePending(store,'lab-a',[notice],when+2000)[0].completionNote,'ambiguous duplicate order numbers must never mark done');
  assert.equal(decoratePending(store,'lab-a',[original({orderId:A})],when+2000)[0].completionNote,NOTE,'UUID matching remains exact');
 });
@@ -37,7 +38,8 @@ test('durable status survives native alert and temporary download list clearing,
  const notice=original();controller.account='lab-a';controller.items=[notice];
  controller.updateDownload({orderId:A,number:'896',phase:'downloading',downloadVerified:false},'lab-a');
  assert(!controller.state().items[0].completionNote);
- controller.updateDownload({orderId:A,number:'896',phase:'complete',downloadVerified:true},'lab-a');
+ controller.updateDownload({orderId:A,number:'896',phase:'invoice_issued',downloadVerified:true},'lab-a');
+ controller.updateDownload({orderId:A,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},'lab-a');
  assert.equal(controller.state().items[0].completionNote,NOTE);
  controller.downloads.clear();assert.equal(controller.state().downloads.length,0);
  assert.equal(controller.state().items[0].completionNote,NOTE,'original order retains success after progress card disappears');
@@ -51,7 +53,7 @@ test('durable status survives native alert and temporary download list clearing,
  assert.equal(fresh.state().items.length,0,'operator acknowledgement still removes original notification');
 });
 test('completion cache is bounded and expired records cannot annotate a newer order',()=>{
- const store=storage(),p=(i)=>({orderId:i,number:'896',phase:'complete',downloadVerified:true});
+ const store=storage(),p=(i)=>({orderId:i,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true});
  for(let i=0;i<MAX+25;i++){const id=i.toString(16).padStart(8,'0')+'-aaaa-4aaa-8aaa-aaaaaaaaaaaa';noteComplete(store,'lab-a',p(id),when+i);}
  assert.equal(store.get('labAlertVerifiedCompleted:lab-a').length,MAX);
  noteComplete(store,'lab-a',p(A),when+1000);
@@ -61,17 +63,18 @@ test('order renderer appends to new-order card without overwriting original text
  const renderer=fs.readFileSync(path.join(__dirname,'..','alert-renderer.js'),'utf8');
  const html=fs.readFileSync(path.join(__dirname,'..','alert.html'),'utf8');
  assert(renderer.includes("body.textContent=n.message;row.append(title,body);"));
- assert(renderer.includes("if(n.completionNote)"));
- assert(renderer.includes("success.className='orderCompletion'"));
- assert(html.includes(".order span.orderCompletion"));
- assert(renderer.includes("const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;"));
+ assert(renderer.includes("orderPanels.set(n.id,{notice:n,panel:stagePanel})"));
+ assert(renderer.includes("renderDownloads(next.downloads)"));
+ assert(html.includes(".orderStage"));
+ assert(renderer.includes("const showBar=item?.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;"));
+ assert(!renderer.includes('root.append(row)'),'an order must not have a second progress card');
 });
 
 
 test('unread new-order notification itself retains verified note beyond cache TTL until operator acknowledgment',async()=>{
  const store=storage(),pendingKey='nativeAlertsPending:lab-a',notice=original();
  store.set(pendingKey,[notice]);
- assert(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true},when+1500));
+ assert(noteComplete(store,'lab-a',{orderId:A,number:'896',phase:'complete',downloadVerified:true,invoiceIssued:true},when+1500));
  const saved=store.get(pendingKey);
  assert.equal(saved[0].completionNote,NOTE,'success must be saved in the ORIGINAL unread alert, not only a transient progress event');
  assert.equal(decoratePending(store,'lab-a',saved,when+TTL+6*24*60*60*1000)[0].completionNote,NOTE,'unread order remains completed long after transient cache expires');

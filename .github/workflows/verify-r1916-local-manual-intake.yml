@@ -1,0 +1,37 @@
+name: R1916 Local Walk-in Intake (isolated, NOT release)
+on:
+  push:
+    branches:
+      - fix/lab-manual-intake-local-preflight-r1916
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-intake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --experimental-fetch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2'
+      - name: Install native dependencies (legacy SQLite ABI)
+        run: npm ci --no-audit --no-fund
+      - name: Syntax check scoped native changes
+        run: |
+          node --check host.cjs
+          node --check manual-intake-preflight.cjs
+          node --check offline-ui.cjs
+          node --check document-policy.cjs
+          node --check local-business-host.cjs
+          node --check test/r1916-manual-intake-preflight.test.cjs
+      - name: Manual form, online/offline order, local file and primary-isolation regression tests
+        run: |
+          node --test \
+            test/offline-ui.test.cjs \
+            test/r1916-manual-intake-preflight.test.cjs \
+            test/offline-host.test.cjs \
+            test/offline-preflight.test.cjs \
+            test/r1912-offline-preflight.test.cjs

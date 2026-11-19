@@ -5,7 +5,7 @@ function adoptEmbeddedUi({store,bundled,version,validate=require('./verify-nativ
  // number. Version-only detection silently kept the PREVIOUS user's UI build
  // after every reinstall, so the old 45-second download worker kept running.
  // For this pinned candidate compare the actual verified UI bundle fingerprint.
- const pinnedCandidate=require('./lab104-candidate.cjs').pinnedOnly===true;
+ const pinnedCandidate=require('./lab104-candidate.cjs').pinnedOnly===true&&require('./update-trust.cjs').newer(version,'1.0.103');
  if(!pinnedCandidate&&store.get('uiEmbeddedForNativeVersion')===version)return false;
  const manifest=JSON.parse(fs.readFileSync(path.join(bundled,'.pb-lab-bundle-manifest.json'),'utf8'));
  require('./prepare-assets.cjs').validate(manifest);

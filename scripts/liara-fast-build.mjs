@@ -1429,3 +1429,8 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// LAB 1.0.104: final native-only download/finance split after R1892.
+// PR remains draft; this branch is never deployed or merged without Windows verification.
+await deployStep('./enable-r1907-lab-download-pipeline.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1907-download-scheduler.cjs'],{stdio:'inherit'});

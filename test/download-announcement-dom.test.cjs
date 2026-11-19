@@ -44,3 +44,32 @@ test('a failed invoice or PDF is never rendered as final success',()=>{
   assert(s.includes('انجام نشد')||s.includes('بررسی'));
  }
 });
+
+test('R1912: download and invoice have independent success/warning indicators, with no repeat download after invoice',()=>{
+ const app=view();
+ app.render([order('verified',{downloadVerified:true})]);
+ let checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.equal(checks[0].textContent,'✓ دانلود');
+ assert.equal(checks[1].textContent,'… صدور فاکتور');
+ app.render([order('invoice_issuing',{downloadVerified:true,stage:'invoice'})]);
+ checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.equal(checks[0].textContent,'✓ دانلود');
+ assert.equal(checks[1].textContent,'… صدور فاکتور');
+ app.render([order('failed',{downloadVerified:true,stage:'invoice'})]);
+ checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.equal(checks[0].textContent,'✓ دانلود');
+ assert.equal(checks[1].textContent,'⚠ صدور فاکتور');
+ app.render([order('failed',{downloadVerified:false,stage:'download'})]);
+ checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.equal(checks[0].textContent,'⚠ دانلود');
+ assert.equal(checks[1].textContent,'… صدور فاکتور');
+ app.render([order('invoice_issued',{downloadVerified:true,stage:'pdf'})]);
+ checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','✓ صدور فاکتور']);
+ assert(!app.parts().some(x=>x.tagName==='progress'));
+ app.render([order('complete',{downloadVerified:true,stage:'pdf'})]);
+ assert(app.parts().some(x=>x.tagName==='small'&&x.textContent==='سفارش تکمیل شد'));
+ assert(!app.parts().some(x=>x.tagName==='small'&&x.textContent.includes('دانلود')));
+ checks=app.parts().find(x=>x.className==='stageChecks').children;
+ assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','✓ صدور فاکتور']);
+});

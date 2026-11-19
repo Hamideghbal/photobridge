@@ -17,11 +17,11 @@ test('R1915: fresh numbered SSE notice is accepted before notification polling; 
 });
 test('R1915: numeric SSE dispatch fetches exact lab order before stalled generic refresh, without crossing lab',async()=>{
  let called=false,refresh=false;const sent=[];
- const dispatcher=createOrderAlertDispatch({getAccount:()=> 'lab-a',now:()=>now,
+ const dispatcher=createOrderAlertDispatch({getAccount:()=> 'lab-a',now:()=>Date.now(),
   deliver:(account,id)=>sent.push({account,id}),
   request:async pathname=>{called=true;assert.equal(pathname,'/api/lab/orders');return {ok:true,json:async()=>({orders:[{id:ID,number:42,lab_id:'lab-a',status:'sent'}]})}}});
  let first=true;
- const body={getReader:()=>({read:async()=>first?(first=false,{done:false,value:Buffer.from(packet({type:'order_submitted',labId:'lab-a',orderNumber:42,createdAt:new Date(now).toISOString()}))}):new Promise(()=>{}),
+ const body={getReader:()=>({read:async()=>first?(first=false,{done:false,value:Buffer.from(packet({type:'order_submitted',labId:'lab-a',orderNumber:42,createdAt:new Date().toISOString()}))}):new Promise(()=>{}),
   cancel:async()=>{}})};
  const sub=subscribeLabEvents({
   request:async()=>({ok:true,body}),getAccount:()=> 'lab-a',

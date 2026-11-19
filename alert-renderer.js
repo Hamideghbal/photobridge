@@ -20,7 +20,7 @@ function renderDownloads(items){
   const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',failed:'دانلود کامل نشد؛ نیازمند بررسی',invoice_issuing:'در حال صدور فاکتور',invoice_issued:'فاکتور صادر شد',complete:'سفارش تکمیل شد'};
   const failure=item.stage==='invoice'?'دانلود تأیید شد؛ صدور فاکتور انجام نشد':item.stage==='pdf'?'فاکتور صادر شد؛ ذخیره PDF انجام نشد':item.stage==='print'?'فاکتور صادر شد؛ چاپ نیازمند بررسی است':phase.failed;
   const stageLabel={invoice:'در حال صدور فاکتور',pdf:'در حال ذخیره فاکتور',print:'در حال چاپ فاکتور',pricing:'منتظر تعیین قیمت'};
-  const description=item.phase==='failed'?failure:item.phase==='checking'&&downloadVerified?(stageLabel[item.stage]||'دانلود تأیید شد'):(phase[item.phase]||phase.checking);
+  const description=item.phase==='complete'&&!invoiceDone?'صدور فاکتور هنوز تأیید نشده':item.phase==='failed'?failure:item.phase==='checking'&&downloadVerified?(stageLabel[item.stage]||'دانلود تأیید شد'):(phase[item.phase]||phase.checking);
   // Only actual measured byte transfer gets a bar; never retain it in finance or failure states.
   const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;
   const invoiceDone=item.invoiceIssued===true||item.phase==='invoice_issued'||(item.phase==='failed'&&downloadVerified&&['pdf','print'].includes(item.stage));

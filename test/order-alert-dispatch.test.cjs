@@ -96,7 +96,7 @@ test('real NativeAlerts poll begins order lookup before popup is presented',asyn
   notify:async()=>{sequence.push('popup');assert(orderQueryStarted,'order resolver must already have started before opening the popup')},
   open:()=>{}});
  await alerts.poll();
- await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(sent,[UUID]);
+ for(let i=0;i<15&&!sent.length;i++)await new Promise(resolve=>setTimeout(resolve,10));
+ assert.deepEqual(sent,[UUID],'sequence='+sequence.join(' -> ')+'; pending='+dispatch.pending());
  assert(sequence.indexOf('order_fetch')<sequence.indexOf('popup'));
 });

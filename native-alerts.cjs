@@ -5,7 +5,7 @@ const infoEvent=n=>['collaboration_request','photographer_invite_accepted','phot
 const {collectChatAlerts}=require('./chat-alerts.cjs');
 // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
 class NativeAlerts {
- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,now});this.epoch=0;this.busy=false;this.timer=null;}
+ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;}
  start(){this.stop();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
  key(account){return 'nativeAlertsPending:'+account;}

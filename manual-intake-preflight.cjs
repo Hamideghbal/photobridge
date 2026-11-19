@@ -14,9 +14,19 @@ async function manualIntakePreflight({store,nativeStorage,request}){
  const root=await nativeStorage.status();
  if(!same())return{allowed:false,status:401,error:'account_changed',message:'حساب تغییر کرده است؛ دوباره وارد شوید.'};
  if(!root?.root||root.permission!=='granted')return{allowed:false,status:409,error:'local_storage_unavailable',message:root?.message||'مسیر ذخیرهٔ عکس‌ها قابل نوشتن نیست؛ مسیر ذخیره را از تنظیمات لابراتوار انتخاب یا بررسی کنید.'};
- // Turn on the local-only business router for this lab, even when WAN is up.
- // This does not register a primary device, grant remote download or create an order.
+ // Keep the working ONLINE server registration flow when this computer is
+ // really the primary. Fall back to LOCAL manual creation only if that primary
+ // confirmation is missing, rejected or unavailable (never fake it for downloads).
+ let remotePrimary=false;
+ try{
+  const response=await request('/api/lab/download-device',{signal:AbortSignal.timeout(1100)});
+  if(response.status===401)return{allowed:false,status:401,error:'login_required',message:'نشست ورود تأیید نشد؛ دوباره وارد شوید.'};
+  if(response.ok){const device=await response.json();remotePrimary=device?.registered===true&&device?.isThisDevice===true;}
+ }catch{/* Network loss must not prevent a previously authorized LOCAL order. */}
+ if(!same())return{allowed:false,status:401,error:'account_changed',message:'حساب تغییر کرده است؛ دوباره وارد شوید.'};
+ const localFallback=!remotePrimary;
+ store.set('manualIntakeFallback:'+labId+':'+deviceId,localFallback);
  store.set('localBusinessActive:'+labId,true);
- return{allowed:true,scope:'manual-local-only',localOnly:true};
+ return{allowed:true,scope:'manual-local-only',localOnly:localFallback,remotePrimary};
 }
 module.exports={manualIntakePreflight};

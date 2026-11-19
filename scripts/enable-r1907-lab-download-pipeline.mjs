@@ -46,7 +46,7 @@ if(!s.includes(marker)){
    'accept authenticated notification detail without a redundant order fetch');
   part=replaceOnce(part,
    "await pb1450Root(false,detail);",
-   "pb1908Mark(id,'root_check_start');await pb1450Root(false,detail);pb1908Mark(id,'root_check_passed');",
+   "pb1908Mark(id,'root_and_device_validation_in_download');",
    'diagnose root/device readiness before downloader');
   part=replaceOnce(part,
    "const outcome=await pb1450Download(detail,()=>{},{silent:true});",

@@ -1,7 +1,7 @@
 name: LAB104 reconstructed unsigned Windows candidate (NOT stable)
 on:
   push:
-    branches: [fix/lab-104-native-candidate-1907]
+    branches: [fix/lab-104-native-candidate-1907, fix/lab-104-r1912-alert-offline-regression]
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fix/lab-104-native-candidate-1907
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -72,7 +72,7 @@ jobs:
       - name: Verify first-party regression tests
         shell: pwsh
         run: |
-          node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/alert-order-status.test.cjs test/release-kit.test.cjs test/startup-ui.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs
+          node --test test/fast-order-wake.test.cjs test/order-alert-dispatch.test.cjs test/alert-order-status.test.cjs test/release-kit.test.cjs test/startup-ui.test.cjs test/native-alerts.test.cjs test/realtime-order-wake.test.cjs test/receipt-forward.test.cjs test/download-announcement-dom.test.cjs test/order-progress.test.cjs test/alert-ready.test.cjs test/alert-ordering.test.cjs test/r1912-alert-no-flash.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/setup-node@v4
         with:
@@ -81,6 +81,11 @@ jobs:
         shell: pwsh
         run: |
           npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check local order intake with disconnected WAN and a live network adapter
+        shell: pwsh
+        run: |
+          node --test test/offline-orders.test.cjs test/offline-host.test.cjs test/offline-preflight.test.cjs test/r1912-offline-preflight.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/setup-node@v4
         with:
@@ -128,7 +133,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: lab-1.0.104-R1911-alert-completion-FULL-SOURCE-UNSIGNED
+          name: lab-1.0.104-R1912-alert-offline-FULL-SOURCE-UNSIGNED
           path: |
             release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
             release/PhotoBridge-Lab-FullSource-1.0.104.zip

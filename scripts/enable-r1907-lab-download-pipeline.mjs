@@ -26,11 +26,11 @@ if(!s.includes(marker)){
   'const followUps=window.__PB_LAB104_NATIVE__?[]:[800,2400,5600,11000];',
   'candidate avoids repeated global order-list probes');
  s=rewriteSection(s,'async function pb1450Download(','async function pb1450AllowStage(',part=>{
-  const rootPattern=/\\broot\\s*=\\s*await\\s+pb1450Root\\([^;]*\\)\\s*;/g;
+  const rootPattern=/\broot\s*=\s*await\s+pb1450Root\([^;]*\)\s*;/g;
   const roots=[...part.matchAll(rootPattern)];
   if(roots.length!==1)throw Error('LAB104 expected one downloader root assignment; found '+roots.length);
   part=part.replace(rootPattern,'root = await pb1450Root(options.silent===true?false:true);');
-  const preflightPattern=/report\\s*=\\s*await\\s+pb1450Verify\\(detail\\s*,\\s*root\\s*,\\s*receipts\\s*,\\s*progress\\s*\\)\\s*;/g;
+  const preflightPattern=/report\s*=\s*await\s+pb1450Verify\(detail\s*,\s*root\s*,\s*receipts\s*,\s*progress\s*\)\s*;/g;
   const verifyAnchors=[...part.matchAll(preflightPattern)];
   if(verifyAnchors.length<1)throw Error('LAB104 expected a pre-download verification call');
   // Only the FIRST scan can use the proven empty-folder shortcut. A later

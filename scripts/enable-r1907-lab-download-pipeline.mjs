@@ -19,6 +19,12 @@ if(!s.includes(marker)){
  // Preserve all original disk/account proof but remove repeated device checks in
  // unattended mode. For completely empty new folders only, the expensive per-file
  // pre-verification is redundant; the FULL post-write verification is mandatory.
+ // R1892 scheduled four repeated FULL-LIST probes per notification. This
+ // candidate has a direct order-ID lane and bounded detail-only readiness probes.
+ // Keep one legacy SSE safety-net scan, but never flood the entire lab list.
+ s=replaceOnce(s,'const followUps=[800,2400,5600,11000];',
+  'const followUps=window.__PB_LAB104_NATIVE__?[]:[800,2400,5600,11000];',
+  'candidate avoids repeated global order-list probes');
  s=rewriteSection(s,'async function pb1450Download(','async function pb1450AllowStage(',part=>{
   part=replaceOnce(part,'root = await pb1450Root(true);',
    'root = await pb1450Root(options.silent===true?false:true);','no interactive picker for auto download');

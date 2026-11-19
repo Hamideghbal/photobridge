@@ -116,23 +116,13 @@ jobs:
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip=[System.IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'release/PhotoBridge-Lab-FullSource-1.0.104.zip'))
           try {
-            $names=@($zip.Entries | ForEach-Object { $_.FullName -replace '\\','/' })
+            $names=@($zip.Entries | ForEach-Object { $_.FullName })
             foreach($required in @('SOURCE-MANIFEST.json','native/main.cjs','native/alert-order-status.cjs','native/package-lock.json','native/verified-ui/.pb-lab-bundle-manifest.json','web/web-source-9138277571d036ae7c647a9456d8042edb0a95dc.zip')){
               if(-not ($names -contains $required)){throw "Full source missing $required"}
             }
             if($names.Count -lt 900){throw "Unexpectedly small source ZIP"}
-            if(@($names | Where-Object { $_ -match '(?i)(^|/)(\.publisher|node_modules|\.git)/|\.pem$|\.pfx
-      - uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: lab-1.0.104-R1911-alert-completion-FULL-SOURCE-UNSIGNED
-          path: |
-            release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
-            release/PhotoBridge-Lab-FullSource-1.0.104.zip
-            release/PhotoBridge-Lab-ReleaseInfo-1.0.104.json
-          retention-days: 30
-          if-no-files-found: error
- }).Count){throw 'Source ZIP contains restricted private files'}
+            $bad=@($names | Where-Object { $_.Contains('/.publisher/') -or $_.Contains('/node_modules/') -or $_.EndsWith('.pem') -or $_.EndsWith('.pfx') })
+            if($bad.Count -gt 0){throw 'Source ZIP contains restricted private files'}
           } finally { $zip.Dispose() }
           if (Test-Path 'release/PhotoBridge-Lab-Update-1.0.104.json') { throw 'Unsafe: an unsigned candidate must not publish a misleading update JSON' }
       - uses: actions/upload-artifact@v4

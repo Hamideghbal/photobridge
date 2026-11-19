@@ -20,7 +20,7 @@ function setup({online=true,writeAllowed=true,rootAllowed=true,remotePrimary=fal
  const request=async(p,options={})=>{
   calls.push(p);
   if(p==='/api/lab/write-access')return{ok:writeAllowed,status:writeAllowed?200:403,json:async()=>({labId:lab,allowed:writeAllowed,serverNow:new Date().toISOString(),activeUntil:new Date(now+86400000).toISOString()})};
-  if(p==='/api/lab/download-device')return{ok:true,status:200,headers:{get:()=> 'application/json'},arrayBuffer:async()=>Buffer.from(JSON.stringify({registered:true,isThisDevice:remotePrimary}))};
+  if(p==='/api/lab/download-device')return{ok:true,status:200,headers:{get:()=> 'application/json'},json:async()=>({registered:true,isThisDevice:remotePrimary}),arrayBuffer:async()=>Buffer.from(JSON.stringify({registered:true,isThisDevice:remotePrimary}))};
   throw Error('other upstream not configured');
  };
  const server=createHost({store,nativeStorage,request,roots:()=>[],token:'test',isOnline:()=>online,sync:{status:()=>store.status(),wake(){}}});

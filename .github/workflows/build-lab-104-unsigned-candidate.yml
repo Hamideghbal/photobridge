@@ -21,6 +21,16 @@ jobs:
           npm install --ignore-scripts --no-package-lock --no-audit --no-fund
           npm run build
           node --test scripts/test-r1907-download-scheduler.cjs
+      - name: Archive exact R1910 full web/server build source (for permanent release kit)
+        shell: bash
+        run: |
+          git archive --format=zip --output="$RUNNER_TEMP/photobridge-web-source.zip" HEAD
+          sha256sum "$RUNNER_TEMP/photobridge-web-source.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab104-web-source
+          path: ${{ runner.temp }}/photobridge-web-source.zip
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: lab104-patched-ui
@@ -46,6 +56,10 @@ jobs:
         with:
           name: lab104-patched-ui
           path: candidate-ui
+      - uses: actions/download-artifact@v4
+        with:
+          name: lab104-web-source
+          path: web-source-archive
       - name: Replace stale 1.0.94 UI pin with verified candidate UI
         shell: pwsh
         run: |
@@ -88,10 +102,25 @@ jobs:
           Get-Content compat-smoke-error.log
           if ($p.ExitCode -ne 0) { throw "Packaged smoke failed: $($p.ExitCode)" }
           if (!(Select-String -Path compat-smoke.log -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) { throw 'Smoke completion missing' }
+      - name: Verify exact full source and produce source+installer release kit (NO updater JSON)
+        shell: pwsh
+        env:
+          PB_WEB_SOURCE_ARCHIVE: ${{ github.workspace }}/web-source-archive/photobridge-web-source.zip
+          PB_WEB_SOURCE_COMMIT: 9138277571d036ae7c647a9456d8042edb0a95dc
+          PB_REQUIRE_SIGNED_UPDATE: '0'
+        run: |
+          node release-kit.cjs inspect
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node release-kit.cjs pack
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (Test-Path 'release/PhotoBridge-Lab-Update-1.0.104.json') { throw 'Unsafe: an unsigned candidate must not publish a misleading update JSON' }
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: lab-1.0.104-R1910-fixed-download-disk-binding-UNSIGNED
-          path: release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
-          retention-days: 7
+          name: lab-1.0.104-R1911-alert-completion-FULL-SOURCE-UNSIGNED
+          path: |
+            release/PhotoBridge-Lab-Setup-1.0.104-x64.exe
+            release/PhotoBridge-Lab-FullSource-1.0.104.zip
+            release/PhotoBridge-Lab-ReleaseInfo-1.0.104.json
+          retention-days: 30
           if-no-files-found: error

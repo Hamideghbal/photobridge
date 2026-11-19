@@ -3,8 +3,8 @@ const path=require('node:path');
 const {normalizeSettings,initializeSettings}=require('./alert-settings.cjs');
 const {noteComplete,decoratePending}=require('./alert-order-status.cjs');
 class AlertWindow {
- constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,retryDownload=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
-  Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,retryDownload,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.focusOrderId=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();this.revision=0;this.pendingRenderRevision=null;
+ constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,retryDownload=null,verifyInvoice=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
+  Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,retryDownload,verifyInvoice,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.focusOrderId=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();this.revision=0;this.pendingRenderRevision=null;this.invoiceChecks=new Map();
   const valid=event=>this.window&&!this.window.isDestroyed()&&event.sender===this.window.webContents;
   ipcMain.handle('lab-alert-layout',(event,height)=>{if(!valid(event))throw Error('invalid_sender');const area=this.getWorkArea(),h=Math.max(220,Math.min(640,area.height-80,Number(typeof height==='object'?height.height:height)||300)),w=Math.min(420,area.width-40);this.window.setContentSize?.(w,Math.ceil(h));const bounds=this.window.getBounds?.();if(bounds)this.window.setPosition?.(Math.max(area.x+8,area.x+area.width-bounds.width-20),Math.max(area.y+8,area.y+area.height-bounds.height-20));if(height&&typeof height==='object'&&height.revision===this.pendingRenderRevision){this.pendingRenderRevision=null;if(!this.hiddenByUser&&(!this.account||this.account===this.getAccount())&&(this.items.length||this.settingsOnly)){this.window.show();this.window.restore?.();this.window.focus();this.window.flashFrame?.(true)}}return h});
   ipcMain.handle('lab-alert-state',event=>{if(!valid(event))throw Error('invalid_sender');return this.state()});
@@ -20,7 +20,7 @@ class AlertWindow {
   // Only a confirmed invoice_issued phase (or a post-invoice PDF/print error)
   // may produce an invoice checkmark. A generic download-complete event does not.
   const previous=this.downloads.get(value.orderId);
-  const invoiceIssued=value.phase==='invoice_issued'||(value.phase==='failed'&&value.downloadVerified===true&&['pdf','print'].includes(value.stage))||previous?.invoiceIssued===true;
+  const invoiceIssued=value.invoiceIssued===true||value.phase==='invoice_issued'||(value.phase==='failed'&&value.downloadVerified===true&&['pdf','print'].includes(value.stage))||previous?.invoiceIssued===true;
   value={...value,invoiceIssued,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};
   const completed=noteComplete(this.store,account,value);this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
   while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
@@ -28,6 +28,25 @@ class AlertWindow {
    this.window.webContents.send('lab-alert-progress',this.visibleDownloads());
    if(completed)this.window.webContents.send('lab-alert-change');
   }
+  if(value.downloadVerified===true&&!value.invoiceIssued&&['verified','complete','invoice_issuing'].includes(value.phase))this.scheduleInvoiceCheck(value.orderId,account);
+ }
+ async scheduleInvoiceCheck(id,account){
+  if(!this.verifyInvoice||!account||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))return;
+  const key=account+':'+id;if(this.invoiceChecks.has(key))return;
+  this.invoiceChecks.set(key,true);
+  try{
+   for(const delay of [0,1500,4000,8000,15000,30000]){
+    if(delay)await new Promise(resolve=>{const timer=setTimeout(resolve,delay);timer.unref?.()});
+    if(this.getAccount()!==account||this.downloadAccount!==account)break;
+    const current=this.downloads.get(id);
+    if(!current||current.invoiceIssued||current.downloadVerified!==true||!['verified','complete','invoice_issuing'].includes(current.phase))break;
+    let issued=false;try{issued=await this.verifyInvoice({account,orderId:id})===true}catch{}
+    if(!issued)continue;
+    const latest=this.downloads.get(id);if(!latest||this.getAccount()!==account||latest.invoiceIssued)break;
+    this.updateDownload({...latest,invoiceIssued:true,phase:latest.phase==='complete'?'complete':'invoice_issued',stage:'invoice'},account);
+    break;
+   }
+  }finally{this.invoiceChecks.delete(key)}
  }
  visibleDownloads(){const rows=this.downloadAccount===this.getAccount()?[...this.downloads.values()]:[];if(this.focusOrderId)return rows.filter(row=>row.orderId===this.focusOrderId);return rows.sort((a,b)=>(Date.parse(b.orderCreatedAt)||b.firstSeenAt||0)-(Date.parse(a.orderCreatedAt)||a.firstSeenAt||0)).slice(0,1)}
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}

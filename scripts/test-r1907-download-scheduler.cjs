@@ -12,7 +12,7 @@ function context(processOrder){
   Me:async route=>{requests.push(route);if(route==='/api/lab/automation')return {settings:{autoDownloadEnabled:true,invoiceTiming:'after_verified_download'}};if(route==='/api/auth/me')return {lab:{id:'lab-A'}};if(route==='/api/lab/orders/'+id)return {order:{...order},files:[{id:'file-1'}]};throw Error('unexpected route '+route)},
   pb1568Problem:e=>e.message,pb1568ProcessOrder:processOrder,pb1568AutoTick:()=>{},addEventListener:(n,f)=>listeners[n]=f};
  vm.createContext(env);vm.runInContext(source,env);
- return {...env,listeners,requests,store,order,
+ return {...env,env,listeners,requests,store,order,
  schedule:(...args)=>vm.runInContext('pb1907ScheduleOrder',env)(...args),
  setTick:fn=>{env.pb1568AutoTick=fn},
  preview:(...args)=>vm.runInContext('pb1907PreviewKick',env)(...args),
@@ -90,7 +90,7 @@ test('opening a preview uses its ready detail and goes directly to worker',async
 test('notification honors automation opt-out, payment gate and session scope',async()=>{
  let started=0;const ctx=context(async()=>started++);
  const prev=ctx.Me;
- ctx.Me=async(route)=>route==='/api/lab/automation'?{settings:{autoDownloadEnabled:false}}:prev(route);
+ ctx.env.Me=async(route)=>route==='/api/lab/automation'?{settings:{autoDownloadEnabled:false}}:prev(route);
  assert.equal(await ctx.arrival({labId:'lab-A',orderId:ctx.order.id}),false);
  assert.equal(started,0);
  assert.equal(await ctx.arrival({labId:'lab-other',orderId:ctx.order.id}),false);

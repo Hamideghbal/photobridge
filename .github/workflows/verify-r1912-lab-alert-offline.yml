@@ -1,0 +1,40 @@
+name: R1912 LAB104 notification and offline intake regressions
+on:
+  push:
+    branches:
+      - fix/lab-104-r1912-alert-offline-regression
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2'
+      - name: Install native SQLite/test dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check native JavaScript syntax
+        run: |
+          node --check alert-window.cjs
+          node --check alert-renderer.js
+          node --check host.cjs
+          node --check local-business-host.cjs
+          node --check test/r1912-alert-no-flash.test.cjs
+          node --check test/r1912-offline-preflight.test.cjs
+      - name: Run existing and new behavioral regressions
+        run: |
+          node --test \
+            test/alert-ready.test.cjs \
+            test/alert-ordering.test.cjs \
+            test/alert-order-status.test.cjs \
+            test/download-announcement-dom.test.cjs \
+            test/order-progress.test.cjs \
+            test/offline-preflight.test.cjs \
+            test/offline-orders.test.cjs \
+            test/offline-host.test.cjs \
+            test/r1912-alert-no-flash.test.cjs \
+            test/r1912-offline-preflight.test.cjs

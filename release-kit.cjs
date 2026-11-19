@@ -47,6 +47,7 @@ function archiveDirectory(folder,out){
   // ZipFile.CreateFromDirectory on Windows can emit backslash entry names.
   // Explicit forward-slash entries are portable to Linux/macOS unzip tools.
   const script=[
+   'Add-Type -AssemblyName System.IO.Compression',
    'Add-Type -AssemblyName System.IO.Compression.FileSystem',
    "$root=[IO.Path]::GetFullPath('"+escaped(folder)+"')",
    "$dest=[IO.Path]::GetFullPath('"+escaped(out)+"')",

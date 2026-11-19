@@ -11,9 +11,10 @@ function patchOfflineIntake(source){
  // flag. Still require the native host's account-scoped folder and subscription
  // approval. Never set primaryState=true from a local-only preflight.
  const guard=[
-  ["   const cachedPrimary=primaryState===true&&Date.now()-primaryCheckedAt<45000;","   // Local walk-in preflight is independent of remote download-primary approval."],
-  ["     cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device'),","     api('/api/lab/manual-intake/preflight'),"],
-  ["   primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();\n   if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);","   if(primary?.allowed!==true)throw Error(primary?.message||'مجوز ثبت سفارش محلی تأیید نشد.');"]
+  ["const cachedPrimary=primaryState===true&&Date.now()-primaryCheckedAt<45000;","/* Local walk-in is independent of the remote download-primary device. */"],
+  ["cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):api('/api/lab/download-device')","api('/api/lab/manual-intake/preflight')"],
+  ["primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();","/* Do not promote primaryState from a manual-only capability. */"],
+  ["if(!primary.registered||!primary.isThisDevice)throw Error(primary.registered?errors.not_primary_download_device:errors.download_device_not_registered);","if(primary?.allowed!==true)throw Error(primary?.message||'مجوز ثبت سفارش محلی تأیید نشد.');"]
  ];
  for(const [from,to] of guard){if(!source.includes(from))throw Error('manual_intake_preflight_ui_incompatible');source=source.replace(from,to);}
  const completion="form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;";

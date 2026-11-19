@@ -1,5 +1,27 @@
 "use strict";
-function subscribeLabEvents({ request, getAccount, onEvent, onDisconnect = () => {}, retryMs = 2000 }) {
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const NEW_ORDER_EVENTS=new Set(['order_submitted','order_created','order_received','new_order','photo_order_created','photo_order_submitted']);
+// A trusted authenticated lab SSE frame may contain the exact new order UUID.
+// Extract only a fresh order event for the connected lab; all other frames
+// continue through the original notification/sync fallback.
+function parseFreshOrderId(frame,account,now=Date.now()){
+ try{
+  const data=frame.split(/\n/).filter(x=>x.startsWith('data:')).map(x=>x.slice(5).trimStart()).join('\n');
+  if(!data||data.length>10000)return null;
+  const obj=JSON.parse(data);if(!obj||typeof obj!=='object')return null;
+  const eventLine=frame.split(/\n/).find(x=>x.startsWith('event:'))||'';
+  const type=String(obj.event_key||obj.eventKey||obj.type||obj.event||eventLine.slice(6).trim()).toLowerCase();
+  if(!NEW_ORDER_EVENTS.has(type))return null;
+  const lab=String(obj.lab_id||obj.labId||obj.lab?.id||'');
+  if(lab&&lab!==String(account))return null;
+  const id=String(obj.order_id||obj.orderId||obj.order?.id||'');
+  if(!UUID.test(id))return null;
+  const at=Date.parse(obj.created_at||obj.createdAt||'');
+  if(Number.isFinite(at)&&(now-at>10*60*1000||at-now>2*60*1000))return null;
+  return id;
+ }catch{return null}
+}
+function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}, onDisconnect = () => {}, retryMs = 2000 }) {
   let controller = null,
     timer = null,
     epoch = 0,
@@ -55,8 +77,11 @@ function subscribeLabEvents({ request, getAccount, onEvent, onDisconnect = () =>
           while ((end = buffer.indexOf("\n\n")) >= 0) {
             const frame = buffer.slice(0, end);
             buffer = buffer.slice(end + 2);
-            if (current() && /^data:/m.test(frame))
+            if (current() && /^data:/m.test(frame)) {
+              const id=parseFreshOrderId(frame,account);
+              if(id)try{onOrderId(id,account)}catch{/* safe fallback below */}
               void deliver().catch(() => {});
+            }
           }
         }
       } finally {
@@ -81,4 +106,4 @@ function subscribeLabEvents({ request, getAccount, onEvent, onDisconnect = () =>
     },
   };
 }
-module.exports = { subscribeLabEvents };
+module.exports = { subscribeLabEvents, parseFreshOrderId };

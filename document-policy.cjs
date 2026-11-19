@@ -113,7 +113,8 @@ function routePolicy(store, method, url, b, offline) {
   // An explicitly local-only walk-in order may start with WAN connected.
   // It is a distinct, account-scoped local capability approved by the native host.
   const manualLocalCreation = p === "/api/lab/delegated-orders" &&
-    b.localOnly === true && store.get("localBusinessActive:" + store.get("labId")) === true;
+    b.localOnly === true && store.get("manualIntakeFallback:" + store.get("labId") + ":" + store.get("deviceId")) === true;
+  // A confirmed online primary keeps its original server-authoritative flow.
   if (exclusive || (offline && creation) || manualLocalCreation) {
     if (
       (p.includes("customers") && Number(b.initialDebt || 0)) ||

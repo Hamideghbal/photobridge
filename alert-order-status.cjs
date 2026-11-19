@@ -21,7 +21,7 @@ function entries(store,account,now=Date.now()){
    (row.number===null||number(row.number)===row.number));
 }
 function noteComplete(store,account,progress,now=Date.now()){
- if(!account||progress?.phase!=='complete'||progress.downloadVerified!==true||
+ if(!account||progress?.phase!=='complete'||progress.downloadVerified!==true||progress.invoiceIssued!==true||
     !uuid.test(String(progress.orderId||''))||!Number.isFinite(now))return false;
  const current=entries(store,account,now),id=String(progress.orderId);
  const found=current.find(row=>row.orderId===id);

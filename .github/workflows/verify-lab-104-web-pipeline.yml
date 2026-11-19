@@ -21,7 +21,7 @@ jobs:
       - name: Generate real native UI and server bundle
         run: npm run build
       - name: Re-run behavior against final generated native bundle
-        run: node --test scripts/test-r1907-download-scheduler.cjs scripts/test-r1907-final-native-worker.cjs
+        run: node --test scripts/test-r1907-download-scheduler.cjs scripts/test-r1907-final-native-worker.cjs scripts/test-r1907-verified-receipt.cjs
       - name: Verify integrated code and manifests exist
         run: |
           node --check dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js

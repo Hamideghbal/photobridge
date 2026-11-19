@@ -1,0 +1,29 @@
+name: LAB R1911 Signed Update JSON API (DRAFT, NOT deployed)
+on:
+  push:
+    branches: [feat/lab-update-json-r1911]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cryptographic proof before full build
+        run: |
+          node --check dist/api/lab-desktop-update-manifest.js
+          node -e "import('./dist/api/lab-desktop-update-manifest.js').then(x=>{if(!x.validLabUpdatePair||!x.checkLabInstallerBytes)throw Error('module_missing')})"
+      - name: Generate real web/server artifact with R1911 update endpoint
+        run: |
+          npm install --ignore-scripts --no-package-lock --no-audit --no-fund
+          npm run build
+      - name: Verify signed JSON, exact installer checksum and unchanged download paths
+        run: |
+          node --test scripts/test-r1911-lab-update-json.cjs
+          node --test scripts/test-r1892-fast-notification-download.cjs
+          node --check dist/api/server.js

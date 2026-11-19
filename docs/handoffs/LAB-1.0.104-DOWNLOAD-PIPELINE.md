@@ -117,3 +117,24 @@ Playwright is available at `/opt/codex/cua_node/lib/node_modules/playwright`; Ch
 - [ ] Actual installed Windows performance verified.
 - [ ] Implementation PR ready for review.
 - [ ] Stable release approved. DO NOT CHECK THIS AUTOMATICALLY.
+
+## Continuation update — 2026-11-19, R1907 candidate work
+
+**Status: partial implementation committed to isolated branches, NOT an accepted/installed 1.0.104 fix. No merge, no production deploy or stable release.**
+
+- Native Electron work branch `fix/lab-104-native-candidate-1907` derives from the complete native 1.0.94 source. It changes the realtime callback so `lab-document-change` is sent before (not after) pending `sync.live()`, adds invoice-specific progress states, and renders a real progress element only while bytes are still transferring; after verified receipt the bar and percent disappear from the **same** native notification.
+- Native `receipt-forward.cjs` uses an explicit opt-in to forward exact manifest receipt directly to server, bypassing the desktop offline mutation queue. It checks response `downloaded_at`/`verifiedFiles`, rejects 202/pending and account/device changes; native host activates this only for version `1.0.104`. The legacy receipt flow is unchanged. The native `lab104-candidate.cjs` locks trial candidates to their bundled UI, preventing silent replacement with the production website before test verification.
+- Native tests are run against the real native renderer's `renderDownloads` function, the realtime wake function, the receipt forwarder and main-frame authorization. GitHub Actions native tests at [run 44471921094](https://github.com/Hamideghbal/photobridge/actions/runs/44471921094) completed successfully. This **does not** verify real Windows order download latency.
+- Web/server branch `fix/lab-104-web-pipeline-1907` derives from `aaa-liara-release`. It has a bounded two-transfer pool with account/order keyed single flight, scanning that schedules download without awaiting a prior order's invoice, separate retry draining, and an opt-in server receipt that commits after exact file/device/payment verification without blocking on invoice. It preserves existing invoice-on-receipt behavior for legacy clients. It reports distinct verified, invoice issuing, invoice issued, and completion stages, and rejects queued PDF upload as success.
+- Tests include an independently exercised fake blocked-invoice scheduler and `scripts/test-r1907-final-native-worker.cjs`, intended to run the **final generated** native worker with invoice A stalled while order B starts a first transfer. The latter and full web build are pending/iterating through CI; do not mark them passed until GitHub Actions confirms them.
+- Web build encountered unrelated legacy release revision compatibility assertions initially. The candidate revision now retains the legacy mobile release markers; CI has been rerun. Link: [web branch Actions](https://github.com/Hamideghbal/photobridge/actions/workflows/verify-lab-104-web-pipeline.yml).
+- A **test-only unsigned installer** workflow was added on native candidate branch. It first builds the patched web UI, verifies SHA-256 manifest entries, replaces stale native UI pin, then attempts a Windows installer and packaged Electron smoke test. [Candidate Actions](https://github.com/Hamideghbal/photobridge/actions/workflows/build-lab-104-unsigned-candidate.yml). Its success is not yet established and the original publisher private key is neither supplied nor replaced.
+- `package.json` and `package-lock.json` in the isolated native **reconstruction** branch carry `1.0.104`; **this version label does not establish binary provenance of the user's actually installed program**.
+- Main release branch, database schema, old native signing/update trust, account-scoped disk writer, verified file manifest and payment/device checks have not been changed.
+
+### Acceptance still open
+1. Obtain and compare exact user's installed 1.0.104 executable/source and R1903–R1906 if ever located.
+2. Confirm full web build and final injected worker behavioral tests; verify opt-in server receipt with an isolated real PostgreSQL transaction and legacy compatibility.
+3. Confirm unsigned Windows candidate construction, pin manifest hashes and packaged Electron smoke.
+4. Test new-order arrival to first actual byte write on installed Windows, including an artificially blocked invoice, offline/resume, repeated wakes and changed-account denial. Record timings and failure states.
+5. Keep PRs Draft; **never merge/deploy/publish stable before explicit real-user acceptance**.

@@ -86,6 +86,26 @@ function pb1908TakeDetail(lab,id){
  if(!cached)return null;pb1908DetailHints.delete(key);
  return Date.now()-cached.at<15000&&cached.detail?.order?.id===id&&Array.isArray(cached.detail.files)?cached.detail:null;
 }
+// An early notification can arrive before the full server manifest commits.
+// Probe only this order, never refetch the whole order list in a retry burst.
+const pb1908RetryTimers=new Map(),pb1908RetryCounts=new Map();
+function pb1908StopRetry(key){
+ const timer=pb1908RetryTimers.get(key);if(timer!==undefined)clearTimeout(timer);
+ pb1908RetryTimers.delete(key);pb1908RetryCounts.delete(key);
+}
+function pb1908RetryDetail(lab,id,notifiedAt,why){
+ const key=String(lab)+':'+String(id);
+ if(pb1908RetryTimers.has(key))return;
+ const n=pb1908RetryCounts.get(key)||0,delays=[450,1200,3000,6500];
+ if(n>=delays.length)return;
+ pb1908RetryCounts.set(key,n+1);
+ pb1908Mark(id,'manifest_not_ready',why);
+ const timer=setTimeout(()=>{
+  pb1908RetryTimers.delete(key);
+  void pb1908FastArrival({labId:lab,orderId:id,notifiedAt,source:'manifest_retry'});
+ },delays[n]);
+ pb1908RetryTimers.set(key,timer);
+}
 function pb1908FastArrival(signal,previewDetail){
  if(!window.__PB_LAB104_NATIVE__||!window.pbNativeStorage)return Promise.resolve(false);
  const id=String(signal?.orderId||'');
@@ -108,7 +128,9 @@ function pb1908FastArrival(signal,previewDetail){
   if(startedEpoch!==pb1907SessionEpoch||!window.pbNativeStorage||String(pb1568Work.labId||lab)!==lab)return false;
   if(String(account?.lab?.id||'')!==lab||String(detail?.order?.lab_id||lab)!==lab)return false;
   const order=detail?.order,task=pb1568State(lab,id),settings=config?.settings;
-  if(!order||!settings||task?.phase==='complete'||!task&&order.downloaded_at)return false;
+  if(!settings)return false;
+  if(!order){pb1908RetryDetail(lab,id,notifiedAt,'missing_order');return false;}
+  if(task?.phase==='complete'||!task&&order.downloaded_at){pb1908StopRetry(key);return false;}
   if(!task){
    if(!settings.autoDownloadEnabled||!['sent','received'].includes(String(order.status||''))||Number(order.file_count||0)<1)return false;
    if(order.settlement_mode==='prepaid'&&order.payment_status!=='paid')return false;
@@ -118,7 +140,10 @@ function pb1908FastArrival(signal,previewDetail){
    if(!enabledAt&&(!Number.isFinite(created)||Date.now()-created>120000))return false;
    if(!enabledAt)localStorage.setItem('pb1568:downloadEnabledAt:'+lab,String(Date.now()-120000));
   }
-  if(!Array.isArray(detail.files)||!detail.files.length)return false;
+  if(!Array.isArray(detail.files)||detail.files.length!==Number(order.file_count||0)||!detail.files.length){
+   pb1908RetryDetail(lab,id,notifiedAt,'manifest_not_final');return false;
+  }
+  pb1908StopRetry(key);
   pb1568Work.labId=lab;
   pb1908DetailHints.set(key,{at:Date.now(),detail});
   pb1908Mark(id,'worker_scheduled');
@@ -127,6 +152,9 @@ function pb1908FastArrival(signal,previewDetail){
   return true;
  })().catch(error=>{
   pb1908Mark(id,'failed',String(error?.message||error));
+  const code=String(error?.data?.error||error?.code||error?.message||'');
+  if(!/401|403|auth|account_changed|payment_required|not_primary_download_device|permission/i.test(code))
+   pb1908RetryDetail(lab,id,notifiedAt,'order_detail_error');
   // The ordinary polling/retry path remains available after a transient fast-path error.
   if(typeof pb1586WakeDownloads==='function')pb1586WakeDownloads();
   return false;
@@ -148,6 +176,8 @@ if(window.__PB_LAB104_NATIVE__&&window.pbDesktopEvents?.onOrderArrived){
 window.pb1908DownloadDiagnostics=()=>[...pb1908Timing].map(([orderId,value])=>({orderId,elapsedMs:Date.now()-value.startAt,stages:Object.fromEntries(Object.entries(value.stages).map(([name,at])=>[name,at-value.startAt]))}));
 addEventListener('photobridge-auth-session-changed',()=>{
  pb1907SessionEpoch++;pb1908ArrivalFlights.clear();pb1908DetailHints.clear();pb1908Timing.clear();
+ for(const timer of pb1908RetryTimers.values())clearTimeout(timer);
+ pb1908RetryTimers.clear();pb1908RetryCounts.clear();
  // Existing native storage and account validation still guard any active disk writes.
  // Do not cancel an in-progress verified native write by reusing its file handle.
 });

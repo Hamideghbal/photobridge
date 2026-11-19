@@ -30,8 +30,25 @@ function pb1907ScheduleOrder(lab,order,settings){
  pb1907OrderFlights.set(key,flight);
  return flight;
 }
+const pb1907PreviewSeen=new Map();
+function pb1907PreviewKick(path,response){
+ if(!window.pbNativeStorage||!/^\/api\/lab\/orders\/[0-9a-f-]{20,}(?:\?.*)?$/.test(String(path||'')))return;
+ const order=response?.order;
+ if(!order?.id||order.downloaded_at||!['sent','received'].includes(String(order.status||'')))return;
+ if(pb1568Work.labId&&order.lab_id&&String(order.lab_id)!==String(pb1568Work.labId))return;
+ const lab=String(pb1568Work.labId||order.lab_id||'');
+ if(lab&&pb1907OrderFlights.has(lab+':'+order.id))return;
+ const now=Date.now();
+ if(now-(pb1907PreviewSeen.get(order.id)||0)<1500)return;
+ pb1907PreviewSeen.set(order.id,now);
+ while(pb1907PreviewSeen.size>300)pb1907PreviewSeen.delete(pb1907PreviewSeen.keys().next().value);
+ // Opening the order preview actively wakes the already guarded worker.
+ // Never await invoice/sync; avoid recursively waking while this order is in flight.
+ if(!pb1568Work.running)void pb1568AutoTick();
+ else if(typeof pb1586WakeDownloads==='function')pb1586WakeDownloads();
+}
 addEventListener('photobridge-auth-session-changed',()=>{
- pb1907SessionEpoch++;
+ pb1907SessionEpoch++;pb1907PreviewSeen.clear();
  // Existing native storage and account validation still guard any active disk writes.
  // Do not cancel an in-progress verified native write by reusing its file handle.
 });

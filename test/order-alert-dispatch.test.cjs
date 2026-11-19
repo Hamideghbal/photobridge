@@ -76,3 +76,27 @@ test('native alert pipeline dispatches exact order before awaiting popup and cha
  assert(main.includes("onOrderNotice:(account,items)=>orderDispatch.accept(account,items)"));
  assert(main.includes("orderDispatch.accept(account,message?.items||[])"));
 });
+
+
+test('real NativeAlerts poll begins order lookup before popup is presented',async()=>{
+ const {NativeAlerts}=require('../native-alerts.cjs');
+ const values=new Map(),sequence=[],orders=[{id:UUID,lab_id:'lab-A',number:894,status:'sent',file_count:1}];
+ const store={get:key=>values.get(key),set:(key,v)=>values.set(key,structuredClone(v))};
+ let orderQueryStarted=false;
+ const request=async route=>{
+  if(route.startsWith('/api/lab/notifications?'))return {ok:true,json:async()=>({notifications:[photo894]})};
+  if(route==='/api/lab/orders'){orderQueryStarted=true;sequence.push('order_fetch');return {ok:true,json:async()=>({orders})}};
+  if(route==='/api/lab/notifications/chat-read')return {ok:true,json:async()=>({seen:{}})};
+  return {ok:true,json:async()=>({ok:true})};
+ };
+ const sent=[];
+ const dispatch=createOrderAlertDispatch({getAccount:()=> 'lab-A',request,now:()=>NOW,deliver:(a,id)=>{sent.push(id);sequence.push('order_dispatched')}});
+ const alerts=new NativeAlerts({store,request,getAccount:()=> 'lab-A',getUserId:()=>null,
+  onOrderNotice:(a,items)=>dispatch.accept(a,items),
+  notify:async()=>{sequence.push('popup');assert(orderQueryStarted,'order resolver must already have started before opening the popup')},
+  open:()=>{}});
+ await alerts.poll();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(sent,[UUID]);
+ assert(sequence.indexOf('order_fetch')<sequence.indexOf('popup'));
+});

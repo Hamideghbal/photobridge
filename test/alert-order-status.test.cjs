@@ -63,10 +63,11 @@ test('order renderer appends to new-order card without overwriting original text
  const renderer=fs.readFileSync(path.join(__dirname,'..','alert-renderer.js'),'utf8');
  const html=fs.readFileSync(path.join(__dirname,'..','alert.html'),'utf8');
  assert(renderer.includes("body.textContent=n.message;row.append(title,body);"));
- assert(renderer.includes("if(n.completionNote)"));
- assert(renderer.includes("success.className='orderCompletion'"));
- assert(html.includes(".order span.orderCompletion"));
- assert(renderer.includes("const showBar=item.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;"));
+ assert(renderer.includes("orderPanels.set(n.id,{notice:n,panel:stagePanel})"));
+ assert(renderer.includes("renderDownloads(next.downloads)"));
+ assert(html.includes(".orderStage"));
+ assert(renderer.includes("const showBar=item?.phase==='downloading'&&!downloadVerified&&Number(item.totalBytes)>0;"));
+ assert(!renderer.includes('root.append(row)'),'an order must not have a second progress card');
 });
 
 

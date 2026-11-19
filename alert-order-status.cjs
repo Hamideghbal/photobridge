@@ -28,6 +28,14 @@ function noteComplete(store,account,progress,now=Date.now()){
  const row={orderId:id,number:number(progress.number)||found?.number||null,at:now};
  const next=[...current.filter(item=>item.orderId!==id),row].slice(-MAX);
  store.set(key(account),next);
+ // Persist the verified note into the ORIGINAL unread notification itself.
+ // Its lifetime is controlled only by operator acknowledgement, not the
+ // short-lived progress card nor the bounded order-ID correlation cache.
+ const pendingKey='nativeAlertsPending:'+String(account),pending=store.get(pendingKey);
+ if(Array.isArray(pending)&&pending.length){
+  const decorated=decoratePending(store,account,pending,now);
+  if(decorated.some((item,i)=>item!==pending[i]))store.set(pendingKey,decorated);
+ }
  return true;
 }
 function decoratePending(store,account,items,now=Date.now()){
@@ -35,6 +43,9 @@ function decoratePending(store,account,items,now=Date.now()){
  const records=entries(store,account,now);
  return items.map(item=>{
   if(item?.orderAlert!==true)return item;
+  // Already verified and persisted on the local original notification:
+  // retain for as long as the unread order itself exists (even after 14 days).
+  if(item.completionNote===NOTE&&Number.isFinite(Date.parse(item.completedAt||'')))return item;
   const id=String(item.orderId||'');
   const n=number(item.orderNumber);
   const createdAt=Date.parse(item.created_at||item.createdAt||'');

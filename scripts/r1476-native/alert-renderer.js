@@ -2,7 +2,7 @@
 const $=id=>document.getElementById(id);let state={items:[],settings:{}},timer=null,context=null,played=new Set(),saveChain=Promise.resolve(),refreshId=0;
 const replyDrafts=new Map(),replyBusy=new Set();
 const controls=['mode','tone','volume','interval'];
-function fit(){requestAnimationFrame(()=>void window.labAlert.layout(Math.ceil(document.body.getBoundingClientRect().height)).catch(()=>{}))}
+function fit(){requestAnimationFrame(()=>void window.labAlert.layout({height:Math.ceil(document.body.getBoundingClientRect().height),revision:state.revision}).catch(()=>{}))}
 function status(message){$('status').textContent=message;fit();}
 function controlsState(){return {mode:$('mode').value,tone:$('tone').value,volume:Number($('volume').value),interval:Number($('interval').value)}}
 function stop(){if(timer)clearInterval(timer);timer=null;context?.suspend().catch(()=>{});}

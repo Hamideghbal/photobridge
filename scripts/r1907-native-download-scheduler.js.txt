@@ -30,6 +30,21 @@ function pb1907ScheduleOrder(lab,order,settings){
  pb1907OrderFlights.set(key,flight);
  return flight;
 }
+// R1910 only: one-shot recovery of the bad R1908/R1909 checkpoint.
+// The older candidate startedAt BEFORE passing the order detail to the
+// per-order folder resolver. An unbound NEW order was then misclassified as
+// a historical disk order, failed before first GET, and got 30-60s retryAt.
+// Never auto-reset genuinely historical/partial locally verified orders.
+function pb1910RepairFalseHistoricalRetry(lab,id,order,task){
+ if(!window.__PB_LAB104_NATIVE__||!task||task.phase!=='pending_download'||task.r1910Repaired)return null;
+ if(order?.downloaded_at||!['sent','received'].includes(String(order?.status||'')))return null;
+ if(!/پوشه.{0,6}قبلی این سفارش پیدا نشد/u.test(String(task.error||'')))return null;
+ const state=yc(id)||{};
+ if(state.pathLayout!=='order-v2'||state.localComplete||Object.keys(state.localFiles||{}).length)return null;
+ const repaired={...task,r1910Repaired:true,retryAt:0,attempts:0,error:null};
+ pb1568Save(lab,id,repaired);
+ return repaired;
+}
 /* LAB104 R1908: targeted notification-to-first-byte path.
    Native notification order IDs bypass the expensive accounts/settings/orders LIST scan.
    Server authorization, exact download manifest, disk proof, and device checks remain

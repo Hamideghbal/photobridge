@@ -27,6 +27,8 @@ jobs:
           node --check local-business-host.cjs
           node --check test/r1912-alert-no-flash.test.cjs
           node --check test/r1912-offline-preflight.test.cjs
+          node --check test/r1915-durable-checks.test.cjs
+          node --check test/r1915-fast-numeric-sse.test.cjs
       - name: Run existing and new behavioral regressions
         run: |
           node --test \
@@ -42,4 +44,6 @@ jobs:
             test/r1912-alert-no-flash.test.cjs \
             test/r1912-offline-preflight.test.cjs \
             test/r1913-fast-sse-wake.test.cjs \
-            test/r1913-invoice-proof.test.cjs
+            test/r1913-invoice-proof.test.cjs \
+            test/r1915-durable-checks.test.cjs \
+            test/r1915-fast-numeric-sse.test.cjs

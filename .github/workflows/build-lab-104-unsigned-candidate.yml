@@ -1,5 +1,7 @@
 name: LAB104 reconstructed unsigned Windows candidate (NOT stable)
 on:
+  push:
+    branches: [fix/lab-104-native-candidate-1907]
   workflow_dispatch:
 permissions:
   contents: read

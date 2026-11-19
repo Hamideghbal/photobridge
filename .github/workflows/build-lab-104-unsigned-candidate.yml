@@ -113,7 +113,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node release-kit.cjs pack
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Add-Type -AssemblyName System.IO.Compression
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip=[System.IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'release/PhotoBridge-Lab-FullSource-1.0.104.zip'))
           try {
             $names=@($zip.Entries | ForEach-Object { $_.FullName -replace '\\','/' })

@@ -32,7 +32,8 @@ test('real native source wires exact order metadata to ready-gated IPC',()=>{
  const fs=require('node:fs');
  const main=fs.readFileSync(require('node:path').join(__dirname,'..','main.cjs'),'utf8');
  const preload=fs.readFileSync(require('node:path').join(__dirname,'..','main-preload.cjs'),'utf8');
- assert(main.includes('if(item.orderAlert&&item.orderId)fastArrival.notify(account,item.orderId)'));
+ assert(main.includes('onOrderNotice:(account,items)=>orderDispatch.accept(account,items)'));
+ assert(main.includes('orderDispatch.accept(account,message?.items||[])'));
  assert(main.includes("ipcMain.on('lab-fast-order-ready'"));
  assert(preload.includes("ipcRenderer.on('lab-order-arrived'"));
  assert(preload.includes("ipcRenderer.send('lab-fast-order-ready')"));

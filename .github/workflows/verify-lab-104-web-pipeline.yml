@@ -14,11 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - name: Verify scheduler independently
         run: node --test scripts/test-r1907-download-scheduler.cjs
       - name: Install web build dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-package-lock --no-audit --no-fund
       - name: Generate real native UI and server bundle
         run: npm run build
       - name: Re-run behavior against final generated native bundle

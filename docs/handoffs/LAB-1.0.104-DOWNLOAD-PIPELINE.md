@@ -166,3 +166,10 @@ Playwright is available at `/opt/codex/cua_node/lib/node_modules/playwright`; Ch
 - [R1908 unsigned Windows build 44481405254](https://github.com/Hamideghbal/photobridge/actions/runs/44481405254): started from exact web commit `32c9a1d96d5dc6707d6d456d018d1929caf2a5f6`, native source `f81a60fb98d40d7a82b1336917da8b431579b155`. Installer results and artifact must be checked before calling build successful.
 
 **Hard remaining gates:** real authenticated Windows notification-to-first byte timing (including first start without opening web order page), genuine API server receipt compatibility in an isolated environment, no auto-downloading older orders, file manifest parity and device/account changes. The new server companion remains Draft/not deployed; do not merge/publish stable/deploy production on the strength of isolated tests alone. Preserve the already-correct post-download progress-bar removal.
+
+### R1908 unsigned Windows installer gate — SUCCESS (2026-11-19)
+
+- [GitHub Actions build 44481405254](https://github.com/Hamideghbal/photobridge/actions/runs/44481405254): **passed** `patched-web-ui` and `windows-test-artifact`, including 901 SHA256-verifiable UI files and packaged Electron runtime smoke with sqlite, network and login.
+- [Download **NEW R1908 test installer artifact 14509096446**](https://github.com/Hamideghbal/photobridge/actions/runs/44481405254/artifacts/14509096446) — ZIP contains `PhotoBridge-Lab-Setup-1.0.104-x64.exe`, **UNSIGNED**, 7-day GitHub Actions retention; do not confuse with old slow R1907 artifact 14507336226.
+- R1908 EXE SHA-256: `8E0ED498292921077F8B510E4E0DFE42EFED7C691237856376238DA846985C9E`. R1908 pinned native UI hash `be0bc80c838250ddea85d22b719fc856e72c7c4e21d2225f08dfaf24d0f43804`.
+- **Acceptance OPEN:** despite green automated tests and smoke, real physical Windows notification-to-first-byte time has not been validated. Backend R1907 patch remains Draft/not deployed. Existing progress bar fix preserved. No stable release/production deploy authorized.

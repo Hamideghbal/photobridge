@@ -78,4 +78,6 @@ test('R1912: a downloaded order without confirmed invoice must not display a fal
  const app=view();app.render([order('complete',{downloadVerified:true,stage:'download'})]);
  const checks=app.parts().find(x=>x.className==='stageChecks').children;
  assert.deepEqual(checks.map(x=>x.textContent),['✓ دانلود','⚠ صدور فاکتور']);
+ assert(!app.parts().some(x=>x.tagName==='small'&&x.textContent==='سفارش تکمیل شد'));
+ assert(app.parts().some(x=>x.tagName==='small'&&x.textContent==='صدور فاکتور هنوز تأیید نشده'));
 });

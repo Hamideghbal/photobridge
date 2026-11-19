@@ -13,7 +13,8 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  const businessWrite=!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(p);if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute&&!businessWrite)return false;
  // An online local-only walk-in must use an actual writable folder on THIS
  // authenticated machine. This is not a download-primary registration bypass.
- if(req.method==='POST'&&p==='/api/lab/delegated-orders'&&b.localOnly===true&&!offline){
+ if(req.method==='POST'&&p==='/api/lab/delegated-orders'&&b.localOnly===true&&!offline&&
+   store.get('manualIntakeFallback:'+lab+':'+store.get('deviceId'))===true){
   let access;try{access=await nativeStorage?.status();same();}catch(error){same();}
   if(access?.permission!=='granted'||!access.root){
    json(res,409,{error:'local_storage_unavailable',message:'مسیر ذخیرهٔ عکس‌های حضوری روی این دستگاه قابل نوشتن نیست.'});

@@ -21322,6 +21322,16 @@ ${inviteUrl}`;
                 return snappboxErrorResponse(res, e);
             }
         }
+        // R1921: efficient database-backed 10-item pages for each lab queue tab.
+        if (req.method === 'GET' && url.pathname === '/api/lab/orders' && url.searchParams.get('paged') === '1') {
+            const queue = (await import('./lab-order-queue-r1921.cjs')).default;
+            try {
+                return sendJson(res, 200, await queue.listLabOrdersPage(pool, labId, url));
+            } catch (error) {
+                if (error.status === 400) return sendJson(res, 400, {error:error.message});
+                throw error;
+            }
+        }
         if (req.method === 'GET' && url.pathname === '/api/lab/orders') {
             const q = await pool.query(`SELECT o.*,COALESCE(o.walkin_customer_name,u.name) customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile,u.location_lat,u.location_lng,
         (SELECT count(*)::int FROM order_files f WHERE f.order_id=o.id) file_count,
@@ -21358,6 +21368,7 @@ ${inviteUrl}`;
         LEFT JOIN order_payment_receipts r ON r.order_id=o.id
         LEFT JOIN order_courier_shipments cs ON cs.order_id=o.id AND cs.provider='snappbox'
         WHERE o.lab_id=$1 AND o.status NOT IN ('uploading','cancelled') AND COALESCE(o.source,'')<>'manual_invoice'
+          AND NOT EXISTS(SELECT 1 FROM lab_order_queue_hidden qh WHERE qh.lab_id=o.lab_id AND qh.order_id=o.id)
         ORDER BY o.created_at DESC LIMIT 300`, [labId]);
             return sendJson(res, 200, { orders: q.rows });
         }
@@ -23047,6 +23058,25 @@ ${inviteUrl}`;
             finally {
                 c.release();
             }
+        }
+        // R1921: hide an old order from the lab queue only; keep its invoice,
+        // status history, files, payments, and accounting records intact.
+        const queueVisibility = url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]+)\/(hide-from-queue|restore-to-queue)$/);
+        if(queueVisibility && req.method === 'POST') {
+            const orderId=queueVisibility[1], kind=queueVisibility[2];
+            const queue=(await import('./lab-order-queue-r1921.cjs')).default;
+            if(kind==='hide-from-queue') {
+                const data=await bodyJson(req,10000);
+                if(data.confirm!==true)return sendJson(res,400,{error:'queue_hide_confirmation_required'});
+                const result=await queue.hideLabOrderFromQueue(pool,{labId,orderId,actorId:a.userId,note:String(data.note||'').trim().slice(0,240)});
+                if(result.status===200)await audit(a.userId,labId,'order.queue_hide','order',orderId,{preserveInvoice:true}).catch(()=>{});
+                return sendJson(res,result.status,result.body);
+            }
+            const data=await bodyJson(req,10000);
+            if(data.confirm!==true)return sendJson(res,400,{error:'queue_restore_confirmation_required'});
+            const result=await queue.unhideLabOrderFromQueue(pool,{labId,orderId});
+            if(result.body.restored)await audit(a.userId,labId,'order.queue_restore','order',orderId,{}).catch(()=>{});
+            return sendJson(res,result.status,result.body);
         }
         const labOrder = url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]+)$/);
         if (labOrder && req.method === 'GET') {

@@ -33,7 +33,7 @@ function shell(portal,mobileScripts){
   const frameElement=page.locator(portal==='photographer'&&width>820?'.pb1126ContentPanel[data-panel="crm"] iframe':'#pbCrmTabContent iframe');
   const frame=page.frameLocator(portal==='photographer'&&width>820?'.pb1126ContentPanel[data-panel="crm"] iframe':'#pbCrmTabContent iframe');
   await frame.locator('#customer-details').waitFor({state:'attached'});
-  assert.match(await frameElement.getAttribute('src'),/crmRev=r1867-crm-delivery/);assert.equal(await frame.locator('#back').count(),0);assert.equal(await frame.locator('#marketing-consent').count(),0);assert(await frame.locator('body>header').isHidden());
+  assert.match(await frameElement.getAttribute('src'),/crmRev=r1875-mobile-header-layout/);assert.equal(await frame.locator('#back').count(),0);assert.equal(await frame.locator('#marketing-consent').count(),0);assert(await frame.locator('body>header').isHidden());
   assert.equal(page.frames().length,2);assert.equal(new URL(page.url()).pathname,root);
   if(width<=820){
    const calendar=page.locator('[data-pb-crm-pane="calendar"]');
@@ -74,7 +74,7 @@ function shell(portal,mobileScripts){
   await (await frameElement.elementHandle()).contentFrame().then(child=>child.evaluate(path=>{location.href=path},root));
   await page.waitForURL(url=>url.pathname===root&&!url.searchParams.has('pbCrmTab')&&!url.searchParams.has('pbDesktopPanel'));
   assert(page.frames().every(f=>!f.parentFrame()||!f.parentFrame().parentFrame()));assert.deepEqual(errors,[]);
-  assert(requests.some(url=>url.includes('crmRev=r1867-crm-delivery')));console.log('cached CRM tab, single header, calendar, tab switching, frame escape:',portal,width,'passed');await page.close();
+  assert(requests.some(url=>url.includes('crmRev=r1875-mobile-header-layout')));console.log('cached CRM tab, single header, calendar, tab switching, frame escape:',portal,width,'passed');await page.close();
  }
  settingsUnavailable=true;
  const page=await browser.newPage({viewport:{width:390,height:900}});

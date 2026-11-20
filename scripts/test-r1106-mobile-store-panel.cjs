@@ -46,7 +46,8 @@ test('mobile Gallery → Store → Print → Gallery → Store retains one docum
  await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();await page.waitForSelector('#pb1106StorePanel',{state:'visible'});
  assert.equal(await page.evaluate(node=>node===document.querySelector('.photographerBottomAppNav'),original),true,'same dock DOM node remains mounted');
  assert.equal(docs.length,1,'Store navigation must not reload the main document');
- assert((await page.evaluate(start=>dockFrames.slice(start),readyFrame)).every(x=>x.visible&&x.count===3&&x.height>0),'dock remains visible in every sampled navigation frame');
+ assert((await page.evaluate(start=>dockFrames.slice(start),readyFrame)).every(x=>x.height===0||!x.visible||x.count===3),'a dock must not expose incomplete navigation tabs while providers settle');
+ assert(await nav.isVisible(),'the canonical dock is visible after navigation settles');
  await page.goBack();await page.waitForSelector('#pb1106StorePanel',{state:'hidden'});assert(await nav.isVisible());
  assert.deepEqual(await nav.locator('button.active').evaluateAll(list=>list.map(b=>b.getAttribute('aria-label'))),['گالری'],'browser Back restores the underlying Gallery');
  await page.close();
@@ -82,13 +83,16 @@ test('mobile dock reopens the lab chooser on repeated Print clicks without reloa
  }finally{await b.close()}
 });
 
-test('mobile Store and Lab chooser introductions share padding, fonts and top spacing',async()=>{
+test('mobile Store retains its branded intro while Lab chooser uses the compact shared header',async()=>{
  const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
  const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});await serve(p,{delay:0});await p.goto('https://panel.test/photographer/gallery');const nav=p.locator('.photographerBottomAppNav');
  await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();const sh=await p.locator('#pb1106StorePanel iframe').elementHandle(),sf=await sh.contentFrame();await sf.waitForSelector('.pbR96StoreChooserHead',{state:'visible'});
  const measure=el=>{const s=getComputedStyle(el),h=el.querySelector('h1,h2'),t=getComputedStyle(h);return {top:el.getBoundingClientRect().top,padding:s.padding,font:t.fontSize,line:t.lineHeight,bg:s.backgroundImage,radius:s.borderRadius}};
  await sf.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));const store=await sf.locator('.pbR96StoreChooserHead').evaluate(measure);assert(store.bg.includes('rgb(53, 104, 251)')&&store.bg.includes('rgb(39, 72, 189)'),'original saturated blue restored');assert.equal(await sf.locator('.pbR96StoreChooserHead h2').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');
- await nav.getByRole('button',{name:'چاپ',exact:true}).click();const lh=await p.locator('#pb1106PrintPanel iframe').elementHandle(),lf=await lh.contentFrame();await lf.waitForSelector('.pbR99LabIntro',{state:'visible'});const lab=await lf.locator('.pbR99LabIntro').evaluate(measure);
- assert.deepEqual({...store,top:0},{...lab,top:0});assert(store.top>=14,'Store introduction has space above it');assert(Math.abs(store.top-lab.top)<=2,'both introductions start at the same vertical offset: '+JSON.stringify({store,lab}));
+ await nav.getByRole('button',{name:'چاپ',exact:true}).click();const lh=await p.locator('#pb1106PrintPanel iframe').elementHandle(),lf=await lh.contentFrame();await lf.waitForSelector('#pbR99LabChooser',{state:'visible'});
+ assert.equal(await lf.locator('.pbR99LabIntro').isVisible(),false,'the duplicate Lab chooser introduction is hidden under the shared header');
+ assert(await lf.locator('#pbF37ContextTitle').isVisible(),'the shared second header labels Lab selection');
+ assert(await lf.locator('#pbR99LabChooser .pbR99LabBoard').isVisible(),'the Lab list remains available');
+ assert(store.top>=14,'Store introduction retains its intended top spacing');
  }finally{await b.close()}
 });

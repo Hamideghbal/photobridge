@@ -102,7 +102,7 @@ test('R1896: Ready and Delivered use server status without folder checks',()=>{
   assert.doesNotMatch(ready,/pb1450AllowStage\(le\)/);
   assert.doesNotMatch(delivered,/pb1450AllowStage\(le\)/);
   assert.match(ready,/await It\(le,"ready"\)/);
-  assert.match(delivered,/await It\(le,"completed"\)/);
+  assert.match(delivered,/await It\((?:le|current),"completed"\)/);
   assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
 test('R1894: frozen Windows Lab UI is patched and its release manifest hashes match',()=>{

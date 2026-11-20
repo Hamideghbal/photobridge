@@ -1429,3 +1429,7 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// R1894: previously invoiced lab orders advance without any local-folder dependency.
+await deployStep('./enable-r1894-lab-invoiced-stages.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1894-lab-invoiced-stages.cjs'],{stdio:'inherit'});

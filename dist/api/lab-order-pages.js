@@ -10,7 +10,11 @@ export function parseLabQueuePage(url){
 }
 export async function listLabQueuePage(pool,labId,{mode,tab,page,search,pageSize=10}){
  const fields=[labId,mode,tab,search];
- const [count,items]=await Promise.all([pool.query(COUNT,fields),pool.query(SQL,[...fields,pageSize,(page-1)*pageSize])]);
- const total=Number(count.rows[0]?.total||0);
- return{orders:items.rows,page,pageSize,total,totalPages:Math.ceil(total/pageSize),tab,mode,search};
+ const [flow,ready,completed,items]=await Promise.all([
+   ...['flow','ready','completed'].map(tabName=>pool.query(COUNT,[labId,mode,tabName,search])),
+   pool.query(SQL,[...fields,pageSize,(page-1)*pageSize])
+ ]);
+ const counts={flow:Number(flow.rows[0]?.total||0),ready:Number(ready.rows[0]?.total||0),completed:Number(completed.rows[0]?.total||0)};
+ const total=counts[tab];
+ return{orders:items.rows,page,pageSize,total,totalPages:Math.ceil(total/pageSize),counts,tab,mode,search};
 }

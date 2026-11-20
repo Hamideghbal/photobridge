@@ -1,4 +1,4 @@
-// R1723: validate exact uppercase disk folder names in both delivered web and native Lab UIs.
+// R1936: validate exact Hamkar/Moshtari disk labels in delivered web and native Lab UIs.
 // After all prior patch stages. Historic disk folders and saved per-order handles remain untouched.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -8,10 +8,10 @@ for(const dir of ['dist/web','dist/web/lab-desktop-ui']){
   const jsFile=dir+'/'+asset, htmlFile=dir+'/index.html';
   let js=fs.readFileSync(jsFile,'utf8');
   const section=js.slice(js.lastIndexOf('function pb1664StorageBucket(order){'),js.lastIndexOf('async function pb1550Probe(root,detail){'));
-  if(!section||!section.includes("?'MOSHTARI':'HAMKAR'")||!section.includes("function pb1664PreviousStorageBuckets(order)"))
+  if(!section||!section.includes("?'Moshtari':'Hamkar'")||!section.includes("function pb1664PreviousStorageBuckets(order)"))
     throw Error('[R1723] final '+dir+' storage labels or legacy fallback not installed; refusing stale delivery');
   if(!js.includes('for(const name of [pb1664StorageBucket(detail.order),day,saved.customer,Uy(detail,file)])'))
-    throw Error('[R1723] '+dir+' new download path does not use uppercase storage bucket');
+    throw Error('[R1723] '+dir+' new download path does not use the exact named storage bucket');
   execFileSync(process.execPath,['--check',jsFile],{stdio:'inherit'});
   let html=fs.readFileSync(htmlFile,'utf8');
   const jsPattern=/index-UIRefine-v655-r84\.js\?[^"'\s]+/g;
@@ -31,4 +31,4 @@ for(const dir of ['dist/web','dist/web/lab-desktop-ui']){
     fs.writeFileSync(manifestFile,JSON.stringify(m));
   }
 }
-console.log('[R1723] Both delivered Lab UI snapshots use exact HAMKAR / MOSHTARI for new orders; native manifest versioned, old folders preserved.');
+console.log('[R1723] Both delivered Lab UI snapshots use exact Hamkar / Moshtari for new orders; native manifest versioned, old folders preserved.');

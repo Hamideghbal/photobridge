@@ -34,11 +34,11 @@ function pb1664StorageBucket(order){
  const source=String(order?.source||order?.order_source||'').toLowerCase();
  // Source 'walkin' represents a direct customer, not a photographer account.
  return source==='walkin'||source==='walk_in'||source==='manual_invoice'||
-        Boolean(order?.walkin_customer_name||order?.walkin_customer_mobile)?'MOSHTARI':'HAMKAR';
+        Boolean(order?.walkin_customer_name||order?.walkin_customer_mobile)?'Moshtari':'Hamkar';
 }
 // Never rename historical folders. Reattach older lowercase, title-case or Persian layouts.
-function pb1664PreviousStorageBuckets(order){return pb1664StorageBucket(order)==='MOSHTARI'?['moshtari','Moshtari']:['hamkar','Hamkar'];}
-function pb1664LegacyStorageBucket(order){return pb1664StorageBucket(order)==='MOSHTARI'?'مشتریان':'همکاران';}
+function pb1664PreviousStorageBuckets(order){return pb1664StorageBucket(order)==='Moshtari'?['MOSHTARI','moshtari']:['HAMKAR','hamkar'];}
+function pb1664LegacyStorageBucket(order){return pb1664StorageBucket(order)==='Moshtari'?'مشتریان':'همکاران';}
 async function pb1550Probe(root,detail){
  const state=yc(detail.order.id)||{},pathDate=state.pathDate||detail.order.downloaded_at||state.startedAt;
  if(!pathDate||!detail.files?.length)return null;
@@ -76,6 +76,13 @@ async function pb1550Root(detail,choose=false,candidate){
   if(legacy&&!local){
    let record=await pb1550Probe(root,detail);
    if(!record&&choose&&!window.pbNativeStorage){root=await window.showDirectoryPicker({mode:'readwrite',id:'photobridge-order-folder'});record=await pb1550Probe(root,detail);}
+   if(!record&&choose&&pb1936ExplicitDownload(detail)){
+    // No complete historical folder remains. Re-create only the requested
+    // order's children under its existing, validated root on the first target.
+    record={version:1,root:pb1550Encode(root),targets:{},
+      pathDate:state.pathDate||detail.order.downloaded_at||state.startedAt||new Date().toISOString(),
+      customer:Tg(detail.order),createdAt:new Date().toISOString()};
+   }
    if(!record)throw Error('پوشهٔ قبلی این سفارش پیدا نشد؛ برای اتصال دوباره، «بررسی و تکمیل دانلود» را بزنید و پوشهٔ اصلی قبلی را انتخاب کنید. مسیر پیش‌فرض تغییر نمی‌کند.');
    await pb1550Db(detail,record);
   }else await pb1550Db(detail,{version:1,root:pb1550Encode(root),targets:{},createdAt:new Date().toISOString()});
@@ -87,13 +94,78 @@ async function pb1550ArchiveRoot(detail){
  if(!saved&&!detail.order.downloaded_at&&!state.startedAt&&!detail.order.localFiles?.length)return null;
  try{return await pb1550Root(detail,false)}catch(error){if(saved)throw error;return null;}
 }
+
+/* PB1936 explicit redownload recovery — only a user-started download may
+ * re-create an order's old child directories; never rewrite a missing root. */
+function pb1936ExplicitDownload(detail) {
+ return typeof pb1450Flights!=='undefined'&&pb1450Flights.has(detail.order.id);
+}
+function pb1936SafePart(part) {
+ return typeof part==='string'&&part.length>0&&part.length<=180&&
+   part!=='.'&&part!=='..'&&!/[\\/:*?"<>|\u0000-\u001f]/.test(part)&&
+   !/[ .]$/.test(part)&&!/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part);
+}
+async function pb1936RecreateNativeDir(root,stored) {
+ const base=pb1550Encode(root);
+ if(!stored?.native||!base?.native||stored.rootId!==base.rootId||
+    !Array.isArray(stored.parts)||!Array.isArray(base.parts))
+   throw Error('order_storage_root_mismatch');
+ if(base.parts.some((v,i)=>stored.parts[i]!==v)||
+    stored.parts.length<=base.parts.length||stored.parts.length-base.parts.length>12)
+   throw Error('order_storage_root_mismatch');
+ const children=stored.parts.slice(base.parts.length);
+ if(!children.every(pb1936SafePart))throw Error('order_storage_path_invalid');
+ let directory=root;
+ for(const part of children)directory=await directory.getDirectoryHandle(part,{create:true});
+ return directory;
+}
+async function pb1936CanonicalDir(root,saved,detail,file) {
+ const day=Ic(new Date(saved.pathDate||detail.order.downloaded_at||
+      (yc(detail.order.id)||{}).startedAt||new Date().toISOString()));
+ const customer=saved.customer||Tg(detail.order);
+ let directory=root;
+ for(const name of [pb1664StorageBucket(detail.order),day,customer,Uy(detail,file)]) {
+   if(!pb1936SafePart(name))throw Error('order_storage_path_invalid');
+   directory=await directory.getDirectoryHandle(name,{create:true});
+ }
+ return{dir:directory,day};
+}
+async function pb1936ReviveTarget(root,old,saved,detail,file) {
+ if(!pb1936ExplicitDownload(detail))return {dir:pb1550Decode(old.dir),day:old.day};
+ if(old.dir?.native){
+   const dir=await pb1936RecreateNativeDir(root,old.dir);
+   return {dir,day:old.day};
+ }
+ // Browser FileSystemDirectoryHandle cannot reveal the original relative path.
+ // Reuse the saved handle if it exists; otherwise create the canonical path
+ // under the still-permitted original root, without deleting any old files.
+ const prior=pb1550Decode(old.dir);
+ try {
+   const it=prior.entries();
+   await it.next();
+   return {dir:prior,day:old.day};
+ }catch(error) {
+   if(!pb1450Missing(error))throw error;
+ }
+ return pb1936CanonicalDir(root,saved,detail,file);
+}
+
 async function pb1550Target(candidate,detail,file){
  const root=await pb1550Root(detail,false,candidate);
  return pb1550Serial(detail,async()=>{
   const saved=await pb1550Db(detail),key=String(file.id),local=pb1550LocalFile(detail,file),old=saved.targets[key];
-  if(old)return{root,dir:pb1550Decode(old.dir),day:old.day};
+  if(old){
+   const restored=await pb1936ReviveTarget(root,old,saved,detail,file);
+   // The browser cannot re-open a deleted saved DirectoryHandle. Persist only
+   // its explicitly regenerated canonical child; native pinned paths stay exact.
+   if(pb1936ExplicitDownload(detail)&&!old.dir?.native&&restored.dir!==pb1550Decode(old.dir)){
+    saved.targets[key]={dir:pb1550Encode(restored.dir),day:restored.day};
+    await pb1550Db(detail,saved);
+   }
+   return{root,...restored};
+  }
   if(local?.rootId&&Array.isArray(local.parts)&&local.parts.length){
-   const dir=pb1550Decode({native:true,rootId:local.rootId,parts:local.parts.slice(0,-1),kind:'directory',name:local.parts.at(-2)});
+   const oldDir={native:true,rootId:local.rootId,parts:local.parts.slice(0,-1),kind:'directory',name:local.parts.at(-2)};const dir=pb1936ExplicitDownload(detail)?await pb1936RecreateNativeDir(root,oldDir):pb1550Decode(oldDir);
    saved.targets[key]={dir:pb1550Encode(dir),day:local.parts[0]};await pb1550Db(detail,saved);
    return{root,dir,day:local.parts[0]};
   }

@@ -1,0 +1,29 @@
+name: R1921 lab queue staged investigation
+on:
+  push:
+    branches:
+      - fix/r1921-lab-order-stages-legacy-hide-paging
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate new server-side page modules
+        run: |
+          node --check dist/api/lab-order-pages.cjs
+          node --check scripts/r1921-inspect-stage-and-queue.cjs
+          node --check scripts/enable-r1921-lab-order-pages.mjs
+      - name: Show exact stage and queue references for safe changes
+        run: node scripts/r1921-inspect-stage-and-queue.cjs
+      - name: Validate endpoint compatibility on a throwaway copy only
+        run: |
+          mkdir -p /tmp/pb-r1921
+          cp dist/api/server.js /tmp/pb-r1921/server-original.js
+          node scripts/enable-r1921-lab-order-pages.mjs
+          cmp -s dist/api/server.js /tmp/pb-r1921/server-original.js && exit 1 || true
+          node scripts/enable-r1921-lab-order-pages.mjs
+          git diff -- dist/api/server.js | head -65

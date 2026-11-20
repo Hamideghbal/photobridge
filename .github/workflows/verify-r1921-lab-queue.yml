@@ -28,6 +28,6 @@ jobs:
       - name: Run R1921 pagination, legacy hide and stage regressions
         run: node --test test/r1921-lab-queue.test.mjs
       - name: Install dependencies for the exact Liara release build
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Verify full Docker build patch sequence still preserves R1921
         run: node --expose-gc scripts/liara-fast-build.mjs

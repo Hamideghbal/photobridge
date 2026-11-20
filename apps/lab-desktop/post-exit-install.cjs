@@ -36,7 +36,7 @@ function makePowerShell({file,manifest,parentPid,args}){
   ' if($null -eq $proc -or $proc.ExitCode -ne 0){exit 27}',
   ' exit 0',
   '} catch {exit 28}'
- ].join(';\r\n');
+ ].join('\r\n');
 }
 function launchVerifiedAfterExit({file,args,manifest,parentPid=process.pid,platform=process.platform,spawnImpl=spawn}){
  if(platform!=='win32')return Promise.reject(Error('windows_only_verified_update'));

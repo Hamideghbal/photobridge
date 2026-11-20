@@ -48,7 +48,7 @@ function installAppUpdates({app,dialog,Notification,store,request,getWindow,show
  // to a detached waiter, then let PhotoBridge exit normally.
  app.on('before-quit',event=>{
   clearInterval(timer);clearInterval(idleTimer);
-  if(exitBypass||autoBusy||!updater.ready||!app.isPackaged||platform!=='win32')return;
+  if(exitBypass||autoBusy||updater.installing||!updater.ready||!app.isPackaged||platform!=='win32')return;
   event.preventDefault();exitBypass=true;
   Promise.resolve().then(async()=>{
    if(!await canInstall()){app.quit();return;}

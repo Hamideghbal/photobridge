@@ -13,7 +13,7 @@ if(!ui.includes(marker)){
   if(!ui.includes('setInterval(refresh,3000)')||!ui.includes('pb1753VisibleLabOrders'))
     throw Error('[R1936] native queue refresh/server-order reconciliation missing');
   ui=ui.replace(old,next);
-  ui+='\\n'+marker+'\\n';
+  ui+='\n'+marker+'\n';
   fs.writeFileSync(file,ui);
 }
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

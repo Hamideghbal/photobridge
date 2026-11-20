@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS lab_order_queue_hidden (
   PRIMARY KEY (lab_id, order_id)
 );
 CREATE INDEX IF NOT EXISTS lab_order_queue_hidden_order_idx ON lab_order_queue_hidden(order_id);
+
+-- Keep the first page of each tab index-backed even with many delivered orders.
+CREATE INDEX IF NOT EXISTS orders_lab_queue_page_r1921_idx ON orders(lab_id,mode,status,created_at DESC,id DESC) WHERE status NOT IN ('uploading','cancelled');

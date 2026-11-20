@@ -78,6 +78,19 @@ test('R1894: print Ready and Delivered gate bypass disk only with stored invoice
   assert.match(delivered,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
   assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
+test('R1894: frozen Windows Lab UI is patched and its release manifest hashes match',()=>{
+  const root='dist/web/lab-desktop-ui';
+  const js=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js');
+  const html=fs.readFileSync(root+'/index.html');
+  const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
+  const hash=require('node:crypto').createHash;
+  assert.match(js.toString('utf8'),/pb1894HasIssuedInvoice\(le\)/);
+  assert.match(js.toString('utf8'),/if\(!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)\)/);
+  assert.match(html.toString('utf8'),/labStage=r1894/);
+  for(const [name,bytes] of [['assets/index-UIRefine-v655-r84.js',js],['index.html',html]]){
+    assert.equal(manifest.files.find(row=>row.name===name)?.sha256,hash('sha256').update(bytes).digest('hex'));
+  }
+});
 test('R1894: existing server invoice contract remains unchanged and audit is preserved',()=>{
   assert.match(api,/async function createOrGetInvoice\(c, labId, orderId\)/);
   assert.match(api,/const existing = await c\.query\(\x60SELECT i\.\*/);

@@ -68,4 +68,4 @@ if(!html.includes('labStage=r1894')){
 }
 execFileSync(process.execPath,['--check',uiPath],{stdio:'inherit'});
 // Existing createOrGetInvoice already reuses issued invoices; backend is unchanged.
-console.log('[R1894] Server-only changes for previously issued lab invoices (print and album), no disk dependency');
+console.log('[R1894] Existing-invoice Lab status actions bypass local folder verification; server invoice logic unchanged');

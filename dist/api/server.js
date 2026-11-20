@@ -21322,6 +21322,34 @@ ${inviteUrl}`;
                 return snappboxErrorResponse(res, e);
             }
         }
+        // R1921: bounded work queue, exactly 10 enriched orders per tab/page.
+        if (req.method === 'GET' && url.pathname === '/api/lab/orders/page') {
+            const {parseLabQueuePage,listLabQueuePage}=await import('./lab-order-pages.js');
+            return sendJson(res,200,await listLabQueuePage(pool,labId,parseLabQueuePage(url)));
+        }
+        // Hide only the LAB QUEUE card; never delete the issued document or financial history.
+        const labQueueVisibility=url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]{36})\/queue-(hide|restore)$/i);
+        if (labQueueVisibility && req.method === 'POST') {
+            const orderId=labQueueVisibility[1],hide=labQueueVisibility[2]==='hide';
+            const c=await pool.connect();
+            try {
+                await c.query('BEGIN');
+                const oq=await c.query('SELECT id,status,downloaded_at,lab_queue_hidden_at FROM orders WHERE id=$1 AND lab_id=$2 FOR UPDATE',[orderId,labId]);
+                if(!oq.rowCount){await c.query('ROLLBACK');return sendJson(res,404,{error:'order_not_found'});}
+                const row=oq.rows[0];
+                if(hide){
+                    const proof=await c.query("SELECT id FROM invoices WHERE order_id=$1 AND lab_id=$2 AND issued_at IS NOT NULL LIMIT 1",[orderId,labId]);
+                    if(!proof.rowCount || !row.downloaded_at && !['ready','completed'].includes(row.status)){
+                        await c.query('ROLLBACK');
+                        return sendJson(res,409,{error:'queue_hide_requires_existing_invoice_and_download',message:'برای سفارش بدون فاکتور قطعی یا دانلود تأییدشده، حذف از صف مجاز نیست.'});
+                    }
+                }
+                await c.query('UPDATE orders SET lab_queue_hidden_at=$3 WHERE id=$1 AND lab_id=$2',[orderId,labId,hide?new Date():null]);
+                await c.query('COMMIT');
+                await audit(a.userId,labId,hide?'order.lab_queue_hide':'order.lab_queue_restore','order',orderId,{documentsPreserved:true}).catch(()=>{});
+                return sendJson(res,200,{ok:true,orderId,hidden:hide,documentsPreserved:true});
+            }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{c.release();}
+        }
         if (req.method === 'GET' && url.pathname === '/api/lab/orders') {
             const q = await pool.query(`SELECT o.*,COALESCE(o.walkin_customer_name,u.name) customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile,u.location_lat,u.location_lng,
         (SELECT count(*)::int FROM order_files f WHERE f.order_id=o.id) file_count,
@@ -21357,7 +21385,7 @@ ${inviteUrl}`;
         LEFT JOIN invoices i ON i.order_id=o.id
         LEFT JOIN order_payment_receipts r ON r.order_id=o.id
         LEFT JOIN order_courier_shipments cs ON cs.order_id=o.id AND cs.provider='snappbox'
-        WHERE o.lab_id=$1 AND o.status NOT IN ('uploading','cancelled') AND COALESCE(o.source,'')<>'manual_invoice'
+        WHERE o.lab_id=$1 AND o.status NOT IN ('uploading','cancelled') AND COALESCE(o.source,'')<>'manual_invoice' AND o.lab_queue_hidden_at IS NULL
         ORDER BY o.created_at DESC LIMIT 300`, [labId]);
             return sendJson(res, 200, { orders: q.rows });
         }

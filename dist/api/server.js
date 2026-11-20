@@ -21322,6 +21322,24 @@ ${inviteUrl}`;
                 return snappboxErrorResponse(res, e);
             }
         }
+        // R1921: database-backed ten-order pages, no full queue hydration.
+        if (req.method === 'GET' && url.pathname === '/api/lab/orders' && url.searchParams.has('tab')) {
+            const {createRequire} = await import('node:module');
+            const requireR1921 = createRequire(import.meta.url);
+            const result = await requireR1921('./lab-order-pages.cjs').pageLabOrders(pool,labId,url.searchParams);
+            return sendJson(res,result.status||200,result);
+        }
+        // R1921: hide old cards without deleting any invoice, payment, or image.
+        const hiddenLabOrder = url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]+)\/hide$/);
+        if (hiddenLabOrder && req.method === 'POST') {
+            const orderId = hiddenLabOrder[1];
+            const ownership = await pool.query("SELECT id,status FROM orders WHERE id=$1 AND lab_id=$2", [orderId,labId]);
+            if (!ownership.rowCount) return sendJson(res,404,{error:'order_not_found'});
+            if (ownership.rows[0].status === 'uploading') return sendJson(res,409,{error:'order_upload_in_progress'});
+            await pool.query("INSERT INTO lab_hidden_order_cards(lab_id,order_id,hidden_by,reason) VALUES($1,$2,$3,'manual_archive') ON CONFLICT(lab_id,order_id) DO NOTHING",[labId,orderId,a.userId]);
+            await audit(a.userId,labId,'order.hide_card','order',orderId,{visible:false}).catch(()=>{});
+            return sendJson(res,200,{ok:true,orderId,hidden:true,financialRecordsPreserved:true});
+        }
         if (req.method === 'GET' && url.pathname === '/api/lab/orders') {
             const q = await pool.query(`SELECT o.*,COALESCE(o.walkin_customer_name,u.name) customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile,u.location_lat,u.location_lng,
         (SELECT count(*)::int FROM order_files f WHERE f.order_id=o.id) file_count,

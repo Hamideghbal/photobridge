@@ -371,3 +371,6 @@
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{display:flex!important;visibility:visible!important;opacity:1!important;position:static!important;min-height:32px!important;height:32px!important;overflow:visible!important;align-items:center!important}
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:42px!important;min-width:42px!important;height:30px!important;min-height:30px!important;text-align:center!important;font-size:12px!important}
 .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:26px!important;min-width:26px!important;height:30px!important;min-height:30px!important;flex:0 0 26px!important;font-size:14px!important}
+
+/* R1925 site parity: no separate Add after choosing photos, including group headers. */
+.pb1137Intake .pb1139Add,.pb1137Intake .pb1139GroupHead .pb1924RedundantAdd{display:none!important;visibility:hidden!important}

@@ -65,7 +65,6 @@ test('R1894: album Ready and completion bypass local-folder gate after existing 
   const handler=field('Cn=async(le,nt)=>',',aa=async');
   assert.match(handler,/nt!=="printing"&&await pb1894HasIssuedInvoice\(le\)/);
   assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
-  assert.match(api,/invoiceReused/);
 });
 test('R1894: print Ready and Delivered gate bypass disk only with stored invoice',()=>{
   const ready=field('un=async le=>',',Cn=async');
@@ -74,21 +73,15 @@ test('R1894: print Ready and Delivered gate bypass disk only with stored invoice
   assert.match(delivered,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
   assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
-test('R1894: both server transitions reuse existing invoice',()=>{
-  const cases=[
-    ['print',"if (labOrder && req.method === 'PATCH')","// v0.17.565-pdf-upload"],
-    ['album',"if (labAlbumStage && req.method === 'PUT')","if (req.method === 'GET' && url.pathname === '/api/lab/walkin')"]
-  ];
-  for(const [name,a,b] of cases){
-    const start=api.indexOf(a),stop=api.indexOf(b,start);
-    assert(start>0&&stop>start);
-    const part=api.slice(start,stop);
-    assert(part.includes('SELECT * FROM invoices WHERE order_id=$1 AND lab_id=$2 ORDER BY issued_at ASC LIMIT 1'),name+' verifies persisted invoice');
-    assert.match(part,/priorInvoice\.rows\[0\] \|\| await createOrGetInvoice/);
-    assert.match(part,/!priorInvoice\.rowCount|!invoiceReused/);
-    assert.doesNotMatch(part,/getDirectoryHandle|showDirectoryPicker|folder_permission_denied/);
-  }
-  assert.match(api,/oldOrder\.settlement_mode === 'prepaid'/);
-  assert.match(api,/statusEvent\(c, order, status, a\.userId, note\)/);
+test('R1894: existing server invoice contract remains unchanged and audit is preserved',()=>{
+  assert.match(api,/async function createOrGetInvoice\(c, labId, orderId\)/);
+  assert.match(api,/const existing = await c\.query\(\x60SELECT i\.\*/);
+  assert.match(api,/if \(existing\.rowCount\)/);
+  const print=api.slice(api.indexOf("if (labOrder && req.method === 'PATCH')"),api.indexOf("// v0.17.565-pdf-upload",api.indexOf("if (labOrder && req.method === 'PATCH')")));
+  assert.match(print,/invoice = await createOrGetInvoice\(c, labId, labOrder\[1\]\)/);
+  assert.match(print,/statusEvent\(c, order, status, a\.userId, note\)/);
+  assert.match(print,/oldOrder\.settlement_mode === 'prepaid'/);
+  const album=api.slice(api.indexOf("if (labAlbumStage && req.method === 'PUT')"),api.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/walkin')",api.indexOf("if (labAlbumStage && req.method === 'PUT')")));
+  assert.match(album,/invoice = await createOrGetInvoice\(c, labId, order\.id\)/);
   assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labStage=r1894/);
 });

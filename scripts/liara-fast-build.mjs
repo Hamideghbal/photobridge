@@ -1429,3 +1429,12 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// R1921 final gate: after every site/Windows patcher, prove ten-at-a-time queue
+// navigation, reversible hide, status transitions, and valid deployed JS remain.
+await deployStep('./enable-r1921-queue-final.mjs');
+console.log('[PhotoBridge Docker build] START R1921 Lab queue final regressions');
+runR1314(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'});
+runR1314(process.execPath,['--check','dist/web/assets/index-UIRefine-v655-r84.js'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','test/r1921-lab-queue.test.mjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK R1921 Lab queue final regressions');

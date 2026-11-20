@@ -65,6 +65,7 @@ test('R1936: browsing an old order does not create or repair disk directories',a
 });
 test('R1936: a deleted entire legacy order folder may be created at a verified root on redownload',async()=>{
  const x=harness({hasSaved:false,legacy:true});
+ x.ctx.window.pbNativeStorage={}; // The reported ENOENT is from the native Windows app.
  const root=await x.ctx.runRoot(x.detail,true);
  assert.equal(root,x.root);
  assert.equal(x.saved().targets['photo-1'],undefined);

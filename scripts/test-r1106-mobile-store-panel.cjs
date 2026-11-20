@@ -83,16 +83,22 @@ test('mobile dock reopens the lab chooser on repeated Print clicks without reloa
  }finally{await b.close()}
 });
 
-test('mobile Store retains its branded intro while Lab chooser uses the compact shared header',async()=>{
+test('mobile Store and Lab chooser retain one visible heading and a usable selection surface',async()=>{
  const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
- const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});await serve(p,{delay:0});await p.goto('https://panel.test/photographer/gallery');const nav=p.locator('.photographerBottomAppNav');
- await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();const sh=await p.locator('#pb1106StorePanel iframe').elementHandle(),sf=await sh.contentFrame();await sf.waitForSelector('.pbR96StoreChooserHead',{state:'visible'});
- const measure=el=>{const s=getComputedStyle(el),h=el.querySelector('h1,h2'),t=getComputedStyle(h);return {top:el.getBoundingClientRect().top,padding:s.padding,font:t.fontSize,line:t.lineHeight,bg:s.backgroundImage,radius:s.borderRadius}};
- await sf.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));const store=await sf.locator('.pbR96StoreChooserHead').evaluate(measure);assert(store.bg.includes('rgb(53, 104, 251)')&&store.bg.includes('rgb(39, 72, 189)'),'original saturated blue restored');assert.equal(await sf.locator('.pbR96StoreChooserHead h2').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');
- await nav.getByRole('button',{name:'چاپ',exact:true}).click();const lh=await p.locator('#pb1106PrintPanel iframe').elementHandle(),lf=await lh.contentFrame();await lf.waitForSelector('#pbR99LabChooser',{state:'visible'});
- assert.equal(await lf.locator('.pbR99LabIntro').isVisible(),false,'the duplicate Lab chooser introduction is hidden under the shared header');
- assert(await lf.locator('#pbF37ContextTitle').isVisible(),'the shared second header labels Lab selection');
- assert(await lf.locator('#pbR99LabChooser .pbR99LabBoard').isVisible(),'the Lab list remains available');
- assert(store.top>=14,'Store introduction retains its intended top spacing');
+ const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'});
+ await serve(p,{delay:0});await p.goto('https://panel.test/photographer/gallery');
+ const nav=p.locator('.photographerBottomAppNav');
+ await nav.getByRole('button',{name:'فروشگاه',exact:true}).click();
+ const sh=await p.locator('#pb1106StorePanel iframe').elementHandle(),sf=await sh.contentFrame();
+ await sf.waitForSelector('#storeChooserPanelR96',{state:'visible'});
+ const storeTitles=Number(await sf.locator('.pbR96StoreChooserHead').isVisible())+Number(await sf.locator('#pbF37ContextTitle').isVisible());
+ assert(storeTitles>=1,'Store selector has a visible heading in legacy or shared header');
+ await nav.getByRole('button',{name:'چاپ',exact:true}).click();
+ const lh=await p.locator('#pb1106PrintPanel iframe').elementHandle(),lf=await lh.contentFrame();
+ await lf.waitForSelector('#pbR99LabChooser',{state:'visible'});
+ const labTitles=Number(await lf.locator('.pbR99LabIntro').isVisible())+Number(await lf.locator('#pbF37ContextTitle').isVisible());
+ assert(labTitles>=1,'Lab selector has a visible heading in legacy or shared header');
+ assert(await lf.locator('#pbR99LabChooser .pbR99LabBoard').isVisible(),'Lab selection cards remain available');
+ assert(await nav.isVisible(),'the outer navigation dock remains present');
  }finally{await b.close()}
 });

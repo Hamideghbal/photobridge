@@ -26,6 +26,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // The backend requires a current document revision. Any mobile/browser PATCH
   // must preserve the optimistic concurrency contract; do not bypass it.
   ui=scoped(ui,'It=async(le,nt,xt)=>',',gn=async',part=>{
+    part=replaceOne(part,'nt==="printing"&&!await pb1450AllowStage(le)',
+      'nt==="printing"&&!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
+      'printing stage: issued invoice bypasses local disk');
     if(part.includes('expectedRevision:'))return part;
     return replaceOne(part,'body:JSON.stringify({status:nt,note:xt||null})',
       'body:JSON.stringify({status:nt,note:xt||null,expectedRevision:le.document_revision})',
@@ -60,7 +63,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 
   ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>
     replaceOne(part,'!await pb1450AllowStage(le)',
-      '!(nt!=="printing"&&await pb1894HasIssuedInvoice(le))&&!await pb1450AllowStage(le)',
+      '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
       'album Ready and Delivered guard'),'R1450 album stage guard');
 
   ui+='\nasync function pb1894HasIssuedInvoice(le){if(le?.invoice_id)return true;try{const detail=await Me("/api/lab/orders/"+le.id);if(detail?.invoice?.id){le.invoice_id=detail.invoice.id;return true}return false}catch{return false}}\n'+marker+'\n';

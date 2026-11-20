@@ -16,7 +16,7 @@ function stageFn(mode){
 }
 function enabledFn(mode){
   const rn=stageFn(mode);
-  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn,pb1798NoPrintOrder:()=>false,pb1603InvoicePending:()=>false});
+  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn,pb1798NoPrintOrder:()=>false,pb1603InvoicePending:()=>false,pb1450CanDownload:()=>true});
 }
 test('R1894: an already-issued print invoice enables Ready without history or local folder',()=>{
   const order={id:'old-order',number:42,status:'received',status_history:[],invoice_id:'existing-invoice',downloaded_at:null};

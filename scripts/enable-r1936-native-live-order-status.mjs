@@ -7,7 +7,7 @@ let ui=fs.readFileSync(file,'utf8');
 const marker='/* PB1936 native verified live status refresh */';
 if(!ui.includes(marker)){
   const old="return Me('/api/lab/orders'+(recovery?'?recovery='+encodeURIComponent(recovery):''))";
-  const next="return Me('/api/lab/orders'+(recovery?'?recovery='+encodeURIComponent(recovery)+'&':'?')+'pbNativeLiveStatus='+Date.now())";
+  const next="return Me('/api/lab/orders'+(recovery?'?recovery='+encodeURIComponent(recovery):'')+(typeof navigator!=='undefined'&&navigator.onLine===false?'':(recovery?'&':'?')+'pbNativeLiveStatus='+Date.now()))";
   const count=ui.split(old).length-1;
   if(count!==1)throw Error('[R1936] native queue online read anchor mismatch: '+count);
   if(!ui.includes('setInterval(refresh,3000)')||!ui.includes('pb1753VisibleLabOrders'))

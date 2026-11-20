@@ -39,7 +39,8 @@ test('R1892: an already issued invoice advances to ready before any folder/PDF a
   const patch = handler.indexOf('await It(le,"ready")', guard);
   const local = handler.indexOf('await Ef(');
   assert.ok(guard >= 0 && patch > guard && local > patch, 'server stage update precedes any local folder access');
-  assert.ok(handler.slice(guard, handler.indexOf('if(nt){', guard)).includes('return}'), 'ready transition exits before invoice PDF/folder handling');
+  assert.ok(handler.indexOf('try{if(nt){') >= 0 && guard > handler.indexOf('try{if(nt){'), 'legacy invoice build anchor remains available');
+  assert.ok(handler.slice(guard, handler.indexOf('const Zt=', guard)).includes('return}'), 'ready transition exits before invoice PDF/folder handling');
 });
 
 test('R1892: downloaded and completed API stages remain database-only operations', () => {

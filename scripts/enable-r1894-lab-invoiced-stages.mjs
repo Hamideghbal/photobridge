@@ -78,12 +78,22 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 }
 
 let html=fs.readFileSync(htmlPath,'utf8');
-if(!html.includes('labStage=r1894')){
+// Upgrade the actual browser module URL, even when the old R1894 suffix exists.
+// The R1896 code was previously deployed with an unchanged R1894 URL, allowing
+// browser caches to keep running the obsolete folder-checking bundle.
+{
   const search=/index-UIRefine-v655-r84\.js\?[^"'\s]*/g;
   const hits=[...html.matchAll(search)];
-  if(hits.length!==1)throw Error('R1894 UI script revision anchor '+hits.length);
-  html=html.replace(search,m=>m+'&labStage=r1894');
-  fs.writeFileSync(htmlPath,html);
+  if(hits.length!==1)throw Error('R1897 UI script revision anchor '+hits.length);
+  const oldUrl=hits[0][0];
+  const newUrl=/[?&]labStage=r\d+/.test(oldUrl)
+    ?oldUrl.replace(/([?&])labStage=r\d+/,'$1labStage=r1897')
+    :oldUrl+'&labStage=r1897';
+  if(newUrl===oldUrl&&!oldUrl.includes('labStage=r1897'))throw Error('R1897 cache revision unchanged');
+  if(newUrl!==oldUrl) {
+    html=html.replace(oldUrl,newUrl);
+    fs.writeFileSync(htmlPath,html);
+  }
 }
 execFileSync(process.execPath,['--check',uiPath],{stdio:'inherit'});
  if(root.endsWith('/lab-desktop-ui')){

@@ -53,14 +53,19 @@ async function pageLabOrders(pool,labId,query){
  const n=Number(query.get('page')||1);
  if(!Number.isSafeInteger(n)||n<1||n>100000)return{error:'invalid_page',status:400};
  const where=conditions(tab,search),params=[labId,mode,search];
+ const countRows=await Promise.all(['flow','ready','completed'].map(async group=>{
+  const sql=`SELECT count(*)::int AS total FROM orders o JOIN users u ON u.id=o.customer_id WHERE ${conditions(group,search)}`;
+  return Number((await pool.query(sql,params)).rows[0]?.total||0);
+ }));
+ const counts={flow:countRows[0],ready:countRows[1],completed:countRows[2]};
  const totalsSql=`SELECT count(*)::int AS total FROM orders o JOIN users u ON u.id=o.customer_id WHERE ${where}`;
  const total=Number((await pool.query(totalsSql,params)).rows[0]?.total||0);
  const pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
  const page=Math.min(n,pages);
  const ids=await pool.query(`SELECT o.id FROM orders o JOIN users u ON u.id=o.customer_id WHERE ${where} ORDER BY o.created_at DESC,o.id DESC LIMIT $4 OFFSET $5`,[...params,PAGE_SIZE,(page-1)*PAGE_SIZE]);
- if(!ids.rows.length)return{orders:[],total,page,pages,pageSize:PAGE_SIZE,tab,mode,search};
+ if(!ids.rows.length)return{orders:[],total,page,pages,pageSize:PAGE_SIZE,tab,mode,search,counts};
  const orderIds=ids.rows.map(row=>row.id);
  const details=await pool.query(detailedSql,[labId,orderIds]);
- return{orders:details.rows,total,page,pages,pageSize:PAGE_SIZE,tab,mode,search};
+ return{orders:details.rows,total,page,pages,pageSize:PAGE_SIZE,tab,mode,search,counts};
 }
 module.exports={pageLabOrders,conditions,PAGE_SIZE};

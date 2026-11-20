@@ -16,7 +16,7 @@ function patchModernIntake(source){
   "window.pbNativeStorage?api('/api/lab/manual-intake/preflight').then(check=>({...check,registered:check.allowed===true,isThisDevice:check.allowed===true})):cachedPrimary?Promise.resolve({registered:true,isThisDevice:true}):labOutboxPrimary()");
  replace('primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();',
   'if(!window.pbNativeStorage){primaryState=!!(primary.registered&&primary.isThisDevice);primaryCheckedAt=Date.now();}');
- replace("labOutboxBootstrap(/^\/lab\/album(?:s|[-/]|$)/.test(location.pathname)?'album':'print')",
+ replace("labOutboxBootstrap(/^\\/lab\\/album(?:s|[-/]|$)/.test(location.pathname)?'album':'print')",
   "window.pbNativeStorage?api('/api/lab/delegated-orders/bootstrap'+(albumMode?'':'?mode=print')):labOutboxBootstrap(albumMode?'album':'print')");
  // The native page already shows an immediate cancellable warmup dialog.
  replace('document.body.append(prep);prep.showModal();',

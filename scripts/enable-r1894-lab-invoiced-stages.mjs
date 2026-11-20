@@ -37,15 +37,24 @@ if(!ui.includes(marker)){
     return part.slice(0,opening+4)+fast+part.slice(opening+4);
   },'print ready handler');
 
-  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>{
-    const opening=part.indexOf('const Zt=await Me(');
-    const ending=opening<0?-1:part.indexOf(');',opening);
-    if(opening<0||ending<opening||ending-opening>260){console.error('[R1894 album stage anchor]',part.slice(0,1400));throw Error('R1894 album stage API call missing');}
-    const fast='if(nt==="ready"&&Zt.invoiceReused){await ye().catch(()=>{});await Gt(le,"ready").catch(()=>{});'+
-      'P("آلبوم #"+V(le.number)+" آماده تحویل شد؛ فاکتور قبلی محفوظ است");return}';
-    return part.slice(0,ending+2)+fast+part.slice(ending+2);
-  },'album stage handler');
-  ui+='\n'+marker+'\n';
+  // R1450 protects first-time physical downloads. For already-issued
+  // invoices, Ready/Delivered must not depend on a local directory.
+  ui=scoped(ui,'un=async le=>',',Cn=async',part=>
+    replaceOne(part,'!await pb1450AllowStage(le)',
+      '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
+      'Ready guard for issued invoices'),'R1450 print Ready guard');
+
+  ui=scoped(ui,'gn=async le=>',',Vn=async',part=>
+    replaceOne(part,'!await pb1450AllowStage(le)',
+      '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
+      'Delivered guard for issued invoices'),'R1450 delivery guard');
+
+  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>
+    replaceOne(part,'!await pb1450AllowStage(le)',
+      '!(nt!=="printing"&&await pb1894HasIssuedInvoice(le))&&!await pb1450AllowStage(le)',
+      'album Ready and Delivered guard'),'R1450 album stage guard');
+
+  ui+='\nasync function pb1894HasIssuedInvoice(le){if(le?.invoice_id)return true;try{const detail=await Me("/api/lab/orders/"+le.id);return Boolean(detail?.invoice?.id)}catch{return false}}\n'+marker+'\n';
   fs.writeFileSync(uiPath,ui);
 }
 

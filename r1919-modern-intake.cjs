@@ -32,6 +32,17 @@ function patchModernIntake(source){
   "/* R1919_MODERN_NATIVE_INTAKE: local-only manual entry never grants remote primary. */if(!window.pbNativeStorage&&primaryState===false){document.getElementById('pb1137LocalIntakeButton')?.remove();return;}");
  replace('if(primaryState===null&&provider.deviceId())checkPrimary();',
   'if(!window.pbNativeStorage&&primaryState===null&&provider?.deviceId?.())checkPrimary();');
+ // Keep the manual entry visible when the local storage bridge or the inner
+ // header has not yet appeared; submission remains capability-gated.
+ replace("if(!/^\\/lab(?:\\/|$)/.test(location.pathname)||!host||!provider){old?.remove();return;}",
+  "if(!/^\\/lab(?:\\/|$)/.test(location.pathname)||!host){old?.remove();return;}");
+ replace("const target=desktopQueue?(header||visibleFallback):host.querySelector('.ordersWorkspace');if(!target){old?.remove();return;}",
+  "const target=(desktopQueue?(header||visibleFallback):host.querySelector('.ordersWorkspace'))||host;");
+ replace('const provider=storage();let directory,bootstrap,loadError;',
+  "const provider=storage();let directory,bootstrap,loadError;if(!provider||typeof provider.root!=='function'||typeof provider.request!=='function')loadError=Error('اتصال ذخیره‌سازی برنامه هنوز آماده نیست؛ دوباره تلاش کنید.');");
+ replace(' try{\n  // The toolbar already checked this device.',
+  ' try{if(loadError)throw loadError;\n  // The toolbar already checked this device.');
+
  // Incomplete/pending native sync must NEVER delete source files of Cut photos.
  replace('   const moveResult=await window.pb1466IntakeMove.finish(targets);',
   '   const pendingNative=window.pbNativeStorage&&(result.desktopPending||result.localCommitted&&result.syncPending);\n   const moveResult=pendingNative?{moved:0,pending:true}:await window.pb1466IntakeMove.finish(targets);');

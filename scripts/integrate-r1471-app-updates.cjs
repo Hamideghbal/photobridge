@@ -1,7 +1,7 @@
 'use strict';const fs=require('node:fs'),path=require('node:path');
 function integrate(root,repo=path.resolve(__dirname,'..')){
  const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('R1471 native anchor changed');return s.replace(a,b)};
- for(const name of ['update-trust.cjs','app-update.cjs','app-update-main.cjs','create-update-release.cjs'])fs.copyFileSync(path.join(repo,'apps/lab-desktop',name),path.join(root,name));
+ for(const name of ['update-trust.cjs','app-update.cjs','post-exit-install.cjs','app-update-main.cjs','create-update-release.cjs'])fs.copyFileSync(path.join(repo,'apps/lab-desktop',name),path.join(root,name));
  const file=path.join(root,'main.cjs');let main=fs.readFileSync(file,'utf8');
  if(!main.includes('/* R1471 app updater */')){
   main=once(main,'let applyingUi=null;','let applyingUi=null;let programUpdates=null;');

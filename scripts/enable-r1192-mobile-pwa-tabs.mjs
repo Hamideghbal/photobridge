@@ -12,7 +12,7 @@ if(start<0||end<start)throw Error('[R1192] React lab queue switch missing');
 const current=react.slice(start,end);
 if(!current.includes('xt();R({direction:"forward",phase:"idle"')||current.includes('340')||current.includes('560'))
  throw Error('[R1192] unexpected legacy 900ms mobile tab wait');
-if(!react.includes('let le=Math.min(Be.length,24);Ge(le)'))
+if(!react.includes('let le=Math.min(Be.length,24);Ge(le)')&&!(react.includes('const Nt=Be,tt=')&&react.includes('pageSize:10,onPage:pb1921SetPage')))
  throw Error('[R1192] immediate lab photo-card batches missing');
 
 const motion='dist/web/photobridge-v904r100f27-header-calendar-motion.js';

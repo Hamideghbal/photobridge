@@ -19,7 +19,7 @@ if(start>=0&&end>start){
 const slow='x.useEffect(()=>{if(Ge(0),!Be.length)return;let le=0;const nt=window.setTimeout(()=>Ge(1),35),xt=window.setInterval(()=>{le+=1,Ge(Math.min(Be.length,le+1)),le+1>=Be.length&&window.clearInterval(xt)},105);return()=>{window.clearTimeout(nt),window.clearInterval(xt)}},[T,o,s,bt]);';
 const fast='x.useEffect(()=>{if(!Be.length){Ge(0);return}let le=Math.min(Be.length,24);Ge(le);let nt=0;const xt=()=>{le=Math.min(Be.length,le+24);Ge(le);if(le<Be.length)nt=requestAnimationFrame(xt)};if(le<Be.length)nt=requestAnimationFrame(xt);return()=>{if(nt)cancelAnimationFrame(nt)}},[T,o,s,bt]);';
 if(ui.includes(slow))ui=ui.replace(slow,fast);
-else if(!ui.includes(fast))throw Error('[R1190] lab list batches no longer match source');
+else if(!ui.includes(fast)&&!ui.includes('const Nt=Be,tt='))throw Error('[R1190] lab list batches no longer match source');
 fs.writeFileSync(appFile,ui);
 
 // Owner Store has a second Web Animations API per-content slide in the inline

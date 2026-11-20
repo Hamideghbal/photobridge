@@ -21,8 +21,11 @@ test('lab mobile, desktop and PWA all switch status without the legacy 900ms tim
  }
 });
 test('lab order cards render immediately in batches instead of one per 105ms',()=>{
- assert(react.includes('let le=Math.min(Be.length,24);Ge(le)'));
- assert(react.includes('le=Math.min(Be.length,le+24)'));
+ const tenPerPage=react.includes('const Nt=Be,tt=')&&react.includes('pageSize:10,onPage:pb1921SetPage');
+ if(!tenPerPage){
+  assert(react.includes('let le=Math.min(Be.length,24);Ge(le)'));
+  assert(react.includes('le=Math.min(Be.length,le+24)'));
+ }else assert(react.includes('new URLSearchParams({tab:T,page:String(pb1921Page)'));
  assert(!react.includes('const nt=window.setTimeout(()=>Ge(1),35)'));
 });
 test('mobile queue animations are canceled in all phases',()=>{

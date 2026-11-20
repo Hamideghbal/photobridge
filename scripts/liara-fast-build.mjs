@@ -1429,3 +1429,7 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// Last: all legacy queue/album/frontend writers have completed; apply SQL-side
+// paging and reversible historical order visibility without changing finances.
+await deployStep('./enable-r1921-lab-queue.mjs');

@@ -1,0 +1,35 @@
+name: R1921 lab queue regression
+on:
+  push:
+    branches:
+      - fix/r1921-lab-queue-history-pagination
+  pull_request:
+    paths:
+      - 'dist/api/lab-order-queue-page.js'
+      - 'dist/api/server.js'
+      - 'dist/web/assets/index-UIRefine-v655-r84.js'
+      - 'scripts/test-r1921-lab-queue.mjs'
+permissions:
+  contents: read
+jobs:
+  queue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse current server and UI assets
+        run: |
+          node --check dist/api/server.js
+          node --check dist/api/lab-order-queue-page.js
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+      - name: Install production build dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run production fast-build transformation chain
+        run: npm run build
+      - name: Ensure final Liara build retains R1921 features
+        run: |
+          node --check dist/api/server.js
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+          node --test scripts/test-r1921-lab-queue.mjs

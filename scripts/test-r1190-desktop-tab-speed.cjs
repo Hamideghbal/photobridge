@@ -25,9 +25,13 @@ test('lab order tabs have no 340ms exit plus 560ms entry timer',async()=>{
 test('order card list starts with a batch rather than one card every 105ms',()=>{
  assert(!lab.includes('const nt=window.setTimeout(()=>Ge(1),35)'));
  assert(!lab.includes('Ge(Math.min(Be.length,le+1))'));
- assert(lab.includes('let le=Math.min(Be.length,24);Ge(le)'));
- assert(lab.includes('le=Math.min(Be.length,le+24)'));
- assert(lab.includes('cancelAnimationFrame(nt)'));
+ const serverPaged=lab.includes('const Nt=Be,tt=')&&lab.includes('pageSize:10,onPage:pb1921SetPage');
+ if(!serverPaged){
+  assert(lab.includes('let le=Math.min(Be.length,24);Ge(le)'));
+  assert(lab.includes('le=Math.min(Be.length,le+24)'));
+  assert(lab.includes('cancelAnimationFrame(nt)'));
+ }else assert(lab.includes('new URLSearchParams({tab:T,page:String(pb1921Page)'));
+
 });
 test('store owner content no longer receives separate translated Web Animations on tab clicks',()=>{
  const at=store.indexOf('<script id="pb918SharedTabMotion">');

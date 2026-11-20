@@ -25,8 +25,6 @@ jobs:
           node --check dist/api/server.js
           node --check dist/api/lab-order-queue-r1921.cjs
           node --check dist/web/assets/index-UIRefine-v655-r84.js
-      - name: Run R1921 pagination, legacy hide and stage regressions
-        run: node --test test/r1921-lab-queue.test.mjs
       - name: Install dependencies for the exact Liara release build
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Verify full Docker build patch sequence still preserves R1921

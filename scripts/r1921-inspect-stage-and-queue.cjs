@@ -1,11 +1,8 @@
 'use strict';const fs=require('node:fs');
-for(const [file,needles] of [
- ['dist/web/assets/index-UIRefine-v655-r84.js',['async function Tt(','function Tt(','const Tt=','onClick:()=>Tt(','setInterval(refresh,3000)','pb1753VisibleLabOrders','data.orders||[]','ready_print','labOrderCard']],
- ['dist/api/server.js',["if (labOrder && req.method === 'PATCH')","if (labOrder && req.method === 'DELETE')","'/api/lab/orders'","'/api/lab/archive'","order_status_events","labOrders"]]
- ]){
- const s=fs.readFileSync(file,'utf8');console.log('SOURCE '+file+' '+s.length);
- for(const needle of needles){const matches=[];let i=-1;while((i=s.indexOf(needle,i+1))>=0){matches.push(i);if(matches.length>=4)break;}
- console.log('NEEDLE '+JSON.stringify(needle)+' matches '+matches.length);
- for(const i of matches)console.log('EXCERPT '+JSON.stringify(s.slice(Math.max(0,i-350),Math.min(s.length,i+1350))));
- }
-}
+const ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),server=fs.readFileSync('dist/api/server.js','utf8');
+function snippet(label,s,token,before=1500,after=5200){const i=s.lastIndexOf(token);console.log('=== '+label+' pos='+i+' ===');console.log(JSON.stringify(i<0?'MISSING':s.slice(Math.max(0,i-before),i+after)));}
+snippet('stage PATCH with local successor',ui,'It=async(le,nt,xt)=>',900,5200);
+snippet('queue render pagination context',ui,'queuePageTurn ${Xe.direction}',3700,3600);
+snippet('queue API use',ui,'Me("/api/lab/orders"',1400,3000);
+snippet('server PATCH stage transaction',server,"if (labOrder && req.method === 'PATCH')",300,4500);
+snippet('server order GET list',server,"if (req.method === 'GET' && url.pathname === '/api/lab/orders')",0,5500);

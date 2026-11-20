@@ -3,21 +3,21 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {execFileSync}=require('node:child_process'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),vm=require('node:vm');
 const source=fs.readFileSync('scripts/r1550-order-storage.js.txt','utf8');
 
-test('new customer and coworker paths are exact uppercase English labels',()=>{
+test('new customer and coworker paths use exact-case Latin names',()=>{
  const ctx={window:{pbLabLocalIntakeStorage:{}},Map,Promise,Date,pb1450Root:async()=>null};
  vm.createContext(ctx);vm.runInContext(source,ctx);
  const fn=ctx.pb1664StorageBucket;
  for(const order of [{source:'walkin'},{source:'WALK_IN'},{source:'manual_invoice'},{walkin_customer_mobile:'09123456789'}])
-   assert.equal(fn(order),'MOSHTARI');
+   assert.equal(fn(order),'Moshtari');
  for(const order of [{source:'print'},{source:'web',mode:'album'},{source:'photographer'}])
-   assert.equal(fn(order),'HAMKAR');
+   assert.equal(fn(order),'Hamkar');
  const old=ctx.pb1664PreviousStorageBuckets;
- assert.deepEqual(Array.from(old({source:'walkin'})),['moshtari','Moshtari']);
- assert.deepEqual(Array.from(old({source:'web'})),['hamkar','Hamkar']);
+ assert.deepEqual(Array.from(old({source:'walkin'})),['MOSHTARI','moshtari']);
+ assert.deepEqual(Array.from(old({source:'web'})),['HAMKAR','hamkar']);
  assert.equal(ctx.pb1664LegacyStorageBucket({source:'walkin'}),'مشتریان');
  assert.equal(ctx.pb1664LegacyStorageBucket({source:'print'}),'همکاران');
  assert.match(source,/\[pb1664StorageBucket\(detail\.order\),day,saved\.customer,Uy\(detail,file\)\]/);
- assert.match(source,/if\(old\)return\{root,dir:pb1550Decode\(old\.dir\),day:old\.day\}/);
+ assert.match(source,/if\(old\)\{const restored=await pb1936ReviveTarget\(root,old,saved,detail,file\);return\{root,\.\.\.restored\};\}/);
 });
 
 test('actual delivered web and native Lab bundles both have the new folder layout',()=>{
@@ -25,7 +25,7 @@ test('actual delivered web and native Lab bundles both have the new folder layou
  for(const dir of ['dist/web','dist/web/lab-desktop-ui']){
    const js=fs.readFileSync(dir+'/assets/index-UIRefine-v655-r84.js','utf8');
    const section=js.slice(js.lastIndexOf('function pb1664StorageBucket(order){'),js.lastIndexOf('async function pb1550Probe(root,detail){'));
-   assert(section.includes("?'MOSHTARI':'HAMKAR'"),dir+' must have uppercase labels');
+   assert(section.includes("?'Moshtari':'Hamkar'"),dir+' must have exact requested Hamkar/Moshtari labels');
    assert(section.includes('function pb1664PreviousStorageBuckets(order)'),dir+' must preserve legacy labels');
    assert(js.includes('for(const name of [pb1664StorageBucket(detail.order),day,saved.customer,Uy(detail,file)])'));
    assert(fs.readFileSync(dir+'/index.html','utf8').includes('&storageFolders=r1723'));

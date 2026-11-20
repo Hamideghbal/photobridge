@@ -1,0 +1,29 @@
+name: Verify R1921 Lab queue
+on:
+  push:
+    branches:
+      - fix/r1921-lab-queue-stages-pagination-legacy-hide
+  pull_request:
+    paths:
+      - 'dist/api/server.js'
+      - 'dist/api/lab-order-queue-r1921.cjs'
+      - 'dist/web/assets/index-UIRefine-v655-r84.js'
+      - 'migrations/198_lab_order_queue_hidden.sql'
+      - 'test/r1921-lab-queue.test.mjs'
+      - '.github/workflows/verify-r1921-lab-queue.yml'
+jobs:
+  queue-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check the real deployed backend and minified frontend
+        run: |
+          node --check dist/api/server.js
+          node --check dist/api/lab-order-queue-r1921.cjs
+          node --check dist/web/assets/index-UIRefine-v655-r84.js
+      - name: Run R1921 pagination, legacy hide and stage regressions
+        run: node --test test/r1921-lab-queue.test.mjs

@@ -35,6 +35,14 @@ test('R1894: issued album invoices can progress without the original folder',()=
   assert.equal(ready(order,'binding'),true);
   assert.equal(enabled(order,'ready'),true);
 });
+test('R1894: no-print merchandise retains its separate workflow despite an invoice',()=>{
+  const rn=vm.runInNewContext('('+field('rn=(le,nt)=>',',en=(le,nt)=>')+')',{
+    o:'print',pb1798NoPrintOrder:()=>true,kn:()=>false,Pn:()=>0
+  });
+  const product={id:'no-photo',invoice_id:'invoice',status:'received'};
+  assert.equal(rn(product,'download'),false);
+  assert.equal(rn(product,'received'),true);
+});
 test('R1894: uninvoiced undownloaded print still requires original receive/download step',()=>{
   const order={status:'received',status_history:[],downloaded_at:null,invoice_id:null};
   const ready=stageFn('print'),enabled=enabledFn('print');

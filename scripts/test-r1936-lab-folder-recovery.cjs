@@ -39,7 +39,7 @@ function harness({active=true,hasSaved=true,allowed=true,legacy=false}={}){
    pb1550DefaultRoot:async()=>root,pb1550Probe:async()=>null,
    Vs:async()=>allowed,ai:()=>true,Hu:async()=>({registered:true,isThisDevice:true}),
    yc:()=>({}),Tg:()=> 'platform-admin',Uy:()=> '10-15-luster-order-953',
-   Ic:()=> '1405-08-30',pb1450Missing:e=>e.code==='ENOENT',
+   Ic:()=> '1405-08-30',Ya:String,pb1450Missing:e=>e.code==='ENOENT',
  };
  vm.createContext(ctx);
  vm.runInContext(bucketFns+'\n'+repairFns+'\n'+rootFn+'\n'+targetFn+

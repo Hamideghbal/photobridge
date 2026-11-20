@@ -1,5 +1,5 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),vm=require('node:vm');
 const {patchOfflineIntake}=require('../offline-ui.cjs');
 const {patchModernIntake}=require('../r1919-modern-intake.cjs');
 const site='https://photobridge.ir/lab-desktop-ui/photobridge-r1137-lab-local-intake.js';
@@ -45,4 +45,26 @@ test('R1919: when offline or local-only, native save never invokes browser Index
 test('R1919: unknown source and obsolete two-button source are never rewritten',()=>{
  assert.throws(()=>patchModernIntake('window.hello=true'),/modern_ui_incompatible/);
  assert.throws(()=>patchModernIntake("const x='pb1504ActionToggle'; const labOutboxBootstrap=true;"),/anchor_mismatch/);
+});
+
+test('R1919: actual current-site button survives delayed native bridge and header without enabling remote primary',async()=>{
+ const transformed=patchOfflineIntake(await original());
+ const start=transformed.indexOf('function mount(){'),end=transformed.indexOf('let primaryState=',start);
+ assert(start>0&&end>start);
+ function mount(path){
+  const added=[];
+  const host={isConnected:true,getClientRects:()=>[{}],querySelector:()=>null,append(button){added.push(button);button.parentElement=this;}};
+  const document={
+   querySelector:selector=>selector==='.labRoleWorkspace main'?host:null,
+   getElementById:()=>null
+  };
+  const window={pbNativeStorage:{},matchMedia:()=>({matches:true})};
+  vm.runInNewContext(transformed.slice(start,end)+'\nmount();',
+   {document,window,location:{pathname:path},storage:()=>null,node:(tag,text,cls)=>({tag,textContent:text,cls}),primaryState:false,open:()=>{throw Error('do not open during mount')}},
+   {timeout:600});
+  return added;
+ }
+ assert.equal(mount('/lab/orders').length,1);
+ assert.equal(mount('/lab/orders')[0].textContent,'ثبت سفارش عکس حضوری');
+ assert.equal(mount('/store/orders').length,0);
 });

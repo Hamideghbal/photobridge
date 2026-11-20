@@ -54,7 +54,8 @@ function shell(portal,mobileScripts){
    assert.equal(await frame.locator('.calDay').count(),42);
    assert.equal(page.frames().length,2);
    await button.click();
-   await frame.locator('nav button[data-view="customers"]').waitFor();
+   await frame.locator('#customers').waitFor({state:'visible'});
+   assert(await frame.locator('#nav').isHidden(),'embedded mobile CRM keeps its duplicate internal navigation hidden');
    assert(await button.locator('em').isVisible());
   }else{
    await frame.locator('nav button[data-view="calendar"]').click();

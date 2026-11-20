@@ -11,6 +11,16 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  const canRead=['/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/summary','/api/lab/finance/ledger','/api/lab/finance/customer-statement','/api/lab/delegated-orders/bootstrap'].includes(p)||/^\/api\/lab\/(orders\/[^/]+(?:\/invoice-pricing)?|delegated-customers\/[^/]+\/account-summary)$/.test(p);
  const invoiceRoute=raw.match(/^\/api\/lab\/invoices\/([^/]+)\/(download|preview|pdf-upload|pdf-complete)$/),printRoute=raw.match(/^\/desktop\/local-invoices\/([^/]+)\/(pdf|print)$/);
  const businessWrite=!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(p);if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute&&!businessWrite)return false;
+ // An online local-only walk-in must use an actual writable folder on THIS
+ // authenticated machine. This is not a download-primary registration bypass.
+ if(req.method==='POST'&&p==='/api/lab/delegated-orders'&&b.localOnly===true&&!offline&&
+   store.get('manualIntakeFallback:'+lab+':'+store.get('deviceId'))===true){
+  let access;try{access=await nativeStorage?.status();same();}catch(error){same();}
+  if(access?.permission!=='granted'||!access.root){
+   json(res,409,{error:'local_storage_unavailable',message:'مسیر ذخیرهٔ عکس‌های حضوری روی این دستگاه قابل نوشتن نیست.'});
+   return true;
+  }
+ }
  store.set('localBusinessActive:'+store.get('labId'),true);
  if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
  engine.state();

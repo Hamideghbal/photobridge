@@ -61,6 +61,11 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
         if(req.method==='PATCH'&&/^\/api\/lab\/order-files\/[0-9a-f-]+\/print-settings$/i.test(url.pathname))return json(res,409,{error:'order_details_read_only',message:'جزئیات ثبت‌شدهٔ سفارش فقط قابل مشاهده است.'});
+        // Local walk-in preflight: never pretend this PC is a remote download primary.
+        if(url.pathname==='/api/lab/manual-intake/preflight'&&req.method==='GET'){
+          const result=await require('./manual-intake-preflight.cjs').manualIntakePreflight({store,nativeStorage,request:connectionOffline()?async()=>{throw Error('offline')}:request});
+          return json(res,result.allowed?200:result.status||403,result);
+        }
         if(url.pathname==='/api/lab/events'&&req.method==='GET'){if(connectionOffline())return json(res,503,{error:'internet_offline'});await require('./live-events-host.cjs').streamLabEvents({req,res,store,request,lab:store.get('labId')});return;}
         if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
         if(!exempt(req.method,req.url)){const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));if(!access.allowed)return json(res,403,access)}
@@ -163,7 +168,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(path.extname(file)==='.css')return res.end(require('./native-font.cjs').patchNativeFontCss(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
-        if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
+        /* R1918_NATIVE_INTAKE_SAFE_SERVE */if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./r1918-safeserve.cjs').serve(fs.readFileSync(file,'utf8'),require('./offline-ui.cjs').patchOfflineIntake));
         if(name==='assets/index-UIRefine-v655-r84.js'){const source=fs.readFileSync(file,'utf8'),proof=require('./ui-diagnostics.cjs').sourceMarker(source,require('./package.json').version);return res.end('window.__PB_LAB104_NATIVE__='+JSON.stringify(require('./lab104-candidate.cjs').pinnedOnly===true&&['1.0.104','1.0.105'].includes(require('./package.json').version))+';\n'+'window.__PB_NATIVE_SOURCE_PROOF__='+JSON.stringify(proof)+';\n'+require('./storage-bundle.cjs').patchStorageBundle(source));}
         return fs.createReadStream(file).pipe(res);
       }

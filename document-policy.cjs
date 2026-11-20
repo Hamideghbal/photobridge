@@ -110,7 +110,12 @@ function routePolicy(store, method, url, b, offline) {
     );
   const exclusive =
     target?.origin_offline && !shared(target) && !target.legacyUnclassified;
-  if (exclusive || (offline && creation)) {
+  // An explicitly local-only walk-in order may start with WAN connected.
+  // It is a distinct, account-scoped local capability approved by the native host.
+  const manualLocalCreation = p === "/api/lab/delegated-orders" &&
+    b.localOnly === true && store.get("manualIntakeFallback:" + store.get("labId") + ":" + store.get("deviceId")) === true;
+  // A confirmed online primary keeps its original server-authoritative flow.
+  if (exclusive || (offline && creation) || manualLocalCreation) {
     if (
       (p.includes("customers") && Number(b.initialDebt || 0)) ||
       (p === "/api/lab/finance/payments" && !b.invoiceId)

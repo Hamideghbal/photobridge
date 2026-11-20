@@ -25,7 +25,7 @@ test('R1664 routes only walk-in/direct customers into customer folder, photograp
 test('R1664 new storage layout includes category, date, named party and order-size subfolder',()=>{
  assert.match(code,/\[pb1664StorageBucket\(detail\.order\),day,saved\.customer,Uy\(detail,file\)\]/);
  assert.match(code,/for\(const prefix of \[\[pb1664StorageBucket\(detail\.order\),day,customer\],\.\.\.pb1664PreviousStorageBuckets\(detail\.order\)\.map\(name=>\[name,day,customer\]\),\[pb1664LegacyStorageBucket\(detail\.order\),day,customer\],\[day,customer\]\]\)/);
- assert.match(code,/if\(old\)\{const restored=await pb1936ReviveTarget\(root,old,saved,detail,file\);return\{root,\.\.\.restored\};\}/);
+ assert.match(code,/if\(old\)\{\s*const restored=await pb1936ReviveTarget\(root,old,saved,detail,file\);[\s\S]*?return\{root,\.\.\.restored\};/);
 });
 test('R1664 browser and native installs use the same guarded source without migrating old orders',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){

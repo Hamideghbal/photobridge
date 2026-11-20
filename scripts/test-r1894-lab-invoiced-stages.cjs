@@ -113,7 +113,7 @@ test('R1894: frozen Windows Lab UI is patched and its release manifest hashes ma
   const hash=require('node:crypto').createHash;
   assert.match(js.toString('utf8'),/pb1894HasIssuedInvoice\(le\)/);
   assert.match(js.toString('utf8'),/pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
-  assert.match(html.toString('utf8'),/labStage=r1894/);
+  assert.match(html.toString('utf8'),/labStage=r1897/);
   for(const [name,bytes] of [['assets/index-UIRefine-v655-r84.js',js],['index.html',html]]){
     assert.equal(manifest.files.find(row=>row.name===name)?.sha256,hash('sha256').update(bytes).digest('hex'));
   }
@@ -130,5 +130,16 @@ test('R1894: existing server invoice contract remains unchanged and audit is pre
   const album=api.slice(api.indexOf("if (labAlbumStage && req.method === 'PUT')"),api.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/walkin')",api.indexOf("if (labAlbumStage && req.method === 'PUT')")));
   assert.match(album,/invoice|invoice_required/);
   assert.match(album,/album_stage/);
-  assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labStage=r1894/);
+  assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labStage=r1897/);
+});
+
+
+test('R1897: HTML imports the newly revisioned module on both website and frozen Lab Windows',()=>{
+  for(const root of ['dist/web','dist/web/lab-desktop-ui']) {
+    const html=fs.readFileSync(root+'/index.html','utf8');
+    const links=[...html.matchAll(/index-UIRefine-v655-r84\.js\?[^"'\s]*/g)].map(m=>m[0]);
+    assert.equal(links.length,1,root+' has a single current Lab JS import');
+    assert.match(links[0],/[?&]labStage=r1897(?:&|$)/);
+    assert.doesNotMatch(links[0],/labStage=r1894/);
+  }
 });

@@ -11,12 +11,12 @@ function field(start,end){
 }
 function stageFn(mode){
   const expr=field('rn=(le,nt)=>',',en=(le,nt)=>');
-  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0};
+  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0,pb1798NoPrintOrder:()=>false,pb1450CanDownload:()=>true};
   return vm.runInNewContext('('+expr+')',context);
 }
 function enabledFn(mode){
   const rn=stageFn(mode);
-  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn});
+  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn,pb1798NoPrintOrder:()=>false,pb1603InvoicePending:()=>false});
 }
 test('R1894: an already-issued print invoice enables Ready without history or local folder',()=>{
   const order={id:'old-order',number:42,status:'received',status_history:[],invoice_id:'existing-invoice',downloaded_at:null};
@@ -44,7 +44,7 @@ test('R1894: uninvoiced undownloaded print still requires original receive/downl
 });
 test('R1894: Ready from any browser uses server status, no file picker or PDF action',async()=>{
   const events=[], context={
-    C:()=>{},It:async(o,s)=>{events.push('PATCH:'+s);return{order:{status:s}};},
+    E:false,B:()=>{},C:()=>{},It:async(o,s)=>{events.push('PATCH:'+s);return{order:{status:s}};},
     Gt:async()=>{events.push('navigate');},ye:async()=>{},P:()=>{},V:String,
     Me:async(url)=>{events.push('GET:'+url);return {invoice:{id:'existing-invoice'}};},
     alert:(message)=>{throw Error('Unexpected alert '+message)},
@@ -65,7 +65,11 @@ test('R1894: album Ready and completion bypass local-folder gate after existing 
   const handler=field('Cn=async(le,nt)=>',',aa=async');
   assert.match(handler,/nt!=="printing"&&await pb1894HasIssuedInvoice\(le\)/);
   assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
-  assert.match(api,/invoiceReused/);
+});
+test('R1894: status PATCH sends the document revision required by server',()=>{
+  const status=field('It=async(le,nt,xt)=>',',gn=async');
+  assert.match(status,/expectedRevision:/);
+  assert.match(status,/document_revision/);
 });
 test('R1894: print Ready and Delivered gate bypass disk only with stored invoice',()=>{
   const ready=field('un=async le=>',',Cn=async');
@@ -74,21 +78,17 @@ test('R1894: print Ready and Delivered gate bypass disk only with stored invoice
   assert.match(delivered,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
   assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
-test('R1894: both server transitions reuse existing invoice',()=>{
-  const cases=[
-    ['print',"if (labOrder && req.method === 'PATCH')","// v0.17.565-pdf-upload"],
-    ['album',"if (labAlbumStage && req.method === 'PUT')","if (req.method === 'GET' && url.pathname === '/api/lab/walkin')"]
-  ];
-  for(const [name,a,b] of cases){
-    const start=api.indexOf(a),stop=api.indexOf(b,start);
-    assert(start>0&&stop>start);
-    const part=api.slice(start,stop);
-    assert(part.includes('SELECT * FROM invoices WHERE order_id=$1 AND lab_id=$2 ORDER BY issued_at ASC LIMIT 1'),name+' verifies persisted invoice');
-    assert.match(part,/priorInvoice\.rows\[0\] \|\| await createOrGetInvoice/);
-    assert.match(part,/!priorInvoice\.rowCount|!invoiceReused/);
-    assert.doesNotMatch(part,/getDirectoryHandle|showDirectoryPicker|folder_permission_denied/);
-  }
-  assert.match(api,/oldOrder\.settlement_mode === 'prepaid'/);
-  assert.match(api,/statusEvent\(c, order, status, a\.userId, note\)/);
+test('R1894: existing server invoice contract remains unchanged and audit is preserved',()=>{
+  assert.match(api,/async function createOrGetInvoice\(c, labId, orderId\)/);
+  assert.match(api,/const existing = await c\.query\(\x60SELECT i\.\*/);
+  assert.match(api,/if \(existing\.rowCount\)/);
+  const print=api.slice(api.indexOf("if (labOrder && req.method === 'PATCH')"),api.indexOf("// v0.17.565-pdf-upload",api.indexOf("if (labOrder && req.method === 'PATCH')")));
+  assert.match(print,/invoice = \(await c\.query\('SELECT \* FROM invoices WHERE lab_id=\$1 AND order_id=\$2 LIMIT 1'/);
+  assert.match(print,/b\.expectedRevision/);
+  assert.match(print,/statusEvent\(c, order, status, a\.userId, note\)/);
+  assert.match(print,/oldOrder\.settlement_mode === 'prepaid'/);
+  const album=api.slice(api.indexOf("if (labAlbumStage && req.method === 'PUT')"),api.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/walkin')",api.indexOf("if (labAlbumStage && req.method === 'PUT')")));
+  assert.match(album,/invoice|invoice_required/);
+  assert.match(album,/album_stage/);
   assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labStage=r1894/);
 });

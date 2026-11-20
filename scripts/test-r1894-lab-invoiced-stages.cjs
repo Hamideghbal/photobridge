@@ -25,7 +25,7 @@ test('R1894: an already-issued print invoice enables Ready without history or lo
   assert.equal(ready(order,'print'),true);
   assert.equal(ready(order,'ready'),false);
   assert.equal(enabled(order,'ready'),true);
-  assert.equal(enabled(order,'download'),false);
+  assert.equal(enabled(order,'download'),true,'optional explicit re-download remains accessible, but Ready never invokes it');
   assert.equal(enabled(order,'print'),false);
 });
 test('R1894: issued album invoices can progress without the original folder',()=>{

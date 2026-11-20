@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { cleanIncident, classifyIncident, createErrorMonitor } from './r1850-error-monitor.mjs';
@@ -24,3 +24,30 @@ assert.equal(classifyIncident({code:'QuotaExceeded'}).channel,'storage_capacity'
 test('server and browser report of the same request do not send duplicate alerts',async t=>{let sends=0;const {monitor}=await setup(t,{alert:async()=>{sends++}});await monitor.record({source:'server',code:'57P03',status:500,reference:'PB-123'});await tick();await monitor.record({source:'api',code:'http_500',status:500,reference:'PB-123'});await tick();assert.equal(sends,1);assert.equal((await monitor.list()).length,1);assert.equal((await monitor.list())[0].count,1);});
 
 test('database outage keeps local incident and retries its durable mirror later',async t=>{let fail=true,copies=[];const {monitor}=await setup(t,{persistExternal:async row=>{if(fail)throw Object.assign(Error('db_down'),{code:'57P03'});copies.push(row)}});await monitor.record({source:'server',code:'57P03'});await monitor.sync();assert.equal(copies.length,0);assert.equal((await monitor.list()).length,1);fail=false;await monitor.sync();assert.equal(copies.length,1);assert.equal(copies[0].code,'57P03');});
+
+test('recreates a missing monitor directory before persisting a new report', async t=>{
+  const {monitor,directory}=await setup(t);
+  await monitor.list();
+  await rm(directory,{recursive:true,force:true});
+  await monitor.record({source:'server',code:'directory_restored'});
+  await monitor.flush();
+  assert.match(await readFile(path.join(directory,'incidents.jsonl'),'utf8'),/directory_restored/);
+});
+
+test('retains unsaved reports after write failure and persists them on retry', async t=>{
+  const failures=[];
+  const {monitor,directory}=await setup(t,{log:{error:(...args)=>failures.push(args)}});
+  await monitor.list();
+  await rm(directory,{recursive:true,force:true});
+  await writeFile(directory,'temporary-blocker');
+  await monitor.record({source:'server',code:'first_unwritten'});
+  await monitor.flush();
+  assert(failures.some(row=>row[0]==='[error-monitor] persistence failed'));
+  await rm(directory,{force:true});
+  await mkdir(directory,{recursive:true});
+  await monitor.record({source:'server',code:'second_written'});
+  await monitor.flush();
+  const saved=(await readFile(path.join(directory,'incidents.jsonl'),'utf8')).split('\n').filter(Boolean).map(JSON.parse);
+  assert(saved.some(row=>row.code==='first_unwritten'));
+  assert(saved.some(row=>row.code==='second_written'));
+});

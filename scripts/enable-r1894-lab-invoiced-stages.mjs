@@ -37,10 +37,14 @@ if(!ui.includes(marker)){
     return part.slice(0,opening+4)+fast+part.slice(opening+4);
   },'print ready handler');
 
-  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>
-    replaceOne(part,'nt==="ready"&&Zt.invoice){',
-      'nt==="ready"&&Zt.invoice&&!Zt.invoiceReused){',
-      'album existing PDF remains untouched'),'album stage handler');
+  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>{
+    const opening=part.indexOf('const Zt=await Me(');
+    const ending=opening<0?-1:part.indexOf(');',opening);
+    if(opening<0||ending<opening||ending-opening>260)throw Error('R1894 album stage API call missing');
+    const fast='if(nt==="ready"&&Zt.invoiceReused){await ye().catch(()=>{});await Gt(le,"ready").catch(()=>{});'+
+      'P("آلبوم #"+V(le.number)+" آماده تحویل شد؛ فاکتور قبلی محفوظ است");return}';
+    return part.slice(0,ending+2)+fast+part.slice(ending+2);
+  },'album stage handler');
   ui+='\n'+marker+'\n';
   fs.writeFileSync(uiPath,ui);
 }

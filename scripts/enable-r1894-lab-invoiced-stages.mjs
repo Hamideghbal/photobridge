@@ -23,6 +23,15 @@ function scoped(text,from,to,edit,label){
   return text.slice(0,start)+edit(text.slice(start,end))+text.slice(end);
 }
 if(!ui.includes(marker)){
+  // The backend requires a current document revision. Any mobile/browser PATCH
+  // must preserve the optimistic concurrency contract; do not bypass it.
+  ui=scoped(ui,'It=async(le,nt,xt)=>',',gn=async',part=>{
+    if(part.includes('expectedRevision:'))return part;
+    return replaceOne(part,'body:JSON.stringify({status:nt,note:xt||null})',
+      'body:JSON.stringify({status:nt,note:xt||null,expectedRevision:le.document_revision})',
+      'server document revision in status PATCH');
+  },'status PATCH contract');
+
   ui=scoped(ui,'rn=(le,nt)=>',',en=(le,nt)=>',part=>
     replaceOne(part,'rn=(le,nt)=>{',
       'rn=(le,nt)=>{if(le&&le.invoice_id&&(nt==="download"||nt==="print"||o==="album"&&(nt==="download_print"||nt==="binding")))return!0;',

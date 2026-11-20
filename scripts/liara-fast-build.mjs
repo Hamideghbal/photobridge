@@ -1434,7 +1434,13 @@ runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-downlo
 await deployStep('./enable-r1894-lab-invoiced-stages.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1894-lab-invoiced-stages.cjs'],{stdio:'inherit'});
 
+// R1936: native live order read bypasses cache for online cross-device stage updates.
+// Run before R1897, which must regenerate compressed files and frozen manifest.
+await deployStep('./enable-r1936-native-live-order-status.mjs');
+
 // R1897: R1845/PB_PERF_FIX precompressed assets were generated before R1894.
 // Always refresh the final .br/.gz bytes and bump the immutable JS URL *last*.
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
+
+runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'],{stdio:'inherit'});

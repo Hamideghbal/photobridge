@@ -14,7 +14,7 @@ on:
 jobs:
   queue-regressions:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,3 +27,7 @@ jobs:
           node --check dist/web/assets/index-UIRefine-v655-r84.js
       - name: Run R1921 pagination, legacy hide and stage regressions
         run: node --test test/r1921-lab-queue.test.mjs
+      - name: Install dependencies for the exact Liara release build
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify full Docker build patch sequence still preserves R1921
+        run: node --expose-gc scripts/liara-fast-build.mjs

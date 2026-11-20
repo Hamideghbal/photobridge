@@ -31,7 +31,10 @@ function copyPinnedUi({source,pinFile,staging,origin}){
 async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://photobridge.ir',directory=path.join(root,'runtime'),offline=process.env.PB_LAB_PREPARE_OFFLINE==='1',log=console.log,pinnedDirectory=path.join(root,'verified-ui'),pinFile=path.join(root,'verified-ui-pin.json'),refresh=process.env.PB_LAB_REFRESH_UI==='1'}={}){
  // R1919 release guard: never silently replace the current on-site copy/cut
  // photo chips with the frozen legacy dual-button UI.
- const requireCurrent=process.env.PB_LAB_REQUIRE_CURRENT_INTAKE==='1';
+ const candidateVersion=require('./package.json').version;
+ const parts=String(candidateVersion).split('.').map(Number);
+ const testCandidateOrNewer=parts.length===3&&parts.every(Number.isInteger)&&(parts[0]>1||parts[0]===1&&(parts[1]>0||parts[1]===0&&parts[2]>=107));
+ const requireCurrent=testCandidateOrNewer||process.env.PB_LAB_REQUIRE_CURRENT_INTAKE==='1';
  if(requireCurrent&&!refresh)throw Error('r1919_current_intake_requires_fresh_verified_site_manifest');
  const staging=directory+'.staging-'+process.pid;
  fs.rmSync(staging,{recursive:true,force:true});fs.mkdirSync(staging,{recursive:true});

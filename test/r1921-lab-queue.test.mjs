@@ -63,3 +63,22 @@ test('R1921: backend keeps legacy callers but exposes protected paged + soft-hid
  assert(migration.includes('PRIMARY KEY (lab_id, order_id)'));
  assert(!migration.includes('DELETE FROM invoices'));
 });
+
+test('R1921: an invoiced downloaded print or album order can advance despite renamed or missing local folder',()=>{
+ const web=fs.readFileSync(new URL('../dist/web/assets/index-UIRefine-v655-r84.js',import.meta.url),'utf8');
+ assert(web.includes('nt==="ready"&&(rn(le,"print")||!!le.downloaded_at&&!!le.invoice_id)'));
+ assert(web.includes('nt==="ready"&&(rn(le,"binding")||!!le.downloaded_at&&!!le.invoice_id)'));
+ assert(web.includes('if(Zt.invoice.pdf_ready===true)'));
+ assert(web.includes('Zt.invoice&&Zt.invoice.pdf_ready!==true'));
+ assert(web.includes('local invoice folder unavailable; cloud invoice/status preserved'));
+ assert(web.includes('album PDF local folder unavailable; status remains saved'));
+ const server=fs.readFileSync(new URL('../dist/api/server.js',import.meta.url),'utf8');
+ const i=server.indexOf("if (labOrder && req.method === 'PATCH')");
+ const e=server.indexOf('const labInvoicePdfUpload =',i);
+ assert(i>0&&e>i);
+ const stage=server.slice(i,e);
+ assert(stage.includes("await statusEvent(c, order, status"));
+ assert(stage.includes("await c.query('COMMIT')"));
+ assert(!stage.includes('folder_not_found'));
+ assert(!stage.includes('nativeStorage'));
+});

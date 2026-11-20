@@ -28,12 +28,14 @@ if(!ui.includes(marker)){
       'rn=(le,nt)=>{if(le&&le.invoice_id&&(nt==="download"||nt==="print"||o==="album"&&(nt==="download_print"||nt==="binding")))return!0;',
       'issued-invoice stage eligibility'),'stage predicate');
 
-  ui=scoped(ui,'un=async le=>',',Cn=async',part=>
-    replaceOne(part,'try{if(nt){',
-      'try{const pb1894ExistingInvoice=le.invoice_id||(await Me("/api/lab/orders/"+le.id).then(v=>v.invoice&&v.invoice.id).catch(()=>null));'+
+  ui=scoped(ui,'un=async le=>',',Cn=async',part=>{
+    const opening=part.indexOf('try{');
+    if(opening<0||opening>260)throw Error('R1894 expected beginning of Ready handler');
+    const fast='const pb1894ExistingInvoice=le.invoice_id||(await Me("/api/lab/orders/"+le.id).then(v=>v.invoice&&v.invoice.id).catch(()=>null));'+
       'if(pb1894ExistingInvoice){if(le.status!=="ready")await It(le,"ready");await Gt(le,"ready").catch(()=>{});'+
-      'P("سفارش #"+V(le.number)+" آماده تحویل شد؛ بدون نیاز به پوشه یا صدور دوباره فاکتور");return}if(nt){',
-      'ready without local folder'),'print ready handler');
+      'P("سفارش #"+V(le.number)+" آماده تحویل شد؛ بدون نیاز به پوشه یا صدور دوباره فاکتور");return}';
+    return part.slice(0,opening+4)+fast+part.slice(opening+4);
+  },'print ready handler');
 
   ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>
     replaceOne(part,'nt==="ready"&&Zt.invoice){',

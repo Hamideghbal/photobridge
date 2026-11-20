@@ -53,6 +53,8 @@ jobs:
         run: node --test scripts/test-r1296-native-alerts.cjs scripts/test-r1296-lab-settings.cjs scripts/test-r1297-lab-settings-speed.cjs scripts/test-r1298-lab-header-navigation.cjs scripts/test-r1300-lab-header-build-compat.cjs scripts/test-r1301-lab-site-general.cjs
       - name: Verify publication asset checks
         run: node --test .github/scripts/test-verify-compact-assets.cjs
+      - name: Verify R1892 lab status transitions without local folders
+        run: node --test scripts/test-r1892-lab-status-no-folder.cjs
       - name: Run production build
         run: npm run build
       - name: Verify durable administrator SMS guards and frozen desktop instrumentation

@@ -63,8 +63,24 @@ test('R1894: Ready from any browser uses server status, no file picker or PDF ac
 });
 test('R1894: album Ready and completion bypass local-folder gate after existing invoice',()=>{
   const handler=field('Cn=async(le,nt)=>',',aa=async');
-  assert.match(handler,/nt!=="printing"&&await pb1894HasIssuedInvoice\(le\)/);
+  assert.match(handler,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
   assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
+});
+test('R1894: all post-invoice print stages ignore disk, first-time print still checks it',async()=>{
+  const events=[],context={
+    B:()=>{},ye:async()=>{},pb1894HasIssuedInvoice:async row=>Boolean(row.invoice_id),
+    pb1450AllowStage:async()=>{events.push('disk');return false},
+    Me:async()=>{events.push('PATCH');return{order:{status:'printing'}}}
+  };
+  const change=vm.runInNewContext('('+field('It=async(le,nt,xt)=>',',gn=async')+')',context);
+  const old={id:'old',invoice_id:'invoice1',document_revision:1};
+  await change(old,'printing');
+  assert.deepEqual(events,['PATCH']);
+  events.length=0;
+  const fresh={id:'new',invoice_id:null,document_revision:1};
+  const blocked=await change(fresh,'printing');
+  assert.deepEqual(events,['disk']);
+  assert.equal(blocked.blocked,true);
 });
 test('R1894: status PATCH sends the document revision required by server',()=>{
   const status=field('It=async(le,nt,xt)=>',',gn=async');

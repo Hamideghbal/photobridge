@@ -23,7 +23,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  }
  // R1919: avoid a SQLite write on every local menu/status/invoice request.
  if(!localActive(store))store.set('localBusinessActive:'+lab,true);
- if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
+ if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout((store.cached('/api/lab/delegated-orders/bootstrap')||store.cached('/api/lab/delegated-orders/bootstrap?mode=print'))?900:3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
  engine.state();
  try{
   if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){

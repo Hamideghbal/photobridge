@@ -37,7 +37,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
 
   ui=scoped(ui,'rn=(le,nt)=>',',en=(le,nt)=>',part=>
     replaceOne(part,'rn=(le,nt)=>{',
-      'rn=(le,nt)=>{if(le&&le.invoice_id&&(nt==="download"||nt==="print"||o==="album"&&(nt==="download_print"||nt==="binding")))return!0;',
+      'rn=(le,nt)=>{if(le&&le.invoice_id&&!pb1798NoPrintOrder(le)&&(nt==="download"||nt==="print"||o==="album"&&(nt==="download_print"||nt==="binding")))return!0;',
       'issued-invoice stage eligibility'),'stage predicate');
 
   ui=scoped(ui,'un=async le=>',',Cn=async',part=>{

@@ -54,7 +54,7 @@ if(!ui.includes(marker)){
       '!(nt!=="printing"&&await pb1894HasIssuedInvoice(le))&&!await pb1450AllowStage(le)',
       'album Ready and Delivered guard'),'R1450 album stage guard');
 
-  ui+='\nasync function pb1894HasIssuedInvoice(le){if(le?.invoice_id)return true;try{const detail=await Me("/api/lab/orders/"+le.id);return Boolean(detail?.invoice?.id)}catch{return false}}\n'+marker+'\n';
+  ui+='\nasync function pb1894HasIssuedInvoice(le){if(le?.invoice_id)return true;try{const detail=await Me("/api/lab/orders/"+le.id);if(detail?.invoice?.id){le.invoice_id=detail.invoice.id;return true}return false}catch{return false}}\n'+marker+'\n';
   fs.writeFileSync(uiPath,ui);
 }
 

@@ -1,6 +1,5 @@
 import {deliverAppointmentReminders,reminderCopy} from './customer-appointments.js';
 import {createGalleryMessaging} from './gallery-messaging.js';
-import {pageLabOrders,setQueueHidden} from './lab-order-queue-page.js';
 import {queueGalleryOwnerNotification,acknowledgeGalleryDelivery,deliverGallerySmsFallbacks} from './gallery-owner-delivery.js';
 import {handleLabManualCustomerAccounts} from './lab-manual-customer-controls.js';
 import {handleCustomerCRM} from './customer-crm.js';
@@ -21323,16 +21322,7 @@ ${inviteUrl}`;
                 return snappboxErrorResponse(res, e);
             }
         }
-        // R1921: queue-only reversible hide. Never delete files, invoices or accounting.
-        const labQueueHide = url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]{36})\/queue-hide$/i);
-        if (labQueueHide && (req.method === 'POST' || req.method === 'DELETE')) {
-            const hidden = req.method === 'POST';
-            const result = await setQueueHidden(pool,{labId,actorId:a.userId,orderId:labQueueHide[1],hidden});
-            if (result.ok) await audit(a.userId,labId,hidden?'order.queue_hide':'order.queue_restore','order',labQueueHide[1],{hidden}).catch(()=>{});
-            return sendJson(res,result.status,result);
-        }
         if (req.method === 'GET' && url.pathname === '/api/lab/orders') {
-            if (url.searchParams.has('tab')) return sendJson(res,200,await pageLabOrders(pool,labId,url));
             const q = await pool.query(`SELECT o.*,COALESCE(o.walkin_customer_name,u.name) customer_name,u.email customer_email,COALESCE(o.walkin_customer_mobile,u.mobile) customer_mobile,u.location_lat,u.location_lng,
         (SELECT count(*)::int FROM order_files f WHERE f.order_id=o.id) file_count,
         (SELECT coalesce(sum(f.bytes),0)::bigint FROM order_files f WHERE f.order_id=o.id) total_bytes,

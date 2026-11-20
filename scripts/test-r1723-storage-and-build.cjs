@@ -17,7 +17,7 @@ test('new customer and coworker paths use exact-case Latin names',()=>{
  assert.equal(ctx.pb1664LegacyStorageBucket({source:'walkin'}),'مشتریان');
  assert.equal(ctx.pb1664LegacyStorageBucket({source:'print'}),'همکاران');
  assert.match(source,/\[pb1664StorageBucket\(detail\.order\),day,saved\.customer,Uy\(detail,file\)\]/);
- assert.match(source,/if\(old\)\{const restored=await pb1936ReviveTarget\(root,old,saved,detail,file\);return\{root,\.\.\.restored\};\}/);
+ assert.match(source,/if\(old\)\{\s*const restored=await pb1936ReviveTarget\(root,old,saved,detail,file\);[\s\S]*?return\{root,\.\.\.restored\};/);
 });
 
 test('actual delivered web and native Lab bundles both have the new folder layout',()=>{

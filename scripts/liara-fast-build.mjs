@@ -1429,3 +1429,11 @@ runR1314(process.execPath,['--test','scripts/test-r1891-offline-storage-root.cjs
 // including manifests that become visible shortly after the OS popup.
 await deployStep('./enable-r1892-fast-notification-download.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1892-fast-notification-download.cjs'],{stdio:'inherit'});
+
+// R1894: published web and mobile Lab stages are server-first for issued invoices.
+await deployStep('./enable-r1894-lab-invoiced-stages.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1894-lab-invoiced-stages.cjs'],{stdio:'inherit'});
+
+// R1895: ledger-safe cancellation/hide of old lab work orders; review-gated PR.
+await deployStep('./enable-r1895-lab-old-order-cancel.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1895-lab-old-order-cancel.cjs'],{stdio:'inherit'});

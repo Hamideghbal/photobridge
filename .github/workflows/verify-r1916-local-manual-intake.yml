@@ -35,6 +35,7 @@ jobs:
             test/r1916-manual-intake-preflight.test.cjs \
             test/r1918-button-mount.test.cjs \
             test/r1919-manual-preflight-parallel.test.cjs \
+            test/r1919-policy-fastpath.test.cjs \
             test/offline-orders.test.cjs \
             test/offline-preflight.test.cjs \
             test/r1912-offline-preflight.test.cjs

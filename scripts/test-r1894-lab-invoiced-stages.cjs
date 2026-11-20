@@ -76,7 +76,7 @@ test('R1894: album Ready and completion bypass local-folder gate after existing 
 });
 test('R1894: all post-invoice print stages ignore disk, first-time print still checks it',async()=>{
   const events=[],context={
-    B:()=>{},ye:async()=>{},window:{},pb1894HasIssuedInvoice:async row=>Boolean(row.invoice_id),
+    B:()=>{},f:()=>{},ye:async()=>{},window:{},pb1894HasIssuedInvoice:async row=>Boolean(row.invoice_id),
     pb1450AllowStage:async()=>{events.push('disk');return false},
     Me:async()=>{events.push('PATCH');return{order:{status:'printing'}}}
   };

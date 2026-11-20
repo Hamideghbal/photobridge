@@ -53,22 +53,26 @@ export function createErrorMonitor({ directory, alert, shouldAlert = () => true,
     return true;
   }
   function persist(row) {
-    pending.set(row.fingerprint, row);
-    external.delete(row.id);external.set(row.id,row);
-    while(external.size>500)external.delete(external.keys().next().value);
+    if(row){
+      pending.set(row.fingerprint, row);
+      external.delete(row.id);external.set(row.id,row);
+      while(external.size>500)external.delete(external.keys().next().value);
+    }
     if (draining) return;
     draining = true;
     writes = writes.then(async () => {
       await ready;
       while (pending.size) {
-        const rows = [...pending.values()]; pending.clear();
-        let stat; try { stat = await fs.stat(file); } catch {}
+        const rows = [...pending.entries()];
+        await fs.mkdir(directory, { recursive: true, mode: 0o700 });
+        let stat; try { stat = await fs.stat(file); } catch (e) { if(e.code!=='ENOENT') throw e; }
         if (stat?.size > 4 * 1024 * 1024) {
           await fs.rename(file, file + '.previous').catch(e => { if (e.code !== 'ENOENT') throw e; });
         }
-        await fs.appendFile(file, rows.map(row=>JSON.stringify(row)).join('\n')+'\n', { mode: 0o600 });
+        await fs.appendFile(file, rows.map(([,row])=>JSON.stringify(row)).join('\n')+'\n', { mode: 0o600 });
+        for(const [key,saved] of rows)if(pending.get(key)===saved)pending.delete(key);
       }
-    }).catch(e => log.error('[error-monitor] persistence failed', e.code || 'write_failed')).finally(()=>{draining=false;if(pending.size)persist([...pending.values()][0]);});
+    }).catch(e => log.error('[error-monitor] persistence failed', e.code || 'write_failed')).finally(()=>{draining=false;});
   }
   function maybeAlert(row) {
     // Non-actionable client/network errors are still counted but never consume
@@ -124,7 +128,7 @@ export function createErrorMonitor({ directory, alert, shouldAlert = () => true,
     catch(e) { log.error('[error-monitor] database mirror pending', token(e?.code||'database_unavailable')); }
     finally { syncing=false; }
   }
-  const mirror=setInterval(()=>{void sync();},15000);mirror.unref?.();
+  const mirror=setInterval(()=>{if(pending.size&&!draining)persist();void sync();},15000);mirror.unref?.();
   const retry = setInterval(() => { for (const row of incidents.values()) if (row.alertState === 'queued' && now() - row.lastAt < 86400000) maybeAlert(row); }, 60000);
   retry.unref?.();
   return { record, allow, async list() { await ready; return [...incidents.values()].sort((a,b) => b.lastAt-a.lastAt).slice(0,200).map(r=>({...r})); },

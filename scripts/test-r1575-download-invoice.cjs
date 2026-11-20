@@ -29,8 +29,22 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui'])test(root+': print, rea
  writes.length=0;rows=[{id:ORDER,status:'downloaded',document_revision:20}];context.Me=async(url,options)=>{assert(url.endsWith('/album-stage'));assert.equal(options.method,'PUT');const body=JSON.parse(options.body);assert.equal(body.expectedRevision,rows[0].document_revision);writes.push(body);return{order:{...rows[0],status:body.stage,document_revision:rows[0].document_revision+1}}};
  const a=source.indexOf('Cn=async(le,nt)=>'),b=source.indexOf(',aa=async',a);vm.runInNewContext('globalThis.album='+source.slice(a+3,b),context);
  await Promise.race([(async()=>{for(const stage of ['printing','ready','completed'])await context.album(rows[0],stage)})(),new Promise((_,reject)=>setTimeout(()=>reject(Error('album stage waited for background work')),500))]);assert.deepEqual(writes.map(x=>x.stage),['printing','ready','completed']);
- // Current safety gates must stop every production action before a status write.
- writes.length=0;context.pb1450AllowStage=async()=>false;await context.It(rows[0],'printing');await context.ready(rows[0]);await context.done(rows[0]);for(const stage of ['printing','binding','ready','completed'])await context.album(rows[0],stage);assert.equal(writes.length,0);
+ // Physical printing and binding are still blocked without local files.
+ // Ready/Delivered are server-only, even when the browser knows no folder.
+ writes.length=0;context.pb1450AllowStage=async()=>false;
+ await context.album(rows[0],'printing');await context.album(rows[0],'binding');
+ assert.equal(writes.length,0,'album physical steps remain blocked');
+ context.Me=async(url,options)=>{const body=JSON.parse(options.body);const status=body.status||body.stage;
+   if(options.method==='PATCH')assert(url.includes('/api/lab/orders/'));
+   else assert(options.method==='PUT'&&url.endsWith('/album-stage'));
+   writes.push(options.method==='PATCH'?{status}:{stage:status});
+   return{order:{...rows[0],status,document_revision:rows[0].document_revision+1}}};
+ await context.It(rows[0],'printing');assert.equal(writes.length,0,'first-time printing still checks disk');
+ await context.ready({...rows[0],invoice_id:'existing-invoice'});
+ await context.done({...rows[0],invoice_id:'existing-invoice'});
+ await context.album({...rows[0],invoice_id:'existing-invoice'},'ready');
+ await context.album({...rows[0],invoice_id:'existing-invoice'},'completed');
+ assert.deepEqual(writes.map(x=>x.status||x.stage),['ready','completed','ready','completed']);
 
 });
 test('stored legacy timing cannot postpone invoicing, and existing invoices are reused without rechecking files or prices',async()=>{

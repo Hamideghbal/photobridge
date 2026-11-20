@@ -43,9 +43,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   ui=scoped(ui,'un=async le=>',',Cn=async',part=>{
     const opening=part.indexOf('try{');
     if(opening<0||opening>260)throw Error('R1894 expected beginning of Ready handler');
-    const fast='const pb1894ExistingInvoice=le.invoice_id||(await Me("/api/lab/orders/"+le.id).then(v=>v.invoice&&v.invoice.id).catch(()=>null));'+
-      'if(pb1894ExistingInvoice){if(le.status!=="ready")await It(le,"ready");await Gt(le,"ready").catch(()=>{});'+
-      'P("سفارش #"+V(le.number)+" آماده تحویل شد؛ بدون نیاز به پوشه یا صدور دوباره فاکتور");return}';
+    // Ready only changes the server-owned stage; no local folder is required.
+    // Status PATCH retains existing invoice, payment and document revision gates.
+    const fast='const pb1894ReadyResult=await It(le,"ready");'+
+      'if(pb1894ReadyResult?.blocked)return;void Gt(le,"ready").catch(()=>{});'+
+      'P("سفارش #"+V(le.number)+" آماده تحویل شد؛ بدون نیاز به پوشه محلی");return;';
     return part.slice(0,opening+4)+fast+part.slice(opening+4);
   },'print ready handler');
 
@@ -53,18 +55,23 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   // invoices, Ready/Delivered must not depend on a local directory.
   ui=scoped(ui,'un=async le=>',',Cn=async',part=>
     replaceOne(part,'!await pb1450AllowStage(le)',
-      '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
-      'Ready guard for issued invoices'),'R1450 print Ready guard');
+      'false',
+      'Ready is server-only'),'R1450 print Ready guard');
 
   ui=scoped(ui,'gn=async le=>',',Vn=async',part=>
     replaceOne(part,'!await pb1450AllowStage(le)',
-      '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
-      'Delivered guard for issued invoices'),'R1450 delivery guard');
+      'false',
+      'Delivered is server-only'),'R1450 delivery guard');
 
-  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=>
-    replaceOne(part,'!await pb1450AllowStage(le)',
+  ui=scoped(ui,'Cn=async(le,nt)=>',',aa=async',part=> {
+    // Preserve file checks for album printing/binding, never for Ready/Delivered.
+    part=replaceOne(part,'["printing","binding","ready","completed"].includes(nt)',
+      '["printing","binding"].includes(nt)',
+      'album file-dependent stages');
+    return replaceOne(part,'!await pb1450AllowStage(le)',
       '!await pb1894HasIssuedInvoice(le)&&!await pb1450AllowStage(le)',
-      'album Ready and Delivered guard'),'R1450 album stage guard');
+      'album file-dependent stages with issued invoices');
+  },'R1450 album stage guard');
 
   ui+='\nasync function pb1894HasIssuedInvoice(le){if(le?.invoice_id)return true;try{const detail=await Me("/api/lab/orders/"+le.id);if(detail?.invoice?.id){le.invoice_id=detail.invoice.id;return true}return false}catch{return false}}\n'+marker+'\n';
   fs.writeFileSync(uiPath,ui);

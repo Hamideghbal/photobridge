@@ -21,8 +21,9 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    return true;
   }
  }
- store.set('localBusinessActive:'+store.get('labId'),true);
- if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
+ // R1919: avoid a SQLite write on every local menu/status/invoice request.
+ if(!localActive(store))store.set('localBusinessActive:'+lab,true);
+ if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout((store.cached('/api/lab/delegated-orders/bootstrap')||store.cached('/api/lab/delegated-orders/bootstrap?mode=print'))?900:3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
  engine.state();
  try{
   if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){
@@ -72,7 +73,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    const html=require('./local-invoice.cjs').invoiceHtml(engine.decorateInvoice(s,inv),engine.bootstrap().lab);
    if(printRoute[2]==='print'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return true;}
    let pdf=(!inv.origin_offline||inv.pdfDisplayNumber===engine.decorateInvoice(s,inv).number&&inv.pdfDisplayVersion===2)&&!inv.serverNumber&&store.db.prepare('SELECT bytes FROM local_invoice_pdf WHERE lab=? AND id=?').get(store.get('labId'),inv.id)?.bytes;
-   if(!pdf){if(!pdfRenderer)throw Object.assign(Error('چاپ PDF در این محیط در دسترس نیست.'),{status:503});pdf=await pdfRenderer(html);same();}
+   if(!pdf){if(!pdfRenderer)throw Object.assign(Error('چاپ PDF در این محیط در دسترس نیست.'),{status:503});pdf=await require('./invoice-render-cache.cjs').cachedInvoicePdf({store,lab,invoice:inv.id,html,render:pdfRenderer,checkAccount:same});same();}
    res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'inline; filename="invoice-'+inv.id+'.pdf"'});res.end(Buffer.from(pdf));return true;
   }
 

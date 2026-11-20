@@ -1,5 +1,6 @@
 'use strict';
 function patchOfflineIntake(source){
+ if(typeof source==='string'&&source.includes("'pb1504ActionToggle'")&&source.includes('labOutboxBootstrap'))return require('./r1919-modern-intake.cjs').patchModernIntake(source);
  const changes=[
  ["   const moveResult=await window.pb1466IntakeMove.finish(targets);","   const moveResult=result.desktopPending?{moved:0,pending:true}:await window.pb1466IntakeMove.finish(targets);"],
  ["node('h3','سفارش شمارهٔ '+order.orderNumber+' ثبت شد.')","node('h3',result.desktopPending?'سفارش محلی ذخیره شد؛ در انتظار تأیید سرور':'سفارش شمارهٔ '+order.orderNumber+' ثبت شد.')"],

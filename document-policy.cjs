@@ -6,6 +6,10 @@ const shared = (doc) => !!(doc && (doc.remote || doc.serverId || doc.sharedAt));
 function applyPolicy(store) {
   const lab = store.get("labId");
   if (!lab) return;
+  // R1919: a policy applied to this lab is immutable at version 1.
+  // Avoid opening and committing a SQLite transaction for every menu read,
+  // order status poll, photo action and invoice render.
+  if (store.get("documentPolicyAppliedV1:" + lab) === true) return;
   store.set("documentPolicy:" + lab, 1);
   const engine = new LocalBusiness(store);
   store.transaction(() => {
@@ -57,6 +61,8 @@ function applyPolicy(store) {
     s.documentPolicyVersion = 1;
     store.set(engine.key(), s);
   });
+  // Mark the migration complete only AFTER the transaction commits.
+  store.set("documentPolicyAppliedV1:" + lab, true);
 }
 function targetFor(s, p, b) {
   const match = p.match(

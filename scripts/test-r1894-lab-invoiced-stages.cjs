@@ -61,7 +61,7 @@ test('R1894: Ready from any browser uses server status, no file picker or PDF ac
 });
 test('R1894: album Ready never regenerates an existing PDF',()=>{
   const handler=field('Cn=async(le,nt)=>',',aa=async');
-  assert.match(handler,/Zt.invoice&&!Zt.invoiceReused/);
+  assert.match(handler,/nt==="ready"&&Zt.invoiceReused/);
   assert.match(api,/invoiceReused/);
 });
 test('R1894: both server transitions reuse existing invoice',()=>{

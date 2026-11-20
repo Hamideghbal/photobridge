@@ -50,7 +50,9 @@ test('R1894: Ready from any browser uses server status, no file picker or PDF ac
     alert:(message)=>{throw Error('Unexpected alert '+message)},
     Ef:()=>{throw Error('LOCAL_FOLDER_CALLED')},
     Wu:()=>{throw Error('INVOICE_PDF_CALLED')},
-    ai:()=>{throw Error('LOCAL_CHECK_CALLED')}
+    ai:()=>{throw Error('LOCAL_CHECK_CALLED')},
+    pb1450AllowStage:async()=>{throw Error('LOCAL_FOLDER_CALLED')},
+    pb1894HasIssuedInvoice:async le=>{if(le.invoice_id)return true;const detail=await context.Me('/api/lab/orders/'+le.id);if(detail?.invoice?.id){le.invoice_id=detail.invoice.id;return true}return false}
   };
   const onReady=vm.runInNewContext('('+field('un=async le=>',',Cn=async')+')',context);
   await onReady({id:'legacy',number:42,status:'received',invoice_required:true,invoice_id:'invoice1',downloaded_at:null,status_history:[]});
@@ -59,10 +61,18 @@ test('R1894: Ready from any browser uses server status, no file picker or PDF ac
   await onReady({id:'legacy',number:42,status:'received',invoice_required:true,downloaded_at:null,status_history:[]});
   assert.deepEqual(events,['GET:/api/lab/orders/legacy','PATCH:ready','navigate']);
 });
-test('R1894: album Ready never regenerates an existing PDF',()=>{
+test('R1894: album Ready and completion bypass local-folder gate after existing invoice',()=>{
   const handler=field('Cn=async(le,nt)=>',',aa=async');
-  assert.match(handler,/nt==="ready"&&Zt.invoiceReused/);
+  assert.match(handler,/nt!=="printing"&&await pb1894HasIssuedInvoice\(le\)/);
+  assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
   assert.match(api,/invoiceReused/);
+});
+test('R1894: print Ready and Delivered gate bypass disk only with stored invoice',()=>{
+  const ready=field('un=async le=>',',Cn=async');
+  const delivered=field('gn=async le=>',',Vn=async');
+  assert.match(ready,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
+  assert.match(delivered,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
+  assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
 test('R1894: both server transitions reuse existing invoice',()=>{
   const cases=[

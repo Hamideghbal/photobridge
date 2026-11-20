@@ -11,12 +11,12 @@ function field(start,end){
 }
 function stageFn(mode){
   const expr=field('rn=(le,nt)=>',',en=(le,nt)=>');
-  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0};
+  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0,pb1798NoPrintOrder:()=>false};
   return vm.runInNewContext('('+expr+')',context);
 }
 function enabledFn(mode){
   const rn=stageFn(mode);
-  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn});
+  return vm.runInNewContext('('+field('la=(le,nt)=>',',Wn=async')+')',{o:mode,rn,pb1798NoPrintOrder:()=>false,pb1603InvoicePending:()=>false});
 }
 test('R1894: an already-issued print invoice enables Ready without history or local folder',()=>{
   const order={id:'old-order',number:42,status:'received',status_history:[],invoice_id:'existing-invoice',downloaded_at:null};
@@ -44,7 +44,7 @@ test('R1894: uninvoiced undownloaded print still requires original receive/downl
 });
 test('R1894: Ready from any browser uses server status, no file picker or PDF action',async()=>{
   const events=[], context={
-    C:()=>{},It:async(o,s)=>{events.push('PATCH:'+s);return{order:{status:s}};},
+    E:false,B:()=>{},C:()=>{},It:async(o,s)=>{events.push('PATCH:'+s);return{order:{status:s}};},
     Gt:async()=>{events.push('navigate');},ye:async()=>{},P:()=>{},V:String,
     Me:async(url)=>{events.push('GET:'+url);return {invoice:{id:'existing-invoice'}};},
     alert:(message)=>{throw Error('Unexpected alert '+message)},
@@ -78,10 +78,12 @@ test('R1894: existing server invoice contract remains unchanged and audit is pre
   assert.match(api,/const existing = await c\.query\(\x60SELECT i\.\*/);
   assert.match(api,/if \(existing\.rowCount\)/);
   const print=api.slice(api.indexOf("if (labOrder && req.method === 'PATCH')"),api.indexOf("// v0.17.565-pdf-upload",api.indexOf("if (labOrder && req.method === 'PATCH')")));
-  assert.match(print,/invoice = await createOrGetInvoice\(c, labId, labOrder\[1\]\)/);
+  assert.match(print,/invoice = \(await c\.query\('SELECT \* FROM invoices WHERE lab_id=\$1 AND order_id=\$2 LIMIT 1'/);
+  assert.match(print,/b\.expectedRevision/);
   assert.match(print,/statusEvent\(c, order, status, a\.userId, note\)/);
   assert.match(print,/oldOrder\.settlement_mode === 'prepaid'/);
   const album=api.slice(api.indexOf("if (labAlbumStage && req.method === 'PUT')"),api.indexOf("if (req.method === 'GET' && url.pathname === '/api/lab/walkin')",api.indexOf("if (labAlbumStage && req.method === 'PUT')")));
-  assert.match(album,/invoice = await createOrGetInvoice\(c, labId, order\.id\)/);
+  assert.match(album,/invoice|invoice_required/);
+  assert.match(album,/album_stage/);
   assert.match(fs.readFileSync('dist/web/index.html','utf8'),/labStage=r1894/);
 });

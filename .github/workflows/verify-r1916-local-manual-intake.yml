@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - fix/lab-manual-intake-local-preflight-r1916
+      - fix/lab-1919-preserve-current-walkin-speed
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,6 +25,8 @@ jobs:
           node --check host.cjs
           node --check manual-intake-preflight.cjs
           node --check offline-ui.cjs
+          node --check r1919-modern-ui.cjs
+          node --check test/r1919-current-ui.test.cjs
           node --check document-policy.cjs
           node --check local-business-host.cjs
           node --check test/r1916-manual-intake-preflight.test.cjs
@@ -33,6 +36,7 @@ jobs:
             test/offline-ui.test.cjs \
             test/r1916-manual-intake-preflight.test.cjs \
             test/r1918-button-mount.test.cjs \
+            test/r1919-current-ui.test.cjs \
             test/offline-orders.test.cjs \
             test/offline-preflight.test.cjs \
             test/r1912-offline-preflight.test.cjs

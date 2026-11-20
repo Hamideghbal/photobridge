@@ -22,7 +22,15 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
   }
  }
  store.set('localBusinessActive:'+store.get('labId'),true);
- if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
+ /* R1919_ASYNC_PREWARM: valid lab-scoped cached print bootstrap can open
+    while unrelated finance/order reads complete; server price read still runs. */
+ let quickBootstrap=false;
+ if(req.method==='GET'&&p==='/api/lab/delegated-orders/bootstrap')try{
+  const row=store.cached(req.url)||store.cached(p+'?mode=print')||store.cached(p);
+  const data=row&&JSON.parse(Buffer.from(row.body,'base64').toString('utf8'));
+  quickBootstrap=!!(row?.status===200&&Array.isArray(data?.customers)&&Array.isArray(data?.printSizes));
+ }catch{}
+ if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];const flight=Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));if(!quickBootstrap)await flight;same();}
  engine.state();
  try{
   if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){

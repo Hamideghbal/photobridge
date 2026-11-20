@@ -25,3 +25,10 @@ function patchOfflineIntake(source){
  return require('./r1918-restore-entry.cjs').patchManualVisibility(source);
 }
 module.exports={patchOfflineIntake};
+
+/* R1919_CURRENT_WEBSITE_UI: use the installed script first, never an older pinned copy. */
+const r1919LegacyPatch=module.exports.patchOfflineIntake;
+module.exports.patchOfflineIntake=function(source){
+ try{return r1919LegacyPatch(source)}
+ catch{return require('./r1919-modern-ui.cjs').patchModernWalkIn(source)}
+};

@@ -154,7 +154,16 @@ async function pb1550Target(candidate,detail,file){
  const root=await pb1550Root(detail,false,candidate);
  return pb1550Serial(detail,async()=>{
   const saved=await pb1550Db(detail),key=String(file.id),local=pb1550LocalFile(detail,file),old=saved.targets[key];
-  if(old){const restored=await pb1936ReviveTarget(root,old,saved,detail,file);return{root,...restored};}
+  if(old){
+   const restored=await pb1936ReviveTarget(root,old,saved,detail,file);
+   // The browser cannot re-open a deleted saved DirectoryHandle. Persist only
+   // its explicitly regenerated canonical child; native pinned paths stay exact.
+   if(pb1936ExplicitDownload(detail)&&!old.dir?.native&&restored.dir!==pb1550Decode(old.dir)){
+    saved.targets[key]={dir:pb1550Encode(restored.dir),day:restored.day};
+    await pb1550Db(detail,saved);
+   }
+   return{root,...restored};
+  }
   if(local?.rootId&&Array.isArray(local.parts)&&local.parts.length){
    const oldDir={native:true,rootId:local.rootId,parts:local.parts.slice(0,-1),kind:'directory',name:local.parts.at(-2)};const dir=pb1936ExplicitDownload(detail)?await pb1936RecreateNativeDir(root,oldDir):pb1550Decode(oldDir);
    saved.targets[key]={dir:pb1550Encode(dir),day:local.parts[0]};await pb1550Db(detail,saved);

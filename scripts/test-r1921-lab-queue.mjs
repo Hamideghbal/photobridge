@@ -53,6 +53,8 @@ test('R1921: real UI fetches server-side tab and page instead of old 300-order l
  assert.match(ui,/pageSize:10,onPage:pb1921SetPage/);
  assert.match(ui,/queue-hide/);
  assert.match(ui,/le.downloaded_at&&le.invoice_id&&le.invoice_pdf_ready/);
+ assert.match(ui,/return nt==="download"\?\(!!le.downloaded_at\|\|kn/);
+ assert.match(ui,/if\(le!==pb1921Latest.id\)return/);
  assert(!ui.includes('ma=le=>!(le!=null&&le.downloaded_at)'), 'all old invoices must offer a safe hide button');
  assert.match(server,/await pageLabOrders\(pool,labId,url\)/);
  assert.match(server,/await setQueueHidden\(pool/);

@@ -2,13 +2,9 @@
 // Run after all existing Liara HTML/bundle writers. Never probe the local disk
 // or regenerate an already-issued invoice PDF just to advance workflow.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
-const uiPath='dist/web/assets/index-UIRefine-v655-r84.js';
-const apiPath='dist/api/server.js';
-const htmlPath='dist/web/index.html';
-let ui=fs.readFileSync(uiPath,'utf8');
-let api=fs.readFileSync(apiPath,'utf8');
 const marker='/* PB1894 invoice-first server stages */';
 
 function replaceOne(text,oldText,newText,label){
@@ -22,7 +18,11 @@ function scoped(text,from,to,edit,label){
   if(start<0||end<=start)throw Error('R1894 '+label+' section missing');
   return text.slice(0,start)+edit(text.slice(start,end))+text.slice(end);
 }
-if(!ui.includes(marker)){
+for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+ const uiPath=root+'/assets/index-UIRefine-v655-r84.js';
+ const htmlPath=root+'/index.html';
+ let ui=fs.readFileSync(uiPath,'utf8');
+ if(!ui.includes(marker)){
   // The backend requires a current document revision. Any mobile/browser PATCH
   // must preserve the optimistic concurrency contract; do not bypass it.
   ui=scoped(ui,'It=async(le,nt,xt)=>',',gn=async',part=>{
@@ -76,5 +76,19 @@ if(!html.includes('labStage=r1894')){
   fs.writeFileSync(htmlPath,html);
 }
 execFileSync(process.execPath,['--check',uiPath],{stdio:'inherit'});
+ if(root.endsWith('/lab-desktop-ui')){
+  const manifestPath=root+'/manifest.json';
+  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+  const sha=content=>crypto.createHash('sha256').update(content).digest('hex');
+  for(const name of ['assets/index-UIRefine-v655-r84.js','index.html']){
+   const record=manifest.files.find(row=>row.name===name);
+   if(!record)throw Error('R1894 missing native manifest entry '+name);
+   record.sha256=sha(fs.readFileSync(root+'/'+name));
+  }
+  manifest.build=sha(Buffer.from(JSON.stringify(manifest.files)));
+  manifest.generatedAt=new Date().toISOString();
+  fs.writeFileSync(manifestPath,JSON.stringify(manifest));
+ }
+ console.log('[R1894] issued Lab invoices are folder-independent in '+root);
+}
 // Existing createOrGetInvoice already reuses issued invoices; backend is unchanged.
-console.log('[R1894] Existing-invoice Lab status actions bypass local folder verification; server invoice logic unchanged');

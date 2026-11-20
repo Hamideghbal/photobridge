@@ -66,6 +66,11 @@ test('R1894: album Ready and completion bypass local-folder gate after existing 
   assert.match(handler,/nt!=="printing"&&await pb1894HasIssuedInvoice\(le\)/);
   assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
 });
+test('R1894: status PATCH sends the document revision required by server',()=>{
+  const status=field('It=async(le,nt,xt)=>',',gn=async');
+  assert.match(status,/expectedRevision:/);
+  assert.match(status,/document_revision/);
+});
 test('R1894: print Ready and Delivered gate bypass disk only with stored invoice',()=>{
   const ready=field('un=async le=>',',Cn=async');
   const delivered=field('gn=async le=>',',Vn=async');

@@ -11,7 +11,7 @@ function field(start,end){
 }
 function stageFn(mode){
   const expr=field('rn=(le,nt)=>',',en=(le,nt)=>');
-  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0,pb1798NoPrintOrder:()=>false};
+  const context={o:mode,kn:(row,statuses)=>statuses.includes(row.status)||(row.status_history||[]).some(x=>statuses.includes(x.status)),Pn:()=>0,pb1798NoPrintOrder:()=>false,pb1450CanDownload:()=>true};
   return vm.runInNewContext('('+expr+')',context);
 }
 function enabledFn(mode){

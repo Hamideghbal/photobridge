@@ -67,11 +67,12 @@ test('R1894: Ready from any browser uses server status, no file picker or PDF ac
   assert.deepEqual(events,['PATCH:ready','navigate']);
   events.length=0;
   await onReady({id:'legacy',number:42,status:'received',invoice_required:true,downloaded_at:null,status_history:[]});
-  assert.deepEqual(events,['GET:/api/lab/orders/legacy','PATCH:ready','navigate']);
+  assert.deepEqual(events,['PATCH:ready','navigate'],'server-side validation does not require invoice ID in the card');
 });
-test('R1894: album Ready and completion bypass local-folder gate after existing invoice',()=>{
+test('R1896: album Ready and Delivered skip folder checks; printing and binding remain protected',()=>{
   const handler=field('Cn=async(le,nt)=>',',aa=async');
-  assert.match(handler,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
+  assert.match(handler,/\["printing","binding"\]\.includes\(nt\)&&!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
+  assert.doesNotMatch(handler,/\["printing","binding","ready","completed"\]\.includes\(nt\)/);
   assert.doesNotMatch(handler,/getDirectoryHandle|showDirectoryPicker|\bEf\(|\bWu\(/);
 });
 test('R1894: all post-invoice print stages ignore disk, first-time print still checks it',async()=>{
@@ -95,11 +96,13 @@ test('R1894: status PATCH sends the document revision required by server',()=>{
   assert.match(status,/expectedRevision:/);
   assert.match(status,/document_revision/);
 });
-test('R1894: print Ready and Delivered gate bypass disk only with stored invoice',()=>{
+test('R1896: Ready and Delivered use server status without folder checks',()=>{
   const ready=field('un=async le=>',',Cn=async');
   const delivered=field('gn=async le=>',',Vn=async');
-  assert.match(ready,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
-  assert.match(delivered,/!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
+  assert.doesNotMatch(ready,/pb1450AllowStage\(le\)/);
+  assert.doesNotMatch(delivered,/pb1450AllowStage\(le\)/);
+  assert.match(ready,/await It\(le,"ready"\)/);
+  assert.match(delivered,/await It\(le,"completed"\)/);
   assert.match(bundle,/async function pb1894HasIssuedInvoice\(le\)/);
 });
 test('R1894: frozen Windows Lab UI is patched and its release manifest hashes match',()=>{
@@ -109,7 +112,7 @@ test('R1894: frozen Windows Lab UI is patched and its release manifest hashes ma
   const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
   const hash=require('node:crypto').createHash;
   assert.match(js.toString('utf8'),/pb1894HasIssuedInvoice\(le\)/);
-  assert.match(js.toString('utf8'),/if\(!await pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)\)/);
+  assert.match(js.toString('utf8'),/pb1894HasIssuedInvoice\(le\)&&!await pb1450AllowStage\(le\)/);
   assert.match(html.toString('utf8'),/labStage=r1894/);
   for(const [name,bytes] of [['assets/index-UIRefine-v655-r84.js',js],['index.html',html]]){
     assert.equal(manifest.files.find(row=>row.name===name)?.sha256,hash('sha256').update(bytes).digest('hex'));

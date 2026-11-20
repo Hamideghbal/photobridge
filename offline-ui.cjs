@@ -21,6 +21,7 @@ function patchOfflineIntake(source){
  source=source.replace(completion,completion+"if(window.pbManualInvoiceFlow?.open){closeModal();void window.pbManualInvoiceFlow.open({orderId:order.orderId,labId:bootstrap.lab?.id});}");
  source=source.replace('ثبت سفارش و ذخیره پیش‌فاکتور','ثبت سفارش و صدور فاکتور');
  source=source.replace('عکس‌ها در مسیر سفارش روی هارد ثبت شدند. وضعیت سفارش دانلودشده است؛ پیش‌فاکتور تا زمان «آماده تحویل» قطعی نمی‌شود.','عکس‌ها در مسیر سفارش روی هارد ثبت شدند. فاکتور پس از تکمیل قیمت‌گذاری همین سفارش صادر می‌شود.');
- return source;
+ /* R1918_WALKIN_ENTRY_PATCH: keep original entry even when provider or header is late. */
+ return require('./r1918-restore-entry.cjs').patchManualVisibility(source);
 }
 module.exports={patchOfflineIntake};

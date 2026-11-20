@@ -37,6 +37,7 @@ jobs:
             test/r1919-manual-preflight-parallel.test.cjs \
             test/r1919-policy-fastpath.test.cjs \
             test/r1919-current-ui-guard.test.cjs \
+            test/r1919-invoice-render-cache.test.cjs \
             test/offline-orders.test.cjs \
             test/offline-preflight.test.cjs \
             test/r1912-offline-preflight.test.cjs

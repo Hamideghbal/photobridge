@@ -155,6 +155,8 @@ jobs:
           node --test scripts/test-r1549-lab-entry-browser.cjs scripts/test-r1550-order-storage-browser.cjs scripts/test-r1551-walkin-album-binding.cjs scripts/test-r1563-intake-discount.cjs scripts/test-r1564-browser.cjs scripts/test-r1567-native-browser.cjs
           PB_PGLITE_PATH=/tmp/photobridge-frame-browser/node_modules/@electric-sql/pglite node --test scripts/test-r1564-sms-db.cjs
           node --test scripts/test-r1134-photographer-mobile-bottom-nav.cjs scripts/test-r1106-mobile-store-panel.cjs scripts/test-r1284-mobile-identity.cjs
+          # R1946: Playwright is installed above; verify actual 360/390/430px Lab sticky search and pager geometry.
+          node scripts/test-r1946-lab-mobile-pager-browser.cjs
       - name: Verify complete deployment payload
         run: npm run verify:full
       - name: Verify frame palette, variant photos and prices in Chromium

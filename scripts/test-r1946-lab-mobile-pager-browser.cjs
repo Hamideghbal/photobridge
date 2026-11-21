@@ -14,7 +14,7 @@ const {chromium}=require('playwright');
  assert(html.includes('.r1944Search{grid-column:1;grid-row:1'));
  assert(html.includes('.r1944Pager{grid-column:1;grid-row:3'));
  assert(html.includes('labStage=r1946'),'new JS cache revision required');
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  const errors=[],requests=[];
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  page.on('pageerror',e=>errors.push(e.message));

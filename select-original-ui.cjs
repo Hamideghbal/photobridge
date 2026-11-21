@@ -5,6 +5,7 @@ const path = require('node:path');
 const { copyPinnedUi } = require('./prepare-assets.cjs');
 const { validateNativeUi } = require('./verify-native-ui.cjs');
 const { fastWorkerEnabled } = require('./native-renderer-bundle.cjs');
+const { canBridge } = require('./native-notification-download.cjs');
 
 function select(source, destination) {
   const manifestName = fs.existsSync(path.join(source, '.pb-lab-bundle-manifest.json'))
@@ -19,7 +20,7 @@ function select(source, destination) {
     copyPinnedUi({ source, pinFile, staging: stage, origin, manifestName });
     validateNativeUi(stage);
     const entry = fs.readFileSync(path.join(stage, 'assets/index-UIRefine-v655-r84.js'), 'utf8');
-    const hasWorker = fastWorkerEnabled(entry, '1.0.120');
+    const hasWorker = fastWorkerEnabled(entry, '1.0.120') || canBridge(entry);
     const hasPages = entry.includes('/* PB1944 server-paged lab queue */') && entry.includes('className:"r1944Pager"');
     if (!hasWorker || !hasPages) {
       const error = Error('Verified UI capabilities: immediate notification worker=' + hasWorker + ', order pagination=' + hasPages);

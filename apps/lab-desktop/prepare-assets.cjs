@@ -18,6 +18,32 @@ function validate(manifest){
  }
  if(!names.has('index.html')||!names.has('desktop-overlay.js'))throw Error('required_lab_asset_missing');
 }
+// R1951: a verified hash alone cannot prove that a previously pinned
+// Windows UI contains the later folder-recovery and server-only stage fixes.
+// Refuse stale offline/pinned payloads; the normal online path fetches a fresh
+// hash-verified snapshot before any new installer can be published.
+function assertCurrentLabUi(root){
+ const bundle=path.join(root,'assets/index-UIRefine-v655-r84.js');
+ const page=path.join(root,'index.html');
+ let js,html;
+ try{js=fs.readFileSync(bundle,'utf8');html=fs.readFileSync(page,'utf8')}
+ catch{throw Error('stale_pinned_lab_ui_missing_release_assets')}
+ for(const [label,expected] of [
+  ['missing-folder recovery','function pb1936RecreateNativeDir('],
+  ['explicit redownload guard','PB1943 legacy-folder retry'],
+  ['redownload storage target','async function pb1550Target('],
+  ['exact Latin category labels',"?'Moshtari':'Hamkar'"],
+  ['server-only stage transitions','const pb1894ReadyResult=await It(le,"ready")'],
+  ['ready and delivered without disk','/* PB1894 invoice-first server stages */']
+ ]) if(!js.includes(expected))throw Error('stale_pinned_lab_ui_'+label.replace(/[^a-z0-9]+/gi,'_'));
+ if(!html.includes('labStage=r1949')||!html.includes('PB1949:'))
+  throw Error('stale_pinned_lab_ui_before_r1949');
+ return true;
+}
+function isCurrentPinnedLabUi(root,log){
+ try{return assertCurrentLabUi(root)}
+ catch(error){log('[Lab Installer] Pinned UI is obsolete ('+error.message+'); fetching the latest verified Lab snapshot instead.');return false}
+}
 async function response(url,timeout=20000){
  let last;for(let attempt=1;attempt<=3;attempt++){try{const res=await fetch(url,{signal:AbortSignal.timeout(timeout),redirect:'error',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}});if(!res.ok)throw Object.assign(Error('ui_http_'+res.status),{status:res.status});return res}catch(e){last=e;if(e.status&&e.status<500)throw e;if(attempt<3)await new Promise(r=>setTimeout(r,attempt*250))}}
  throw Error('ui_fetch_failed: '+url.origin+url.pathname+' · '+(last?.cause?.code||last?.code||last?.name||'network_error')+' · '+last.message);
@@ -40,7 +66,7 @@ async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://pho
    log('[Lab Installer] Developer-only offline UI bundle (not a fresh release)');
   }else{
    const url=new URL(origin);if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.pathname!=='/'||url.search||url.hash)throw Error('invalid_ui_server_origin');
-   if(!refresh&&url.origin==='https://photobridge.ir'&&fs.existsSync(pinnedDirectory)&&fs.existsSync(pinFile)){
+   if(!refresh&&url.origin==='https://photobridge.ir'&&fs.existsSync(pinnedDirectory)&&fs.existsSync(pinFile)&&isCurrentPinnedLabUi(pinnedDirectory,log)){
     const manifest=copyPinnedUi({source:pinnedDirectory,pinFile,staging,origin});log('[Lab Installer] Using '+manifest.files.length+' bundled UI files; all server hashes verified ('+manifest.build.slice(0,12)+'). No site download required.');
    }else{
    let manifest,lastError;
@@ -70,6 +96,7 @@ async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://pho
    }
    await Promise.all(Array.from({length:Math.min(6,manifest.files.length)},()=>worker()));
    if(failed)throw failed;
+   assertCurrentLabUi(staging);
    fs.writeFileSync(path.join(staging,'.pb-lab-bundle-manifest.json'),JSON.stringify(manifest));
    }
   }
@@ -83,4 +110,4 @@ async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://pho
  }catch(e){fs.rmSync(staging,{recursive:true,force:true});throw e}
 }
 if(require.main===module)buildBundledUi().catch(e=>{console.error('[Lab Installer] Verified UI preparation failed; installer NOT built:',e.message);process.exitCode=1});
-module.exports={buildBundledUi,validate,copyPinnedUi};
+module.exports={buildBundledUi,validate,copyPinnedUi,assertCurrentLabUi};

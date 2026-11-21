@@ -218,9 +218,33 @@ function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
   }
   $env:PB_120_UI_DIR=$root
   & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
-  return ($LASTEXITCODE -eq 0)
+  $selection=$LASTEXITCODE
+  if ($selection -eq 2) {return (Find-CompatibleOfficialUi $Node)}
+  return ($selection -eq 0)
  } catch {
   Write-Host ('Could not recover UI from installer: '+$_.Exception.Message)
   return $false
+ } finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
+}
+
+function Find-CompatibleOfficialUi([string]$Node) {
+ Write-Host 'Using native 1.0.120 source. Checking the downloaded official UI for both required features.'
+ if ($env:APPDATA) {
+  foreach ($name in @('PhotoBridge Lab','photobridge-lab-desktop')) {
+   $database=Join-Path (Join-Path $env:APPDATA $name) 'lab.sqlite'
+   if (!(Test-Path -LiteralPath $database -PathType Leaf)) {continue}
+   $cached=@(& $Node --disable-warning=ExperimentalWarning (Join-Path $PSScriptRoot 'read-original-ui-profile.cjs') $database '--compatible-cache')
+   foreach ($root in $cached) {
+    $env:PB_120_UI_DIR=$root
+    & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
+    if ($LASTEXITCODE -eq 0) {return $true}
+   }
+  }
+ }
+ $stage=Join-Path ([IO.Path]::GetTempPath()) ('pb120-official-'+[guid]::NewGuid().ToString('N'))
+ try {
+  Write-Host 'Checking the official PhotoBridge server for a verified compatible UI...'
+  & $Node (Join-Path $PSScriptRoot 'fetch-compatible-ui.cjs') $stage | Out-Host
+  return ($LASTEXITCODE -eq 0)
  } finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
 }

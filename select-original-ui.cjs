@@ -19,8 +19,13 @@ function select(source, destination) {
     copyPinnedUi({ source, pinFile, staging: stage, origin, manifestName });
     validateNativeUi(stage);
     const entry = fs.readFileSync(path.join(stage, 'assets/index-UIRefine-v655-r84.js'), 'utf8');
-    if (!fastWorkerEnabled(entry, '1.0.120') || !entry.includes('/* PB1944 server-paged lab queue */') ||
-        !entry.includes('className:"r1944Pager"')) throw Error('Original UI lacks the required notification worker or paged order toolbar');
+    const hasWorker = fastWorkerEnabled(entry, '1.0.120');
+    const hasPages = entry.includes('/* PB1944 server-paged lab queue */') && entry.includes('className:"r1944Pager"');
+    if (!hasWorker || !hasPages) {
+      const error = Error('Verified UI capabilities: immediate notification worker=' + hasWorker + ', order pagination=' + hasPages);
+      error.code = 'incompatible_verified_ui';
+      throw error;
+    }
     fs.rmSync(destination, { recursive: true, force: true });
     fs.renameSync(stage, destination);
     return manifest.build;
@@ -36,7 +41,7 @@ if (require.main === module) {
     console.log('Verified original UI manifest:', build);
   } catch (error) {
     console.error('STOP: Could not prepare the original 1.0.120 UI:', error.message);
-    process.exitCode = 1;
+    process.exitCode = error.code === 'incompatible_verified_ui' ? 2 : 1;
   }
 }
 

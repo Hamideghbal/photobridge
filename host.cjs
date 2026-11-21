@@ -5,9 +5,22 @@ const fs=require('node:fs');
 const path=require('node:path');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,getReadEpoch=()=>0}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
+  const pageReads=new Map();
+  let orderGeneration=0;
+  const pageScope=()=>JSON.stringify([store.get('labId'),store.get('deviceId'),store.get('auth'),getReadEpoch()]);
+  function readPage(key,route){
+    const pending=pageReads.get(key);
+    if(pending)return pending;
+    const flight=(async()=>{
+      const response=await request(route,{method:'GET'});
+      return {status:response.status,ok:response.ok,mime:response.headers.get('content-type')||'application/octet-stream',body:Buffer.from(await response.arrayBuffer())};
+    })().finally(()=>pageReads.delete(key));
+    pageReads.set(key,flight);
+    return flight;
+  }
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
     try{
@@ -66,6 +79,10 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(!exempt(req.method,req.url)){const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));if(!access.allowed)return json(res,403,access)}
         // LAB104: run only after account/authorization gates; never enqueue a receipt.
         if(await require('./receipt-forward.cjs').forwardReceipt({req,res,url,bytes,contentType,store,request,offline:connectionOffline,json,enabled:require('./package.json').version==='1.0.104'}))return;
+        if(!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|delegated-orders)(?:\/|$)/.test(url.pathname)){
+          orderGeneration++;
+          res.once('finish',()=>{orderGeneration++;});
+        }
         const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
         // The legacy local list has no page/count fields. Its renderer fallback
         // computes both from the local orders, including orders made offline.
@@ -110,22 +127,31 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
           }
           try{
             if(connectionOffline())throw Error('internet_offline');
-            const up=await request(req.url,{method:req.method});
-            const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/octet-stream';
-            if(pagedOrders&&req.method==='GET'&&up.ok){
+            const pagedRead=pagedOrders&&req.method==='GET';
+            const scope=pagedRead?pageScope():null,generation=orderGeneration;
+            let result;
+            if(pagedRead){
+              result=await readPage(JSON.stringify([scope,generation,cacheUrl]),req.url);
+              if(scope!==pageScope())return json(res,401,{error:'account_changed'});
+            }else{
+              const up=await request(req.url,{method:req.method});
+              result={status:up.status,ok:up.ok,mime:up.headers.get('content-type')||'application/octet-stream',body:Buffer.from(await up.arrayBuffer())};
+            }
+            const {status,ok,mime,body}=result;
+            if(pagedRead&&ok){
               let page;
               try{page=JSON.parse(body.toString());}catch{}
               if(!Array.isArray(page?.orders)||!Number.isSafeInteger(page.total)||!Number.isSafeInteger(page.pages)||!page.counts){
                 return json(res,502,{error:'invalid_paged_orders'});
               }
             }
-            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6){
+            if(ok&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
               const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
-              if(!cached||cached.status!==up.status||cached.mime!==mime||cached.body!==encoded){
-                store.cache(cacheUrl,up.status,mime,encoded);
+              if(!cached||cached.status!==status||cached.mime!==mime||cached.body!==encoded){
+                store.cache(cacheUrl,status,mime,encoded);
               }
             }
-            res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});
+            res.writeHead(status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{
             if(pagedOrders)return json(res,503,{error:'online_connection_required'});

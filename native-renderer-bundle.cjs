@@ -2,7 +2,7 @@
 
 const fs = require('node:fs');
 const { sourceMarker } = require('./ui-diagnostics.cjs');
-const { canBridge, connectNotificationDownload } = require('./native-notification-download.cjs');
+const { canBridge, connectNotificationDownload, reuseDownloadedDetails } = require('./native-notification-download.cjs');
 const { patchStorageBundle } = require('./storage-bundle.cjs');
 let last;
 
@@ -21,9 +21,11 @@ function compile(file, version) {
   const source = fs.readFileSync(file, 'utf8');
   const modern = fastWorkerEnabled(source, version);
   const bridge = !modern && /^1\.0\.\d+$/.test(version) && Number(version.split('.')[2]) >= 120 && canBridge(source);
+  const served = patchStorageBundle(source);
+  const optimized = bridge ? reuseDownloadedDetails(served) : { source: served };
   const body = 'window.__PB_LAB104_NATIVE__=' + JSON.stringify(modern) + ';\n' +
     'window.__PB_NATIVE_SOURCE_PROOF__=' + JSON.stringify(sourceMarker(source, version)) + ';\n' +
-    patchStorageBundle(source) + (bridge ? '\n;(' + connectNotificationDownload.toString() + ')();\n' : '');
+    optimized.source + (bridge ? '\n;(' + connectNotificationDownload.toString() + ')(' + optimized.reused + ');\n' : '');
   last = { key, body };
   return body;
 }

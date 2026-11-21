@@ -47,3 +47,27 @@ test('notification fetches the exact order immediately and calls its existing do
   await previous;
   assert.equal(transfers.length, 1);
 });
+
+test('worker can reuse the ready order detail and report download progress without changing the ordinary path', async () => {
+  const { reuseDownloadedDetails } = require('../native-notification-download.cjs');
+  const upstream = `async function pb1568ProcessOrder(lab,order,settings){
+   const id=order.id;
+   const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));
+   return await pb1450Download(detail,()=>{},{silent:true});
+  }
+  async function pb1568AutoTick(){}`;
+  const result = reuseDownloadedDetails(upstream);
+  assert(result.reused);
+  let reads = 0;
+  const bytes = [];
+  const worker = vm.runInNewContext(result.source + '\npb1568ProcessOrder', {
+    Me: async () => { reads++; return { id: orderId }; },
+    pb1450Download: async (detail, progress) => { progress(12); return detail; },
+  });
+  const detail = { id: orderId };
+  assert.equal(await worker('lab-1', detail, {}, { detail, progress: n => bytes.push(n) }), detail);
+  assert.deepEqual(bytes, [12]);
+  assert.equal(reads, 0);
+  await worker('lab-1', detail, {});
+  assert.equal(reads, 1);
+});

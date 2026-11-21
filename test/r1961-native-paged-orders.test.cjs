@@ -93,3 +93,35 @@ test('changing only the page poll timestamp reuses the cache and preserves disti
   store.db.close();
  }
 });
+
+test('overlapping identical page requests share one upstream read while another tab stays independent',async()=>{
+ const {createHost}=require('../host.cjs');
+ const {LabStore}=require('../store.cjs');
+ const store=new LabStore(':memory:');
+ store.set('auth',{});store.set('labId','lab-1');store.set('deviceId','device-1');
+ const calls=[];
+ let release;
+ const pending=new Promise(resolve=>{release=resolve;});
+ const phases=new Map();
+ const server=createHost({store,sync:{},token:'test',request:async route=>{
+  const stage=new URL(route,'http://127.0.0.1').searchParams.get('stage');
+  calls.push(stage);phases.get(stage)?.();await pending;
+  return Response.json({orders:[{id:stage}],counts:{flow:1,ready:1,completed:0},pages:1,total:1});
+ }});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const request=(stage,tag)=>fetch('http://127.0.0.1:'+server.address().port+'/api/lab/orders?paged=1&mode=print&stage='+stage+'&page=1&pbNativeLiveStatus='+tag,{headers:{Cookie:'desktop=test'}});
+ try{
+  const first=new Promise(resolve=>phases.set('flow',resolve));
+  const one=request('flow',1);await first;
+  const two=request('flow',2);
+  const another=new Promise(resolve=>phases.set('ready',resolve));
+  const three=request('ready',3);await another;
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.deepEqual(calls,['flow','ready']);
+  release();
+  const bodies=await Promise.all([one,two,three].map(async response=>(await response).json()));
+  assert.deepEqual(bodies.map(body=>body.orders[0].id),['flow','flow','ready']);
+ }finally{
+  release();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.db.close();
+ }
+});

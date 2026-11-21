@@ -44,7 +44,7 @@ function fixtureHtml({style,links},width){
  '<meta name="viewport" content="width=device-width, initial-scale=1">'+links+
  '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{max-width:100%}.labRoleWorkspace{width:100%}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:8px 10px;}</style>'+
  style+
- '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="rolePageScrollArea labRolePageScrollArea"><div class="stageQueueWorkspace compactStageQueue r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
+ '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="rolePageScrollArea labRolePageScrollArea"><div class="ordersWorkspace stageQueueWorkspace compactStageQueue r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
  '<div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div><div class="labQueueSearchSlot desktopQueueSearch"><input aria-label="جستجوی قدیمی"></div>'+
  '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button class="queueAttentionPulse">آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
  '</div><section class="r1952QueuePanel"><div class="r1952StatusTabs"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+

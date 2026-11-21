@@ -14,7 +14,7 @@ function readPayload(root){
  const html=fs.readFileSync(root+'/index.html','utf8');
  const i=ui.indexOf(labTabsAnchor);
  assert(i>0,root+' lab status tabs were not found');
- assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+90).startsWith(',e.jsxs("section",{className:"r1952QueuePanel"'),root+' independent status/search/pager controls must be outside legacy sticky bar');
+ assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+100).startsWith(']})'+',e.jsxs("section",{className:"r1952QueuePanel"'),root+' independent status/search/pager controls must be outside legacy sticky bar');
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=820?3:5'),root+' mobile pager must limit numeric buttons');

@@ -18,7 +18,7 @@ function readPayload(root){
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=820?3:5'),root+' mobile pager must limit numeric buttons');
- assert(html.includes('labStage=r1951'),root+' fresh UI revision missing');
+ assert(html.includes('labStage=r1952'),root+' fresh UI revision missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
  assert(style&&style[1].includes('PB1947:')&&style[1].includes('PB1949:'),root+' final mobile/desktop CSS missing');
  assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicated search still mounted');

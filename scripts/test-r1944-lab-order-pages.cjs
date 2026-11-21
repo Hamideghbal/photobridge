@@ -64,13 +64,17 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('PB1944 server-paged lab queue'),root+' missing paged fetch');
   assert(ui.includes('paged=1&mode='),root+' missing server route');
   assert(ui.includes('r1944Toolbar'),root+' missing controls');
-  assert(ui.includes('className:"r1952QueuePanel"'),root+' controls must be rendered outside legacy sticky header');
-  assert(ui.includes('className:"r1952StatusTabs"'),root+' missing 3 standalone status filters');
-  assert(html.includes('id="pb1952-lab-queue"'),root+' independent controls CSS is missing');
+  assert(ui.includes('className:"r1954QueueBar"'),root+' compact third header must be outside the sticky bar');
+  assert(!ui.includes('className:"r1952StatusTabs"'),root+' duplicated status buttons must not be mounted');
+  assert(html.includes('id="pb1954-lab-third-header"'),root+' compact third-header CSS is missing');
   const statusEnd='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})]})';
   const statusEndAt=ui.indexOf(statusEnd);
   assert(statusEndAt>0,root+' legacy status anchor missing');
-  assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+100).startsWith(']})'+',e.jsxs("section",{className:"r1952QueuePanel"'),root+' pager must be outside the old sticky header');
+  assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+100).startsWith(']})'+',e.jsx("section",{className:"r1954QueueBar"'),root+' pager must be outside the old sticky header');
+  assert(ui.includes('PB1954: background refresh must not flash loading UI'),root+' polling flicker guard missing');
+  assert(ui.includes('JSON.stringify(previous)===JSON.stringify(next)?previous:next'),root+' unchanged rows must not re-render');
+  assert(!ui.includes('در حال دریافت سفارش‌ها…'),root+' temporary loading summary must not blink');
+  assert(!ui.includes('disabled:r1944Pending||r1944Page'),root+' pagination must not toggle disabled on polling');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
    assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicate legacy search must not render');
    assert(html.includes('PB1949:'),root+' final CSS must override legacy header grid');
@@ -79,9 +83,9 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' fallback pages must show no more than ten');
   assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=820?3:5)'),root+' missing compact mobile pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
-  assert(html.includes('.r1952QueuePanel > .r1944Toolbar'),root+' pager must render as independent workspace panel');
+  assert(html.includes('.r1954QueueBar > .r1944Toolbar'),root+' pager must render in third header');
   assert(!html.includes('.labQueueStickyBar:has(>.r1944Toolbar)'),root+' advanced parent selector must not hide desktop pager');
-  assert(html.includes('labStage=r1952'),root+' stale bundle URL');
+  assert(html.includes('labStage=r1954'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }
 });

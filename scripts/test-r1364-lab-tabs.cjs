@@ -1,12 +1,12 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 test('all Lab tabs measure the visible secondary header and remove the viewport on logout/mobile',()=>{
- let active=true,desktop=true,headers=[{getClientRects:()=>[{}],getBoundingClientRect:()=>({bottom:72})},{getClientRects:()=>[{}],getBoundingClientRect:()=>({bottom:120})}],top,queue=false;
+ let active=true,desktop=true,headers=[{getClientRects:()=>[{}],getBoundingClientRect:()=>({bottom:72})},{getClientRects:()=>[{}],getBoundingClientRect:()=>({bottom:120})}],top,classes={};
  const root={querySelectorAll:()=>headers},main={querySelector:()=>({}),closest:()=>root,style:{getPropertyValue:()=>top,setProperty:(_,v)=>top=v}};
- const document={readyState:'complete',documentElement:{classList:{toggle:(_,v)=>queue=v}},querySelector:selector=>{assert.equal(selector.includes('labPrimaryConnectorMode'),false);return active?main:null},getElementById:()=>({})};
+ const document={readyState:'complete',documentElement:{classList:{toggle:(name,v)=>{classes[name]=v}}},querySelector:selector=>{assert.equal(selector.includes('labPrimaryConnectorMode'),false);return active?main:null},getElementById:()=>({})};
  const media={get matches(){return desktop},addEventListener:()=>{}};
  const context={window:{pbNativeStorage:{invoke(){}}},document,matchMedia:()=>media,requestAnimationFrame:fn=>fn(),MutationObserver:class{observe(){}},ResizeObserver:class{observe(){}disconnect(){}},addEventListener:()=>{},getComputedStyle:()=>({visibility:'visible'}),innerHeight:900};
  const source=fs.readFileSync('dist/web/photobridge-r1363-lab-queue.js','utf8').replace('function schedule(){','window.measureForTest=measure;function schedule(){');vm.runInNewContext(source,context);
- assert.equal(queue,true);assert.equal(top,'120px');headers=[headers[0]];context.window.measureForTest();assert.equal(top,'72px');desktop=false;context.window.measureForTest();assert.equal(queue,false);desktop=true;active=false;context.window.measureForTest();assert.equal(queue,false);
+ assert.equal(classes.pb1363OrderQueue,true);assert.equal(top,'120px');headers=[headers[0]];context.window.measureForTest();assert.equal(top,'72px');desktop=false;context.window.measureForTest();assert.equal(classes.pb1363OrderQueue,false);desktop=true;active=false;context.window.measureForTest();assert.equal(classes.pb1363OrderQueue,false);
 });
 test('blue shadow strength falls while neutral shadows, text and focus outlines remain unchanged',async()=>{
  const {softenCss}=await import('./soften-blue-shadows.mjs');

@@ -1,3 +1,7 @@
+/* PB1955: Hide only the redundant legacy status row. The existing second header remains unchanged. */
+html body #root .rolePageScrollArea > .ordersWorkspace.stageQueueWorkspace.compactStageQueue > .labQueueStickyBar.quickAccessAlwaysOpen > .queueFilters.mainQueueFilters.compactQueueFilters{
+  display:none!important;visibility:hidden!important
+}
 /* PB1955: Third Lab header is a full-width sibling before the blue scroll surface, not a card. */
 html body #root main.pageMain.pbFixedRoleHeader.labPrimaryConnectorMode > .pb1955ThirdHeaderHost{
   display:flex!important;flex:0 0 52px!important;align-items:center!important;box-sizing:border-box!important;

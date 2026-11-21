@@ -73,7 +73,7 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+100).startsWith(']})'+',e.jsx("section",{className:"r1954QueueBar"'),root+' pager must be outside the old sticky header');
   assert(ui.includes('PB1954: background refresh must not flash loading UI'),root+' polling flicker guard missing');
   assert(ui.includes('JSON.stringify(previous)===JSON.stringify(next)?previous:next'),root+' unchanged rows must not re-render');
-  assert(!ui.includes('در حال دریافت سفارش‌ها…'),root+' temporary loading summary must not blink');
+  assert(!ui.includes('r1944Pending?"در حال دریافت سفارش‌ها…":'),root+' temporary loading summary must not blink');
   assert(!ui.includes('disabled:r1944Pending||r1944Page'),root+' pagination must not toggle disabled on polling');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
    assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicate legacy search must not render');

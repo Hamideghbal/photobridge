@@ -43,14 +43,14 @@ function fixtureHtml({style,links},width){
  '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{max-width:100%}.labRoleWorkspace{width:100%}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:8px 10px;}</style>'+
  style+
  '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="rolePageScrollArea labRolePageScrollArea"><div class="stageQueueWorkspace compactStageQueue r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
- '<div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div><div class="labQueueSearchSlot desktopQueueSearch">جست‌وجوی قدیمی</div>'+
- '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
+ '<div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div><div class="labQueueSearchSlot desktopQueueSearch"><input aria-label="جستجوی قدیمی"></div>'+
+ '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button class="queueAttentionPulse">آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
  '<div class="r1944Toolbar"><div class="r1944ToolbarInner"><input type="search" class="r1944Search" placeholder="جست‌وجو در سفارش‌ها">'+
  '<span class="r1944PageSummary">نمایش ۱ تا ۱۰ از ۱۸۸ سفارش</span><div class="r1944Pager"><button class="r1944PageButton">قبلی</button>'+
  numbers+'<button class="r1944PageButton">بعدی</button></div></div></div>'+
  '</div><div class="labOrderScrollArea">سفارش‌های صفحه</div></div></main></div></div></body></html>';
 }
-const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility};};
+const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility,animationName:s.animationName};};
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
@@ -66,7 +66,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     await page.setContent(fixtureHtml(payload,width),{waitUntil:'load'});
     const g=await page.evaluate(()=>{
      const get=q=>document.querySelector(q);
-     const b=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility};};
+     const b=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility,animationName:s.animationName};};
      const header=get('.labQueueStickyBar');
      return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,header:b(header),filter:b(get('.queueFilters')),tabs:[...document.querySelectorAll('.queueFilters > button')].map(b),toolbar:b(get('.labQueueStickyBar > .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
     });
@@ -85,6 +85,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
      assert(g.buttons.every(b=>b.width>=24),tag+' mobile page touch targets too narrow');
     }
     assert(g.old?.display==='none',tag+' duplicated old search');
+    assert(g.tabs.every(b=>b.animationName==='none'),tag+' status tabs must never flash on refresh');
     assert(g.filter.top>=g.header.top-2&&g.filter.bottom<=g.toolbar.top+3,tag+' status buttons must precede the pager under actual legacy CSS');
     console.log('[R1946]',tag,'layout ok, page numbers',g.buttons.length-2);
    }

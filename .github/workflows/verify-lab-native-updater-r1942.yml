@@ -1,0 +1,37 @@
+name: Verify Lab native updater safety (R1942)
+
+on:
+  pull_request:
+    paths:
+      - 'apps/lab-desktop/app-update.cjs'
+      - 'apps/lab-desktop/app-update-main.cjs'
+      - 'apps/lab-desktop/lab-update-gate.cjs'
+      - 'apps/lab-desktop/post-exit-install.cjs'
+      - 'scripts/integrate-r1471-app-updates.cjs'
+      - 'scripts/test-r1933-auto-updates.cjs'
+      - 'scripts/test-r1942-native-install-gate.cjs'
+      - '.github/workflows/verify-lab-native-updater-r1942.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-updater-windows:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify updater modules parse
+        shell: pwsh
+        run: |
+          node --check apps/lab-desktop/app-update.cjs
+          node --check apps/lab-desktop/app-update-main.cjs
+          node --check apps/lab-desktop/lab-update-gate.cjs
+          node --check apps/lab-desktop/post-exit-install.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Native updater parse check failed' }
+      - name: Test signed updater handoff, idle gate and abort recovery
+        run: node --test scripts/test-r1933-auto-updates.cjs scripts/test-r1942-native-install-gate.cjs

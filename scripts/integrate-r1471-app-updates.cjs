@@ -1,12 +1,12 @@
 'use strict';const fs=require('node:fs'),path=require('node:path');
 function integrate(root,repo=path.resolve(__dirname,'..')){
  const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('R1471 native anchor changed');return s.replace(a,b)};
- for(const name of ['update-trust.cjs','app-update.cjs','app-update-main.cjs','create-update-release.cjs'])fs.copyFileSync(path.join(repo,'apps/lab-desktop',name),path.join(root,name));
+ for(const name of ['update-trust.cjs','app-update.cjs','lab-update-gate.cjs','post-exit-install.cjs','app-update-main.cjs','create-update-release.cjs'])fs.copyFileSync(path.join(repo,'apps/lab-desktop',name),path.join(root,name));
  const file=path.join(root,'main.cjs');let main=fs.readFileSync(file,'utf8');
  if(!main.includes('/* R1471 app updater */')){
   main=once(main,'let applyingUi=null;','let applyingUi=null;let programUpdates=null;');
   const start=main.indexOf(" try{const {autoUpdater}=require('electron-updater');"),end=main.indexOf('\n',start);if(start<0||end<start)throw Error('R1471 old updater missing');
-  main=main.slice(0,start)+` /* R1471 app updater */programUpdates=require('./app-update-main.cjs').installAppUpdates({app,dialog,Notification,store,request,getWindow:()=>win,show,canInstall:async()=>{if(nativeStorage.writers.size||nativeStorage.selection||sync.flight)return false;return await win.webContents.executeJavaScript(${JSON.stringify("!document.querySelector('dialog[open],form[data-busy=\"1\"]')")});},beforeQuit:async()=>{quitting=true;await sync.pause();}});void programUpdates.check();`+main.slice(end);
+  main=main.slice(0,start)+` const updateInstallGate=require('./lab-update-gate.cjs').createInstallGate({sync,nativeStorage,getWindow:()=>win,store}); /* R1471 app updater */programUpdates=require('./app-update-main.cjs').installAppUpdates({app,dialog,Notification,store,request,getWindow:()=>win,show,canInstall:()=>updateInstallGate.check(),onInstallAborted:()=>updateInstallGate.abort(),beforeQuit:async()=>{quitting=true;await sync.pause();}});void programUpdates.check();`+main.slice(end);
   main=once(main,"{label:'تنظیم صدای اعلان سفارش'", "{label:'به‌روزرسانی برنامه',click:()=>void programUpdates?.check(true)},{label:'تنظیم صدای اعلان سفارش'");
   main=once(main,'nativeAlerts.start();sync.resume();','nativeAlerts.start();void programUpdates?.check();sync.resume();');
   fs.writeFileSync(file,main);

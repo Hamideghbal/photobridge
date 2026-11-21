@@ -18,9 +18,10 @@ function readPayload(root){
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=720?3:5'),root+' mobile pager must limit numeric buttons');
- assert(html.includes('labStage=r1947'),root+' fresh UI revision missing');
+ assert(html.includes('labStage=r1949'),root+' fresh UI revision missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
- assert(style&&style[1].includes('PB1947:'),root+' final mobile/desktop CSS missing');
+ assert(style&&style[1].includes('PB1947:')&&style[1].includes('PB1949:'),root+' final mobile/desktop CSS missing');
+ assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicated search still mounted');
  assert(!style[1].includes(':has('),root+' toolbar must not rely on :has() support');
  const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
  if(root.endsWith('lab-desktop-ui')){
@@ -41,8 +42,8 @@ function fixtureHtml({style,links},width){
  '<meta name="viewport" content="width=device-width, initial-scale=1">'+links+
  '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{max-width:100%}.labRoleWorkspace{width:100%}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:8px 10px;}</style>'+
  style+
- '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="labRolePageScrollArea"><div class="r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
- '<div class="labQueueSearchSlot desktopQueueSearch">جست‌وجوی قدیمی</div>'+
+ '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="rolePageScrollArea labRolePageScrollArea"><div class="stageQueueWorkspace compactStageQueue r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
+ '<div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div><div class="labQueueSearchSlot desktopQueueSearch">جست‌وجوی قدیمی</div>'+
  '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
  '<div class="r1944Toolbar"><div class="r1944ToolbarInner"><input type="search" class="r1944Search" placeholder="جست‌وجو در سفارش‌ها">'+
  '<span class="r1944PageSummary">نمایش ۱ تا ۱۰ از ۱۸۸ سفارش</span><div class="r1944Pager"><button class="r1944PageButton">قبلی</button>'+
@@ -84,6 +85,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
      assert(g.buttons.every(b=>b.width>=24),tag+' mobile page touch targets too narrow');
     }
     assert(g.old?.display==='none',tag+' duplicated old search');
+    assert(g.filter.top>=g.header.top-2&&g.filter.bottom<=g.toolbar.top+3,tag+' status buttons must precede the pager under actual legacy CSS');
     console.log('[R1946]',tag,'layout ok, page numbers',g.buttons.length-2);
    }
    await page.close();

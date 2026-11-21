@@ -8,7 +8,7 @@ const currentBundle=[
  "return source==='walkin'?'Moshtari':'Hamkar'",
  'const pb1894ReadyResult=await It(le,"ready")',
  '/* PB1894 invoice-first server stages */',
- 'r1955Host?bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"'),
+ 'r1955Host?bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"',
  'main.insertBefore(host,scroll)'
 ].join('\\n');
 const currentHtml='<html>verified website<style>/* PB1949: stable Lab toolbar */</style><style id="pb1955-real-third-header">/* PB1955: real third header */</style><script src="/assets/index-UIRefine-v655-r84.js?labStage=r1955"></script></html>';

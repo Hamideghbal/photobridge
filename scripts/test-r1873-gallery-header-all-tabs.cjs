@@ -5,6 +5,20 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const read=name=>fs.readFileSync(name,'utf8');
 
+test('R1873: Gallery asset revision accepts current and future releases, rejects malformed values',()=>{
+ const source=read('scripts/enable-r1873-gallery-header-all-tabs.mjs');
+ const first=source.indexOf('const revision=');
+ const last=source.indexOf('for(const file of ',first);
+ assert(first>=0&&last>first,'revision validator must be present');
+ const validate=new Function('fs',source.slice(first,last));
+ for(const revision of [read('DEPLOY_REVISION.txt').trim(),'2027-01-01-r2000-future-release','2026-11-17-r1875-mobile-header-legacy']){
+  assert.doesNotThrow(()=>validate({readFileSync:()=>revision}),revision);
+ }
+ for(const revision of ['', '../invalid', 'bad-revision']){
+  assert.throws(()=>validate({readFileSync:()=>revision}),/invalid deployment revision/);
+ }
+});
+
 test('R1873: one Gallery account component survives all mobile routes',()=>{
  const header=read('dist/web/photobridge-v904r100f41-header-date-name-fit.js');
  const css=read('dist/web/photobridge-v904r100f41-header-date-name-fit.css');

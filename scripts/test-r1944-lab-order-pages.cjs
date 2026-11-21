@@ -86,7 +86,7 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
   assert(html.includes('.pb1955ThirdHeaderHost .r1944Toolbar'),root+' pager must render in full-width third header');
   assert(!html.includes('.labQueueStickyBar:has(>.r1944Toolbar)'),root+' advanced parent selector must not hide desktop pager');
-  assert(html.includes('labStage=r1955'),root+' stale bundle URL');
+  assert(html.includes('labStage=r1956'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }
 });

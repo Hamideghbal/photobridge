@@ -24,7 +24,7 @@ function create({now=()=>Date.now(),maxEntries=48,maxBytes=12*1024*1024,freshMs=
   return !!old&&old.signature!==signature;
  }
  async function getOrFetch({account,url,load,validAccount=()=>true}){
-  sameAccount(account);const identity=canonical(url),key=account+'|'+identity;
+  sameAccount(account);if(!validAccount())throw fail('account_changed',401);const identity=canonical(url),key=account+'|'+identity;
   const current=entries.get(key),age=current?now()-current.at:Infinity;
   async function begin(){
    if(flights.has(key))return flights.get(key);

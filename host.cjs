@@ -5,9 +5,14 @@ const fs=require('node:fs');
 const path=require('node:path');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,perf=null,onPageRefreshed=()=>{}}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
+  /* R1965_NATIVE_RESPONSIVENESS: verified pages in RAM only, per account. */
+  const nativePageCache=require('./r1965-page-cache.cjs').create({
+   onMetric:(type,ms)=>perf?.record(type,ms),
+   onRefresh:({account})=>{if(account===store.get('labId')&&store.get('auth'))onPageRefreshed()}
+  });
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
     try{
@@ -44,6 +49,13 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(url.pathname==='/desktop/discard'&&req.method==='POST'){const p=await readJson(req);store.discard(String(p.id||''));return json(res,200,{ok:true})}
 
       const {bytes,contentType}=await readBody(req);
+      /* R1965_NATIVE_PERF_SAMPLES: numeric aggregate only, no identifiers. */
+      if(req.method==='POST'&&url.pathname==='/desktop/perf-sample'){
+       if(!store.get('auth'))return json(res,401,{error:'login_required'});
+       try{const data=JSON.parse(bytes.toString());if(!Array.isArray(data.samples)||data.samples.length>40)return json(res,400,{error:'samples_invalid'});for(const entry of data.samples)perf?.record(entry.type,entry.value)}
+       catch{return json(res,400,{error:'samples_invalid'})}return json(res,200,{ok:true});
+      }
+
       if(await require('./local-files-host.cjs').localFilesHost({req,res,url,store,nativeStorage,offline:connectionOffline(),json}))return;
       if(url.pathname.startsWith('/desktop/local-invoices/')&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request}))return;
       if(url.pathname==='/api/auth/lab-login'&&req.method==='POST'){
@@ -60,6 +72,22 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
+        /* R1965_FAST_PAGED_VIEW: serve validated page from RAM and revalidate asynchronously. */
+        if(require('./r1964-native-paged-route.cjs').isPagedOrderRequest(req,url)){
+         if(connectionOffline())return json(res,503,{error:'paged_orders_offline'});
+         sync.nativeForegroundUntil=Date.now()+2000;
+         const begin=Date.now(),account=store.get('labId');
+         try{
+          const result=await nativePageCache.getOrFetch({account,url:req.url,
+           validAccount:()=>store.get('labId')===account&&!!store.get('auth')&&!store.get('sessionExpired'),
+           load:async()=>{const upstream=await request(req.url,{method:'GET',signal:AbortSignal.timeout(10000)});return{status:upstream.status,body:Buffer.from(await upstream.arrayBuffer())}}
+          });
+          if(store.get('labId')!==account||!store.get('auth'))return json(res,401,{error:'account_changed'});
+          perf?.record('native_api_ms',Date.now()-begin);
+          res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-PhotoBridge-Page-Source':result.source});return res.end(result.body);
+         }catch(e){return json(res,e.status||503,{error:e.code||e.message||'paged_orders_unavailable',message:'نمایش پشتیبان سفارش‌ها فعال می‌شود.'})}
+        }
+
         if(req.method==='PATCH'&&/^\/api\/lab\/order-files\/[0-9a-f-]+\/print-settings$/i.test(url.pathname))return json(res,409,{error:'order_details_read_only',message:'جزئیات ثبت‌شدهٔ سفارش فقط قابل مشاهده است.'});
         if(url.pathname==='/api/lab/events'&&req.method==='GET'){if(connectionOffline())return json(res,503,{error:'internet_offline'});await require('./live-events-host.cjs').streamLabEvents({req,res,store,request,lab:store.get('labId')});return;}
         if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
@@ -67,7 +95,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(!exempt(req.method,req.url)){const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));if(!access.allowed)return json(res,403,access)}
         // LAB104: run only after account/authorization gates; never enqueue a receipt.
         if(await require('./receipt-forward.cjs').forwardReceipt({req,res,url,bytes,contentType,store,request,offline:connectionOffline,json,enabled:require('./package.json').version==='1.0.104'}))return;
-        if(await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request,stagePrefetch})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
+        if(await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request,stagePrefetch,onStageConfirmed:()=>{nativePageCache.invalidate(store.get('labId'));onPageRefreshed();}})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
         const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
@@ -153,6 +181,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       // Native bridge assets are pinned to this installed app, even after UI updates.
       // The desktop overlay includes native-only intake improvements and must not
       // silently revert when the verified website UI updates its bundled copy.
+      if(name==='r1965-perf-client.js'){res.writeHead(200,{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,name)))}
       if(['native-storage.js','desktop-overlay.js','backup-ui.js'].includes(name)){res.writeHead(200,{'Content-Type':MIME['.js'],'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});return res.end(fs.readFileSync(path.join(__dirname,name)))}
       for(const root of roots()){
         const file=path.resolve(root,name),resolvedRoot=path.resolve(root);
@@ -161,7 +190,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});
         if(name==='index.html'){
           let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');html=require('./native-first-paint.cjs').injectFirstPaint(html);const end=html.toLowerCase().lastIndexOf('</body>');
-          html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
+          html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script><script src="/r1965-perf-client.js"></script>'+(end<0?'':html.slice(end));
           return res.end(html);
         }
         if(path.extname(file)==='.css')return res.end(require('./native-font.cjs').patchNativeFontCss(fs.readFileSync(file,'utf8')));

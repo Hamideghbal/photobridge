@@ -1,0 +1,3 @@
+Copy your original Ed25519 update key into this folder as update-private.pem.
+Optional: put the Windows Authenticode certificate here as windows-signing.pfx.
+Keep all private key and certificate files on this computer.

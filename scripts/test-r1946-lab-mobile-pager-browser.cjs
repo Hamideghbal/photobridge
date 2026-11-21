@@ -18,9 +18,10 @@ function readPayload(root){
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=720?3:5'),root+' mobile pager must limit numeric buttons');
- assert(html.includes('labStage=r1946'),root+' fresh UI revision missing');
+ assert(html.includes('labStage=r1947'),root+' fresh UI revision missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
- assert(style&&style[1].includes('PB1946:'),root+' final mobile/desktop CSS missing');
+ assert(style&&style[1].includes('PB1947:'),root+' final mobile/desktop CSS missing');
+ assert(!style[1].includes(':has('),root+' toolbar must not rely on :has() support');
  const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
  if(root.endsWith('lab-desktop-ui')){
   const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));

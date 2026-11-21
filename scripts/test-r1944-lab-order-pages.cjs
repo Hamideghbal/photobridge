@@ -65,8 +65,9 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('paged=1&mode='),root+' missing server route');
   assert(ui.includes('r1944Toolbar'),root+' missing controls');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
-  assert(ui.includes('nativeOffline?Me("/api/lab/orders"):Me(uri)'),root+' must retain legacy cached orders when native offline');
-  assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' offline pagination must not show more than ten');
+  assert(ui.includes('nativeOffline?pb1945Legacy():Me(uri).catch('),root+' must retain offline cached orders and fallback if server paging fails');
+  assert(ui.includes('__pb1945Legacy'),root+' missing fallback status marker');
+  assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' fallback pages must show no more than ten');
   assert(ui.includes('Math.min(r1944Pages,5)'),root+' missing numeric pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
   assert(html.includes('position:sticky;top:0'),root+' toolbar must not scroll away');

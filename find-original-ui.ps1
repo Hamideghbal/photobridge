@@ -48,10 +48,16 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
  $roots=@((Join-Path $env:USERPROFILE 'Downloads'),[Environment]::GetFolderPath('DesktopDirectory'),(Split-Path -Parent $PSScriptRoot),$original)
  $versionPattern='(?i)(?:1[._-]0[._-]120|R1961)(?![0-9])'
  $archives=@()
+ $installers=@()
  $candidates=@($env:PB_120_UI_DIR,$original)+$InstalledRoots
  foreach ($root in ($roots | Where-Object {$_} | Select-Object -Unique)) {
   foreach ($file in (Get-ChildItem -LiteralPath $root -File -Filter '*.zip' -ErrorAction SilentlyContinue)) {
    if ($root -eq $original -or $file.Name -match $versionPattern) {$archives+=$file.FullName}
+  }
+  foreach ($file in (Get-ChildItem -LiteralPath $root -File -Filter '*.exe' -ErrorAction SilentlyContinue)) {
+   if ($root -eq $original -or ($file.Name -like '*PhotoBridge*Lab*' -and $file.Name -match $versionPattern)) {
+    $installers+=$file.FullName
+   }
   }
   foreach ($folder in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | Where-Object {$_.Name -match $versionPattern})) {
    foreach ($relative in @('', 'runtime','resources/runtime','verified-ui','win-unpacked/resources/runtime')) {
@@ -71,6 +77,37 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
   }
  }
 
+ if (Find-OriginalUiInZip $Node $archives) {return}
+ foreach ($installer in ($installers | Select-Object -Unique)) {
+  if (Find-OriginalUiInInstaller $Node $installer) {return}
+ }
+ if ($env:OS -eq 'Windows_NT') {
+  Add-Type -AssemblyName System.Windows.Forms
+  $picker=New-Object System.Windows.Forms.OpenFileDialog
+  try {
+   $picker.Title='Select the PhotoBridge Lab 1.0.120 setup, source ZIP, or installed application'
+   $picker.Filter='PhotoBridge setup or source|*.exe;*.zip|All files|*.*'
+   $picker.CheckFileExists=$true
+   if ($picker.ShowDialog() -eq 'OK') {
+    if ([IO.Path]::GetExtension($picker.FileName) -ieq '.zip') {
+     if (Find-OriginalUiInZip $Node @($picker.FileName)) {return}
+    }
+    $runtime=Get-Exact120Runtime $picker.FileName
+    if ($runtime) {
+     $env:PB_120_UI_DIR=$runtime
+     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
+     if ($LASTEXITCODE -eq 0) {return}
+    } elseif ([IO.Path]::GetExtension($picker.FileName) -ieq '.exe') {
+     if (Find-OriginalUiInInstaller $Node $picker.FileName) {return}
+    }
+   }
+  } finally {$picker.Dispose()}
+ }
+ throw 'Original 1.0.120 UI was not found or did not pass verification. Put the original 1.0.120 Lab setup EXE or source ZIP in original-120-ui.'
+}
+
+function Find-OriginalUiInZip([string]$Node,[string[]]$Archives) {
+ $manifestName='.pb-lab-bundle-manifest.json'
  Add-Type -AssemblyName System.IO.Compression.FileSystem
  foreach ($archive in ($archives | Select-Object -Unique)) {
   $zip=$null
@@ -95,30 +132,57 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
       [IO.Compression.ZipFileExtensions]::ExtractToFile($item,$target)
      }
      $env:PB_120_UI_DIR=$stage
-     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
-     if ($LASTEXITCODE -eq 0) {return}
+     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
+     if ($LASTEXITCODE -eq 0) {return $true}
     } catch {Write-Host ('Skipping UI archive candidate: '+$_.Exception.Message)}
     finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
    }
   } catch {Write-Host ('Skipping ZIP: '+$_.Exception.Message)}
   finally {if($zip){$zip.Dispose()}}
  }
- if ($env:OS -eq 'Windows_NT') {
-  Add-Type -AssemblyName System.Windows.Forms
-  $picker=New-Object System.Windows.Forms.OpenFileDialog
-  try {
-   $picker.Title='Select the installed PhotoBridge Lab 1.0.120 executable (not Setup)'
-   $picker.Filter='Installed PhotoBridge Lab|PhotoBridge Lab.exe'
-   $picker.CheckFileExists=$true
-   if ($picker.ShowDialog() -eq 'OK') {
-    $runtime=Get-Exact120Runtime $picker.FileName
-    if ($runtime) {
-     $env:PB_120_UI_DIR=$runtime
-     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
-     if ($LASTEXITCODE -eq 0) {return}
-    }
+ return $false
+}
+
+function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
+ $stage=Join-Path ([IO.Path]::GetTempPath()) ('pb120-installer-'+[guid]::NewGuid().ToString('N'))
+ try {
+  New-Item -ItemType Directory -Path $stage | Out-Null
+  $seven=$null
+  foreach ($parent in @($env:ProgramFiles,${env:ProgramFiles(x86)})) {
+   if ($parent) {
+    $candidate=Join-Path $parent '7-Zip/7z.exe'
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {$seven=$candidate;break}
    }
-  } finally {$picker.Dispose()}
- }
- throw 'Original 1.0.120 UI was not found or did not pass verification. Put the original 1.0.120 source ZIP in original-120-ui. The EXE alone is not a source ZIP.'
+  }
+  if (!$seven) {
+   $msi=Join-Path $stage '7zip.msi'
+   $tools=Join-Path $stage 'tools'
+   Write-Host 'Downloading 7-Zip for temporary installer extraction...'
+   Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-x64.msi' -OutFile $msi
+   if ((Get-FileHash -Algorithm SHA256 -LiteralPath $msi).Hash -ne 'e7eb0b7ed5efa4e087b7b17f191797f7af5b7f442d1290c66f3a21777005ef57') {
+    throw '7-Zip download checksum mismatch.'
+   }
+   $args=@('/a',('"'+$msi+'"'),('TARGETDIR="'+$tools+'"'),'/qn','/norestart')
+   $unpack=Start-Process -FilePath (Join-Path $env:SystemRoot 'System32/msiexec.exe') -ArgumentList $args -PassThru -Wait
+   if ($unpack.ExitCode -ne 0) {throw ('Could not extract 7-Zip MSI: '+$unpack.ExitCode)}
+   $seven=(Get-ChildItem -LiteralPath $tools -Filter '7z.exe' -File -Recurse | Select-Object -First 1).FullName
+   if (!$seven) {throw '7-Zip executable missing from extracted tools.'}
+  }
+  $payload=Join-Path $stage 'payload'
+  & $seven x $Installer '-ir!app-64.7z' ('-o'+$payload) '-y' | Out-Host
+  if ($LASTEXITCODE -ne 0) {return $false}
+  $app=(Get-ChildItem -LiteralPath $payload -Filter 'app-64.7z' -File -Recurse | Select-Object -First 1).FullName
+  if (!$app) {return $false}
+  $installed=Join-Path $stage 'installed'
+  & $seven x $app 'PhotoBridge Lab.exe' 'resources/runtime/*' ('-o'+$installed) '-y' | Out-Host
+  if ($LASTEXITCODE -ne 0) {return $false}
+  $root=Get-Exact120Runtime (Join-Path $installed 'PhotoBridge Lab.exe')
+  if (!$root) {Write-Host 'Selected installer does not contain a 1.0.120 Lab executable and bundled UI.';return $false}
+  $env:PB_120_UI_DIR=$root
+  & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
+  return ($LASTEXITCODE -eq 0)
+ } catch {
+  Write-Host ('Could not recover UI from installer: '+$_.Exception.Message)
+  return $false
+ } finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
 }

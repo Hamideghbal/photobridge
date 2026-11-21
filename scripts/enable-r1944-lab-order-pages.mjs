@@ -53,6 +53,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(nextField<oldEnd)throw Error('[R1944] queue card handlers missing '+root);
   src=src.slice(0,effectBegin)+effectText+more+';'+newList+src.slice(nextField);
   const tab='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})';
+  const pos=src.indexOf(tab);
+  if(pos<0)throw Error('[R1946] missing tabs');
+  console.log('[R1946_TAB_CONTEXT]',root,JSON.stringify({left:src.slice(Math.max(0,pos-1100),pos),right:src.slice(pos+tab.length,pos+tab.length+1600)}));
   src=once(src,tab,tab+tb,'tab toolbar '+root);
   fs.writeFileSync(path,src);
  }

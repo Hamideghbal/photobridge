@@ -14,17 +14,19 @@ function readPayload(root){
  const html=fs.readFileSync(root+'/index.html','utf8');
  const i=ui.indexOf(labTabsAnchor);
  assert(i>0,root+' lab status tabs were not found');
- assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+100).startsWith(']})'+',e.jsx("section",{className:"r1954QueueBar"'),root+' compact search/pager must be outside legacy sticky bar');
+ assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+120).startsWith(']})'+',r1955Host?bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"'),root+' search/pager must use React portal into third header');
+ assert(ui.includes('main.insertBefore(host,scroll)'),root+' real header host is not placed before the blue scroll surface');
+ assert(ui.includes('[r1955Host,r1955SetHost]=x.useState(null)'),root+' header host must be React managed');
  assert(!ui.includes('className:"r1952StatusTabs"'),root+' duplicated status tabs must not be rendered');
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=820?3:5'),root+' mobile pager must limit numeric buttons');
- assert(html.includes('labStage=r1954'),root+' fresh UI revision missing');
+ assert(html.includes('labStage=r1955'),root+' fresh UI revision missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
  assert(style&&style[1].includes('PB1947:')&&style[1].includes('PB1949:'),root+' final mobile/desktop CSS missing');
  assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicated search still mounted');
- const newStyle=html.match(/<style id="pb1954-lab-third-header">([\s\S]*?)<\/style>/);
- assert(newStyle&&newStyle[1].includes('PB1954:'),root+' independent controls CSS not delivered');
+ const newStyle=html.match(/<style id="pb1955-real-third-header">([\s\S]*?)<\/style>/);
+ assert(newStyle&&newStyle[1].includes('PB1955:'),root+' independent controls CSS not delivered');
  assert(!style[1].includes(':has(')&&!newStyle[1].includes(':has('),root+' toolbar must not rely on :has() support');
  const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
  if(root.endsWith('lab-desktop-ui')){
@@ -38,21 +40,25 @@ function readPayload(root){
  }
  return {root,html,style:style[0]+newStyle[0],links};
 }
+
 function fixtureHtml({style,links},width){
  const num=width<=820?3:5;
  const numbers=Array.from({length:num},(_,i)=>'<button type="button" class="r1944PageButton'+(i===0?' active':'')+'">'+(i+1)+'</button>').join('');
  return '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">'+
  '<meta name="viewport" content="width=device-width, initial-scale=1">'+links+
- '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{max-width:100%}.labRoleWorkspace{width:100%}.labGlobalStageHeader{height:48px;display:flex;align-items:center;gap:8px;padding:0 10px;direction:rtl;background:#fff}.labGlobalStageHeader button{height:33px;border:0;background:#edf4ff;color:#235bc2;border-radius:8px;padding:0 10px}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:0 10px 8px;}</style>'+
+ '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{width:100%;max-width:100%}.labRoleWorkspace{width:100%}.labGlobalStageHeader{box-sizing:border-box;width:100%;height:52px;display:flex;align-items:center;gap:8px;padding:0 10px;direction:rtl;background:#fff;border-bottom:1px solid #dce4ef}.labGlobalStageHeader button{height:33px;border:0;background:#edf4ff;color:#235bc2;border-radius:8px;padding:0 10px}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:0 10px 8px;}</style>'+
  style+
- '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="labGlobalStageHeader"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div><div class="rolePageScrollArea labRolePageScrollArea"><div class="ordersWorkspace stageQueueWorkspace compactStageQueue r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
- '<div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div><div class="labQueueSearchSlot desktopQueueSearch"><input aria-label="جستجوی قدیمی"></div>'+
- '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button class="queueAttentionPulse">آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
- '</div><section class="r1954QueueBar">'+
- '<div class="r1944Toolbar"><div class="r1944ToolbarInner"><input type="search" class="r1944Search" placeholder="جست‌وجو در سفارش‌ها">'+
+ '</head><body><div id="root"><div class="labRoleWorkspace"><main class="pageMain pbFixedRoleHeader labPrimaryConnectorMode appWorkspacePage pb1151PrintPage">'+
+ '<div class="labGlobalStageHeader"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
+ '<div class="pb1955ThirdHeaderHost"><section class="r1955ThirdHeader"><div class="r1944Toolbar"><div class="r1944ToolbarInner">'+
+ '<input type="search" class="r1944Search" placeholder="جست‌وجو در سفارش‌ها">'+
  '<span class="r1944PageSummary">نمایش ۱ تا ۱۰ از ۱۸۸ سفارش</span><div class="r1944Pager"><button class="r1944PageButton">قبلی</button>'+
- numbers+'<button class="r1944PageButton">بعدی</button></div></div></div>'+
- '</section><div class="labOrderScrollArea">سفارش‌های صفحه</div></div></main></div></div></body></html>';
+ numbers+'<button class="r1944PageButton">بعدی</button></div></div></div></section></div>'+
+ '<div class="rolePageScrollArea labRolePageScrollArea"><div class="ordersWorkspace stageQueueWorkspace compactStageQueue r1946Fixture">'+
+ '<div class="labQueueStickyBar quickAccessAlwaysOpen"><div class="labQueueQuickAccessV464">میانبرهای لابراتوار</div>'+
+ '<div class="labQueueSearchSlot desktopQueueSearch"><input aria-label="جستجوی قدیمی"></div>'+
+ '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div></div>'+
+ '<div class="labOrderScrollArea">سفارش‌های صفحه</div></div></div></main></div></div></body></html>';
 }
 const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility,animationName:s.animationName};};
 (async()=>{
@@ -72,13 +78,15 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
      const get=q=>document.querySelector(q);
      const b=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility,animationName:s.animationName};};
      const header=get('.labQueueStickyBar');
-     return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,header:b(header),filter:b(get('.labGlobalStageHeader')),legacyFilter:b(get('.labQueueStickyBar > .queueFilters')),tabs:[...document.querySelectorAll('.labGlobalStageHeader > button')].map(b),panel:b(get('.r1954QueueBar')),toolbar:b(get('.r1954QueueBar > .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
+     return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,header:b(header),filter:b(get('.labGlobalStageHeader')),legacyFilter:b(get('.labQueueStickyBar > .queueFilters')),tabs:[...document.querySelectorAll('.labGlobalStageHeader > button')].map(b),panel:b(get('.pb1955ThirdHeaderHost')),scroll:b(get('.rolePageScrollArea.labRolePageScrollArea')),toolbar:b(get('.pb1955ThirdHeaderHost .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
     });
     const tag=root+':'+width;
     assert(g.header&&g.filter&&g.panel&&g.toolbar&&g.search&&g.summary&&g.pager,tag+' missing independent panel pieces');
     assert(g.tabs.length===3&&g.tabs.every(b=>b.width>35&&b.height>20),tag+' status tabs collapsed');
     assert(g.toolbar.height>=30&&g.search.height>=28&&g.pager.height>=30,tag+' search and pager must be visible');
-    assert(g.panel.top>=g.filter.bottom-2,tag+' third header overlaps existing second status header '+JSON.stringify(g));
+    assert(g.panel.top>=g.filter.bottom-2,tag+' third header overlaps second header '+JSON.stringify(g));
+    assert(Math.abs(g.panel.height-52)<=1,tag+' third header must match second header height of 52px '+JSON.stringify(g));
+    assert(g.scroll?.top>=g.panel.bottom-2,tag+' blue scroll surface must start below third header');
     assert(g.search.top>=g.toolbar.top-1&&g.pager.top>=g.toolbar.top-1,tag+' search or pager obscured');
     assert(g.header.left>=-3&&g.header.right<=g.vp+3,tag+' header exceeds viewport');
     assert(g.toolbar.left>=-3&&g.toolbar.right<=g.vp+3,tag+' toolbar exceeds viewport');
@@ -90,15 +98,15 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     } 
     assert.equal(g.buttons.length,width<=820?5:7,tag+' correct numeric pager count');
     if(width<=820){
-     assert(g.search.bottom<=g.pager.top+2,tag+' mobile search/pager rows overlap');
+     assert(Math.abs(g.search.top-g.pager.top)<12,tag+' mobile search and pager must share one header row');
      assert.equal(g.summary.display,'none',tag+' mobile summary must be compact/hidden');
      assert(g.buttons.every(b=>b.width>=24),tag+' mobile page touch targets too narrow');
     }
     assert(g.old?.display==='none',tag+' duplicated old search');
     assert(g.legacyFilter?.display==='none',tag+' hidden legacy tabs must not overlap new tab panel');
-    assert(g.panel.top>=g.header.bottom-3,tag+' independent panel must follow the old header');
+    assert(g.panel.bottom<=g.header.top+3,tag+' third header must be ABOVE the old order workspace header');
     assert(g.buttons.every(b=>b.animationName==='none'),tag+' pagination must never blink on polling');
-    assert(g.filter.bottom<=g.panel.top+3,tag+' no extra duplicated status row between existing header and third header');
+    assert(g.filter.bottom<=g.panel.top+3,tag+' third header must follow existing status row without extra controls');
     console.log('[R1946]',tag,'layout ok, page numbers',g.buttons.length-2);
    }
    await page.close();

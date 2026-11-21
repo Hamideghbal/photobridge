@@ -70,14 +70,37 @@
  }
  async function openUpdate(){
    await refresh();const s=state||{};const panel=dialog('به‌روزرسانی ظاهر برنامه');
+   const compactHash=v=>/^[a-f0-9]{64}$/.test(String(v||''))?String(v).slice(0,12):'نامشخص';
    for(const line of [
      'نسخهٔ برنامه: '+(s.nativeVersion||'در این نسخه گزارش نمی‌شود'),
+     'بستهٔ رابط دریافت‌شده: '+compactHash(s.uiBuild),
      'آخرین بررسی: '+date(s.uiLastCheckedAt),
      'آخرین دریافت: '+date(s.uiDownloadedAt),
      'آخرین اعمال: '+date(s.uiAppliedAt)
    ])element('p',line,panel);
-   element('p',s.updateError?'به‌روزرسانی کامل نشده است: '+s.updateError:'بررسی و دریافت تغییرات ظاهر خودکار انجام می‌شود.',panel);
-   element('p','برای بررسی دستی از منوی آیکون PhotoBridge کنار ساعت ویندوز استفاده کن.',panel);
+   const serverLine=element('p','نسخه رابط روی سرور: در حال بررسی…',panel);
+   // R1955: Compare the local *downloaded* hash with the public remote
+   // manifest. Do not confuse program-installer version with native UI version.
+   void (async()=>{
+     let last='';
+     for(const url of ['/api/desktop-ui/lab-manifest','/api/lab/desktop-ui-manifest']){
+       try{
+         const r=await fetch(url+'?pb1955='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
+         if(!r.ok)throw Error('HTTP '+r.status);
+         const manifest=await r.json();
+         if(!/^[a-f0-9]{64}$/.test(manifest.build))throw Error('invalid_manifest');
+         if(!serverLine.isConnected)return;
+         const same=manifest.build===s.uiBuild;
+         serverLine.textContent='بستهٔ رابط روی سرور: '+compactHash(manifest.build)+(same?' · بسته دریافت شده است':' · نسخه جدیدتر قابل بررسی است');
+         if(same)element('p','اگر هنوز تغییرات را نمی‌بینی، احتمالاً رابط جدید فعال نشده است؛ برنامه را پس از پایان کارها کاملاً ببند و دوباره باز کن.',panel);
+         else element('p','برای دریافت رابط، گزینه «به‌روزرسانی سریع ظاهر» کنار ساعت را اجرا کن؛ «به‌روزرسانی برنامه» فقط نسخهٔ نصبی را بررسی می‌کند.',panel);
+         return;
+       }catch(error){last=String(error.message||error)}
+     }
+     if(serverLine.isConnected)serverLine.textContent='نسخه رابط روی سرور قابل بررسی نبود: '+last;
+   })();
+   element('p',s.updateError?'به‌روزرسانی کامل نشده است: '+s.updateError:'برای به‌روزرسانی ظاهر، نسخه نصبی و بسته رابط مستقل بررسی می‌شوند.',panel);
+   element('p','برای بررسی دستی از منوی آیکون PhotoBridge کنار ساعت ویندوز گزینه «به‌روزرسانی سریع ظاهر» را استفاده کن.',panel);
    const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
    link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
  }

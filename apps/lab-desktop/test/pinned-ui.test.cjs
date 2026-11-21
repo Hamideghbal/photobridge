@@ -7,9 +7,11 @@ const currentBundle=[
  'async function pb1550Target(){}',
  "return source==='walkin'?'Moshtari':'Hamkar'",
  'const pb1894ReadyResult=await It(le,"ready")',
- '/* PB1894 invoice-first server stages */'
+ '/* PB1894 invoice-first server stages */',
+ 'r1955Host?bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"})',
+ 'main.insertBefore(host,scroll)'
 ].join('\\n');
-const currentHtml='<html>verified website<style>/* PB1949: stable Lab toolbar */</style><script src="/assets/index-UIRefine-v655-r84.js?labStage=r1949"></script></html>';
+const currentHtml='<html>verified website<style>/* PB1949: stable Lab toolbar */</style><style id="pb1955-real-third-header">/* PB1955: real third header */</style><script src="/assets/index-UIRefine-v655-r84.js?labStage=r1955"></script></html>';
 function setup(){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-pinned-')),source=path.join(root,'verified'),directory=path.join(root,'runtime'),pinFile=path.join(root,'pin.json');
  fs.mkdirSync(path.join(source,'assets'),{recursive:true});
@@ -48,9 +50,11 @@ test('stale previously pinned installer UI is rejected, including old folder nam
   assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui/);
   fs.writeFileSync(file,currentBundle.replace('const pb1894ReadyResult=await It(le,"ready")',''));
   assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui/);
+  fs.writeFileSync(file,currentBundle.replace('main.insertBefore(host,scroll)',''));
+  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_missing_r1955_portal/);
   fs.writeFileSync(file,currentBundle);
-  fs.writeFileSync(path.join(f.source,'index.html'),currentHtml.replace('labStage=r1949','labStage=r1936'));
-  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_before_r1949/);
+  fs.writeFileSync(path.join(f.source,'index.html'),currentHtml.replace('labStage=r1955','labStage=r1936'));
+  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_before_r1955/);
  }finally{f.close()}
 });
 test('a stale but hash-valid pinned UI is refreshed from latest verified server files',async()=>{

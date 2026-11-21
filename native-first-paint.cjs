@@ -57,6 +57,26 @@ function bootNativeFirstPaint(ready) {
     schedule();
   }
   const stallTimer=setTimeout(()=>{
+    /* PB_R1967_NATIVE_FIRST_PAINT_RECOVERY: visual gate only, never a security or download gate. */
+    const root=document.getElementById('root');
+    const workspace=root?.querySelector('.labRoleWorkspace');
+    const snapshot={
+      schema:1,
+      appMounted:Boolean(root?.firstElementChild),
+      workspace:Boolean(workspace),
+      overlay:Boolean(window.__PB_LAB_DESKTOP_OVERLAY__),
+      primaryHeader:Boolean(workspace?.querySelector('.labSingleHeader')),
+      primaryNavigation:Boolean(workspace?.querySelector('.pb1147LabNav')),
+      secondaryNavigation:Boolean(workspace?.querySelector('.pb1148SecondaryHeader')),
+      tertiaryNavigation:Boolean(workspace?.querySelector('.pb1372ThirdHeader'))
+    };
+    window.__PB_NATIVE_FIRST_PAINT_DIAGNOSTICS__=snapshot;
+    if(snapshot.appMounted){
+      console.warn('[PhotoBridge R1967] Showing existing React page: native header paint readiness was delayed.');
+      finish();
+      return;
+    }
+
     if(done)return;
     html.classList.add('pbNativeFirstPaintStalled');
     if(!document.body || retry)return;
@@ -64,9 +84,16 @@ function bootNativeFirstPaint(ready) {
     retry.id='pbNativeFirstPaintRetry';
     retry.type='button';
     retry.textContent='تلاش دوباره';
+    retry.title='نمایش دوبارهٔ رابط؛ اطلاعات و عکس‌های ذخیره‌شده حذف نمی‌شوند.';
+    const hint=document.createElement('div');
+    hint.id='pbNativeFirstPaintDiagnostic';
+    hint.textContent='رابط اصلی هنوز ساخته نشده است (UI-R1967-MOUNT). شبکه یا خطای اجرای جاوااسکریپت را بررسی کنید.';
+    hint.style.cssText='position:fixed;z-index:2147483003;left:50%;top:calc(50% + 125px);transform:translateX(-50%);width:min(630px,90vw);text-align:center;font:12px Vazirmatn,Tahoma,sans-serif;color:#667085;direction:rtl;pointer-events:none';
+    document.body.append(hint);
+
     retry.addEventListener('click',()=>location.reload());
     document.body.append(retry);
-  },18000);
+  },6500);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
   else start();
 }

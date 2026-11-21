@@ -379,14 +379,16 @@ jobs:
               const nativeHtml=(await get('/lab-desktop-ui/index.html?check=r1955')).text;
               const nativeJs=(await get('/lab-desktop-ui/assets/index-UIRefine-v655-r84.js?check=r1955')).text;
               const nativeOverlay=(await get('/lab-desktop-ui/desktop-overlay.js?check=r1955')).text;
+              const nativeViewport=(await get('/lab-desktop-ui/photobridge-r1363-lab-queue.js?check=r1956')).text;
               const hash=source=>crypto.createHash('sha256').update(source).digest('hex');
               if(labManifest.protocol!==1||labManifest.channel!=='lab'||hash(JSON.stringify(labManifest.files))!==labManifest.build)throw Error('Live Lab UI manifest hash/protocol invalid');
               for(const [name,source] of [
                 ['index.html',nativeHtml],
                 ['assets/index-UIRefine-v655-r84.js',nativeJs],
-                ['desktop-overlay.js',nativeOverlay]
+                ['desktop-overlay.js',nativeOverlay],
+                ['photobridge-r1363-lab-queue.js',nativeViewport]
               ])if(labManifest.files.find(file=>file.name===name)?.sha256!==hash(source))throw Error('Live Lab UI manifest file hash differs: '+name);
-              if(!nativeHtml.includes('labStage=r1955')||!nativeHtml.includes('id="pb1955-real-third-header"')||!nativeJs.includes('bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"')||!nativeOverlay.includes('بستهٔ رابط روی سرور'))throw Error('Live Lab UI R1955 third header/native diagnostic assets missing');
+              if(!nativeHtml.includes('labStage=r1956')||!nativeHtml.includes('PB1956:')||!nativeHtml.includes('id="pb1955-real-third-header"')||!nativeJs.includes('bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"')||!nativeJs.includes("classList.add('pb1956LabThirdHeader')")||!nativeViewport.includes("--pb1956-third-bottom")||!nativeOverlay.includes('بستهٔ رابط روی سرور'))throw Error('Live Lab UI R1956 fixed scroll boundary/native UI assets missing');
               console.log('LIVE LAB UI VERIFIED: build '+labManifest.build+'; hashed native index, portal and update diagnostics available.');
               await verifyLiveCrm({expectedRevision:expected});
               console.log('LIVE VERIFIED: '+expected+'; shared model cards, photographer store, public storefront, stable print layout, failed-photo controls and saved-order recovery are served by photobridge.ir.');process.exit(0);

@@ -111,6 +111,15 @@ jobs:
         run: |
           npm run dist:unsigned
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test verified UI startup in the Windows Electron Renderer
+        env:
+          PB_ELECTRON_TEST_UI_ROOT: runtime
+        shell: pwsh
+        run: |
+          $p=Start-Process -FilePath '.\node_modules\electron\dist\electron.exe' -ArgumentList 'qa/native-ui-startup-electron.cjs' -PassThru -Wait -RedirectStandardOutput 'native-ui-startup.log' -RedirectStandardError 'native-ui-startup-error.log'
+          Get-Content native-ui-startup.log
+          Get-Content native-ui-startup-error.log
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
       - name: Smoke-test ACTUAL Windows Electron package
         shell: pwsh
         run: |

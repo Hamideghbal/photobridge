@@ -27,7 +27,28 @@ function rendererSnapshot(){
 }
 async function browserProof(){
  const output={};
- for(const name of ['/desktop/ui-proof','/assets/index-UIRefine-v655-r84.js','/photobridge-r1147-lab-admin-header.js','/photobridge-r1372-third-header.js','/desktop-overlay.js'])try{const response=await fetch(name,{cache:'no-store'});if(name==='/desktop/ui-proof'){output.host={status:response.status,data:response.ok?await response.json():null};continue;}const body=await response.arrayBuffer();output[name]={status:response.status,sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',body))].map(b=>b.toString(16).padStart(2,'0')).join(''),hostVersion:response.headers.get('x-photobridge-native-version'),hostPid:response.headers.get('x-photobridge-native-pid')};}catch{output[name]={failed:true};}
+ const paths=['/index.html','/assets/index-UIRefine-v655-r84.js','/photobridge-r1147-lab-admin-header.js',
+  '/photobridge-r1372-third-header.js','/desktop-overlay.js','/native-storage.js',
+  '/r1965-perf-client.js','/desktop/ui-assets/vazirmatn.woff2'];
+ for(const name of ['/desktop/ui-proof',...paths]){
+  const key=name==='/desktop/ui-proof'?'host':name;
+  try{
+   const response=await fetch(name,{cache:'no-store',credentials:'same-origin'});
+   const contentType=response.headers.get('content-type');
+   const status={status:response.status,contentType};
+   if(!response.ok){
+    if(response.status===403&&contentType?.startsWith('application/json')){
+     const reason=(await response.json().catch(()=>null))?.error;
+     if(['invalid_host','desktop_locked','invalid_origin'].includes(reason))status.rejection=reason;
+    }
+    output[key]=status;
+    continue;
+   }
+   if(key==='host'){output.host={...status,data:await response.json()};continue;}
+   const body=await response.arrayBuffer();
+   output[name]={...status,sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',body))].map(b=>b.toString(16).padStart(2,'0')).join(''),hostVersion:response.headers.get('x-photobridge-native-version'),hostPid:response.headers.get('x-photobridge-native-pid')};
+  }catch{output[key]={failed:true};}
+ }
  return output;
 }
 function createUiDiagnostics({getWindow,getRoots,store,version,origin}){

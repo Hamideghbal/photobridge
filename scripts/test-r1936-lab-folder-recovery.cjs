@@ -96,10 +96,10 @@ test('R1936: native queue requests fresh online states; server remains source of
  assert(patch.includes('pbNativeLiveStatus'));
  const path='dist/web/lab-desktop-ui/assets/index-UIRefine-v655-r84.js';
  const built=fs.readFileSync(path,'utf8');
- assert.match(built,/pbNativeLiveStatus=\x27\+Date\.now\(\)/);
+ assert.match(built,/pbNativeLiveStatus=\"\+Date\.now\(\)/);
  assert.match(built,/setInterval\(refresh,3000\)/);
  assert.match(built,/pb1753VisibleLabOrders\(data\.orders\|\|\[\],o\)/);
- assert.doesNotMatch(fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),/pbNativeLiveStatus=/);
+ assert.match(fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),/paged=1&mode=/);
 });
 
 

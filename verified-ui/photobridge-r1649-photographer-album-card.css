@@ -1,0 +1,214 @@
+/* R1649 — Photographer desktop/Windows ALBUM cards only.
+   Print-photo cards use R1591 and are intentionally not targeted.
+   Album stages sit between the right-hand order facts and the left actions.
+   Six album facts must occupy exactly one row, including the cover inscription. */
+@media (min-width:821px) {
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard > .liveOrderMainRow {
+    display:grid!important;
+    grid-template-columns:minmax(115px,.78fr) minmax(150px,.92fr) minmax(280px,2fr) minmax(200px,1.08fr)!important;
+    grid-template-areas:"head facts progress actions" "details details details details"!important;
+    column-gap:0!important;
+    row-gap:8px!important;
+    align-items:stretch!important;
+    direction:rtl!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .liveOrderMainRow > .customerOrderHead {
+    grid-area:head!important;
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-start!important;
+    padding:8px 6px 8px 12px!important;
+    margin:0!important;
+    min-width:0!important;
+    text-align:right!important;
+    box-sizing:border-box!important;
+  }
+
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .liveOrderMainRow > .customerOrderFacts {
+    grid-area:facts!important;
+    align-self:stretch!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    align-items:center!important;
+    justify-items:center!important;
+    padding:8px 11px!important;
+    margin:0!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+  }
+
+  /* Center all six album-stage dots and captions; no 'وضعیت چاپ' heading. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .liveOrderMainRow > .pb1464OrderProgress {
+    grid-area:progress!important;
+    align-self:stretch!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    place-content:center!important;
+    justify-items:center!important;
+    gap:0!important;
+    padding:5px 14px!important;
+    margin:0!important;
+    width:100%!important;
+    min-width:0!important;
+    border:0!important;
+    background:transparent!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .pb1464OrderProgress > small {
+    display:none!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .pb1464OrderProgress > .liveTimeline.albumCustomerTimeline {
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    justify-self:center!important;
+    align-self:center!important;
+    align-items:start!important;
+    justify-items:stretch!important;
+    gap:5px!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    padding:0!important;
+    direction:rtl!important;
+  }
+
+  /* Single divider at the RIGHT edge of the left-hand three action buttons. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .liveOrderMainRow > .customerOrderQuickRail {
+    grid-area:actions!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-end!important;
+    align-self:stretch!important;
+    gap:6px!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:8px 8px 8px 12px!important;
+    margin:0!important;
+    border:0!important;
+    border-inline-start:1px solid #dce4ed!important;
+    background:transparent!important;
+    box-sizing:border-box!important;
+    text-align:left!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .customerOrderQuickRail > span {
+    display:block!important;
+    width:100%!important;
+    text-align:left!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .customerOrderQuickActions {
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    width:100%!important;
+    min-width:0!important;
+    gap:5px!important;
+    margin:0!important;
+    direction:rtl!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .customerOrderQuickActions > button {
+    flex:1 1 0!important;
+    min-width:0!important;
+    max-width:115px!important;
+    width:auto!important;
+    white-space:nowrap!important;
+  }
+
+  /* Details remain BELOW the four card zones, as in the existing print card. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .liveOrderMainRow > .mobileOrderDisclosure {
+    grid-area:details!important;
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+
+  /* Six real fields, never five; the final cover inscription stays at column 6.
+     Text may wrap *inside* its own cell, but no fact drops into another row. */
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .albumOrderSummary.compact .albumOrderSummaryFactsPrimary {
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    grid-template-rows:minmax(64px,auto)!important;
+    grid-auto-flow:row!important;
+    gap:0!important;
+    align-items:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    max-height:none!important;
+    height:auto!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .albumOrderSummary.compact .albumOrderSummaryFactsPrimary > span {
+    grid-column:auto!important;
+    grid-row:1!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:64px!important;
+    padding:7px 6px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .albumOrderSummary.compact .albumOrderSummaryFactsPrimary > .albumCoverTextFact {
+    grid-column:6!important;
+    grid-row:1!important;
+  }
+  html:is(.pb1126Desktop,.pb1126Embedded) body #root
+  main.photographerMain.photographerPrintWorkspace .liveCustomerOrders
+  .liveOrderCard.albumCustomerOrderCard .albumOrderSummaryFactsPrimary > span > :is(small,b) {
+    min-width:0!important;
+    max-width:100%!important;
+    width:100%!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    text-align:center!important;
+  }
+}

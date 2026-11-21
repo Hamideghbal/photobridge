@@ -78,8 +78,7 @@
    ])element('p',line,panel);
    element('p',s.updateError?'به‌روزرسانی کامل نشده است: '+s.updateError:'بررسی و دریافت تغییرات ظاهر خودکار انجام می‌شود.',panel);
    element('p','برای بررسی دستی از منوی آیکون PhotoBridge کنار ساعت ویندوز استفاده کن.',panel);
-   const link=element('a','صفحهٔ دانلود برنامهٔ ویندوز لابراتوار',panel);
-   link.href='https://photobridge.ir/lab-windows-download.html';link.target='_blank';link.rel='noopener noreferrer';
+
  }
  document.addEventListener('keydown',event=>{
    if(!event.ctrlKey||!event.shiftKey||event.altKey||event.metaKey)return;
@@ -88,5 +87,5 @@
  });
  window.addEventListener('online',()=>{void syncNow()});
  window.addEventListener('offline',()=>{void refresh()});
- void refresh();setInterval(()=>void refresh(),10000);
+ // Status is refreshed on demand by openSync/openUpdate, not polled while idle.
 })();

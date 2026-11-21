@@ -1,0 +1,26 @@
+/* R1628: the address and all four photographer controls occupy one shared row. */
+html body #root .pb1436LabInvites .pb1436InviteControls{
+ display:grid!important;grid-template-columns:minmax(270px,1fr) minmax(610px,1.8fr)!important;
+ align-items:center!important;gap:14px!important;overflow-x:auto!important
+}
+html body #root .pb1436LabInvites .pb1436InviteLink{display:block!important;position:relative!important;min-width:0!important;grid-row:1!important;grid-column:1!important}
+html body #root .pb1436LabInvites .pb1436InviteLink input{height:42px!important;padding:8px 88px 8px 12px!important;direction:ltr;text-align:left}
+html body #root .pb1436LabInvites .pb1436InviteLink button{position:absolute!important;inset:5px 5px 5px auto!important;width:76px!important;min-height:0!important;height:32px!important;padding:3px 6px!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend{grid-row:1!important;grid-column:2!important;min-width:610px!important;grid-template-columns:minmax(150px,1.1fr) minmax(135px,1fr) minmax(145px,1fr) max-content!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>input:nth-child(2){grid-column:3!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>.pb1436InviteDebt{grid-column:2!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend input{height:42px!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>button{height:42px!important}
+html body #root .pb1436LabInvites .pb1436InviteControls>small,html body #root .pb1436LabInvites .pb1436InviteControls>[role],html body #root .pb1436LabInvites .pb1436InviteControls>button{grid-column:1/-1!important}
+html body #root .labReferralInviteControls.pb1436InviteControls{grid-template-columns:minmax(290px,1.25fr) 1px minmax(310px,1fr)!important;overflow-x:auto!important;gap:14px!important}
+html body #root .labReferralInviteControls .labReferralInviteDivider{width:1px!important;min-width:1px!important;height:40px!important;min-height:40px!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend{display:grid!important;grid-template-rows:auto!important;align-items:center!important;gap:8px!important}
+html body #root .pb1436LabInvites .pb1436InviteControls .pb1436InviteSend>.pb1436InviteDebt{grid-row:1!important}
+html body #root .pb1436LabInvites .pb1443CopyField{position:relative!important;display:block!important}
+html body #root .pb1436LabInvites .pb1438InviteIntro{grid-column:1/-1!important;grid-row:2!important;margin:0!important;font-size:11px!important}
+html body #root .pb1436LabInvites .pb1443InviteDivider{display:none!important}
+html body #root .labReferralInviteControls .labReferralInviteSend{display:grid!important;grid-template-columns:minmax(0,1fr) max-content!important;gap:8px!important}
+html body #root .labReferralInviteControls .labReferralInviteLink{display:block!important;position:relative!important}
+html body #root .labReferralInviteControls>.labReferralInviteLink{grid-row:1!important;grid-column:1!important}
+html body #root .labReferralInviteControls>.labReferralInviteDivider{grid-row:1!important;grid-column:2!important;margin:0!important}
+html body #root .labReferralInviteControls>.labReferralInviteSend{grid-row:1!important;grid-column:3!important;width:100%!important;min-width:0!important}

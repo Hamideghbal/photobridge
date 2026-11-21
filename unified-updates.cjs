@@ -9,29 +9,37 @@ function createUnifiedUpdates({checkProgram,checkUi,uiBusy,pending,uiError,canAp
    await prompt({kind:'busy',message:'فرم باز یا عملیات ذخیره‌سازی را تمام کنید؛ فایل‌های دریافت‌شده محفوظ هستند. سپس از منوی کنار ساعت دوباره به‌روزرسانی سریع ظاهر را بزنید.'});
    return true;
   }
-  const applied=await apply();
-  if(applied===false)await prompt({kind:'error',message:'اعمال ظاهر جدید انجام نشد. نسخهٔ سالم قبلی و فایل‌های دانلودشده حفظ شدند.'});
-  return true;
+  try{
+   return await apply()===false?'failed':true;
+  }catch{return 'failed';}
  }
  async function run(uiOnly=false,fast=false){
   await show();
   if(uiBusy())await waitForUi();
-  // A pending, verified UI takes priority over a separate native installer.
-  if(await applyReady(fast))return;
+  // Offer a queued UI first, but a UI failure must not suppress installer updates.
+  let uiResult=await applyReady(fast);
+  if(uiResult===true)return;
   if(!isOnline())return prompt({kind:'error',message:'اینترنت قطع است؛ نسخهٔ فعلی حفظ می‌شود. پس از اتصال، از منوی کنار ساعت دوباره بررسی کنید.'});
   let failure=null;
-  progress({start:true,message:'در حال بررسی و دریافت به‌روزرسانی ظاهر برنامه…',percent:0});
-  try{
-   await checkUi((done,total)=>progress({message:'دریافت فایل‌های رابط برنامه: '+Number(done).toLocaleString('fa-IR')+' از '+Number(total).toLocaleString('fa-IR'),percent:total?Math.round(done/total*100):0}));
-  }catch(error){failure=error;}finally{stopProgress();}
-  if(await applyReady(fast))return;
-  if(failure||uiError())return prompt({kind:'error',message:'دریافت فایل‌های ظاهر کامل نشد؛ نسخهٔ فعلی حفظ می‌شود. از منوی کنار ساعت دوباره بررسی کنید.'});
-  if(uiOnly)return prompt({kind:'current'});
-  const program=await checkProgram();
-  if(['ready','busy','cancelled','available'].includes(program?.state))return;
-  if(program?.state==='error')return prompt({kind:'error',message:'بررسی نسخهٔ نصبی کامل نشد؛ نسخهٔ فعلی برنامه حفظ می‌شود.'});
-  if(program?.state==='login_required')return prompt({kind:'error',message:'برای بررسی نسخهٔ برنامه، ابتدا وارد حساب لابراتوار شوید.'});
-  return prompt({kind:'current'});
+  if(uiResult!=='failed'){
+   progress({start:true,message:'در حال بررسی و دریافت به‌روزرسانی ظاهر برنامه…',percent:0});
+   try{
+    await checkUi((done,total)=>progress({message:'دریافت فایل‌های رابط برنامه: '+Number(done).toLocaleString('fa-IR')+' از '+Number(total).toLocaleString('fa-IR'),percent:total?Math.round(done/total*100):0}));
+   }catch(error){failure=error;}finally{stopProgress();}
+   uiResult=await applyReady(fast);
+   if(uiResult===true)return;
+  }
+  const uiFailure=uiResult==='failed'
+   ?'اعمال ظاهر جدید انجام نشد. نسخهٔ سالم قبلی و فایل‌های دانلودشده حفظ شدند.'
+   :failure||uiError()?'دریافت فایل‌های ظاهر کامل نشد؛ نسخهٔ فعلی حفظ می‌شود. از منوی کنار ساعت دوباره بررسی کنید.':null;
+  if(!uiOnly){
+   let program;
+   try{program=await checkProgram();}catch{program={state:'error'};}
+   if(['ready','busy','cancelled','available'].includes(program?.state))return;
+   if(program?.state==='error')return prompt({kind:'error',message:'بررسی نسخهٔ نصبی کامل نشد؛ نسخهٔ فعلی برنامه حفظ می‌شود.'});
+   if(program?.state==='login_required')return prompt({kind:'error',message:'برای بررسی نسخهٔ برنامه، ابتدا وارد حساب لابراتوار شوید.'});
+  }
+  return uiFailure?prompt({kind:'error',message:uiFailure}):prompt({kind:'current'});
  }
  async function loop(uiOnly=false,fast=false){
   try{return await run(uiOnly,fast)}

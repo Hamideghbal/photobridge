@@ -1,0 +1,11 @@
+.albumFileQcCard .pb1865AlbumFileStatus{margin:6px 10px 9px;padding:5px 9px;border-radius:8px;font-size:12.5px;font-weight:750;line-height:1.65;text-align:right;border:1px solid transparent}
+.albumFileQcCard .pb1865AlbumFileStatus.success{background:#eaf8f0;border-color:#bde5cc;color:#147447}
+.albumFileQcCard .pb1865AlbumFileStatus.waiting{background:#f2f5f9;border-color:#dbe3ec;color:#53657b}
+.albumFileQcCard .pb1865AlbumFileStatus.sending{background:#edf4ff;border-color:#bed4f9;color:#205baa}
+.albumQuoteCard .pb1865AlbumCancel{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:9px 0;padding:8px 15px;border:1px solid #cf7077;border-radius:10px;background:#fff6f7;color:#a02938;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.albumQuoteCard .pb1865AlbumCancel:hover{background:#ffebee}
+.albumQuoteCard .pb1865AlbumCancel:focus-visible{outline:3px solid #efb0ba;outline-offset:2px}
+@media(max-width:650px){.albumQuoteCard .pb1865AlbumCancel{width:100%;min-height:42px}.albumFileQcCard .pb1865AlbumFileStatus{font-size:12px;margin:5px 7px 8px}}
+
+.albumUploadResumeNotice button{display:none!important}
+.pb1866AlbumFresh{display:block;width:100%;margin:8px 0;padding:9px 12px;background:#f5f7fb;border:1px solid #cad4e0;border-radius:10px;font:inherit;font-weight:700;cursor:pointer}

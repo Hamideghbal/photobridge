@@ -362,4 +362,386 @@
  }
 }
 
+/* PB1500 manual-order preview and quantity visibility */
+.pb1137Intake .pb1139GroupPhotos{max-height:min(240px,36dvh)!important;overflow-x:auto!important;overflow-y:auto!important;scrollbar-width:thin!important;align-items:flex-start!important}
+.pb1137Intake .pb1139GroupPhotos figure{overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos img{height:82px!important;object-fit:contain!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{min-height:32px!important;height:auto!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{min-height:30px!important;height:30px!important;font-size:10.5px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{display:flex!important;visibility:visible!important;opacity:1!important;position:static!important;min-height:32px!important;height:32px!important;overflow:visible!important;align-items:center!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:42px!important;min-width:42px!important;height:30px!important;min-height:30px!important;text-align:center!important;font-size:12px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:26px!important;min-width:26px!important;height:30px!important;min-height:30px!important;flex:0 0 26px!important;font-size:14px!important}
+
 /* PB1364 softer blue shadows */
+
+/* PB1501 manual-order parity: photo action, paper and quantity */
+.pb1137Intake .pb1139GroupPhotos{max-height:min(280px,40dvh)!important;overflow-x:auto!important;overflow-y:auto!important;align-items:flex-start!important;scrollbar-width:thin!important}
+.pb1137Intake .pb1139GroupPhotos figure{display:flex!important;flex:0 0 148px!important;width:148px!important;min-width:148px!important;flex-direction:column!important;align-items:stretch!important;gap:3px!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{position:relative!important;display:grid!important;place-items:center!important;width:100%!important;height:94px!important;min-height:94px!important;overflow:hidden!important;border-radius:9px!important;background:#f2f4f7!important}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame>img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+.pb1137Intake .pb1139GroupPhotos figcaption{display:block!important;width:100%!important;min-height:18px!important;margin:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-size:10px!important;line-height:1.5!important}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge{display:inline-flex!important;align-items:center!important;justify-content:center!important;align-self:center!important;min-height:21px!important;padding:1px 9px!important;border-radius:999px!important;font:800 10px/1.4 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge[data-action="copy"]{color:#1458a5!important;background:#eaf2ff!important;border:1px solid #c7dcff!important}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge[data-action="move"]{color:#087443!important;background:#e9f8ef!important;border:1px solid #b8e7c9!important}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge[data-action="both"]{color:#76500a!important;background:#fff6df!important;border:1px solid #f0d78f!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:3px!important;width:100%!important;min-height:0!important;height:auto!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:30px!important;height:30px!important;padding:3px 5px!important;font:700 10px/1.4 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;text-overflow:clip!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;min-height:20px!important;margin:0!important;font:600 10px/1.4 Vazirmatn,Tahoma,sans-serif!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{width:15px!important;height:15px!important;min-height:15px!important;margin:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{display:flex!important;visibility:visible!important;opacity:1!important;position:static!important;align-items:center!important;justify-content:center!important;gap:4px!important;width:100%!important;min-height:30px!important;height:30px!important;margin:0!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{display:inline!important;font:700 10px/1.4 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:40px!important;min-width:40px!important;height:28px!important;min-height:28px!important;padding:2px!important;text-align:center!important;font-size:12px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:25px!important;min-width:25px!important;height:28px!important;min-height:28px!important;flex:0 0 25px!important;padding:0!important;font-size:14px!important}
+
+/* PB1504 per-photo copy/move */
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{position:relative!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{position:absolute!important;z-index:3!important;left:6px!important;top:6px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:62px!important;min-height:24px!important;height:24px!important;padding:2px 9px!important;border-radius:999px!important;font:800 11px/1.3 Vazirmatn,Tahoma,sans-serif!important;cursor:pointer!important;box-shadow:0 2px 8px rgba(16,24,40,.22)!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle[data-action="copy"]{color:#1458a5!important;background:#fff!important;border:1px solid #c7dcff!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle[data-action="move"]{color:#087443!important;background:#e9f8ef!important;border:1px solid #b8e7c9!important}
+.pb1137Intake .pb1468FileActions{display:none!important}
+
+/* PB1502 browser-only manual intake card layout */
+.pb1137Intake .pb1139GroupPhotos{
+ display:grid!important;grid-template-columns:repeat(auto-fill,minmax(168px,1fr))!important;
+ align-content:start!important;align-items:start!important;justify-items:stretch!important;
+ gap:10px!important;max-height:min(330px,46dvh)!important;overflow-x:hidden!important;overflow-y:auto!important;
+ padding:8px!important;scrollbar-width:thin!important;overscroll-behavior:contain!important
+}
+.pb1137Intake .pb1139GroupPhotos figure{
+ box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ grid-auto-rows:auto!important;align-content:start!important;align-items:stretch!important;justify-items:stretch!important;
+ width:100%!important;min-width:0!important;max-width:240px!important;min-height:0!important;flex:none!important;
+ gap:6px!important;margin:0!important;padding:8px!important;overflow:visible!important;
+ border:1px solid #dce5f1!important;border-radius:13px!important;background:#fff!important;
+ box-shadow:0 2px 8px #163b7210!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+ box-sizing:border-box!important;position:relative!important;display:grid!important;place-items:center!important;
+ width:100%!important;height:118px!important;min-height:118px!important;max-height:118px!important;
+ margin:0!important;overflow:hidden!important;border-radius:9px!important;background:#f2f4f7!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame>img{
+ display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;
+ object-fit:contain!important;object-position:center!important
+}
+.pb1137Intake .pb1139GroupPhotos figcaption{
+ box-sizing:border-box!important;display:-webkit-box!important;width:100%!important;min-width:0!important;
+ min-height:30px!important;margin:0!important;overflow:hidden!important;overflow-wrap:anywhere!important;
+ white-space:normal!important;text-overflow:ellipsis!important;text-align:center!important;
+ -webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;line-height:1.45!important;font-size:11px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge{
+ justify-self:center!important;max-width:100%!important;min-height:23px!important;margin:0!important;
+ padding:2px 10px!important;line-height:1.45!important;font-size:11px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+ box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ align-items:stretch!important;justify-items:stretch!important;gap:5px!important;width:100%!important;
+ min-width:0!important;min-height:0!important;height:auto!important;margin:0!important;overflow:visible!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
+ box-sizing:border-box!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;
+ height:36px!important;min-height:36px!important;margin:0!important;padding:5px 8px!important;
+ font:700 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ gap:6px!important;width:100%!important;min-width:0!important;min-height:24px!important;height:auto!important;
+ margin:0!important;padding:0!important;white-space:nowrap!important;font:600 11px/1.4 Vazirmatn,Tahoma,sans-serif!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{
+ box-sizing:border-box!important;flex:0 0 16px!important;width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;margin:0!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+ box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(0,1fr) 30px 44px 30px!important;
+ align-items:center!important;justify-items:stretch!important;gap:4px!important;width:100%!important;min-width:0!important;
+ min-height:34px!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>*{box-sizing:border-box!important;position:static!important;float:none!important;transform:none!important;margin:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{
+ display:block!important;min-width:0!important;white-space:nowrap!important;text-align:right!important;
+ font:700 11px/1.4 Vazirmatn,Tahoma,sans-serif!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+ display:block!important;width:44px!important;min-width:44px!important;max-width:44px!important;
+ height:32px!important;min-height:32px!important;margin:0!important;padding:2px!important;text-align:center!important;font-size:13px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:30px!important;min-width:30px!important;max-width:30px!important;height:32px!important;min-height:32px!important;
+ flex:none!important;margin:0!important;padding:0!important;font-size:15px!important
+}
+@media(max-width:520px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;padding:5px!important}
+ .pb1137Intake .pb1139GroupPhotos figure{max-width:none!important;padding:6px!important;gap:5px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(86px,28vw,118px)!important;min-height:clamp(86px,28vw,118px)!important;max-height:clamp(86px,28vw,118px)!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{grid-template-columns:minmax(0,1fr) 28px 40px 28px!important;gap:3px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:40px!important;min-width:40px!important;max-width:40px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:28px!important;min-width:28px!important;max-width:28px!important}
+}
+
+/* PB1505 shared web and Windows manual-order card layout */
+.pb1137Intake .pb1139GroupPhotos{
+ grid-template-columns:repeat(auto-fill,minmax(190px,1fr))!important;gap:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos figure{
+ max-width:260px!important;min-width:0!important;gap:7px!important;padding:9px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+ height:150px!important;min-height:150px!important;max-height:150px!important
+}
+.pb1137Intake .pb1139GroupPhotos figcaption{
+ min-height:32px!important;overflow-wrap:anywhere!important;white-space:normal!important;line-height:1.5!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+ grid-template-columns:minmax(0,1fr)!important;gap:7px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
+ width:100%!important;height:40px!important;min-height:40px!important;padding:6px 10px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
+ min-height:28px!important;gap:8px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{
+ flex-basis:18px!important;width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+ grid-template-columns:minmax(38px,1fr) 28px 42px 28px!important;gap:4px!important;min-height:38px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{
+ min-width:38px!important;font-size:12px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+ width:42px!important;min-width:42px!important;max-width:42px!important;height:34px!important;min-height:34px!important;font-size:14px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+ width:28px!important;min-width:28px!important;max-width:28px!important;height:34px!important;min-height:34px!important
+}
+@media(max-width:520px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .pb1137Intake .pb1139GroupPhotos figure{max-width:none!important;padding:7px!important;gap:6px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(110px,34vw,145px)!important;min-height:clamp(110px,34vw,145px)!important;max-height:clamp(110px,34vw,145px)!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity{grid-template-columns:minmax(36px,1fr) 24px 40px 24px!important;gap:3px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{min-width:36px!important;font-size:11px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:40px!important;min-width:40px!important;max-width:40px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:24px!important;min-width:24px!important;max-width:24px!important}
+}
+
+/* PB1510 orderly manual-order photo rows */
+.pb1137Intake .pb1139GroupPhotos{
+ grid-template-columns:repeat(auto-fill,minmax(188px,200px))!important;justify-content:start!important;
+ gap:8px!important;max-height:none!important;overflow:visible!important;padding:7px!important
+}
+.pb1137Intake .pb1139GroupPhotos figure{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;
+ align-content:start!important;align-items:stretch!important;width:100%!important;min-width:0!important;max-width:none!important;
+ box-sizing:border-box!important;height:auto!important;min-height:0!important;max-height:none!important;
+ gap:4px!important;margin:0!important;padding:7px!important;overflow:hidden!important;border-radius:9px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{
+ grid-column:1!important;grid-row:1!important;width:100%!important;
+ height:104px!important;min-height:104px!important;max-height:104px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay,
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{
+ top:7px!important;height:28px!important;min-height:28px!important;margin:0!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181DeleteOverlay{
+ left:7px!important;right:auto!important;width:28px!important;min-width:28px!important;max-width:28px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{
+ left:41px!important;right:auto!important;min-width:68px!important;max-width:88px!important;padding:3px 10px!important
+}
+.pb1137Intake .pb1139GroupPhotos figcaption{
+ grid-column:1!important;grid-row:2!important;width:100%!important;min-height:19px!important;max-height:19px!important;
+ text-align:center!important;-webkit-line-clamp:1!important;font-size:10px!important;line-height:19px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{
+ grid-column:1!important;grid-row:3!important;display:grid!important;
+ grid-template-columns:minmax(0,1fr) 68px!important;width:100%!important;gap:5px!important;align-items:center!important;
+ height:31px!important;min-height:31px!important;max-height:31px!important;margin:0!important;overflow:visible!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{
+ width:100%!important;height:31px!important;min-height:31px!important;max-height:31px!important;padding:3px 6px!important;font-size:10px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{
+ box-sizing:border-box!important;justify-self:stretch!important;min-width:0!important;width:68px!important;
+ min-height:31px!important;height:31px!important;max-height:31px!important;padding:0 4px!important;font-size:10px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{
+ grid-column:1!important;grid-row:4!important;display:grid!important;
+ grid-template-columns:36px 26px 38px 26px!important;justify-content:center!important;align-items:center!important;
+ box-sizing:border-box!important;width:100%!important;height:31px!important;min-height:31px!important;max-height:31px!important;
+ gap:3px!important;margin:0!important;padding:0!important;overflow:visible!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{min-width:0!important;font-size:10px!important;text-align:center!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{
+ width:38px!important;min-width:38px!important;max-width:38px!important;height:28px!important;min-height:28px!important;max-height:28px!important;font-size:11px!important
+}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{
+ width:26px!important;min-width:26px!important;max-width:26px!important;height:28px!important;min-height:28px!important;max-height:28px!important;font-size:12px!important
+}
+@media(max-width:760px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:6px!important}
+ .pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame{height:clamp(88px,25vw,104px)!important;min-height:clamp(88px,25vw,104px)!important;max-height:clamp(88px,25vw,104px)!important}
+}
+@media(max-width:390px){
+ .pb1137Intake .pb1139GroupPhotos{grid-template-columns:minmax(0,1fr)!important}
+}
+
+/* PB1520 compact intake header and readable card controls */
+@media (min-width:761px){
+ .pb1137Intake>header{box-sizing:border-box!important;min-height:42px!important;height:42px!important;padding:3px 0 7px!important;gap:12px!important}
+ .pb1137Intake>header>h2{margin:0!important;padding:0!important;font-size:16px!important;line-height:1.4!important}
+ .pb1137Intake>header>.pb1469IntakeClose{flex:0 0 32px!important;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;font-size:21px!important;border-radius:8px!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1181IntakeFrame>.pb1501ActionBadge:not(.pb1504ActionToggle){display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{left:41px!important;right:auto!important;width:58px!important;min-width:58px!important;max-width:58px!important;padding:2px 5px!important;font-size:10px!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle::before,
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle::after{display:none!important;content:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions{grid-template-columns:minmax(0,1fr) 54px!important;gap:4px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{padding:3px 5px!important;font-size:10px!important;text-overflow:ellipsis!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{width:54px!important;padding:0 3px!important;gap:3px!important;font-size:9px!important;white-space:nowrap!important;overflow:hidden!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle input{flex:0 0 14px!important;width:14px!important;min-width:14px!important;height:14px!important;min-height:14px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{grid-template-columns:46px 24px 38px 24px!important;gap:3px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{width:46px!important;min-width:46px!important;font-size:10px!important;white-space:nowrap!important;overflow:visible!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:24px!important;min-width:24px!important;max-width:24px!important}
+
+/* PB1521 edge-to-edge intake header and native label reset */
+@media (min-width:761px){
+ .pb1137Intake>header{position:relative!important;display:grid!important;place-items:center!important;width:calc(100% + 24px)!important;min-height:46px!important;height:46px!important;margin:-9px -12px 0!important;padding:7px 12px!important;gap:0!important}
+ .pb1137Intake>header>h2{width:100%!important;margin:0!important;padding:0 42px!important;text-align:center!important;font:800 14px/1.4 Vazirmatn,Tahoma,sans-serif!important}
+ .pb1137Intake>header>.pb1469IntakeClose{position:absolute!important;left:12px!important;top:7px!important;right:auto!important;bottom:auto!important;margin:0!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge:not(.pb1504ActionToggle){display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1180IntakePaper{font:700 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1141PhotoActions>.pb1181ChassisToggle{font:600 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{font:700 9px/1.25 Vazirmatn,Tahoma,sans-serif!important;letter-spacing:0!important}
+
+/* PB1522 native single action and contained controls */
+@media (min-width:761px){
+ .pb1137Intake[open]{padding-top:0!important}
+ .pb1137Intake>header{width:calc(100% + 24px)!important;margin:0 -12px!important;padding:7px 12px!important;background:#fff!important;border-radius:0!important}
+}
+.pb1137Intake .pb1139GroupPhotos .pb1501ActionBadge{display:none!important}
+.pb1137Intake .pb1139GroupPhotos .pb1504ActionToggle{display:inline-flex!important;left:auto!important;right:7px!important;width:58px!important;min-width:58px!important;max-width:58px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity{box-sizing:border-box!important;width:calc(100% - 8px)!important;max-width:calc(100% - 8px)!important;justify-self:center!important;grid-template-columns:42px 23px 36px 23px!important;gap:3px!important;padding:0!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity>span{width:42px!important;min-width:42px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity input{width:36px!important;min-width:36px!important;max-width:36px!important}
+.pb1137Intake .pb1139GroupPhotos .pb1142Quantity button{width:23px!important;min-width:23px!important;max-width:23px!important}
+
+/* PB1528 contained intake and right-edge launch */
+html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1526QueueHeader.pb1174QueueNav > #pb1137LocalIntakeButton.pb1137Launch{grid-column:3!important;grid-row:1!important;justify-self:end!important;margin:0!important;order:0!important}
+html body .pb1137Intake,html body .pb1137Intake>form{box-sizing:border-box!important;min-width:0!important;overflow-x:hidden!important}
+html body .pb1137Intake>form{width:100%!important;max-width:100%!important}
+html body .pb1137Intake>header{box-sizing:border-box!important;width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important}
+html body .pb1137Intake :is(.pb1178IntakeWorkspace,.pb1178IntakeEditor,.pb1178IntakeBill,.pb1137Settings,.pb1139Group,.pb1139GroupPhotos){box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
+html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fill,minmax(min(176px,100%),1fr))!important;overflow-x:hidden!important}
+
+/* R1751: responsive layout only; no intake launcher, order, or SMS changes. */
+/* R1740: TWO rows maximum for normal Lab desktop intake. Flex wrapping only
+   when picker + account facts do not fit; never force a second row. */
+.pb1137Intake .pb1137Settings.pb1139EntryRow > .pb1365CustomerAccountRow {
+  grid-column:1 / -1!important;
+  display:flex!important; flex-wrap:wrap!important;
+  align-items:flex-end!important; align-content:start!important;
+  gap:8px 12px!important; width:100%!important; min-width:0!important;
+  box-sizing:border-box!important; overflow:visible!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1139Customer {
+  flex:1 1 236px!important; min-width:min(100%,236px)!important;
+  width:auto!important; max-width:100%!important;
+  margin:0!important; align-self:stretch!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+  flex:2 1 440px!important; min-width:min(100%,440px)!important;
+  max-width:100%!important; width:auto!important;
+  display:flex!important; flex-wrap:nowrap!important;
+  align-items:center!important; justify-content:space-between!important;
+  gap:8px!important; margin:0!important; padding:6px 8px!important;
+  overflow:visible!important; box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails[hidden] {
+  display:none!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountSummary {
+  display:flex!important; flex:1 1 175px!important;
+  flex-wrap:nowrap!important; min-width:0!important; gap:7px!important;
+  align-items:center!important; max-width:100%!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta {
+  display:flex!important; flex-direction:column!important;
+  flex:1 1 0!important; min-width:0!important;
+  gap:2px!important; padding:1px 5px!important;
+  border:0!important; border-inline-start:1px solid #e0e8f3!important;
+  border-radius:0!important; background:transparent!important;
+  overflow-wrap:anywhere!important; white-space:normal!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta:first-child { border-inline-start:0!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > strong {
+  max-width:100%!important; overflow-wrap:anywhere!important;
+  font-size:11px!important; line-height:1.5!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294Meta > span { font-size:10px!important; line-height:1.5!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1586IntakeDebtDate {
+  display:block!important; max-width:100%!important; font-size:10px!important;
+  line-height:1.5!important; white-space:normal!important; overflow-wrap:anywhere!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+  display:flex!important; flex:0 1 auto!important; flex-wrap:wrap!important;
+  align-items:center!important; align-content:center!important;
+  justify-content:flex-end!important; max-width:56%!important;
+  min-width:0!important; gap:5px!important; margin:0!important;
+  position:static!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions > button {
+  flex:0 0 auto!important; width:auto!important; max-width:100%!important;
+  min-height:30px!important; height:auto!important;
+  padding:4px 7px!important; font-size:11px!important;
+  white-space:normal!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1365SmsChoice {
+  display:inline-flex!important; flex:0 0 auto!important;
+  gap:4px!important; align-items:center!important; white-space:nowrap!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit {
+  position:static!important; inset:auto!important; top:auto!important;
+  flex:1 0 100%!important; width:100%!important; max-width:100%!important;
+  margin-top:4px!important; box-sizing:border-box!important;
+  z-index:auto!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit input {
+  min-width:0!important; max-width:100%!important; box-sizing:border-box!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1294InitialEdit[hidden] { display:none!important; }
+.pb1137Intake .pb1365CustomerAccountRow .pb1294ActionNotice:not(:empty) {
+  position:static!important; inset:auto!important; top:auto!important;
+  flex:1 0 100%!important; width:100%!important; max-width:100%!important;
+  box-sizing:border-box!important; padding:4px 6px!important;
+  white-space:normal!important; overflow-wrap:anywhere!important;
+}
+/* Very narrow viewport: still one account row beneath picker, while allowing
+   controls to wrap within that row so text stays readable rather than colliding. */
+@media(max-width:620px) {
+  .pb1137Intake .pb1365CustomerAccountRow > .pb1294SelectedDetails {
+    flex-wrap:wrap!important;
+  }
+  .pb1137Intake .pb1365CustomerAccountRow .pb1294AccountActions {
+    max-width:100%!important; justify-content:flex-start!important;
+  }
+}
+
+/* R1741: override the older R1467 nowrap action strip that caused overlap. */
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow {
+  display:flex!important; flex-flow:row wrap!important;
+  align-items:center!important; gap:5px 7px!important;
+  white-space:normal!important; min-width:0!important; max-width:100%!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > button {
+  width:auto!important; max-width:100%!important;
+  height:auto!important; min-height:29px!important;
+  white-space:normal!important; line-height:1.45!important;
+}
+.pb1137Intake .pb1365CustomerAccountRow .pb1467AccountActionRow > .pb1365SmsChoice {
+  min-width:0!important; max-width:100%!important;
+}

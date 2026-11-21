@@ -519,4 +519,3 @@
   addEventListener('scroll',syncScroll,{passive:true});document.addEventListener('scroll',syncInternalScroll,true);
   addEventListener('popstate',function(){syncRouteViewportClass();syncActive();syncScroll();syncMobileDock()});addEventListener('hashchange',function(){syncRouteViewportClass();syncActive();syncScroll();syncMobileDock()});window.addEventListener('photobridge-auth-session-changed',syncMobileDock);
 })();
-

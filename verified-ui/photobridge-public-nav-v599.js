@@ -451,4 +451,3 @@
   addEventListener('scroll',syncScroll,{passive:true});document.addEventListener('scroll',syncInternalScroll,true);
   addEventListener('popstate',function(){syncActive();syncScroll();syncMobileDock()});addEventListener('hashchange',function(){syncActive();syncScroll();syncMobileDock()});window.addEventListener('photobridge-auth-session-changed',syncMobileDock);
 })();
-

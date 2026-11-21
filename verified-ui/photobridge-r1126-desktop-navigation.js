@@ -3,7 +3,14 @@
  'use strict';
 
  const query=new URLSearchParams(location.search);
- if(query.get('pbDesktopContent')==='1'){
+ /* PB1656 embedded invoice link guard */
+ let embeddedHost=false;
+ try{
+  embeddedHost=window.parent!==window&&
+   Boolean(window.frameElement?.closest('.pb1126ContentPanel[data-panel="print"],.pb1126ContentPanel[data-panel="store"]'))&&
+   window.parent.document.documentElement.classList.contains('pb1126Desktop');
+ }catch{}
+ if(query.get('pbDesktopContent')==='1'||embeddedHost){
   /* PB1316 atomic print row */
   const pb1316Wheel=e=>{
    if(e.ctrlKey||e.shiftKey||!e.deltaY||!matchMedia('(min-width:821px)').matches)return;
@@ -46,7 +53,7 @@
   return;
  }
  if(document.body?.classList.contains('pbAuthenticatedPhotographerPortal'))document.documentElement.classList.add('pb1126Desktop');
- const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
+ const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['crm','مشتریان','/customer-crm.html?portal=photographer'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
  let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false;
  try{const saved=JSON.parse(sessionStorage.getItem('pb1126-desktop-tabs'));if(saved?.tabs)settings=saved;}catch{}
  let walletBalance=null,walletRefreshing=false;
@@ -67,7 +74,7 @@
  }
  function livePrintControl(key){
   const doc=currentDocument(),header=doc&&nativeHeader(doc);
-  return [...(header?.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')||[])].find(button=>printControlKey(button)===key&&button.isConnected&&!button.disabled&&!button.hidden&&button.getAttribute('aria-hidden')!=='true');
+  return [...(doc?.querySelectorAll('.financeSectionTabs>button')||[]),...(header?.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')||[])].find(button=>printControlKey(button)===key&&button.isConnected&&!button.disabled&&!button.hidden&&button.getAttribute('aria-hidden')!=='true');
  }
  function printControlSignature(button){
   const key=printControlKey(button);
@@ -100,8 +107,8 @@
   const active=nav.querySelector(':scope > button.active');
   if(!active||active.getBoundingClientRect().width===0){indicator.style.opacity='0';return;}
   const base=nav.getBoundingClientRect(),rect=active.getBoundingClientRect();
-  const width=Math.max(18,rect.width-12)+'px';
-  const x=Math.round(rect.left-base.left+6+nav.scrollLeft)+'px';
+  const labelRange=document.createRange();labelRange.selectNodeContents(active);const measured=labelRange.getBoundingClientRect().width;const width=Math.max(18,Math.round(measured+6))+'px';
+  const x=Math.round(rect.left-base.left+(rect.width-parseFloat(width))/2+nav.scrollLeft)+'px';
   if(!indicator.dataset.ready)indicator.style.transition='none';
   if(indicator.style.width!==width)indicator.style.width=width;
   if(indicator.style.transform!=='translateX('+x+')')indicator.style.transform='translateX('+x+')';
@@ -191,14 +198,16 @@
   row.hidden=choosing;
   document.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing&&!selected);
   if(doc?.documentElement&&doc!==document)doc.documentElement.classList.toggle('pb1133LabChat',active==='print'&&!choosing);
+  const pb1631Finance=active==='print'&&Boolean(doc?.querySelector('.financeWorkspace'));
+  row.classList.toggle('pb1631Finance',pb1631Finance);
   const pb1459LabSource=active==='print'&&!choosing?doc?.querySelector('select.pb1459LabSource'):null;
   const pb1459LabSignature=pb1459LabSource?JSON.stringify([pb1459LabSource.outerHTML,pb1459LabSource.value,pb1459LabSource.disabled]):'';
-  const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
+  const sources=choosing?[]:active==='store'?[...native.querySelectorAll('#pbR1123StoreDesktopNav>button')]:active==='crm'?[]:active==='print'?[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')]:[...native.querySelectorAll('.roleHeaderToolButtons>button:not(.headerWalletBadge):not(.headerLogoutBtn)')];
   const visible=sources.filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack')&&!el.classList.contains('pb1458LabPrices')); /* PB1462 toolbar prices retired */
   const cameraStoreControls=cameraStore?visible.filter(el=>el.dataset.storePanel!=='salesPanel'):[];
   const frameStoreControls=frameStore?[...frameStore.querySelectorAll('button[data-frame-customer-view],button[data-frame-customer-history],button[data-frame-customer-cart]')].filter(el=>getComputedStyle(el).display!=='none'):[];
   const headerControls=frameStore?frameStoreControls:cameraStore?cameraStoreControls:[];
-  const signature=pb1459LabSignature+'|'+active+'|'+choosing+'|'+(storeHeader?'store:'+frameStoreName+headerControls.map(el=>el.outerHTML).join('')+(cameraCart?.outerHTML||''):(active==='print'?JSON.stringify(visible.map(printControlSignature)):visible.map(el=>el.outerHTML).join('')));
+  const signature=String(pb1631Finance)+'|'+pb1459LabSignature+'|'+active+'|'+choosing+'|'+(storeHeader?'store:'+frameStoreName+headerControls.map(el=>el.outerHTML).join('')+(cameraCart?.outerHTML||''):(active==='print'?JSON.stringify(visible.map(printControlSignature)):visible.map(el=>el.outerHTML).join('')));
   if(row.dataset.source!==signature){
    row.replaceChildren();row.classList.toggle('pb1127PrintRow',active==='print');
    if(storeHeader){
@@ -252,9 +261,32 @@
     if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}
     if(utilities&&original.closest('.photographerPrintModeUtilityCluster'))utilities.append(copy);else (modes||row).append(copy);
    }
-   if(utilities){for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)utilities.append(b);}}
+   if(utilities){const separator=document.createElement('span');separator.className='pb1632ModeDivider';separator.setAttribute('aria-hidden','true');modes.append(separator);for(const cls of ['finance','archive']){const b=utilities.querySelector('.'+cls);if(b)modes.append(b)}utilities.remove();}
    row.dataset.source=signature;
   }
+  // R1632: Finance sub-tabs belong to a dedicated third header.
+  let financeThird=chrome.querySelector('.pb1632FinanceTabs');
+  if(!financeThird){financeThird=document.createElement('nav');financeThird.className='pb1632FinanceTabs';financeThird.setAttribute('aria-label','بخش‌های امور مالی');chrome.append(financeThird)}
+  const controls=pb1631Finance?['فاکتورها','حساب معین','دریافت‌ها'].map(label=>[...doc.querySelectorAll('.financeSectionTabs>button')].find(button=>button.textContent.trim()===label)).filter(Boolean):[];
+  const thirdVisible=controls.length>0;
+  financeThird.hidden=!thirdVisible;
+  chrome.classList.toggle('pb1632FinanceThird',thirdVisible);
+  document.documentElement.classList.toggle('pb1632FinanceThird',thirdVisible);
+  if(thirdVisible){
+   const next=controls.map(button=>button.textContent.trim()).join('|');
+   if(financeThird.dataset.source!==next){
+    financeThird.replaceChildren();
+    for(const original of controls){const copy=cleanClone(original);copy.removeAttribute('style');copy.classList.add('pb1632FinanceTab');copy.onclick=()=>{const live=[...(currentDocument()?.querySelectorAll('.financeSectionTabs>button')||[])].find(button=>button.textContent.trim()===copy.textContent.trim());live?.click();schedule()};financeThird.append(copy)}
+    financeThird.dataset.source=next;
+   }
+   controls.forEach((original,index)=>{
+    const copy=financeThird.children[index];if(!copy)return;
+    const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';
+    copy.classList.toggle('active',active);
+    if(active)copy.setAttribute('aria-current','page');else copy.removeAttribute('aria-current');
+   });
+  }
+
   const printPanel=panels.get('print');
   const loading=printPanel?.querySelector('.pb1126Loading');
   const nativeModes=active==='print'&&!choosing&&visible.some(button=>button.classList.contains('photographerPrintPhotoTab'))&&visible.some(button=>button.classList.contains('photographerPrintAlbumTab'));
@@ -322,14 +354,15 @@
   let panel=panels.get(key);if(!panel){
    panel=document.createElement('section');panel.hidden=true;panel.className='pb1126ContentPanel';panel.dataset.panel=key;
    const loading=document.createElement('div');loading.className='pb1126Loading';loading.textContent='در حال دریافت…';loading.setAttribute('role','status');
-   const frame=document.createElement('iframe');frame.title=key==='store'?'فروشگاه':'چاپ';
-   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
+   const frame=document.createElement('iframe');frame.title=key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':'چاپ';
+   frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!(/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||u.pathname==='/customer-crm.html')||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    frame.addEventListener('load',()=>pb1315Watch(panel));
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
+   if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{
    /* PB1461 refresh route */
    const savedPrint=key==='print'?new URLSearchParams(location.search).get('pbPrintRoute'):null;
    let restoredPrint=null;try{if(savedPrint?.startsWith('/')&&!savedPrint.startsWith('//')){const u=new URL(savedPrint,location.origin);if(u.origin===location.origin&&/^\/photographer\/(?:orders\/(?:flow|needs_fix|ready|completed)|upload|album|archive|finance)\/?$/.test(u.pathname)&&u.searchParams.get('pbLabChooser')!=='1'){u.searchParams.set('pbDesktopContent','1');u.searchParams.set('workspace','print');restoredPrint=u.pathname+u.search}}}catch{}
-   const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;
+   const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;}
   }
   return panel;
  }
@@ -391,6 +424,8 @@
   w.history.pushState(null,'',url);w.dispatchEvent(new w.PopStateEvent('popstate'));return true;
  }
  function navigate(key){
+  /* PB1763 CRM desktop navigation compatibility */
+  if(key==='print'||key==='crm'){open(key);return;}
   if(key==='print'||key==='store'){
    open(key);const panel=panels.get(key),frame=panel?.querySelector('iframe');if(!frame)return;
    let complete=false;
@@ -408,7 +443,13 @@
   closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(motionContent(document))));
  }
  // Register before legacy full-document navigation handlers.
- window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
+ /* PB1668 close settings before desktop header click */
+ window.addEventListener('click',event=>{
+  const button=event.target?.closest?.('#pb1126DesktopHeader button');
+  if(button&&!button.closest('.pb1635SettingsNav'))
+   window.pb1635CloseInlineSettings?.();
+ },true);
+ window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);if(b.dataset.pb1126Kind==='print'&&currentDocument()?.querySelector('.financeWorkspace')){livePrintControl('class:photographerPrintPhotoTab')?.click();schedule();return}navigate(b.dataset.pb1126Kind);},true);
  /* PB1315 stable laboratory transition */
  const pb1315Documents=new WeakSet();
  function pb1315Sync(panel){
@@ -458,10 +499,10 @@
  });
  window.addEventListener('photobridge-desktop-identity-ready',schedule);
  window.addEventListener('resize',schedule,{passive:true});
- window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print'].includes(panel))open(panel,false);else{closePanels();schedule();}});
+ window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print','crm'].includes(panel))open(panel,false);else{closePanels();schedule();}});
  window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){authenticated=true;settings=e.detail;queueWarmPanels();try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}schedule();}});
  window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;resumePanelDocuments();void refreshWallet();return;}panelSessionReady=false;pendingPanel=null;authenticated=false;clearPanelDocuments();chrome?.parentElement.remove();chrome=null;document.documentElement.classList.remove('pb1126Desktop','pb1127Choosing','pb1310GalleryHome');walletBalance=null;try{sessionStorage.removeItem('pb1126-desktop-tabs');}catch{}closePanels();for(const p of panels.values())p.remove();panels.clear();schedule();});
- function start(){render();void refreshWallet();const panel=query.get('pbDesktopPanel');if(['store','print'].includes(panel))open(panel,false);new MutationObserver(records=>{if(records.some(record=>!chrome?.contains(record.target)))schedule();}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}
+ function start(){render();void refreshWallet();const panel=query.get('pbDesktopPanel');if(['store','print','crm'].includes(panel))open(panel,false);new MutationObserver(records=>{if(records.some(record=>!chrome?.contains(record.target)))schedule();}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 

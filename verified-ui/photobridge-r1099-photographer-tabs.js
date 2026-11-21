@@ -1,9 +1,27 @@
 /* Photographer tab controls; the admin bypass comes from the authenticated server response. */
 (()=>{
 'use strict';
-const keys=['ai','album','instagram'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام'};
+const keys=['ai','album','instagram','customers'],labels={ai:'هوش مصنوعی',album:'طراحی آلبوم',instagram:'اینستاگرام',customers:'مشتریان (عکاس و لابراتوار)'};
 let settings=null,scheduled=false,inFlight=false,loadedPath=null,redirecting=false,sessionEpoch=0;
 const previousDisplay=new WeakMap();
+// Release the initial mobile dock only after both server-controlled tab sets
+// have been applied to the same canonical dock. No intermediate 5→8 buttons.
+let dockRevealTimer=0;
+function releaseStableDock(){
+ if(!photographer()||!matchMedia('(max-width:820px)').matches)return;
+ if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
+ if(!document.documentElement.classList.contains('pbR1877DockPending'))return;
+ if(dockRevealTimer)clearTimeout(dockRevealTimer);
+ // Allow the last React/CRM navigation mutation to settle before first paint.
+ dockRevealTimer=setTimeout(()=>requestAnimationFrame(()=>{
+  dockRevealTimer=0;
+  if(!window.pbR1877FeatureNavReady||!window.pbR1877CrmNavReady)return;
+  apply();
+  document.documentElement.classList.remove('pbR1877DockPending');
+  document.documentElement.classList.add('pbR1877DockReady');
+ }),170);
+}
+window.addEventListener('pb-r1877-crm-ready',releaseStableDock);
 const admin=()=>location.pathname.startsWith('/admin');
 const photographer=()=>location.pathname.startsWith('/photographer')||location.pathname==='/equipment-rental/book';
 async function api(path,options={}){
@@ -42,7 +60,7 @@ function apply(){
   }
  }
  for(const grid of document.querySelectorAll('.photographerBottomAppNavGrid')){
-  grid.dataset.pb1099Grid='1';
+  if(grid.dataset.pb1099Grid!=='1')grid.dataset.pb1099Grid='1';
   const count=[...grid.children].filter(el=>el.dataset.pb1099Hidden!=='1'&&!el.hidden&&getComputedStyle(el).display!=='none').length;
   if(count&&grid.style.getPropertyValue('--pb1099-tabs')!==String(count))grid.style.setProperty('--pb1099-tabs',String(count));
  }
@@ -52,7 +70,7 @@ function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=
 function installStyle(){
  if(document.querySelector('#pb1099TabsStyle'))return;
  const style=document.createElement('style');style.id='pb1099TabsStyle';
- style.textContent='@media(max-width:820px){html body .photographerBottomAppNav[data-pb1318-stale]{display:none!important}html[data-pb1106-tabs-pending] .photographerBottomAppNav{visibility:hidden!important;pointer-events:none!important}body.pbAuthenticatedPhotographerPortal :is(.pbHomeMobileAccountBar,.adminBottomAppNav,.labBottomAppNav){display:none!important}}[data-pb1099-hidden="1"]{display:none!important}html body #photographerStoreBottomNav .photographerBottomAppNavGrid[data-pb1099-grid],html body .photographerBottomAppNav .photographerBottomAppNavGrid[data-pb1099-grid]{grid-template-columns:repeat(var(--pb1099-tabs,6),minmax(0,1fr))!important}.pb1099TabsDialog{border:1px solid #dce3f0;border-radius:20px;padding:22px;width:min(430px,calc(100vw - 40px));font-family:inherit;direction:rtl;color:#24334d;background:#fff}.pb1099TabsDialog::backdrop{background:#16234088}.pb1099TabsDialog h3{margin:0 0 10px}.pb1099TabsDialog p{font-size:13px;line-height:1.8}.pb1099TabsDialog label{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:16px}.pb1099TabsDialog input{width:20px;height:20px;accent-color:#315cff}.pb1099TabsActions{display:flex;gap:10px;margin-top:16px}.pb1099TabsActions button{font:inherit;padding:10px 18px;border:1px solid #dce3f0;border-radius:10px;cursor:pointer;background:#fff}.pb1099TabsActions button[type=submit]{background:#315cff;color:#fff}.pb1099TabsMessage{min-height:22px;color:#b42318}';
+ style.textContent='@media(max-width:820px){html body .photographerBottomAppNav[data-pb1318-stale]{display:none!important}body.pbAuthenticatedPhotographerPortal :is(.pbHomeMobileAccountBar,.adminBottomAppNav,.labBottomAppNav){display:none!important}}[data-pb1099-hidden="1"]{display:none!important}html body #photographerStoreBottomNav .photographerBottomAppNavGrid[data-pb1099-grid],html body .photographerBottomAppNav .photographerBottomAppNavGrid[data-pb1099-grid]{grid-template-columns:repeat(var(--pb1099-tabs,6),minmax(0,1fr))!important}.pb1099TabsDialog{border:1px solid #dce3f0;border-radius:20px;padding:22px;width:min(430px,calc(100vw - 40px));font-family:inherit;direction:rtl;color:#24334d;background:#fff}.pb1099TabsDialog::backdrop{background:#16234088}.pb1099TabsDialog h3{margin:0 0 10px}.pb1099TabsDialog p{font-size:13px;line-height:1.8}.pb1099TabsDialog label{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:16px}.pb1099TabsDialog input{width:20px;height:20px;accent-color:#315cff}.pb1099TabsActions{display:flex;gap:10px;margin-top:16px}.pb1099TabsActions button{font:inherit;padding:10px 18px;border:1px solid #dce3f0;border-radius:10px;cursor:pointer;background:#fff}.pb1099TabsActions button[type=submit]{background:#315cff;color:#fff}.pb1099TabsMessage{min-height:22px;color:#b42318}';
  document.head.append(style);
 }
 function mountAdmin(){
@@ -62,21 +80,21 @@ function mountAdmin(){
 }
 async function openAdmin(){
  let dialog=document.querySelector('#pb1099TabsDialog');
- if(!dialog){dialog=document.createElement('dialog');dialog.id='pb1099TabsDialog';dialog.className='pb1099TabsDialog';dialog.innerHTML='<form><h3>تب‌های عکاس</h3><p>هر تب را جداگانه فعال یا غیرفعال کنید. حساب عکاسی ادمین همیشه به هر سه تب دسترسی دارد.</p>'+keys.map(key=>'<label><input type="checkbox" name="'+key+'">'+labels[key]+'</label>').join('')+'<p class="pb1099TabsMessage" role="status"></p><div class="pb1099TabsActions"><button type="submit">ذخیره</button><button type="button" data-close>بستن</button></div></form>';document.body.append(dialog);
+ if(!dialog){dialog=document.createElement('dialog');dialog.id='pb1099TabsDialog';dialog.className='pb1099TabsDialog';dialog.innerHTML='<form><h3>تب‌های عکاس</h3><p>هر تب را جداگانه فعال یا غیرفعال کنید. تب مشتریان برای عکاس و لابراتوار با یک کلید مشترک کنترل می‌شود. سایر تب‌های عکاس تنظیمات مستقل خودشان را دارند.</p>'+keys.map(key=>'<label><input type="checkbox" name="'+key+'">'+labels[key]+'</label>').join('')+'<p class="pb1099TabsMessage" role="status"></p><div class="pb1099TabsActions"><button type="submit">ذخیره</button><button type="button" data-close>بستن</button></div></form>';document.body.append(dialog);
  dialog.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
- dialog.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const save=dialog.querySelector('[type=submit]'),msg=dialog.querySelector('[role=status]');save.disabled=true;try{await api('/api/admin/photographer-tabs',{method:'PUT',body:JSON.stringify({tabs:Object.fromEntries(keys.map(key=>[key,dialog.querySelector('[name='+key+']').checked]))})});msg.textContent='تنظیمات ذخیره شد.'}catch{msg.textContent='ذخیره انجام نشد؛ دوباره تلاش کنید.'}finally{save.disabled=false}});
+ dialog.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const save=dialog.querySelector('[type=submit]'),msg=dialog.querySelector('[role=status]');save.disabled=true;try{await api('/api/admin/photographer-tabs',{method:'PUT',body:JSON.stringify({tabs:Object.fromEntries(keys.map(key=>[key,dialog.querySelector('[name='+key+']').checked]))})});msg.textContent='تنظیمات ذخیره شد.';try{localStorage.setItem('pb1761CustomerVisibilityUpdated',String(Date.now()))}catch{}window.dispatchEvent(new Event('pb1761-customer-settings-updated'))}catch{msg.textContent='ذخیره انجام نشد؛ دوباره تلاش کنید.'}finally{save.disabled=false}});
  }
  dialog.querySelector('[role=status]').textContent='در حال دریافت تنظیمات…';dialog.querySelector('[type=submit]').disabled=true;dialog.showModal();
  try{const d=await api('/api/admin/photographer-tabs');for(const key of keys)dialog.querySelector('[name='+key+']').checked=d.tabs[key]!==false;dialog.querySelector('[role=status]').textContent='';dialog.querySelector('[type=submit]').disabled=false}catch{dialog.querySelector('[role=status]').textContent='دریافت تنظیمات انجام نشد.'}
 }
 async function load(){
  if(!photographer()||inFlight)return;const epoch=sessionEpoch;inFlight=true;loadedPath=location.pathname;
- try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch)inFlight=false}
+ try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
-window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;document.documentElement.dataset.pb1106TabsPending='1';void load();});
+window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

@@ -1,6 +1,6 @@
 'use strict';
 async function run(){
- const {app,BrowserWindow,net}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');let dir,db,server,win;const profile=fs.mkdtempSync(path.join(os.tmpdir(),'pb-compat-profile-'));app.setPath('userData',profile);const timeout=setTimeout(()=>{console.error('COMPAT_SMOKE_TIMEOUT');app.exit(1);},45000);
+ const {app,BrowserWindow,ipcMain,net}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');let dir,db,server,win;const profile=fs.mkdtempSync(path.join(os.tmpdir(),'pb-compat-profile-'));app.setPath('userData',profile);const timeout=setTimeout(()=>{console.error('COMPAT_SMOKE_TIMEOUT');app.exit(1);},45000);
  try{
   await app.whenReady();dir=fs.mkdtempSync(path.join(os.tmpdir(),'pb-compat-'));const {LabStore}=require('./store.cjs');db=new LabStore(path.join(dir,'lab.sqlite'));db.set('labId','smoke');db.enqueue('POST','/api/lab/test',{total:1200});assert.equal(db.rows().length,1);
   server=http.createServer((req,res)=>{res.setHeader('Set-Cookie',['one=1; Path=/','two=2; Path=/']);res.end('{"ok":true}');});await new Promise(r=>server.listen(0,'127.0.0.1',r));const port=server.address().port,result=await require('./runtime-compat.cjs').electronFetch(net,'http://127.0.0.1:'+port);assert.deepEqual(await result.json(),{ok:true});assert.equal(result.headers.getSetCookie().length,2);await new Promise(r=>server.close(r));
@@ -9,9 +9,12 @@ async function run(){
   const origin='http://127.0.0.1:'+server.address().port;
   await require('./native-session.cjs').prepareNativeSession(require('electron').session.defaultSession,origin);
   win=new BrowserWindow({show:false,webPreferences:{preload:path.join(__dirname,'main-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+  const fastWorker=require('./verify-native-ui.cjs').hasNativeFastWorker(root,app.getVersion());
+  let fastWorkerReady=false;
+  ipcMain.on('lab-fast-order-ready',event=>{if(event.sender===win.webContents)fastWorkerReady=true;});
   await require('./ui-activation.cjs').loadMountedUi({window:win,origin,token:'smoke'});
   const state=await win.webContents.executeJavaScript("new Promise(resolve=>{const started=Date.now();const check=()=>{if(document.querySelector('input[type=password]'))return resolve({login:true,bridge:!!window.pbNativeStorage});if(Date.now()-started>10000)return resolve({login:false,text:document.body.innerText.slice(0,200)});setTimeout(check,100)};check()})");assert.equal(state.login,true,JSON.stringify(state));assert.equal(state.bridge,true);
-  const {ipcMain}=require('electron');
+  if(fastWorker)assert(fastWorkerReady,'Packaged download worker did not subscribe to immediate order arrivals');
   const alert=new (require('./alert-window.cjs').AlertWindow)({BrowserWindow,ipcMain,store:db,getAccount:()=> 'smoke',open:async()=>{}});
   await alert.present({items:[{id:'test-order',title:'سفارش آزمایشی',message:'اعلان سفارش'}]},null,()=>{},'smoke');
   const alertState=await alert.window.webContents.executeJavaScript("new Promise(resolve=>{let tries=0;const check=()=>{const hasOrder=!!document.querySelector('#items .order'),bridge=!!window.labAlert;if(hasOrder&&bridge)return resolve({rendered:true,hidden:document.hidden,bridge});if(++tries>200)return resolve({rendered:false,hidden:document.hidden,bridge,hasOrder,body:(document.body?.innerText||'').slice(0,160)});setTimeout(check,50)};check()})");assert.equal(alertState.rendered,true,JSON.stringify(alertState));assert.equal(alertState.bridge,true,JSON.stringify(alertState));alert.destroy();
@@ -19,7 +22,7 @@ async function run(){
   const menuState=await menu.window.webContents.executeJavaScript("document.fonts.ready.then(()=>new Promise((resolve,reject)=>{let tries=0;const check=()=>{const items=document.querySelectorAll('button').length;if(items)return resolve({rtl:document.documentElement.dir,font:getComputedStyle(document.body).fontFamily,items});if(++tries>100)return reject(Error('tray renderer not ready'));setTimeout(check,50)};check()}))");assert.equal(menuState.rtl,'rtl');assert(menuState.font.includes('Vazirmatn'));assert.equal(menuState.items,1);menu.destroy();
   const backups=new (require('./data-backups.cjs').DataBackups)({store:db,userData:dir,exportAccess:async()=>{throw Error('Access must not run')}});const saved=await backups.run();assert(saved.ok&&saved.databaseSaved&&saved.viewerSaved,JSON.stringify(saved));assert(!fs.existsSync(path.join(saved.folder,'finance.accdb')));await require('./data-backups.cjs').verifyBackup(saved.folder);
   const viewer=new BrowserWindow({show:false,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}});const viewerErrors=[];viewer.webContents.on('console-message',(_event,level,message)=>{if(level>=3)viewerErrors.push(message)});await viewer.loadFile(path.join(saved.folder,'مشاهده بکاپ.html'));const viewerText=await viewer.webContents.executeJavaScript('document.body.innerText');assert(viewerText.includes('فاکتورها')&&viewerText.includes('دریافت‌ها'),viewerText.slice(0,300));assert.deepEqual(viewerErrors,[]);viewer.destroy();
-  console.log('PB_COMPAT_SMOKE_PASS '+JSON.stringify({electron:process.versions.electron,node:process.versions.node,sqlite:true,network:true,login:true}));
+  console.log('PB_COMPAT_SMOKE_PASS '+JSON.stringify({electron:process.versions.electron,node:process.versions.node,sqlite:true,network:true,login:true,fastWorkerReady}));
  }catch(e){console.error(e.stack||e);process.exitCode=1;}finally{clearTimeout(timeout);win?.destroy();if(server?.listening)await new Promise(r=>server.close(r));db?.db.close();if(dir)fs.rmSync(dir,{recursive:true,force:true});try{fs.rmSync(profile,{recursive:true,force:true});}catch{}app.exit(process.exitCode||0);}
 }
 module.exports={run};

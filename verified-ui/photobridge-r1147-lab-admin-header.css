@@ -396,3 +396,13 @@ html body #root .labRoleWorkspace .pb1147LabNav button::after{content:none!impor
 }
 
 /* PB1364 softer blue shadows */
+
+/* PB1749 visible real native intake */
+@media(min-width:821px) and (hover:hover) and (pointer:fine){
+html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav>#pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;order:-1!important;flex:0 0 auto!important;margin-inline-end:auto!important;position:relative!important;z-index:2!important}
+html body #root .labRoleWorkspace .labSingleHeader>#pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important}
+}
+@media(min-width:821px) and (hover:hover) and (pointer:fine){html body #root .labRoleWorkspace .mainQueueFilters{display:none!important;visibility:hidden!important}}
+
+/* PB1775 native order detail launcher guard */
+@media (min-width:821px){html body #root .labRoleWorkspace:has(.orderDetailPage) #pb1137LocalIntakeButton{display:none!important;visibility:hidden!important;pointer-events:none!important}}

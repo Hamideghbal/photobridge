@@ -1,0 +1,19 @@
+@media(min-width:821px){
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes{grid-column:1;display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-start;direction:rtl;justify-self:start!important;gap:4px!important;max-width:100%;white-space:nowrap}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button{position:relative!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;min-width:58px!important;height:39px!important;padding:5px 11px 8px!important;white-space:nowrap!important;font:800 14px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button.active{background:transparent!important;color:#245be4!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes>button.active::after{content:""!important;position:absolute!important;bottom:0!important;right:9px!important;left:9px!important;height:2px!important;border-radius:999px!important;background:#315efb!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1632ModeDivider{height:21px;width:1px;background:#d8e1ed;flex:0 0 1px;margin:0 9px}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button{font:800 14px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126MainNav>button.active{color:#245be4!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .photographerHeaderIdentity h1{font:800 16px/1.6 Vazirmatn,Tahoma,sans-serif!important;color:#1d2939!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1459LabContext{grid-column:2!important;justify-self:center!important;font:750 13px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important}
+html.pb1126Desktop.pb1632FinanceThird body #pb1126ChromeHost #pb1126DesktopHeader{height:155px!important;min-height:155px!important;grid-template-rows:72px 41px 42px!important}
+html.pb1126Desktop.pb1632FinanceThird .pb1126ContentPanel{top:155px!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs{grid-row:3!important;grid-column:1/-1!important;display:flex!important;justify-content:flex-start!important;align-items:center!important;direction:rtl!important;height:42px!important;min-height:42px!important;gap:5px!important;padding:0 14px!important;border-top:1px solid #e3eaf3!important;background:#fff!important;box-shadow:0 4px 11px rgba(42,74,131,.04)!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs[hidden]{display:none!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs>button{height:40px!important;min-height:40px!important;position:relative!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;padding:7px 12px!important;color:#344054!important;font:800 13px/1.5 Vazirmatn,Tahoma,sans-serif!important;cursor:pointer}
+html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs>button.active{color:#245be4!important;background:transparent!important}
+html body #pb1126ChromeHost #pb1126DesktopHeader>.pb1632FinanceTabs>button.active::after{content:"";position:absolute;right:10px;left:10px;bottom:0;height:2px;background:#315efb;border-radius:999px}
+html.pb1126Embedded body #root .financeWorkspace .financeSectionTabs{display:none!important}
+}

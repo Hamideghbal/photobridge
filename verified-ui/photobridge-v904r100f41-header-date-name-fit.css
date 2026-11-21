@@ -548,4 +548,350 @@ html.pbR100F37LabEnterBoot #root{visibility:hidden!important}
   html.pbF49PhotographerRoute #storeSectionNavV673{display:none!important;visibility:hidden!important;pointer-events:none!important}
 }
 
+/* R1873: the Gallery account header remains the single visible account row
+   in Store as well. Keep the Store header mounted for its live action handlers. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreRoleHeader.pbF37CoreHeader{
+   visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+ }
+ html body.pbF37UnifiedActive.pbF37StoreMode #pbF37PhotographerHeader,
+ html body.pbF37UnifiedActive.pbF37StoreMode #pbF37MenuBtn{
+   visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ /* A conservative first-paint offset until the CRM host measures the active
+    Gallery/Store title rows; its inline position subsequently takes priority. */
+ html.pbCrmTabOpen body.pbF37UnifiedActive:not(.pbF37StoreMode) #pbCrmTabContent{
+   top:var(--pb-f37-content-top,181px);
+ }
+ html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37StoreMode #pbCrmTabContent{
+   top:181px;
+ }
+ /* The account menu must remain clickable over the CRM iframe when opened. */
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuPanel{
+   z-index:2147483300!important;
+ }
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37MenuBtn{
+   z-index:2147483350!important;
+ }
+}
+
+/* R1874: one account header with independent CRM and Print subheaders. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive #pbR99LabChooser{top:181px!important;inset:181px 0 calc(72px + env(safe-area-inset-bottom,0px)) 0!important;max-height:calc(100dvh - 253px - env(safe-area-inset-bottom,0px))!important}
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbF37Subheader{display:block!important;visibility:visible!important}
+ html.pbCrmTabOpen body.pbF37UnifiedActive #pbCrmTabContent{top:181px!important}
+ html body.pbF37UnifiedActive.pbF37StoreMode #photographerStoreIdentityBar{margin-top:90px!important}
+ html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace{scroll-padding-top:90px!important}
+}
+
+
+/* R1875: Mobile header ownership is by destination, never by the underlying Gallery page. */
+@media(max-width:820px){
+  /* Store uses a 90px shared account row, 42px identity row and 44px nav.
+     Position the scroll container below all three; a margin on a fixed bar
+     does not move the fixed scrollport and previously hid its blue introduction. */
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>#photographerStoreIdentityBar{
+    position:fixed!important;top:90px!important;margin-top:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>#storeSectionNavV673{
+    position:fixed!important;top:132px!important;margin-top:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreMode #storePhotographerWorkspace>.shell{
+    position:fixed!important;top:181px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    padding:12px 11px 24px!important;overflow-x:hidden!important;overflow-y:auto!important;
+    scroll-padding-top:12px!important;
+  }
+
+  /* The chooser has its own overlay, not a separate account header.
+     Keep only the shared photographer account + one chooser title above it. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37PhotographerHeader,
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37MenuBtn,
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37Subheader{
+    display:block!important;visibility:visible!important;opacity:1!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37Subheader{
+    height:42px!important;z-index:2147481490!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    position:fixed!important;top:132px!important;right:0!important;left:0!important;
+    bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+    max-height:calc(100dvh - 204px - env(safe-area-inset-bottom,0px))!important;
+    z-index:2147481400!important;overflow-y:auto!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbF37ContextTitle{
+    display:flex!important;height:42px!important;justify-content:center!important;
+  }
+
+  /* Customers and Calendar replace both stale Gallery rows with ONE second row. */
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode{
+    --pb-f37-content-top:142px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37Subheader{
+    display:block!important;visibility:visible!important;
+    top:90px!important;height:52px!important;min-height:52px!important;max-height:52px!important;
+    background:#eaf5ff!important;z-index:2147481490!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbCrmTabContent{
+    top:142px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pb1156GalleryBack{
+    display:none!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37ContextTitle{
+    display:none!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37Tabs{
+    position:absolute!important;top:0!important;left:9px!important;right:9px!important;
+    height:52px!important;min-height:52px!important;max-height:52px!important;
+    display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    padding:5px 0!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CustomersMode #pbF37Tabs button{
+    height:42px!important;min-height:42px!important;max-height:42px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37ContextTitle{
+    display:flex!important;height:52px!important;min-height:52px!important;max-height:52px!important;
+    align-items:center!important;justify-content:flex-start!important;
+    padding:6px 144px 6px 12px!important;text-align:right!important;background:#eaf5ff!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37ContextTitle b{
+    font-size:13px!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37Tabs{
+    position:absolute!important;top:5px!important;left:9px!important;right:auto!important;
+    width:130px!important;height:42px!important;min-height:42px!important;max-height:42px!important;
+    display:grid!important;grid-template-columns:1fr!important;padding:2px 0!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CalendarMode #pbF37Tabs button{
+    height:38px!important;min-height:38px!important;max-height:38px!important;
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+}
+
+
+/* R1876: compact mobile selector pages — title exists in the second header. */
+@media(max-width:820px){
+  /* Print: the blue title/explanation card duplicates 'انتخاب لابراتوار'
+     already displayed in the shared second header. Keep city tabs and labs. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabIntro{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabWrap{
+    padding-top:12px!important;
+  }
+  /* Store: replace the old chooser heading/explanation with the same F37
+     second header, keeping the store filter and selectable store cards. */
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37Subheader{
+    display:block!important;visibility:visible!important;
+    top:90px!important;height:42px!important;min-height:42px!important;
+    max-height:42px!important;z-index:2147481490!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37ContextTitle{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    height:42px!important;min-height:42px!important;max-height:42px!important;
+    background:#eaf5ff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37Tabs{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooserHead{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storePhotographerWorkspace>.shell{
+    top:132px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    padding:12px 11px 24px!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96,
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    margin-top:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    padding-top:12px!important;
+  }
+}
+
+
+/* R1877 — canonical white mobile headers, separated stationary filter rows. */
+@media(max-width:820px){
+  html body.pbF37UnifiedActive #pbF37PhotographerHeader{
+    background:#fff!important;background-image:none!important;
+    border-bottom:1px solid #dde4ee!important;
+  }
+  html body.pbF37UnifiedActive #pbF37Subheader,
+  html body.pbF37UnifiedActive #pbF37ContextTitle{
+    background:#fff!important;background-image:none!important;
+  }
+  html body.pbF37UnifiedActive #pbF37ContextTitle{
+    border-bottom:1px solid #dde4ee!important;
+  }
+
+  /* Print: no maximum-height clipping or dead white zone above phone dock.
+     The city row does not belong to the lab-cards scrolling pane. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    inset:132px 0 calc(78px + env(safe-area-inset-bottom,0px)) 0!important;
+    top:132px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    height:auto!important;max-height:none!important;min-height:0!important;
+    overflow:hidden!important;display:block!important;
+    background:linear-gradient(180deg,#e5f2ff 0%,#f5faff 140px,#fff 450px)!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser>.pbR99LabWrap{
+    height:100%!important;max-height:100%!important;min-height:0!important;
+    width:100%!important;padding:0 12px 0!important;margin:0 auto!important;
+    display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabIntro{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabCities:not([hidden]){
+    flex:0 0 auto!important;display:flex!important;flex-wrap:wrap!important;
+    align-items:center!important;justify-content:center!important;gap:6px!important;
+    margin:0 -12px 7px!important;padding:9px 12px!important;
+    background:#fff!important;border-bottom:1px solid #dde4ee!important;
+    position:relative!important;z-index:3!important;
+  }
+  #pbR99LabChooser .pbR99LabCities[hidden]{display:none!important}
+  #pbR99LabChooser .pbR99LabCities>span{
+    font:900 11px Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
+    margin-inline-end:5px!important;
+  }
+  #pbR99LabChooser .pbR99LabCities>button{
+    min-width:0!important;min-height:34px!important;padding:5px 11px!important;
+    border-radius:10px!important;border:1px solid #d5e1ee!important;
+    background:#fff!important;color:#334155!important;
+    font:850 11px Vazirmatn,Tahoma,sans-serif!important;
+  }
+  #pbR99LabChooser .pbR99LabCities>button.active{
+    background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard{
+    flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+    overflow-y:auto!important;overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    margin:8px 0 0!important;padding:9px 8px 18px!important;
+    background:transparent!important;border:0!important;box-shadow:none!important;
+  }
+  #pbR99LabChooser .pbR99LabCard{
+    background:#fff!important;
+  }
+
+  /* Store chooser: white second header and a fixed third category header. */
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37Subheader,
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #pbF37ContextTitle{
+    background:#fff!important;border-bottom:1px solid #dde4ee!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231{
+    position:fixed!important;top:132px!important;left:0!important;right:0!important;
+    z-index:2147481470!important;height:54px!important;min-height:54px!important;
+    margin:0!important;padding:7px 9px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;
+    background:#fff!important;border:0!important;border-bottom:1px solid #dde4ee!important;
+    box-sizing:border-box!important;overflow:hidden!important;direction:rtl!important;
+  }
+  html body.pbF37UnifiedActive:not(.pbF37StoreChooserMode) #storeChooserFiltersR1231{
+    display:none!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button{
+    flex:1 1 0!important;min-width:0!important;max-width:190px!important;
+    height:38px!important;padding:4px 5px!important;border-radius:12px!important;
+    border:1px solid #dbe3ef!important;background:#fff!important;color:#475467!important;
+    font:850 11.6px Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button[aria-pressed="true"]{
+    border-color:#315efb!important;background:#eaf0ff!important;color:#2957cc!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 button:disabled{opacity:.35!important}
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserFiltersR1231 small{font-size:10px!important}
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storePhotographerWorkspace>.shell{
+    top:186px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;
+    background:linear-gradient(180deg,#e7f3ff 0%,#f4f9ff 150px,#fff 450px)!important;
+    padding:12px 11px 30px!important;scroll-padding-top:10px!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    background:transparent!important;border:0!important;box-shadow:none!important;
+    padding-top:0!important;
+  }
+
+  /* CRM: one white second row, and blue depth only AFTER that row. */
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37Subheader,
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbF37ContextTitle{
+    background:#fff!important;background-image:none!important;
+    border-bottom:1px solid #dde4ee!important;
+  }
+  html.pbCrmTabOpen body.pbF37UnifiedActive.pbF37CrmMode #pbCrmTabContent{
+    background:linear-gradient(180deg,#e7f3ff 0%,#f4f9ff 130px,#fff 420px)!important;
+  }
+}
+
+/* R1878 — remove the blue seam below the third mobile row and
+   release the reserved blank strip above the persistent bottom dock. */
+@media (max-width:820px){
+  /* Store chooser: filters form the third fixed row at 132–186px. Cards begin
+     immediately below it, with no blue gutter or artificial extra padding. */
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storePhotographerWorkspace>.shell{
+    top:186px!important;
+    bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;
+    padding:0 11px 8px!important;
+    scroll-padding-top:0!important;
+    background:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96,
+  html body.pbF37UnifiedActive.pbF37StoreChooserMode #storeChooserPanelR96 .pbR96StoreChooser{
+    margin-top:0!important;padding-top:0!important;
+  }
+  /* Lab chooser: the city filter is its third row. Do not insert another
+     colored band before the list and let the scroll area reach the dock. */
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;
+    background:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabCities:not([hidden]){
+    margin-bottom:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard{
+    margin-top:0!important;
+    padding:0 8px 8px!important;
+    background:#fff!important;
+  }
+  /* Remaining scrollports must occupy the usable area rather than reserve
+     the earlier 78px clearance after the dock height was reduced. */
+  html body.pbF37UnifiedActive:not(.pbF37StoreMode) #root .photographerMain.pbFixedRoleHeader>.photographerRolePageScrollArea{
+    bottom:64px!important;
+  }
+  html body.pbF37PrintMode #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    bottom:64px!important;
+    inset:181px 0 64px 0!important;
+  }
+  html body.pbF37PrintMode.pbF37PrintComposer #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
+    inset:241px 0 64px 0!important;
+  }
+}
+
+/* R1879 — lab chooser: a height-based viewport avoids a legacy doubled
+   bottom reservation. The chooser script refines this to the real dock row. */
+@media(max-width:820px){
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser{
+    top:132px!important;
+    bottom:auto!important;
+    height:calc(100dvh - 132px - 78px - env(safe-area-inset-bottom,0px))!important;
+    max-height:none!important;
+    min-height:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    background:#fff!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser>.pbR99LabWrap{
+    height:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+    padding-bottom:0!important;
+  }
+  html body.pbF37UnifiedActive.pbF37ChooserMode #pbR99LabChooser .pbR99LabBoard{
+    min-height:0!important;
+    flex:1 1 auto!important;
+    padding-bottom:8px!important;
+    overscroll-behavior:contain!important;
+  }
+}
+
 /* PB1364 softer blue shadows */

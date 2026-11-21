@@ -236,4 +236,3 @@
   document.addEventListener('DOMContentLoaded',async()=>{enhance();loadOrder();await loadSessionMobile();restoreActivePublicOrder()});
   setTimeout(async()=>{enhance();loadOrder();await loadSessionMobile();restoreActivePublicOrder()},300);setInterval(updatePublicExpiryTimers,1000);
 })();
-

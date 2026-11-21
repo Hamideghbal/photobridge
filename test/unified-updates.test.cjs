@@ -5,7 +5,7 @@ test('one update action checks both and reports current once',async()=>{const f=
 test('UI-only update applies only after explicit approval and after checking open work',async()=>{let applied=0;for(const allowed of [true,false]){const shown=[],f=fixture({pending:()=>true,canApply:async()=>allowed,apply:async()=>{applied++;return true},prompt:async state=>{shown.push(state.kind);return state.kind==='ready'?'apply':'later'}});await f.check();assert.deepEqual(shown,allowed?['ready']:['ready','busy']);}assert.equal(applied,1);});
 test('full ready/install flow does not open a competing UI dialog',async()=>{const f=fixture({pending:()=>true,checkProgram:async()=>({state:'ready'})});await f.check();assert.deepEqual(f.calls,['ready']);});
 test('declining the full download can still apply the smaller UI update',async()=>{const f=fixture({pending:()=>true,checkProgram:async()=>({state:'available'})});await f.check();assert.deepEqual(f.calls,['ready']);});
-test('offline errors never claim that the program is current',async()=>{const f=fixture({uiError:()=> 'offline'});await f.check();assert.deepEqual(f.calls,['ui','error']);});
+test('offline errors never claim that the program is current',async()=>{const f=fixture({uiError:()=> 'offline'});await f.check();assert.deepEqual(f.calls,['ui','program','error']);});
 test('repeated clicks share one check instead of duplicate download/prompts',async()=>{let release,checks=0;const waiting=new Promise(r=>release=r),f=fixture({checkUi:async()=>{checks++;await waiting}}),a=f.check(),b=f.check();assert.equal(a,b);release();await Promise.all([a,b]);assert.equal(checks,1);assert.equal(f.calls.filter(x=>x==='current').length,1);});
 test('failed update does not loop; a later user action starts a fresh check',async()=>{let tries=0,applied=0;const f=fixture({uiError:()=> 'offline',checkUi:async()=>{tries++},apply:async()=>{applied++},prompt:async()=>tries===1?'retry':'later'});await f.check();assert.equal(tries,1);await f.check();assert.equal(tries,2);assert.equal(applied,0);});
 test('tray contains one update action and preserves unrelated actions',()=>{const s=fs.readFileSync(require('node:path').join(__dirname,'../main.cjs'),'utf8'),a=s.indexOf('const trayActions='),b=s.indexOf(';const trayMenu=',a),menu=s.slice(a,b);assert.equal((menu.match(/به‌روزرسانی برنامه/g)||[]).length,1);assert(menu.includes('به‌روزرسانی سریع ظاهر'));assert(menu.includes('manualUpdates.checkUiOnly()'));assert(menu.includes('تنظیم صدای اعلان سفارش'));assert(!menu.includes(',,'));});
@@ -21,3 +21,10 @@ test('UI progress stays in the update window and closes before the result dialog
 
 test('manual update checks UI in apply-eligible mode, not startup-only mode',()=>{const s=fs.readFileSync(require('node:path').join(__dirname,'../main.cjs'),'utf8');assert.match(s,/checkUi:onProgress=>updateUi\(false,true,onProgress\)/);});
 test('native update network failure does not discard a verified, waiting UI update',async()=>{let applied=0;const f=fixture({checkProgram:async()=>{throw Error('network_down')},pending:()=>true,apply:async()=>{applied++;return true},prompt:async state=>state.kind==='ready'?'apply':'later'});await f.check();assert.equal(applied,1);assert.deepEqual(f.calls,[]);});
+
+test('a downloaded UI that fails to mount does not block the native installer check',async()=>{
+ const f=fixture({pending:()=>true,apply:async()=>false,
+  prompt:async state=>state.kind==='ready'?'apply':'later'});
+ await f.check();
+ assert.deepEqual(f.calls,['program']);
+});

@@ -15,6 +15,16 @@ function pb1372FinanceContext(){
  document.querySelector('.labRoleWorkspace main').append(source);return source;
 }
 function secondary(h){
+ /* R1610 no archive second header */
+ if(/^\/lab\/archive(?:\/|$)/.test(location.pathname)||h.querySelector('.labArchiveHeaderBtn.active')){
+  const row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
+  row?.remove();
+  h.parentElement.querySelector(':scope>.pb1175HeaderFade')?.remove();
+  h.parentElement.classList.remove('pb1148HasSecondary');
+  h.parentElement.querySelectorAll('.pb1148SecondarySource').forEach(el=>el.classList.remove('pb1148SecondarySource'));
+  return;
+ }
+
  if(!document.querySelector('.financeSectionTabs'))document.querySelector('.pb1372FinanceContext')?.remove();
  let row=h.parentElement.querySelector(':scope>.pb1148SecondaryHeader');
  /* PB1188 prefer active queue tabs in browser */const queueRoute=/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
@@ -31,7 +41,10 @@ function secondary(h){
  if(row._source!==source||buttons().length!==originals.length){
   row._source=source;
   /* PB1186 preserve intake on tab rebuild */const nativeIntake=row.querySelector(':scope>#pb1137LocalIntakeButton');
+  /* PB1749 retained real intake button */
+  const retainedIntake=row.querySelector('#pb1137LocalIntakeButton');
   row.replaceChildren();
+  if(retainedIntake)row.prepend(retainedIntake);
   if(nativeIntake)row.prepend(nativeIntake);
   originals.forEach((original,index)=>{
    const button=document.createElement('button');button.type='button';
@@ -58,14 +71,14 @@ function secondary(h){
   indicator.className='pb1173MovingIndicator';indicator.setAttribute('aria-hidden','true');
   row.append(indicator);
  }
- const isQueue=source.classList.contains('mainQueueFilters')&&/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname);
+ const isQueue=source.classList.contains('mainQueueFilters')&&((location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace'))||/^\/lab\/(?:orders(?:\/|$)|album(?:s|[-/]|$)|print(?:\/|$))/.test(location.pathname));
  row.classList.toggle('pb1174QueueNav',isQueue);
  // The original registered-device launch button is the ONLY one; move it,
  // retaining its native click handler and not inserting a second proxy.
  const intake=document.getElementById('pb1137LocalIntakeButton');
- if(isQueue&&intake&&intake.parentElement!==row)row.prepend(intake);
+ if(isQueue&&intake){intake.classList.remove('pb1174QueueLaunch');if(intake.parentElement!==row)row.prepend(intake);}
  if(!isQueue&&intake&&intake.parentElement===row)intake.remove();
- row.querySelector(':scope>.pb1174QueueLaunch')?.remove();
+ row.querySelector(':scope>.pb1174QueueLaunch:not(#pb1137LocalIntakeButton)')?.remove();
  row.setAttribute('aria-label',source.getAttribute('aria-label')||'زیرگزینه‌های صفحه');
  buttons().forEach((button,index)=>{
   const original=originals[index];if(!original)return;
@@ -82,8 +95,8 @@ function secondary(h){
   }
   const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';
   button.classList.toggle('active',active);
-  button.setAttribute('aria-selected',String(active));
-  button.disabled=original.disabled;
+  if(button.getAttribute('aria-selected')!==String(active))button.setAttribute('aria-selected',String(active));
+  if(button.disabled!==original.disabled)button.disabled=original.disabled;
  });
  const indicator=row.querySelector(':scope>.pb1173MovingIndicator');
  requestAnimationFrame(()=>{
@@ -155,8 +168,10 @@ function render(){scheduled=false;if(!media.matches){clearDesktop();return;}if(!
  const section=location.pathname.split('/')[3]||'general';nav.querySelectorAll('button').forEach(button=>{const original=button.dataset.source&&h.querySelector(button.dataset.source);const active=original?original.classList.contains('active'):button.dataset.category!==undefined&&(location.pathname.startsWith('/lab/settings')||location.pathname==='/lab/wallet')&&categories[Number(button.dataset.category)][2].includes(location.pathname==='/lab/wallet'?'wallet':section);button.classList.toggle('active',!!active);button.setAttribute('aria-current',active?'page':'false');});
 }
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(render)}
-function start(){schedule();new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,characterData:true});addEventListener('popstate',schedule);addEventListener('photobridge-auth-session-changed',()=>{epoch++;loaded=false;loading=false;avatar='';manager='';schedule();});media.addEventListener('change',schedule);}
+function start(){schedule();new MutationObserver(records=>{if(records.some(record=>{const node=record.target.nodeType===1?record.target:record.target.parentElement;return !node?.closest('.pb1372ThirdHeader,.pb1148SecondaryHeader,.pb1147LabNav,.pb1148LabAvatar,.pb1148Manager')}))schedule()}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,characterData:true});addEventListener('popstate',schedule);addEventListener('photobridge-auth-session-changed',()=>{epoch++;loaded=false;loading=false;avatar='';manager='';schedule();});media.addEventListener('change',schedule);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();
 
 
 /* PB1420 single finance context */
+
+/* PB1567 stable header */

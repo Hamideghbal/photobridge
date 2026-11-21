@@ -1,0 +1,56 @@
+/* R1648: photographer invoices appear on top of desktop frame chrome, with a
+ * readable document size. Lab preview and mobile invoice layout stay unchanged. */
+@media (min-width:821px) {
+  html.pb1126Desktop body > .globalInvoicePreviewLayer.invoicePreviewBack {
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483640!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    padding:14px!important;
+    background:rgba(15,23,42,.62)!important;
+  }
+  html.pb1126Desktop body > .globalInvoicePreviewLayer > .invoicePreviewModal.customerInvoicePreview.invoiceFitModal {
+    width:min(940px,calc(100vw - 28px))!important;
+    max-width:calc(100vw - 28px)!important;
+    height:min(940px,calc(100dvh - 28px))!important;
+    max-height:calc(100dvh - 28px)!important;
+    min-height:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    padding:14px!important;
+    gap:10px!important;
+    border-radius:15px!important;
+  }
+  html.pb1126Desktop body > .globalInvoicePreviewLayer > .customerInvoicePreview .invoicePreviewHead {
+    flex:0 0 auto!important;
+    min-height:46px!important;
+    padding-bottom:10px!important;
+  }
+  html.pb1126Desktop body > .globalInvoicePreviewLayer > .customerInvoicePreview .invoicePaperViewport {
+    flex:1 1 auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    justify-content:center!important;
+    align-items:flex-start!important;
+    padding:12px!important;
+    overscroll-behavior:contain!important;
+  }
+  html.pb1126Desktop body > .globalInvoicePreviewLayer > .customerInvoicePreview .invoicePaper {
+    height:860px!important;
+    max-height:none!important;
+    flex:0 0 auto!important;
+    min-width:0!important;
+  }
+  html.pb1126Desktop body > .globalInvoicePreviewLayer > .customerInvoicePreview .invoicePreviewHeadActions button {
+    min-height:33px!important;
+    font:750 12px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+  }
+}
+/* The inline customer viewer is only lifted out of the iframe in desktop mode.
+   There must be no new fixed-height spacer in the order card document. */

@@ -14,7 +14,8 @@
  function sync(){frame=0;if(!matchMedia('(min-width:821px)').matches)return;
   const chrome=document.querySelector('#pb1126DesktopHeader'),panel=document.querySelector('.pb1126ContentPanel[data-panel="print"]');
   if(chrome&&panel&&!panel.hidden){const nodes=[chrome,...chrome.querySelectorAll('.pb1126Secondary,.pb1127PrintModes,.pb1127PrintUtilities,.pb1126Secondary>*,.pb1126Secondary>*>*')];nodes.forEach(watch);const top=window.pb1319DesktopPrintInset(chrome);if(top>0&&top<innerHeight-64&&panel.style.getPropertyValue('top')!==top+'px')panel.style.setProperty('top',top+'px','important');}
-  if(document.documentElement.classList.contains('pb1126Embedded')||document.documentElement.classList.contains('pb1126Desktop')){const area=document.querySelector('main.photographerPrintWorkspace>.photographerRolePageScrollArea');if(area){const top=window.pb1318PrintInset();document.querySelectorAll(innerHeaders).forEach(watch);if(area.style.getPropertyValue('top')!==top+'px')area.style.setProperty('top',top+'px','important');}}
+  // Relative desktop content already follows main's header padding; only fixed viewports need an inset.
+  if(document.documentElement.classList.contains('pb1126Embedded')||document.documentElement.classList.contains('pb1126Desktop')){const area=document.querySelector('main.photographerPrintWorkspace>.photographerRolePageScrollArea');if(area){const top=getComputedStyle(area).position==='fixed'?window.pb1318PrintInset():0;document.querySelectorAll(innerHeaders).forEach(watch);if(area.style.getPropertyValue('top')!==top+'px')area.style.setProperty('top',top+'px','important');}}
  }
  function watch(el){if(resize&&!observed.has(el)){observed.add(el);resize.observe(el)}}
  function schedule(){if(!frame)frame=requestAnimationFrame(sync)}

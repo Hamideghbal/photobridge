@@ -3,10 +3,10 @@ const media=matchMedia('(min-width:821px) and (hover:hover) and (pointer:fine)')
 function pb1425CustomersSource(root,native){
  let source=root.querySelector('.pb1425CustomerTabs');
  if(!source){source=document.createElement('nav');source.className='pb1425CustomerTabs';source.hidden=true;
- for(const [index,label,path] of [[0,'عکاس‌ها','/lab/settings/customers/photographers'],[1,'دعوت‌نامه','/lab/settings/customers/invites'],[2,'درخواست همکاری','/lab/settings/customers/collaboration'],[3,'مشتری آزاد','/lab/settings/walkin']]){
- const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=()=>{const live=root.querySelectorAll('.labCustomerSubnav>button')[index];if(index<3&&live){live.click();return}if(location.pathname!==path){history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}};source.append(button);}
+ for(const [index,label,path] of [[0,'عکاس‌ها','/lab/settings/customers/photographers'],[1,'دعوت‌نامهٔ عکاس‌ها','/lab/settings/customers/invites'],[2,'دعوت‌نامهٔ لابراتوارها','/lab/settings/customers/lab-invites'],[3,'درخواست همکاری','/lab/settings/customers/collaboration'],[4,'مشتری آزاد','/lab/settings/walkin']]){
+ const button=document.createElement('button');button.type='button';button.textContent=label;/* PB1542 customer tabs use canonical routes */button.onclick=()=>{if(location.pathname!==path||location.hash){history.pushState(null,'',path);dispatchEvent(new PopStateEvent('popstate'));}};source.append(button);}
  root.querySelector('main').append(source);}
- const active=location.pathname.includes('/walkin')?3:location.pathname.includes('/invites')||location.hash==='#customers-invites'?1:location.pathname.includes('/collaboration')||location.hash==='#customers-collaboration'?2:0;
+ /* R1621 laboratory referral tab */const active=location.pathname.includes('/walkin')?4:location.pathname.includes('/lab-invites')||location.hash==='#customers-lab-invites'?2:location.pathname.includes('/invites')||location.hash==='#customers-invites'?1:location.pathname.includes('/collaboration')||location.hash==='#customers-collaboration'?3:0;
  [...source.children].forEach((button,i)=>button.classList.toggle('active',i===active));
  return source;
 }
@@ -41,18 +41,20 @@ function render(){queued=false;const root=document.querySelector('.labRoleWorksp
  const fontButton=second.querySelector(':scope>button[data-pb1173-index]');if(fontButton&&typeof getComputedStyle==='function'){const font=getComputedStyle(fontButton).font;if(font&&row.style.getPropertyValue('--pb1375-tab-font')!==font)row.style.setProperty('--pb1375-tab-font',font)}
  [...row.querySelectorAll('button')].forEach((button,i)=>{const original=originals[i],raw=original.textContent.trim();let count='',label=raw;
  if(data.kind==='customers'){label=original.querySelector('span')?.textContent.trim()||raw;const suffix=original.querySelector('small')?.textContent.trim()||'';count=suffix.match(/[0-9۰-۹٠-٩]+/)?.[0]||'';if(!original.querySelector('span'))label=raw.replace(/[0-9۰-۹٠-٩]+\s*(?:عضو|جدید)/g,'').trim();}
- if(data.kind==='pricing')label=raw.includes('چاپ')?'چاپ':raw.includes('جدید')?'سایز جدید':raw.includes('ذخیره')?(original.disabled?'در حال ذخیره…':'ذخیره'):raw;
+ if(data.kind==='pricing')label=raw.includes('شاسی')&&raw.includes('جدید')?'شاسی جدید':raw.includes('قاب')&&raw.includes('جدید')?'قاب جدید':raw.includes('صحافی')&&raw.includes('جدید')?'صحافی جدید':raw.includes('جدید')?'سایز جدید':raw.includes('چاپ')?'چاپ':raw.includes('ذخیره')?(original.disabled?'در حال ذخیره…':'ذخیره'):raw;
  if(button.dataset.label!==label||button.dataset.count!==count){button.replaceChildren();const text=document.createElement('span');text.className='pb1375TabLabel';text.textContent=label;button.append(text);if(count){const badge=document.createElement('b');badge.className='pb1375TabCount';badge.textContent=count;button.append(badge)}button.dataset.label=label;button.dataset.count=count;}
  button.classList.toggle('pb1379HeaderToggle',original.classList.contains('pb1379AlbumMenuToggle'));if(original.getAttribute('role')==='switch'){button.setAttribute('role','switch');button.setAttribute('aria-checked',original.getAttribute('aria-checked'))}else{button.removeAttribute('role');button.removeAttribute('aria-checked')}
- button.classList.toggle('pb1418ManualInvoiceAction',original.classList.contains('pb1176ManualOpen'));button.disabled=original.disabled;const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+ button.classList.toggle('pb1418ManualInvoiceAction',original.classList.contains('pb1176ManualOpen'));if(button.disabled!==original.disabled)button.disabled=original.disabled;const active=original.classList.contains('active')||original.getAttribute('aria-selected')==='true';button.classList.toggle('active',active);if(button.getAttribute('aria-pressed')!==String(active))button.setAttribute('aria-pressed',String(active));});
  const top=Math.ceil(((data.kind==='finance'||data.kind==='customers')?header:second).getBoundingClientRect().bottom);if(row.style.top!==top+'px')row.style.top=top+'px';root.classList.add('pb1372HasThird');
  const edge=Math.ceil((inline?second:row).getBoundingClientRect().bottom)+'px';if(root.style.getPropertyValue('--pb1375-fade-top')!==edge)root.style.setProperty('--pb1375-fade-top',edge);
  // R1396: the scroll viewport owner measures all headers plus the collaboration notice.
  if(typeof ResizeObserver!=='undefined'){resize||=new ResizeObserver(schedule);if(resize._second!==second||resize._row!==row){resize.disconnect();resize.observe(second);resize.observe(row);resize._second=second;resize._row=row}}
 }
 function schedule(){if(!queued){queued=true;requestAnimationFrame(render)}}
-function start(){new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','aria-selected']});addEventListener('popstate',schedule);addEventListener('resize',schedule);addEventListener('photobridge-auth-session-changed',schedule);media.addEventListener('change',schedule);schedule()}
+function start(){new MutationObserver(records=>{if(records.some(record=>{const node=record.target.nodeType===1?record.target:record.target.parentElement;return !node?.closest('.pb1372ThirdHeader,.pb1148SecondaryHeader,.pb1147LabNav,.pb1148LabAvatar,.pb1148Manager')}))schedule()}).observe(document.getElementById('root')||document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','aria-selected']});addEventListener('popstate',schedule);addEventListener('resize',schedule);addEventListener('photobridge-auth-session-changed',schedule);media.addEventListener('change',schedule);schedule()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();
 
 
 /* PB1439 manual action stays in invoice toolbar */
+
+/* PB1567 stable header */

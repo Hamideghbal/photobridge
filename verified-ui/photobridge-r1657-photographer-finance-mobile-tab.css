@@ -1,0 +1,33 @@
+/* R1657: photographer only. Finance already has its own third-header tabs.
+   Remove ONLY the redundant content heading on embedded desktop; keep records,
+   search, controls and all laboratory finance headings unchanged. */
+@media (min-width:821px) {
+ html.pb1126Embedded body #root :is(.photographerRolePageScrollArea,.rolePageScrollArea)
+ > .financeWorkspace.financeWorkspaceCompact > .sectionTopline.financeTopline {
+  display:none!important;
+ }
+ html.pb1126Embedded body #root :is(.photographerRolePageScrollArea,.rolePageScrollArea)
+ > .financeWorkspace.financeWorkspaceCompact {
+  padding-top:0!important;
+  margin-top:0!important;
+ }
+}
+/* The photographer's mobile Print/Album mode row must be centered when
+   exactly one real mode remains. Never change the two-mode arrangement. */
+@media (max-width:820px) {
+ html body #root main.photographerMain .photographerPrintModeNav[data-pb1657-single="1"] {
+  box-sizing:border-box!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-inline:auto!important;
+  text-align:center!important;
+ }
+ html body #root main.photographerMain .photographerPrintModeNav[data-pb1657-single="1"] > button:not([hidden]) {
+  flex:0 0 auto!important;
+  margin-inline:0!important;
+  align-self:center!important;
+ }
+}

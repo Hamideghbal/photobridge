@@ -1,0 +1,8 @@
+/* Native-only layout work reduction; printing remains fully expanded. */
+@media screen {
+ .labRoleWorkspace .labOrderCard{content-visibility:auto;contain-intrinsic-size:auto 180px;animation:none!important}
+ .labRoleWorkspace .labRolePageScrollArea,.labRoleWorkspace .settingsBody,.labRoleWorkspace .financeWorkspace{animation:none!important}
+ .pbLabDesktopConflicts a[href*="lab-windows-download.html"],.pbLabDesktopConflicts a[href*="/api/lab/desktop-installer"]{display:none!important}
+ .labRoleWorkspace .pb1175HeaderFade{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
+@media print {.labRoleWorkspace .labOrderCard{content-visibility:visible;contain:none;contain-intrinsic-size:none}}

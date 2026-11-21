@@ -242,4 +242,3 @@
   document.addEventListener('DOMContentLoaded',async()=>{scheduleEnhance(0);loadOrder();await loadSessionMobile();restoreActivePublicOrder()});
   setTimeout(async()=>{scheduleEnhance(0);loadOrder();await loadSessionMobile();restoreActivePublicOrder()},300);setInterval(updatePublicExpiryTimers,1000);
 })();
-

@@ -1,0 +1,61 @@
+/* PhotoBridge R1868 – mobile fixed-width CRM tabs, native-font parity and custom RTL menus. */
+@font-face{font-family:"PB CRM Vazirmatn";src:url("/assets/photobridge-handover-vazirmatn.woff2") format("woff2");font-display:swap}
+html,body,button,input,textarea,select,option,dialog,.pb1868Popup,.pb1868Popup *{
+  font-family:"PB CRM Vazirmatn",Vazirmatn,Tahoma,sans-serif!important;
+}
+html[lang="fa"] body{direction:rtl;text-align:right}
+select,option,input,textarea{direction:rtl;text-align:right}
+input[dir="ltr"],input[type="time"],input[type="tel"][dir="ltr"]{direction:ltr;text-align:left}
+#nav{position:sticky;top:0;z-index:12;background:#f5f7fb;overflow:visible!important;scrollbar-width:none}
+#nav::-webkit-scrollbar{display:none}
+.pb1868Select{display:block;position:relative;width:100%;min-width:0}
+.pb1868Native{
+  position:absolute!important;left:0!important;top:0!important;opacity:0!important;
+  width:1px!important;height:1px!important;min-height:0!important;padding:0!important;
+  pointer-events:none!important;clip-path:inset(50%)!important;
+}
+button.pb1868Trigger{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:43px;
+  padding:9px 12px!important;background:#fff!important;border:1px solid #d4deeb!important;
+  color:#273953!important;border-radius:10px;text-align:right;direction:rtl;font-size:13px;white-space:normal;
+}
+button.pb1868Trigger:after{content:"⌄";font-family:Tahoma,sans-serif;font-size:18px;color:#7485a2;flex:none}
+button.pb1868Trigger:hover,button.pb1868Trigger:focus-visible{border-color:#7198e8!important;outline:2px solid #dbe6ff}
+button.pb1868Placeholder{color:#8491a4!important}
+.pb1868Popup{
+  position:fixed;z-index:2147483600;display:flex;flex-direction:column;gap:3px;overflow:auto;
+  background:#fff;border:1px solid #d9e2f0;border-radius:12px;box-shadow:0 12px 32px #1b2e4825;
+  padding:6px;direction:rtl;text-align:right;overscroll-behavior:contain;
+}
+.pb1868Popup[hidden]{display:none!important}
+.pb1868Option{
+  background:#fff!important;color:#253955!important;border:0!important;border-radius:8px!important;
+  min-height:39px!important;padding:9px 11px!important;display:block!important;width:100%;text-align:right!important;
+  white-space:normal!important;line-height:1.7;font-size:13px!important;cursor:pointer;
+}
+.pb1868Option:hover,.pb1868Option:focus-visible,.pb1868Option[aria-selected="true"]{
+  background:#ecf2ff!important;color:#254fba!important;outline:0;
+}
+.pb1868Option.pb1868Add{color:#245be1!important;font-weight:850!important;border-top:1px solid #e4eaf4!important;margin-top:3px}
+.pb1868Empty{margin:8px;color:#73839a;font-size:12px}
+#pb1868CreateDialog{border:0;padding:20px;width:min(420px,calc(100vw - 28px));border-radius:16px;
+  color:#263a56;background:white;box-shadow:0 20px 70px #18293d44;max-height:85dvh}
+#pb1868CreateDialog::backdrop{background:#101b3070}
+#pb1868CreateDialog h3{margin:0 0 8px;font-size:17px}
+#pb1868CreateDialog p{color:#6a798f;font-size:12px;line-height:1.8}
+#pb1868CreateDialog label{display:block;margin:12px 0 7px}
+#pb1868CreateDialog input{width:100%;min-height:44px;border:1px solid #d4deeb;border-radius:9px;padding:9px 12px}
+#pb1868ServiceError{font-size:12px;color:#b13a53;min-height:18px}
+.pb1868Actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+@media(max-width:700px){
+  #nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0!important;
+    padding:0!important;margin:0 0 12px!important;border-bottom:1px solid #dfe7f4}
+  #nav button{min-width:0!important;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;
+    padding:10px 3px!important;line-height:1.45!important;min-height:51px!important;font-size:11px!important}
+  html.crmEmbedded main{padding-left:8px;padding-right:8px}
+  .pb1868Popup .pb1868Option{font-size:14px!important}
+  .calDialog{font-family:"PB CRM Vazirmatn",Vazirmatn,Tahoma,sans-serif!important}
+}
+@media(max-width:360px){#nav button{font-size:10px!important;padding-inline:2px!important}}
+
+/* PB1364 softer blue shadows */

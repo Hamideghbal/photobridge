@@ -61,8 +61,8 @@
     row.dataset.mode=mode;
     const choose=row.querySelector('.pb755Choose'), send=row.querySelector('.pb755Send');
     choose.textContent=isAlbum?(albumHasFiles()?'افزودن فایل به آلبوم':'انتخاب فایل آلبوم'):'انتخاب سایز و عکس';
-    send.textContent=isAlbum?'ارسال آلبوم برای چاپ':'ارسال فایل برای چاپ';
-    const chooseSource=actionSource(w,mode,0), sendSource=actionSource(w,mode,1);
+    const retrySource=actionSource(w,mode,1),label=isAlbum?'ارسال آلبوم برای چاپ':retrySource?.dataset.pb1858Primary==='true'?retrySource.textContent:'ارسال فایل برای چاپ';if(send.textContent!==label)send.textContent=label;
+    const chooseSource=actionSource(w,mode,0), sendSource=actionSource(w,mode,1);window.PB1854PrintRecovery?.syncPrintActions(row,send,sendSource,!isAlbum&&printCreate(w));
     choose.disabled=!!chooseSource?.disabled;
     // On list pages the real send button navigates to the composer, so it stays enabled.
     send.disabled=(isAlbum&&albumCreate(w))||(mode==='print'&&printCreate(w)) ? !!sendSource?.disabled : false;

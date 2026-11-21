@@ -72,6 +72,7 @@ try {
  $env:PATH=(Split-Path -Parent $node)+';'+$env:PATH
  $env:PB_UPDATE_SIGNING_KEY=$publisher
  $env:PB_LAB_REFRESH_UI='0'
+ $env:PB_REQUIRE_NATIVE_FAST_WORKER='1'
  Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
  function Invoke-Checked([string]$exe,[string[]]$arguments) {
   & $exe @arguments

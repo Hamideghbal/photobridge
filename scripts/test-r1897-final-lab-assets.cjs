@@ -23,8 +23,8 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
     }
     const urls=[...html.matchAll(/index-UIRefine-v655-r84\.js\?[^"'\s>]*/g)];
     assert.equal(urls.length,1);
-    assert.match(urls[0][0],/[&]labStage=r1943$/);
-    assert.doesNotMatch(urls[0][0],/labStage=r1894|labStage=r1897|labStage=r1936/);
+    assert.match(urls[0][0],/[&]labStage=r1944$/);
+    assert.doesNotMatch(urls[0][0],/labStage=r1894|labStage=r1897|labStage=r1936|labStage=r1943/);
     for(const suffix of ['.br','.gz']){
       const file=root+'/index.html'+suffix;
       if(fs.existsSync(file)){

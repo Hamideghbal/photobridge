@@ -21,7 +21,8 @@ function readPayload(root){
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
  assert(ui.includes('window.innerWidth<=820?3:5'),root+' mobile pager must limit numeric buttons');
- assert(html.includes('labStage=r1955'),root+' fresh UI revision missing');
+ assert(html.includes('labStage=r1956'),root+' fresh UI revision missing');
+ assert(html.includes('PB1956:'),root+' fixed scroll viewport CSS missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
  assert(style&&style[1].includes('PB1947:')&&style[1].includes('PB1949:'),root+' final mobile/desktop CSS missing');
  assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicated search still mounted');
@@ -31,14 +32,17 @@ function readPayload(root){
  const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
  if(root.endsWith('lab-desktop-ui')){
   const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
-  for(const name of [ASSET,'index.html']){
+  for(const name of [ASSET,'index.html','photobridge-r1363-lab-queue.js']){
    const entry=manifest.files.find(f=>f.name===name);
    assert(entry,'native UI updater must download '+name);
    assert.equal(entry.sha256,sha(fs.readFileSync(root+'/'+name)),name+' hash must match manifest after build');
   }
   assert.equal(manifest.build,sha(JSON.stringify(manifest.files)),root+' native build hash must be valid');
  }
- return {root,html,style:style[0]+newStyle[0],links};
+ const queueRuntime=fs.readFileSync(root+'/photobridge-r1363-lab-queue.js','utf8');
+ assert(queueRuntime.includes('.pb1955ThirdHeaderHost')&&queueRuntime.includes('--pb1956-third-bottom'),root+' runtime must measure new header');
+ const queueCss=fs.readFileSync('dist/web/photobridge-r1363-lab-queue.css','utf8');
+ return {root,html,style:'<style>'+queueCss+'</style>'+style[0]+newStyle[0],links,queueRuntime};
 }
 
 function fixtureHtml({style,links},width){
@@ -72,13 +76,16 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     return path.extname(url.pathname)&&fs.existsSync(file)?route.fulfill({path:file}):route.fulfill({status:404,body:''});
    });
    for(const width of [360,390,430,768,1280]){
+    await page.goto('about:blank');
     await page.setViewportSize({width,height:900});
     await page.setContent(fixtureHtml(payload,width),{waitUntil:'load'});
+    await page.addScriptTag({content:payload.queueRuntime});
+    await page.waitForFunction(()=>document.documentElement.classList.contains('pb1956LabThirdHeader')&&document.documentElement.style.getPropertyValue('--pb1956-third-bottom'),{timeout:6000});
     const g=await page.evaluate(()=>{
      const get=q=>document.querySelector(q);
      const b=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility,animationName:s.animationName};};
      const header=get('.labQueueStickyBar');
-     return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,header:b(header),filter:b(get('.labGlobalStageHeader')),legacyFilter:b(get('.labQueueStickyBar > .queueFilters')),tabs:[...document.querySelectorAll('.labGlobalStageHeader > button')].map(b),panel:b(get('.pb1955ThirdHeaderHost')),scroll:b(get('.rolePageScrollArea.labRolePageScrollArea')),toolbar:b(get('.pb1955ThirdHeaderHost .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
+     return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,thirdActive:document.documentElement.classList.contains('pb1956LabThirdHeader'),thirdBottom:document.documentElement.style.getPropertyValue('--pb1956-third-bottom'),header:b(header),filter:b(get('.labGlobalStageHeader')),legacyFilter:b(get('.labQueueStickyBar > .queueFilters')),tabs:[...document.querySelectorAll('.labGlobalStageHeader > button')].map(b),panel:b(get('.pb1955ThirdHeaderHost')),scroll:b(get('.rolePageScrollArea.labRolePageScrollArea')),toolbar:b(get('.pb1955ThirdHeaderHost .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
     });
     const tag=root+':'+width;
     assert(g.header&&g.filter&&g.panel&&g.toolbar&&g.search&&g.summary&&g.pager,tag+' missing independent panel pieces');
@@ -86,6 +93,8 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     assert(g.toolbar.height>=30&&g.search.height>=28&&g.pager.height>=30,tag+' search and pager must be visible');
     assert(g.panel.top>=g.filter.bottom-2,tag+' third header overlaps second header '+JSON.stringify(g));
     assert(Math.abs(g.panel.height-52)<=1,tag+' third header must match second header height of 52px '+JSON.stringify(g));
+    assert(g.thirdActive,tag+' live measured third-header mode not enabled');
+    assert(Math.abs(parseFloat(g.thirdBottom)-g.panel.bottom)<=2,tag+' runtime must measure actual third header bottom '+JSON.stringify(g));
     assert(g.scroll?.top>=g.panel.bottom-2,tag+' blue scroll surface must start below third header');
     assert(g.search.top>=g.toolbar.top-1&&g.pager.top>=g.toolbar.top-1,tag+' search or pager obscured');
     assert(g.header.left>=-3&&g.header.right<=g.vp+3,tag+' header exceeds viewport');

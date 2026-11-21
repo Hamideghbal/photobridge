@@ -25,8 +25,9 @@ function validate(manifest){
 function assertCurrentLabUi(root){
  const bundle=path.join(root,'assets/index-UIRefine-v655-r84.js');
  const page=path.join(root,'index.html');
- let js,html;
- try{js=fs.readFileSync(bundle,'utf8');html=fs.readFileSync(page,'utf8')}
+ const measuredScroll=path.join(root,'photobridge-r1363-lab-queue.js');
+ let js,html,queue;
+ try{js=fs.readFileSync(bundle,'utf8');html=fs.readFileSync(page,'utf8');queue=fs.readFileSync(measuredScroll,'utf8')}
  catch{throw Error('stale_pinned_lab_ui_missing_release_assets')}
  for(const [label,expected] of [
   ['missing-folder recovery','function pb1936RecreateNativeDir('],
@@ -40,9 +41,15 @@ function assertCurrentLabUi(root){
  // third header. New installers must use the portal and current server assets.
  if(!js.includes('bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"')||
     !js.includes('main.insertBefore(host,scroll)'))throw Error('stale_pinned_lab_ui_missing_r1955_portal');
+ // R1956: the legacy viewport was positioned below the second header.
+ // New pinned releases must ship the real measured scroll boundary too.
+ if(!js.includes("document.documentElement.classList.add('pb1956LabThirdHeader')")||
+    !queue.includes(".pb1955ThirdHeaderHost")||
+    !queue.includes("--pb1956-third-bottom"))
+   throw Error('stale_pinned_lab_ui_missing_r1956_scroll');
  const stageRevision=Number(html.match(/labStage=r(\d+)/)?.[1]||0);
- if(stageRevision<1955||!html.includes('PB1949:')||!html.includes('id="pb1955-real-third-header"'))
-  throw Error('stale_pinned_lab_ui_before_r1955');
+ if(stageRevision<1956||!html.includes('PB1949:')||!html.includes('id="pb1955-real-third-header"')||!html.includes('PB1956:'))
+  throw Error('stale_pinned_lab_ui_before_r1956');
  return true;
 }
 function isCurrentPinnedLabUi(root,log){

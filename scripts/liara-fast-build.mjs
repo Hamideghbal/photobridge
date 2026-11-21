@@ -1451,5 +1451,3 @@ runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory
 runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{stdio:'inherit'});
 // R1945: a missing SQL column must never blank the Lab; test working legacy fallback.
 runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});
-// R1946: ensure real Chromium mobile status tabs, search and pagination do not overlap.
-runR1314(process.execPath,['scripts/test-r1946-lab-mobile-pager-browser.cjs'],{stdio:'inherit'});

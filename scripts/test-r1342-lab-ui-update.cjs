@@ -11,3 +11,31 @@ test('missing cached CSS is repaired even when index and overlay hashes still ma
 for(const name of ['../outside.js','/outside.js','asset-0.css'])test('reject invalid/duplicate manifest entry '+name,async()=>{const f=fixture();try{f.manifest.files.push({name,url:'/lab-desktop-ui/'+name,sha256:hash('x')});f.manifest.build=hash(JSON.stringify(f.manifest.files));await assert.rejects(f.run(),/invalid_update_path/);assert.equal(f.calls.filter(x=>x.startsWith('/lab-desktop-ui/')).length,0);}finally{f.close()}});
 test('failed build quarantine and untrusted manifest hash remain enforced',async()=>{const f=fixture();try{f.store.set('uiFailedBuild',f.manifest.build);await assert.rejects(f.run(),/ui_build_quarantined/);f.store.set('uiFailedBuild',null);f.manifest.files[0].sha256=hash('tampered');await assert.rejects(f.run(),/ui_manifest_hash_mismatch/);}finally{f.close()}});
 test('legacy manifest alias stays available anonymously',async()=>{const f=fixture();try{let aliases=[];const request=async(url,opts)=>{aliases.push(url);if(url==='/api/desktop-ui/lab-manifest')return {ok:false,status:404};return f.request(url,opts);};assert.equal(await f.run({request}),true);assert.deepEqual(aliases.slice(0,2),['/api/desktop-ui/lab-manifest','/api/lab/desktop-ui-manifest']);}finally{f.close()}});
+
+test('R1958: a transient file-network error is retried without discarding the verified UI',async()=>{
+ const f=fixture();
+ try{
+  let failed=false;
+  const request=async(url,options)=>{
+   if(url==='/lab-desktop-ui/asset-7.css'&&!failed){failed=true;throw Error('ECONNRESET');}
+   return f.request(url,options);
+  };
+  assert.equal(await f.run({request}),true);
+  assert.equal(failed,true);
+  assert.equal(f.store.get('uiRemoteBuild'),f.manifest.build);
+  assert.equal(f.store.get('uiRemoteFileCount'),f.manifest.files.length);
+  assert.equal(f.store.get('uiBuild'),f.manifest.build);
+  assert.equal(f.store.get('updateError'),null);
+ }finally{f.close()}
+});
+test('R1958: persistent file errors never mark the stale UI as current',async()=>{
+ const f=fixture();
+ try{
+  f.fail=true;
+  await assert.rejects(f.run(),/connection_reset/);
+  assert.equal(f.store.get('uiRemoteBuild'),f.manifest.build);
+  assert.equal(f.store.get('uiBuild'),undefined);
+  assert.match(f.store.get('updateError'),/connection_reset/);
+  assert(f.store.get('uiLastUpdateFailureAt'));
+ }finally{f.close()}
+});

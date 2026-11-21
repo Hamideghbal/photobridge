@@ -14,7 +14,13 @@ async function fetchManifest(request,timeout){let last;for(const endpoint of ['/
 async function remote(request,url,remaining){if(remaining<=0)throw Error('ui_update_timeout');const r=await request(url,{signal:AbortSignal.timeout(Math.max(1,Math.min(30000,remaining))),anonymous:true,headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}});if(!r.ok)throw Error('update_download_failed');if(Number(r.headers?.get('content-length'))>MAX_FILE_BYTES)throw Error('update_too_large');const bytes=Buffer.from(await r.arrayBuffer());if(bytes.length>MAX_FILE_BYTES)throw Error('update_too_large');return bytes;}
 function cleanup(directory,keep){try{for(const ent of fs.readdirSync(directory,{withFileTypes:true})){if(!ent.isDirectory())continue;const full=path.join(directory,ent.name);if((/^[a-f0-9]{64}$/.test(ent.name)||/^[a-f0-9]{64}\.partial$/.test(ent.name))&&!keep.has(full))fs.rmSync(full,{recursive:true,force:true});}}catch{}}
 async function updateUi({store,request,bundled,directory,timeout=120000,onProgress=()=>{},retryFailedBuild=false}){
- const manifest=await fetchManifest(request,timeout);validate(manifest);if(manifest.build===store.get('uiFailedBuild')&&!retryFailedBuild)throw Error('ui_build_quarantined');
+ const manifest=await fetchManifest(request,timeout);validate(manifest);
+// R1958: record verified remote identity separately from installed EXE and
+// downloaded/active UI identity. Never report an old UI as current merely
+// because the native installer version itself is current.
+store.set('uiRemoteBuild',manifest.build);
+store.set('uiRemoteFileCount',manifest.files.length);
+if(manifest.build===store.get('uiFailedBuild')&&!retryFailedBuild)throw Error('ui_build_quarantined');
  const target=path.join(directory,manifest.build);
  if(manifest.build===store.get('uiBuild')&&validRoot(target)&&manifest.files.every(f=>verified(target,f))){
   // R1952: the verified snapshot can already be downloaded while the active
@@ -33,12 +39,28 @@ async function updateUi({store,request,bundled,directory,timeout=120000,onProgre
   });
   return stalePointer;
  }
- const previousRoot=validRoot(store.get('uiRoot'))?store.get('uiRoot'):null,previousBuild=store.get('uiBuild')||null,staging=target+'.partial',deadline=Date.now()+Math.max(timeout,30000);fs.mkdirSync(staging,{recursive:true});let cursor=0,count=0,failure;
- async function worker(){while(!failure){const i=cursor++;if(i>=manifest.files.length)return;const f=manifest.files[i];try{if(Date.now()>=deadline)throw Error('ui_update_timeout');const file=path.join(staging,f.name);let content;for(const root of [staging,previousRoot,bundled].filter(Boolean)){content=verified(root,f);if(content)break;}if(!content)content=await remote(request,f.url,deadline-Date.now());if(hash(content)!==f.sha256)throw Error('update_hash_mismatch');fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file+'.download',content);fs.renameSync(file+'.download',file);onProgress(++count,manifest.files.length);}catch(error){failure=error;}}}
+ const previousRoot=validRoot(store.get('uiRoot'))?store.get('uiRoot'):null,previousBuild=store.get('uiBuild')||null,staging=target+'.partial';
+// A Lab manifest currently contains about 900 files. Even when most are
+// reusable, slow/unstable networks need enough time to resume the remainder.
+// Keep this bounded: 10 minutes for large manifests, never indefinite polling.
+const budget=Math.max(timeout,manifest.files.length>500?600000:30000),deadline=Date.now()+budget;
+fs.mkdirSync(staging,{recursive:true});let cursor=0,count=0,failure;
+ async function worker(){while(!failure){const i=cursor++;if(i>=manifest.files.length)return;const f=manifest.files[i];try{if(Date.now()>=deadline)throw Error('ui_update_timeout');const file=path.join(staging,f.name);let content;for(const root of [staging,previousRoot,bundled].filter(Boolean)){content=verified(root,f);if(content)break;}if(!content){
+   // Retry only transient network failures; never bypass checksum or path
+   // verification. Already verified files stay in .partial for the next run.
+   let last;
+   for(let attempt=1;attempt<=3;attempt++){
+    try{content=await remote(request,f.url,deadline-Date.now());last=null;break}
+    catch(e){last=e;if(Date.now()>=deadline||attempt===3||['update_too_large','ui_update_timeout'].includes(e.message))break;
+      await new Promise(resolve=>setTimeout(resolve,250*attempt));}
+   }
+   if(last)throw last;
+  }
+  if(hash(content)!==f.sha256)throw Error('update_hash_mismatch');fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file+'.download',content);fs.renameSync(file+'.download',file);onProgress(++count,manifest.files.length);}catch(error){failure=error;}}}
  try{await Promise.all(Array.from({length:Math.min(4,manifest.files.length)},worker));if(failure)throw failure;
  if(!manifest.files.some(f=>f.name==='desktop-overlay.js')&&fs.existsSync(path.join(bundled,'desktop-overlay.js')))fs.copyFileSync(path.join(bundled,'desktop-overlay.js'),path.join(staging,'desktop-overlay.js'));
  if(!validRoot(staging))throw Error('ui_root_missing');const backup=target+'.replaced';fs.rmSync(backup,{recursive:true,force:true});const existed=fs.existsSync(target);if(existed)fs.renameSync(target,backup);try{fs.renameSync(staging,target);}catch(error){if(existed)fs.renameSync(backup,target);throw error;}fs.rmSync(backup,{recursive:true,force:true});
  store.transaction(()=>{store.set('uiPreviousRoot',previousRoot);store.set('uiPreviousBuild',previousBuild);store.set('uiRoot',target);store.set('uiBuild',manifest.build);store.set('uiDownloadedAt',new Date().toISOString());store.set('uiLastCheckedAt',new Date().toISOString());store.set('updateError',null);});cleanup(directory,new Set([target,previousRoot].filter(Boolean)));return true;
- }catch(error){store.set('uiLastCheckedAt',new Date().toISOString());store.set('updateError',String(error.message||error));throw error;}
+ }catch(error){store.set('uiLastCheckedAt',new Date().toISOString());store.set('uiLastUpdateFailureAt',new Date().toISOString());store.set('updateError',String(error.message||error));throw error;}
 }
 module.exports={updateUi};

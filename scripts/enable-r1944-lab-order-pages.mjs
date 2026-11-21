@@ -53,10 +53,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(nextField<oldEnd)throw Error('[R1944] queue card handlers missing '+root);
   src=src.slice(0,effectBegin)+effectText+more+';'+newList+src.slice(nextField);
   const tab='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})';
-  const pos=src.indexOf(tab);
-  if(pos<0)throw Error('[R1946] missing tabs');
-  console.log('[R1946_TAB_CONTEXT]',root,JSON.stringify({left:src.slice(Math.max(0,pos-1100),pos),right:src.slice(pos+tab.length,pos+tab.length+1600)}));
-  src=once(src,tab,tab+tb,'tab toolbar '+root);
+  // The 3 status buttons live in .queueFilters, itself a child of
+  // .labQueueStickyBar. R1944 mistakenly appended the toolbar as a 4th
+  // queueFilters child, clipping filters/search into a single height-limited row.
+  // R1946 inserts it after queueFilters but BEFORE closing the sticky bar.
+  const tabAndClosers=tab+']})]})';
+  src=once(src,tabAndClosers,tab+']})'+tb+']})','Lab toolbar must be a sticky-bar sibling of queueFilters '+root);
   fs.writeFileSync(path,src);
  }
  execFileSync(process.execPath,['--check',path],{stdio:'inherit'});

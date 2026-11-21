@@ -88,12 +88,20 @@ jobs:
         run: |
           Copy-Item apps/lab-desktop/desktop-overlay.js "$env:RUNNER_TEMP/lab-overlay.js"
           Copy-Item apps/lab-desktop/ui-update.cjs "$env:RUNNER_TEMP/lab-ui-update.cjs"
+          # Preserve the audited native updater; the historical source archive
+          # must not silently replace this PR's verified update controllers.
+          @('app-update.cjs','app-update-main.cjs','post-exit-install.cjs','lab-update-gate.cjs') | ForEach-Object {
+            Copy-Item "apps/lab-desktop/$_" "$env:RUNNER_TEMP/lab-updater-$_"
+          }
           $sourceHash=(Get-FileHash desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($sourceHash -ne '5fcd7e991f6f95008f375ac10ff036ea3abd89997118738e325d67a8c0df89aa') { throw "Unexpected laboratory source checksum" }
           Expand-Archive -LiteralPath desktop-sources/PhotoBridge-Lab-Source-v1.0.22.zip -DestinationPath "$env:RUNNER_TEMP/lab-current" -Force
           Copy-Item "$env:RUNNER_TEMP/lab-current/PhotoBridge-Lab-Source-v1.0.22/*" apps/lab-desktop -Recurse -Force
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
           Copy-Item "$env:RUNNER_TEMP/lab-ui-update.cjs" apps/lab-desktop/ui-update.cjs -Force
+          @('app-update.cjs','app-update-main.cjs','post-exit-install.cjs','lab-update-gate.cjs') | ForEach-Object {
+            Copy-Item "$env:RUNNER_TEMP/lab-updater-$_" "apps/lab-desktop/$_" -Force
+          }
           node scripts/integrate-r1386-native-storage.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Storage integration failed" }
           node scripts/integrate-r1388-lab-expiry.cjs apps/lab-desktop
@@ -116,6 +124,8 @@ jobs:
           node scripts/integrate-r1629-update-retry.cjs apps/lab-desktop
           node scripts/integrate-r1687-windows-release.cjs apps/lab-desktop
           if ($LASTEXITCODE -ne 0) { throw "Current native integration failed" }
+      - name: R1942 verified native updater quiescence and abort tests
+        run: node --test scripts/test-r1942-native-install-gate.cjs
       - name: Verify configured-path activation
         run: node --test scripts/test-r1386-storage-target.cjs scripts/test-r1386-configured-native.cjs
       - name: Test native update controllers

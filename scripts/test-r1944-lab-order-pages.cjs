@@ -70,7 +70,7 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   const statusEnd='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})]})';
   const statusEndAt=ui.indexOf(statusEnd);
   assert(statusEndAt>0,root+' legacy status anchor missing');
-  assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+80).startsWith(',e.jsxs("section",{className:"r1952QueuePanel"'),root+' pager must be outside the old sticky header');
+  assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+100).startsWith(']})'+',e.jsxs("section",{className:"r1952QueuePanel"'),root+' pager must be outside the old sticky header');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
    assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicate legacy search must not render');
    assert(html.includes('PB1949:'),root+' final CSS must override legacy header grid');

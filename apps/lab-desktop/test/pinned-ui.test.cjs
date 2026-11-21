@@ -9,14 +9,16 @@ const currentBundle=[
  'const pb1894ReadyResult=await It(le,"ready")',
  '/* PB1894 invoice-first server stages */',
  'r1955Host?bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"})',
- 'main.insertBefore(host,scroll)'
+ 'main.insertBefore(host,scroll)',
+ "document.documentElement.classList.add('pb1956LabThirdHeader')"
 ].join('\\n');
-const currentHtml='<html>verified website<style>/* PB1949: stable Lab toolbar */</style><style id="pb1955-real-third-header">/* PB1955: real third header */</style><script src="/assets/index-UIRefine-v655-r84.js?labStage=r1955"></script></html>';
+const currentHtml='<html>verified website<style>/* PB1949: stable Lab toolbar */</style><style id="pb1955-real-third-header">/* PB1955: real third header */ /* PB1956: viewport starts below third header */</style><script src="/assets/index-UIRefine-v655-r84.js?labStage=r1956"></script></html>';
+const currentQueue='/* PB1956: measured viewport */ document.querySelector(".pb1955ThirdHeaderHost"); document.documentElement.style.setProperty("--pb1956-third-bottom","172px");';
 function setup(){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pb-pinned-')),source=path.join(root,'verified'),directory=path.join(root,'runtime'),pinFile=path.join(root,'pin.json');
  fs.mkdirSync(path.join(source,'assets'),{recursive:true});
  function pin(){
-  const files=['index.html','desktop-overlay.js','assets/index-UIRefine-v655-r84.js'].map(name=>({
+  const files=['index.html','desktop-overlay.js','photobridge-r1363-lab-queue.js','assets/index-UIRefine-v655-r84.js'].map(name=>({
    name,url:'/lab-desktop-ui/'+name,sha256:hash(fs.readFileSync(path.join(source,name)))}));
   const manifest={protocol:1,channel:'lab',files,build:hash(JSON.stringify(files))};
   fs.writeFileSync(path.join(source,'.pb-lab-bundle-manifest.json'),JSON.stringify(manifest));
@@ -25,6 +27,7 @@ function setup(){
  }
  fs.writeFileSync(path.join(source,'index.html'),currentHtml);
  fs.writeFileSync(path.join(source,'desktop-overlay.js'),'verified overlay');
+ fs.writeFileSync(path.join(source,'photobridge-r1363-lab-queue.js'),currentQueue);
  fs.writeFileSync(path.join(source,'assets/index-UIRefine-v655-r84.js'),currentBundle);
  const manifest=pin();
  return {root,source,directory,pinFile,manifest,pin,close:()=>fs.rmSync(root,{recursive:true,force:true}),options(){return {origin:'https://photobridge.ir',directory,pinnedDirectory:source,pinFile,log(){}}}};
@@ -53,8 +56,12 @@ test('stale previously pinned installer UI is rejected, including old folder nam
   fs.writeFileSync(file,currentBundle.replace('main.insertBefore(host,scroll)',''));
   assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_missing_r1955_portal/);
   fs.writeFileSync(file,currentBundle);
-  fs.writeFileSync(path.join(f.source,'index.html'),currentHtml.replace('labStage=r1955','labStage=r1936'));
-  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_before_r1955/);
+  const queue=path.join(f.source,'photobridge-r1363-lab-queue.js');
+  fs.writeFileSync(queue,'old viewport');
+  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_missing_r1956_scroll/);
+  fs.writeFileSync(queue,currentQueue);
+  fs.writeFileSync(path.join(f.source,'index.html'),currentHtml.replace('labStage=r1956','labStage=r1936'));
+  assert.throws(()=>assertCurrentLabUi(f.source),/stale_pinned_lab_ui_before_r1956/);
  }finally{f.close()}
 });
 test('a stale but hash-valid pinned UI is refreshed from latest verified server files',async()=>{
@@ -66,6 +73,7 @@ test('a stale but hash-valid pinned UI is refreshed from latest verified server 
   const remoteFiles=[
    ['index.html',currentHtml],
    ['desktop-overlay.js','verified overlay'],
+   ['photobridge-r1363-lab-queue.js',currentQueue],
    ['assets/index-UIRefine-v655-r84.js',currentBundle]
   ];
   const files=remoteFiles.map(([name,body])=>({name,url:'/lab-desktop-ui/'+name,sha256:hash(body)}));

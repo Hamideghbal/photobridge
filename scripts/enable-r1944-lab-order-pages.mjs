@@ -38,7 +38,11 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   src=once(src,ref,ref+'r1944Request=x.useRef(0),','request ref '+root);
   const begin=src.indexOf('const ye=()=>Me("/api/lab/orders")',uf);
   const end=begin<0?-1:src.indexOf(',tt=le=>',begin);
-  if(begin<0||end<begin)throw Error('[R1944] Lab list fetch section missing '+root);
+  if(begin<0||end<begin){
+  const tokens=['const ye=','ye=()=>','/api/lab/orders','const Ye=','tt=le=>','Be=p.filter','const Nt=','labOrderScrollArea'];
+  const diag=tokens.map(token=>{const pos=src.indexOf(token,uf);return {token,pos,near:pos<0?'':src.slice(Math.max(0,pos-100),pos+460)}});
+  throw Error('[R1944] Lab list fetch section missing '+root+' '+JSON.stringify({uf,begin,end,diag}));
+}
   src=src.slice(0,begin)+list+src.slice(end);
   const tab='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})';
   src=once(src,tab,tab+tb,'tab toolbar '+root);

@@ -1,6 +1,6 @@
 'use strict';
 function patchOrderLive(source){
- if(source.includes('/* PB1468 shared document isolation */'))return upgradeFinanceLive(source);
+ /* R1964_NATIVE_PAGED_PRIORITY */if(source.includes('/* PB1468 shared document isolation */')&&!source.includes('/* PB1944 server-paged lab queue */'))return upgradeFinanceLive(source);
  // R1961: R1944+ uses the authoritative paged server endpoint and keeps
  // all-status counts and total pages in its React state. The legacy PB1468
  // replacement below fetches /api/lab/orders and overwrites that entire

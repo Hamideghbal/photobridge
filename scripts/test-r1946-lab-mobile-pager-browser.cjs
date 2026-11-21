@@ -57,6 +57,11 @@ const {chromium}=require('playwright');
       oldSearch:box('.labQueueStickyBar > .desktopQueueSearch')
      }
    });
+   if(!g.status||!g.toolbar||!g.search||!g.pager){
+     const summary=await page.evaluate(()=>[...document.querySelectorAll('.labQueueStickyBar')].map((el,i)=>({i,classes:el.className,html:el.outerHTML.slice(0,1000),children:[...el.children].map(c=>c.className)})));
+     console.error('[R1946_MISSING_HEADER]',width,JSON.stringify({g,summary,errors:errors.slice(-5)}));
+     await page.screenshot({path:'/tmp/r1216-mobile-r1946-missing-'+width+'.png',fullPage:false});
+   }
    assert(g.status&&g.toolbar&&g.search&&g.pager,'all three queue header rows must exist at width '+width);
    assert(g.status.height>=30,'status filters must be visible at '+width);
    assert.equal(g.buttons.length,3,'all three status tabs remain available at '+width);

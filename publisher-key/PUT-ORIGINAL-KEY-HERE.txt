@@ -1,0 +1,1 @@
+Place your original update-private.pem here. Optional: windows-signing.pfx.

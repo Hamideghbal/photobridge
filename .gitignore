@@ -9,3 +9,9 @@ access-runtime/
 .access-runtime-build-*/
 .access-classes/
 .compat-smoke/
+debug-logs/
+original-ui-input/
+original-120-ui/*
+!original-120-ui/ORIGINAL-120-UI-HERE.txt
+publisher-key/*
+!publisher-key/PUT-ORIGINAL-KEY-HERE.txt

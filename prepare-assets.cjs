@@ -28,7 +28,7 @@ function copyPinnedUi({source,pinFile,staging,origin}){
  const base=fs.realpathSync(source);for(const item of manifest.files){const file=path.join(source,item.name),real=fs.realpathSync(file);if(!real.startsWith(base+path.sep)||!fs.lstatSync(file).isFile())throw Error('pinned_ui_unsafe_file:'+item.name);const stat=fs.statSync(file);if(stat.size>MAX_FILE_BYTES)throw Error('ui_asset_too_large:'+item.name);const bytes=fs.readFileSync(file);if(digest(bytes)!==item.sha256)throw Error('pinned_ui_hash_mismatch:'+item.name);const dest=path.join(staging,item.name);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,bytes)}
  fs.writeFileSync(path.join(staging,'.pb-lab-bundle-manifest.json'),JSON.stringify(manifest));return manifest;
 }
-async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://photobridge.ir',directory=path.join(root,'runtime'),offline=process.env.PB_LAB_PREPARE_OFFLINE==='1',log=console.log,pinnedDirectory=path.join(root,'verified-ui'),pinFile=path.join(root,'verified-ui-pin.json'),refresh=process.env.PB_LAB_REFRESH_UI==='1'}={}){
+async function buildBundledUi({origin=process.env.PB_LAB_UI_ORIGIN||'https://photobridge.ir',directory=path.join(root,'runtime'),offline=process.env.PB_LAB_PREPARE_OFFLINE==='1',log=console.log,pinnedDirectory=process.env.PB_LAB_PINNED_DIRECTORY||path.join(root,'verified-ui'),pinFile=process.env.PB_LAB_PIN_FILE||path.join(root,'verified-ui-pin.json'),refresh=process.env.PB_LAB_REFRESH_UI==='1'}={}){
  const staging=directory+'.staging-'+process.pid;
  fs.rmSync(staging,{recursive:true,force:true});fs.mkdirSync(staging,{recursive:true});
  try{

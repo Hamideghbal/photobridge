@@ -25,7 +25,22 @@ export async function verifyLiveCrm({inspect=false,base='https://photobridge.ir'
   if(!inspect&&(!/(javascript|css)/i.test(asset.type)||asset.sha256!==expected))throw Error('CRM asset differs from reviewed source: '+name);
  }
  if(!inspect){
-  for(const path of ['/photographer/gallery','/lab']){const page=await get(path);if(!page.text.includes('customer-crm-host.js?v='+revision)||!page.text.includes('photobridge-r1761-crm-nav.js?v='+revision)||!page.text.includes('photobridge-r1126-desktop-navigation.js?v='+revision))throw Error('CRM portal navigation version missing at '+path)}
+  // R1955: Navigation scripts have independent, reviewed release query strings.
+  // The old check incorrectly demanded CRM revision on all three and rejected
+  // a healthy Liara deployment despite its exact shared asset hashes passing.
+  const shippedHtml=fs.readFileSync('dist/web/index.html','utf8');
+  const scriptRef=name=>{
+   const start=shippedHtml.indexOf('/'+name+'?');
+   if(start<0)throw Error('CRM referenced script absent from released HTML: '+name);
+   let end=start;
+   while(end<shippedHtml.length&&!/["'\\s<>]/.test(shippedHtml[end]))end++;
+   return shippedHtml.slice(start,end);
+  };
+  const requiredNavRefs=['customer-crm-host.js','photobridge-r1761-crm-nav.js','photobridge-r1126-desktop-navigation.js'].map(scriptRef);
+  for(const path of ['/photographer/gallery','/lab']){
+   const page=await get(path);
+   for(const script of requiredNavRefs)if(!page.text.includes(script))throw Error('CRM portal navigation differs from released HTML at '+path+': '+script);
+  }
   console.log('CRM LIVE VERIFIED: '+expectedRevision+'; both portals, uncached HTML and exact reviewed CRM asset hashes.');
  }
 }

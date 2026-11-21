@@ -35,8 +35,10 @@ async function pb1568ProcessOrder(lab,order,settings){
    if(task.phase==='pending_download'){
      const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));
      if(detail.files?.some(file=>file.local_only))throw Error('local_only_order_manual_review');
-     // Never open a folder selector in an unattended session; a configured writable root is mandatory.
-     await pb1450Root(false,detail);
+     // PB1943: validate the configured native root, not a possibly deleted
+     // per-order child. pb1450Download owns the explicit repair flight and
+     // verifies server photo bytes before acknowledging the download.
+     await pb1450Root(false);
      const outcome=await pb1450Download(detail,()=>{},{silent:true});
      if(outcome.fallbackUsed)throw Error('original_fallback_requires_operator');
      const ack=await pb1451AcknowledgeDownload(detail);

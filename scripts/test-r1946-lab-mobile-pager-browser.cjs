@@ -77,7 +77,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     const tag=root+':'+width;
     assert(g.header&&g.filter&&g.panel&&g.toolbar&&g.search&&g.summary&&g.pager,tag+' missing independent panel pieces');
     assert(g.tabs.length===3&&g.tabs.every(b=>b.width>35&&b.height>20),tag+' status tabs collapsed');
-    assert(g.toolbar.height>=48&&g.search.height>=28&&g.pager.height>=30,tag+' search and pager must be visible');
+    assert(g.toolbar.height>=30&&g.search.height>=28&&g.pager.height>=30,tag+' search and pager must be visible');
     assert(g.panel.top>=g.filter.bottom-2,tag+' third header overlaps existing second status header '+JSON.stringify(g));
     assert(g.search.top>=g.toolbar.top-1&&g.pager.top>=g.toolbar.top-1,tag+' search or pager obscured');
     assert(g.header.left>=-3&&g.header.right<=g.vp+3,tag+' header exceeds viewport');

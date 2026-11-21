@@ -22,12 +22,15 @@ test('the instant the popup notice is received, resolve its number without waiti
   log:(stage,data)=>logs.push(stage)
  });
  dispatch.accept('lab-A',[photo894]);
- assert.deepEqual(requests,['/api/lab/orders'],'resolve starts synchronously, not 45s after popup');
+ assert.deepEqual(requests,[
+  '/api/lab/orders?paged=1&mode=print&stage=flow&page=1&q=894',
+  '/api/lab/orders?paged=1&mode=album&stage=flow&page=1&q=894',
+ ],'bounded lookup starts before the popup');
  await new Promise(resolve=>setImmediate(resolve));
  assert.deepEqual(sent,[{lab:'lab-A',id:UUID}]);
  assert(logs.includes('number_resolved'));
  dispatch.accept('lab-A',[photo894]);await new Promise(resolve=>setImmediate(resolve));
- assert.equal(requests.length,1,'no duplicate fetch for the same notice');
+ assert.equal(requests.length,2,'no duplicate fetch for the same notice');
 });
 test('existing notification with a valid UUID bypasses any order list request',()=>{
  let requested=0;const sent=[];
@@ -85,7 +88,7 @@ test('real NativeAlerts poll begins order lookup before popup is presented',asyn
  let orderQueryStarted=false;
  const request=async route=>{
   if(route.startsWith('/api/lab/notifications?'))return {ok:true,json:async()=>({notifications:[photo894]})};
-  if(route==='/api/lab/orders'){orderQueryStarted=true;sequence.push('order_fetch');return {ok:true,json:async()=>({orders})}};
+  if(route.startsWith('/api/lab/orders?paged=1')){orderQueryStarted=true;sequence.push('order_fetch');return {ok:true,json:async()=>({orders})}};
   if(route==='/api/lab/notifications/chat-read')return {ok:true,json:async()=>({seen:{}})};
   return {ok:true,json:async()=>({ok:true})};
  };

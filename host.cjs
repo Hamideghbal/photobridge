@@ -102,7 +102,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(connectionOffline())throw Error('internet_offline');
             const up=await request(req.url,{method:req.method});
             const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/octet-stream';
-            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6)store.cache(req.url,up.status,mime,body.toString('base64'));
+            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6){
+              const cached=store.cached?.(req.url),encoded=body.toString('base64');
+              if(!cached||cached.status!==up.status||cached.mime!==mime||cached.body!==encoded){
+                store.cache(req.url,up.status,mime,encoded);
+              }
+            }
             res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{
@@ -164,7 +169,9 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
-        if(name==='assets/index-UIRefine-v655-r84.js'){const source=fs.readFileSync(file,'utf8'),proof=require('./ui-diagnostics.cjs').sourceMarker(source,require('./package.json').version);return res.end('window.__PB_LAB104_NATIVE__='+JSON.stringify(require('./package.json').version==='1.0.104')+';\n'+'window.__PB_NATIVE_SOURCE_PROOF__='+JSON.stringify(proof)+';\n'+require('./storage-bundle.cjs').patchStorageBundle(source));}
+        if(name==='assets/index-UIRefine-v655-r84.js'){
+          return res.end(require('./native-renderer-bundle.cjs').compile(file,require('./package.json').version));
+        }
         return fs.createReadStream(file).pipe(res);
       }
       return json(res,404,{error:'not_found'});

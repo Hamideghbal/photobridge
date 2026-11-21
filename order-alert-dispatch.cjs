@@ -55,7 +55,15 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
  async function drain(account){
   if(flight||!valid(account))return;
   const generation=epoch;
+  async function readOrders(url, timeout){
+   const res=await request(url,{signal:AbortSignal.timeout(timeout)});
+   if(!res.ok)throw Error('order_list_http_'+res.status);
+   const {orders}=await res.json();
+   if(!Array.isArray(orders))throw Error('invalid_order_list');
+   return orders;
+  }
   flight=(async()=>{
+   let first=true;
    // A just-created order can briefly be absent from the list. The retry
    // windows are short and keyed to the exact announced order number.
    for(const delay of [0,500,1400,3000,5500]){
@@ -64,12 +72,22 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
     const awaiting=[...pending.values()].filter(x=>x.account===account);
     if(!awaiting.length)break;
     try{
-     const res=await request('/api/lab/orders',{signal:AbortSignal.timeout(9000)});
-     if(!res.ok)throw Error('order_list_http_'+res.status);
-     const data=await res.json();
+     let orders;
+     if(first&&awaiting.length===1){
+      const n=awaiting[0].number;
+      try{
+       const pages=await Promise.all(['print','album'].map(mode=>
+        readOrders('/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q='+n,2500)));
+       orders=[...new Map(pages.flat().map(row=>[row.id,row])).values()];
+       if(!candidate(orders,account,n))orders=undefined;
+      }catch{/* Older or unavailable paged endpoint: retain the verified legacy lookup. */}
+     }
+     first=false;
+     if(epoch!==generation||!valid(account))break;
+     if(!orders)orders=await readOrders('/api/lab/orders',9000);
      if(epoch!==generation||!valid(account))break;
      for(const item of awaiting){
-      const row=candidate(data?.orders,account,item.number);
+      const row=candidate(orders,account,item.number);
       if(!row)continue;
       pending.delete(account+':'+item.number);
       deliver(account,row.id);

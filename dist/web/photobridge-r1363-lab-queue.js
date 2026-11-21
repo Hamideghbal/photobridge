@@ -35,6 +35,16 @@
   if(main.style.getPropertyValue('--pb1363-order-top')!==value)main.style.setProperty('--pb1363-order-top',value);
   if(hasThird&&document.documentElement.style.getPropertyValue('--pb1956-third-bottom')!==value)
     document.documentElement.style.setProperty('--pb1956-third-bottom',value);
+  // Only the queue owns this offset. Measure the real bottom dock on mobile
+  // rather than hardcoding a second scrollbar underneath navigation.
+  if(hasThird){
+    const dock=root?.querySelector('nav.labBottomAppNav');
+    const visible=Boolean(dock?.getClientRects().length&&getComputedStyle(dock).display!=='none');
+    const bottom=visible?Math.max(0,Math.ceil(innerHeight-dock.getBoundingClientRect().top)):0;
+    const dockValue=bottom+'px';
+    if(document.documentElement.style.getPropertyValue('--pb1956-lab-dock-bottom')!==dockValue)
+      document.documentElement.style.setProperty('--pb1956-lab-dock-bottom',dockValue);
+  }
  }
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(measure)}}
  function start(){

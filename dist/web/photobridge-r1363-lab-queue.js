@@ -15,7 +15,7 @@
   // R1956: the Lab queue has THREE headers. The third portal lives in main,
   // whereas the first two fixed headers live in the surrounding workspace.
   const third=main?.querySelector(':scope>.pb1955ThirdHeaderHost');
-  const hasThird=Boolean(third&&third.getClientRects().length&&getComputedStyle(third).display!=='none');
+  const hasThird=Boolean(third&&typeof third.getClientRects==='function'&&third.getClientRects().length&&getComputedStyle(third).display!=='none');
   document.documentElement.classList.toggle('pb1363OrderQueue',active);
   document.documentElement.classList.toggle('pb1956LabThirdHeader',hasThird);
   const root=main?.closest('.labRoleWorkspace');

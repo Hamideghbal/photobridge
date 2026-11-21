@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 
 const asset = 'assets/index-UIRefine-v655-r84.js';
-const rev = 'r1936';
+const rev = 'r1943';
 const sha = buffer => crypto.createHash('sha256').update(buffer).digest('hex');
 
 function refreshCompression(file) {

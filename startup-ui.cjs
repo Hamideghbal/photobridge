@@ -25,12 +25,20 @@ function adoptEmbeddedUi({store,bundled,version,validate=require('./verify-nativ
   }
  }
  if(!pinnedCandidate&&store.get('uiEmbeddedForNativeVersion')===version)return false;
- const manifest=JSON.parse(fs.readFileSync(path.join(bundled,'.pb-lab-bundle-manifest.json'),'utf8'));
- require('./prepare-assets.cjs').validate(manifest);
+ const manifest=readEmbeddedManifest(bundled);
  if(pinnedCandidate&&store.get('uiEmbeddedForNativeBuild')===manifest.build&&store.get('uiRoot')===bundled)return false;
- validate(bundled);
- for(const entry of manifest.files){const bytes=fs.readFileSync(path.join(bundled,entry.name));if(crypto.createHash('sha256').update(bytes).digest('hex')!==entry.sha256)throw Error('embedded_ui_integrity_failed:'+entry.name);}
+ verifyEmbeddedUi(bundled,validate,manifest);
  store.transaction(()=>{const previous=store.get('uiRoot');if(previous&&previous!==bundled){store.set('uiPreviousRoot',previous);store.set('uiPreviousBuild',store.get('uiBuild')||null);}store.set('uiRoot',bundled);store.set('uiBuild',manifest.build);store.set('uiEmbeddedForNativeVersion',version);store.set('uiEmbeddedForNativeBuild',manifest.build);store.set('updateError',null);});
  return true;
 }
-module.exports={adoptEmbeddedUi};
+function readEmbeddedManifest(bundled){
+ const manifest=JSON.parse(fs.readFileSync(path.join(bundled,'.pb-lab-bundle-manifest.json'),'utf8'));
+ require('./prepare-assets.cjs').validate(manifest);
+ return manifest;
+}
+function verifyEmbeddedUi(bundled,validate=require('./verify-native-ui.cjs').validateNativeUi,manifest=readEmbeddedManifest(bundled)){
+ validate(bundled);
+ for(const entry of manifest.files){const bytes=fs.readFileSync(path.join(bundled,entry.name));if(crypto.createHash('sha256').update(bytes).digest('hex')!==entry.sha256)throw Error('embedded_ui_integrity_failed:'+entry.name);}
+ return manifest;
+}
+module.exports={adoptEmbeddedUi,verifyEmbeddedUi};

@@ -9,8 +9,15 @@ $exitCode=1
 Start-Transcript -Path $log -Force | Out-Null
 try {
  if (!(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'package-lock.json'))) {throw 'Extract this launcher next to main.cjs and package-lock.json.'}
- $publisher=Join-Path $PSScriptRoot '.publisher\update-private.pem'
- if (!(Test-Path -LiteralPath $publisher)) {throw 'Copy your ORIGINAL .publisher folder next to BUILD-WINDOWS.cmd. Expected: .publisher\update-private.pem'}
+ $keyFolder=Join-Path $PSScriptRoot 'publisher-key'
+ $publisher=Join-Path $keyFolder 'update-private.pem'
+ if (!(Test-Path -LiteralPath $publisher -PathType Leaf)) {
+  $legacyFolder=Join-Path $PSScriptRoot '.publisher'
+  $legacyKey=Join-Path $legacyFolder 'update-private.pem'
+  if (!(Test-Path -LiteralPath $legacyKey -PathType Leaf)) {throw 'Copy your original update-private.pem into the publisher-key folder.'}
+  $keyFolder=$legacyFolder
+  $publisher=$legacyKey
+ }
  $tools=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'PhotoBridgeBuild'
  function Get-PortableNode([string]$selector,[string]$versionPattern) {
   $nodeFolder=Join-Path $tools $selector
@@ -83,7 +90,7 @@ try {
   Invoke-Checked $node16 @($npm16,'ci','--no-audit','--no-fund')
  } finally {$env:PATH=$path22}
  $npm22=Join-Path (Split-Path -Parent $node) 'node_modules\npm\bin\npm-cli.js'
- $certificate=Join-Path $PSScriptRoot '.publisher\windows-signing.pfx'
+ $certificate=Join-Path $keyFolder 'windows-signing.pfx'
  if ((Test-Path -LiteralPath $certificate -PathType Leaf) -and !$env:CSC_LINK -and !$env:WIN_CSC_LINK) {
   $env:WIN_CSC_LINK=$certificate
   if (!$env:WIN_CSC_KEY_PASSWORD) {
@@ -102,6 +109,14 @@ try {
  $renderer=Start-Process -FilePath $electron -ArgumentList 'qa/native-ui-startup-electron.cjs' -PassThru -Wait -RedirectStandardOutput $rendererLog -RedirectStandardError $rendererErrors
  Get-Content -LiteralPath $rendererLog,$rendererErrors
  if ($renderer.ExitCode -ne 0) {throw 'Electron Renderer startup test failed.'}
+ $packaged=Join-Path $PSScriptRoot 'release\win-unpacked\PhotoBridge Lab.exe'
+ $smokeLog=Join-Path $logs 'packaged-smoke.log'
+ $smokeErrors=Join-Path $logs 'packaged-smoke-errors.log'
+ $smoke=Start-Process -FilePath $packaged -ArgumentList '--compat-smoke' -PassThru -Wait -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErrors
+ Get-Content -LiteralPath $smokeLog,$smokeErrors
+ if ($smoke.ExitCode -ne 0 -or !(Select-String -LiteralPath $smokeLog -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) {
+  throw 'Packaged Windows startup test failed.'
+ }
  Invoke-Checked $node @('create-update-release.cjs')
  Invoke-Checked $node @('release-kit.cjs','verify-json')
  $exitCode=0

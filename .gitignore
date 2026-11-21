@@ -9,5 +9,6 @@ access-runtime/
 .access-classes/
 .compat-smoke/
 debug-logs/
-.publisher/*
-!.publisher/PUT-ORIGINAL-KEY-HERE.txt
+.publisher/
+publisher-key/*
+!publisher-key/PUT-ORIGINAL-KEY-HERE.txt

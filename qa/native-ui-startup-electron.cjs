@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { randomBytes } = require('node:crypto');
+const { createHash, randomBytes } = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
 const os = require('node:os');
@@ -10,16 +10,25 @@ const { spawnSync } = require('node:child_process');
 const { app, BrowserWindow, session } = require('electron');
 const { createHost } = require('../host.cjs');
 const { prepareNativeSession } = require('../native-session.cjs');
+const { activateUi, loadMountedUi } = require('../ui-activation.cjs');
+const { adoptEmbeddedUi, verifyEmbeddedUi } = require('../startup-ui.cjs');
+const { validateNativeUi } = require('../verify-native-ui.cjs');
 
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'pb-electron-ui-'));
 app.setPath('userData', profile);
 const token = randomBytes(32).toString('hex');
 const root = path.resolve(process.env.PB_ELECTRON_TEST_UI_ROOT || path.join(__dirname, '../verified-ui'));
-const store = { get: () => null };
+let activeRoot = root;
+const state = new Map();
+const store = {
+  get: key => state.get(key),
+  set: (key, value) => state.set(key, value),
+  transaction: update => update(),
+};
 const server = createHost({
   store,
   token,
-  roots: () => [root],
+  roots: () => [activeRoot, root],
   isOnline: () => false,
   request: async () => { throw Error('offline'); },
 });
@@ -33,7 +42,7 @@ server.on('request', (req, res) => {
 const timeout = setTimeout(() => {
   console.error('Timed out waiting for the Electron UI');
   app.exit(1);
-}, 45000);
+}, 90000);
 
 function request(url, headers) {
   return new Promise((resolve, reject) => {
@@ -90,7 +99,46 @@ async function run() {
     },
   });
 
-  await window.loadURL(origin + '/start?token=' + token);
+  const broken = path.join(profile, 'cached-ui');
+  fs.cpSync(root, broken, { recursive: true });
+  const entry = path.join(broken, 'assets/index-UIRefine-v655-r84.js');
+  const source = fs.readFileSync(entry, 'utf8');
+  fs.writeFileSync(entry, 'throw new Error("QA: UI failed before React mount");\n' + source);
+  validateNativeUi(broken);
+
+  const manifestPath = path.join(broken, '.pb-lab-bundle-manifest.json');
+  const brokenManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const digest = value => createHash('sha256').update(value).digest('hex');
+  brokenManifest.files.find(file => file.name === 'assets/index-UIRefine-v655-r84.js').sha256 = digest(fs.readFileSync(entry));
+  const brokenBuild = brokenManifest.build = digest(JSON.stringify(brokenManifest.files));
+  fs.writeFileSync(manifestPath, JSON.stringify(brokenManifest));
+  store.set('uiRoot', broken);
+  store.set('uiBuild', brokenBuild);
+  store.set('uiKnownGoodRoot', broken);
+  store.set('uiKnownGoodBuild', brokenBuild);
+  assert.equal(adoptEmbeddedUi({ store, bundled: root, version: '1.0.127' }), false);
+  assert.equal(store.get('uiRoot'), broken);
+  const embedded = verifyEmbeddedUi(root);
+  const result = await activateUi({
+    store, candidate: broken, bundled: root, previousActive: broken,
+    selectRoot: selected => { activeRoot = selected; },
+    validate: validateNativeUi,
+    verifyBundled: () => verifyEmbeddedUi(root),
+    load: async () => {
+      if (activeRoot !== broken) {
+        assert.equal(responses.get('/lab'), 200, 'the broken document was served successfully');
+        assert.equal(responses.get('/assets/index-UIRefine-v655-r84.js'), 200);
+        assert.match(store.get('uiFailedBuild'), /^[a-f0-9]{64}$/);
+      }
+      await loadMountedUi({ window, origin, token, timeout: activeRoot === broken ? 4000 : 12000 });
+    },
+  });
+  assert.equal(result, false, 'a failed cached activation recovered to the embedded UI');
+  assert.equal(store.get('uiRoot'), root);
+  assert.equal(store.get('uiBuild'), embedded.build);
+  assert.equal(store.get('uiKnownGoodRoot'), root);
+  assert.equal(store.get('uiFailedBuild'), brokenBuild);
+  assert.equal(store.get('updateError'), 'ui_activation_failed:native_ui_renderer_mount_timeout');
   assert.equal(window.webContents.getURL(), origin + '/lab');
   await waitForMount(window);
   assert.equal(responses.get('/lab'), 200);

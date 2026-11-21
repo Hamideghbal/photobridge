@@ -6,6 +6,24 @@ function adoptEmbeddedUi({store,bundled,version,validate=require('./verify-nativ
  // after every reinstall, so the old 45-second download worker kept running.
  // For this pinned candidate compare the actual verified UI bundle fingerprint.
  const pinnedCandidate=require('./lab104-candidate.cjs').pinnedOnly===true&&require('./update-trust.cjs').newer(version,'1.0.103');
+ /* R1959 native only: restore an already downloaded and hash-verified UI at startup. */
+ if(pinnedCandidate){
+  const current=store.get('uiRoot'),installedBuild=store.get('uiBuild');
+  if(current&&current!==bundled&&/^[a-f0-9]{64}$/.test(String(installedBuild||''))){
+   try{
+    const record=JSON.parse(fs.readFileSync(path.join(current,'.pb-lab-bundle-manifest.json'),'utf8'));
+    require('./prepare-assets.cjs').validate(record);
+    if(record.build===installedBuild){
+     for(const name of ['index.html','assets/index-UIRefine-v655-r84.js','photobridge-r1363-lab-queue.js']){
+      const row=record.files.find(e=>e.name===name);
+      if(!row)throw Error('native_verified_ui_file_missing');
+      if(crypto.createHash('sha256').update(fs.readFileSync(path.join(current,name))).digest('hex')!==row.sha256)throw Error('native_verified_ui_hash_mismatch');
+     }
+     validate(current);return false;
+    }
+   }catch{/* Invalid snapshot: retain bundled fallback. */}
+  }
+ }
  if(!pinnedCandidate&&store.get('uiEmbeddedForNativeVersion')===version)return false;
  const manifest=JSON.parse(fs.readFileSync(path.join(bundled,'.pb-lab-bundle-manifest.json'),'utf8'));
  require('./prepare-assets.cjs').validate(manifest);

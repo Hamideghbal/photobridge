@@ -16,7 +16,23 @@ function cleanup(directory,keep){try{for(const ent of fs.readdirSync(directory,{
 async function updateUi({store,request,bundled,directory,timeout=120000,onProgress=()=>{},retryFailedBuild=false}){
  const manifest=await fetchManifest(request,timeout);validate(manifest);if(manifest.build===store.get('uiFailedBuild')&&!retryFailedBuild)throw Error('ui_build_quarantined');
  const target=path.join(directory,manifest.build);
- if(manifest.build===store.get('uiBuild')&&validRoot(target)&&manifest.files.every(f=>verified(target,f))){store.set('uiLastCheckedAt',new Date().toISOString());store.set('updateError',null);return false;}
+ if(manifest.build===store.get('uiBuild')&&validRoot(target)&&manifest.files.every(f=>verified(target,f))){
+  // R1952: the verified snapshot can already be downloaded while the active
+  // UI pointer still references a previous installation (or vanished folder).
+  // Returning "current" in that case silently leaves the user on stale code.
+  const oldRoot=store.get('uiRoot');
+  const stalePointer=oldRoot!==target;
+  store.transaction(()=>{
+   if(stalePointer){
+    store.set('uiPreviousRoot',validRoot(oldRoot)?oldRoot:null);
+    store.set('uiPreviousBuild',store.get('uiBuild')||null);
+    store.set('uiRoot',target);
+   }
+   store.set('uiLastCheckedAt',new Date().toISOString());
+   store.set('updateError',null);
+  });
+  return stalePointer;
+ }
  const previousRoot=validRoot(store.get('uiRoot'))?store.get('uiRoot'):null,previousBuild=store.get('uiBuild')||null,staging=target+'.partial',deadline=Date.now()+Math.max(timeout,30000);fs.mkdirSync(staging,{recursive:true});let cursor=0,count=0,failure;
  async function worker(){while(!failure){const i=cursor++;if(i>=manifest.files.length)return;const f=manifest.files[i];try{if(Date.now()>=deadline)throw Error('ui_update_timeout');const file=path.join(staging,f.name);let content;for(const root of [staging,previousRoot,bundled].filter(Boolean)){content=verified(root,f);if(content)break;}if(!content)content=await remote(request,f.url,deadline-Date.now());if(hash(content)!==f.sha256)throw Error('update_hash_mismatch');fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file+'.download',content);fs.renameSync(file+'.download',file);onProgress(++count,manifest.files.length);}catch(error){failure=error;}}}
  try{await Promise.all(Array.from({length:Math.min(4,manifest.files.length)},worker));if(failure)throw failure;

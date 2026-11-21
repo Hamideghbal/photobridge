@@ -1450,6 +1450,7 @@ runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'
 runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory.cjs'],{stdio:'inherit'});
 // R1951: block any subsequent installer kit that would silently pin a stale Lab UI.
 runR1314(process.execPath,['--test','apps/lab-desktop/test/pinned-ui.test.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','apps/lab-desktop/test/ui-active-snapshot.test.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{stdio:'inherit'});
 // R1945: a missing SQL column must never blank the Lab; test working legacy fallback.
 runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});

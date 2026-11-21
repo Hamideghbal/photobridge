@@ -64,6 +64,13 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('PB1944 server-paged lab queue'),root+' missing paged fetch');
   assert(ui.includes('paged=1&mode='),root+' missing server route');
   assert(ui.includes('r1944Toolbar'),root+' missing controls');
+  assert(ui.includes('className:"r1952QueuePanel"'),root+' controls must be rendered outside legacy sticky header');
+  assert(ui.includes('className:"r1952StatusTabs"'),root+' missing 3 standalone status filters');
+  assert(html.includes('id="pb1952-lab-queue"'),root+' independent controls CSS is missing');
+  const statusEnd='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})]})';
+  const statusEndAt=ui.indexOf(statusEnd);
+  assert(statusEndAt>0,root+' legacy status anchor missing');
+  assert(ui.slice(statusEndAt+statusEnd.length,statusEndAt+statusEnd.length+100).startsWith(']})'+',e.jsxs("section",{className:"r1952QueuePanel"'),root+' pager must be outside the old sticky header');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
    assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicate legacy search must not render');
    assert(html.includes('PB1949:'),root+' final CSS must override legacy header grid');
@@ -72,9 +79,9 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' fallback pages must show no more than ten');
   assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=820?3:5)'),root+' missing compact mobile pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
-  assert(html.includes('.labQueueStickyBar>.r1944Toolbar'),root+' toolbar must be sibling of status filters');
+  assert(html.includes('.r1952QueuePanel > .r1944Toolbar'),root+' pager must render as independent workspace panel');
   assert(!html.includes('.labQueueStickyBar:has(>.r1944Toolbar)'),root+' advanced parent selector must not hide desktop pager');
-  assert(html.includes('labStage=r1951'),root+' stale bundle URL');
+  assert(html.includes('labStage=r1952'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }
 });

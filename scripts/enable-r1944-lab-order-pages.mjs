@@ -49,7 +49,9 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(effectText.split(dep).length!==2)throw Error('[R1944] live refresh dependencies changed: '+root);
   effectText=effectText.replace(dep,'[a,o,t?.id,T,r1944Page,r1944DebouncedQuery]');
   const more=";x.useEffect(()=>{const timer=window.setTimeout(()=>r1944SetDebouncedQuery(String(r1944Query||s||\"\")),270);return()=>window.clearTimeout(timer)},[r1944Query,s]);x.useEffect(()=>{r1944SetPage(1)},[T,o,r1944DebouncedQuery])";
-  src=src.slice(0,effectBegin)+effectText+more+';'+newList+src.slice(oldEnd+';const Ye=le=>'.length);
+  const nextField=src.indexOf(',tt=le=>',oldEnd);
+  if(nextField<oldEnd)throw Error('[R1944] queue card handlers missing '+root);
+  src=src.slice(0,effectBegin)+effectText+more+';'+newList+src.slice(nextField);
   const tab='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})';
   src=once(src,tab,tab+tb,'tab toolbar '+root);
   fs.writeFileSync(path,src);

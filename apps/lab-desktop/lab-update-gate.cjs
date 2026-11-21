@@ -15,7 +15,7 @@ function createInstallGate({sync,nativeStorage,getWindow,store,uiTimeoutMs=2000,
  function timed(promise,ms){
   let timer;return Promise.race([
    Promise.resolve().then(promise),
-   new Promise(resolve=>{timer=setTimeout(()=>resolve(false),ms);timer.unref?.();})
+   new Promise(resolve=>{timer=setTimeout(()=>resolve(false),ms);})
   ]).finally(()=>clearTimeout(timer));
  }
  async function safeUi(){

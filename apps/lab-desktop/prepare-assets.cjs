@@ -36,9 +36,13 @@ function assertCurrentLabUi(root){
   ['server-only stage transitions','const pb1894ReadyResult=await It(le,"ready")'],
   ['ready and delivered without disk','/* PB1894 invoice-first server stages */']
  ]) if(!js.includes(expected))throw Error('stale_pinned_lab_ui_'+label.replace(/[^a-z0-9]+/gi,'_'));
+ // R1955: even a fully hash-valid R1954 pin is obsolete for the real
+ // third header. New installers must use the portal and current server assets.
+ if(!js.includes('bi.createPortal(e.jsx("section",{className:"r1955ThirdHeader"')||
+    !js.includes('main.insertBefore(host,scroll)'))throw Error('stale_pinned_lab_ui_missing_r1955_portal');
  const stageRevision=Number(html.match(/labStage=r(\d+)/)?.[1]||0);
- if(stageRevision<1949||!html.includes('PB1949:'))
-  throw Error('stale_pinned_lab_ui_before_r1949');
+ if(stageRevision<1955||!html.includes('PB1949:')||!html.includes('id="pb1955-real-third-header"'))
+  throw Error('stale_pinned_lab_ui_before_r1955');
  return true;
 }
 function isCurrentPinnedLabUi(root,log){

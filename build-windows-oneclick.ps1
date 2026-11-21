@@ -9,19 +9,38 @@ $exitCode=1
 Start-Transcript -Path $log -Force | Out-Null
 try {
  if (!(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'package-lock.json'))) {throw 'Extract this launcher next to main.cjs and package-lock.json.'}
- $keyFolder=Join-Path $PSScriptRoot 'publisher-key'
- $publisher=Join-Path $keyFolder 'update-private.pem'
- if (!(Test-Path -LiteralPath $publisher -PathType Leaf)) {
-  $legacyFolder=Join-Path $PSScriptRoot '.publisher'
-  $legacyKey=Join-Path $legacyFolder 'update-private.pem'
-  if (!(Test-Path -LiteralPath $legacyKey -PathType Leaf)) {throw 'Copy your original update-private.pem into the publisher-key folder.'}
-  $keyFolder=$legacyFolder
-  $publisher=$legacyKey
+ $keyFolder=$env:PB_BUILD_KEY_FOLDER
+ if (!$keyFolder) {
+  $keyFolder=Join-Path $PSScriptRoot 'publisher-key'
+  if (!(Test-Path -LiteralPath (Join-Path $keyFolder 'update-private.pem') -PathType Leaf)) {
+   $keyFolder=Join-Path $PSScriptRoot '.publisher'
+  }
  }
- $tools=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'PhotoBridgeBuild'
+ $publisher=Join-Path $keyFolder 'update-private.pem'
+ if (!(Test-Path -LiteralPath $publisher -PathType Leaf)) {throw 'Copy your original update-private.pem into the publisher-key folder.'}
+ . (Join-Path $PSScriptRoot 'build-workspace.ps1')
+ $volumes=@([IO.DriveInfo]::GetDrives() | Where-Object {$_.IsReady})
+ $buildRoot=Get-BuildWorkspace $PSScriptRoot $volumes
+ if ($buildRoot -ne $PSScriptRoot) {
+  $env:PB_BUILD_KEY_FOLDER=$keyFolder
+  Write-Host ('Continuing build on '+$buildRoot)
+  Stop-Transcript | Out-Null
+  try {
+   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $buildRoot 'build-windows-oneclick.ps1')
+   exit $LASTEXITCODE
+  } finally {Start-Transcript -Path $log -Append | Out-Null}
+ }
+ $tools=Set-BuildScratch $buildRoot
+ $sharedTools=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'PhotoBridgeBuild'
  function Get-PortableNode([string]$selector,[string]$versionPattern) {
   $nodeFolder=Join-Path $tools $selector
   $node=Join-Path $nodeFolder 'node.exe'
+  $existing=Join-Path (Join-Path $sharedTools $selector) 'node.exe'
+  if (Test-Path -LiteralPath $existing -PathType Leaf) {
+   $version=& $existing --version
+   $arch=& $existing -p process.arch
+   if ($LASTEXITCODE -eq 0 -and $version -match ('^'+$versionPattern+'$') -and $arch -eq 'x64') {return $existing}
+  }
   $ready=$false
   if (Test-Path -LiteralPath $node) {
    $version=& $node --version

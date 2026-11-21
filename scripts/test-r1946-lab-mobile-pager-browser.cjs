@@ -32,14 +32,14 @@ function readPayload(root){
  const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
  if(root.endsWith('lab-desktop-ui')){
   const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
-  for(const name of [ASSET,'index.html']){
+  for(const name of [ASSET,'index.html','photobridge-r1363-lab-queue.js']){
    const entry=manifest.files.find(f=>f.name===name);
    assert(entry,'native UI updater must download '+name);
    assert.equal(entry.sha256,sha(fs.readFileSync(root+'/'+name)),name+' hash must match manifest after build');
   }
   assert.equal(manifest.build,sha(JSON.stringify(manifest.files)),root+' native build hash must be valid');
  }
- const queueRuntime=fs.readFileSync('dist/web/photobridge-r1363-lab-queue.js','utf8');
+ const queueRuntime=fs.readFileSync(root+'/photobridge-r1363-lab-queue.js','utf8');
  assert(queueRuntime.includes('.pb1955ThirdHeaderHost')&&queueRuntime.includes('--pb1956-third-bottom'),root+' runtime must measure new header');
  const queueCss=fs.readFileSync('dist/web/photobridge-r1363-lab-queue.css','utf8');
  return {root,html,style:'<style>'+queueCss+'</style>'+style[0]+newStyle[0],links,queueRuntime};

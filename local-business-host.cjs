@@ -1,7 +1,7 @@
 'use strict';
 const {LocalBusiness,canonical}=require('./local-business.cjs');
 function localActive(store){return!!store.get('localBusinessActive:'+store.get('labId'));}
-async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request}){
+async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request,stagePrefetch=null}){
  if(!store.get('auth')||!store.get('labId'))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
  require('./document-policy.cjs').applyPolicy(store);
@@ -11,8 +11,8 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  const canRead=['/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/summary','/api/lab/finance/ledger','/api/lab/finance/customer-statement','/api/lab/delegated-orders/bootstrap'].includes(p)||/^\/api\/lab\/(orders\/[^/]+(?:\/invoice-pricing)?|delegated-customers\/[^/]+\/account-summary)$/.test(p);
  const invoiceRoute=raw.match(/^\/api\/lab\/invoices\/([^/]+)\/(download|preview|pdf-upload|pdf-complete)$/),printRoute=raw.match(/^\/desktop\/local-invoices\/([^/]+)\/(pdf|print)$/);
  const businessWrite=!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(p);if(!canRead&&!engine.supports(req.method,p)&&!invoiceRoute&&!printRoute&&!businessWrite)return false;
- store.set('localBusinessActive:'+store.get('labId'),true);
- if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];await Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));same();}
+ if(!localActive(store))store.set('localBusinessActive:'+store.get('labId'),true);/* R1963_NATIVE_PERFORMANCE */
+ if(!store.get(engine.key())&&!offline&&request){const paths=['/api/lab/finance/summary','/api/lab/orders','/api/lab/archive','/api/lab/invoices','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/delegated-orders/bootstrap'];const prewarm=Promise.allSettled(paths.filter(p=>!store.cached(p)).map(async p=>{const r=await request(p,{signal:AbortSignal.timeout(3500)});if(!r.ok)return;const data=Buffer.from(await r.arrayBuffer());same();if(data.length<12e6&&(r.headers.get('content-type')||'').includes('application/json'))store.cache(p,r.status,'application/json',data.toString('base64'));}));if(!['GET','HEAD'].includes(req.method))await prewarm;else void prewarm.catch(()=>{});same();}/* R1963_ASYNC_READ_PREWARM */
  engine.state();
  try{
   if(req.method==='POST'&&/^\/api\/lab\/delegated-orders\/[^/]+\/submit$/.test(p)){
@@ -46,7 +46,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
   if(stageRequest){
    let detail;
    if(policy.kind==='local')detail=engine.read('/api/lab/orders/'+(policy.target?.id||stageRequest.orderId));
-   else{const forwarded=require('./document-policy.cjs').remoteRequest(store,'/api/lab/orders/'+stageRequest.orderId,{},policy.target),response=await request(forwarded.url);detail=await response.json();same();if(!response.ok){json(res,response.status,detail);return true;}}
+   else{const forwarded=require('./document-policy.cjs').remoteRequest(store,'/api/lab/orders/'+stageRequest.orderId,{},policy.target);const early=stagePrefetch&&stagePrefetch.orderId===stageRequest.orderId&&stagePrefetch.url===forwarded.url?await stagePrefetch.promise:null;const response=early?.response||await request(forwarded.url);detail=await response.json();same();if(!response.ok){json(res,response.status,detail);return true;}}/* R1963_STAGE_PREFETCH_CONSUME */
    if(require('./invoice-stage-guard.cjs').requiresInvoice(detail)){json(res,409,{error:'order_invoice_required',message:'ابتدا فاکتور سفارش را صادر کنید؛ مرحلهٔ کار تغییر نکرد.'});return true;}
   }
   const detailMatch=p.match(/^\/api\/lab\/orders\/([^/]+)(?:\/invoice-pricing)?$/);

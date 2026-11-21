@@ -14,3 +14,7 @@ function patchOfflineIntake(source){
  return source;
 }
 module.exports={patchOfflineIntake};
+
+/* R1963_NATIVE_MANUAL_BUTTON_SCOPED: print/album only; never finance/archive. */
+const pb1963OriginalIntakePatch=module.exports.patchOfflineIntake;
+module.exports.patchOfflineIntake=function(source){return require('./r1963-intake-route.cjs').scopeManualButton(pb1963OriginalIntakePatch(source));};

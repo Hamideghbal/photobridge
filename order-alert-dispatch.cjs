@@ -58,15 +58,13 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
   flight=(async()=>{
    // A just-created order can briefly be absent from the list. The retry
    // windows are short and keyed to the exact announced order number.
-   for(const delay of [0,500,1400,3000,5500]){
+   let attempt=0;for(const delay of [0,500,1400,3000,5500]){
     if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
     if(epoch!==generation||!valid(account))break;
     const awaiting=[...pending.values()].filter(x=>x.account===account);
     if(!awaiting.length)break;
     try{
-     const res=await request('/api/lab/orders',{signal:AbortSignal.timeout(9000)});
-     if(!res.ok)throw Error('order_list_http_'+res.status);
-     const data=await res.json();
+     const data=await require('./r1963-order-number-lookup.cjs').lookup(request,awaiting,attempt++);/* R1963_NUMBER_PAGED_LOOKUP */
      if(epoch!==generation||!valid(account))break;
      for(const item of awaiting){
       const row=candidate(data?.orders,account,item.number);

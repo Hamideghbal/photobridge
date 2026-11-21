@@ -17,7 +17,7 @@ function readPayload(root){
  assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+90).startsWith(',e.jsx("div",{className:"r1944Toolbar"'),root+' toolbar must be sibling of all 3 status filters');
  assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
  assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
- assert(ui.includes('window.innerWidth<=720?3:5'),root+' mobile pager must limit numeric buttons');
+ assert(ui.includes('window.innerWidth<=820?3:5'),root+' mobile pager must limit numeric buttons');
  assert(html.includes('labStage=r1949'),root+' fresh UI revision missing');
  const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
  assert(style&&style[1].includes('PB1947:')&&style[1].includes('PB1949:'),root+' final mobile/desktop CSS missing');
@@ -36,7 +36,7 @@ function readPayload(root){
  return {root,html,style:style[0],links};
 }
 function fixtureHtml({style,links},width){
- const num=width<=720?3:5;
+ const num=width<=820?3:5;
  const numbers=Array.from({length:num},(_,i)=>'<button type="button" class="r1944PageButton'+(i===0?' active':'')+'">'+(i+1)+'</button>').join('');
  return '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">'+
  '<meta name="viewport" content="width=device-width, initial-scale=1">'+links+
@@ -61,7 +61,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     const url=new URL(route.request().url()),file=path.join(path.resolve(root),url.pathname);
     return path.extname(url.pathname)&&fs.existsSync(file)?route.fulfill({path:file}):route.fulfill({status:404,body:''});
    });
-   for(const width of [360,390,430,1280]){
+   for(const width of [360,390,430,768,1280]){
     await page.setViewportSize({width,height:900});
     await page.setContent(fixtureHtml(payload,width),{waitUntil:'load'});
     const g=await page.evaluate(()=>{
@@ -79,8 +79,8 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     assert(g.header.left>=-3&&g.header.right<=g.vp+3,tag+' header exceeds viewport');
     assert(g.toolbar.left>=-3&&g.toolbar.right<=g.vp+3,tag+' toolbar exceeds viewport');
     assert(g.buttons.every(b=>b.left>=g.toolbar.left-3&&b.right<=g.toolbar.right+3&&b.width>=24),tag+' page buttons overflow'); 
-    assert.equal(g.buttons.length,width<=720?5:7,tag+' correct numeric pager count');
-    if(width<=720){
+    assert.equal(g.buttons.length,width<=820?5:7,tag+' correct numeric pager count');
+    if(width<=820){
      assert(g.search.bottom<=g.summary.top+2&&g.summary.bottom<=g.pager.top+2,tag+' mobile rows overlap');
      assert(g.buttons.every(b=>b.width>=24),tag+' mobile page touch targets too narrow');
     }

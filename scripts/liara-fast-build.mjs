@@ -1449,3 +1449,5 @@ runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{
 runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{stdio:'inherit'});
+// R1945: a missing SQL column must never blank the Lab; test working legacy fallback.
+runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});

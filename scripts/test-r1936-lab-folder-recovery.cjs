@@ -98,7 +98,7 @@ test('R1936: native queue requests fresh online states; server remains source of
  const built=fs.readFileSync(path,'utf8');
  assert.match(built,/pbNativeLiveStatus=\"\+Date\.now\(\)/);
  assert.match(built,/setInterval\(refresh,3000\)/);
- assert.match(built,/pb1753VisibleLabOrders\(nativeOffline\?stage\.slice\(/);
+ assert.match(built,/pb1753VisibleLabOrders\(useLegacy\?stage\.slice\(/);
  assert.match(built,/data\.orders\|\|\[\],o\)/);
  assert.match(fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),/paged=1&mode=/);
 });

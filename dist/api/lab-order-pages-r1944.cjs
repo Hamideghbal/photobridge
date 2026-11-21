@@ -18,7 +18,7 @@ function params(url){
 }
 // This is read-only: no hidden-order table, no migration or invoice mutation.
 const visible="o.lab_id=$1 AND COALESCE(o.mode,'print')=$2 AND o.status NOT IN ('uploading','cancelled') AND COALESCE(o.source,'')<>'manual_invoice'";
-const searchSql="($3='' OR o.number::text ILIKE ('%'||$3||'%') OR COALESCE(u.name,'') ILIKE ('%'||$3||'%') OR COALESCE(o.walkin_customer_name,'') ILIKE ('%'||$3||'%') OR COALESCE(o.walkin_customer_mobile,u.mobile,'') ILIKE ('%'||$3||'%') OR COALESCE(o.folder_latin_name,'') ILIKE ('%'||$3||'%') OR EXISTS(SELECT 1 FROM invoices ii WHERE ii.order_id=o.id AND ii.lab_id=o.lab_id AND ii.number::text ILIKE ('%'||$3||'%') ) OR EXISTS(SELECT 1 FROM order_files ff WHERE ff.order_id=o.id AND COALESCE(ff.original_name,'') ILIKE ('%'||$3||'%')))";
+const searchSql="($3='' OR o.number::text ILIKE ('%'||$3||'%') OR COALESCE(u.name,'') ILIKE ('%'||$3||'%') OR COALESCE(o.walkin_customer_name,'') ILIKE ('%'||$3||'%') OR COALESCE(o.walkin_customer_mobile,u.mobile,'') ILIKE ('%'||$3||'%') OR EXISTS(SELECT 1 FROM invoices ii WHERE ii.order_id=o.id AND ii.lab_id=o.lab_id AND ii.number::text ILIKE ('%'||$3||'%') ) OR EXISTS(SELECT 1 FROM order_files ff WHERE ff.order_id=o.id AND COALESCE(ff.original_name,'') ILIKE ('%'||$3||'%')))";
 const listSQL=`WITH page_ids AS MATERIALIZED (
  SELECT o.id FROM orders o JOIN users u ON u.id=o.customer_id
  WHERE ${visible} AND ${searchSql} AND ${stageFilter('__STAGE__')}

@@ -68,9 +68,9 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('nativeOffline?pb1945Legacy():Me(uri).catch('),root+' must retain offline cached orders and fallback if server paging fails');
   assert(ui.includes('__pb1945Legacy'),root+' missing fallback status marker');
   assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' fallback pages must show no more than ten');
-  assert(ui.includes('Math.min(r1944Pages,5)'),root+' missing numeric pagination');
+  assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=720?3:5)'),root+' missing compact mobile pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
-  assert(html.includes('position:sticky;top:0'),root+' toolbar must not scroll away');
+  assert(html.includes('.labQueueStickyBar:has(>.r1944Toolbar)'),root+' sticky bar must own the toolbar instead of its filter row');
   assert(html.includes('labStage=r1945'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }

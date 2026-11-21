@@ -51,7 +51,7 @@ for (const root of ['dist/web', 'dist/web/lab-desktop-ui']) {
     'window.pbLabLocalIntakeStorage.target=pb1550Target;'
   ]) if (!ui.includes(required)) throw Error('R1951 recovery/stages release contract missing '+root+': '+required);
   if (!ui.includes('/* PB1951 native UI release refresh */')) {
-    fs.appendFileSync(uiFile,'\\n/* PB1951 native UI release refresh */\\n');
+    fs.appendFileSync(uiFile,'\n/* PB1951 native UI release refresh */\n');
   }
 
   if (!ui.includes('/* PB1894 invoice-first server stages */'))

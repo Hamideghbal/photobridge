@@ -198,23 +198,7 @@ function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
   }
   if (!(Test-Path -LiteralPath (Join-Path $root '.pb-lab-bundle-manifest.json') -PathType Leaf) -and
       !(Test-Path -LiteralPath (Join-Path $root 'manifest.json') -PathType Leaf)) {
-   Write-Host 'The installer has no bundled UI manifest. Looking beside its release kit.'
-   $kit=Split-Path -Parent $Installer
-   while ($kit -and (Split-Path -Leaf $kit) -notlike 'kit-*') {
-    $parent=Split-Path -Parent $kit
-    if ($parent -eq $kit) {$kit=$null;break}
-    $kit=$parent
-   }
-   if (!$kit) {return $false}
-   foreach ($candidate in @('verified-ui','native/verified-ui','runtime','release/win-unpacked/resources/runtime')) {
-    $root=Join-Path $kit $candidate
-    if (Test-Path -LiteralPath (Join-Path $root '.pb-lab-bundle-manifest.json') -PathType Leaf) {
-     $env:PB_120_UI_DIR=$root
-     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
-     if ($LASTEXITCODE -eq 0) {return $true}
-    }
-   }
-   return $false
+   return (Find-UiWithoutInstallerManifest $Node $Installer)
   }
   $env:PB_120_UI_DIR=$root
   & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
@@ -225,6 +209,28 @@ function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
   Write-Host ('Could not recover UI from installer: '+$_.Exception.Message)
   return $false
  } finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
+}
+
+function Find-UiWithoutInstallerManifest([string]$Node,[string]$Installer) {
+ Write-Host 'No bundled UI manifest was found. Checking the original release kit, then the verified official UI.'
+ $kit=Split-Path -Parent $Installer
+ while ($kit -and (Split-Path -Leaf $kit) -notlike 'kit-*') {
+  $parent=Split-Path -Parent $kit
+  if ($parent -eq $kit) {$kit=$null;break}
+  $kit=$parent
+ }
+ if ($kit) {
+  foreach ($candidate in @('verified-ui','native/verified-ui','runtime','release/win-unpacked/resources/runtime')) {
+   $root=Join-Path $kit $candidate
+   if ((Test-Path -LiteralPath (Join-Path $root '.pb-lab-bundle-manifest.json') -PathType Leaf) -or
+       (Test-Path -LiteralPath (Join-Path $root 'manifest.json') -PathType Leaf)) {
+    $env:PB_120_UI_DIR=$root
+    & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
+    if ($LASTEXITCODE -eq 0) {return $true}
+   }
+  }
+ }
+ return (Find-CompatibleOfficialUi $Node)
 }
 
 function Find-CompatibleOfficialUi([string]$Node) {

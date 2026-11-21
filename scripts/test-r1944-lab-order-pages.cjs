@@ -65,14 +65,16 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('paged=1&mode='),root+' missing server route');
   assert(ui.includes('r1944Toolbar'),root+' missing controls');
   assert(ui.includes('r1944Query'),root+' missing full-history search field');
+   assert(!ui.includes('className:"labQueueSearchSlot desktopQueueSearch"'),root+' duplicate legacy search must not render');
+   assert(html.includes('PB1949:'),root+' final CSS must override legacy header grid');
   assert(ui.includes('nativeOffline?pb1945Legacy():Me(uri).catch('),root+' must retain offline cached orders and fallback if server paging fails');
   assert(ui.includes('__pb1945Legacy'),root+' missing fallback status marker');
   assert(ui.includes('stage.slice((r1944Page-1)*10,r1944Page*10)'),root+' fallback pages must show no more than ten');
-  assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=720?3:5)'),root+' missing compact mobile pagination');
+  assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=820?3:5)'),root+' missing compact mobile pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
   assert(html.includes('.labQueueStickyBar>.r1944Toolbar'),root+' toolbar must be sibling of status filters');
   assert(!html.includes('.labQueueStickyBar:has(>.r1944Toolbar)'),root+' advanced parent selector must not hide desktop pager');
-  assert(html.includes('labStage=r1947'),root+' stale bundle URL');
+  assert(html.includes('labStage=r1949'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }
 });

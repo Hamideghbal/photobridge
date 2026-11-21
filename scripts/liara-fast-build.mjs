@@ -1444,3 +1444,4 @@ await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory.cjs'],{stdio:'inherit'});

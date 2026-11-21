@@ -101,3 +101,19 @@ test('R1936: native queue requests fresh online states; server remains source of
  assert.match(built,/pb1753VisibleLabOrders\(data\.orders\|\|\[\],o\)/);
  assert.doesNotMatch(fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8'),/pbNativeLiveStatus=/);
 });
+
+
+test('R1943: explicit native redownload with no saved manifest and choose=false rebuilds deleted folder',async()=>{
+ const x=harness({hasSaved:false,legacy:true});
+ x.ctx.window.pbNativeStorage={}; // Installed Electron Windows host is available
+ const target=await x.ctx.runTarget(x.root,x.detail,x.detail.files[0]);
+ assert.equal(target.root,x.root);
+ assert.equal(target.dir.parts.join('/'),'Hamkar/1405-08-30/platform-admin/10-15-luster-order-953');
+ assert.equal(x.saved().targets['photo-1'].dir.native,true);
+ assert.deepEqual(x.calls,['Hamkar','Hamkar/1405-08-30','Hamkar/1405-08-30/platform-admin','Hamkar/1405-08-30/platform-admin/10-15-luster-order-953']);
+});
+test('R1943: initial online native worker must not block a redownload on a deleted legacy child',()=>{
+ const worker=require('node:fs').readFileSync('scripts/r1568-native-worker.js.txt','utf8');
+ assert.match(worker,/await pb1450Root\(false\);\s*const outcome=await pb1450Download\(detail,/);
+ assert.doesNotMatch(worker,/await pb1450Root\(false,detail\)/);
+});

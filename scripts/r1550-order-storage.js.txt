@@ -76,7 +76,12 @@ async function pb1550Root(detail,choose=false,candidate){
   if(legacy&&!local){
    let record=await pb1550Probe(root,detail);
    if(!record&&choose&&!window.pbNativeStorage){root=await window.showDirectoryPicker({mode:'readwrite',id:'photobridge-order-folder'});record=await pb1550Probe(root,detail);}
-   if(!record&&choose&&pb1936ExplicitDownload(detail)){
+   /* PB1943 legacy-folder retry: pb1550Target invokes this with choose=false.
+    A previously downloaded native order with no saved folder manifest must be
+    repairable only inside an actual pb1450Download flight. The initial
+    pb1450Root(true) has already checked the primary device and selected root.
+    Browser restores continue to require an explicit directory picker. */
+   if(!record&&pb1936ExplicitDownload(detail)&&(choose||!!window.pbNativeStorage)){
     // No complete historical folder remains. Re-create only the requested
     // order's children under its existing, validated root on the first target.
     record={version:1,root:pb1550Encode(root),targets:{},

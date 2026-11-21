@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 
 const asset = 'assets/index-UIRefine-v655-r84.js';
-const rev = 'r1949';
+const rev = 'r1951';
 const sha = buffer => crypto.createHash('sha256').update(buffer).digest('hex');
 
 function refreshCompression(file) {
@@ -37,6 +37,23 @@ for (const root of ['dist/web', 'dist/web/lab-desktop-ui']) {
   const uiFile = root + '/' + asset;
   const htmlFile = root + '/index.html';
   const ui = fs.readFileSync(uiFile, 'utf8');
+  // R1951: a new installer must not pin a pre-R1936 Windows Lab snapshot.
+  // This release barrier also changes the frozen native manifest SHA so an
+  // installed app can discover the restored UI through ordinary safe sync.
+  for (const required of [
+    '/* PB1936 explicit redownload recovery',
+    'PB1943 legacy-folder retry',
+    'async function pb1936RecreateNativeDir(',
+    "?'Moshtari':'Hamkar'",
+    'const pb1894ReadyResult=await It(le,"ready")',
+    '/* PB1894 invoice-first server stages */',
+    '/* PB1944 server-paged lab queue */',
+    'window.pbLabLocalIntakeStorage.target=pb1550Target;'
+  ]) if (!ui.includes(required)) throw Error('R1951 recovery/stages release contract missing '+root+': '+required);
+  if (!ui.includes('/* PB1951 native UI release refresh */')) {
+    fs.appendFileSync(uiFile,'\n/* PB1951 native UI release refresh */\n');
+  }
+
   if (!ui.includes('/* PB1894 invoice-first server stages */'))
     throw Error('R1897 stage fix missing in ' + root);
   const ready = ui.slice(ui.indexOf('un=async le=>'), ui.indexOf(',Cn=async', ui.indexOf('un=async le=>')));

@@ -7,7 +7,8 @@ const { validateNativeUi } = require('./verify-native-ui.cjs');
 const { fastWorkerEnabled } = require('./native-renderer-bundle.cjs');
 
 function select(source, destination) {
-  const manifestName = '.pb-lab-bundle-manifest.json';
+  const manifestName = fs.existsSync(path.join(source, '.pb-lab-bundle-manifest.json'))
+    ? '.pb-lab-bundle-manifest.json' : 'manifest.json';
   const manifest = JSON.parse(fs.readFileSync(path.join(source, manifestName), 'utf8'));
   const origin = 'https://photobridge.ir';
   const stage = fs.mkdtempSync(destination + '-');
@@ -15,7 +16,7 @@ function select(source, destination) {
     const pin = { origin, build: manifest.build };
     const pinFile = path.join(stage, 'pin.json');
     fs.writeFileSync(pinFile, JSON.stringify(pin));
-    copyPinnedUi({ source, pinFile, staging: stage, origin });
+    copyPinnedUi({ source, pinFile, staging: stage, origin, manifestName });
     validateNativeUi(stage);
     const entry = fs.readFileSync(path.join(stage, 'assets/index-UIRefine-v655-r84.js'), 'utf8');
     if (!fastWorkerEnabled(entry, '1.0.120') || !entry.includes('/* PB1944 server-paged lab queue */') ||

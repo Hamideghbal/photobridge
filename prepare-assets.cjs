@@ -22,8 +22,8 @@ async function response(url,timeout=20000){
  let last;for(let attempt=1;attempt<=3;attempt++){try{const res=await fetch(url,{signal:AbortSignal.timeout(timeout),redirect:'error',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}});if(!res.ok)throw Object.assign(Error('ui_http_'+res.status),{status:res.status});return res}catch(e){last=e;if(e.status&&e.status<500)throw e;if(attempt<3)await new Promise(r=>setTimeout(r,attempt*250))}}
  throw Error('ui_fetch_failed: '+url.origin+url.pathname+' · '+(last?.cause?.code||last?.code||last?.name||'network_error')+' · '+last.message);
 }
-function copyPinnedUi({source,pinFile,staging,origin}){
- const pin=JSON.parse(fs.readFileSync(pinFile,'utf8')),manifest=JSON.parse(fs.readFileSync(path.join(source,'.pb-lab-bundle-manifest.json'),'utf8'));validate(manifest);
+function copyPinnedUi({source,pinFile,staging,origin,manifestName='.pb-lab-bundle-manifest.json'}){
+ const pin=JSON.parse(fs.readFileSync(pinFile,'utf8')),manifest=JSON.parse(fs.readFileSync(path.join(source,manifestName),'utf8'));validate(manifest);
  if(pin.origin!==new URL(origin).origin||pin.build!==manifest.build)throw Error('pinned_ui_identity_mismatch');
  const base=fs.realpathSync(source);for(const item of manifest.files){const file=path.join(source,item.name),real=fs.realpathSync(file);if(!real.startsWith(base+path.sep)||!fs.lstatSync(file).isFile())throw Error('pinned_ui_unsafe_file:'+item.name);const stat=fs.statSync(file);if(stat.size>MAX_FILE_BYTES)throw Error('ui_asset_too_large:'+item.name);const bytes=fs.readFileSync(file);if(digest(bytes)!==item.sha256)throw Error('pinned_ui_hash_mismatch:'+item.name);const dest=path.join(staging,item.name);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,bytes)}
  fs.writeFileSync(path.join(staging,'.pb-lab-bundle-manifest.json'),JSON.stringify(manifest));return manifest;

@@ -5,7 +5,8 @@ function Get-Exact120Runtime([string]$Exe) {
  if ($file.VersionInfo.ProductVersion -notmatch '^1\.0\.120(?:\.0)?$' -and
      $file.VersionInfo.FileVersion -notmatch '^1\.0\.120(?:\.0)?$') {return}
  $runtime=Join-Path $file.DirectoryName 'resources/runtime'
- if (Test-Path -LiteralPath (Join-Path $runtime '.pb-lab-bundle-manifest.json') -PathType Leaf) {$runtime}
+ if ((Test-Path -LiteralPath (Join-Path $runtime '.pb-lab-bundle-manifest.json') -PathType Leaf) -or
+     (Test-Path -LiteralPath (Join-Path $runtime 'manifest.json') -PathType Leaf)) {$runtime}
 }
 
 function Get-Installed120Roots([string]$Node) {
@@ -174,10 +175,47 @@ function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
   $app=(Get-ChildItem -LiteralPath $payload -Filter 'app-64.7z' -File -Recurse | Select-Object -First 1).FullName
   if (!$app) {return $false}
   $installed=Join-Path $stage 'installed'
-  & $seven x $app 'PhotoBridge Lab.exe' 'resources/runtime/*' ('-o'+$installed) '-y' | Out-Host
+  & $seven x $app 'PhotoBridge Lab.exe' 'resources/app.asar' 'resources/runtime/*' ('-o'+$installed) '-y' | Out-Host
   if ($LASTEXITCODE -ne 0) {return $false}
-  $root=Get-Exact120Runtime (Join-Path $installed 'PhotoBridge Lab.exe')
-  if (!$root) {Write-Host 'Selected installer does not contain a 1.0.120 Lab executable and bundled UI.';return $false}
+  $package=Join-Path $installed 'resources/app.asar'
+  $exe=Join-Path $installed 'PhotoBridge Lab.exe'
+  $root=Join-Path $installed 'resources/runtime'
+  $version=$null
+  if (Test-Path -LiteralPath $package -PathType Leaf) {
+   $version=& $Node (Join-Path $PSScriptRoot 'read-installer-app-version.cjs') $package
+  }
+  $versionInfo=(Get-Item -LiteralPath $exe -ErrorAction SilentlyContinue).VersionInfo
+  Write-Host ('Installed executable version: '+$versionInfo.FileVersion+' / '+$versionInfo.ProductVersion)
+  Write-Host ('Inner Lab package version: '+$version)
+  if ($version -and $version -ne '1.0.120') {
+   Write-Host 'The inner Lab package version is different from 1.0.120.'
+   return $false
+  }
+  if (!$version -and $versionInfo.FileVersion -notmatch '^1\.0\.120(?:\.0)?$' -and
+     $versionInfo.ProductVersion -notmatch '^1\.0\.120(?:\.0)?$') {
+   Write-Host 'Could not verify the installer version as 1.0.120.'
+   return $false
+  }
+  if (!(Test-Path -LiteralPath (Join-Path $root '.pb-lab-bundle-manifest.json') -PathType Leaf) -and
+      !(Test-Path -LiteralPath (Join-Path $root 'manifest.json') -PathType Leaf)) {
+   Write-Host 'The installer has no bundled UI manifest. Looking beside its release kit.'
+   $kit=Split-Path -Parent $Installer
+   while ($kit -and (Split-Path -Leaf $kit) -notlike 'kit-*') {
+    $parent=Split-Path -Parent $kit
+    if ($parent -eq $kit) {$kit=$null;break}
+    $kit=$parent
+   }
+   if (!$kit) {return $false}
+   foreach ($candidate in @('verified-ui','native/verified-ui','runtime','release/win-unpacked/resources/runtime')) {
+    $root=Join-Path $kit $candidate
+    if (Test-Path -LiteralPath (Join-Path $root '.pb-lab-bundle-manifest.json') -PathType Leaf) {
+     $env:PB_120_UI_DIR=$root
+     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
+     if ($LASTEXITCODE -eq 0) {return $true}
+    }
+   }
+   return $false
+  }
   $env:PB_120_UI_DIR=$root
   & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
   return ($LASTEXITCODE -eq 0)

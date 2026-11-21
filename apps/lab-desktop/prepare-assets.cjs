@@ -36,7 +36,8 @@ function assertCurrentLabUi(root){
   ['server-only stage transitions','const pb1894ReadyResult=await It(le,"ready")'],
   ['ready and delivered without disk','/* PB1894 invoice-first server stages */']
  ]) if(!js.includes(expected))throw Error('stale_pinned_lab_ui_'+label.replace(/[^a-z0-9]+/gi,'_'));
- if(!html.includes('labStage=r1949')||!html.includes('PB1949:'))
+ const stageRevision=Number(html.match(/labStage=r(\d+)/)?.[1]||0);
+ if(stageRevision<1949||!html.includes('PB1949:'))
   throw Error('stale_pinned_lab_ui_before_r1949');
  return true;
 }

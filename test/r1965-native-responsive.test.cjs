@@ -7,7 +7,7 @@ const url='/api/lab/orders?paged=1&mode=print&stage=flow&page=1&pbNativeLiveStat
 test('R1965 account-isolated page memory cache does not re-download on repeated tab open',async()=>{
  let requests=0;const cache=create(),load=async()=>{requests++;return{status:200,body:valid()}};
  const a=await cache.getOrFetch({account:'lab-a',url,load});
- const b=await cache.getOrFetch({account:'lab-a',url:url.replace('=1','=12'),load});
+ const b=await cache.getOrFetch({account:'lab-a',url:url.replace('pbNativeLiveStatus=1','pbNativeLiveStatus=12'),load});
  assert.equal(a.source,'network');assert.equal(b.source,'memory');assert.equal(requests,1);
  cache.invalidate('lab-a');assert.equal(cache.stats().entries,0);
 });

@@ -1,3 +1,47 @@
+function Get-Exact120Runtime([string]$Exe) {
+ if (!$Exe -or !(Test-Path -LiteralPath $Exe -PathType Leaf)) {return}
+ $file=Get-Item -LiteralPath $Exe
+ if ($file.Name -ne 'PhotoBridge Lab.exe') {return}
+ if ($file.VersionInfo.ProductVersion -notmatch '^1\.0\.120(?:\.0)?$' -and
+     $file.VersionInfo.FileVersion -notmatch '^1\.0\.120(?:\.0)?$') {return}
+ $runtime=Join-Path $file.DirectoryName 'resources/runtime'
+ if (Test-Path -LiteralPath (Join-Path $runtime '.pb-lab-bundle-manifest.json') -PathType Leaf) {$runtime}
+}
+
+function Get-Installed120Roots([string]$Node) {
+ $executables=@(Get-Process -Name 'PhotoBridge Lab' -ErrorAction SilentlyContinue | ForEach-Object {$_.Path})
+ $folders=@()
+ foreach ($parent in @($env:LOCALAPPDATA,$env:ProgramFiles,${env:ProgramFiles(x86)})) {
+  if ($parent) {$folders+=Join-Path $parent 'Programs/PhotoBridge Lab';$folders+=Join-Path $parent 'PhotoBridge Lab'}
+ }
+ $uninstall=@('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')
+ $folders+=@(Get-ItemProperty -Path $uninstall -ErrorAction SilentlyContinue |
+  Where-Object {$_.DisplayName -like 'PhotoBridge Lab*' -and $_.DisplayVersion -eq '1.0.120'} |
+  ForEach-Object {$_.InstallLocation} | Where-Object {$_})
+ foreach ($folder in $folders) {$executables+=Join-Path $folder 'PhotoBridge Lab.exe'}
+ if ($env:OS -eq 'Windows_NT') {
+  try {
+   $shell=New-Object -ComObject WScript.Shell
+   foreach ($shortcutRoot in @([Environment]::GetFolderPath('DesktopDirectory'),[Environment]::GetFolderPath('StartMenu'),[Environment]::GetFolderPath('CommonStartMenu'))) {
+    if (!$shortcutRoot) {continue}
+    foreach ($shortcut in (Get-ChildItem -LiteralPath $shortcutRoot -Filter '*PhotoBridge*Lab*.lnk' -File -Recurse -ErrorAction SilentlyContinue)) {
+     $executables+=$shell.CreateShortcut($shortcut.FullName).TargetPath
+    }
+   }
+  } catch {Write-Host 'Windows shortcuts could not be inspected.'}
+ }
+ # Prefer the verified active UI from a profile last opened by version 120.
+ if ($env:APPDATA) {
+  foreach ($name in @('PhotoBridge Lab','photobridge-lab-desktop')) {
+   $database=Join-Path (Join-Path $env:APPDATA $name) 'lab.sqlite'
+   if (Test-Path -LiteralPath $database -PathType Leaf) {
+    & $Node --disable-warning=ExperimentalWarning (Join-Path $PSScriptRoot 'read-original-ui-profile.cjs') $database
+   }
+  }
+ }
+ foreach ($exe in ($executables | Where-Object {$_} | Select-Object -Unique)) {Get-Exact120Runtime $exe}
+}
+
 function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
  $manifestName='.pb-lab-bundle-manifest.json'
  $original=Join-Path $PSScriptRoot 'original-120-ui'
@@ -58,6 +102,23 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
    }
   } catch {Write-Host ('Skipping ZIP: '+$_.Exception.Message)}
   finally {if($zip){$zip.Dispose()}}
+ }
+ if ($env:OS -eq 'Windows_NT') {
+  Add-Type -AssemblyName System.Windows.Forms
+  $picker=New-Object System.Windows.Forms.OpenFileDialog
+  try {
+   $picker.Title='Select the installed PhotoBridge Lab 1.0.120 executable (not Setup)'
+   $picker.Filter='Installed PhotoBridge Lab|PhotoBridge Lab.exe'
+   $picker.CheckFileExists=$true
+   if ($picker.ShowDialog() -eq 'OK') {
+    $runtime=Get-Exact120Runtime $picker.FileName
+    if ($runtime) {
+     $env:PB_120_UI_DIR=$runtime
+     & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
+     if ($LASTEXITCODE -eq 0) {return}
+    }
+   }
+  } finally {$picker.Dispose()}
  }
  throw 'Original 1.0.120 UI was not found or did not pass verification. Put the original 1.0.120 source ZIP in original-120-ui. The EXE alone is not a source ZIP.'
 }

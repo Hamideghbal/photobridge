@@ -79,28 +79,8 @@ try {
   & $exe @arguments
   if ($LASTEXITCODE -ne 0) {throw ((Split-Path -Leaf $exe)+' exited with code '+$LASTEXITCODE+'.')}
  }
- # Find the original installed 1.0.120 runtime. Newer installed versions
- # are deliberately excluded from this recovery build.
- $installedRoots=@()
- if (!$env:PB_120_UI_DIR) {
-  $folders=@()
-  foreach ($parent in @($env:LOCALAPPDATA,$env:ProgramFiles,${env:ProgramFiles(x86)})) {
-   if ($parent) {$folders+=Join-Path $parent 'Programs\PhotoBridge Lab';$folders+=Join-Path $parent 'PhotoBridge Lab'}
-  }
-  $uninstall=@('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')
-  $folders+=@(Get-ItemProperty -Path $uninstall -ErrorAction SilentlyContinue |
-   Where-Object {$_.DisplayName -like 'PhotoBridge Lab*' -and $_.DisplayVersion -eq '1.0.120'} |
-   ForEach-Object {$_.InstallLocation} | Where-Object {$_})
-  foreach ($folder in ($folders | Select-Object -Unique)) {
-   $exe=Join-Path $folder 'PhotoBridge Lab.exe'
-   $runtime=Join-Path $folder 'resources\runtime'
-   if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $runtime -PathType Container) -and
-    (Get-Item -LiteralPath $exe).VersionInfo.ProductVersion -match '^1\.0\.120(?:\.0)?$') {
-    $installedRoots+=$runtime
-   }
-  }
- }
  . (Join-Path $PSScriptRoot 'find-original-ui.ps1')
+ $installedRoots=@(Get-Installed120Roots $node)
  Find-OriginalUi $node $installedRoots
  $env:PB_LAB_PINNED_DIRECTORY=Join-Path $PSScriptRoot 'original-ui-input'
  $env:PB_LAB_PIN_FILE=Join-Path $PSScriptRoot 'original-ui-input\pin.json'
@@ -134,6 +114,10 @@ try {
  $smokeErrors=Join-Path $logs 'packaged-smoke-errors.log'
  $smokeProfile=Join-Path $logs ('smoke-profile-'+[guid]::NewGuid().ToString('N'))
  $smokeArgs=@('--compat-smoke',('--user-data-dir="'+$smokeProfile+'"'))
+ $running=@(Get-Process -Name 'PhotoBridge Lab' -ErrorAction SilentlyContinue)
+ if ($running.Count) {
+  Read-Host 'Close the installed PhotoBridge Lab fully from its tray menu, then press Enter to test the new installer' | Out-Null
+ }
  $smoke=Start-Process -FilePath $packaged -ArgumentList $smokeArgs -PassThru -Wait -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErrors
  Get-Content -LiteralPath $smokeLog,$smokeErrors
  if ($smoke.ExitCode -ne 0 -or !(Select-String -LiteralPath $smokeLog -Pattern 'PB_COMPAT_SMOKE_PASS' -Quiet)) {

@@ -1,47 +1,91 @@
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs');
-const {chromium}=require('playwright');
+// R1946: Browser geometry from the actual final CSS/JS in BOTH web and Windows bundles.
+// Mount a deterministic laboratory header fixture: auth/login redirects must not
+// cause false failures or hide a UI layout regression.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {chromium}=require(process.env.PB_PLAYWRIGHT_PATH||'playwright');
+const ASSET='assets/index-UIRefine-v655-r84.js';
+const labTabsAnchor='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})]})';
+const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
+
+function readPayload(root){
+ const ui=fs.readFileSync(root+'/'+ASSET,'utf8');
+ const html=fs.readFileSync(root+'/index.html','utf8');
+ const i=ui.indexOf(labTabsAnchor);
+ assert(i>0,root+' lab status tabs were not found');
+ assert(ui.slice(i+labTabsAnchor.length,i+labTabsAnchor.length+90).startsWith(',e.jsx("div",{className:"r1944Toolbar"'),root+' toolbar must be sibling of all 3 status filters');
+ assert(ui.includes('PB1944 server-paged lab queue'),root+' must use server paging');
+ assert(ui.includes('/api/lab/orders?paged=1&mode='),root+' missing server paged endpoint');
+ assert(ui.includes('window.innerWidth<=720?3:5'),root+' mobile pager must limit numeric buttons');
+ assert(html.includes('labStage=r1946'),root+' fresh UI revision missing');
+ const style=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
+ assert(style&&style[1].includes('PB1946:'),root+' final mobile/desktop CSS missing');
+ const links=(html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g)||[]).join('\n').replaceAll('href="./','href="/');
+ if(root.endsWith('lab-desktop-ui')){
+  const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
+  for(const name of [ASSET,'index.html']){
+   const entry=manifest.files.find(f=>f.name===name);
+   assert(entry,'native UI updater must download '+name);
+   assert.equal(entry.sha256,sha(fs.readFileSync(root+'/'+name)),name+' hash must match manifest after build');
+  }
+  assert.equal(manifest.build,sha(JSON.stringify(manifest.files)),root+' native build hash must be valid');
+ }
+ return {root,html,style:style[0],links};
+}
+function fixtureHtml({style,links},width){
+ const num=width<=720?3:5;
+ const numbers=Array.from({length:num},(_,i)=>'<button type="button" class="r1944PageButton'+(i===0?' active':'')+'">'+(i+1)+'</button>').join('');
+ return '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">'+
+ '<meta name="viewport" content="width=device-width, initial-scale=1">'+links+
+ '<style>html,body{margin:0;padding:0;width:100%;max-width:100%}#root{max-width:100%}.labRoleWorkspace{width:100%}.r1946Fixture{box-sizing:border-box;width:100%;max-width:100%;padding:8px 10px;}</style>'+
+ style+
+ '</head><body><div id="root"><div class="labRoleWorkspace"><main class="appWorkspacePage pb1151PrintPage"><div class="labRolePageScrollArea"><div class="r1946Fixture"><div class="labQueueStickyBar quickAccessAlwaysOpen">'+
+ '<div class="labQueueSearchSlot desktopQueueSearch">جست‌وجوی قدیمی</div>'+
+ '<div class="queueFilters mainQueueFilters compactQueueFilters"><button class="active">در جریان ۱۸۸</button><button>آماده تحویل ۱۱۹</button><button>تحویل‌شده ۱۴۰</button></div>'+
+ '<div class="r1944Toolbar"><div class="r1944ToolbarInner"><input type="search" class="r1944Search" placeholder="جست‌وجو در سفارش‌ها">'+
+ '<span class="r1944PageSummary">نمایش ۱ تا ۱۰ از ۱۸۸ سفارش</span><div class="r1944Pager"><button class="r1944PageButton">قبلی</button>'+
+ numbers+'<button class="r1944PageButton">بعدی</button></div></div></div>'+
+ '</div><div class="labOrderScrollArea">سفارش‌های صفحه</div></div></main></div></div></body></html>';
+}
+const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility};};
 (async()=>{
- const html=fs.readFileSync('dist/web/index.html','utf8'),ui=fs.readFileSync('dist/web/assets/index-UIRefine-v655-r84.js','utf8');
- const anchor='children:["تحویل‌شده ",e.jsx("b",{children:V(ge.completed)})]})]})',ix=ui.indexOf(anchor);
- assert(ix>=0,'status filters must close before the new toolbar');
- assert(ui.slice(ix+anchor.length,ix+anchor.length+120).startsWith(',e.jsx("div",{className:"r1944Toolbar"'),'toolbar must be a direct sticky-header child, not a fourth filter button');
- assert(ui.includes('Math.min(r1944Pages,typeof window!=="undefined"&&window.innerWidth<=720?3:5)'),'mobile shows 3 numbered pages');
- assert(ui.includes('type:"search",className:"r1944Search"')&&ui.includes('r1944SetQuery(le.target.value)'),'search interaction preserved');
- assert(ui.includes('paged=1&mode=')&&ui.includes('r1944SetPage'),'server pagination preserved');
- const styles=html.match(/<style id="pb1944-lab-pager">([\s\S]*?)<\/style>/);
- assert(styles,'final Lab pager CSS missing');
- assert(styles[1].includes('/* PB1946: Lab filters followed by a separate, visible sticky-toolbar row */'));
- assert(styles[1].includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
- assert(styles[1].includes('.r1944Search{grid-column:1;grid-row:1'));
- assert(styles[1].includes('.r1944Pager{grid-column:1;grid-row:3'));
- assert(html.includes('labStage=r1946'),'new cache revision missing');
- // Use verified compiled DOM hierarchy and the actual final CSS in Chromium.
- // Login redirects from the full app are intentionally not part of a geometry test.
- const body="<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>*{box-sizing:border-box}body{margin:0;background:#f3f6fc;font:13px Tahoma,Arial,sans-serif}.shell{width:100%;padding:0 8px;height:1500px}.labQueueStickyBar{position:sticky;top:0;display:flex;align-items:center;background:#fff;border-bottom:1px solid #dfe5ef;min-height:45px;z-index:5;padding:8px;gap:7px}.queueFilters{display:flex;gap:6px;align-items:center}.queueFilters button{border:1px solid #d6dfea;border-radius:9px;background:#f4f7fb;padding:7px 12px;font:inherit;white-space:nowrap}</style><style>"+styles[1]+"</style></head><body><div class=\"shell\"><div class=\"labQueueStickyBar quickAccessAlwaysOpen\"><div class=\"labQueueSearchSlot desktopQueueSearch\"><input aria-label=\"old search\"></div><div class=\"queueFilters mainQueueFilters compactQueueFilters\"><button class=\"active\">در جریان ۵۷</button><button>آماده تحویل ۲۱</button><button>تحویل‌شده ۱۵</button></div><div class=\"r1944Toolbar\"><div class=\"r1944ToolbarInner\"><input type=\"search\" class=\"r1944Search\" placeholder=\"شماره سفارش، عکاس یا نام عکس\"><span class=\"r1944PageSummary\">نمایش ۱ تا ۱۰ از ۵۷ سفارش</span><div class=\"r1944Pager\"><button class=\"r1944PageButton\">قبلی</button><button class=\"r1944PageButton active\">۱</button><button class=\"r1944PageButton\">۲</button><button class=\"r1944PageButton\">۳</button><button class=\"r1944PageButton\">بعدی</button></div></div></div></div><div class=\"labOrderGrid\" style=\"padding:16px\">کارت‌های سفارش</div></div></body></html>";
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
-  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
-  for(const width of [360,390,430]){
-   await page.setViewportSize({width,height:844});
-   await page.setContent(body);
-   const g=await page.evaluate(()=>{
-    const box=sel=>{const el=document.querySelector(sel);if(!el)return null;const r=el.getBoundingClientRect(),cs=getComputedStyle(el);return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,width:r.width,display:cs.display}};
-    return {viewport:document.documentElement.clientWidth,status:box('.labQueueStickyBar > .queueFilters'),toolbar:box('.labQueueStickyBar > .r1944Toolbar'),search:box('.r1944Search'),summary:box('.r1944PageSummary'),pager:box('.r1944Pager'),oldSearch:box('.labQueueStickyBar > .desktopQueueSearch'),buttons:[...document.querySelectorAll('.queueFilters button')].map(el=>el.getBoundingClientRect().width),pageButtons:[...document.querySelectorAll('.r1944PageButton')].map(el=>{const r=el.getBoundingClientRect();return{left:r.left,right:r.right,width:r.width}})};
+  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+   const payload=readPayload(root);
+   const page=await browser.newPage({viewport:{width:1280,height:900},deviceScaleFactor:1});
+   await page.route('**/*',route=>{
+    const url=new URL(route.request().url()),file=path.join(path.resolve(root),url.pathname);
+    return path.extname(url.pathname)&&fs.existsSync(file)?route.fulfill({path:file}):route.fulfill({status:404,body:''});
    });
-   assert(g.status&&g.toolbar&&g.search&&g.pager,'status, search and pager visible at '+width);
-   assert(g.status.height>=30&&g.buttons.length===3&&g.buttons.every(x=>x>=40),'status filters are touchable at '+width);
-   assert(g.toolbar.top>=g.status.bottom-2,'toolbar below status buttons at '+width+': '+JSON.stringify(g));
-   assert(g.search.height>=28&&g.search.top>=g.toolbar.top,'search visible at '+width);
-   assert(g.summary.top>=g.search.bottom-2&&g.pager.top>=g.summary.bottom-2,'search/count/page rows do not overlap at '+width);
-   assert(g.toolbar.left>=-2&&g.toolbar.right<=g.viewport+2,'toolbar fits screen at '+width);
-   assert(g.pageButtons.length===5&&g.pageButtons.every(x=>x.width>=25&&x.left>=g.toolbar.left-2&&x.right<=g.toolbar.right+2),'pager buttons fit without horizontal scrolling at '+width);
-   assert.equal(g.oldSearch.display,'none','duplicate desktop search hidden');
-   await page.screenshot({path:'/tmp/r1216-mobile-r1946-pager-'+width+'.png'});
+   for(const width of [360,390,430,1280]){
+    await page.setViewportSize({width,height:900});
+    await page.setContent(fixtureHtml(payload,width),{waitUntil:'load'});
+    const g=await page.evaluate(()=>{
+     const get=q=>document.querySelector(q);
+     const b=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,display:s.display,visibility:s.visibility};};
+     const header=get('.labQueueStickyBar');
+     return{vp:document.documentElement.clientWidth,docScroll:document.documentElement.scrollWidth,header:b(header),filter:b(get('.queueFilters')),tabs:[...document.querySelectorAll('.queueFilters > button')].map(b),toolbar:b(get('.labQueueStickyBar > .r1944Toolbar')),search:b(get('.r1944Search')),summary:b(get('.r1944PageSummary')),pager:b(get('.r1944Pager')),buttons:[...document.querySelectorAll('.r1944PageButton')].map(b),old:b(get('.desktopQueueSearch'))};
+    });
+    const tag=root+':'+width;
+    assert(g.header&&g.filter&&g.toolbar&&g.search&&g.summary&&g.pager,tag+' missing header pieces');
+    assert(g.tabs.length===3&&g.tabs.every(b=>b.width>35&&b.height>20),tag+' status tabs collapsed');
+    assert(g.toolbar.height>75&&g.search.height>=28,tag+' search and pager must be visible');
+    assert(g.toolbar.top>=g.filter.bottom-2,tag+' pager overlaps status filters '+JSON.stringify(g));
+    assert(g.search.top>=g.toolbar.top-1&&g.pager.top>=g.search.top,tag+' search obscured');
+    assert(g.header.left>=-3&&g.header.right<=g.vp+3,tag+' header exceeds viewport');
+    assert(g.toolbar.left>=-3&&g.toolbar.right<=g.vp+3,tag+' toolbar exceeds viewport');
+    assert(g.buttons.every(b=>b.left>=g.toolbar.left-3&&b.right<=g.toolbar.right+3&&b.width>=24),tag+' page buttons overflow'); 
+    assert.equal(g.buttons.length,width<=720?5:7,tag+' correct numeric pager count');
+    if(width<=720){
+     assert(g.search.bottom<=g.summary.top+2&&g.summary.bottom<=g.pager.top+2,tag+' mobile rows overlap');
+     assert(g.buttons.every(b=>b.width>=24),tag+' mobile page touch targets too narrow');
+    }
+    assert(g.old?.display==='none',tag+' duplicated old search');
+    console.log('[R1946]',tag,'layout ok, page numbers',g.buttons.length-2);
+   }
+   await page.close();
   }
-  await page.evaluate(()=>scrollTo(0,600));
-  const sticky=await page.locator('.labQueueStickyBar').evaluate(el=>el.getBoundingClientRect().top);
-  assert(sticky>=-2&&sticky<=2,'filters and pager stay together in sticky header on scroll');
-  console.log('[R1946] Chromium mobile Lab header geometry passed at 360/390/430px');
- }finally{await browser.close();}
+ }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

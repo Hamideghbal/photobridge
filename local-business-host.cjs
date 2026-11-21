@@ -3,6 +3,8 @@ const {LocalBusiness,canonical}=require('./local-business.cjs');
 function localActive(store){return!!store.get('localBusinessActive:'+store.get('labId'));}
 async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request,stagePrefetch=null}){
  if(!store.get('auth')||!store.get('labId'))return false;
+ /* R1964_NATIVE_PAGED_API_PASSTHROUGH: server pages must never be rewritten as legacy local orders. */
+ if(require('./r1964-native-paged-route.cjs').isPagedOrderRequest(req,url))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
  require('./document-policy.cjs').applyPolicy(store);
  const engine=new LocalBusiness(store),raw=url.pathname,p=canonical(req.url);let b={};try{b=bytes?.length?JSON.parse(bytes.toString()):{}}catch{}

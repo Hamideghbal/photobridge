@@ -103,11 +103,14 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(connectionOffline())throw Error('internet_offline');
             const up=await request(req.url,{method:req.method});
             const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/octet-stream';
-            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6)store.cache(req.url,up.status,mime,body.toString('base64'));
+            /* R1964: reject a fake one-page success instead of clearing counts. */
+            if(require('./r1964-native-paged-route.cjs').isPagedOrderRequest(req,url)&&up.ok&&!require('./r1964-native-paged-route.cjs').validServerPage(body))return json(res,502,{error:'paged_orders_contract_invalid',message:'صفحه‌بندی آنلاین معتبر نیست؛ نمایش پشتیبان فعال می‌شود.'});
+            if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6&&!require('./r1964-native-paged-route.cjs').isPagedOrderRequest(req,url))store.cache(req.url,up.status,mime,body.toString('base64'));/* R1964_NONCACHE_PAGES */
             res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{
-            const cached=store.cached(req.url);
+            if(require('./r1964-native-paged-route.cjs').isPagedOrderRequest(req,url))return json(res,503,{error:'paged_orders_offline',message:'صفحه‌بندی آنلاین در دسترس نیست؛ نمایش پشتیبان فعال می‌شود.'});
+            const cached=store.cached(req.url);/* R1964_CACHED_FALLBACK_LEGACY_ONLY */
             if(cached){res.writeHead(cached.status,{'Content-Type':cached.mime,'Cache-Control':'no-store','X-PhotoBridge-Offline':'1'});return res.end(Buffer.from(cached.body,'base64'))}
             return json(res,503,{error:'online_connection_required',message:'این بخش هنوز در این دستگاه ذخیره نشده است.'});
           }

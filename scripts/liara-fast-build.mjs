@@ -1454,3 +1454,5 @@ runR1314(process.execPath,['--test','apps/lab-desktop/test/ui-active-snapshot.te
 runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{stdio:'inherit'});
 // R1945: a missing SQL column must never blank the Lab; test working legacy fallback.
 runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});
+// R1957: audit final website-vs-Windows UI after all late product, CRM and native patches.
+await deployStep('./audit-r1957-web-native-parity.mjs');

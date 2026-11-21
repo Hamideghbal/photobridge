@@ -81,6 +81,7 @@ try {
  }
  # Find the original installed 1.0.120 runtime. Newer installed versions
  # are deliberately excluded from this recovery build.
+ $installedRoots=@()
  if (!$env:PB_120_UI_DIR) {
   $folders=@()
   foreach ($parent in @($env:LOCALAPPDATA,$env:ProgramFiles,${env:ProgramFiles(x86)})) {
@@ -95,12 +96,12 @@ try {
    $runtime=Join-Path $folder 'resources\runtime'
    if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $runtime -PathType Container) -and
     (Get-Item -LiteralPath $exe).VersionInfo.ProductVersion -match '^1\.0\.120(?:\.0)?$') {
-    $env:PB_120_UI_DIR=$runtime
-    break
+    $installedRoots+=$runtime
    }
   }
  }
- Invoke-Checked $node @('select-original-ui.cjs')
+ . (Join-Path $PSScriptRoot 'find-original-ui.ps1')
+ Find-OriginalUi $node $installedRoots
  $env:PB_LAB_PINNED_DIRECTORY=Join-Path $PSScriptRoot 'original-ui-input'
  $env:PB_LAB_PIN_FILE=Join-Path $PSScriptRoot 'original-ui-input\pin.json'
  $version=(Get-Content -LiteralPath (Join-Path $PSScriptRoot 'BUILD-VERSION.txt') -Raw).Trim()

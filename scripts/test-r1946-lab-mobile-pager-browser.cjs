@@ -71,6 +71,7 @@ const box=el=>{if(!el)return null;const r=el.getBoundingClientRect(),s=getComput
     const tag=root+':'+width;
     assert(g.header&&g.filter&&g.toolbar&&g.search&&g.summary&&g.pager,tag+' missing header pieces');
     assert(g.tabs.length===3&&g.tabs.every(b=>b.width>35&&b.height>20),tag+' status tabs collapsed');
+    if(!(g.toolbar.height>75&&g.search.height>=28))console.error('[R1946_DESKTOP_GEOMETRY]',tag,JSON.stringify(g));
     assert(g.toolbar.height>75&&g.search.height>=28,tag+' search and pager must be visible');
     assert(g.toolbar.top>=g.filter.bottom-2,tag+' pager overlaps status filters '+JSON.stringify(g));
     assert(g.search.top>=g.toolbar.top-1&&g.pager.top>=g.search.top,tag+' search obscured');

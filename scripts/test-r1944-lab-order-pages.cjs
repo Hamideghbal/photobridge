@@ -71,7 +71,7 @@ test('R1944: web and native show ten-row live server pages and sticky controls',
   assert(ui.includes('Math.min(r1944Pages,5)'),root+' missing numeric pagination');
   assert(html.includes('id="pb1944-lab-pager"'),root+' missing fixed bar CSS');
   assert(html.includes('position:sticky;top:0'),root+' toolbar must not scroll away');
-  assert(html.includes('labStage=r1944'),root+' stale bundle URL');
+  assert(html.includes('labStage=r1945'),root+' stale bundle URL');
   assert(!ui.includes('lab_order_queue_hidden'),root+' should not contain old delete feature');
  }
 });

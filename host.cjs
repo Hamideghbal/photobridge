@@ -66,7 +66,11 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(!exempt(req.method,req.url)){const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));if(!access.allowed)return json(res,403,access)}
         // LAB104: run only after account/authorization gates; never enqueue a receipt.
         if(await require('./receipt-forward.cjs').forwardReceipt({req,res,url,bytes,contentType,store,request,offline:connectionOffline,json,enabled:require('./package.json').version==='1.0.104'}))return;
-        if(await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
+        const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
+        // The legacy local list has no page/count fields. Its renderer fallback
+        // computes both from the local orders, including orders made offline.
+        if(pagedOrders&&connectionOffline())return json(res,503,{error:'online_connection_required'});
+        if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
         const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
@@ -98,20 +102,34 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         }
         /* R1472 confirmed financial writes */if(await require('./live-finance.cjs').forwardLiveFinance({req,res,bytes,contentType,store,request,json,sync}))return;
         if(['GET','HEAD'].includes(req.method)){
+          let cacheUrl=req.url;
+          if(pagedOrders&&url.searchParams.has('pbNativeLiveStatus')){
+            const cacheRoute=new URL(req.url,origin);
+            cacheRoute.searchParams.delete('pbNativeLiveStatus');
+            cacheUrl=cacheRoute.pathname+cacheRoute.search;
+          }
           try{
             if(connectionOffline())throw Error('internet_offline');
             const up=await request(req.url,{method:req.method});
             const body=Buffer.from(await up.arrayBuffer()),mime=up.headers.get('content-type')||'application/octet-stream';
+            if(pagedOrders&&req.method==='GET'&&up.ok){
+              let page;
+              try{page=JSON.parse(body.toString());}catch{}
+              if(!Array.isArray(page?.orders)||!Number.isSafeInteger(page.total)||!Number.isSafeInteger(page.pages)||!page.counts){
+                return json(res,502,{error:'invalid_paged_orders'});
+              }
+            }
             if(up.ok&&req.method==='GET'&&mime.includes('application/json')&&body.length<12e6){
-              const cached=store.cached?.(req.url),encoded=body.toString('base64');
+              const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
               if(!cached||cached.status!==up.status||cached.mime!==mime||cached.body!==encoded){
-                store.cache(req.url,up.status,mime,encoded);
+                store.cache(cacheUrl,up.status,mime,encoded);
               }
             }
             res.writeHead(up.status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{
-            const cached=store.cached(req.url);
+            if(pagedOrders)return json(res,503,{error:'online_connection_required'});
+            const cached=store.cached(cacheUrl);
             if(cached){res.writeHead(cached.status,{'Content-Type':cached.mime,'Cache-Control':'no-store','X-PhotoBridge-Offline':'1'});return res.end(Buffer.from(cached.body,'base64'))}
             return json(res,503,{error:'online_connection_required',message:'این بخش هنوز در این دستگاه ذخیره نشده است.'});
           }

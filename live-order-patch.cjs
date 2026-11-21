@@ -15,7 +15,10 @@ function patchOrderLive(source){
   if(!guarded.includes('paged=1&mode=')||!guarded.includes('r1944SetCounts')||
       !guarded.includes('r1944SetPages')||!guarded.includes('r1944SetTotal'))
    throw Error('native_paged_order_contract_missing');
-  return upgradeFinanceLive(patchFinanceLive(guarded))+
+  // Hide only the buttons. Keep the search and server total in the toolbar.
+  const withPager=guarded.replace(/\be\.jsxs\("div",\{className:"r1944Pager",children:\[/g,
+   'r1944Total>=10&&$&');
+  return upgradeFinanceLive(patchFinanceLive(withPager))+
    '\n/* PB1961 preserve native Lab server pagination */\n'+
    require('./lab-realtime.cjs').subscribeLabEvents.toString().replace('function subscribeLabEvents','function pb1468SubscribeLabEvents')+
    '\n'+browserEvents.toString().replace('function browserEvents','function pb1468BrowserEvents');

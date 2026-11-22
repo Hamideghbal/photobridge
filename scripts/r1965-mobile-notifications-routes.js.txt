@@ -1,0 +1,23 @@
+// R1965: the manager's private production log is visible on Android/iOS,
+// never as a second notification list in the Windows laboratory app.
+if (req.method === 'GET' && url.pathname === '/api/lab/notifications') {
+    const limit = Math.max(20, Math.min(200, Math.round(Number(url.searchParams.get('limit') || 80) || 80)));
+    const managerMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(String(req.headers['user-agent'] || ''));
+    const mobileFilter = "($2::boolean OR (event_key NOT LIKE 'lab_manager_%' AND COALESCE(metadata->>'pbManagerMobileOnly','false') <> 'true'))";
+    const [items, unread] = await Promise.all([
+        pool.query(`SELECT id,event_key,title,message,metadata,read_at,created_at FROM system_notifications WHERE recipient_lab_id=$1 AND ${mobileFilter} ORDER BY created_at DESC LIMIT $3`, [labId, managerMobile, limit]),
+        pool.query(`SELECT count(*)::int count FROM system_notifications WHERE recipient_lab_id=$1 AND read_at IS NULL AND ${mobileFilter}`, [labId, managerMobile])
+    ]);
+    return sendJson(res, 200, { notifications: items.rows, unread: Number(unread.rows[0]?.count || 0) });
+}
+if (req.method === 'POST' && url.pathname === '/api/lab/notifications/read') {
+    const b = await bodyJson(req), ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter(x => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+    const managerMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(String(req.headers['user-agent'] || ''));
+    const mobileFilter = "($2::boolean OR (event_key NOT LIKE 'lab_manager_%' AND COALESCE(metadata->>'pbManagerMobileOnly','false') <> 'true'))";
+    if (b.all === true)
+        await pool.query(`UPDATE system_notifications SET read_at=COALESCE(read_at,now()) WHERE recipient_lab_id=$1 AND read_at IS NULL AND ${mobileFilter}`, [labId, managerMobile]);
+    else if (ids.length)
+        await pool.query(`UPDATE system_notifications SET read_at=COALESCE(read_at,now()) WHERE recipient_lab_id=$1 AND id=ANY($2::uuid[]) AND ($3::boolean OR (event_key NOT LIKE 'lab_manager_%' AND COALESCE(metadata->>'pbManagerMobileOnly','false') <> 'true'))`, [labId, ids, managerMobile]);
+    const unread = await pool.query(`SELECT count(*)::int count FROM system_notifications WHERE recipient_lab_id=$1 AND read_at IS NULL AND ${mobileFilter}`, [labId, managerMobile]);
+    return sendJson(res, 200, { ok: true, unread: Number(unread.rows[0]?.count || 0) });
+}

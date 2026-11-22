@@ -6,11 +6,14 @@ const read=path=>fs.readFileSync(path,'utf8');
 
 test('R1966: photographer desktop main row has independent Customers and Calendar tabs',()=>{
  const js=read('dist/web/photobridge-r1126-desktop-navigation.js');
- assert(js.includes("['crm','مشتریان','/customer-crm.html?portal=photographer'],['calendar','تقویم مشتریان'"));
+ assert(/\\['crm','مشتریان','\\/customer-crm\\.html\\?portal=photographer[^']*'\\],\\['calendar','تقویم مشتریان'/.test(js));
  assert(js.includes("if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}"));
  assert(js.includes("['crm','calendar'].includes(active)?[]:"));
  assert(js.includes("key==='calendar'?'تقویم مشتریان'"));
- assert(js.includes("pbCrmDesktopTab='+key+(key==='calendar'?'&view=calendar':'')"));
+ assert(js.includes("u.searchParams.set('pbCrmDesktopTab',key)"));
+ assert(js.includes("u.searchParams.set('view','calendar')"));
+ assert(js.includes("window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer')"));
+ assert(js.includes("if((key==='crm'||key==='calendar')&&u.pathname!=='/customer-crm.html')"));
  assert.equal(js.split("['store','print','crm','calendar'].includes(panel)").length-1,2);
  assert(js.includes("panel.dataset.pb1966CalendarSeen"),'revisiting the Calendar refreshes its appointments');
  new Function(js);

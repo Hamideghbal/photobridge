@@ -95,7 +95,7 @@ test('changing only the page poll timestamp reuses the cache and preserves disti
   assert.equal(response.status,503,'allow the renderer to use its legacy offline list with locally created orders');
   assert.equal((await response.json()).error,'online_connection_required');
  }finally{
-  server.closeAllConnections();
+  server.closeAllConnections?.();
   await new Promise(resolve=>server.close(resolve));
   store.db.close();
  }
@@ -129,7 +129,7 @@ test('overlapping identical page requests share one upstream read while another 
   const bodies=await Promise.all([one,two,three].map(async response=>(await response).json()));
   assert.deepEqual(bodies.map(body=>body.orders[0].id),['flow','flow','ready']);
  }finally{
-  release();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.db.close();
+  release();server.closeAllConnections?.();await new Promise(resolve=>server.close(resolve));store.db.close();
  }
 });
 
@@ -160,7 +160,7 @@ test('a prepared first page responds immediately while live and other-account re
   assert.equal((await page('print',true)).orders[0].id,'second-print-4');
   assert.deepEqual(requests.map(r=>r.live),[false,false,true,true]);
  }finally{
-  server.closeAllConnections();
+  server.closeAllConnections?.();
   await new Promise(resolve=>server.close(resolve));
   store.db.close();
  }

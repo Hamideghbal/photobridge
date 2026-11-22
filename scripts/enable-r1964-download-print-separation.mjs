@@ -114,6 +114,29 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(a<0||b<0)throw Error('[R1964] album enable handler changed '+root);
   return part.slice(0,a)+albumEnabled+part.slice(b);
  },root+' album button gate');
+
+ // Both the order-card timeline and the detail drop-down must expose separate
+ // controls. Fixing only the status predicates would leave the merged control
+ // unable to start printing after a successful download.
+ ui=one(ui,'const mn=o==="album"?[{key:"download_print",label:"دانلود / چاپ"},',
+   'const mn=o==="album"?[{key:"download",label:"دانلود"},{key:"print",label:"شروع چاپ"},',
+   root+' album timeline buttons');
+ ui=one(ui,
+   'value:["files_received","printing"].includes(mr(y.order))?"download_print":mr(y.order)',
+   'value:["binding","ready","completed"].includes(mr(y.order))?mr(y.order):rn(y.order,"print")?"print":"download"',
+   root+' album detail selector value');
+ ui=region(ui,'ja=async le=>',',Va=le=>',part=>{
+   const a=part.indexOf('if(le==="download_print")');
+   const b=a<0?-1:part.indexOf(';const xt={binding:2,ready:3,completed:4}',a);
+   if(a<0||b<0)throw Error('[R1964] album detail selector action changed '+root);
+   const newAction='if(le==="download")return Vn(y.order,{force:pb1450Retry(y.order,yc(y.order.id))});'+
+    'if(le==="print"){if(!rn(y.order,"download")||rn(y.order,"print"))return;'+
+    'pe(!0);try{await Cn(y.order,"printing");await Tt({...y.order,album_stage:"printing"},!1).catch(()=>{})}finally{pe(!1)}return;}';
+   return part.slice(0,a)+newAction+part.slice(b);
+ },root+' album detail selector manual click');
+ ui=one(ui,'مسیر آلبوم مستقل است: دانلود / چاپ، صحافی، آماده تحویل و تحویل‌شده.',
+   'مسیر آلبوم مستقل است: دانلود، شروع چاپ دستی، صحافی، آماده تحویل و تحویل‌شده.',
+   root+' album help');
  ui+='\n'+marker+'\n';
  write(file,ui);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});

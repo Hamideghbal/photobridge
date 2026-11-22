@@ -20,32 +20,9 @@ if(!s.includes(mark)){
  // Mobile lab notification bell sees the manager log. The Windows Lab bell
  // (including historical r1962 entries) must not show these extra alerts.
  section("if (req.method === 'GET' && url.pathname === '/api/lab/notifications') {",
-         "if (req.method === 'GET' && url.pathname === '/api/lab/events') {",part=>{
-  const oldGet="const [items, unread] = await Promise.all([";
-  const prefix="const managerMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(String(req.headers['user-agent']||''));\n            "+oldGet;
-  if(part.split(oldGet).length!==2)throw Error('[R1965] notification mobile flag anchor');
-  part=part.replace(oldGet,prefix);
-  const only=" AND ($2::boolean OR (event_key NOT LIKE 'lab_manager_%' AND COALESCE(metadata->>'pbManagerMobileOnly','false') <> 'true'))";
-  const listOld="WHERE recipient_lab_id=$1 ORDER BY created_at DESC LIMIT $2";
-  const listNew="WHERE recipient_lab_id=$1"+only+" ORDER BY created_at DESC LIMIT $3";
-  if(part.split(listOld).length!==2)throw Error('[R1965] lab notification list SQL changed');
-  part=part.replace(listOld,listNew);
-  part=part.replace("FROM system_notifications WHERE recipient_lab_id=$1 AND read_at IS NULL",
-                    "FROM system_notifications WHERE recipient_lab_id=$1 AND read_at IS NULL"+only);
-  part=part.replace("[labId, limit]","[labId, managerMobile]");
-  // Previous replacement changes LIMIT to $3; keep the limit parameter.
-  part=part.replace("ORDER BY created_at DESC LIMIT $3\`, [labId, managerMobile])",
-                    "ORDER BY created_at DESC LIMIT $3\`, [labId, managerMobile, limit])");
-  // Count SELECT and both read paths need their own mobile flag argument.
-  part=part.replaceAll("WHERE recipient_lab_id=$1 AND read_at IS NULL\`, [labId])",
-                       "WHERE recipient_lab_id=$1 AND read_at IS NULL"+only+"\`, [labId, managerMobile])");
-  // A desktop 'read all' must not clear mobile-only manager events.
-  part=part.replace("WHERE recipient_lab_id=$1 AND read_at IS NULL\`, [labId]);",
-                    "WHERE recipient_lab_id=$1 AND read_at IS NULL"+only+"\`, [labId, managerMobile]);");
-  part=part.replace("WHERE recipient_lab_id=$1 AND id=ANY($2::uuid[])\`, [labId, ids])",
-                    "WHERE recipient_lab_id=$1 AND id=ANY($2::uuid[]) AND ($3::boolean OR (event_key NOT LIKE 'lab_manager_%' AND COALESCE(metadata->>'pbManagerMobileOnly','false') <> 'true'))\`, [labId, ids, managerMobile])");
-  return part;
- },'lab notification list and read');
+         "if (req.method === 'GET' && url.pathname === '/api/lab/events') {",
+         ()=>fs.readFileSync('scripts/r1965-mobile-notifications-routes.js.txt','utf8'),
+         'lab notification list and read');
  // A real verified download is reported only after the transaction and file count
  // have succeeded — not at download start, nor from an arbitrary progress animation.
  section("const labDownloadReceipt=url.pathname.match(",

@@ -66,7 +66,7 @@ const saveBegin=src.indexOf(savePrefix);
 const saveEnd=saveBegin<0?-1:src.indexOf(', extras =',saveBegin+savePrefix.length);
 if(saveBegin<0||saveEnd<=saveBegin||saveEnd-saveBegin>1000)throw Error('[R1961] lab album-settings size gate not uniquely found');
 const priorFilter=src.slice(saveBegin+savePrefix.length,saveEnd);
-if(!priorFilter.includes('bindingPrice')&&!priorFilter.includes('albumCombinedRates'))throw Error('[R1961] expected legacy size-price gate missing');
+if(!priorFilter.includes('albumBase.sizes')||!priorFilter.includes('.filter('))throw Error('[R1961] unexpected lab album size source');
 src=src.slice(0,saveBegin+savePrefix.length)+'(albumBase.sizes || []).filter((x) => x.active !== false)'+src.slice(saveEnd);
 // R1805 already broadened the SQL map; preserve its existing active-only contract.
 const existingDb='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label';

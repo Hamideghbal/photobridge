@@ -33,12 +33,28 @@ s=once(s,"await audit(a.userId, labId, 'album.download_complete', 'order', order
   "            void pb1962LabManagerNotify(labId,'album_download_verified',{orderId:order.id,number:order.number,mode:'album',updatedAt:order.updated_at});",'verified album download');
 s=once(s,"publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, invoiceId: invoice.id",
   "publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, orderNumber:order.number, invoiceId: invoice.id",'prepaid invoice number');
+// Scope deliveries to the *current* active lab admin; revoked devices receive no pushes.
+s=once(s,"const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';",
+  "const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';\n"+
+  "        const subWhere=kind==='lab'?\"recipient_lab_id=$1 AND EXISTS (SELECT 1 FROM lab_memberships m JOIN users u ON u.id=m.user_id WHERE m.lab_id=$1 AND m.user_id=web_push_subscriptions.recipient_user_id AND m.role='lab_admin' AND m.active=true AND u.active=true)\":\"recipient_user_id=$1 AND recipient_lab_id IS NULL\";",
+  'manager active membership filter');
+s=once(s,'FROM web_push_subscriptions WHERE ${col}=$1 ORDER BY updated_at DESC LIMIT 12',
+  'FROM web_push_subscriptions WHERE ${subWhere} ORDER BY updated_at DESC LIMIT 12',
+  'recipient scope SQL');
+s=once(s,
+  'VALUES($1,$2,$3,$4,NULL,$5,$6,now(),now()) ON CONFLICT(endpoint) DO UPDATE SET p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth,recipient_lab_id=EXCLUDED.recipient_lab_id,recipient_user_id=NULL,device_label=EXCLUDED.device_label',
+  'VALUES($1,$2,$3,$4,$7,$5,$6,now(),now()) ON CONFLICT(endpoint) DO UPDATE SET p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth,recipient_lab_id=EXCLUDED.recipient_lab_id,recipient_user_id=EXCLUDED.recipient_user_id,device_label=EXCLUDED.device_label',
+  'lab owner ID binding');
+s=once(s,'[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null]);',
+  '[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null, a.userId]);',
+  'bound subscription parameters');
 fs.writeFileSync(path,s);
 const pushPath='dist/web/photobridge-push-v728.js';
 let push=fs.readFileSync(pushPath,'utf8');
 push=once(push,"function showPrompt(){if(!supported()||Notification.permission!=='default'||document.getElementById(PROMPT_ID))return;ensureStyle();const el=document.createElement('div');el.id=PROMPT_ID;",
  "function showPrompt(){if(!supported()||Notification.permission!=='default'||document.getElementById(PROMPT_ID))return;ensureStyle();const el=document.createElement('div');el.id=PROMPT_ID;"+
  "const promptMessage=role()==='lab'?'مدیر لابراتوار: سفارش جدید، دانلود کامل، صدور فاکتور و تغییر وضعیت سفارش‌ها را روی این موبایل دریافت کنید.':'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.';",'mobile manager opt-in');
+push=once(push,"const LAST_SYNC='photobridge:push:last-sync:v783';","const LAST_SYNC='photobridge:push:last-sync:r1962';",'revalidate manager push account scope');
 push=once(push,'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.</small>','$'+'{promptMessage}</small>','mobile prompt interpolation');
 fs.writeFileSync(pushPath,push);
 // PB_PERF_FIX built precompressed assets before this late patch; refresh both

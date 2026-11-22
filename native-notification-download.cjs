@@ -64,9 +64,11 @@ function connectNotificationDownload(reuseDetail = false) {
         trace('manifest_not_ready');
       }
       if (!order) return;
+      trace('manifest_ready');
       // Share the existing automatic worker lock. A second path must never
       // acknowledge or invoice the same order while that worker is active.
       const waited = pb1568Work.running;
+      if(waited)trace('worker_queue_wait');
       while (pb1568Work.running && session === epoch && Date.now() - at < 120000) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
@@ -74,6 +76,7 @@ function connectNotificationDownload(reuseDetail = false) {
           (pb1568Work.labId && String(pb1568Work.labId) !== lab)) return;
       pb1568Work.running = true;
       pb1568Work.labId = lab;
+      trace('worker_acquired');
       try {
         if (typeof pb1568State === 'function' && typeof pb1568Save === 'function') {
           const task = pb1568State(lab, id);
@@ -84,7 +87,11 @@ function connectNotificationDownload(reuseDetail = false) {
         }
         trace('worker_scheduled');
         let firstByte = false, initialBytes;
+        const seenStages = new Set();
         const progress = value => {
+          if(value?.phase==='scanning'&&!seenStages.has('destination_scan')){seenStages.add('destination_scan');trace('destination_scan');}
+          if(value?.phase==='downloading'&&!seenStages.has('response_headers')){seenStages.add('response_headers');trace('response_headers');}
+          if(value?.phase==='complete')trace('disk_verified');
           if (value?.phase !== 'downloading') return;
           const bytes = Number(value.loadedBytes || 0);
           if (initialBytes === undefined) initialBytes = bytes;

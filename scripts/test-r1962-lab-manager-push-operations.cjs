@@ -87,6 +87,8 @@ test('R1962 mobile prompt uses a user gesture; existing PWA worker and sound rem
  assert(push.includes("Notification.requestPermission()"));
  assert(push.includes('PB782EnableNotifications'));
  assert(push.includes('last-sync:r1962'));
+ assert(push.includes('photobridge-auth-session-changed'));
+ assert(push.includes("document.querySelector('#root .unifiedLoginPage')"));
  assert.match(html,/photobridge-push-v728\.js\?[^"']*labManager=r1962/);
  const sw=fs.readFileSync('dist/web/photobridge-sw-v710.js','utf8');
  assert(sw.includes("self.addEventListener('push'"));

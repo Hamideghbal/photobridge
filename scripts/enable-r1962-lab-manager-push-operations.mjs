@@ -1,6 +1,7 @@
 /* R1962 — wire committed lab orders from Windows/web to existing mobile Push. */
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import zlib from 'node:zlib';
 const path='dist/api/server.js';
 let s=fs.readFileSync(path,'utf8');
 const once=(src,a,b,label)=>{if(src.split(a).length!==2)throw Error('[R1962] '+label+' anchor changed');return src.replace(a,b)};
@@ -40,6 +41,17 @@ push=once(push,"function showPrompt(){if(!supported()||Notification.permission!=
  "const promptMessage=role()==='lab'?'مدیر لابراتوار: سفارش جدید، دانلود کامل، صدور فاکتور و تغییر وضعیت سفارش‌ها را روی این موبایل دریافت کنید.':'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.';",'mobile manager opt-in');
 push=once(push,'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.</small>','$'+'{promptMessage}</small>','mobile prompt interpolation');
 fs.writeFileSync(pushPath,push);
+// PB_PERF_FIX built precompressed assets before this late patch; refresh both
+// encodings or Android Chrome would silently execute the old push prompt.
+const pushBytes=fs.readFileSync(pushPath);
+for(const [suffix,compress,expand] of [
+ ['.br',b=>zlib.brotliCompressSync(b,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:5}}),zlib.brotliDecompressSync],
+ ['.gz',b=>zlib.gzipSync(b,{level:6}),zlib.gunzipSync]
+]){
+ if(!fs.existsSync(pushPath+suffix))continue;
+ fs.writeFileSync(pushPath+suffix,compress(pushBytes));
+ if(!expand(fs.readFileSync(pushPath+suffix)).equals(pushBytes))throw Error('[R1962] stale compressed mobile Push asset '+suffix);
+}
 const index='dist/web/index.html';
 let html=fs.readFileSync(index,'utf8');
 const matches=[...html.matchAll(/photobridge-push-v728\.js\?[^"'\s>]+/g)];

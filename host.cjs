@@ -86,10 +86,18 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
           res.once('finish',()=>{orderGeneration++;});
         }
         const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
+        // A failed background request must not stall the next order's media or
+        // the reads needed to start its notification-triggered download.
+        const foregroundDownload=['GET','HEAD'].includes(req.method)&&(
+          /^\/api\/lab\/order-files\/[0-9a-f-]{36}\/(?:content|preview|download)$/i.test(url.pathname)||
+          /^\/api\/lab\/orders\/[0-9a-f-]{36}$/i.test(url.pathname)||
+          url.pathname==='/api/lab/automation'
+        );
+        const readOffline=foregroundDownload?isOnline()===false:connectionOffline();
         // The legacy local list has no page/count fields. Its renderer fallback
         // computes both from the local orders, including orders made offline.
         if(pagedOrders&&isOnline()===false)return json(res,503,{error:'online_connection_required'});
-        if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
+        if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:readOffline,json,pdfRenderer,request})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
         const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
@@ -128,7 +136,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             cacheUrl=cacheRoute.pathname+cacheRoute.search;
           }
           try{
-            if(pagedOrders?isOnline()===false:connectionOffline())throw Error('internet_offline');
+            if(pagedOrders?isOnline()===false:readOffline)throw Error('internet_offline');
             const pagedRead=pagedOrders&&req.method==='GET';
             const scope=pagedRead?pageScope():null,generation=orderGeneration;
             let result;
@@ -155,11 +163,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
                     if(value!==null)headers[name]=value;
                   }
                 }
+                const body=Readable.from(up.body,{objectMode:false});
                 res.writeHead(up.status,headers);
                 res.flushHeaders();
                 const abort=()=>controller.abort();
                 res.once('close',abort);
-                try{await pipeline(Readable.fromWeb(up.body),res);}
+                try{await pipeline(body,res);}
                 catch(error){if(!res.destroyed)res.destroy(error);}
                 finally{res.off('close',abort);}
                 return;

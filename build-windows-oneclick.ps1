@@ -99,7 +99,7 @@ try {
   if ($LASTEXITCODE -ne 0) {throw ((Split-Path -Leaf $exe)+' exited with code '+$LASTEXITCODE+'.')}
  }
  . (Join-Path $PSScriptRoot 'find-original-ui.ps1')
- $installedRoots=@(Get-Installed120Roots $node)
+ $installedRoots=@(Get-InstalledUiRoots $node)
  Find-OriginalUi $node $installedRoots
  $env:PB_LAB_PINNED_DIRECTORY=Join-Path $PSScriptRoot 'original-ui-input'
  $env:PB_LAB_PIN_FILE=Join-Path $PSScriptRoot 'original-ui-input\pin.json'

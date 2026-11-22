@@ -16,7 +16,7 @@ async function withHost(upstream,run){
   await new Promise(resolve=>host.listen(0,'127.0.0.1',resolve));
   const origin='http://127.0.0.1:'+host.address().port;
   const get=(path,options={})=>fetch(origin+path,{
-    ...options,headers:{cookie:'desktop=r1962-probe',...options.headers}
+    ...options,headers:{connection:'close',cookie:'desktop=r1962-probe',...options.headers}
   });
   try{return await run(get);}
   finally{
@@ -26,15 +26,17 @@ async function withHost(upstream,run){
   }
 }
 
-test('binary download delivers first byte before the upstream stream ends and preserves original headers',async()=>{
+for (const query of ['', '?download=1']) {
+test('photo '+(query?'download':'preview')+' delivers first byte before upstream completion',async()=>{
+  const path='/api/lab/order-files/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/content'+query;
   let finish=()=>{};
   const body=new ReadableStream({start(controller){
     controller.enqueue(Uint8Array.of(1,2,3));
-    finish=()=>{controller.enqueue(Uint8Array.of(4,5));controller.close();};
+    finish=()=>{finish=()=>{};controller.enqueue(Uint8Array.of(4,5));controller.close();};
   }});
   try{
     await withHost(async route=>{
-      assert.equal(route,'/api/lab/photo-original');
+      assert.equal(route,path);
       return new Response(body,{status:200,headers:{
         'Content-Type':'application/octet-stream',
         'Content-Length':'5',
@@ -43,7 +45,7 @@ test('binary download delivers first byte before the upstream stream ends and pr
       }});
     },async get=>{
       const response=await Promise.race([
-        get('/api/lab/photo-original'),
+        get(path),
         new Promise((_,reject)=>setTimeout(()=>reject(Error('headers_waited_for_full_download')),2500))
       ]);
       assert.equal(response.status,200);
@@ -65,6 +67,8 @@ test('binary download delivers first byte before the upstream stream ends and pr
   }finally{finish();}
 });
 
+}
+
 test('a failed unrelated endpoint never imposes a fifteen-second wait on a healthy paged orders read',async()=>{
   const calls=[];
   await withHost(async route=>{
@@ -81,5 +85,23 @@ test('a failed unrelated endpoint never imposes a fifteen-second wait on a healt
     assert.equal((await result.json()).orders.length,1);
     assert(Date.now()-started<5000,'paged orders were delayed by an unrelated upstream failure');
     assert(calls.some(url=>url.includes('paged=1')));
+  });
+});
+
+
+test('an unrelated upstream failure does not delay notification detail, settings or photo content',async()=>{
+  const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const paths=['/api/lab/orders/'+id,'/api/lab/automation','/api/lab/order-files/'+id+'/content?download=1'];
+  const calls=[];
+  await withHost(async route=>{
+    calls.push(route);
+    if(route==='/api/lab/background')throw Error('upstream_timeout');
+    return Response.json({ok:true});
+  },async get=>{
+    for(const path of paths){
+      assert.equal((await get('/api/lab/background')).status,503);
+      assert.equal((await get(path)).status,200,path);
+      assert.equal(calls.at(-1),path);
+    }
   });
 });

@@ -1,15 +1,15 @@
-function Get-Exact120Runtime([string]$Exe) {
+function Get-InstalledRuntime([string]$Exe) {
  if (!$Exe -or !(Test-Path -LiteralPath $Exe -PathType Leaf)) {return}
  $file=Get-Item -LiteralPath $Exe
  if ($file.Name -ne 'PhotoBridge Lab.exe') {return}
- if ($file.VersionInfo.ProductVersion -notmatch '^1\.0\.120(?:\.0)?$' -and
-     $file.VersionInfo.FileVersion -notmatch '^1\.0\.120(?:\.0)?$') {return}
+ if ($file.VersionInfo.ProductVersion -notmatch '^1\.0\.(?:120|134)(?:\.0)?$' -and
+     $file.VersionInfo.FileVersion -notmatch '^1\.0\.(?:120|134)(?:\.0)?$') {return}
  $runtime=Join-Path $file.DirectoryName 'resources/runtime'
  if ((Test-Path -LiteralPath (Join-Path $runtime '.pb-lab-bundle-manifest.json') -PathType Leaf) -or
      (Test-Path -LiteralPath (Join-Path $runtime 'manifest.json') -PathType Leaf)) {$runtime}
 }
 
-function Get-Installed120Roots([string]$Node) {
+function Get-InstalledUiRoots([string]$Node) {
  $executables=@(Get-Process -Name 'PhotoBridge Lab' -ErrorAction SilentlyContinue | ForEach-Object {$_.Path})
  $folders=@()
  foreach ($parent in @($env:LOCALAPPDATA,$env:ProgramFiles,${env:ProgramFiles(x86)})) {
@@ -17,7 +17,7 @@ function Get-Installed120Roots([string]$Node) {
  }
  $uninstall=@('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')
  $folders+=@(Get-ItemProperty -Path $uninstall -ErrorAction SilentlyContinue |
-  Where-Object {$_.DisplayName -like 'PhotoBridge Lab*' -and $_.DisplayVersion -eq '1.0.120'} |
+  Where-Object {$_.DisplayName -like 'PhotoBridge Lab*' -and $_.DisplayVersion -in @('1.0.120','1.0.134')} |
   ForEach-Object {$_.InstallLocation} | Where-Object {$_})
  foreach ($folder in $folders) {$executables+=Join-Path $folder 'PhotoBridge Lab.exe'}
  if ($env:OS -eq 'Windows_NT') {
@@ -31,16 +31,16 @@ function Get-Installed120Roots([string]$Node) {
    }
   } catch {Write-Host 'Windows shortcuts could not be inspected.'}
  }
- # Prefer the verified active UI from a profile last opened by version 120.
+ # Reuse active or known-good UI from the installed profile. Selection still verifies the manifest and capabilities.
  if ($env:APPDATA) {
   foreach ($name in @('PhotoBridge Lab','photobridge-lab-desktop')) {
    $database=Join-Path (Join-Path $env:APPDATA $name) 'lab.sqlite'
    if (Test-Path -LiteralPath $database -PathType Leaf) {
-    & $Node --disable-warning=ExperimentalWarning (Join-Path $PSScriptRoot 'read-original-ui-profile.cjs') $database
+    & $Node --disable-warning=ExperimentalWarning (Join-Path $PSScriptRoot 'read-original-ui-profile.cjs') $database '--compatible-cache'
    }
   }
  }
- foreach ($exe in ($executables | Where-Object {$_} | Select-Object -Unique)) {Get-Exact120Runtime $exe}
+ foreach ($exe in ($executables | Where-Object {$_} | Select-Object -Unique)) {Get-InstalledRuntime $exe}
 }
 
 function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
@@ -94,7 +94,7 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
     if ([IO.Path]::GetExtension($picker.FileName) -ieq '.zip') {
      if (Find-OriginalUiInZip $Node @($picker.FileName)) {return}
     }
-    $runtime=Get-Exact120Runtime $picker.FileName
+    $runtime=Get-InstalledRuntime $picker.FileName
     if ($runtime) {
      $env:PB_120_UI_DIR=$runtime
      & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
@@ -194,8 +194,8 @@ function Find-OriginalUiInInstaller([string]$Node,[string]$Installer) {
    Write-Host 'The inner Lab package version is different from 1.0.120.'
    return $false
   }
-  if (!$version -and $versionInfo.FileVersion -notmatch '^1\.0\.120(?:\.0)?$' -and
-     $versionInfo.ProductVersion -notmatch '^1\.0\.120(?:\.0)?$') {
+  if (!$version -and $versionInfo.FileVersion -notmatch '^1\.0\.(?:120|134)(?:\.0)?$' -and
+     $versionInfo.ProductVersion -notmatch '^1\.0\.(?:120|134)(?:\.0)?$') {
    Write-Host 'Could not verify the installer version as 1.0.120.'
    return $false
   }

@@ -80,10 +80,12 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
  }
  function decorateIntake(root=document){
    installIntakePicker();
-   for(const modal of root.querySelectorAll?.('.pb1137Intake')||[]){
-     if(modal.querySelector('form>h3'))modal.classList.add('pbLabDesktopIntakeDone');
-     modal.querySelectorAll('.pbLabIntakeActionBadge').forEach(badge=>badge.remove());
-   }
+   for(const modal of root.querySelectorAll?.('.pb1137Intake')||[])decorateIntakeModal(modal);
+ }
+ function decorateIntakeModal(modal){
+   installIntakePicker();
+   if(modal.querySelector('form>h3'))modal.classList.add('pbLabDesktopIntakeDone');
+   modal.querySelectorAll('.pbLabIntakeActionBadge').forEach(badge=>badge.remove());
  }
  document.addEventListener('click',event=>{
    installIntakePicker();const button=event.target?.closest?.('button');if(!button)return;
@@ -97,8 +99,17 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
    try{const root=await window.pbNativeFolder.choose();document.querySelectorAll('span,p,small').forEach(el=>{if(el.childElementCount===0&&/هنوز پوشه.*انتخاب نشده/.test(el.textContent))el.textContent=root.displayPath||root.name;if(el.childElementCount===0&&el.textContent.trim()==='download_device_registration_offline'){el.textContent='مسیر محلی فعال است.';el.style.color='#18875a';}});const panel=dialog('پوشهٔ محلی ذخیره شد');element('p',root.displayPath||root.name,panel);element('p','مسیر محلی فعال است و همین حالا برای ذخیرهٔ عکس‌ها قابل استفاده است. تنظیم سیستم اصلی سایت مستقل از کار محلی است.',panel);}
    catch(error){if(error.name!=='AbortError'){const panel=dialog('انتخاب پوشه انجام نشد');element('p',error.message,panel);}}
  },true);
- const intakeObserver=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes||[]){if(node.nodeType===1)decorateIntake(node)}decorateIntake();});
- intakeObserver.observe(document.documentElement,{childList:true,subtree:true});
+ new MutationObserver(records=>{
+   for(const record of records){
+     const modal=record.target.closest?.('.pb1137Intake');
+     if(modal){decorateIntakeModal(modal);continue;}
+     for(const node of record.addedNodes){
+       if(node.nodeType!==1)continue;
+       if(node.matches('.pb1137Intake'))decorateIntakeModal(node);
+       else if(node.querySelector('.pb1137Intake'))decorateIntake(node);
+     }
+   }
+ }).observe(document.body,{childList:true,subtree:true});
  decorateIntake();
  const indicator=document.createElement('button');
  indicator.id='pbLabDesktopConflictFlag';indicator.type='button';
@@ -109,7 +120,12 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
  let state=null,loading=false,busy=false,lastOrderRevision=null,orderRefreshTimer=null;
  function refreshOrders(){clearTimeout(orderRefreshTimer);orderRefreshTimer=setTimeout(()=>window.dispatchEvent(new CustomEvent('photobridge-lab-orders-changed')),100);}
  const statusRow=document.createElement('div');statusRow.id='pbLabDesktopStatusRow';const statusStyle=document.createElement('style');statusStyle.textContent='#pbLabDesktopStatusRow{display:flex;justify-content:center;align-items:center;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:2px 6px;position:relative}.pb1148SecondaryHeader:has(>#pbLabDesktopStatusRow){flex-wrap:wrap}.pbLabConnectionHeader{display:flex;align-items:center;justify-content:center;min-height:42px;width:100%;box-sizing:border-box;background:white;border-bottom:1px solid #edf0f7}';statusStyle.textContent+='html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;direction:ltr!important;position:relative}html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader>#pbLabDesktopStatusRow{grid-column:2;grid-row:1;justify-self:center;width:auto;padding:0}.pb1526QueueStages{grid-column:1;grid-row:1;display:flex;flex-direction:row-reverse;justify-self:start;align-items:center;gap:14px;direction:rtl}html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader>.pb1137Launch{grid-column:3;grid-row:1;justify-self:end}';document.head.append(statusStyle);const connection=document.createElement('span');statusRow.append(connection);connection.id='pbLabDesktopConnection';connection.setAttribute('role','status');connection.style.cssText='font:700 12px Vazirmatn,Tahoma;white-space:nowrap;padding:6px 10px;border-radius:9px;flex-shrink:0';
+ function setStyle(node,name,value,priority=''){
+  if(node.style.getPropertyValue(name)!==value||node.style.getPropertyPriority(name)!==priority)
+    node.style.setProperty(name,value,priority);
+ }
  function resetQueueLayout(header){
+  if(!header.classList.contains('pb1526QueueHeader'))return;
   header.classList.remove('pb1526QueueHeader');
   header.querySelectorAll(':scope>button[data-pb1173-index]').forEach(button=>{['grid-column','grid-row','justify-self','margin-left'].forEach(name=>button.style.removeProperty(name));});
  }
@@ -120,8 +136,8 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
    const buttons=[...pager.querySelectorAll(':scope>button')];
    const onePage=buttons.length>=2&&buttons.length<=3&&
      buttons[0].disabled&&buttons[buttons.length-1].disabled;
-   if(onePage)pager.style.setProperty('display','none','important');
-   else pager.style.removeProperty('display');
+   if(onePage){if(pager.style.getPropertyValue('display')!=='none')pager.style.setProperty('display','none','important');}
+   else if(pager.style.getPropertyValue('display'))pager.style.removeProperty('display');
   }
  }
  function showConnection(){
@@ -140,7 +156,13 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
     header.classList.add('pb1526QueueHeader');
     const stages=[...header.querySelectorAll(':scope>button[data-pb1173-index]')];let offset=0;
     const widths=new Map(stages.map(button=>[button,button.getBoundingClientRect().width]));
-    [...stages].reverse().forEach(button=>{button.style.setProperty('grid-column','1');button.style.setProperty('grid-row','1');button.style.setProperty('justify-self','start');button.style.setProperty('margin-left',String(offset)+'px','important');offset+=widths.get(button)+14;});
+    for(const button of stages.reverse()){
+      setStyle(button,'grid-column','1');
+      setStyle(button,'grid-row','1');
+      setStyle(button,'justify-self','start');
+      setStyle(button,'margin-left',String(offset)+'px','important');
+      offset+=widths.get(button)+14;
+    }
    }else resetQueueLayout(header);
   }else statusRow.remove();
   const connected=state?.internetConnected;
@@ -153,23 +175,34 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
  let connectionFrame=0;
  function scheduleConnection(){
   if(connectionFrame)return;
-  connectionFrame=requestAnimationFrame(()=>{connectionFrame=0;showConnection();});
+  connectionFrame=requestAnimationFrame(()=>{connectionFrame=0;showConnection();mountBackupSettings();});
  }
- new MutationObserver(scheduleConnection).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',scheduleConnection);window.addEventListener('resize',scheduleConnection);document.fonts?.ready.then(scheduleConnection);
+ // Order rows can change constantly without changing the native header chrome.
+ const chromeSelector='.labSingleHeader,.pb1148SecondaryHeader,.r1944Pager';
+ const chromeMounts=chromeSelector+',.settingsBody';
+ new MutationObserver(records=>{
+  if(records.some(record=>record.target.closest?.(chromeSelector)||
+       [...record.addedNodes,...record.removedNodes].some(node=>
+         node.nodeType===1&&(node.matches(chromeMounts)||node.querySelector(chromeMounts)))))
+    scheduleConnection();
+ }).observe(document.body,{childList:true,subtree:true});
+ window.addEventListener('popstate',scheduleConnection);
+ window.addEventListener('hashchange',scheduleConnection);
+ window.addEventListener('resize',scheduleConnection);
+ document.fonts?.ready.then(scheduleConnection);
  function mountBackupSettings(){if(window.pb1576BackupController)return;let button=document.getElementById('pbLabBackupSettingsButton');const target=state?.backupSupported&&/^\/lab\/settings(?:\/(?:general|hours|sms|windowsAlert|snappbox|automation))?\/?$/.test(location.pathname)&&!['#customers','#wallet'].some(hash=>location.hash.startsWith(hash))&&!new URLSearchParams(location.search).has('payment')&&!new URLSearchParams(location.search).has('walletPayment')?(document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader')||document.querySelector('.settingsBody')||document.querySelector('.labRoleWorkspace main')):null;if(!target){button?.remove();return;}if(!button){button=document.createElement('button');button.id='pbLabBackupSettingsButton';button.type='button';button.innerHTML='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z M8 12l3 3 5-6"/></svg><span>پشتیبان اطلاعات برنامه</span>';button.style.cssText='font:600 13px Vazirmatn,Tahoma;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;min-height:44px;border:1px solid #d5deef;border-radius:11px;background:#eef3ff;color:#315efb;cursor:pointer;margin:6px';button.onclick=()=>location.assign('/desktop/backups');}if(button.parentElement!==target){if(target.classList.contains('pb1148SecondaryHeader'))target.append(button);else target.prepend(button);}}
- new MutationObserver(mountBackupSettings).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',mountBackupSettings);
+
  const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';
  function refreshIndicator(){
    const n=(state?.conflicts?.length||0)+(state?.localOrders?.length||0)+(state?.pending||0)+(state?.localBusiness?.pending||0);
    indicator.hidden=!state?.signedIn||!n;
-   indicator.textContent='بررسی همگام‌سازی';
    indicator.title=n.toLocaleString('fa-IR')+' تغییر سفارش یا مالی نیازمند بررسی — Ctrl+Shift+S';
  }
  async function refresh(){
    if(loading)return state;loading=true;
    try{
      const response=await fetch('/desktop/status',{cache:'no-store'});
-     if(response.ok){state=await response.json();const revision=String(state.revision??'')+'|'+String(state.report?.finishedAt||'');if(lastOrderRevision!==null&&revision!==lastOrderRevision)refreshOrders();lastOrderRevision=revision;showConnection();mountBackupSettings();}
+     if(response.ok){state=await response.json();const revision=String(state.revision??'')+'|'+String(state.report?.finishedAt||'');if(lastOrderRevision!==null&&revision!==lastOrderRevision)refreshOrders();lastOrderRevision=revision;scheduleConnection();}
    }catch{}finally{loading=false;refreshIndicator()}
    return state;
  }

@@ -1,6 +1,6 @@
 'use strict';
 function patchNavigationHeader(source){
- if(source.includes('PB1576 resolve startup sections'))return source;
+ if(source.includes('PB1576 resolve startup sections'))return limitHeaderObserver(source);
  if(source.includes('PB1574 active secondary navigation'))return upgradeSectionAliases(source);
  const start="let nav=h.querySelector('.pb1147LabNav');if(!nav){",end='h.append(nav);';
  if(!source.includes('PB1572 reconcile header actions')&&source.includes(start)&&source.includes(end))source=source.replace(start,`/* PB1572 reconcile header actions */let nav=h.querySelector('.pb1147LabNav');const pb1572Signature=['.labPrintTopNav','.albumTopNav','.labArchiveHeaderBtn','.labFinanceHeaderBtn'].map(s=>Boolean(h.querySelector(s))).join('|');if(nav&&nav.dataset.pb1572Signature!==pb1572Signature){nav.remove();nav=null;}if(!nav){`).replace(end,'nav.dataset.pb1572Signature=pb1572Signature;h.append(nav);');
@@ -25,7 +25,7 @@ function secondary(h){`);
 }
 module.exports={patchNavigationHeader};
 function patchThirdNavigation(source){
- if(source.includes('PB1576 visible promoted navigation'))return source;
+ if(source.includes('PB1576 visible promoted navigation'))return limitThirdObserver(source);
  if(source.includes('PB1574 active third navigation'))return upgradeThirdAliases(source);
  if(!source.includes('function buttonSource(root){'))return source;
  source=source.replace('function buttonSource(root){',`/* PB1574 active third navigation */
@@ -50,16 +50,16 @@ function browserSection(){
  return 'general';
 }
 function upgradeSectionAliases(source){
- if(source.includes('PB1576 resolve startup sections'))return source;
+ if(source.includes('PB1576 resolve startup sections'))return limitHeaderObserver(source);
  if(!source.includes('function render(){scheduled=false;')||!source.includes("const section=location.pathname.split('/')[3]||'general';"))return source;
  const resolver=browserSection.toString().replace('browserSection','pb1576Section');
  source=source.replace('function render(){scheduled=false;', '/* PB1576 resolve startup sections */'+resolver+'\n'+layoutObserverSource()+'\nfunction render(){scheduled=false;');
  source=source.replace("const section=location.pathname.split('/')[3]||'general';",'const section=pb1576Section();');
  source=source.replace("const h=document.querySelector('.labRoleWorkspace .labSingleHeader');","pb1576ObserveLayout();const h=document.querySelector('.labRoleWorkspace .labSingleHeader');");
- return source.replace("addEventListener('popstate',schedule);","addEventListener('popstate',schedule);addEventListener('hashchange',schedule);addEventListener('load',schedule);addEventListener('pageshow',schedule);document.fonts?.ready.then(schedule);");
+ return limitHeaderObserver(source.replace("addEventListener('popstate',schedule);","addEventListener('popstate',schedule);addEventListener('hashchange',schedule);addEventListener('load',schedule);addEventListener('pageshow',schedule);document.fonts?.ready.then(schedule);"));
 }
 function upgradeThirdAliases(source){
- if(source.includes('PB1576 visible promoted navigation'))return source;
+ if(source.includes('PB1576 visible promoted navigation'))return limitThirdObserver(source);
  source=source.replace('function buttonSource(root){','/* PB1576 visible promoted navigation */'+layoutObserverSource()+'\nfunction buttonSource(root){');
  source=source.replace("const header=root.querySelector('.labSingleHeader')","pb1576ObserveLayout();const header=root.querySelector('.labSingleHeader')");
  // Source ownership already excludes cached hidden panes. Route-only checks
@@ -71,7 +71,7 @@ function upgradeThirdAliases(source){
   if(start>=0&&source.slice(start,end).includes('pb1574ThirdSource'))source=source.slice(0,start)+"const "+variable+"=pb1574ThirdSource(root,'"+selector+"')"+source.slice(end);
  }
  source=source.replace("if(customers||new RegExp('^/lab/settings/(?:customers|walkin)(?:/|$)').test(location.pathname))","if(customers||new RegExp('^/lab/settings/(?:customers|walkin)(?:/|$)').test(location.pathname)||/^#customers(?:-|$)/.test(location.hash))");
- return source.replace("addEventListener('popstate',schedule);","addEventListener('popstate',schedule);addEventListener('hashchange',schedule);addEventListener('load',schedule);addEventListener('pageshow',schedule);document.fonts?.ready.then(schedule);");
+ return limitThirdObserver(source.replace("addEventListener('popstate',schedule);","addEventListener('popstate',schedule);addEventListener('hashchange',schedule);addEventListener('load',schedule);addEventListener('pageshow',schedule);document.fonts?.ready.then(schedule);"));
 }
 
 function browserObserveLayout(){
@@ -83,3 +83,35 @@ function browserObserveLayout(){
  state.observer.disconnect();state.nodes=nodes;nodes.forEach(node=>state.observer.observe(node));
 }
 function layoutObserverSource(){return browserObserveLayout.toString().replaceAll('browserObserveLayout','pb1576ObserveLayout');}
+
+function browserNavigationChanged(records, includeSecondary) {
+ const controls = '.labSingleHeader,.mainQueueFilters,.labSettingsSectionTabs,.financeSectionTabs,.financeSectionTools,.labCustomerSubnav,.albumSettingsInnerTabs,.labPrintPricingCard>.panelHead,.pb1379AlbumMenuToggle,.labQueueQuickAccessV464,.labQueueQuickIntroV464';
+ const generated = '.pb1147LabNav,.pb1148SecondaryHeader,.pb1372ThirdHeader';
+ return records.some(record=>{
+  const target=record.target.nodeType===1?record.target:record.target.parentElement;
+  if(target?.closest(generated))return false;
+  if(record.type==='attributes'&&record.oldValue===target.getAttribute(record.attributeName))return false;
+  if(target?.closest(controls))return true;
+  if(record.type!=='childList')return false;
+  return [...record.addedNodes,...record.removedNodes].some(node=>node.nodeType===1&&(
+    (includeSecondary&&node.matches('.pb1148SecondaryHeader'))||
+    (!node.matches(generated)&&(node.matches(controls)||node.querySelector(controls)))));
+ });
+}
+
+function limitHeaderObserver(source){
+ const observer="new MutationObserver(records=>{if(records.some(r=>r.type!=='attributes'||r.oldValue!==r.target.getAttribute(r.attributeName)))schedule();})";
+ if(!source.includes(observer))return source;
+ return source.replace(observer,"new MutationObserver(records=>{if(browserNavigationChanged(records,false))schedule();})")
+  .replace("attributeFilter:['class','style','hidden']","attributeFilter:['class','style','hidden','disabled','aria-selected']")
+  .replace('button.disabled=original.disabled;','if(button.disabled!==original.disabled)button.disabled=original.disabled;')
+  .replace('function start(){schedule();',browserNavigationChanged.toString()+'\nfunction start(){schedule();');
+}
+
+function limitThirdObserver(source){
+ const observer="new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','aria-selected']})";
+ if(!source.includes(observer))return source;
+ return source.replace(observer,"new MutationObserver(records=>{if(browserNavigationChanged(records,true))schedule();}).observe(document.getElementById('root')||document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeOldValue:true,attributeFilter:['class','disabled','aria-selected']})")
+  .replace('button.disabled=original.disabled;','if(button.disabled!==original.disabled)button.disabled=original.disabled;')
+  .replace('function start(){new MutationObserver',browserNavigationChanged.toString()+'\nfunction start(){new MutationObserver');
+}

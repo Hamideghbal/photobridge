@@ -3,6 +3,9 @@ const {LocalBusiness,canonical}=require('./local-business.cjs');
 function localActive(store){return!!store.get('localBusinessActive:'+store.get('labId'));}
 async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request}){
  if(!store.get('auth')||!store.get('labId'))return false;
+ // These navigation reads use the standard proxy and never need a local
+ // business migration or SQLite write before reaching the server.
+ if(req.method==='GET'&&['/api/lab/dashboard','/api/lab/profile-image','/api/lab/hours','/api/lab/album-settings','/api/lab/sms-settings','/api/lab/snappbox/settings','/api/lab/site'].includes(url.pathname))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
  require('./document-policy.cjs').applyPolicy(store);
  const engine=new LocalBusiness(store),raw=url.pathname,p=canonical(req.url);let b={};try{b=bytes?.length?JSON.parse(bytes.toString()):{}}catch{}

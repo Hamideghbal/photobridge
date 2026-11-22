@@ -11,19 +11,21 @@ const start=server.indexOf("if (req.method === 'PUT' && url.pathname === '/api/l
 const end=start<0?-1:server.indexOf("\n        if (req.method",start+70);
 if(start<0||end<=start)throw Error('[R1961] album settings PUT boundaries missing');
 let route=server.slice(start,end);
-function once(before,after,label){
-  const n=route.split(before).length-1;
-  if(n!==1)throw Error('[R1961] '+label+' expected once, got '+n);
-  route=route.replace(before,after);
-}
-once(
-  '(albumBase.sizes || []).filter((x) => x.active !== false && Number(x.bindingPrice || 0) > 0)',
-  '(albumBase.sizes || []).filter((x) => x.active !== false)',
-  'save validation uses active binding sizes');
-once(
-  'SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true AND binding_price>0 ORDER BY sort_order,label',
-  'SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label',
-  'cover/package size id mapping includes custom/combined binding');
+// R1815 already includes combined-model tariffs in this save filter, but not
+// separate custom binding models. R1960 sync already determines eligibility
+// and keeps the corresponding rows active; align the save path with that scope.
+const existingGate=/sizes = \(albumBase\.sizes \|\| \[\]\)\.filter\(\(x\) => [^\n]*?\), extras =/g;
+const gates=[...route.matchAll(existingGate)];
+if(gates.length!==1 || !gates[0][0].includes('albumCombinedModelRates') ||
+   !gates[0][0].includes('bindingPrice'))
+  throw Error('[R1961] final album save size gate changed: '+gates.length);
+route=route.replace(existingGate,
+  'sizes = (albumBase.sizes || []).filter((x) => x.active !== false), extras =');
+// R1805 already removed the legacy price gate from SQL, so do not rewrite
+// this query a second time. Retain its active-only rule and label allowlist.
+if(!route.includes('SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label') ||
+   !route.includes('if(sizeNames.includes(cleanText(row.label)))sizeIdsByLabel.set(cleanText(row.label), String(row.id));'))
+  throw Error('[R1961] existing active-size SQL mapping unavailable');
 if(!route.includes('INSERT INTO lab_album_cover_variant_prices') ||
    !route.includes('sizeIdsByLabel.get(cleanText(pr.sizeLabel))'))
   throw Error('[R1961] cover price write path changed');

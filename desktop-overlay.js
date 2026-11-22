@@ -113,6 +113,17 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
   header.classList.remove('pb1526QueueHeader');
   header.querySelectorAll(':scope>button[data-pb1173-index]').forEach(button=>{['grid-column','grid-row','justify-self','margin-left'].forEach(name=>button.style.removeProperty(name));});
  }
+ function updateSinglePagePager(){
+  // Server paging only needs controls when there is more than one page.
+  // Legacy native bundles are rejected by verify-native-ui.cjs.
+  for(const pager of document.querySelectorAll('.r1944Pager')){
+   const buttons=[...pager.querySelectorAll(':scope>button')];
+   const onePage=buttons.length>=2&&buttons.length<=3&&
+     buttons[0].disabled&&buttons[buttons.length-1].disabled;
+   if(onePage)pager.style.setProperty('display','none','important');
+   else pager.style.removeProperty('display');
+  }
+ }
  function showConnection(){
   const queue=/^\/lab\/(?:orders(?:\/|$)|print(?:\/|$)|albums?(?:[-/]|$))/.test(location.pathname);
   const allowed=queue||/^\/lab\/(?:archive|finance)(?:\/|$)/.test(location.pathname);
@@ -135,6 +146,7 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
   const connected=state?.internetConnected;
   const label='PhotoBridge Lab '+(state?.nativeVersion||'')+' · '+(connected===true?'آنلاین · متصل به اینترنت':connected===false?'آفلاین · بدون اتصال به اینترنت':'در حال بررسی اتصال');
   if(connection.textContent!==label)connection.textContent=label;
+  updateSinglePagePager();
   connection.style.background=connected?'#e8f7ee':'#fff3e7';connection.style.color=connected?'#17653b':'#9a4700';
  }
 

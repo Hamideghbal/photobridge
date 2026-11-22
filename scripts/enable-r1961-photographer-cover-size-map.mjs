@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/api/server.js';
 let src=fs.readFileSync(path,'utf8');
-const beginning='async function albumCatalogForLab(labId, includeInactive = false) {';
+const beginning='async function albumCatalogForLabOriginal(';
 const helper=`function pb1961CoversFromPricedVariants(catalog,sizes,legacyRows,includeInactive=false) {
   const oldCovers=(legacyRows||[]).map(r=>({
     id:r.id,name:r.name,materialName:r.material_name||r.name||'جلد',modelName:r.model_name||'استاندارد',
@@ -29,7 +29,7 @@ const helper=`function pb1961CoversFromPricedVariants(catalog,sizes,legacyRows,i
       if(!size||!color||!Number.isFinite(n)||n<=0)continue;
       if(!includeInactive&&(size.active===false||color.active===false||!chosen.has(String(p.colorId))))continue;
       const id=String(p.sizeId),arr=group.get(id)||[];
-      arr.push({id:color.id,name:color.name,colorValue:color.colorValue||'',price:n,
+      arr.push({id:'catalog-color:'+String(v.id)+':'+String(p.sizeId)+':'+String(color.id),name:color.name,colorValue:color.colorValue||'',price:n,
         active:color.active!==false,sortOrder:Number(color.sortOrder||0)});
       group.set(id,arr);
     }
@@ -48,7 +48,7 @@ const helper=`function pb1961CoversFromPricedVariants(catalog,sizes,legacyRows,i
   // When the new matrix is priced, it is authoritative: do not resurrect stale legacy cover models.
   return modern.length?modern:oldCovers;
 }`;
-if(src.split(beginning).length!==2)throw Error('[R1961] expected album catalog function exactly once');
+if(src.split(beginning).length!==2)throw Error('[R1961] expected original album catalog function exactly once');
 src=src.replace(beginning,helper+'\n'+beginning);
 const start=src.indexOf(beginning),end=src.indexOf('\nasync function ',start+beginning.length);
 const fragment=src.slice(start,end);

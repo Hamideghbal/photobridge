@@ -60,14 +60,13 @@ src=src.slice(0,start)+updated+src.slice(end);
 // The laboratory save route used the legacy binding price as an eligibility gate.
 // R1960 now synchronizes every active separately/combined priced binding size,
 // including sizes whose legacy binding_price is zero. Saving must preserve them.
-const oldForm='sizes = (albumBase.sizes || []).filter((x) => x.active !== false && Number(x.bindingPrice || 0) > 0)';
+const oldForm="sizes = (albumBase.sizes || []).filter((x) => x.active !== false && (Number(x.bindingPrice || 0) > 0 || (albumBase.printTariffCatalog?.albumPricingMode===\"combined\" && [\"luster\",\"silk\",\"metallic\"].some(p=>Number(albumBase.printTariffCatalog?.albumCombinedRates?.[String(x.printSizeId||\"\")]?.[p]||0)>0))))";
 const newForm='sizes = (albumBase.sizes || []).filter((x) => x.active !== false)';
 if(src.split(oldForm).length!==2)throw Error('[R1961] lab album-settings size eligibility changed');
 src=src.replace(oldForm,newForm);
-const oldDb='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true AND binding_price>0 ORDER BY sort_order,label';
-const newDb='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label';
-if(src.split(oldDb).length!==2)throw Error('[R1961] lab saved cover price size map changed');
-src=src.replace(oldDb,newDb);
+// R1805 already broadened the SQL map; preserve its existing active-only contract.
+const existingDb='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label';
+if(src.split(existingDb).length!==2)throw Error('[R1961] R1805 active album size ID map missing');
 fs.writeFileSync(path,src);
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 console.log('[R1961] photographer order cover choices now use the priced material/model/color/size matrix');

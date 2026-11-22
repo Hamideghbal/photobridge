@@ -1445,6 +1445,9 @@ await deployStep('./enable-r1936-native-live-order-status.mjs');
 await deployStep('./enable-r1944-lab-order-pages.mjs');
 // R1960: reconcile priced binding models with album cover sizes in both live UIs.
 await deployStep('./enable-r1960-album-cover-priced-sizes.mjs');
+// R1961: persist newly eligible cover prices before final asset/revision hashing.
+await deployStep('./enable-r1961-cover-pricing-save.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1961-photographer-cover-save.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

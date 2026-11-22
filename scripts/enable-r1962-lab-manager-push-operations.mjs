@@ -64,7 +64,7 @@ push=once(push,
 // After an in-app login/role change, bind the already granted device immediately.
 push=once(push,
   "  window.addEventListener('photobridge-notifications-read-lab',",
-  "  window.addEventListener('photobridge-auth-session-changed',()=>{if(Notification.permission==='granted')void syncSubscription(true);else maybePrompt()});\\n  window.addEventListener('photobridge-notifications-read-lab',".replace('\\\\n','\\n'),
+  "  window.addEventListener('photobridge-auth-session-changed',()=>{if(Notification.permission==='granted')void syncSubscription(true);else maybePrompt()});"+String.fromCharCode(10)+"  window.addEventListener('photobridge-notifications-read-lab',",
   'instant lab push rebind after login');
 fs.writeFileSync(pushPath,push);
 // PB_PERF_FIX built precompressed assets before this late patch; refresh both

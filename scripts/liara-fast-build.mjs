@@ -1401,6 +1401,11 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
  // R1877: validate single reveal and fixed white + gradient mobile surfaces.
  runR1314(process.execPath,['--test','scripts/test-r1877-mobile-header-navigation.cjs'],{stdio:'inherit'});
 
+// R1966: stable photographer Store chooser and separate desktop Calendar tab.
+// Apply after CRM writers, before Store snapshot and the bundled boot stylesheet.
+await deployStep('./enable-r1966-desktop-calendar-store-chooser.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1966-desktop-calendar-store-chooser.cjs'],{stdio:'inherit'});
+
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 

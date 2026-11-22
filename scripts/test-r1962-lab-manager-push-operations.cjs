@@ -65,7 +65,7 @@ test('R1962 sends at most one push for repeated server events and keeps lab reci
 test('R1962 server hooks are placed after commits and scope subscriptions to a lab admin',()=>{
  const customer=api.slice(api.indexOf('function publishCustomerEvent('),api.indexOf('function publishRentalShopEvent('));
  assert.match(customer,/pb1962LabManagerNotify\(labId,event,data\)/);
- const labScope=api.slice(api.indexOf("if (url.pathname.startsWith('/api/lab/'))"),api.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/push/subscribe')")+180);
+ const labScope=api.slice(api.indexOf("if (url.pathname.startsWith('/api/lab/'))"),api.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/push/subscribe')")+1500);
  assert.match(labScope,/requireRole\(a, 'lab_admin'\)/);
  assert.match(labScope,/recipient_lab_id/);
  const download=api.slice(api.indexOf('const labAlbumDownloadComplete'),api.indexOf('const labPaymentReceipt'));

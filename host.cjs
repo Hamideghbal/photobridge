@@ -175,6 +175,14 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
                   return;
                 }
                 result={status:up.status,ok:up.ok,mime,body:Buffer.from(await up.arrayBuffer())};
+                const detail=url.pathname.match(/^\/api\/lab\/orders\/([0-9a-f-]{36})$/i);
+                if (req.method==='GET'&&up.ok&&detail&&mime.includes('application/json')){
+                  try{
+                    const raw=JSON.parse(result.body.toString());
+                    const data=require('./download-order-detail.cjs').normalizeDownloadOrderDetail(raw,detail[1]);
+                    if(data!==raw)result.body=Buffer.from(JSON.stringify(data));
+                  }catch{/* Leave malformed or unrecognized upstream data untouched. */}
+                }
               }finally{res.off('close',abort);}
             }
             const {status,ok,mime,body}=result;

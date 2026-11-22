@@ -4,10 +4,11 @@ const assert=require('node:assert/strict');
 const {LabStore}=require('../store.cjs');
 const {createHost}=require('../host.cjs');
 
-async function withHost(upstream,run){
+async function withHost(upstream,run,{localBusiness=false}={}){
   const store=new LabStore(':memory:');
   store.set('labId','test-lab');
   store.set('auth',{user:{id:'test-operator'}});
+  if(localBusiness)store.set('localBusinessActive:test-lab',true);
   const host=createHost({
     store,request:upstream,roots:()=>[],token:'r1962-probe',
     sync:{status:()=>({online:true,pending:0}),wake:()=>{}},
@@ -127,3 +128,19 @@ test('abandoning an early photo request cancels the upstream read before respons
     assert.equal((await pending).name,'AbortError');
   });
 });
+
+
+for (const localBusiness of [false,true]) {
+  test('older authenticated order detail supplies download count in '+(localBusiness?'local business mode':'proxy mode'),async()=>{
+    const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', route='/api/lab/orders/'+id;
+    let detail={order:{id,status:'sent'},files:[{id:'file-one',original_name:'photo.jpg',bytes:5}]};
+    await withHost(async path=>Response.json(path===route?detail:{}),async get=>{
+      const read=async()=>(await get(route)).json();
+      assert.deepEqual(await read(),{...detail,order:{...detail.order,file_count:1}});
+      detail={...detail,order:{...detail.order,file_count:2}};
+      assert.deepEqual(await read(),detail);
+      detail={order:{id,status:'sent'},files:[detail.files[0],detail.files[0]]};
+      assert.deepEqual(await read(),detail);
+    },{localBusiness});
+  });
+}

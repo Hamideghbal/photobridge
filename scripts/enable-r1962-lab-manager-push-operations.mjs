@@ -33,21 +33,21 @@ s=once(s,"await audit(a.userId, labId, 'album.download_complete', 'order', order
   "            void pb1962LabManagerNotify(labId,'album_download_verified',{orderId:order.id,number:order.number,mode:'album',updatedAt:order.updated_at});",'verified album download');
 s=once(s,"publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, invoiceId: invoice.id",
   "publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, orderNumber:order.number, invoiceId: invoice.id",'prepaid invoice number');
-// Scope deliveries to the *current* active lab admin; revoked devices receive no pushes.
+// Bind lab subscriptions to the authenticated owner in a separate mapping table.
+// Keep recipient_user_id NULL for lab endpoints to preserve original schema constraints.
 s=once(s,"const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';",
   "const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';\n"+
-  "        const subWhere=kind==='lab'?\"recipient_lab_id=$1 AND EXISTS (SELECT 1 FROM lab_memberships m JOIN users u ON u.id=m.user_id WHERE m.lab_id=$1 AND m.user_id=web_push_subscriptions.recipient_user_id AND m.role='lab_admin' AND m.active=true AND u.active=true)\":\"recipient_user_id=$1 AND recipient_lab_id IS NULL\";",
+  "        const subWhere=kind==='lab'?\"recipient_lab_id=$1 AND EXISTS (SELECT 1 FROM lab_manager_push_owners p JOIN lab_memberships m ON m.lab_id=p.lab_id AND m.user_id=p.user_id JOIN users u ON u.id=p.user_id WHERE p.endpoint=web_push_subscriptions.endpoint AND p.lab_id=$1 AND m.role='lab_admin' AND m.active=true AND u.active=true)\":\"recipient_user_id=$1 AND recipient_lab_id IS NULL\";",
   'manager active membership filter');
 s=once(s,'FROM web_push_subscriptions WHERE ${col}=$1 ORDER BY updated_at DESC LIMIT 12',
   'FROM web_push_subscriptions WHERE ${subWhere} ORDER BY updated_at DESC LIMIT 12',
   'recipient scope SQL');
 s=once(s,
-  'VALUES($1,$2,$3,$4,NULL,$5,$6,now(),now()) ON CONFLICT(endpoint) DO UPDATE SET p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth,recipient_lab_id=EXCLUDED.recipient_lab_id,recipient_user_id=NULL,device_label=EXCLUDED.device_label',
-  'VALUES($1,$2,$3,$4,$7,$5,$6,now(),now()) ON CONFLICT(endpoint) DO UPDATE SET p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth,recipient_lab_id=EXCLUDED.recipient_lab_id,recipient_user_id=EXCLUDED.recipient_user_id,device_label=EXCLUDED.device_label',
-  'lab owner ID binding');
-s=once(s,'[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null]);',
-  '[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null, a.userId]);',
-  'bound subscription parameters');
+  "[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null]);\n            return sendJson(res, 200, { ok: true, scope: 'lab' });",
+  "[endpoint, p256dh, authKey, labId, deviceLabel || null, userAgent || null]);\n"+
+  "            await pool.query('INSERT INTO lab_manager_push_owners(endpoint,lab_id,user_id,updated_at) VALUES($1,$2,$3,now()) ON CONFLICT(endpoint) DO UPDATE SET lab_id=EXCLUDED.lab_id,user_id=EXCLUDED.user_id,updated_at=now()',[endpoint,labId,a.userId]);\n"+
+  "            return sendJson(res, 200, { ok: true, scope: 'lab' });",
+  'bind existing lab endpoint to authenticated manager');
 fs.writeFileSync(path,s);
 const pushPath='dist/web/photobridge-push-v728.js';
 let push=fs.readFileSync(pushPath,'utf8');

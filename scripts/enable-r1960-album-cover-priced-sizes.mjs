@@ -19,8 +19,8 @@ const prelude=[
 '    /* R1960: a size can be available through custom/combined binding tariffs',
 '       without having a positive legacy album_binding_price. Never transfer',
 '       custom prices into that legacy price or modify past order snapshots. */',
-"    const prefs = await client.query('SELECT ui_preferences FROM labs WHERE id=$1', [labId]);",
-'    const pricing = normalizePrintCatalog(prefs.rows?.[0]?.ui_preferences?.printTariffCatalog);',
+'    // R1539 already loaded the lab-scoped, normalized tariff catalog.',
+'    const pricing = pbCatalog;',
 "    const modelIds = (pricing.types || []).filter(t => t.kind === 'binding' && !t.legacy && t.active !== false).map(t => String(t.id));",
 "    const positive = value => value != null && String(value).trim() !== '' && Number.isFinite(Number(value)) && Number(value) > 0;",
 '    const hasOtherBindingPrice = sizeId => {',
@@ -33,9 +33,9 @@ const prelude=[
 ].join('\n');
 segment=replaceOnce(segment,'    const activePrintIds = [];',prelude,'read model pricing');
 segment=replaceOnce(segment,
-'        if (binding <= 0)\n            continue;\n        const printSizeId = String(row.print_size_id), label = String(row.label || \'\').trim();',
-'        const printSizeId = String(row.print_size_id), label = String(row.label || \'\').trim();\n        if (binding <= 0 && !hasOtherBindingPrice(printSizeId))\n            continue;',
-'pricelist inclusion');
+'if(binding<=0&&!customAvailable&&!pb1805Combined)continue;',
+'if(binding<=0&&!customAvailable&&!pb1805Combined&&!hasOtherBindingPrice(String(row.print_size_id)))continue;',
+'include model-specific prices after R1539/R1805');
 api=api.slice(0,start)+segment+api.slice(end);
 fs.writeFileSync(backend,api);
 execFileSync(process.execPath,['--check',backend],{stdio:'inherit'});

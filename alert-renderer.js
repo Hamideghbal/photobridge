@@ -27,10 +27,10 @@ function renderDownloads(items){
     (downloadVerified&&item?.phase==='failed'&&['pdf','print'].includes(item.stage));
   const downloadFailed=item?.phase==='failed'&&!downloadVerified;
   const invoiceFailed=item?.phase==='failed'&&downloadVerified&&item.stage==='invoice';
-  const phase={checking:'بررسی و تطبیق فایل‌ها',downloading:'در حال دانلود',verified:'دانلود تأیید شد',
+  const phase={checking:'آماده‌سازی دانلود',downloading:'در حال دانلود',verified:'دانلود تأیید شد',
    invoice_issuing:'در حال صدور فاکتور',invoice_issued:'فاکتور صادر شد',complete:'سفارش تکمیل شد',failed:'نیازمند بررسی'};
   const failure=item?.stage==='invoice'?'دانلود تأیید شد؛ صدور فاکتور انجام نشد':item?.stage==='pdf'?'فاکتور صادر شد؛ ذخیره PDF انجام نشد':item?.stage==='print'?'فاکتور صادر شد؛ چاپ نیازمند بررسی است':'دانلود کامل نشد؛ نیازمند بررسی';
-  const description=previouslyComplete&&!item?'سفارش تکمیل شد':!item?'در انتظار شروع بررسی و دانلود':
+  const description=previouslyComplete&&!item?'سفارش تکمیل شد':!item?'در انتظار شروع دانلود':
    item.phase==='complete'&&!invoiceDone?'صدور فاکتور هنوز تأیید نشده':
    item.phase==='failed'?failure:(phase[item.phase]||phase.checking);
   const label=document.createElement('small');label.className='orderStageLabel';

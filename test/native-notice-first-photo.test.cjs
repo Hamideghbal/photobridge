@@ -18,8 +18,8 @@ function gate() {
   return { waiting, release };
 }
 
-function fixture({ rootReady, secondReady, verificationReady, existing = {}, checkpoint = {},
-  silent = true, finalComplete = true, files = ['one','two'] } = {}) {
+function fixture({ rootReady, secondReady, existing = {}, checkpoint = {},
+  silent = true, writtenSize = 5, files = ['one','two'] } = {}) {
   const trace = [], progress = [], saved = new Map(Object.entries(existing));
   const root = {__pbNative:true};
   const target = {dir:{rootId:'lab-root',parts:['order'],async getFileHandle(name) {
@@ -27,7 +27,7 @@ function fixture({ rootReady, secondReady, verificationReady, existing = {}, che
     if (!saved.has(name)) throw Object.assign(Error('missing'),{code:'ENOENT'});
     return {size:saved.get(name)};
   }}};
-  let firstSignal, state = checkpoint;
+  let firstSignal, report, state = checkpoint;
   const order = {id:'order',file_count:files.length};
   const context = vm.createContext({
     AbortController, window:{pbNativeStorage:{}}, pb1450Flights:new Set(), Ya:name=>name,
@@ -41,26 +41,26 @@ function fixture({ rootReady, secondReady, verificationReady, existing = {}, che
     },
     Ky:async (id,signal)=>{if(id==='one')firstSignal=signal;trace.push('request '+id);return {pbDownloadBytes:5};},
     pb1445WriteDownload:async (_,name,__,onChunk)=>{
-      trace.push('write '+name);saved.set(name,5);onChunk(5);
+      trace.push('write '+name);saved.set(name,writtenSize);onChunk(writtenSize);
     },
     pb1450Verify:async ()=>{
       trace.push('full verification');
-      await verificationReady;
-      return {complete:finalComplete,collisions:[],completedIds:[],valid:saved.size,expected:files.length};
+      if(silent)throw Error('unexpected_folder_scan');
+      return {complete:true,collisions:[],completedIds:[],valid:saved.size,expected:files.length};
     },
-    pb1450Save:(_,report)=>trace.push(report.complete?'verified':'incomplete'),
+    pb1450Save:(_,value)=>{report=value;trace.push(report.complete?'verified':'incomplete');},
     pb1450Code:error=>error.message,
     detail:{order,files:files.map(id=>({id,original_name:id+'.jpg',bytes:5}))},
     progress:value=>progress.push(value.phase),
     options:{silent},
   });
   const flight = vm.runInContext(functions+'\npb1450Download(detail,progress,options);',context);
-  return { trace, progress, flight, firstSignal:()=>firstSignal };
+  return { trace, progress, flight, firstSignal:()=>firstSignal, report:()=>report };
 }
 
-test('notification requests the photo during root validation and writes it before any later file check or whole-order scan', async () => {
-  const root = gate(), second = gate(), verification = gate();
-  const job = fixture({rootReady:root.waiting,secondReady:second.waiting,verificationReady:verification.waiting});
+test('automatic download writes the first photo early and completes without a folder scan', async () => {
+  const root = gate(), second = gate();
+  const job = fixture({rootReady:root.waiting,secondReady:second.waiting});
   try {
     await turn();
     assert.deepEqual(job.trace,['request one','root']);
@@ -68,26 +68,28 @@ test('notification requests the photo during root validation and writes it befor
     await turn();
     assert(job.trace.includes('write one.jpg'));
     assert(job.trace.includes('target two'));
-    assert(!job.trace.includes('full verification'));
     assert(job.progress.includes('downloading'));
     assert(!job.progress.includes('complete'));
-    second.release();
-    await turn();
-    assert(job.trace.includes('write two.jpg'));
-    assert.equal(job.trace.at(-1),'full verification');
-    assert(!job.progress.includes('complete'));
-  } finally {root.release();second.release();verification.release();}
+  } finally {root.release();second.release();}
   await job.flight;
+  assert(!job.trace.includes('full verification'));
+  assert(job.trace.includes('write two.jpg'));
   assert.equal(job.trace.at(-1),'verified');
+  assert.equal(job.report().valid,2);
+  assert.equal(job.report().loadedBytes,10);
   assert.equal(job.progress.at(-1),'complete');
 });
 
-test('a valid existing file is kept, and a failed final verification cannot complete the order', async () => {
-  const job = fixture({existing:{'one.jpg':5},finalComplete:false});
-  await assert.rejects(job.flight,/local_download_incomplete/);
+test('a short write cannot complete the order and does not trigger a recovery scan', async () => {
+  const job = fixture({existing:{'one.jpg':5},writtenSize:3});
+  await assert.rejects(job.flight,/download_size_mismatch/);
   assert(!job.trace.includes('write one.jpg'));
   assert(job.firstSignal().aborted);
   assert(job.trace.includes('write two.jpg'));
+  assert(!job.trace.includes('full verification'));
+  assert.equal(job.report().complete,false);
+  assert.equal(job.report().valid,1);
+  assert.equal(job.report().missing.join(','),'two.jpg');
   assert(!job.progress.includes('complete'));
 });
 
@@ -98,19 +100,23 @@ test('manual downloads still verify before sending a photo request', async () =>
   assert(job.trace.indexOf('full verification') < job.trace.indexOf('request one'));
 });
 
-test('automatic resume uses its saved receipt and starts the missing file before the full scan', async () => {
-  const verification = gate();
-  const job = fixture({verificationReady:verification.waiting,existing:{'saved.jpg':7},
+test('automatic resume uses its saved receipt and ignores unrelated folder contents', async () => {
+  const job = fixture({existing:{'saved.jpg':7,'unrelated.jpg':99},
     checkpoint:{startedAt:'earlier',pathLayout:'legacy',localFiles:{one:{name:'saved.jpg',bytes:7}}}});
-  try {
-    await turn();
-    assert.deepEqual(job.trace.slice(0,5),['root','target one','stat saved.jpg','target two','stat two.jpg']);
-    assert(!job.trace.includes('request one'));
-    assert(job.trace.indexOf('write two.jpg') < job.trace.indexOf('full verification'));
-    assert(!job.progress.includes('complete'));
-  } finally {verification.release();}
   await job.flight;
+  assert.deepEqual(job.trace.slice(0,5),['root','target one','stat saved.jpg','target two','stat two.jpg']);
+  assert(!job.trace.includes('request one'));
+  assert(!job.trace.includes('full verification'));
+  assert(job.trace.includes('write two.jpg'));
+  assert.equal(job.report().loadedBytes,12);
   assert.equal(job.progress.at(-1),'complete');
+});
+
+test('duplicate destination names are rejected without requests or a folder scan', async () => {
+  const job = fixture({files:['one','ONE']});
+  await assert.rejects(job.flight,/local_download_incomplete/);
+  assert.deepEqual(job.trace,[]);
+  assert(!job.progress.includes('complete'));
 });
 
 test('the checked-in Lab bundle receives a syntactically valid direct download path', () => {

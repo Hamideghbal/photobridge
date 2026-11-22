@@ -1,0 +1,100 @@
+/* R1962 — durable, account-scoped notifications for a laboratory manager.
+   This runs after a server-side order transition has committed; do not infer
+   completion from a client-side progress bar or a download being started. */
+function pb1962LabManagerEventInfo(event, data) {
+  if (!data || typeof data !== 'object') return null;
+  const orderId = String(data.orderId || '').trim();
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) return null;
+  if (data.managerChanged === false) return null;
+  const no = String(data.number || data.orderNumber || '').trim().slice(0,40);
+  const ref = no ? ' #' + no : '';
+  const mode = String(data.mode || 'print') === 'album' ? 'album' : 'print';
+  const thing = mode === 'album' ? 'آلبوم' : 'سفارش';
+  const stamp = String(data.updatedAt || '').trim().slice(0,80);
+  const statusNames = {
+    received:'دریافت شد', printing:'وارد چاپ شد', reviewing:'در کنترل کیفیت است',
+    ready_print:'آماده چاپ است', printed:'چاپ شد', ready:'آماده تحویل است',
+    needs_fix:'نیاز به اصلاح دارد', completed:'تحویل/تکمیل شد',
+    cancelled:'لغو شد', sent:'ثبت شد'
+  };
+  if (event === 'order_status') {
+    const status = String(data.status || '');
+    if (status === 'downloaded') return {
+      eventKey:'lab_manager_download_verified', dedupeKey:'download:' + orderId,
+      title:'دانلود فایل‌ها کامل شد', message:'فایل‌های سفارش' + ref + ' در لابراتوار دانلود شدند.'
+    };
+    if (!statusNames[status] || status === 'sent' || !stamp) return null;
+    return {
+      eventKey:'lab_manager_order_status',
+      dedupeKey:'status:' + orderId + ':' + status + ':' + stamp,
+      title:'تغییر وضعیت ' + thing,
+      message:thing + ref + ' ' + statusNames[status] + '.'
+    };
+  }
+  if (event === 'album_download_verified') return {
+    eventKey:'lab_manager_download_verified', dedupeKey:'download:' + orderId,
+    title:'دانلود آلبوم کامل شد', message:'تمام فایل‌های آلبوم' + ref + ' روی سیستم لابراتوار دریافت شدند.'
+  };
+  if (event === 'invoice_ready' || event === 'invoice_pricing_ready' || event === 'invoice_created') {
+    const invoiceId = String(data.invoiceId || data.invoice?.id || '').trim();
+    if (!/^[0-9a-f-]{36}$/i.test(invoiceId)) return null;
+    const invoiceNo = String(data.invoiceNumber || data.invoice?.number || data.number || '').trim().slice(0,40);
+    const orderNo = String(data.orderNumber || '').trim().slice(0,40);
+    const orderRef = orderNo ? ' #' + orderNo : '';
+    return {
+      eventKey:'lab_manager_invoice_issued', dedupeKey:'invoice:' + invoiceId,
+      title:'فاکتور سفارش صادر شد',
+      message:'برای سفارش' + orderRef + ' فاکتور' + (invoiceNo ? ' #' + invoiceNo : '') + ' صادر شد.'
+    };
+  }
+  if (event === 'album_stage_updated') {
+    const stage = String(data.stage || '');
+    const label = { files_received:'دریافت فایل‌ها', binding:'صحافی', designing:'طراحی', review:'بازبینی', approved:'تأیید' }[stage];
+    if (!label || !stamp) return null;
+    return {
+      eventKey:'lab_manager_album_stage',
+      dedupeKey:'album:' + orderId + ':' + stage + ':' + stamp,
+      title:'مرحله آلبوم تغییر کرد',
+      message:'آلبوم' + ref + ' وارد مرحله «' + label + '» شد.'
+    };
+  }
+  return null;
+}
+async function pb1962LabManagerNotify(labId, event, data) {
+  const info = pb1962LabManagerEventInfo(event,data);
+  const id = String(labId || '');
+  if (!info || !/^[0-9a-f-]{36}$/i.test(id)) return false;
+  let c = null, row = null;
+  try {
+    c = await pool.connect();
+    await c.query('BEGIN');
+    // Transaction-scoped advisory lock prevents two Windows/browser requests
+    // generating duplicate pushes for the same confirmed server event.
+    await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',
+      [id,info.dedupeKey]);
+    const meta = {...data,pbManagerDedupeKey:info.dedupeKey};
+    const q = await c.query(
+      'INSERT INTO system_notifications(recipient_lab_id,event_key,title,message,metadata) ' +
+      'SELECT $1,$2,$3,$4,$5::jsonb WHERE NOT EXISTS (' +
+      'SELECT 1 FROM system_notifications WHERE recipient_lab_id=$1 AND event_key=$2 ' +
+      "AND metadata->>'pbManagerDedupeKey'=$6) RETURNING id,title,message",
+      [id,info.eventKey,info.title,info.message,JSON.stringify(meta),info.dedupeKey]
+    );
+    row = q.rows[0] || null;
+    await c.query('COMMIT');
+  } catch (e) {
+    if(c) await c.query('ROLLBACK').catch(()=>{});
+    console.warn('[lab-manager-push] event not stored',String(e?.message||e).slice(0,140));
+    return false;
+  } finally { if(c) c.release(); }
+  if(row){
+    // Reuse the pre-existing Android/PWA Push service worker, badge and sound.
+    void sendWebPushToRecipient('lab',id,row,info.eventKey,{...data,mode:data.mode||'print'});
+    const listeners=labEventClients.get(id);
+    if(listeners)for(const response of [...listeners]){
+      try{response.write('event: manager_order_event\ndata: '+JSON.stringify({eventKey:info.eventKey,orderId:data.orderId})+'\n\n')}
+      catch{listeners.delete(response)}
+    }
+  }
+  return Boolean(row);
+}

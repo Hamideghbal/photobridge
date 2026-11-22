@@ -1449,6 +1449,9 @@ await deployStep('./enable-r1960-album-cover-priced-sizes.mjs');
 await deployStep('./enable-r1961-photographer-cover-size-map.mjs');
 // R1963: suppress both website and stale role docks in PWA login before final HTML compression.
 await deployStep('./enable-r1963-auth-only-app-login.mjs');
+// R1962: manager mobile notifications from committed Windows/web order operations.
+await deployStep('./enable-r1962-lab-manager-push-operations.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1962-lab-manager-push-operations.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

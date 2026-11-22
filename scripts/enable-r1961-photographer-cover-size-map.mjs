@@ -1,18 +1,62 @@
-// R1961 — the photographer cover list must use the same active album sizes as the Lab cover editor.
-// R1960 enabled model-specific and combined binding tariffs; this legacy SELECT still discarded them.
+// R1961 — photographer orders must read the current priced cover matrix, not a legacy-only projection.
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const path='dist/api/server.js';
 let src=fs.readFileSync(path,'utf8');
-const start=src.indexOf("if (req.method === 'PUT' && url.pathname === '/api/lab/album-settings')");
-if(start<0)throw Error('[R1961] lab album-settings PUT missing');
-const end=src.indexOf("\n        if (req.method",start+30);
-const section=src.slice(start,end<0?undefined:end);
-const old='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true AND binding_price>0 ORDER BY sort_order,label';
-const replacement='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label';
-if(section.split(old).length!==2)throw Error('[R1961] expected exactly one obsolete cover size filter');
-src=src.replace(old,replacement);
-if(!src.includes(replacement))throw Error('[R1961] corrected cover size SQL missing');
+const beginning='async function albumCatalogForLab(labId, includeInactive = false) {';
+const helper=`function pb1961CoversFromPricedVariants(catalog,sizes,legacyRows,includeInactive=false) {
+  const oldCovers=(legacyRows||[]).map(r=>({
+    id:r.id,name:r.name,materialName:r.material_name||r.name||'جلد',modelName:r.model_name||'استاندارد',
+    price:Number(r.price||0),sizeId:r.size_id||null,sizeLabel:r.size_label||'',imageData:r.image_data||'',
+    previewPresetKey:r.preview_preset_key||'simple',active:Boolean(r.active),sortOrder:Number(r.sort_order||0),
+    colors:(Array.isArray(r.colors)?r.colors:[]).map(c=>({...c,price:Number(c.price||0)}))
+  }));
+  const materials=new Map((catalog?.materials||[]).map(m=>[String(m.id),m]));
+  const types=new Map((catalog?.types||[]).map(t=>[String(t.id),t]));
+  const colors=new Map((catalog?.colors||[]).map(c=>[String(c.id),c]));
+  const albumSizes=new Map((sizes||[]).map(s=>[String(s.id),s]));
+  const modern=[];
+  for(const v of catalog?.variants||[]){
+    if(!includeInactive&&v.active===false)continue;
+    const material=materials.get(String(v.materialId)),type=types.get(String(v.typeId));
+    if(!material||!type||(!includeInactive&&(material.active===false||type.active===false)))continue;
+    if(String(type.name||'')==='__PB_COLOR_PALETTE__')continue;
+    const chosen=new Set((v.colorIds||[]).map(String));
+    const group=new Map();
+    for(const p of v.prices||[]){
+      const size=albumSizes.get(String(p.sizeId)),color=colors.get(String(p.colorId));
+      const n=Number(p.price);
+      if(!size||!color||!Number.isFinite(n)||n<=0)continue;
+      if(!includeInactive&&(size.active===false||color.active===false||!chosen.has(String(p.colorId))))continue;
+      const id=String(p.sizeId),arr=group.get(id)||[];
+      arr.push({id:color.id,name:color.name,colorValue:color.colorValue||'',price:n,
+        active:color.active!==false,sortOrder:Number(color.sortOrder||0)});
+      group.set(id,arr);
+    }
+    for(const [sizeId,rows] of group){
+      if(!rows.length)continue;
+      const size=albumSizes.get(sizeId);
+      const materialName=String(material.name||'جلد'),modelName=String(type.name||'استاندارد');
+      modern.push({id:'catalog:'+String(v.id)+':'+sizeId,
+        name:modelName==='استاندارد'?materialName:materialName+' · '+modelName,
+        materialName,modelName,price:Math.min(...rows.map(x=>x.price)),
+        sizeId,sizeLabel:String(size.label||''),imageData:type.imageData||'',
+        previewPresetKey:type.previewPresetKey||'simple',
+        active:v.active!==false,sortOrder:Number(v.sortOrder||0),colors:rows});
+    }
+  }
+  // When the new matrix is priced, it is authoritative: do not resurrect stale legacy cover models.
+  return modern.length?modern:oldCovers;
+}`;
+if(src.split(beginning).length!==2)throw Error('[R1961] expected album catalog function exactly once');
+src=src.replace(beginning,helper+'\n'+beginning);
+const start=src.indexOf(beginning),end=src.indexOf('\nasync function ',start+beginning.length);
+const fragment=src.slice(start,end);
+const old=/covers: cq\.rows\.map\(\(r\) => \(\{[\s\S]*?\}\)\)), coverCatalog, extras:/;
+const matches=[...fragment.matchAll(new RegExp(old.source,'g'))];
+if(matches.length!==1)throw Error('[R1961] legacy album cover projection count '+matches.length);
+const updated=fragment.replace(old,'covers: pb1961CoversFromPricedVariants(coverCatalog,sq.rows,cq.rows,includeInactive), coverCatalog, extras:');
+src=src.slice(0,start)+updated+src.slice(end);
 fs.writeFileSync(path,src);
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
-console.log('[R1961] cover settings save maps all active priced binding sizes, including custom and combined models');
+console.log('[R1961] photographer order cover choices now use the priced material/model/color/size matrix');

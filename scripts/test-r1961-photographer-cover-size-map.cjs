@@ -33,7 +33,7 @@ test('model-color-size prices override old cover choices for photographer',()=>{
  assert.equal(covers[0].price,250);
  assert.equal(covers[1].price,330);
  assert.equal(covers[1].colors.length,1);
- assert.equal(covers[1].colors[0].id,'red');
+ assert.equal(covers[1].colors[0].id,'catalog-color:variant:b:red');
  assert.equal(covers[1].modelName,'طرح جدید');
  assert.equal(covers[1].sizeLabel,'30×40');
  assert.equal(covers[1].imageData,'/album-cover-samples/new.jpg');

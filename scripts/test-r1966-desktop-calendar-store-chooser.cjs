@@ -56,6 +56,8 @@ test('R1966: both entry pages bust navigation JS and CSS, build executes after C
  const build=read('scripts/liara-fast-build.mjs');
  const crm=build.lastIndexOf("deployStep('./enable-crm-delivery.mjs')");
  const patch=build.lastIndexOf("deployStep('./enable-r1966-desktop-calendar-store-chooser.mjs')");
+ const snapshot=build.lastIndexOf("runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs']");
+ const bundler=build.lastIndexOf("runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs']");
  const final=build.lastIndexOf("deployStep('./enable-r1897-final-lab-assets.mjs')");
- assert(crm>=0&&patch>crm&&final>patch,'CRM writer, R1966 and final compression order');
+ assert(crm>=0&&patch>crm&&snapshot>patch&&bundler>snapshot&&final>bundler,'R1966 must run before Store snapshot and boot CSS bundling');
 });

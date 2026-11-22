@@ -27,23 +27,41 @@ function connectNotificationDownload(reuseDetail = false) {
 
     try {
       const route = '/api/lab/orders/' + encodeURIComponent(id);
+      const trace = stage => window.pbDesktopEvents.downloadTrace?.({ orderId: id, stage, elapsedMs: Date.now() - at });
+      trace('dispatch');
+      const fetchDetail = async () => {
+        try { return await Me(route); }
+        catch (error) {
+          const status = Number(error?.status || error?.data?.status || 0);
+          const code = String(error?.data?.error || error?.code || error?.message || '');
+          if ([401, 403].includes(status) || /^(?:login_required|lab_auth_required|account_changed)$/i.test(code)) throw error;
+          if (!status || [404, 408, 429, 502, 503, 504].includes(status)) return null;
+          throw error;
+        }
+      };
       const [account, automation, firstDetail] = await Promise.all([
-        Me('/api/auth/me'), Me('/api/lab/automation'), Me(route),
+        Me('/api/auth/me'), Me('/api/lab/automation'), fetchDetail(),
       ]);
       const settings = automation?.settings;
       if (session !== epoch || String(account?.lab?.id) !== lab || !settings?.autoDownloadEnabled) return;
+      trace('detail_and_policy_ready');
+      void window.pbDesktopEvents.orderProgress?.({
+        labId: lab, orderId: id, phase: 'checking', stage: 'download',
+      })?.catch(()=>{});
       let order, readyDetail;
       for (const delay of [0, 450, 1200, 3000, 6500]) {
         if (delay) await new Promise(resolve => setTimeout(resolve, delay));
         if (session !== epoch) return;
-        const detail = delay ? await Me(route) : firstDetail;
+        const detail = delay ? await fetchDetail() : firstDetail;
         order = detail?.order;
-        if (String(order?.id) !== id || String(order.lab_id) !== lab ||
+        if (!order) { trace('manifest_not_ready'); continue; }
+        if (String(order.id) !== id || (order.lab_id && String(order.lab_id) !== lab) ||
             !['sent', 'received'].includes(String(order.status)) || order.downloaded_at ||
             (order.settlement_mode === 'prepaid' && order.payment_status !== 'paid')) return;
         if (Array.isArray(detail.files) && detail.files.length > 0 &&
             detail.files.length === Number(order.file_count)) { readyDetail = detail; break; }
         order = null;
+        trace('manifest_not_ready');
       }
       if (!order) return;
       // Share the existing automatic worker lock. A second path must never
@@ -57,7 +75,6 @@ function connectNotificationDownload(reuseDetail = false) {
       pb1568Work.running = true;
       pb1568Work.labId = lab;
       try {
-        const trace = stage => window.pbDesktopEvents.downloadTrace?.({ orderId: id, stage, elapsedMs: Date.now() - at });
         if (typeof pb1568State === 'function' && typeof pb1568Save === 'function') {
           const task = pb1568State(lab, id);
           if (!waited && task?.phase === 'pending_download' && task.retryAt > Date.now() &&

@@ -38,3 +38,28 @@ test('real native source wires exact order metadata to ready-gated IPC',()=>{
  assert(preload.includes("ipcRenderer.on('lab-order-arrived'"));
  assert(preload.includes("ipcRenderer.send('lab-fast-order-ready')"));
 });
+
+test('tab changes and iframe navigation keep the live order listener ready',()=>{
+ const sent=[];
+ const wake=createFastOrderWake({getAccount:()=> 'lab-1',send:value=>sent.push(value.orderId)});
+ wake.ready();
+ wake.onNavigation(null,'http://127.0.0.1:43761/lab/albums',true,true);
+ wake.onNavigation(null,'http://127.0.0.1:43761/lab/embedded',false,false);
+ wake.notify('lab-1',A);
+ assert.deepEqual(sent,[A]);
+ wake.onNavigation(null,'http://127.0.0.1:43761/lab',false,true);
+ wake.notify('lab-1',B);
+ assert.deepEqual(sent,[A]);
+ wake.ready();
+ assert.deepEqual(sent,[A,B]);
+});
+
+test('clearing an account does not unsubscribe the renderer in the same document',()=>{
+ let account='lab-1';
+ const sent=[],wake=createFastOrderWake({getAccount:()=>account,send:value=>sent.push(value.labId)});
+ wake.ready();
+ wake.clear();
+ account='lab-2';
+ wake.notify('lab-2',A);
+ assert.deepEqual(sent,['lab-2']);
+});

@@ -71,3 +71,26 @@ test('worker can reuse the ready order detail and report download progress witho
   await worker('lab-1', detail, {});
   assert.equal(reads, 1);
 });
+
+test('detail returning 404 on arrival gets exact retry instead of a full-list scan', async () => {
+  let receive, attempts = 0, processed = 0;
+  const delays = [];
+  vm.runInNewContext('(' + connectNotificationDownload.toString() + ')();', {
+    window: { pbNativeStorage: {}, pbDesktopEvents: { onOrderArrived: callback => { receive = callback; } } },
+    addEventListener() {},
+    setTimeout: (fn, delay) => { delays.push(delay); queueMicrotask(fn); },
+    pb1568Work: { running: false },
+    pb1568ProcessOrder: async () => { processed++; },
+    pb1586WakeDownloads: () => assert.fail('did not use the exact retry'),
+    Me: async route => {
+      if (route === '/api/auth/me') return { lab: { id: 'lab-1' } };
+      if (route === '/api/lab/automation') return { settings: { autoDownloadEnabled: true } };
+      assert.equal(route, '/api/lab/orders/' + orderId);
+      if (++attempts === 1) throw Object.assign(Error('not_found'), { status: 404 });
+      return { order: { id: orderId, status: 'sent', file_count: 1 }, files: [{ id: 'file-1' }] };
+    },
+  });
+  await receive({ labId: 'lab-1', orderId, notifiedAt: Date.now() });
+  assert.equal(processed, 1);
+  assert.deepEqual(delays, [450]);
+});

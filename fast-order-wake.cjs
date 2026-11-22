@@ -21,7 +21,8 @@ function createFastOrderWake({getAccount,send,now=()=>Date.now(),limit=200}){
   },
   ready(){ready=true;flush()},
   reset(){ready=false},
-  clear(){pending.clear();ready=false},
+  onNavigation(_event,_url,isInPlace,isMainFrame){if(isMainFrame&&!isInPlace)ready=false;},
+  clear(){pending.clear()},
   pending:()=>pending.size
  };
 }

@@ -85,3 +85,30 @@ html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn[aria-busy="false"]
 @media (prefers-reduced-motion:reduce) {
  html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn[aria-busy="false"].idle {animation:none!important}
 }
+
+/* Fixed slots prevent count updates from repositioning the queue tabs. */
+@media (min-width: 1000px) {
+ html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav:has(>#pbLabDesktopStatusRow) {
+  position:relative;
+  justify-content:center!important;
+  flex-wrap:nowrap!important;
+  min-height:48px;
+ }
+ html body #root .labRoleWorkspace .pb1174QueueNav > button[data-pb1173-index] {
+  position:absolute!important;
+  top:50%;
+  translate:0 -50%;
+  width:110px!important;
+  margin:0!important;
+  transition:none!important;
+ }
+ html body #root .labRoleWorkspace .pb1174QueueNav > button[data-pb1173-index="2"] {left:8px}
+ html body #root .labRoleWorkspace .pb1174QueueNav > button[data-pb1173-index="1"] {left:124px}
+ html body #root .labRoleWorkspace .pb1174QueueNav > button[data-pb1173-index="0"] {left:240px}
+ html body #root .labRoleWorkspace .pb1174QueueNav > #pb1137LocalIntakeButton {
+  position:absolute!important;
+  right:8px;
+  top:50%;
+  translate:0 -50%;
+ }
+}

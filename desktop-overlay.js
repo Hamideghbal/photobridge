@@ -119,16 +119,7 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
  document.body.append(indicator);
  let state=null,loading=false,busy=false,lastOrderRevision=null,orderRefreshTimer=null;
  function refreshOrders(){clearTimeout(orderRefreshTimer);orderRefreshTimer=setTimeout(()=>window.dispatchEvent(new CustomEvent('photobridge-lab-orders-changed')),100);}
- const statusRow=document.createElement('div');statusRow.id='pbLabDesktopStatusRow';const statusStyle=document.createElement('style');statusStyle.textContent='#pbLabDesktopStatusRow{display:flex;justify-content:center;align-items:center;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:2px 6px;position:relative}.pb1148SecondaryHeader:has(>#pbLabDesktopStatusRow){flex-wrap:wrap}.pbLabConnectionHeader{display:flex;align-items:center;justify-content:center;min-height:42px;width:100%;box-sizing:border-box;background:white;border-bottom:1px solid #edf0f7}';statusStyle.textContent+='html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;direction:ltr!important;position:relative}html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader>#pbLabDesktopStatusRow{grid-column:2;grid-row:1;justify-self:center;width:auto;padding:0}.pb1526QueueStages{grid-column:1;grid-row:1;display:flex;flex-direction:row-reverse;justify-self:start;align-items:center;gap:14px;direction:rtl}html body #root .labRoleWorkspace:not(.pb1425PromotedSecond) .pb1148SecondaryHeader.pb1174QueueNav.pb1526QueueHeader>.pb1137Launch{grid-column:3;grid-row:1;justify-self:end}';document.head.append(statusStyle);const connection=document.createElement('span');statusRow.append(connection);connection.id='pbLabDesktopConnection';connection.setAttribute('role','status');connection.style.cssText='font:700 12px Vazirmatn,Tahoma;white-space:nowrap;padding:6px 10px;border-radius:9px;flex-shrink:0';
- function setStyle(node,name,value,priority=''){
-  if(node.style.getPropertyValue(name)!==value||node.style.getPropertyPriority(name)!==priority)
-    node.style.setProperty(name,value,priority);
- }
- function resetQueueLayout(header){
-  if(!header.classList.contains('pb1526QueueHeader'))return;
-  header.classList.remove('pb1526QueueHeader');
-  header.querySelectorAll(':scope>button[data-pb1173-index]').forEach(button=>{['grid-column','grid-row','justify-self','margin-left'].forEach(name=>button.style.removeProperty(name));});
- }
+ const statusRow=document.createElement('div');statusRow.id='pbLabDesktopStatusRow';const statusStyle=document.createElement('style');statusStyle.textContent='#pbLabDesktopStatusRow{display:flex;justify-content:center;align-items:center;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:2px 6px;position:relative}.pb1148SecondaryHeader:has(>#pbLabDesktopStatusRow){flex-wrap:wrap}.pbLabConnectionHeader{display:flex;align-items:center;justify-content:center;min-height:42px;width:100%;box-sizing:border-box;background:white;border-bottom:1px solid #edf0f7}';document.head.append(statusStyle);const connection=document.createElement('span');statusRow.append(connection);connection.id='pbLabDesktopConnection';connection.setAttribute('role','status');connection.style.cssText='font:700 12px Vazirmatn,Tahoma;white-space:nowrap;padding:6px 10px;border-radius:9px;flex-shrink:0';
  function updateSinglePagePager(){
   // Server paging only needs controls when there is more than one page.
   // Legacy native bundles are rejected by verify-native-ui.cjs.
@@ -182,21 +173,8 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
   // React reuses this row when switching from the print queue to settings.
   // Settings has no connection badge, so the old cleanup inside if(header)
   // never ran there. Its grid then clipped tabs and overrode promoted-row hiding.
-  document.querySelectorAll('.pb1526QueueHeader').forEach(previous=>{if(previous!==header||!queue)resetQueueLayout(previous);});
   if(header){
    if(statusRow.parentElement!==header)header.append(statusRow);
-   if(queue&&header.classList.contains('pb1174QueueNav')){
-    header.classList.add('pb1526QueueHeader');
-    const stages=[...header.querySelectorAll(':scope>button[data-pb1173-index]')];let offset=0;
-    const widths=new Map(stages.map(button=>[button,button.getBoundingClientRect().width]));
-    for(const button of stages.reverse()){
-      setStyle(button,'grid-column','1');
-      setStyle(button,'grid-row','1');
-      setStyle(button,'justify-self','start');
-      setStyle(button,'margin-left',String(offset)+'px','important');
-      offset+=widths.get(button)+14;
-    }
-   }else resetQueueLayout(header);
   }else statusRow.remove();
   const connected=state?.internetConnected;
   const label='PhotoBridge Lab '+(state?.nativeVersion||'')+' · '+(connected===true?'آنلاین · متصل به اینترنت':connected===false?'آفلاین · بدون اتصال به اینترنت':'در حال بررسی اتصال');

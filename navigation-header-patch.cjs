@@ -1,5 +1,6 @@
 'use strict';
 function patchNavigationHeader(source){
+ source=source.replace("if(changed&&!matchMedia(", "if(changed&&!row.classList.contains('pb1174QueueNav')&&!matchMedia(");
  if(source.includes('PB1576 resolve startup sections'))return limitHeaderObserver(source);
  if(source.includes('PB1574 active secondary navigation'))return upgradeSectionAliases(source);
  const start="let nav=h.querySelector('.pb1147LabNav');if(!nav){",end='h.append(nav);';
@@ -18,8 +19,8 @@ function pb1574Source(selector){
 }
 function secondary(h){`);
  source=source.replace(old,`const source=queueRoute?pb1574Source('.mainQueueFilters'):/^\\/lab\\/finance(?:\\/|$)/.test(location.pathname)?(pb1574Source('.financeSectionTabs')?pb1372FinanceContext():null):/^\\/lab\\/(?:settings(?:\\/|$)|wallet$)/.test(location.pathname)?pb1574Source('.labSettingsSectionTabs'):null;`);
- source=source.replace('if(row._source!==source||buttons().length!==originals.length){','if(row._source!==source||buttons().length!==originals.length||originals.some((node,i)=>row._pb1574Originals?.[i]!==node)){');
- source=source.replace('row._source=source;','row._source=source;row._pb1574Originals=originals;');
+ source=source.replace('if(row._source!==source||buttons().length!==originals.length){','if(buttons().length!==originals.length||row._source?.classList.contains("mainQueueFilters")!==source.classList.contains("mainQueueFilters")){');
+ source=source.replace('row._source=source;','row._source=source;').replace('const isQueue=source.classList', 'row._source=source;const isQueue=source.classList');
  source=source.replace("new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,characterData:true});","new MutationObserver(records=>{if(records.some(r=>r.type!=='attributes'||r.oldValue!==r.target.getAttribute(r.attributeName)))schedule();}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeOldValue:true,attributeFilter:['class','style','hidden']});");
  return upgradeSectionAliases(source);
 }

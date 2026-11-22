@@ -12,7 +12,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){if(!args[1]?.signal?.aborted)offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const pageReads=new Map(),warmOrders=new Map(),stageProofs=new Map();
-  const warmPageMs=5000;
+  const warmPageMs=30000;
   let orderGeneration=0,financeGeneration=0,stageAccess=null;
   const pageScope=()=>JSON.stringify([store.get('labId'),store.get('deviceId'),store.get('auth'),getReadEpoch()]);
   const financeScope=()=>JSON.stringify([pageScope(),financeGeneration]);
@@ -70,7 +70,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   async function warmOrderPage(mode){
     const scope=pageScope(),generation=orderGeneration,route=firstPage(mode);
     const key=JSON.stringify([scope,generation,route]);
-    if(warmedFirstPage(key,mode))return;
+    if(warmedFirstPage(key,mode)&&Date.now()-warmOrders.get(mode).at<5000)return;
     const result=await readPage(key,route,true);
     if(scope===pageScope()&&generation===orderGeneration)rememberFirstPage(key,mode,result);
   }
@@ -274,10 +274,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             const catalogRead=req.method==='GET'&&url.pathname==='/api/lab/print-catalog';
             const scope=pagedRead||accessRead||catalogRead?pageScope():null,generation=orderGeneration;
             const catalogTicket=catalogRead?require('./read-cache.cjs').beginRead(store,cacheUrl):null;
-            let result;
+            let result,servedWarm=false;
             if(pagedRead){
               const key=JSON.stringify([scope,generation,cacheUrl]),mode=url.searchParams.get('mode');
               const warmed=openPage?warmedFirstPage(key,mode):null;
+              servedWarm=Boolean(warmed);
+              if(warmed&&Date.now()-warmOrders.get(mode).at>=5000)void warmOrderPage(mode).catch(()=>{});
               result=warmed||await readPage(key,upstreamUrl);
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
               if(!warmed&&generation===orderGeneration&&['print','album'].includes(mode)&&cacheUrl===firstPage(mode)){
@@ -331,9 +333,9 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(pagedRead&&ok){
               const page=validPage(result,(url.searchParams.get('q')||'').trim().slice(0,100));
               if(!page)return json(res,502,{error:'invalid_paged_orders'});
-              if(generation===orderGeneration)rememberStageProofs(page,scope);
+              if(!servedWarm&&generation===orderGeneration)rememberStageProofs(page,scope);
             }
-            if(ok&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
+            if(ok&&!servedWarm&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
               const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
               if(!cached||cached.status!==status||cached.mime!==mime||cached.body!==encoded){
                 if(catalogTicket)require('./read-cache.cjs').commitRead(store,catalogTicket,status,mime,encoded);
@@ -414,7 +416,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         return fs.createReadStream(file).pipe(res);
       }
       return json(res,404,{error:'not_found'});
-    }catch(e){return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}
+    }catch(e){if(res.headersSent){res.destroy(e);return;}return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}
   });
   return server;
 }

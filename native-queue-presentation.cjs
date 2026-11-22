@@ -29,6 +29,7 @@ function patchNativeQueuePresentation(source) {
  const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey;
  const pbNativeVisiblePage=x.useRef(pbNativePageKey);
  pbNativeVisiblePage.current=pbNativePageKey;
+ const pbNativeDetailRequest=x.useRef(0);
  const pbNativeOpeningPage=x.useRef(pbNativePageKey);
  pbNativeOpeningPage.current=pbNativePageLoading?pbNativePageKey:null;
  `;
@@ -57,6 +58,11 @@ function patchNativeQueuePresentation(source) {
   .replace('value:r1944Query,onChange:le=>r1944SetQuery(le.target.value)', 'value:r1944Query,maxLength:100,onChange:le=>{r1944SetQuery(le.target.value);r1944SetPage(1)}')
   .replace('String([le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number].join(" ")).toLowerCase().includes(query.toLowerCase())','[le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number,...(Array.isArray(le.files)?le.files.map(file=>file.original_name||file.name):[])].some(value=>pbNativeSearchText(value).includes(pbNativeSearchText(query)))')
   .replace('r1944SetDebouncedQuery(String(r1944Query||"")),270','r1944SetDebouncedQuery(pbNativeQueueSearch(r1944Query)),110')
+  .replace("x.useLayoutEffect(()=>{const main=document.querySelector('main.pageMain.pbFixedRoleHeader.labPrimaryConnectorMode')","x.useLayoutEffect(()=>{if(h){r1955SetHost(null);return;}const main=document.querySelector('main.pageMain.pbFixedRoleHeader.labPrimaryConnectorMode')")
+  .replace("document.documentElement.classList.remove('pb1956LabThirdHeader');host.remove()}},[])", "document.documentElement.classList.remove('pb1956LabThirdHeader');document.documentElement.style.removeProperty('--pb1956-third-bottom');host.remove()}},[Boolean(h),o])")
+  .replace('const _pbKey=String(le.id),_pbCached=', 'const pbDetailRequest=++pbNativeDetailRequest.current,pbDetailPath=location.pathname;const _pbKey=String(le.id),_pbCached=')
+  .replace('data:Mt}),I(Mt),S(xt.order)', 'data:Mt});if(pbDetailRequest===pbNativeDetailRequest.current&&location.pathname===pbDetailPath){I(Mt);S(xt.order)}')
+  .replace('onClick:()=>{S(null),I(null),Dn(ur(T,"",l),!0)}','onClick:()=>{++pbNativeDetailRequest.current;S(null);I(null);Dn(ur(T,"",l),!0)}')
   .replace(afterSuccess,'pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:true});'+afterSuccess)
   .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:!pbNativePageResult?.ok?null:Be.length?Nt.map(`);
  return source.slice(0,start)+patched+source.slice(cardAt+cards.length);

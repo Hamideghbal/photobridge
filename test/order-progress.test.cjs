@@ -20,3 +20,14 @@ test('notification progress is bounded, isolated by lab and cleared on dismissal
 });
 
 test('failure reason reaches the alert, is bounded and is cleared when download resumes',()=>{const error={orderId:'order-1',phase:'failed',reason:'مسئول ذخیره‌سازی انتخاب نشده است.'};assert.equal(normalizeProgress(error).reason,error.reason);assert.equal(normalizeProgress({...error,reason:'x'.repeat(600)}).reason.length,400);assert.equal(normalizeProgress({...error,phase:'downloading'}).reason,'');});
+
+test('the notification worker can report verified stages from the canonical /lab entry route',()=>{
+ let handler,received;
+ const frame={url:'http://127.0.0.1:43761/lab'},contents={mainFrame:frame};
+ installOrderProgress({ipcMain:{handle:(_name,fn)=>handler=fn},getWindow:()=>({webContents:contents,isDestroyed:()=>false}),
+  getAccount:()=> 'A',getOrigin:()=> 'http://127.0.0.1:43761',update:value=>{received=value;}});
+ assert.equal(handler({sender:contents,senderFrame:frame},{labId:'A',orderId:'order-1',phase:'invoice_issued',downloadVerified:true}),true);
+ assert.equal(received.phase,'invoice_issued');
+ frame.url='http://127.0.0.1:43761/laboratory';
+ assert.throws(()=>handler({sender:contents,senderFrame:frame},{labId:'A',orderId:'order-1',phase:'invoice_issued',downloadVerified:true}),/account_changed/);
+});

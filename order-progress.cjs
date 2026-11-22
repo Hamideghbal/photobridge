@@ -13,7 +13,7 @@ function installOrderProgress({ipcMain,getWindow,getAccount,getOrigin,update}){
  ipcMain.handle('lab-order-progress',(event,value)=>{
   const win=getWindow();if(!win||win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('invalid_sender');
   let url;try{url=new URL(event.senderFrame.url)}catch{throw Error('invalid_sender')}
-  const account=getAccount();if(url.origin!==getOrigin()||!url.pathname.startsWith('/lab/')||!account||String(value?.labId)!==String(account))throw Error('account_changed');
+  const account=getAccount();if(url.origin!==getOrigin()||!(url.pathname==='/lab'||url.pathname.startsWith('/lab/'))||!account||String(value?.labId)!==String(account))throw Error('account_changed');
   update(normalizeProgress(value),account);return true;
  });return()=>ipcMain.removeHandler('lab-order-progress');
 }

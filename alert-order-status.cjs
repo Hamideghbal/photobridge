@@ -20,23 +20,27 @@ function entries(store,account,now=Date.now()){
    Number.isFinite(row.at)&&row.at<=now+60000&&now-row.at<=TTL&&
    (row.number===null||number(row.number)===row.number));
 }
-function noteComplete(store,account,progress,now=Date.now()){
- if(!account||progress?.phase!=='complete'||progress.downloadVerified!==true||progress.invoiceIssued!==true||
-    !uuid.test(String(progress.orderId||''))||!Number.isFinite(now))return false;
+function noteStages(store,account,progress,now=Date.now()){
+ if(!account||!uuid.test(String(progress?.orderId||''))||!Number.isFinite(now)||
+    !(progress.downloadVerified===true||progress.invoiceIssued===true))return false;
  const current=entries(store,account,now),id=String(progress.orderId);
  const found=current.find(row=>row.orderId===id);
- const row={orderId:id,number:number(progress.number)||found?.number||null,at:now};
- const next=[...current.filter(item=>item.orderId!==id),row].slice(-MAX);
- store.set(key(account),next);
- // Persist the verified note into the ORIGINAL unread notification itself.
- // Its lifetime is controlled only by operator acknowledgement, not the
- // short-lived progress card nor the bounded order-ID correlation cache.
+ const row={orderId:id,number:number(progress.number)||found?.number||null,at:found?.at||now,
+  downloadVerified:progress.downloadVerified===true||found?.downloadVerified===true||Boolean(found&&!('downloadVerified' in found)),
+  invoiceIssued:progress.invoiceIssued===true||found?.invoiceIssued===true||Boolean(found&&!('invoiceIssued' in found)),
+  complete:(progress.phase==='complete'&&progress.downloadVerified===true&&progress.invoiceIssued===true)||found?.complete===true||Boolean(found&&!('complete' in found))};
+ if(found&&JSON.stringify(found)===JSON.stringify(row))return false;
+ store.set(key(account),[...current.filter(item=>item.orderId!==id),row].slice(-MAX));
  const pendingKey='nativeAlertsPending:'+String(account),pending=store.get(pendingKey);
  if(Array.isArray(pending)&&pending.length){
   const decorated=decoratePending(store,account,pending,now);
   if(decorated.some((item,i)=>item!==pending[i]))store.set(pendingKey,decorated);
  }
  return true;
+}
+function noteComplete(store,account,progress,now=Date.now()){
+ if(progress?.phase!=='complete'||progress.downloadVerified!==true||progress.invoiceIssued!==true)return false;
+ return noteStages(store,account,progress,now);
 }
 function decoratePending(store,account,items,now=Date.now()){
  if(!account||!Array.isArray(items)||!items.length)return Array.isArray(items)?items:[];
@@ -58,7 +62,11 @@ function decoratePending(store,account,items,now=Date.now()){
   })();
   if(!candidate)return item;
   if(Number.isFinite(createdAt)&&(candidate.at<createdAt-60000||candidate.at-createdAt>TTL))return item;
-  return {...item,completionNote:NOTE,completedAt:new Date(candidate.at).toISOString()};
+  const downloadVerified=item.downloadVerified===true||candidate.downloadVerified!==false;
+  const invoiceIssued=item.invoiceIssued===true||candidate.invoiceIssued!==false;
+  const complete=candidate.complete!==false&&downloadVerified&&invoiceIssued;
+  if(item.downloadVerified===downloadVerified&&item.invoiceIssued===invoiceIssued&&!complete)return item;
+  return {...item,downloadVerified,invoiceIssued,...(complete?{completionNote:NOTE,completedAt:new Date(candidate.at).toISOString()}: {})};
  });
 }
-module.exports={NOTE,TTL,MAX,noteComplete,decoratePending};
+module.exports={NOTE,TTL,MAX,noteComplete,noteStages,decoratePending};

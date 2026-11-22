@@ -1,7 +1,7 @@
 'use strict';
 const path=require('node:path');
 const {normalizeSettings,initializeSettings}=require('./alert-settings.cjs');
-const {noteComplete,decoratePending}=require('./alert-order-status.cjs');
+const {noteStages,decoratePending}=require('./alert-order-status.cjs');
 class AlertWindow {
  constructor({BrowserWindow,ipcMain,store,getAccount,open,reply=null,retryDownload=null,verifyInvoice=null,getWorkArea=()=>({x:0,y:0,width:1920,height:1080})}){
   Object.assign(this,{BrowserWindow,ipcMain,store,getAccount,open,reply,retryDownload,verifyInvoice,getWorkArea});this.window=null;this.downloads=new Map();this.downloadAccount=null;this.focusOrderId=null;this.items=[];this.account=null;this.ack=null;this.settingsOnly=false;this.hiddenByUser=false;this.replying=new Set();this.revision=0;this.pendingRenderRevision=null;this.invoiceChecks=new Map();
@@ -21,14 +21,14 @@ class AlertWindow {
   // may produce an invoice checkmark. A generic download-complete event does not.
   const previous=this.downloads.get(value.orderId);
   const invoiceIssued=value.invoiceIssued===true||value.phase==='invoice_issued'||(value.phase==='failed'&&value.downloadVerified===true&&['pdf','print'].includes(value.stage))||previous?.invoiceIssued===true;
-  value={...value,invoiceIssued,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};
-  const completed=noteComplete(this.store,account,value);this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
+  value={...value,downloadVerified:value.downloadVerified===true||previous?.downloadVerified===true,invoiceIssued,orderCreatedAt:value.orderCreatedAt||previous?.orderCreatedAt||null,firstSeenAt:previous?.firstSeenAt||Math.max(Date.now(),(this.lastDownloadSeenAt||0)+1)};
+  const completed=noteStages(this.store,account,value);if(completed&&this.account===account)this.items=decoratePending(this.store,account,this.items);this.lastDownloadSeenAt=Math.max(this.lastDownloadSeenAt||0,value.firstSeenAt);this.downloads.delete(value.orderId);this.downloads.set(value.orderId,value);
   while(this.downloads.size>20)this.downloads.delete(this.downloads.keys().next().value);
   if(this.window&&!this.window.isDestroyed()){
    this.window.webContents.send('lab-alert-progress',this.visibleDownloads());
    if(completed)this.window.webContents.send('lab-alert-change');
   }
-  if(value.downloadVerified===true&&!value.invoiceIssued&&['verified','complete','invoice_issuing'].includes(value.phase))this.scheduleInvoiceCheck(value.orderId,account);
+  if(value.downloadVerified===true&&!value.invoiceIssued)this.scheduleInvoiceCheck(value.orderId,account);
  }
  async scheduleInvoiceCheck(id,account){
   if(!this.verifyInvoice||!account||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))return;
@@ -39,7 +39,7 @@ class AlertWindow {
     if(delay)await new Promise(resolve=>{const timer=setTimeout(resolve,delay);timer.unref?.()});
     if(this.getAccount()!==account||this.downloadAccount!==account)break;
     const current=this.downloads.get(id);
-    if(!current||current.invoiceIssued||current.downloadVerified!==true||!['verified','complete','invoice_issuing'].includes(current.phase))break;
+    if(!current||current.invoiceIssued||current.downloadVerified!==true)break;
     let issued=false;try{issued=await this.verifyInvoice({account,orderId:id})===true}catch{}
     if(!issued)continue;
     const latest=this.downloads.get(id);if(!latest||this.getAccount()!==account||latest.invoiceIssued)break;

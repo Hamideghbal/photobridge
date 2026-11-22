@@ -21,9 +21,9 @@ function renderDownloads(items){
   }
   panel.replaceChildren();
   const previouslyComplete=Boolean(notice.completionNote);
-  const downloadVerified=previouslyComplete||item?.downloadVerified===true;
+  const downloadVerified=previouslyComplete||notice.downloadVerified===true||item?.downloadVerified===true;
   // A generic "complete" or 100% byte progress is NOT proof of an invoice.
-  const invoiceDone=previouslyComplete||item?.invoiceIssued===true||item?.phase==='invoice_issued'||
+  const invoiceDone=previouslyComplete||notice.invoiceIssued===true||item?.invoiceIssued===true||item?.phase==='invoice_issued'||
     (downloadVerified&&item?.phase==='failed'&&['pdf','print'].includes(item.stage));
   const downloadFailed=item?.phase==='failed'&&!downloadVerified;
   const invoiceFailed=item?.phase==='failed'&&downloadVerified&&item.stage==='invoice';

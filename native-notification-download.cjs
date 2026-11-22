@@ -58,6 +58,13 @@ function connectNotificationDownload(reuseDetail = false) {
       pb1568Work.labId = lab;
       try {
         const trace = stage => window.pbDesktopEvents.downloadTrace?.({ orderId: id, stage, elapsedMs: Date.now() - at });
+        if (typeof pb1568State === 'function' && typeof pb1568Save === 'function') {
+          const task = pb1568State(lab, id);
+          if (!waited && task?.phase === 'pending_download' && task.retryAt > Date.now() &&
+              /^(download_manifest_incomplete|file_not_found)$/i.test(String(task.error || ''))) {
+            pb1568Save(lab, id, { ...task, retryAt: 0 });
+          }
+        }
         trace('worker_scheduled');
         let firstByte = false, initialBytes;
         const progress = value => {
@@ -93,9 +100,19 @@ function reuseDownloadedDetails(source) {
   const read = "const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));";
   const download = "pb1450Download(detail,()=>{},{silent:true})";
   if (!worker.includes(read) || !worker.includes(download)) return { source, reused: false };
-  const patched = worker.replace(signature, 'async function pb1568ProcessOrder(lab,order,settings,nativeNotice){')
+  const invoice = "pb1568Save(lab,id,{phase:'invoice_issued',invoiceId:data.invoice.id,attempts:0});";
+  let patched = worker.replace(signature, 'async function pb1568ProcessOrder(lab,order,settings,nativeNotice){')
     .replace(read, "const detail=nativeNotice?.detail||await Me('/api/lab/orders/'+encodeURIComponent(id));")
-    .replace(download, "pb1450Download(detail,nativeNotice?.progress||(()=>{}),{silent:true})");
+    .replace(download, "pb1450Download(detail,nativeNotice?.progress||(()=>{}),{silent:true})")
+    .replace(invoice, invoice + `
+     if(!data.desktopPending&&!data.queued&&!data.offline&&window.pbDesktopEvents?.orderProgress){
+      void window.pbDesktopEvents.orderProgress({labId:lab,orderId:id,number:order.number,
+       orderCreatedAt:order.created_at,phase:'invoice_issued',stage:'invoice',downloadVerified:true}).catch(()=>{});
+     }`);
+  const downloadBody = source.slice(source.indexOf('async function pb1450Download('),source.indexOf('async function pb1450AllowStage('));
+  if (/\broot\s*=\s*await\s+pb1450Root\(/.test(downloadBody)) {
+    patched = patched.replace('await pb1450Root(false);','if(!nativeNotice?.detail)await pb1450Root(false);');
+  }
   return { source: source.slice(0, start) + patched + source.slice(end), reused: true };
 }
 

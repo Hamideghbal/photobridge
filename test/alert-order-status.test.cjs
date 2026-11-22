@@ -86,3 +86,22 @@ test('unread new-order notification itself retains verified note beyond cache TT
  alerts.acknowledge('lab-a',[notice.id]);
  assert.equal(store.get(pendingKey).length,0,'only explicit operator acknowledgment removes durable notice');
 });
+
+test('the unread card keeps each verified check independently after later updates and progress eviction',()=>{
+ const store=storage(),account='lab-a',notice=original({at:Date.now()-1000});
+ store.set('nativeAlertsPending:'+account,[notice]);
+ const controller=new AlertWindow({ipcMain:{handle(){}},store,getAccount:()=>account});
+ controller.account=account;controller.items=[notice];
+ controller.updateDownload({orderId:A,number:'896',phase:'verified',downloadVerified:true},account);
+ controller.updateDownload({orderId:A,number:'896',phase:'checking',downloadVerified:false},account);
+ for(let i=0;i<25;i++)controller.updateDownload({orderId:'other-'+i,phase:'downloading'},account);
+ assert.equal(controller.downloads.has(A),false);
+ assert.equal(controller.state().items[0].downloadVerified,true);
+ assert.equal(controller.state().items[0].invoiceIssued,false);
+ controller.updateDownload({orderId:A,number:'896',phase:'invoice_issued',downloadVerified:true},account);
+ const persisted=store.get('nativeAlertsPending:'+account)[0];
+ assert.equal(persisted.invoiceIssued,true);
+ assert.equal(persisted.downloadVerified,true);
+ assert(!persisted.completionNote,'invoice is independent of PDF and print completion');
+ assert.equal(decoratePending(store,account,[persisted],Date.now()+TTL+1000)[0].downloadVerified,true);
+});

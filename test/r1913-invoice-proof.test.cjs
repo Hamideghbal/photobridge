@@ -22,7 +22,9 @@ test('R1913: a completed download is not a proof; verified invoice upgrades its 
   verifyInvoice:async()=>confirmed});
  alert.updateDownload({orderId:id,number:'42',phase:'complete',downloadVerified:true,stage:'download'},'lab-a');
  assert.equal(alert.downloads.get(id).invoiceIssued,false);
- assert.equal(data.get('labAlertVerifiedCompleted:lab-a'),undefined);
+ assert.equal(data.get('labAlertVerifiedCompleted:lab-a')[0].downloadVerified,true);
+ assert.equal(data.get('labAlertVerifiedCompleted:lab-a')[0].invoiceIssued,false);
+ assert.equal(data.get('labAlertVerifiedCompleted:lab-a')[0].complete,false);
  // Already running asynchronous check; confirmation can happen on the subsequent
  // real invoice_issued event, or after the bounded proof-poll retries.
  alert.updateDownload({orderId:id,number:'42',phase:'invoice_issued',stage:'invoice',downloadVerified:true},'lab-a');

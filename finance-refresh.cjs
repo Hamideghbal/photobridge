@@ -61,6 +61,17 @@ async function refreshFinance(store,request,{force=false,focus=null,scope,getAcc
     // Keep account-change rejections observed until the entire flight ends.
     void current.flight.catch(()=>{});
   }
+  if(focus==='overview'){
+    // Dashboard totals need reconciled financial inputs, but no journal rows.
+    const current=state;
+    current.overview??=Promise.all(routes.slice(0,-1).map(([url])=>current.jobs.get(url))).then(results=>{
+      accountGate(store,lab,account,getAccount);
+      for(const item of results)current.commit(item);
+      if(results.every(item=>item.ok)&&!current.result?.complete)new LocalBusiness(store).absorbRemote({financeOnly:true});
+      return current.result;
+    });
+    return current.overview;
+  }
   if(focus&&state.jobs.has(focus)){
     const selected=state.commit(await state.jobs.get(focus));
     return state.result||{complete:false,invoicesFresh:focus==='/api/lab/invoices'&&selected.ok,updatedAt:new Date().toISOString()};

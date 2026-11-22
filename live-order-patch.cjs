@@ -22,7 +22,7 @@ function patchOrderLive(source){
   const liveHelpers=source.includes('function pb1468BrowserEvents')?'':
    require('./lab-realtime.cjs').subscribeLabEvents.toString().replace('function subscribeLabEvents','function pb1468SubscribeLabEvents')+
    '\n'+browserEvents.toString().replace('function browserEvents','function pb1468BrowserEvents');
-  return upgradeFinanceLive(patchFinanceLive(removeConfirmedOrderExitWait(patchNativeQueuePresentation(withPager))))+
+  return upgradeFinanceLive(patchFinanceLive(removeConfirmedOrderExitWait(patchNativeOrderStages(patchNativeQueuePresentation(withPager)))))+
    '\n/* PB1961 preserve native Lab server pagination */\n'+liveHelpers;
  }
  if(source.includes('/* PB1468 shared document isolation */'))return upgradeFinanceLive(source);
@@ -32,9 +32,41 @@ function patchOrderLive(source){
  source=source.slice(0,start)+replacement+source.slice(end);source=source.replace('new Error(p.error||"request_failed")','new Error(p.message||p.error||"request_failed")');source=source.replace('JSON.stringify({status:nt,note:xt||null})','JSON.stringify({status:nt,note:xt||null,expectedUpdatedAt:le.updated_at,expectedRevision:le.document_revision})').replace('JSON.stringify({stage:nt})','JSON.stringify({stage:nt,expectedUpdatedAt:le.updated_at,expectedRevision:le.document_revision})');return upgradeFinanceLive(patchFinanceLive(source))+'\n'+require('./lab-realtime.cjs').subscribeLabEvents.toString().replace('function subscribeLabEvents','function pb1468SubscribeLabEvents')+'\n'+browserEvents.toString().replace('function browserEvents','function pb1468BrowserEvents');
 }
 
+function patchNativeOrderStages(source){
+ const start=source.indexOf('It=async(le,nt,xt)=>'),end=source.indexOf(',aa=async',start);
+ if(start<0||end<0||end-start>12000)return source;
+ const handlers=source.slice(start,end)
+  .replace('nt==="printing"&&!await pb1450AllowStage(le)','nt==="printing"&&!le.invoice_id&&!await pb1450AllowStage(le)')
+  .replace('gn=async le=>{if(!await pb1450AllowStage(le))','gn=async le=>{if(!le.invoice_id&&!await pb1450AllowStage(le))')
+  .replace(`if(typeof window!=="undefined"&&window.pbNativeStorage){const fresh=(await Me('/api/lab/orders/'+encodeURIComponent(le.id))).order;`, `if(!le.invoice_id&&typeof window!=="undefined"&&window.pbNativeStorage){const fresh=(await Me('/api/lab/orders/'+encodeURIComponent(le.id))).order;`)
+  .replace('un=async le=>{if(!await pb1450AllowStage(le))','un=async le=>{if(!le.invoice_id&&!await pb1450AllowStage(le))')
+  .replace('["printing","binding","ready","completed"].includes(nt)&&!await pb1450AllowStage(le)','["printing","binding","ready","completed"].includes(nt)&&!le.invoice_id&&!await pb1450AllowStage(le)');
+ return source.slice(0,start)+handlers+source.slice(end);
+}
+
+function patchNativeFinanceOverview(source){
+ const invoice='const Ot=await Me(ke);';
+ const parallel='Me(`/api/lab/finance/summary?${At.toString()}`),extraPath?Me(extraPath):Promise.resolve(null)';
+ const viewGuard=/pb1569LoadedFinanceView\.current=w;\s*const endpoint=/;
+ const finance=source.indexOf('function ub({role:t');
+ const start=source.indexOf(invoice,finance),summary=source.indexOf(parallel,start);
+ const tabMatch=summary<0?null:viewGuard.exec(source.slice(summary,summary+14000));
+ const tabs=tabMatch?summary+tabMatch.index:-1;
+ if(finance<0||start<0||summary<0||tabs<0||tabs-start>14000||source.includes('pbNativeOverview'))return source;
+ const end=tabs+tabMatch[0].length;
+ const body=source.slice(start,end)
+  .replace(invoice,'const pbNativeOverview=w==="overview",Ot=pbNativeOverview?null:await Me(ke);')
+  .replace(parallel,'Me(`/api/lab/finance/summary?${At.toString()}${pbNativeOverview?"&pbNativeOverview="+(pb1572FinanceFirstLoad.current?"initial":"live"):""}`),extraPath?Me(extraPath):Promise.resolve(null)')
+  .replace('o(Ot.invoices||[]),f(Et.summary||null),C(Et.customers||[]);','if(Ot){o(Ot.invoices||[]);pbNativeFinanceInvoicesLoaded.current=true;}f(Et.summary||null),C(Et.customers||[]);')
+  .replace('pb1569LoadedFinanceView=x.useRef(null);','pb1569LoadedFinanceView=x.useRef(null),pbNativeFinanceInvoicesLoaded=x.useRef(false);')
+  .replace(viewGuard,'const pbNativeLastFinanceView=pb1569LoadedFinanceView.current;pb1569LoadedFinanceView.current=w;\n   if(w==="overview"||w==="invoices"||pbNativeLastFinanceView==="overview"){if(w!=="overview"&&!pbNativeFinanceInvoicesLoaded.current)g(!0);void ce().catch(()=>{});return;}\n   const endpoint=');
+ return source.slice(0,start)+body+source.slice(end);
+}
+
 function upgradeFinanceLive(source){
  source=require('./download-transition-patch.cjs').patchDownloadTransition(source);
  source=require('./document-ui-patch.cjs').patchDocumentUI(source);
+ source=patchNativeFinanceOverview(source);
  const compact='const V=t=>{if(typeof t==="string"&&/^(?:OFF-|PB-)/.test(t))return t.replace(/^OFF-[A-F0-9]{32}-(?:INV|ORD|EXP|PAY|COR)-0*([1-9]\\d*|0)$/,"OFF-$1").replace(/^PB-[A-F0-9]{8}-(?:INV|ORD|EXP|PAY|COR|ADJ)-0*([1-9]\\d*|0)$/,"L-$1");return Number(t||0).toLocaleString("fa-IR")}';
  for(const before of ['const V=t=>Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:PB-|OFF-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:OFF-|PB-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")'])source=source.replaceAll(before,compact);
  if(!source.includes('/* PB1526 quiet finance */')){

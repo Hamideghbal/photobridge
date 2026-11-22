@@ -1,7 +1,7 @@
 'use strict';
 const {LocalBusiness,canonical}=require('./local-business.cjs');
 function localActive(store){return!!store.get('localBusinessActive:'+store.get('labId'));}
-async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request,financeScope,financeAccount}){
+async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request,financeScope,financeAccount,hasStageProof}){
  if(!store.get('auth')||!store.get('labId'))return false;
  // These navigation reads use the standard proxy and never need a local
  // business migration or SQLite write before reaching the server.
@@ -43,14 +43,24 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
     }
    }catch{same();/* Use last verified local bootstrap if server briefly drops. */}
   }
-  if(req.method==='GET'&&!offline&&['/api/lab/invoices','/api/lab/finance/summary','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/ledger'].includes(p))await require('./finance-refresh.cjs').refreshFinance(store,request,{force:p==='/api/lab/invoices',focus:p,scope:financeScope?.(),getAccount:financeAccount});
+  if(req.method==='GET'&&!offline){
+   const {refreshFinance,routes}=require('./finance-refresh.cjs');
+   if(routes.some(([route])=>route===p)){
+    const overview=p==='/api/lab/finance/summary'?url.searchParams.get('pbNativeOverview'):null;
+    const options={force:p==='/api/lab/invoices',focus:overview?'overview':p,scope:financeScope?.(),getAccount:financeAccount};
+    const snapshot=overview==='initial'&&store.cached(p)&&engine.state().snapshotAt;
+    if(snapshot)void refreshFinance(store,request,options).catch(()=>{});
+    else await refreshFinance(store,request,options);
+   }
+  }
   const policy=require('./document-policy.cjs').routePolicy(store,req.method,req.url,b,offline);
-  const stageRequest=require('./invoice-stage-guard.cjs').invoiceStageRequest(req.method,p,b);
-  if(stageRequest){
+  const {invoiceStageRequest,requiresInvoice}=require('./invoice-stage-guard.cjs');
+  const stageRequest=invoiceStageRequest(req.method,p,b);
+  if(stageRequest&&(policy.kind==='local'||!hasStageProof?.(stageRequest.orderId,b))){
    let detail;
    if(policy.kind==='local')detail=engine.read('/api/lab/orders/'+(policy.target?.id||stageRequest.orderId));
    else{const forwarded=require('./document-policy.cjs').remoteRequest(store,'/api/lab/orders/'+stageRequest.orderId,{},policy.target),response=await request(forwarded.url);detail=await response.json();same();if(!response.ok){json(res,response.status,detail);return true;}}
-   if(require('./invoice-stage-guard.cjs').requiresInvoice(detail)){json(res,409,{error:'order_invoice_required',message:'ابتدا فاکتور سفارش را صادر کنید؛ مرحلهٔ کار تغییر نکرد.'});return true;}
+   if(requiresInvoice(detail)){json(res,409,{error:'order_invoice_required',message:'ابتدا فاکتور سفارش را صادر کنید؛ مرحلهٔ کار تغییر نکرد.'});return true;}
   }
   const detailMatch=p.match(/^\/api\/lab\/orders\/([^/]+)(?:\/invoice-pricing)?$/);
   if(req.method==='GET'&&detailMatch&&!offline){const state=engine.state(),doc=Object.values(state.orders).find(o=>o.id===detailMatch[1]||o.serverId===detailMatch[1]);if(!doc||require('./document-policy.cjs').shared(doc)){const forwarded=require('./document-policy.cjs').remoteRequest(store,req.url,{},doc),response=await request(forwarded.url);const rawData=await response.json();same();const data=response.ok&&p==='/api/lab/orders/'+detailMatch[1]?require('./download-order-detail.cjs').normalizeDownloadOrderDetail(rawData,String((doc?.serverId||detailMatch[1]))):rawData;if(response.ok&&data.order){store.transaction(()=>{const live=engine.state();const old=doc||{};live.orders[old.id||data.order.id]={...data.order,...old,status:data.order.status??old.status,album_stage:data.order.album_stage??old.album_stage,updated_at:data.order.updated_at||old.updated_at,document_revision:data.order.document_revision??old.document_revision,remote:old.id?old.remote:true,files:old.files?.length?old.files.map(f=>{const remote=data.files?.find(r=>r.id===(f.serverId||f.id));return remote?{...f,...remote,id:f.id,serverId:f.serverId||remote.id}:f;}):data.files||[]};store.set(engine.key(),live);});}if(response.ok&&data.invoice)require('./remote-invoice-cache.cjs').rememberRemoteInvoice(store,data.invoice,doc?.id||detailMatch[1]);json(res,response.status,data);return true;}}

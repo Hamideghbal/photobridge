@@ -165,3 +165,28 @@ test('a prepared first page responds immediately while live and other-account re
   store.db.close();
  }
 });
+
+test('short search text reaches the server and a default page cannot masquerade as search results',async()=>{
+ const {createHost}=require('../host.cjs'),{LabStore}=require('../store.cjs');
+ const store=new LabStore(':memory:');
+ store.set('auth',{});store.set('labId','A');
+ const seen=[];
+ const server=createHost({store,token:'test',sync:{},request:async url=>{
+  const q=new URL(url,'http://localhost').searchParams.get('q');
+  seen.push(q);
+  return Response.json({orders:[{id:'one'}],pages:1,total:1,counts:{flow:1},query:q==='ا'?'':q});
+ }});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const headers={Cookie:'desktop=test',Connection:'close'},root='http://127.0.0.1:'+server.address().port;
+ try{
+  const first=await fetch(root+'/api/lab/orders?paged=1&mode=print&q='+encodeURIComponent('ا'),{headers});
+  assert.equal(first.status,502);
+  assert.equal((await first.json()).error,'invalid_paged_orders');
+  for(const q of ['نی','72']){
+   const response=await fetch(root+'/api/lab/orders?paged=1&mode=album&q='+encodeURIComponent(q),{headers});
+   assert.equal(response.status,200);
+   assert.equal((await response.json()).query,q);
+  }
+  assert.deepEqual(seen,['ا','نی','72']);
+ }finally{await new Promise(resolve=>server.close(resolve));store.db.close();}
+});

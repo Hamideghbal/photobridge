@@ -10,9 +10,9 @@ const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-st
 function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,getReadEpoch=()=>0}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){if(!args[1]?.signal?.aborted)offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
-  const pageReads=new Map(),warmOrders=new Map();
+  const pageReads=new Map(),warmOrders=new Map(),stageProofs=new Map();
   const warmPageMs=5000;
-  let orderGeneration=0,financeGeneration=0;
+  let orderGeneration=0,financeGeneration=0,stageAccess=null;
   const pageScope=()=>JSON.stringify([store.get('labId'),store.get('deviceId'),store.get('auth'),getReadEpoch()]);
   const financeScope=()=>JSON.stringify([pageScope(),financeGeneration]);
   function readPage(key,route,preload=false){
@@ -30,12 +30,33 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
     return flight;
   }
   const firstPage=mode=>'/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q=';
-  function validPage(result){
-    if(!result.ok||!result.mime.includes('application/json'))return false;
+  function validPage(result,query=''){
+    if(!result.ok||!result.mime.includes('application/json'))return null;
     try{
       const page=JSON.parse(result.body.toString());
-      return Array.isArray(page?.orders)&&Number.isSafeInteger(page.total)&&Number.isSafeInteger(page.pages)&&Boolean(page.counts);
-    }catch{return false;}
+      if(!Array.isArray(page?.orders)||!Number.isSafeInteger(page.total)||!Number.isSafeInteger(page.pages)||!page.counts)return null;
+      // Some compatible servers can return the default page when a search
+      // cannot be applied. Use the renderer's filtered fallback in that case.
+      return !query||page.query===query?page:null;
+    }catch{return null;}
+  }
+  function rememberStageProofs(page,scope){
+    if(!stageProofs.size||stageProofs.values().next().value.scope!==scope)stageProofs.clear();
+    for(const order of page.orders){
+      if(!order?.id)continue;
+      stageProofs.delete(order.id);
+      if(order.invoice_id||order.invoice_required===false){
+        stageProofs.set(order.id,{scope,at:Date.now(),revision:order.document_revision,updatedAt:order.updated_at});
+        if(stageProofs.size>200)stageProofs.delete(stageProofs.keys().next().value);
+      }
+    }
+  }
+  function hasStageProof(orderId,body){
+    const proof=stageProofs.get(orderId);
+    return proof?.scope===pageScope()&&Date.now()-proof.at<30000&&
+      (body.expectedRevision!=null&&proof.revision!=null
+        ? String(body.expectedRevision)===String(proof.revision)
+        : Boolean(body.expectedUpdatedAt&&body.expectedUpdatedAt===proof.updatedAt));
   }
   function rememberFirstPage(key,mode,result){
     if(result.body.length>=12e6||!validPage(result))return;
@@ -51,6 +72,23 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
     if(warmedFirstPage(key,mode))return;
     const result=await readPage(key,route,true);
     if(scope===pageScope()&&generation===orderGeneration)rememberFirstPage(key,mode,result);
+  }
+  function confirmedStageAccess(scope){
+    if(stageAccess?.scope!==scope)return false;
+    const age=Date.now()-stageAccess.receivedAt;
+    return age>=0&&age<5000&&stageAccess.serverTime+age<stageAccess.expiresAt;
+  }
+  function rememberStageAccess(result,scope){
+    if(scope!==pageScope())return;
+    stageAccess=null;
+    if(!result.ok||!result.mime.includes('application/json'))return;
+    try{
+      const access=JSON.parse(result.body.toString()),serverTime=Date.parse(access.serverNow);
+      const expiresAt=access.activeUntil==null?Infinity:Date.parse(access.activeUntil);
+      if(access.allowed===true&&access.labId===store.get('labId')&&Number.isFinite(serverTime)&&expiresAt>serverTime){
+        stageAccess={scope,serverTime,expiresAt,receivedAt:Date.now()};
+      }
+    }catch{/* Only a validated live approval can be reused. */}
   }
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
@@ -125,12 +163,37 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(req.method==='PATCH'&&/^\/api\/lab\/order-files\/[0-9a-f-]+\/print-settings$/i.test(url.pathname))return json(res,409,{error:'order_details_read_only',message:'جزئیات ثبت‌شدهٔ سفارش فقط قابل مشاهده است.'});
         if(url.pathname==='/api/lab/events'&&req.method==='GET'){if(connectionOffline())return json(res,503,{error:'internet_offline'});await require('./live-events-host.cjs').streamLabEvents({req,res,store,request,lab:store.get('labId')});return;}
         if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
-        if(!exempt(req.method,req.url)){const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));if(!access.allowed)return json(res,403,access)}
+        if(!exempt(req.method,req.url)){
+          const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);
+          let knownStage=false;
+          if(!connectionOffline()&&confirmedStageAccess(pageScope())&&/^\/api\/lab\/orders\//.test(url.pathname)){
+            let body;
+            try{body=JSON.parse(bytes.toString());}catch{}
+            const stage=body&&require('./invoice-stage-guard.cjs').invoiceStageRequest(req.method,url.pathname,body);
+            if(stage&&hasStageProof(stage.orderId,body)){
+              const target=store.get('localBusiness:v1:'+store.get('labId'))?.orders?.[stage.orderId];
+              knownStage=!target?.origin_offline||require('./document-policy.cjs').shared(target);
+            }
+          }
+          // Reuse the lab's freshly polled approval for a known shared stage.
+          // The upstream mutation still enforces live entitlement and revision.
+          if(!knownStage){
+            const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));
+            if(!access.allowed)return json(res,403,access);
+          }
+        }
         // LAB104: run only after account/authorization gates; never enqueue a receipt.
         if(await require('./receipt-forward.cjs').forwardReceipt({req,res,url,bytes,contentType,store,request,offline:connectionOffline,json,enabled:require('./package.json').version==='1.0.104'}))return;
         if(!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|delegated-orders|invoices|finance|customers|delegated-customers)(?:\/|$)/.test(url.pathname)){
           financeGeneration++;
-          res.once('finish',()=>{financeGeneration++;});
+          res.once('finish',()=>{
+            financeGeneration++;
+            if(res.statusCode<300){
+              const orderId=url.pathname.match(/^\/api\/lab\/orders\/([^/]+)/)?.[1];
+              if(orderId)stageProofs.delete(orderId);
+              else if(/^\/api\/lab\/(?:invoices|finance)\//.test(url.pathname))stageProofs.clear();
+            }
+          });
         }
         if(!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|delegated-orders)(?:\/|$)/.test(url.pathname)){
           orderGeneration++;
@@ -148,7 +211,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         // The legacy local list has no page/count fields. Its renderer fallback
         // computes both from the local orders, including orders made offline.
         if(pagedOrders&&isOnline()===false)return json(res,503,{error:'online_connection_required'});
-        if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:readOffline,json,pdfRenderer,request,financeScope,financeAccount:pageScope})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
+        if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:readOffline,json,pdfRenderer,request,financeScope,financeAccount:pageScope,hasStageProof})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
         const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
@@ -188,11 +251,16 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             upstreamUrl=cacheRoute.pathname+cacheRoute.search;
             cacheRoute.searchParams.delete('pbNativeLiveStatus');
             cacheUrl=cacheRoute.pathname+cacheRoute.search;
+          }else if(url.pathname==='/api/lab/finance/summary'&&url.searchParams.has('pbNativeOverview')){
+            const summaryRoute=new URL(req.url,origin);
+            summaryRoute.searchParams.delete('pbNativeOverview');
+            upstreamUrl=cacheUrl=summaryRoute.pathname+summaryRoute.search;
           }
           try{
             if(pagedOrders?isOnline()===false:readOffline)throw Error('internet_offline');
             const pagedRead=pagedOrders&&req.method==='GET';
-            const scope=pagedRead?pageScope():null,generation=orderGeneration;
+            const accessRead=req.method==='GET'&&url.pathname==='/api/lab/write-access';
+            const scope=pagedRead||accessRead?pageScope():null,generation=orderGeneration;
             let result;
             if(pagedRead){
               const key=JSON.stringify([scope,generation,cacheUrl]),mode=url.searchParams.get('mode');
@@ -208,7 +276,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
               res.once('close',abort);
               if(res.destroyed)abort();
               try{
-                const up=await request(req.url,{method:req.method,signal:controller.signal});
+                const up=await request(upstreamUrl,{method:req.method,signal:controller.signal});
                 const mime=up.headers.get('content-type')||'application/octet-stream';
                 // Auth, device and payment gates remain upstream. Never buffer a verified
                 // binary response in the localhost host: the renderer needs its first chunk.
@@ -245,7 +313,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
               }finally{res.off('close',abort);}
             }
             const {status,ok,mime,body}=result;
-            if(pagedRead&&ok&&!validPage(result))return json(res,502,{error:'invalid_paged_orders'});
+            if(accessRead)rememberStageAccess(result,scope);
+            if(pagedRead&&ok){
+              const page=validPage(result,(url.searchParams.get('q')||'').trim().slice(0,100));
+              if(!page)return json(res,502,{error:'invalid_paged_orders'});
+              if(generation===orderGeneration)rememberStageProofs(page,scope);
+            }
             if(ok&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
               const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
               if(!cached||cached.status!==status||cached.mime!==mime||cached.body!==encoded){

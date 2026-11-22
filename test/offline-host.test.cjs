@@ -138,3 +138,41 @@ test('every work-stage write is blocked after cancelling offline pricing until a
  const result=await f.call('/api/lab/orders/'+id,{status:'printing'},'PATCH');assert.equal(result.status,200);assert.equal(result.data.order.status,'printing');
  }finally{await f.close()}
 });
+
+test('shared status skips detail only for the matching confirmed invoice and order revision',async()=>{
+ const order=crypto.randomUUID(),invoice=crypto.randomUUID(),calls=[];
+ let revision=4,hasInvoice=true,currentStatus='downloaded';
+ const f=await fixture(true,async(url,{method='GET',body}={})=>{
+  calls.push([method,url]);
+  if(url==='/api/lab/write-access')return Response.json({labId:'A',allowed:true,serverNow:new Date().toISOString(),activeUntil:'2030-01-01T00:00:00Z'});
+  const row={id:order,mode:'print',status:currentStatus,document_revision:revision,invoice_id:hasInvoice?invoice:null};
+  if(url.startsWith('/api/lab/orders?paged=1'))return Response.json({orders:[row],total:1,pages:1,counts:{flow:1},query:''});
+  if(url==='/api/lab/orders/'+order&&method==='GET')return Response.json({order:row});
+  if(url==='/api/lab/orders/'+order&&method==='PATCH'){
+   const change=JSON.parse(body);
+   assert.equal(change.expectedRevision,revision);
+   currentStatus=change.status;
+   return Response.json({order:{...row,status:currentStatus,document_revision:++revision}});
+  }
+  return Response.json({});
+ });
+ try{
+  for(const status of ['printing','ready','completed']){
+   await f.call('/api/lab/orders?paged=1&mode=print&stage=flow&page=1&q=');
+   await f.call('/api/lab/write-access');
+   calls.length=0;
+   const result=await f.call('/api/lab/orders/'+order,{status,expectedRevision:revision},'PATCH');
+   assert.equal(result.status,200);
+   assert.equal(result.data.order.status,status);
+   assert.deepEqual(calls,[['PATCH','/api/lab/orders/'+order]]);
+  }
+  hasInvoice=false;
+  calls.length=0;
+  const blocked=await f.call('/api/lab/orders/'+order,{status:'reviewing',expectedRevision:revision,invoice_id:invoice},'PATCH');
+  assert.equal(blocked.status,409);
+  assert.equal(blocked.data.error,'order_invoice_required');
+  assert(calls.some(([method,url])=>method==='GET'&&url==='/api/lab/write-access'));
+  assert(calls.some(([method,url])=>method==='GET'&&url==='/api/lab/orders/'+order));
+  assert(!calls.some(([method])=>method==='PATCH'));
+ }finally{await f.close();}
+});

@@ -72,3 +72,19 @@ test('preloading finance discards responses when the account changes during a re
   assert.equal(f.store.cached('/api/lab/invoices'),null);
  }finally{release();f.store.db.close();}
 });
+
+test('the finance overview reconciles the current totals without waiting for the ledger',async()=>{
+ const f=fixture();
+ let release;
+ const waiting=new Promise(resolve=>{release=()=>resolve(Response.json({transactions:[]}));});
+ const request=async url=>url.endsWith('/ledger')?waiting:source({
+  invoices:[{id:crypto.randomUUID(),number:147,total:147,issued_at:new Date().toISOString()}],customers:[]
+ })(url);
+ try{
+  const overview=refreshFinance(f.store,request,{focus:'overview'});
+  await Promise.race([overview,new Promise((_,reject)=>setTimeout(()=>reject(Error('ledger blocked dashboard')),1000))]);
+  assert.equal(f.engine.read('/api/lab/finance/summary').summary.invoiced,147);
+  release();
+  assert.equal((await refreshFinance(f.store,request)).complete,true);
+ }finally{release();f.store.db.close();}
+});

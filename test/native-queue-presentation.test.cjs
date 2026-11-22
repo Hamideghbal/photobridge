@@ -34,7 +34,8 @@ test('both modes and page transitions render placeholders until the matching res
   r1944SetCounts(){},r1944SetError(){},
  });
  const show=(mode,page,lab='lab')=>render({id:lab},mode,'flow',page,'');
- const placeholders=view=>{assert.equal(view['aria-busy'],true);assert.equal(view.children.children.length,6);};
+ const placeholders=view=>{assert.equal(view['aria-busy'],true);assert.equal(view.children.length,6);
+  for(const card of view.children){assert.match(card.className,/pbNativeQueueSkeleton.*labOrderCard/);assert.equal(card['aria-hidden'],true);}};
  placeholders(show('print',1).view);
  const a=show('print',1).load();
  const b=show('album',1).load();

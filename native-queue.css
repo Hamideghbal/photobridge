@@ -10,39 +10,35 @@ html body #root .labRoleWorkspace .mainQueueFilters button:is(.active,[aria-sele
  background:#e8efff!important;
  color:#173a8b!important;
 }
-.pbNativeQueueLoading {
- display:grid;
+.labOrderGrid > .pbNativeQueueSkeleton {
  grid-column:1 / -1;
- grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));
- gap:12px;
+ box-sizing:border-box;
  width:100%;
-}
-.pbNativeQueueSkeleton {
- min-height:152px;
- display:grid;
- grid-template-columns:58px minmax(0,1fr) 62px;
- align-items:start;
- gap:15px;
- padding:20px;
- border:1px solid #dce4f0;
- border-radius:14px;
- background:#fff;
+ min-width:0;
+ pointer-events:none;
 }
 .pbNativeQueueSkeleton i {
  display:block;
- background:#e5ebf5;
+ max-width:100%;
+ background:#e1e9f4;
  border-radius:6px;
- animation:pbNativeQueuePulse 1.25s ease-in-out infinite alternate;
 }
-.pbNativeQueueSkeletonThumb {width:58px;height:58px;border-radius:10px!important}
-.pbNativeQueueSkeletonLines {display:grid;gap:12px;padding-top:5px}
-.pbNativeQueueSkeletonLines i {height:10px;width:80%}
-.pbNativeQueueSkeletonLines i:nth-child(2) {width:58%}
-.pbNativeQueueSkeletonLines i:nth-child(3) {width:70%;margin-top:12px}
-.pbNativeQueueSkeletonAction {height:25px;margin-top:4px}
-@keyframes pbNativeQueuePulse {from{opacity:.95}to{opacity:.56}}
+.pbNativeQueueSkeleton .pbNativeSkeletonLine {width:68%;height:7px;margin:4px auto 0}
+.pbNativeQueueSkeleton .labOrderHead .pbNativeSkeletonLine {margin-inline:0}
+.pbNativeQueueSkeleton .pbNativeSkeletonBadge {width:38px;height:18px;border-radius:12px}
+.pbNativeQueueSkeleton .labOrderFacts .pbNativeSkeletonLine + i {width:44%;height:5px}
+.pbNativeQueueSkeleton .labActionTimeline .timelineDot {background:#e1e9f4;border-color:#cfdced}
+.pbNativeQueueSkeleton .labActionTimeline button .pbNativeSkeletonLine {width:min(65%,35px)}
+.pbNativeQueueSkeleton .labOrderFoot > span .pbNativeSkeletonLine {width:53px;margin-inline-start:auto;margin-inline-end:0}
+.pbNativeQueueSkeleton .labOrderMiniActions i {width:min(36%,48px);height:25px}
+.pbNativeQueueSkeleton .pbNativeSkeletonAlbum {display:flex;gap:5px}
+.pbNativeQueueSkeleton .pbNativeSkeletonAlbum i {flex:1;height:30px}
+.labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton {
+ animation:pbNativeQueuePulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes pbNativeQueuePulse {from{opacity:1}to{opacity:.77}}
 @media (prefers-reduced-motion:reduce) {
- .pbNativeQueueSkeleton i {animation:none}
+ .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton {animation:none}
 }
 
 html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav button[data-pb1173-index],

@@ -1,7 +1,7 @@
 'use strict';
 
 function normalizeQueueSearch(value){
- return String(value||'').trim().replace(/[۰-۹٠-٩]/g,digit=>String(digit.charCodeAt(0)&15));
+ return String(value??'').trim().replace(/[۰-۹٠-٩]/g,digit=>String(digit.charCodeAt(0)&15));
 }
 
 function patchNativeQueuePresentation(source) {
@@ -23,6 +23,7 @@ function patchNativeQueuePresentation(source) {
  ${normalizeQueueSearch.toString().replace('function normalizeQueueSearch','function pbNativeQueueSearch')}
  const [pbNativePageResult,pbNativeSetPageResult]=x.useState(null);
  const pbNativeRequestQuery=pbNativeQueueSearch(r1944DebouncedQuery);
+ const pbNativeSearchText=value=>pbNativeQueueSearch(value).toLowerCase().replace(/ي/g,"ی").replace(/ك/g,"ک");
  const pbNativeSearchInput=typeof r1944Query==="undefined"?pbNativeRequestQuery:pbNativeQueueSearch(r1944Query);
  const pbNativePageKey=JSON.stringify([t?.id,o,T,r1944Page,pbNativeRequestQuery]);
  const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey;
@@ -31,11 +32,31 @@ function patchNativeQueuePresentation(source) {
  const pbNativeOpeningPage=x.useRef(pbNativePageKey);
  pbNativeOpeningPage.current=pbNativePageLoading?pbNativePageKey:null;
  `;
- const skeleton=`e.jsx("div",{className:"pbNativeQueueLoading","aria-hidden":true,children:Array.from({length:6},(_,index)=>e.jsxs("div",{className:"pbNativeQueueSkeleton",children:[e.jsx("i",{className:"pbNativeQueueSkeletonThumb"}),e.jsx("div",{className:"pbNativeQueueSkeletonLines",children:[e.jsx("i",{},0),e.jsx("i",{},1),e.jsx("i",{},2)]}),e.jsx("i",{className:"pbNativeQueueSkeletonAction"})]},index))})`;
+ const skeleton=`Array.from({length:6},(_,index)=>e.jsxs("article",{
+  className:"pbNativeQueueSkeleton"+(o==="album"?" albumLabOrderCard":"")+" card customerOrderCard liveOrderCard labOrderCard",
+  "aria-hidden":true,
+  children:[
+   e.jsxs("div",{className:"customerOrderHead labOrderHead",children:[
+    e.jsxs("div",{children:[e.jsx("i",{className:"pbNativeSkeletonLine",style:{width:62}}),e.jsx("i",{className:"pbNativeSkeletonLine",style:{width:40}})]}),
+    e.jsx("i",{className:"pbNativeSkeletonBadge"})
+   ]}),
+   e.jsx("div",{className:"customerOrderFacts labOrderFacts",children:Array.from({length:3},(_,fact)=>
+    e.jsxs("span",{children:[e.jsx("i",{className:"pbNativeSkeletonLine"}),e.jsx("i",{className:"pbNativeSkeletonLine"})]},fact))}),
+   o==="album"?e.jsx("div",{className:"labAlbumSummaryRow pbNativeSkeletonAlbum",children:Array.from({length:5},(_,fact)=>e.jsx("i",{},fact))}):null,
+   e.jsx("div",{className:"labActionTimeline",children:Array.from({length:o==="album"?5:4},(_,stage)=>
+    e.jsxs("button",{type:"button",disabled:true,children:[e.jsx("span",{className:"timelineDot"}),e.jsx("i",{className:"pbNativeSkeletonLine"})]},stage))}),
+   e.jsxs("div",{className:"labOrderFoot",children:[
+    e.jsx("span",{children:e.jsx("i",{className:"pbNativeSkeletonLine"})}),
+    e.jsxs("div",{className:"labOrderMiniActions",children:[e.jsx("i",{}),e.jsx("i",{})]})
+   ]})
+  ]
+ },index))`;
  const patched=withFailure
   .replace(marker,marker+state)
   .replace('String(r1944DebouncedQuery||"").trim()','pbNativeRequestQuery')
   .replace('"&pbNativeLiveStatus="+Date.now();','"&pbNativeLiveStatus="+Date.now()+(pbNativeOpeningPage.current===pbNativePageKey&&T==="flow"&&r1944Page===1&&!query?"&pbNativeOpen=1":"");')
+  .replace('value:r1944Query,onChange:le=>r1944SetQuery(le.target.value)', 'value:r1944Query,maxLength:100,onChange:le=>{r1944SetQuery(le.target.value);r1944SetPage(1)}')
+  .replace('String([le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number].join(" ")).toLowerCase().includes(query.toLowerCase())','[le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number,...(Array.isArray(le.files)?le.files.map(file=>file.original_name||file.name):[])].some(value=>pbNativeSearchText(value).includes(pbNativeSearchText(query)))')
   .replace('r1944SetDebouncedQuery(String(r1944Query||"")),270','r1944SetDebouncedQuery(pbNativeQueueSearch(r1944Query)),110')
   .replace(afterSuccess,'pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:true});'+afterSuccess)
   .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:!pbNativePageResult?.ok?null:Be.length?Nt.map(`);

@@ -131,7 +131,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
    if(a<0||b<0)throw Error('[R1964] album detail selector action changed '+root);
    const newAction='if(le==="download")return Vn(y.order,{force:pb1450Retry(y.order,yc(y.order.id))});'+
     'if(le==="print"){if(!rn(y.order,"download")||rn(y.order,"print"))return;'+
-    'pe(!0);try{await Cn(y.order,"printing");await Tt({...y.order,album_stage:"printing"},!1).catch(()=>{})}finally{pe(!1)}return;}';
+    'pe(!0);try{await Cn(y.order,"printing")}finally{pe(!1)}return;}';
    return part.slice(0,a)+newAction+part.slice(b);
  },root+' album detail selector manual click');
  ui=one(ui,'مسیر آلبوم مستقل است: دانلود / چاپ، صحافی، آماده تحویل و تحویل‌شده.',

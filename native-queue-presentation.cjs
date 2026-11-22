@@ -1,5 +1,9 @@
 'use strict';
 
+function normalizeQueueSearch(value){
+ return String(value||'').trim().replace(/[۰-۹٠-٩]/g,digit=>String(digit.charCodeAt(0)&15));
+}
+
 function patchNativeQueuePresentation(source) {
  const marker='/* PB1944 server-paged lab queue */';
  const start=source.indexOf(marker);
@@ -13,15 +17,20 @@ function patchNativeQueuePresentation(source) {
  if(!queue.includes(pendingGuard)||!queue.includes(afterSuccess)||!queue.includes(onError))return source;
 
  const state=`
+ ${normalizeQueueSearch.toString().replace('function normalizeQueueSearch','function pbNativeQueueSearch')}
  const [pbNativePageResult,pbNativeSetPageResult]=x.useState(null);
- const pbNativePageKey=JSON.stringify([t?.id,o,T,r1944Page,r1944DebouncedQuery]);
- const pbNativePageLoading=pbNativePageResult?.key!==pbNativePageKey;
+ const pbNativeRequestQuery=pbNativeQueueSearch(r1944DebouncedQuery);
+ const pbNativeSearchInput=typeof r1944Query==="undefined"?pbNativeRequestQuery:pbNativeQueueSearch(r1944Query);
+ const pbNativePageKey=JSON.stringify([t?.id,o,T,r1944Page,pbNativeRequestQuery]);
+ const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey;
  const pbNativeVisiblePage=x.useRef(pbNativePageKey);
  pbNativeVisiblePage.current=pbNativePageKey;
  `;
  const skeleton=`e.jsx("div",{className:"pbNativeQueueLoading","aria-hidden":true,children:Array.from({length:6},(_,index)=>e.jsxs("div",{className:"pbNativeQueueSkeleton",children:[e.jsx("i",{className:"pbNativeQueueSkeletonThumb"}),e.jsx("div",{className:"pbNativeQueueSkeletonLines",children:[e.jsx("i",{},0),e.jsx("i",{},1),e.jsx("i",{},2)]}),e.jsx("i",{className:"pbNativeQueueSkeletonAction"})]},index))})`;
  const patched=queue
   .replace(marker,marker+state)
+  .replace('String(r1944DebouncedQuery||"").trim()','pbNativeRequestQuery')
+  .replace('r1944SetDebouncedQuery(String(r1944Query||"")),270','r1944SetDebouncedQuery(pbNativeQueueSearch(r1944Query)),110')
   .replace(afterSuccess,'pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:true});'+afterSuccess)
   .replace(onError,'if(pbLiveOrders.current.active&&seq===pbLiveOrders.current.seq)pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:false});'+onError)
   .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:!pbNativePageResult?.ok?null:Be.length?Nt.map(`);
@@ -44,20 +53,25 @@ function reflowOrderCards(id,stage,from){
    .find(node=>node.dataset.orderId===String(id));
  const list=outgoing?.parentElement;
  if(!list)return;
+ const animations=reflowOrderCards.animations||=new WeakMap();
  const before=new Map([...list.querySelectorAll(':scope>.labOrderCard[data-order-id]')]
    .filter(card=>card!==outgoing).map(card=>[card,card.getBoundingClientRect()]));
  const observer=new MutationObserver(()=>{
   if(outgoing.parentElement===list)return;
   observer.disconnect();clearTimeout(expiry);
   const changes=[];
+  for(const card of before.keys())animations.get(card)?.cancel();
   for(const[card,previous]of before){
    if(card.parentElement!==list)continue;
    const next=card.getBoundingClientRect(),x=previous.left-next.left,y=previous.top-next.top;
    if(x||y)changes.push({card,x,y});
   }
-  for(const{card,x,y}of changes)card.animate?.(
+  for(const{card,x,y}of changes){
+   if(typeof card.animate!=='function')continue;
+   animations.set(card,card.animate(
     [{translate:`${x}px ${y}px`},{translate:'0px 0px'}],
-    {duration:180,easing:'cubic-bezier(.18,.76,.35,1)'});
+    {duration:220,easing:'cubic-bezier(.18,.76,.35,1)'}));
+  }
  });
  const expiry=setTimeout(()=>observer.disconnect(),400);
  observer.observe(list,{childList:true});
@@ -78,4 +92,4 @@ function patchNativeOrderExit(source){
   source.slice(to,flash)+flashOrderCount.toString().replace('function flashOrderCount','function flash')+'\n'+source.slice(after);
 }
 
-module.exports={patchNativeQueuePresentation,removeConfirmedOrderExitWait,patchNativeOrderExit};
+module.exports={patchNativeQueuePresentation,removeConfirmedOrderExitWait,patchNativeOrderExit,normalizeQueueSearch};

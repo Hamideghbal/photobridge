@@ -89,3 +89,15 @@ test('confirmed moves close the gap on the current page without removing an unco
   assert.equal(animations,expected.length===1?1:0);
  }
 });
+
+test('one- and two-character queries keep their value and Persian numbers use the server format',()=>{
+ const {normalizeQueueSearch}=require('../native-queue-presentation.cjs');
+ assert.deepEqual(['ع','عل','علی',' ۹ ','٩٨','۹۸۷'].map(normalizeQueueSearch),['ع','عل','علی','9','98','987']);
+ const input=queue.replace('return Me([o,T,r1944Page])',
+  'const query=String(r1944DebouncedQuery||"").trim();return Me([o,T,r1944Page,query])')
+  .replace('const Be=', 'const update=()=>window.setTimeout(()=>r1944SetDebouncedQuery(String(r1944Query||"")),270);const Be=');
+ const patched=patchNativeQueuePresentation(input);
+ assert.match(patched,/const query=pbNativeRequestQuery/);
+ assert.match(patched,/r1944SetDebouncedQuery\(pbNativeQueueSearch\(r1944Query\)\),110/);
+ new vm.Script(patched);
+});

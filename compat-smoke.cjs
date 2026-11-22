@@ -12,6 +12,10 @@ async function run(){
    const entry=compile(path.join(root,'assets','index-UIRefine-v655-r84.js'),app.getVersion());
    assert(entry.includes(directDownloadMarker),'The bundled UI does not support the native direct download path');
    if(Number(app.getVersion().split('.')[2])>=143)assert(entry.includes('className:"pbNativeQueueSkeleton"'),'The bundled UI does not support the native order loading cards');
+   if(Number(app.getVersion().split('.')[2])>=145){
+    const intake=require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8'));
+    assert(intake.includes('pbNativeIntakePhotoPicker'),'The bundled UI does not support automatic intake photo insertion');
+   }
   }
   server=require('./host.cjs').createHost({store:db,sync:{status:()=>db.status(),run:async()=>{}},request:async()=>Response.json({error:'login_required'},{status:401}),roots:()=>[root],token:'smoke',isOnline:()=>false});await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(43761,'127.0.0.1',resolve);});
   win=new BrowserWindow({show:false,webPreferences:{preload:path.join(__dirname,'main-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});await win.loadURL('http://127.0.0.1:'+server.address().port+'/start?token=smoke');

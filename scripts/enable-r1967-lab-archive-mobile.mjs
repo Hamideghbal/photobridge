@@ -75,7 +75,7 @@ function pb1967JalaliArchiveDay(day){
                 basis:{invoices:'issued_at',payments:'paid_at',timeZone:'Asia/Tehran'}
             });
         }
-`;
+`.replaceAll('\\`','`');
  server=once(server,anchor,route+anchor,'read-only authenticated Lab archive finance endpoint');
  fs.writeFileSync(apiFile,server);
 }

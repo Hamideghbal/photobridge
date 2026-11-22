@@ -33,6 +33,15 @@ s=once(s,"await audit(a.userId, labId, 'album.download_complete', 'order', order
   "            void pb1962LabManagerNotify(labId,'album_download_verified',{orderId:order.id,number:order.number,mode:'album',updatedAt:order.updated_at});",'verified album download');
 s=once(s,"publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, invoiceId: invoice.id",
   "publishCustomerEvent(labId, String(order.customer_id), 'invoice_pricing_ready', { orderId, number: order.number, orderNumber:order.number, invoiceId: invoice.id",'prepaid invoice number');
+// Deep-link a manager notification to the correct print/album workspace.
+s=once(s,
+  "number: order.number, status, note, updatedAt: order.updated_at, managerChanged:String(oldOrder.status||'')!==String(status), invoice:",
+  "number: order.number, status, note, mode:order.mode, updatedAt: order.updated_at, managerChanged:String(oldOrder.status||'')!==String(status), invoice:",
+  'order event deep-link mode');
+s=once(s,
+  'number: order.number, stage, status: order.status, updatedAt:order.updated_at, invoice:',
+  'number: order.number, stage, mode:order.mode, status: order.status, updatedAt:order.updated_at, invoice:',
+  'album event deep-link mode');
 // Bind lab subscriptions to the authenticated owner in a separate mapping table.
 // Keep recipient_user_id NULL for lab endpoints to preserve original schema constraints.
 s=once(s,"const col = kind === 'lab' ? 'recipient_lab_id' : 'recipient_user_id';",

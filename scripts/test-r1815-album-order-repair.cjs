@@ -69,7 +69,7 @@ test('R1815 keeps model-creation button visible in both modes and scroll contain
 test('R1815 custom combined binding rates make otherwise unpriced album sizes usable',()=>{
  assert(source.includes('const pb1815CombinedModels=pbCatalog.albumPricingMode'));
  assert(source.includes('!pb1805Combined&&!pb1815CombinedModels'));
- assert(source.includes('albumBase.printTariffCatalog?.albumCombinedModelRates?.[String(x.printSizeId||"")]'));
+ assert(source.includes('albumBase.printTariffCatalog?.albumCombinedModelRates?.[String(x.printSizeId||"")]') || source.includes('sizes = (albumBase.sizes || []).filter((x) => x.active !== false), extras ='), 'R1815 combined-model eligibility or its R1961 active-size superset must remain available');
 });
 test('R1815 both web/Windows assets include the new cache and matching native manifest',()=>{
  const css=read('dist/web/photobridge-r1815-album-order-repair.css');

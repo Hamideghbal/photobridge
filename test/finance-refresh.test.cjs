@@ -5,3 +5,31 @@ test('fresh invoices for a new customer render without requiring a previous cust
 test('opening finance preserves independent OFF invoices and a confirmed order stage',async()=>{const f=fixture();try{const customer=f.engine.handle('POST','/api/lab/customers',{name:'آفلاین'},crypto.randomUUID(),{isolated:true}).customer,invoice=f.engine.handle('POST','/api/lab/invoices/manual',{customerId:customer.id,items:[{description:'سند مستقل',unitPrice:100}]},crypto.randomUUID(),{isolated:true}).invoice;const state=f.engine.state(),order=crypto.randomUUID();state.orders[order]={id:order,remote:true,status:'printing'};f.store.set(f.engine.key(),state);f.store.cache('/api/lab/orders',200,'application/json',Buffer.from(JSON.stringify({orders:[{id:order,status:'downloaded'}]})).toString('base64'));await refreshFinance(f.store,source({invoices:[],customers:[]}),{force:true});assert.equal(f.engine.state().orders[order].status,'printing');assert.equal(f.engine.read('/api/lab/invoices').invoices.find(i=>i.id===invoice.id).number,invoice.number);assert(!f.engine.state().invoices[invoice.id].inBaseline);}finally{f.store.db.close()}});
 test('partial refresh adds invoices without clearing cached data or failing on a missing customer',async()=>{const f=fixture(),id=crypto.randomUUID();try{await refreshFinance(f.store,async url=>{if(url!=='/api/lab/invoices')throw Error('unavailable');return Response.json({invoices:[{id,number:901,customer_id:crypto.randomUUID(),customer_name:'جدید',total:200,paid_total:0,issued_at:new Date().toISOString()}]});},{force:true});assert.equal(f.engine.read('/api/lab/invoices').invoices[0].number,901);assert.equal(f.store.get('financeRefresh:A').complete,false);}finally{f.store.db.close()}});
 test('fresh invoices lead the local invoice list even after many older documents were stored first',async()=>{const f=fixture(),customer=crypto.randomUUID(),make=(number)=>({id:crypto.randomUUID(),number,customer_id:customer,total:100,paid_total:0,issued_at:new Date(1700000000000+number*1000).toISOString()});try{const invoices=Array.from({length:80},(_,i)=>make(i+1));await refreshFinance(f.store,source({invoices,customers:[]}),{force:true});invoices.push(make(901));await refreshFinance(f.store,source({invoices,customers:[]}),{force:true});const rows=f.engine.read('/api/lab/invoices').invoices;assert.equal(rows.length,81);assert.equal(rows[0].number,901);assert.equal(rows[1].number,80);}finally{f.store.db.close()}});
+
+test('selected invoices do not wait for a deliberately blocked ledger',async()=>{
+ const f=fixture();
+ let releaseLedger=()=>{};
+ const delayedLedger=new Promise(resolve=>{releaseLedger=()=>resolve(Response.json({transactions:[]}));});
+ const invoiceId=crypto.randomUUID();
+ const request=async url=>{
+  if(url==='/api/lab/finance/ledger')return delayedLedger;
+  if(url==='/api/lab/invoices')return Response.json({invoices:[{
+   id:invoiceId,number:1962,customer_id:crypto.randomUUID(),customer_name:'مشتری',total:100,paid_total:0,issued_at:new Date().toISOString()
+  }]});
+  if(url==='/api/lab/finance/summary')return Response.json({summary:{invoiced:100},customers:[]});
+  if(url.endsWith('/payments'))return Response.json({payments:[]});
+  if(url.endsWith('/expenses'))return Response.json({expenses:[]});
+  throw Error('unexpected_route');
+ };
+ try{
+  const focused=await Promise.race([
+   refreshFinance(f.store,request,{force:true,focus:'/api/lab/invoices'}),
+   new Promise((_,reject)=>setTimeout(()=>reject(Error('invoices_blocked_by_ledger')),2500))
+  ]);
+  assert.equal(focused.invoicesFresh,true);
+  assert(f.engine.read('/api/lab/invoices').invoices.some(inv=>inv.id===invoiceId));
+  releaseLedger();
+  const completed=await refreshFinance(f.store,request);
+  assert.equal(completed.complete,true);
+ }finally{releaseLedger();f.store.db.close()}
+});

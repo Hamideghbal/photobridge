@@ -3,10 +3,12 @@ const http=require('node:http');
 const {exempt,checkWriteAccess}=require('./write-access.cjs');
 const fs=require('node:fs');
 const path=require('node:path');
+const {Readable}=require('node:stream');
+const {pipeline}=require('node:stream/promises');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
 function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,getReadEpoch=()=>0}){
-  let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){offlineUntil=Date.now()+15000;throw error;}};
+  let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){if(!args[1]?.signal?.aborted)offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const pageReads=new Map();
   let orderGeneration=0;
@@ -86,7 +88,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
         // The legacy local list has no page/count fields. Its renderer fallback
         // computes both from the local orders, including orders made offline.
-        if(pagedOrders&&connectionOffline())return json(res,503,{error:'online_connection_required'});
+        if(pagedOrders&&isOnline()===false)return json(res,503,{error:'online_connection_required'});
         if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:connectionOffline(),json,pdfRenderer,request})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
@@ -126,7 +128,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             cacheUrl=cacheRoute.pathname+cacheRoute.search;
           }
           try{
-            if(connectionOffline())throw Error('internet_offline');
+            if(pagedOrders?isOnline()===false:connectionOffline())throw Error('internet_offline');
             const pagedRead=pagedOrders&&req.method==='GET';
             const scope=pagedRead?pageScope():null,generation=orderGeneration;
             let result;
@@ -134,8 +136,35 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
               result=await readPage(JSON.stringify([scope,generation,cacheUrl]),req.url);
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
             }else{
-              const up=await request(req.url,{method:req.method});
-              result={status:up.status,ok:up.ok,mime:up.headers.get('content-type')||'application/octet-stream',body:Buffer.from(await up.arrayBuffer())};
+              const controller=new AbortController();
+              const up=await request(req.url,{method:req.method,signal:controller.signal});
+              const mime=up.headers.get('content-type')||'application/octet-stream';
+              // Auth, device and payment gates remain upstream. Never buffer a verified
+              // binary response in the localhost host: the renderer needs its first chunk.
+              if(req.method==='GET'&&up.ok&&up.body&&/^(?:image\/|application\/octet-stream(?:;|$))/i.test(mime)){
+                const headers={'Content-Type':mime,'Cache-Control':'no-store'};
+                for(const name of ['content-disposition','x-pb-file-name','x-pb-fallback-original','etag','last-modified']){
+                  const value=up.headers.get(name);
+                  if(value!==null)headers[name]=value;
+                }
+                // Fetch may transparently decompress encoded bodies. Preserve
+                // byte counts and range metadata only when bytes are unchanged.
+                if(!up.headers.get('content-encoding')||up.headers.get('content-encoding')==='identity'){
+                  for(const name of ['content-length','content-range','accept-ranges']){
+                    const value=up.headers.get(name);
+                    if(value!==null)headers[name]=value;
+                  }
+                }
+                res.writeHead(up.status,headers);
+                res.flushHeaders();
+                const abort=()=>controller.abort();
+                res.once('close',abort);
+                try{await pipeline(Readable.fromWeb(up.body),res);}
+                catch(error){if(!res.destroyed)res.destroy(error);}
+                finally{res.off('close',abort);}
+                return;
+              }
+              result={status:up.status,ok:up.ok,mime,body:Buffer.from(await up.arrayBuffer())};
             }
             const {status,ok,mime,body}=result;
             if(pagedRead&&ok){

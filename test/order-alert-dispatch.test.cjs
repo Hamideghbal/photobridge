@@ -103,3 +103,45 @@ test('real NativeAlerts poll begins order lookup before popup is presented',asyn
  assert.deepEqual(sent,[UUID],'sequence='+sequence.join(' -> ')+'; pending='+dispatch.pending());
  assert(sequence.indexOf('order_fetch')<sequence.indexOf('popup'));
 });
+
+test('a number-only notice reaches the worker through the fallback while both paged requests are still pending',async()=>{
+ const calls=[],signals=[];
+ let deliver;
+ const delivered=new Promise(resolve=>{deliver=resolve;});
+ const dispatch=createOrderAlertDispatch({
+  getAccount:()=> 'lab-A',now:()=>NOW,
+  deliver:(lab,id)=>deliver({lab,id}),
+  request:(route,{signal})=>{
+   calls.push(route);signals.push(signal);
+   if(route.includes('?'))return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));
+   return {ok:true,json:async()=>({orders:[{id:UUID,number:894,status:'sent'}]})};
+  }
+ });
+ dispatch.accept('lab-A',[photo894]);
+ assert.equal(calls.length,2);
+ assert.deepEqual(await delivered,{lab:'lab-A',id:UUID});
+ assert.equal(calls.at(-1),'/api/lab/orders');
+ assert(signals.every(signal=>signal.aborted),'losing lookups are cancelled');
+});
+
+test('a slow number lookup cannot delay another new order or cross account reset',async()=>{
+ let delivered;
+ const completion=new Promise(resolve=>{delivered=resolve;});
+ const slow=[];
+ const dispatch=createOrderAlertDispatch({
+  getAccount:()=> 'lab-A',now:()=>NOW,
+  deliver:(lab,id)=>delivered(id),
+  request:(route,{signal})=>{
+   if(route.endsWith('=895'))return {ok:true,json:async()=>({orders:[{id:OTHER,number:895,status:'sent'}]})};
+   slow.push(signal);
+   return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));
+  }
+ });
+ dispatch.accept('lab-A',[photo894]);
+ dispatch.accept('lab-A',[{...photo894,id:'notification-895',message:'سفارش #۸۹۵ از Platform Admin ثبت شد · ۱ فایل'}]);
+ assert.equal(await completion,OTHER);
+ dispatch.reset();
+ await new Promise(setImmediate);
+ assert(slow.every(signal=>signal.aborted));
+ assert.equal(dispatch.pending(),0);
+});

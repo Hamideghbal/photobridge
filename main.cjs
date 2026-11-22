@@ -44,7 +44,7 @@ async function start(){app.setAppUserModelId('ir.photobridge.lab');const dir=app
   ipcMain.on('lab-download-trace',(_event,value)=>{
    if(!win||win.isDestroyed()||_event.sender!==win.webContents||!String(_event.sender.getURL()).startsWith(origin+'/'))return;
    if(!store.get('auth')||store.get('sessionExpired')||!value||typeof value!=='object')return;
-   if(!/^[0-9a-f-]{36}$/i.test(String(value.orderId||''))||!/^(notification|dispatch|detail_and_policy_ready|manifest_not_ready|worker_scheduled|root_check_start|root_check_passed|transfer_scheduled|download_preparing|first_byte|worker_finished|failed|complete)$/.test(String(value.stage||'')))return;
+   if(!/^[0-9a-f-]{36}$/i.test(String(value.orderId||''))||!/^(notification|dispatch|detail_and_policy_ready|manifest_not_ready|manifest_ready|worker_queue_wait|worker_acquired|worker_scheduled|root_check_start|root_check_passed|initial_verification_started|destination_scan|transfer_scheduled|photo_requested|photo_headers|response_headers|first_photo_write_started|disk_verified|download_preparing|first_byte|worker_finished|failed|complete)$/.test(String(value.stage||'')))return;
    downloadTrace('web_'+value.stage,{labId:store.get('labId'),orderId:value.orderId,elapsedMs:Math.max(0,Math.min(600000,Number(value.elapsedMs)||0))});
   });
   ipcMain.on('lab-fast-order-ready',event=>{

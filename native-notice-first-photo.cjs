@@ -57,6 +57,11 @@ function patchNoticeFirstPhoto(source) {
     .replace('} catch (error) {', '} catch (error) {\n    firstPhotoAbort?.abort();')
     .replace(rootCheck, match => `
     ${directDownloadMarker}
+    const downloadStarted = Date.now();
+    const traceDownload = stage => {
+      try { window.pbDesktopEvents?.downloadTrace?.({orderId:id,stage,elapsedMs:Date.now()-downloadStarted}); } catch {}
+    };
+    traceDownload('root_check_start');
     const checkpoint = yc(id) || {};
     const noticePaths = options.silent === true && options.force !== true &&
       window.pbNativeStorage && (!checkpoint.startedAt || checkpoint.pathLayout === 'order-v2') &&
@@ -65,18 +70,21 @@ function patchNoticeFirstPhoto(source) {
     let firstPhoto;
     if (noticePaths) {
       firstPhotoAbort = new AbortController();
+      traceDownload('photo_requested');
       firstPhoto = Ky(detail.files[0].id,firstPhotoAbort.signal).then(
-        response => ({response}), error => ({error})
+        response => { traceDownload('photo_headers'); return {response}; },
+        error => ({error})
       );
     }
     ${match}
+    traceDownload('root_check_passed');
     const claimNoticePath = root?.__pbNative ? noticePaths : null;
     if (!claimNoticePath) firstPhotoAbort?.abort();
     `)
     .replace(verify, match => `
     if (claimNoticePath) {
       report = {valid:0,loadedBytes:0,completedIds:[],collisions:[]};
-    } else { ${match} }
+    } else { traceDownload('initial_verification_started'); ${match} }
     `)
     .replace(transfer, `
       const earlyResponse = claimNoticePath && file === files[0] ? firstPhoto : null;
@@ -94,9 +102,11 @@ function patchNoticeFirstPhoto(source) {
           continue;
         }
       }
+      if (!earlyResponse && file === files[0]) traceDownload('photo_requested');
       const response = earlyResponse
         ? await earlyResponse.then(result => { if (result.error) throw result.error; return result.response; })
         : await Ky(file.id);
+      if (!earlyResponse && file === files[0]) traceDownload('photo_headers');
     `)
     .replace(nameLine, match => `${match}
       if (claimNoticePath) {
@@ -111,6 +121,8 @@ function patchNoticeFirstPhoto(source) {
         }
       }
     `)
+    .replace('await pb1445WriteDownload(target.dir,name,response,',
+      "if (file === files[0]) traceDownload('first_photo_write_started');\n      $&")
     .replace(close, 'firstPhotoAbort?.abort(); ' + close);
 
   return (source.slice(0, start) + worker + source.slice(end))

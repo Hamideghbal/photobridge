@@ -5,12 +5,10 @@ const number=value=>{
  const text=latinDigits(value).trim().replace(/^#/,'');
  return /^\d{1,12}$/.test(text)?text.replace(/^0+(?=\d)/,''):null;
 };
-// Existing production notification payloads sometimes contain "#894" but no
-// order UUID. Resolve such notices immediately from the authenticated order
-// list, before rendering the alert, instead of waiting for the 45s web tick.
+// UUID notifications wake the worker synchronously. Number-only notices
+// resolve independently so another order's slow lookup cannot hold up delivery.
 function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now(),log=()=>{}}){
  const pending=new Map(),recent=new Map();
- let flight=null,epoch=0;
  const valid=account=>account&&getAccount()===account;
  function prune(){
   for(const [key,at] of recent)if(now()-at>300000)recent.delete(key);
@@ -37,10 +35,16 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
    const n=number(notice.orderNumber);
    if(!n)continue;
    const p=String(account)+':'+n;
-   if(!pending.has(p))pending.set(p,{account,number:n,observedAt});
+   if(pending.has(p)||pending.size>=12){recent.delete(key);continue;}
+   const lookup=new AbortController();
+   pending.set(p,lookup);
    log('number_detected',{account,number:n});
+   void resolveNumber(account,n,lookup,observedAt).catch(()=>{
+    log('number_resolve_error',{account,number:n,elapsedMs:now()-observedAt});
+   }).finally(()=>{
+    if(pending.get(p)===lookup)pending.delete(p);
+   });
   }
-  if(pending.size&&!flight)void drain(account);
  }
  function candidate(orders,account,n){
   if(!Array.isArray(orders))return null;
@@ -52,57 +56,57 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
   });
   return list.length===1?list[0]:null; // Never infer when ambiguous.
  }
- async function drain(account){
-  if(flight||!valid(account))return;
-  const generation=epoch;
-  async function readOrders(url, timeout){
-   const res=await request(url,{signal:AbortSignal.timeout(timeout)});
+ async function findCandidate(account,n,sessionSignal){
+  const attempt=new AbortController();
+  async function readOrders(url){
+   const res=await request(url,{signal:attempt.signal});
    if(!res.ok)throw Error('order_list_http_'+res.status);
    const {orders}=await res.json();
    if(!Array.isArray(orders))throw Error('invalid_order_list');
    return orders;
   }
-  flight=(async()=>{
-   let first=true;
-   // A just-created order can briefly be absent from the list. The retry
-   // windows are short and keyed to the exact announced order number.
-   for(const delay of [0,500,1400,3000,5500]){
-    if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
-    if(epoch!==generation||!valid(account))break;
-    const awaiting=[...pending.values()].filter(x=>x.account===account);
-    if(!awaiting.length)break;
-    try{
-     let orders;
-     if(first&&awaiting.length===1){
-      const n=awaiting[0].number;
-      try{
-       const pages=await Promise.all(['print','album'].map(mode=>
-        readOrders('/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q='+n,2500)));
-       orders=[...new Map(pages.flat().map(row=>[row.id,row])).values()];
-       if(!candidate(orders,account,n))orders=undefined;
-      }catch{/* Older or unavailable paged endpoint: retain the verified legacy lookup. */}
-     }
-     first=false;
-     if(epoch!==generation||!valid(account))break;
-     if(!orders)orders=await readOrders('/api/lab/orders',9000);
-     if(epoch!==generation||!valid(account))break;
-     for(const item of awaiting){
-      const row=candidate(orders,account,item.number);
-      if(!row)continue;
-      pending.delete(account+':'+item.number);
-      deliver(account,row.id);
-      log('number_resolved',{account,number:item.number,orderId:row.id,elapsedMs:now()-item.observedAt});
-     }
-     if(![...pending.values()].some(x=>x.account===account))break;
-    }catch(error){log('number_resolve_error',{account,error:String(error?.message||error).slice(0,100)});}
-   }
-   for(const [key,item] of pending)if(item.account===account){
-    log('number_unresolved',{account,number:item.number,elapsedMs:now()-item.observedAt});
-    pending.delete(key);
-   }
-  })().finally(()=>{flight=null});
-  return flight;
+  const match=orders=>{
+   const row=candidate(orders,account,n);
+   if(!row)throw Error('order_not_visible');
+   return row;
+  };
+  let legacyTimer,deadlineTimer,cancel;
+  const deadline=new Promise(resolve=>{
+   cancel=()=>resolve(null);
+   deadlineTimer=setTimeout(cancel,1800);
+  });
+  sessionSignal.addEventListener('abort',cancel,{once:true});
+  try{
+   if(sessionSignal.aborted)return null;
+   const filtered=Promise.all(['print','album'].map(mode=>
+    readOrders('/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q='+n)))
+    .then(pages=>match([...new Map(pages.flat().map(row=>[row.id,row])).values()]));
+   // The legacy list is a fallback, never a barrier to a usable paged response.
+   const legacy=new Promise(resolve=>{legacyTimer=setTimeout(resolve,300);})
+    .then(()=>readOrders('/api/lab/orders')).then(match);
+   return await Promise.race([Promise.any([filtered,legacy]).catch(()=>null),deadline]);
+  }finally{
+   clearTimeout(legacyTimer);
+   clearTimeout(deadlineTimer);
+   sessionSignal.removeEventListener('abort',cancel);
+   attempt.abort();
+  }
  }
- return {accept,reset(){epoch++;pending.clear();recent.clear()},pending:()=>pending.size};
+ async function resolveNumber(account,n,lookup,observedAt){
+  for(const delay of [0,250,500]){
+   if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+   if(lookup.signal.aborted||!valid(account))return;
+   const row=await findCandidate(account,n,lookup.signal);
+   if(lookup.signal.aborted||!valid(account))return;
+   if(row){
+    deliver(account,row.id);
+    log('number_resolved',{account,number:n,orderId:row.id,elapsedMs:now()-observedAt});
+    return;
+   }
+  }
+  log('number_unresolved',{account,number:n,elapsedMs:now()-observedAt});
+ }
+
+ return {accept,reset(){for(const lookup of pending.values())lookup.abort();pending.clear();recent.clear()},pending:()=>pending.size};
 }
 module.exports={createOrderAlertDispatch};

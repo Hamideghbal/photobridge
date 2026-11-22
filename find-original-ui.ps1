@@ -75,6 +75,7 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
    $env:PB_120_UI_DIR=$candidate
    & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
    if ($LASTEXITCODE -eq 0) {return}
+   if ($LASTEXITCODE -eq 2 -and (Find-CompatibleOfficialUi $Node)) {return}
   }
  }
 
@@ -98,6 +99,7 @@ function Find-OriginalUi([string]$Node,[string[]]$InstalledRoots) {
      $env:PB_120_UI_DIR=$runtime
      & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs')
      if ($LASTEXITCODE -eq 0) {return}
+     if ($LASTEXITCODE -eq 2 -and (Find-CompatibleOfficialUi $Node)) {return}
     } elseif ([IO.Path]::GetExtension($picker.FileName) -ieq '.exe') {
      if (Find-OriginalUiInInstaller $Node $picker.FileName) {return}
     }
@@ -135,6 +137,7 @@ function Find-OriginalUiInZip([string]$Node,[string[]]$Archives) {
      $env:PB_120_UI_DIR=$stage
      & $Node (Join-Path $PSScriptRoot 'select-original-ui.cjs') | Out-Host
      if ($LASTEXITCODE -eq 0) {return $true}
+     if ($LASTEXITCODE -eq 2 -and (Find-CompatibleOfficialUi $Node)) {return $true}
     } catch {Write-Host ('Skipping UI archive candidate: '+$_.Exception.Message)}
     finally {Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue}
    }

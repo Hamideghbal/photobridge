@@ -37,6 +37,7 @@ test('binary download delivers first byte before the upstream stream ends and pr
       assert.equal(route,'/api/lab/photo-original');
       return new Response(body,{status:200,headers:{
         'Content-Type':'application/octet-stream',
+        'Content-Length':'5',
         'X-PB-File-Name':'photo-original.jpg',
         'X-PB-Fallback-Original':'1'
       }});
@@ -47,6 +48,7 @@ test('binary download delivers first byte before the upstream stream ends and pr
       ]);
       assert.equal(response.status,200);
       assert.equal(response.headers.get('x-pb-file-name'),'photo-original.jpg');
+      assert.equal(response.headers.get('content-length'),'5');
       assert.equal(response.headers.get('x-pb-fallback-original'),'1');
       const reader=response.body.getReader();
       const first=await Promise.race([

@@ -221,3 +221,31 @@ test('a click loads its ten-order page while a warm-up and a poll are blocked',a
   assert.deepEqual(seen,[null,'poll','click']);
  }finally{release();if(poll)await poll;await new Promise(resolve=>server.close(resolve));store.db.close();}
 });
+
+test('reopening page two uses its own validated rows while album and other accounts read independently',async()=>{
+ const {createHost}=require('../host.cjs'),{LabStore}=require('../store.cjs');
+ const store=new LabStore(':memory:');
+ store.set('auth',{revision:1});store.set('labId','A');
+ const requests=[];
+ const server=createHost({store,token:'test',sync:{},request:async(route,{signal})=>{
+  assert(signal);
+  const params=new URL(route,'http://localhost').searchParams;
+  const id=params.get('mode')+':'+params.get('stage')+':'+params.get('page')+':'+store.get('auth').revision;
+  requests.push(id);
+  return Response.json({orders:[{id}],total:12,pages:2,counts:{flow:12}});
+ }});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const call=(mode)=>fetch('http://127.0.0.1:'+server.address().port+'/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=2&q=&pbNativeOpen=1',{headers:{Cookie:'desktop=test',Connection:'close'}});
+ try{
+  const first=await call('print');
+  assert.match(first.headers.get('Server-Timing'),/upstream;dur=/);
+  assert.equal((await first.json()).orders[0].id,'print:flow:2:1');
+  const second=await call('print');
+  assert.match(second.headers.get('Server-Timing'),/memory;dur=/);
+  assert.equal((await second.json()).orders[0].id,'print:flow:2:1');
+  assert.equal((await (await call('album')).json()).orders[0].id,'album:flow:2:1');
+  store.set('auth',{revision:2});
+  assert.equal((await (await call('print')).json()).orders[0].id,'print:flow:2:2');
+  assert.deepEqual(requests,['print:flow:2:1','album:flow:2:1','print:flow:2:2']);
+ }finally{await new Promise(resolve=>server.close(resolve));store.db.close();}
+});

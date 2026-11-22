@@ -1,5 +1,6 @@
 'use strict';
 const http=require('node:http');
+const {performance}=require("node:perf_hooks");
 const {exempt,checkWriteAccess}=require('./write-access.cjs');
 const {liveEditRoute,forwardLiveEdit}=require('./lab-live-edits.cjs');
 const fs=require('node:fs');
@@ -22,7 +23,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
     const pending=pageReads.get(flightKey);
     if(pending)return pending;
     const flight=(async()=>{
-      const response=await upstreamRequest(route,{method:'GET',signal:AbortSignal.timeout(6000)});
+      const response=await upstreamRequest(route,{method:'GET',signal:AbortSignal.timeout(3000)});
       return {status:response.status,ok:response.ok,mime:response.headers.get('content-type')||'application/octet-stream',body:Buffer.from(await response.arrayBuffer())};
     })().finally(()=>pageReads.delete(flightKey));
     pageReads.set(flightKey,flight);
@@ -57,22 +58,28 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         ? String(body.expectedRevision)===String(proof.revision)
         : Boolean(body.expectedUpdatedAt&&body.expectedUpdatedAt===proof.updatedAt));
   }
-  function rememberFirstPage(key,mode,result){
-    if(result.body.length>=12e6||!validPage(result))return;
-    warmOrders.set(mode,{key,result,at:Date.now()});
+  function rememberOrderPage(key,result){
+    if(result.body.length>=256*1024)return;
+    warmOrders.delete(key);
+    warmOrders.set(key,{result,at:Date.now()});
+    if(warmOrders.size>40)warmOrders.delete(warmOrders.keys().next().value);
   }
-  function warmedFirstPage(key,mode){
-    const warm=warmOrders.get(mode);
-    if(warm?.key===key&&Date.now()-warm.at<warmPageMs)return warm.result;
+  function warmedOrderPage(key){
+    const warm=warmOrders.get(key);
+    if(warm&&Date.now()-warm.at<warmPageMs)return warm;
   }
   async function warmOrderPage(mode){
     const scope=pageScope(),generation=orderGeneration,route=firstPage(mode);
     const key=JSON.stringify([scope,generation,route]);
-    if(warmedFirstPage(key,mode)&&Date.now()-warmOrders.get(mode).at<5000)return;
-    const before=warmOrders.get(mode);
+    await refreshWarmPage(key,route,scope,generation);
+  }
+  async function refreshWarmPage(key,route,scope,generation){
+    const before=warmOrders.get(key);
+    if(before&&Date.now()-before.at<5000)return;
     const result=await readPage(key,route,'preload');
-    if(scope===pageScope()&&generation===orderGeneration&&before===warmOrders.get(mode))
-      rememberFirstPage(key,mode,result);
+    const query=new URL(route,'http://localhost').searchParams.get('q')?.trim().slice(0,100)||'';
+    if(scope===pageScope()&&generation===orderGeneration&&before===warmOrders.get(key)&&validPage(result,query))
+      rememberOrderPage(key,result);
   }
   function confirmedStageAccess(scope){
     if(stageAccess?.scope!==scope)return false;
@@ -93,6 +100,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   }
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
+    const receivedAt=performance.now();
     try{
       const origin='http://127.0.0.1:'+server.address().port;
       if(req.headers.host!=='127.0.0.1:'+server.address().port)return json(res,403,{error:'invalid_host'});
@@ -225,8 +233,8 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(!pagedOrders&&await require('./local-business-host.cjs').localBusinessHost({req,res,url,bytes,store,nativeStorage,offline:readOffline,json,pdfRenderer,request,financeScope,financeAccount:pageScope,hasStageProof})){if(!['GET','HEAD'].includes(req.method)&&res.statusCode<300)sync.wake?.();return;}
         let parsedLocalBody;const localBody=()=>{if(parsedLocalBody)return parsedLocalBody;try{return parsedLocalBody=bytes.length?JSON.parse(bytes.toString()):{}}catch{return parsedLocalBody={}}};
         const localOrders=require('./offline-orders.cjs'),logicalUrl=localOrders.canonical(req.url);
-        const existingLocal=localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
-        if(connectionOffline()||existingLocal){
+        const existingLocal=!pagedOrders&&localOrders.pendingOrders(store).some(x=>req.url.includes(x.id)||localBody().clientOrderId===x.id);
+        if(!pagedOrders&&(connectionOffline()||existingLocal)){
           if(req.method==='POST'&&/\/delegated-orders\/[0-9a-f-]+\/submit(?:\/download)?$/.test(url.pathname)){
             const files=localBody().desktopLocalFiles,expected=localOrders.pendingOrders(store).find(x=>req.url.includes(x.id))?.files;if(!nativeStorage||!Array.isArray(files)||!files.length||files.length!==expected||new Set(files.map(f=>JSON.stringify([f.rootId,f.parts]))).size!==files.length)return json(res,409,{error:'local_files_not_verified'});
             for(const file of files)file.sha256=await require('./local-file-proof.cjs').fileProof(nativeStorage,file);
@@ -274,18 +282,17 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             const catalogRead=req.method==='GET'&&url.pathname==='/api/lab/print-catalog';
             const scope=pagedRead||accessRead||catalogRead?pageScope():null,generation=orderGeneration;
             const catalogTicket=catalogRead?require('./read-cache.cjs').beginRead(store,cacheUrl):null;
-            let result,servedWarm=false;
+            let result,servedWarm=false,pageKey,previousWarm,upstreamMs;
             if(pagedRead){
-              const key=JSON.stringify([scope,generation,cacheUrl]),mode=url.searchParams.get('mode');
-              const warmed=openPage?warmedFirstPage(key,mode):null;
-              const previousWarm=warmOrders.get(mode);
+              pageKey=JSON.stringify([scope,generation,cacheUrl]);
+              previousWarm=warmOrders.get(pageKey);
+              const warmed=openPage?warmedOrderPage(pageKey):null;
               servedWarm=Boolean(warmed);
-              if(warmed&&Date.now()-warmOrders.get(mode).at>=5000)void warmOrderPage(mode).catch(()=>{});
-              result=warmed||await readPage(key,upstreamUrl,openPage?'foreground':'poll');
+              if(warmed&&Date.now()-warmed.at>=5000)void refreshWarmPage(pageKey,upstreamUrl,scope,generation).catch(()=>{});
+              const requestedAt=performance.now();
+              result=warmed?.result||await readPage(pageKey,upstreamUrl,openPage?'foreground':'poll');
+              upstreamMs=performance.now()-requestedAt;
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
-              if(!warmed&&previousWarm===warmOrders.get(mode)&&generation===orderGeneration&&['print','album'].includes(mode)&&cacheUrl===firstPage(mode)){
-                rememberFirstPage(key,mode,result);
-              }
             }else{
               const controller=new AbortController();
               const abort=()=>controller.abort();
@@ -334,7 +341,10 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(pagedRead&&ok){
               const page=validPage(result,(url.searchParams.get('q')||'').trim().slice(0,100));
               if(!page)return json(res,502,{error:'invalid_paged_orders'});
-              if(!servedWarm&&generation===orderGeneration)rememberStageProofs(page,scope);
+              if(!servedWarm&&generation===orderGeneration&&previousWarm===warmOrders.get(pageKey)){
+                rememberStageProofs(page,scope);
+                rememberOrderPage(pageKey,result);
+              }
             }
             if(ok&&!servedWarm&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
               const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
@@ -343,6 +353,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
                 else store.cache(cacheUrl,status,mime,encoded);
               }
             }
+            if(pagedRead)res.setHeader('Server-Timing',`queue;dur=${(performance.now()-receivedAt).toFixed(1)}, ${servedWarm?'memory':'upstream'};dur=${upstreamMs.toFixed(1)}`);
             res.writeHead(status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{

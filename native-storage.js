@@ -52,6 +52,11 @@
  const url=typeof input==='string'?input:input?.url,same=url&&new URL(url,location.href).origin===location.origin,method=String(options.method||input?.method||'GET').toUpperCase();let key;
  if(same&&['POST','PUT','PATCH'].includes(method)&&typeof options.body==='string'){key=method+' '+url+' '+options.body;const headers=new Headers(options.headers||{});if(!headers.has('x-photobridge-local-operation')){let existing;try{existing=JSON.parse(options.body).desktopOperationId}catch{}if(typeof existing==='string'&&/^[0-9a-f-]{36}$/i.test(existing))headers.set('x-photobridge-local-operation',existing);else{if(!pending.has(key))pending.set(key,crypto.randomUUID());headers.set('x-photobridge-local-operation',pending.get(key));}}options={...options,headers};}
  const response=await original(input,options);
+ // Paged queue responses contain rows and counts. The queue reads this body itself.
+ if(same&&method==='GET'&&response.ok){
+  const route=new URL(url,location.href);
+  if(route.pathname==='/api/lab/orders'&&route.searchParams.get('paged')==='1')return response;
+ }
  if(same&&response.headers.get('content-type')?.includes('application/json')){try{const data=await response.clone().json();if(key&&response.status<500)pending.delete(key);if(data.offline)window.__PB_NATIVE_OFFLINE=true;else if(response.ok)window.__PB_NATIVE_OFFLINE=false;if(data.localCommitted)window.dispatchEvent(new CustomEvent('photobridge-local-committed',{detail:{url,method}}));if(data.desktopPending)window.dispatchEvent(new CustomEvent('photobridge-native-pending',{detail:{message:'روی این دستگاه ذخیره شد؛ در انتظار تأیید سرور'}}));}catch{}}
  return response;
 };})();

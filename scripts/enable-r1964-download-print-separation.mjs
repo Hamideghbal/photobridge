@@ -35,7 +35,7 @@ if(!server.includes(marker)){
                        'دانلود آلبوم کامل شد؛ شروع چاپ در انتظار اپراتور');
   return part;
  },'album download endpoint');
- server+='\\n'+marker+'\\n';
+ server+='\n'+marker+'\n';
  write(serverFile,server);
  execFileSync(process.execPath,['--check',serverFile],{stdio:'inherit'});
 }
@@ -114,7 +114,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   if(a<0||b<0)throw Error('[R1964] album enable handler changed '+root);
   return part.slice(0,a)+albumEnabled+part.slice(b);
  },root+' album button gate');
- ui+='\\n'+marker+'\\n';
+ ui+='\n'+marker+'\n';
  write(file,ui);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 }

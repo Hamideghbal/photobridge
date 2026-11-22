@@ -1447,10 +1447,13 @@ await deployStep('./enable-r1944-lab-order-pages.mjs');
 await deployStep('./enable-r1960-album-cover-priced-sizes.mjs');
 // R1961: ensure cover tariff entries are saved for R1960 active sizes before shipping the API.
 await deployStep('./enable-r1961-photographer-cover-size-map.mjs');
+// R1963: suppress both website and stale role docks in PWA login before final HTML compression.
+await deployStep('./enable-r1963-auth-only-app-login.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1961-photographer-cover-size-map.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1963-auth-only-app-login.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory.cjs'],{stdio:'inherit'});

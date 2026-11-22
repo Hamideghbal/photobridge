@@ -6,9 +6,9 @@ const fmt=new Intl.NumberFormat('fa-IR'),money=n=>fmt.format(Number(n)||0)+' ت�
 const make=(tag,cls,txt)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(txt!=null)x.textContent=String(txt);return x;};
 let frame=0;
 function mount(){
- if(!matchMedia('(max-width:820px)').matches){document.querySelectorAll('.pb1967StatusBar,.pb1967ManualOrder').forEach(x=>x.remove());return;}
+ if(!matchMedia('(max-width:820px)').matches){document.documentElement.classList.remove('pb1967LabMobileChromeReady');document.querySelectorAll('.pb1967StatusBar,.pb1967ManualOrder').forEach(x=>x.remove());return;}
  const host=document.querySelector('#root .labRoleWorkspace main.labPrimaryConnectorMode > .pb1955ThirdHeaderHost');
- if(!host||!host.querySelector('.r1955ThirdHeader'))return;
+ if(!host||!host.querySelector('.r1955ThirdHeader')){document.documentElement.classList.remove('pb1967LabMobileChromeReady');return;}
  let bar=host.querySelector(':scope > .pb1967StatusBar');
  if(!bar){bar=make('nav','pb1967StatusBar');bar.setAttribute('aria-label','وضعیت سفارش‌های لابراتوار');host.append(bar);}
  for(let i=0;i<3;i++){
@@ -42,6 +42,7 @@ function mount(){
   };
   host.append(manual);
  }
+ document.documentElement.classList.add('pb1967LabMobileChromeReady');
 }
 function schedule(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;mount()});}
 let popup=null,seq=0,abort=null,prior=null;

@@ -1452,8 +1452,11 @@ await deployStep('./enable-r1963-auth-only-app-login.mjs');
 // R1962: manager mobile notifications from committed Windows/web order operations.
 await deployStep('./enable-r1962-lab-manager-push-operations.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1962-lab-manager-push-operations.cjs'],{stdio:'inherit'});
+// R1964: download acknowledges only receipt; print requires explicit operator action.
+await deployStep('./enable-r1964-download-print-separation.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1964-download-print-separation.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1961-photographer-cover-size-map.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1963-auth-only-app-login.cjs'],{stdio:'inherit'});

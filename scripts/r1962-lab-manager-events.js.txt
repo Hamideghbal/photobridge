@@ -38,11 +38,13 @@ function pb1962LabManagerEventInfo(event, data) {
   if (event === 'invoice_ready' || event === 'invoice_pricing_ready' || event === 'invoice_created') {
     const invoiceId = String(data.invoiceId || data.invoice?.id || '').trim();
     if (!/^[0-9a-f-]{36}$/i.test(invoiceId)) return null;
-    const invoiceNo = String(data.invoiceNumber || data.invoice?.number || '').trim().slice(0,40);
+    const invoiceNo = String(data.invoiceNumber || data.invoice?.number || data.number || '').trim().slice(0,40);
+    const orderNo = String(data.orderNumber || '').trim().slice(0,40);
+    const orderRef = orderNo ? ' #' + orderNo : '';
     return {
       eventKey:'lab_manager_invoice_issued', dedupeKey:'invoice:' + invoiceId,
       title:'فاکتور سفارش صادر شد',
-      message:'برای سفارش' + ref + ' فاکتور' + (invoiceNo ? ' #' + invoiceNo : '') + ' صادر شد.'
+      message:'برای سفارش' + orderRef + ' فاکتور' + (invoiceNo ? ' #' + invoiceNo : '') + ' صادر شد.'
     };
   }
   if (event === 'album_stage_updated') {

@@ -75,6 +75,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
+        if(req.method==='GET'&&url.pathname==='/api/lab/intake-live/download/device'){
+          const {status,data}=await require('./native-intake-device.cjs').readIntakeDevice({
+            store,nativeStorage,request,isOnline,opening:url.searchParams.get('purpose')==='open',getReadEpoch
+          });
+          return json(res,status,data);
+        }
         if(req.method==='PATCH'&&/^\/api\/lab\/order-files\/[0-9a-f-]+\/print-settings$/i.test(url.pathname))return json(res,409,{error:'order_details_read_only',message:'جزئیات ثبت‌شدهٔ سفارش فقط قابل مشاهده است.'});
         if(url.pathname==='/api/lab/events'&&req.method==='GET'){if(connectionOffline())return json(res,503,{error:'internet_offline'});await require('./live-events-host.cjs').streamLabEvents({req,res,store,request,lab:store.get('labId')});return;}
         if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
@@ -265,6 +271,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(path.extname(file)==='.css')return res.end(require('./native-font.cjs').patchNativeFontCss(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
+        if(name==='photobridge-r1631-order-exit.js')return res.end(require('./native-queue-presentation.cjs').patchNativeOrderExit(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8')));
         if(name==='assets/index-UIRefine-v655-r84.js'){
           return res.end(require('./native-renderer-bundle.cjs').compile(file,require('./package.json').version));

@@ -44,3 +44,19 @@ html body #root .labRoleWorkspace .mainQueueFilters button:is(.active,[aria-sele
 @media (prefers-reduced-motion:reduce) {
  .pbNativeQueueSkeleton i {animation:none}
 }
+
+html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav button[data-pb1173-index],
+html body #root .labRoleWorkspace .mainQueueFilters button {
+ padding-inline:14px!important;
+ column-gap:8px!important;
+}
+html body #root .labRoleWorkspace :is(.pb1148SecondaryHeader.pb1174QueueNav,.mainQueueFilters) button:is(.queueAttentionPulse,.orderTabAttentionPulse) {
+ animation:none!important;
+}
+html body #root .labRoleWorkspace :is(.pb1148SecondaryHeader.pb1174QueueNav,.mainQueueFilters) button:is(.queueAttentionPulse,.orderTabAttentionPulse) b {
+ animation:pbNativeQueueCountPulse .3s ease-in-out 2 alternate;
+}
+@keyframes pbNativeQueueCountPulse {to{opacity:.4;transform:scale(1.14)}}
+@media (prefers-reduced-motion:reduce) {
+ html body #root .labRoleWorkspace :is(.pb1148SecondaryHeader.pb1174QueueNav,.mainQueueFilters) button:is(.queueAttentionPulse,.orderTabAttentionPulse) b {animation:none}
+}

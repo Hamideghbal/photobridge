@@ -24,7 +24,7 @@ test('both modes and page transitions render placeholders until the matching res
  let state=null, rows=[];
  const requests=[], ref={current:{seq:0,active:true}};
  const render=vm.runInNewContext(patchNativeQueuePresentation(queue)+'\nUf',{
-  x:{useState:()=>[state,apply=>{state=apply(state);}],useRef:()=>ref},
+  x:{useState:()=>[state,apply=>{state=apply(state);}],useRef:value=>typeof value==="string"?{current:value}:ref},
   e:{jsx:(_type,props)=>props,jsxs:(_type,props)=>props},
   get rows(){return rows;},
   f:value=>{rows=value;},
@@ -69,4 +69,23 @@ test('an order change waits for confirmation but does not wait for the exit anim
  reply({order:{id:'order'}});
  await flight;
  assert.deepEqual(updates,['order']);
+});
+
+
+test('confirmed moves close the gap on the current page without removing an unconfirmed or same-tab card',async()=>{
+ for(const [T,status,expected] of [['flow','ready',['other']],['ready','ready',['order','other']],['flow','printing',['order','other']]]){
+  let rows=[{id:'order'},{id:'other'}],animations=0;
+  const source=`(async(le,nt,T)=>{
+   const result=await send();
+   if(result.order){await window.pb1631ExitOrder?.(le.id,nt,T);f(rows=>rows.map(row=>row.id===le.id?{...row,...result.order}:row));}
+  })`;
+  const run=vm.runInNewContext(removeConfirmedOrderExitWait(source),{
+   send:async()=>({order:{id:'order',status}}),
+   window:{pb1631ExitOrder:()=>{animations++;return new Promise(()=>{});}},
+   f:apply=>{rows=apply(rows);},
+  });
+  await run({id:'order'},'ready',T);
+  assert.deepEqual(rows.map(row=>row.id),expected);
+  assert.equal(animations,expected.length===1?1:0);
+ }
 });

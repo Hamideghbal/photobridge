@@ -16,6 +16,8 @@ function patchNativeQueuePresentation(source) {
  const [pbNativePageResult,pbNativeSetPageResult]=x.useState(null);
  const pbNativePageKey=JSON.stringify([t?.id,o,T,r1944Page,r1944DebouncedQuery]);
  const pbNativePageLoading=pbNativePageResult?.key!==pbNativePageKey;
+ const pbNativeVisiblePage=x.useRef(pbNativePageKey);
+ pbNativeVisiblePage.current=pbNativePageKey;
  `;
  const skeleton=`e.jsx("div",{className:"pbNativeQueueLoading","aria-hidden":true,children:Array.from({length:6},(_,index)=>e.jsxs("div",{className:"pbNativeQueueSkeleton",children:[e.jsx("i",{className:"pbNativeQueueSkeletonThumb"}),e.jsx("div",{className:"pbNativeQueueSkeletonLines",children:[e.jsx("i",{},0),e.jsx("i",{},1),e.jsx("i",{},2)]}),e.jsx("i",{className:"pbNativeQueueSkeletonAction"})]},index))})`;
  const patched=queue
@@ -27,7 +29,53 @@ function patchNativeQueuePresentation(source) {
 }
 
 function removeConfirmedOrderExitWait(source){
- return source.replaceAll('await window.pb1631ExitOrder?.(le.id,nt,T);','');
+ const stateUpdate=/if\((Mt|result)\.order\)\{await window\.pb1631ExitOrder\?\.\(le\.id,nt,T\);f\(rows=>rows\.map\(row=>row\.id===le\.id\?\{\.\.\.row,\.\.\.\1\.order\}:row\)\);\}/g;
+ const samePage=source.includes("const pbNativeVisiblePage=")?"&&pbLiveOrders.current.active&&pbNativeVisiblePage.current===pbNativePageKey":"";
+ return source.replace(stateUpdate,(_,result)=>`if(${result}.order${samePage}){
+  const pbNativeMoved=(nt==="ready"||nt==="completed")&&T!==nt&&${result}.order.status===nt;
+  if(pbNativeMoved)window.pb1631ExitOrder?.(le.id,nt,T);
+  f(rows=>pbNativeMoved?rows.filter(row=>row.id!==le.id):rows.map(row=>row.id===le.id?{...row,...${result}.order}:row));
+ }`).replaceAll('await window.pb1631ExitOrder?.(le.id,nt,T);','');
 }
 
-module.exports={patchNativeQueuePresentation,removeConfirmedOrderExitWait};
+function reflowOrderCards(id,stage,from){
+ if(stage===from||document.hidden||reduced())return;
+ const outgoing=[...document.querySelectorAll('.labOrderCard[data-order-id]')]
+   .find(node=>node.dataset.orderId===String(id));
+ const list=outgoing?.parentElement;
+ if(!list)return;
+ const before=new Map([...list.querySelectorAll(':scope>.labOrderCard[data-order-id]')]
+   .filter(card=>card!==outgoing).map(card=>[card,card.getBoundingClientRect()]));
+ const observer=new MutationObserver(()=>{
+  if(outgoing.parentElement===list)return;
+  observer.disconnect();clearTimeout(expiry);
+  const changes=[];
+  for(const[card,previous]of before){
+   if(card.parentElement!==list)continue;
+   const next=card.getBoundingClientRect(),x=previous.left-next.left,y=previous.top-next.top;
+   if(x||y)changes.push({card,x,y});
+  }
+  for(const{card,x,y}of changes)card.animate?.(
+    [{translate:`${x}px ${y}px`},{translate:'0px 0px'}],
+    {duration:180,easing:'cubic-bezier(.18,.76,.35,1)'});
+ });
+ const expiry=setTimeout(()=>observer.disconnect(),400);
+ observer.observe(list,{childList:true});
+}
+
+function flashOrderCount(button){
+ const badge=button.querySelector('b');
+ if(!badge||reduced())return;
+ badge.animate?.([{opacity:1,scale:1},{opacity:.42,scale:1.15},{opacity:1,scale:1}],
+  {duration:375,iterations:2,easing:'ease-in-out'});
+}
+
+function patchNativeOrderExit(source){
+ const tween=source.indexOf('function tween('),from=source.indexOf('window.pb1631ExitOrder='),to=source.indexOf('const normalize=',from);
+ const flash=source.indexOf('function flash(button){',to),after=source.indexOf("addEventListener('photobridge-order-moved'",flash);
+ if(from<0||to<0||flash<0||after<0)return source;
+ return source.slice(0,tween>=0&&tween<from?tween:from)+'window.pb1631ExitOrder='+reflowOrderCards.toString()+';\n'+
+  source.slice(to,flash)+flashOrderCount.toString().replace('function flashOrderCount','function flash')+'\n'+source.slice(after);
+}
+
+module.exports={patchNativeQueuePresentation,removeConfirmedOrderExitWait,patchNativeOrderExit};

@@ -49,3 +49,29 @@ test('R1912: submitting the first manual order after a long offline editing sess
   assert.equal(attempts,1,'only a bounded authorization probe may reach WAN');
  }finally{await new Promise(resolve=>server.close(resolve));store.db.close()}
 });
+
+test('native intake binds its opening device check to the current session and keeps live submission server-verified',async()=>{
+ const store=new LabStore(':memory:'), lab='lab-device', user='user-device';
+ store.set('labId',lab);store.set('deviceId','machine');
+ store.set('auth',{user:{userId:user,labRole:'lab_admin'},lab:{id:lab}});
+ store.set('nativeStorageRoot:'+lab,{id:'root',localStandalone:true});
+ const traffic=[];
+ let upstream={registered:true,isThisDevice:false};
+ const server=createHost({store,roots:()=>[],isOnline:()=>true,token:'test',sync:{},
+  nativeStorage:{device:async()=>({registered:true,isThisDevice:true,scope:'local-device'})},
+  request:async path=>{traffic.push(path);return Response.json(upstream);},
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const call=async query=>{
+   const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/lab/intake-live/download/device'+query,{headers:{Cookie:'desktop=test',Connection:'close'}});
+   return {status:response.status,data:await response.json()};
+  };
+  assert.deepEqual(await call('?purpose=open'),{status:200,data:{registered:true,isThisDevice:true,scope:'local-device',labId:lab,userId:user}});
+  assert.deepEqual(traffic,[]);
+  assert.deepEqual(await call('?check=1'),{status:200,data:{registered:true,isThisDevice:false,labId:lab,userId:user}});
+  assert.deepEqual(traffic,['/api/lab/download-device']);
+  upstream={registered:true,isThisDevice:true,labId:'other-lab',userId:user};
+  assert.deepEqual(await call('?check=1'),{status:401,data:{error:'account_changed'}});
+ }finally{await new Promise(resolve=>server.close(resolve));store.db.close();}
+});

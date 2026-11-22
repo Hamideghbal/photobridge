@@ -52,7 +52,7 @@ test('both modes and page transitions render placeholders until the matching res
  placeholders(show('album',2).view);
  placeholders(show('album',1,'other').view);
  const c=show('album',2).load();
- assert(!requests[2].key.includes('pbNativeOpen'));
+ assert(requests[2].key.endsWith('&pbNativeOpen=1'));
  requests[2].resolve({orders:[]});
  await c;
  assert.equal(show('album',2).view.children,'empty');

@@ -16,18 +16,16 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   let orderGeneration=0,financeGeneration=0,stageAccess=null;
   const pageScope=()=>JSON.stringify([store.get('labId'),store.get('deviceId'),store.get('auth'),getReadEpoch()]);
   const financeScope=()=>JSON.stringify([pageScope(),financeGeneration]);
-  function readPage(key,route,preload=false){
-    const pending=pageReads.get(key);
-    if(pending){
-      if(preload||!pending.preload)return pending.flight;
-      const retry=()=>readPage(key,route);
-      return pending.flight.then(result=>validPage(result)||[401,403].includes(result.status)?result:retry(),retry);
-    }
+  function readPage(key,route,priority){
+    // A visible page must be able to leave immediately while a poll or warm-up is in flight.
+    const flightKey=JSON.stringify([key,priority]);
+    const pending=pageReads.get(flightKey);
+    if(pending)return pending;
     const flight=(async()=>{
-      const response=await (preload?upstreamRequest:request)(route,{method:'GET'});
+      const response=await upstreamRequest(route,{method:'GET',signal:AbortSignal.timeout(6000)});
       return {status:response.status,ok:response.ok,mime:response.headers.get('content-type')||'application/octet-stream',body:Buffer.from(await response.arrayBuffer())};
-    })().finally(()=>pageReads.delete(key));
-    pageReads.set(key,{flight,preload});
+    })().finally(()=>pageReads.delete(flightKey));
+    pageReads.set(flightKey,flight);
     return flight;
   }
   const firstPage=mode=>'/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q=';
@@ -71,8 +69,10 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
     const scope=pageScope(),generation=orderGeneration,route=firstPage(mode);
     const key=JSON.stringify([scope,generation,route]);
     if(warmedFirstPage(key,mode)&&Date.now()-warmOrders.get(mode).at<5000)return;
-    const result=await readPage(key,route,true);
-    if(scope===pageScope()&&generation===orderGeneration)rememberFirstPage(key,mode,result);
+    const before=warmOrders.get(mode);
+    const result=await readPage(key,route,'preload');
+    if(scope===pageScope()&&generation===orderGeneration&&before===warmOrders.get(mode))
+      rememberFirstPage(key,mode,result);
   }
   function confirmedStageAccess(scope){
     if(stageAccess?.scope!==scope)return false;
@@ -278,11 +278,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(pagedRead){
               const key=JSON.stringify([scope,generation,cacheUrl]),mode=url.searchParams.get('mode');
               const warmed=openPage?warmedFirstPage(key,mode):null;
+              const previousWarm=warmOrders.get(mode);
               servedWarm=Boolean(warmed);
               if(warmed&&Date.now()-warmOrders.get(mode).at>=5000)void warmOrderPage(mode).catch(()=>{});
-              result=warmed||await readPage(key,upstreamUrl);
+              result=warmed||await readPage(key,upstreamUrl,openPage?'foreground':'poll');
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
-              if(!warmed&&generation===orderGeneration&&['print','album'].includes(mode)&&cacheUrl===firstPage(mode)){
+              if(!warmed&&previousWarm===warmOrders.get(mode)&&generation===orderGeneration&&['print','album'].includes(mode)&&cacheUrl===firstPage(mode)){
                 rememberFirstPage(key,mode,result);
               }
             }else{

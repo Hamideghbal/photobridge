@@ -54,7 +54,9 @@ function patchNativeQueuePresentation(source) {
  const patched=withFailure
   .replace(marker,marker+state)
   .replace('String(r1944DebouncedQuery||"").trim()','pbNativeRequestQuery')
-  .replace('"&pbNativeLiveStatus="+Date.now();','"&pbNativeLiveStatus="+Date.now()+(pbNativeOpeningPage.current===pbNativePageKey&&T==="flow"&&r1944Page===1&&!query?"&pbNativeOpen=1":"");')
+  .replace('"&pbNativeLiveStatus="+Date.now();','"&pbNativeLiveStatus="+Date.now()+(pbNativeOpeningPage.current===pbNativePageKey?"&pbNativeOpen=1":"");')
+  .replace('if(status===401||status===403)throw error;','if(status!==502||error?.data?.error!=="invalid_paged_orders"||!query||Array.from(query).length>2)throw error;')
+  .replace('const cached=await pb1945Legacy();','const cached=await Me("/api/lab/orders",{signal:AbortSignal.timeout(2000)}).then(data=>({...data,__pb1945Legacy:true}));')
   .replace('value:r1944Query,onChange:le=>r1944SetQuery(le.target.value)', 'value:r1944Query,maxLength:100,onChange:le=>{r1944SetQuery(le.target.value);r1944SetPage(1)}')
   .replace('String([le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number].join(" ")).toLowerCase().includes(query.toLowerCase())','[le.number,le.customer_name,le.customer_mobile,le.folder_latin_name,le.invoice_number,...(Array.isArray(le.files)?le.files.map(file=>file.original_name||file.name):[])].some(value=>pbNativeSearchText(value).includes(pbNativeSearchText(query)))')
   .replace('r1944SetDebouncedQuery(String(r1944Query||"")),270','r1944SetDebouncedQuery(pbNativeQueueSearch(r1944Query)),110')

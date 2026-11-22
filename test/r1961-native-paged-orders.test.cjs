@@ -190,3 +190,34 @@ test('short search text reaches the server and a default page cannot masquerade 
   assert.deepEqual(seen,['ا','نی','72']);
  }finally{await new Promise(resolve=>server.close(resolve));store.db.close();}
 });
+
+test('a click loads its ten-order page while a warm-up and a poll are blocked',async()=>{
+ const {createHost}=require('../host.cjs'),{LabStore}=require('../store.cjs');
+ const store=new LabStore(':memory:');
+ store.set('auth',{});store.set('labId','A');
+ let release,notifyPoll;
+ const held=new Promise(resolve=>{release=resolve;});
+ const pollStarted=new Promise(resolve=>{notifyPoll=resolve;});
+ const seen=[];
+ const server=createHost({store,token:'test',sync:{},request:async(route,{signal})=>{
+  assert(signal);
+  const stamp=new URL(route,'http://localhost').searchParams.get('pbNativeLiveStatus');
+  seen.push(stamp);
+  if(stamp==='poll')notifyPoll();
+  if(stamp!=='click')await held;
+  return Response.json({orders:[{id:stamp}],total:1,pages:1,counts:{flow:1}});
+ }});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const headers={Cookie:'desktop=test',Connection:'close'},origin='http://127.0.0.1:'+server.address().port;
+ const path=origin+'/api/lab/orders?paged=1&mode=print&stage=flow&page=1&q=&pbNativeLiveStatus=';
+ let poll;
+ try{
+  await fetch(origin+'/desktop/warm-view?view=print',{headers});
+  poll=fetch(path+'poll',{headers});
+  await pollStarted;
+  const response=await fetch(path+'click&pbNativeOpen=1',{headers,signal:AbortSignal.timeout(1500)});
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).orders[0].id,'click');
+  assert.deepEqual(seen,[null,'poll','click']);
+ }finally{release();if(poll)await poll;await new Promise(resolve=>server.close(resolve));store.db.close();}
+});

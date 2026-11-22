@@ -12,11 +12,16 @@ function section(start,end,fn,label){
  s=s.slice(0,i)+fn(s.slice(i,j))+s.slice(j);
 }
 if(!s.includes(mark)){
- // Scope only the new mobile-manager push events. Existing native order popup,
- // generic Lab events and legacy Web Push are not changed.
- once("AND u.active=true)\":\"recipient_user_id=$1 AND recipient_lab_id IS NULL\";",
-      "AND u.active=true) AND web_push_subscriptions.user_agent ~* '(Android|iPhone|iPad|iPod|Mobile)'\":\"recipient_user_id=$1 AND recipient_lab_id IS NULL\";",
-      'push recipients restricted to manager mobile devices');
+ // Scope only the new mobile-manager events; preserve the existing generic
+ // Lab Web Push fan-out for order submission and ordinary lab notifications.
+ section('async function sendWebPushToRecipient(', 'async function storeLabSystemNotification(', part=>{
+   const oldDecl="const subWhere=kind==='lab'?";
+   const newDecl="const managerMobileOnly=kind==='lab'&&String(event||'').startsWith('lab_manager_');\\n        "+oldDecl;
+   const oldQuery="FROM web_push_subscriptions WHERE ${subWhere} ORDER BY updated_at DESC LIMIT 12";
+   const newQuery="FROM web_push_subscriptions WHERE ${managerMobileOnly?(subWhere+\" AND web_push_subscriptions.user_agent ~* '(Android|iPhone|iPad|iPod|Mobile)'\"):subWhere} ORDER BY updated_at DESC LIMIT 12";
+   if(part.split(oldDecl).length!==2||part.split(oldQuery).length!==2)throw Error('[R1965] push query anchor changed');
+   return part.replace(oldDecl,newDecl.replace('\\\\n','\\n')).replace(oldQuery,newQuery);
+ },'mobile manager push recipient list');
  // Mobile lab notification bell sees the manager log. The Windows Lab bell
  // (including historical r1962 entries) must not show these extra alerts.
  section("if (req.method === 'GET' && url.pathname === '/api/lab/notifications') {",

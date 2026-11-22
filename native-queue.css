@@ -75,16 +75,22 @@ html body .pb1137Intake button.pbNativeIntakePhotoPicker {
 .pbNativePendingPhotos img {display:block;width:100%;height:82px;object-fit:contain}
 .pbNativePendingPhotos figcaption {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn[aria-busy="true"] {
- animation:none!important;transform:none!important;opacity:1!important;filter:none!important;
+/* The list stays visible during transitions, including a failed first read. */
+html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn {
+ animation:none!important;transition:none!important;transform:none!important;opacity:1!important;filter:none!important;
 }
-html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn[aria-busy="false"].idle {
- animation:pbNativeQueueReveal .14s ease-out both!important;
+.pbNativeQueueError {
+ grid-column:1 / -1;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:14px;
+ padding:20px;
+ background:#fff;
+ border:1px solid #dce5f1;
+ border-radius:12px;
 }
-@keyframes pbNativeQueueReveal {from{opacity:.75}to{opacity:1}}
-@media (prefers-reduced-motion:reduce) {
- html body #root .labRoleWorkspace .labOrderGrid.queuePageTurn[aria-busy="false"].idle {animation:none!important}
-}
+.pbNativeQueueError button {cursor:pointer}
 
 /* Fixed slots prevent count updates from repositioning the queue tabs. */
 @media (min-width: 1000px) {

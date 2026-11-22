@@ -7,6 +7,19 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  // business migration or SQLite write before reaching the server.
  if(req.method==='GET'&&['/api/lab/dashboard','/api/lab/profile-image','/api/lab/hours','/api/lab/album-settings','/api/lab/sms-settings','/api/lab/snappbox/settings','/api/lab/site'].includes(url.pathname))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
+ if(!offline&&req.method==='GET'&&url.pathname==='/api/lab/finance/summary'&&url.searchParams.has('pbNativeOverview')){
+  const snapshot=store.get('localBusiness:v1:'+lab);
+  // On a fresh workstation the website summary already covers the account.
+  // A persisted local ledger still supplies its own reconciled figures.
+  if(!snapshot)return false;
+  if(url.searchParams.get('pbNativeOverview')==='initial'&&snapshot.snapshotAt&&store.cached(url.pathname)){
+   const {refreshFinance}=require('./finance-refresh.cjs');
+   void refreshFinance(store,request,{focus:'overview',scope:financeScope?.(),getAccount:financeAccount}).catch(()=>{});
+   const result=new LocalBusiness(store).summary(snapshot,url.searchParams);
+   json(res,200,result);
+   return true;
+  }
+ }
  require('./document-policy.cjs').applyPolicy(store);
  const engine=new LocalBusiness(store),raw=url.pathname,p=canonical(req.url);let b={};try{b=bytes?.length?JSON.parse(bytes.toString()):{}}catch{}
  const isPrint=/^\/desktop\/local-invoices\//.test(raw);

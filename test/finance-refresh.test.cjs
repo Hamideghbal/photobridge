@@ -88,3 +88,23 @@ test('the finance overview reconciles the current totals without waiting for the
   assert.equal((await refreshFinance(f.store,request)).complete,true);
  }finally{release();f.store.db.close();}
 });
+
+test('a cold native dashboard uses only the ranged server summary, even with local mode enabled',async()=>{
+ const {LabStore}=require('../store.cjs'),{createHost}=require('../host.cjs');
+ const store=new LabStore(':memory:');
+ store.set('labId','A');store.set('auth',{});store.set('localBusinessActive:A',true);
+ const routes=[];
+ const host=createHost({store,sync:{},token:'test',request:async route=>{
+  routes.push(route);
+  return Response.json({summary:{cash:125000},customers:[]});
+ }});
+ await new Promise(resolve=>host.listen(0,'127.0.0.1',resolve));
+ try{
+  const path='/api/lab/finance/summary?from=2026-11-01&to=2026-11-21';
+  const response=await fetch('http://127.0.0.1:'+host.address().port+path+'&pbNativeOverview=initial',{headers:{Cookie:'desktop=test',Connection:'close'}});
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).summary.cash,125000);
+  assert.deepEqual(routes,[path]);
+  assert.equal(store.get('localBusiness:v1:A'),null);
+ }finally{await new Promise(resolve=>host.close(resolve));store.db.close();}
+});

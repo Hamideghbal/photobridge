@@ -26,7 +26,7 @@ test('both modes and page transitions render placeholders until the matching res
  let state=null, rows=[];
  const requests=[], ref={current:{seq:0,active:true}};
  const render=vm.runInNewContext(patchNativeQueuePresentation(queue)+'\nUf',{
-  x:{useState:()=>[state,apply=>{state=apply(state);}],useRef:value=>typeof value==="string"?{current:value}:ref},
+  x:{useState:()=>[state,apply=>{state=typeof apply==="function"?apply(state):apply;}],useRef:value=>typeof value==="string"?{current:value}:ref},
   e:{jsx:(_type,props)=>props,jsxs:(_type,props)=>props},
   get rows(){return rows;},
   f:value=>{rows=value;},
@@ -59,7 +59,13 @@ test('both modes and page transitions render placeholders until the matching res
  const d=show('album',3).load();
  requests[3].reject(Error('unavailable'));
  await d;
- assert.equal(show('album',3).view.children,null);
+ assert.equal(show('album',3).view.children.className,'pbNativeQueueError');
+ const retry=show('album',3).view.children.children[1];
+ retry.onClick();
+ placeholders(show('album',3).view);
+ requests[4].resolve({orders:[{id:'retried'}]});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(show('album',3).view.children[0],'retried');
 });
 
 test('an order change waits for confirmation but does not wait for the exit animation',async()=>{

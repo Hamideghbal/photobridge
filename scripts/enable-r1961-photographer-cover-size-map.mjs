@@ -60,10 +60,14 @@ src=src.slice(0,start)+updated+src.slice(end);
 // The laboratory save route used the legacy binding price as an eligibility gate.
 // R1960 now synchronizes every active separately/combined priced binding size,
 // including sizes whose legacy binding_price is zero. Saving must preserve them.
-const oldForm="sizes = (albumBase.sizes || []).filter((x) => x.active !== false && (Number(x.bindingPrice || 0) > 0 || (albumBase.printTariffCatalog?.albumPricingMode===\"combined\" && [\"luster\",\"silk\",\"metallic\"].some(p=>Number(albumBase.printTariffCatalog?.albumCombinedRates?.[String(x.printSizeId||\"\")]?.[p]||0)>0))))";
-const newForm='sizes = (albumBase.sizes || []).filter((x) => x.active !== false)';
-if(src.split(oldForm).length!==2)throw Error('[R1961] lab album-settings size eligibility changed');
-src=src.replace(oldForm,newForm);
+// Isolate the saver declaration itself: later patches may extend its pricing predicate.
+const savePrefix='const b = await bodyJson(req, 12_000_000), albumBase = await albumCatalogForLab(labId, true), sizes = ';
+const saveBegin=src.indexOf(savePrefix);
+const saveEnd=saveBegin<0?-1:src.indexOf(', extras =',saveBegin+savePrefix.length);
+if(saveBegin<0||saveEnd<=saveBegin||saveEnd-saveBegin>1000)throw Error('[R1961] lab album-settings size gate not uniquely found');
+const priorFilter=src.slice(saveBegin+savePrefix.length,saveEnd);
+if(!priorFilter.includes('bindingPrice')&&!priorFilter.includes('albumCombinedRates'))throw Error('[R1961] expected legacy size-price gate missing');
+src=src.slice(0,saveBegin+savePrefix.length)+'(albumBase.sizes || []).filter((x) => x.active !== false)'+src.slice(saveEnd);
 // R1805 already broadened the SQL map; preserve its existing active-only contract.
 const existingDb='SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label';
 if(src.split(existingDb).length!==2)throw Error('[R1961] R1805 active album size ID map missing');

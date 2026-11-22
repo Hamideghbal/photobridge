@@ -37,6 +37,7 @@ test('both modes and page transitions render placeholders until the matching res
  const placeholders=view=>{assert.equal(view['aria-busy'],true);assert.equal(view.children.length,6);
   for(const card of view.children){assert.match(card.className,/pbNativeQueueSkeleton.*labOrderCard/);assert.equal(card['aria-hidden'],true);}};
  placeholders(show('print',1).view);
+ assert.deepEqual(show('print',1).view.children,show('album',1).view.children);
  const a=show('print',1).load();
  const b=show('album',1).load();
  assert(requests[0].key.includes('mode=print&stage=flow&page=1'));

@@ -1,6 +1,7 @@
 'use strict';
 const http=require('node:http');
 const {exempt,checkWriteAccess}=require('./write-access.cjs');
+const {liveEditRoute,forwardLiveEdit}=require('./lab-live-edits.cjs');
 const fs=require('node:fs');
 const path=require('node:path');
 const {Readable}=require('node:stream');
@@ -163,6 +164,12 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(req.method==='PATCH'&&/^\/api\/lab\/order-files\/[0-9a-f-]+\/print-settings$/i.test(url.pathname))return json(res,409,{error:'order_details_read_only',message:'جزئیات ثبت‌شدهٔ سفارش فقط قابل مشاهده است.'});
         if(url.pathname==='/api/lab/events'&&req.method==='GET'){if(connectionOffline())return json(res,503,{error:'internet_offline'});await require('./live-events-host.cjs').streamLabEvents({req,res,store,request,lab:store.get('labId')});return;}
         if(url.pathname==='/api/lab/write-access'&&req.method==='GET'&&connectionOffline()){const access=await checkWriteAccess(store,async()=>{throw Error('offline')});const saved=store.get('writeAccess:'+store.get('labId'));return json(res,access.allowed?200:403,{...access,labId:store.get('labId'),activeUntil:saved?.activeUntil||null,serverNow:new Date().toISOString(),offline:true});}
+        let editorBody;
+        if(['PATCH','POST'].includes(req.method)&&/^\/api\/lab\/(?:customers\/|print-catalog(?:\/|$))/.test(url.pathname)){
+          try{editorBody=JSON.parse(bytes.toString());}catch{}
+        }
+        const liveEdit=liveEditRoute(req.method,url.pathname,editorBody);
+        const editScope=liveEdit?pageScope():null;
         if(!exempt(req.method,req.url)){
           const manualIntakeWrite=req.method==='POST'&&/^\/api\/lab\/delegated-orders(?:\/|$)/.test(url.pathname);
           let knownStage=false;
@@ -178,13 +185,13 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
           // Reuse the lab's freshly polled approval for a known shared stage.
           // The upstream mutation still enforces live entitlement and revision.
           if(!knownStage){
-            const access=await checkWriteAccess(store,connectionOffline()?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));
+            const access=await checkWriteAccess(store,(liveEdit?isOnline()===false:connectionOffline())?async()=>{throw Error('offline')}:(p,options={})=>request(p,{...options,signal:AbortSignal.timeout(manualIntakeWrite?1100:3500)}));
             if(!access.allowed)return json(res,403,access);
           }
         }
         // LAB104: run only after account/authorization gates; never enqueue a receipt.
         if(await require('./receipt-forward.cjs').forwardReceipt({req,res,url,bytes,contentType,store,request,offline:connectionOffline,json,enabled:require('./package.json').version==='1.0.104'}))return;
-        if(!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|delegated-orders|invoices|finance|customers|delegated-customers)(?:\/|$)/.test(url.pathname)){
+        if(!['GET','HEAD','OPTIONS'].includes(req.method)&&(liveEdit?.kind==='debt'||/^\/api\/lab\/(?:orders|order-files|delegated-orders|invoices|finance|customers|delegated-customers)(?:\/|$)/.test(url.pathname))){
           financeGeneration++;
           res.once('finish',()=>{
             financeGeneration++;
@@ -195,9 +202,13 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             }
           });
         }
-        if(!['GET','HEAD','OPTIONS'].includes(req.method)&&/^\/api\/lab\/(?:orders|order-files|delegated-orders)(?:\/|$)/.test(url.pathname)){
+        if(!['GET','HEAD','OPTIONS'].includes(req.method)&&(liveEdit?.kind==='name'||/^\/api\/lab\/(?:orders|order-files|delegated-orders)(?:\/|$)/.test(url.pathname))){
           orderGeneration++;
           res.once('finish',()=>{orderGeneration++;});
+        }
+        if(liveEdit&&await forwardLiveEdit({route:liveEdit,req,res,url,bytes,contentType,store,request,isOnline,scope:editScope,getScope:pageScope,json})){
+          if(req.method==='POST'&&liveEdit.kind==='debt'&&res.statusCode<300)sync.wake?.();
+          return;
         }
         const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
         // A failed background request must not stall the next order's media or
@@ -260,7 +271,9 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(pagedOrders?isOnline()===false:readOffline)throw Error('internet_offline');
             const pagedRead=pagedOrders&&req.method==='GET';
             const accessRead=req.method==='GET'&&url.pathname==='/api/lab/write-access';
-            const scope=pagedRead||accessRead?pageScope():null,generation=orderGeneration;
+            const catalogRead=req.method==='GET'&&url.pathname==='/api/lab/print-catalog';
+            const scope=pagedRead||accessRead||catalogRead?pageScope():null,generation=orderGeneration;
+            const catalogTicket=catalogRead?require('./read-cache.cjs').beginRead(store,cacheUrl):null;
             let result;
             if(pagedRead){
               const key=JSON.stringify([scope,generation,cacheUrl]),mode=url.searchParams.get('mode');
@@ -314,6 +327,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             }
             const {status,ok,mime,body}=result;
             if(accessRead)rememberStageAccess(result,scope);
+            if(catalogRead&&scope!==pageScope())return json(res,401,{error:'account_changed'});
             if(pagedRead&&ok){
               const page=validPage(result,(url.searchParams.get('q')||'').trim().slice(0,100));
               if(!page)return json(res,502,{error:'invalid_paged_orders'});
@@ -322,7 +336,8 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             if(ok&&req.method==='GET'&&(!pagedRead||generation===orderGeneration)&&mime.includes('application/json')&&body.length<12e6){
               const cached=store.cached?.(cacheUrl),encoded=body.toString('base64');
               if(!cached||cached.status!==status||cached.mime!==mime||cached.body!==encoded){
-                store.cache(cacheUrl,status,mime,encoded);
+                if(catalogTicket)require('./read-cache.cjs').commitRead(store,catalogTicket,status,mime,encoded);
+                else store.cache(cacheUrl,status,mime,encoded);
               }
             }
             res.writeHead(status,{'Content-Type':mime,'Cache-Control':'no-store'});

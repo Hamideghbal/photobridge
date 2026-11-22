@@ -33,7 +33,7 @@ function patchNativeQueuePresentation(source) {
  pbNativeOpeningPage.current=pbNativePageLoading?pbNativePageKey:null;
  `;
  const skeleton=`Array.from({length:6},(_,index)=>e.jsxs("article",{
-  className:"pbNativeQueueSkeleton"+(o==="album"?" albumLabOrderCard":"")+" card customerOrderCard liveOrderCard labOrderCard",
+  className:"pbNativeQueueSkeleton card customerOrderCard liveOrderCard labOrderCard",
   "aria-hidden":true,
   children:[
    e.jsxs("div",{className:"customerOrderHead labOrderHead",children:[
@@ -42,8 +42,7 @@ function patchNativeQueuePresentation(source) {
    ]}),
    e.jsx("div",{className:"customerOrderFacts labOrderFacts",children:Array.from({length:3},(_,fact)=>
     e.jsxs("span",{children:[e.jsx("i",{className:"pbNativeSkeletonLine"}),e.jsx("i",{className:"pbNativeSkeletonLine"})]},fact))}),
-   o==="album"?e.jsx("div",{className:"labAlbumSummaryRow pbNativeSkeletonAlbum",children:Array.from({length:5},(_,fact)=>e.jsx("i",{},fact))}):null,
-   e.jsx("div",{className:"labActionTimeline",children:Array.from({length:o==="album"?5:4},(_,stage)=>
+   e.jsx("div",{className:"labActionTimeline",children:Array.from({length:4},(_,stage)=>
     e.jsxs("button",{type:"button",disabled:true,children:[e.jsx("span",{className:"timelineDot"}),e.jsx("i",{className:"pbNativeSkeletonLine"})]},stage))}),
    e.jsxs("div",{className:"labOrderFoot",children:[
     e.jsx("span",{children:e.jsx("i",{className:"pbNativeSkeletonLine"})}),

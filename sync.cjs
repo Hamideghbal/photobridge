@@ -1,5 +1,6 @@
 'use strict';
 const {exempt,checkWriteAccess}=require('./write-access.cjs');
+const {liveEditRoute}=require('./lab-live-edits.cjs');
 const IDEMPOTENT=[
  ['POST',/^\/api\/lab\/invoices\/manual$/],['POST',/^\/api\/lab\/finance\/payments$/],['PUT',/^\/api\/lab\/finance\/customer-settings$/],['POST',/^\/api\/lab\/finance\/customer-adjustments$/],['POST',/^\/api\/lab\/finance\/expenses$/],['POST',/^\/api\/lab\/finance\/corrections$/],['PUT',/^\/api\/lab\/orders\/[0-9a-f-]{36}\/invoice-pricing$/i]
 ];
@@ -26,6 +27,10 @@ class Sync{
    const updated=Date.parse(row.updated_at||'');if(Number.isFinite(updated)&&updated<=retryBefore)this.store.retry(row.id);
   }
   for(const row of this.store.rows().filter(x=>x.state==='pending')){
+   if(liveEditRoute(row.method,new URL(row.url,'http://localhost').pathname,row.body)){
+    this.store.conflict(row.id,{error:'legacy_live_edit_review',message:'این تغییر در نسخهٔ قبلی به صف رفته است. مقدار فعلی را بررسی و از فرم مربوط ذخیره کنید.'});
+    continue;
+   }
    if(this.store.get('documentPolicy:'+this.store.get('labId'))&&/^\/api\/lab\/(?:orders|order-files|invoices|finance|delegated-orders|delegated-customers|customers)(?:\/|$)/.test(new URL(row.url,'http://localhost').pathname)){this.store.conflict(row.id,{error:'legacy_policy_review'});continue;}
    const invoiceOrder=require('./live-finance.cjs').invoiceOrderId(row.method,row.url,row.body);
    if(invoiceOrder&&this.store.rows().some(x=>x.seq<row.seq&&x.state==='conflict'&&require('./live-finance.cjs').orderMutationTargets(x,invoiceOrder)))continue;

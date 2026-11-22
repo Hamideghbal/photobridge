@@ -31,14 +31,14 @@ html body #root .labRoleWorkspace .mainQueueFilters button:is(.active,[aria-sele
 .pbNativeQueueSkeleton .labActionTimeline button .pbNativeSkeletonLine {width:min(65%,35px)}
 .pbNativeQueueSkeleton .labOrderFoot > span .pbNativeSkeletonLine {width:53px;margin-inline-start:auto;margin-inline-end:0}
 .pbNativeQueueSkeleton .labOrderMiniActions i {width:min(36%,48px);height:25px}
-.pbNativeQueueSkeleton .pbNativeSkeletonAlbum {display:flex;gap:5px}
-.pbNativeQueueSkeleton .pbNativeSkeletonAlbum i {flex:1;height:30px}
-.labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton {
+html body #root .labRoleWorkspace .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton i,
+html body #root .labRoleWorkspace .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton .timelineDot {
  animation:pbNativeQueuePulse 1.2s ease-in-out infinite alternate;
 }
-@keyframes pbNativeQueuePulse {from{opacity:1}to{opacity:.77}}
+@keyframes pbNativeQueuePulse {from{opacity:1}to{opacity:.52}}
 @media (prefers-reduced-motion:reduce) {
- .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton {animation:none}
+ html body #root .labRoleWorkspace .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton i,
+ html body #root .labRoleWorkspace .labOrderGrid[aria-busy="true"] > .pbNativeQueueSkeleton .timelineDot {animation:none}
 }
 
 html body #root .labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav button[data-pb1173-index],

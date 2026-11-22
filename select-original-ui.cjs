@@ -18,7 +18,9 @@ function select(source, destination) {
     const pinFile = path.join(stage, 'pin.json');
     fs.writeFileSync(pinFile, JSON.stringify(pin));
     copyPinnedUi({ source, pinFile, staging: stage, origin, manifestName });
-    validateNativeUi(stage);
+    // A valid original 1.0.120 installer can contain a pre-paging UI.
+    // Distinguish "valid but incompatible" (exit 2 -> fetch verified official
+    // UI) from corrupt/untrusted assets (exit 1). Do not weaken the final gate.
     const entry = fs.readFileSync(path.join(stage, 'assets/index-UIRefine-v655-r84.js'), 'utf8');
     const hasWorker = fastWorkerEnabled(entry, '1.0.120') || canBridge(entry);
     const hasPages = entry.includes('/* PB1944 server-paged lab queue */') && entry.includes('className:"r1944Pager"');
@@ -27,6 +29,8 @@ function select(source, destination) {
       error.code = 'incompatible_verified_ui';
       throw error;
     }
+    // Only compatible manifest-verified UI may pass the strict native gate.
+    validateNativeUi(stage);
     fs.rmSync(destination, { recursive: true, force: true });
     fs.renameSync(stage, destination);
     return manifest.build;

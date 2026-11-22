@@ -68,8 +68,13 @@ test('R1962 server hooks are placed after commits and scope subscriptions to a l
  const labScope=api.slice(api.indexOf("if (url.pathname.startsWith('/api/lab/'))"),api.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/push/subscribe')")+1500);
  assert.match(labScope,/requireRole\(a, 'lab_admin'\)/);
  assert.match(labScope,/recipient_lab_id/);
- assert.match(api,/m\.user_id=web_push_subscriptions\.recipient_user_id/);
- assert.match(api,/recipient_user_id=EXCLUDED\.recipient_user_id/);
+ assert.match(api,/FROM lab_manager_push_owners p JOIN lab_memberships m/);
+ assert.match(api,/p\.endpoint=web_push_subscriptions\.endpoint/);
+ assert.match(api,/INSERT INTO lab_manager_push_owners\(endpoint,lab_id,user_id,updated_at\)/);
+ const migration=fs.readFileSync('migrations/20261123_lab_manager_mobile_push_owners.sql','utf8');
+ assert(migration.includes('ON DELETE CASCADE'));
+ assert(migration.includes('lab_id uuid NOT NULL'));
+ assert(migration.includes('user_id uuid NOT NULL'));
  const download=api.slice(api.indexOf('const labAlbumDownloadComplete'),api.indexOf('const labPaymentReceipt'));
  assert(download.indexOf("await c.query('COMMIT')")<download.indexOf("pb1962LabManagerNotify(labId,'album_download_verified'"));
  assert.match(api,/managerChanged:String\(oldOrder\.status\|\|''\)!==String\(status\)/);

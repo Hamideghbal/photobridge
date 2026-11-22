@@ -32,10 +32,13 @@ const prelude=[
 '    const activePrintIds = [];'
 ].join('\n');
 segment=replaceOnce(segment,'    const activePrintIds = [];',prelude,'read model pricing');
-segment=replaceOnce(segment,
-'if(binding<=0&&!customAvailable&&!pb1805Combined)continue;',
-'if(binding<=0&&!customAvailable&&!pb1805Combined&&!hasOtherBindingPrice(String(row.print_size_id)))continue;',
-'include model-specific prices after R1539/R1805');
+// Extend the already-present R1539 custom eligibility input rather than
+// replacing the exact gate, which later pricing features also rewrite.
+const customGate = /const customAvailable\s*=\s*customBindings\.some\(/g;
+const gateMatches=[...segment.matchAll(customGate)];
+if(gateMatches.length!==1)throw Error('[R1960] final binding eligibility declaration '+gateMatches.length);
+segment=segment.replace(customGate,
+  'const customAvailable=hasOtherBindingPrice(String(row.print_size_id))||customBindings.some(');
 api=api.slice(0,start)+segment+api.slice(end);
 fs.writeFileSync(backend,api);
 execFileSync(process.execPath,['--check',backend],{stdio:'inherit'});

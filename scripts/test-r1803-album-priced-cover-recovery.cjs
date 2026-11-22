@@ -13,7 +13,8 @@ test('R1803: reject missing/zero/negative prices and refuse to synthesize the wr
  assert.equal(recover([],fixture(0)).length,0);assert.equal(recover([],fixture(-1)).length,0);
  assert.equal(recover([],fixture(125000),[{id:'other',active:true,binding_price:35000}]).length,0);
  assert.equal(recover([],fixture(125000),[{id:'s',active:false,binding_price:35000}]).length,0);
- assert.equal(recover([],fixture(125000),[{id:'s',active:true,binding_price:0}]).length,0);
+ assert.equal(recover([],fixture(125000),[{id:'s',active:true,binding_price:0}]).length,1,'R1961: priced cover must appear for a custom-only binding size');
+ assert.equal(recover([],fixture(125000),[{id:'s',active:true,binding_price:null}]).length,1,'R1961: no default binding tariff is required');
 });
 test('R1803: inactive variants, types, materials and colors remain unavailable',()=>{
  for(const k of ['variants','types','materials','colors']) {const cat=fixture();cat[k][0].active=false;assert.equal(recover([],cat).length,0,k)}
@@ -36,7 +37,7 @@ test('R1803: actual composed catalog and invoice snapshot use authoritative save
  assert(server.slice(start,wrapperStart).includes('covers: pb1803RecoverPricedCovers(cq.rows.map('));
  const cat=fixture();const pool={query:async sql=>{
   if(sql.includes('FROM labs WHERE id'))return {rows:[{album_enabled:true,ui_preferences:{albumCoverCatalogEnabled:true}}]};
-  if(sql.includes('FROM lab_album_sizes a'))return {rows:[{id:'s',print_size_id:'p',label:'20×30',binding_price:35000,luster:8000,silk:8000,metallic:8000,min_spreads:1,max_spreads:500,active:true,width_cm:20,height_cm:30}]};
+  if(sql.includes('FROM lab_album_sizes a'))return {rows:[{id:'s',print_size_id:'p',label:'20×30',binding_price:0,luster:8000,silk:8000,metallic:8000,min_spreads:1,max_spreads:500,active:true,width_cm:20,height_cm:30}]};
   if(sql.includes('FROM lab_album_covers c'))return {rows:[]};
   return {rows:[]};
  }};
@@ -44,10 +45,10 @@ test('R1803: actual composed catalog and invoice snapshot use authoritative save
  const {applyAlbumColorImages}=await import('../dist/api/album-color-images.js');
  const shared={pool,syncLabAlbumSizesFromPrintTariffs:async()=>{},albumCoverCatalogV2ForLab:async()=>cat,pb1803RecoverPricedCovers:ctx.pb1803RecoverPricedCovers,applyAlbumColorImages,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date};
  const originalFn=vm.runInNewContext('('+server.slice(start,wrapperStart).trim()+')',shared);
- const fn=vm.runInNewContext('('+server.slice(wrapperStart,snapshotStart).trim()+')',{pool,albumCatalogForLabOriginal:originalFn,normalizePrintCatalog:()=>({types:[{id:'album_binding_price',kind:'binding',name:'صحافی آلبوم',active:true}],rates:{}})});
- const result=await fn('lab');assert.equal(result.covers.length,1);assert.equal(result.covers[0].price,125000);
+ const fn=vm.runInNewContext('('+server.slice(wrapperStart,snapshotStart).trim()+')',{pool,albumCatalogForLabOriginal:originalFn,normalizePrintCatalog:()=>({albumPricingMode:'separate',types:[{id:'album_binding_price',kind:'binding',name:'صحافی آلبوم',active:true},{id:'custom',kind:'binding',name:'صحافی ویژه',active:true}],rates:{p:{custom:35000}}})});
+ const result=await fn('lab');assert.equal(result.sizes[0].bindingPrice,0,'R1961 integration must keep legacy price zero');assert.equal(result.covers.length,1,'R1961 priced cover must reach photographer album-config');assert.equal(result.covers[0].price,125000);
  const sStart=server.indexOf('async function albumOrderSnapshot('),sEnd=server.indexOf('\nasync function ',sStart+20);
  assert(sStart>=0&&sEnd>sStart);const orderSnapshot=vm.runInNewContext('('+server.slice(sStart,sEnd)+')',{albumCatalogForLab:fn,albumMoney:n=>Number(n||0),invoicePrintTypeLabel:t=>t,Date});
- const cover=result.covers[0];const snap=await orderSnapshot('lab',{sizeId:'s',spreads:2,paperType:'luster',coverId:cover.id,colorId:cover.colors[0].id});
- assert.equal(snap.pricing.manualCoverRequired,false);assert.equal(snap.pricing.coverPrice,125000);assert.equal(snap.pricing.total,211000);
+ const cover=result.covers[0];const snap=await orderSnapshot('lab',{sizeId:'s',bindingTypeId:'custom',spreads:2,paperType:'luster',coverId:cover.id,colorId:cover.colors[0].id});
+ assert.equal(snap.pricing.manualCoverRequired,false);assert.equal(snap.pricing.manualBindingRequired,false);assert.equal(snap.pricing.coverPrice,125000);assert.equal(snap.pricing.total,211000);
 });

@@ -14,7 +14,10 @@ function patchNativeQueuePresentation(source) {
  const onError='if(seq===pbLiveOrders.current.seq)r1944SetError(';
  if(start<0||cardAt<0||cardAt-start>70000||source.includes('const pbNativePageKey='))return source;
  const queue=source.slice(start,cardAt+cards.length);
- if(!queue.includes(pendingGuard)||!queue.includes(afterSuccess)||!queue.includes(onError))return source;
+ const success=queue.indexOf(afterSuccess),failure=queue.indexOf(onError,success+afterSuccess.length);
+ if(!queue.includes(pendingGuard)||success<0||failure<0)return source;
+ const reportFailure='if(pbLiveOrders.current.active&&seq===pbLiveOrders.current.seq)pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:false});';
+ const withFailure=queue.slice(0,failure)+reportFailure+queue.slice(failure);
 
  const state=`
  ${normalizeQueueSearch.toString().replace('function normalizeQueueSearch','function pbNativeQueueSearch')}
@@ -25,14 +28,16 @@ function patchNativeQueuePresentation(source) {
  const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey;
  const pbNativeVisiblePage=x.useRef(pbNativePageKey);
  pbNativeVisiblePage.current=pbNativePageKey;
+ const pbNativeOpeningPage=x.useRef(pbNativePageKey);
+ pbNativeOpeningPage.current=pbNativePageLoading?pbNativePageKey:null;
  `;
  const skeleton=`e.jsx("div",{className:"pbNativeQueueLoading","aria-hidden":true,children:Array.from({length:6},(_,index)=>e.jsxs("div",{className:"pbNativeQueueSkeleton",children:[e.jsx("i",{className:"pbNativeQueueSkeletonThumb"}),e.jsx("div",{className:"pbNativeQueueSkeletonLines",children:[e.jsx("i",{},0),e.jsx("i",{},1),e.jsx("i",{},2)]}),e.jsx("i",{className:"pbNativeQueueSkeletonAction"})]},index))})`;
- const patched=queue
+ const patched=withFailure
   .replace(marker,marker+state)
   .replace('String(r1944DebouncedQuery||"").trim()','pbNativeRequestQuery')
+  .replace('"&pbNativeLiveStatus="+Date.now();','"&pbNativeLiveStatus="+Date.now()+(pbNativeOpeningPage.current===pbNativePageKey&&T==="flow"&&r1944Page===1&&!query?"&pbNativeOpen=1":"");')
   .replace('r1944SetDebouncedQuery(String(r1944Query||"")),270','r1944SetDebouncedQuery(pbNativeQueueSearch(r1944Query)),110')
   .replace(afterSuccess,'pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:true});'+afterSuccess)
-  .replace(onError,'if(pbLiveOrders.current.active&&seq===pbLiveOrders.current.seq)pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:false});'+onError)
   .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:!pbNativePageResult?.ok?null:Be.length?Nt.map(`);
  return source.slice(0,start)+patched+source.slice(cardAt+cards.length);
 }

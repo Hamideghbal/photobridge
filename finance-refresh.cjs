@@ -4,15 +4,15 @@ const {beginRead,commitRead}=require('./read-cache.cjs');
 const states=new WeakMap();
 const routes=[['/api/lab/invoices','invoices'],['/api/lab/finance/summary','summary'],['/api/lab/finance/payments','payments'],['/api/lab/finance/expenses','expenses'],['/api/lab/finance/ledger','transactions']];
 
-function accountGate(store,lab){
-  if(store.get('labId')!==lab||!store.get('auth'))
+function accountGate(store,lab,account,getAccount){
+  if(store.get('labId')!==lab||!store.get('auth')||getAccount?.()!==account)
     throw Object.assign(Error('account_changed'),{status:401,code:'account_changed'});
 }
-async function refreshFinance(store,request,{force=false,focus=null}={}){
-  const lab=store.get('labId');
+async function refreshFinance(store,request,{force=false,focus=null,scope,getAccount,warm=false}={}){
+  const lab=store.get('labId'),account=getAccount?.(),now=Date.now();
   let state=states.get(store);
-  if(!state||state.lab!==lab||(!state.flight&&(force||Date.now()-state.finishedAt>=1000))){
-    state={lab,finishedAt:0,result:null,jobs:new Map(),committed:new Set(),flight:null};
+  if(!state||state.lab!==lab||state.scope!==scope||(!state.flight&&now>=state.warmUntil&&(force||now-state.finishedAt>=1000))){
+    state={lab,scope,finishedAt:0,warmUntil:0,warm,result:null,jobs:new Map(),committed:new Set(),flight:null};
     states.set(store,state);
     const current=state;
     const load=async(url,key)=>{
@@ -24,7 +24,7 @@ async function refreshFinance(store,request,{force=false,focus=null}={}){
         if(bytes.length>=12e6)return{url,ok:false};
         const data=JSON.parse(bytes.toString());
         if(key==='summary'?!data.summary||typeof data.summary!=='object':!Array.isArray(data[key]))return{url,ok:false};
-        accountGate(store,lab);
+        accountGate(store,lab,account,getAccount);
         return{url,key,ticket,ok:true,status:response.status,body:bytes.toString('base64')};
       }catch(error){
         if(error?.code==='account_changed')throw error;
@@ -34,7 +34,7 @@ async function refreshFinance(store,request,{force=false,focus=null}={}){
     for(const[url,key]of routes)current.jobs.set(url,load(url,key));
     current.commit=result=>{
       if(!result?.ok||current.committed.has(result.url))return result;
-      accountGate(store,lab);
+      accountGate(store,lab,account,getAccount);
       current.committed.add(result.url);
       const accepted=commitRead(store,result.ticket,result.status,'application/json',result.body);
       if(accepted&&result.key==='invoices')new LocalBusiness(store).refreshInvoiceSnapshot();
@@ -44,7 +44,7 @@ async function refreshFinance(store,request,{force=false,focus=null}={}){
     // needs to settle before its own response; the remaining sections finish
     // independently and are reconciled when all have settled.
     current.flight=Promise.all([...current.jobs.values()]).then(results=>{
-      accountGate(store,lab);
+      accountGate(store,lab,account,getAccount);
       for(const item of results)current.commit(item);
       const engine=new LocalBusiness(store);
       engine.refreshInvoiceSnapshot();
@@ -54,6 +54,7 @@ async function refreshFinance(store,request,{force=false,focus=null}={}){
       store.set('financeRefresh:'+lab,result);
       current.result=result;
       current.finishedAt=Date.now();
+      if(current.warm&&complete)current.warmUntil=current.finishedAt+5000;
       return result;
     }).finally(()=>{current.flight=null;});
     // A focused reader may return before another finance endpoint settles.

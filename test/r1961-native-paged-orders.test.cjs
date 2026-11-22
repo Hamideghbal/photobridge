@@ -19,6 +19,13 @@ test('R1961 native keeps the real paged route, total pages and three status coun
  assert(!result.includes("return Me('/api/lab/orders'+(recovery?"),'legacy full-order replacement was injected');
  new vm.Script(result);
 });
+test('the native paged enhancement also attaches to UI already carrying the legacy document marker',()=>{
+ const result=patchOrderLive('/* PB1468 shared document isolation */\n'+source+'\nfunction pb1468BrowserEvents(){}');
+ assert.match(result,/PB1961 preserve native Lab server pagination/);
+ assert.equal(result.split('function pb1468BrowserEvents').length,2);
+ new vm.Script(result);
+});
+
 test('R1961 retains document concurrency guards and finance browser listeners',()=>{
  const result=patchOrderLive(source);
  assert(result.includes('expectedUpdatedAt:le.updated_at'));
@@ -123,5 +130,38 @@ test('overlapping identical page requests share one upstream read while another 
   assert.deepEqual(bodies.map(body=>body.orders[0].id),['flow','flow','ready']);
  }finally{
   release();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.db.close();
+ }
+});
+
+test('a prepared first page responds immediately while live and other-account reads still go upstream',async()=>{
+ const {createHost}=require('../host.cjs'),{LabStore}=require('../store.cjs');
+ const store=new LabStore(':memory:');
+ store.set('auth',{user:{id:'first'}});store.set('labId','lab');
+ const requests=[];
+ const server=createHost({store,token:'test',sync:{},request:async route=>{
+  const query=new URL(route,'http://localhost').searchParams;
+  const mode=query.get('mode'),user=store.get('auth').user.id;
+  requests.push({mode,live:query.has('pbNativeLiveStatus'),user});
+  return Response.json({orders:[{id:user+'-'+mode+'-'+requests.length}],total:1,pages:1,counts:{flow:1,ready:0,completed:0}});
+ }});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const origin='http://127.0.0.1:'+server.address().port,headers={Cookie:'desktop=test'};
+ const page=(mode,open)=>fetch(origin+'/api/lab/orders?paged=1&mode='+mode+'&stage=flow&page=1&q=&pbNativeLiveStatus=100'+(open?'&pbNativeOpen=1':''),{headers}).then(r=>r.json());
+ try{
+  assert.equal((await fetch(origin+'/desktop/warm-view?view=print')).status,403);
+  assert.equal((await fetch(origin+'/desktop/warm-view?view=archive',{headers})).status,400);
+  for(const mode of ['print','album'])assert.equal((await fetch(origin+'/desktop/warm-view?view='+mode,{headers})).status,204);
+  assert.equal((await page('print',true)).orders[0].id,'first-print-1');
+  assert.equal((await page('album',true)).orders[0].id,'first-album-2');
+  assert.deepEqual(requests.map(r=>r.live),[false,false]);
+  assert.equal((await page('print',false)).orders[0].id,'first-print-3');
+  assert.equal((await page('print',true)).orders[0].id,'first-print-3');
+  store.set('auth',{user:{id:'second'}});
+  assert.equal((await page('print',true)).orders[0].id,'second-print-4');
+  assert.deepEqual(requests.map(r=>r.live),[false,false,true,true]);
+ }finally{
+  server.closeAllConnections();
+  await new Promise(resolve=>server.close(resolve));
+  store.db.close();
  }
 });

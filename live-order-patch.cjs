@@ -1,6 +1,5 @@
 'use strict';
 function patchOrderLive(source){
- if(source.includes('/* PB1468 shared document isolation */'))return upgradeFinanceLive(source);
  // R1961: R1944+ uses the authoritative paged server endpoint and keeps
  // all-status counts and total pages in its React state. The legacy PB1468
  // replacement below fetches /api/lab/orders and overwrites that entire
@@ -8,6 +7,7 @@ function patchOrderLive(source){
  // Preserve the new component while retaining finance live updates and
  // optimistic document-revision guards required by the native workstation.
  if(source.includes('/* PB1944 server-paged lab queue */')){
+  if(source.includes('const pbNativeOpeningPage='))return source;
   const guarded=source
    .replace('new Error(p.error||"request_failed")','new Error(p.message||p.error||"request_failed")')
    .replace('JSON.stringify({status:nt,note:xt||null})','JSON.stringify({status:nt,note:xt||null,expectedUpdatedAt:le.updated_at,expectedRevision:le.document_revision})')
@@ -19,11 +19,13 @@ function patchOrderLive(source){
   const withPager=guarded.replace(/\be\.jsxs\("div",\{className:"r1944Pager",children:\[/g,
    'r1944Total>=10&&$&');
   const {patchNativeQueuePresentation,removeConfirmedOrderExitWait}=require('./native-queue-presentation.cjs');
-  return upgradeFinanceLive(patchFinanceLive(removeConfirmedOrderExitWait(patchNativeQueuePresentation(withPager))))+
-   '\n/* PB1961 preserve native Lab server pagination */\n'+
+  const liveHelpers=source.includes('function pb1468BrowserEvents')?'':
    require('./lab-realtime.cjs').subscribeLabEvents.toString().replace('function subscribeLabEvents','function pb1468SubscribeLabEvents')+
    '\n'+browserEvents.toString().replace('function browserEvents','function pb1468BrowserEvents');
+  return upgradeFinanceLive(patchFinanceLive(removeConfirmedOrderExitWait(patchNativeQueuePresentation(withPager))))+
+   '\n/* PB1961 preserve native Lab server pagination */\n'+liveHelpers;
  }
+ if(source.includes('/* PB1468 shared document isolation */'))return upgradeFinanceLive(source);
  const start=source.indexOf('const pbLiveOrders=')>=0?source.indexOf('const pbLiveOrders='):source.indexOf('const pb1465List=')>=0?source.indexOf('const pb1465List='):source.indexOf('const ye=()=>Me("/api/lab/orders")');
  const end=start<0?-1:source.indexOf('const Ye=',start);if(start<0||end<0||end-start>6000)throw Error('lab_live_refresh_bundle_incompatible');
  const replacement=`/* PB1468 shared document isolation */const pbLiveOrders=x.useRef({seq:0,active:true}),ye=()=>{const seq=++pbLiveOrders.current.seq;const recovery=new URLSearchParams(location.search).get('recoveredOrder');return Me('/api/lab/orders'+(recovery?'?recovery='+encodeURIComponent(recovery):'')).then(data=>{if(pbLiveOrders.current.active&&seq===pbLiveOrders.current.seq)f((data.orders||[]).filter(row=>String(row.mode||'print')===o));});};x.useEffect(()=>{pbLiveOrders.current.active=true;let busy=false,closed=false,rerun=false;const refresh=async(event)=>{if(closed||document.hidden)return;if(busy){if(event?.type==='document.changed'||event?.type==='photobridge-lab-orders-changed')rerun=true;return;}busy=true;try{await ye();}catch{}finally{busy=false;if(rerun){rerun=false;void refresh();}}};const visible=()=>{if(!document.hidden)void refresh();};void refresh();const timer=setInterval(refresh,3000);const stream=pb1468BrowserEvents(t?.id,()=>{void refresh({type:'document.changed'});window.dispatchEvent(new CustomEvent('photobridge-finance-changed'));});window.addEventListener('photobridge-lab-orders-changed',refresh);window.addEventListener('focus',visible);document.addEventListener('visibilitychange',visible);return()=>{stream?.stop();closed=true;pbLiveOrders.current.active=false;pbLiveOrders.current.seq++;clearInterval(timer);window.removeEventListener('photobridge-lab-orders-changed',refresh);window.removeEventListener('focus',visible);document.removeEventListener('visibilitychange',visible);};},[a,o,t?.id]);`;

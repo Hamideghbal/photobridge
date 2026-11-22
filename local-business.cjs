@@ -30,8 +30,18 @@ function financeJournalIndex(state){
  };
 }
 
+function documentsById(records){
+ const index=new Map();
+ for(const record of Object.values(records)){
+  if(!index.has(record.id))index.set(record.id,record);
+  if(!index.has(record.serverId))index.set(record.serverId,record);
+ }
+ return index;
+}
+
 const validId=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-const day=value=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value));
+const tehranDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'});
+const day=value=>tehranDate.format(new Date(value));
 const stamp=value=>{const d=value?new Date(value):new Date();if(!Number.isFinite(d.getTime()))throw fail('invalid_date','تاریخ معتبر نیست.');return d.toISOString();};
 const payMethod=value=>['cash','card','transfer','cheque','other'].includes(value)?value:'cash';
 const shortOffline=value=>typeof value==='string'?value.replace(/^OFF-[A-F0-9]{32}-(?:INV|ORD|EXP|PAY|COR)-0*([1-9]\d*|0)$/,'OFF-$1'):value;
@@ -57,16 +67,52 @@ class LocalBusiness{
   const drafts=this.store.get('offlineOrders:'+s.labId)||[];for(const d of drafts.filter(x=>x.state!=='synced'&&x.state!=='editing')){s.orders[d.id]={id:d.id,number:this.number(s,'ORD'),legacyNumber:d.number,customer_id:d.body.customerId,customer_name:s.customers[d.body.customerId]?.name||d.body.studioName||'مشتری',mode:d.body.mode,status:'downloaded',source:'lab_delegated',localOnly:true,album_data:d.body.albumData||null,created_at:d.createdAt,files:d.files.map(f=>({...f,id:f.clientFileId,original_name:f.name,print_size_id:f.printSizeId,print_type:f.printType,print_copies:f.printCopies||1})),localFiles:d.localFiles||[],prices:{},remote:false,origin_offline:this.execution?.isolated===true};s.events.push({id:id(),kind:'order_create',target:d.id,state:d.state==='conflict'?'conflict':'pending',error:d.error||null,createdAt:now(),body:d.body});d.state='adopted';}
   this.store.set(key,s);if(drafts.some(d=>d.state==='adopted'))this.store.set('offlineOrders:'+s.labId,drafts);return s;
  }
- refreshInvoiceSnapshot(){return this.store.transaction(()=>{const s=this.state(),snapshot=this.store.cached('/api/lab/invoices');if(!snapshot||s.invoiceSnapshotBody===snapshot.body)return;const rows=cached(this.store,'/api/lab/invoices')?.invoices||[],external=new Map((s.externalDocuments||[]).map(i=>[i.id,i]));for(const row of rows){if(!validId(row.id))continue;if(row.document_type&&row.document_type!=='invoice'){external.set(row.id,row);continue;}const order=Object.values(s.orders).find(o=>o.id===row.order_id||o.serverId===row.order_id),customer=Object.values(s.customers).find(c=>c.id===row.customer_id||c.serverId===row.customer_id),customerId=customer?.id||row.customer_id;if(customerId&&!s.customers[customerId])s.customers[customerId]={id:customerId,name:row.customer_name||'مشتری',mobile:row.customer_mobile||'',openingBalance:0,openingKnown:false,remote:true};const local=Object.values(s.invoices).find(i=>i.id===row.id||i.serverId===row.id);if(local){if(local.remote||local.serverId){const identity={id:local.id,number:local.remote?row.number:local.number,customer_id:local.customer_id||customerId,order_id:local.order_id||order?.id||row.order_id,remote:local.remote,origin_offline:local.origin_offline,serverId:local.serverId};Object.assign(local,row,identity);local.paid=Number(row.paid??row.paid_total??0);local.basePaid=local.paid;local.serverNumber=local.serverId?(row.server_number??row.number):local.serverNumber;}continue;}s.invoices[row.id]={...row,order_id:order?.id||row.order_id,customer_id:customerId,remote:true,items:row.items||[],paid:Number(row.paid??row.paid_total??0),basePaid:Number(row.paid??row.paid_total??0),total:Number(row.total||0)};}const mapped=new Set([...Object.values(s.adjustments),...Object.values(s.corrections)].map(d=>d.serverId).filter(Boolean));s.externalDocuments=[...external.values()].filter(d=>!mapped.has(d.id));s.invoiceSnapshotBody=snapshot.body;this.store.set(this.key(),s);});}
+ refreshInvoiceSnapshot(){return this.store.transaction(()=>{
+  const s=this.state(),snapshot=this.store.cached('/api/lab/invoices');
+  if(!snapshot||s.invoiceSnapshotBody===snapshot.body)return;
+  const rows=cached(this.store,'/api/lab/invoices')?.invoices||[];
+  const external=new Map((s.externalDocuments||[]).map(i=>[i.id,i]));
+  const orders=documentsById(s.orders),customers=documentsById(s.customers),invoices=documentsById(s.invoices);
+  for(const row of rows){
+   if(!validId(row.id))continue;
+   if(row.document_type&&row.document_type!=='invoice'){external.set(row.id,row);continue;}
+   const order=orders.get(row.order_id),customer=customers.get(row.customer_id);
+   const customerId=customer?.id||row.customer_id;
+   if(customerId&&!s.customers[customerId]){
+    const newCustomer={id:customerId,name:row.customer_name||'مشتری',mobile:row.customer_mobile||'',openingBalance:0,openingKnown:false,remote:true};
+    s.customers[customerId]=newCustomer;
+    customers.set(customerId,newCustomer);
+   }
+   const local=invoices.get(row.id),paid=Number(row.paid??row.paid_total??0);
+   if(local){
+    if(local.remote||local.serverId){
+     const identity={id:local.id,number:local.remote?row.number:local.number,customer_id:local.customer_id||customerId,order_id:local.order_id||order?.id||row.order_id,remote:local.remote,origin_offline:local.origin_offline,serverId:local.serverId};
+     Object.assign(local,row,identity);
+     local.paid=paid;local.basePaid=paid;
+     local.serverNumber=local.serverId?(row.server_number??row.number):local.serverNumber;
+    }
+    continue;
+   }
+   const invoice={...row,order_id:order?.id||row.order_id,customer_id:customerId,remote:true,items:row.items||[],paid,basePaid:paid,total:Number(row.total||0)};
+   s.invoices[row.id]=invoice;
+   invoices.set(row.id,invoice);
+  }
+  const mapped=new Set([...Object.values(s.adjustments),...Object.values(s.corrections)].map(d=>d.serverId).filter(Boolean));
+  s.externalDocuments=[...external.values()].filter(d=>!mapped.has(d.id));
+  s.invoiceSnapshotBody=snapshot.body;
+  this.store.set(this.key(),s);
+ });}
  refreshOrderSnapshot(){return this.store.transaction(()=>{const s=this.state(),snapshot=this.store.cached('/api/lab/orders');if(!snapshot||s.orderSnapshotBody===snapshot.body)return;const rows=cached(this.store,'/api/lab/orders')?.orders||[];for(const row of rows){if(!validId(row.id))continue;const local=Object.values(s.orders).find(o=>o.id===row.id||o.serverId===row.id);if(!local){s.orders[row.id]={...row,remote:true,files:[]};continue;}const pending=s.events.some(e=>e.target===local.id&&e.state!=='synced');if(pending&&(!this.store.get('documentPolicy:'+this.store.get('labId'))||!require('./document-policy.cjs').shared(local)))continue;const files=local.files;Object.assign(local,{...row,id:local.id,number:local.number,customer_id:local.customer_id||row.customer_id,created_at:local.created_at||row.created_at,remote:local.remote,serverId:local.serverId,serverNumber:local.serverId?row.number:local.serverNumber,files:files||[]});}s.orderSnapshotBody=snapshot.body;this.store.set(this.key(),s);});}
  absorbRemote(options={}){return this.store.transaction(()=>{const s=this.state();const isolated=this.store.get('documentPolicy:'+this.store.get('labId'));if(!isolated&&(s.events.some(e=>e.state!=='synced')||Object.values(s.adjustments).some(a=>a.auto_discount&&!a.serverId)))return false;const finance=cached(this.store,'/api/lab/finance/summary');if(!finance)return false;
-  for(const remote of finance.customers||[]){const local=Object.values(s.customers).find(c=>c.id===remote.id||c.serverId===remote.id);if(local){local.openingBalance=Number(remote.balance||0);local.openingKnown=true;local.name=remote.name||local.name;local.mobile=remote.mobile||local.mobile;local.invoiced=Number(remote.invoiced||0);local.paid=Number(remote.paid||0);local.discounts=Number(remote.discounts||0);const statement=cached(this.store,'/api/lab/finance/customer-statement?customerId='+remote.id);if(statement){local.statement=statement;if(statement.settings)local.settings=statement.settings;}}else s.customers[remote.id]={...remote,openingBalance:Number(remote.balance||0),openingKnown:true,remote:true};}
+  const customers=documentsById(s.customers);
+  for(const remote of finance.customers||[]){const local=customers.get(remote.id);if(local){local.openingBalance=Number(remote.balance||0);local.openingKnown=true;local.name=remote.name||local.name;local.mobile=remote.mobile||local.mobile;local.invoiced=Number(remote.invoiced||0);local.paid=Number(remote.paid||0);local.discounts=Number(remote.discounts||0);const statement=cached(this.store,'/api/lab/finance/customer-statement?customerId='+remote.id);if(statement){local.statement=statement;if(statement.settings)local.settings=statement.settings;}}else{const customer={...remote,openingBalance:Number(remote.balance||0),openingKnown:true,remote:true};s.customers[remote.id]=customer;customers.set(remote.id,customer);}}
   for(const t of s.journal){const table={invoice:'invoices',payment:'payments',expense:'expenses',correction:'corrections',adjustment:'adjustments'}[t.reference_type],doc=table&&s[table][t.reference_id];t.inBaseline=!isolated||!!(doc?.remote||doc?.serverId);}for(const field of ['invoices','payments','expenses','adjustments'])for(const doc of Object.values(s[field])){doc.inBaseline=!isolated||!!(doc.remote||doc.serverId);if((field==='payments'||field==='expenses')&&doc.inBaseline)doc.baseAmount=Number(doc.amount||0);}
   s.baseSummary=finance.summary||{};s.snapshotAt=now();s.history=cached(this.store,'/api/lab/finance/ledger')?.transactions||s.history;
   if(!options.financeOnly)for(const order of [...(cached(this.store,'/api/lab/orders')?.orders||[]),...(cached(this.store,'/api/lab/archive')?.orders||[]).map(o=>({...o,id:o.order_id||o.id,number:o.order_number||o.number,status:o.raw_order_status||o.order_status||'completed'}))]){const local=Object.values(s.orders).find(o=>o.id===order.id||o.serverId===order.id);if(local){local.status=order.status;local.album_stage=order.album_stage;local.updated_at=order.updated_at;local.document_revision=order.document_revision;}else s.orders[order.id]={...order,remote:true,files:[]};}
-  for(const invoice of cached(this.store,'/api/lab/invoices')?.invoices||[]){if(invoice.document_type&&invoice.document_type!=='invoice')continue;const local=Object.values(s.invoices).find(i=>i.id===invoice.id||i.serverId===invoice.id);if(local){local.paid=Number(invoice.paid??invoice.paid_total??0);local.basePaid=local.paid;local.correction_delta=Number(invoice.correction_delta||local.correction_delta||0);}else if(invoice.id)s.invoices[invoice.id]={...invoice,remote:true,items:invoice.items||[],paid:Number(invoice.paid??invoice.paid_total??0),basePaid:Number(invoice.paid??invoice.paid_total??0),total:Number(invoice.total||0)};}
+  const remoteInvoices=cached(this.store,'/api/lab/invoices')?.invoices||[],invoices=documentsById(s.invoices);
+  for(const invoice of remoteInvoices){if(invoice.document_type&&invoice.document_type!=='invoice')continue;const local=invoices.get(invoice.id);if(local){local.paid=Number(invoice.paid??invoice.paid_total??0);local.basePaid=local.paid;local.correction_delta=Number(invoice.correction_delta||local.correction_delta||0);}else if(invoice.id){const doc={...invoice,remote:true,items:invoice.items||[],paid:Number(invoice.paid??invoice.paid_total??0),basePaid:Number(invoice.paid??invoice.paid_total??0),total:Number(invoice.total||0)};s.invoices[invoice.id]=doc;invoices.set(invoice.id,doc);}}
   for(const [url,field] of [['/api/lab/finance/payments','payments'],['/api/lab/finance/expenses','expenses']])for(const row of cached(this.store,url)?.[field]||[]){const local=Object.values(s[field]).find(p=>p.id===row.id||p.serverId===row.id);if(local)local.baseAmount=Number(row.amount||0);else s[field][row.id]={...row,remote:true,baseAmount:Number(row.amount||0)};}
-  const mapped=new Set([...Object.values(s.adjustments),...Object.values(s.corrections)].map(d=>d.serverId).filter(Boolean)),external=new Map((s.externalDocuments||[]).filter(d=>!mapped.has(d.id)).map(d=>[d.id,d]));for(const doc of cached(this.store,'/api/lab/invoices')?.invoices||[])if(doc.document_type&&doc.document_type!=='invoice'&&!mapped.has(doc.id))external.set(doc.id,doc);s.externalDocuments=[...external.values()];
+  const mapped=new Set([...Object.values(s.adjustments),...Object.values(s.corrections)].map(d=>d.serverId).filter(Boolean)),external=new Map((s.externalDocuments||[]).filter(d=>!mapped.has(d.id)).map(d=>[d.id,d]));for(const doc of remoteInvoices)if(doc.document_type&&doc.document_type!=='invoice'&&!mapped.has(doc.id))external.set(doc.id,doc);s.externalDocuments=[...external.values()];
   this.store.set(this.key(),s);return true;
  });}
 

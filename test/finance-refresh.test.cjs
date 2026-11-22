@@ -33,3 +33,42 @@ test('selected invoices do not wait for a deliberately blocked ledger',async()=>
   assert.equal(completed.complete,true);
  }finally{releaseLedger();f.store.db.close()}
 });
+
+test('a prepared finance dashboard reuses its verified invoice and summary reads within the same account and generation',async()=>{
+ const f=fixture(),calls=[];
+ const data={invoices:[],customers:[]};
+ const request=async url=>{calls.push(url);return source(data)(url);};
+ let scope='lab-A:0',account='user-1';
+ const getAccount=()=>account;
+ const options=()=>({scope,getAccount});
+ try{
+  await refreshFinance(f.store,request,{...options(),warm:true});
+  assert.equal(calls.length,5);
+  const invoices=await refreshFinance(f.store,request,{...options(),focus:'/api/lab/invoices',force:true});
+  const summary=await refreshFinance(f.store,request,{...options(),focus:'/api/lab/finance/summary'});
+  assert.equal(invoices.complete,true);
+  assert.equal(summary.complete,true);
+  assert.equal(calls.length,5);
+  data.invoices.push({id:crypto.randomUUID(),number:146,customer_id:crypto.randomUUID(),total:125,issued_at:new Date().toISOString()});
+  scope='lab-A:1';
+  await refreshFinance(f.store,request,{...options(),focus:'/api/lab/invoices',force:true});
+  assert.equal(f.engine.read('/api/lab/invoices').invoices[0].number,146);
+  await refreshFinance(f.store,request,options());
+  assert.equal(calls.length,10);
+ }finally{f.store.db.close();}
+});
+
+test('preloading finance discards responses when the account changes during a request',async()=>{
+ const f=fixture();
+ let account='first',release;
+ const delayed=new Promise(resolve=>{release=resolve;});
+ try{
+  const warming=refreshFinance(f.store,async url=>{await delayed;return source({invoices:[],customers:[]})(url);},{
+   warm:true,scope:account,getAccount:()=>account
+  });
+  account='second';
+  release();
+  await assert.rejects(warming,{code:'account_changed'});
+  assert.equal(f.store.cached('/api/lab/invoices'),null);
+ }finally{release();f.store.db.close();}
+});

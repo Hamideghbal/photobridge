@@ -9,7 +9,9 @@ const queue=`function Uf(t,o,T,r1944Page,r1944DebouncedQuery){
  /* PB1944 server-paged lab queue */
  const pbLiveOrders=x.useRef({seq:0,active:true}),ye=()=>{
   const seq=++pbLiveOrders.current.seq;
-  return Me([o,T,r1944Page]).then(data=>{
+  const query=String(r1944DebouncedQuery||"").trim();
+  const uri="/api/lab/orders?paged=1&mode="+o+"&stage="+T+"&page="+r1944Page+"&q="+encodeURIComponent(query)+"&pbNativeLiveStatus="+Date.now();
+  return Me(uri).then(data=>{
    if(!pbLiveOrders.current.active||seq!==pbLiveOrders.current.seq)return;
    f(data.orders);
    r1944SetCounts(old=>old);
@@ -36,6 +38,9 @@ test('both modes and page transitions render placeholders until the matching res
  placeholders(show('print',1).view);
  const a=show('print',1).load();
  const b=show('album',1).load();
+ assert(requests[0].key.includes('mode=print&stage=flow&page=1'));
+ assert(requests[0].key.endsWith('&pbNativeOpen=1'));
+ assert(requests[1].key.endsWith('&pbNativeOpen=1'));
  requests[0].resolve({orders:[{id:'old-print'}]});
  await a;
  placeholders(show('album',1).view);
@@ -45,6 +50,7 @@ test('both modes and page transitions render placeholders until the matching res
  placeholders(show('album',2).view);
  placeholders(show('album',1,'other').view);
  const c=show('album',2).load();
+ assert(!requests[2].key.includes('pbNativeOpen'));
  requests[2].resolve({orders:[]});
  await c;
  assert.equal(show('album',2).view.children,'empty');

@@ -140,7 +140,40 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
    else if(pager.style.getPropertyValue('display'))pager.style.removeProperty('display');
   }
  }
+ const warmTargets={
+  print:'.labPrintTopNav,.pb1147LabNav button[data-source=".labPrintTopNav"]',
+  album:'.albumTopNav,.pb1147LabNav button[data-source=".albumTopNav"]',
+  finance:'.labFinanceHeaderBtn,.pb1147LabNav button[data-source=".labFinanceHeaderBtn"]',
+ };
+ const lastWarm=new Map();
+ let warmedWorkspace=false;
+ function warmView(view){
+  if(document.hidden||!state?.signedIn||state.internetConnected!==true)return;
+  const now=Date.now();
+  if(now-(lastWarm.get(view)||0)<2000)return;
+  lastWarm.set(view,now);
+  void fetch('/desktop/warm-view?view='+view,{cache:'no-store',priority:'low'}).catch(()=>{});
+ }
+ function warmInitialViews(){
+  if(!state?.signedIn){warmedWorkspace=false;lastWarm.clear();return;}
+  if(warmedWorkspace||document.hidden||state.internetConnected!==true||!document.querySelector('.labRoleWorkspace'))return;
+  warmedWorkspace=true;
+  const warm=()=>Object.keys(warmTargets).forEach(warmView);
+  if(window.requestIdleCallback)window.requestIdleCallback(warm,{timeout:1500});
+  else setTimeout(warm,200);
+ }
+ function warmTarget(event){
+  for(const [view,selector] of Object.entries(warmTargets)){
+   const button=event.target?.closest?.(selector);
+   if(button&&!button.contains(event.relatedTarget)){warmView(view);return;}
+  }
+ }
+ document.addEventListener('pointerover',warmTarget,{passive:true});
+ document.addEventListener('focusin',warmTarget);
+ document.addEventListener('visibilitychange',warmInitialViews);
+
  function showConnection(){
+  warmInitialViews();
   const queue=/^\/lab\/(?:orders(?:\/|$)|print(?:\/|$)|albums?(?:[-/]|$))/.test(location.pathname);
   const allowed=queue||/^\/lab\/(?:archive|finance)(?:\/|$)/.test(location.pathname);
   let header=allowed?document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader'):null;

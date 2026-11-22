@@ -1,7 +1,7 @@
 'use strict';
 const {LocalBusiness,canonical}=require('./local-business.cjs');
 function localActive(store){return!!store.get('localBusinessActive:'+store.get('labId'));}
-async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request}){
+async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,json,pdfRenderer,request,financeScope,financeAccount}){
  if(!store.get('auth')||!store.get('labId'))return false;
  // These navigation reads use the standard proxy and never need a local
  // business migration or SQLite write before reaching the server.
@@ -43,7 +43,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
     }
    }catch{same();/* Use last verified local bootstrap if server briefly drops. */}
   }
-  if(req.method==='GET'&&!offline&&['/api/lab/invoices','/api/lab/finance/summary','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/ledger'].includes(p))await require('./finance-refresh.cjs').refreshFinance(store,request,{force:p==='/api/lab/invoices',focus:p});
+  if(req.method==='GET'&&!offline&&['/api/lab/invoices','/api/lab/finance/summary','/api/lab/finance/payments','/api/lab/finance/expenses','/api/lab/finance/ledger'].includes(p))await require('./finance-refresh.cjs').refreshFinance(store,request,{force:p==='/api/lab/invoices',focus:p,scope:financeScope?.(),getAccount:financeAccount});
   const policy=require('./document-policy.cjs').routePolicy(store,req.method,req.url,b,offline);
   const stageRequest=require('./invoice-stage-guard.cjs').invoiceStageRequest(req.method,p,b);
   if(stageRequest){

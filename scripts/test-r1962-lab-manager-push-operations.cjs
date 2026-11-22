@@ -68,6 +68,8 @@ test('R1962 server hooks are placed after commits and scope subscriptions to a l
  const labScope=api.slice(api.indexOf("if (url.pathname.startsWith('/api/lab/'))"),api.indexOf("if (req.method === 'POST' && url.pathname === '/api/lab/push/subscribe')")+1500);
  assert.match(labScope,/requireRole\(a, 'lab_admin'\)/);
  assert.match(labScope,/recipient_lab_id/);
+ assert.match(api,/m\.user_id=web_push_subscriptions\.recipient_user_id/);
+ assert.match(api,/recipient_user_id=EXCLUDED\.recipient_user_id/);
  const download=api.slice(api.indexOf('const labAlbumDownloadComplete'),api.indexOf('const labPaymentReceipt'));
  assert(download.indexOf("await c.query('COMMIT')")<download.indexOf("pb1962LabManagerNotify(labId,'album_download_verified'"));
  assert.match(api,/managerChanged:String\(oldOrder\.status\|\|''\)!==String\(status\)/);
@@ -79,6 +81,7 @@ test('R1962 mobile prompt uses a user gesture; existing PWA worker and sound rem
  assert(push.includes('مدیر لابراتوار: سفارش جدید، دانلود کامل، صدور فاکتور'));
  assert(push.includes("Notification.requestPermission()"));
  assert(push.includes('PB782EnableNotifications'));
+ assert(push.includes('last-sync:r1962'));
  assert.match(html,/photobridge-push-v728\.js\?[^"']*labManager=r1962/);
  const sw=fs.readFileSync('dist/web/photobridge-sw-v710.js','utf8');
  assert(sw.includes("self.addEventListener('push'"));

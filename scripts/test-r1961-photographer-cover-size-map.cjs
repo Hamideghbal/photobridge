@@ -50,3 +50,15 @@ test('server snapshot validates chosen priced cover and size',()=>{
  assert.match(snapshot,/String\(x\.sizeId\) === String\(size\.id\)/);
  assert.match(api,/covers: pb1961CoversFromPricedVariants\(coverCatalog,sq\.rows,cq\.rows,includeInactive\)/);
 });
+
+test('lab cover catalog save retains active priced custom binding sizes even with zero legacy binding price',()=>{
+ const start=api.indexOf("if (req.method === 'PUT' && url.pathname === '/api/lab/album-settings')");
+ const end=api.indexOf("if (req.method === 'PUT'",start+10);
+ const route=api.slice(start,end<0?undefined:end);
+ assert(start>=0,'lab album settings save handler exists');
+ assert(route.includes('sizes = (albumBase.sizes || []).filter((x) => x.active !== false)'),
+   'active album sizes must not require legacy binding price');
+ assert(route.includes('SELECT id,label FROM lab_album_sizes WHERE lab_id=$1 AND active=true ORDER BY sort_order,label'),
+   'cover model tariff size map must not reject custom/combined binding sizes');
+ assert(!route.includes('active=true AND binding_price>0 ORDER BY sort_order,label'));
+});

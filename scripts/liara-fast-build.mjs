@@ -1443,8 +1443,11 @@ await deployStep('./enable-r1936-native-live-order-status.mjs');
 // R1944 — ten real server-paged lab orders with fixed search and page bar.
 // Keep AFTER native UI patches and BEFORE Brotli/gzip + manifest finalization.
 await deployStep('./enable-r1944-lab-order-pages.mjs');
+// R1960: reconcile priced binding models with album cover sizes in both live UIs.
+await deployStep('./enable-r1960-album-cover-priced-sizes.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});
 
 runR1314(process.execPath,['--test','scripts/test-r1936-lab-folder-recovery.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1943-native-missing-directory.cjs'],{stdio:'inherit'});

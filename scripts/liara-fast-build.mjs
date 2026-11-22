@@ -1401,6 +1401,11 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
  // R1877: validate single reveal and fixed white + gradient mobile surfaces.
  runR1314(process.execPath,['--test','scripts/test-r1877-mobile-header-navigation.cjs'],{stdio:'inherit'});
 
+// R1966: stable photographer Store chooser and separate desktop Calendar tab.
+// Apply after CRM writers, before Store snapshot and the bundled boot stylesheet.
+await deployStep('./enable-r1966-desktop-calendar-store-chooser.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1966-desktop-calendar-store-chooser.cjs'],{stdio:'inherit'});
+
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 
@@ -1455,10 +1460,6 @@ runR1314(process.execPath,['--test','scripts/test-r1962-lab-manager-push-operati
 // R1965: mobile-only manager push, without extra Windows Lab notifications.
 await deployStep('./enable-r1965-manager-mobile-only.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1965-manager-mobile-only.cjs'],{stdio:'inherit'});
-// R1966: stable photographer Store chooser and separate desktop Calendar tab.
-// Apply after all Store/CRM writers but before final Brotli/gzip refresh.
-await deployStep('./enable-r1966-desktop-calendar-store-chooser.mjs');
-runR1314(process.execPath,['--test','scripts/test-r1966-desktop-calendar-store-chooser.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

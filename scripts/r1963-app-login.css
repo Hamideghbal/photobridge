@@ -1,0 +1,26 @@
+/* R1963: protect login from the photographer/lab dashboard dock and the public site's bottom bar. */
+html.pbR1963AuthGate body :is(.pbHomeMobileAccountBar,nav.photographerBottomAppNav,#photographerStoreBottomNav){
+  visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+}
+html.pbR1963AuthOnly body :is(
+  .pbHomeMobileAccountBar,nav.photographerBottomAppNav,.photographerMobileUtilityRail,
+  .labMobileUtilityRail,.labBottomAppNav,#photographerStoreBottomNav,
+  #pbCanonicalHeaderV624,#pbCanonicalHeaderSpacerV624,#pbCanonicalFooterV624,
+  .pbPublicMobileNav,.seoSafeFooter
+){display:none!important;visibility:hidden!important;pointer-events:none!important}
+html.pbR1963AuthOnly body.pbPublicMobileDockMounted,
+html.pbR1963AuthOnly body{padding-bottom:0!important}
+html.pbR1963AuthOnly body.pbCanonicalHeaderMounted{padding-top:0!important}
+html.pbR1963AuthOnly body #root .unifiedLoginPage,
+html.pbR1963AuthOnly body #loginView:not(.hidden){z-index:5000}
+html.pbR1963Installed.pbR1963AuthOnly body .authFooterLinks a[href="/"],
+html.pbR1963Installed.pbR1963AuthOnly body .authFooterLinks a[href="/photographer/signup"],
+html.pbR1963Installed.pbR1963AuthOnly body .authFooterLinks a[href="/equipment-rental/register"]{
+  display:none!important
+}
+html.pbR1963Installed.pbR1963AuthOnly body .authFooterLinks a:is(
+  [href="/photographer"],[href="/lab"],[href="/rental"]){
+  display:inline-flex!important;justify-content:center;align-items:center;
+  min-height:34px;padding:7px 12px;border-radius:10px;
+  color:#315efb;background:#f4f7ff;text-decoration:none;
+}

@@ -6,7 +6,8 @@ const read=path=>fs.readFileSync(path,'utf8');
 
 test('R1966: photographer desktop main row has independent Customers and Calendar tabs',()=>{
  const js=read('dist/web/photobridge-r1126-desktop-navigation.js');
- assert(/\\['crm','مشتریان','\\/customer-crm\\.html\\?portal=photographer[^']*'\\],\\['calendar','تقویم مشتریان'/.test(js));
+ assert(js.includes("['crm','مشتریان','/customer-crm.html?portal=photographer"));
+ assert(js.includes("['calendar','تقویم مشتریان','/customer-crm.html?portal=photographer&view=calendar']"));
  assert(js.includes("if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}"));
  assert(js.includes("['crm','calendar'].includes(active)?[]:"));
  assert(js.includes("key==='calendar'?'تقویم مشتریان'"));

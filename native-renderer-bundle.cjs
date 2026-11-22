@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { sourceMarker } = require('./ui-diagnostics.cjs');
 const { canBridge, connectNotificationDownload, reuseDownloadedDetails } = require('./native-notification-download.cjs');
 const { patchStorageBundle } = require('./storage-bundle.cjs');
+const { patchEmptyDownloadPreflight } = require('./native-empty-download-preflight.cjs');
 let last;
 
 function fastWorkerEnabled(source, version) {
@@ -25,7 +26,7 @@ function compile(file, version) {
   const optimized = bridge ? reuseDownloadedDetails(served) : { source: served };
   const body = 'window.__PB_LAB104_NATIVE__=' + JSON.stringify(modern) + ';\n' +
     'window.__PB_NATIVE_SOURCE_PROOF__=' + JSON.stringify(sourceMarker(source, version)) + ';\n' +
-    optimized.source + (bridge ? '\n;(' + connectNotificationDownload.toString() + ')(' + optimized.reused + ');\n' : '');
+    (bridge ? patchEmptyDownloadPreflight(optimized.source) : optimized.source) + (bridge ? '\n;(' + connectNotificationDownload.toString() + ')(' + optimized.reused + ');\n' : '');
   last = { key, body };
   return body;
 }

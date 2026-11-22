@@ -26,8 +26,12 @@ const prepaint="<script id=\"pbR1963AuthPrepaint\">(()=>{try{const p=location.pa
 const assets='<link rel="stylesheet" href="/photobridge-r1963-app-login.css?v=r1963">\n<script defer src="/photobridge-r1963-app-login.js?v=r1963"></script>\n';
 for(const file of ['dist/web/index.html','dist/api/equipment-rental-portal.html']){
  let html=fs.readFileSync(file,'utf8');
- html=once(html,'<head>','<head>\n'+prepaint,'early authentication paint '+file);
- html=once(html,'</head>',assets+'</head>','login assets '+file);
+ const open=html.indexOf('<head>'),close=html.indexOf('</head>',open+6);
+ if(open<0||open>1000||close<=open)throw Error('[R1963] no primary HTML head in '+file);
+ // Store portal contains additional <head> snippets in inline JS templates.
+ // Patch only the actual document head, never scripts' string literals.
+ html=html.slice(0,close)+assets+html.slice(close);
+ html=html.slice(0,open)+'<head>\n'+prepaint+html.slice(open+6);
  if(file==='dist/web/index.html'){
   const navUrl=/photobridge-public-nav-v625[.]js[?][^"'\\s>]*/g;
   const urls=[...html.matchAll(navUrl)];

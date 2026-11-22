@@ -1,0 +1,74 @@
+/* R1963 — authentication screens have no site or authenticated workspace dock. */
+(function(){
+  'use strict';
+  const html=document.documentElement;
+  let scheduled=false;
+  function installedApp(){
+    try{
+      return navigator.standalone===true ||
+        matchMedia('(display-mode: standalone)').matches ||
+        matchMedia('(display-mode: fullscreen)').matches ||
+        html.classList.contains('pb711Installed');
+    }catch(_){return false}
+  }
+  function authVisible(){
+    const reactAuth=document.querySelector('#root .unifiedLoginPage, #root .passwordResetCard');
+    const rental=document.getElementById('loginView');
+    return !!(reactAuth||(rental&&!rental.hidden&&!rental.classList.contains('hidden')));
+  }
+  function authRoute(){
+    return /^\/(?:photographer(?:\/login)?|lab|rental)\/?$/.test(location.pathname);
+  }
+  function sync(){
+    scheduled=false;
+    const auth=authVisible();
+    html.classList.toggle('pbR1963Installed',installedApp());
+    html.classList.toggle('pbR1963AuthOnly',auth);
+    const root=document.getElementById('root'),rental=document.getElementById('loginView');
+    const resolved=(root&&root.childElementCount>0)||
+      (rental&&(!rental.classList.contains('hidden')||document.body.classList.contains('rentalAppReady')));
+    if(auth||resolved||!authRoute())html.classList.remove('pbR1963AuthGate');
+    if(auth){
+      document.querySelectorAll('.pbHomeMobileAccountBar').forEach(node=>node.remove());
+      document.body.classList.remove('pbPublicMobileDockMounted');
+    }
+  }
+  function schedule(){
+    if(scheduled)return;
+    scheduled=true;
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(sync);
+    else Promise.resolve().then(sync);
+  }
+  function boot(){
+    const react=document.getElementById('root');
+    if(react&&typeof MutationObserver==='function'){
+      const observer=new MutationObserver(schedule);
+      observer.observe(react,{childList:true,subtree:true});
+    }
+    const rental=document.getElementById('loginView');
+    if(rental&&typeof MutationObserver==='function'){
+      const observer=new MutationObserver(schedule);
+      observer.observe(rental,{attributes:true,attributeFilter:['class','hidden']});
+    }
+    if(rental&&document.body&&typeof MutationObserver==='function'){
+      const observer=new MutationObserver(schedule);
+      observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+    }
+    sync();
+  }
+  // A logo or "home" link on a standalone login must never leave the app for the marketing website.
+  document.addEventListener('click',event=>{
+    if(!installedApp()||!authVisible())return;
+    const link=event.target&&event.target.closest&&event.target.closest('a[href="/"]');
+    if(link&&(link.closest('.unifiedLoginPage')||link.closest('.passwordResetCard'))){
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  },true);
+  addEventListener('photobridge-auth-session-changed',schedule);
+  addEventListener('popstate',schedule);
+  addEventListener('pageshow',schedule);
+  addEventListener('visibilitychange',schedule);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();

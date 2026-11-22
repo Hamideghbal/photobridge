@@ -128,7 +128,8 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
    if(queue&&header.classList.contains('pb1174QueueNav')){
     header.classList.add('pb1526QueueHeader');
     const stages=[...header.querySelectorAll(':scope>button[data-pb1173-index]')];let offset=0;
-    [...stages].reverse().forEach(button=>{button.style.setProperty('grid-column','1');button.style.setProperty('grid-row','1');button.style.setProperty('justify-self','start');button.style.setProperty('margin-left',String(offset)+'px','important');offset+=button.getBoundingClientRect().width+14;});
+    const widths=new Map(stages.map(button=>[button,button.getBoundingClientRect().width]));
+    [...stages].reverse().forEach(button=>{button.style.setProperty('grid-column','1');button.style.setProperty('grid-row','1');button.style.setProperty('justify-self','start');button.style.setProperty('margin-left',String(offset)+'px','important');offset+=widths.get(button)+14;});
    }else resetQueueLayout(header);
   }else statusRow.remove();
   const connected=state?.internetConnected;
@@ -137,7 +138,12 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
   connection.style.background=connected?'#e8f7ee':'#fff3e7';connection.style.color=connected?'#17653b':'#9a4700';
  }
 
- new MutationObserver(showConnection).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',showConnection);window.addEventListener('resize',showConnection);document.fonts?.ready.then(showConnection);
+ let connectionFrame=0;
+ function scheduleConnection(){
+  if(connectionFrame)return;
+  connectionFrame=requestAnimationFrame(()=>{connectionFrame=0;showConnection();});
+ }
+ new MutationObserver(scheduleConnection).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',scheduleConnection);window.addEventListener('resize',scheduleConnection);document.fonts?.ready.then(scheduleConnection);
  function mountBackupSettings(){if(window.pb1576BackupController)return;let button=document.getElementById('pbLabBackupSettingsButton');const target=state?.backupSupported&&/^\/lab\/settings(?:\/(?:general|hours|sms|windowsAlert|snappbox|automation))?\/?$/.test(location.pathname)&&!['#customers','#wallet'].some(hash=>location.hash.startsWith(hash))&&!new URLSearchParams(location.search).has('payment')&&!new URLSearchParams(location.search).has('walletPayment')?(document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader')||document.querySelector('.settingsBody')||document.querySelector('.labRoleWorkspace main')):null;if(!target){button?.remove();return;}if(!button){button=document.createElement('button');button.id='pbLabBackupSettingsButton';button.type='button';button.innerHTML='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z M8 12l3 3 5-6"/></svg><span>پشتیبان اطلاعات برنامه</span>';button.style.cssText='font:600 13px Vazirmatn,Tahoma;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;min-height:44px;border:1px solid #d5deef;border-radius:11px;background:#eef3ff;color:#315efb;cursor:pointer;margin:6px';button.onclick=()=>location.assign('/desktop/backups');}if(button.parentElement!==target){if(target.classList.contains('pb1148SecondaryHeader'))target.append(button);else target.prepend(button);}}
  new MutationObserver(mountBackupSettings).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',mountBackupSettings);
  const date=v=>v?new Date(v).toLocaleString('fa-IR'):'ثبت نشده';

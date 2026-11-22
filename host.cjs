@@ -248,13 +248,17 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       // The desktop overlay includes native-only intake improvements and must not
       // silently revert when the verified website UI updates its bundled copy.
       if(['native-storage.js','desktop-overlay.js','backup-ui.js'].includes(name)){res.writeHead(200,{'Content-Type':MIME['.js'],'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});return res.end(fs.readFileSync(path.join(__dirname,name)))}
+      if(name==='native-queue.css'){
+        res.writeHead(200,{'Content-Type':MIME['.css'],'Cache-Control':'no-store'});
+        return res.end(fs.readFileSync(path.join(__dirname,name)));
+      }
       for(const root of roots()){
         const file=path.resolve(root,name),resolvedRoot=path.resolve(root);
         if(!file.startsWith(resolvedRoot+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())continue;
         const type=MIME[path.extname(file)]||'application/octet-stream';
         res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});
         if(name==='index.html'){
-          let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');html=require('./native-first-paint.cjs').injectFirstPaint(html);const end=html.toLowerCase().lastIndexOf('</body>');
+          let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');html=html.replace(/<\/head>/i,'<link rel="stylesheet" href="/native-queue.css"></head>');html=require('./native-first-paint.cjs').injectFirstPaint(html);const end=html.toLowerCase().lastIndexOf('</body>');
           html=(end<0?html:html.slice(0,end))+'<script src="/desktop-overlay.js"></script>'+(end<0?'':html.slice(end));
           return res.end(html);
         }

@@ -18,7 +18,8 @@ function patchOrderLive(source){
   // Hide only the buttons. Keep the search and server total in the toolbar.
   const withPager=guarded.replace(/\be\.jsxs\("div",\{className:"r1944Pager",children:\[/g,
    'r1944Total>=10&&$&');
-  return upgradeFinanceLive(patchFinanceLive(withPager))+
+  const {patchNativeQueuePresentation,removeConfirmedOrderExitWait}=require('./native-queue-presentation.cjs');
+  return upgradeFinanceLive(patchFinanceLive(removeConfirmedOrderExitWait(patchNativeQueuePresentation(withPager))))+
    '\n/* PB1961 preserve native Lab server pagination */\n'+
    require('./lab-realtime.cjs').subscribeLabEvents.toString().replace('function subscribeLabEvents','function pb1468SubscribeLabEvents')+
    '\n'+browserEvents.toString().replace('function browserEvents','function pb1468BrowserEvents');

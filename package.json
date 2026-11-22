@@ -28,6 +28,7 @@
     "files": [
       "*.cjs",
       "*.js",
+      "native-queue.css",
       "assets/**/*",
       "package.json",
       "release-config.json",

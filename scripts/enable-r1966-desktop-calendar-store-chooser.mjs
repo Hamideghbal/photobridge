@@ -95,12 +95,10 @@ if(!crm.includes('id="pbR1966StandaloneCrmBoot"')){
 for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let page=read(path);
  for(const asset of ['photobridge-r1126-desktop-navigation.js','photobridge-r1126-desktop-navigation.css']){
-  const start=page.indexOf(asset+'?');
-  if(start<0||page.indexOf(asset+'?',start+1)>=0)throw new Error('[R1966] bad '+asset+' reference in '+path);
-  const end=page.indexOf('"',start);
-  if(end<0)throw new Error('[R1966] unterminated asset URL in '+path);
-  const original=page.slice(start,end);
-  if(!original.includes('r1966=1'))page=once(page,original,original+'&r1966=1','cache bust '+path+' '+asset);
+  let found=0;
+  const pattern=new RegExp(asset.replaceAll('.','[.]')+'\\?[^"\\x27<>\\s]+','g');
+  page=page.replace(pattern,url=>{found++;return url.includes('r1966=1')?url:url+'&r1966=1'});
+  if(!found)throw new Error('[R1966] missing '+asset+' in '+path);
  }
  write(path,page);
 }

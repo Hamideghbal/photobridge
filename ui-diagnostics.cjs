@@ -10,14 +10,14 @@ async function diskProof({roots,version,store}){
  for(const [index,root]of roots.entries()){
   if(!root)continue;const item={slot:index===0?'selected':'fallback',files:{}};
   for(const name of assets)try{const bytes=await fs.readFile(path.join(root,name));const raw=bytes.toString('utf8');let served=null;
-   if(name.endsWith('r84.js'))served='window.__PB_NATIVE_SOURCE_PROOF__='+JSON.stringify(sourceMarker(raw,version))+';\n'+require('./storage-bundle.cjs').patchStorageBundle(raw);
+   if(name.endsWith('r84.js'))served=require('./native-renderer-bundle.cjs').compile(path.join(root,name),version);
    if(name==='photobridge-r1147-lab-admin-header.js')served=require('./navigation-header-patch.cjs').patchNavigationHeader(raw);
    if(name==='photobridge-r1372-third-header.js')served=require('./navigation-header-patch.cjs').patchThirdNavigation(raw);
    item.files[name]={sha256:hash(bytes),bytes:bytes.length,...(served?{servedSha256:hash(served)}:{}),...(name.endsWith('r84.js')?{generalSections:generalSections(raw)}:{})};}catch{item.files[name]={missing:true};}
   try{item.manifestBuild=JSON.parse(await fs.readFile(path.join(root,'.pb-lab-bundle-manifest.json'),'utf8')).build;}catch{item.manifestBuild=null;}
   result.roots.push(item);
  }
- for(const name of ['main.cjs','host.cjs','desktop-overlay.js','navigation-header-patch.cjs','native-session.cjs'])try{result.nativeFiles[name]=hash(await fs.readFile(path.join(__dirname,name)));}catch{result.nativeFiles[name]=null;}
+ for(const name of ['main.cjs','host.cjs','desktop-overlay.js','native-renderer-bundle.cjs','native-notification-download.cjs','finance-refresh.cjs','navigation-header-patch.cjs','native-session.cjs'])try{result.nativeFiles[name]=hash(await fs.readFile(path.join(__dirname,name)));}catch{result.nativeFiles[name]=null;}
  return result;
 }
 function rendererSnapshot(){

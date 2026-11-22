@@ -17,10 +17,10 @@ function multiple(source,oldText,newText,expected,description){
 const navPath='dist/web/photobridge-r1126-desktop-navigation.js';
 let nav=read(navPath);
 if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop chrome. */')){
- nav=once(nav,
-  "['crm','مشتریان','/customer-crm.html?portal=photographer'],",
-  "['crm','مشتریان','/customer-crm.html?portal=photographer'],['calendar','تقویم مشتریان','/customer-crm.html?portal=photographer&view=calendar'],",
-  'main navigation calendar tab');
+ // CRM delivery appends a release token to this href before R1966 runs.
+ const crmTab=nav.match(/\['crm','مشتریان','\/customer-crm\.html\?portal=photographer[^']*'\],/g)||[];
+ if(crmTab.length!==1)throw new Error('[R1966] CRM tab reference count '+crmTab.length);
+ nav=once(nav,crmTab[0],crmTab[0]+"['calendar','تقویم مشتریان','/customer-crm.html?portal=photographer&view=calendar'],",'main navigation calendar tab');
  nav=once(nav,
   "active==='crm'?[]:",
   "['crm','calendar'].includes(active)?[]:",
@@ -33,10 +33,20 @@ if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop c
   "const frame=document.createElement('iframe');frame.title=key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':'چاپ';",
   "const frame=document.createElement('iframe');frame.title=key==='calendar'?'تقویم مشتریان':key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':'چاپ';",
   'calendar iframe title');
- nav=once(nav,
-  "if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';",
-  "if(key==='crm'||key==='calendar')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1&pbCrmDesktopTab='+key+(key==='calendar'?'&view=calendar':'');",
+ // R1867's CRM delivery wrapper controls the iframe URL, so keep its cache policy.
+ const crmFrame=nav.match(/if\(key==='crm'\)frame\.src=[^\n;]+;else\{/g)||[];
+ if(crmFrame.length!==1)throw new Error('[R1966] CRM iframe branch count '+crmFrame.length);
+ nav=once(nav,crmFrame[0],
+  "if(key==='crm'||key==='calendar'){const crmUrl=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1';const u=new URL(crmUrl,location.origin);u.searchParams.set('pbDesktopContent','1');u.searchParams.set('pbCrmDesktopTab',key);if(key==='calendar')u.searchParams.set('view','calendar');else u.searchParams.delete('view');frame.src=u.pathname+u.search;}else{",
   'two isolated CRM iframe routes');
+ nav=once(nav,
+  "if(key==='crm'&&u.pathname!=='/customer-crm.html')",
+  "if((key==='crm'||key==='calendar')&&u.pathname!=='/customer-crm.html')",
+  'prevent recursive CRM navigation from either tab');
+ nav=once(nav,
+  "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm');",
+  "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm'||active==='calendar');",
+  'calendar shares CRM shell visibility');
  nav=once(nav,
   "if(key==='print'||key==='crm'){open(key);return;}",
   "if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}",

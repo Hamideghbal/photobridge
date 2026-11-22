@@ -57,6 +57,18 @@ function shell(portal,mobileScripts){
    await frame.locator('#customers').waitFor({state:'visible'});
    assert(await frame.locator('#nav').isHidden(),'embedded mobile CRM keeps its duplicate internal navigation hidden');
    assert(await button.locator('em').isVisible());
+  }else if(portal==='photographer'){
+   // R1966: desktop Calendar is its own main tab. The CRM internal button is hidden.
+   assert(await frame.locator('nav button[data-view="calendar"]').isHidden());
+   const calendarMain=page.locator('#pb1126ChromeHost [data-pb1126-kind="calendar"]');
+   await calendarMain.click();
+   const calendarFrame=page.frameLocator('.pb1126ContentPanel[data-panel="calendar"] iframe');
+   await calendarFrame.locator('.calDay').first().waitFor();
+   assert.equal(await calendarFrame.locator('.calDay').count(),42);
+   assert(await frameElement.isHidden(),'Customers iframe is hidden while Calendar tab is selected');
+   assert.equal(await calendarMain.getAttribute('aria-current'),'page');
+   await button.click();
+   assert(await frameElement.isVisible(),'Customers iframe is restored when its tab is reopened');
   }else{
    await frame.locator('nav button[data-view="calendar"]').click();
    await frame.locator('.calDay').first().waitFor();
@@ -70,7 +82,7 @@ function shell(portal,mobileScripts){
   if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isVisible());
   await button.click();assert(await frameElement.isVisible());
   if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isHidden());
-  assert.equal(page.frames().length,hasPrintPanel?3:2);
+  assert.equal(page.frames().length,hasPrintPanel||(portal==='photographer'&&width>820)?3:2);
   // A portal navigation from inside CRM must leave the frame, never nest another portal shell.
   await (await frameElement.elementHandle()).contentFrame().then(child=>child.evaluate(path=>{location.href=path},root));
   await page.waitForURL(url=>url.pathname===root&&!url.searchParams.has('pbCrmTab')&&!url.searchParams.has('pbDesktopPanel'));

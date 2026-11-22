@@ -1452,6 +1452,9 @@ await deployStep('./enable-r1963-auth-only-app-login.mjs');
 // R1962: manager mobile notifications from committed Windows/web order operations.
 await deployStep('./enable-r1962-lab-manager-push-operations.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1962-lab-manager-push-operations.cjs'],{stdio:'inherit'});
+// R1965: mobile-only manager push, without extra Windows Lab notifications.
+await deployStep('./enable-r1965-manager-mobile-only.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1965-manager-mobile-only.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

@@ -55,9 +55,9 @@ async function scenario(mode){
 test('R1960: active legacy, separate custom, combined default and combined model binding prices all expose cover sizes',async()=>{
  const {inserts,deactivated,queries}=await scenario('combined');
  assert.deepEqual(inserts.map(a=>a[1]),['legacy','custom','combined','modelCombined']);
- assert.deepEqual(deactivated[0][1],['legacy','custom','combined','modelCombined']);
- assert.equal(inserts.find(row=>row[1]==='custom')[6],0,'custom price must NOT become default binding amount');
- assert.equal(inserts.find(row=>row[1]==='combined')[6],0,'combined paper price must NOT become default binding amount');
+ assert.deepEqual(Array.from(deactivated[0][1]),['legacy','custom','combined','modelCombined']);
+ assert.equal(inserts.find(row=>row[1]==='custom')[5],0,'custom price must NOT become default binding amount');
+ assert.equal(inserts.find(row=>row[1]==='combined')[5],0,'combined paper price must NOT become default binding amount');
  assert(queries.every(sql=>!sql.includes('invoice')&&!sql.includes('UPDATE lab_prices')));
 });
 test('R1960: archived models and combined-only tariffs are not silently enabled in separate mode',async()=>{

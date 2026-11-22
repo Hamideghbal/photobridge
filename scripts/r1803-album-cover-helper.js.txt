@@ -4,7 +4,10 @@ function pb1803RecoverPricedCovers(legacyCovers, catalog, sizeRows) {
   const result = Array.isArray(legacyCovers) ? [...legacyCovers] : [];
   if (!catalog || !Array.isArray(catalog.variants)) return result;
   const active = row => row && row.active !== false;
-  const sizes = new Map((sizeRows || []).filter(row => active(row) && Number(row.binding_price || 0) > 0)
+  /* R1961: size eligibility was established by syncLabAlbumSizesFromPrintTariffs.
+     A custom/combined binding tariff can activate a size with legacy binding_price=0.
+     Cover availability still requires a positive cover tariff for the exact size/color. */
+  const sizes = new Map((sizeRows || []).filter(row => active(row))
     .map(row => [String(row.id), row]));
   const materials = new Map((catalog.materials || []).filter(active).map(row => [String(row.id), row]));
   const types = new Map((catalog.types || []).filter(active).map(row => [String(row.id), row]));

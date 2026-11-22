@@ -52,10 +52,10 @@ if(src.split(beginning).length!==2)throw Error('[R1961] expected album catalog f
 src=src.replace(beginning,helper+'\n'+beginning);
 const start=src.indexOf(beginning),end=src.indexOf('\nasync function ',start+beginning.length);
 const fragment=src.slice(start,end);
-const old=/covers: cq\.rows\.map\(\(r\) => \(\{[\s\S]*?\}\)\)), coverCatalog, extras:/;
-const matches=[...fragment.matchAll(new RegExp(old.source,'g'))];
-if(matches.length!==1)throw Error('[R1961] legacy album cover projection count '+matches.length);
-const updated=fragment.replace(old,'covers: pb1961CoversFromPricedVariants(coverCatalog,sq.rows,cq.rows,includeInactive), coverCatalog, extras:');
+const at=fragment.indexOf('covers: pb1803RecoverPricedCovers(');
+const stop=fragment.indexOf(', coverCatalog, extras:',at);
+if(at<0||stop<=at)throw Error('[R1961] R1803 reader projection missing');
+const updated=fragment.slice(0,at)+'covers: pb1961CoversFromPricedVariants(coverCatalog,sq.rows,cq.rows,includeInactive)'+fragment.slice(stop);
 src=src.slice(0,start)+updated+src.slice(end);
 fs.writeFileSync(path,src);
 execFileSync(process.execPath,['--check',path],{stdio:'inherit'});

@@ -105,3 +105,25 @@ test('an unrelated upstream failure does not delay notification detail, settings
     }
   });
 });
+
+test('abandoning an early photo request cancels the upstream read before response headers',async()=>{
+  let entered, aborted;
+  const upstreamStarted=new Promise(resolve=>{entered=resolve;});
+  const upstreamAborted=new Promise(resolve=>{aborted=resolve;});
+  const controller=new AbortController();
+  await withHost((_,{signal})=>new Promise((resolve,reject)=>{
+    signal.addEventListener('abort',()=>{aborted();reject(signal.reason);},{once:true});
+    entered();
+  }),async get=>{
+    const pending=get('/api/lab/order-files/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/content?download=1',{signal:controller.signal}).catch(error=>error);
+    await upstreamStarted;
+    controller.abort();
+    let timeout;
+    try{
+      await Promise.race([upstreamAborted,new Promise((_,reject)=>{
+        timeout=setTimeout(()=>reject(Error('upstream photo request did not cancel')),2000);
+      })]);
+    }finally{clearTimeout(timeout);}
+    assert.equal((await pending).name,'AbortError');
+  });
+});

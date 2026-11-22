@@ -145,35 +145,37 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
             }else{
               const controller=new AbortController();
-              const up=await request(req.url,{method:req.method,signal:controller.signal});
-              const mime=up.headers.get('content-type')||'application/octet-stream';
-              // Auth, device and payment gates remain upstream. Never buffer a verified
-              // binary response in the localhost host: the renderer needs its first chunk.
-              if(req.method==='GET'&&up.ok&&up.body&&/^(?:image\/|application\/octet-stream(?:;|$))/i.test(mime)){
-                const headers={'Content-Type':mime,'Cache-Control':'no-store'};
-                for(const name of ['content-disposition','x-pb-file-name','x-pb-fallback-original','etag','last-modified']){
-                  const value=up.headers.get(name);
-                  if(value!==null)headers[name]=value;
-                }
-                // Fetch may transparently decompress encoded bodies. Preserve
-                // byte counts and range metadata only when bytes are unchanged.
-                if(!up.headers.get('content-encoding')||up.headers.get('content-encoding')==='identity'){
-                  for(const name of ['content-length','content-range','accept-ranges']){
+              const abort=()=>controller.abort();
+              res.once('close',abort);
+              if(res.destroyed)abort();
+              try{
+                const up=await request(req.url,{method:req.method,signal:controller.signal});
+                const mime=up.headers.get('content-type')||'application/octet-stream';
+                // Auth, device and payment gates remain upstream. Never buffer a verified
+                // binary response in the localhost host: the renderer needs its first chunk.
+                if(req.method==='GET'&&up.ok&&up.body&&/^(?:image\/|application\/octet-stream(?:;|$))/i.test(mime)){
+                  const headers={'Content-Type':mime,'Cache-Control':'no-store'};
+                  for(const name of ['content-disposition','x-pb-file-name','x-pb-fallback-original','etag','last-modified']){
                     const value=up.headers.get(name);
                     if(value!==null)headers[name]=value;
                   }
+                  // Fetch may transparently decompress encoded bodies. Preserve
+                  // byte counts and range metadata only when bytes are unchanged.
+                  if(!up.headers.get('content-encoding')||up.headers.get('content-encoding')==='identity'){
+                    for(const name of ['content-length','content-range','accept-ranges']){
+                      const value=up.headers.get(name);
+                      if(value!==null)headers[name]=value;
+                    }
+                  }
+                  const body=Readable.from(up.body,{objectMode:false});
+                  res.writeHead(up.status,headers);
+                  res.flushHeaders();
+                  try{await pipeline(body,res);}
+                  catch(error){if(!res.destroyed)res.destroy(error);}
+                  return;
                 }
-                const body=Readable.from(up.body,{objectMode:false});
-                res.writeHead(up.status,headers);
-                res.flushHeaders();
-                const abort=()=>controller.abort();
-                res.once('close',abort);
-                try{await pipeline(body,res);}
-                catch(error){if(!res.destroyed)res.destroy(error);}
-                finally{res.off('close',abort);}
-                return;
-              }
-              result={status:up.status,ok:up.ok,mime,body:Buffer.from(await up.arrayBuffer())};
+                result={status:up.status,ok:up.ok,mime,body:Buffer.from(await up.arrayBuffer())};
+              }finally{res.off('close',abort);}
             }
             const {status,ok,mime,body}=result;
             if(pagedRead&&ok){
@@ -192,6 +194,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
             res.writeHead(status,{'Content-Type':mime,'Cache-Control':'no-store'});
             return req.method==='HEAD'?res.end():res.end(body);
           }catch{
+            if(res.destroyed)return;
             if(pagedOrders)return json(res,503,{error:'online_connection_required'});
             const cached=store.cached(cacheUrl);
             if(cached){res.writeHead(cached.status,{'Content-Type':cached.mime,'Cache-Control':'no-store','X-PhotoBridge-Offline':'1'});return res.end(Buffer.from(cached.body,'base64'))}

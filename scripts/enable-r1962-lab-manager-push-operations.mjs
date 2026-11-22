@@ -56,6 +56,16 @@ push=once(push,"function showPrompt(){if(!supported()||Notification.permission!=
  "const promptMessage=role()==='lab'?'مدیر لابراتوار: سفارش جدید، دانلود کامل، صدور فاکتور و تغییر وضعیت سفارش‌ها را روی این موبایل دریافت کنید.':'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.';",'mobile manager opt-in');
 push=once(push,"const LAST_SYNC='photobridge:push:last-sync:v783';","const LAST_SYNC='photobridge:push:last-sync:r1962';",'revalidate manager push account scope');
 push=once(push,'مرحله چاپ، فاکتور، اجاره/فروش تجهیزات و رویدادهای مهم با اعلان اطلاع داده می‌شوند.</small>','$'+'{promptMessage}</small>','mobile prompt interpolation');
+// Do not ask for notification permission on the account login screen.
+push=once(push,
+  "function maybePrompt(){if(!supported())return;",
+  "function maybePrompt(){if(!supported())return;if(role()==='lab'){const login=document.querySelector('#root .unifiedLoginPage');if(login&&login.getClientRects().length&&getComputedStyle(login).display!=='none'){hidePrompt();return}}",
+  'login-only gate');
+// After an in-app login/role change, bind the already granted device immediately.
+push=once(push,
+  "  window.addEventListener('photobridge-notifications-read-lab',",
+  "  window.addEventListener('photobridge-auth-session-changed',()=>{if(Notification.permission==='granted')void syncSubscription(true);else maybePrompt()});\\n  window.addEventListener('photobridge-notifications-read-lab',".replace('\\\\n','\\n'),
+  'instant lab push rebind after login');
 fs.writeFileSync(pushPath,push);
 // PB_PERF_FIX built precompressed assets before this late patch; refresh both
 // encodings or Android Chrome would silently execute the old push prompt.

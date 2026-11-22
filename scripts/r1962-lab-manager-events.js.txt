@@ -31,9 +31,9 @@ function pb1962LabManagerEventInfo(event, data) {
       message:thing + ref + ' ' + statusNames[status] + '.'
     };
   }
-  if (event === 'album_download_verified') return {
+  if (event === 'download_verified' || event === 'album_download_verified') return {
     eventKey:'lab_manager_download_verified', dedupeKey:'download:' + orderId,
-    title:'دانلود آلبوم کامل شد', message:'تمام فایل‌های آلبوم' + ref + ' روی سیستم لابراتوار دریافت شدند.'
+    title:mode === 'album' ? 'دانلود آلبوم کامل شد' : 'دانلود عکس‌ها کامل شد', message:'تمام فایل‌های ' + (mode === 'album' ? 'آلبوم' : 'سفارش چاپ') + ref + ' روی سیستم لابراتوار دریافت و تأیید شدند.'
   };
   if (event === 'invoice_ready' || event === 'invoice_pricing_ready' || event === 'invoice_created') {
     const invoiceId = String(data.invoiceId || data.invoice?.id || '').trim();
@@ -72,7 +72,8 @@ async function pb1962LabManagerNotify(labId, event, data) {
     // generating duplicate pushes for the same confirmed server event.
     await c.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))',
       [id,info.dedupeKey]);
-    const meta = {...data,pbManagerDedupeKey:info.dedupeKey};
+    // Private mobile-manager events must not reappear in the common Windows Lab bell.
+    const meta = {...data,pbManagerMobileOnly:true,pbManagerDedupeKey:info.dedupeKey};
     const q = await c.query(
       'INSERT INTO system_notifications(recipient_lab_id,event_key,title,message,metadata) ' +
       'SELECT $1,$2,$3,$4,$5::jsonb WHERE NOT EXISTS (' +
@@ -90,11 +91,7 @@ async function pb1962LabManagerNotify(labId, event, data) {
   if(row){
     // Reuse the pre-existing Android/PWA Push service worker, badge and sound.
     void sendWebPushToRecipient('lab',id,row,info.eventKey,{...data,mode:data.mode||'print'});
-    const listeners=labEventClients.get(id);
-    if(listeners)for(const response of [...listeners]){
-      try{response.write('event: manager_order_event\ndata: '+JSON.stringify({eventKey:info.eventKey,orderId:data.orderId})+'\n\n')}
-      catch{listeners.delete(response)}
-    }
+    // Manager-only status details are sent to Android/iOS Push, not Windows Lab SSE.
   }
   return Boolean(row);
 }

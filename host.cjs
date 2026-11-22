@@ -147,6 +147,14 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
                   const value=up.headers.get(name);
                   if(value!==null)headers[name]=value;
                 }
+                // Fetch may transparently decompress encoded bodies. Preserve
+                // byte counts and range metadata only when bytes are unchanged.
+                if(!up.headers.get('content-encoding')||up.headers.get('content-encoding')==='identity'){
+                  for(const name of ['content-length','content-range','accept-ranges']){
+                    const value=up.headers.get(name);
+                    if(value!==null)headers[name]=value;
+                  }
+                }
                 res.writeHead(up.status,headers);
                 res.flushHeaders();
                 const abort=()=>controller.abort();

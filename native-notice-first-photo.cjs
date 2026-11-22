@@ -8,17 +8,19 @@ function noticeFileName(file, order, incoming = file.original_name) {
     : Ya(incoming, 'file');
 }
 
-function noticeManifest(detail) {
+function noticeManifest(detail, receipts) {
   const { order, files } = detail;
-  if (!Array.isArray(files) || !files.length || files.length !== Number(order.file_count)) return null;
+  if (!Array.isArray(files) || !files.length || files.length !== Number(order.file_count)) throw Error('download_manifest_incomplete');
   const ids = new Set();
   const paths = new Map();
   const key = (file, name) => JSON.stringify([Uy(detail,file).toLowerCase(),name.toLowerCase()]);
   for (const file of files) {
-    if (!file.id || file.local_only || ids.has(String(file.id))) return null;
+    if (!file.id || ids.has(String(file.id))) throw Error('download_manifest_incomplete');
+    if (file.local_only) throw Error('local_only_order_manual_review');
     ids.add(String(file.id));
-    const path = key(file,pbNativeNoticeFileName(file,order));
-    if (paths.has(path)) return null;
+    const meta = pb1450Meta(file,receipts);
+    const path = key(file,pbNativeNoticeFileName(file,order,meta.original_name));
+    if (paths.has(path)) throw Error('local_download_incomplete');
     paths.set(path,file);
   }
   const claimed = new Set();
@@ -64,11 +66,11 @@ function patchNoticeFirstPhoto(source) {
     traceDownload('root_check_start');
     const checkpoint = yc(id) || {};
     const noticePaths = options.silent === true && options.force !== true &&
-      window.pbNativeStorage && (!checkpoint.startedAt || checkpoint.pathLayout === 'order-v2') &&
-      !detail.order.downloaded_at && !Object.keys(receipts).length
-      ? pbNativeNoticeManifest(detail) : null;
+      window.pbNativeStorage && !detail.order.downloaded_at
+      ? pbNativeNoticeManifest(detail,receipts) : null;
     let firstPhoto;
-    if (noticePaths) {
+    if (noticePaths && !Object.keys(receipts).length &&
+        (!checkpoint.startedAt || checkpoint.pathLayout === 'order-v2')) {
       firstPhotoAbort = new AbortController();
       traceDownload('photo_requested');
       firstPhoto = Ky(detail.files[0].id,firstPhotoAbort.signal).then(
@@ -91,9 +93,10 @@ function patchNoticeFirstPhoto(source) {
       const target = await pb1450Target(root,detail,file,targets);
       let noticeName;
       if (claimNoticePath) {
-        noticeName = pbNativeNoticeFileName(file,detail.order);
+        const meta = pb1450Meta(file,receipts);
+        noticeName = pbNativeNoticeFileName(file,detail.order,meta.original_name);
         const current = await pbNativeNoticeExistingFile(target.dir,noticeName);
-        if (current?.size && (!Number(file.bytes) || current.size === Number(file.bytes))) {
+        if (current?.size && (!Number(meta.bytes) || current.size === Number(meta.bytes))) {
           claimNoticePath(file,target.dir,noticeName);
           if (earlyResponse) firstPhotoAbort.abort();
           already.add(String(file.id));

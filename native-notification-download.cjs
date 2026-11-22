@@ -65,22 +65,21 @@ function connectNotificationDownload(reuseDetail = false) {
       }
       if (!order) return;
       trace('manifest_ready');
-      // Share the existing automatic worker lock. A second path must never
-      // acknowledge or invoice the same order while that worker is active.
-      const waited = pb1568Work.running;
-      if(waited)trace('worker_queue_wait');
-      while (pb1568Work.running && session === epoch && Date.now() - at < 120000) {
+      // The patched worker coalesces calls for the same order. A background
+      // list read or work on another order needn't block this exact order.
+      if (!reuseDetail && pb1568Work.running) trace('worker_queue_wait');
+      while (!reuseDetail && pb1568Work.running && session === epoch && Date.now() - at < 120000) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
-      if (session !== epoch || pb1568Work.running || Date.now() - at >= 120000 ||
+      if (session !== epoch || (!reuseDetail && pb1568Work.running) || Date.now() - at >= 120000 ||
           (pb1568Work.labId && String(pb1568Work.labId) !== lab)) return;
-      pb1568Work.running = true;
+      if (!reuseDetail) pb1568Work.running = true;
       pb1568Work.labId = lab;
       trace('worker_acquired');
       try {
         if (typeof pb1568State === 'function' && typeof pb1568Save === 'function') {
           const task = pb1568State(lab, id);
-          if (!waited && task?.phase === 'pending_download' && task.retryAt > Date.now() &&
+          if (task?.phase === 'pending_download' && task.retryAt > Date.now() &&
               /^(download_manifest_incomplete|file_not_found)$/i.test(String(task.error || ''))) {
             pb1568Save(lab, id, { ...task, retryAt: 0 });
           }
@@ -101,12 +100,12 @@ function connectNotificationDownload(reuseDetail = false) {
           }
         };
         await pb1568ProcessOrder(lab, order, settings, {
-          detail: reuseDetail && !waited ? readyDetail : null,
+          detail: reuseDetail ? readyDetail : null,
           progress,
         });
         trace('worker_finished');
       } finally {
-        pb1568Work.running = false;
+        if (!reuseDetail) pb1568Work.running = false;
       }
     } catch {
       if (session === epoch) pb1586WakeDownloads();
@@ -125,7 +124,18 @@ function reuseDownloadedDetails(source) {
   const download = "pb1450Download(detail,()=>{},{silent:true})";
   if (!worker.includes(read) || !worker.includes(download)) return { source, reused: false };
   const invoice = "pb1568Save(lab,id,{phase:'invoice_issued',invoiceId:data.invoice.id,attempts:0});";
-  let patched = worker.replace(signature, 'async function pb1568ProcessOrder(lab,order,settings,nativeNotice){')
+  const lock = `
+const pbNativeOrderWork = new Map();
+function pb1568ProcessOrder(lab,order,settings,nativeNotice){
+ const key = JSON.stringify([lab,order.id]);
+ const active = pbNativeOrderWork.get(key);
+ if(active) return active;
+ const work = Promise.resolve().then(()=>pbNativeProcessOrder(lab,order,settings,nativeNotice));
+ pbNativeOrderWork.set(key,work);
+ return work.finally(()=>{if(pbNativeOrderWork.get(key)===work)pbNativeOrderWork.delete(key);});
+}
+`;
+  let patched = lock + worker.replace(signature, 'async function pbNativeProcessOrder(lab,order,settings,nativeNotice){')
     .replace(read, "const detail=nativeNotice?.detail||await Me('/api/lab/orders/'+encodeURIComponent(id));")
     .replace(download, "pb1450Download(detail,nativeNotice?.progress||(()=>{}),{silent:true})")
     .replace(invoice, invoice + `

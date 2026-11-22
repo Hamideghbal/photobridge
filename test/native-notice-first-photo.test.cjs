@@ -35,6 +35,10 @@ function fixture({ rootReady, secondReady, verificationReady, existing = {}, che
     pb1450Root:async()=>{trace.push('root');await rootReady;return root;},
     pb1450Target:async(_,__,file)=>{trace.push('target '+file.id);if(file.id==='two')await secondReady;return target;},
     pb1450Missing:error=>error.code==='ENOENT', pb1450FileInfo:async handle=>handle,
+    pb1450Meta:(file,receipts)=>{
+      const receipt=receipts[file.id];
+      return receipt?{...file,original_name:receipt.name,bytes:receipt.bytes}:file;
+    },
     Ky:async (id,signal)=>{if(id==='one')firstSignal=signal;trace.push('request '+id);return {pbDownloadBytes:5};},
     pb1445WriteDownload:async (_,name,__,onChunk)=>{
       trace.push('write '+name);saved.set(name,5);onChunk(5);
@@ -87,13 +91,26 @@ test('a valid existing file is kept, and a failed final verification cannot comp
   assert(!job.progress.includes('complete'));
 });
 
-test('manual downloads and historical paths still verify before sending a photo request', async () => {
-  for (const options of [{silent:false},{checkpoint:{startedAt:'earlier',pathLayout:'legacy'}}]) {
-    const job = fixture(options);
-    await job.flight;
-    assert.equal(job.trace[0],'root');
-    assert(job.trace.indexOf('full verification') < job.trace.indexOf('request one'));
-  }
+test('manual downloads still verify before sending a photo request', async () => {
+  const job = fixture({silent:false});
+  await job.flight;
+  assert.equal(job.trace[0],'root');
+  assert(job.trace.indexOf('full verification') < job.trace.indexOf('request one'));
+});
+
+test('automatic resume uses its saved receipt and starts the missing file before the full scan', async () => {
+  const verification = gate();
+  const job = fixture({verificationReady:verification.waiting,existing:{'saved.jpg':7},
+    checkpoint:{startedAt:'earlier',pathLayout:'legacy',localFiles:{one:{name:'saved.jpg',bytes:7}}}});
+  try {
+    await turn();
+    assert.deepEqual(job.trace.slice(0,5),['root','target one','stat saved.jpg','target two','stat two.jpg']);
+    assert(!job.trace.includes('request one'));
+    assert(job.trace.indexOf('write two.jpg') < job.trace.indexOf('full verification'));
+    assert(!job.progress.includes('complete'));
+  } finally {verification.release();}
+  await job.flight;
+  assert.equal(job.progress.at(-1),'complete');
 });
 
 test('the checked-in Lab bundle receives a syntactically valid direct download path', () => {

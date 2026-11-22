@@ -94,3 +94,35 @@ test('detail returning 404 on arrival gets exact retry instead of a full-list sc
   assert.equal(processed, 1);
   assert.deepEqual(delays, [450]);
 });
+
+test('a ready notice starts while another order is busy and shares one run for the same order', async()=>{
+  const {reuseDownloadedDetails}=require('../native-notification-download.cjs');
+  const upstream=`async function pb1568ProcessOrder(lab,order,settings){
+    const id=order.id;
+    const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));
+    return await pb1450Download(detail,()=>{},{silent:true});
+  }
+  async function pb1568AutoTick(){}`;
+  const worker=reuseDownloadedDetails(upstream);
+  let receive, finish;
+  const running=new Promise(resolve=>{finish=resolve;});
+  const starts=[];
+  const detail={order:{id:orderId,lab_id:'lab-1',status:'sent',file_count:1},files:[{id:'file-1'}]};
+  const context=vm.createContext({
+    window:{pbNativeStorage:{},pbDesktopEvents:{onOrderArrived:callback=>{receive=callback;}}},
+    addEventListener(){},
+    Me:async route=>route==='/api/auth/me'?{lab:{id:'lab-1'}}:route==='/api/lab/automation'?{settings:{autoDownloadEnabled:true}}:detail,
+    pb1568Work:{running:true,labId:'lab-1'},
+    pb1450Download(value){starts.push(value);return running;},
+    setTimeout(){assert.fail('ready notice must not wait for the background scheduler');},
+  });
+  const runWorker=vm.runInContext(worker.source+'\n('+connectNotificationDownload.toString()+')(true);\npb1568ProcessOrder',context);
+  const notification=receive({labId:'lab-1',orderId,notifiedAt:Date.now()});
+  await new Promise(setImmediate);
+  assert.deepEqual(starts,[detail]);
+  const polling=runWorker('lab-1',detail.order,{autoDownloadEnabled:true});
+  finish();
+  await Promise.all([notification,polling]);
+  assert.equal(starts.length,1);
+  assert.equal(context.pb1568Work.running,true);
+});

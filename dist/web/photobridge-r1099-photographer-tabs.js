@@ -107,7 +107,7 @@ async function load(){
  try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;
   // Only the first authenticated landing of an invited photographer, never
   // subsequent navigation back to the Gallery, starts at Lab print selection.
-  if(next.connectedLab===true&&location.pathname==='/photographer/gallery'&&!new URLSearchParams(location.search).has('pbDesktopPanel')){
+  if(next.connectedLab===true&&/^\/photographer(?:\/gallery)?\/?$/.test(location.pathname)&&!['pbDesktopPanel','pbCrmTab','pbStorePanel','pbDesktopContent','view'].some(key=>new URLSearchParams(location.search).has(key))){
    let seen=false;try{seen=sessionStorage.getItem('pb1976PrintLanding')==='1';if(!seen)sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
    if(!seen){location.replace('/photographer/orders/flow?workspace=print&pbLabChooser=1');return;}
   }
@@ -116,7 +116,7 @@ async function load(){
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
-window.addEventListener('photobridge-auth-session-changed',()=>{try{sessionStorage.removeItem('pb1976PrintLanding')}catch{}sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
+window.addEventListener('photobridge-auth-session-changed',event=>{if(event.detail?.labRole!=='customer')try{sessionStorage.removeItem('pb1976PrintLanding')}catch{}sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

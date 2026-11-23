@@ -57,11 +57,11 @@ test('R1967: mobile header retains three live status actions, page numbers, and 
 test('R1967: native app manifest and web links contain exact new JS/CSS and updated bundle hashes',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const html=read(root+'/index.html');
-  for(const file of ['photobridge-r1967-lab-archive-mobile.css','photobridge-r1967-lab-archive-mobile.js']){
-   assert(html.includes('/'+file+'?v=r1967'),root+' missing '+file);
+  for(const [file,version] of [['photobridge-r1967-lab-archive-mobile.css','r1967'],['photobridge-r1967-lab-archive-mobile.js','r1968']]){
+   assert(html.includes('/'+file+'?v='+version),root+' missing or stale '+file);
    assert(fs.existsSync(root+'/'+file),root+' missing output '+file);
   }
-  assert(html.includes('labDaily=r1967'),root+' archive module cache revision missing');
+  assert(html.includes('labDaily=r1968'),root+' archive module cache revision missing');
  }
  const root='dist/web/lab-desktop-ui';
  const manifest=JSON.parse(read(root+'/manifest.json'));
@@ -80,4 +80,22 @@ test('R1967: patch executes after final Lab writers, before final br/gzip and na
  const updated=build.lastIndexOf("deployStep('./enable-r1967-lab-archive-mobile.mjs')");
  const sealed=build.lastIndexOf("deployStep('./enable-r1897-final-lab-assets.mjs')");
  assert(old>=0&&updated>old&&sealed>updated);
+});
+
+test('R1968: clicking a Lab calendar day triggers exactly one summary and parses Persian digits without changing the React selection',()=>{
+ const src=read('dist/web/photobridge-r1967-lab-archive-mobile.js');
+ const start=src.indexOf('const pb1968Months=');
+ const end=src.indexOf('function pb1968ArchiveDayClick(',start);
+ assert(start>=0&&end>start,'pure Persian day parser must exist');
+ const parse=new Function(src.slice(start,end)+'return pb1968ArchiveDateKey;')();
+ assert.equal(parse('آذر ۱۴۰۵','۲'),'1405-09-02');
+ assert.equal(parse('فروردین ۱۴۰۴','۳۱'),'1404-01-31');
+ assert.equal(parse('بهمن ١٤٠٥','١٠'),'1405-11-10');
+ assert.equal(parse('آذر ۱۴۰۵','۰'),null);
+ assert.equal(parse('unknown','۲'),null);
+ assert(src.includes("document.addEventListener('click',pb1968ArchiveDayClick,true)"),'capture-phase native click must not depend on React bundle patch');
+ assert(src.includes("'.labArchiveWorkspace .persianCalendarCard .calendarGrid button'"),'delegated handler must be scoped to the Lab archive calendar only');
+ assert(src.includes("if(popup?.isConnected&&openDay===day)return"),'React custom event and native click must not reopen the modal or refetch');
+ assert(src.includes("if(day)void show(day)"),'click must directly open day financial modal');
+ assert(src.includes("if(e.detail?.role==='lab')"),'original event listener remains for cached/older UI variants');
 });

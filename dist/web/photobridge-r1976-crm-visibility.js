@@ -13,13 +13,13 @@
    if(button){button.hidden=!enabled;button.disabled=!enabled;button.setAttribute('aria-hidden',enabled?'false':'true');}
   }
   if(!customers&&!calendar){
-   document.querySelector('main')?.setAttribute('aria-hidden','true');
+   document.querySelector('main')?.setAttribute('aria-hidden','true');document.querySelector('main')?.setAttribute('hidden','');
    let note=document.querySelector('#pb1976NoCrm');
    if(!note){note=document.createElement('p');note.id='pb1976NoCrm';note.setAttribute('role','status');note.textContent='دسترسی به مشتریان و تقویم توسط مدیر غیرفعال شده است.';document.body.prepend(note);}
    return;
   }
   document.querySelector('#pb1976NoCrm')?.remove();
-  document.querySelector('main')?.removeAttribute('aria-hidden');
+  document.querySelector('main')?.removeAttribute('aria-hidden');document.querySelector('main')?.removeAttribute('hidden');
   const visible=document.querySelector('#calendar:not([hidden])')?'calendar':'customers';
   if(!allowed[visible]){
    const fallback=customers?'customers':'calendar';

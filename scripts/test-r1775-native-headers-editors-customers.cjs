@@ -59,11 +59,11 @@ test('R1775: actual native dialog can save and cancel, preserving user input',as
  cancel.listeners.click();
  assert.equal(await cancelling,null);
 });
-test('R1775: shared Customers navigation is server controlled for both roles and rechecked',()=>{
+test('R1976: both CRM panes are server controlled for their portal and rechecked',()=>{
  assert(nav.includes("const activePortal=()=>lab()?'lab':photo()?'photographer':null"));
- assert(nav.includes("enabled=data?.tabs?.customers===true"));
+ assert(nav.includes("enabled={customers:data?.tabs?.customers===true,calendar:data?.tabs?.calendar===true}"));
  // The R1877 dock readiness signal is valid only after failed/disabled tabs are cleared.
- assert(/if\(enabled!==true\)\{clearButtons\(\);(?:settleDock\(\);)?return;\}/.test(nav));
+ assert(nav.includes("if(!enabled||(!enabled.customers&&!enabled.calendar))"));
  assert(nav.includes("credentials:'include',cache:'no-store'"));
  assert(nav.includes("window.addEventListener('pb1761-customer-settings-updated',refresh)"));
  assert(nav.includes("event.key==='pb1761CustomerVisibilityUpdated'"));
@@ -74,10 +74,12 @@ test('R1775: shared Customers navigation is server controlled for both roles and
 test('R1775: disabled Customers setting handles saved false values and keeps other tabs',()=>{
  const fake=settings.replace(/export\s+/g,'');
  const src=fake.slice(fake.indexOf('function pb1775DisabledCustomerSetting('),fake.indexOf('export async function')>=0?fake.indexOf('export async function'):fake.indexOf('async function handlePhotographerTabSettings('));
- const normalized=vm.runInNewContext(src+';({normalizePhotographerTabs,photographerTabsForUser})',{PHOTOGRAPHER_TAB_KEYS:['ai','album','instagram','customers']});
+ const normalized=vm.runInNewContext(src+';({normalizePhotographerTabs,photographerTabsForUser})',{PHOTOGRAPHER_TAB_KEYS:['ai','album','instagram','customers','calendar','lab_customers','lab_calendar']});
  for(const off of [false,0,'false','0']){
   assert.equal(normalized.normalizePhotographerTabs({customers:off}).customers,false);
   assert.equal(normalized.photographerTabsForUser({customers:off},{platformRole:'platform_admin'}).tabs.customers,false);
+  assert.equal(normalized.normalizePhotographerTabs({customers:off}).calendar,false);
+  assert.equal(normalized.normalizePhotographerTabs({customers:off}).lab_calendar,false);
  }
  assert.equal(normalized.normalizePhotographerTabs({customers:true}).customers,true);
  assert.equal(normalized.normalizePhotographerTabs({customers:false,album:true}).album,true);

@@ -3,7 +3,7 @@ const path=require('node:path'),{spawn}=require('node:child_process');
 const {AppUpdate}=require('./app-update.cjs');
 const {UpdateConfirmation}=require('./update-confirmation.cjs');
 
-function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
+function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,holdForInstall,installBlockReason,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
  let updater;
  const progress=providedProgress||new UpdateConfirmation({app,dialog,getParent:getWindow,BrowserWindow});
  let prompting=false,readyAnnounced=null,downloadInProgress=false,checking=false,lastSuccessfulCheck=0,retryTimer=null;
@@ -13,7 +13,7 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,b
   onVersion:v=>store.set('nativeUpdateHighest',v),
   confirmDownload:async update=>{await show();let answer=await progress.ask({state:'available',version:update.version});if(answer==='ui_unavailable')answer=await nativeAction('available',update.version);if(answer!=='download')progress.close();return answer==='download';},
   onState:state=>{store.set('nativeUpdateState',state);if(state.state==='downloading'){downloadInProgress=true;getWindow()?.setProgressBar?.(state.percent/100);progress.update(state);}else if(state.state==='verifying'){downloadInProgress=true;getWindow()?.setProgressBar?.(1);progress.update(state);}else if(state.state==='ready'){downloadInProgress=false;getWindow()?.setProgressBar?.(-1);progress.update({state:'ready',version:state.version,percent:100,loadedBytes:state.loadedBytes,totalBytes:state.totalBytes});}},
-  canInstall,
+  canInstall,holdForInstall,installBlockReason,
   launch:(file,args)=>new Promise((resolve,reject)=>{const child=spawn(file,args,{detached:true,stdio:'ignore',windowsHide:true});child.once('error',reject);child.once('spawn',()=>{child.unref();resolve();});}),
   quit:async()=>{let timer;try{await Promise.race([Promise.resolve().then(beforeQuit),new Promise(resolve=>{timer=setTimeout(resolve,quitTimeout);})]);}finally{clearTimeout(timer);}const force=setTimeout(()=>app.exit?.(0),quitTimeout);force.unref?.();app.quit();}
  });
@@ -39,7 +39,9 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,b
      await updater.install();progress.close();break;
     }catch(error){
      getWindow()?.setProgressBar?.(-1);
-     const message=error.message==='finish_current_work'?'ابتدا فرم‌های باز و عملیات ذخیره‌سازی را تمام کن؛ سپس دوباره نصب را بزن.':'نصب انجام نشد؛ برنامهٔ فعلی و اطلاعاتت حفظ شده‌اند.';
+     const blocked={foreground_write:'ذخیره یا چاپ اطلاعات هنوز تمام نشده است؛ پس از پایان دوباره نصب را بزن.',open_form:'یک فرم باز است؛ آن را ذخیره کن یا ببند، سپس نصب را بزن.',saving_form:'ذخیرهٔ فرم هنوز تمام نشده است؛ پس از پایان دوباره نصب را بزن.',file_write:'کپی فایل هنوز تمام نشده است؛ پس از پایان دوباره نصب را بزن.',folder_selection:'پنجرهٔ انتخاب پوشه باز است؛ آن را تمام کن، سپس نصب را بزن.',sync_write:'ارسال تغییرات ثبت‌شده هنوز تمام نشده است؛ پس از پایان دوباره نصب را بزن.',ui_unavailable:'وضعیت فرم‌های برنامه بررسی نشد؛ پنجرهٔ اصلی را باز کن و دوباره نصب را بزن.'};
+     progress.log?.('install_blocked',{code:String(error.message),reason:error.reason||null});
+     const message=error.message==='finish_current_work'?(blocked[error.reason]||'ابتدا فرم‌های باز و عملیات ذخیره‌سازی را تمام کن؛ سپس دوباره نصب را بزن.'):'نصب انجام نشد؛ برنامهٔ فعلی و اطلاعاتت حفظ شده‌اند.';
      let retry=await progress.ask({state:'error',retryStage:'install',version,message});if(retry==='ui_unavailable')retry=await nativeAction('error',version,message);
      if(retry!=='retry'){progress.close();break;}
     }

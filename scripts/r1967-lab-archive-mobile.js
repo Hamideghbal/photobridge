@@ -24,24 +24,18 @@ function mount(){
    requestAnimationFrame(schedule);
   };}
  }
- let manual=host.querySelector(':scope > .pb1967ManualOrder');
- if(!manual){
-  manual=make('button','pb1967ManualOrder','＋ سفارش دستی');manual.type='button';
-  manual.title='فرم سفارش حضوری مشتری آزاد';
-  manual.onclick=async()=>{
-   if(manual.disabled)return;manual.disabled=true;
-   try{
-    const response=await fetch('/api/lab/walkin',{credentials:'same-origin',cache:'no-store'});
-    if(!response.ok)throw new Error('دریافت فرم سفارش حضوری ممکن نشد.');
-    const data=await response.json();
-    if(!data.lab?.walkin_enabled){location.assign('/lab/settings/walkin');return;}
-    const target=new URL(data.url,location.origin);
-    if(target.protocol!=='https:'&&target.origin!==location.origin)throw new Error('آدرس فرم سفارش نامعتبر است.');
-    location.assign(target.href);
-   }catch(error){manual.disabled=false;alert(error.message||'فرم سفارش در دسترس نیست.');}
-  };
-  host.append(manual);
+ let onsite=host.querySelector(':scope > .pb1967ManualOrder');
+ if(!onsite){
+  onsite=make('button','pb1967ManualOrder','＋ سفارش حضوری');
+  onsite.type='button';host.append(onsite);
  }
+ if(onsite.textContent!=='＋ سفارش حضوری')onsite.textContent='＋ سفارش حضوری';
+ onsite.title='ثبت سفارش حضوری لابراتوار با انتخاب عکاس، عکس، سایز و کاغذ';
+ onsite.onclick=()=>{
+  const open=window.pb1969OpenLabOnsiteOrder;
+  if(typeof open==='function')open();
+  else alert('فرم سفارش حضوری هنوز بارگذاری نشده است. صفحه را تازه‌سازی کنید.');
+ };
  document.documentElement.classList.add('pb1967LabMobileChromeReady');
 }
 function schedule(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;mount()});}

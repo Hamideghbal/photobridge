@@ -1,3 +1,4 @@
+b36434efd0a4b96d00bbe7123e947ab4c5bb114eac86f0fcfebc557a7633baba  PhotoBridge-Lab-1.0.153-Build.zip
 2eef9455cc83caac953457a50dfa7fab064d72e2abd3d7214f0f002c549f8fcf  PhotoBridge-Lab-1.0.91-Build-Fix.zip
 b3cd6ad56e58da4c66575f1ffb398a9551efdd2efd7179ed29f96a8830cc5014  PhotoBridge-Lab-1.0.91-Debug.zip
 59c2f00c475d3ec148f37a1184ea2946723ef1487e3824b914750e33e8238881  PhotoBridge-Lab-1.0.91-Extraction-Fix.zip

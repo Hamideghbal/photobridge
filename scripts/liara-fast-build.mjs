@@ -1468,8 +1468,10 @@ runR1314(process.execPath,['--test','scripts/test-r1967-lab-archive-mobile.cjs']
 // Apply after R1824 camera renewal and before final asset compression.
 await deployStep('./enable-r1969-frame-admin-renewal.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1969-frame-admin-renewal.cjs'],{stdio:'inherit'});
+await deployStep('./enable-r1970-thermal-model-dialogs.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r1970-model-dialogs.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1961-photographer-cover-size-map.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1963-auth-only-app-login.cjs'],{stdio:'inherit'});

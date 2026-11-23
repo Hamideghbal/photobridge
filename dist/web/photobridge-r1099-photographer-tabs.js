@@ -66,6 +66,18 @@ function apply(){
   const count=[...grid.children].filter(el=>el.dataset.pb1099Hidden!=='1'&&!el.hidden&&getComputedStyle(el).display!=='none').length;
   if(count&&grid.style.getPropertyValue('--pb1099-tabs')!==String(count))grid.style.setProperty('--pb1099-tabs',String(count));
  }
+ // Keep the Print tab visually centered in the main top menu for connected labs.
+ if(settings.connectedLab===true){
+  for(const nav of document.querySelectorAll('.photographerHeaderNav,.photographerHomeModeNav,#pb1126DesktopHeader .pb1126MainNav')){
+   const elements=[...nav.children].filter(el=>el.matches('button,a'));
+   const print=elements.find(el=>el.dataset.pb1126Kind==='print'||/چاپ عکس|^چاپ$/.test((el.textContent||'').trim()));
+   if(!print)continue;
+   const rest=elements.filter(el=>el!==print);
+   rest.forEach((el,i)=>{if(el.style.order!==String(i))el.style.order=String(i)});
+   const mid=Math.floor(rest.length/2);
+   if(print.style.order!==String(mid))print.style.order=String(mid);
+  }
+ }
  const active=currentFeature();if(active&&settings.tabs[active]===false&&!redirecting){redirecting=true;location.replace('/photographer/gallery')}
 }
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;apply();mountAdmin();if(photographer()&&loadedPath!==location.pathname)void load()})}
@@ -73,6 +85,7 @@ function installStyle(){
  if(document.querySelector('#pb1099TabsStyle'))return;
  const style=document.createElement('style');style.id='pb1099TabsStyle';
  style.textContent='@media(max-width:820px){html body .photographerBottomAppNav[data-pb1318-stale]{display:none!important}body.pbAuthenticatedPhotographerPortal :is(.pbHomeMobileAccountBar,.adminBottomAppNav,.labBottomAppNav){display:none!important}}[data-pb1099-hidden="1"]{display:none!important}html body #photographerStoreBottomNav .photographerBottomAppNavGrid[data-pb1099-grid],html body .photographerBottomAppNav .photographerBottomAppNavGrid[data-pb1099-grid]{grid-template-columns:repeat(var(--pb1099-tabs,6),minmax(0,1fr))!important}.pb1099TabsDialog{border:1px solid #dce3f0;border-radius:20px;padding:22px;width:min(430px,calc(100vw - 40px));font-family:inherit;direction:rtl;color:#24334d;background:#fff}.pb1099TabsDialog::backdrop{background:#16234088}.pb1099TabsDialog h3{margin:0 0 10px}.pb1099TabsDialog p{font-size:13px;line-height:1.8}.pb1099TabsDialog label{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:16px}.pb1099TabsDialog input{width:20px;height:20px;accent-color:#315cff}.pb1099TabsActions{display:flex;gap:10px;margin-top:16px}.pb1099TabsActions button{font:inherit;padding:10px 18px;border:1px solid #dce3f0;border-radius:10px;cursor:pointer;background:#fff}.pb1099TabsActions button[type=submit]{background:#315cff;color:#fff}.pb1099TabsMessage{min-height:22px;color:#b42318}';
+ style.textContent+='@media(min-width:821px){#pb1126DesktopHeader .pb1126MainNav{display:flex!important}#pb1126DesktopHeader .pb1126MainNav [data-pb1126-kind=print]{flex-shrink:0}}';
  document.head.append(style);
 }
 function mountAdmin(){
@@ -91,12 +104,19 @@ async function openAdmin(){
 }
 async function load(){
  if(!photographer()||inFlight)return;const epoch=sessionEpoch;inFlight=true;loadedPath=location.pathname;
- try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
+ try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;
+  // Only the first authenticated landing of an invited photographer, never
+  // subsequent navigation back to the Gallery, starts at Lab print selection.
+  if(next.connectedLab===true&&location.pathname==='/photographer/gallery'&&!new URLSearchParams(location.search).has('pbDesktopPanel')){
+   let seen=false;try{seen=sessionStorage.getItem('pb1976PrintLanding')==='1';if(!seen)sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
+   if(!seen){location.replace('/photographer/orders/flow?workspace=print&pbLabChooser=1');return;}
+  }
+  if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
 }
 function init(){installStyle();mountAdmin();void load();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','aria-label','href']})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('popstate',()=>{apply();void load()});window.addEventListener('focus',()=>void load());
-window.addEventListener('photobridge-auth-session-changed',()=>{sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
+window.addEventListener('photobridge-auth-session-changed',()=>{try{sessionStorage.removeItem('pb1976PrintLanding')}catch{}sessionEpoch++;settings=null;loadedPath=null;redirecting=false;inFlight=false;window.pbR1877FeatureNavReady=false;window.pbR1877CrmNavReady=false;document.documentElement.classList.remove('pbR1877DockReady');document.documentElement.classList.add('pbR1877DockPending');document.documentElement.dataset.pb1106TabsPending='1';void load();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void load()});
 document.addEventListener('click',e=>{if(!settings||!photographer())return;const el=e.target.closest('button,a'),key=el&&feature(el);if(key&&settings.tabs[key]===false){e.preventDefault();e.stopImmediatePropagation()}},true);
 })();

@@ -24,7 +24,7 @@
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
     "build-windows-oneclick.ps1": "12bd1b0e23f966a31127b291bab91aad62e61aa74ae10318696fe4c4d4c02907",
-    "test/release-critical.test.cjs": "d0b89933ca184f6e4db14dbc24a775ffb24b0aa4fe7db3dd7c0dd8ee3247aa9b",
+    "test/release-critical.test.cjs": "ad075969aef0394f22ba61403a05d1b0d6153c75def20963ea35c2bdc6b38b93",
     "test/release-lock.test.cjs": "c037bd01bb5a25152da8d6dd15808813412a6278d39c89727aa97f4b01b03353",
     "test/approved-thermal-layout.test.cjs": "7db138372649106a16a7c354f0560644cdc3203f4db99c3a657297440b63042e",
     "test/model-dialog-patch.test.cjs": "1064c930600b53f784d4ee41742a360e088c0b71e394d26ea785b6933b613ee0",

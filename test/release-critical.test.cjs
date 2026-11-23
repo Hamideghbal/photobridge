@@ -37,10 +37,17 @@ test('scheduled bulk sync stays quiet in the background and foreground refresh r
 });
 
 test('background Lab host serves cached workspace reads while the order worker stays online',async t=>{
- const {createHost}=require('../host.cjs'),{LabStore}=require('../store.cjs');
- const store=new LabStore(':memory:');
- store.set('labId','A');
- store.set('auth',{user:{labRole:'lab_admin'}});
+ const {createHost}=require('../host.cjs');
+ const settings=new Map([['labId','A'],['localBusiness:v1:A',{documentPolicyVersion:1}],['auth',{user:{labRole:'lab_admin'}}]]);
+ const cachedReads=new Map();
+ const store={
+  get:key=>settings.get(key),
+  db:{exec:()=>{}},
+  transaction:work=>work(),
+  set:(key,value)=>settings.set(key,value),
+  cached:path=>cachedReads.get(path),
+  cache:(path,status,mime,body)=>cachedReads.set(path,{status,mime,body})
+ };
  const dashboard='/api/lab/dashboard';
  store.cache(dashboard,200,'application/json',Buffer.from('{"source":"cache"}').toString('base64'));
  const requests=[];
@@ -50,7 +57,7 @@ test('background Lab host serves cached workspace reads while the order worker s
   request:async path=>{requests.push(path);return Response.json({source:'server'});}
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
- t.after(async()=>{await new Promise(resolve=>server.close(resolve));store.db.close();});
+ t.after(()=>new Promise(resolve=>server.close(resolve)));
  const fetchPath=path=>fetch('http://127.0.0.1:'+server.address().port+path,{headers:{Cookie:'desktop=background-test'}});
  assert.deepEqual(await (await fetchPath(dashboard)).json(),{source:'cache'});
  assert.equal((await fetchPath('/api/lab/orders?paged=1&mode=print')).status,503);

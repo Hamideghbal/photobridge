@@ -1486,3 +1486,5 @@ runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{s
 runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});
 // R1973: custom connected site text or QR-only poster; never print fallback profile URLs.
 runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1973-walkin-poster-site.test.cjs'],{stdio:'inherit'});
+// R1976: independent CRM/calendar toggles, photographer print-first and video help.
+runR1314(process.execPath,['--test','scripts/test-r1976-print-crm-guides.cjs'],{stdio:'inherit'});

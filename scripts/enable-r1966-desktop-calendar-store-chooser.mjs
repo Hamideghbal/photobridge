@@ -64,6 +64,24 @@ if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop c
  write(navPath,nav);
 }
 
+// R1976: apply after R1966 generated calendar source so that the controls
+// survive every Liara build and frozen Windows UI generation.
+nav=read(navPath);
+if(!nav.includes('/* R1976 independent CRM tabs + centered Print */')){
+ const oldFilter="if(['ai','album','instagram'].includes(key)&&settings.tabs[key]===false)";
+ if(!nav.includes(oldFilter))throw Error('[R1976] desktop settings filter anchor missing');
+ nav=nav.replace(oldFilter,"if(['ai','album','instagram','crm','calendar'].includes(key)&&settings.tabs[key]===false)");
+ const orderStart="const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind=\"'+key+'\"]')).filter(Boolean);";
+ if(!nav.includes(orderStart))throw Error('[R1976] desktop tab sort anchor missing');
+ nav=nav.replace(orderStart,orderStart+"if(settings.connectedLab===true){const p=ordered.find(b=>b.dataset.pb1126Kind==='print');if(p){ordered.splice(ordered.indexOf(p),1);ordered.splice(Math.floor(ordered.length/2),0,p);}}");
+ // A disabled pane must not remain open while a setting changes.
+ const renderAnchor="scheduled=false;if(!document.body)return;";
+ if(!nav.includes(renderAnchor))throw Error('[R1976] render anchor missing');
+ nav=nav.replace(renderAnchor,renderAnchor+"if(selected&&['crm','calendar'].includes(selected)&&settings.tabs[selected]===false){closePanels();}");
+ nav="/* R1976 independent CRM tabs + centered Print */\n"+nav;
+ new Function(nav);write(navPath,nav);
+}
+
 const cssPath='dist/web/photobridge-r1126-desktop-navigation.css';
 let css=read(cssPath);
 if(!css.includes('/* R1966: keep desktop Store filter chips inside the chooser flow. */')){

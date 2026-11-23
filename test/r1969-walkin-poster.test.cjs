@@ -4,11 +4,11 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const poster=fs.readFileSync(path.join(root,'dist/web/photobridge-r1969-walkin-a4-poster.js'),'utf8');
+const poster=fs.readFileSync(path.join(root,'dist/web/photobridge-walkin-a4-minimal-r1975.js'),'utf8');
 const index=fs.readFileSync(path.join(root,'dist/web/index.html'),'utf8');
 test('R1969 poster script parses and is mounted once',()=>{
  assert.doesNotThrow(()=>new vm.Script(poster,{filename:'walkin-poster.js'}));
- assert.equal((index.match(/photobridge-r1969-walkin-a4-poster.js/g)||[]).length,1);
+ assert.equal((index.match(/photobridge-walkin-a4-minimal-r1975.js/g)||[]).length,1);
 });
 test('R1969 poster uses the actual authenticated walk-in QR destination',()=>{
  assert.match(poster,/api\/lab\/walkin/);

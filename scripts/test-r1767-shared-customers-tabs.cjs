@@ -8,10 +8,13 @@ const admin=fs.readFileSync('dist/web/photobridge-r1099-photographer-tabs.js','u
 const api=fs.readFileSync('dist/api/photographer-tab-settings.js','utf8');
 const html=fs.readFileSync('dist/web/index.html','utf8');
 
-test('R1767: one Customers checkbox exists in admin photographer tab settings',()=>{
- assert.match(api,/PHOTOGRAPHER_TAB_KEYS=\['ai','album','instagram','customers'\]/);
- assert.match(admin,/customers:'مشتریان \(عکاس و لابراتوار\)'/);
- assert.match(api,/customers:effective\.customers/);
+test('R1976: role-scoped Customers and Calendar checkboxes exist in admin photographer tab settings',()=>{
+ assert.match(api,/PHOTOGRAPHER_TAB_KEYS=\['ai','album','instagram','customers','calendar','lab_customers','lab_calendar'\]/);
+ assert.match(admin,/customers:'مشتریان عکاس'/);
+ assert.match(admin,/calendar:'تقویم مشتریان عکاس'/);
+ assert.match(admin,/lab_customers:'مشتریان لابراتوار'/);
+ assert.match(admin,/lab_calendar:'تقویم مشتریان لابراتوار'/);
+ assert.match(api,/lab\?effective\.lab_customers:effective\.customers/);
  assert.doesNotMatch(admin,/حساب عکاسی ادمین همیشه به هر سه تب دسترسی دارد/);
 });
 test('R1767: both navigation assets use fresh versions and do not affect unrelated pages',()=>{
@@ -20,15 +23,15 @@ test('R1767: both navigation assets use fresh versions and do not affect unrelat
  const boot=html.match(/href="(\/assets\/photobridge-boot-[a-f0-9]+\.css)[^"]*"/);
  assert(crmCssLinks===1||!!boot&&fs.readFileSync('dist/web'+boot[1],'utf8').includes(fs.readFileSync('dist/web/photobridge-r1761-crm-nav.css','utf8')));
  assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=(?:1767|r1775)/g)||[]).length,1);
- assert.match(nav,/enabled=data\?\.tabs\?\.customers===true/);
+ assert.match(nav,/enabled=\{customers:data\?\.tabs\?\.customers===true,calendar:data\?\.tabs\?\.calendar===true\}/);
  // R1877 keeps the fail-closed policy while waiting for the final mobile dock.
- assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);(?:settleDock\(\);)?return;\}/);
+ assert.match(nav,/if\(!enabled\|\|\(!enabled\.customers&&!enabled\.calendar\)\)/);
  assert.match(nav,/if\(typeof window\.dispatchEvent==='function'&&typeof Event==='function'\)/);
  assert.match(nav,/credentials:'include',cache:'no-store'/);
  new vm.Script(nav);
 });
 function scene(portal,mobile){
- let allowed=true;let calls=0;const events={},frames=[];
+ let allowed={customers:true,calendar:true};let calls=0;const events={},frames=[];
  const buttons=[];
  const target={
   children:[],dataset:{},hidden:false,
@@ -79,7 +82,7 @@ function scene(portal,mobile){
   MutationObserver:class{observe(){}},queueMicrotask:fn=>frames.push(fn),
   getComputedStyle:()=>({display:'flex'}),
   sessionStorage:{getItem:()=>null},
-  fetch:async()=>{calls++;return {ok:true,json:async()=>({tabs:{customers:allowed}})}},
+  fetch:async()=>{calls++;return {ok:true,json:async()=>({tabs:allowed})}},
   window:{addEventListener(name,fn){events[name]=fn},pb1761CrmNavigation:false}
  };
  // Mock classList references the host button's className.
@@ -87,7 +90,7 @@ function scene(portal,mobile){
  document.createElement=(tag)=>{const el=originalCreate(tag);el.classList.owner=el;return el};
  vm.runInNewContext(nav,context);
  return {
-  target,events,requests:()=>calls,setAllowed:v=>{allowed=v},
+  target,events,requests:()=>calls,setAllowed:v=>{allowed=typeof v==='boolean'?{customers:v,calendar:v}:v},
   async flush(){
    for(let i=0;i<12;i++){
     while(frames.length)frames.shift()();
@@ -97,11 +100,11 @@ function scene(portal,mobile){
   }
  };
 }
-test('R1767: one switch controls Customers and its mobile calendar in both portals',async()=>{
+test('R1976: each portal independently mounts Customers and Calendar without duplicate tabs',async()=>{
  for(const portal of ['lab','photographer'])for(const mobile of [true,false]){
   const page=scene(portal,mobile);
   const panes=()=>page.target.children.filter(b=>b.dataset.pb1761Crm===portal).map(b=>b.dataset.pbCrmPane);
-  const expected=mobile?['customers','calendar']:['customers'];
+  const expected=['customers','calendar'];
   await page.flush();
   assert.deepEqual(panes(),expected,'ON: '+portal+' mobile='+mobile);
   const sameButtons=[...page.target.children];
@@ -112,6 +115,12 @@ test('R1767: one switch controls Customers and its mobile calendar in both porta
   await page.flush();
   assert.equal(page.target.children.filter(b=>b.dataset.pb1761Crm===portal).length,0,
    'OFF: '+portal+' mobile='+mobile);
+  page.setAllowed({customers:false,calendar:true});page.events.focus();
+  await page.flush();
+  assert.deepEqual(panes(),['calendar'],'Calendar only: '+portal+' mobile='+mobile);
+  page.setAllowed({customers:true,calendar:false});page.events.focus();
+  await page.flush();
+  assert.deepEqual(panes(),['customers'],'Customers only: '+portal+' mobile='+mobile);
   page.setAllowed(true);page.events.focus();
   await page.flush();
   assert.deepEqual(panes(),expected,'RESTORED: '+portal+' mobile='+mobile);

@@ -1,2 +1,8 @@
 # The 734 server-pinned Lab UI files must retain their byte-identical SHA-256 across all Windows checkouts.
 verified-ui/** -text
+# Protected sources are checked byte-for-byte; Windows Git must not rewrite them.
+*.cjs -text
+*.ps1 -text
+.github/workflows/*.yml -text
+assets/** -text
+protected-source-lock.json -text

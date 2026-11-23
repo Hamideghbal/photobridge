@@ -38,7 +38,8 @@
     "test/local-business-sync.test.cjs": "9677d6991e478d107cf70428615a4371cf4a5530a7add5d5e22bcfecec42c3b5",
     "test/isolated-sync.test.cjs": "2ac28583efbe3a9e5b8c1f24ecbc706d6ab94afcdfc40c6078e51abf757802fe",
     "test/thermal-printer.test.cjs": "12c4d327f7f953c6676a7dfcd111843d09ec672556061ae4d320eed6f3c6df1d",
-    "test/manual-invoice-ui.test.cjs": "dc893e72bfd4bd4b053c8c7abb3730922db6c1004508b669fdd5830b57f0d757"
+    "test/manual-invoice-ui.test.cjs": "dc893e72bfd4bd4b053c8c7abb3730922db6c1004508b669fdd5830b57f0d757",
+    ".gitattributes": "07c07fc41d911eeee9183a68ab4cea1d10cead657f9f6008a160d530912ce0f2"
   },
   "packagedFiles": [
     "main.cjs",

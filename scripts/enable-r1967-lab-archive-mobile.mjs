@@ -96,12 +96,12 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  fs.writeFileSync(root+'/'+cssName,fs.readFileSync('scripts/r1967-lab-archive-mobile.css'));
  let html=fs.readFileSync(root+'/index.html','utf8');
  const link='<link rel="stylesheet" href="/'+cssName+'?v=r1967">';
- const script='<script src="/'+jsName+'?v=r1967" defer></script>';
+ const script='<script src="/'+jsName+'?v=r1968" defer></script>';
  if(!html.includes(link))html=once(html,'</head>',link+'</head>','mobile/finance CSS '+root);
  if(!html.includes(script))html=once(html,'</body>',script+'</body>','mobile/finance JS '+root);
  const pattern=/index-UIRefine-v655-r84[.]js[?][^"'\s>]+/g;
  if((html.match(pattern)||[]).length!==1)throw Error('[R1967] bundle URL missing '+root);
- html=html.replace(pattern,url=>url.includes('labDaily=r1967')?url:url.replace(/^([^?]+\?[^&]+)&/,'$1&labDaily=r1967&'));
+ html=html.replace(pattern,url=>url.includes('labDaily=r1968')?url:url.replace(/^([^?]+\?[^&]+)&/,'$1&labDaily=r1968&'));
  fs.writeFileSync(root+'/index.html',html);
  if(root.endsWith('/lab-desktop-ui')){
   const manifestFile=root+'/manifest.json';

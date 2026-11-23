@@ -13,18 +13,21 @@ if(!nav.includes('/* PB1461 refresh route */')){
  // handler before this installer runs. Reattach CRM to the same genuine tab
  // action instead of weakening the CRM regression test.
  const crmDispatch="if(key==='print'||key==='crm'){open(key);return;}";
- if(!nav.includes(crmDispatch)){
+ const crmCalendarDispatch="if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}";
+ if(!nav.includes(crmDispatch)&&!nav.includes(crmCalendarDispatch)){
   const handler=' function navigate(key){';
   if(nav.split(handler).length!==2)throw Error('R1763 desktop navigate handler missing');
   nav=nav.replace(handler,handler+"\n  /* PB1763 CRM desktop navigation compatibility */\n  "+crmDispatch);
  }
  const crmHistory="['store','print','crm'].includes(panel)";
- if(!nav.includes(crmHistory)){
+ const crmCalendarHistory="['store','print','crm','calendar'].includes(panel)";
+ if(!nav.includes(crmHistory)&&!nav.includes(crmCalendarHistory)){
   const oldHistory="['store','print'].includes(panel)";
   if(!nav.includes(oldHistory))throw Error('R1763 desktop CRM history routing missing');
   nav=nav.replaceAll(oldHistory,crmHistory);
  }
- if(!nav.includes("if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{"))
+ if(!nav.includes("if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{")&&
+    !nav.includes("if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?"))
   throw Error('R1763 CRM iframe must remain isolated from Print routing');
  fs.writeFileSync(navFile,nav);
 }

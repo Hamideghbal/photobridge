@@ -84,6 +84,8 @@ execFileSync(process.execPath,['--check',apiFile],{stdio:'inherit'});
 const asset='assets/index-UIRefine-v655-r84.js';
 const jsName='photobridge-r1967-lab-archive-mobile.js';
 const cssName='photobridge-r1967-lab-archive-mobile.css';
+const onsiteJs='photobridge-r1969-lab-onsite-order.js';
+const onsiteCss='photobridge-r1969-lab-onsite-order.css';
 for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  const file=root+'/'+asset;
  let ui=fs.readFileSync(file,'utf8');
@@ -94,11 +96,18 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
  fs.writeFileSync(root+'/'+jsName,fs.readFileSync('scripts/r1967-lab-archive-mobile.js'));
  fs.writeFileSync(root+'/'+cssName,fs.readFileSync('scripts/r1967-lab-archive-mobile.css'));
+ fs.writeFileSync(root+'/'+onsiteJs,fs.readFileSync('scripts/r1969-lab-onsite-order.js'));
+ fs.writeFileSync(root+'/'+onsiteCss,fs.readFileSync('scripts/r1969-lab-onsite-order.css'));
+ execFileSync(process.execPath,['--check',root+'/'+onsiteJs],{stdio:'inherit'});
  let html=fs.readFileSync(root+'/index.html','utf8');
  const link='<link rel="stylesheet" href="/'+cssName+'?v=r1967">';
- const script='<script src="/'+jsName+'?v=r1968" defer></script>';
+ const script='<script src="/'+jsName+'?v=r1969" defer></script>';
+ const onsiteLink='<link rel="stylesheet" href="/'+onsiteCss+'?v=r1969">';
+ const onsiteScript='<script src="/'+onsiteJs+'?v=r1969" defer></script>';
  if(!html.includes(link))html=once(html,'</head>',link+'</head>','mobile/finance CSS '+root);
  if(!html.includes(script))html=once(html,'</body>',script+'</body>','mobile/finance JS '+root);
+ if(!html.includes(onsiteLink))html=once(html,'</head>',onsiteLink+'</head>','onsite intake CSS '+root);
+ if(!html.includes(onsiteScript))html=once(html,'</body>',onsiteScript+'</body>','onsite intake JS '+root);
  const pattern=/index-UIRefine-v655-r84[.]js[?][^"'\s>]+/g;
  if((html.match(pattern)||[]).length!==1)throw Error('[R1967] bundle URL missing '+root);
  html=html.replace(pattern,url=>url.includes('labDaily=r1968')?url:url.replace(/^([^?]+\?[^&]+)&/,'$1&labDaily=r1968&'));
@@ -107,7 +116,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const manifestFile=root+'/manifest.json';
   const manifest=JSON.parse(fs.readFileSync(manifestFile,'utf8'));
   if(manifest.channel!=='lab'||manifest.protocol!==1||!Array.isArray(manifest.files))throw Error('[R1967] invalid native manifest');
-  for(const name of [asset,jsName,cssName,'index.html']){
+  for(const name of [asset,jsName,cssName,onsiteJs,onsiteCss,'index.html']){
    const bytes=fs.readFileSync(root+'/'+name);
    let row=manifest.files.find(entry=>entry.name===name);
    if(!row){row={name,url:'/lab-desktop-ui/'+name};manifest.files.push(row);}

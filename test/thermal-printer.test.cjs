@@ -6,9 +6,9 @@ const order={id:ORDER,lab_id:LAB,number:1258,customer_name:'آتلیه تست',c
 const invoice={id:INVOICE,number:567,order_id:ORDER,issued_at:'2026-11-03T10:00:00Z',pdf_ready:true,total:580000,subtotal:600000,discount_total:20000,account_balance_at_issue:1780000,items:[{description:'چاپ ۱۰×۱۵',quantity:8,unitPrice:20000,lineTotal:160000},{description:'چاپ ۲۰×۳۰',quantity:4,unitPrice:105000,lineTotal:420000}]};
 test('58mm complete invoice has full items, sum, debt and escaped labels',()=>{
  const html=documentHtml({kind:'invoice',labName:'لابراتوار <script>',order,invoice,widthMm:58});
- assert.match(html,/size:58mm auto/);assert.match(html,/کل بدهی عکاسی/);
+ assert.match(html,/size:58mm auto/);assert.match(html,/مانده کل حساب شما/);
  assert.match(html,/۱٬۷۸۰٬۰۰۰/);assert.match(html,/۵۸۰٬۰۰۰/);
- assert.match(html,/فی واحد/);assert.match(html,/۸/);
+ assert.match(html,/قیمت کل/);assert.match(html,/۸/);
  assert(!html.includes('<script>'));assert(html.includes('&lt;script&gt;'));
 });
 test('80mm missing-price ticket never fabricates a bill or total debt',()=>{

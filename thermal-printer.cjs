@@ -16,8 +16,9 @@ function ticketRows(files=[]){
  }
  return [...groups.values()];
 }
-function documentHtml({kind,labName,order,invoice,files=[],requirements=[],widthMm=80,fontData=''}) {
+function documentHtml({kind,labName,lab={},order,invoice,files=[],requirements=[],widthMm=80,fontData=''}) {
  if(![58,80].includes(widthMm))throw Error('receipt_width_invalid');
+ if(kind==='invoice')return require('./approved-thermal-invoice.cjs').approvedInvoiceHtml({labName,lab,order,invoice,widthMm,fontData});
  const css=`@font-face{font-family:Vazirmatn;src:url(data:font/woff2;base64,${fontData})}
  @page{size:${widthMm}mm auto;margin:0}*{box-sizing:border-box}
  html,body{margin:0;padding:0;width:${widthMm}mm;max-width:${widthMm}mm;background:white;color:#101820}
@@ -115,7 +116,7 @@ class ThermalPrinter{
   const widthMm=settings?.settings?.receiptWidthMm===58?58:80;
   const labData=engine?(this.store.get('auth')||{}):await fetchJson(this.request,'/api/auth/me');
   const font=fs.readFileSync(path.join(__dirname,'assets/photobridge-vazirmatn.woff2')).toString('base64');
-  const html=documentHtml({kind,labName:labData.lab?.name,order:doc.order,invoice,files:doc.files,requirements,widthMm,fontData:font});
+  const html=documentHtml({kind,labName:labData.lab?.name,lab:labData.lab,order:doc.order,invoice,files:doc.files,requirements,widthMm,fontData:font});
   // State is persisted BEFORE we hand off to the OS spooler. Unknown outcomes require a human.
   this.store.set(jobKey,{state:'submitting',date:new Date().toISOString(),printer:config.deviceName});
   const win=new this.BrowserWindow({show:false,width:900,height:1100,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});

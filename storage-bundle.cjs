@@ -9,6 +9,7 @@ const patches=[
  ['async function vc(t=!1){','async function vc(t=!1){if(!window.pbNativeFolder)throw new Error("ارتباط ذخیره‌سازی با برنامه برقرار نشد.");return await window.pbNativeFolder.register(t);']
 ];
 function patchStorageBundle(source){
+ source=require("./model-dialog-patch.cjs").patchModelDialogs(source);
  source=require('./live-order-patch.cjs').patchOrderLive(source);
  source=require('./manual-invoice-ui.cjs').patchManualInvoiceUI(source);
  if(source.includes('/* PB native disk bridge v1 */'))return source;

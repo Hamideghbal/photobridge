@@ -101,7 +101,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  if(!html.includes(script))html=once(html,'</body>',script+'</body>','mobile/finance JS '+root);
  const pattern=/index-UIRefine-v655-r84[.]js[?][^"'\s>]+/g;
  if((html.match(pattern)||[]).length!==1)throw Error('[R1967] bundle URL missing '+root);
- html=html.replace(pattern,url=>url.includes('labDaily=r1967')?url:url.replace('?', '?labDaily=r1967&'));
+ html=html.replace(pattern,url=>url.includes('labDaily=r1967')?url:url.replace(/^([^?]+\?[^&]+)&/,'$1&labDaily=r1967&'));
  fs.writeFileSync(root+'/index.html',html);
  if(root.endsWith('/lab-desktop-ui')){
   const manifestFile=root+'/manifest.json';

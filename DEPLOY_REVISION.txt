@@ -1,1 +1,1 @@
-2026-11-23-r1972-forward-compatible-deploy-regression-tests
+2026-11-23-r1973-walkin-poster-custom-domain-or-qr-only

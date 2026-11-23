@@ -1484,3 +1484,5 @@ runR1314(process.execPath,['--test','apps/lab-desktop/test/ui-active-snapshot.te
 runR1314(process.execPath,['--test','scripts/test-r1944-lab-order-pages.cjs'],{stdio:'inherit'});
 // R1945: a missing SQL column must never blank the Lab; test working legacy fallback.
 runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs'],{stdio:'inherit'});
+// R1973: custom connected site text or QR-only poster; never print fallback profile URLs.
+runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1973-walkin-poster-site.test.cjs'],{stdio:'inherit'});

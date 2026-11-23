@@ -1460,6 +1460,10 @@ runR1314(process.execPath,['--test','scripts/test-r1962-lab-manager-push-operati
 // R1965: mobile-only manager push, without extra Windows Lab notifications.
 await deployStep('./enable-r1965-manager-mobile-only.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1965-manager-mobile-only.cjs'],{stdio:'inherit'});
+// R1967: read-only archive finance modal + compact mobile Lab status/manual controls.
+// Run after all legacy Lab writers and before final native/web compressed assets.
+await deployStep('./enable-r1967-lab-archive-mobile.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1967-lab-archive-mobile.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

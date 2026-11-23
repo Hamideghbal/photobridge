@@ -30,7 +30,15 @@ export async function handlePhotographerTabSettings({req,res,url,a,pool,requireR
   const settings=normalizePhotographerTabs(q.rows[0]?.value);
   const portal=String(req.headers?.['x-photobridge-portal']||'');
   res.setHeader('cache-control','no-store');
-  sendJson(res,200,admin?{tabs:settings}:photographerTabsForUser(settings,a,portal==='lab'?'lab':'photographer'));return true;
+  if(admin){sendJson(res,200,{tabs:settings});return true;}
+  const result=photographerTabsForUser(settings,a,portal==='lab'?'lab':'photographer');
+  if(portal==='photographer'&&a?.userId){
+   // Read-only membership check. Only an active invited/connected photographer
+   // may get the Print-first landing; never infer membership from a client flag.
+   const connected=await pool.query("SELECT 1 FROM lab_memberships WHERE user_id=$1 AND role='customer' LIMIT 1",[a.userId]);
+   result.connectedLab=connected.rowCount>0;
+  }else result.connectedLab=false;
+  sendJson(res,200,result);return true;
  }
  if(admin&&req.method==='PUT'){
   const b=await bodyJson(req);

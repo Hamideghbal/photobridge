@@ -5,12 +5,16 @@ const replace=(text,before,after,label)=>{if(text.includes(after))return text;if
 const shared='dist/web/photobridge-r1761-crm-nav.js';
 let nav=fs.readFileSync(shared,'utf8');
 nav=replace(nav,'if(!portal){clearButtons();return;}','if(!portal){clearButtons();window.pbCrmClose?.();return;}','logout cleanup');
-// R1877: the new navigation settles the final dock before revealing it.
-if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
- nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
-   'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
-}else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
-nav=replace(nav,"window.addEventListener('focus',refresh);","window.addEventListener('focus',()=>{if(document.documentElement?.classList?.contains('pbCrmTabOpen')||document.documentElement?.classList?.contains('pbCrmDesktopActive'))schedule();else refresh();});",'stable tab focus');
+// R1976: when Customers and Calendar are independent, do not replace the
+// native fail-closed visibility guard or suppress an admin setting refresh
+// while the currently open CRM pane is visible.
+if(!nav.includes('if(!enabled||(!enabled.customers&&!enabled.calendar))')){
+ if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
+  nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
+    'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
+ }else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
+ nav=replace(nav,"window.addEventListener('focus',refresh);","window.addEventListener('focus',()=>{if(document.documentElement?.classList?.contains('pbCrmTabOpen')||document.documentElement?.classList?.contains('pbCrmDesktopActive'))schedule();else refresh();});",'stable tab focus');
+}
 fs.writeFileSync(shared,nav);
 const desktop='dist/web/photobridge-r1126-desktop-navigation.js';
 nav=fs.readFileSync(desktop,'utf8');

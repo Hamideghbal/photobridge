@@ -100,7 +100,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   }
   const json=(res,code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
   const server=http.createServer(async(req,res)=>{
-    const receivedAt=performance.now();
+    const receivedAt=performance.now();let releaseUpdateWrite=()=>{};
     try{
       const origin='http://127.0.0.1:'+server.address().port;
       if(req.headers.host!=='127.0.0.1:'+server.address().port)return json(res,403,{error:'invalid_host'});
@@ -108,6 +108,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(url.pathname==='/start'&&url.searchParams.get('token')===token){res.writeHead(302,{'Set-Cookie':'desktop='+token+'; HttpOnly; SameSite=Strict; Path=/','Location':'/lab'});return res.end()}
       if(!String(req.headers.cookie||'').split(';').some(x=>x.trim()==='desktop='+token))return json(res,403,{error:'desktop_locked'});
       if(req.headers.origin&&req.headers.origin!==origin)return json(res,403,{error:'invalid_origin'});
+      releaseUpdateWrite=require('./update-install-gate.cjs').beginHostWrite(sync,req.method,url.pathname);
 
       // The native host owns offline storage and updates; a PWA worker must not intercept its verified UI.
       if(req.headers['service-worker']==='script'||/^\/(?:photobridge-sw[^/]*|service-worker|sw)\.js$/.test(url.pathname))return json(res,410,{error:'native_service_worker_disabled'});
@@ -428,7 +429,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         return fs.createReadStream(file).pipe(res);
       }
       return json(res,404,{error:'not_found'});
-    }catch(e){if(res.headersSent){res.destroy(e);return;}return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}
+    }catch(e){if(res.headersSent){res.destroy(e);return;}return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}finally{releaseUpdateWrite();}
   });
   return server;
 }

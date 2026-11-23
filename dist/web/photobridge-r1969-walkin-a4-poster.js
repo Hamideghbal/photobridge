@@ -31,7 +31,7 @@ function documentHtml({labName,walkinUrl,siteUrl}){
  </style></head><body><main class="page ${siteUrl?'':'onlyqr'}">
  <header class="top"><div class="eyebrow">سفارش آنلاین چاپ عکس</div><div class="name">${name}</div><h1>عکس‌هات رو همین‌جا برای چاپ بفرست!</h1></header>
  <p class="intro">بدون نیاز به مراجعه مجدد، عکس‌هایت را از طریق گوشی برای ما ارسال کن.</p>
- <section class="qrbox"><img src="${escapeHtml(qr)}" alt="کد ارسال عکس" crossorigin="anonymous"><div class="qrtitle">روش اول: اسکن کد QR</div><div class="hint">دوربین گوشی را به سمت کد بگیر و وارد صفحه ارسال عکس شو.</div></section>
+ <section class="qrbox"><img src="${escapeHtml(qr)}" alt="کد ارسال عکس"><div class="qrtitle">روش اول: اسکن کد QR</div><div class="hint">دوربین گوشی را به سمت کد بگیر و وارد صفحه ارسال عکس شو.</div></section>
  <div class="steps"><span class="step">۱. اسکن یا ورود</span><span class="step">۲. انتخاب عکس‌ها</span><span class="step">۳. ثبت سفارش</span></div>
  ${siteUrl?`<section class="alternative"><div class="alternateTitle">روش دوم: از طریق سایت لابراتوار</div><div class="site">${site}</div><p class="hint">آدرس بالا را در مرورگر باز کن، گزینه ارسال یا سفارش عکس را انتخاب کن و عکس‌هایت را بارگذاری و سفارش را ثبت کن.</p></section>`:`<section class="alternative"><div class="alternateTitle">لینک مستقیم ارسال عکس</div><div class="site" style="font-size:10pt">${link}</div></section>`}
  <footer>${name} · چاپ عکس با ثبت سفارش آنلاین</footer></main>

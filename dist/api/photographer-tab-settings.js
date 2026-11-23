@@ -2,16 +2,19 @@
 // Preserve the legacy shared 'customers' flag when reading older saved settings.
 export const PHOTOGRAPHER_TABS_KEY='photographer_navigation_tabs';
 export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram','customers','calendar','lab_customers','lab_calendar'];
+// R1775 legacy settings persisted by older clients may be booleans, numeric zero, or strings.
+function pb1775DisabledCustomerSetting(x){return x===false||x===0||x==='false'||x==='0'}
 export function normalizePhotographerTabs(value){
  const old=value&&typeof value==='object'?value:{};
- const customer=old.customers!==false;
- const labCustomer=typeof old.lab_customers==='boolean'?old.lab_customers:customer;
+ const visible=(key,fallback=true)=>old[key]===undefined?fallback:!pb1775DisabledCustomerSetting(old[key]);
+ const customer=visible('customers');
+ const labCustomer=visible('lab_customers',customer);
  return {
-  ai:old.ai!==false,album:old.album!==false,instagram:old.instagram!==false,
+  ai:visible('ai'),album:visible('album'),instagram:visible('instagram'),
   customers:customer,
-  calendar:typeof old.calendar==='boolean'?old.calendar:customer,
+  calendar:visible('calendar',customer),
   lab_customers:labCustomer,
-  lab_calendar:typeof old.lab_calendar==='boolean'?old.lab_calendar:labCustomer
+  lab_calendar:visible('lab_calendar',labCustomer)
  };
 }
 export function photographerTabsForUser(settings,user,portal='photographer'){

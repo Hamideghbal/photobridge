@@ -56,10 +56,11 @@
  window.pbCrmClose=close;
  window.pbCrmOpen=(portal,push=true,pane)=>{
   if(!['lab','photographer'].includes(portal))return;
-  // The desktop photographer already has a native CRM content panel.
-  const native=portal==='photographer'&&document.querySelector('#pb1126ChromeHost [data-pb1126-kind="crm"]');
-  if(native&&shown(native)){close();native.click();return;}
   pane??=params().get('pbCrmPane')||(params().get('view')==='calendar'?'calendar':'customers');
+  if(typeof window.pbCrmAllowedPane==='function'&&!window.pbCrmAllowedPane(portal,pane))return;
+  // The desktop photographer already has a native CRM content panel.
+  const native=portal==='photographer'&&document.querySelector('#pb1126ChromeHost [data-pb1126-kind="'+(pane==='calendar'?'calendar':'crm')+'"]');
+  if(native&&shown(native)){close();native.click();return;}
   window.pbCrmActivePane=pane;window.pbCrmInnerView=pane==='calendar'?'calendar':'customers';notifyHeader();
   const url=window.pbCrmFrameUrl(portal,pane);
   if(!host){host=document.createElement('section');host.id='pbCrmTabContent';host.setAttribute('aria-label','مشتریان');host.hidden=true;document.body.append(host)}

@@ -37,10 +37,10 @@ test('admin can edit all three settings in the rendered dialog',async()=>{
  if(p==='/api/admin/photographer-tabs'){if(r.request().method()==='PUT')saved=r.request().postDataJSON().tabs;return r.fulfill({json:{tabs:saved||{ai:true,album:true,instagram:true,customers:true},ok:true}})}
  if(p==='/feature.js')return r.fulfill({path:file});
  return r.fulfill({contentType:'text/html; charset=utf-8',body:'<div class="adminTabs adminTabsUnified"><button>عکاس‌ها</button></div><script src="/feature.js"></script>'});});
- await page.goto('https://tabs.test/admin/labs');await page.getByRole('button',{name:'تب‌های عکاس',exact:true}).click();
+ await page.goto('https://tabs.test/admin/labs');await page.getByRole('button',{name:'تب‌های عکاس و لابراتوار',exact:true}).click();
  await page.waitForFunction(()=>!document.querySelector('#pb1099TabsDialog [type=submit]').disabled);
- await page.locator('[name=ai]').uncheck();await page.locator('[name=instagram]').uncheck();await page.locator('[name=customers]').uncheck();await page.getByRole('button',{name:'ذخیره',exact:true}).click();
+ await page.locator('[name=ai]').uncheck();await page.locator('[name=instagram]').uncheck();await page.locator('[name=customers]').uncheck();await page.locator('[name=calendar]').uncheck();await page.locator('[name=lab_customers]').uncheck();await page.locator('[name=lab_calendar]').check();await page.getByRole('button',{name:'ذخیره',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#pb1099TabsDialog [role=status]').textContent==='تنظیمات ذخیره شد.');
- assert.deepEqual(saved,{ai:false,album:true,instagram:false,customers:false});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
+ assert.deepEqual(saved,{ai:false,album:true,instagram:false,customers:false,calendar:false,lab_customers:false,lab_calendar:true});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
  }finally{await browser.close()}
 });

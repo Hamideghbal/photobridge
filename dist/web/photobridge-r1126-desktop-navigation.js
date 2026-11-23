@@ -9,8 +9,8 @@
   return;
  }
  document.documentElement.classList.add('pb1126Desktop');
- const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['crm','مشتریان','/customer-crm.html?portal=photographer'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
- let settings={tabs:{ai:false,album:false,instagram:false}},chrome,selected=null,scheduled=false,authenticated=false;
+ const tabs=[['print','چاپ','/photographer/orders/flow?workspace=print&pbLabChooser=1'],['crm','مشتریان','/customer-crm.html?portal=photographer'],['calendar','تقویم مشتریان','/customer-crm.html?portal=photographer&view=calendar'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['gallery','گالری','/photographer/gallery'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram'],['store','فروشگاه','/equipment-rental/book']];
+ let settings={tabs:{ai:false,album:false,instagram:false,customers:false,calendar:false}},chrome,selected=null,scheduled=false,authenticated=false;
  try{const saved=JSON.parse(sessionStorage.getItem('pb1126-desktop-tabs'));if(saved?.tabs)settings=saved;}catch{}
  let walletBalance=null,walletRefreshing=false;
  const faWallet=n=>Math.round(Number(n)||0).toLocaleString('fa-IR');
@@ -78,7 +78,7 @@
   const nav=chrome.querySelector('.pb1126MainNav'),active=selected||kind(),previousActive=nav.dataset.pb1132Active||'';
   for(const [key,label,href] of tabs){
    let button=nav.querySelector('[data-pb1126-kind="'+key+'"]');
-   if(['ai','album','instagram'].includes(key)&&settings.tabs[key]===false){button?.remove();continue;}
+   if((['ai','album','instagram'].includes(key)&&settings.tabs[key]===false)||(key==='crm'&&settings.tabs.customers!==true)||(key==='calendar'&&settings.tabs.calendar!==true)){button?.remove();continue;}
    if(!button){button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.pb1126Kind=key;button.dataset.mainHref=href;nav.append(button);}
    button.classList.toggle('active',active===key);if(active===key)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
   }
@@ -200,10 +200,10 @@
   let panel=panels.get(key);if(!panel){
    panel=document.createElement('section');panel.className='pb1126ContentPanel';panel.dataset.panel=key;
    const loading=document.createElement('div');loading.className='pb1126Loading';loading.textContent='در حال دریافت…';loading.setAttribute('role','status');
-   const frame=document.createElement('iframe');frame.title=key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':'چاپ';
+   const frame=document.createElement('iframe');frame.title=key==='crm'?'دفتر مشتریان':key==='calendar'?'تقویم مشتریان':key==='store'?'فروشگاه':'چاپ';
    frame.addEventListener('load',()=>{try{const u=new URL(frame.contentWindow.location.href);if(u.href==='about:blank')return;if(u.origin!==location.origin||!(/^\/(equipment-rental|photographer)(\/|$)/.test(u.pathname)||u.pathname==='/customer-crm.html')||/^\/photographer\/(login|signup|register)/.test(u.pathname)){location.assign(u.href);return;}loading.hidden=true;schedule();if(!panel.hidden)requestAnimationFrame(()=>reveal(motionContent(frame.contentDocument)||frame));new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});}catch{}});
    panel.append(frame,loading);document.body.append(panel);panels.set(key,panel);
-   if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;}
+   if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer',key==='calendar'?'calendar':'customers'):'/customer-crm.html?portal=photographer&pbDesktopContent=1'+(key==='calendar'?'&view=calendar':'')+'&crmRev=r1867-crm-delivery';else{const q=new URLSearchParams(key==='store'?query.get('pbDesktopStoreQuery')||'':'workspace=print&pbLabChooser=1');q.set('pbDesktopContent','1');if(key==='store')q.set('pbDesktopFrameStore','1');frame.src=(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;}
   }
   closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');
   if(push){const u=new URL(location.href);u.searchParams.set('pbDesktopPanel',key);history.pushState({pb1126Panel:key},'',u);}
@@ -259,17 +259,19 @@
    if(frame&&!openStoreChooser(frame.contentDocument))frame.addEventListener('load',()=>openStoreChooser(frame.contentDocument),{once:true});
    return;
   }
-  if(key==='print'||key==='crm'){open(key);return;}
+  if(key==='crm'&&settings.tabs.customers!==true)return;
+  if(key==='calendar'&&settings.tabs.calendar!==true)return;
+  if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}
   closePanels();const tab=tabs.find(x=>x[0]===key);if(!tab)return;history.pushState(null,'',tab[2]);window.dispatchEvent(new PopStateEvent('popstate'));render();requestAnimationFrame(()=>requestAnimationFrame(()=>reveal(motionContent(document))));
  }
  // Register before legacy full-document navigation handlers.
  window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);
  window.addEventListener('photobridge-desktop-identity-ready',schedule);
  window.addEventListener('resize',schedule,{passive:true});
- window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print','crm'].includes(panel))open(panel,false);else{closePanels();schedule();}});
- window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}schedule();}});
+ window.addEventListener('popstate',()=>{const panel=new URLSearchParams(location.search).get('pbDesktopPanel');if(['store','print','crm','calendar'].includes(panel))open(panel,false);else{closePanels();schedule();}});
+ window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;try{sessionStorage.setItem('pb1126-desktop-tabs',JSON.stringify(settings));}catch{}if((selected==='crm'&&settings.tabs.customers!==true)||(selected==='calendar'&&settings.tabs.calendar!==true))closePanels();schedule();}});
  window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;void refreshWallet();return;}if(!authenticated)return;authenticated=false;walletBalance=null;try{sessionStorage.removeItem('pb1126-desktop-tabs');}catch{}closePanels();for(const p of panels.values())p.remove();panels.clear();schedule();});
- function start(){render();void refreshWallet();const panel=query.get('pbDesktopPanel');if(['store','print','crm'].includes(panel))open(panel,false);new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});}
+ function start(){render();void refreshWallet();const panel=query.get('pbDesktopPanel');if(['store','print','crm','calendar'].includes(panel))open(panel,false);new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 

@@ -12,12 +12,14 @@ test('navigation transform is idempotent',()=>{
 
 test('R1762 CRM desktop frame survives the R1461 print-route transform',()=>{
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
- const crm=nav.indexOf("if(key==='crm')frame.src=");
+ const legacyCrm=nav.indexOf("if(key==='crm')frame.src=");
+ const independentCrm=nav.indexOf("if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?");
+ const crm=independentCrm>=0?independentCrm:legacyCrm;
  const print=nav.indexOf('/* PB1461 refresh route */',crm);
  const frame=nav.indexOf("frame.src=restoredPrint||(key==='store'?'/equipment-rental/book':'/photographer/orders/flow')+'?'+q;",print);
  assert(crm>=0,'CRM has its isolated iframe URL and is not redirected to print');
  assert(print>crm,'print-route restoration remains inside the non-CRM branch');
  assert(frame>print,'print/store frame uses restoredPrint while CRM keeps its own source');
- assert(nav.includes("if(key==='print'||key==='crm'){open(key);return;}"),'CRM is an actual desktop tab');
- assert(nav.includes("['store','print','crm'].includes(panel)"),'CRM supports history navigation and refresh');
+ assert(nav.includes("if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}")||nav.includes("if(key==='print'||key==='crm'){open(key);return;}"),'CRM and Calendar are actual desktop tabs');
+ assert(nav.includes("['store','print','crm','calendar'].includes(panel)")||nav.includes("['store','print','crm'].includes(panel)"),'CRM and Calendar support history navigation and refresh');
 });

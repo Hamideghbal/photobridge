@@ -5,17 +5,24 @@ const replace=(text,before,after,label)=>{if(text.includes(after))return text;if
 const shared='dist/web/photobridge-r1761-crm-nav.js';
 let nav=fs.readFileSync(shared,'utf8');
 nav=replace(nav,'if(!portal){clearButtons();return;}','if(!portal){clearButtons();window.pbCrmClose?.();return;}','logout cleanup');
-// R1877: the new navigation settles the final dock before revealing it.
-if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
- nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
-   'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
-}else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
-nav=replace(nav,"window.addEventListener('focus',refresh);","window.addEventListener('focus',()=>{if(document.documentElement?.classList?.contains('pbCrmTabOpen')||document.documentElement?.classList?.contains('pbCrmDesktopActive'))schedule();else refresh();});",'stable tab focus');
+// R1976: when Customers and Calendar are independent, do not replace the
+// native fail-closed visibility guard or suppress an admin setting refresh
+// while the currently open CRM pane is visible.
+if(!nav.includes('if(!enabled||(!enabled.customers&&!enabled.calendar))')){
+ if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
+  nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
+    'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
+ }else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');
+ nav=replace(nav,"window.addEventListener('focus',refresh);","window.addEventListener('focus',()=>{if(document.documentElement?.classList?.contains('pbCrmTabOpen')||document.documentElement?.classList?.contains('pbCrmDesktopActive'))schedule();else refresh();});",'stable tab focus');
+}
 fs.writeFileSync(shared,nav);
 const desktop='dist/web/photobridge-r1126-desktop-navigation.js';
 nav=fs.readFileSync(desktop,'utf8');
 nav=replace(nav,"['crm','مشتریان','/customer-crm.html?portal=photographer']", "['crm','مشتریان','/customer-crm.html?portal=photographer&crmRev="+revision+"']",'desktop href');
-nav=replace(nav,"if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{", "if(key==='crm')frame.src=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1&crmRev="+revision+"';else{",'desktop iframe');
+// R1976: the desktop CRM/Calendar frame now selects the current pane in one
+// shared safe URL helper. Leave the modern source intact; only patch old layouts.
+if(!nav.includes("if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?"))
+ nav=replace(nav,"if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{", "if(key==='crm')frame.src=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1&crmRev="+revision+"';else{",'desktop iframe');
 nav=replace(nav,"if(u.href==='about:blank')return;if(u.origin", "if(u.href==='about:blank')return;if(key==='crm'&&u.pathname!=='/customer-crm.html'){location.assign(u.href);return;}if(u.origin",'prevent recursive portal');
 nav=replace(nav,"  for(const [key,label,href] of tabs){", "  document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm');\n  for(const [key,label,href] of tabs){",'single header');
 fs.writeFileSync(desktop,nav);

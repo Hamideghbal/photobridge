@@ -10,8 +10,8 @@
     {key:'membership-desktop',kind:'membership',device:'desktop',title:'آموزش عضویت (دسکتاپ)',category:'راهنمای عضویت · دسکتاپ',description:'آموزش عضویت و شروع کار با PhotoBridge در ویندوز و دسکتاپ',sortOrder:900},
     {key:'print-mobile',kind:'print',device:'mobile',title:'راهنمای چاپ عکس (موبایل)',category:'راهنمای چاپ عکس · موبایل',description:'آموزش ارسال و سفارش چاپ عکس در موبایل',sortOrder:910},
     {key:'print-desktop',kind:'print',device:'desktop',title:'راهنمای چاپ عکس (دسکتاپ)',category:'راهنمای چاپ عکس · دسکتاپ',description:'آموزش ارسال و سفارش چاپ عکس در ویندوز و دسکتاپ',sortOrder:920},
-    {key:'album-mobile',kind:'album',device:'mobile',title:'راهنمای سفارش آلبوم (موبایل)',category:'راهنمای سفارش آلبوم · موبایل',description:'آموزش ثبت سفارش آلبوم در موبایل',sortOrder:930},
-    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای سفارش آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940}
+    {key:'album-mobile',kind:'album',device:'mobile',title:'راهنمای صحافی آلبوم (موبایل)',category:'راهنمای سفارش آلبوم · موبایل',description:'آموزش ثبت سفارش آلبوم در موبایل',sortOrder:930},
+    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای صحافی آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940}
   ];
   let publicCache={at:0,guides:[]};
   let adminLoading=false;
@@ -82,7 +82,7 @@
     const b=document.createElement('span');
     b.className=`pb569WorkflowGuideButton ${kind}`;
     b.dataset.pbGuide=kind;
-    b.title=kind==='print'?'راهنمای چاپ عکس':'راهنمای سفارش آلبوم';
+    b.title=kind==='print'?'راهنمای چاپ عکس':'راهنمای صحافی آلبوم';
     b.setAttribute('aria-label',b.title);
     b.setAttribute('role','button');
     b.tabIndex=0;
@@ -101,7 +101,7 @@
     button.dataset.pbGuideArrow=tx>=bx?'right':'left';
   }
   function cleanupHeaderButtons(){
-    const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav');
+    const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav')||document.querySelector('.photographerPrintModeNav');
     document.querySelectorAll('.pb569WorkflowGuideButton').forEach(el=>{if(!validNav||!validNav.contains(el))el.remove()});
     if(!validNav)document.querySelectorAll('.photographerHeaderNav.pb699DesktopGuideNav,.photographerHeaderNav.pb569WorkflowGuideNavReady,.photographerHeaderNav.pb692InlineGuideReady').forEach(el=>el.classList.remove('pb699DesktopGuideNav','pb569WorkflowGuideNavReady','pb692InlineGuideReady'));
     return validNav;
@@ -109,7 +109,7 @@
   function mountHeaderButtons(){
     const nav=cleanupHeaderButtons();if(!nav)return;
     const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab'),lab=nav.querySelector('.photographerPrintTopLab');
-    if(!print||!lab)return;
+    if(!print)return;
     print.querySelectorAll('.pb569WorkflowGuideButton:not(.print)').forEach(x=>x.remove());
     if(album)album.querySelectorAll('.pb569WorkflowGuideButton:not(.album)').forEach(x=>x.remove());
 
@@ -146,7 +146,7 @@
       if(!a)a=guideButton('album');
       a.classList.add('pb699DesktopGuide');
       if(!a.querySelector('.pb699GuideArrow')||a.querySelector('.pb569GuideLabel')?.textContent!=='راهنما')a.innerHTML='<i class="pb569GuideArrow pb699GuideArrow" aria-hidden="true">→</i><em class="pb569GuideLabel">راهنما</em>';
-      if(a.parentElement!==nav||nav.lastElementChild!==a)nav.append(a);
+      if(a.parentElement!==nav||album.nextElementSibling!==a)album.after(a);
     }else nav.querySelector(':scope > .pb569WorkflowGuideButton.album')?.remove();
 
     nav.classList.remove('pb567WorkflowGuideNavReady','pb692InlineGuideReady');

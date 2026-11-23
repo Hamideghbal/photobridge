@@ -31,6 +31,7 @@ function field(parent,name,control){
  const label=make('label','pb1969Field');
  label.append(make('span','',name),control);parent.append(label);return control;
 }
+function makeField(name,control){const label=make('label','pb1969Field');label.append(make('span','',name),control);return label;}
 function option(select,value,title){
  const o=make('option','',title);o.value=value;select.append(o);return o;
 }
@@ -67,7 +68,7 @@ function drawRows(){
  for(const item of state.items){
   const row=make('section','pb1969FileRow');
   const head=make('div','pb1969FileHead');
-  head.append(make('b','',item.file.name),make('small','',money(0).replace(/۰ تومان$/,'')+new Intl.NumberFormat('fa-IR').format(Math.ceil(item.file.size/1024))+' کیلوبایت'));
+  head.append(make('b','',item.file.name),make('small','',new Intl.NumberFormat('fa-IR').format(Math.ceil(item.file.size/1024))+' کیلوبایت'));
   const remove=make('button','pb1969Remove','×');remove.type='button';remove.title='حذف این عکس';remove.disabled=state.locked;
   remove.onclick=()=>{state.items=state.items.filter(x=>x!==item);drawRows()};
   head.append(remove);row.append(head);
@@ -80,7 +81,7 @@ function drawRows(){
   paper.value=item.paper;paper.disabled=state.locked;paper.onchange=()=>{item.paper=paper.value;quote()};
   const copies=make('input');copies.type='number';copies.min='1';copies.max='99';copies.step='1';copies.value=String(item.copies);copies.inputMode='numeric';copies.setAttribute('aria-label','تعداد چاپ');copies.disabled=state.locked;
   copies.onchange=()=>{const value=Number(digits(copies.value));item.copies=Number.isInteger(value)&&value>=1&&value<=99?value:0;quote()};
-  grid.append(field(make('div'),'سایز',sizes),field(make('div'),'کاغذ',paper),field(make('div'),'تعداد',copies));
+  grid.append(makeField('سایز',sizes),makeField('کاغذ',paper),makeField('تعداد',copies));
   row.append(grid);if(item.complete)row.append(make('small','pb1969FileComplete','✓ فایل کامل دریافت و تأیید شد'));
   holder.append(row);
  }

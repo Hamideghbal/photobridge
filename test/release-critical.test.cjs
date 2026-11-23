@@ -85,3 +85,28 @@ test('background notification poll wakes new orders without fetching chat histor
  assert.deepEqual(notices,[order]);
  assert.deepEqual(requests,['/api/lab/notifications?limit=200&pending=']);
 });
+
+test('idle notification checks slow down only while the live feed is healthy',async()=>{
+ const {NativeAlerts}=require('../native-alerts.cjs');
+ const values=new Map();
+ const store={get:key=>values.get(key),set:(key,value)=>values.set(key,value)};
+ let healthy=true,now=0,requests=0;
+ const alerts=new NativeAlerts({
+  store,getAccount:()=> 'A',foreground:()=>false,liveHealthy:()=>healthy,now:()=>now,
+  request:async()=>{requests++;return Response.json({notifications:[]});}
+ });
+ await alerts.pollIfDue();
+ for(now=10000;now<60000;now+=10000)await alerts.pollIfDue();
+ assert.equal(requests,1);
+ await alerts.pollIfDue();
+ assert.equal(requests,2);
+ now=61000;
+ await alerts.pollIfDue({event:true});
+ assert.equal(requests,2);
+ await alerts.poll();
+ assert.equal(requests,3,'an exact order signal can check immediately');
+ healthy=false;
+ now=71000;
+ await alerts.pollIfDue();
+ assert.equal(requests,4);
+});

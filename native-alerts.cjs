@@ -4,10 +4,11 @@ const {decoratePending}=require('./alert-order-status.cjs');
 const {initializeSettings}=require('./alert-settings.cjs');
 const infoEvent=n=>['collaboration_request','photographer_invite_accepted','photographer_removed_by_admin','photographer_removed_by_lab'].includes(n?.event_key);
 const {collectChatAlerts}=require('./chat-alerts.cjs');
+const fallbackInterval=10000, healthyBackgroundInterval=60000;
 // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
 class NativeAlerts {
- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,foreground=()=>true,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,foreground,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;this.presentedInProcess=new Set();}
- start(){this.stop();this.presentedInProcess.clear();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
+ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,foreground=()=>true,liveHealthy=()=>false,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,foreground,liveHealthy,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;this.presentedInProcess=new Set();}
+ start(){this.stop();this.presentedInProcess.clear();this.lastPollAt=null;void this.poll();this.timer=setInterval(()=>void this.pollIfDue(),fallbackInterval);this.timer.unref?.();}
  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
  key(account){return 'nativeAlertsPending:'+account;}
  receiptKey(account){return 'nativeAlertsReadOutbox:'+account;}
@@ -54,8 +55,15 @@ class NativeAlerts {
   await this.notify({title:pending.length>1?'PhotoBridge Lab · '+pending.length+' اعلان جدید':String(pending[0].title||'PhotoBridge Lab'),body:pending.slice(0,3).map(n=>String(n.message||n.title||'اعلان جدید')).join(' · '),silent:true,items:pending},()=>this.open(),ids=>this.acknowledge(account,ids),account);
   if(epoch===this.epoch&&this.getAccount()===account){for(const n of fresh){delivered.add(n.id);this.presentedInProcess.add(account+':'+n.id)}this.store.set(key,[...delivered]);}
  }
+ pollIfDue({event=false}={}){
+  const foreground=this.foreground();
+  const interval=event&&foreground?0:!event&&!foreground&&this.liveHealthy()?healthyBackgroundInterval:fallbackInterval;
+  if(this.lastPollAt!=null&&this.now()-this.lastPollAt<interval)return;
+  return this.poll();
+ }
  async poll(){
   const account=this.getAccount();if(this.busy||!account||!this.isSupported())return;
+  this.lastPollAt=this.now();
   initializeSettings(this.store,account);
   if(!this.store.get('nativeAlertsPresented:'+account))this.store.set('nativeAlertsPresented:'+account,this.store.get('nativeAlertsSeen:'+account)||[]);
   const epoch=this.epoch,checkedAt=this.now(),token={};let ownsChat=false;this.busy=true;this.busyToken=token;const release=()=>{if(this.busyToken===token)this.busy=false};

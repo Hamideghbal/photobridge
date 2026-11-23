@@ -6,7 +6,8 @@ test("authenticated SSE invalidates immediately, parses split frames and aborts 
   let controller,
     account = "A",
     events = 0,
-    signal;
+    signal,
+    now=0;
   const stream = new ReadableStream({
     start(c) {
       controller = c;
@@ -24,9 +25,13 @@ test("authenticated SSE invalidates immediately, parses split frames and aborts 
       events++;
     },
     retryMs: 10000,
+    now:()=>now,
   });
   try {
     await flush();
+    assert.equal(sub.isHealthy(),true);
+    now=46000;
+    assert.equal(sub.isHealthy(),false);
     controller.enqueue(
       new TextEncoder().encode("event: document.changed\ndata: {"),
     );
@@ -35,12 +40,14 @@ test("authenticated SSE invalidates immediately, parses split frames and aborts 
     controller.enqueue(new TextEncoder().encode("}\n\n"));
     await flush();
     assert.equal(events, 1);
+    assert.equal(sub.isHealthy(),true);
     account = "B";
     controller.enqueue(new TextEncoder().encode("data: {}\n\n"));
     await flush();
     assert.equal(events, 1);
     sub.stop();
     assert(signal.aborted);
+    assert.equal(sub.isHealthy(),false);
   } finally {
     sub.stop();
   }

@@ -21,13 +21,16 @@ function parseFreshOrderId(frame,account,now=Date.now()){
   return id;
  }catch{return null}
 }
-function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}, onDisconnect = () => {}, retryMs = 2000 }) {
+function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}, onDisconnect = () => {}, retryMs = 2000, now = Date.now }) {
   let controller = null,
     timer = null,
     epoch = 0,
     stopped = false,
     busy = false,
-    again = false;
+    again = false,
+    connectedAt = null,
+    lastActivity = null,
+    retryDelay = retryMs;
   const deliver = async () => {
     if (busy) {
       again = true;
@@ -62,6 +65,8 @@ function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}
       });
       if (!response.ok || !response.body)
         throw Error("live_events_unavailable");
+      if (!current()) return;
+      connectedAt = lastActivity = now();
       const reader = response.body.getReader(),
         decoder = new TextDecoder();
       let buffer = "";
@@ -69,6 +74,7 @@ function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}
         while (current()) {
           const chunk = await reader.read();
           if (chunk.done) break;
+          lastActivity = now();
           buffer = (
             buffer + decoder.decode(chunk.value, { stream: true })
           ).replace(/\r\n/g, "\n");
@@ -90,14 +96,18 @@ function subscribeLabEvents({ request, getAccount, onEvent, onOrderId = () => {}
     } catch {
     } finally {
       if (!stopped && generation === epoch) {
+        if (connectedAt !== null && now() - connectedAt >= 30000) retryDelay = retryMs;
+        connectedAt = lastActivity = null;
         onDisconnect();
-        timer = setTimeout(connect, retryMs);
+        timer = setTimeout(connect, retryDelay);
+        retryDelay = Math.max(retryMs, Math.min(retryDelay * 2, 60000));
         timer.unref?.();
       }
     }
   };
   void connect();
   return {
+    isHealthy: () => !stopped && lastActivity !== null && now() - lastActivity <= 45000,
     stop() {
       stopped = true;
       epoch++;

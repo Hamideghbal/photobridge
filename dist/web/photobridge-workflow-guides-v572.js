@@ -101,7 +101,7 @@
     button.dataset.pbGuideArrow=tx>=bx?'right':'left';
   }
   function cleanupHeaderButtons(){
-    const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav');
+    const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav')||document.querySelector('.photographerPrintModeNav');
     document.querySelectorAll('.pb569WorkflowGuideButton').forEach(el=>{if(!validNav||!validNav.contains(el))el.remove()});
     if(!validNav)document.querySelectorAll('.photographerHeaderNav.pb699DesktopGuideNav,.photographerHeaderNav.pb569WorkflowGuideNavReady,.photographerHeaderNav.pb692InlineGuideReady').forEach(el=>el.classList.remove('pb699DesktopGuideNav','pb569WorkflowGuideNavReady','pb692InlineGuideReady'));
     return validNav;
@@ -109,7 +109,7 @@
   function mountHeaderButtons(){
     const nav=cleanupHeaderButtons();if(!nav)return;
     const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab'),lab=nav.querySelector('.photographerPrintTopLab');
-    if(!print||!lab)return;
+    if(!print)return;
     print.querySelectorAll('.pb569WorkflowGuideButton:not(.print)').forEach(x=>x.remove());
     if(album)album.querySelectorAll('.pb569WorkflowGuideButton:not(.album)').forEach(x=>x.remove());
 
@@ -146,7 +146,7 @@
       if(!a)a=guideButton('album');
       a.classList.add('pb699DesktopGuide');
       if(!a.querySelector('.pb699GuideArrow')||a.querySelector('.pb569GuideLabel')?.textContent!=='راهنما')a.innerHTML='<i class="pb569GuideArrow pb699GuideArrow" aria-hidden="true">→</i><em class="pb569GuideLabel">راهنما</em>';
-      if(a.parentElement!==nav||nav.lastElementChild!==a)nav.append(a);
+      if(a.parentElement!==nav||album.nextElementSibling!==a)album.after(a);
     }else nav.querySelector(':scope > .pb569WorkflowGuideButton.album')?.remove();
 
     nav.classList.remove('pb567WorkflowGuideNavReady','pb692InlineGuideReady');

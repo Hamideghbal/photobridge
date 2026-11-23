@@ -47,6 +47,10 @@ test('R1875: CRM has one compact second row, iframe duplicates are suppressed',(
 test('R1875: delivery names a new cache revision',()=>{
  const revision=read('DEPLOY_REVISION.txt').trim();
  const finalizer=read('scripts/enable-r1873-gallery-header-all-tabs.mjs');
- assert.match(revision,/r1875-mobile-header/);
- assert.match(finalizer,/r1875-mobile-header/);
+ assert.match(revision,/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
+ assert.match(finalizer,/encodeURIComponent\(revision\)/);
+ const html=read('dist/web/index.html');
+ for(const asset of ['photobridge-v904r100f41-header-date-name-fit.js','customer-crm-host.js']){
+  assert(html.includes(asset+'?rev='+revision),'current revision missing from '+asset);
+ }
 });

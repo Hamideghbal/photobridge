@@ -55,12 +55,14 @@ test('R1877: Store has stationary third category row and CRM gets compact white 
 test('R1877: the deployed build pins updated selectors and navigation scripts',()=>{
  const rev=read('DEPLOY_REVISION.txt').trim();
  const fin=read('scripts/enable-r1873-gallery-header-all-tabs.mjs');
- assert(rev.includes('r1875-mobile-header'));
- assert(rev.includes('r1876-chooser-compact'));
- assert(rev.includes('r1877-mobile-nav-header-scroll'));
+ assert.match(rev,/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
  assert(fin.includes('photobridge-v904r99-lab-chooser.js'));
  assert(fin.includes('photobridge-r1099-photographer-tabs.js'));
  assert(fin.includes('photobridge-r1761-crm-nav.js'));
+ const html=read('dist/web/index.html');
+ for(const asset of ['photobridge-v904r99-lab-chooser.js','photobridge-r1099-photographer-tabs.js','photobridge-r1761-crm-nav.js']){
+  assert(html.includes(asset+'?rev='+rev),'current deployment must refresh '+asset);
+ }
 });
 
 test('R1879: lab chooser ends at the actual visible mobile dock',()=>{
@@ -75,7 +77,7 @@ test('R1879: lab chooser ends at the actual visible mobile dock',()=>{
  assert(chooser.includes("chooser.style.setProperty('height',height+'px','important')"));
  assert(css.includes('R1879 — lab chooser'));
  assert(css.includes('height:calc(100dvh - 132px - 78px - env(safe-area-inset-bottom,0px))!important'));
- assert(rev.includes('r1879-lab-chooser-viewport'));
+ assert.match(rev,/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
  assert(html.includes('photobridge-v904r99-lab-chooser.js?rev='+rev));
  assert(html.includes('photobridge-v904r100f41-header-date-name-fit.css?rev='+rev));
 });

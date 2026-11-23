@@ -1,0 +1,10 @@
+/* PB1970: a real modal owns keyboard focus even above another native dialog. */
+html body dialog.pb1970ModelDialog{display:block;box-sizing:border-box;width:min(560px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:calc(100dvh - 32px);margin:auto;padding:0;border:1px solid #d8e2f0;border-radius:20px;background:#fff;color:#20324e;overflow:auto;box-shadow:0 24px 80px #132b4f55;font:14px/1.8 Vazirmatn,Tahoma,sans-serif;direction:rtl;text-align:right}
+html body dialog.pb1970ModelDialog:not([open]){display:none}
+html body dialog.pb1970ModelDialog::backdrop{background:#142d4d8c;backdrop-filter:blur(4px)}
+html body dialog.pb1970ModelDialog .modalHead{padding:16px 20px;border-bottom:1px solid #e5ebf5}
+html body dialog.pb1970ModelDialog .modalHead h2{font-size:18px;margin:0}
+html body dialog.pb1970ModelDialog .modalContent{padding:20px}
+html body dialog.pb1970ModelDialog input{pointer-events:auto;-webkit-user-select:text;user-select:text;-webkit-app-region:no-drag}
+
+/* PB1364 softer blue shadows */

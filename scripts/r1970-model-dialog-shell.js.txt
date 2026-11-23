@@ -1,0 +1,14 @@
+/* PB1970: editable model fields stay in the browser's active modal layer. */
+function PB1970ModelDialogShell({title,onClose,busy=false,children}){
+ const ref=x.useRef(null),closeRef=x.useRef(onClose);closeRef.current=onClose;
+ x.useEffect(()=>{
+  const dialog=ref.current;if(!dialog)return;
+  dialog.showModal();
+  const frame=requestAnimationFrame(()=>{const input=dialog.querySelector('input:not(:disabled),button:not(:disabled)');input?.focus();});
+  return()=>{cancelAnimationFrame(frame);if(dialog.open)dialog.close();};
+ },[]);
+ return ra.createPortal(e.jsxs('dialog',{ref,className:'modal card pb1970ModelDialog',dir:'rtl','aria-label':title,onKeyDown:event=>{if(event.key==='Escape')event.stopPropagation();},onCancel:event=>{event.preventDefault();if(!busy)closeRef.current?.();},onMouseDown:event=>{if(!busy&&event.target===event.currentTarget){const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeRef.current?.();}},children:[
+  e.jsxs('div',{className:'panelHead modalHead',children:[e.jsx('h2',{children:title}),e.jsx('button',{type:'button',disabled:busy,'aria-label':'بستن',onClick:()=>closeRef.current?.(),children:'×'})]}),
+  e.jsx('div',{className:'modalContent',children})
+ ]}),document.body);
+}

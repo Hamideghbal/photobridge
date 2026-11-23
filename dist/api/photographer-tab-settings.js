@@ -1,13 +1,14 @@
 // R1976: independent CRM/Calendar switches for Photographer and Lab, in the existing platform_settings row.
 export const PHOTOGRAPHER_TABS_KEY='photographer_navigation_tabs';
 export const PHOTOGRAPHER_TAB_KEYS=['ai','album','instagram','customers','calendar','labCustomers','labCalendar'];
+function pb1775DisabledCustomerSetting(x){return x===false||x===0||x==='false'||x==='0'}
 export function normalizePhotographerTabs(value){
- const oldShared=value?.customers!==false;
+ const oldShared=!pb1775DisabledCustomerSetting(value?.customers);
  return {
-  ai:value?.ai!==false,
-  album:value?.album!==false,
-  instagram:value?.instagram!==false,
-  customers:value?.customers!==false,
+  ai:!pb1775DisabledCustomerSetting(value?.ai),
+  album:!pb1775DisabledCustomerSetting(value?.album),
+  instagram:!pb1775DisabledCustomerSetting(value?.instagram),
+  customers:!pb1775DisabledCustomerSetting(value?.customers),
   // An older shared disable applies to both CRM panes and to both portals.
   calendar:typeof value?.calendar==='boolean'?value.calendar:oldShared,
   labCustomers:typeof value?.labCustomers==='boolean'?value.labCustomers:oldShared,

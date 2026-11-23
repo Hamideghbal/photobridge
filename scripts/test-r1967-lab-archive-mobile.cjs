@@ -37,14 +37,16 @@ test('R1967: archive square click opens finance summary without losing the exist
  }
 });
 
-test('R1967: mobile header retains three live status actions, page numbers, and uses real walk-in intake',()=>{
+test('R1967: mobile header retains three live status actions, page numbers, and opens the real on-site Lab intake',()=>{
  const client=read('dist/web/photobridge-r1967-lab-archive-mobile.js');
  const css=read('dist/web/photobridge-r1967-lab-archive-mobile.css');
  assert(client.includes("btn.onclick=()=>"),'status buttons must be interactive');
  assert(client.includes('live')||client.includes("?.click()"),'status buttons invoke original React tab actions');
  assert(client.includes("source.classList.contains('active')"),'selected filter follows real status');
  assert(client.includes('pb1967LabMobileChromeReady'),'mobile overrides appear only when mounted');
- assert(client.includes("fetch('/api/lab/walkin'"),'manual button opens existing real intake instead of fake action');
+ assert(client.includes('＋ سفارش حضوری'),'mobile action must be called سفارش حضوری');
+ assert(client.includes('pb1969OpenLabOnsiteOrder'),'mobile action invokes actual Lab intake');
+ assert(!client.includes("fetch('/api/lab/walkin'"),'mobile action must never open the customer QR link');
  assert(css.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
  assert(css.includes('grid-template-rows:39px 34px'));
  assert(css.includes('.r1944Search,.')||css.includes('.r1944Search,'),'mobile search hidden');
@@ -57,7 +59,7 @@ test('R1967: mobile header retains three live status actions, page numbers, and 
 test('R1967: native app manifest and web links contain exact new JS/CSS and updated bundle hashes',()=>{
  for(const root of ['dist/web','dist/web/lab-desktop-ui']){
   const html=read(root+'/index.html');
-  for(const [file,version] of [['photobridge-r1967-lab-archive-mobile.css','r1967'],['photobridge-r1967-lab-archive-mobile.js','r1968']]){
+  for(const [file,version] of [['photobridge-r1967-lab-archive-mobile.css','r1967'],['photobridge-r1967-lab-archive-mobile.js','r1969'],['photobridge-r1969-lab-onsite-order.css','r1969'],['photobridge-r1969-lab-onsite-order.js','r1969']]){
    assert(html.includes('/'+file+'?v='+version),root+' missing or stale '+file);
    assert(fs.existsSync(root+'/'+file),root+' missing output '+file);
   }
@@ -66,7 +68,7 @@ test('R1967: native app manifest and web links contain exact new JS/CSS and upda
  const root='dist/web/lab-desktop-ui';
  const manifest=JSON.parse(read(root+'/manifest.json'));
  assert.equal(manifest.channel,'lab');assert.equal(manifest.protocol,1);
- for(const file of [ASSET,'index.html','photobridge-r1967-lab-archive-mobile.css','photobridge-r1967-lab-archive-mobile.js']){
+ for(const file of [ASSET,'index.html','photobridge-r1967-lab-archive-mobile.css','photobridge-r1967-lab-archive-mobile.js','photobridge-r1969-lab-onsite-order.css','photobridge-r1969-lab-onsite-order.js']){
   const item=manifest.files.find(x=>x.name===file);
   assert(item,'native updater must ship '+file);
   assert.equal(item.sha256,hash(fs.readFileSync(root+'/'+file)),'native hash mismatch '+file);
@@ -98,4 +100,25 @@ test('R1968: clicking a Lab calendar day triggers exactly one summary and parses
  assert(src.includes("if(popup?.isConnected&&openDay===day)return"),'React custom event and native click must not reopen the modal or refetch');
  assert(src.includes("if(day)void show(day)"),'click must directly open day financial modal');
  assert(src.includes("if(e.detail?.role==='lab')"),'original event listener remains for cached/older UI variants');
+});
+
+test('R1969: mobile on-site intake is a real Lab order and not walk-in QR/manual invoice',()=>{
+ const client=read('dist/web/photobridge-r1969-lab-onsite-order.js');
+ const server=read('dist/api/server.js');
+ assert(client.includes("window.pb1969OpenLabOnsiteOrder=open"),'mobile button opens on-site form');
+ assert(client.includes("'ثبت سفارش حضوری'"),'intake title uses requested label');
+ assert(client.includes("'/api/lab/delegated-orders/bootstrap?mode=print&fresh='"),'same customer/size bootstrap as Lab website intake');
+ assert(client.includes("'/api/lab/delegated-orders','POST'"),'creates an actual Lab order');
+ assert(client.includes("localOnly:false"),'mobile cannot impersonate the lab primary hard-drive device');
+ assert(client.includes("'/files/presign'")&&client.includes("'/api/lab/delegated-files/complete'"),'all photos are uploaded then verified before submit');
+ assert(client.includes("'/submit'")&&client.includes("state.items.length"),'submission follows verified uploaded originals');
+ assert(client.includes("clientOrderId:state.clientOrderId")&&client.includes("clientFileId:entry.id"),'retry uses stable idempotency IDs');
+ assert(client.includes("if(entry.complete)return"),'retries do not re-upload verified photos');
+ assert(client.includes("state.locked=true"),'customer, files and pricing cannot change after a draft is reserved');
+ assert(client.includes("customerId")&&client.includes("studioName")&&client.includes("mobile"),'both linked photographer and new mobile customer supported');
+ assert(!client.includes("/api/lab/walkin")&&!client.includes("/api/lab/invoices/manual"),'wrong QR and invoice shortcuts excluded');
+ assert(server.includes("if (b.localOnly === true && !await requireLocalIntakePrimary()) return;"),'only local primary-device intakes are gated');
+ assert(server.includes("if (!deviceLocal && !uploadAvailable)"),'remote intake requires real upload storage');
+ assert(server.includes("f.original_state !== 'active'"),'backend rejects orders with unverified originals');
+ new Function(client);
 });

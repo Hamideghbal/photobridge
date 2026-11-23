@@ -33,7 +33,9 @@ test('R1876: Print chooser hides only redundant blue explanation and retains lab
 test('R1876: release suffix refreshes chooser assets',()=>{
  const rev=read('DEPLOY_REVISION.txt').trim();
  const finalizer=read('scripts/enable-r1873-gallery-header-all-tabs.mjs');
- assert(rev.includes('r1875-mobile-header'));
- assert(rev.includes('r1876-chooser-compact'));
+ assert.match(rev,/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
  assert(finalizer.includes('encodeURIComponent(revision)'));
+ for(const file of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+  assert(read(file).includes('photobridge-v904r100f41-header-date-name-fit.js?rev='+rev),file+' must load the current header revision');
+ }
 });

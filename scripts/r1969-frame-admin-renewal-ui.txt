@@ -1,0 +1,21 @@
+
+async function pb1969RenewFrameShop(s,button){
+ if(!['frame','chassis','frame_chassis'].includes(String(s?.business_category||'')))return alert('تمدید رایگان فقط برای فروشگاه شاسی و قاب در دسترس است.');
+ const raw=prompt('تعداد ماه تمدید رایگان فروشگاه «'+String(s.name||'فروشگاه')+'» (۱ تا ۲۴ ماه):','1');
+ if(raw===null)return;
+ const normalized=String(raw).trim()
+  .replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+  .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+ const months=Number(normalized);
+ if(!Number.isInteger(months)||months<1||months>24)return alert('تعداد ماه باید عدد صحیح بین ۱ تا ۲۴ باشد.');
+ if(!confirm('اعتبار فروشگاه «'+String(s.name||'فروشگاه')+'» '+months+' ماه، بدون دریافت وجه، از پایان اعتبار فعلی یا امروز (هرکدام دیرتر است) تمدید شود؟ وضعیت فعال‌سازی و تعلیق تغییر نمی‌کند.'))return;
+ if(button){button.disabled=true;button.textContent='در حال تمدید…';}
+ try{
+  const result=await api('/api/admin/equipment-rental/shops/'+encodeURIComponent(s.id)+'/grant-frame-renewal',{method:'POST',body:JSON.stringify({months})});
+  alert('تمدید رایگان ثبت شد. تاریخ انقضای جدید: '+dt(result.activeUntil));
+  await load();
+ }catch(e){
+  const messages={frame_store_only:'این فروشگاه از نوع شاسی یا قاب نیست.',unlimited_subscription:'این فروشگاه از قبل اعتبار نامحدود دارد.',invalid_renewal_months:'تعداد ماه نامعتبر است.',rental_shop_not_found:'فروشگاه پیدا نشد.'};
+  alert('تمدید اعتبار انجام نشد: '+(messages[e?.data?.error]||e?.data?.message||e?.data?.error||e?.message||'خطای نامشخص'));
+ }finally{if(button){button.disabled=false;button.textContent='تمدید رایگان';}}
+}

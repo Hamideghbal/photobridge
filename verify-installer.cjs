@@ -9,5 +9,5 @@ function resources(bytes,type){
  walk(0,0,false);return result;
 }
 function verify(file){const bytes=fs.readFileSync(file),manifests=resources(bytes,24).map(x=>x.toString('utf8')),dialogs=resources(bytes,5);if(!manifests.some(x=>/<dpiAware(?:\s[^>]*)?>\s*true(?:\/pm)?\s*<\/dpiAware>/i.test(x)&&/<dpiAwareness(?:\s[^>]*)?>[^<]*PerMonitorV2/i.test(x)))throw Error('installer_missing_per_monitor_dpi_manifest');if(!dialogs.some(x=>x.includes(Buffer.from('Segoe UI\0','utf16le'))))throw Error('installer_missing_segoe_ui_dialog_font');return true;}
-if(require.main===module){const file=process.argv[2]||path.join(__dirname,'release','PhotoBridge-Lab-Setup-'+require('./package.json').version+'-x64.exe');try{verify(file);console.log('Installer verified: PerMonitorV2 DPI manifest and native Segoe UI dialog font')}catch(e){console.error('STOP: installer display verification failed:',e.message);process.exitCode=1}}
+if(require.main===module){const file=process.argv[2]||path.join(__dirname,'release','PhotoBridge-Lab-Setup-'+require('./package.json').version+'-x64.exe');try{verify(file);require('./verify-release-lock.cjs').verifyPackaged();console.log('Installer verified: PerMonitorV2 DPI manifest and native Segoe UI dialog font')}catch(e){console.error('STOP: installer display verification failed:',e.message);process.exitCode=1}}
 module.exports={resources,verify};

@@ -1,0 +1,27 @@
+name: Native release contract
+on:
+  push:
+    branches: [build/lab154-155-locked-pair]
+  pull_request:
+    paths: ['**/*.cjs', 'package*.json', 'protected-source-lock.json', 'BUILD-VERSION.txt', '.github/workflows/native-release-contract.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  protected-source-and-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Mandatory source and behavior checks
+        run: |
+          node verify-release-lock.cjs
+          node run-release-regressions.cjs
+      - name: Install test-only SQLite binding compatible with Node 22
+        run: npm install --prefix "$RUNNER_TEMP/lab-test-deps" better-sqlite3@11.10.0 undici@5.28.5 --no-audit --no-fund
+      - name: Real sync, host and updater regressions
+        env:
+          NODE_PATH: ${{ runner.temp }}/lab-test-deps/node_modules
+        run: node --test test/update-install-gate.test.cjs test/updater.test.cjs test/native-progress.test.cjs test/live-sync.test.cjs test/local-business-sync.test.cjs test/isolated-sync.test.cjs test/approved-thermal-layout.test.cjs test/thermal-printer.test.cjs test/manual-invoice-ui.test.cjs test/model-dialog-patch.test.cjs test/unified-updates.test.cjs

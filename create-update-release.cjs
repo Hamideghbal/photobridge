@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {PUBLIC_KEY,payload}=require('./update-trust.cjs');
 async function create({root=__dirname,keyFile=process.env.PB_UPDATE_SIGNING_KEY||path.join(root,'.publisher/update-private.pem')}={}){
+ require('./verify-release-lock.cjs').verifyPackaged({root});
  const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'))).version;if(!/^\d+\.\d+\.\d+$/.test(version))throw Error('release_version_must_be_stable');
  const file=path.join(root,'release',`PhotoBridge-Lab-Setup-${version}-x64.exe`),size=fs.statSync(file).size;if(size<10_000_000)throw Error('installer_missing_or_too_small');
  const key=crypto.createPrivateKey(fs.readFileSync(keyFile));if(crypto.createPublicKey(key).export({type:'spki',format:'pem'})!==PUBLIC_KEY)throw Error('wrong_update_signing_key');

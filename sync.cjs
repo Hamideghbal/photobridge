@@ -10,21 +10,20 @@ const PULL=[
 const isIdempotent=(m,u)=>IDEMPOTENT.some(([mm,re])=>m===mm&&re.test(u));
 const SAFE_CONFLICT_RETRY_MS=5*60*1000;
 class Sync{
- constructor({store,request,isOnline=()=>true,verifyLocalFiles,repairLocalStorage,renderOfflinePdf}){Object.assign(this,{store,request,isOnline,verifyLocalFiles,repairLocalStorage,renderOfflinePdf});this.running=false;this.online=false;this.paused=false;this.lastError=null;this.flight=null;this.phase='idle';this.mutating=false;this.updateHolds=0;this.revision=0;this.report=null;}
+ constructor({store,request,isOnline=()=>true,foreground=()=>true,verifyLocalFiles,repairLocalStorage,renderOfflinePdf}){Object.assign(this,{store,request,isOnline,foreground,verifyLocalFiles,repairLocalStorage,renderOfflinePdf});this.running=false;this.online=false;this.paused=false;this.lastError=null;this.flight=null;this.phase='idle';this.mutating=false;this.updateHolds=0;this.revision=0;this.report=null;}
 
- wake(){clearTimeout(this.wakeTimer);this.wakeTimer=setTimeout(async()=>{if(this.flight)await this.flight;await this.run();},150);this.wakeTimer.unref?.();}
- // Only the scheduled bulk pull is slowed in the background. Manual sync
- // and write-triggered wakeups continue to use run() directly.
+ wake(){clearTimeout(this.wakeTimer);this.wakeTimer=setTimeout(async()=>{if(this.flight)await this.flight;if(this.foreground())await this.run();},150);this.wakeTimer.unref?.();}
+ // Automatic synchronization is deferred until the main workspace is active.
  runScheduled({foreground,now=Date.now()}){
   const account=this.store.get('labId');
-  if(this.updateHolds||!account||!this.store.get('auth')||this.paused||this.isOnline()===false)return;
+  if(!foreground||this.updateHolds||!account||!this.store.get('auth')||this.paused||this.isOnline()===false)return;
   if(Date.now()<(this.nativeDownloadPriorityUntil||0))return;
-  if(this.lastScheduledAccount===account&&now-this.lastScheduledAt<(foreground?30000:300000))return;
+  if(this.lastScheduledAccount===account&&now-this.lastScheduledAt<30000)return;
   this.lastScheduledAccount=account;
   this.lastScheduledAt=now;
   return this.run();
  }
- async live(){if(this.updateHolds||this.liveFlight||this.paused||this.isOnline()===false||!this.store.get('auth')||Date.now()<(this.nativeDownloadPriorityUntil||0))return;const lab=this.store.get('labId');this.liveFlight=true;try{const cache=require('./read-cache.cjs');const results=await Promise.all(['/api/lab/orders','/api/lab/invoices'].map(async url=>{const ticket=cache.beginRead(this.store,url);try{const response=await this.request(url);if(!response.ok)return null;const body=Buffer.from(await response.arrayBuffer());if(body.length>=12e6)return null;const data=JSON.parse(body.toString());if(!Array.isArray(data[url.endsWith('/orders')?'orders':'invoices']))return null;return{url,ticket,status:response.status,body:body.toString('base64')};}catch{return null;}}));if(this.store.get('labId')!==lab||!this.store.get('auth'))return;let changed=false;for(const result of results.filter(Boolean)){const different=this.store.cached(result.url)?.body!==result.body;if(cache.commitRead(this.store,result.ticket,result.status,'application/json',result.body)&&different)changed=true;this.online=true;}if(changed)this.revision++;}finally{this.liveFlight=false;}}
+ async live(){if(!this.foreground()||this.updateHolds||this.liveFlight||this.paused||this.isOnline()===false||!this.store.get('auth')||Date.now()<(this.nativeDownloadPriorityUntil||0))return;const lab=this.store.get('labId');this.liveFlight=true;try{const cache=require('./read-cache.cjs');const results=await Promise.all(['/api/lab/orders','/api/lab/invoices'].map(async url=>{const ticket=cache.beginRead(this.store,url);try{const response=await this.request(url);if(!response.ok)return null;const body=Buffer.from(await response.arrayBuffer());if(body.length>=12e6)return null;const data=JSON.parse(body.toString());if(!Array.isArray(data[url.endsWith('/orders')?'orders':'invoices']))return null;return{url,ticket,status:response.status,body:body.toString('base64')};}catch{return null;}}));if(this.store.get('labId')!==lab||!this.store.get('auth'))return;let changed=false;for(const result of results.filter(Boolean)){const different=this.store.cached(result.url)?.body!==result.body;if(cache.commitRead(this.store,result.ticket,result.status,'application/json',result.body)&&different)changed=true;this.online=true;}if(changed)this.revision++;}finally{this.liveFlight=false;}}
  async pause(){this.paused=true;if(this.flight)await this.flight} resume(){this.paused=false}
  holdForUpdate(){this.updateHolds++;let released=false;return()=>{if(!released){released=true;this.updateHolds=Math.max(0,this.updateHolds-1);}}}
  run(){if(this.updateHolds)return Promise.resolve({ok:false,error:'update_in_progress',pulled:false,sent:0});if(this.flight)return this.flight;if(this.paused||!this.store.get('labId'))return Promise.resolve({ok:false,error:'login_required',pulled:false,sent:0});this.running=true;this.flight=this.perform().catch(error=>this.failedRun(error)).finally(()=>{this.running=false;this.phase='idle';this.flight=null});return this.flight}
@@ -62,11 +61,13 @@ class Sync{
   }
   if(this.updateHolds)return {ok:false,error:'update_in_progress',sent,pulled:false};
   if(this.paused||!this.store.get('auth')||!this.store.get('labId'))return {ok:false,error:'login_required',sent,pulled:false};
+  if(!this.foreground())return {ok:true,deferred:true,sent,pulled:false};
   if(this.repairLocalStorage)await this.repairLocalStorage();
   this.phase='download';
   if(this.lastError!=='login_required'){
    try{
     const me=await this.request('/api/auth/me');if(!me.ok)throw Object.assign(Error('login_required'),{status:me.status});
+    if(!this.foreground())return {ok:true,deferred:true,sent,pulled:false};
     const results=await Promise.all(PULL.map(async url=>{
       try{const ticket=require('./read-cache.cjs').beginRead(this.store,url),r=await this.request(url);if(!r.ok)return false;const bytes=Buffer.from(await r.arrayBuffer()),mime=r.headers.get('content-type')||'application/json';if(!mime.includes('application/json')||bytes.length>=12e6)return false;require('./read-cache.cjs').commitRead(this.store,ticket,r.status,mime,bytes.toString('base64'));return true;}catch{return false}
     }));
@@ -74,7 +75,7 @@ class Sync{
    }catch(e){this.online=false;this.lastError=e.status===401||e.status===403?'login_required':this.isOnline()===false?'internet_offline':'server_unavailable'}
   }
   if(this.updateHolds||this.paused)return {ok:false,error:'update_in_progress',sent,pulled:!!pulled};
-  if(pulled===PULL.length)await require('./prepare-offline-data.cjs').prepareOfflineData(this.store,this.request);
+  if(this.foreground()&&pulled===PULL.length)await require('./prepare-offline-data.cjs').prepareOfflineData(this.store,this.request);
   if(pulled===PULL.length&&this.store.get('localBusinessActive:'+this.store.get('labId')))new (require('./local-business.cjs').LocalBusiness)(this.store).absorbRemote();
   const state=this.store.status(),ok=this.online&&!this.lastError&&!state.pending&&!state.conflicts.length&&!state.localOrders?.length&&!(this.store.get('localBusinessActive:'+this.store.get('labId'))&&this.store.get('localBusiness:v1:'+this.store.get('labId'))?new (require('./local-business.cjs').LocalBusiness)(this.store).status().pending:0);this.report={ok,pulled:!!pulled,pulledCount:pulled,failedPulls:PULL.length-pulled,sent,pending:state.pending+(state.localOrders?.length||0),conflicts:state.conflicts.length,error:this.lastError,startedAt,finishedAt:new Date().toISOString()};this.store.set('lastSyncReport',this.report);return this.report;
  }

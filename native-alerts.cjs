@@ -6,7 +6,7 @@ const infoEvent=n=>['collaboration_request','photographer_invite_accepted','phot
 const {collectChatAlerts}=require('./chat-alerts.cjs');
 // Pending desktop alerts are account-scoped and survive a restart until acknowledged.
 class NativeAlerts {
- constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;this.presentedInProcess=new Set();}
+ constructor({store,request,getAccount,notify,open,isSupported=()=>true,dismiss=()=>{},getUserId=()=>null,foreground=()=>true,notifyInfo=async()=>{},onOrderNotice=()=>{},now=()=>Date.now()}){Object.assign(this,{store,request,getAccount,notify,open,isSupported,dismiss,getUserId,foreground,notifyInfo,onOrderNotice,now});this.epoch=0;this.busy=false;this.timer=null;this.presentedInProcess=new Set();}
  start(){this.stop();this.presentedInProcess.clear();void this.poll();this.timer=setInterval(()=>void this.poll(),10000);this.timer.unref?.();}
  stop(){this.epoch++;if(this.timer)clearInterval(this.timer);this.timer=null;this.dismiss();}
  key(account){return 'nativeAlertsPending:'+account;}
@@ -60,7 +60,7 @@ class NativeAlerts {
   if(!this.store.get('nativeAlertsPresented:'+account))this.store.set('nativeAlertsPresented:'+account,this.store.get('nativeAlertsSeen:'+account)||[]);
   const epoch=this.epoch,checkedAt=this.now(),token={};let ownsChat=false;this.busy=true;this.busyToken=token;const release=()=>{if(this.busyToken===token)this.busy=false};
   try{
-   void this.flushReceipts(account).catch(()=>{});
+   if(this.foreground())void this.flushReceipts(account).catch(()=>{});
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    let pending=this.store.get(this.key(account))||[];
 
@@ -95,10 +95,10 @@ class NativeAlerts {
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    this.store.set('nativeAlertStatus:'+account,{checkedAt:this.now(),received:items.length,pending:pending.length,error:null});
    for(const n of items)if(n.id&&(!infoEvent(n)||n.read_at||deliveredInfo.has(n.id)))seen.add(n.id);this.store.set(key,[...seen].slice(-1000));
-   release();if(this.chatBusy)return;this.chatBusy=true;ownsChat=true;
+   release();if(!this.foreground()||this.chatBusy)return;this.chatBusy=true;ownsChat=true;
    try{const r=await this.request('/api/lab/notifications/chat-read',{signal:AbortSignal.timeout(8000)});if(r.ok)sharedChat=(await r.json()).seen||{};}catch{}
    let chat=null;
-   if(this.getUserId())try{chat=await collectChatAlerts({store:this.store,request:(path,options={})=>this.request(path,{...options,signal:options.signal||AbortSignal.timeout(8000)}),account,userId:this.getUserId(),now:checkedAt});}catch{}
+   if(this.foreground()&&this.getUserId())try{chat=await collectChatAlerts({store:this.store,request:(path,options={})=>this.request(path,{...options,signal:options.signal||AbortSignal.timeout(8000)}),account,userId:this.getUserId(),now:checkedAt});}catch{}
    if(epoch!==this.epoch||this.getAccount()!==account)return;
    if(chat)for(const n of chat.items)if(!seen.has(n.id))fresh.push(n);
    // Re-read after the request: the operator may have acknowledged a popup meanwhile.

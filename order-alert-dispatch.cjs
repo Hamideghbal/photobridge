@@ -7,7 +7,7 @@ const number=value=>{
 };
 // UUID notifications wake the worker synchronously. Number-only notices
 // resolve independently so another order's slow lookup cannot hold up delivery.
-function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now(),log=()=>{}}){
+function createOrderAlertDispatch({getAccount,request,deliver,foreground=()=>true,now=()=>Date.now(),log=()=>{}}){
  const pending=new Map(),recent=new Map();
  const valid=account=>account&&getAccount()===account;
  function prune(){
@@ -83,7 +83,7 @@ function createOrderAlertDispatch({getAccount,request,deliver,now=()=>Date.now()
     .then(pages=>match([...new Map(pages.flat().map(row=>[row.id,row])).values()]));
    // The legacy list is a fallback, never a barrier to a usable paged response.
    const legacy=new Promise(resolve=>{legacyTimer=setTimeout(resolve,300);})
-    .then(()=>readOrders('/api/lab/orders')).then(match);
+    .then(()=>{if(!foreground())throw Error('legacy_order_list_deferred');return readOrders('/api/lab/orders');}).then(match);
    return await Promise.race([Promise.any([filtered,legacy]).catch(()=>null),deadline]);
   }finally{
    clearTimeout(legacyTimer);

@@ -9,7 +9,7 @@ const {Readable}=require('node:stream');
 const {pipeline}=require('node:stream/promises');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf'};
 const OFFLINE_BLOCK=/\/(?:zibal|upload|presign|download|installer|password|ai-studio|video-guides)(?:\/|$)/i;
-function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,getReadEpoch=()=>0}){
+function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLogout,nativeStorage,pdfRenderer,thermalPrinter,backups,isOnline=()=>true,getReadEpoch=()=>0,foreground=()=>true}){
   let offlineUntil=0;const request=async(...args)=>{try{const response=await upstreamRequest(...args);offlineUntil=0;return response;}catch(error){if(!args[1]?.signal?.aborted)offlineUntil=Date.now()+15000;throw error;}};
   const connectionOffline=()=>isOnline()===false||Date.now()<offlineUntil;
   const pageReads=new Map(),warmOrders=new Map(),stageProofs=new Map();
@@ -164,6 +164,18 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
 
       if(url.pathname.startsWith('/api/')){
         if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
+        // The main renderer also owns the download worker. Order-specific
+        // reads stay online, while passive workspace reads use local data.
+        if(!foreground()){
+          const orderRead=/^\/api\/lab\/(?:orders\/[0-9a-f-]{36}(?:\/download)?|order-files\/[0-9a-f-]{36}\/(?:content|preview|download)|automation|download-device|storage-target|write-access)$/i.test(url.pathname);
+          if(['GET','HEAD'].includes(req.method)&&!orderRead){
+            const saved=store.cached?.(req.url);
+            if(!saved)return json(res,503,{error:'workspace_in_background'});
+            res.writeHead(saved.status,{'Content-Type':saved.mime,'Cache-Control':'no-store'});
+            return res.end(req.method==='HEAD'?undefined:Buffer.from(saved.body,'base64'));
+          }
+          if(req.method==='POST'&&url.pathname==='/api/lab/print-alert/presence')return json(res,200,{ok:true});
+        }
         if(req.method==='GET'&&url.pathname==='/api/lab/intake-live/download/device'){
           const {status,data}=await require('./native-intake-device.cjs').readIntakeDevice({
             store,nativeStorage,request,isOnline,opening:url.searchParams.get('purpose')==='open',getReadEpoch
@@ -389,11 +401,11 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(!store.rows().length){
           try{
             const up=await request(req.url,{method:req.method,body:JSON.stringify(payload)}),data=await up.json().catch(()=>({}));
-            if(up.ok){void sync.run();return json(res,up.status,data)}
+            if(up.ok){if(foreground())void sync.run();return json(res,up.status,data)}
             if(up.status<500)return json(res,up.status,data);
           }catch{}
         }
-        const queued=store.enqueue(req.method,req.url,payload);void sync.run();
+        const queued=store.enqueue(req.method,req.url,payload);if(foreground())void sync.run();
         return json(res,202,{ok:true,...queued,message:'تغییر در برنامه ذخیره شد و پس از اتصال همگام می‌شود.'});
       }
 

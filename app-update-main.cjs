@@ -3,7 +3,7 @@ const path=require('node:path'),{spawn}=require('node:child_process');
 const {AppUpdate}=require('./app-update.cjs');
 const {UpdateConfirmation}=require('./update-confirmation.cjs');
 
-function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,holdForInstall,installBlockReason,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
+function installAppUpdates({app,dialog,store,request,foreground=()=>true,getWindow,show,canInstall,holdForInstall,installBlockReason,beforeQuit,platform=process.platform,Updater=AppUpdate,BrowserWindow,ipcMain,net,progress:providedProgress,quitTimeout=5000}){
  let updater;
  const progress=providedProgress||new UpdateConfirmation({app,dialog,getParent:getWindow,BrowserWindow});
  let prompting=false,readyAnnounced=null,downloadInProgress=false,checking=false,lastSuccessfulCheck=0,retryTimer=null;
@@ -52,7 +52,7 @@ function installAppUpdates({app,dialog,store,request,getWindow,show,canInstall,h
  function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=null;}}
  function scheduleRetry(){clearRetry();retryTimer=setTimeout(()=>{retryTimer=null;void check();},5*60*1000);retryTimer.unref?.();}
  async function check(manual=false,quietCurrent=false){
-  if(!app.isPackaged||platform!=='win32')return{state:'unsupported'};if(checking)return{state:'busy'};checking=true;
+  if(!app.isPackaged||platform!=='win32')return{state:'unsupported'};if(!manual&&!foreground())return{state:'deferred'};if(checking)return{state:'busy'};checking=true;
   try{
    const result=await updater.check();store.set('nativeUpdateError',null);lastSuccessfulCheck=Date.now();clearRetry();
    if(result.state==='ready'){

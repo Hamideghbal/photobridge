@@ -6,3 +6,5 @@ verified-ui/** -text
 .github/workflows/*.yml -text
 assets/** -text
 protected-source-lock.json -text
+
+.gitattributes -text

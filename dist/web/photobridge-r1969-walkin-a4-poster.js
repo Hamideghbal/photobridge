@@ -7,7 +7,7 @@ async function json(path){const response=await fetch(path,{credentials:'same-ori
 function getLink(panel){return validHttps(panel.querySelector('.walkinLinkInfo input[readonly]')?.value||panel.querySelector('.walkinLinkInfo input')?.value)}
 function documentHtml({labName,walkinUrl,siteUrl}){
  const qr='https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=24&data='+encodeURIComponent(walkinUrl);
- const name=escapeHtml(labName), link=escapeHtml(walkinUrl), site=siteUrl?escapeHtml(siteUrl):'';
+ const name=escapeHtml(labName), site=siteUrl?escapeHtml(siteUrl):'';
  return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>پوستر ارسال عکس - ${name}</title><style>
  @page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:210mm;height:297mm}
  body{font-family:Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#17324b;background:#fff}
@@ -31,9 +31,9 @@ function documentHtml({labName,walkinUrl,siteUrl}){
  </style></head><body><main class="page ${siteUrl?'':'onlyqr'}">
  <header class="top"><div class="eyebrow">سفارش آنلاین چاپ عکس</div><div class="name">${name}</div><h1>عکس‌هات رو همین‌جا برای چاپ بفرست!</h1></header>
  <p class="intro">بدون نیاز به مراجعه مجدد، عکس‌هایت را از طریق گوشی برای ما ارسال کن.</p>
- <section class="qrbox"><img src="${escapeHtml(qr)}" alt="کد ارسال عکس"><div class="qrtitle">روش اول: اسکن کد QR</div><div class="hint">دوربین گوشی را به سمت کد بگیر و وارد صفحه ارسال عکس شو.</div></section>
+ <section class="qrbox"><img src="${escapeHtml(qr)}" alt="کد ارسال عکس"><div class="qrtitle">${siteUrl?'روش اول: اسکن کد QR':'اسکن کد QR'}</div><div class="hint">دوربین گوشی را به سمت کد بگیر و وارد صفحه ارسال عکس شو.</div></section>
  <div class="steps"><span class="step">۱. اسکن یا ورود</span><span class="step">۲. انتخاب عکس‌ها</span><span class="step">۳. ثبت سفارش</span></div>
- ${siteUrl?`<section class="alternative"><div class="alternateTitle">روش دوم: از طریق سایت لابراتوار</div><div class="site">${site}</div><p class="hint">آدرس بالا را در مرورگر باز کن، گزینه ارسال یا سفارش عکس را انتخاب کن و عکس‌هایت را بارگذاری و سفارش را ثبت کن.</p></section>`:`<section class="alternative"><div class="alternateTitle">لینک مستقیم ارسال عکس</div><div class="site" style="font-size:10pt">${link}</div></section>`}
+ ${siteUrl?`<section class="alternative"><div class="alternateTitle">روش دوم: از طریق سایت لابراتوار</div><div class="site">${site}</div><p class="hint">آدرس بالا را در مرورگر باز کن، گزینه ارسال یا سفارش عکس را انتخاب کن و عکس‌هایت را بارگذاری و سفارش را ثبت کن.</p></section>`:''}
  <footer>${name} · چاپ عکس با ثبت سفارش آنلاین</footer></main>
  <script>window.addEventListener('load',()=>{const img=document.querySelector('.qrbox img');const go=()=>setTimeout(()=>window.print(),350);if(img.complete)go();else{img.addEventListener('load',go,{once:true});img.addEventListener('error',()=>{document.body.insertAdjacentHTML('afterbegin','<p style="color:red;text-align:center">بارگذاری QR ناموفق بود؛ قبل از چاپ دوباره تلاش کنید.</p>')},{once:true})}});<\/script>
  </body></html>`;

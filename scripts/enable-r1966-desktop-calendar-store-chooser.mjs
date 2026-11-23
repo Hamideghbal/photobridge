@@ -17,6 +17,38 @@ function multiple(source,oldText,newText,expected,description){
 const navPath='dist/web/photobridge-r1126-desktop-navigation.js';
 let nav=read(navPath);
 if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop chrome. */')){
+ // R1976: R1966 used to create the calendar tab itself. When independent
+ // visibility controls already created it, retain the Store/CRM compatibility
+ // work and the current editor, without trying to add a second Calendar tab.
+ if(nav.includes("if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?")){
+  nav=once(nav,
+    "active==='crm'?[]:",
+    "['crm','calendar'].includes(active)?[]:",
+    'CRM secondary navigation');
+  nav=once(nav,
+    "const choosing=active==='store'?(!doc?.querySelector('#photographerStoreRoleHeader')||doc.body?.classList.contains('pbR96ChoosingStore'))",
+    "const choosing=active==='store'?(!storeHeader||!!doc?.body?.classList.contains('pbR96ChoosingStore'))",
+    'Store chooser header');
+  const modernCrm=nav.match(/if\(key==='crm'\|\|key==='calendar'\)frame\.src=[^\n;]+;else\{/g)||[];
+  if(modernCrm.length!==1)throw Error('[R1966] independent CRM source expected once, got '+modernCrm.length);
+  nav=once(nav,modernCrm[0],
+    "if(key==='crm'||key==='calendar'){const crmUrl=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1';const u=new URL(crmUrl,location.origin);u.searchParams.set('pbDesktopContent','1');u.searchParams.set('pbCrmDesktopTab',key);if(key==='calendar')u.searchParams.set('view','calendar');else u.searchParams.delete('view');frame.src=u.pathname+u.search;}else{",
+    'two isolated CRM iframe routes');
+  nav=once(nav,
+    "if(key==='crm'&&u.pathname!=='/customer-crm.html')",
+    "if((key==='crm'||key==='calendar')&&u.pathname!=='/customer-crm.html')",
+    'CRM iframe safe navigation');
+  nav=once(nav,
+    "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm');",
+    "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm'||active==='calendar');",
+    'CRM Calendar header state');
+  nav=once(nav,
+    "closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');",
+    "closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');\n   if(key==='calendar'&&panel.dataset.pb1966CalendarSeen==='1')panel.querySelector('iframe')?.contentDocument?.querySelector('#nav button[data-view=\"calendar\"]')?.click();\n   if(key==='calendar')panel.dataset.pb1966CalendarSeen='1';",
+    'refresh appointments');
+  nav="/* R1966: standalone photographer calendar in stable desktop chrome. */\n"+nav;
+  new Function(nav);write(navPath,nav);
+ }else{
  // CRM delivery appends a release token to this href before R1966 runs.
  const crmTab=nav.match(/\['crm','مشتریان','\/customer-crm\.html\?portal=photographer[^']*'\],/g)||[];
  if(crmTab.length!==1)throw new Error('[R1966] CRM tab reference count '+crmTab.length);
@@ -62,6 +94,7 @@ if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop c
  nav="/* R1966: standalone photographer calendar in stable desktop chrome. */\n"+nav;
  new Function(nav);
  write(navPath,nav);
+ }
 }
 
 const cssPath='dist/web/photobridge-r1126-desktop-navigation.css';

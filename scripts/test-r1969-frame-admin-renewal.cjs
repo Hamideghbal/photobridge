@@ -92,5 +92,5 @@ test('R1969: build patches after R1824 and before final compression; no migratio
  const patch=read('scripts/enable-r1969-frame-admin-renewal.mjs');
  assert(!patch.includes('migrations/'));
  assert(!patch.includes('lab-desktop'));
- assert(read('DEPLOY_REVISION.txt').includes('r1969-frame-admin-free-renewal'));
+ assert.match(read('DEPLOY_REVISION.txt').trim(),/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
 });

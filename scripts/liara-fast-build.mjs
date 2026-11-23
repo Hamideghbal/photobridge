@@ -1464,6 +1464,10 @@ runR1314(process.execPath,['--test','scripts/test-r1965-manager-mobile-only.cjs'
 // Run after all legacy Lab writers and before final native/web compressed assets.
 await deployStep('./enable-r1967-lab-archive-mobile.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1967-lab-archive-mobile.cjs'],{stdio:'inherit'});
+// R1969: complimentary manual subscription extension for frame/chassis stores only.
+// Apply after R1824 camera renewal and before final asset compression.
+await deployStep('./enable-r1969-frame-admin-renewal.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1969-frame-admin-renewal.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});

@@ -15,7 +15,10 @@ fs.writeFileSync(shared,nav);
 const desktop='dist/web/photobridge-r1126-desktop-navigation.js';
 nav=fs.readFileSync(desktop,'utf8');
 nav=replace(nav,"['crm','مشتریان','/customer-crm.html?portal=photographer']", "['crm','مشتریان','/customer-crm.html?portal=photographer&crmRev="+revision+"']",'desktop href');
-nav=replace(nav,"if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{", "if(key==='crm')frame.src=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1&crmRev="+revision+"';else{",'desktop iframe');
+// R1976: the desktop CRM/Calendar frame now selects the current pane in one
+// shared safe URL helper. Leave the modern source intact; only patch old layouts.
+if(!nav.includes("if(key==='crm'||key==='calendar')frame.src=window.pbCrmFrameUrl?"))
+ nav=replace(nav,"if(key==='crm')frame.src='/customer-crm.html?portal=photographer&pbDesktopContent=1';else{", "if(key==='crm')frame.src=window.pbCrmFrameUrl?window.pbCrmFrameUrl('photographer'):'/customer-crm.html?portal=photographer&pbDesktopContent=1&crmRev="+revision+"';else{",'desktop iframe');
 nav=replace(nav,"if(u.href==='about:blank')return;if(u.origin", "if(u.href==='about:blank')return;if(key==='crm'&&u.pathname!=='/customer-crm.html'){location.assign(u.href);return;}if(u.origin",'prevent recursive portal');
 nav=replace(nav,"  for(const [key,label,href] of tabs){", "  document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm');\n  for(const [key,label,href] of tabs){",'single header');
 fs.writeFileSync(desktop,nav);

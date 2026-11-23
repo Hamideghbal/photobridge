@@ -45,9 +45,9 @@ function mount(){
  document.documentElement.classList.add('pb1967LabMobileChromeReady');
 }
 function schedule(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;mount()});}
-let popup=null,seq=0,abort=null,prior=null;
+let popup=null,seq=0,abort=null,prior=null,openDay='';
 function dismiss(){
- seq++;abort?.abort();abort=null;popup?.remove();popup=null;
+ seq++;abort?.abort();abort=null;popup?.remove();popup=null;openDay='';
  document.documentElement.classList.remove('pb1967FinanceShowing');
  if(prior?.isConnected)prior.focus({preventScroll:true});prior=null;
 }
@@ -76,7 +76,8 @@ function summary(data,target){
 }
 async function show(day){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
- dismiss();prior=document.activeElement;const current=++seq;
+ if(popup?.isConnected&&openDay===day)return; // Main React event and delegated click must not double-open.
+ dismiss();openDay=day;prior=document.activeElement;const current=++seq;
  const shade=make('div','pb1967FinanceBackdrop'),dialog=make('section','pb1967FinanceDialog');
  dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','pb1967FinanceTitle');
  const head=make('header','pb1967FinanceHead');
@@ -100,6 +101,29 @@ async function show(day){
   const retry=make('button','pb1967FinanceRetry','تلاش دوباره');retry.type='button';retry.onclick=()=>show(day);body.append(retry);
  }
 }
+// R1968: delegated native calendar click; robust even if an older cached React bundle misses the custom event.
+const pb1968Months=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+function pb1968LatinDigits(value){
+ const fa='۰۱۲۳۴۵۶۷۸۹',ar='٠١٢٣٤٥٦٧٨٩';
+ return String(value||'').replace(/[۰-۹٠-٩]/g,digit=>String((fa.includes(digit)?fa:ar).indexOf(digit)));
+}
+function pb1968ArchiveDateKey(headerText,dayText){
+ const heading=pb1968LatinDigits(headerText).replace(/\u200c/g,' ');
+ const year=Number(heading.match(/\b\d{4}\b/)?.[0]||0);
+ const month=pb1968Months.findIndex(name=>heading.includes(name))+1;
+ const day=Number(pb1968LatinDigits(dayText).trim());
+ if(year<1300||year>1700||month<1||day<1||day>31)return null;
+ return [year,String(month).padStart(2,'0'),String(day).padStart(2,'0')].join('-');
+}
+function pb1968ArchiveDayClick(event){
+ const target=event.target?.nodeType===1?event.target:event.target?.parentElement;
+ const cell=target?.closest?.('.labArchiveWorkspace .persianCalendarCard .calendarGrid button');
+ if(!cell)return;
+ const card=cell.closest('.persianCalendarCard');
+ const day=pb1968ArchiveDateKey(card?.querySelector('.calendarHead b')?.textContent,cell.querySelector('b')?.textContent);
+ if(day)void show(day); // Capture phase precedes React state updates; keep native selection intact.
+}
+document.addEventListener('click',pb1968ArchiveDayClick,true);
 window.addEventListener('pb1967-lab-archive-day',e=>{if(e.detail?.role==='lab')void show(String(e.detail.day||''));});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&popup){e.preventDefault();dismiss();}});
 function start(){

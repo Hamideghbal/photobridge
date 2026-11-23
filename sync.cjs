@@ -13,6 +13,17 @@ class Sync{
  constructor({store,request,isOnline=()=>true,verifyLocalFiles,repairLocalStorage,renderOfflinePdf}){Object.assign(this,{store,request,isOnline,verifyLocalFiles,repairLocalStorage,renderOfflinePdf});this.running=false;this.online=false;this.paused=false;this.lastError=null;this.flight=null;this.phase='idle';this.mutating=false;this.updateHolds=0;this.revision=0;this.report=null;}
 
  wake(){clearTimeout(this.wakeTimer);this.wakeTimer=setTimeout(async()=>{if(this.flight)await this.flight;await this.run();},150);this.wakeTimer.unref?.();}
+ // Only the scheduled bulk pull is slowed in the background. Manual sync
+ // and write-triggered wakeups continue to use run() directly.
+ runScheduled({foreground,now=Date.now()}){
+  const account=this.store.get('labId');
+  if(this.updateHolds||!account||!this.store.get('auth')||this.paused||this.isOnline()===false)return;
+  if(Date.now()<(this.nativeDownloadPriorityUntil||0))return;
+  if(this.lastScheduledAccount===account&&now-this.lastScheduledAt<(foreground?30000:300000))return;
+  this.lastScheduledAccount=account;
+  this.lastScheduledAt=now;
+  return this.run();
+ }
  async live(){if(this.updateHolds||this.liveFlight||this.paused||this.isOnline()===false||!this.store.get('auth')||Date.now()<(this.nativeDownloadPriorityUntil||0))return;const lab=this.store.get('labId');this.liveFlight=true;try{const cache=require('./read-cache.cjs');const results=await Promise.all(['/api/lab/orders','/api/lab/invoices'].map(async url=>{const ticket=cache.beginRead(this.store,url);try{const response=await this.request(url);if(!response.ok)return null;const body=Buffer.from(await response.arrayBuffer());if(body.length>=12e6)return null;const data=JSON.parse(body.toString());if(!Array.isArray(data[url.endsWith('/orders')?'orders':'invoices']))return null;return{url,ticket,status:response.status,body:body.toString('base64')};}catch{return null;}}));if(this.store.get('labId')!==lab||!this.store.get('auth'))return;let changed=false;for(const result of results.filter(Boolean)){const different=this.store.cached(result.url)?.body!==result.body;if(cache.commitRead(this.store,result.ticket,result.status,'application/json',result.body)&&different)changed=true;this.online=true;}if(changed)this.revision++;}finally{this.liveFlight=false;}}
  async pause(){this.paused=true;if(this.flight)await this.flight} resume(){this.paused=false}
  holdForUpdate(){this.updateHolds++;let released=false;return()=>{if(!released){released=true;this.updateHolds=Math.max(0,this.updateHolds-1);}}}

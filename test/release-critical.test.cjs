@@ -11,3 +11,28 @@ test('release invariant: visible user forms are never bypassed by the updater',a
  const sync={holdForUpdate:()=>()=>{},mutating:false},gate=createUpdateInstallGate({nativeStorage:{writers:new Map()},sync,getWindow:()=>({webContents:{executeJavaScript:async()=> 'open_form'}})});
  assert.equal(await gate.canInstall({waitMs:0}),false);assert.equal(gate.reason(),'open_form');
 });
+
+test('scheduled bulk sync stays quiet in the background and foreground refresh resumes',async()=>{
+ const {Sync}=require('../sync.cjs');
+ const store={get:key=>key==='labId'?'A':key==='auth'?{}:null};
+ const sync=new Sync({store,request:async()=>{throw Error('unexpected HTTP call');}});
+ const calls=[];
+ sync.run=()=>{calls.push('bulk');return Promise.resolve();};
+ await sync.runScheduled({foreground:true,now:1000});
+ for(let now=31000;now<301000;now+=30000)await sync.runScheduled({foreground:false,now});
+ assert.equal(calls.length,1);
+ await sync.runScheduled({foreground:false,now:301000});
+ assert.equal(calls.length,2);
+ await sync.runScheduled({foreground:true,now:331000});
+ assert.equal(calls.length,3);
+ sync.nativeDownloadPriorityUntil=Date.now()+10000;
+ await sync.runScheduled({foreground:true,now:361000});
+ assert.equal(calls.length,3);
+ sync.updateHolds=1;
+ sync.nativeDownloadPriorityUntil=0;
+ await sync.runScheduled({foreground:true,now:361000});
+ assert.equal(calls.length,3);
+ sync.updateHolds=0;
+ await sync.run();
+ assert.equal(calls.length,4);
+});

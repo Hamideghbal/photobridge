@@ -75,10 +75,10 @@ function upgradeFinanceLive(source){
   else{const legacy='ce=async()=>{var Je;g(!0);try{const Ot=await Me(ke);';if(source.includes(legacy))source=source.replace(legacy,'/* PB1526 quiet finance */pb1526Loaded=x.useRef(false),ce=async()=>{var Je;if(!pb1526Loaded.current)g(!0);try{const Ot=await Me(ke);pb1526Loaded.current=true;');}
  }
  source=source.replace('o(Ot.invoices||[])',"o((Ot.invoices||[]).slice().sort((a,b)=>(Date.parse(b.issued_at)||0)-(Date.parse(a.issued_at)||0)||String(b.id).localeCompare(String(a.id))))");
- if(source.includes('/* PB1525 finance polling */'))return source;
+ if(source.includes('/* PB1525 finance polling */'))return source.replace('setInterval(visible,5000)','setInterval(()=>{if(document.hasFocus())visible();},5000)');
  const start=source.indexOf('/* PB1468 finance live */'),end=start<0?-1:source.indexOf('},[t]);',start);if(start<0||end<0)return source;
  let effect=source.slice(start,end);
- const before="void refresh();const stream=t==='lab'?",after="/* PB1525 finance polling */const visible=()=>{if(!document.hidden)void refresh();};const timer=t==='lab'?setInterval(visible,5000):null;document.addEventListener('visibilitychange',visible);void refresh();const stream=t==='lab'?";
+ const before="void refresh();const stream=t==='lab'?",after="/* PB1525 finance polling */const visible=()=>{if(!document.hidden)void refresh();};const timer=t==='lab'?setInterval(()=>{if(document.hasFocus())visible();},5000):null;document.addEventListener('visibilitychange',visible);void refresh();const stream=t==='lab'?";
  const clean="return()=>{closed=true;stream?.stop();window.removeEventListener('photobridge-finance-changed',refresh);";
  if(!effect.includes(before)||!effect.includes(clean))throw Error('finance_polling_incompatible');
  effect=effect.replace(before,after).replace(clean,"return()=>{closed=true;clearInterval(timer);document.removeEventListener('visibilitychange',visible);stream?.stop();window.removeEventListener('photobridge-finance-changed',refresh);");

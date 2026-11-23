@@ -10,8 +10,8 @@
     {key:'membership-desktop',kind:'membership',device:'desktop',title:'آموزش عضویت (دسکتاپ)',category:'راهنمای عضویت · دسکتاپ',description:'آموزش عضویت و شروع کار با PhotoBridge در ویندوز و دسکتاپ',sortOrder:900},
     {key:'print-mobile',kind:'print',device:'mobile',title:'راهنمای چاپ عکس (موبایل)',category:'راهنمای چاپ عکس · موبایل',description:'آموزش ارسال و سفارش چاپ عکس در موبایل',sortOrder:910},
     {key:'print-desktop',kind:'print',device:'desktop',title:'راهنمای چاپ عکس (دسکتاپ)',category:'راهنمای چاپ عکس · دسکتاپ',description:'آموزش ارسال و سفارش چاپ عکس در ویندوز و دسکتاپ',sortOrder:920},
-    {key:'album-mobile',kind:'album',device:'mobile',title:'راهنمای سفارش آلبوم (موبایل)',category:'راهنمای سفارش آلبوم · موبایل',description:'آموزش ثبت سفارش آلبوم در موبایل',sortOrder:930},
-    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای سفارش آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940}
+    {key:'album-mobile',kind:'album',device:'mobile',title:'راهنمای صحافی آلبوم (موبایل)',category:'راهنمای سفارش آلبوم · موبایل',description:'آموزش ثبت سفارش آلبوم در موبایل',sortOrder:930},
+    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای صحافی آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940}
   ];
   let publicCache={at:0,guides:[]};
   let adminLoading=false;
@@ -82,7 +82,7 @@
     const b=document.createElement('span');
     b.className=`pb569WorkflowGuideButton ${kind}`;
     b.dataset.pbGuide=kind;
-    b.title=kind==='print'?'راهنمای چاپ عکس':'راهنمای سفارش آلبوم';
+    b.title=kind==='print'?'راهنمای چاپ عکس':'راهنمای صحافی آلبوم';
     b.setAttribute('aria-label',b.title);
     b.setAttribute('role','button');
     b.tabIndex=0;

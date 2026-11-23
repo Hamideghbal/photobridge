@@ -176,6 +176,7 @@ async function bootstrap(){
 }
 function open(){
  if(!/^\/lab(?:\/|$)/.test(location.pathname)){alert('سفارش حضوری فقط در حساب لابراتوار قابل ثبت است.');return}
+ if(shell&&state?.done){shell.remove();shell=null;state=null;}
  if(shell){shell.hidden=false;state.close.focus({preventScroll:true});return}
  shell=make('div','pb1969Backdrop');shell.setAttribute('role','presentation');
  const dialog=make('section','pb1969Dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','ثبت سفارش حضوری لابراتوار');

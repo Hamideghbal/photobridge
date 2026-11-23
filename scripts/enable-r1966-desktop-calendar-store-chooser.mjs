@@ -42,6 +42,13 @@ if(!nav.includes('/* R1966: standalone photographer calendar in stable desktop c
     "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm');",
     "document.documentElement.classList.toggle('pbCrmDesktopActive',active==='crm'||active==='calendar');",
     'CRM Calendar header state');
+  // Earlier R1461 compatibility stages can inject the old CRM-only opener.
+  // Canonicalize it here so Calendar remains a real desktop navigation route.
+  if(nav.includes("if(key==='print'||key==='crm'){open(key);return;}"))
+   nav=nav.replaceAll("if(key==='print'||key==='crm'){open(key);return;}",
+     "if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}");
+  if(!nav.includes("if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}"))
+   throw Error('[R1966] independent Calendar opener missing');
   nav=once(nav,
     "closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');",
     "closePanels();panel.hidden=false;selected=key;document.documentElement.classList.add('pb1126PanelOpen');\n   if(key==='calendar'&&panel.dataset.pb1966CalendarSeen==='1')panel.querySelector('iframe')?.contentDocument?.querySelector('#nav button[data-view=\"calendar\"]')?.click();\n   if(key==='calendar')panel.dataset.pb1966CalendarSeen='1';",

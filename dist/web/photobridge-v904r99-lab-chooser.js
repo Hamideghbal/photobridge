@@ -220,11 +220,14 @@
   function isPrintPrimaryNav(el){
     if(!el||!isPhotographerRoute()||el.closest?.('.labBottomAppNav,.labBottomAppNavGrid,.labMain'))return false;
     const href=String(el.dataset?.mainHref||el.getAttribute?.('href')||'');
-    // R1978: labels differ between native mobile dock and desktop: چاپ / چاپ عکس.
+    // R1981: "چاپ" is the MAIN navigation destination (lab chooser).
+    // "چاپ عکس" / "صحافی آلبوم" are INNER mode switches and must retain
+    // their own React handlers. Never route their clicks to lab selection.
+    if(el.closest?.('.photographerPrintModeNav')||el.matches?.('.photographerPrintPhotoTab,.photographerPrintAlbumTab'))return false;
     const text=String(el.getAttribute?.('aria-label')||el.textContent||'').replace(/\s+/g,' ').trim();
     const inPrimary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
-    const printModeTab=Boolean(el.matches?.('.photographerPrintPhotoTab')&&el.closest?.('.photographerPrintModeNav'));
-    return printModeTab||(inPrimary&&(href.includes('workspace=print')||/^(?:چاپ|چاپ عکس|چاپ تصاویر)$/.test(text)));
+    const isPrintMain=el.dataset?.pb1126Kind==='print'||text==='چاپ';
+    return inPrimary&&(isPrintMain||(!/چاپ عکس|چاپ تصاویر|صحافی آلبوم/.test(text)&&href.includes('workspace=print')));
   }
   document.addEventListener('click',e=>{
     if(!isPhotographerRoute())return;

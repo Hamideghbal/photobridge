@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 const file='dist/web/photobridge-r1126-desktop-navigation.js';
 let code=fs.readFileSync(file,'utf8');
+// R1990: do not assume a one-line onclick. R1989 keeps live button-state UI in a multi-line handler.
+// Patch stable clone and click-expression anchors, preserving the blue/white selection updates.
 const replacements=[
   [
     " function cleanClone(original){",
@@ -12,10 +14,14 @@ const replacements=[
     "(active==='print'?JSON.stringify(visible.map(printControlSignature)):visible.map(el=>el.outerHTML).join(''))"
   ],
   [
-    "    copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};",
-    "    const printKey=active==='print'?printControlKey(original):null;\n    copy.onclick=()=>{const target=printKey?livePrintControl(printKey):original;if(!target||target.disabled)return;press(copy);target.click();requestAnimationFrame(()=>reveal(motionContent(currentDocument())));};"
-  ]
-  ,[
+    "    const copy=cleanClone(original);copy.style.removeProperty('display');",
+    "    const copy=cleanClone(original);copy.style.removeProperty('display');\n    const printKey=active==='print'?printControlKey(original):null;"
+  ],
+  [
+    "press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));",
+    "const target=printKey?livePrintControl(printKey):original;if(!target||target.disabled)return;press(copy);target.click();requestAnimationFrame(()=>reveal(motionContent(currentDocument())));"
+  ],
+  [
     "new MutationObserver(schedule).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});",
     "new MutationObserver(records=>{if(records.some(record=>!chrome?.contains(record.target)))schedule();}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});"
   ]

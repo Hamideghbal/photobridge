@@ -52,8 +52,19 @@ if(!server.includes('/* PB2000 customer statement invoice items */')){
  const end=server.indexOf("if (req.method === 'GET' && url.pathname === '/api/customer/chat') {",start);
  if(start<0||end<start)throw Error('[R2000] customer statement SQL route missing');
  let part=server.slice(start,end);
- part=once(part,'i.number invoice_number','i.items invoice_items,i.number invoice_number','customer invoice detail select');
- part=once(part,'t.reference_id,i.number','t.reference_id,i.id,i.number','customer detail primary-key group');
+ const responseAnchor='return sendJson(res, 200, { customer:';
+ if(part.split(responseAnchor).length!==2)throw Error('[R2000] customer statement response anchor missing');
+ const enrichment=[
+  '/* R2000: complete invoice line-items for selected customer and lab, read-only. */',
+  "const pb2000Ids=[...new Set(rows.filter(row=>row.reference_type==='invoice'&&/^[0-9a-f-]{36}$/i.test(String(row.reference_id||''))).map(row=>String(row.reference_id)))];",
+  'if(pb2000Ids.length){',
+  " const pb2000Inv=await pool.query('SELECT id,items FROM invoices WHERE lab_id=$1 AND customer_id=$2 AND id=ANY($3::uuid[])',[labId,a.userId,pb2000Ids]);",
+  ' const pb2000ById=new Map(pb2000Inv.rows.map(row=>[String(row.id),row.items]));',
+  " for(const row of rows)if(row.reference_type==='invoice'&&pb2000ById.has(String(row.reference_id)))row.invoice_items=pb2000ById.get(String(row.reference_id));",
+  '}',
+  ''
+ ].join('\\n');
+ part=part.replace(responseAnchor,enrichment+'\\n'+responseAnchor);
  server=server.slice(0,start)+part+server.slice(end)+'\n/* PB2000 customer statement invoice items */\n';
  write(serverPath,server);
 }

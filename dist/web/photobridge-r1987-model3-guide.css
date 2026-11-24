@@ -80,6 +80,12 @@ html body .pb567GuideBackdrop .pb567GuideDialog > header.pb567GuideDialogHead > 
   display:flex!important; flex-direction:column!important; align-items:flex-start!important;
   gap:4px!important; width:auto!important; min-width:0!important; flex:1 1 auto!important;
 }
+html body .pb567GuideBackdrop .pb567GuideDialog > header.pb567GuideDialogHead span {
+  display:inline-block!important; position:static!important; inset:auto!important;
+  margin:0 0 2px!important; padding:3px 9px!important; border-radius:999px!important;
+  height:auto!important; line-height:1.5!important; font-size:11px!important;
+  background:#eef5ff!important; color:#245bc0!important;
+}
 html body .pb567GuideBackdrop .pb567GuideDialog > header.pb567GuideDialogHead h2 {
   position:static!important; display:block!important; margin:0!important; padding:0!important;
   font:800 clamp(15px,2.5vw,20px)/1.5 Vazirmatn,Tahoma,sans-serif!important;

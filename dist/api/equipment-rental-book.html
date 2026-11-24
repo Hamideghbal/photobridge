@@ -536,6 +536,35 @@ body.pbR96ChoosingStore #photographerStoreIdentityBar,body.pbR96ChoosingStore #s
 <link rel="stylesheet" href="/photobridge-r1284-mobile-identity.css?v=r1288"><link rel="stylesheet" href="/photobridge-r1331-gallery-retouch-sms.css?v=r1331"><link rel="stylesheet" href="/photobridge-r1332-gallery-cards.css?v=r1333"><link rel="stylesheet" href="/photobridge-r1334-login-width.css?v=r1334"><link rel="stylesheet" href="/photobridge-r1776-login-password-clearance.css?v=r1776">
 <script defer src="/photobridge-r1776-login-password-clearance.js?v=r1776"></script>
 <link rel="stylesheet" href="/customer-crm-host.css?rev=2026-11-17-r1875-mobile-header-crm-store-print"><script defer src="/customer-crm-host.js?rev=2026-11-17-r1875-mobile-header-crm-store-print"></script>
+<!-- R1994: desktop embedded Store chooser - category chips must not overlap blue heading -->
+<style id="pbR1994StoreChooserFilterFlow">
+@media(min-width:821px){
+ html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 > .pbR96StoreChooser {
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  gap:0!important;overflow:visible!important;
+ }
+ html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreChooser > .pbR96StoreChooserHead {
+  order:0!important;position:relative!important;inset:auto!important;transform:none!important;
+  z-index:0!important;flex:0 0 auto!important;
+  margin:0 0 15px!important;clear:both!important;
+ }
+ html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreChooser > #storeChooserFiltersR1231 {
+  order:1!important;position:relative!important;inset:auto!important;
+  top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  transform:none!important;float:none!important;clear:both!important;z-index:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 auto!important;flex-wrap:wrap!important;
+  width:100%!important;max-width:100%!important;height:auto!important;min-height:36px!important;
+  box-sizing:border-box!important;margin:0 0 15px!important;padding:0 6px!important;
+  gap:7px!important;
+ }
+ html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreChooser > #storeChooserListR96 {
+  order:2!important;position:relative!important;inset:auto!important;
+  transform:none!important;z-index:0!important;clear:both!important;
+  margin:0!important;
+ }
+}
+</style>
 </head>
 <body class="rentalPhotographerMode pbR96ChoosingStore">
 <div id="storePhotographerWorkspace" class="pageMain photographerMain compactPage appWorkspacePage pbFixedRoleHeader storePhotographerWorkspace" style="--pb-role-header-h:64px">

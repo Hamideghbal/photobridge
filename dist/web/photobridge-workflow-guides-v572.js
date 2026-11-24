@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1984';
+  const VERSION='0.17.699-r1985';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -253,7 +253,7 @@
       if(!button.querySelector('.pb569GuideArrow')||!button.querySelector('.pb569GuideLabel')||
          button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
         button.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
-      button.classList.add('pb1978VideoGuideButton');
+      if(!button.classList.contains('pb1978VideoGuideButton'))button.classList.add('pb1978VideoGuideButton');
       // No React-owned button is replaced; tutorials are adjacent siblings.
       if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
       return button;
@@ -297,7 +297,7 @@
     createRoot.querySelectorAll('.albumQuoteCard').forEach(card=>{
       const sourceIdentity=card.querySelector(':scope > .albumQuoteLabIdentity');
       if(sourceIdentity){
-        const b=sourceIdentity.querySelector('b');if(b)b.textContent=name;
+        const b=sourceIdentity.querySelector('b');if(b&&b.textContent!==name)b.textContent=name;
         return;
       }
       let row=card.querySelector(':scope > .pb570AlbumQuoteLab');
@@ -306,7 +306,7 @@
         row.innerHTML='<span>لابراتوار</span><b></b>';
         card.insertAdjacentElement('afterbegin',row);
       }
-      const b=row.querySelector('b');if(b)b.textContent=name;
+      const b=row.querySelector('b');if(b&&b.textContent!==name)b.textContent=name;
     });
   }
   function syncLabSemantics(){
@@ -431,7 +431,7 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
   // React toggles hidden/classes after hydration without adding/removing nodes.
   // Observe those transitions too, so guide buttons are reattached immediately.
-  new MutationObserver(queueSync).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','aria-hidden']});
+  new MutationObserver(queueSync).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)queueSync()});
   window.addEventListener('popstate',queueSync);window.addEventListener('resize',queueSync,{passive:true});
 })();

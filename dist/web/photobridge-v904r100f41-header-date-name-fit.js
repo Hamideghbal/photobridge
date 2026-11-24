@@ -98,7 +98,7 @@
         if(node&&kind==='album')printAlbumKnown=true;
         const id='print:'+kind;if(node)sourceMap.set(id,node);
         const path=location.pathname;
-        const active=kind==='print'?/^\\/photographer\\/(orders|upload)(?:\\/|$)/.test(path):kind==='album'?/^\\/photographer\\/album(?:\\/|$)/.test(path):/^\\/photographer\\/finance(?:\\/|$)/.test(path);
+        const section=path.split('/')[2];const active=kind==='print'?['orders','upload'].includes(section):kind==='album'?section==='album':section==='finance';
         out.push({id,label,active,guide:kind});
       }
     }else if(m==='ai'){

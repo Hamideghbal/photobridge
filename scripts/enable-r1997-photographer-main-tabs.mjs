@@ -19,7 +19,7 @@ if(!nav.includes('/* PB1997 cached gallery / stable store */')){
    ' function pb1997StoreKey(el){',
    "  if(!el)return '';",
    "  for(const attr of ['data-store-panel','data-frame-customer-view','data-frame-customer-history','data-frame-customer-cart']){",
-   "   if(el.hasAttribute(attr))return attr+':'+(el.getAttribute(attr)||'1');",
+   "   if(el.hasAttribute(attr))return attr+':'+(el.getAttribute(attr)||el.id||el.getAttribute('aria-label')||(el.textContent||'').trim().slice(0,32)||'1');",
    '  }',
    "  return 'id:'+(el.id||el.getAttribute('aria-label')||(el.textContent||'').trim().slice(0,32));",
    ' }',
@@ -157,7 +157,7 @@ function refresh(dir){
   if(entry.isDirectory())refresh(f);
   else if(f.endsWith('.html')){
    const html=fs.readFileSync(f,'utf8');
-   const updated=html.replace(/(photobridge-r1126-desktop-navigation\.(?:js|css))([^"'<>\\s]*)/g,(_,name,q)=>{
+   const updated=html.replace(/(photobridge-r1126-desktop-navigation\.(?:js|css))([^"'<> \t\r\n]*)/g,(_,name,q)=>{
     const clean=q.replace(/([?&])primaryTabs=[^&]*/g,'$1').replace(/[?&]$/,'');
     return name+clean+(clean.includes('?')?'&':'?')+'primaryTabs=r1997';
    });

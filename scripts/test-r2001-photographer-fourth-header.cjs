@@ -97,3 +97,22 @@ test('R2002 top separator and contrasting ledger controls survive stylesheet del
   assert(fs.readFileSync('dist/web/assets/'+match[0],'utf8').includes('R2002 | Photographer finance fourth-header separation'));
  }
 });
+
+test('R2003 photographer date controls are statement-style and presets reset actual filtering state',()=>{
+ assert(finance.includes('className:"statementDateLabel pb2003InvoiceDateLabel"'));
+ assert(finance.includes('className:"statementDateControl"'));
+ assert(finance.includes('if(t!=="lab")c("");_setPbInvFrom(day)'));
+ assert(finance.includes('t!=="lab"&&c(""),_setPbInvFrom("")'));
+ assert(finance.includes('false&&e.jsxs("div",{className:"pb2000CustomerMetrics"'));
+ assert(finance.includes('pb2003Day(Je.issued_at||Je.created_at)'));
+ assert(css.includes('linear-gradient(90deg,transparent 0%,#cbd5e1'));
+ assert(css.includes('border-radius:0 10px 10px 0!important'));
+ assert(css.includes('border-radius:10px 0 0 10px!important'));
+ const guide=fs.readFileSync('dist/web/photobridge-workflow-guides-v572.js','utf8');
+ assert(guide.includes('>راهنما</em>'));
+ assert(guide.includes("mount('print',print)"));
+ assert(guide.includes("mount('album',album)"));
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ assert(html.includes('photographerDateFilters=r2003'));
+ assert(html.includes('splitGuide=r2003'));
+});

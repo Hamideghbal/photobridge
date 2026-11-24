@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1986';
+  const VERSION='0.17.699-r1987';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -150,9 +150,16 @@
     const direction=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
     if(arrow.textContent!==direction)arrow.textContent=direction;
   }
+  // R1987: the stable delegated capture handler owns video-guide clicks on rebuilt desktop rows.
   // R1983: user-approved concept 3 — prominent main modes and understated
   // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
+    // R1987: the versioned final stylesheet outranks legacy desktop chrome.
+    // Do not reinject the old R1983 stylesheet later and undo mobile styles.
+    if(document.querySelector('link[href*="photobridge-r1987-model3-guide.css"]')){
+      document.getElementById('pb1983ModelThreeStyles')?.remove();
+      return;
+    }
     let style=document.getElementById('pb1983ModelThreeStyles');
     if(style){const playerStyle=document.getElementById('pb1986VisibleVideoPlayer');if(playerStyle){if(style.nextElementSibling!==playerStyle)document.head.insertBefore(style,playerStyle)}else if(document.head.lastElementChild!==style)document.head.append(style);return;}
     style=document.createElement('style');
@@ -285,7 +292,13 @@
         button.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
       if(!button.classList.contains('pb1978VideoGuideButton'))button.classList.add('pb1978VideoGuideButton');
       // No React-owned button is replaced; tutorials are adjacent siblings.
-      if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
+      // R1987 model three: print tutorial on the outer right, album tutorial
+      // on the outer left, with the two primary actions together in the centre.
+      if(kind==='print'){
+        if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
+      }else if(button.parentElement!==nav||button.previousElementSibling!==target){
+        target.insertAdjacentElement('afterend',button);
+      }
       return button;
     }
     const printGuide=mount('print',print);

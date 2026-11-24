@@ -274,7 +274,11 @@
    return;
   }
   if(key==='print'||key==='crm'){open(key);return;}
-  // R1995: history.pushState only changes the URL; React keeps rendering the old\n  // Orders/Lab page. Real routes such as Gallery MUST load their own document.\n  const tab=tabs.find(x=>x[0]===key);if(!tab)return;\n  try{sessionStorage.setItem('pb1976PrintLanding','1')}catch{}\n  closePanels();window.location.assign(tab[2]);
+  // R1995: history.pushState only changes the URL; React keeps rendering the old
+  // Orders/Lab page. Real routes such as Gallery MUST load their own document.
+  const tab=tabs.find(x=>x[0]===key);if(!tab)return;
+  try{sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
+  closePanels();window.location.assign(tab[2]);
  }
  // Register before legacy full-document navigation handlers.
  window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-pb1126-kind]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();press(b);navigate(b.dataset.pb1126Kind);},true);

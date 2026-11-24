@@ -36,6 +36,9 @@ function feature(el){
  if(el.querySelector('.photographerBottomNavIcon.instagram')||/اینستاگرام/.test(text)||/pb_mode=instagram|instagram-post-design/.test(href))return 'instagram';
  if(el.querySelector('.photographerBottomNavIcon.ai')||/هوش مصنوعی/.test(text)||href.startsWith('/photographer/ai'))return 'ai';
  if(/طراحی آلبوم/.test(text)||href.startsWith('/photographer/album-design'))return 'album';
+ // R1977: apply disabled CRM/Calendar flags to native and injected menus alike.
+ if(el.dataset.pbCrmPane==='calendar'||el.dataset.pb1126Kind==='calendar'||/تقویم مشتریان/.test(text)||/[?&]view=calendar(?:&|$)/.test(href))return 'calendar';
+ if(el.dataset.pbCrmPane==='customers'||el.dataset.pb1126Kind==='crm'||/^مشتریان(?: عکاس)?$/.test(text)||/\/customer-crm\.html/.test(href))return 'customers';
  return null;
 }
 function currentFeature(){
@@ -105,11 +108,12 @@ async function openAdmin(){
 async function load(){
  if(!photographer()||inFlight)return;const epoch=sessionEpoch;inFlight=true;loadedPath=location.pathname;
  try{const next=await api('/api/photographer/navigation-tabs');if(epoch!==sessionEpoch)return;settings=next;
-  // Only the first authenticated landing of an invited photographer, never
-  // subsequent navigation back to the Gallery, starts at Lab print selection.
+  // R1977: land in the native Print orders workspace, preserving its status
+  // header, send-photos action and existing orders. Do not force the standalone
+  // new-upload chooser over the order board on login.
   if(next.connectedLab===true&&/^\/photographer(?:\/gallery)?\/?$/.test(location.pathname)&&!['pbDesktopPanel','pbCrmTab','pbStorePanel','pbDesktopContent','view'].some(key=>new URLSearchParams(location.search).has(key))){
    let seen=false;try{seen=sessionStorage.getItem('pb1976PrintLanding')==='1';if(!seen)sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
-   if(!seen){location.replace('/photographer/orders/flow?workspace=print&pbLabChooser=1');return;}
+   if(!seen){location.replace('/photographer/orders');return;}
   }
   if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
 }

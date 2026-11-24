@@ -38,7 +38,12 @@ test('R1989: active mode changes synchronously and keeps original React click be
   assert.match(desktop,/button\.classList\.toggle\('selected',selected\)/);
   assert.match(desktop,/button\.setAttribute\('aria-pressed',String\(selected\)\)/);
   assert.match(desktop,/button\.dataset\.pb1989Active=String\(selected\)/);
-  assert.match(desktop,/press\(copy\);original\.click\(\)/);
+  // The prebuild source can directly click the original, but R1307 production
+  // replaces that call with a live React control proxy for recreated nodes.
+  assert.match(desktop,/press\\(copy\\);(?:original|target)\\.click\\(\\)/);
+  if(desktop.includes('function livePrintControl(key)')){
+    assert.match(desktop,/const target=printKey\\?livePrintControl\\(printKey\\):original/);
+  }
   assert.match(css,/data-pb1989-active="true"/);
 });
 test('R1989: both muted video tutorials follow the correct matching mode in RTL',()=>{

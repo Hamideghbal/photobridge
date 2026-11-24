@@ -79,8 +79,9 @@ if(!store.includes('id="pbR1998StoreChooserNoFilters"')){
  const hide=[
   '<style id="pbR1998StoreChooserNoFilters">',
   '@media(min-width:821px){',
-  ' html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserFiltersR1231,',
-  ' html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreFilters{',
+  ' html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreChooser > #storeChooserFiltersR1231,',
+  ' html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace #storeChooserPanelR96 .pbR96StoreChooser > .pbR96StoreFilters,',
+  ' html.pb1126Embedded body.pbR96ChoosingStore #storePhotographerWorkspace > #storeChooserFiltersR1231{',
   '  display:none!important;visibility:hidden!important;position:static!important;',
   '  width:0!important;height:0!important;min-height:0!important;max-height:0!important;',
   '  margin:0!important;padding:0!important;border:0!important;gap:0!important;pointer-events:none!important',

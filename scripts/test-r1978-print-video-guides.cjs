@@ -129,7 +129,7 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(desktop.includes("const reenter=()=>{if(panel.hidden||selected!=='print'||!frame.isConnected)return;"),'only the visible Print panel can change its chooser');
  assert(desktop.includes("openPrintChooser(doc);schedule();"),'real Print chooser is reopened');
  assert(!desktop.includes('pb1978Refresh'),'repeated Print clicks no longer force full iframe downloads');
- assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
+ assert(navSettings.includes("location.replace('/photographer/orders?workspace=print')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
  // Compare the live HTML asset revision with its Liara build writer, rather

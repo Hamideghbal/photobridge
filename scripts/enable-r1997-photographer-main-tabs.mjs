@@ -45,6 +45,11 @@ if(!nav.includes('/* PB1997 cached gallery / stable store */')){
   'stable controls helpers'
  );
  once(
+  "frame.title=key==='calendar'?'تقویم مشتریان':key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':'چاپ';",
+  "frame.title=key==='calendar'?'تقویم مشتریان':key==='crm'?'دفتر مشتریان':key==='store'?'فروشگاه':key==='gallery'?'گالری':'چاپ';",
+  'Gallery document uses correct accessible iframe title'
+ );
+ once(
   "if(key==='crm'||key==='calendar'){const crmUrl=",
   "if(key==='gallery'){frame.src='/photographer/gallery?pbDesktopContent=1&pbDesktopPanel=gallery';}else if(key==='crm'||key==='calendar'){const crmUrl=",
   'gallery loads actual isolated document'

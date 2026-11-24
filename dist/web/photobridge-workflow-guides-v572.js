@@ -154,6 +154,12 @@
   // R1983: user-approved concept 3 — prominent main modes and understated
   // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
+    // R1987: the versioned final stylesheet outranks legacy desktop chrome.
+    // Do not reinject the old R1983 stylesheet later and undo mobile styles.
+    if(document.querySelector('link[href*="photobridge-r1987-model3-guide.css"]')){
+      document.getElementById('pb1983ModelThreeStyles')?.remove();
+      return;
+    }
     let style=document.getElementById('pb1983ModelThreeStyles');
     if(style){const playerStyle=document.getElementById('pb1986VisibleVideoPlayer');if(playerStyle){if(style.nextElementSibling!==playerStyle)document.head.insertBefore(style,playerStyle)}else if(document.head.lastElementChild!==style)document.head.append(style);return;}
     style=document.createElement('style');

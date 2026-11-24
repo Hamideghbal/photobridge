@@ -23,6 +23,7 @@ test('R1997: Gallery is a real, isolated, cached document and Print cannot redir
  assert.equal(nav.includes("if(key==='print'||key==='crm'||key==='calendar'){open(key);return;}"),false,'legacy Print shortcut must not intercept');
  assert.equal(nav.includes('pb1978Refresh'),false,'repeated Print click must not hard-reload its embedded document');
  assert.match(nav,/if\(\['store','print','crm','calendar','gallery'\]\.includes\(panel\)\)open\(panel,false\)/,'reload/back restores Gallery');
+ assert.match(nav,/if\(\['print','store','gallery'\]\.includes\(requested\)\)open\(requested,false\)/,'auth restoration reopens the cached Gallery tab');
  assert.match(landing,/!.*\['pbDesktopPanel','pbCrmTab','pbStorePanel','pbDesktopContent','view'\]/,'explicit Gallery iframe bypasses first-login Print redirect');
  assert.match(chooser,/q\.get\('pbDesktopPanel'\)!=='print'/,'Lab chooser must disappear for Gallery/Store');
 });

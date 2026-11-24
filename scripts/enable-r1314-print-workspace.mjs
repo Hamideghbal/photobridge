@@ -46,7 +46,11 @@ if(!nav.includes('/* PB1314 print workspace */')){
  replace(" window.addEventListener('photobridge-desktop-identity-ready',schedule);",readiness);
  // Reset the chosen mode on EVERY Print/Store tab click while retaining cache.
  const begin=nav.indexOf(' function navigate(key){');
- const finish=nav.indexOf('  closePanels();const tab=tabs.find',begin);
+ // R1995 routes Gallery/AI/Album/Instagram through real full-document navigation.
+ // Preserve that tail exactly; the legacy build instead had closePanels() first.
+ const modernTail='  // R1995: history.pushState only changes the URL; React keeps rendering the old';
+ const modernFinish=nav.indexOf(modernTail,begin);
+ const finish=modernFinish>=0?modernFinish:nav.indexOf('  closePanels();const tab=tabs.find',begin);
  if(begin<0||finish<begin)throw Error('[R1314] Missing desktop navigate anchors');
  const navigate=[
  " function openPrintChooser(doc){",
@@ -71,6 +75,7 @@ if(!nav.includes('/* PB1314 print workspace */')){
  "   if(!complete)frame.addEventListener('load',goToChooser,{once:true});",
  "   return;",
  "  }",
+ "  if(key==='crm'){open('crm');return;}",
  ""].join('\n');
  nav=nav.slice(0,begin)+navigate+nav.slice(finish);
  replace(" function openStoreChooser(doc){const button=doc?.querySelector('[data-store-home]');if(!button)return false;button.click();return true;}",

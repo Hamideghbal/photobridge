@@ -74,7 +74,8 @@ test('R1981 guide target survives desktop chrome clone while hidden iframe canno
  const start=guide.indexOf('function visiblePrintModeNav(){');
  const end=guide.indexOf('\n  }',start);
  assert(start>=0&&end>start,'guide target selector exists');
- const chooser=new Function('location','window','document','isMobile','return ('+guide.slice(start,end+4)+');');
+ // R1982: execute the extracted selector (the old test compared the function object).
+ const chooser=new Function('location','window','document','isMobile','return ('+guide.slice(start,end+4)+')();');
  const printButton={};
  const stable={querySelector:sel=>sel==='.photographerPrintPhotoTab'?printButton:null};
  const secondary={hidden:false,querySelector:sel=>sel==='.pb1127PrintModes'?stable:null};

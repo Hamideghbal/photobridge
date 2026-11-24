@@ -232,6 +232,9 @@
   document.addEventListener('click',e=>{
     if(!isPhotographerRoute())return;
     const el=e.target?.closest?.('button,a,[data-main-href]');if(!el)return;
+    // R1981: never intercept inner Print/Album mode tabs or their tutorial buttons.
+    if(el.closest?.('.photographerPrintModeNav,.pb1127PrintModes')||
+       el.matches?.('.photographerPrintPhotoTab,.photographerPrintAlbumTab,.pb1978VideoGuideButton'))return;
     const chooser=document.getElementById(ROOT_ID),primary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
     /* R100F20: every exit from Print/Lab gets a zero-frame cover. Some bottom-nav buttons navigate through JS and have no href, so href cannot be the gate. */
     if(primary&&!isPrintPrimaryNav(el)&&(chooser||isPrintRoute())){

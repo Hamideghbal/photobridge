@@ -77,11 +77,14 @@ test('R1984 guide buttons survive cloned desktop headers, tab re-renders and cac
  assert(guide.includes('event.stopImmediatePropagation()'));
  assert(guide.includes('openContextGuide(kind,button)'));
  assert(guide.includes('button.dataset.pbGuideOpening'));
+ assert(guide.includes("if(!button.classList.contains('pb1978VideoGuideButton'))"));
+ assert(guide.includes('if(b&&b.textContent!==name)b.textContent=name'));
+
  assert(guide.includes('showGuideModal(null,slot,true)'));
- assert(guide.includes("attributeFilter:['class','hidden','aria-hidden']"));
+ assert(guide.includes("attributeFilter:['class','hidden']"));
  assert(guide.includes("document.querySelector('.pb567GuideBackdrop')!==pendingBackdrop"));
  assert(guide.includes('html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes)'));
  assert(!guide.includes('.pb1127PrintModes.pb1983ModelThree'));
- assert(html.includes('photobridge-workflow-guides-v572.js?v=r1984'));
- assert(build.includes("['photobridge-workflow-guides-v572.js','v','r1984']"));
+ assert(html.includes('photobridge-workflow-guides-v572.js?v=r1985'));
+ assert(build.includes("['photobridge-workflow-guides-v572.js','v','r1985']"));
 });

@@ -124,9 +124,11 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  const navSettings=read('dist/web/photobridge-r1099-photographer-tabs.js');
  assert.doesNotThrow(()=>new vm.Script(desktop));
  assert(desktop.includes('/* R1978 reopen Print lab chooser on intentional click */'));
- assert(desktop.includes("if(key==='print'&&panels.has('print'))"));
- assert(desktop.includes("frame.src='/photographer/orders/flow?workspace=print&pbLabChooser=1&pbDesktopContent=1"));
- assert(desktop.includes("if(selected==='print')return"));
+ // R1997 re-enters the already-loaded chooser without reloading the iframe.
+ assert(desktop.includes("if(key==='print'){"),'Print retains an explicit navigation branch');
+ assert(desktop.includes("const reenter=()=>{if(panel.hidden||selected!=='print'||!frame.isConnected)return;"),'only the visible Print panel can change its chooser');
+ assert(desktop.includes("openPrintChooser(doc);schedule();"),'real Print chooser is reopened');
+ assert(!desktop.includes('pb1978Refresh'),'repeated Print clicks no longer force full iframe downloads');
  assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');

@@ -24,7 +24,8 @@ test('Video modal retains separated header and video picture regardless of butto
 });
 test('Model TWO replaces model three and does not silently serve the cached old header',()=>{
   assert.match(index,/photobridge-workflow-guides-v572\.js\?v=r1989/);
-  assert.match(index,/photobridge-r1989-model2-segmented\.css\?v=r1989/);
+  const {verifyModelTwoCssDelivery}=require('./verify-r1992-model2-css-delivery.cjs');
+  assert(['direct','bundled'].includes(verifyModelTwoCssDelivery().mode),'model 2 CSS must actually be served');
   assert.match(guide,/nav\.classList\.remove\('pb1983ModelThree'\)/);
   assert.match(guide,/nav\.classList\.contains\('pb1989ModelTwo'\)/);
 });

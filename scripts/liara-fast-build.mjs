@@ -1421,6 +1421,10 @@ runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inher
 console.log('[PhotoBridge Docker build] START first-load perf fix');
 runR1314(process.execPath,['scripts/photobridge-perf-fix.mjs'],{stdio:'inherit'});
 console.log('[PhotoBridge Docker build] OK first-load perf fix');
+// R1992: the optimization above intentionally removes individual CSS links.
+// Assert the approved model TWO is ACTUALLY inside the served boot stylesheet,
+// not that its old <link> still exists; fail here rather than 8 minutes later.
+runR1314(process.execPath,['scripts/verify-r1992-model2-css-delivery.cjs'],{stdio:'inherit'});
 
 // R1884: native-only lab manual intake responsiveness runs last, after all
 // Windows UI snapshot writers, header mutations and web performance bundlers.

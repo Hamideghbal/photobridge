@@ -10,7 +10,8 @@ const desktop=read('dist/web/photobridge-r1126-desktop-navigation.js');
 const html=read('dist/web/index.html');
 const writer=read('scripts/enable-r1966-desktop-calendar-store-chooser.mjs');
 test('R1989: load the approved model 2 CSS and JS with new uncached URLs',()=>{
-  assert.match(html,/photobridge-r1989-model2-segmented\.css\?v=r1989/);
+  const {verifyModelTwoCssDelivery}=require('./verify-r1992-model2-css-delivery.cjs');
+  assert(['direct','bundled'].includes(verifyModelTwoCssDelivery().mode),'model 2 CSS must actually be served');
   assert.match(html,/photobridge-workflow-guides-v572\.js\?v=r1989/);
   assert.match(writer,/\['photobridge-workflow-guides-v572\.js','v','r1989'\]/);
   assert.doesNotThrow(()=>new Script(guide));

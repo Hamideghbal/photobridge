@@ -1,1 +1,1 @@
-2026-11-24-r1981-main-print-chooser-inner-modes-stable-tutorials
+2026-11-24-r1982-fix-visible-header-guide-test-docker-build

@@ -108,3 +108,25 @@ html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo >
   }
   html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo > button:not(:first-child)::before {right:-3px!important}
 }
+
+/* R1993: active blue Print/Album controls must have WHITE labels even when
+   the React button contains nested typography with its own forced text color.
+   Preserve dark text for the inactive white control. */
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes.pb1989ModelTwo > button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab):is(.active,.selected,[aria-selected="true"],[aria-pressed="true"],[data-pb1989-active="true"]),
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo > button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab):is(.active,.selected,[aria-selected="true"],[aria-pressed="true"],[data-pb1989-active="true"]) {
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes.pb1989ModelTwo > button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab):is(.active,.selected,[aria-selected="true"],[aria-pressed="true"],[data-pb1989-active="true"]) :is(span,strong,em,b,i,small,label),
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo > button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab):is(.active,.selected,[aria-selected="true"],[aria-pressed="true"],[data-pb1989-active="true"]) :is(span,strong,em,b,i,small,label) {
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+/* Finance and the leftmost video guide are two separate groups.
+   The old boundary rendered a 1px border on EACH side, so the user saw two
+   adjacent lines. The Finance/Archive button retains its own border as the
+   SINGLE separator; remove only the overlapping left edge of the mode shell.
+   Keep the other three capsule edges and all internal model-two separators. */
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes.pb1989ModelTwo:has(+ .pb1127PrintUtilities > button) {
+  border-inline-end:0!important;
+}

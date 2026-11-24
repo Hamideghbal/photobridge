@@ -220,9 +220,10 @@
   function isPrintPrimaryNav(el){
     if(!el||!isPhotographerRoute()||el.closest?.('.labBottomAppNav,.labBottomAppNavGrid,.labMain'))return false;
     const href=String(el.dataset?.mainHref||el.getAttribute?.('href')||'');
-    const text=String(el.textContent||el.getAttribute?.('aria-label')||'').replace(/\s+/g,' ').trim();
+    // R1978: labels differ between native mobile dock and desktop: چاپ / چاپ عکس.
+    const text=String(el.getAttribute?.('aria-label')||el.textContent||'').replace(/\s+/g,' ').trim();
     const inPrimary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
-    return inPrimary&&(href.includes('workspace=print')||text==='چاپ');
+    return inPrimary&&(href.includes('workspace=print')||/^(?:چاپ|چاپ عکس|چاپ تصاویر)$/.test(text));
   }
   document.addEventListener('click',e=>{
     if(!isPhotographerRoute())return;

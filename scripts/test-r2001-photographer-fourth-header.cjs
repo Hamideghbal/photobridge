@@ -182,3 +182,27 @@ test('R2007 canonical print entry and archive in mobile menu; desktop guides use
  assert(ui.includes('/* PB2007 canonical print route */'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('canonicalPrint=r2007'));
 });
+
+test('R2008 generated Print context patch emits real line breaks and valid executable JS',()=>{
+ const writer=fs.readFileSync('scripts/enable-r2001-photographer-fourth-header.mjs','utf8');
+ const start=writer.indexOf("if(!ui.includes('/* PB2007 canonical print route */'))");
+ const end=writer.indexOf('execFileSync',start);
+ assert(start>=0&&end>start);
+ const snippet=writer.slice(start,end);
+ const gate=new Function('return '+snippet.match(/const gate=(.*);/)[1])();
+ const patch=new Function('ui','once','file','write',snippet+'\nreturn ui;');
+ const once=(value,before,after)=>{assert.equal(value.split(before).length,2);return value.replace(before,after)};
+ const output=patch('let '+gate+';',once,'fixture',()=>{});
+ assert(output.endsWith('\n/* PB2007 canonical print route */\n'));
+ const evaluate=new Function('H','Se','location',output+'\nreturn D;');
+ for(const [H,Se,pathname,search,expected] of [
+  [false,'orders','/photographer/orders','',true],
+  [false,'album','/photographer/album','',true],
+  [false,'finance','/photographer/finance','',true],
+  [true,'orders','/photographer/orders','',false],
+  [false,'clients','/photographer/gallery','',false]
+ ])assert.equal(evaluate(H,Se,{pathname,search}),expected);
+ assert.equal(patch(output,once,'fixture',()=>{}),output);
+ assert.doesNotThrow(()=>new vm.Script(output));
+ assert(ui.includes('\n/* PB2007 canonical print route */\n'));
+});

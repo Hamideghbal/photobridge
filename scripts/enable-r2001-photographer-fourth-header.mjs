@@ -135,7 +135,7 @@ if(!ui.includes('/* PB2007 canonical print route */')){
  const gate='D=!H&&["orders","upload","album","archive","finance"].includes(Se)&&new URLSearchParams(location.search).get("workspace")==="print"';
  if(ui.includes(gate))ui=once(ui,gate,'D=!H&&["orders","upload","album","archive","finance"].includes(Se)&&(new URLSearchParams(location.search).get("workspace")==="print"||/^\\/photographer\\/(?:orders|upload|album|archive|finance)(?:\\/|$)/.test(location.pathname))','R2007 native print context');
  else if(!ui.includes('D=!H&&["orders","upload","album","archive","finance"].includes(Se)'))throw Error('[R2007] native print gate missing');
- ui+='\\n/* PB2007 canonical print route */\\n';write(file,ui);
+ ui+=String.fromCharCode(10)+'/* PB2007 canonical print route */'+String.fromCharCode(10);write(file,ui);
 }
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const cssName='photobridge-r2001-photographer-fourth-header.css';

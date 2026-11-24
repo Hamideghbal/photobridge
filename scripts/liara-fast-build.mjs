@@ -1411,6 +1411,11 @@ runR1314(process.execPath,['--test','scripts/test-r1868-crm-services.cjs'],{stdi
 // Apply after CRM writers, before Store snapshot and the bundled boot stylesheet.
 await deployStep('./enable-r1966-desktop-calendar-store-chooser.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1966-desktop-calendar-store-chooser.cjs'],{stdio:'inherit'});
+// R1997: use one cached real Gallery document alongside Print and Store.
+// Run AFTER every older desktop navigation writer (including R1966/R1978),
+// BEFORE R1995 route checks and Store snapshot/performance bundling.
+await deployStep('./enable-r1997-photographer-main-tabs.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1997-photographer-main-tabs.cjs'],{stdio:'inherit'});
 // R1994: desktop Store chooser category strip must remain below the blue title, not overlap it.
 runR1314(process.execPath,['--test','scripts/test-r1994-store-chooser-filter-flow.cjs'],{stdio:'inherit'});
 // R1978: direct Liara build must verify the two real video buttons and explicit Print chooser actions.
@@ -1506,6 +1511,8 @@ runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1
 runR1314(process.execPath,['--test','scripts/test-r1976-print-entry-crm-guides.cjs'],{stdio:'inherit'});
 // R1977: native order board must survive login; authenticated CRM flags hide tabs even after desktop rendering.
 runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board-crm.cjs'],{stdio:'inherit'});
+// R1997: validate isolated main tabs and stable Store header after every asset finalizer.
+runR1314(process.execPath,['--test','scripts/test-r1997-photographer-main-tabs.cjs'],{stdio:'inherit'});
 // R1995: revalidate after all Docker mutation and optimization stages.
 runR1314(process.execPath,['--test','scripts/test-r1995-photographer-tab-routing.cjs'],{stdio:'inherit'});
 // R1988: retain contextual video player, including title separation and delegated clicks.

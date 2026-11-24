@@ -63,5 +63,5 @@ test('R1976 no shared CRM switch remains in browser, and video guides are presen
  assert(build.includes('/* R1976 independent CRM tabs + centered Print */'));
  assert(admin.includes("next.connectedLab===true"));
  assert(admin.includes("pb1976PrintLanding"));
- assert(admin.includes("pbLabChooser=1"));
+ assert(admin.includes("location.replace('/photographer/orders')"));
 });

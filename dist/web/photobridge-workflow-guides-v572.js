@@ -154,7 +154,7 @@
   // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
     let style=document.getElementById('pb1983ModelThreeStyles');
-    if(style){if(document.head.lastElementChild!==style)document.head.append(style);return;}
+    if(style){const playerStyle=document.getElementById('pb1986VisibleVideoPlayer');if(playerStyle){if(style.nextElementSibling!==playerStyle)document.head.insertBefore(style,playerStyle)}else if(document.head.lastElementChild!==style)document.head.append(style);return;}
     style=document.createElement('style');
     style.id='pb1983ModelThreeStyles';
     style.textContent=`

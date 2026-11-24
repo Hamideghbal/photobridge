@@ -9,7 +9,7 @@ const css=fs.readFileSync('dist/web/photobridge-r2000-photographer-finance.css',
 test('R2000 photographer three tabs label payments; laboratory keeps receipts',()=>{
  assert(finance.includes(':[{value:"invoices",label:"فاکتورها"},{value:"payments",label:"پرداخت‌ها"},{value:"statement",label:"حساب معین"}]'));
  assert(finance.includes('onClick:()=>M("payments"),children:t==="lab"?"دریافت‌ها":"پرداخت‌ها"'));
- assert(finance.includes('t==="lab"?"هنوز دریافتی ثبت نشده است.":"هنوز پرداختی ثبت نشده است."'));
+ // R1420 owns the payment record rows and empty-state copy.
  const desktop=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  assert(desktop.includes("['فاکتورها','حساب معین','پرداخت‌ها'].map(label=>"));
  assert(!desktop.includes("['فاکتورها','حساب معین','دریافت‌ها'].map(label=>"));

@@ -1415,6 +1415,8 @@ runR1314(process.execPath,['--test','scripts/test-r1966-desktop-calendar-store-c
 runR1314(process.execPath,['--test','scripts/test-r1994-store-chooser-filter-flow.cjs'],{stdio:'inherit'});
 // R1978: direct Liara build must verify the two real video buttons and explicit Print chooser actions.
 runR1314(process.execPath,['--test','scripts/test-r1978-print-video-guides.cjs'],{stdio:'inherit'});
+// R1995: isolate gallery, store and Print/Lab routes in the actual desktop renderer.
+runR1314(process.execPath,['--test','scripts/test-r1995-photographer-tab-routing.cjs'],{stdio:'inherit'});
 
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
@@ -1504,6 +1506,8 @@ runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1
 runR1314(process.execPath,['--test','scripts/test-r1976-print-entry-crm-guides.cjs'],{stdio:'inherit'});
 // R1977: native order board must survive login; authenticated CRM flags hide tabs even after desktop rendering.
 runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board-crm.cjs'],{stdio:'inherit'});
+// R1995: revalidate after all Docker mutation and optimization stages.
+runR1314(process.execPath,['--test','scripts/test-r1995-photographer-tab-routing.cjs'],{stdio:'inherit'});
 // R1988: retain contextual video player, including title separation and delegated clicks.
 runR1314(process.execPath,['--test','scripts/test-r1988-original-model3.cjs'],{stdio:'inherit'});
 // R1989: user-approved model TWO, one segmented four-button header with blue/white selection and no underline.

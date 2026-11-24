@@ -7,7 +7,7 @@
   let running=false,lastPath='',runEpoch=0,currentData=null,refreshQueued=false,selectedCityKey='';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isPhotographerRoute=()=>/^\/photographer(?:\/|$)/.test(location.pathname)&&!/^\/photographer\/(?:signup|invite|register)(?:\/|$)/.test(location.pathname);
-  const isPrintRoute=()=>{if(!isPhotographerRoute())return false;const q=new URLSearchParams(location.search);return q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(location.pathname)};
+  const isPrintRoute=()=>{if(!isPhotographerRoute())return false;const q=new URLSearchParams(location.search);/* R1995: parent desktop URL can stay /orders while another iframe tab is selected. */if(q.has('pbDesktopPanel')&&q.get('pbDesktopPanel')!=='print')return false;return q.get('workspace')==='print'||/^\/photographer\/(?:orders|upload|album|archive|finance)(?:\/|$)/.test(location.pathname)};
   async function api(path,opt={}){
     const r=await fetch(path,{credentials:'include',headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
     let j={};try{j=await r.json()}catch{}

@@ -52,7 +52,7 @@ if(!server.includes('/* PB2000 customer statement invoice items */')){
  const end=server.indexOf("if (req.method === 'GET' && url.pathname === '/api/customer/chat') {",start);
  if(start<0||end<start)throw Error('[R2000] customer statement SQL route missing');
  let part=server.slice(start,end);
- part=once(part,'i.number invoice_number,p.method payment_method','i.items invoice_items,i.number invoice_number,p.method payment_method','customer invoice detail select');
+ part=once(part,'i.number invoice_number','i.items invoice_items,i.number invoice_number','customer invoice detail select');
  const oldGroup=part.includes('t.reference_id,i.number,i.offline_reference,p.method')?
    't.reference_id,i.number,i.offline_reference,p.method':'t.reference_id,i.number,p.method';
  part=once(part,oldGroup,oldGroup.replace('i.number','i.id,i.number'),'customer detail grouping by primary key');

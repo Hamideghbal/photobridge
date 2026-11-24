@@ -6,8 +6,15 @@ import path from 'node:path';
 const galleryJs='dist/web/photobridge-r1310-layout.js';
 let js=fs.readFileSync(galleryJs,'utf8');
 if(!js.includes('/* PB1998 embedded gallery geometry */')){
- const anchor="  const gallery=!mobile()&&root.classList.contains('pb1126Desktop')&&active==='gallery'&&!!qs('.clientGalleryWorkspace')&&!qs('.clientGalleryManager');";
- if(js.split(anchor).length!==2)throw Error('[R1998] gallery geometry anchor missing/ambiguous');
+ // R1606 deliberately removes the early .clientGalleryWorkspace check.
+ // The asset may be tested before or after that writer: both are supported.
+ const anchors=[
+  "  const gallery=!mobile()&&root.classList.contains('pb1126Desktop')&&active==='gallery'&&!!qs('.clientGalleryWorkspace')&&!qs('.clientGalleryManager');",
+  "  const gallery=!mobile()&&root.classList.contains('pb1126Desktop')&&active==='gallery'&&!qs('.clientGalleryManager');"
+ ];
+ const matches=anchors.filter(anchor=>js.split(anchor).length===2);
+ if(matches.length!==1)throw Error('[R1998] R1310/R1606 gallery geometry anchors missing/ambiguous');
+ const anchor=matches[0];
  const next=[
   '  /* PB1998 embedded gallery geometry */',
   "  const embeddedGallery=!mobile()&&root.classList.contains('pb1126Embedded')&&",

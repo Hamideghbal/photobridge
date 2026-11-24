@@ -78,7 +78,10 @@ if(!html.includes(cssName))html=once(html,'</head>','<link rel="stylesheet" href
 function cacheBump(name){
  const needle=name+'?';
  if(!html.includes(needle))throw Error('[R2000] missing cached URL for '+name);
- html=html.replace(needle,name+'?photographerFinance=r2000&');
+ const pattern=new RegExp('('+name.replaceAll('.','\\.')+'\\?[^"\\'<>\\s]*)','g');
+ let n=0;
+ html=html.replace(pattern,match=>{n++;return match.replace(/&photographerFinance=r\\d+/g,'')+'&photographerFinance=r2000'});
+ if(n!==1)throw Error('[R2000] expected one versioned HTML URL for '+name+', found '+n);
 }
 cacheBump('index-UIRefine-v655-r84.js');
 cacheBump('photobridge-r1126-desktop-navigation.js');

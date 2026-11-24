@@ -217,6 +217,12 @@ await deployStep("./enable-r1299-lab-initial-debt.mjs");
 await deployStep("./enable-r1301-lab-site-general.mjs");
 await deployStep("./enable-r1302-mobile-login.mjs");
 
+// R1990: fail at an explicit preflight if the legacy R1307 writer cannot patch
+// this version of the live desktop chrome. This test runs independently of Actions.
+console.log('[PhotoBridge Docker build] START R1990 desktop model 2 / R1307 compatibility test');
+const { execFileSync: runR1990 } = await import('node:child_process');
+runR1990(process.execPath,['--test','scripts/test-r1990-r1307-model2-build-compat.cjs'],{stdio:'inherit'});
+console.log('[PhotoBridge Docker build] OK R1990 preflight');
 
 await deployStep("./enable-r1307-desktop-print-controls.mjs");
 
@@ -1496,3 +1502,5 @@ runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board
 runR1314(process.execPath,['--test','scripts/test-r1988-original-model3.cjs'],{stdio:'inherit'});
 // R1989: user-approved model TWO, one segmented four-button header with blue/white selection and no underline.
 runR1314(process.execPath,['--test','scripts/test-r1989-model2-segmented.cjs'],{stdio:'inherit'});
+// R1990: ensure R1307's live proxy has not stripped model-two click-state logic.
+runR1314(process.execPath,['--test','scripts/test-r1990-r1307-model2-build-compat.cjs'],{stdio:'inherit'});

@@ -100,10 +100,20 @@ if(!ui.includes('/* PB2003 photographer date filters */')){
   ['From','_pbInvFrom','_setPbInvFrom','از تاریخ'],
   ['To','_pbInvTo','_setPbInvTo','تا تاریخ']
  ]){
-  const picker='e.jsx(Hs,{compact:!0,value:'+field+',onChange:'+set+',placeholder:"'+placeholder+'",showToday:t==="lab"})';
-  const old='e.jsxs("label",{children:["'+placeholder+'",'+picker+']})';
-  const next='(t==="lab"?'+old+':e.jsx("div",{className:"statementDateLabel pb2003InvoiceDateLabel","aria-label":"'+placeholder+'",children:e.jsxs("div",{className:"statementDateControl",children:['+picker+','+field+'&&e.jsx("button",{type:"button",className:"dateClearBtn","aria-label":"پاک کردن '+placeholder+'",onClick:()=>{'+set+'("");_setPbInvApplied'+key+'("");Ie(1)},children:"×"})]})}))';
-  part=once(part,old,next,'R2003 '+key+' date control');
+  // R2004: R2001 already verified the unique picker props. Older toolbar
+  // writers may add a label class, span or other wrapper: do not match those.
+  const marker='compact:!0,value:'+field+',onChange:'+set+',placeholder:"'+placeholder+'",showToday:t==="lab"';
+  const at=part.indexOf(marker);
+  if(at<0||part.indexOf(marker,at+marker.length)>=0)throw Error('[R2004] unique '+key+' picker props missing');
+  const start=part.lastIndexOf('e.jsx(Hs,{',at);
+  const close=part.indexOf('})',at+marker.length);
+  if(start<0||close<0||at-start>180||close-at-marker.length>180)throw Error('[R2004] '+key+' picker boundary missing');
+  const picker=part.slice(start,close+2);
+  const clear=field+'&&e.jsx("button",{type:"button",className:"dateClearBtn","aria-label":"پاک کردن '+placeholder+'",onClick:()=>{'+set+'("");_setPbInvApplied'+key+'("");Ie(1)},children:"×"})';
+  const control='e.jsx("div",{className:"statementDateLabel pb2003InvoiceDateLabel","aria-label":"'+placeholder+'",children:e.jsxs("div",{className:"statementDateControl",children:['+picker+','+clear+']})})';
+  // Replace only the picker JSX, preserving the enclosing label and every
+  // lab prop byte-for-byte. Do not duplicate either calendar or date label.
+  part=once(part,picker,'(t==="lab"?'+picker+':'+control+')','R2004 '+key+' picker control');
  }
  // Use the already existing state setters and remove stale search on explicit
  // Today / All presets. Dates and search are local filters, never writes.
@@ -125,7 +135,7 @@ const cssName='photobridge-r2001-photographer-fourth-header.css';
 fs.copyFileSync('scripts/r2001-photographer-fourth-header.css','dist/web/'+cssName);
 let html=read('dist/web/index.html');
 if(!html.includes(cssName))
- html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2003"></head>','fourth header CSS link');
+ html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2004"></head>','fourth header CSS link');
 const versionKey='&photographerFinanceFourth=r2001';
 const asset='index-UIRefine-v655-r84.js';
 if(!html.includes(versionKey)){
@@ -137,5 +147,6 @@ if(!html.includes(versionKey)){
 }
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('photographerDateFilters=r2003')?url:url+'&photographerDateFilters=r2003');
 html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('splitGuide=r2003')?url:url+'&splitGuide=r2003');
+html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('financeDateBuild=r2004')?url:url+'&financeDateBuild=r2004');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

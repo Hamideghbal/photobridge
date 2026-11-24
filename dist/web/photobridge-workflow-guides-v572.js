@@ -164,7 +164,7 @@
     const nav=cleanupHeaderButtons();if(!nav)return;
     const print=nav.querySelector('.photographerPrintPhotoTab'),
           album=nav.querySelector('.photographerPrintAlbumTab');
-    if(!print)return;
+    if(!print)return; // R1976: do not depend on a preselected lab.
     installR1978GuideStyle();
     function mount(kind,target){
       const selector=':scope > .pb1978VideoGuideButton.'+kind;

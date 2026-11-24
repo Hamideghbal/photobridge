@@ -139,7 +139,7 @@
   function guideButton(kind){
     const b=document.createElement('button');
     b.type='button';
-    b.className='pb569WorkflowGuideButton pb1978VideoGuideButton '+kind;
+    b.className='pb569WorkflowGuideButton pb1978VideoGuideButton '+(kind==='archive'||kind==='finance'?'pb2005UtilityGuide':kind);
     b.dataset.pbGuide=kind;
     b.title='ویدیوی آموزشی '+({print:'چاپ عکس',album:'صحافی آلبوم',archive:'آرشیو',finance:'مالی'}[kind]);
     if(kind==='archive'||kind==='finance')b.classList.add('pb2005UtilityGuide');

@@ -14,9 +14,13 @@ test('R1978 labels remain visible and clickable next to BOTH Print and Album tab
  assert(guide.includes('pb569GuideArrow'),'visible pointing arrow');
  assert(guide.includes("mount('print',print)"),'guide beside Print Photos');
  assert(guide.includes("mount('album',album)"),'guide beside Album Binding');
- assert(guide.includes('function mountChooserGuides()'),'guides also visible before selecting any lab');
- assert(guide.includes('pb1978ChooserVideos'),'chooser contains two labelled video links');
- assert(guide.includes('2147483600!important'),'video dialog must render above the lab chooser');
+ // R1980: the lab chooser must contain only lab information, not synthetic
+ // Print/Album tabs or tutorial buttons. The real Print mode header owns them.
+ assert(!guide.includes('function mountChooserGuides()'),'no guide insertion into the lab chooser');
+ assert(!guide.includes('pb1978ChooserVideos'),'no synthetic Print/Album guide row');
+ assert(!guide.includes('pb1978ChooserPair'),'no tutorial boxes in the chooser');
+ assert(guide.includes("const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav')"),'bind guides only to the original Print/Album header');
+ assert(guide.includes("nav.insertBefore(button,target)"),'each guide is beside its own original tab');
  assert(guide.includes('nav.insertBefore(button,target)'),'guide is a sibling and does not nest interactive buttons');
  assert(guide.includes("kind==='print'?'mobile':'desktop'")===false,'do not hard-code one video for both devices');
  assert(guide.includes("slots.find(s=>s.kind===kind&&s.device==="),'each guide uses its matching mobile/desktop slot');
@@ -66,6 +70,6 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
- assert(html.includes('photobridge-workflow-guides-v572.js?v=r1978'));
+ assert(html.includes('photobridge-workflow-guides-v572.js?v=r1980'));
  assert(html.includes('r1978=print-photos-tab'));
 });

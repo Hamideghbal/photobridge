@@ -38,7 +38,7 @@ test('R2000 selected date interval totals come from ledger, not all-time summary
 test('R2000 final page cache and CSS have photographer-only scope',()=>{
  const html=fs.readFileSync('dist/web/index.html','utf8');
  const external=html.includes('photobridge-r2000-photographer-finance.css?v=r2000');
- const packed=html.match(/href="\\/assets\\/(photobridge-boot-[a-f0-9]+\\.css)"/)?.[1];
+ const packed=html.match(/photobridge-boot-[a-f0-9]+\.css/)?.[0];
  assert(external||packed,'R2000 stylesheet must be loaded directly or by bundled boot CSS');
  if(packed){const boot=fs.readFileSync('dist/web/assets/'+packed,'utf8');assert(boot.includes('pb2000CustomerMetrics'),'R2000 stylesheet missing from boot CSS');}
  assert(html.includes('photographerFinance=r2000'));

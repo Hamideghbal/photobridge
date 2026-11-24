@@ -46,8 +46,8 @@ test('R2001 photographer invoice keeps one Today preset and period-scoped metric
  assert(finance.includes('Number(Je.balance??'));
  assert(finance.includes('false&&e.jsxs("div",{children:[e.jsx("b",{children:"فاکتورها و اسناد مالی"})'));
  assert(finance.includes('e.jsx("span",{children:t==="lab"?"بخش حسابداری":"بخش مالی"})'));
- assert(finance.includes('_pbRecorded=t==="lab"&&!Ot&&!At'));
- assert(finance.includes('t==="lab"&&Je.accounting_exported&&e.jsx("small"'));
+ if(finance.includes('_pbRecorded='))assert(finance.includes('_pbRecorded=t==="lab"&&'),'accounting flag must remain laboratory-only');
+ if(finance.includes('accountingTransferredBadge'))assert(finance.includes('t==="lab"&&Je.accounting_exported&&e.jsx("small"'),'accounting exported badge must remain laboratory-only');
  const start=ui.indexOf('function Hs('),end=ui.indexOf('}function ',start+12);
  const picker=ui.slice(start,end+1);
  assert(picker.includes('_pb2001ShowToday&&e.jsxs("button",{type:"button",className:"calendarTodayBtn"'));

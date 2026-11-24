@@ -78,27 +78,61 @@
     catch{showGuideModal(null,slot)}
     finally{if(button){button.disabled=false;button.classList.remove('loading');if(old!=null)button.innerHTML=old}}
   }
+  // R1978: a labelled, real button is visible on mobile AND copied into the
+  // desktop Print secondary header (which clones only native <button> elements).
   function guideButton(kind){
-    const b=document.createElement('span');
-    b.className=`pb569WorkflowGuideButton ${kind}`;
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='pb569WorkflowGuideButton pb1978VideoGuideButton '+kind;
     b.dataset.pbGuide=kind;
-    b.title=kind==='print'?'راهنمای چاپ عکس':'راهنمای سفارش آلبوم';
+    b.title=kind==='print'?'ویدیوی آموزشی چاپ عکس':'ویدیوی آموزشی صحافی آلبوم';
     b.setAttribute('aria-label',b.title);
-    b.setAttribute('role','button');
-    b.tabIndex=0;
-    b.innerHTML='<em class="pb569GuideLabel" aria-hidden="true">؟</em>';
-    const open=e=>{e.preventDefault();e.stopPropagation();openContextGuide(kind,b)};
-    b.addEventListener('click',open);
-    b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){open(e)}});
+    b.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void openContextGuide(kind,b)});
     return b;
   }
   function pointGuideArrow(button,target){
     if(!button||!target||!button.isConnected||!target.isConnected)return;
     const arrow=button.querySelector('.pb569GuideArrow');if(!arrow)return;
     const br=button.getBoundingClientRect(),tr=target.getBoundingClientRect();
-    const bx=br.left+br.width/2,tx=tr.left+tr.width/2;
-    arrow.textContent=tx>=bx?'→':'←';
-    button.dataset.pbGuideArrow=tx>=bx?'right':'left';
+    arrow.textContent=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
+  }
+  function installR1978GuideStyle(){
+    if(document.getElementById('pb1978VideoGuidesStyle'))return;
+    const style=document.createElement('style');
+    style.id='pb1978VideoGuidesStyle';
+    style.textContent=`
+      .photographerPrintModeNav > .pb1978VideoGuideButton,
+      #pb1126DesktopHeader .pb1126Secondary .pb1978VideoGuideButton {
+        display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;
+        justify-content:center!important;gap:5px!important;width:auto!important;min-width:0!important;
+        height:32px!important;min-height:30px!important;padding:4px 9px!important;
+        margin:0 3px!important;border:1px solid #a5c5fc!important;border-radius:9px!important;
+        background:#edf5ff!important;color:#174c9a!important;opacity:1!important;
+        visibility:visible!important;white-space:nowrap!important;cursor:pointer!important;
+        box-shadow:none!important;line-height:1.2!important;position:relative!important;
+        font:700 11px Vazirmatn,Tahoma,sans-serif!important;text-decoration:none!important;
+      }
+      .pb1978VideoGuideButton .pb569GuideLabel{
+        display:inline!important;font:inherit!important;color:inherit!important;
+        margin:0!important;padding:0!important;white-space:nowrap!important;
+      }
+      .pb1978VideoGuideButton .pb569GuideArrow{
+        display:inline!important;font:800 15px Tahoma,sans-serif!important;
+        color:#2563eb!important;line-height:1!important;font-style:normal!important;
+        width:auto!important;height:auto!important;
+      }
+      .pb1978VideoGuideButton:hover,.pb1978VideoGuideButton:focus-visible{
+        background:#dbeafe!important;outline:2px solid #93c5fd;outline-offset:1px;
+      }
+      @media(max-width:820px){
+        .photographerPrintModeNav > .pb1978VideoGuideButton{
+          font-size:10px!important;padding:3px 5px!important;height:29px!important;
+          min-height:28px!important;margin:0 1px!important;gap:3px!important;
+        }
+      }
+    `;
+    document.head.append(style);
   }
   function cleanupHeaderButtons(){
     const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav');
@@ -108,50 +142,31 @@
   }
   function mountHeaderButtons(){
     const nav=cleanupHeaderButtons();if(!nav)return;
-    const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab'),lab=nav.querySelector('.photographerPrintTopLab');
+    const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab');
     if(!print)return; // R1976: guides must be available even before a lab is selected.
-    print.querySelectorAll('.pb569WorkflowGuideButton:not(.print)').forEach(x=>x.remove());
-    if(album)album.querySelectorAll('.pb569WorkflowGuideButton:not(.album)').forEach(x=>x.remove());
-
-    if(isMobile()){
-      /* Mobile: guide stays as the compact square INSIDE the main button. */
-      nav.querySelectorAll(':scope > .pb567WorkflowGuideButton').forEach(x=>x.remove());
-      let p=print.querySelector(':scope > .pb569WorkflowGuideButton.print')||nav.querySelector(':scope > .pb569WorkflowGuideButton.print');
-      if(!p)p=guideButton('print');
-      p.classList.remove('pb699DesktopGuide');
-      if(!p.querySelector(':scope > .pb569GuideLabel')||p.querySelector(':scope > .pb569GuideLabel')?.textContent!=='؟'||p.children.length!==1)p.innerHTML='<em class="pb569GuideLabel" aria-hidden="true">؟</em>';
-      if(p.parentElement!==print||print.lastElementChild!==p)print.append(p);
-      if(album){
-        let a=album.querySelector(':scope > .pb569WorkflowGuideButton.album')||nav.querySelector(':scope > .pb569WorkflowGuideButton.album');
-        if(!a)a=guideButton('album');
-        a.classList.remove('pb699DesktopGuide');
-        if(!a.querySelector(':scope > .pb569GuideLabel')||a.querySelector(':scope > .pb569GuideLabel')?.textContent!=='؟'||a.children.length!==1)a.innerHTML='<em class="pb569GuideLabel" aria-hidden="true">؟</em>';
-        if(a.parentElement!==album||album.lastElementChild!==a)album.append(a);
-      }else nav.querySelector(':scope > .pb569WorkflowGuideButton.album')?.remove();
-      nav.classList.remove('pb567WorkflowGuideNavReady','pb699DesktopGuideNav');
-      nav.classList.add('pb569WorkflowGuideNavReady','pb692InlineGuideReady');
-      return;
+    installR1978GuideStyle();
+    function mount(kind,target){
+      let button=nav.querySelector(':scope > .pb1978VideoGuideButton.'+kind)||
+        target.querySelector(':scope > .pb569WorkflowGuideButton.'+kind);
+      if(button?.tagName!=='BUTTON'){button?.remove();button=null;}
+      if(!button)button=guideButton(kind);
+      button.classList.add('pb1978VideoGuideButton');
+      if(!button.querySelector('.pb569GuideArrow')||!button.querySelector('.pb569GuideLabel')||
+        button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
+        button.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+      // Sibling placement means React's own Print/Album click action remains untouched.
+      if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
+      return button;
     }
-
-    /* Desktop/Windows: guides are independent labelled buttons BESIDE their destinations. */
-    let p=nav.querySelector(':scope > .pb569WorkflowGuideButton.print')||print.querySelector(':scope > .pb569WorkflowGuideButton.print');
-    if(!p)p=guideButton('print');
-    p.classList.add('pb699DesktopGuide');
-    if(!p.querySelector('.pb699GuideArrow')||p.querySelector('.pb569GuideLabel')?.textContent!=='راهنما')p.innerHTML='<i class="pb569GuideArrow pb699GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">راهنما</em>';
-    if(p.parentElement!==nav||p.nextElementSibling!==print)nav.insertBefore(p,print);
-
-    let a=null;
-    if(album){
-      a=nav.querySelector(':scope > .pb569WorkflowGuideButton.album')||album.querySelector(':scope > .pb569WorkflowGuideButton.album');
-      if(!a)a=guideButton('album');
-      a.classList.add('pb699DesktopGuide');
-      if(!a.querySelector('.pb699GuideArrow')||a.querySelector('.pb569GuideLabel')?.textContent!=='راهنما')a.innerHTML='<i class="pb569GuideArrow pb699GuideArrow" aria-hidden="true">→</i><em class="pb569GuideLabel">راهنما</em>';
-      if(a.parentElement!==nav||nav.lastElementChild!==a)nav.append(a);
-    }else nav.querySelector(':scope > .pb569WorkflowGuideButton.album')?.remove();
-
-    nav.classList.remove('pb567WorkflowGuideNavReady','pb692InlineGuideReady');
-    nav.classList.add('pb569WorkflowGuideNavReady','pb699DesktopGuideNav');
-    requestAnimationFrame(()=>{pointGuideArrow(p,print);if(a&&album)pointGuideArrow(a,album)});
+    // Print arrow points into the real Print button; album has its own guide.
+    const printGuide=mount('print',print);
+    const albumGuide=album?mount('album',album):null;
+    if(!album)nav.querySelectorAll(':scope > .pb569WorkflowGuideButton.album').forEach(el=>el.remove());
+    nav.classList.add('pb1978GuideNavReady');
+    requestAnimationFrame(()=>{
+      pointGuideArrow(printGuide,print);
+      if(albumGuide&&album)pointGuideArrow(albumGuide,album);
+    });
   }
 
   function currentLabName(){

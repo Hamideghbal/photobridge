@@ -116,3 +116,17 @@ test('R2003 photographer date controls are statement-style and presets reset act
  assert(html.includes('photographerDateFilters=r2003'));
  assert(html.includes('splitGuide=r2003'));
 });
+
+test('R2004 date picker role wrapper preserves existing lab picker and photographer clear control',()=>{
+ for(const [key,field,set,label] of [['From','_pbInvFrom','_setPbInvFrom','از تاریخ'],['To','_pbInvTo','_setPbInvTo','تا تاریخ']]){
+  const marker='compact:!0,value:'+field+',onChange:'+set+',placeholder:"'+label+'",showToday:t==="lab"';
+  assert.equal(finance.split(marker).length-1,2,'one preserved lab picker and one customer picker');
+  const start=finance.indexOf('(t==="lab"?e.jsx(Hs,{'+marker);
+  assert(start>=0,'lab picker remains original');
+  const fragment=finance.slice(start,start+1600);
+  assert(fragment.includes('className:"statementDateLabel pb2003InvoiceDateLabel"'));
+  assert(fragment.includes('_setPbInvApplied'+key+'("");Ie(1)'));
+ }
+ assert(css.includes('label:has(.pb2003InvoiceDateLabel)'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeDateBuild=r2004'));
+});

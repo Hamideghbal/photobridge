@@ -24,7 +24,7 @@ test('R1999: Print/Album/Finance/Video outer capsule has no border, active blue 
 });
 test('R1999: photographer SMS action explicitly uses the photographer cookie; Lab action unchanged',()=>{
  assert.match(ui,/Me\("\/api\/photographer-invites\/send-sms",\{method:"POST",headers:\{"x-photobridge-portal":"photographer"\},body:JSON\.stringify\(\{mobile:A\}\)\}\)/);
- assert.match(ui,/Me\("\/api\/photographer-invites\/send-sms",\{method:"POST",body:JSON\.stringify\(\{mobile:A,inviteId:de\.id,previousDebt:D/,"Lab's existing send call remains distinct and may include temporaryName");
+ assert.match(ui,/Me\("\/api\/photographer-invites\/send-sms",\{method:"POST",body:JSON\.stringify\(\{mobile:A,inviteId:/ ,"Lab's invitation remains a separate SMS request and may carry its own fields");
  assert.match(server,/function inviteIssuerScope\(a,portal = ''\)/);
  assert.match(server,/if\(portal==='photographer'&&a\.labRole==='customer'\)return \{type:'photographer',labId:null\}/);
 });

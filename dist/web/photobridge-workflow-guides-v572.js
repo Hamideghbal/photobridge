@@ -139,7 +139,7 @@
     b.dataset.pbGuide=kind;
     b.title=kind==='print'?'ویدیوی آموزشی چاپ عکس':'ویدیوی آموزشی صحافی آلبوم';
     b.setAttribute('aria-label',b.title);
-    b.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+    b.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">راهنما</em>';
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void openContextGuide(kind,b)});
     return b;
   }
@@ -287,8 +287,8 @@
       if(button?.tagName!=='BUTTON'){button?.remove();button=null;}
       if(!button)button=guideButton(kind);
       if(!button.querySelector('.pb569GuideArrow')||!button.querySelector('.pb569GuideLabel')||
-         button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
-        button.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+         button.querySelector('.pb569GuideLabel').textContent!=='راهنما')
+        button.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">راهنما</em>';
       if(!button.classList.contains('pb1978VideoGuideButton'))button.classList.add('pb1978VideoGuideButton');
       // No React-owned button is replaced; tutorials are adjacent siblings.
       // R1989: selected new model 2 reference — all four buttons share ONE rounded shell.

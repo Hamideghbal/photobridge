@@ -168,10 +168,24 @@
     row.append(title,nav,cart);
    }
    let modes,utilities;
-   if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
+   if(active==='print'&&!choosing){modes=document.createElement('div');modes.className='pb1127PrintModes pb1989ModelTwo';utilities=document.createElement('div');utilities.className='pb1127PrintUtilities';row.append(modes,utilities);}
    for(const original of storeHeader?[]:visible){
     const copy=cleanClone(original);copy.style.removeProperty('display');
-    copy.onclick=()=>{press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));};
+    copy.onclick=()=>{
+     // R1989: the visible cloned mode buttons must switch blue/white immediately;
+     // underlying React mode state still changes only through the REAL original.
+     if(modes&&(copy.classList.contains('photographerPrintPhotoTab')||copy.classList.contains('photographerPrintAlbumTab'))){
+      modes.querySelectorAll('button.photographerPrintPhotoTab,button.photographerPrintAlbumTab').forEach(button=>{
+       const selected=button===copy;
+       button.classList.toggle('active',selected);
+       button.classList.toggle('selected',selected);
+       button.setAttribute('aria-pressed',String(selected));
+       button.setAttribute('aria-selected',String(selected));
+       button.dataset.pb1989Active=String(selected);
+      });
+     }
+     press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));
+    };
     if(active==='store'){const labels={equipmentPanel:'اجاره تجهیزات',salesPanel:'خرید تجهیزات',bookingsPanel:'آفیش‌های من',financePanel:'مالی'};if(labels[copy.dataset.storePanel])copy.textContent=labels[copy.dataset.storePanel];}
     if(copy.classList.contains('archive'))copy.textContent='آرشیو';
     if(copy.classList.contains('finance')){copy.textContent='مالی';copy.setAttribute('aria-label','مالی');}

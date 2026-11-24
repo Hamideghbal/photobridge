@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1988-original-model3';
+  const VERSION='0.17.699-r1989-approved-model2';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -152,9 +152,9 @@
   // R1983: user-approved concept 3 — prominent main modes and understated
   // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
-    // R1987: the versioned final stylesheet outranks legacy desktop chrome.
-    // Do not reinject the old R1983 stylesheet later and undo mobile styles.
-    if(document.querySelector('link[href*="photobridge-r1987-model3-guide.css"]')){
+    // R1989: the final approved model 2 stylesheet owns the bar.
+    // Never re-inject the old model 3 style after hydration.
+    if(document.querySelector('link[href*="photobridge-r1989-model2-segmented.css"]')){
       document.getElementById('pb1983ModelThreeStyles')?.remove();
       return;
     }
@@ -278,7 +278,8 @@
     const print=nav.querySelector('.photographerPrintPhotoTab'),
           album=nav.querySelector('.photographerPrintAlbumTab');
     if(!print)return; // R1976: do not depend on a preselected lab.
-    if(!nav.classList.contains('pb1983ModelThree'))nav.classList.add('pb1983ModelThree');
+    nav.classList.remove('pb1983ModelThree');
+    if(!nav.classList.contains('pb1989ModelTwo'))nav.classList.add('pb1989ModelTwo');
     installR1978GuideStyle();
     function mount(kind,target){
       const selector=':scope > .pb1978VideoGuideButton.'+kind;
@@ -290,8 +291,8 @@
         button.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
       if(!button.classList.contains('pb1978VideoGuideButton'))button.classList.add('pb1978VideoGuideButton');
       // No React-owned button is replaced; tutorials are adjacent siblings.
-      // R1988: use the USER-SELECTED ORIGINAL numbered model 3 image.
-      // Visual order in RTL: [چاپ عکس] [ویدیوی چاپ] [صحافی آلبوم] [ویدیوی آلبوم].
+      // R1989: selected new model 2 reference — all four buttons share ONE rounded shell.
+      // Visual RTL order: [چاپ عکس] [ویدیوی چاپ] [صحافی آلبوم] [ویدیوی آلبوم].
       // Both tutorials go AFTER their corresponding primary action in DOM.
       if(button.parentElement!==nav||button.previousElementSibling!==target)
         target.insertAdjacentElement('afterend',button);

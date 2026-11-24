@@ -114,27 +114,6 @@
         box-shadow:none!important;line-height:1.2!important;position:relative!important;
         font:700 11px Vazirmatn,Tahoma,sans-serif!important;text-decoration:none!important;
       }
-      #pbR99LabChooser .pb1978ChooserVideos{
-        display:flex!important;flex-wrap:wrap!important;justify-content:center!important;
-        align-items:center!important;gap:8px!important;margin:12px 0!important;
-        direction:rtl!important;
-      }
-      #pbR99LabChooser .pb1978ChooserPair{
-        display:inline-flex!important;align-items:center!important;gap:5px!important;
-        padding:4px 7px!important;border-radius:10px!important;background:#fff!important;
-        border:1px solid #d8e7ff!important;
-      }
-      #pbR99LabChooser .pb1978ChooserPair > span{
-        font:700 11px Vazirmatn,Tahoma,sans-serif!important;color:#25344b!important;
-      }
-      #pbR99LabChooser .pb1978VideoGuideButton{
-        display:inline-flex!important;align-items:center!important;gap:5px!important;
-        background:#edf5ff!important;color:#174c9a!important;
-        border:1px solid #a5c5fc!important;border-radius:8px!important;
-        padding:6px 9px!important;font:700 11px Vazirmatn,Tahoma,sans-serif!important;
-        cursor:pointer!important;width:auto!important;min-width:0!important;height:auto!important;
-      }
-      html.pb567GuideOpen body .pb567GuideBackdrop{z-index:2147483600!important}
       .pb1978VideoGuideButton .pb569GuideLabel{
         display:inline!important;font:inherit!important;color:inherit!important;
         margin:0!important;padding:0!important;white-space:nowrap!important;
@@ -158,8 +137,9 @@
   }
   function cleanupHeaderButtons(){
     const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav');
+    // R1980: video guidance belongs only beside the original Print/Album header tabs.
     document.querySelectorAll('.pb569WorkflowGuideButton').forEach(el=>{
-      if((!validNav||!validNav.contains(el))&&!el.closest('#pbR99LabChooser .pb1978ChooserVideos'))el.remove();
+      if(!validNav||!validNav.contains(el))el.remove();
     });
     if(!validNav)document.querySelectorAll('.photographerHeaderNav.pb699DesktopGuideNav,.photographerHeaderNav.pb569WorkflowGuideNavReady,.photographerHeaderNav.pb692InlineGuideReady').forEach(el=>el.classList.remove('pb699DesktopGuideNav','pb569WorkflowGuideNavReady','pb692InlineGuideReady'));
     return validNav;
@@ -193,21 +173,6 @@
     });
   }
 
-
-  // R1978: contextual guides are also visible while the lab chooser covers
-  // the Print workspace; choosing a lab is not required to watch either video.
-  function mountChooserGuides(){
-    const intro=document.querySelector('#pbR99LabChooser .pbR99LabIntro');
-    if(!intro||intro.querySelector('.pb1978ChooserVideos'))return;
-    const row=document.createElement('div');row.className='pb1978ChooserVideos';
-    for(const [kind,title] of [['print','چاپ عکس'],['album','صحافی آلبوم']]){
-      const pair=document.createElement('div');pair.className='pb1978ChooserPair';
-      const label=document.createElement('span');label.textContent=title;
-      const button=guideButton(kind);
-      pair.append(label,button);row.append(pair);
-    }
-    intro.append(row);
-  }
 
   function currentLabName(){
     const selectors=[
@@ -367,7 +332,7 @@
     const manager=document.createElement('section');manager.className='pb567WorkflowGuideManager';manager.dataset.version=VERSION;manager.innerHTML='<div class="pb567GuideManagerLoading">در حال دریافت شش ویدیوی اختصاصی…</div>';
     const head=panel.querySelector('.adminGuideHead');head.insertAdjacentElement('afterend',manager);renderAdminManager(manager);
   }
-  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountChooserGuides();mountAlbumQuoteLab();mountAdminManager()}
+  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
   function queueSync(){if(observerQueued)return;observerQueued=true;requestAnimationFrame(()=>{observerQueued=false;sync()})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuideModal()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();

@@ -363,3 +363,19 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
  html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide{flex:0 0 18px!important;width:18px!important;padding:0!important;border:1px solid #cdd9ec!important;border-radius:8px 0 0 8px!important;background:#eef4ff!important;color:#315efb!important;-webkit-text-fill-color:#315efb!important;font-size:9px!important;box-shadow:none!important}
  html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs button::before,html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs button::after{animation:none!important;transition:none!important}
 }
+
+/* R2007: three stable mobile actions; archive only in the menu. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;animation:none!important;transition:none!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs:has([data-f37-source="print:print"]):not(:has([data-f37-source="print:album"])){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button:not(.pb2006MobileGuide){font-size:12px!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide{flex:0 0 23px!important;width:23px!important;font-size:11px!important}
+ html body #pbF37MenuPanel .pb2007ArchiveMenuPair{display:flex!important;align-items:center!important;gap:4px!important}
+ html body #pbF37MenuPanel .pb2007ArchiveMenuPair>button[data-f37-menu="archive"]{flex:1 1 0!important;min-width:0!important}
+ html body #pbF37MenuPanel .pb2007ArchiveMenuPair>button.pb2007ArchiveMenuGuide{display:flex!important;align-items:center!important;justify-content:center!important;width:66px!important;flex:0 0 66px!important;min-height:42px!important;background:#eef4ff!important;color:#315efb!important;font:700 10px/1.4 Vazirmatn,Tahoma,sans-serif!important;padding:4px!important}
+}
+@media(min-width:821px){
+ html body #pb1126DesktopHeader .pb1126Secondary button.pb2005UtilityGuide{display:inline-flex!important;visibility:visible!important;opacity:1!important;animation:none!important;transition:none!important}
+ html body #pb1126DesktopHeader .pb1126Secondary .pb1127PrintUtilities{direction:rtl!important;gap:0!important}
+ html body #pb1126DesktopHeader .pb1126Secondary .pb1127PrintUtilities>button.pb2005UtilityGuide{margin-inline-end:6px!important}
+}

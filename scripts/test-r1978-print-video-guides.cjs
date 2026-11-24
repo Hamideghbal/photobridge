@@ -36,9 +36,14 @@ test('R1978 labels remain visible and clickable next to BOTH Print and Album tab
 test('R1983 model 3: two prominent main tabs and two subtle paired video tutorials',()=>{
  const source=read('dist/web/photobridge-workflow-guides-v572.js');
  assert(source.includes("nav.classList.add('pb1983ModelThree')"),'stable header receives model 3 styling');
- assert(source.includes('pb1983ModelThree > button.photographerPrintPhotoTab'),'Print Photos is a primary button');
- assert(source.includes('pb1983ModelThree > button.photographerPrintAlbumTab'),'Album Binding is a primary button');
- assert(source.includes('pb1983ModelThree > .pb1978VideoGuideButton'),'both video tutorials are secondary');
+ // R1985: style must survive replacement of the secondary desktop header.
+ // A transient pb1983ModelThree class is optional decoration, not the selector
+ // responsible for keeping main tabs and guide buttons visible.
+ assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintPhotoTab'),'Print Photos persists in the visible desktop header');
+ assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintAlbumTab'),'Album Binding persists in the visible desktop header');
+ assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > .pb1978VideoGuideButton'),'tutorials survive desktop clone/re-render');
+ assert(source.includes('html body .photographerPrintWorkspace .photographerPrintModeNav > .pb1978VideoGuideButton'),'mobile native controls retain paired video buttons');
+ assert(!source.includes('.pb1127PrintModes.pb1983ModelThree'),'model 3 layout must not depend on a temporary class');
  assert(source.includes('height:35px!important'),'main buttons taller and more prominent');
  assert(source.includes('height:26px!important'),'video tutorial buttons are smaller');
  assert(source.includes('background:linear-gradient(135deg,#397bff,#2356d8)'),'active primary tab uses blue emphasis');
@@ -120,6 +125,11 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
- assert(html.includes('photobridge-workflow-guides-v572.js?v=r1983'));
+ // Compare the live HTML asset revision with its Liara build writer, rather
+ // than pinning r1983 forever and rejecting every later cache-busted release.
+ const writer=read('scripts/enable-r1966-desktop-calendar-store-chooser.mjs');
+ const pinned=writer.match(/'photobridge-workflow-guides-v572[.]js','v','(r[0-9]+)'/);
+ assert(pinned,'Liara writer pins the video guide cache revision');
+ assert(html.includes('photobridge-workflow-guides-v572.js?v='+pinned[1]),'HTML and Liara writer use the same fresh video revision');
  assert(html.includes('r1981=main-print-only'));
 });

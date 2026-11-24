@@ -1,1 +1,1 @@
-2026-11-24-r1985-video-guide-stability-no-render-loop
+2026-11-24-r1986-guide-regression-tests-follow-live-asset

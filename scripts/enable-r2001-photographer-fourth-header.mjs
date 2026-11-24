@@ -130,6 +130,13 @@ if(!ui.includes('/* PB2003 photographer date filters */')){
  ui=ui.slice(0,begin)+part+ui.slice(end+1)+'\n/* PB2003 photographer date filters */\n';
  write(file,ui);
 }
+// R2007: native Print header must exist even on the first unqualified Orders route.
+if(!ui.includes('/* PB2007 canonical print route */')){
+ const gate='D=!H&&["orders","upload","album","archive","finance"].includes(Se)&&new URLSearchParams(location.search).get("workspace")==="print"';
+ if(ui.includes(gate))ui=once(ui,gate,'D=!H&&["orders","upload","album","archive","finance"].includes(Se)&&(new URLSearchParams(location.search).get("workspace")==="print"||/^\\/photographer\\/(?:orders|upload|album|archive|finance)(?:\\/|$)/.test(location.pathname))','R2007 native print context');
+ else if(!ui.includes('D=!H&&["orders","upload","album","archive","finance"].includes(Se)'))throw Error('[R2007] native print gate missing');
+ ui+='\\n/* PB2007 canonical print route */\\n';write(file,ui);
+}
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const cssName='photobridge-r2001-photographer-fourth-header.css';
 fs.copyFileSync('scripts/r2001-photographer-fourth-header.css','dist/web/'+cssName);
@@ -150,5 +157,6 @@ html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('financeDateBuild=r2004')?url:url+'&financeDateBuild=r2004');
 html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('utilityGuides=r2005')?url:url+'&utilityGuides=r2005');
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|r1099-photographer-tabs)\.js\?[^"'<>\s]*)/g,url=>url.includes('mobileHeader=r2006')?url:url+'&mobileHeader=r2006');
+html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|v904r99-lab-chooser|r1099-photographer-tabs)\.js\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('canonicalPrint=r2007')?url:url+'&canonicalPrint=r2007');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

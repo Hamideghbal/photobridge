@@ -164,3 +164,21 @@ test('R2006 actual F37 mobile header reconciles first-entry and preserves tab no
  assert(guide.includes("if(document.querySelector?.('#pbF37Tabs.pb2006PrintTabs'))return null"));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('mobileHeader=r2006'));
 });
+
+test('R2007 canonical print entry and archive in mobile menu; desktop guides use actual utility parent',()=>{
+ const header=fs.readFileSync('dist/web/photobridge-v904r100f41-header-date-name-fit.js','utf8');
+ const chooser=fs.readFileSync('dist/web/photobridge-v904r99-lab-chooser.js','utf8');
+ const guide=fs.readFileSync('dist/web/photobridge-workflow-guides-v572.js','utf8');
+ const nav=fs.readFileSync('dist/web/photobridge-r1099-photographer-tabs.js','utf8');
+ for(const text of [header,chooser,guide,nav])assert.doesNotThrow(()=>new vm.Script(text));
+ assert(header.includes("['finance','.photographerPrintCommonAction.finance','مالی']];"));
+ assert(header.includes('pb2007ArchiveMenuPair'));
+ assert(header.includes("location.assign('/photographer/archive?workspace=print')"));
+ assert(header.includes("const active=kind==='print'?"));
+ assert(chooser.includes("u.pathname='/photographer/orders/flow';u.searchParams.set('workspace','print')"));
+ assert(nav.includes("location.replace('/photographer/orders?workspace=print')"));
+ assert(guide.includes('return target?.parentElement||null'));
+ assert(css.includes('repeat(3,minmax(0,1fr))'));
+ assert(ui.includes('/* PB2007 canonical print route */'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('canonicalPrint=r2007'));
+});

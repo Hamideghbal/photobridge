@@ -273,6 +273,7 @@
     // R2006: the visible F37 mobile proxy owns its guides. Do not alter
     // the hidden React source row while it is being mirrored.
     if(document.querySelector?.('#pbF37Tabs.pb2006PrintTabs'))return null;
+    if(window.PBStorePhotographerHeaderCore)return null; // only the F37 mobile row owns contextual guides.
     // Mobile has no cloned desktop row; use the real interactive mode header.
     const modes=[...document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')];
     return modes.find(nav=>nav.isConnected&&nav.querySelector('.photographerPrintPhotoTab')&&nav.getClientRects().length>0)||null;
@@ -327,10 +328,11 @@
   function visibleUtilityNav(){
     if(!location.pathname.startsWith('/photographer')||window.self!==window.top)return null;
     if(isMobile()&&document.querySelector('#pbF37Tabs.pb2006PrintTabs'))return null;
-    const candidates=isMobile()
-      ? [...document.querySelectorAll('.photographerPrintModeUtilityCluster')]
-      : [...document.querySelectorAll('#pb1126DesktopHeader .pb1126Secondary:not([hidden]) .pb1127PrintUtilities')];
-    return candidates.find(el=>el.isConnected&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden'&&el.querySelector('button.archive,button.finance'))||null;
+    if(isMobile())return null; // R2007: archive lives only in the mobile menu.
+    const row=document.querySelector('#pb1126DesktopHeader .pb1126Secondary');
+    if(!row||row.hidden)return null;
+    const target=row.querySelector('button.photographerPrintCommonAction.finance,button.photographerPrintCommonAction.archive,button.finance:not(.pb2005UtilityGuide),button.archive:not(.pb2005UtilityGuide)');
+    return target?.parentElement||null;
   }
   function mountUtilityGuides(){
     const nav=visibleUtilityNav();

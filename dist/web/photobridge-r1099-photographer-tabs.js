@@ -120,7 +120,7 @@ async function load(){
   }
   if(next.connectedLab===true&&/^\/photographer(?:\/gallery)?\/?$/.test(location.pathname)&&!['pbDesktopPanel','pbCrmTab','pbStorePanel','pbDesktopContent','view'].some(key=>new URLSearchParams(location.search).has(key))){
    let seen=false;try{seen=sessionStorage.getItem('pb1976PrintLanding')==='1';if(!seen)sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
-   if(!seen){location.replace('/photographer/orders');return;}
+   if(!seen){location.replace('/photographer/orders?workspace=print');return;}
   }
   if(matchMedia('(min-width:821px)').matches)window.dispatchEvent(new CustomEvent('photobridge-navigation-tabs',{detail:settings}));apply();delete document.documentElement.dataset.pb1106TabsPending}catch{}finally{if(epoch===sessionEpoch){inFlight=false;window.pbR1877FeatureNavReady=true;releaseStableDock()}}
 }

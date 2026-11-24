@@ -130,3 +130,20 @@ test('R2004 date picker role wrapper preserves existing lab picker and photograp
  assert(css.includes('label:has(.pb2003InvoiceDateLabel)'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeDateBuild=r2004'));
 });
+
+test('R2005 archive and finance guide uploads are independent for mobile and desktop',()=>{
+ const guide=fs.readFileSync('dist/web/photobridge-workflow-guides-v572.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(guide));
+ for(const kind of ['archive','finance'])for(const device of ['mobile','desktop'])assert(guide.includes("key:'"+kind+"-"+device+"',kind:'"+kind+"',device:'"+device+"'"));
+ assert(guide.includes("['print','album','archive','finance'].includes(kind)"));
+ assert(guide.includes('for(const s of slots)'));
+ assert(guide.includes("for(const kind of ['archive','finance'])"));
+ assert(guide.includes('button.previousElementSibling!==target'));
+ assert(guide.includes('mountUtilityGuides();'));
+ assert(guide.includes('if(window.self!==window.top)return null'));
+ assert(guide.includes('link[href*="photobridge-boot-"]'));
+ assert(guide.includes('if(style)return; // R2005'));
+ assert(css.includes('button.pb2005UtilityGuide'));
+ assert(css.includes('animation:none!important;transition:none!important'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('utilityGuides=r2005'));
+});

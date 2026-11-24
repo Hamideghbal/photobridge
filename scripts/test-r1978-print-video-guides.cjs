@@ -128,7 +128,7 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  // Compare the live HTML asset revision with its Liara build writer, rather
  // than pinning r1983 forever and rejecting every later cache-busted release.
  const writer=read('scripts/enable-r1966-desktop-calendar-store-chooser.mjs');
- const pinned=writer.match(/\['photobridge-workflow-guides-v572\\.js','v','(r\\d+)'\]/);
+ const pinned=writer.match(/'photobridge-workflow-guides-v572[.]js','v','(r[0-9]+)'/);
  assert(pinned,'Liara writer pins the video guide cache revision');
  assert(html.includes('photobridge-workflow-guides-v572.js?v='+pinned[1]),'HTML and Liara writer use the same fresh video revision');
  assert(html.includes('r1981=main-print-only'));

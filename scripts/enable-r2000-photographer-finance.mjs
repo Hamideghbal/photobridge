@@ -21,9 +21,14 @@ if(!bundle.includes('/* PB2000 photographer finance parity */')){
  part=once(part,'t==="lab"&&_pb1177StmtMode==="detailed"&&Je.reference_type==="invoice"','_pb1177StmtMode==="detailed"&&Je.reference_type==="invoice"','invoice item detail');
  if(!part.includes('_pb1177StmtMode==="detailed"?window.pb1176Finance?.detailed(_,r):Jy(_)'))throw Error('[R2000] print mode must be respected');
  part=once(part,'p&&(t!=="lab"||w==="overview")&&e.jsx("div",{className:"financeSummary accountingSummary financeSummaryCompact"','p&&(t!=="lab"||w==="overview")&&w!=="statement"&&e.jsx("div",{className:"financeSummary accountingSummary financeSummaryCompact"','hide duplicate all-time summary only for statement');
- const old='e.jsx("button",{className:"primary",disabled:D||t==="lab"&&!z,onClick:()=>b(),children:D?"در حال محاسبه…":"نمایش حساب"})]})';
- const next='e.jsx("button",{className:"primary",disabled:D||t==="lab"&&!z,onClick:()=>b(),children:D?"در حال محاسبه…":"نمایش حساب"}),t==="customer"&&e.jsxs("div",{className:"pb2000CustomerMetrics",role:"status","aria-live":"polite",children:[e.jsxs("span",{children:[e.jsx("small",{children:"جمع فاکتورها"}),e.jsx("b",{children:_?Xe(st.filter(Je=>Je.reference_type==="invoice").reduce((sum,Je)=>sum+Number(Je.debit||0)-Number(Je.credit||0),0)):"—"})]}),e.jsxs("span",{children:[e.jsx("small",{children:"پرداخت‌شده"}),e.jsx("b",{children:_?Xe(st.filter(Je=>Je.reference_type==="payment").reduce((sum,Je)=>sum+Number(Je.credit||0)-Number(Je.debit||0),0)):"—"})]}),e.jsxs("span",{className:"pb2000Balance",children:[e.jsx("small",{children:"مانده حساب"}),e.jsx("b",{children:_?Xe(_.summary?.closing):"—"})]})]})]})';
- part=once(part,old,next,'range totals same row');
+ const metrics='t==="customer"&&e.jsxs("div",{className:"pb2000CustomerMetrics",role:"status","aria-live":"polite",children:[e.jsxs("span",{children:[e.jsx("small",{children:"جمع فاکتورها"}),e.jsx("b",{children:_?Xe(st.filter(Je=>Je.reference_type==="invoice").reduce((sum,Je)=>sum+Number(Je.debit||0)-Number(Je.credit||0),0)):"—"})]}),e.jsxs("span",{children:[e.jsx("small",{children:"پرداخت‌شده"}),e.jsx("b",{children:_?Xe(st.filter(Je=>Je.reference_type==="payment").reduce((sum,Je)=>sum+Number(Je.credit||0)-Number(Je.debit||0),0)):"—"})]}),e.jsxs("span",{className:"pb2000Balance",children:[e.jsx("small",{children:"مانده حساب"}),e.jsx("b",{children:_?Xe(_.summary?.closing):"—"})]})]})';
+ const filters=part.indexOf('className:"statementFilters"');
+ const actions=part.indexOf('e.jsxs("div",{className:"statementActions"',filters);
+ const closing=part.lastIndexOf(']})',actions);
+ if(filters<0||actions<filters||closing<filters||actions-closing>10)
+  throw Error('[R2000] statement filter-to-actions boundary missing');
+ part=part.slice(0,closing)+','+metrics+part.slice(closing);
+
  bundle=bundle.slice(0,begin)+part+bundle.slice(end+1)+'\n/* PB2000 photographer finance parity */\n';
  write(bundlePath,bundle);
 }

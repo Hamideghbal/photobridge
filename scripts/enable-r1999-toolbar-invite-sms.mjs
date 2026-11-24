@@ -96,7 +96,11 @@ if(!server.includes('/* PB1999 photographer recipient lookup */')){
   '                        throw e;',
   '                    }'
  ].join('\n');
- once(oldCatch,newCatch,'schema repair for photographer-sent SMS');
+ const photographerBranchEnd=route.indexOf("        if (scope.type !== 'lab' || !scope.labId)");
+ if(photographerBranchEnd<0)throw Error('[R1999] photographer branch boundary missing');
+ const photographerPart=route.slice(0,photographerBranchEnd);
+ if(photographerPart.split(oldCatch).length!==2)throw Error('[R1999] photographer SMS schema retry anchor missing');
+ route=photographerPart.replace(oldCatch,newCatch)+route.slice(photographerBranchEnd);
  // A provider-accepted SMS must not be shown as failed if the secondary
  // invite presentation query later throws (which would trigger duplicate sends).
  once(

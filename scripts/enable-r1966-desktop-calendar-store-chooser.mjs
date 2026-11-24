@@ -164,8 +164,8 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  const indexPath='dist/web/index.html';
  let html=read(indexPath);
  for(const [filename,key,value] of [
-  ['photobridge-v904r99-lab-chooser.js','r1978','print-photos-tab'],
-  ['photobridge-workflow-guides-v572.js','v','r1980']
+  ['photobridge-v904r99-lab-chooser.js','r1981','main-print-only'],
+  ['photobridge-workflow-guides-v572.js','v','r1981']
  ]){
   const pattern=new RegExp('/'+filename.replaceAll('.','[.]')+'(?:\\?[^"\\x27<>\\s]*)?','g');
   let hits=0;
@@ -174,6 +174,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
    const mark=url.indexOf('?');
    const pathname=mark<0?url:url.slice(0,mark);
    const query=new URLSearchParams(mark<0?'':url.slice(mark+1));
+   if(filename==='photobridge-v904r99-lab-chooser.js')query.delete('r1978');
    query.set(key,value);
    return pathname+'?'+query.toString();
   });

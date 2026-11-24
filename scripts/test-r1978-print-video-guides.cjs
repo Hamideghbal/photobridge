@@ -5,53 +5,58 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const read=p=>fs.readFileSync(p,'utf8');
 
-test('R1978 labels remain visible and clickable next to BOTH Print and Album tabs',()=>{
+// R1991: R1989 is the user's approved model 2. These checks preserve R1978
+// clickability/device selection without demanding the REMOVED model 3 design.
+test('R1978 two labelled video guides remain adjacent to their own Print and Album buttons',()=>{
  const guide=read('dist/web/photobridge-workflow-guides-v572.js');
  assert.doesNotThrow(()=>new vm.Script(guide));
- assert(guide.includes("document.createElement('button')"),'guide must be a real button for desktop secondary header cloning');
- assert(guide.includes("pb1978VideoGuideButton"),'new visible labelled guide class');
- assert(guide.includes('ویدیوی آموزشی'),'fully written visible label');
- assert(guide.includes('pb569GuideArrow'),'visible pointing arrow');
- assert(guide.includes("mount('print',print)"),'guide beside Print Photos');
- assert(guide.includes("mount('album',album)"),'guide beside Album Binding');
- // R1980: the lab chooser must contain only lab information, not synthetic
- // Print/Album tabs or tutorial buttons. The real Print mode header owns them.
+ assert(guide.includes("document.createElement('button')"),'guide controls are actual buttons copied by the desktop chrome');
+ assert(guide.includes('pb1978VideoGuideButton'),'both guides have their own stable button class');
+ assert(guide.includes('ویدیوی آموزشی'),'tutorial text is visible rather than an icon-only action');
+ assert(guide.includes('pb569GuideArrow'),'video play symbol is present');
+ assert(guide.includes("mount('print',print)"),'Print tutorial is bound to the Print button');
+ assert(guide.includes("mount('album',album)"),'Album tutorial is bound to the Album button');
+ // RTL DOM order for the approved model 2: print, print-guide, album, album-guide.
+ assert(guide.includes("target.insertAdjacentElement('afterend',button)"),'each tutorial is inserted immediately AFTER its own main tab');
+ assert(guide.includes('button.previousElementSibling!==target'),'the adjacency check survives re-renders without unnecessary DOM moves');
+ assert(guide.includes('pointGuideIcon(printGuide);pointGuideIcon(albumGuide);'),'both play icons stay visible');
+ // Original R1978/R1981 guarantees: no buttons in the lab chooser, only in real headers.
  assert(!guide.includes('function mountChooserGuides()'),'no guide insertion into the lab chooser');
- assert(!guide.includes('pb1978ChooserVideos'),'no synthetic Print/Album guide row');
+ assert(!guide.includes('pb1978ChooserVideos'),'no synthetic chooser video row');
  assert(!guide.includes('pb1978ChooserPair'),'no tutorial boxes in the chooser');
- // R1981: desktop header clones the native controls. Mount guidance in the
- // final visible row, not the transient source which disappears during render.
- assert(guide.includes("secondary.querySelector('.pb1127PrintModes')"),'desktop guide belongs to the final rendered header');
- assert(guide.includes("if(window.self!==window.top)return null"),'embedded desktop iframe cannot own visible tutorials');
- assert(guide.includes("if(!secondary||secondary.hidden)return null"),'never flash guides in hidden secondary header');
- assert(guide.includes("document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')"),'mobile guidance remains beside native Print/Album tabs');
- assert(guide.includes("function cleanupHeaderButtons()"),'remove detached tutorial copies after React re-render');
- assert(guide.includes("nav.insertBefore(button,target)"),'each guide is beside its own original tab');
-
- assert(guide.includes("kind==='print'?'mobile':'desktop'")===false,'do not hard-code one video for both devices');
- assert(guide.includes("slots.find(s=>s.kind===kind&&s.device==="),'each guide uses its matching mobile/desktop slot');
- assert(guide.includes("if(arrow.textContent!==direction)"),'no repeated DOM observer loop');
+ assert(guide.includes("secondary.querySelector('.pb1127PrintModes')"),'desktop target is the final rendered chrome');
+ assert(guide.includes("if(window.self!==window.top)return null"),'hidden desktop iframe never creates duplicate guides');
+ assert(guide.includes("if(!secondary||secondary.hidden)return null"),'do not flash buttons in a hidden header');
+ assert(guide.includes("document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')"),'mobile header retains the same paired guides');
+ assert(guide.includes('function cleanupHeaderButtons()'),'detached copies are cleaned after React re-renders');
+ assert(guide.includes("window.addEventListener('click',onDelegatedVideoGuideClick,true)"),'capture delegation keeps clone clicks functional');
+ assert(guide.includes("slots.find(s=>s.kind===kind&&s.device==="),'guide is specific to print/album and desktop/mobile');
 });
 
-test('R1983 model 3: two prominent main tabs and two subtle paired video tutorials',()=>{
- const source=read('dist/web/photobridge-workflow-guides-v572.js');
- assert(source.includes("nav.classList.add('pb1983ModelThree')"),'stable header receives model 3 styling');
- // R1985: style must survive replacement of the secondary desktop header.
- // A transient pb1983ModelThree class is optional decoration, not the selector
- // responsible for keeping main tabs and guide buttons visible.
- assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintPhotoTab'),'Print Photos persists in the visible desktop header');
- assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintAlbumTab'),'Album Binding persists in the visible desktop header');
- assert(source.includes('html body #pb1126DesktopHeader .pb1127PrintModes > .pb1978VideoGuideButton'),'tutorials survive desktop clone/re-render');
- assert(source.includes('html body .photographerPrintWorkspace .photographerPrintModeNav > .pb1978VideoGuideButton'),'mobile native controls retain paired video buttons');
- assert(!source.includes('.pb1127PrintModes.pb1983ModelThree'),'model 3 layout must not depend on a temporary class');
- assert(source.includes('height:35px!important'),'main buttons taller and more prominent');
- assert(source.includes('height:26px!important'),'video tutorial buttons are smaller');
- assert(source.includes('background:linear-gradient(135deg,#397bff,#2356d8)'),'active primary tab uses blue emphasis');
- assert(source.includes("mount('print',print)")&&source.includes("mount('album',album)"),'each video points to its own mode');
- assert(source.includes('nav.insertBefore(button,target)'),'video buttons are siblings adjacent to native tabs');
- assert(!source.includes('mountChooserGuides'),'lab chooser remains free of tutorial controls');
+test('R1989 approved model 2: single segmented bar, white inactive button, blue active button, no underline',()=>{
+ const guide=read('dist/web/photobridge-workflow-guides-v572.js');
+ const css=read('dist/web/photobridge-r1989-model2-segmented.css');
+ const html=read('dist/web/index.html');
+ const desktop=read('dist/web/photobridge-r1126-desktop-navigation.js');
+ assert(guide.includes("nav.classList.remove('pb1983ModelThree')"),'obsolete model 3 class is removed');
+ assert(guide.includes("nav.classList.contains('pb1989ModelTwo')"),'the stable Print row receives model 2 styling');
+ assert(html.includes('photobridge-r1989-model2-segmented.css?v=r1989'),'model 2 stylesheet is included with a cache-busting revision');
+ assert(css.includes('.pb1127PrintModes.pb1989ModelTwo'),'model 2 applies to the final desktop header');
+ assert(css.includes('.photographerPrintModeNav.pb1989ModelTwo'),'model 2 also applies to mobile');
+ assert(css.includes('border-radius:18px!important'),'all four actions share a rounded white outer bar');
+ assert(css.includes('gap:0!important'),'segmented controls have no unrelated gap');
+ assert(css.includes('background:#fff!important'),'inactive main tab is white');
+ assert(css.includes('background:var(--pb1989-blue)!important'),'active main tab is filled blue');
+ assert(css.includes('.pb1131MovingIndicator'),'old moving underline is suppressed');
+ assert(css.includes('content:none!important'),'the underline pseudo-element is disabled');
+ assert(css.includes('.pb1978VideoGuideButton'),'both tutorial buttons have their own subtle styling');
+ assert(css.includes('var(--pb1989-guide-bg)'),'tutorials use pale blue-gray, not the main active color');
+ assert(desktop.includes("button.classList.toggle('active',selected)"),'desktop reflects selected mode immediately');
+ assert(desktop.includes('button.dataset.pb1989Active=String(selected)'),'desktop selection survives clone state handling');
+ assert(guide.includes("mount('print',print)")&&guide.includes("mount('album',album)"),'each tutorial is bound to its own main action');
+ assert(!guide.includes('mountChooserGuides'),'chooser remains free of tutorial buttons');
  const chooser=read('dist/web/photobridge-v904r99-lab-chooser.js');
- assert(chooser.includes("if(el.closest?.('.photographerPrintModeNav')"),'inner Print/Album tabs retain original interactions');
+ assert(chooser.includes("if(el.closest?.('.photographerPrintModeNav')"),'native Print/Album tabs retain their original interactions');
 });
 
 test('R1981 only main Print opens Lab chooser; Print Photos and Album remain normal mode tabs',()=>{

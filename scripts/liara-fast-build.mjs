@@ -1492,3 +1492,5 @@ runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1
 runR1314(process.execPath,['--test','scripts/test-r1976-print-entry-crm-guides.cjs'],{stdio:'inherit'});
 // R1977: native order board must survive login; authenticated CRM flags hide tabs even after desktop rendering.
 runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board-crm.cjs'],{stdio:'inherit'});
+// R1988: pin the exact user-selected numbered model 3 photo header and tutorial icons/order.
+runR1314(process.execPath,['--test','scripts/test-r1988-original-model3.cjs'],{stdio:'inherit'});

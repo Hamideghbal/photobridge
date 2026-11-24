@@ -113,7 +113,7 @@ if(!nav.includes('/* R1978 reopen Print lab chooser on intentional click */')){
    }
   }
  `);
- nav='/* R1978 reopen Print lab chooser on intentional click */\\n'+nav;
+ nav='/* R1978 reopen Print lab chooser on intentional click */\n'+nav;
  new Function(nav);write(navPath,nav);
 }
 

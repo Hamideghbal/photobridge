@@ -1429,6 +1429,9 @@ runR1314(process.execPath,['--test','scripts/test-r1999-toolbar-invite-sms.cjs']
 // R2000: photographer-only financial presentation; run after legacy ledger and navigation writers.
 await deployStep('./enable-r2000-photographer-finance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2000-photographer-finance.cjs'],{stdio:'inherit'});
+// R2001: keep photographer invoice controls in a fourth header, with working statement details.
+await deployStep('./enable-r2001-photographer-fourth-header.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2001-photographer-fourth-header.cjs'],{stdio:'inherit'});
 // R1978: direct Liara build must verify the two real video buttons and explicit Print chooser actions.
 runR1314(process.execPath,['--test','scripts/test-r1978-print-video-guides.cjs'],{stdio:'inherit'});
 // R1995: isolate gallery, store and Print/Lab routes in the actual desktop renderer.
@@ -1525,6 +1528,7 @@ runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board
 // R1999: final compiled API and HTML must preserve the invite fix and CSS.
 runR1314(process.execPath,['--test','scripts/test-r1999-toolbar-invite-sms.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r2000-photographer-finance.cjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r2001-photographer-fourth-header.cjs'],{stdio:'inherit'});
 // R1998: verify the final page after HTML optimization retains the narrow
 // Gallery card and hides Store chooser chips only on embedded desktop.
 runR1314(process.execPath,['--test','scripts/test-r1998-gallery-store-chooser-layout.cjs'],{stdio:'inherit'});

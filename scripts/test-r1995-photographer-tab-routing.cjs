@@ -41,26 +41,25 @@ test('R1995: root Lab chooser never covers Store, CRM, Calendar or Gallery',()=>
  assert.match(chooser,/for\(const k of \['pushState','replaceState'\]\)/,'old chooser is cleaned up whenever desktop panel changes through history');
  assert.match(chooser,/function onRoute\(\)\{\s*if\(!isPrintRoute\(\)\)\{cleanup\(\);return\}/,'leaving print synchronously removes obsolete Lab overlay');
 });
-test('R1995: clicking Gallery navigates to a real gallery document and never fake-changes a URL',()=>{
+test('R1995/R1997: Gallery is a separate real iframe, never old Orders content in disguise',()=>{
  assert.doesNotThrow(()=>new vm.Script(chrome));
  const code=extractNavigate();
  const to=[],opened=[],other=[],pages=[];
- const frame={addEventListener(){}};
  const tabs=[['gallery','گالری','/photographer/gallery'],['ai','هوش مصنوعی','/photographer/ai/retouch'],['album','طراحی آلبوم','/photographer/album-design'],['instagram','اینستاگرام','/photographer/album-design?pb_mode=instagram']];
- const session={setItem:(k,v)=>{other.push([k,v])}};
- const run=new Function('tabs','sessionStorage','window','closePanels','open','selected','openStoreChooser','currentDocument','panels','location','return ('+code+')');
- const nav=run(tabs,session,{location:{assign:href=>to.push(href)}},()=>pages.push('close'),key=>opened.push(key),null,()=>false,()=>null,new Map([['store',{querySelector:()=>frame}]]),{pathname:'/photographer/orders'});
- nav('gallery');
- assert.deepEqual(to,['/photographer/gallery']);
- assert.deepEqual(pages,['close']);
- assert(other.some(([key,val])=>key==='pb1976PrintLanding'&&val==='1'),'intentional navigation is remembered');
+ const session={setItem:(k,v)=>other.push([k,v])};
+ const run=new Function('tabs','sessionStorage','window','closePanels','open','selected','panels','openPrintChooser','schedule','location','return ('+code+')');
+ const nav=run(tabs,session,{location:{assign:href=>to.push(href)}},()=>pages.push('close'),key=>opened.push(key),null,new Map(),()=>true,()=>{},{pathname:'/photographer/orders'});
+ nav('gallery');nav('store');nav('gallery');
+ assert.deepEqual(opened,['gallery','store','gallery'],'each tab uses its own cached panel');
+ assert.deepEqual(to,[],'Gallery and Store never trigger root document loads or fake SPA routes');
+ assert.match(chrome,/frame\.src='\/photographer\/gallery\?pbDesktopContent=1&pbDesktopPanel=gallery'/,'Gallery iframe loads the actual Gallery page');
+ assert.match(chrome,/frame\.src=(?:restoredPrint\|\|)?\(key==='store'\?'\/equipment-rental\/book':'\/photographer\/orders\/flow'\)\+'\?'\+q/,'Store remains an actual equipment page');
  nav('ai');nav('album');nav('instagram');
- assert.deepEqual(to.slice(1),['/photographer/ai/retouch','/photographer/album-design','/photographer/album-design?pb_mode=instagram']);
- nav('store');
- assert.deepEqual(opened,['store'],'Store remains an isolated iframe, not the Print iframe');
- assert(to.length===4,'Store does not navigate to Lab/Gallery');
- assert(!code.includes("history.pushState(null,'',tab[2])"),'broken URL-only navigation is removed');
+ assert.deepEqual(to,['/photographer/ai/retouch','/photographer/album-design','/photographer/album-design?pb_mode=instagram']);
+ assert.equal(pages.length,3,'non-cached app features still use real document navigation');
+ assert(!code.includes("history.pushState(null,'',tab[2])"),'no URL-only fake navigation');
 });
+
 test('R1995: connected photographer visiting Orders marks initial landing complete for future Gallery clicks',()=>{
  assert.doesNotThrow(()=>new vm.Script(landing));
  assert.match(landing,/R1995: once the connected photographer has visited native Orders/);

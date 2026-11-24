@@ -109,7 +109,7 @@ if(!nav.includes('/* PB1997 cached gallery / stable store */')){
  );
  // R1319 adds dynamic Print frame offsets after the row; a direct render-end
  // anchor is unstable. Sync on microtask after the current row construction.
- const signatureStart=nav.indexOf(" const signature=active+'|'+choosing+'|'");
+ const signatureStart=nav.indexOf('headerControls.map(el=>pb1997StoreKey(el))');
  const signatureEnd=nav.indexOf('\n',signatureStart);
  if(signatureStart<0||signatureEnd<signatureStart)throw Error('[R1997] Store signature insertion point missing');
  nav=nav.slice(0,signatureEnd)+

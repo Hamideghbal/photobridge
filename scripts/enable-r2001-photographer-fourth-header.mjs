@@ -26,8 +26,14 @@ if(!ui.includes('/* PB2001 fourth finance header */')){
   'photographer detailed toggle');
  // The photographer portal must not display laboratory bookkeeping labels or flags.
  part=once(part,'e.jsx("span",{children:"بخش حسابداری"})','e.jsx("span",{children:t==="lab"?"بخش حسابداری":"بخش مالی"})','finance picker label');
- part=once(part,'_pbRecorded=!Ot&&!At&&Boolean(Je.external_accounting_recorded)','_pbRecorded=t==="lab"&&!Ot&&!At&&Boolean(Je.external_accounting_recorded)','laboratory-only recorded invoice badge');
- part=once(part,'Je.accounting_exported&&e.jsx("small",{className:"accountingTransferredBadge"','t==="lab"&&Je.accounting_exported&&e.jsx("small",{className:"accountingTransferredBadge"','laboratory-only accounting export badge');
+ // Later invoice builders can modify the recorded-status expression; scope
+ // the existing computed flag without assuming an obsolete right-hand side.
+ if(part.includes('_pbRecorded=')&&!part.includes('_pbRecorded=t==="lab"&&')){
+  part=once(part,'_pbRecorded=','_pbRecorded=t==="lab"&&','lab-only accounting badge guard');
+ }
+ if(part.includes('Je.accounting_exported&&e.jsx("small",{className:"accountingTransferredBadge"')){
+  part=once(part,'Je.accounting_exported&&e.jsx("small",{className:"accountingTransferredBadge"','t==="lab"&&Je.accounting_exported&&e.jsx("small",{className:"accountingTransferredBadge"','lab-only accounting-export guard');
+ }
  // Keep the complete invoice records, but remove the irrelevant financial
  // document count/title from the photographer's displayed invoice controls.
  part=once(part,

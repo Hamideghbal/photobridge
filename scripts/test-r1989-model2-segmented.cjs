@@ -38,11 +38,10 @@ test('R1989: active mode changes synchronously and keeps original React click be
   assert.match(desktop,/button\.classList\.toggle\('selected',selected\)/);
   assert.match(desktop,/button\.setAttribute\('aria-pressed',String\(selected\)\)/);
   assert.match(desktop,/button\.dataset\.pb1989Active=String\(selected\)/);
-  // The prebuild source can directly click the original, but R1307 production
-  // replaces that call with a live React control proxy for recreated nodes.
-  assert.match(desktop,/press\\(copy\\);(?:original|target)\\.click\\(\\)/);
+  // Prebuild: direct React source click. Docker R1307: live replacement-node proxy.
+  assert(desktop.includes('press(copy);original.click()')||desktop.includes('press(copy);target.click()'));
   if(desktop.includes('function livePrintControl(key)')){
-    assert.match(desktop,/const target=printKey\\?livePrintControl\\(printKey\\):original/);
+    assert(desktop.includes('const target=printKey?livePrintControl(printKey):original'));
   }
   assert.match(css,/data-pb1989-active="true"/);
 });

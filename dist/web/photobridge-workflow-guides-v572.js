@@ -273,6 +273,7 @@
     // R2006: the visible F37 mobile proxy owns its guides. Do not alter
     // the hidden React source row while it is being mirrored.
     if(document.querySelector?.('#pbF37Tabs.pb2006PrintTabs'))return null;
+    if(window.PBStorePhotographerHeaderCore)return null; // only the F37 mobile row owns contextual guides.
     // Mobile has no cloned desktop row; use the real interactive mode header.
     const modes=[...document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')];
     return modes.find(nav=>nav.isConnected&&nav.querySelector('.photographerPrintPhotoTab')&&nav.getClientRects().length>0)||null;

@@ -88,8 +88,9 @@ if(!store.includes('id="pbR1998StoreChooserNoFilters"')){
   '}',
   '</style>'
  ].join('\n');
- if(store.split('</head>').length!==2)throw Error('[R1998] Store HTML head missing/ambiguous');
- store=store.replace('</head>',hide+'\n</head>');
+ const headEnd='</head>\n<body class="rentalPhotographerMode pbR96ChoosingStore">';
+ if(store.split(headEnd).length!==2)throw Error('[R1998] Store chooser HTML head boundary missing/ambiguous');
+ store=store.replace(headEnd,hide+'\n'+headEnd);
  fs.writeFileSync(storeFile,store);
 }
 

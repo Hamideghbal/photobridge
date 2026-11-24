@@ -244,9 +244,9 @@
     const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(records=>{if(records.some(r=>r.type==='childList'||r.target?.matches?.('.photographerMain,.photographerPrintModeNav,.photographerPrintPhotoTab,.photographerPrintAlbumTab,.photographerPrintCommonAction')))schedule(70)}).observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     // Store chooser changes body class without changing the route; never keep
     // the previous Store header when the selector opens or closes.
-    let chooserState=()=>String(document.body.classList.contains('pbR96ChoosingStore'))+'|'+String(document.body.classList.contains('pbR100F14ChoosingLab'));
-    let wasChoosing=chooserState();
-    new MutationObserver(()=>{const choosing=chooserState();if(choosing!==wasChoosing){wasChoosing=choosing;schedule(0)}}).observe(document.body,{attributes:true,attributeFilter:['class']});
+    let wasChoosingStore=document.body.classList.contains('pbR96ChoosingStore');
+    let wasChoosingLab=document.body.classList.contains('pbR100F14ChoosingLab');
+    new MutationObserver(()=>{const choosing=document.body.classList.contains('pbR96ChoosingStore'),choosingLab=document.body.classList.contains('pbR100F14ChoosingLab');if(choosing!==wasChoosingStore||choosingLab!==wasChoosingLab){wasChoosingStore=choosing;wasChoosingLab=choosingLab;schedule(0)}}).observe(document.body,{attributes:true,attributeFilter:['class']});
     // Bounded first-entry reconciliation, not a perpetual polling loop.
     if(new URLSearchParams(location.search).get('pbEntryDone')==='lab'||document.documentElement.classList.contains('pbR100F37LabEnterBoot'))for(const ms of [80,250,600,1200,2500,4500])setTimeout(()=>schedule(0),ms);
     addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});

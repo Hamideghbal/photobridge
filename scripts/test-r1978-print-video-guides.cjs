@@ -37,7 +37,7 @@ test('R1981 only main Print opens Lab chooser; Print Photos and Album remain nor
  const source=read('dist/web/photobridge-v904r99-lab-chooser.js');
  assert.doesNotThrow(()=>new vm.Script(source));
  const start=source.indexOf('function isPrintPrimaryNav(el){');
- const end=source.indexOf('\\n  }',start);
+ const end=source.indexOf('\n  }',start);
  assert(start>=0&&end>start,'main Print tab matcher must exist');
  const match=new Function('isPhotographerRoute','return ('+source.slice(start,end+4)+');')(()=>true);
  function el(label,{primary=false,printMode=false,href='',mainKey=''}={}){
@@ -72,7 +72,7 @@ test('R1981 only main Print opens Lab chooser; Print Photos and Album remain nor
 test('R1981 guide target survives desktop chrome clone while hidden iframe cannot mount guides',()=>{
  const guide=read('dist/web/photobridge-workflow-guides-v572.js');
  const start=guide.indexOf('function visiblePrintModeNav(){');
- const end=guide.indexOf('\\n  }',start);
+ const end=guide.indexOf('\n  }',start);
  assert(start>=0&&end>start,'guide target selector exists');
  const chooser=new Function('location','window','document','isMobile','return ('+guide.slice(start,end+4)+');');
  const printButton={};

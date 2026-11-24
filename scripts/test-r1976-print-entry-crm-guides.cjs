@@ -65,3 +65,23 @@ test('R1976 no shared CRM switch remains in browser, and video guides are presen
  assert(admin.includes("pb1976PrintLanding"));
  assert(admin.includes("location.replace('/photographer/orders')"));
 });
+
+test('R1984 guide buttons survive cloned desktop headers, tab re-renders and cached old CSS',()=>{
+ const guide=read('dist/web/photobridge-workflow-guides-v572.js');
+ const html=read('dist/web/index.html');
+ const build=read('scripts/enable-r1966-desktop-calendar-store-chooser.mjs');
+ const desktop=read('dist/web/photobridge-r1126-desktop-navigation.js');
+ assert.doesNotThrow(()=>new vm.Script(guide));
+ assert(desktop.includes('cloneNode(true)'));
+ assert(guide.includes("window.addEventListener('click',onDelegatedVideoGuideClick,true)"));
+ assert(guide.includes('event.stopImmediatePropagation()'));
+ assert(guide.includes('openContextGuide(kind,button)'));
+ assert(guide.includes('button.dataset.pbGuideOpening'));
+ assert(guide.includes('showGuideModal(null,slot,true)'));
+ assert(guide.includes("attributeFilter:['class','hidden','aria-hidden']"));
+ assert(guide.includes("document.querySelector('.pb567GuideBackdrop')!==pendingBackdrop"));
+ assert(guide.includes('html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes)'));
+ assert(!guide.includes('.pb1127PrintModes.pb1983ModelThree'));
+ assert(html.includes('photobridge-workflow-guides-v572.js?v=r1984'));
+ assert(build.includes("['photobridge-workflow-guides-v572.js','v','r1984']"));
+});

@@ -319,3 +319,11 @@ html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo >
  }
  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1989ModelTwo > button.pb1978VideoGuideButton.print{margin-inline-end:4px!important}
 }
+
+/* R2004: preserve the existing invoice label around the role-specific control. */
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label:has(.pb2003InvoiceDateLabel){
+ display:flex!important;align-items:center!important;gap:4px!important;min-width:112px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label .pb2003InvoiceDateLabel{
+ flex:1 1 0!important;width:auto!important;min-width:0!important;
+}

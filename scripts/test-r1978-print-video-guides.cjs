@@ -14,6 +14,9 @@ test('R1978 labels remain visible and clickable next to BOTH Print and Album tab
  assert(guide.includes('pb569GuideArrow'),'visible pointing arrow');
  assert(guide.includes("mount('print',print)"),'guide beside Print Photos');
  assert(guide.includes("mount('album',album)"),'guide beside Album Binding');
+ assert(guide.includes('function mountChooserGuides()'),'guides also visible before selecting any lab');
+ assert(guide.includes('pb1978ChooserVideos'),'chooser contains two labelled video links');
+ assert(guide.includes('2147483600!important'),'video dialog must render above the lab chooser');
  assert(guide.includes('nav.insertBefore(button,target)'),'guide is a sibling and does not nest interactive buttons');
  assert(guide.includes("kind==='print'?'mobile':'desktop'")===false,'do not hard-code one video for both devices');
  assert(guide.includes("slots.find(s=>s.kind===kind&&s.device==="),'each guide uses its matching mobile/desktop slot');

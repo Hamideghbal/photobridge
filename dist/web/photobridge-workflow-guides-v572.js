@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1985';
+  const VERSION='0.17.699-r1986';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -48,9 +48,24 @@
     const d=await request('/api/public/video-guides?raw=1');
     publicCache={at:Date.now(),guides:Array.isArray(d.guides)?d.guides:[]};return publicCache.guides;
   }
-  function closeGuideModal(){document.querySelector('.pb567GuideBackdrop')?.remove();document.documentElement.classList.remove('pb567GuideOpen')}
+  function closeGuideModal(){
+    document.querySelectorAll('.pb567GuideBackdrop video').forEach(video=>{try{video.pause();video.removeAttribute('src');video.load()}catch{}});
+    document.querySelector('.pb567GuideBackdrop')?.remove();
+    document.documentElement.classList.remove('pb567GuideOpen');
+  }
+  // Stable dialog sizing: a decoded video must have a visible picture area.
+  // Scoped only to the contextual guide overlay; other PhotoBridge video players are untouched.
+  function ensureVisiblePlayerStyle(){
+    let style=document.getElementById('pb1986VisibleVideoPlayer');
+    if(!style){style=document.createElement('style');style.id='pb1986VisibleVideoPlayer';
+      style.textContent='html body .pb567GuideBackdrop{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:12px!important;background:rgba(10,20,40,.78)!important;box-sizing:border-box!important}html body .pb567GuideBackdrop .pb567GuideDialog{position:relative!important;display:flex!important;flex-direction:column!important;width:min(940px,100%)!important;max-width:940px!important;max-height:calc(100dvh - 24px)!important;overflow:auto!important;background:#fff!important;border-radius:16px!important;box-sizing:border-box!important}html body .pb567GuideBackdrop .pb567GuideVideoFrame{position:relative!important;display:block!important;width:100%!important;min-height:180px!important;aspect-ratio:16/9!important;background:#080b12!important;overflow:hidden!important;flex:0 0 auto!important}html body .pb567GuideBackdrop .pb567GuideVideoFrame video{position:relative!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:100%!important;min-height:180px!important;max-height:min(70dvh,700px)!important;object-fit:contain!important;background:#080b12!important;transform:none!important;filter:none!important}html body .pb567GuideBackdrop .pb1986VideoError{padding:14px!important;background:#fff4e5!important;color:#713c08!important;line-height:1.8!important}html body .pb567GuideBackdrop .pb1986VideoError a{display:inline-block;margin-inline-start:10px;color:#1b59c7;text-decoration:underline}';
+    }
+    // Later-injected app styles should not override the guide's visible video.
+    if(document.head.lastElementChild!==style)document.head.append(style);
+  }
   function showGuideModal(guide,slot,loading=false){
     closeGuideModal();
+    ensureVisiblePlayerStyle();
     const back=document.createElement('div');back.className='pb567GuideBackdrop';back.setAttribute('role','presentation');
     const dialog=document.createElement('section');dialog.className='pb567GuideDialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.dir='rtl';
     const head=document.createElement('header');head.className='pb567GuideDialogHead';
@@ -64,9 +79,23 @@
     if(loading){const spinner=document.createElement('div');spinner.className='pb567GuideEmpty';spinner.setAttribute('role','status');spinner.textContent='در حال بارگذاری ویدیوی آموزشی…';dialog.append(spinner);}
     else if(guide?.src){
       const frame=document.createElement('div');frame.className='pb567GuideVideoFrame';
-      const video=document.createElement('video');video.controls=true;video.playsInline=true;video.autoplay=true;video.preload='metadata';if(guide.poster)video.poster=guide.poster;
-      const source=document.createElement('source');source.src=guide.src;source.type=guide.contentType||'video/mp4';video.append(source);frame.append(video);dialog.append(frame);
-      setTimeout(()=>video.play().catch(()=>{}),60);
+      const video=document.createElement('video');video.controls=true;video.playsInline=true;video.autoplay=false;video.preload='metadata';if(guide.poster)video.poster=guide.poster;
+      // Do not assert MP4 for files with an unknown/incorrect MIME type. Browser should sniff the stream.
+      const source=document.createElement('source');source.src=guide.src;
+      if(guide.contentType&&/video\/(mp4|webm|ogg)/i.test(guide.contentType))source.type=guide.contentType;
+      video.append(source);frame.append(video);dialog.append(frame);
+      let warned=false;
+      const showVideoError=()=>{
+        if(warned||!video.isConnected)return;warned=true;video.pause();
+        const msg=document.createElement('div');msg.className='pb1986VideoError';msg.setAttribute('role','alert');
+        msg.append(document.createTextNode('تصویر این ویدیو در مرورگر قابل نمایش نیست. ممکن است کُدک تصویر فایل پشتیبانی نشود. فایل را با H.264 (AVC) و صدای AAC در قالب MP4 بارگذاری کنید. '));
+        const link=document.createElement('a');link.href=guide.src;link.target='_blank';link.rel='noopener noreferrer';link.textContent='باز کردن فایل ویدیو';msg.append(link);
+        frame.insertAdjacentElement('afterend',msg);
+      };
+      video.addEventListener('error',showVideoError);
+      video.addEventListener('loadedmetadata',()=>{if(!video.videoWidth||!video.videoHeight)showVideoError()});
+      video.addEventListener('playing',()=>{if(video.readyState>=1&&(!video.videoWidth||!video.videoHeight))showVideoError()});
+      video.addEventListener('loadeddata',()=>{if(!video.videoWidth||!video.videoHeight)showVideoError()});
     }else{
       const empty=document.createElement('div');empty.className='pb567GuideEmpty';empty.innerHTML='<b>آموزش هنوز منتشر نشده است.</b><span>ادمین می‌تواند از بخش «راهنمای ویدیویی» فایل مخصوص این دستگاه را بارگذاری کند.</span>';dialog.append(empty);
     }
@@ -124,8 +153,9 @@
   // R1983: user-approved concept 3 — prominent main modes and understated
   // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
-    if(document.getElementById('pb1983ModelThreeStyles'))return;
-    const style=document.createElement('style');
+    let style=document.getElementById('pb1983ModelThreeStyles');
+    if(style){if(document.head.lastElementChild!==style)document.head.append(style);return;}
+    style=document.createElement('style');
     style.id='pb1983ModelThreeStyles';
     style.textContent=`
       .photographerPrintWorkspace .photographerPrintModeNav,
@@ -425,7 +455,7 @@
     const manager=document.createElement('section');manager.className='pb567WorkflowGuideManager';manager.dataset.version=VERSION;manager.innerHTML='<div class="pb567GuideManagerLoading">در حال دریافت شش ویدیوی اختصاصی…</div>';
     const head=panel.querySelector('.adminGuideHead');head.insertAdjacentElement('afterend',manager);renderAdminManager(manager);
   }
-  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
+  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();if(document.querySelector('.pb567GuideBackdrop'))ensureVisiblePlayerStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
   function queueSync(){if(observerQueued)return;observerQueued=true;requestAnimationFrame(()=>{observerQueued=false;sync()})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuideModal()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();

@@ -107,11 +107,14 @@ if(!nav.includes('/* PB1997 cached gallery / stable store */')){
   "copy.onclick=()=>{const live=pb1997LiveStoreControl(doc,copy.dataset.pb1997StoreKey)||(original.isConnected?original:null);if(!live||live.disabled)return;live.click();requestAnimationFrame(()=>{schedule();reveal(motionContent(doc));});};",
   'Store proxy does not retain detached React controls'
  );
- once(
-  "\n }\n const pressTimers=new WeakMap();",
-  "\n  if(storeHeader&&!choosing)pb1997SyncStoreHeader(row,headerControls,doc);\n }\n const pressTimers=new WeakMap();",
-  'Store selection sync without recreation'
- );
+ // R1319 adds dynamic Print frame offsets after the row; a direct render-end
+ // anchor is unstable. Sync on microtask after the current row construction.
+ const signatureStart=nav.indexOf(" const signature=active+'|'+choosing+'|'");
+ const signatureEnd=nav.indexOf('\n',signatureStart);
+ if(signatureStart<0||signatureEnd<signatureStart)throw Error('[R1997] Store signature insertion point missing');
+ nav=nav.slice(0,signatureEnd)+
+  "\n  if(storeHeader&&!choosing)queueMicrotask(()=>{if(selected==='store'&&row.isConnected)pb1997SyncStoreHeader(row,headerControls,doc);});"+
+  nav.slice(signatureEnd);
  // R1995 body is still a real full-document route for AI/album/Instagram, not
  // a history-only fake SPA navigation. Gallery is a *real* isolated iframe.
  if(!nav.includes("if(key==='store'||key==='gallery')")||!nav.includes("frame.src='/photographer/gallery?pbDesktopContent=1&pbDesktopPanel=gallery'"))throw Error('[R1997] gallery/store isolation not installed');

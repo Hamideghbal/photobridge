@@ -73,19 +73,36 @@ if(!ui.includes('/* PB2001 fourth finance header */')){
  ui+='\n/* PB2001 fourth finance header */\n';
  write(file,ui);
 }
+// R2002: R1202 added a second Today shortcut and lab bookkeeping counts.
+// Guard the actual JSX, not merely the calendar popover or the old title.
+if(!ui.includes('/* PB2002 photographer finance polish */')){
+ const begin=ui.indexOf('function ub({role:t,'),end=ui.indexOf('}function hb(',begin);
+ if(begin<0||end<begin)throw Error('[R2002] finance component missing');
+ let part=ui.slice(begin,end+1);
+ part=once(part,
+  'e.jsx("button",{type:"button",className:"pb1201InvoiceToday"',
+  't==="lab"&&e.jsx("button",{type:"button",className:"pb1201InvoiceToday"',
+  'R2002 legacy Today shortcut is lab-only');
+ part=once(part,
+  'e.jsxs("div",{className:"pb1201InvoiceCounts"',
+  't==="lab"&&e.jsxs("div",{className:"pb1201InvoiceCounts"',
+  'R2002 legacy document and accounting counts are lab-only');
+ ui=ui.slice(0,begin)+part+ui.slice(end+1)+'\n/* PB2002 photographer finance polish */\n';
+ write(file,ui);
+}
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const cssName='photobridge-r2001-photographer-fourth-header.css';
 fs.copyFileSync('scripts/r2001-photographer-fourth-header.css','dist/web/'+cssName);
 let html=read('dist/web/index.html');
 if(!html.includes(cssName))
- html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2001"></head>','fourth header CSS link');
+ html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2002"></head>','fourth header CSS link');
 const versionKey='&photographerFinanceFourth=r2001';
 const asset='index-UIRefine-v655-r84.js';
 if(!html.includes(versionKey)){
  if(!html.includes(asset+'?'))throw Error('[R2001] UI module URL not found');
  const pattern=new RegExp(asset.replace(/\./g,'\\.')+'[^"\\s<>]*','g');
  let hits=0;
- html=html.replace(pattern,url=>{hits++;return url+versionKey});
+ html=html.replace(pattern,url=>{hits++;return url+versionKey+'&photographerFinancePolish=r2002'});
  if(hits!==1)throw Error('[R2001] expected one UI module URL, found '+hits);
 }
 write('dist/web/index.html',html);

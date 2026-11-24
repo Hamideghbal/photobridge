@@ -70,14 +70,27 @@ nav=read(navPath);
 if(!nav.includes('/* R1976 independent CRM tabs + centered Print */')){
  const oldFilter="if(['ai','album','instagram'].includes(key)&&settings.tabs[key]===false)";
  if(!nav.includes(oldFilter))throw Error('[R1976] desktop settings filter anchor missing');
- nav=nav.replace(oldFilter,"if(['ai','album','instagram','crm','calendar'].includes(key)&&settings.tabs[key]===false)");
+ nav=nav.replace(oldFilter,"if((['ai','album','instagram'].includes(key)&&settings.tabs[key]===false)||(['crm','calendar'].includes(key)&&(!crmVisibilityVerified||settings.tabs[key==='crm'?'customers':'calendar']!==true)))");
+ // CRM's UI tab 'crm' maps to settings key 'customers'; fail closed until authenticated API confirms it.
+ const stateAnchor="let settings={tabs:{ai:false,album:false,instagram:false}},chrome";
+ if(!nav.includes(stateAnchor))throw Error('[R1977] desktop default state anchor missing');
+ nav=nav.replace(stateAnchor,`let settings={tabs:{ai:false,album:false,instagram:false,customers:false,calendar:false}},crmVisibilityVerified=false,chrome`);
+ // Older UI writers may alter the existing event listener's exact source text.
+ // Listen independently rather than patching its internals, keeping CI builds stable.
+ const registrationAnchor="let walletBalance=null,walletRefreshing=false;";
+ if(!nav.includes(registrationAnchor))throw Error('[R1977] desktop registration anchor missing');
+ nav=nav.replace(registrationAnchor,
+  "window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){crmVisibilityVerified=true;schedule();}});"+
+  "window.addEventListener('photobridge-auth-session-changed',()=>{crmVisibilityVerified=false;schedule();});"+
+  registrationAnchor);
+
  const orderStart="const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind=\"'+key+'\"]')).filter(Boolean);";
  if(!nav.includes(orderStart))throw Error('[R1976] desktop tab sort anchor missing');
  nav=nav.replace(orderStart,orderStart+"if(settings.connectedLab===true){const p=ordered.find(b=>b.dataset.pb1126Kind==='print');if(p){ordered.splice(ordered.indexOf(p),1);ordered.splice(Math.floor(ordered.length/2),0,p);}}");
  // A disabled pane must not remain open while a setting changes.
  const renderAnchor="scheduled=false;if(!document.body)return;";
  if(!nav.includes(renderAnchor))throw Error('[R1976] render anchor missing');
- nav=nav.replace(renderAnchor,renderAnchor+"if(selected&&['crm','calendar'].includes(selected)&&settings.tabs[selected]===false){closePanels();}");
+ nav=nav.replace(renderAnchor,renderAnchor+"if(selected&&['crm','calendar'].includes(selected)&&(!crmVisibilityVerified||settings.tabs[selected==='crm'?'customers':'calendar']!==true)){closePanels();}");
  nav="/* R1976 independent CRM tabs + centered Print */\n"+nav;
  new Function(nav);write(navPath,nav);
 }

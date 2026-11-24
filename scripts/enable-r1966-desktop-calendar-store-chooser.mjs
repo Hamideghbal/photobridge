@@ -156,4 +156,30 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  }
  write(path,page);
 }
+// R1979: preceding legacy HTML writers can replace the R1978 chooser URL,
+// dropping its cache-busting query. Reinstate both updated script URL revisions
+// AFTER all older HTML writers and BEFORE the R1978 Docker build regression.
+// This changes only script URL query parameters, never navigation or order data.
+{
+ const indexPath='dist/web/index.html';
+ let html=read(indexPath);
+ for(const [filename,key,value] of [
+  ['photobridge-v904r99-lab-chooser.js','r1978','print-photos-tab'],
+  ['photobridge-workflow-guides-v572.js','v','r1978']
+ ]){
+  const pattern=new RegExp('/'+filename.replaceAll('.','[.]')+'(?:\\?[^"\\x27<>\\s]*)?','g');
+  let hits=0;
+  html=html.replace(pattern,url=>{
+   hits++;
+   const mark=url.indexOf('?');
+   const pathname=mark<0?url:url.slice(0,mark);
+   const query=new URLSearchParams(mark<0?'':url.slice(mark+1));
+   query.set(key,value);
+   return pathname+'?'+query.toString();
+  });
+  if(hits!==1)throw Error('[R1979] expected one '+filename+' asset in '+indexPath+', found '+hits);
+ }
+ write(indexPath,html);
+}
+
 console.log('[R1966] stable Store chooser and separate photographer calendar tab prepared; mobile CRM and appointment logic untouched');

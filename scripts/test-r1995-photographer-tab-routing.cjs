@@ -25,7 +25,7 @@ test('R1995: root Lab chooser never covers Store, CRM, Calendar or Gallery',()=>
  const fn=extractChooserPredicate();
  const mk=(url)=>{
   const parsed=new URL('https://photobridge.ir'+url);
-  return new Function('location','URLSearchParams','isPhotographerRoute','return ('+fn+')')(
+  return new Function('location','URLSearchParams','isPhotographerRoute','return ('+fn+')()')(
     {pathname:parsed.pathname,search:parsed.search},URLSearchParams,
     ()=>parsed.pathname.startsWith('/photographer/')
   );

@@ -51,13 +51,10 @@ if(!ui.includes('/* PB2001 fourth finance header */')){
   'compact:!0,value:_pbInvTo,onChange:_setPbInvTo,placeholder:"تا تاریخ",showToday:t==="lab"',
   'photographer invoice to-date picker');
  const metrics='t==="customer"&&e.jsxs("div",{className:"pb2000CustomerMetrics pb2001InvoiceMetrics",role:"status","aria-live":"polite",children:[e.jsxs("span",{children:[e.jsx("small",{children:"جمع فاکتورها"}),e.jsx("b",{children:Xe(Ve.filter(Je=>(Je.document_type||"invoice")==="invoice").reduce((sum,Je)=>sum+Number(Je.total||0),0))})]}),e.jsxs("span",{children:[e.jsx("small",{children:"پرداخت‌ها"}),e.jsx("b",{children:Xe(Ve.filter(Je=>(Je.document_type||"invoice")==="invoice").reduce((sum,Je)=>sum+Number(Je.paid_total||0),0))})]}),e.jsxs("span",{className:"pb2000Balance",children:[e.jsx("small",{children:"مانده حساب"}),e.jsx("b",{children:Xe(Ve.filter(Je=>(Je.document_type||"invoice")==="invoice").reduce((sum,Je)=>sum+Number(Je.balance??(Number(Je.total||0)-Number(Je.paid_total||0)),0))})]})]})';
- const rangeStart=part.indexOf('className:"invoiceRangeToolbar"');
- const allStart=part.indexOf('className:"invoiceRangeAll"',rangeStart);
- const rangeClose=part.indexOf(']})',allStart);
- const invoiceRowsStart=part.indexOf('Ve.length?',rangeStart);
- if(rangeStart<0||allStart<rangeStart||rangeClose<allStart||invoiceRowsStart<rangeClose||rangeClose-allStart>600)
-  throw Error('[R2001] invoice range buttons structure changed');
- part=part.slice(0,rangeClose)+','+metrics+part.slice(rangeClose);
+ part=once(part,
+  'e.jsxs("div",{className:"invoiceRangeToolbar",children:[',
+  'e.jsxs("div",{className:"invoiceRangeToolbar",children:['+metrics+',',
+  'invoice period totals inserted as toolbar child');
  // Only the rendered view mode changes for a photographer; the loaded ledger
  // and its read-only line items stay available without a redundant network trip.
  ui=ui.slice(0,begin)+part+ui.slice(end+1);

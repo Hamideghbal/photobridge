@@ -72,6 +72,8 @@ function apply(){
  // Keep the Print tab visually centered in the main top menu for connected labs.
  if(settings.connectedLab===true){
   for(const nav of document.querySelectorAll('.photographerHeaderNav,.photographerHomeModeNav,#pb1126DesktopHeader .pb1126MainNav')){
+   // R2006: centering belongs to the main menu only, not Print's mode row.
+   if(nav.matches('.photographerPrintModeNav'))continue;
    const elements=[...nav.children].filter(el=>el.matches('button,a'));
    const print=elements.find(el=>el.dataset.pb1126Kind==='print'||/چاپ عکس|^چاپ$/.test((el.textContent||'').trim()));
    if(!print)continue;

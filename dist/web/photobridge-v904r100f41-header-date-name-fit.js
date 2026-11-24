@@ -84,12 +84,16 @@
   function src(node,label,active){if(!node)return null;const id=stableId(node);sourceMap.set(id,node);return{id,label:label||txt(node),active:active??node.classList.contains('active')}}
   function gridButtons(){const t=$('.photographerAlbumDesignCatalog .albumDesignModelViewToolbar');const a=t?$$('.albumDesignMobileGridToggle button',t):[];return a.length>=2?a:$$('.photographerAlbumDesignCatalog .albumDesignMobilePicker .albumDesignMobileGridToggle button').slice(0,2)}
   function actions(m){
-    sourceMap=new Map();sourceSeq=0;const out=[];
+    sourceMap=new Map();const out=[]; // R2006: never reuse source IDs across React remounts.
     if(m==='customers')return ['customers','events','templates'].map((id,i)=>({id:'crm:'+id,label:['مشتریان','مناسبت‌ها','قالب پیامک'][i],active:window.pbCrmInnerView===id||(i===0&&!window.pbCrmInnerView)}));
     if(m==='calendar')return [{id:'crm:book',label:'＋ ثبت نوبت',active:false}];
     if(m==='print'){
-      const photo=$('.photographerPrintModeNav .photographerPrintPhotoTab'),album=$('.photographerPrintModeNav .photographerPrintAlbumTab'),finance=$('.photographerPrintCommonAction.finance');
-      if(photo)out.push(src(photo,'چاپ عکس'));if(album)out.push(src(album,'صحافی آلبوم'));if(finance)out.push(src(finance,'مالی'));
+      // R2006: semantic identities outlive native React remounts.
+      const specs=[['print','.photographerPrintModeNav .photographerPrintPhotoTab','چاپ عکس'],['album','.photographerPrintModeNav .photographerPrintAlbumTab','صحافی آلبوم'],['finance','.photographerPrintCommonAction.finance','مالی'],['archive','.photographerPrintCommonAction.archive','آرشیو']];
+      for(const [kind,selector,label] of specs){
+        const node=$(selector);if(!node)continue;
+        const id='print:'+kind;sourceMap.set(id,node);out.push({id,label,active:node.classList.contains('active'),guide:kind});
+      }
     }else if(m==='ai'){
       const a=$$('.photographerAiSectionNav>button').slice(0,2);if(a[0])out.push(src(a[0],'روتوش صورت AI'));if(a[1])out.push(src(a[1],'سایر ابزارهای AI'));
     }else if(m==='gallery'){
@@ -123,7 +127,7 @@
     document.addEventListener('click',e=>{if(!e.target.closest('#pbF37MenuPanel,#pbF37MenuBtn'))closeMenu()},true);
     return h;
   }
-  function ensureSub(){let s=$('#pbF37Subheader');if(s)return s;s=document.createElement('section');s.id='pbF37Subheader';s.innerHTML='<div id="pbF37ContextTitle"><b id="pbF37ContextText"></b><span id="pbF37ContextMeta" hidden></span></div><nav id="pbF37Tabs" aria-label="دکمه‌های بخش"></nav>';document.body.appendChild(s);$('#pbF37Tabs').addEventListener('click',e=>{const b=e.target.closest('[data-f37-source]');if(!b)return;if(b.dataset.f37Source.startsWith('crm:'))window.pbCrmHeaderAction?.(b.dataset.f37Source.slice(4));else sourceMap.get(b.dataset.f37Source)?.click();schedule(60)});return s}
+  function ensureSub(){let s=$('#pbF37Subheader');if(s)return s;s=document.createElement('section');s.id='pbF37Subheader';s.innerHTML='<div id="pbF37ContextTitle"><b id="pbF37ContextText"></b><span id="pbF37ContextMeta" hidden></span></div><nav id="pbF37Tabs" aria-label="دکمه‌های بخش"></nav>';document.body.appendChild(s);$('#pbF37Tabs').addEventListener('click',e=>{const b=e.target.closest('[data-f37-source]');if(!b)return;if(b.dataset.f37Source.startsWith('crm:'))window.pbCrmHeaderAction?.(b.dataset.f37Source.slice(4));else{const id=b.dataset.f37Source;let source=sourceMap.get(id);if(id.startsWith('print:')){actions('print');source=sourceMap.get(id)}if(source?.isConnected&&!source.disabled)source.click()}schedule(60)});return s}
   function clockBadge(){const d=$('#pbF37Date'),t=$('#pbF37Time'),bd=$('#pbF37MenuBadge');setText(d,pdate());setText(t,ptime());const b=badgeText();if(bd){bd.hidden=!b;if(b)bd.textContent=b}void syncNotificationBadge()}
   function fitHeaderName(root){
     const n=root?.querySelector?.('#pbF37StudioName,.workspaceIdentityCopy>h1');if(!n)return;
@@ -146,7 +150,7 @@
     const sc=w.querySelector(':scope>.photographerRolePageScrollArea'),comp=orderComposer(),top=comp?241:181;
     document.body.classList.add('pbF37PrintMode');document.body.classList.toggle('pbF37PrintComposer',comp);
     if(comp){$('#pb762-add')?.remove();$('#pb765-add')?.remove();}
-    if(sc){const map={position:'fixed',top:`${top}px`,left:'0px',right:'0px',bottom:'78px',height:'auto','min-height':'0px',margin:'0px','padding-top':'10px','box-sizing':'border-box','overflow-y':'auto','overflow-x':'hidden',transition:'none',animation:'none',transform:'none',opacity:'1',visibility:'visible'};for(const [k,v] of Object.entries(map))sc.style.setProperty(k,v,'important')}
+    if(sc){const map={position:'fixed',top:`${top}px`,left:'0px',right:'0px',bottom:'78px',height:'auto','min-height':'0px',margin:'0px','padding-top':'10px','box-sizing':'border-box','overflow-y':'auto','overflow-x':'hidden',transition:'none',animation:'none',transform:'none',opacity:'1',visibility:'visible'};for(const [k,v] of Object.entries(map))if(sc.style.getPropertyValue(k)!==v||sc.style.getPropertyPriority(k)!=='important')sc.style.setProperty(k,v,'important')}
     // Legacy top context rail is mirrored into the F37 title/tabs and must never sit below the header.
     const rail=w.querySelector(':scope>.photographerLabContextRail');if(rail){rail.style.setProperty('display','none','important');rail.style.setProperty('visibility','hidden','important');rail.style.setProperty('pointer-events','none','important')}
     ensureComposerActions();
@@ -198,8 +202,27 @@
       let back=$('#pb1156GalleryBack');
       if(!back){back=document.createElement('button');back.id='pb1156GalleryBack';back.type='button';back.textContent='→ بازگشت';back.onclick=()=>$('.clientGalleryManagerTop>.backBtn')?.click();$('#pbF37ContextTitle').appendChild(back);}
     }
-    const aa=actions(m),tabs=$('#pbF37Tabs');document.body.classList.toggle('pbF37HasTabs',!!aa.length);document.body.classList.toggle('pbF37NoTabs',!aa.length);tabs.hidden=!aa.length;tabs.style.setProperty('--pb-f37-tabs',String(Math.max(1,aa.length)));
-    const sig=`${m}|${info.title}|${info.meta}|`+aa.map(a=>`${a.id}:${a.label}:${a.active?'1':'0'}`).join('|');if(sig!==lastSig){lastSig=sig;tabs.innerHTML=aa.map(a=>`<button type="button" class="${a.active?'active':''}" data-f37-source="${a.id}">${esc(a.label)}</button>`).join('')}
+    const aa=actions(m),tabs=$('#pbF37Tabs');
+    // R2006: preserve the existing Print row during a transient React
+    // remount. Reconcile when native controls are available again.
+    const waitingPrint=m==='print'&&!aa.some(a=>a.id==='print:print');
+    if(!waitingPrint){
+      document.body.classList.toggle('pbF37HasTabs',!!aa.length);document.body.classList.toggle('pbF37NoTabs',!aa.length);
+      if(tabs.hidden!==!aa.length)tabs.hidden=!aa.length;
+      const count=String(Math.max(1,aa.length));if(tabs.style.getPropertyValue('--pb-f37-tabs')!==count)tabs.style.setProperty('--pb-f37-tabs',count);
+      tabs.classList.toggle('pb2006PrintTabs',m==='print');
+      const sig=m+'|'+aa.map(a=>a.id+':'+a.label).join('|');
+      if(sig!==lastSig||tabs.querySelectorAll('[data-f37-source]').length!==aa.length){
+        lastSig=sig;
+        tabs.innerHTML=aa.map(a=>{
+          const main='<button type="button" class="'+(a.active?'active':'')+'" data-f37-source="'+a.id+'" aria-pressed="'+String(!!a.active)+'">'+esc(a.label)+'</button>';
+          if(!a.guide)return main;
+          return '<span class="pb2006MobileSplit">'+main+'<button type="button" class="pb1978VideoGuideButton pb2006MobileGuide" data-pb-guide="'+a.guide+'" aria-label="ویدیوی آموزشی '+esc(a.label)+'" title="راهنما"><span aria-hidden="true">▶</span></button></span>';
+        }).join('');
+      }
+      // State changes never replace buttons or replay entry animation.
+      for(const a of aa){const button=[...tabs.querySelectorAll('[data-f37-source]')].find(el=>el.dataset.f37Source===a.id);if(!button)continue;if(button.classList.contains('active')!==!!a.active)button.classList.toggle('active',!!a.active);if(button.getAttribute('aria-pressed')!==String(!!a.active))button.setAttribute('aria-pressed',String(!!a.active));}
+    }
     if(m==='print')fixPrint();else clearPrint();
     // Last-word physical-left lock, independent from RTL/logical properties.
     const mb=$('#pbF37MenuBtn');if(mb){mb.style.setProperty('position','fixed','important');mb.style.setProperty('inset-inline-start','10px','important');mb.style.setProperty('inset-inline-end','auto','important');mb.style.setProperty('left','10px','important');mb.style.setProperty('right','auto','important');mb.style.setProperty('top','20px','important')}
@@ -211,18 +234,21 @@
     if(renderTimer)return;
     renderTimer=requestAnimationFrame(()=>{renderTimer=0;render()});
   }
-  let bootTimer=0;function settleBoot(){if(!document.documentElement.classList.contains('pbR100F37LabEnterBoot'))return;const w=$('.photographerMain.photographerPrintWorkspace'),sc=w?.querySelector(':scope>.photographerRolePageScrollArea');if(!w||!sc||!sc.children.length||chooserVisible()||labName()==='لابراتوار')return;if(bootTimer)return;bootTimer=setTimeout(()=>{bootTimer=0;document.documentElement.classList.remove('pbR100F37LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{};try{const u=new URL(location.href);if(u.searchParams.get('pbEntryDone')==='lab'){u.searchParams.delete('pbEntryDone');history.replaceState(history.state,'',u.pathname+(u.searchParams.size?'?'+u.searchParams.toString():'')+u.hash)}}catch{}},320)}
+  let bootTimer=0;function settleBoot(){if(!document.documentElement.classList.contains('pbR100F37LabEnterBoot'))return;const w=$('.photographerMain.photographerPrintWorkspace'),sc=w?.querySelector(':scope>.photographerRolePageScrollArea');if(!w||!sc||!sc.children.length||chooserVisible()||labName()==='لابراتوار'||!$('#pbF37Tabs [data-f37-source="print:print"]')||!$('#pbF37Tabs [data-f37-source="print:finance"]'))return;if(bootTimer)return;bootTimer=setTimeout(()=>{bootTimer=0;document.documentElement.classList.remove('pbR100F37LabEnterBoot');try{sessionStorage.removeItem('photobridge:r100f37:lab-enter-pending')}catch{};try{const u=new URL(location.href);if(u.searchParams.get('pbEntryDone')==='lab'){u.searchParams.delete('pbEntryDone');history.replaceState(history.state,'',u.pathname+(u.searchParams.size?'?'+u.searchParams.toString():'')+u.hash)}}catch{}},320)}
   async function loadMe(){if(!photographerRoute())return;try{const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':'photographer'}});if(r.ok){me=await r.json();avatarData=String(me?.user?.photographerAvatarData||'');schedule(0)}}catch{}}
   function start(){
     for(const name of ['pushState','replaceState']){const old=history[name];if(typeof old==='function'&&!old.__pbR100F38){const fn=function(...args){const out=old.apply(this,args);pendingMode='';pendingUntil=0;schedule(0);return out};fn.__pbR100F38=true;history[name]=fn}}
     void loadMe();render();
     addEventListener('pb-crm-header-change',()=>{lastSig='';schedule()});
     addEventListener('photobridge-auth-session-changed',()=>{if(photographerRoute()){void loadMe();schedule(0)}});
-    const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(()=>schedule(70)).observe(root,{childList:true,subtree:true});
+    const root=$('#root')||$('#storePhotographerWorkspace')||document.documentElement;new MutationObserver(records=>{if(records.some(r=>r.type==='childList'||r.target?.matches?.('.photographerMain,.photographerPrintModeNav,.photographerPrintPhotoTab,.photographerPrintAlbumTab,.photographerPrintCommonAction')))schedule(70)}).observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     // Store chooser changes body class without changing the route; never keep
     // the previous Store header when the selector opens or closes.
     let wasChoosingStore=document.body.classList.contains('pbR96ChoosingStore');
-    new MutationObserver(()=>{const choosing=document.body.classList.contains('pbR96ChoosingStore');if(choosing!==wasChoosingStore){wasChoosingStore=choosing;schedule(0)}}).observe(document.body,{attributes:true,attributeFilter:['class']});
+    let wasChoosingLab=document.body.classList.contains('pbR100F14ChoosingLab');
+    new MutationObserver(()=>{const choosing=document.body.classList.contains('pbR96ChoosingStore'),choosingLab=document.body.classList.contains('pbR100F14ChoosingLab');if(choosing!==wasChoosingStore||choosingLab!==wasChoosingLab){wasChoosingStore=choosing;wasChoosingLab=choosingLab;schedule(0)}}).observe(document.body,{attributes:true,attributeFilter:['class']});
+    // Bounded first-entry reconciliation, not a perpetual polling loop.
+    if(new URLSearchParams(location.search).get('pbEntryDone')==='lab'||document.documentElement.classList.contains('pbR100F37LabEnterBoot'))for(const ms of [80,250,600,1200,2500,4500])setTimeout(()=>schedule(0),ms);
     addEventListener('popstate',()=>{pendingMode='';pendingUntil=0;schedule(0)},{passive:true});addEventListener('pageshow',e=>{if(e.persisted){pendingMode='';pendingUntil=0}schedule(0)},{passive:true});addEventListener('resize',()=>schedule(100),{passive:true});
     setInterval(()=>{clockBadge();settleBoot()},15000);
     setTimeout(()=>{if(document.documentElement.classList.contains('pbR100F37LabEnterBoot'))document.documentElement.classList.remove('pbR100F37LabEnterBoot')},5200);

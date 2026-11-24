@@ -71,9 +71,9 @@ let html=read('dist/web/index.html');
 if(!html.includes(cssName))
  html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2001"></head>','fourth header CSS link');
 const versionKey='&photographerFinanceFourth=r2001';
-const asset='index-UIRefine-v655-r84.js?';
+const asset='index-UIRefine-v655-r84.js';
 if(!html.includes(versionKey)){
- if(!html.includes(asset))throw Error('[R2001] UI module URL not found');
+ if(!html.includes(asset+'?'))throw Error('[R2001] UI module URL not found');
  const pattern=new RegExp(asset.replace(/\./g,'\\.')+'[^"\\s<>]*','g');
  let hits=0;
  html=html.replace(pattern,url=>{hits++;return url+versionKey});

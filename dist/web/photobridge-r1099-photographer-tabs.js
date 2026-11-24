@@ -111,6 +111,11 @@ async function load(){
   // R1977: land in the native Print orders workspace, preserving its status
   // header, send-photos action and existing orders. Do not force the standalone
   // new-upload chooser over the order board on login.
+  // R1995: once the connected photographer has visited native Orders, later
+  // intentional Gallery navigation must NOT bounce back to Orders/Lab.
+  if(next.connectedLab===true&&/^\/photographer\/(?:orders|upload|archive|finance)(?:\/|$)/.test(location.pathname)){
+   try{sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
+  }
   if(next.connectedLab===true&&/^\/photographer(?:\/gallery)?\/?$/.test(location.pathname)&&!['pbDesktopPanel','pbCrmTab','pbStorePanel','pbDesktopContent','view'].some(key=>new URLSearchParams(location.search).has(key))){
    let seen=false;try{seen=sessionStorage.getItem('pb1976PrintLanding')==='1';if(!seen)sessionStorage.setItem('pb1976PrintLanding','1')}catch{}
    if(!seen){location.replace('/photographer/orders');return;}

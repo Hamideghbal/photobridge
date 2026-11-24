@@ -178,7 +178,10 @@
       modes.querySelectorAll('button.photographerPrintPhotoTab,button.photographerPrintAlbumTab').forEach(button=>{
        const selected=button===copy;
        button.classList.toggle('active',selected);
+       button.classList.toggle('selected',selected);
        button.setAttribute('aria-pressed',String(selected));
+       button.setAttribute('aria-selected',String(selected));
+       button.dataset.pb1989Active=String(selected);
       });
      }
      press(copy);original.click();requestAnimationFrame(()=>reveal(motionContent(doc)));

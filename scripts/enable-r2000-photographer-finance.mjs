@@ -53,9 +53,7 @@ if(!server.includes('/* PB2000 customer statement invoice items */')){
  if(start<0||end<start)throw Error('[R2000] customer statement SQL route missing');
  let part=server.slice(start,end);
  part=once(part,'i.number invoice_number','i.items invoice_items,i.number invoice_number','customer invoice detail select');
- const oldGroup=part.includes('t.reference_id,i.number,i.offline_reference,p.method')?
-   't.reference_id,i.number,i.offline_reference,p.method':'t.reference_id,i.number,p.method';
- part=once(part,oldGroup,oldGroup.replace('i.number','i.id,i.number'),'customer detail grouping by primary key');
+ part=once(part,'t.reference_id,i.number','t.reference_id,i.id,i.number','customer detail primary-key group');
  server=server.slice(0,start)+part+server.slice(end)+'\n/* PB2000 customer statement invoice items */\n';
  write(serverPath,server);
 }

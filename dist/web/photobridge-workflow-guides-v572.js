@@ -95,7 +95,8 @@
     if(!button||!target||!button.isConnected||!target.isConnected)return;
     const arrow=button.querySelector('.pb569GuideArrow');if(!arrow)return;
     const br=button.getBoundingClientRect(),tr=target.getBoundingClientRect();
-    arrow.textContent=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
+    const direction=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
+    if(arrow.textContent!==direction)arrow.textContent=direction;
   }
   function installR1978GuideStyle(){
     if(document.getElementById('pb1978VideoGuidesStyle'))return;

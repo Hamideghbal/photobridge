@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699';
+  const VERSION='0.17.699-r1984';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -78,6 +78,20 @@
     catch{showGuideModal(null,slot)}
     finally{if(button){button.disabled=false;button.classList.remove('loading');if(old!=null)button.innerHTML=old}}
   }
+  // R1984: Desktop chrome rebuilds its secondary row by cloneNode(true), which
+  // deliberately does NOT copy addEventListener handlers. One capturing handler
+  // survives those clones and React re-renders on both desktop and mobile.
+  function onDelegatedVideoGuideClick(event){
+    const button=event.target?.closest?.('button.pb569WorkflowGuideButton,button.pb1978VideoGuideButton');
+    if(!button||!button.isConnected||!location.pathname.startsWith('/photographer'))return;
+    const kind=button.dataset.pbGuide||(button.classList.contains('album')?'album':button.classList.contains('print')?'print':'');
+    if(kind!=='print'&&kind!=='album')return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(button.dataset.pbGuideOpening==='1')return;
+    button.dataset.pbGuideOpening='1';
+    void openContextGuide(kind,button).finally(()=>{delete button.dataset.pbGuideOpening});
+  }
+  window.addEventListener('click',onDelegatedVideoGuideClick,true);
   // R1978: a labelled, real button is visible on mobile AND copied into the
   // desktop Print secondary header (which clones only native <button> elements).
   function guideButton(kind){
@@ -105,16 +119,16 @@
     const style=document.createElement('style');
     style.id='pb1983ModelThreeStyles';
     style.textContent=`
-      .photographerPrintModeNav.pb1983ModelThree,
-      #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree {
+      .photographerPrintWorkspace .photographerPrintModeNav,
+      #pb1126DesktopHeader .pb1127PrintModes {
         display:flex!important;align-items:center!important;justify-content:center!important;
         flex-wrap:nowrap!important;gap:5px!important;direction:rtl!important;
       }
       /* Main actions stand out. Never alter their native click handlers. */
-      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
-      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab,
-      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintPhotoTab,
-      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintAlbumTab {
+      html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintPhotoTab,
+      html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintAlbumTab,
+      html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintPhotoTab,
+      html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintAlbumTab {
         display:inline-flex!important;align-items:center!important;justify-content:center!important;
         flex:0 0 auto!important;height:35px!important;min-height:35px!important;
         min-width:0!important;width:auto!important;max-width:none!important;
@@ -126,16 +140,16 @@
         cursor:pointer!important;opacity:1!important;visibility:visible!important;
         text-decoration:none!important;
       }
-      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
-      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
-      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
-      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]) {
+      html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body #pb1126DesktopHeader .pb1127PrintModes > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]) {
         background:linear-gradient(135deg,#397bff,#2356d8)!important;color:#fff!important;
         border-color:#2559d9!important;box-shadow:0 3px 9px rgba(36,89,219,.19)!important;
       }
       /* Each tutorial is deliberately smaller, quiet and adjacent to its main tab. */
-      html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton,
-      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > .pb1978VideoGuideButton {
+      html body .photographerPrintWorkspace .photographerPrintModeNav > .pb1978VideoGuideButton,
+      html body #pb1126DesktopHeader .pb1127PrintModes > .pb1978VideoGuideButton {
         display:inline-flex!important;align-items:center!important;justify-content:center!important;
         flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important;
         height:26px!important;min-height:26px!important;padding:3px 7px!important;
@@ -145,45 +159,45 @@
         white-space:nowrap!important;opacity:1!important;visibility:visible!important;
         position:relative!important;cursor:pointer!important;text-decoration:none!important;
       }
-      html body .pb1983ModelThree > .pb1978VideoGuideButton .pb569GuideLabel {
+      html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes) > .pb1978VideoGuideButton .pb569GuideLabel {
         display:inline!important;font:inherit!important;color:inherit!important;
         margin:0!important;padding:0!important;white-space:nowrap!important;
       }
-      html body .pb1983ModelThree > .pb1978VideoGuideButton .pb569GuideArrow {
+      html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes) > .pb1978VideoGuideButton .pb569GuideArrow {
         display:inline!important;font:800 12px/1 Tahoma,sans-serif!important;
         color:#4678cf!important;font-style:normal!important;
         width:auto!important;height:auto!important;line-height:1!important;
       }
-      html body .pb1983ModelThree > .pb1978VideoGuideButton:hover,
-      html body .pb1983ModelThree > .pb1978VideoGuideButton:focus-visible {
+      html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes) > .pb1978VideoGuideButton:hover,
+      html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes) > .pb1978VideoGuideButton:focus-visible {
         background:#edf4ff!important;color:#235bd1!important;
         border-color:#a9c5f8!important;outline:2px solid #b2ccfb;outline-offset:1px;
       }
       /* A little air between the two pairs; no layout changes outside this row. */
-      html body .pb1983ModelThree > .photographerPrintPhotoTab {
+      html body :is(.photographerPrintWorkspace .photographerPrintModeNav,#pb1126DesktopHeader .pb1127PrintModes) > .photographerPrintPhotoTab {
         margin-inline-end:9px!important;
       }
       @media(max-width:820px){
-        html body .photographerPrintModeNav.pb1983ModelThree{gap:3px!important}
-        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
-        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab{
+        html body .photographerPrintWorkspace .photographerPrintModeNav{gap:3px!important}
+        html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintPhotoTab,
+        html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintAlbumTab{
           height:31px!important;min-height:31px!important;
           padding:4px 7px!important;font-size:11px!important;border-radius:9px!important;
         }
-        html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton{
+        html body .photographerPrintWorkspace .photographerPrintModeNav > .pb1978VideoGuideButton{
           height:25px!important;min-height:25px!important;padding:3px 5px!important;
           font-size:9px!important;gap:2px!important;border-radius:7px!important;
         }
-        html body .photographerPrintModeNav.pb1983ModelThree > .photographerPrintPhotoTab {
+        html body .photographerPrintWorkspace .photographerPrintModeNav > .photographerPrintPhotoTab {
           margin-inline-end:3px!important;
         }
       }
       @media(max-width:380px){
-        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
-        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab{
+        html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintPhotoTab,
+        html body .photographerPrintWorkspace .photographerPrintModeNav > button.photographerPrintAlbumTab{
           padding-inline:5px!important;font-size:10px!important;
         }
-        html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton{
+        html body .photographerPrintWorkspace .photographerPrintModeNav > .pb1978VideoGuideButton{
           padding-inline:3px!important;font-size:8px!important;
         }
       }

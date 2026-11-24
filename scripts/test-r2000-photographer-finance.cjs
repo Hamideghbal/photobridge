@@ -51,8 +51,9 @@ test('R2000 historical invoice line items are read from the customer statement S
  const from=server.indexOf("url.pathname === '/api/customer/finance/statement'");
  const to=server.indexOf("url.pathname === '/api/customer/chat'",from);
  const route=server.slice(from,to);
- assert(route.includes('i.items invoice_items'));
- assert(route.includes('t.reference_id,i.id,i.number'));
+ assert(route.includes('const pb2000Ids='));
+ assert(route.includes('SELECT id,items FROM invoices WHERE lab_id=$1 AND customer_id=$2'));
+ assert(route.includes('row.invoice_items=pb2000ById.get('));
  assert(route.includes("a.system_key='receivable' AND e.customer_id=$2"));
  assert(server.includes('/* PB2000 customer statement invoice items */'));
 });

@@ -51,7 +51,7 @@ test('R1998: only the desktop chooser filter strip is hidden; Shop cards/actions
  const rule=head.slice(current,head.indexOf('</style>',current));
  assert.match(rule,/@media\(min-width:821px\)/,'mobile chooser is left untouched');
  assert.match(rule,/html\.pb1126Embedded body\.pbR96ChoosingStore/);
- assert.match(rule,/#storePhotographerWorkspace #storeChooserFiltersR1231/);
+ assert.match(rule,/#storePhotographerWorkspace #storeChooserPanelR96 \.pbR96StoreChooser > #storeChooserFiltersR1231/,'selector must match the old highly-specific display:flex rule');
  assert.match(rule,/display:none!important/);
  assert.match(rule,/margin:0!important;padding:0!important/);
  assert.doesNotMatch(rule,/#storeChooserListR96|\.pbR96StoreCard/,'store selection cards must not be hidden');

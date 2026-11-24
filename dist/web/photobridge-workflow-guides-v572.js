@@ -328,7 +328,7 @@
     const manager=document.createElement('section');manager.className='pb567WorkflowGuideManager';manager.dataset.version=VERSION;manager.innerHTML='<div class="pb567GuideManagerLoading">در حال دریافت شش ویدیوی اختصاصی…</div>';
     const head=panel.querySelector('.adminGuideHead');head.insertAdjacentElement('afterend',manager);renderAdminManager(manager);
   }
-  function sync(){if(location.pathname==='/guide')return;cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
+  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
   function queueSync(){if(observerQueued)return;observerQueued=true;requestAnimationFrame(()=>{observerQueued=false;sync()})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuideModal()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();

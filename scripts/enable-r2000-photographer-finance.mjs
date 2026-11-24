@@ -36,6 +36,26 @@ if(!desktop.includes('/* PB2000 photographer payments header */')){
  write(desktopPath,desktop);
 }
 execFileSync(process.execPath,['--check',desktopPath],{stdio:'inherit'});
+
+// The laboratory detailed ledger already returns historical invoice line items
+// directly with statement rows. Do the same read-only enrichment for the
+// photographer: the separate invoices list is limited to recent documents.
+const serverPath='dist/api/server.js';
+let server=read(serverPath);
+if(!server.includes('/* PB2000 customer statement invoice items */')){
+ const start=server.indexOf("if (req.method === 'GET' && url.pathname === '/api/customer/finance/statement') {");
+ const end=server.indexOf("if (req.method === 'GET' && url.pathname === '/api/customer/chat') {",start);
+ if(start<0||end<start)throw Error('[R2000] customer statement SQL route missing');
+ let part=server.slice(start,end);
+ part=once(part,'i.number invoice_number,p.method payment_method','i.items invoice_items,i.number invoice_number,p.method payment_method','customer invoice detail select');
+ const oldGroup=part.includes('t.reference_id,i.number,i.offline_reference,p.method')?
+   't.reference_id,i.number,i.offline_reference,p.method':'t.reference_id,i.number,p.method';
+ part=once(part,oldGroup,oldGroup.replace('i.number','i.id,i.number'),'customer detail grouping by primary key');
+ server=server.slice(0,start)+part+server.slice(end)+'\n/* PB2000 customer statement invoice items */\n';
+ write(serverPath,server);
+}
+execFileSync(process.execPath,['--check',serverPath],{stdio:'inherit'});
+
 const cssName='photobridge-r2000-photographer-finance.css';
 fs.copyFileSync('scripts/r2000-photographer-finance.css','dist/web/'+cssName);
 const htmlPath='dist/web/index.html';

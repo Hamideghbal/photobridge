@@ -26,7 +26,7 @@ test('R1977 desktop CRM + Calendar are gated by authenticated role-specific API 
  const start=source.indexOf("if((['ai','album','instagram'].includes(key)");
  const end=source.indexOf('{button?.remove();continue;}',start);
  assert(start>=0&&end>start,'generated desktop filter not found');
- const predicate=source.slice(start+3,end);
+ const predicate=source.slice(start+3,end-1);
  const blocked=new Function('key','settings','crmVisibilityVerified','return '+predicate+';');
  const settings={tabs:{ai:true,album:true,instagram:true,customers:false,calendar:true}};
  assert.equal(blocked('crm',settings,true),true,'CRM must disappear when photographer Customers off');

@@ -90,12 +90,42 @@ if(!ui.includes('/* PB2002 photographer finance polish */')){
  ui=ui.slice(0,begin)+part+ui.slice(end+1)+'\n/* PB2002 photographer finance polish */\n';
  write(file,ui);
 }
+// R2003: preserve the laboratory's original range controls; make photographer
+// filters use the same Persian picker layout as the statement.
+if(!ui.includes('/* PB2003 photographer date filters */')){
+ const begin=ui.indexOf('function ub({role:t,'),end=ui.indexOf('}function hb(',begin);
+ if(begin<0||end<begin)throw Error('[R2003] finance component missing');
+ let part=ui.slice(begin,end+1);
+ for(const [key,field,set,placeholder] of [
+  ['From','_pbInvFrom','_setPbInvFrom','از تاریخ'],
+  ['To','_pbInvTo','_setPbInvTo','تا تاریخ']
+ ]){
+  const picker='e.jsx(Hs,{compact:!0,value:'+field+',onChange:'+set+',placeholder:"'+placeholder+'",showToday:t==="lab"})';
+  const old='e.jsxs("label",{children:["'+placeholder+'",'+picker+']})';
+  const next='(t==="lab"?'+old+':e.jsx("div",{className:"statementDateLabel pb2003InvoiceDateLabel","aria-label":"'+placeholder+'",children:e.jsxs("div",{className:"statementDateControl",children:['+picker+','+field+'&&e.jsx("button",{type:"button",className:"dateClearBtn","aria-label":"پاک کردن '+placeholder+'",onClick:()=>{'+set+'("");_setPbInvApplied'+key+'("");Ie(1)},children:"×"})]})}))';
+  part=once(part,old,next,'R2003 '+key+' date control');
+ }
+ // Use the already existing state setters and remove stale search on explicit
+ // Today / All presets. Dates and search are local filters, never writes.
+ part=once(part,'const day=$s(new Date());_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1)',
+  'const day=$s(new Date());if(t!=="lab")c("");_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1)','R2003 today reset');
+ part=once(part,'_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1)',
+  't!=="lab"&&c(""),_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1)','R2003 all reset');
+ // Date-only ISO inputs already denote a Tehran civil day. Avoid parsing them
+ // through UTC again; historical customer records may use created_at.
+ part=once(part,'const At=$s(Je.issued_at),Et=_pbInvAppliedFrom?$s(_pbInvAppliedFrom):"",dn=_pbInvAppliedTo?$s(_pbInvAppliedTo):"";',
+  'const pb2003Day=v=>typeof v==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(v)?v:$s(v),At=t==="lab"?$s(Je.issued_at):pb2003Day(Je.issued_at||Je.created_at),Et=_pbInvAppliedFrom?pb2003Day(_pbInvAppliedFrom):"",dn=_pbInvAppliedTo?pb2003Day(_pbInvAppliedTo):"";','R2003 civil-date filtering');
+ // Keep the original ledger totals in the statement paper, not its toolbar.
+ part=once(part,'t==="customer"&&e.jsxs("div",{className:"pb2000CustomerMetrics",','false&&e.jsxs("div",{className:"pb2000CustomerMetrics",','R2003 hide duplicate statement totals');
+ ui=ui.slice(0,begin)+part+ui.slice(end+1)+'\n/* PB2003 photographer date filters */\n';
+ write(file,ui);
+}
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const cssName='photobridge-r2001-photographer-fourth-header.css';
 fs.copyFileSync('scripts/r2001-photographer-fourth-header.css','dist/web/'+cssName);
 let html=read('dist/web/index.html');
 if(!html.includes(cssName))
- html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2002"></head>','fourth header CSS link');
+ html=once(html,'</head>','<link rel="stylesheet" href="/'+cssName+'?v=r2003"></head>','fourth header CSS link');
 const versionKey='&photographerFinanceFourth=r2001';
 const asset='index-UIRefine-v655-r84.js';
 if(!html.includes(versionKey)){
@@ -105,5 +135,7 @@ if(!html.includes(versionKey)){
  html=html.replace(pattern,url=>{hits++;return url+versionKey+'&photographerFinancePolish=r2002'});
  if(hits!==1)throw Error('[R2001] expected one UI module URL, found '+hits);
 }
+html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('photographerDateFilters=r2003')?url:url+'&photographerDateFilters=r2003');
+html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('splitGuide=r2003')?url:url+'&splitGuide=r2003');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

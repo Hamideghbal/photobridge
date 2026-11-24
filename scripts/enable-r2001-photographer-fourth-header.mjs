@@ -148,5 +148,6 @@ if(!html.includes(versionKey)){
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('photographerDateFilters=r2003')?url:url+'&photographerDateFilters=r2003');
 html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('splitGuide=r2003')?url:url+'&splitGuide=r2003');
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('financeDateBuild=r2004')?url:url+'&financeDateBuild=r2004');
+html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('utilityGuides=r2005')?url:url+'&utilityGuides=r2005');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

@@ -161,6 +161,6 @@ test('R2006 actual F37 mobile header reconciles first-entry and preserves tab no
  assert(header.includes("if(id.startsWith('print:')){actions('print');source=sourceMap.get(id)}"));
  assert(css.includes('#pbF37Tabs.pb2006PrintTabs'));
  const guide=fs.readFileSync('dist/web/photobridge-workflow-guides-v572.js','utf8');
- assert(guide.includes("if(document.querySelector('#pbF37Tabs.pb2006PrintTabs'))return null"));
+ assert(guide.includes("if(document.querySelector?.('#pbF37Tabs.pb2006PrintTabs'))return null"));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('mobileHeader=r2006'));
 });

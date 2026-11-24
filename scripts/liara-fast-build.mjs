@@ -1488,3 +1488,5 @@ runR1314(process.execPath,['--test','scripts/test-r1945-lab-order-recovery.cjs']
 runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1973-walkin-poster-site.test.cjs'],{stdio:'inherit'});
 // R1976: ensure all four CRM/Calendar role switches, connected Print entry and guide buttons survive final build.
 runR1314(process.execPath,['--test','scripts/test-r1976-print-entry-crm-guides.cjs'],{stdio:'inherit'});
+// R1977: native order board must survive login; authenticated CRM flags hide tabs even after desktop rendering.
+runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board-crm.cjs'],{stdio:'inherit'});

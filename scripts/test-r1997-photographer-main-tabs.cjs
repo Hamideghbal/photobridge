@@ -47,7 +47,7 @@ test('R1997: Store controls keep stable identity and synchronize selection witho
  assert.match(nav,/headerControls\.map\(el=>pb1997StoreKey\(el\)\)\.join\('\|'\)\+pb1997StoreKey\(cameraCart\)/);
  assert.match(nav,/copy\.dataset\.pb1997StoreKey=pb1997StoreKey\(original\)/);
  assert.match(nav,/pb1997LiveStoreControl\(doc,copy\.dataset\.pb1997StoreKey\)/);
- assert.match(nav,/if\(storeHeader&&!choosing\)pb1997SyncStoreHeader\(row,headerControls,doc\)/);
+ assert.match(nav,/if\(storeHeader&&!choosing\)queueMicrotask\(\(\)=>\{if\(selected==='store'&&row\.isConnected\)pb1997SyncStoreHeader\(row,headerControls,doc\);\}\)/);
  assert.doesNotMatch(navigateFunction(),/openStoreChooser\(/,'Store must retain its selected page instead of forcibly reopening chooser');
 });
 test('R1997: hidden frames do not keep redrawing Store header; CSS prevents row collisions',()=>{

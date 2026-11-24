@@ -74,7 +74,8 @@ test('R1981 guide target survives desktop chrome clone while hidden iframe canno
  const start=guide.indexOf('function visiblePrintModeNav(){');
  const end=guide.indexOf('\n  }',start);
  assert(start>=0&&end>start,'guide target selector exists');
- const chooser=new Function('location','window','document','isMobile','return ('+guide.slice(start,end+4)+');');
+ const chooserFactory=new Function('location','window','document','isMobile','return ('+guide.slice(start,end+4)+');');
+ const chooser=(location,window,document,isMobile)=>chooserFactory(location,window,document,isMobile)();
  const printButton={};
  const stable={querySelector:sel=>sel==='.photographerPrintPhotoTab'?printButton:null};
  const secondary={hidden:false,querySelector:sel=>sel==='.pb1127PrintModes'?stable:null};
@@ -103,6 +104,12 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
- assert(html.includes('photobridge-workflow-guides-v572.js?v=r1981'));
- assert(html.includes('r1981=main-print-only'));
+ // Final Liara HTML writers may reorder URL query parameters.
+ function version(file,key){
+  const hit=html.match(new RegExp(file.replaceAll('.','[.]')+'\\\\?([^"\\x27<>\\s]+)'));
+  assert(hit,'missing '+file+' script');
+  return new URLSearchParams(hit[1]).get(key);
+ }
+ assert.equal(version('photobridge-workflow-guides-v572.js','v'),'r1981');
+ assert.equal(version('photobridge-v904r99-lab-chooser.js','r1981'),'main-print-only');
 });

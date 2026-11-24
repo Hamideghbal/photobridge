@@ -71,3 +71,29 @@ test('R2001 fixed fourth header is white, single-row, scoped to photographer',()
   assert(boot.includes('R2001 | Photographer financial fourth header'));
  }
 });
+
+test('R2002 actual legacy Today and accounting counts render only for laboratory',()=>{
+ const legacyToday='t==="lab"&&e.jsx("button",{type:"button",className:"pb1201InvoiceToday"';
+ const counts='t==="lab"&&e.jsxs("div",{className:"pb1201InvoiceCounts"';
+ assert.equal(finance.split(legacyToday).length,2);
+ assert.equal(finance.split(counts).length,2);
+ assert.equal(finance.split('className:"pb1201InvoiceToday"').length,2);
+ assert.equal(finance.split('className:"pb1201InvoiceCounts"').length,2);
+ assert(finance.includes('className:"pb1176Today "'));
+ assert(!finance.includes('t==="lab"&&e.jsx("button",{type:"button",className:"pb1176Today "'));
+ assert(ui.includes('/* PB2002 photographer finance polish */'));
+});
+test('R2002 top separator and contrasting ledger controls survive stylesheet delivery',()=>{
+ assert(css.includes('border-block-start:1px solid #cbd5e1!important'));
+ assert(css.includes('button.pb1177ViewMode:not(.active)'));
+ assert(css.includes('button:is(.pb1177ViewMode.active,.pb1177Print)'));
+ assert(css.includes('color:#344054!important;-webkit-text-fill-color:#344054!important'));
+ assert(css.includes('color:#fff!important;-webkit-text-fill-color:#fff!important'));
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ assert(html.includes('photographerFinancePolish=r2002'));
+ if(!html.includes('photobridge-r2001-photographer-fourth-header.css')){
+  const match=html.match(/photobridge-boot-[a-f0-9]{16}\.css/);
+  assert(match);
+  assert(fs.readFileSync('dist/web/assets/'+match[0],'utf8').includes('R2002 | Photographer finance fourth-header separation'));
+ }
+});

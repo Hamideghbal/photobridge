@@ -185,3 +185,27 @@ html body #root .photographerRolePageScrollArea .financeWorkspace .customerState
   flex:0 0 135px!important;min-width:135px!important;
  }
 }
+
+/* R2002 | Photographer finance fourth-header separation and readable ledger buttons. */
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar,
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar,
+html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar,
+html.pb1126Embedded body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar{
+ border-block-start:1px solid #cbd5e1!important;
+ border-top:1px solid #cbd5e1!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementActions>button.pb1177ViewMode:not(.active){
+ background:#f6f9ff!important;border-color:#cbd9ef!important;
+ color:#344054!important;-webkit-text-fill-color:#344054!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementActions>button:is(.pb1177ViewMode.active,.pb1177Print){
+ background:#315efb!important;border-color:#315efb!important;
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementActions>button:is(.pb1177ViewMode,.pb1177Print) :is(span,b,strong,small,svg){
+ color:inherit!important;-webkit-text-fill-color:inherit!important;
+}
+/* Defensive fallback for a legacy injected toolbar; lab is deliberately not scoped here. */
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar :is(.pb1201InvoiceToday,.pb1201InvoiceCounts){
+ display:none!important;
+}

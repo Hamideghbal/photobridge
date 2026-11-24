@@ -73,7 +73,7 @@ function makeSmsHandler(deps={}){
  };
  Object.assign(ctx,deps);
  const keys=Object.keys(ctx);
- const execute=new Function(...keys,'return (async()=>{'+branch+'\n})()');
+ const execute=new Function(...keys,'return (async()=>{'+branch+'\n}\n})()');
  return ()=>execute(...keys.map(k=>ctx[k]));
 }
 test('R1999: schema mismatch repairs once; sent SMS stays success if optional invite read fails',async()=>{

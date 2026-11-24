@@ -49,7 +49,7 @@
     publicCache={at:Date.now(),guides:Array.isArray(d.guides)?d.guides:[]};return publicCache.guides;
   }
   function closeGuideModal(){document.querySelector('.pb567GuideBackdrop')?.remove();document.documentElement.classList.remove('pb567GuideOpen')}
-  function showGuideModal(guide,slot){
+  function showGuideModal(guide,slot,loading=false){
     closeGuideModal();
     const back=document.createElement('div');back.className='pb567GuideBackdrop';back.setAttribute('role','presentation');
     const dialog=document.createElement('section');dialog.className='pb567GuideDialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.dir='rtl';
@@ -57,11 +57,12 @@
     const copy=document.createElement('div');
     const badge=document.createElement('span');badge.textContent=isMobile()?'نسخه موبایل':'نسخه دسکتاپ';
     const title=document.createElement('h2');title.textContent=guide?.title||slot.title;
-    const desc=document.createElement('p');desc.textContent=guide?.description||'ویدیوی این راهنما هنوز توسط ادمین بارگذاری نشده است.';
+    const desc=document.createElement('p');desc.textContent=loading?'در حال دریافت ویدیوی آموزشی…':guide?.description||'ویدیوی این راهنما هنوز توسط ادمین بارگذاری نشده است.';
     copy.append(badge,title,desc);
     const close=document.createElement('button');close.type='button';close.className='pb567GuideClose';close.setAttribute('aria-label','بستن');close.textContent='×';close.onclick=closeGuideModal;
     head.append(copy,close);dialog.append(head);
-    if(guide?.src){
+    if(loading){const spinner=document.createElement('div');spinner.className='pb567GuideEmpty';spinner.setAttribute('role','status');spinner.textContent='در حال بارگذاری ویدیوی آموزشی…';dialog.append(spinner);}
+    else if(guide?.src){
       const frame=document.createElement('div');frame.className='pb567GuideVideoFrame';
       const video=document.createElement('video');video.controls=true;video.playsInline=true;video.autoplay=true;video.preload='metadata';if(guide.poster)video.poster=guide.poster;
       const source=document.createElement('source');source.src=guide.src;source.type=guide.contentType||'video/mp4';video.append(source);frame.append(video);dialog.append(frame);
@@ -74,9 +75,17 @@
   async function openContextGuide(kind,button){
     const slot=slotFor(kind);if(!slot)return;
     const old=button?.innerHTML;if(button){button.disabled=true;button.classList.add('loading')}
-    try{const guides=await loadPublicGuides();const guide=guides.find(g=>String(g.category||'').trim()===slot.category);showGuideModal(guide||null,slot)}
-    catch{showGuideModal(null,slot)}
-    finally{if(button){button.disabled=false;button.classList.remove('loading');if(old!=null)button.innerHTML=old}}
+    // Open synchronously on the first click. API latency must not look like a dead button.
+    showGuideModal(null,slot,true);
+    const pendingBackdrop=document.querySelector('.pb567GuideBackdrop');
+    try{
+      const guides=await loadPublicGuides();
+      if(document.querySelector('.pb567GuideBackdrop')!==pendingBackdrop)return;
+      const guide=guides.find(g=>String(g.category||'').trim()===slot.category);
+      showGuideModal(guide||null,slot);
+    }catch{
+      if(document.querySelector('.pb567GuideBackdrop')===pendingBackdrop)showGuideModal(null,slot);
+    }finally{if(button){button.disabled=false;button.classList.remove('loading');if(old!=null)button.innerHTML=old}}
   }
   // R1984: Desktop chrome rebuilds its secondary row by cloneNode(true), which
   // deliberately does NOT copy addEventListener handlers. One capturing handler
@@ -420,6 +429,9 @@
   function queueSync(){if(observerQueued)return;observerQueued=true;requestAnimationFrame(()=>{observerQueued=false;sync()})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuideModal()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
-  new MutationObserver(queueSync).observe(document.documentElement,{childList:true,subtree:true});
+  // React toggles hidden/classes after hydration without adding/removing nodes.
+  // Observe those transitions too, so guide buttons are reattached immediately.
+  new MutationObserver(queueSync).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','aria-hidden']});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)queueSync()});
   window.addEventListener('popstate',queueSync);window.addEventListener('resize',queueSync,{passive:true});
 })();

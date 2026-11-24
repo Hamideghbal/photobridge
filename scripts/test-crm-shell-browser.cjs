@@ -18,7 +18,7 @@ function shell(portal,mobileScripts){
   }
   if(['/lab','/photographer/gallery'].includes(u.pathname)){res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(shell(u.pathname==='/lab'?'lab':'photographer',u.searchParams.has('testMobileDock')));return}
   if(settingsUnavailable&&u.pathname==='/api/photographer/navigation-tabs'){res.writeHead(503,{'content-type':'application/json'});res.end('{}');return}
-  if(u.pathname.startsWith('/api/')){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(u.pathname.includes('navigation-tabs')?{tabs:{customers:true}}:u.pathname.includes('services-wallet')?{balance:1000}:u.pathname.includes('appointments')?{appointments:[]}:{customers:[],shootTypes:[],sessions:[],templates:[],invoices:[],occasions:[]}));return}
+  if(u.pathname.startsWith('/api/')){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(u.pathname.includes('navigation-tabs')?{tabs:{customers:true,calendar:true}}:u.pathname.includes('services-wallet')?{balance:1000}:u.pathname.includes('appointments')?{appointments:[]}:{customers:[],shootTypes:[],sessions:[],templates:[],invoices:[],occasions:[]}));return}
   const file=path.resolve(web,'.'+u.pathname);if(file.startsWith(web+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()){res.writeHead(200,{'content-type':file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.woff2')?'font/woff2':'application/octet-stream','cache-control':'no-cache'});fs.createReadStream(file).pipe(res);return}
   res.writeHead(404);res.end();
  });

@@ -8,10 +8,10 @@ const admin=fs.readFileSync('dist/web/photobridge-r1099-photographer-tabs.js','u
 const api=fs.readFileSync('dist/api/photographer-tab-settings.js','utf8');
 const html=fs.readFileSync('dist/web/index.html','utf8');
 
-test('R1767: one Customers checkbox exists in admin photographer tab settings',()=>{
- assert.match(api,/PHOTOGRAPHER_TAB_KEYS=\['ai','album','instagram','customers'\]/);
- assert.match(admin,/customers:'مشتریان \(عکاس و لابراتوار\)'/);
- assert.match(api,/customers:effective\.customers/);
+test('R1976: Customers and Calendar are independent for Photographer and Lab',()=>{
+ assert.match(api,/PHOTOGRAPHER_TAB_KEYS=\['ai','album','instagram','customers','calendar','labCustomers','labCalendar'\]/);
+ assert.match(admin,/customers:'مشتریان عکاس'/);assert.match(admin,/labCalendar:'تقویم مشتریان لابراتوار'/);
+ assert.match(api,/customers:effective\.labCustomers/);assert.match(api,/calendar:effective\.labCalendar/);
  assert.doesNotMatch(admin,/حساب عکاسی ادمین همیشه به هر سه تب دسترسی دارد/);
 });
 test('R1767: both navigation assets use fresh versions and do not affect unrelated pages',()=>{
@@ -20,9 +20,9 @@ test('R1767: both navigation assets use fresh versions and do not affect unrelat
  const boot=html.match(/href="(\/assets\/photobridge-boot-[a-f0-9]+\.css)[^"]*"/);
  assert(crmCssLinks===1||!!boot&&fs.readFileSync('dist/web'+boot[1],'utf8').includes(fs.readFileSync('dist/web/photobridge-r1761-crm-nav.css','utf8')));
  assert.equal((html.match(/photobridge-r1099-photographer-tabs\.js\?v=(?:1767|r1775)/g)||[]).length,1);
- assert.match(nav,/enabled=data\?\.tabs\?\.customers===true/);
+ assert.match(nav,/enabled=\{customers:data\?\.tabs\?\.customers===true,calendar:data\?\.tabs\?\.calendar===true\}/);
  // R1877 keeps the fail-closed policy while waiting for the final mobile dock.
- assert.match(nav,/if\(enabled!==true\)\{clearButtons\(\);(?:settleDock\(\);)?return;\}/);
+ assert(nav.includes('if(!enabled||(!enabled.customers&&!enabled.calendar))'));
  assert.match(nav,/if\(typeof window\.dispatchEvent==='function'&&typeof Event==='function'\)/);
  assert.match(nav,/credentials:'include',cache:'no-store'/);
  new vm.Script(nav);
@@ -43,7 +43,8 @@ function scene(portal,mobile){
    const pane=q.match(/^:scope > button\[data-pb-crm-pane="(customers|calendar)"\]$/)?.[1];
    if(pane)return this.children.find(x=>x.dataset.pbCrmPane===pane)||null;
    return null;
-  }
+  },
+  querySelectorAll(q){const pane=q.match(/data-pb-crm-pane="(customers|calendar)"/)?.[1];return pane?this.children.filter(x=>x.dataset.pbCrmPane===pane):[];}
  };
  const document={
   readyState:'complete',hidden:false,body:{classList:{contains:()=>false}},
@@ -79,7 +80,7 @@ function scene(portal,mobile){
   MutationObserver:class{observe(){}},queueMicrotask:fn=>frames.push(fn),
   getComputedStyle:()=>({display:'flex'}),
   sessionStorage:{getItem:()=>null},
-  fetch:async()=>{calls++;return {ok:true,json:async()=>({tabs:{customers:allowed}})}},
+  fetch:async()=>{calls++;return {ok:true,json:async()=>({tabs:{customers:allowed,calendar:allowed}})}},
   window:{addEventListener(name,fn){events[name]=fn},pb1761CrmNavigation:false}
  };
  // Mock classList references the host button's className.
@@ -97,11 +98,11 @@ function scene(portal,mobile){
   }
  };
 }
-test('R1767: one switch controls Customers and its mobile calendar in both portals',async()=>{
+test('R1976: each portal renders its allowed Customers and Calendar tabs and restores them',async()=>{
  for(const portal of ['lab','photographer'])for(const mobile of [true,false]){
   const page=scene(portal,mobile);
   const panes=()=>page.target.children.filter(b=>b.dataset.pb1761Crm===portal).map(b=>b.dataset.pbCrmPane);
-  const expected=mobile?['customers','calendar']:['customers'];
+  const expected=['customers','calendar'];
   await page.flush();
   assert.deepEqual(panes(),expected,'ON: '+portal+' mobile='+mobile);
   const sameButtons=[...page.target.children];

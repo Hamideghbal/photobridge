@@ -109,7 +109,7 @@
   function mountHeaderButtons(){
     const nav=cleanupHeaderButtons();if(!nav)return;
     const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab'),lab=nav.querySelector('.photographerPrintTopLab');
-    if(!print||!lab)return;
+    if(!print)return; // R1976: guides must be available even before a lab is selected.
     print.querySelectorAll('.pb569WorkflowGuideButton:not(.print)').forEach(x=>x.remove());
     if(album)album.querySelectorAll('.pb569WorkflowGuideButton:not(.album)').forEach(x=>x.remove());
 

@@ -41,6 +41,6 @@ test('admin can edit all three settings in the rendered dialog',async()=>{
  await page.waitForFunction(()=>!document.querySelector('#pb1099TabsDialog [type=submit]').disabled);
  await page.locator('[name=ai]').uncheck();await page.locator('[name=instagram]').uncheck();await page.locator('[name=customers]').uncheck();await page.getByRole('button',{name:'ذخیره',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#pb1099TabsDialog [role=status]').textContent==='تنظیمات ذخیره شد.');
- assert.deepEqual(saved,{ai:false,album:true,instagram:false,customers:false});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
+ assert.deepEqual(saved,{ai:false,album:true,instagram:false,customers:false,calendar:true,labCustomers:true,labCalendar:true});await page.getByRole('button',{name:'بستن',exact:true}).click();assert(!await page.locator('dialog').isVisible());
  }finally{await browser.close()}
 });

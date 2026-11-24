@@ -61,9 +61,9 @@ test('R1775: actual native dialog can save and cancel, preserving user input',as
 });
 test('R1775: shared Customers navigation is server controlled for both roles and rechecked',()=>{
  assert(nav.includes("const activePortal=()=>lab()?'lab':photo()?'photographer':null"));
- assert(nav.includes("enabled=data?.tabs?.customers===true"));
- // The R1877 dock readiness signal is valid only after failed/disabled tabs are cleared.
- assert(/if\(enabled!==true\)\{clearButtons\(\);(?:settleDock\(\);)?return;\}/.test(nav));
+ assert(nav.includes("enabled={customers:data?.tabs?.customers===true,calendar:data?.tabs?.calendar===true}"));
+ // The R1877 dock readiness signal is valid only after both independently disabled panes are cleared.
+ assert(nav.includes("if(!enabled||(!enabled.customers&&!enabled.calendar))"));
  assert(nav.includes("credentials:'include',cache:'no-store'"));
  assert(nav.includes("window.addEventListener('pb1761-customer-settings-updated',refresh)"));
  assert(nav.includes("event.key==='pb1761CustomerVisibilityUpdated'"));

@@ -6,7 +6,10 @@ const shared='dist/web/photobridge-r1761-crm-nav.js';
 let nav=fs.readFileSync(shared,'utf8');
 nav=replace(nav,'if(!portal){clearButtons();return;}','if(!portal){clearButtons();window.pbCrmClose?.();return;}','logout cleanup');
 // R1877: the new navigation settles the final dock before revealing it.
-if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
+if(nav.includes('if(!enabled||(!enabled.customers&&!enabled.calendar)){clearButtons();window.pbCrmClose?.();settleDock();return;}')){
+ // R1976: role-scoped Customers and Calendar already close forbidden panes;
+ // do not rewrite the new readiness gate using the old shared boolean logic.
+}else if(nav.includes('if(enabled!==true){clearButtons();settleDock();return;}')){
  nav=nav.replace('if(enabled!==true){clearButtons();settleDock();return;}',
    'if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();settleDock();return;}');
 }else nav=replace(nav,'if(enabled!==true){clearButtons();return;}','if(enabled===false)window.pbCrmClose?.();\n    if(enabled!==true){clearButtons();return;}','disabled tab cleanup');

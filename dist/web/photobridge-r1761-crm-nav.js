@@ -34,7 +34,7 @@
       b.dataset.source='.pb1761CrmNotANativeTab';
       const label=document.createElement('span');
       label.className='pb1149NavLabel';
-      label.textContent='مشتریان';
+      label.textContent=title;
       b.append(label);
     }else{
       const customersIcon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.2A5.8 5.8 0 0 1 9.3 12h.4a5.8 5.8 0 0 1 5.8 5.8V19"/><path d="M16.8 5.5a3 3 0 0 1 0 5.7M18 13a5.3 5.3 0 0 1 2.5 4.5V19"/></svg>';
@@ -77,12 +77,12 @@
       if(!response.ok)throw Error('tab-settings-unavailable');
       const data=await response.json();
       if(requestEpoch!==epoch)return;
-      enabled=data?.tabs?.customers===true;
+      enabled={customers:data?.tabs?.customers===true,calendar:data?.tabs?.calendar===true};
       fetchedPortal=portal;
     }catch{
       if(requestEpoch!==epoch)return;
       // Never display a disabled or unverified tab during a network/auth error.
-      enabled=false;
+      enabled={customers:false,calendar:false};
       fetchedPortal=portal;
     }finally{
       loading=false;
@@ -124,15 +124,16 @@
     const portal=activePortal();
     if(!portal){clearButtons();return;}
     if(fetchedPortal!==portal){clearButtons();void loadVisibility(portal);return;}
-    if(enabled!==true){clearButtons();settleDock();return;}
+    if(!enabled||(!enabled.customers&&!enabled.calendar)){clearButtons();window.pbCrmClose?.();settleDock();return;}
     const target=targetFor(portal),kind=media.matches?'pb1761CrmMobileTab':'pb1761CrmDesktopTab';
     // Remove stale or differently sized copies before inserting the current one.
     for(const button of document.querySelectorAll('button[data-pb1761-crm]')){
-      if(button.parentElement!==target||button.dataset.pb1761Crm!==portal||!button.classList.contains(kind))removeButton(button);
+      if(button.parentElement!==target||button.dataset.pb1761Crm!==portal||!button.classList.contains(kind)||enabled[button.dataset.pbCrmPane]!==true)removeButton(button);
     }
     if(!target)return;
     let mounted=false;
-    for(const pane of media.matches?['customers','calendar']:['customers']){
+    for(const pane of ['customers','calendar']){
+      if(enabled[pane]!==true){for(const old of target.querySelectorAll(':scope > button[data-pb-crm-pane="'+pane+'"]'))removeButton(old);continue;}
       if(target.querySelector(':scope > button[data-pb-crm-pane="'+pane+'"]'))continue;
       const button=make(portal,!media.matches,pane);
       if(portal==='lab'&&!media.matches){
@@ -143,7 +144,8 @@
     }
     recount(target);
     settleDock();
-    if(mounted&&new URLSearchParams(location.search).get('pbCrmTab')==='1')window.pbCrmOpen?.(portal,false);
+    if(window.pbCrmActivePane&&enabled[window.pbCrmActivePane]!==true)window.pbCrmClose?.(true);
+    if(mounted&&new URLSearchParams(location.search).get('pbCrmTab')==='1'){const pane=new URLSearchParams(location.search).get('pbCrmPane')||'customers';if(enabled[pane])window.pbCrmOpen?.(portal,false,pane)}
   }
   function schedule(){
     if(pending)return;

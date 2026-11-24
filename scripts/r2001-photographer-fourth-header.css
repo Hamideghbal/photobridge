@@ -353,3 +353,13 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
  html body #root .photographerPrintModeUtilityCluster:has(>button.pb2005UtilityGuide){gap:0!important;flex-wrap:nowrap!important}
  html body #root .photographerPrintModeUtilityCluster > button.pb2005UtilityGuide{height:29px!important;min-height:29px!important;padding-inline:3px!important;font-size:9px!important}
 }
+
+/* R2006 | stable real mobile photographer header, not hidden React source. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs{gap:3px!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit{display:flex!important;align-items:center!important;min-width:0!important;direction:rtl!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button{animation:none!important;transition:none!important;transform:none!important;flex:1 1 auto!important;min-width:0!important;padding-inline:2px!important;font-size:10px!important;border-radius:0 8px 8px 0!important;border-inline-end:0!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.active{color:#fff!important;-webkit-text-fill-color:#fff!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide{flex:0 0 18px!important;width:18px!important;padding:0!important;border:1px solid #cdd9ec!important;border-radius:8px 0 0 8px!important;background:#eef4ff!important;color:#315efb!important;-webkit-text-fill-color:#315efb!important;font-size:9px!important;box-shadow:none!important}
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs button::before,html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs button::after{animation:none!important;transition:none!important}
+}

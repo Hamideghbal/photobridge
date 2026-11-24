@@ -94,7 +94,7 @@
         const node=$(selector);
         // R2007: native header may be temporarily absent during hydration.
         // Use the canonical Print URL as a safe navigation fallback, never a fake click.
-        if(!node&&kind==='album'&&!printAlbumKnown)continue;
+        if(!node&&kind==='album'&&(!printAlbumKnown||$('.photographerPrintModeNav')))continue;
         if(node&&kind==='album')printAlbumKnown=true;
         const id='print:'+kind;if(node)sourceMap.set(id,node);
         const path=location.pathname;

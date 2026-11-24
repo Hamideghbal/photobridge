@@ -95,6 +95,29 @@ if(!nav.includes('/* R1976 independent CRM tabs + centered Print */')){
  new Function(nav);write(navPath,nav);
 }
 
+
+ // R1978: the first Print click opens a forced lab chooser; a subsequent click
+ // on the already-selected Print tab must reopen it after the lab was chosen.
+ // Keep the native Orders board as the landing page (R1977).
+nav=read(navPath);
+if(!nav.includes('/* R1978 reopen Print lab chooser on intentional click */')){
+ const navigateAnchor='function navigate(key){';
+ if(nav.split(navigateAnchor).length!==2)throw Error('[R1978] desktop Print navigation anchor missing');
+ nav=nav.replace(navigateAnchor,navigateAnchor+`
+  // R1978: reset a cached Print frame only when its chooser is no longer visible.
+  if(key==='print'&&panels.has('print')){
+   const frame=panels.get('print')?.querySelector('iframe');
+   if(frame&&!frame.contentDocument?.querySelector('#pbR99LabChooser')){
+    frame.src='/photographer/orders/flow?workspace=print&pbLabChooser=1&pbDesktopContent=1&pb1978Refresh='+Date.now();
+    if(selected==='print')return;
+   }
+  }
+ `);
+ nav='/* R1978 reopen Print lab chooser on intentional click */\\n'+nav;
+ new Function(nav);write(navPath,nav);
+}
+
+
 const cssPath='dist/web/photobridge-r1126-desktop-navigation.css';
 let css=read(cssPath);
 if(!css.includes('/* R1966: keep desktop Store filter chips inside the chooser flow. */')){

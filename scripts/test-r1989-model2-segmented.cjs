@@ -66,3 +66,20 @@ test('R1989: existing video-modal title stays outside the picture',()=>{
   assert.match(old,/\.pb567GuideDialog > \.pb567GuideVideoFrame/);
   assert.match(guide,/const title=document\.createElement\('h2'\)/);
 });
+
+test('R1993: selected Print/Album label and nested text are always white, inactive remains dark',()=>{
+ const patch=css.slice(css.indexOf('/* R1993: active blue Print/Album controls'));
+ assert(patch.length>1000,'R1993 CSS loaded');
+ assert.match(patch,/\.pb1127PrintModes\.pb1989ModelTwo > button:is\(\.photographerPrintPhotoTab,\.photographerPrintAlbumTab\):is\(\.active,/);
+ assert.match(patch,/\.photographerPrintModeNav\.pb1989ModelTwo > button:is\(\.photographerPrintPhotoTab,\.photographerPrintAlbumTab\):is\(\.active,/);
+ assert.match(patch,/:is\(span,strong,em,b,i,small,label\)/,'nested typography inherits active color even if app CSS pins it');
+ assert.match(patch,/color:#fff!important/);
+ assert.match(patch,/-webkit-text-fill-color:#fff!important/);
+ assert.match(css,/background:#fff!important; color:#1b2e48!important/,'inactive remains white/dark');
+});
+test('R1993: Finance and last tutorial are separated by one edge, not two',()=>{
+ const patch=css.slice(css.indexOf('/* R1993: active blue Print/Album controls'));
+ assert.match(patch,/:has\(\+ \.pb1127PrintUtilities > button\)/,'desktop adjacent Finance utility boundary');
+ assert.match(patch,/border-inline-end:0!important/,'the overlapping second edge is removed');
+ assert.match(css,/background:#e1e6ee!important/,'internal segment dividers remain in place');
+});

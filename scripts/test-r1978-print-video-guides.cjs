@@ -27,7 +27,7 @@ test('R1978 labels remain visible and clickable next to BOTH Print and Album tab
  assert(guide.includes("document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')"),'mobile guidance remains beside native Print/Album tabs');
  assert(guide.includes("function cleanupHeaderButtons()"),'remove detached tutorial copies after React re-render');
  assert(guide.includes("nav.insertBefore(button,target)"),'each guide is beside its own original tab');
- assert(guide.includes('nav.insertBefore(button,target)'),'guide is a sibling and does not nest interactive buttons');
+
  assert(guide.includes("kind==='print'?'mobile':'desktop'")===false,'do not hard-code one video for both devices');
  assert(guide.includes("slots.find(s=>s.kind===kind&&s.device==="),'each guide uses its matching mobile/desktop slot');
  assert(guide.includes("if(arrow.textContent!==direction)"),'no repeated DOM observer loop');
@@ -104,5 +104,5 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
  assert(html.includes('photobridge-workflow-guides-v572.js?v=r1981'));
- assert(html.includes('r1978=print-photos-tab'));
+ assert(html.includes('r1981=main-print-only'));
 });

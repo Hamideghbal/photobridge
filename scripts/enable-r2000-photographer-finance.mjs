@@ -63,8 +63,8 @@ if(!server.includes('/* PB2000 customer statement invoice items */')){
   " for(const row of rows)if(row.reference_type==='invoice'&&pb2000ById.has(String(row.reference_id)))row.invoice_items=pb2000ById.get(String(row.reference_id));",
   '}',
   ''
- ].join('\\n');
- part=part.replace(responseAnchor,enrichment+'\\n'+responseAnchor);
+ ].join('\n');
+ part=part.replace(responseAnchor,enrichment+'\n'+responseAnchor);
  server=server.slice(0,start)+part+server.slice(end)+'\n/* PB2000 customer statement invoice items */\n';
  write(serverPath,server);
 }

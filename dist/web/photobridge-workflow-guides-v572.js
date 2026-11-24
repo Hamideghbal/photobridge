@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1989-approved-model2';
+  const VERSION='0.17.705-r2005-archive-finance-guides';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -11,7 +11,11 @@
     {key:'print-mobile',kind:'print',device:'mobile',title:'راهنمای چاپ عکس (موبایل)',category:'راهنمای چاپ عکس · موبایل',description:'آموزش ارسال و سفارش چاپ عکس در موبایل',sortOrder:910},
     {key:'print-desktop',kind:'print',device:'desktop',title:'راهنمای چاپ عکس (دسکتاپ)',category:'راهنمای چاپ عکس · دسکتاپ',description:'آموزش ارسال و سفارش چاپ عکس در ویندوز و دسکتاپ',sortOrder:920},
     {key:'album-mobile',kind:'album',device:'mobile',title:'راهنمای سفارش آلبوم (موبایل)',category:'راهنمای سفارش آلبوم · موبایل',description:'آموزش ثبت سفارش آلبوم در موبایل',sortOrder:930},
-    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای سفارش آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940}
+    {key:'album-desktop',kind:'album',device:'desktop',title:'راهنمای سفارش آلبوم (دسکتاپ)',category:'راهنمای سفارش آلبوم · دسکتاپ',description:'آموزش ثبت سفارش آلبوم در ویندوز و دسکتاپ',sortOrder:940},
+    {key:'archive-mobile',kind:'archive',device:'mobile',title:'راهنمای آرشیو (موبایل)',category:'راهنمای آرشیو · موبایل',description:'آموزش استفاده از آرشیو سفارش‌ها در موبایل',sortOrder:950},
+    {key:'archive-desktop',kind:'archive',device:'desktop',title:'راهنمای آرشیو (دسکتاپ)',category:'راهنمای آرشیو · دسکتاپ',description:'آموزش استفاده از آرشیو سفارش‌ها در ویندوز و دسکتاپ',sortOrder:960},
+    {key:'finance-mobile',kind:'finance',device:'mobile',title:'راهنمای مالی (موبایل)',category:'راهنمای مالی · موبایل',description:'آموزش فاکتورها، پرداخت‌ها و حساب معین در موبایل',sortOrder:970},
+    {key:'finance-desktop',kind:'finance',device:'desktop',title:'راهنمای مالی (دسکتاپ)',category:'راهنمای مالی · دسکتاپ',description:'آموزش فاکتورها، پرداخت‌ها و حساب معین در ویندوز و دسکتاپ',sortOrder:980}
   ];
   let publicCache={at:0,guides:[]};
   let adminLoading=false;
@@ -61,7 +65,7 @@
       style.textContent='html body .pb567GuideBackdrop{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:12px!important;background:rgba(10,20,40,.78)!important;box-sizing:border-box!important}html body .pb567GuideBackdrop .pb567GuideDialog{position:relative!important;display:flex!important;flex-direction:column!important;width:min(940px,100%)!important;max-width:940px!important;max-height:calc(100dvh - 24px)!important;overflow:auto!important;background:#fff!important;border-radius:16px!important;box-sizing:border-box!important}html body .pb567GuideBackdrop .pb567GuideVideoFrame{position:relative!important;display:block!important;width:100%!important;min-height:180px!important;aspect-ratio:16/9!important;background:#080b12!important;overflow:hidden!important;flex:0 0 auto!important}html body .pb567GuideBackdrop .pb567GuideVideoFrame video{position:relative!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:100%!important;min-height:180px!important;max-height:min(70dvh,700px)!important;object-fit:contain!important;background:#080b12!important;transform:none!important;filter:none!important}html body .pb567GuideBackdrop .pb1986VideoError{padding:14px!important;background:#fff4e5!important;color:#713c08!important;line-height:1.8!important}html body .pb567GuideBackdrop .pb1986VideoError a{display:inline-block;margin-inline-start:10px;color:#1b59c7;text-decoration:underline}';
     }
     // Later-injected app styles should not override the guide's visible video.
-    if(document.head.lastElementChild!==style)document.head.append(style);
+    if(!style.isConnected)document.head.append(style);
   }
   function showGuideModal(guide,slot,loading=false){
     closeGuideModal();
@@ -123,7 +127,7 @@
     const button=event.target?.closest?.('button.pb569WorkflowGuideButton,button.pb1978VideoGuideButton');
     if(!button||!button.isConnected||!location.pathname.startsWith('/photographer'))return;
     const kind=button.dataset.pbGuide||(button.classList.contains('album')?'album':button.classList.contains('print')?'print':'');
-    if(kind!=='print'&&kind!=='album')return;
+    if(!['print','album','archive','finance'].includes(kind))return;
     event.preventDefault();event.stopImmediatePropagation();
     if(button.dataset.pbGuideOpening==='1')return;
     button.dataset.pbGuideOpening='1';
@@ -137,7 +141,8 @@
     b.type='button';
     b.className='pb569WorkflowGuideButton pb1978VideoGuideButton '+kind;
     b.dataset.pbGuide=kind;
-    b.title=kind==='print'?'ویدیوی آموزشی چاپ عکس':'ویدیوی آموزشی صحافی آلبوم';
+    b.title='ویدیوی آموزشی '+({print:'چاپ عکس',album:'صحافی آلبوم',archive:'آرشیو',finance:'مالی'}[kind]);
+    if(kind==='archive'||kind==='finance')b.classList.add('pb2005UtilityGuide');
     b.setAttribute('aria-label',b.title);
     b.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">راهنما</em>';
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void openContextGuide(kind,b)});
@@ -154,12 +159,12 @@
   function installR1978GuideStyle(){
     // R1989: the final approved model 2 stylesheet owns the bar.
     // Never re-inject the old model 3 style after hydration.
-    if(document.querySelector('link[href*="photobridge-r1989-model2-segmented.css"]')){
+    if(document.querySelector('link[href*="photobridge-r1989-model2-segmented.css"],link[href*="photobridge-boot-"]')){
       document.getElementById('pb1983ModelThreeStyles')?.remove();
       return;
     }
     let style=document.getElementById('pb1983ModelThreeStyles');
-    if(style){const playerStyle=document.getElementById('pb1986VisibleVideoPlayer');if(playerStyle){if(style.nextElementSibling!==playerStyle)document.head.insertBefore(style,playerStyle)}else if(document.head.lastElementChild!==style)document.head.append(style);return;}
+    if(style)return; // R2005: never move a style node on every observed mutation.
     style=document.createElement('style');
     style.id='pb1983ModelThreeStyles';
     style.textContent=`
@@ -253,6 +258,9 @@
   // Mount directly beside those visible buttons, NOT in their transient source.
   function visiblePrintModeNav(){
     if(!location.pathname.startsWith('/photographer'))return null;
+    // R2005: an embedded desktop document never competes with its parent chrome,
+    // even when a Windows window is resized below the mobile breakpoint.
+    if(window.self!==window.top)return null;
     if(!isMobile()){
       // Do not place tutorials in the embedded/hidden desktop content document.
       if(window.self!==window.top)return null;
@@ -269,7 +277,7 @@
   function cleanupHeaderButtons(){
     const validNav=visiblePrintModeNav();
     document.querySelectorAll('.pb569WorkflowGuideButton').forEach(el=>{
-      if(!validNav||!validNav.contains(el))el.remove();
+      if(!el.classList.contains('pb2005UtilityGuide')&&(!validNav||!validNav.contains(el)))el.remove();
     });
     return validNav;
   }
@@ -278,7 +286,7 @@
     const print=nav.querySelector('.photographerPrintPhotoTab'),
           album=nav.querySelector('.photographerPrintAlbumTab');
     if(!print)return; // R1976: do not depend on a preselected lab.
-    nav.classList.remove('pb1983ModelThree');
+    if(nav.classList.contains('pb1983ModelThree'))nav.classList.remove('pb1983ModelThree');
     if(!nav.classList.contains('pb1989ModelTwo'))nav.classList.add('pb1989ModelTwo');
     installR1978GuideStyle();
     function mount(kind,target){
@@ -309,6 +317,29 @@
     if(albumGuide&&album&&album.nextElementSibling!==albumGuide)
       album.insertAdjacentElement('afterend',albumGuide);
     pointGuideIcon(printGuide);pointGuideIcon(albumGuide);
+  }
+
+  // R2005: Utility guides are adjacent siblings, never nested buttons and
+  // never proxies for the actual archive/finance navigation actions.
+  function visibleUtilityNav(){
+    if(!location.pathname.startsWith('/photographer')||window.self!==window.top)return null;
+    const candidates=isMobile()
+      ? [...document.querySelectorAll('.photographerPrintModeUtilityCluster')]
+      : [...document.querySelectorAll('#pb1126DesktopHeader .pb1126Secondary:not([hidden]) .pb1127PrintUtilities')];
+    return candidates.find(el=>el.isConnected&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden'&&el.querySelector('button.archive,button.finance'))||null;
+  }
+  function mountUtilityGuides(){
+    const nav=visibleUtilityNav();
+    document.querySelectorAll('button.pb2005UtilityGuide').forEach(el=>{if(!nav||!nav.contains(el))el.remove()});
+    if(!nav)return;
+    for(const kind of ['archive','finance']){
+      const target=nav.querySelector('button.'+kind+':not(.pb2005UtilityGuide)');
+      const copies=[...nav.querySelectorAll('button.pb2005UtilityGuide[data-pb-guide="'+kind+'"]')];
+      if(!target){copies.forEach(el=>el.remove());continue}
+      const button=copies.shift()||guideButton(kind);
+      copies.forEach(el=>el.remove());
+      if(button.previousElementSibling!==target||button.parentElement!==nav)target.insertAdjacentElement('afterend',button);
+    }
   }
 
   function currentLabName(){
@@ -356,10 +387,10 @@
   function syncLabSemantics(){
     const mobile=isMobile();
     document.querySelectorAll('.photographerPrintModeHeader .photographerPrintTopLab').forEach(el=>{
-      if(mobile)el.removeAttribute('aria-hidden');else el.setAttribute('aria-hidden','true');
+      if(mobile){if(el.hasAttribute('aria-hidden'))el.removeAttribute('aria-hidden')}else if(el.getAttribute('aria-hidden')!=='true')el.setAttribute('aria-hidden','true');
     });
     document.querySelectorAll('.photographerPrintWorkspace .simplePrintPilotHeader .simplePrintPilotLabSelect,.photographerPrintWorkspace .simplePrintPilotHeader .simplePrintPilotLabStatic').forEach(el=>{
-      if(mobile)el.setAttribute('aria-hidden','true');else el.removeAttribute('aria-hidden');
+      if(mobile){if(el.getAttribute('aria-hidden')!=='true')el.setAttribute('aria-hidden','true')}else if(el.hasAttribute('aria-hidden'))el.removeAttribute('aria-hidden');
     });
   }
 
@@ -426,7 +457,7 @@
     const card=document.createElement('article');card.className='pb567GuideSlotCard';card.dataset.slot=slot.key;
     const top=document.createElement('div');top.className='pb567GuideSlotTop';
     const icon=document.createElement('span');icon.className='pb567GuideDeviceIcon';icon.textContent=slot.device==='mobile'?'▯':'▭';
-    const text=document.createElement('div');const h=document.createElement('b');h.textContent=slot.kind==='membership'?'عضویت':slot.kind==='print'?'چاپ عکس':'سفارش آلبوم';const small=document.createElement('small');small.textContent=slot.device==='mobile'?'ویدیوی مخصوص موبایل':'ویدیوی مخصوص ویندوز / دسکتاپ';text.append(h,small);top.append(icon,text);
+    const text=document.createElement('div');const h=document.createElement('b');h.textContent=({membership:'عضویت',print:'چاپ عکس',album:'صحافی آلبوم',archive:'آرشیو',finance:'مالی'})[slot.kind];const small=document.createElement('small');small.textContent=slot.device==='mobile'?'ویدیوی مخصوص موبایل':'ویدیوی مخصوص ویندوز / دسکتاپ';text.append(h,small);top.append(icon,text);
     const status=document.createElement('div');status.className='pb567GuideSlotStatus '+((guide?.videoKey||guide?.videoUrl||guide?.legacySrc)?'ready':'empty');status.textContent=statusText(guide);
     const actions=document.createElement('div');actions.className='pb567GuideSlotActions';
     const label=document.createElement('label');label.className='pb567GuideUploadButton '+(!storageAvailable?'disabled':'');label.innerHTML=`<span>${guide?.videoKey||guide?.videoUrl||guide?.legacySrc?'جایگزینی ویدیو':'بارگذاری ویدیو'}</span><input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" ${storageAvailable?'':'disabled'}>`;
@@ -452,7 +483,7 @@
     if(adminLoading)return;adminLoading=true;manager.classList.add('loading');
     try{
       const data=await request('/api/admin/video-guides');manager.innerHTML='';
-      const head=document.createElement('div');head.className='pb567GuideManagerHead';head.innerHTML='<div><span>راهنمای هوشمند PhotoBridge</span><h3>ویدیوهای عضویت، چاپ عکس و سفارش آلبوم</h3><p>برای هر آموزش نسخه موبایل و دسکتاپ را جدا بارگذاری کن؛ صفحه راهنما و دکمه‌های داخل سفارش نسخه مناسب دستگاه کاربر را خودکار انتخاب می‌کنند.</p></div>';
+      const head=document.createElement('div');head.className='pb567GuideManagerHead';head.innerHTML='<div><span>راهنمای هوشمند PhotoBridge</span><h3>ویدیوهای عضویت، چاپ عکس، صحافی آلبوم، آرشیو و مالی</h3><p>برای هر آموزش نسخه موبایل و دسکتاپ را جدا بارگذاری کن؛ صفحه راهنما و دکمه‌های داخل سفارش نسخه مناسب دستگاه کاربر را خودکار انتخاب می‌کنند.</p></div>';
       const grid=document.createElement('div');grid.className='pb567GuideSlotGrid';
       const refresh=async()=>{await renderAdminManager(manager)};
       for(const s of slots){const g=(data.guides||[]).find(x=>String(x.category||'').trim()===s.category);grid.append(adminCard(s,g,Boolean(data.storageAvailable),refresh))}
@@ -466,10 +497,10 @@
     const panel=document.querySelector('.adminGuidePanel');if(!panel||panel.querySelector('.pb567WorkflowGuideManager'))return;
     // Wait until the real admin guide UI (not only the loading placeholder) is mounted.
     if(!panel.querySelector('.adminGuideHead'))return;
-    const manager=document.createElement('section');manager.className='pb567WorkflowGuideManager';manager.dataset.version=VERSION;manager.innerHTML='<div class="pb567GuideManagerLoading">در حال دریافت شش ویدیوی اختصاصی…</div>';
+    const manager=document.createElement('section');manager.className='pb567WorkflowGuideManager';manager.dataset.version=VERSION;manager.innerHTML='<div class="pb567GuideManagerLoading">در حال دریافت ویدیوهای اختصاصی…</div>';
     const head=panel.querySelector('.adminGuideHead');head.insertAdjacentElement('afterend',manager);renderAdminManager(manager);
   }
-  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();if(document.querySelector('.pb567GuideBackdrop'))ensureVisiblePlayerStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountAlbumQuoteLab();mountAdminManager()}
+  function sync(){if(location.pathname==='/guide')return;installR1978GuideStyle();if(document.querySelector('.pb567GuideBackdrop'))ensureVisiblePlayerStyle();cleanupHeaderButtons();syncLabSemantics();mountHeaderButtons();mountUtilityGuides();mountAlbumQuoteLab();mountAdminManager()}
   function queueSync(){if(observerQueued)return;observerQueued=true;requestAnimationFrame(()=>{observerQueued=false;sync()})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuideModal()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();

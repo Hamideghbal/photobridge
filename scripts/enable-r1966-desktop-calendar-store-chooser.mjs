@@ -156,7 +156,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  }
  write(path,page);
 }
-// R1979: preceding legacy HTML writers can replace the R1978 chooser URL,
+// R1980: preceding legacy HTML writers can replace the chooser/video URL,
 // dropping its cache-busting query. Reinstate both updated script URL revisions
 // AFTER all older HTML writers and BEFORE the R1978 Docker build regression.
 // This changes only script URL query parameters, never navigation or order data.
@@ -165,7 +165,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  let html=read(indexPath);
  for(const [filename,key,value] of [
   ['photobridge-v904r99-lab-chooser.js','r1978','print-photos-tab'],
-  ['photobridge-workflow-guides-v572.js','v','r1978']
+  ['photobridge-workflow-guides-v572.js','v','r1980']
  ]){
   const pattern=new RegExp('/'+filename.replaceAll('.','[.]')+'(?:\\?[^"\\x27<>\\s]*)?','g');
   let hits=0;

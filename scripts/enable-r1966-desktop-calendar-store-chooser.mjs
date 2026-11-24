@@ -165,7 +165,7 @@ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html'])
  let html=read(indexPath);
  for(const [filename,key,value] of [
   ['photobridge-v904r99-lab-chooser.js','r1981','main-print-only'],
-  ['photobridge-workflow-guides-v572.js','v','r1981']
+  ['photobridge-workflow-guides-v572.js','v','r1983']
  ]){
   const pattern=new RegExp('/'+filename.replaceAll('.','[.]')+'(?:\\?[^"\\x27<>\\s]*)?','g');
   let hits=0;

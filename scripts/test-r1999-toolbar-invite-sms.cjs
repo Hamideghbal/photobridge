@@ -115,7 +115,14 @@ test('R1999: provider failure remains retryable, without claiming SMS sent',asyn
 });
 test('R1999: final HTML contains both new asset revisions',()=>{
  const html=read('dist/web/index.html');
- assert.match(html,/photobridge-r1989-model2-segmented\.css[^"'<>\s]*bareFrame=r1999/);
+ const direct=/photobridge-r1989-model2-segmented\.css[^"'<>\s]*bareFrame=r1999/.test(html);
+ if(!direct){
+  const bundled=html.match(/<link\b[^>]*href=["']\/assets\/(photobridge-boot-[a-f0-9]{16}\.css)["'][^>]*>/i);
+  assert(bundled,'after CSS optimization the served HTML must point to a boot bundle');
+  const finalCss=read('dist/web/assets/'+bundled[1]);
+  assert(finalCss.includes('/* PB1999 borderless navigation shells */'),'served CSS bundle includes borderless toolbar rule');
+  assert(finalCss.includes(css),'all source Model-2 styles are present in the delivered CSS');
+ }
  assert.match(html,/index-UIRefine-v655-r84\.js[^"'<>\s]*inviteSend=r1999/);
  assert.doesNotThrow(()=>new vm.Script(ui.replace(/^import[^;]+;/gm,'')),'UI syntax');
 });

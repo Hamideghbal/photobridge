@@ -2,38 +2,29 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const read=path=>fs.readFileSync(path,'utf8');
-const guide=read('dist/web/photobridge-workflow-guides-v572.js');
-const css=read('dist/web/photobridge-r1987-model3-guide.css');
-const html=read('dist/web/index.html');
-test('R1988: selected original numbered model 3 is loaded, never the stale guide assets',()=>{
-  assert.match(html,/photobridge-workflow-guides-v572\.js\?v=r1988&pb=original-numbered-model-three/);
-  assert.match(html,/photobridge-r1987-model3-guide\.css\?v=r1988-original-numbered-model-three/);
-  assert.match(guide,/USER-SELECTED ORIGINAL numbered model 3/);
-  assert.doesNotThrow(()=>new (require('node:vm').Script)(guide));
-});
-test('R1988: in the RTL secondary bar, both tutorials follow their own main tab',()=>{
-  assert.match(guide,/Visual order in RTL: \[چاپ عکس\] \[ویدیوی چاپ\] \[صحافی آلبوم\] \[ویدیوی آلبوم\]/);
-  assert.match(guide,/if\(button\.parentElement!==nav\|\|button\.previousElementSibling!==target\)/);
-  assert.match(guide,/target\.insertAdjacentElement\('afterend',button\)/);
-  assert.doesNotMatch(guide,/pointGuideArrow/);
-  assert.match(guide,/aria-hidden="true">▶<\/span>/);
+const vm=require('node:vm');
+const guide=fs.readFileSync('dist/web/photobridge-workflow-guides-v572.js','utf8');
+const overlayCSS=fs.readFileSync('dist/web/photobridge-r1987-model3-guide.css','utf8');
+const index=fs.readFileSync('dist/web/index.html','utf8');
+// Historical R1988 tests now guard the guide functionality retained when the
+// user deliberately replaced the model-three visuals with model TWO in R1989.
+test('Guide JavaScript and event delegation remain valid after changing visual model',()=>{
+  assert.doesNotThrow(()=>new vm.Script(guide));
+  assert.match(guide,/window\.addEventListener\('click',onDelegatedVideoGuideClick,true\)/);
+  assert.match(guide,/void openContextGuide\(kind,button\)/);
   assert.match(guide,/pointGuideIcon\(printGuide\);pointGuideIcon\(albumGuide\)/);
+  assert.match(guide,/aria-hidden="true">▶<\/span>/);
 });
-test('R1988: real-desktop-header-specific selected visual matches the reference',()=>{
-  const block=css.slice(css.indexOf('R1988 — faithful selected original image model 3'));
-  assert.ok(block.length>2000);
-  assert.match(block,/#pb1126ChromeHost #pb1126DesktopHeader \.pb1126Secondary \.pb1127PrintModes > button/);
-  assert.match(block,/background:#2460db!important/);
-  assert.match(block,/background:#fff!important/);
-  assert.match(block,/background:#f4f7fc!important/);
-  assert.match(block,/border-radius:50%!important/);
-  assert.match(block,/margin-inline-end:16px!important/);
-  assert.equal((css.match(/{/g)||[]).length,(css.match(/}/g)||[]).length,'CSS must parse balanced rules');
-});
-test('R1988: video window title remains above, never on top of the video picture',()=>{
-  assert.match(css,/\.pb567GuideDialog > header\.pb567GuideDialogHead/);
-  assert.match(css,/\.pb567GuideDialog > \.pb567GuideVideoFrame/);
-  assert.match(css,/position:relative!important; display:flex!important; flex-direction:column!important/);
+test('Video modal retains separated header and video picture regardless of button theme',()=>{
   assert.match(guide,/const title=document\.createElement\('h2'\)/);
+  assert.match(guide,/const frame=document\.createElement\('div'\);frame\.className='pb567GuideVideoFrame'/);
+  assert.match(overlayCSS,/\.pb567GuideDialog > header\.pb567GuideDialogHead/);
+  assert.match(overlayCSS,/\.pb567GuideDialog > \.pb567GuideVideoFrame/);
+  assert.match(guide,/pb1986VideoError/);
+});
+test('Model TWO replaces model three and does not silently serve the cached old header',()=>{
+  assert.match(index,/photobridge-workflow-guides-v572\.js\?v=r1989/);
+  assert.match(index,/photobridge-r1989-model2-segmented\.css\?v=r1989/);
+  assert.match(guide,/nav\.classList\.remove\('pb1983ModelThree'\)/);
+  assert.match(guide,/nav\.classList\.contains\('pb1989ModelTwo'\)/);
 });

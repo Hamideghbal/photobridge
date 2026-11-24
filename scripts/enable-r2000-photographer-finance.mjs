@@ -12,7 +12,7 @@ if(!bundle.includes('/* PB2000 photographer finance parity */')){
  let part=bundle.slice(begin,end+1);
  part=once(part,':[{value:"invoices",label:"فاکتورها"},{value:"payments",label:"دریافت‌ها"},{value:"statement",label:"حساب معین"}]',':[{value:"invoices",label:"فاکتورها"},{value:"payments",label:"پرداخت‌ها"},{value:"statement",label:"حساب معین"}]','picker payments label');
  part=once(part,'onClick:()=>M("payments"),children:"دریافت‌ها"','onClick:()=>M("payments"),children:t==="lab"?"دریافت‌ها":"پرداخت‌ها"','tab payments label');
- part=once(part,'children:"هنوز دریافتی ثبت نشده است."','children:t==="lab"?"هنوز دریافتی ثبت نشده است.":"هنوز پرداختی ثبت نشده است."','empty payments message');
+// R1420 replaces the original payment-empty markup with its own payment list; keep that rendered copy unchanged.
  part=once(part,'t==="lab"&&e.jsxs("div",{className:"invoiceRangeToolbar"','e.jsxs("div",{className:"invoiceRangeToolbar"','invoice date range enable');
  part=once(part,'className:t==="lab"?"pb1423InvoiceToolbar":"pb1423OtherInvoiceToolbar"','className:t==="lab"?"pb1423InvoiceToolbar":"pb1423InvoiceToolbar pb2000CustomerInvoiceToolbar"','invoice header match');
  const modes='t==="lab"&&e.jsx("button",{type:"button",className:"pb1177ViewMode "';

@@ -223,7 +223,8 @@
     // R1978: labels differ between native mobile dock and desktop: چاپ / چاپ عکس.
     const text=String(el.getAttribute?.('aria-label')||el.textContent||'').replace(/\s+/g,' ').trim();
     const inPrimary=Boolean(el.closest?.('.photographerHomeModeNav,.photographerBottomAppNavGrid,.photographerBottomAppNav'));
-    return inPrimary&&(href.includes('workspace=print')||/^(?:چاپ|چاپ عکس|چاپ تصاویر)$/.test(text));
+    const printModeTab=Boolean(el.matches?.('.photographerPrintPhotoTab')&&el.closest?.('.photographerPrintModeNav'));
+    return printModeTab||(inPrimary&&(href.includes('workspace=print')||/^(?:چاپ|چاپ عکس|چاپ تصاویر)$/.test(text)));
   }
   document.addEventListener('click',e=>{
     if(!isPhotographerRoute())return;

@@ -10,6 +10,14 @@ const css=read('dist/web/photobridge-r1310-layout.css');
 const store=read('dist/api/equipment-rental-book.html');
 const page=read('dist/web/index.html');
 
+test('R1998: builder handles the late R1606 Gallery-startup rewrite',()=>{
+ const writer=read('scripts/enable-r1998-gallery-store-chooser-layout.mjs');
+ assert.match(writer,/R1606 deliberately removes the early/);
+ assert.match(writer,/const anchors=\[/);
+ assert.match(writer,/const matches=anchors\.filter/);
+ assert.match(writer,/R1310\/R1606 gallery geometry anchors missing\/ambiguous/);
+});
+
 test('R1998: Gallery iframe gets its own measured layout, never assumes parent DOM',()=>{
  assert.doesNotThrow(()=>new vm.Script(js),'Gallery geometry JS parses');
  assert.match(js,/\/\* PB1998 embedded gallery geometry \*\//);

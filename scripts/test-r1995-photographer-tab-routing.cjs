@@ -65,7 +65,7 @@ test('R1995: connected photographer visiting Orders marks initial landing comple
  assert.match(landing,/R1995: once the connected photographer has visited native Orders/);
  assert.match(landing,/^ *if\(next.connectedLab===true&&\/\^\\\/photographer\\\/\(\?:orders\|upload\|archive\|finance\)/m);
  assert.match(landing,/sessionStorage\.setItem\('pb1976PrintLanding','1'\)/);
- assert.match(landing,/if\(!seen\)\{location.replace\('\/photographer\/orders'\);return;\}/,'original first-login redirect remains in place');
+ assert.match(landing,/if\(!seen\)\{location.replace\('\/photographer\/orders\?workspace=print'\);return;\}/,'canonical first-login Orders route retains Print workspace and prevents a second lab selection');
 });
 
 test('R1995: Store and Print retain separate iframe sources, selecting one hides the other',()=>{

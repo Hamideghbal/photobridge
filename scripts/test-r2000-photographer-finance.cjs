@@ -45,3 +45,14 @@ test('R2000 final page cache and CSS have photographer-only scope',()=>{
  assert(!css.includes('.labRolePageScrollArea'));
  assert(ui.includes('/* PB2000 photographer finance parity */'));
 });
+
+test('R2000 historical invoice line items are read from the customer statement SQL',()=>{
+ const server=fs.readFileSync('dist/api/server.js','utf8');
+ const from=server.indexOf("url.pathname === '/api/customer/finance/statement'");
+ const to=server.indexOf("url.pathname === '/api/customer/chat'",from);
+ const route=server.slice(from,to);
+ assert(route.includes('i.items invoice_items'));
+ assert(route.includes('t.reference_id,i.id,i.number'));
+ assert(route.includes("a.system_key='receivable' AND e.customer_id=$2"));
+ assert(server.includes('/* PB2000 customer statement invoice items */'));
+});

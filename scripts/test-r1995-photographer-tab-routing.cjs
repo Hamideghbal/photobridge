@@ -68,3 +68,14 @@ test('R1995: connected photographer visiting Orders marks initial landing comple
  assert.match(landing,/sessionStorage\.setItem\('pb1976PrintLanding','1'\)/);
  assert.match(landing,/if\(!seen\)\{location.replace\('\/photographer\/orders'\);return;\}/,'original first-login redirect remains in place');
 });
+
+test('R1995: Store and Print retain separate iframe sources, selecting one hides the other',()=>{
+ assert.match(chrome,/frame\.src=\(key==='store'\?'\/equipment-rental\/book':'\/photographer\/orders\/flow'\)\+'\?'\+q/,
+  'Store should display its own storefront document, Print its own Orders/Lab document');
+ assert.match(chrome,/function closePanels\(\)\{for\(const p of panels\.values\(\)\)p\.hidden=true;selected=null/,
+  'switching tabs hides any previously visible iframe panel');
+ assert.match(chrome,/closePanels\(\);panel\.hidden=false;selected=key;/,
+  'opening a Store or Print panel displays only the newly selected one');
+ assert.match(chrome,/if\(push\)\{const u=new URL\(location\.href\);u\.searchParams\.set\('pbDesktopPanel',key\);history\.pushState/,
+  'parent URL has the selected overlay type so the chooser knows when to disappear');
+});

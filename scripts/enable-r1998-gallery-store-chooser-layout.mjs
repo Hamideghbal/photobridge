@@ -96,9 +96,12 @@ if(!store.includes('id="pbR1998StoreChooserNoFilters"')){
   '}',
   '</style>'
  ].join('\n');
- const headEnd='</head>\n<body class="rentalPhotographerMode pbR96ChoosingStore">';
- if(store.split(headEnd).length!==2)throw Error('[R1998] Store chooser HTML head boundary missing/ambiguous');
- store=store.replace(headEnd,hide+'\n'+headEnd);
+ // The HTML can contain a SECOND </head> literal inside invoice templates.
+ // Insert at the document's first actual head/body boundary, regardless of
+ // optional classes/attributes inserted by previous Liara stages.
+ const headEnd=store.indexOf('</head>'),bodyStart=store.indexOf('<body',headEnd);
+ if(headEnd<0||bodyStart<headEnd||bodyStart-headEnd>80)throw Error('[R1998] Store chooser document head boundary missing');
+ store=store.slice(0,headEnd)+hide+'\n'+store.slice(headEnd);
  fs.writeFileSync(storeFile,store);
 }
 

@@ -135,44 +135,58 @@
     `;
     document.head.append(style);
   }
+  // R1981: on desktop the original React mode row lives inside an iframe/
+  // hidden native header. The user only sees the stable cloned SECONDARY row.
+  // Mount directly beside those visible buttons, NOT in their transient source.
+  function visiblePrintModeNav(){
+    if(!location.pathname.startsWith('/photographer'))return null;
+    if(!isMobile()){
+      // Do not place tutorials in the embedded/hidden desktop content document.
+      if(window.self!==window.top)return null;
+      const header=document.querySelector('#pb1126DesktopHeader');
+      const secondary=header?.querySelector('.pb1126Secondary');
+      if(!secondary||secondary.hidden)return null;
+      const nav=secondary.querySelector('.pb1127PrintModes');
+      return nav?.querySelector('.photographerPrintPhotoTab')?nav:null;
+    }
+    // Mobile has no cloned desktop row; use the real interactive mode header.
+    const modes=[...document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')];
+    return modes.find(nav=>nav.isConnected&&nav.querySelector('.photographerPrintPhotoTab')&&nav.getClientRects().length>0)||null;
+  }
   function cleanupHeaderButtons(){
-    const validNav=document.querySelector('.photographerPrintWorkspace .photographerPrintModeNav');
-    // R1980: video guidance belongs only beside the original Print/Album header tabs.
+    const validNav=visiblePrintModeNav();
     document.querySelectorAll('.pb569WorkflowGuideButton').forEach(el=>{
       if(!validNav||!validNav.contains(el))el.remove();
     });
-    if(!validNav)document.querySelectorAll('.photographerHeaderNav.pb699DesktopGuideNav,.photographerHeaderNav.pb569WorkflowGuideNavReady,.photographerHeaderNav.pb692InlineGuideReady').forEach(el=>el.classList.remove('pb699DesktopGuideNav','pb569WorkflowGuideNavReady','pb692InlineGuideReady'));
     return validNav;
   }
   function mountHeaderButtons(){
     const nav=cleanupHeaderButtons();if(!nav)return;
-    const print=nav.querySelector('.photographerPrintPhotoTab'),album=nav.querySelector('.photographerPrintAlbumTab');
-    if(!print)return; // R1976: guides must be available even before a lab is selected.
+    const print=nav.querySelector('.photographerPrintPhotoTab'),
+          album=nav.querySelector('.photographerPrintAlbumTab');
+    if(!print)return;
     installR1978GuideStyle();
     function mount(kind,target){
-      let button=nav.querySelector(':scope > .pb1978VideoGuideButton.'+kind)||
-        target.querySelector(':scope > .pb569WorkflowGuideButton.'+kind);
+      const selector=':scope > .pb1978VideoGuideButton.'+kind;
+      let button=nav.querySelector(selector);
       if(button?.tagName!=='BUTTON'){button?.remove();button=null;}
       if(!button)button=guideButton(kind);
-      button.classList.add('pb1978VideoGuideButton');
       if(!button.querySelector('.pb569GuideArrow')||!button.querySelector('.pb569GuideLabel')||
-        button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
+         button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
         button.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
-      // Sibling placement means React's own Print/Album click action remains untouched.
+      button.classList.add('pb1978VideoGuideButton');
+      // No React-owned button is replaced; tutorials are adjacent siblings.
       if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
       return button;
     }
-    // Print arrow points into the real Print button; album has its own guide.
     const printGuide=mount('print',print);
     const albumGuide=album?mount('album',album):null;
     if(!album)nav.querySelectorAll(':scope > .pb569WorkflowGuideButton.album').forEach(el=>el.remove());
-    nav.classList.add('pb1978GuideNavReady');
     requestAnimationFrame(()=>{
       pointGuideArrow(printGuide,print);
       if(albumGuide&&album)pointGuideArrow(albumGuide,album);
     });
   }
-
 
   function currentLabName(){
     const selectors=[

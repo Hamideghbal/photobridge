@@ -74,13 +74,15 @@ if(!nav.includes('/* R1976 independent CRM tabs + centered Print */')){
  // CRM's UI tab 'crm' maps to settings key 'customers'; fail closed until authenticated API confirms it.
  const stateAnchor="let settings={tabs:{ai:false,album:false,instagram:false}},chrome";
  if(!nav.includes(stateAnchor))throw Error('[R1977] desktop default state anchor missing');
- nav=nav.replace(stateAnchor,"let settings={tabs:{ai:false,album:false,instagram:false,customers:false,calendar:false}},crmVisibilityVerified=false,chrome");
- const eventAnchor="window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){settings=e.detail;";
- if(!nav.includes(eventAnchor))throw Error('[R1977] desktop settings event anchor missing');
- nav=nav.replace(eventAnchor,eventAnchor+"crmVisibilityVerified=true;");
- const authAnchor="window.addEventListener('photobridge-auth-session-changed',e=>{";
- if(!nav.includes(authAnchor))throw Error('[R1977] desktop auth reset anchor missing');
- nav=nav.replace(authAnchor,authAnchor+"crmVisibilityVerified=false;");
+ nav=nav.replace(stateAnchor,`let settings={tabs:{ai:false,album:false,instagram:false,customers:false,calendar:false}},crmVisibilityVerified=false,chrome`);
+ // Older UI writers may alter the existing event listener's exact source text.
+ // Listen independently rather than patching its internals, keeping CI builds stable.
+ const registrationAnchor="let walletBalance=null,walletRefreshing=false;";
+ if(!nav.includes(registrationAnchor))throw Error('[R1977] desktop registration anchor missing');
+ nav=nav.replace(registrationAnchor,
+  "window.addEventListener('photobridge-navigation-tabs',e=>{if(e.detail?.tabs){crmVisibilityVerified=true;schedule();}});"+
+  "window.addEventListener('photobridge-auth-session-changed',()=>{crmVisibilityVerified=false;schedule();});"+
+  registrationAnchor);
 
  const orderStart="const ordered=tabs.map(([key])=>nav.querySelector('[data-pb1126-kind=\"'+key+'\"]')).filter(Boolean);";
  if(!nav.includes(orderStart))throw Error('[R1976] desktop tab sort anchor missing');

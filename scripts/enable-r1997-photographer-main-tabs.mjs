@@ -55,6 +55,11 @@ if(!nav.includes('/* PB1997 cached gallery / stable store */')){
   'gallery loads actual isolated document'
  );
  once(
+  "if(['print','store'].includes(requested))open(requested,false);",
+  "if(['print','store','gallery'].includes(requested))open(requested,false);",
+  'restore Gallery after login/auth refresh or a direct reload'
+ );
+ once(
   "new MutationObserver(schedule).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});",
   "new MutationObserver(()=>{if(selected===key&&!panel.hidden)schedule();}).observe(frame.contentDocument.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','disabled','aria-current']});",
   'only visible panel schedules redraw'

@@ -33,6 +33,22 @@ test('R1978 labels remain visible and clickable next to BOTH Print and Album tab
  assert(guide.includes("if(arrow.textContent!==direction)"),'no repeated DOM observer loop');
 });
 
+test('R1983 model 3: two prominent main tabs and two subtle paired video tutorials',()=>{
+ const source=read('dist/web/photobridge-workflow-guides-v572.js');
+ assert(source.includes("nav.classList.add('pb1983ModelThree')"),'stable header receives model 3 styling');
+ assert(source.includes('pb1983ModelThree > button.photographerPrintPhotoTab'),'Print Photos is a primary button');
+ assert(source.includes('pb1983ModelThree > button.photographerPrintAlbumTab'),'Album Binding is a primary button');
+ assert(source.includes('pb1983ModelThree > .pb1978VideoGuideButton'),'both video tutorials are secondary');
+ assert(source.includes('height:35px!important'),'main buttons taller and more prominent');
+ assert(source.includes('height:26px!important'),'video tutorial buttons are smaller');
+ assert(source.includes('background:linear-gradient(135deg,#397bff,#2356d8)'),'active primary tab uses blue emphasis');
+ assert(source.includes("mount('print',print)")&&source.includes("mount('album',album)"),'each video points to its own mode');
+ assert(source.includes('nav.insertBefore(button,target)'),'video buttons are siblings adjacent to native tabs');
+ assert(!source.includes('mountChooserGuides'),'lab chooser remains free of tutorial controls');
+ const chooser=read('dist/web/photobridge-v904r99-lab-chooser.js');
+ assert(chooser.includes("if(el.closest?.('.photographerPrintModeNav')"),'inner Print/Album tabs retain original interactions');
+});
+
 test('R1981 only main Print opens Lab chooser; Print Photos and Album remain normal mode tabs',()=>{
  const source=read('dist/web/photobridge-v904r99-lab-chooser.js');
  assert.doesNotThrow(()=>new vm.Script(source));
@@ -104,6 +120,6 @@ test('R1978 desktop clicking selected Print reopens the chooser; landing keeps n
  assert(navSettings.includes("location.replace('/photographer/orders')"),'do not break the orders/status header landing');
  assert(!navSettings.includes("location.replace('/photographer/orders/flow"),'the first photographer landing is never the upload-only chooser');
  const html=read('dist/web/index.html');
- assert(html.includes('photobridge-workflow-guides-v572.js?v=r1981'));
+ assert(html.includes('photobridge-workflow-guides-v572.js?v=r1983'));
  assert(html.includes('r1981=main-print-only'));
 });

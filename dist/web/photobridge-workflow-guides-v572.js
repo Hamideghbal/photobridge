@@ -98,38 +98,93 @@
     const direction=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
     if(arrow.textContent!==direction)arrow.textContent=direction;
   }
+  // R1983: user-approved concept 3 — prominent main modes and understated
+  // compact tutorials, each paired beside its own tab in the SAME header row.
   function installR1978GuideStyle(){
-    if(document.getElementById('pb1978VideoGuidesStyle'))return;
+    if(document.getElementById('pb1983ModelThreeStyles'))return;
     const style=document.createElement('style');
-    style.id='pb1978VideoGuidesStyle';
+    style.id='pb1983ModelThreeStyles';
     style.textContent=`
-      .photographerPrintModeNav > .pb1978VideoGuideButton,
-      #pb1126DesktopHeader .pb1126Secondary .pb1978VideoGuideButton {
-        display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;
-        justify-content:center!important;gap:5px!important;width:auto!important;min-width:0!important;
-        height:32px!important;min-height:30px!important;padding:4px 9px!important;
-        margin:0 3px!important;border:1px solid #a5c5fc!important;border-radius:9px!important;
-        background:#edf5ff!important;color:#174c9a!important;opacity:1!important;
-        visibility:visible!important;white-space:nowrap!important;cursor:pointer!important;
-        box-shadow:none!important;line-height:1.2!important;position:relative!important;
-        font:700 11px Vazirmatn,Tahoma,sans-serif!important;text-decoration:none!important;
+      .photographerPrintModeNav.pb1983ModelThree,
+      #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree {
+        display:flex!important;align-items:center!important;justify-content:center!important;
+        flex-wrap:nowrap!important;gap:5px!important;direction:rtl!important;
       }
-      .pb1978VideoGuideButton .pb569GuideLabel{
+      /* Main actions stand out. Never alter their native click handlers. */
+      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
+      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab,
+      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintPhotoTab,
+      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintAlbumTab {
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;
+        flex:0 0 auto!important;height:35px!important;min-height:35px!important;
+        min-width:0!important;width:auto!important;max-width:none!important;
+        padding:5px 13px!important;margin:0!important;
+        border:1px solid #a9bfea!important;border-radius:11px!important;
+        background:#eef4ff!important;color:#214990!important;
+        box-shadow:0 2px 7px rgba(39,81,164,.09)!important;
+        white-space:nowrap!important;font:800 12px/1.3 Vazirmatn,Tahoma,sans-serif!important;
+        cursor:pointer!important;opacity:1!important;visibility:visible!important;
+        text-decoration:none!important;
+      }
+      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]) {
+        background:linear-gradient(135deg,#397bff,#2356d8)!important;color:#fff!important;
+        border-color:#2559d9!important;box-shadow:0 3px 9px rgba(36,89,219,.19)!important;
+      }
+      /* Each tutorial is deliberately smaller, quiet and adjacent to its main tab. */
+      html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton,
+      html body #pb1126DesktopHeader .pb1127PrintModes.pb1983ModelThree > .pb1978VideoGuideButton {
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;
+        flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important;
+        height:26px!important;min-height:26px!important;padding:3px 7px!important;
+        margin:0!important;gap:4px!important;border:1px solid #d8e4f8!important;
+        border-radius:8px!important;background:#fff!important;color:#6480a8!important;
+        box-shadow:none!important;font:700 10px/1.25 Vazirmatn,Tahoma,sans-serif!important;
+        white-space:nowrap!important;opacity:1!important;visibility:visible!important;
+        position:relative!important;cursor:pointer!important;text-decoration:none!important;
+      }
+      html body .pb1983ModelThree > .pb1978VideoGuideButton .pb569GuideLabel {
         display:inline!important;font:inherit!important;color:inherit!important;
         margin:0!important;padding:0!important;white-space:nowrap!important;
       }
-      .pb1978VideoGuideButton .pb569GuideArrow{
-        display:inline!important;font:800 15px Tahoma,sans-serif!important;
-        color:#2563eb!important;line-height:1!important;font-style:normal!important;
-        width:auto!important;height:auto!important;
+      html body .pb1983ModelThree > .pb1978VideoGuideButton .pb569GuideArrow {
+        display:inline!important;font:800 12px/1 Tahoma,sans-serif!important;
+        color:#4678cf!important;font-style:normal!important;
+        width:auto!important;height:auto!important;line-height:1!important;
       }
-      .pb1978VideoGuideButton:hover,.pb1978VideoGuideButton:focus-visible{
-        background:#dbeafe!important;outline:2px solid #93c5fd;outline-offset:1px;
+      html body .pb1983ModelThree > .pb1978VideoGuideButton:hover,
+      html body .pb1983ModelThree > .pb1978VideoGuideButton:focus-visible {
+        background:#edf4ff!important;color:#235bd1!important;
+        border-color:#a9c5f8!important;outline:2px solid #b2ccfb;outline-offset:1px;
+      }
+      /* A little air between the two pairs; no layout changes outside this row. */
+      html body .pb1983ModelThree > .photographerPrintPhotoTab {
+        margin-inline-end:9px!important;
       }
       @media(max-width:820px){
-        .photographerPrintModeNav > .pb1978VideoGuideButton{
-          font-size:10px!important;padding:3px 5px!important;height:29px!important;
-          min-height:28px!important;margin:0 1px!important;gap:3px!important;
+        html body .photographerPrintModeNav.pb1983ModelThree{gap:3px!important}
+        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
+        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab{
+          height:31px!important;min-height:31px!important;
+          padding:4px 7px!important;font-size:11px!important;border-radius:9px!important;
+        }
+        html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton{
+          height:25px!important;min-height:25px!important;padding:3px 5px!important;
+          font-size:9px!important;gap:2px!important;border-radius:7px!important;
+        }
+        html body .photographerPrintModeNav.pb1983ModelThree > .photographerPrintPhotoTab {
+          margin-inline-end:3px!important;
+        }
+      }
+      @media(max-width:380px){
+        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
+        html body .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab{
+          padding-inline:5px!important;font-size:10px!important;
+        }
+        html body .photographerPrintModeNav.pb1983ModelThree > .pb1978VideoGuideButton{
+          padding-inline:3px!important;font-size:8px!important;
         }
       }
     `;
@@ -165,6 +220,7 @@
     const print=nav.querySelector('.photographerPrintPhotoTab'),
           album=nav.querySelector('.photographerPrintAlbumTab');
     if(!print)return; // R1976: do not depend on a preselected lab.
+    if(!nav.classList.contains('pb1983ModelThree'))nav.classList.add('pb1983ModelThree');
     installR1978GuideStyle();
     function mount(kind,target){
       const selector=':scope > .pb1978VideoGuideButton.'+kind;

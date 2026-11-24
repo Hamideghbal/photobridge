@@ -270,6 +270,9 @@
       const nav=secondary.querySelector('.pb1127PrintModes');
       return nav?.querySelector('.photographerPrintPhotoTab')?nav:null;
     }
+    // R2006: the visible F37 mobile proxy owns its guides. Do not alter
+    // the hidden React source row while it is being mirrored.
+    if(document.querySelector('#pbF37Tabs.pb2006PrintTabs'))return null;
     // Mobile has no cloned desktop row; use the real interactive mode header.
     const modes=[...document.querySelectorAll('.photographerPrintWorkspace .photographerPrintModeNav')];
     return modes.find(nav=>nav.isConnected&&nav.querySelector('.photographerPrintPhotoTab')&&nav.getClientRects().length>0)||null;
@@ -323,6 +326,7 @@
   // never proxies for the actual archive/finance navigation actions.
   function visibleUtilityNav(){
     if(!location.pathname.startsWith('/photographer')||window.self!==window.top)return null;
+    if(isMobile()&&document.querySelector('#pbF37Tabs.pb2006PrintTabs'))return null;
     const candidates=isMobile()
       ? [...document.querySelectorAll('.photographerPrintModeUtilityCluster')]
       : [...document.querySelectorAll('#pb1126DesktopHeader .pb1126Secondary:not([hidden]) .pb1127PrintUtilities')];

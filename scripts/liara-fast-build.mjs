@@ -1422,6 +1422,10 @@ runR1314(process.execPath,['--test','scripts/test-r1994-store-chooser-filter-flo
 // Gallery geometry and hide the chooser-only Store filters (not shop controls).
 await deployStep('./enable-r1998-gallery-store-chooser-layout.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1998-gallery-store-chooser-layout.cjs'],{stdio:'inherit'});
+// R1999: after older Model-2 styles and photographer invite writers, remove
+// only the enclosing toolbar outline and fix photographer-portal SMS delivery.
+await deployStep('./enable-r1999-toolbar-invite-sms.mjs');
+runR1314(process.execPath,['--test','scripts/test-r1999-toolbar-invite-sms.cjs'],{stdio:'inherit'});
 // R1978: direct Liara build must verify the two real video buttons and explicit Print chooser actions.
 runR1314(process.execPath,['--test','scripts/test-r1978-print-video-guides.cjs'],{stdio:'inherit'});
 // R1995: isolate gallery, store and Print/Lab routes in the actual desktop renderer.
@@ -1515,6 +1519,8 @@ runR1314(process.execPath,['--test','test/r1969-walkin-poster.test.cjs','test/r1
 runR1314(process.execPath,['--test','scripts/test-r1976-print-entry-crm-guides.cjs'],{stdio:'inherit'});
 // R1977: native order board must survive login; authenticated CRM flags hide tabs even after desktop rendering.
 runR1314(process.execPath,['--test','scripts/test-r1977-photographer-order-board-crm.cjs'],{stdio:'inherit'});
+// R1999: final compiled API and HTML must preserve the invite fix and CSS.
+runR1314(process.execPath,['--test','scripts/test-r1999-toolbar-invite-sms.cjs'],{stdio:'inherit'});
 // R1998: verify the final page after HTML optimization retains the narrow
 // Gallery card and hides Store chooser chips only on embedded desktop.
 runR1314(process.execPath,['--test','scripts/test-r1998-gallery-store-chooser-layout.cjs'],{stdio:'inherit'});

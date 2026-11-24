@@ -70,8 +70,14 @@ test('R1995: connected photographer visiting Orders marks initial landing comple
 });
 
 test('R1995: Store and Print retain separate iframe sources, selecting one hides the other',()=>{
- assert.match(chrome,/frame\.src=\(key==='store'\?'\/equipment-rental\/book':'\/photographer\/orders\/flow'\)\+'\?'\+q/,
+ // R1461 rebuild can add a print-only restored URL before the same store/print
+ // destination selector. Test both production-bundled and prebuild shapes.
+ assert.match(chrome,/frame\.src=(?:restoredPrint\|\|)?\(key==='store'\?'\/equipment-rental\/book':'\/photographer\/orders\/flow'\)\+'\?'\+q/,
   'Store should display its own storefront document, Print its own Orders/Lab document');
+ if(chrome.includes('frame.src=restoredPrint||')){
+  assert.match(chrome,/const savedPrint=key==='print'\?/,'only Print can restore a previous Print route');
+  assert.match(chrome,/let restoredPrint=null/,'Store must not reuse a Print history URL');
+ }
  assert.match(chrome,/function closePanels\(\)\{for\(const p of panels\.values\(\)\)p\.hidden=true;selected=null/,
   'switching tabs hides any previously visible iframe panel');
  assert.match(chrome,/closePanels\(\);panel\.hidden=false;selected=key;/,

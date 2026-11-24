@@ -17,6 +17,9 @@ try{
  assert(nav.includes("clearPanelDocuments();chrome?.parentElement.remove()"),'logout removes header immediately');
  assert(nav.includes("key==='print'?openPrintChooser(doc):openStoreChooser(doc)"),'Print and Store reset to chooser');
  assert(nav.includes("frame.addEventListener('load',goToChooser,{once:true})"),'initial load retries chooser');
+ assert(nav.includes("if(key==='crm'){open('crm');return;}"),'R1314 preserves independent CRM panel routing');
+ assert(nav.includes("closePanels();window.location.assign(tab[2]);"),'R1995 real Gallery/AI/Album/Instagram routes survive R1314');
+ assert(!nav.includes("if(key==='print'||key==='crm'){open(key);return;}"),'legacy route branch is replaced, not duplicated');
  assert(nav.includes("window.addEventListener('photobridge-panel-ready'"),'early content-ready event');
  assert(css.includes('/* PB1314 print workspace layout */'));
  assert(css.includes('overflow-y:auto!important;overscroll-behavior-y:contain!important'),'embedded print can scroll');

@@ -1,0 +1,116 @@
+/* R2000 — Photographer only; laboratory accounting layout unchanged. */
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace{
+ width:100%!important;max-width:none!important;min-width:0!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar{
+ position:sticky!important;top:0!important;z-index:80!important;
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ box-sizing:border-box!important;width:100%!important;min-width:0!important;
+ gap:7px!important;padding:9px 12px!important;margin:0 0 8px!important;
+ background:#fff!important;border:1px solid #e0e8f3!important;border-radius:10px!important;
+ box-shadow:0 7px 15px -13px #344054!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters{
+ display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+ justify-content:flex-start!important;gap:8px!important;width:100%!important;
+ min-width:0!important;margin:0!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters>.statementDateLabel{
+ display:flex!important;flex:0 0 160px!important;width:160px!important;min-width:0!important;
+ gap:4px!important;align-items:center!important;white-space:nowrap!important;
+ font-size:10px!important;line-height:1.5!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters>.statementDateLabel>.statementDateControl{
+ display:flex!important;flex:1 1 0!important;min-width:0!important;max-width:130px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters>.statementDateLabel .persianDateField,
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters>.statementDateLabel .persianDateTrigger{
+ box-sizing:border-box!important;min-width:0!important;width:100%!important;
+ height:33px!important;min-height:33px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters>.primary{
+ flex:0 0 auto!important;min-width:88px!important;height:33px!important;
+ margin:0!important;padding:5px 9px!important;white-space:nowrap!important;font-size:10px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics{
+ display:grid!important;grid-template-columns:repeat(3,minmax(96px,1fr))!important;
+ flex:1 1 350px!important;min-width:300px!important;width:auto!important;
+ align-items:center!important;gap:0!important;box-sizing:border-box!important;
+ border:1px solid #e0e7f5!important;border-radius:9px!important;background:#f7faff!important;
+ padding:4px 2px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics>span{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:center!important;min-width:0!important;gap:2px!important;padding:1px 5px!important;
+ border-inline-end:1px solid #e4eaf4!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics>span:last-child{border:0!important}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics small{
+ font:750 9px/1.4 Vazirmatn,Tahoma,sans-serif!important;color:#667085!important;white-space:nowrap!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics b{
+ font:850 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
+ font-variant-numeric:tabular-nums!important;white-space:nowrap!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerMetrics .pb2000Balance b{color:#b54708!important}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementPaper{
+ width:100%!important;max-width:none!important;margin-top:8px!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementActions{
+ display:flex!important;flex-flow:row nowrap!important;justify-content:flex-end!important;
+ align-items:center!important;gap:7px!important;min-width:0!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .pb1177ViewMode.active{
+ background:#e7eeff!important;border-color:#b5ccff!important;color:#315efb!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar{
+ position:sticky!important;top:0!important;z-index:70!important;
+ display:flex!important;flex-flow:row nowrap!important;align-items:center!important;justify-content:flex-start!important;
+ gap:7px!important;box-sizing:border-box!important;width:100%!important;min-height:52px!important;
+ padding:8px 12px!important;margin:0 0 8px!important;
+ border-bottom:1px solid #e0e7f1!important;background:#fff!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar>.invoiceRangeToolbar,
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar>.invoiceListToolbar{
+ display:contents!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceListToolbar>div:first-child{
+ display:none!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .financeInvoiceSearch{
+ flex:1 1 220px!important;min-width:140px!important;max-width:340px!important;margin:0!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label{
+ display:flex!important;flex:0 0 150px!important;min-width:0!important;width:150px!important;gap:5px!important;
+ align-items:center!important;white-space:nowrap!important;margin:0!important;padding:0!important;
+ font:800 10px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#526078!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label .persianDateField{
+ flex:1!important;min-width:0!important;width:100%!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label .persianDateTrigger{
+ width:100%!important;min-height:32px!important;height:32px!important;
+ font-size:10px!important;box-sizing:border-box!important;
+}
+html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button{
+ flex:0 0 auto!important;min-width:67px!important;width:auto!important;
+ min-height:32px!important;height:32px!important;margin:0!important;padding:5px 8px!important;
+ white-space:nowrap!important;font-size:10px!important;
+}
+@media (max-width:920px){
+ html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar{
+  overflow-x:auto!important;overscroll-behavior-x:contain!important;scrollbar-width:thin;
+ }
+ html body #root .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace .statementFilters{
+  width:max-content!important;min-width:780px!important;
+ }
+ html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar{
+  overflow-x:auto!important;scrollbar-width:thin;
+ }
+ html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar>.invoiceRangeToolbar{
+  display:contents!important;
+ }
+ html body #root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label{
+  flex:0 0 145px!important;
+ }
+}

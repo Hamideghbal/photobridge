@@ -1,1 +1,1 @@
-2026-11-24-r1991-model2-video-guides-build-tests
+2026-11-24-r1992-model2-boot-css-bundle-verification

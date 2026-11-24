@@ -2,7 +2,7 @@
    Kept as a small runtime enhancement so it can be cache-busted independently from the main React bundle. */
 (()=>{
   'use strict';
-  const VERSION='0.17.699-r1987';
+  const VERSION='0.17.699-r1988-original-model3';
   const PUBLIC_GUIDE_REACT_SAFE=true; // v572: never replace React-owned /guide DOM nodes.
   const MOBILE_QUERY='(max-width: 820px)';
   const slots=[
@@ -139,16 +139,14 @@
     b.dataset.pbGuide=kind;
     b.title=kind==='print'?'ویدیوی آموزشی چاپ عکس':'ویدیوی آموزشی صحافی آلبوم';
     b.setAttribute('aria-label',b.title);
-    b.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+    b.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void openContextGuide(kind,b)});
     return b;
   }
-  function pointGuideArrow(button,target){
-    if(!button||!target||!button.isConnected||!target.isConnected)return;
-    const arrow=button.querySelector('.pb569GuideArrow');if(!arrow)return;
-    const br=button.getBoundingClientRect(),tr=target.getBoundingClientRect();
-    const direction=tr.left+tr.width/2>=br.left+br.width/2?'→':'←';
-    if(arrow.textContent!==direction)arrow.textContent=direction;
+  function pointGuideIcon(button){
+    if(!button||!button.isConnected)return;
+    const icon=button.querySelector('.pb569GuideArrow');
+    if(icon&&icon.textContent!=='▶')icon.textContent='▶';
   }
   // R1987: the stable delegated capture handler owns video-guide clicks on rebuilt desktop rows.
   // R1983: user-approved concept 3 — prominent main modes and understated
@@ -289,25 +287,27 @@
       if(!button)button=guideButton(kind);
       if(!button.querySelector('.pb569GuideArrow')||!button.querySelector('.pb569GuideLabel')||
          button.querySelector('.pb569GuideLabel').textContent!=='ویدیوی آموزشی')
-        button.innerHTML='<i class="pb569GuideArrow" aria-hidden="true">←</i><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
+        button.innerHTML='<span class="pb569GuideArrow" aria-hidden="true">▶</span><em class="pb569GuideLabel">ویدیوی آموزشی</em>';
       if(!button.classList.contains('pb1978VideoGuideButton'))button.classList.add('pb1978VideoGuideButton');
       // No React-owned button is replaced; tutorials are adjacent siblings.
-      // R1987 model three: print tutorial on the outer right, album tutorial
-      // on the outer left, with the two primary actions together in the centre.
-      if(kind==='print'){
-        if(button.parentElement!==nav||button.nextElementSibling!==target)nav.insertBefore(button,target);
-      }else if(button.parentElement!==nav||button.previousElementSibling!==target){
+      // R1988: use the USER-SELECTED ORIGINAL numbered model 3 image.
+      // Visual order in RTL: [چاپ عکس] [ویدیوی چاپ] [صحافی آلبوم] [ویدیوی آلبوم].
+      // Both tutorials go AFTER their corresponding primary action in DOM.
+      if(button.parentElement!==nav||button.previousElementSibling!==target)
         target.insertAdjacentElement('afterend',button);
-      }
       return button;
     }
     const printGuide=mount('print',print);
     const albumGuide=album?mount('album',album):null;
     if(!album)nav.querySelectorAll(':scope > .pb569WorkflowGuideButton.album').forEach(el=>el.remove());
-    requestAnimationFrame(()=>{
-      pointGuideArrow(printGuide,print);
-      if(albumGuide&&album)pointGuideArrow(albumGuide,album);
-    });
+    // The parent React/Desktop header may clone the two main actions in
+    // either order. Normalize once, without triggering repeated DOM mutations.
+    if(album&&print.nextElementSibling!==printGuide){
+      if(printGuide?.isConnected)print.insertAdjacentElement('afterend',printGuide);
+    }
+    if(albumGuide&&album&&album.nextElementSibling!==albumGuide)
+      album.insertAdjacentElement('afterend',albumGuide);
+    pointGuideIcon(printGuide);pointGuideIcon(albumGuide);
   }
 
   function currentLabName(){

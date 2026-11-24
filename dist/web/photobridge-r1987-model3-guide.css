@@ -123,3 +123,99 @@ html body .pb567GuideBackdrop .pb567GuideDialog > .pb567GuideVideoFrame > video 
   }
   html body .pb567GuideBackdrop .pb567GuideDialog > header.pb567GuideDialogHead {padding:10px 12px!important;}
 }
+
+/* R1988 — faithful selected original image model 3 (NOT a new design).
+   Source: PhotoBridge-four-button-design-options.png, labelled «مدل ۳».
+   Desktop RTL order: Print / print-guide / Album / album-guide.
+   Main button selected = solid blue; inactive = white; guides = muted pale blue. */
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree {
+  gap:6px!important;
+  direction:rtl!important;
+  flex-wrap:nowrap!important;
+  justify-content:center!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.photographerPrintPhotoTab,
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.photographerPrintAlbumTab,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab {
+  box-sizing:border-box!important;
+  height:34px!important;min-height:34px!important;
+  min-width:108px!important;
+  padding:5px 14px!important;margin:0!important;
+  background:#fff!important;
+  color:#2c568e!important;
+  border:1px solid #a7c4f7!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+  font:800 12px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]),
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]) {
+  background:#2460db!important;
+  color:#fff!important;
+  border-color:#2460db!important;
+  box-shadow:none!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.pb1978VideoGuideButton,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton {
+  box-sizing:border-box!important;
+  height:34px!important;min-height:34px!important;
+  min-width:132px!important;
+  padding:5px 11px!important;margin:0!important;
+  background:#f4f7fc!important;
+  color:#6680a2!important;
+  border:1px solid #d6e2f4!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+  font:700 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  gap:6px!important;
+  display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.pb1978VideoGuideButton.print,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton.print {
+  margin-inline-end:16px!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.pb1978VideoGuideButton .pb569GuideArrow,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton .pb569GuideArrow {
+  box-sizing:border-box!important;
+  display:inline-grid!important;place-items:center!important;
+  flex:0 0 16px!important;
+  width:16px!important;height:16px!important;min-width:16px!important;
+  border:1px solid #5e84b7!important;border-radius:50%!important;
+  font:800 8px/1 Tahoma,sans-serif!important;
+  font-style:normal!important;
+  color:#5278ae!important;
+  padding:0!important;margin:0!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button.pb1978VideoGuideButton .pb569GuideLabel,
+html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton .pb569GuideLabel {
+  font:700 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  font-style:normal!important;color:inherit!important;
+}
+html body #pb1126ChromeHost #pb1126DesktopHeader .pb1126Secondary .pb1127PrintModes > button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab)::after {
+  display:none!important;content:none!important;
+}
+@media(max-width:820px){
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree {gap:3px!important;}
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintPhotoTab,
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.photographerPrintAlbumTab {
+    min-width:0!important;height:31px!important;min-height:31px!important;
+    padding:4px 6px!important;font-size:10px!important;
+  }
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton {
+    min-width:0!important;height:31px!important;min-height:31px!important;
+    padding:4px 5px!important;gap:3px!important;font-size:9px!important;
+  }
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton.print {
+    margin-inline-end:3px!important;
+  }
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton .pb569GuideLabel {
+    font-size:9px!important;
+  }
+  html body .photographerPrintWorkspace .photographerPrintModeNav.pb1983ModelThree > button.pb1978VideoGuideButton .pb569GuideArrow {
+    flex-basis:13px!important;width:13px!important;height:13px!important;min-width:13px!important;font-size:7px!important;
+  }
+}

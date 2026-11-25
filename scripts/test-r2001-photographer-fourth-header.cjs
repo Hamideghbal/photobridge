@@ -496,3 +496,27 @@ test('R2028 date clear feedback targets the two specific customer date buttons',
   assert.equal(finance.split(anchor).length-1,1,'unique '+key+' date clear handler');
  }
 });
+
+
+test('R2029 desktop finance has only the third-row navigation and readable presets',()=>{
+ const patch=css.slice(css.indexOf('/* R2029: one visible desktop finance header'));
+ assert(patch.length>1000);
+ assert.match(patch,/html\.pb1126Embedded body #root#root main\.photographerMain .*\.financeWorkspace>\.financeNavDock,/);
+ assert.match(patch,/\.pb1632FinanceTabs:not\(\[hidden\]\).*\.financeNavDock\{\s*display:none!important;/);
+ assert(!patch.includes('body.pbF37UnifiedActive'));
+ assert(finance.includes('className:"financeSectionTabs"'),'native source controls remain for proxy and mobile');
+ const preset=patch.match(/\.invoiceRangeToolbar>button:is\(\.invoiceRangeApply,\.invoiceRangeAll,\.pb1176Today\)\{([^}]+)\}/);
+ assert(preset);
+ assert.match(preset[1],/transition:box-shadow \.12s ease-out!important/);
+ assert.match(preset[1],/-webkit-text-fill-color:currentColor!important/);
+ assert.match(patch,/:not\(\.active\)\{\s*background:#fff!important;border-color:#cbd9ef!important;color:#344054!important/);
+ assert.match(patch,/\.active\{\s*background:#315efb!important;border-color:#315efb!important;color:#fff!important/);
+ assert.match(patch,/button:is\(\.photographerPrintPhotoTab,\.photographerPrintAlbumTab,\.finance,\.archive\):not\(\.pb1978VideoGuideButton\)\{\s*font-size:11px!important/);
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ // Final performance bundling can remove the original CSS link.
+ if(html.includes('photobridge-r2001-photographer-fourth-header.css?'))assert(html.includes('financePolish=r2029'));
+ else {
+  const links=[...html.matchAll(/href="([^"]+\.css)(?:\?[^"]*)?"/g)].map(m=>m[1]);
+  assert(links.some(url=>url.startsWith('/')&&fs.existsSync('dist/web'+url)&&fs.readFileSync('dist/web'+url,'utf8').includes('R2029: one visible desktop finance header')),'R2029 included in served CSS');
+ }
+});

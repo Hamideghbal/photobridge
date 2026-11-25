@@ -328,3 +328,34 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('joinedGuides=r2023')?url:url+'&joinedGuides=r2023');
  write(p,h);
 }
+
+
+// R2024: the real visible Print document owns readiness after lab selection.
+// A previous panel's boot/loader flag must not permanently hide the second row.
+const pb2024NavFile='dist/web/photobridge-r1126-desktop-navigation.js';
+let pb2024Nav=read(pb2024NavFile);
+if(!pb2024Nav.includes('/* PB2024 lab switch header recovery */')){
+ const patch=(a,b,label)=>{pb2024Nav=once(pb2024Nav,a,b,'R2024 '+label)};
+ const helper=" /* PB2024 lab switch header recovery */\n function pb2024ChoosingLab(doc){\n  if(!doc?.body)return false;\n  try{if(new URLSearchParams(doc.defaultView.location.search).get('pbLabChooser')==='1')return true}catch{}\n  const chooser=doc.querySelector('#pbR99LabChooser');\n  if(chooser&&!chooser.hidden&&doc.defaultView?.getComputedStyle(chooser).display!=='none')return true;\n  return doc.body.classList.contains('pbR100F14ChoosingLab')||(doc.documentElement.classList.contains('pbR100F14LabChooserBoot')&&!doc.querySelector('.photographerPrintModeNav'));\n }\n function pb2024PrintReady(doc){\n  if(!doc?.body||pb2024ChoosingLab(doc)||!pb2018RouteKey(doc))return false;\n  const native=doc.querySelector('#photographerRoleHeaderV710'),scroll=doc.querySelector('main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea');\n  if(!native||!scroll)return false;\n  const sources=[...native.querySelectorAll('.photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button')].filter(el=>!el.hidden&&el.getAttribute('aria-hidden')!=='true'&&!el.classList.contains('photographerPrintModeBack'));\n  return pb2018Complete(sources);\n }\n";
+ patch(' function cleanClone(original){',helper+' function cleanClone(original){','live document readiness helpers');
+ const oldChoose="(!!doc?.querySelector('#pbR99LabChooser')||doc?.body?.classList.contains('pbR100F14ChoosingLab')||doc?.documentElement?.classList.contains('pbR100F14LabChooserBoot')||(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print'&&!pb2017Retain))";
+ patch(oldChoose,'pb2024ChoosingLab(doc)','chooser means real chooser, never missing native nav');
+ // Reconcile the transition state on every normal body-mutation render,
+ // including when only React's native controls become available.
+ patch(' function pb1315Sync(panel){',' function pb1315Sync(panel,notify=true){','allow render-time reconciliation without scheduling itself');
+ patch("  const choosing=chooser&&!chooser.hidden&&doc.defaultView?.getComputedStyle(chooser).display!=='none';","  const choosing=pb2024ChoosingLab(doc);",'consistent chooser test');
+ patch("  const workspace=!!doc.querySelector('.photographerPrintModeNav')&&!!scroll?.children.length;","  const workspace=pb2024PrintReady(doc);",'actual four controls and scroll root, not loaded orders');
+ patch("  const transitioning=boot||(!choosing&&!workspace);","  const transitioning=!choosing&&!workspace;",'legacy boot is not a readiness veto');
+ patch("   if(!transitioning)schedule();","   if(!transitioning&&notify)schedule();",'no render loop');
+ // Reset clone identity when the iframe replaces its document. Otherwise
+ // a matching structural signature can leave cloned handlers from the old lab.
+ patch("  const pb2017Retain=active==='print'&&row.dataset.pb2017Ready==='1';","  if(active==='print'&&row._pb2024Document!==doc){row._pb2024Document=doc;delete row.dataset.pb2017Ready;delete row.dataset.source;delete row.dataset.pb2017LabSignature;}\n  if(active==='print'&&selected==='print')pb1315Sync(panels.get('print'),false);\n  const pb2017Retain=active==='print'&&row.dataset.pb2017Ready==='1';",'document generation and transition reconciliation');
+ patch("const waiting=active==='print'&&!choosing&&!pb2017Retain&&(!pb2018Complete(visible)||!nativeModes||!clonedModes||(loading&&!loading.hidden)||doc?.documentElement?.classList.contains('pbR100F37LabEnterBoot')||document.documentElement.classList.contains('pb1315PanelChanging'));","const waiting=active==='print'&&!choosing&&!pb2017Retain&&(!pb2024PrintReady(doc)||!pb2018Complete(visible)||!nativeModes||!clonedModes);\n  if(active==='print'&&!choosing&&!waiting&&pb2024PrintReady(doc)){if(loading)loading.hidden=true;document.documentElement.classList.remove('pb1315PanelChanging');}",'release stale wait only with actual complete current-document controls');
+ write(pb2024NavFile,pb2024Nav);
+}
+execFileSync(process.execPath,['--check',pb2024NavFile],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('labHeaderRecovery=r2024')?url:url+'&labHeaderRecovery=r2024');
+ write(p,h);
+}

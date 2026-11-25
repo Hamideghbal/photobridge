@@ -520,3 +520,32 @@ test('R2029 desktop finance has only the third-row navigation and readable prese
   assert(links.some(url=>url.startsWith('/')&&fs.existsSync('dist/web'+url)&&fs.readFileSync('dist/web'+url,'utf8').includes('R2029: one visible desktop finance header')),'R2029 included in served CSS');
  }
 });
+
+
+test('R2030 finance filters are pinned to the scrollport and share the same date and button geometry',()=>{
+ const patch=css.slice(css.indexOf('/* R2030: pinned fourth finance header'));
+ assert(patch.length>1000);
+ assert.match(patch,/>:is\(\.sectionTopline,\.financeTopline,\.financeSummary\),/);
+ assert.match(patch,/position:sticky!important;top:0!important;inset-block-start:0!important/);
+ assert.match(patch,/position:fixed!important;inset:0!important;top:0!important;bottom:0!important/);
+ assert.match(patch,/position:sticky!important;top:44px!important;inset-block-start:44px!important/);
+ assert.match(patch,/\.statementDateControl \.persianDateTrigger\{\s*display:flex!important;[\s\S]*?height:34px!important/);
+ assert.match(patch,/\.invoiceRangeToolbar>button\.invoiceRangeApply\{[\s\S]*?height:34px!important/);
+ assert.match(patch,/\.pb2030InvoiceColumns,\.invoiceRow\)\{[\s\S]*?grid-template-columns:var\(--pb2030-columns\)!important/);
+ assert.match(patch,/overflow-x:auto!important;overflow-y:visible!important/);
+ assert(fs.readFileSync('dist/web/photobridge-r1318-print-insets.js','utf8').includes('/* PB2030 embedded finance inset */'));
+ const a=finance.indexOf('children:(t==="customer"?[null,...qe]:qe).map(Je=>{if(Je===null)return ');
+ assert(a>=0,'customer-only column row');
+ const start=finance.indexOf('e.jsx("div",{className:"pb2030InvoiceColumns"',a),end=finance.indexOf(';"',start);
+ assert(start>=0);
+ const marker='},"pb2030-columns")';
+ const stop=finance.indexOf(marker,start)+marker.length;
+ assert(stop>start);
+ const jsx=(type,props,key)=>({type,...props,key});
+ const header=vm.runInNewContext(finance.slice(start,stop),{e:{jsx}});
+ assert.equal(header.children.length,8);
+ assert.equal(header.children[0].children,'شماره سند');
+ assert.equal(header.children[7].children,'عملیات');
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ assert(html.includes('fixedFinance=r2030'));
+});

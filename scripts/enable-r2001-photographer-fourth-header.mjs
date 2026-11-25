@@ -359,3 +359,11 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('labHeaderRecovery=r2024')?url:url+'&labHeaderRecovery=r2024');
  write(p,h);
 }
+
+
+// R2025: refresh visual polish without changing navigation or order loading.
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('statusContrast=r2025')?url:url+'&statusContrast=r2025');
+ write(p,h);
+}

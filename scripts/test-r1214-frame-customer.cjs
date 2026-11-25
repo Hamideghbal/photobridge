@@ -338,10 +338,12 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
    assert.equal(await guides.count(),4);
    assert.equal(await guides.locator('.pb569GuideArrow').count(),4);
    assert.equal(await guides.locator('.pb569GuideLabel').count(),4);
-   const gaps=await page.locator('.pb1127PrintModes').evaluate(nav=>{const buttons=[...nav.querySelectorAll(':scope>button')].map(n=>n.getBoundingClientRect());return buttons.slice(1).map((r,i)=>Math.round(buttons[i].left-r.right))});
-   assert.deepEqual(gaps,[0,10,0,10,0,10,0],'joined pairs and equal group gaps');
+   const gaps=await page.locator('.pb1127PrintModes').evaluate(nav=>{const buttons=[...nav.querySelectorAll(':scope>button')].map(n=>n.getBoundingClientRect());return buttons.slice(1).map((r,i)=>Math.round(Math.max(buttons[i].left-r.right,r.left-buttons[i].right)))});
+   assert.deepEqual(gaps,[0,10,0,22,0,10,0],'joined pairs and wider separation between album and finance');
    const edges=await page.locator('.pb1127PrintModes').evaluate(nav=>[...nav.querySelectorAll(':scope>button')].map(b=>{const s=getComputedStyle(b);return [s.borderTopLeftRadius,s.borderTopRightRadius,s.borderRightWidth,s.borderLeftWidth]}));
-   edges.forEach((edge,i)=>assert.deepEqual(edge,i%2===0?['0px','10px','1px','0px']:['10px','0px','1px','1px'],'one internal border and no inner rounding'));
+   edges.forEach((edge,i)=>assert.deepEqual(edge,i%2===0?['0px','10px','1px','0px']:['10px','0px','1px','1px'],'one reserved seam and no inner rounding'));
+   const dividers=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n,'::before');return [s.display,s.width,s.top,s.bottom,s.pointerEvents,getComputedStyle(n).borderInlineStartColor]}));
+   dividers.forEach(v=>assert.deepEqual(v,['block','1px','6px','6px','none','rgba(0, 0, 0, 0)'],'inset guide divider without full-height seam'));
    const looks=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),a=getComputedStyle(n.querySelector('.pb569GuideArrow'));return [s.height,s.backgroundColor,s.color,s.borderRadius,a.width,a.height,a.backgroundColor]}));
    looks.forEach(v=>assert.deepEqual(v,looks[0]));
    for(let i=0;i<4;i++){
@@ -404,6 +406,28 @@ test('R2023 photographer footer stays below short and long album, finance and ar
     assert(result.top>=result.content-1,'footer cannot cover the content');
     if(height===80)assert(Math.abs(result.bottom-result.footer)<=2,'short content footer sits at bottom');
     else assert(result.footer>result.bottom,'long content footer remains in scroll flow');
+   }
+  }
+ }finally{await browser.close()}
+});
+
+
+test('R2025 selected photographer status is visibly blue with readable count',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  for(const width of [1440,390])for(const cls of [width>820?'photographerContextStatusesDesktop':'photographerContextStatusesMobile','albumHeaderStatuses']){
+   await page.setViewportSize({width,height:800});
+   await page.setContent('<html dir="rtl"><body><div id="root"><main class="photographerMain photographerPrintWorkspace"><div class="photographerLabContextRail"><div class="'+cls+'"><button class="active">در جریان <b>7</b></button><button>آماده <b>2</b></button></div></div></main></div></body></html>');
+   await page.addStyleTag({content:css});
+   const buttons=page.locator('.'+cls+'>button');
+   for(let i=0;i<2;i++){
+    await buttons.evaluateAll((nodes,i)=>nodes.forEach((n,j)=>n.classList.toggle('active',i===j)),i);
+    const v=await buttons.evaluateAll(nodes=>nodes.map(n=>[getComputedStyle(n).backgroundColor,getComputedStyle(n).color,getComputedStyle(n.querySelector('b')).color]));
+    assert.deepEqual(v[i],['rgb(49, 94, 251)','rgb(255, 255, 255)','rgb(255, 255, 255)']);
+    assert.notEqual(v[1-i][0],v[i][0]);
    }
   }
  }finally{await browser.close()}

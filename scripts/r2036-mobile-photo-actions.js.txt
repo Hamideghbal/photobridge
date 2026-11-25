@@ -1,0 +1,37 @@
+  // R2036: reuse the real React actions, including the existing product dialog.
+  let pb2036PhotoObserver=null,pb2036PhotoWorkspace=null,pb2036PhotoRow=null;
+  function pb2036ProductSource(w){return w?.querySelector('.pb1793StandaloneLaunch')||null}
+  function pb2036SyncPhoto(row,w){
+    if(!pb2036MobilePhoto(w)||!row?.isConnected)return;
+    if(!document.documentElement.classList.contains('pb2036PhotoComposer'))document.documentElement.classList.add('pb2036PhotoComposer');
+    if(row.hidden)row.hidden=false;
+    if(!row.classList.contains('pb2036PhotoActions'))row.classList.add('pb2036PhotoActions');
+    const choose=row.querySelector('.pbF37Choose'),send=row.querySelector('.pbF37Send');
+    let product=row.querySelector('.pb2036Standalone');
+    if(!product){
+      product=document.createElement('button');product.type='button';product.className='pb2036Standalone';
+      product.textContent='سفارش شاسی و قاب بدون چاپ';
+      product.addEventListener('click',()=>{const source=pb2036ProductSource($('.photographerMain.photographerPrintWorkspace'));if(source&&!source.disabled)source.click()});
+      row.append(product);
+    }
+    const sources=[printAction(0),printAction(1),pb2036ProductSource(w)];
+    for(const [index,button] of [choose,send,product].entries()){
+      const disabled=!sources[index]||!!sources[index].disabled;
+      if(button&&button.disabled!==disabled)button.disabled=disabled;
+    }
+    if(choose&&choose.textContent!=='انتخاب سایز و عکس')choose.textContent='انتخاب سایز و عکس';
+    if(send&&send.textContent!=='ارسال')send.textContent='ارسال';
+    if(send&&send.getAttribute('aria-label')!=='ارسال فایل برای چاپ')send.setAttribute('aria-label','ارسال فایل برای چاپ');
+  }
+  function pb2036WatchPhoto(row,w){
+    if(pb2036PhotoWorkspace===w&&pb2036PhotoRow===row&&pb2036PhotoObserver)return;
+    pb2036PhotoObserver?.disconnect();pb2036PhotoWorkspace=w;pb2036PhotoRow=row;
+    pb2036PhotoObserver=new MutationObserver(()=>pb2036SyncPhoto(row,w));
+    pb2036PhotoObserver.observe(w,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled']});
+  }
+  function pb2036StopPhoto(){
+    if(!pb2036PhotoWorkspace&&!document.documentElement.classList.contains('pb2036PhotoComposer'))return;
+    pb2036PhotoObserver?.disconnect();pb2036PhotoObserver=null;pb2036PhotoWorkspace=null;pb2036PhotoRow=null;
+    document.documentElement.classList.remove('pb2036PhotoComposer');
+    const row=$('#pbF37PrintComposerActions');if(row){row.classList.remove('pb2036PhotoActions');row.querySelector('.pb2036Standalone')?.remove();row.querySelector('.pbF37Send')?.removeAttribute('aria-label')}
+  }

@@ -339,7 +339,9 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
    assert.equal(await guides.locator('.pb569GuideArrow').count(),4);
    assert.equal(await guides.locator('.pb569GuideLabel').count(),4);
    const gaps=await page.locator('.pb1127PrintModes').evaluate(nav=>{const buttons=[...nav.querySelectorAll(':scope>button')].map(n=>n.getBoundingClientRect());return buttons.slice(1).map((r,i)=>Math.round(buttons[i].left-r.right))});
-   assert.deepEqual(gaps,[2,10,2,10,2,10,2],'equal group gaps and small within-pair gaps');
+   assert.deepEqual(gaps,[0,10,0,10,0,10,0],'joined pairs and equal group gaps');
+   const edges=await page.locator('.pb1127PrintModes').evaluate(nav=>[...nav.querySelectorAll(':scope>button')].map(b=>{const s=getComputedStyle(b);return [s.borderTopLeftRadius,s.borderTopRightRadius,s.borderRightWidth,s.borderLeftWidth]}));
+   edges.forEach((edge,i)=>assert.deepEqual(edge,i%2===0?['0px','10px','1px','0px']:['10px','0px','1px','1px'],'one internal border and no inner rounding'));
    const looks=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),a=getComputedStyle(n.querySelector('.pb569GuideArrow'));return [s.height,s.backgroundColor,s.color,s.borderRadius,a.width,a.height,a.backgroundColor]}));
    looks.forEach(v=>assert.deepEqual(v,looks[0]));
    for(let i=0;i<4;i++){

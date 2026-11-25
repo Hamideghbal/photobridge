@@ -351,3 +351,29 @@ test('R2017 print secondary controls retain their identity when active and disab
  assert(!patch.includes('.simplePrintPilotQuoteSend'),'existing quote send action is untouched');
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('stableSecondary=r2017'));
 });
+
+
+test('R2018 all four print destinations are required and share route-driven selection',()=>{
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(nav));
+ const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
+ assert(a>=0&&b>a);
+ const h=new Function('printControlKey','location',nav.slice(a,b)+'\nreturn {pb2018Complete,pb2018RouteKey,pb2018Select};')(v=>v.key,{pathname:'/photographer/orders/flow'});
+ const keys=['class:photographerPrintPhotoTab','class:photographerPrintAlbumTab','class:finance','class:archive'];
+ const source=keys.map(key=>({key}));
+ assert(!h.pb2018Complete(source.slice(0,2)));assert(!h.pb2018Complete(source.slice(0,3)));assert(h.pb2018Complete(source));
+ const routes=['/photographer/orders/flow','/photographer/album','/photographer/finance','/photographer/archive'];
+ const copies=keys.map(key=>{const attrs=new Map(),classes=new Set();return {dataset:{pb2017PrintKey:key},classList:{contains:k=>classes.has(k),toggle:(k,v)=>v?classes.add(k):classes.delete(k)},getAttribute:k=>attrs.get(k),setAttribute:(k,v)=>attrs.set(k,v)}});
+ routes.forEach((pathname,i)=>{
+  const key=h.pb2018RouteKey({defaultView:{location:{pathname}}});assert.equal(key,keys[i]);
+  h.pb2018Select({querySelectorAll:()=>copies},key);
+  copies.forEach((copy,n)=>assert.equal(copy.classList.contains('active'),n===i));
+ });
+ assert(nav.includes("active==='print'?'print':String(pb1631Finance)"));
+ assert(nav.includes('!pb2018Complete(visible)'));
+ assert(nav.includes('pb2018MountPrintGuides?.()'));
+ const patch=css.slice(css.indexOf('/* R2018: four matching desktop tabs'));
+ assert(patch.includes('.finance,.archive'));assert(patch.includes('left:50%!important'));assert(patch.includes('translateX(-50%)'));
+ assert(patch.includes('background:#315efb!important'));assert(patch.includes('.pb1127PrintRow[hidden]'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('fourTabs=r2018'));
+});

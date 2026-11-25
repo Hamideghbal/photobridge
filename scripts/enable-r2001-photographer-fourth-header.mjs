@@ -415,3 +415,26 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('financePolish=r2029')?url:url+'&financePolish=r2029');
  write(p,h);
 }
+
+
+// R2030: a real shared invoice column header inside the same horizontal
+// scroll container as its records. The existing row renderer, document types,
+// action handlers, filtering, totals and pagination stay unchanged.
+let pb2030UI=read(file);
+if(!pb2030UI.includes('/* PB2030 photographer invoice columns */')){
+ const start=pb2030UI.indexOf('function ub({role:t,'),end=pb2030UI.indexOf('}function hb(',start);
+ if(start<0||end<start)throw Error('[R2030] finance component missing');
+ let part=pb2030UI.slice(start,end+1);
+ const anchor='className:"invoiceRows accountingInvoiceRows",children:qe.map(Je=>{';
+ const labels=['شماره سند','لابراتوار','سفارش / سند مبنا','تاریخ صدور','مبلغ','پرداخت / نوع سند','مانده / شرح','عملیات'];
+ const head='e.jsx("div",{className:"pb2030InvoiceColumns",children:'+JSON.stringify(labels)+'.map(label=>e.jsx("span",{children:label},label))},"pb2030-columns")';
+ part=once(part,anchor,'className:"invoiceRows accountingInvoiceRows",children:(t==="customer"?[null,...qe]:qe).map(Je=>{if(Je===null)return '+head+';','R2030 shared invoice column heading');
+ pb2030UI=pb2030UI.slice(0,start)+part+pb2030UI.slice(end+1)+'\n/* PB2030 photographer invoice columns */\n';
+ write(file,pb2030UI);
+}
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('fixedFinance=r2030')?url:url+'&fixedFinance=r2030');
+ write(p,h);
+}

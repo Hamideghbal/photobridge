@@ -213,7 +213,7 @@ for(const name of ['photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store
  let js=read(p);
  for(const signature of ['function syncGeometry(w){','function resetScrollGeometry(w){','function fixPrint(){','function clearPrint(){']){
   if(!js.includes(signature)||js.includes(signature+'/* PB2016 desktop owner */'))continue;
-  js=once(js,signature,signature+"/* PB2016 desktop owner */if(matchMedia('(min-width:821px)').matches&&document.documentElement.classList.contains('pb1126Desktop'))return;",'R2016 mobile-only geometry '+name);
+  js=once(js,signature,signature+"/* PB2016 desktop owner */if(matchMedia('(min-width:821px)').matches&&document.documentElement.classList.contains('pb1126Desktop')&&/^\\/photographer\\/(?:orders(?:\\/(?:flow|needs_fix|ready|completed))?|album|upload)\\/?$/.test(location.pathname))return;",'R2016 mobile-only geometry '+name);
  }
  write(p,js);execFileSync(process.execPath,['--check',p],{stdio:'inherit'});
 }

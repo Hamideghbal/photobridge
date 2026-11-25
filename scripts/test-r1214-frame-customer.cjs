@@ -352,3 +352,29 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
   }
  }finally{await browser.close()}
 });
+
+
+test('R2019 real RTL photo and album order buttons center in third row with native status siblings',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  for(const width of [1024,1440,1920]){
+   await page.setViewportSize({width,height:800});
+   for(const embedded of [false,true])for(const mode of ['photo','album-slot','album-nested']){
+    const album=mode!=='photo',edge=embedded?0:114;
+    const button='<button class="photographerContextAction primary" onclick="this.dataset.clicked=1">'+(album?'سفارش آلبوم جدید':'چاپ عکس جدید')+'</button>';
+    const slot='<div id="photographer-album-new-order-slot">'+button+'</div>';
+    const action=album?(mode==='album-nested'?'<div class="photographerLabContextActions">'+slot+'</div>':slot):'<div class="photographerLabContextActions">'+button+'</div>';
+    const statuses='<div class="photographerContextStatusesDesktop"><button>درحال انجام</button><button>آماده</button></div>';
+    await page.setContent('<html dir="rtl" class="'+(embedded?'pb1126Embedded':'pb1126Desktop')+'"><body class="pbAuthenticatedPhotographerPortal"><div id="root"><main class="photographerMain photographerPrintWorkspace pb2015OrderBoard pb2016OrderList pb2016ManagedViewport '+(album?'pb1464Album':'pb1461Orders')+'" style="--pb2016ChromeEdge:'+edge+'px;--pb2014OrderTop:'+edge+'px"><div class="photographerLabContextRail"><div class="photographerLabContextMain">'+action+statuses+'</div></div><div class="photographerRolePageScrollArea"><section class="ordersWorkspace liveCustomerOrders"></section></div></main></div></body></html>');
+    await page.addStyleTag({content:css});
+    const control=page.locator('.photographerContextAction.primary'),box=await control.boundingBox();
+    assert(box&&Math.abs(box.x+box.width/2-width/2)<=2,JSON.stringify({width,embedded,mode,box}));
+    assert(box.y>=edge&&box.y+box.height<=edge+44,'action is within third row');
+    await control.click();assert.equal(await control.getAttribute('data-clicked'),'1');
+   }
+  }
+ }finally{await browser.close()}
+});

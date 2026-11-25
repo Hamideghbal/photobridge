@@ -544,3 +544,40 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   margin-top:0!important;scroll-padding-top:0!important;
  }
 }
+
+/* R2015: one native third row for BOTH photographer order boards. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerLabContextRail{
+  position:fixed!important;inset:var(--pb2014OrderTop,var(--pb1461-toolbar-top,114px)) 0 auto!important;
+  display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  width:100%!important;max-width:none!important;height:44px!important;min-height:44px!important;max-height:44px!important;
+  margin:0!important;padding:4px 18px!important;background:#fff!important;box-sizing:border-box!important;
+  border:0!important;border-block:1px solid #e5e7eb!important;overflow:visible!important;z-index:420!important;transform:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerLabContextRail .photographerLabContextMain{
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  align-items:center!important;justify-content:flex-start!important;position:static!important;width:100%!important;min-width:0!important;height:34px!important;
+  overflow:visible!important;transform:none!important;margin:0!important;padding:0!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerLabContextRail :is(.photographerLabContextActions,#photographer-album-new-order-slot){
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  align-items:center!important;height:34px!important;min-height:34px!important;width:auto!important;flex:0 0 auto!important;
+  position:static!important;inset:auto!important;transform:none!important;margin:0!important;padding:0!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerLabContextRail :is(.photographerLabContextActions,#photographer-album-new-order-slot) button{
+  display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  align-items:center!important;justify-content:center!important;position:static!important;transform:none!important;white-space:nowrap!important;height:32px!important;min-height:32px!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard #photographer-album-status-desktop-slot{
+  display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;overflow:visible!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard :is(.photographerContextStatusesDesktop,#photographer-album-status-desktop-slot .albumHeaderStatuses){
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;align-items:center!important;position:fixed!important;
+  top:var(--pb2014OrderTop,var(--pb1461-toolbar-top,114px))!important;left:18px!important;right:auto!important;bottom:auto!important;
+  height:44px!important;min-height:44px!important;width:auto!important;max-width:65%!important;gap:6px!important;margin:0!important;padding:4px 0!important;
+  overflow-x:auto!important;overflow-y:hidden!important;transform:none!important;z-index:421!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerRolePageScrollArea{
+  top:var(--pb2014OrderContentTop,158px)!important;inset-block-start:var(--pb2014OrderContentTop,158px)!important;margin-top:0!important;scroll-padding-top:0!important;
+ }
+}

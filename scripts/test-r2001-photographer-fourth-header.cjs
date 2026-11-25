@@ -276,3 +276,34 @@ test('R2014 desktop frame query cannot hide the top-level account header and nat
  assert(css.includes('--pb2014OrderContentTop'));
  assert(css.includes('.photographerLabContextActions>button.photographerContextAction.primary'));
 });
+
+
+test('R2015 native third row survives both order routes, delayed action mount, reload and chooser transitions',()=>{
+ const source=fs.readFileSync('dist/web/photobridge-r1461-print-navigation.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(source));
+ const tokens=new Set(),props=new Map(),railProps=new Map([['display','none'],['visibility','hidden']]);
+ const style=map=>({getPropertyValue:k=>map.get(k)||'',setProperty:(k,v)=>map.set(k,v),removeProperty:k=>map.delete(k)});
+ const rail={style:style(railProps),querySelector:()=>null};
+ let board=true,choosing=false,composer=false,embedded=false,frame;
+ const area={querySelector:()=>board?{}:null};
+ const main={querySelector:s=>s.includes('ContextRail')?rail:area,querySelectorAll:()=>[],style:style(props),classList:{contains:k=>composer&&k==='photographerAlbumCreateWorkspaceMode',toggle:(k,v)=>v?tokens.add(k):tokens.delete(k)}};
+ const location={pathname:'/photographer/orders',search:'',origin:'https://photobridge.ir'};
+ const win={};win.self=win;win.top=win;
+ const document={readyState:'complete',body:{classList:{contains:()=>choosing}},querySelector:s=>s.startsWith('main.')?main:null,getElementById:()=>({getBoundingClientRect:()=>({bottom:121})})};
+ const history={pushState(){},replaceState(){}};
+ vm.runInNewContext(source,{window:win,parent:win,document,location,history,URL,URLSearchParams,matchMedia:()=>({matches:true}),requestAnimationFrame:cb=>{frame=cb},MutationObserver:class{observe(){}},addEventListener(){}});
+ const tick=()=>{history.pushState();frame()};
+ tick();assert(tokens.has('pb1461Orders'));assert(tokens.has('pb2015OrderBoard'));assert.equal(props.get('--pb2014OrderTop'),'121px');assert.equal(props.get('--pb2014OrderContentTop'),'165px');assert.equal(railProps.size,0);
+ location.pathname='/photographer/album';tick();assert(tokens.has('pb1464Album'));assert(!tokens.has('pb1461Orders'));
+ win.top={};tick();assert.equal(props.get('--pb2014OrderTop'),'0px');assert.equal(props.get('--pb2014OrderContentTop'),'44px');
+ location.pathname='/photographer/orders/ready';tick();assert(tokens.has('pb1461Orders'));
+ choosing=true;tick();assert(!tokens.has('pb2015OrderBoard'));assert(!props.has('--pb2014OrderTop'));
+ choosing=false;location.pathname='/photographer/album/new';tick();assert(!tokens.has('pb2015OrderBoard'));
+ location.pathname='/photographer/album';composer=true;tick();assert(!tokens.has('pb2015OrderBoard'));
+ composer=false;board=false;tick();assert(!tokens.has('pb2015OrderBoard'));
+ board=true;location.pathname='/photographer/finance';tick();assert(!tokens.has('pb2015OrderBoard'));
+ assert(css.includes('/* R2015: one native third row'));
+ assert(css.includes('#photographer-album-new-order-slot'));
+ assert(css.includes('#photographer-album-status-desktop-slot .albumHeaderStatuses'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('orderThird=r2015'));
+});

@@ -6,20 +6,31 @@
  function sync(){
   scheduled=false;const main=document.querySelector('main.photographerPrintWorkspace');if(!main)return;
   const rail=main.querySelector(':scope>.photographerLabContextRail');
-  const orders=/^\/photographer\/orders(?:\/|$)/.test(location.pathname)&&!!rail?.querySelector('.photographerContextAction.primary');
+  // PB2015: the native list and current route own the third row; action/slot
+  // children may mount a render later. Do not depend on a particular button.
+  const area=main.querySelector(':scope>.photographerRolePageScrollArea');
+  const board=!!area?.querySelector('.ordersWorkspace.liveCustomerOrders');
+  const chooser=new URLSearchParams(location.search).get('pbLabChooser')==='1'||document.body.classList.contains('pbR100F14ChoosingLab')||!!document.querySelector('#pbR99LabChooser');
+  const composer=main.classList.contains('simplePrintPilotWorkspaceMode')||main.classList.contains('photographerAlbumCreateWorkspaceMode');
+  const eligible=!!rail&&board&&!chooser&&!composer;
+  const orders=eligible&&/^\/photographer\/orders(?:\/(?:flow|needs_fix|ready|completed))?\/?$/.test(location.pathname);
+  const album=eligible&&/^\/photographer\/album\/?$/.test(location.pathname);
   main.classList.toggle('pb1461Orders',orders);
-  // R2014: keep the real third-row control visible and reserve its actual height.
-  if(orders){
+  main.classList.toggle('pb1464Album',album);
+  main.classList.toggle('pb2015OrderBoard',orders||album);
+  if(orders||album){
+   // Clear stale mobile-only inline hiding, never rebuild React controls.
+   for(const prop of ['display','visibility','pointer-events'])if(rail.style.getPropertyValue(prop))rail.style.removeProperty(prop);
    const embedded=window.self!==window.top;
    const header=document.getElementById('pb1126DesktopHeader');
-   const edge=embedded?0:Math.max(0,Math.ceil(header?.getBoundingClientRect().bottom||114));
+   const native=document.getElementById('photographerRoleHeaderV710');
+   const headerEdge=header?.getBoundingClientRect().bottom||native?.getBoundingClientRect().bottom||114;
+   const edge=embedded?0:Math.max(0,Math.ceil(headerEdge));
    const top=edge+'px',bottom=(edge+44)+'px';
    if(main.style.getPropertyValue('--pb2014OrderTop')!==top)main.style.setProperty('--pb2014OrderTop',top);
    if(main.style.getPropertyValue('--pb2014OrderContentTop')!==bottom)main.style.setProperty('--pb2014OrderContentTop',bottom);
   }else for(const prop of ['--pb2014OrderTop','--pb2014OrderContentTop'])main.style.removeProperty(prop);
 
-  const album=/^\/photographer\/album\/?$/.test(location.pathname)&&!!rail?.querySelector('#photographer-album-status-desktop-slot');
-  main.classList.toggle('pb1464Album',album);
   for(const grid of main.querySelectorAll('.simplePrintPhotoGrid')){const width=grid.getBoundingClientRect().width;if(width>0){const columns=width>=980?6:width>=720?5:4,next='repeat('+columns+', minmax(0, 1fr))';if(grid.style.getPropertyValue('grid-template-columns')!==next)grid.style.setProperty('grid-template-columns',next,'important')}}
   try{
    if(parent===window||!window.frameElement?.closest('.pb1126ContentPanel[data-panel="print"]:not([hidden])'))return;

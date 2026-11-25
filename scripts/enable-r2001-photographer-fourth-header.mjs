@@ -534,7 +534,7 @@ const pb2035EntryFile='dist/web/photobridge-r100f5-entry-routing.js';
 let pb2035Entry=read(pb2035EntryFile);
 if(!pb2035Entry.includes('/* PB2035 desktop landing owner */')){
  const anchor='  async function route(){';
- pb2035Entry=once(pb2035Entry,anchor,anchor+"\n    /* PB2035 desktop landing owner */ if(window.matchMedia?.('(min-width:821px)')?.matches)return;",'R2035 desktop landing owner');
+ pb2035Entry=once(pb2035Entry,anchor,anchor+"\n    /* PB2035 desktop landing owner */ if(window.matchMedia&&!window.matchMedia('(max-width:820px)').matches)return;",'R2035 desktop landing owner');
  write(pb2035EntryFile,pb2035Entry);
 }
 // Bound chooser calls and keep the last confirmed selection distinct from a
@@ -579,6 +579,24 @@ if(!pb2035Chooser.includes('/* PB2035 bounded lab selection */')){
 }
 for(const p of [pb2035EntryFile,pb2035ChooserFile])execFileSync(process.execPath,['--check',p],{stdio:'inherit'});
 
+// A document opened directly on /photographer/login can complete login in
+// the same React document. Keep its desktop observer installed, but render
+// nothing on the auth screen; reassert desktop ownership on the real route.
+const pb2035NavFile='dist/web/photobridge-r1126-desktop-navigation.js';
+let pb2035Nav=read(pb2035NavFile);
+if(!pb2035Nav.includes('/* PB2035 same-document login */')){
+ const gate="if(!/^\\/photographer(?:\\/|$)/.test(location.pathname)||/^\\/photographer\\/(login|signup|register|invite)(?:\\/|$)/.test(location.pathname)){";
+ const pos=pb2035Nav.indexOf(gate);
+ if(pos<0)throw Error('[R2035] desktop bootstrap route guard');
+ const render=pb2035Nav.indexOf(' function render(){');
+ if(render<pos)throw Error('[R2035] expected bootstrap before renderer');
+ pb2035Nav=pb2035Nav.slice(0,pos)+pb2035Nav.slice(pos).replace(gate,gate.replace('(login|signup|register|invite)','(signup|register|invite)'));
+ const native="const native=nativeHeader(currentDocument()||document)||nativeHeader(document);if(!native)return;";
+ pb2035Nav=once(pb2035Nav,native,native+"document.documentElement.classList.add('pb1126Desktop'); /* PB2035 same-document login */",'R2035 reassert canonical header ownership');
+ write(pb2035NavFile,pb2035Nav);
+}
+execFileSync(process.execPath,['--check',pb2035NavFile],{stdio:'inherit'});
+
 // Install the gate before any deferred legacy renderer or React first paint.
 // Desktop only; the approved mobile animated splash is untouched.
 const pb2035Gate=read('scripts/r2035-photographer-entry.js');
@@ -589,6 +607,6 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  if(p==='dist/web/index.html'&&!h.includes('id="pb2035EntryGate"')){
   h=once(h,'<head>','<head><style id="pb2035EntryStyle">'+pb2035Style+'</style><script id="pb2035EntryGate">'+pb2035Gate+'</script>','R2035 prepaint entry gate');
  }
- h=h.replace(/(photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
+ h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*|photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
  write(p,h);
 }

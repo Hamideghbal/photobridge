@@ -721,22 +721,22 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
 /* R2020: keep the real desktop Print row, center its four split buttons,
    put the selected lab on the physical right and tint only the matching guide. */
 @media(min-width:821px){
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow:not([hidden]){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow:not([hidden]){
   display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
   direction:rtl!important;align-items:center!important;justify-content:stretch!important;gap:8px!important;
   padding-inline:14px!important;box-sizing:border-box!important;overflow:visible!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1459LabContext{
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1459LabContext{
   grid-column:1!important;grid-row:1!important;justify-self:start!important;justify-content:flex-start!important;
   direction:rtl!important;text-align:right!important;position:static!important;inset:auto!important;transform:none!important;
   width:min(100%,260px)!important;max-width:100%!important;min-width:0!important;margin:0!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1127PrintModes{
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1127PrintModes{
   grid-column:2!important;grid-row:1!important;justify-self:center!important;justify-content:center!important;
   position:static!important;inset:auto!important;transform:none!important;margin:0!important;width:max-content!important;
   max-width:calc(100vw - 48px)!important;direction:rtl!important;flex-wrap:nowrap!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>:is(.pb1635SettingsNav,.pb1127PrintUtilities){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>:is(.pb1635SettingsNav,.pb1127PrintUtilities){
   grid-column:3!important;grid-row:1!important;justify-self:end!important;min-width:0!important;max-width:100%!important;
   position:static!important;inset:auto!important;transform:none!important;margin:0!important;overflow-x:auto!important;
   scrollbar-width:none!important;
@@ -1199,5 +1199,22 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
   align-self:stretch!important;min-height:0!important;max-height:100%!important;
   overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;
   scrollbar-width:thin!important;box-sizing:border-box!important;
+ }
+}
+
+/* R2033: finance title never flashes while data loads (render guard also
+   removes it). Payments retain their existing totals and record list. */
+html body #root#root main.photographerMain .financeWorkspace>.sectionTopline.financeTopline{
+ display:none!important;
+}
+/* Keep the four guide hit areas and their active styling; shrink only text
+   and play icon inside each. The shared R2020 grid is used even in settings. */
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton .pb569GuideArrow{
+  flex:0 0 10px!important;width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important;
+  font:800 6px/1 Tahoma,sans-serif!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton .pb569GuideLabel{
+  font:700 8px/1.1 Vazirmatn,Tahoma,sans-serif!important;
  }
 }

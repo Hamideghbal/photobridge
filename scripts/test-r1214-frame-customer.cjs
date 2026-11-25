@@ -253,3 +253,32 @@ test('R2013 mobile order geometry and invoice remain visible with both empty and
   }
  }finally{await browser.close()}
 });
+
+
+test('R2015 desktop photo and album native third row is visible and clickable in the active document',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1280,height:800}});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  const script=fs.readFileSync('dist/web/photobridge-r1461-print-navigation.js','utf8');
+  for(const album of [false,true]){
+   const pathname=album?'/photographer/album':'/photographer/orders/flow';
+   const controls=album?'<div id="photographer-album-new-order-slot"><button id="new-order">ثبت سفارش آلبوم</button></div><div id="photographer-album-status-desktop-slot"><div class="albumHeaderStatuses"><button id="status">در جریان</button></div></div>':'<div class="photographerLabContextActions"><button id="new-order" class="photographerContextAction primary">ثبت سفارش چاپ</button></div><div class="photographerContextStatusesDesktop"><button id="status">در جریان</button></div>';
+   await page.route('https://photobridge.test'+pathname,route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html class="pb1126Desktop"><body><header id="pb1126DesktopHeader" style="position:fixed;top:0;height:114px;width:100%"></header><div id="root"><main class="photographerMain photographerPrintWorkspace"><div class="photographerLabContextRail" style="display:none!important;visibility:hidden!important"><div class="photographerLabContextMain">'+controls+'</div></div><div class="photographerRolePageScrollArea" style="position:fixed;bottom:0;left:0;right:0"><section class="ordersWorkspace liveCustomerOrders"><div class="customerOrderGrid liveOrderGrid"></div></section></div></main></div></body></html>'}));
+   await page.goto('https://photobridge.test'+pathname);
+   await page.addStyleTag({content:css});
+   await page.addScriptTag({content:script});
+   await page.locator('main.pb2015OrderBoard').waitFor();
+   const rail=await page.locator('.photographerLabContextRail').boundingBox();
+   const area=await page.locator('.photographerRolePageScrollArea').boundingBox();
+   assert(rail&&area&&Math.abs(rail.y-114)<=2&&Math.abs(rail.height-44)<=2&&area.y>=rail.y+rail.height-2);
+   for(const id of ['new-order','status']){
+    const button=page.locator('#'+id);
+    await button.evaluate(el=>el.addEventListener('click',()=>el.dataset.clicked='yes'));
+    await button.click();assert.equal(await button.getAttribute('data-clicked'),'yes');
+   }
+   await page.unroute('https://photobridge.test'+pathname);
+  }
+ }finally{await browser.close()}
+});

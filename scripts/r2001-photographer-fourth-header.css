@@ -975,3 +975,168 @@ html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000Cu
  html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today),
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton){transition:none!important}
 }
+
+
+/* R2030: pinned fourth finance header and aligned customer invoice columns. */
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace:has(:is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace))>:is(.sectionTopline,.financeTopline,.financeSummary),
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace:has(:is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace))>.financeNavDock .financeSectionPicker{
+ display:none!important;margin:0!important;padding:0!important;
+}
+/* A single vertical scrollport owns both the header and the records. No
+   intermediate card may clip the sticky bar or create a second scrollport. */
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace:has(:is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)),
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.invoiceTableCard:has(.pb2000CustomerInvoiceToolbar),.customerStatementWorkspace){
+ display:block!important;position:relative!important;overflow:visible!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ width:100%!important;max-width:none!important;min-width:0!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;transform:none!important;background:transparent!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
+ position:sticky!important;top:0!important;inset-block-start:0!important;
+ left:auto!important;right:auto!important;inset-inline:auto!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;
+ min-height:52px!important;height:auto!important;max-height:none!important;
+ padding:7px 14px!important;margin:0 0 8px!important;gap:7px!important;
+ background:#fff!important;border:0!important;border-bottom:1px solid #dce5f0!important;
+ border-radius:0!important;box-shadow:0 5px 12px -9px #52607866!important;
+ z-index:700!important;overflow:visible!important;transform:none!important;
+}
+html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+ position:fixed!important;inset:0!important;top:0!important;bottom:0!important;
+ width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;
+ max-height:none!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
+ overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;
+ transform:none!important;scroll-padding-top:52px!important;
+}
+html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace))>.financeWorkspace{
+ flex:0 0 auto!important;
+}
+@media(min-width:821px){
+ html.pb1126Embedded body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
+  position:sticky!important;top:0!important;inset-block-start:0!important;
+  height:52px!important;min-height:52px!important;max-height:none!important;
+  flex-wrap:nowrap!important;z-index:700!important;
+ }
+}
+@media(max-width:820px){
+ html:not(.pb1126Embedded) body.pbF37UnifiedActive #root#root main.photographerMain .photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+  overflow-y:auto!important;overflow-x:hidden!important;padding-top:0!important;
+ }
+ html:not(.pb1126Embedded) body.pbF37UnifiedActive #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace>.financeNavDock{
+  box-sizing:border-box!important;position:sticky!important;top:0!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+  margin:0!important;padding:4px 0!important;z-index:800!important;
+ }
+ html:not(.pb1126Embedded) body.pbF37UnifiedActive #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
+  position:sticky!important;top:44px!important;inset-block-start:44px!important;
+  flex-wrap:wrap!important;min-height:52px!important;height:auto!important;max-height:none!important;
+  z-index:700!important;padding:6px 8px!important;
+ }
+}
+/* The two date controls use the same field, clear action and button metrics. */
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>label,
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>.statementDateLabel{
+ display:flex!important;align-items:center!important;box-sizing:border-box!important;
+ flex:0 0 142px!important;width:142px!important;min-width:142px!important;
+ max-width:142px!important;height:34px!important;gap:0!important;padding:0!important;margin:0!important;
+ font:700 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
+}
+/* Invoice labels are aria-labelled wrappers; ledger labels also have a text
+   node. Preserve it for accessibility but let the date placeholder label the field. */
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>.statementDateLabel{
+ font-size:0!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .pb2003InvoiceDateLabel,
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) .statementDateControl{
+ position:relative!important;display:flex!important;align-items:center!important;
+ width:100%!important;min-width:0!important;max-width:none!important;flex:1 1 auto!important;
+ gap:0!important;margin:0!important;padding:0!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) .statementDateControl .persianDateField{
+ position:relative!important;flex:1 1 auto!important;width:100%!important;min-width:0!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) .statementDateControl .persianDateTrigger{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ width:100%!important;height:34px!important;min-height:34px!important;
+ box-sizing:border-box!important;margin:0!important;padding:5px 8px!important;
+ background:#fff!important;border:1px solid #cbd9ef!important;border-radius:9px!important;
+ color:#344054!important;-webkit-text-fill-color:#344054!important;
+ font:700 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;box-shadow:none!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) .statementDateControl .dateClearBtn{
+ box-sizing:border-box!important;flex:0 0 22px!important;width:22px!important;
+ min-width:22px!important;height:30px!important;min-height:30px!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:7px!important;
+ background:#f6f9ff!important;color:#344054!important;-webkit-text-fill-color:#344054!important;
+ font:700 10px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>button.primary,
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button.invoiceRangeApply{
+ box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 auto!important;min-width:88px!important;height:34px!important;min-height:34px!important;
+ padding:5px 10px!important;margin:0!important;border-radius:9px!important;
+ font:750 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;white-space:nowrap!important;
+ transition:box-shadow .12s ease-out!important;animation:none!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>button.primary{
+ background:#fff!important;border:1px solid #cbd9ef!important;color:#344054!important;
+ -webkit-text-fill-color:currentColor!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>button.primary:active{
+ background:#315efb!important;border-color:#315efb!important;color:#fff!important;
+ -webkit-text-fill-color:currentColor!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementActions>button{
+ box-sizing:border-box!important;height:34px!important;min-height:34px!important;
+ padding:5px 10px!important;font:750 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;
+ animation:none!important;transition:box-shadow .12s ease-out!important;
+}
+/* Shared grid contract: one header and every document row have eight columns.
+   Horizontal overflow belongs to the table only, never the fourth header. */
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows{
+ --pb2030-columns:96px minmax(132px,1.3fr) 110px 105px 115px minmax(115px,1fr) minmax(125px,1fr) 136px;
+ display:block!important;box-sizing:border-box!important;width:100%!important;
+ min-width:0!important;max-width:100%!important;height:auto!important;max-height:none!important;
+ overflow-x:auto!important;overflow-y:visible!important;margin:0!important;
+ scrollbar-width:thin;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>:is(.pb2030InvoiceColumns,.invoiceRow){
+ display:grid!important;direction:rtl!important;box-sizing:border-box!important;
+ grid-template-columns:var(--pb2030-columns)!important;
+ width:max(100%,1010px)!important;min-width:1010px!important;max-width:none!important;
+ align-items:center!important;gap:8px!important;padding:9px 12px!important;
+ margin:0!important;border:0!important;border-bottom:1px solid #e2e8f0!important;
+ border-radius:0!important;box-shadow:none!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.pb2030InvoiceColumns{
+ background:#edf3fb!important;color:#344054!important;
+ font:800 11px/1.6 Vazirmatn,Tahoma,sans-serif!important;min-height:36px!important;text-align:center!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow{
+ background:#fff!important;min-height:58px!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow:nth-of-type(even){background:#f8faff!important}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>div:not(.invoiceActionStack){
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ width:auto!important;min-width:0!important;text-align:center!important;gap:3px!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>div:not(.invoiceActionStack)>:is(b,small){
+ width:100%!important;max-width:100%!important;text-align:center!important;overflow-wrap:anywhere!important;
+ margin:0!important;line-height:1.5!important;font-variant-numeric:tabular-nums;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>div:not(.invoiceActionStack)>b{font-size:11px!important}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>div:not(.invoiceActionStack)>small{font-size:10px!important}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow .invoiceIssuedInline{display:none!important}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow:not(.discountInvoiceRow):not(.correctionInvoiceRow)>div:nth-child(n+2):nth-child(-n+7)>small{display:none!important}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>.invoiceActionStack{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ flex-wrap:wrap!important;gap:4px!important;min-width:0!important;
+}
+html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>.invoiceRow>.invoiceActionStack button{
+ min-height:30px!important;white-space:nowrap!important;
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) button{transition:none!important}
+}

@@ -633,3 +633,29 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*|photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
  write(p,h);
 }
+
+
+// R2038: the older R1316 native/cloned mode predicates still demanded an
+// album button independently of R2035. All readiness checks must use the
+// same mandatory core; optional controls are rendered only from real sources.
+let pb2038Nav=read(pb2035NavFile);
+if(!pb2038Nav.includes('/* PB2038 optional binding header */')){
+ const old=[
+  'const native=visible.map(el=>el.closest?.("#photographerRoleHeaderV710")).find(Boolean);',
+  '  const capability=native?.querySelector(".photographerPrintModeNav")?.getAttribute("data-pb2035-album-enabled");',
+  '  const required=capability==="0"?pb2018Keys.filter(k=>k!=="class:photographerPrintAlbumTab"):pb2018Keys;',
+  '  return required.every(k=>keys.has(k));'
+ ].join('\n  ');
+ pb2038Nav=once(pb2038Nav,old,'/* PB2038 optional binding header */\n  return pb2018Keys.filter(k=>k!=="class:photographerPrintAlbumTab").every(k=>keys.has(k));','R2038 core destinations independent of optional service metadata');
+ const native="const nativeModes=active==='print'&&!choosing&&visible.some(button=>button.classList.contains('photographerPrintPhotoTab'))&&visible.some(button=>button.classList.contains('photographerPrintAlbumTab'));";
+ const cloned="const clonedModes=!!row.querySelector('.pb1127PrintModes .photographerPrintPhotoTab')&&!!row.querySelector('.pb1127PrintModes .photographerPrintAlbumTab');";
+ pb2038Nav=once(pb2038Nav,native,"const nativeModes=active==='print'&&!choosing&&pb2018Complete(visible);",'R2038 native mode readiness');
+ pb2038Nav=once(pb2038Nav,cloned,"const clonedModes=pb2018Complete([...row.querySelectorAll('.pb1127PrintModes>button[data-pb2017-print-key]')]);",'R2038 cloned mode readiness');
+ write(pb2035NavFile,pb2038Nav);
+}
+execFileSync(process.execPath,['--check',pb2035NavFile],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('optionalBinding=r2038')?url:url+'&optionalBinding=r2038');
+ write(p,h);
+}

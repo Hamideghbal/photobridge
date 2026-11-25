@@ -247,3 +247,32 @@ test('R2012 mobile order board removes legacy spacing and keeps invoice adjacent
   find(async()=>({invoices}),{id:'target',invoice_id:'b'}).then(v=>assert.equal(v.id,'b'))
  ]);
 });
+
+test('R2014 desktop frame query cannot hide the top-level account header and native Orders route is canonical',()=>{
+ const writer=fs.readFileSync('scripts/enable-r2001-photographer-fourth-header.mjs','utf8');
+ const line=writer.split('\n').find(s=>s.startsWith('const pb2014ShellBoot='));
+ assert(line);const boot=JSON.parse(line.slice('const pb2014ShellBoot='.length,-1));
+ function run(href,embedded){
+  let loc=new URL(href);const win={};win.self=win;win.top=embedded?{}:win;
+  win.frameElement=embedded?{closest:()=>true}:null;
+  const history={state:null,replaceState(state,title,url){loc=new URL(url,loc)},pushState(state,title,url){loc=new URL(url,loc)}};
+  const location={get href(){return loc.href},get origin(){return loc.origin},get pathname(){return loc.pathname},get search(){return loc.search},get hash(){return loc.hash}};
+  vm.runInNewContext(boot,{window:win,location,history,URL,matchMedia:()=>({matches:true})});
+  return {get url(){return loc},history};
+ }
+ const root=run('https://photobridge.ir/photographer/orders?pbDesktopContent=1&pbEntryDone=lab',false);
+ assert.equal(root.url.pathname,'/photographer/orders/flow');
+ assert.equal(root.url.searchParams.get('workspace'),'print');
+ assert.equal(root.url.searchParams.has('pbDesktopContent'),false);
+ root.history.pushState(null,'','/photographer/orders/ready?pbDesktopContent=1');
+ assert.equal(root.url.searchParams.has('pbDesktopContent'),false);
+ const frame=run('https://photobridge.ir/photographer/orders/flow?pbDesktopContent=1&workspace=print',true);
+ frame.history.pushState(null,'','/photographer/upload');
+ assert.equal(frame.url.searchParams.get('pbDesktopContent'),'1');
+ assert.equal(frame.url.searchParams.get('workspace'),'print');
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ assert(nav.includes("if(window.self!==window.top&&(query.get('pbDesktopContent')==='1'||embeddedHost))"));
+ assert(nav.includes('const native=selected?(current&&nativeHeader(current)):nativeHeader(document)'));
+ assert(css.includes('--pb2014OrderContentTop'));
+ assert(css.includes('.photographerLabContextActions>button.photographerContextAction.primary'));
+});

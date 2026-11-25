@@ -477,3 +477,70 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
 @media(min-width:821px){
  html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard .customerOrderQuickActions>button.pb2012InvoiceLookup{display:none!important}
 }
+
+/* R2013: authoritative mobile order layout, same geometry for empty and populated lists. */
+@media(max-width:820px){
+ html body #root main.photographerMain.photographerPrintWorkspace:not(.simplePrintPilotWorkspaceMode):not(.photographerAlbumCreateWorkspaceMode)>.photographerRolePageScrollArea:has(.ordersWorkspace.liveCustomerOrders){
+  display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;
+  gap:0!important;overflow:hidden!important;scrollbar-gutter:auto!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea>.photographerAlbumListFlush:has(.ordersWorkspace.liveCustomerOrders),
+ html body #root main.photographerMain.photographerPrintWorkspace .photographerRolePageScrollArea .ordersWorkspace.liveCustomerOrders{
+  display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;
+  flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;
+  gap:0!important;margin:0!important;padding:0!important;overflow:hidden!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders>.photographerMobileOrderLaunch{
+  position:absolute!important;inset:auto!important;width:1px!important;height:1px!important;min-height:0!important;max-height:1px!important;
+  margin:0!important;padding:0!important;flex:0 0 0!important;overflow:hidden!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders>:is(.pb761PhotoStatuses,.pb761AlbumStageStatuses,#pbR1122PrintOrderStatuses){
+  order:-100!important;flex:0 0 34px!important;height:34px!important;min-height:34px!important;max-height:34px!important;
+  position:relative!important;inset:auto!important;transform:none!important;margin:0 0 5px!important;padding:0 8px!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders>.customerOrderGrid.liveOrderGrid{
+  flex:1 1 0!important;min-height:0!important;height:auto!important;align-content:start!important;align-items:start!important;
+  grid-auto-rows:max-content!important;margin:0!important;padding-top:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard[data-order-id]:not(.status-needs_fix):not(.status-cancelled) .customerOrderHead>.orderStatus{
+  display:none!important;visibility:hidden!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard[data-order-id] .customerOrderQuickActions{
+  display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:minmax(0,1fr)!important;gap:6px!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard[data-order-id] .customerOrderQuickActions>button.pb2012OrderInvoice{
+  display:flex!important;visibility:visible!important;opacity:1!important;order:-1!important;pointer-events:auto!important;
+  width:100%!important;min-width:0!important;height:34px!important;min-height:34px!important;
+  align-items:center!important;justify-content:center!important;border:1px solid #c4d2ff!important;border-radius:8px!important;background:#fff!important;color:#315efb!important;font-size:12px!important;
+ }
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard[data-order-id] .customerOrderQuickActions>button.detail{order:-2!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard[data-order-id] .customerOrderQuickActions>button.pb2012OrderPdf{display:none!important}
+}
+
+/* R2014: one real desktop Print third row, in the currently displayed document. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb1461Orders:has(>.photographerRolePageScrollArea .ordersWorkspace.liveCustomerOrders)>.photographerLabContextRail{
+  position:fixed!important;inset:auto 0 auto 0!important;top:var(--pb2014OrderTop,var(--pb1461-toolbar-top,114px))!important;
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  width:100%!important;min-height:44px!important;height:44px!important;max-height:44px!important;
+  margin:0!important;padding:4px 18px!important;background:#fff!important;box-sizing:border-box!important;
+  z-index:420!important;transform:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb1461Orders>.photographerLabContextRail .photographerLabContextActions{
+  position:fixed!important;inset:auto 18px auto auto!important;top:calc(var(--pb2014OrderTop,var(--pb1461-toolbar-top,114px)) + 5px)!important;
+  display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  transform:none!important;z-index:422!important;height:34px!important;margin:0!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb1461Orders>.photographerLabContextRail .photographerLabContextActions>button.photographerContextAction.primary{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  height:34px!important;min-height:34px!important;position:static!important;transform:none!important;white-space:nowrap!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb1461Orders .photographerContextStatusesDesktop{
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:fixed!important;
+  top:var(--pb2014OrderTop,var(--pb1461-toolbar-top,114px))!important;left:18px!important;right:auto!important;transform:none!important;z-index:421!important;height:44px!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb1461Orders:has(>.photographerRolePageScrollArea .ordersWorkspace.liveCustomerOrders)>.photographerRolePageScrollArea{
+  top:var(--pb2014OrderContentTop,158px)!important;inset-block-start:var(--pb2014OrderContentTop,158px)!important;
+  margin-top:0!important;scroll-padding-top:0!important;
+ }
+}

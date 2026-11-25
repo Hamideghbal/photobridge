@@ -231,3 +231,25 @@ test('Windows photographer tools open closable overlays without switching tabs o
  }finally{await browser.close()}
 });
 
+
+test('R2013 mobile order geometry and invoice remain visible with both empty and populated order lists',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:780},isMobile:true,hasTouch:true});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  const card='<div class="card customerOrderCard liveOrderCard status-ready" data-order-id="test"><div class="liveOrderMainRow"><div class="customerOrderHead"><div>سفارش ۲۴۹</div><span class="orderStatus ready">آماده تحویل</span></div><div class="liveTimeline"><div class="current"><b>آماده</b></div></div><div class="customerOrderQuickRail compactOrderActionRail"><div class="customerOrderQuickActions"><button class="pb2012OrderInvoice pb2012InvoiceLookup">فاکتور</button><button class="detail">جزئیات</button></div></div></div></div>';
+  for(const populated of [false,true]){
+   await page.setContent('<meta name="viewport" content="width=device-width,initial-scale=1"><body class="pbF37UnifiedActive pbF37PrintMode pbF37HasTabs"><div id="pbF37Subheader"><div id="pbF37Tabs" class="pb2006PrintTabs"><button>چاپ عکس</button><button>صحافی آلبوم</button><button>مالی</button></div></div><div id="root"><main class="photographerMain photographerPrintWorkspace pbFixedRoleHeader"><div class="photographerRolePageScrollArea rolePageScrollArea" style="position:fixed!important;top:181px!important;bottom:78px!important;padding-top:3px!important"><section class="ordersWorkspace customerOrders liveCustomerOrders"><div class="photographerMobileOrderLaunch"><button>انتخاب عکس</button></div><div class="pb761PhotoStatuses"><button>در جریان</button><button>نیازمند اصلاح</button><button>آماده تحویل</button><button>تحویل شده</button></div><div class="customerOrderGrid liveOrderGrid">'+(populated?card:'<div class="card">سفارشی در این وضعیت نیست.</div>')+'</div></section></div></main></div></body>');
+   await page.addStyleTag({content:css});
+   const rail=await page.locator('.pb761PhotoStatuses').boundingBox(),sc=await page.locator('.photographerRolePageScrollArea').boundingBox();
+   assert(rail&&sc&&rail.y-sc.y>=0&&rail.y-sc.y<=6,'no empty-state gap above filters');
+   if(populated){
+    assert(await page.locator('.pb2012OrderInvoice').isVisible(),'real invoice action visible');
+    assert(!(await page.locator('.customerOrderHead>.orderStatus').isVisible()),'redundant ready badge hidden');
+    const invoice=await page.locator('.pb2012OrderInvoice').boundingBox(),detail=await page.locator('button.detail').boundingBox();
+    assert(Math.abs(invoice.y-detail.y)<=2,'invoice and Details share a row');
+   }
+  }
+ }finally{await browser.close()}
+});

@@ -581,3 +581,48 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   top:var(--pb2014OrderContentTop,158px)!important;inset-block-start:var(--pb2014OrderContentTop,158px)!important;margin-top:0!important;scroll-padding-top:0!important;
  }
 }
+
+/* R2016: desktop Print list and intake use a single stable viewport origin. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016ManagedViewport.pb2016ManagedViewport{
+  --pb1460-toolbar-top:var(--pb2016ChromeEdge,114px)!important;
+  --pb1461-toolbar-top:var(--pb2016ChromeEdge,114px)!important;
+  --pb2016ContentEdge:calc(var(--pb2016ChromeEdge,114px) + 44px);
+ }
+ html.pb1126Embedded body #root main.photographerMain.photographerPrintWorkspace.pb2016ManagedViewport.pb2016ManagedViewport{
+  --pb1460-toolbar-top:var(--pb2016ChromeEdge,0px)!important;
+  --pb1461-toolbar-top:var(--pb2016ChromeEdge,0px)!important;
+  --pb2016ContentEdge:calc(var(--pb2016ChromeEdge,0px) + 44px);
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016ManagedViewport.pb2016ManagedViewport>.photographerRolePageScrollArea.photographerRolePageScrollArea{
+  position:fixed!important;inset:var(--pb2016ContentEdge) 0 0!important;top:var(--pb2016ContentEdge)!important;bottom:0!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding-top:0!important;
+  box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;scroll-padding-top:0!important;overflow-anchor:none!important;
+  animation:none!important;transition:none!important;transform:none!important;scrollbar-gutter:stable!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016OrderList.pb2016OrderList>.photographerLabContextRail{
+  position:fixed!important;inset:var(--pb2016ChromeEdge,114px) 0 auto!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+  width:100%!important;margin:0!important;background:#fff!important;box-sizing:border-box!important;overflow:visible!important;z-index:420!important;transform:none!important;transition:none!important;animation:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016OrderList.pb2016OrderList .ordersWorkspace.liveCustomerOrders{
+  height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-anchor:none!important;transition:none!important;animation:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016OrderList.pb2016OrderList .customerOrderGrid.liveOrderGrid{
+  align-content:start!important;align-items:start!important;grid-auto-rows:max-content!important;overflow-anchor:none!important;transition:none!important;animation:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake>.simplePrintPilotMobileHeaderHost,
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotHeader{
+  position:fixed!important;inset:var(--pb2016ChromeEdge,114px) 0 auto!important;top:var(--pb2016ChromeEdge,114px)!important;
+  width:100%!important;height:44px!important;min-height:44px!important;max-height:44px!important;
+  margin:0!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;overflow:visible!important;
+  background:#fff!important;box-sizing:border-box!important;transform:none!important;transition:none!important;animation:none!important;z-index:422!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake>.simplePrintPilotMobileHeaderHost{display:block!important}
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotHeader,
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotHeaderActions{display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotHeaderActions>button:is(.simplePrintPilotPrimaryAdd,.simplePrintPilotHeaderSubmitMobile,.simplePrintPilotHeaderCancelMobile){display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:static!important;transform:none!important}
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotQuote{
+  top:calc(var(--pb2016ContentEdge) + 8px)!important;max-height:calc(100dvh - var(--pb2016ContentEdge) - 16px)!important;
+ }
+}

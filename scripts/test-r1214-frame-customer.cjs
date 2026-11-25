@@ -282,3 +282,35 @@ test('R2015 desktop photo and album native third row is visible and clickable in
   }
  }finally{await browser.close()}
 });
+
+
+test('R2016 desktop intake buttons are below the real header and order viewport does not jump when cards appear/disappear',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  const script=fs.readFileSync('dist/web/photobridge-r1461-print-navigation.js','utf8');
+  const inset=fs.readFileSync('dist/web/photobridge-r1318-print-insets.js','utf8');
+  for(const pathname of ['/photographer/upload','/photographer/orders/flow','/photographer/album']){
+   const intake=pathname.endsWith('upload');
+   const content=intake?'<div class="simplePrintPilotMobileHeaderHost"><div class="simplePrintPilotHeader"><div class="simplePrintPilotHeaderActions"><button class="simplePrintPilotPrimaryAdd">انتخاب سایز و فایل چاپ</button></div></div></div>':'<div class="photographerLabContextRail"><div class="photographerLabContextMain"><div class="photographerLabContextActions"><button class="photographerContextAction primary">سفارش جدید</button></div></div></div>';
+   const board=intake?'<div class="simplePrintPilot"><div class="simplePrintPilotDesktopGrid"><div class="simplePrintPilotMain">عکس‌ها</div><aside class="simplePrintPilotQuote">ریز قیمت</aside></div></div>':'<section class="ordersWorkspace liveCustomerOrders"><div class="customerOrderGrid liveOrderGrid"></div></section>';
+   const html='<!doctype html><html class="pb1126Desktop"><body class="pbAuthenticatedPhotographerPortal"><header id="pb1126DesktopHeader" style="position:fixed;top:0;height:121px;width:100%"></header><div id="root"><main class="photographerMain photographerPrintWorkspace '+(intake?'simplePrintPilotWorkspaceMode':'')+'">'+content+'<div class="photographerRolePageScrollArea" style="top:0!important;height:100vh!important">'+board+'</div></main></div></body></html>';
+   const url='https://photobridge.test'+pathname;
+   await page.route(url,route=>route.fulfill({contentType:'text/html',body:html}));
+   await page.goto(url);await page.addStyleTag({content:css});await page.addScriptTag({content:script});await page.addScriptTag({content:inset});
+   await page.locator('main.pb2016ManagedViewport').waitFor();
+   const rail=page.locator(intake?'.simplePrintPilotHeader':'.photographerLabContextRail'),area=page.locator('.photographerRolePageScrollArea');
+   const before=await area.boundingBox(),r=await rail.boundingBox();
+   assert(r&&before&&Math.abs(r.y-121)<=2&&Math.abs(before.y-165)<=2,'third row and content use the measured parent edge');
+   if(intake){const add=rail.locator('.simplePrintPilotPrimaryAdd');await add.evaluate(el=>el.onclick=()=>el.dataset.clicked='yes');await add.click();assert.equal(await add.getAttribute('data-clicked'),'yes')}
+   else for(let i=0;i<4;i++){
+    await area.evaluate((el,n)=>{el.querySelector('.customerOrderGrid').innerHTML=n%2?'<div class="customerOrderCard liveOrderCard" style="height:120px">سفارش</div>':''},i);
+    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+    const next=await area.boundingBox();assert(next&&Math.abs(next.y-before.y)<=1&&Math.abs(next.height-before.height)<=1,'list geometry does not change when cards mount');
+   }
+   await page.unroute(url);
+  }
+ }finally{await browser.close()}
+});

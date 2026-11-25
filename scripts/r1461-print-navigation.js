@@ -18,6 +18,26 @@
   main.classList.toggle('pb1461Orders',orders);
   main.classList.toggle('pb1464Album',album);
   main.classList.toggle('pb2015OrderBoard',orders||album);
+  // PB2016: reserve the same row on empty/loading/populated lists. Header
+  // coordinates belong to the visible document, not its changing cards.
+  const listRoute=!chooser&&!composer&&/^\/photographer\/(?:orders(?:\/(?:flow|needs_fix|ready|completed))?|album)\/?$/.test(location.pathname);
+  const intakeRoute=!chooser&&/^\/photographer\/upload\/?$/.test(location.pathname);
+  const managed=listRoute||intakeRoute;
+  main.classList.toggle('pb2016ManagedViewport',managed);
+  main.classList.toggle('pb2016OrderList',listRoute);
+  main.classList.toggle('pb2016PhotoIntake',intakeRoute);
+  if(managed){
+   const embedded=window.self!==window.top;
+   const header=document.getElementById('pb1126DesktopHeader');
+   const native=document.getElementById('photographerRoleHeaderV710');
+   const edge=embedded?0:Math.max(0,Math.ceil(header?.getBoundingClientRect().bottom||native?.getBoundingClientRect().bottom||114));
+   const value=edge+'px';
+   if(main.style.getPropertyValue('--pb2016ChromeEdge')!==value)main.style.setProperty('--pb2016ChromeEdge',value);
+   if(listRoute&&rail)for(const prop of ['display','visibility','pointer-events'])if(rail.style.getPropertyValue(prop))rail.style.removeProperty(prop);
+   // A stale inline inset from the legacy mobile/desktop measurement wins
+   // against stylesheet !important. Remove only the geometry on managed routes.
+   if(area?.style)for(const prop of ['inset','top','bottom','left','right','inset-block-start','inset-block-end','height','max-height','min-height','margin','margin-top','padding-top'])if(area.style.getPropertyValue(prop))area.style.removeProperty(prop);
+  }else main.style.removeProperty('--pb2016ChromeEdge');
   if(orders||album){
    // Clear stale mobile-only inline hiding, never rebuild React controls.
    for(const prop of ['display','visibility','pointer-events'])if(rail.style.getPropertyValue(prop))rail.style.removeProperty(prop);

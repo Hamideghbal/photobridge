@@ -1431,6 +1431,9 @@ await deployStep('./enable-r2000-photographer-finance.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2000-photographer-finance.cjs'],{stdio:'inherit'});
 // R2001: keep photographer invoice controls in a fourth header, with working statement details.
 await deployStep('./enable-r2001-photographer-fourth-header.mjs');
+// R2039: include R2036 mobile composer after the R2038 desktop header patch.
+await deployStep('./enable-r2036-mobile-photo-composer.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2036-mobile-photo-composer.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r2001-photographer-fourth-header.cjs'],{stdio:'inherit'});
 // R1978: direct Liara build must verify the two real video buttons and explicit Print chooser actions.
 runR1314(process.execPath,['--test','scripts/test-r1978-print-video-guides.cjs'],{stdio:'inherit'});

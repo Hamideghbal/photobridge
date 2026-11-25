@@ -624,3 +624,53 @@ test('R2034 all finance tabs reserve the same header edge even before child cont
  assert.match(gap,/\.financeWorkspace\[data-pb2034-finance-tab="payments"\]\{\s*margin-top:0!important;padding-top:8px!important/);
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('allFinanceEdges=r2034'));
 });
+
+
+test('R2035 lab without binding is ready with three actual controls; enabled and unknown binding still require four',()=>{
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
+ assert(a>=0&&b>a);
+ const h=new Function('printControlKey','location',nav.slice(a,b)+'\nreturn pb2018Complete;')(v=>v.key,{pathname:'/photographer/orders/flow'});
+ const keys=['class:photographerPrintPhotoTab','class:photographerPrintAlbumTab','class:finance','class:archive'];
+ const make=(cap,list)=>list.map(key=>({key,closest:()=>({querySelector:()=>({getAttribute:()=>cap})})}));
+ const printOnly=keys.filter(k=>!k.includes('Album'));
+ assert(h(make('0',printOnly)),'print-only laboratory must not wait for an unavailable service');
+ assert(!h(make('0',printOnly.slice(0,2))),'finance/archive are still mandatory');
+ for(const cap of ['1','pending',null]){
+  assert(!h(make(cap,printOnly)));
+  assert(h(make(cap,keys)));
+ }
+ assert(ui.includes('"data-pb2035-album-enabled":D?(p.lab?(p.lab.album_enabled?"1":"0"):"pending"):void 0'));
+ assert(nav.includes('/* PB2035 same-document login */'));
+});
+test('R2035 desktop entry and lab selection are bounded without changing mobile launch',async()=>{
+ const entry=fs.readFileSync('dist/web/photobridge-r100f5-entry-routing.js','utf8');
+ const chooser=fs.readFileSync('dist/web/photobridge-v904r99-lab-chooser.js','utf8');
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const gate=html.match(/<script id="pb2035EntryGate">([\s\S]*?)<\/script>/)?.[1];
+ assert(gate&&html.indexOf('id="pb2035EntryGate"')<html.indexOf('src="/assets/index-UIRefine-v655-r84.js'));
+ assert.doesNotThrow(()=>new vm.Script(gate));
+ assert(entry.includes("/* PB2035 desktop landing owner */ if(window.matchMedia&&!window.matchMedia('(max-width:820px)').matches)return;"));
+ assert(chooser.includes('if(pb2035Selecting)return;pb2035Selecting=true;'));
+ assert(chooser.includes('if(!force&&new URLSearchParams(location.search).get("pbEntryDone")==="lab")'));
+ assert(chooser.includes('pb2035Selecting=false;sel.disabled=false;toast(err.name==='));
+ assert(chooser.includes('epoch!==runEpoch||!isPrintRoute()||pb2035Selecting'));
+ const a=chooser.indexOf('  async function api(path,opt={}){'),b=chooser.indexOf('\n  function style(){',a);
+ assert(a>=0&&b>a);
+ let abort,timerMs,cleared=0,seen;
+ const api=new Function('fetch','AbortController','setTimeout','clearTimeout',chooser.slice(a,b)+'\nreturn api;')(
+  async(path,opt)=>{seen={path,opt};return {ok:true,json:async()=>({ok:true})}},
+  AbortController,(fn,ms)=>{abort=fn;timerMs=ms;return 1},()=>cleared++);
+ assert.deepEqual(await api('/api/customer/labs/x/select',{method:'POST',body:'{}'}),{ok:true});
+ assert.equal(timerMs,12000);assert.equal(cleared,1);assert.equal(seen.opt.method,'POST');assert(!seen.opt.signal.aborted);
+ let trigger;
+ const hung=new Function('fetch','AbortController','setTimeout','clearTimeout',chooser.slice(a,b)+'\nreturn api;')(
+  (_path,opt)=>new Promise((resolve,reject)=>opt.signal.addEventListener('abort',()=>reject(Object.assign(Error('timeout'),{name:'AbortError'})))),
+  AbortController,fn=>{trigger=fn;return 1},()=>cleared++);
+ const request=hung('/api/customer/labs/x/select',{method:'POST'});trigger();
+ await assert.rejects(request,{name:'AbortError'});assert.equal(cleared,2);
+ assert(gate.includes("Date.now()-loaderStart>=12000"));
+ assert(gate.includes("if(++stable>=2){release();return}"));
+ assert(gate.includes("if(!matchMedia('(min-width:821px)').matches"));
+ assert(html.includes('stableEntry=r2035'));
+});

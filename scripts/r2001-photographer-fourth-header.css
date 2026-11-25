@@ -606,7 +606,7 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   width:100%!important;margin:0!important;background:#fff!important;box-sizing:border-box!important;overflow:visible!important;z-index:420!important;transform:none!important;transition:none!important;animation:none!important;
  }
  html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016OrderList.pb2016OrderList .ordersWorkspace.liveCustomerOrders{
-  display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-anchor:none!important;transition:none!important;animation:none!important;
+  height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-anchor:none!important;transition:none!important;animation:none!important;
  }
  html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016OrderList.pb2016OrderList .customerOrderGrid.liveOrderGrid{
   align-content:start!important;align-items:start!important;grid-auto-rows:max-content!important;overflow-anchor:none!important;transition:none!important;animation:none!important;

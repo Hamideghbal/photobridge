@@ -339,7 +339,9 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
    assert.equal(await guides.locator('.pb569GuideArrow').count(),4);
    assert.equal(await guides.locator('.pb569GuideLabel').count(),4);
    const gaps=await page.locator('.pb1127PrintModes').evaluate(nav=>{const buttons=[...nav.querySelectorAll(':scope>button')].map(n=>n.getBoundingClientRect());return buttons.slice(1).map((r,i)=>Math.round(buttons[i].left-r.right))});
-   assert.deepEqual(gaps,[2,10,2,10,2,10,2],'equal group gaps and small within-pair gaps');
+   assert.deepEqual(gaps,[0,10,0,10,0,10,0],'joined pairs and equal group gaps');
+   const edges=await page.locator('.pb1127PrintModes').evaluate(nav=>[...nav.querySelectorAll(':scope>button')].map(b=>{const s=getComputedStyle(b);return [s.borderTopLeftRadius,s.borderTopRightRadius,s.borderRightWidth,s.borderLeftWidth]}));
+   edges.forEach((edge,i)=>assert.deepEqual(edge,i%2===0?['0px','10px','1px','0px']:['10px','0px','1px','1px'],'one internal border and no inner rounding'));
    const looks=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),a=getComputedStyle(n.querySelector('.pb569GuideArrow'));return [s.height,s.backgroundColor,s.color,s.borderRadius,a.width,a.height,a.backgroundColor]}));
    looks.forEach(v=>assert.deepEqual(v,looks[0]));
    for(let i=0;i<4;i++){
@@ -379,6 +381,29 @@ test('R2019 real RTL photo and album order buttons center in third row with nati
     assert(box&&Math.abs(box.x+box.width/2-width/2)<=2,JSON.stringify({width,embedded,mode,box}));
     assert(box.y>=edge&&box.y+box.height<=edge+44,'action is within third row');
     await control.click();assert.equal(await control.getAttribute('data-clicked'),'1');
+   }
+  }
+ }finally{await browser.close()}
+});
+
+
+test('R2023 photographer footer stays below short and long album, finance and archive content',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const css=fs.readFileSync('scripts/r2001-photographer-fourth-header.css','utf8');
+  for(const cls of ['photographerAlbumListFlush','financeWorkspace accountingWorkspace','photographerArchiveWorkspace']){
+   for(const height of [80,900]){
+    await page.setContent('<html><body><div id="root"><main class="photographerMain" style="height:600px;display:flex;flex-direction:column"><div class="photographerRolePageScrollArea" style="overflow:auto"><section class="'+cls+'" style="height:'+height+'px;flex-shrink:0">content</section><footer class="productFooter">Powered by PhotoBridge</footer></div></main></div></body></html>');
+    await page.addStyleTag({content:css});
+    const result=await page.locator('.photographerRolePageScrollArea').evaluate(el=>{
+     const area=el.getBoundingClientRect(),f=el.querySelector('.productFooter').getBoundingClientRect(),c=el.querySelector('section').getBoundingClientRect();
+     return {bottom:area.bottom,footer:f.bottom,top:f.top,content:c.bottom,position:getComputedStyle(el.querySelector('.productFooter')).position};
+    });
+    assert.equal(result.position,'static');
+    assert(result.top>=result.content-1,'footer cannot cover the content');
+    if(height===80)assert(Math.abs(result.bottom-result.footer)<=2,'short content footer sits at bottom');
+    else assert(result.footer>result.bottom,'long content footer remains in scroll flow');
    }
   }
  }finally{await browser.close()}

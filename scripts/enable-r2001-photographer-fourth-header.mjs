@@ -320,3 +320,11 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('queueSkeleton=r2022')?url:url+'&queueSkeleton=r2022');
  write(p,h);
 }
+
+
+// R2023: invalidate the stylesheet only; queue behavior unchanged.
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('joinedGuides=r2023')?url:url+'&joinedGuides=r2023');
+ write(p,h);
+}

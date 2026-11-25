@@ -499,7 +499,12 @@ test('R2028 date clear feedback targets the two specific customer date buttons',
 
 
 test('R2029 desktop finance has only the third-row navigation and readable presets',()=>{
- const patch=css.slice(css.indexOf('/* R2029: one visible desktop finance header'));
+ // R2031: limit the desktop-only assertion to its own revision block.
+ // R2030 intentionally adds independent mobile finance rules after this block.
+ const start=css.indexOf('/* R2029: one visible desktop finance header');
+ const end=css.indexOf('/* R2030: pinned fourth finance header',start);
+ assert(start>=0&&end>start,'R2029 block boundaries');
+ const patch=css.slice(start,end);
  assert(patch.length>1000);
  assert.match(patch,/html\.pb1126Embedded body #root#root main\.photographerMain .*\.financeWorkspace>\.financeNavDock,/);
  assert.match(patch,/\.pb1632FinanceTabs:not\(\[hidden\]\).*\.financeNavDock\{\s*display:none!important;/);

@@ -35,9 +35,9 @@
  function release(){
   pending=false;stable=0;html.classList.remove('pb2035EntryPending');document.getElementById('pb2035EntryOverlay')?.remove();
  }
- function begin(){
+ function begin(keepFeatures=false){
   if(pending)return;
-  pending=true;features=false;stable=0;entryFailed=false;started=Date.now();html.classList.add('pb2035EntryPending');schedule();
+  pending=true;if(!keepFeatures)features=false;stable=0;entryFailed=false;started=Date.now();html.classList.add('pb2035EntryPending');schedule();
  }
  function fail(gate,retry){
   if(!gate||gate.dataset.pb2035Error)return;
@@ -51,6 +51,14 @@
   if(p==='/photographer'||p==='/photographer/login'||!features)return false;
   const header=document.querySelector('#pb1126DesktopHeader');
   if(!visible(header)||!header.querySelector('.pb1126MainNav>button.active'))return false;
+  const panel=document.querySelector('.pb1126ContentPanel:not([hidden])');
+  if(panel){
+   if(panel.querySelector('.pb1126Loading:not([hidden])'))return false;
+   const doc=panel.querySelector('iframe')?.contentDocument;
+   if(!doc?.body)return false;
+   if(panel.dataset.panel==='print')return !!doc.querySelector('#pbR99LabChooser')||(!!doc.querySelector('main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea')&&visible(header.querySelector('.pb1126Secondary')));
+   return !!doc.body.childElementCount;
+  }
   if(printPath(p)){
    if(chooser())return true;
    if(!nativePrint()||!visible(header.querySelector('.pb1126Secondary'))||!header.querySelector('.pb1127PrintModes'))return false;
@@ -73,8 +81,9 @@
  function sync(){
   scheduled=false;clearLegacy();watchPanel();
   if(auth()){
-   authShown=true;release();return;
+   authShown=true;if(pending)release();return;
   }
+  if(authShown){authShown=false;begin(true)}
   if(!pending)return;
   const gate=showGate();
   if(ready()){
@@ -88,7 +97,7 @@
  addEventListener('photobridge-navigation-tabs',()=>{features=true;schedule()});
  addEventListener('photobridge-auth-session-changed',event=>{
   if(event.detail?.labRole==='customer'&&(authShown||auth()||location.pathname==='/photographer')){
-   authShown=false;begin();
+   features=false;if(!auth()){authShown=false;begin()}
   }
   schedule();
  });

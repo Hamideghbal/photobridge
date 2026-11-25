@@ -5,6 +5,9 @@
   position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   background:#f5f7fb;color:#344054;font:700 13px/1.8 Vazirmatn,Tahoma,sans-serif;direction:rtl;
  }
+ /* Before DOMContentLoaded installs the overlay, suppress premature page paint.
+    Opacity rather than visibility preserves measurable layout and auth UI. */
+ html.pb2035EntryPending body:not(:has(#pb2035EntryOverlay,#root .unifiedLoginPage,#root .passwordResetCard)) :is(#root,#pb1126ChromeHost,#pbR99LabChooser,.pb1126ContentPanel){opacity:0!important;pointer-events:none!important}
  #pb2035EntryOverlay{display:none}
  html.pb2035EntryPending body:has(#root .unifiedLoginPage,#root .passwordResetCard) #pb2035EntryOverlay{display:none!important}
  #pb2035EntryOverlay button,.pb1126Loading[data-pb2035-error] button{

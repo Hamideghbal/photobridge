@@ -224,7 +224,7 @@
         tabs.innerHTML=aa.map(a=>{
           const main='<button type="button" class="'+(a.active?'active':'')+'" data-f37-source="'+a.id+'" aria-pressed="'+String(!!a.active)+'">'+esc(a.label)+'</button>';
           if(!a.guide)return main;
-          return '<span class="pb2006MobileSplit">'+main+'<button type="button" class="pb1978VideoGuideButton pb2006MobileGuide" data-pb-guide="'+a.guide+'" aria-label="ویدیوی آموزشی '+esc(a.label)+'" title="راهنما"><span aria-hidden="true">▶</span></button></span>';
+          return '<span class="pb2006MobileSplit">'+main+'<button type="button" class="pb1978VideoGuideButton pb2006MobileGuide" data-pb-guide="'+a.guide+'" aria-label="ویدیوی آموزشی '+esc(a.label)+'" title="راهنما"><span aria-hidden="true">▶</span><small class="pb2011GuideCaption" aria-hidden="true">راهنما</small></button></span>';
         }).join('');
       }
       // State changes never replace buttons or replay entry animation.

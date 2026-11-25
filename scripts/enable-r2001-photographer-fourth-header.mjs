@@ -222,3 +222,30 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-(?:r1461-print-navigation|r1318-print-insets|ui-fixes-v765|v904r100f3[789]-[^"'<> \t\r\n?]+|v904r100f4[01]-[^"'<> \t\r\n?]+)\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableViewport=r2016')?url:url+'&stableViewport=r2016');
  write(p,h);
 }
+
+// R2017: keep native Print actions and guide nodes mounted across tab switches.
+const pb2017NavFile='dist/web/photobridge-r1126-desktop-navigation.js';
+let pb2017Nav=read(pb2017NavFile);
+if(!pb2017Nav.includes('/* PB2017 stable Print secondary row */')){
+ const patch=(a,b,label)=>{pb2017Nav=once(pb2017Nav,a,b,'R2017 '+label)};
+ patch(' function cleanClone(original){'," /* PB2017 stable Print secondary row */\n function pb2017SyncPrintControls(row,visible){\n  const copies=[...row.querySelectorAll('[data-pb2017-print-key]')];\n  for(const original of visible){\n   const copy=copies.find(button=>button.dataset.pb2017PrintKey===printControlKey(original));\n   if(!copy)continue;\n   for(const name of ['active','selected']){\n    const next=original.classList.contains(name);\n    if(copy.classList.contains(name)!==next)copy.classList.toggle(name,next);\n   }\n   for(const name of ['aria-current','aria-selected','aria-pressed']){\n    const next=original.getAttribute(name);\n    if(next===null){if(copy.hasAttribute(name))copy.removeAttribute(name);}\n    else if(copy.getAttribute(name)!==next)copy.setAttribute(name,next);\n   }\n   if(copy.disabled!==original.disabled)copy.disabled=original.disabled;\n   if(copy.classList.contains('photographerPrintPhotoTab')||copy.classList.contains('photographerPrintAlbumTab')){\n    const selected=original.classList.contains('active')||original.classList.contains('selected')||original.getAttribute('aria-selected')==='true'||original.getAttribute('aria-pressed')==='true';\n    if(copy.dataset.pb1989Active!==String(selected))copy.dataset.pb1989Active=String(selected);\n   }\n  }\n }\n"+' function cleanClone(original){','state sync helper');
+
+ patch("return [key,label,button.disabled,button.classList.contains('active'),button.getAttribute('aria-current')];","return [key,label];",'structural signature only');
+ patch("  const choosing=active==='store'?","  const pb2017Retain=active==='print'&&row.dataset.pb2017Ready==='1';\n  const choosing=active==='store'?",'previous ready row');
+ patch("(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print')","(!doc?.querySelector('.photographerPrintModeNav')&&selected==='print'&&!pb2017Retain)",'transient native absence is not chooser');
+ patch("  row.hidden=choosing;","  if(active!=='print'||choosing)delete row.dataset.pb2017Ready;\n  if(row.hidden!==choosing)row.hidden=choosing;",'real chooser still hides');
+ patch("  const headerControls=frameStore?frameStoreControls:cameraStore?cameraStoreControls:[];","  const headerControls=frameStore?frameStoreControls:cameraStore?cameraStoreControls:[];\n  if(pb2017Retain&&!choosing&&(!visible.some(el=>el.classList.contains('photographerPrintPhotoTab'))||!visible.some(el=>el.classList.contains('photographerPrintAlbumTab'))))return;",'retain complete row while source remounts');
+ patch("const printKey=active==='print'?printControlKey(original):null;","const printKey=active==='print'?printControlKey(original):null;if(printKey)copy.dataset.pb2017PrintKey=printKey;",'stable proxy identity');
+ patch("  const printPanel=panels.get('print');\n  const loading=printPanel?.querySelector('.pb1126Loading');","  if(active==='print'&&!choosing)pb2017SyncPrintControls(row,visible);\n  const printPanel=panels.get('print');\n  const loading=printPanel?.querySelector('.pb1126Loading');",'update state without replacing DOM');
+ patch("const waiting=active==='print'&&!choosing&&(!nativeModes||!clonedModes||!loading?.hidden||document.documentElement.classList.contains('pb1315PanelChanging'));","const waiting=active==='print'&&!choosing&&!pb2017Retain&&(!nativeModes||!clonedModes||(loading&&!loading.hidden)||document.documentElement.classList.contains('pb1315PanelChanging'));\n  if(active==='print'&&!choosing&&!waiting&&clonedModes)row.dataset.pb2017Ready='1';",'initial readiness only');
+ patch("  row.hidden=choosing||waiting;","  if(row.hidden!==(choosing||waiting))row.hidden=choosing||waiting;",'idempotent visibility');
+ patch("   document.documentElement.classList.toggle('pb1315PanelChanging',transitioning);\n   const row=chrome?.querySelector('.pb1126Secondary');\n   if(row&&transitioning)row.hidden=true;","   const row=chrome?.querySelector('.pb1126Secondary');\n   const keep=!!row&&row.dataset.pb2017Ready==='1'&&!choosing&&!boot;\n   document.documentElement.classList.toggle('pb1315PanelChanging',transitioning&&!keep);\n   if(row&&transitioning&&!keep)row.hidden=true;",'keep header during content transition');
+ patch("     document.documentElement.classList.add('pb1315PanelChanging');\n     const row=chrome?.querySelector('.pb1126Secondary');if(row)row.hidden=true;","     const row=chrome?.querySelector('.pb1126Secondary');\n     if(row?.dataset.pb2017Ready!=='1'){document.documentElement.classList.add('pb1315PanelChanging');if(row)row.hidden=true;}",'preserve row across iframe load');
+ write(pb2017NavFile,pb2017Nav);
+}
+execFileSync(process.execPath,['--check',pb2017NavFile],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-(?:r1126-desktop-navigation\.js|r2001-photographer-fourth-header\.css)\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableSecondary=r2017')?url:url+'&stableSecondary=r2017');
+ write(p,h);
+}

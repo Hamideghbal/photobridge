@@ -377,3 +377,24 @@ test('R2018 all four print destinations are required and share route-driven sele
  assert(patch.includes('background:var(--pb1989-blue,#3b82f6)!important'));assert(patch.includes('background:#fff!important;color:#1b2e48!important'));assert(patch.includes('.pb569GuideArrow'));assert(patch.includes('.pb569GuideLabel'));assert(patch.includes('.pb1127PrintRow[hidden]'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('fourTabs=r2018'));
 });
+
+
+test('R2020 desktop lab right, primary group centered, selected guide follows its own tab, and finance third row centered',()=>{
+ const patch=css.slice(css.indexOf('/* R2020:'));
+ assert(patch.includes('grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important'));
+ assert.match(patch,/\.pb1459LabContext\{\s*grid-column:1!important/);
+ assert.match(patch,/\.pb1127PrintModes\{\s*grid-column:2!important/);
+ assert(patch.includes('+button.pb1978VideoGuideButton'));
+ assert(patch.includes('background:#2563eb!important'));
+ assert.match(patch,/\.pb1632FinanceTabs:not\(\[hidden\]\)\{\s*justify-content:center!important/);
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const bundle=html.match(/<link\b[^>]*href=["']\/assets\/(photobridge-boot-[a-f0-9]{16}\.css)["'][^>]*>/i);
+ if(bundle){
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  assert.equal(manifest.boot,bundle[1]);
+  assert(manifest.sources.some(u=>u.startsWith('/photobridge-r2001-photographer-fourth-header.css?')&&u.includes('centerHeader=r2020')));
+  assert(fs.readFileSync('dist/web/assets/'+bundle[1],'utf8').includes(patch.trim()));
+ }else{
+  assert(/<link\b[^>]*href=["']\/photobridge-r2001-photographer-fourth-header\.css\?[^"']*centerHeader=r2020[^"']*["']/i.test(html));
+ }
+});

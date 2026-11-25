@@ -1043,11 +1043,7 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
  max-width:142px!important;height:34px!important;gap:0!important;padding:0!important;margin:0!important;
  font:700 11px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#344054!important;
 }
-/* Invoice labels are aria-labelled wrappers; ledger labels also have a text
-   node. Preserve it for accessibility but let the date placeholder label the field. */
-html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters>.statementDateLabel{
- font-size:0!important;
-}
+/* Both range labels are already aria-labelled by R1421/R1423. */
 html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .pb2003InvoiceDateLabel,
 html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) .statementDateControl{
  position:relative!important;display:flex!important;align-items:center!important;
@@ -1105,7 +1101,7 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
 html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .invoiceTableCard .accountingInvoiceRows>:is(.pb2030InvoiceColumns,.invoiceRow){
  display:grid!important;direction:rtl!important;box-sizing:border-box!important;
  grid-template-columns:var(--pb2030-columns)!important;
- width:max(100%,1010px)!important;min-width:1010px!important;max-width:none!important;
+ width:max(100%,1040px)!important;min-width:1040px!important;max-width:none!important;
  align-items:center!important;gap:8px!important;padding:9px 12px!important;
  margin:0!important;border:0!important;border-bottom:1px solid #e2e8f0!important;
  border-radius:0!important;box-shadow:none!important;
@@ -1139,4 +1135,11 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
 }
 @media(prefers-reduced-motion:reduce){
  html body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar) button{transition:none!important}
+}
+
+@media(min-width:821px) and (max-width:1160px){
+ html.pb1126Embedded body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
+  flex-wrap:wrap!important;height:auto!important;min-height:52px!important;max-height:none!important;
+ }
+ html.pb1126Embedded body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters{flex-wrap:wrap!important}
 }

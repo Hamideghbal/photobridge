@@ -194,3 +194,31 @@ if(!pb2014Nav.includes('/* PB2014 actual desktop frame */')){
 execFileSync(process.execPath,['--check',pb2014NavFile],{stdio:'inherit'});
 
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');
+
+
+// R2016: the legacy measured inset must not compete with the route-owned
+// Print/Album viewport. Preserve it for finance/archive and other old routes.
+const pb2016InsetFile='dist/web/photobridge-r1318-print-insets.js';
+let pb2016Inset=read(pb2016InsetFile);
+if(!pb2016Inset.includes('/* PB2016 stable print viewport */')){
+ const anchor="if(area){const top=getComputedStyle(area).position==='fixed'?window.pb1318PrintInset():0;";
+ pb2016Inset=once(pb2016Inset,anchor,"if(area&&!/^\\/photographer\\/(?:orders(?:\\/(?:flow|needs_fix|ready|completed))?|album|upload)\\/?$/.test(location.pathname)){const top=getComputedStyle(area).position==='fixed'?window.pb1318PrintInset():0;",'R2016 stop competing legacy inset');
+ pb2016Inset+='\n/* PB2016 stable print viewport */\n';write(pb2016InsetFile,pb2016Inset);
+}
+execFileSync(process.execPath,['--check',pb2016InsetFile],{stdio:'inherit'});
+// These old mobile-only geometry helpers also run cleanup on desktop.
+// Do not let them clear the active desktop viewport on every DOM mutation.
+for(const name of ['photobridge-ui-fixes-v765.js','photobridge-v904r100f37-store-header-core.js','photobridge-v904r100f38-header-route-isolation.js','photobridge-v904r100f39-print-actions-cleanup.js','photobridge-v904r100f40-mobile-polish.js','photobridge-v904r100f41-header-date-name-fit.js']){
+ const p='dist/web/'+name;if(!fs.existsSync(p))continue;
+ let js=read(p);
+ for(const signature of ['function syncGeometry(w){','function resetScrollGeometry(w){','function fixPrint(){','function clearPrint(){']){
+  if(!js.includes(signature)||js.includes(signature+'/* PB2016 desktop owner */'))continue;
+  js=once(js,signature,signature+"/* PB2016 desktop owner */if(matchMedia('(min-width:821px)').matches&&document.documentElement.classList.contains('pb1126Desktop'))return;",'R2016 mobile-only geometry '+name);
+ }
+ write(p,js);execFileSync(process.execPath,['--check',p],{stdio:'inherit'});
+}
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-(?:r1461-print-navigation|r1318-print-insets|ui-fixes-v765|v904r100f3[789]-[^"'<> \t\r\n?]+|v904r100f4[01]-[^"'<> \t\r\n?]+)\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableViewport=r2016')?url:url+'&stableViewport=r2016');
+ write(p,h);
+}

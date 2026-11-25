@@ -1143,3 +1143,61 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
  }
  html.pb1126Embedded body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace .customerStatementWorkspace>.statementToolbar>.statementFilters{flex-wrap:wrap!important}
 }
+
+
+/* R2032: the root finance scrollport begins BELOW the measured third row.
+   The embedded viewport is already below that row, so its local origin is 0. */
+@media(min-width:821px){
+ html.pb1126Desktop:not(.pb1126Embedded):not(.pb1635SettingsOpen) body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+  position:fixed!important;inset:var(--pb2032-finance-edge,156px) 0 0!important;
+  top:var(--pb2032-finance-edge,156px)!important;bottom:0!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  width:100%!important;max-width:none!important;margin:0!important;padding:0!important;
+  box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;
+  transform:none!important;scroll-padding-top:52px!important;
+ }
+ html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+  inset:0!important;top:0!important;bottom:0!important;padding:0!important;
+ }
+ html:is(.pb1126Desktop,.pb1126Embedded) body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
+  position:sticky!important;top:0!important;inset-block-start:0!important;
+  width:100%!important;max-width:100%!important;min-height:52px!important;
+  margin:0 0 8px!important;padding:7px 14px!important;
+  background:#fff!important;box-sizing:border-box!important;z-index:700!important;
+ }
+ /* Both print and binding lists start at the same 8px gap below their
+    existing third row. The shared grid also covers empty/loading content. */
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard>.photographerRolePageScrollArea{
+  padding-top:8px!important;box-sizing:border-box!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard .liveCustomerOrders,
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard .photographerAlbumListFlush,
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard .liveCustomerOrders .liveOrderGrid{
+  margin-top:0!important;padding-top:0!important;align-content:start!important;
+ }
+}
+/* Archive: at two-column desktop widths, only the white day-results card
+   is a vertical scroll owner. Keep the calendar at its original right side
+   and retain the responsive stacked page on narrow screens. */
+@media(min-width:1100px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body #root#root main.photographerMain>.photographerRolePageScrollArea:has(>.photographerArchiveWorkspace){
+  display:flex!important;flex-direction:column!important;min-height:0!important;
+  overflow:hidden!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body #root#root main.photographerMain>.photographerRolePageScrollArea>.photographerArchiveWorkspace{
+  display:flex!important;flex-direction:column!important;flex:1 1 0!important;
+  height:auto!important;min-height:0!important;overflow:hidden!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body #root#root .photographerArchiveWorkspace .archiveLayout{
+  flex:1 1 0!important;min-height:0!important;max-height:100%!important;
+  overflow:hidden!important;align-items:start!important;direction:rtl!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body #root#root .photographerArchiveWorkspace .archiveLayout>.persianCalendarCard{
+  align-self:start!important;max-height:none!important;overflow:visible!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body #root#root .photographerArchiveWorkspace .archiveLayout>.archiveDayCard{
+  align-self:stretch!important;min-height:0!important;max-height:100%!important;
+  overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;
+  scrollbar-width:thin!important;box-sizing:border-box!important;
+ }
+}

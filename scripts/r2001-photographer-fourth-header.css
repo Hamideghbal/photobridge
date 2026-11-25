@@ -756,3 +756,33 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   padding-inline:14px!important;box-sizing:border-box!important;
  }
 }
+
+/* R2021: narrow vertical video guide, matching active tab color. */
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton{
+ box-sizing:border-box!important;display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 40px!important;width:40px!important;min-width:40px!important;max-width:40px!important;
+ height:32px!important;min-height:32px!important;max-height:32px!important;padding:2px 3px!important;gap:1px!important;overflow:hidden!important;
+ margin:0!important;margin-inline-end:7px!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton .pb569GuideArrow{
+ display:inline-grid!important;place-items:center!important;flex:0 0 12px!important;width:12px!important;height:12px!important;min-width:12px!important;min-height:12px!important;
+ margin:0!important;padding:0!important;font:800 7px/1 Tahoma,sans-serif!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton .pb569GuideLabel{
+ display:block!important;flex:0 0 auto!important;margin:0!important;padding:0!important;white-space:nowrap!important;font:700 9px/1.1 Vazirmatn,Tahoma,sans-serif!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton{
+ background:var(--pb1989-blue,#3b82f6)!important;border-color:var(--pb1989-blue,#3b82f6)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton .pb569GuideLabel{color:#fff!important;-webkit-text-fill-color:#fff!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton .pb569GuideArrow{background:#fff!important;border-color:#fff!important;color:var(--pb1989-blue,#3b82f6)!important;-webkit-text-fill-color:var(--pb1989-blue,#3b82f6)!important}
+}
+
+/* R2021 approved split capsule: no gap within a pair; a fine divider only. */
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo{gap:0!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton{border-inline-start:1px solid #cdd9ec!important;font-style:normal!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton::before,html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton::after{display:none!important;content:none!important}
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton{border-inline-start-color:rgba(255,255,255,.4)!important}
+}

@@ -344,6 +344,9 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
     await buttons.evaluateAll((nodes,n)=>nodes.forEach((el,index)=>el.classList.toggle('active',n===index)),i);
     const color=await buttons.nth(i).evaluate(n=>{const s=getComputedStyle(n);return [s.backgroundColor,s.color]});
     assert.deepEqual(color,['rgb(59, 130, 246)','rgb(255, 255, 255)']);
+    const styles=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),a=n.querySelector('.pb569GuideArrow').getBoundingClientRect(),b=n.querySelector('.pb569GuideLabel').getBoundingClientRect();return {bg:s.backgroundColor,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height,direction:s.flexDirection,stacked:a.bottom<=b.top+1}}));
+    styles.forEach((s,n)=>{assert.equal(s.bg,n===i?color[0]:'rgb(238, 244, 255)');assert.equal(s.width,40);assert.equal(s.height,32);assert.equal(s.direction,'column');assert(s.stacked,'Play icon above guide label')});
+
    }
    const action=page.locator(album?'#photographer-album-new-order-slot':'.photographerLabContextActions');
    const box=await action.boundingBox();assert(box&&Math.abs(box.x+box.width/2-720)<=2,'new order is centered in the viewport');

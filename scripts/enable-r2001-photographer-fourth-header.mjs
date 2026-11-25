@@ -367,3 +367,38 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('statusContrast=r2025')?url:url+'&statusContrast=r2025');
  write(p,h);
 }
+
+
+// R2026: customer invoice presets represent the applied dates, with immediate
+// validation and a result message. The laboratory's filter behavior is unchanged.
+let pb2026UI=read(file);
+if(!pb2026UI.includes('/* PB2026 customer invoice filter feedback */')){
+ const start=pb2026UI.indexOf('function ub({role:t,'),end=pb2026UI.indexOf('}function hb(',start);
+ if(start<0||end<start)throw Error('R2026 finance component missing');
+ let part=pb2026UI.slice(start,end+1);
+ const patch=(a,b,label)=>{part=once(part,a,b,'R2026 '+label)};
+ const state='[_pbAccountingMark,_setPbAccountingMark]=x.useState(null)';
+ patch(state,state+',[_pb2026Mode,_setPb2026Mode]=x.useState("all"),[_pb2026Notice,_setPb2026Notice]=x.useState(null)','customer filter state');
+ const applied='const Ve=r.filter(';
+ const helper='const pb2026Notify=(kind,message="")=>_setPb2026Notice(old=>({kind,message,serial:(old?.serial||0)+1})),pb2026ApplyRange=()=>{if(t!=="lab"){if(!_pbInvFrom||!_pbInvTo){pb2026Notify("error","لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.");return}if(_pbInvFrom>_pbInvTo){pb2026Notify("error","تاریخ شروع نباید بعد از تاریخ پایان باشد.");return}_setPb2026Mode("range");pb2026Notify("range")}_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)};const Ve=r.filter(';
+ patch(applied,helper,'validate requested date range');
+ const today='_pbInvAppliedFrom===$s(new Date())&&_pbInvAppliedTo===$s(new Date())';
+ patch('className:"pb1176Today "+('+today+'?"active":"")','className:"pb1176Today "+(('+today+'&&(t==="lab"||_pb2026Mode!=="range"))?"active":""),"aria-pressed":'+today+'&&(t==="lab"||_pb2026Mode!=="range")','today selection');
+ patch('className:"invoiceRangeApply",onClick:()=>{_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)}','className:"invoiceRangeApply"+(t!=="lab"&&!!(_pbInvAppliedFrom||_pbInvAppliedTo)&&(_pb2026Mode==="range"||!('+today+'))?" active":""),"aria-pressed":t!=="lab"&&!!(_pbInvAppliedFrom||_pbInvAppliedTo)&&(_pb2026Mode==="range"||!('+today+')),onClick:pb2026ApplyRange','range selected state');
+ patch('className:"invoiceRangeAll",onClick:','className:"invoiceRangeAll"+(t!=="lab"&&!_pbInvAppliedFrom&&!_pbInvAppliedTo?" active":""),"aria-pressed":t!=="lab"&&!_pbInvAppliedFrom&&!_pbInvAppliedTo,onClick:','all selected state');
+ patch('if(t!=="lab")c("");_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1)','if(t!=="lab")c("");_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1);if(t!=="lab"){_setPb2026Mode("today");pb2026Notify("today")}','today notice');
+ patch('t!=="lab"&&c(""),_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1)','t!=="lab"&&c(""),_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1),t!=="lab"&&(_setPb2026Mode("all"),pb2026Notify("all"))','all notice');
+ for(const key of ['From','To'])patch('_setPbInvApplied'+key+'("");Ie(1)','_setPbInvApplied'+key+'("");Ie(1);_setPb2026Notice(null);_setPb2026Mode("all")','clear '+key+' feedback');
+ const feedback='t==="customer"&&_pb2026Notice&&e.jsx("div",{className:"pb2026InvoiceFeedback",role:_pb2026Notice.kind==="error"?"alert":"status","aria-live":"polite","data-kind":_pb2026Notice.kind,children:_pb2026Notice.kind==="error"?_pb2026Notice.message:m?"در حال دریافت فاکتورها…":_pb2026Notice.kind==="range"?(Ve.length?V(Ve.length)+" سند مالی در بازه انتخابی یافت شد.":"در بازه انتخابی فاکتور یا سند مالی یافت نشد."):_pb2026Notice.kind==="today"?(Ve.length?V(Ve.length)+" سند مالی امروز یافت شد.":"امروز فاکتور یا سند مالی یافت نشد."):(Ve.length?V(Ve.length)+" سند مالی نمایش داده شد.":"فاکتور یا سند مالی یافت نشد.")},_pb2026Notice.serial)';
+ patch('Ve.length?e.jsxs(e.Fragment,{children:[','Ve.length?e.jsxs(e.Fragment,{children:['+feedback+',','notice above results');
+ const empty='e.jsx(zn,{text:"هنوز فاکتور یا سند مالی صادر نشده است."})';
+ patch(empty,'(t==="lab"?'+empty+':e.jsxs(e.Fragment,{children:['+feedback+',e.jsx(zn,{text:(_pbInvAppliedFrom||_pbInvAppliedTo)?"در بازه انتخابی فاکتور یا سند مالی وجود ندارد.":l?"فاکتور یا سند مالی مطابق جستجو یافت نشد.":"هنوز فاکتور یا سند مالی صادر نشده است."})]}))','notice and accurate empty state');
+ pb2026UI=pb2026UI.slice(0,start)+part+pb2026UI.slice(end+1)+'\n/* PB2026 customer invoice filter feedback */\n';
+ write(file,pb2026UI);
+}
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('invoiceFeedback=r2026')?url:url+'&invoiceFeedback=r2026');
+ write(p,h);
+}

@@ -717,3 +717,42 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   margin-inline:0!important;flex:0 0 auto!important;
  }
 }
+
+/* R2020: keep the real desktop Print row, center its four split buttons,
+   put the selected lab on the physical right and tint only the matching guide. */
+@media(min-width:821px){
+ html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow:not([hidden]){
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+  direction:rtl!important;align-items:center!important;justify-content:stretch!important;gap:8px!important;
+  padding-inline:14px!important;box-sizing:border-box!important;overflow:visible!important;
+ }
+ html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1459LabContext{
+  grid-column:1!important;grid-row:1!important;justify-self:start!important;justify-content:flex-start!important;
+  direction:rtl!important;text-align:right!important;position:static!important;inset:auto!important;transform:none!important;
+  width:min(100%,260px)!important;max-width:100%!important;min-width:0!important;margin:0!important;
+ }
+ html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1127PrintModes{
+  grid-column:2!important;grid-row:1!important;justify-self:center!important;justify-content:center!important;
+  position:static!important;inset:auto!important;transform:none!important;margin:0!important;width:max-content!important;
+  max-width:calc(100vw - 48px)!important;direction:rtl!important;flex-wrap:nowrap!important;
+ }
+ html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>:is(.pb1635SettingsNav,.pb1127PrintUtilities){
+  grid-column:3!important;grid-row:1!important;justify-self:end!important;min-width:0!important;max-width:100%!important;
+  position:static!important;inset:auto!important;transform:none!important;margin:0!important;overflow-x:auto!important;
+  scrollbar-width:none!important;
+ }
+ /* Same adjacency as R2018; never recreate controls or intercept video clicks. */
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton{
+  background:#2563eb!important;border-color:#2563eb!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton .pb569GuideLabel{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton .pb569GuideArrow{
+  background:#fff!important;border-color:#fff!important;color:#2563eb!important;-webkit-text-fill-color:#2563eb!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1632FinanceTabs:not([hidden]){
+  justify-content:center!important;align-items:center!important;grid-column:1/-1!important;
+  padding-inline:14px!important;box-sizing:border-box!important;
+ }
+}

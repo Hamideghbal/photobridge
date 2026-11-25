@@ -425,3 +425,38 @@ test('R2022 queue skeleton is tied to first-load or retry, never fake order IDs'
  assert(css.includes('@keyframes pb2022QueueShimmer'));
  assert(css.includes('@media(prefers-reduced-motion:reduce)'));
 });
+
+
+test('R2024 chooser to new lab releases second header with four real controls, even if old boot is still set',()=>{
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(nav));
+ const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
+ const c=nav.indexOf(' function pb1315Sync(panel,notify=true){'),d=nav.indexOf(' function pb1315Watch(panel){',c);
+ assert(a>=0&&b>a&&c>=0&&d>c);
+ const cls=(...initial)=>{const set=new Set(initial);return {contains:k=>set.has(k),toggle:(k,on)=>on?set.add(k):set.delete(k),remove:k=>set.delete(k)}};
+ const keys=['class:photographerPrintPhotoTab','class:photographerPrintAlbumTab','class:finance','class:archive'];
+ const controls=keys.map(key=>({key,hidden:false,getAttribute:()=>null,classList:cls()}));
+ const makeDoc=({search='',boot=false,chooser=false,ready=true,path='/photographer/orders/flow',count=4}={})=>{
+  const doc={body:{classList:chooser?cls('pbR100F14ChoosingLab'):cls()},documentElement:{classList:boot?cls('pbR100F37LabEnterBoot'):cls()},defaultView:{location:{pathname:path,search},getComputedStyle:()=>({display:'block'})}};
+  doc.querySelector=q=>q==='#pbR99LabChooser'?(chooser?{hidden:false}:null):q==='#photographerRoleHeaderV710'?(ready?{querySelectorAll:()=>controls.slice(0,count)}:null):q.includes('photographerRolePageScrollArea')?(ready?{children:[]}:null):q==='.photographerPrintModeNav'?(ready?{}:null):null;
+  return doc;
+ };
+ const parent={documentElement:{classList:cls('pb1315PanelChanging')}},row={hidden:true,dataset:{}},loader={hidden:false};
+ let doc=makeDoc({chooser:true,search:'?pbLabChooser=1'}),scheduled=0;
+ const panel={isConnected:true,hidden:false,dataset:{panel:'print'},querySelector:q=>q==='iframe'?{contentDocument:doc}:loader};
+ const h=new Function('printControlKey','location','document','selected','chrome','schedule',nav.slice(a,b)+'\n'+nav.slice(c,d)+'\nreturn {pb2024ChoosingLab,pb2024PrintReady,pb1315Sync};')(v=>v.key,{pathname:'/photographer/archive'},parent,'print',{querySelector:()=>row},()=>scheduled++);
+ assert(h.pb2024ChoosingLab(doc));assert(!h.pb2024PrintReady(doc));h.pb1315Sync(panel,false);
+ doc=makeDoc({ready:false,boot:true});h.pb1315Sync(panel,false);
+ assert(parent.documentElement.classList.contains('pb1315PanelChanging'));assert(!loader.hidden);
+ doc=makeDoc({boot:true,count:2});assert(!h.pb2024PrintReady(doc));h.pb1315Sync(panel,false);assert(!loader.hidden);
+ // The new document is ready before its orders are fetched and before legacy boot cleanup.
+ doc=makeDoc({boot:true});assert(h.pb2024PrintReady(doc));h.pb1315Sync(panel,false);
+ assert(loader.hidden);assert(!parent.documentElement.classList.contains('pb1315PanelChanging'));assert.equal(scheduled,0);
+ h.pb1315Sync(panel);assert.equal(scheduled,1);
+ for(const path of ['/photographer/album','/photographer/finance','/photographer/archive'])assert(h.pb2024PrintReady(makeDoc({path})));
+ assert(!h.pb2024PrintReady(makeDoc({path:'/photographer/gallery'})));
+ assert(!h.pb2024PrintReady(makeDoc({search:'?pbLabChooser=1',boot:true})));
+ assert(nav.includes("row._pb2024Document!==doc"));
+ assert(nav.includes("pb1315Sync(panels.get('print'),false)"));
+ assert(nav.includes("!pb2024PrintReady(doc)||!pb2018Complete(visible)"));
+});

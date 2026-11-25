@@ -10,9 +10,13 @@ const landing=read('dist/web/photobridge-r1099-photographer-tabs.js');
 
 function extractChooserPredicate(){
  const start=chooser.indexOf('const isPrintRoute=()=>');
- const end=chooser.indexOf(';\n  async function api(',start);
+ // R2036: the predicate is a single-line declaration. R2035 adds a
+ // separate selection-state declaration before api(); never include it.
+ const end=chooser.indexOf('\n',start);
  assert(start>=0&&end>start,'exact Print/Lab route predicate exists');
- return chooser.slice(start+'const isPrintRoute='.length,end);
+ const declaration=chooser.slice(start+'const isPrintRoute='.length,end).trimEnd();
+ assert(declaration.endsWith('};'),'predicate declaration has its own terminator');
+ return declaration.slice(0,-1);
 }
 function extractNavigate(){
  const start=chrome.indexOf('function navigate(key){');

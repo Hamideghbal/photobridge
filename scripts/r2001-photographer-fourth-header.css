@@ -721,22 +721,22 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
 /* R2020: keep the real desktop Print row, center its four split buttons,
    put the selected lab on the physical right and tint only the matching guide. */
 @media(min-width:821px){
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow:not([hidden]){
+ html.pb1126Desktop.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow:not([hidden]){
   display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
   direction:rtl!important;align-items:center!important;justify-content:stretch!important;gap:8px!important;
   padding-inline:14px!important;box-sizing:border-box!important;overflow:visible!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1459LabContext{
+ html.pb1126Desktop.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1459LabContext{
   grid-column:1!important;grid-row:1!important;justify-self:start!important;justify-content:flex-start!important;
   direction:rtl!important;text-align:right!important;position:static!important;inset:auto!important;transform:none!important;
   width:min(100%,260px)!important;max-width:100%!important;min-width:0!important;margin:0!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1127PrintModes{
+ html.pb1126Desktop.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>.pb1127PrintModes{
   grid-column:2!important;grid-row:1!important;justify-self:center!important;justify-content:center!important;
   position:static!important;inset:auto!important;transform:none!important;margin:0!important;width:max-content!important;
   max-width:calc(100vw - 48px)!important;direction:rtl!important;flex-wrap:nowrap!important;
  }
- html.pb1126Desktop:not(.pb1635SettingsOpen) body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>:is(.pb1635SettingsNav,.pb1127PrintUtilities){
+ html.pb1126Desktop.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader>.pb1126Secondary.pb1127PrintRow>:is(.pb1635SettingsNav,.pb1127PrintUtilities){
   grid-column:3!important;grid-row:1!important;justify-self:end!important;min-width:0!important;max-width:100%!important;
   position:static!important;inset:auto!important;transform:none!important;margin:0!important;overflow-x:auto!important;
   scrollbar-width:none!important;
@@ -932,3 +932,32 @@ html body #root .photographerPrintWorkspace .liveCustomerOrders .pb2022OrderSkel
  }
  @keyframes pb2026InvoiceNotice{from{opacity:.55}to{opacity:1}}
  @media(prefers-reduced-motion:reduce){.pb2026InvoiceFeedback{animation:none!important}}
+
+/* R2028: keep the R2020 header grid in settings too; readable customer tariff figures. */
+@media(min-width:821px){
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .panelHead h2{
+  font-size:17px!important;line-height:1.5!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .panelHead p{
+  font-size:12px!important;line-height:1.6!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffDetailedRows>div>b{
+  font-size:14px!important;line-height:1.5!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffValue{
+  min-height:28px!important;padding:3px 7px!important;gap:5px!important;
+  max-width:100%!important;flex-wrap:wrap!important;box-sizing:border-box!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffValue em{
+  font-size:11px!important;line-height:1.5!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffValue>b{
+  font-size:14px!important;font-weight:800!important;line-height:1.5!important;font-variant-numeric:tabular-nums;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffStock{
+  font-size:12px!important;line-height:1.5!important;
+ }
+ html body #root#root .settingsWorkspace.photographerSettings .photographerPricingSettings .photographerTariffValues{
+  flex-wrap:wrap!important;gap:6px 8px!important;min-width:0!important;
+ }
+}

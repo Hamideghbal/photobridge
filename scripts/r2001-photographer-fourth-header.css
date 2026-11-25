@@ -693,3 +693,27 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   max-width:calc(33% - 18px)!important;overflow-x:auto!important;
  }
 }
+
+/* R2019: center only native new-order actions; override old physical/RTL
+   insets and the more-specific R2015 slot reset without moving status chips. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace:is(.pb2016OrderList,.pb2015OrderBoard)>.photographerLabContextRail .photographerLabContextActions,
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace:is(.pb2016OrderList,.pb2015OrderBoard)>.photographerLabContextRail #photographer-album-new-order-slot{
+  position:fixed!important;inset:auto 0 auto 0!important;inset-inline:0!important;
+  left:0!important;right:0!important;top:calc(var(--pb2016ChromeEdge,var(--pb2014OrderTop,114px)) + 5px)!important;bottom:auto!important;
+  margin:0 auto!important;margin-inline:auto!important;transform:none!important;
+  width:max-content!important;min-width:0!important;max-width:34%!important;height:34px!important;
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  padding:0!important;z-index:423!important;
+ }
+ /* Album's React portal can be nested in the native action wrapper.
+    Only one fixed centering container in that case. */
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace:is(.pb2016OrderList,.pb2015OrderBoard)>.photographerLabContextRail .photographerLabContextActions #photographer-album-new-order-slot{
+  position:static!important;inset:auto!important;inset-inline:auto!important;
+  margin:0!important;margin-inline:0!important;width:max-content!important;max-width:100%!important;transform:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace:is(.pb2016OrderList,.pb2015OrderBoard)>.photographerLabContextRail :is(.photographerLabContextActions,#photographer-album-new-order-slot)>button{
+  position:static!important;inset:auto!important;transform:none!important;
+  margin-inline:0!important;flex:0 0 auto!important;
+ }
+}

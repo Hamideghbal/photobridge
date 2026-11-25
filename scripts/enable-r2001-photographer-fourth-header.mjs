@@ -524,3 +524,71 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('allFinanceEdges=r2034')?url:url+'&allFinanceEdges=r2034');
  write(p,h);
 }
+
+
+
+// R2035: one desktop landing owner. R1099 already resolves authenticated
+// membership and chooses the real Print workspace; the legacy entry router
+// must not issue a competing Gallery replacement on desktop.
+const pb2035EntryFile='dist/web/photobridge-r100f5-entry-routing.js';
+let pb2035Entry=read(pb2035EntryFile);
+if(!pb2035Entry.includes('/* PB2035 desktop landing owner */')){
+ const anchor='  async function route(){';
+ pb2035Entry=once(pb2035Entry,anchor,anchor+"\n    /* PB2035 desktop landing owner */ if(window.matchMedia?.('(min-width:821px)')?.matches)return;",'R2035 desktop landing owner');
+ write(pb2035EntryFile,pb2035Entry);
+}
+// Bound chooser calls and keep the last confirmed selection distinct from a
+// pending request. A timeout never assumes that a selection was committed.
+const pb2035ChooserFile='dist/web/photobridge-v904r99-lab-chooser.js';
+let pb2035Chooser=read(pb2035ChooserFile);
+if(!pb2035Chooser.includes('/* PB2035 bounded lab selection */')){
+ const start=pb2035Chooser.indexOf('  async function api(path,opt={}){');
+ const end=pb2035Chooser.indexOf('\n  function style(){',start);
+ if(start<0||end<=start)throw Error('[R2035] chooser API boundary');
+ const helper=[
+  '  /* PB2035 bounded lab selection */',
+  '  let pb2035Selecting=false;',
+  '  async function api(path,opt={}){',
+  '    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);',
+  '    try{',
+  '      const r=await fetch(path,{credentials:"include",cache:"no-store",...opt,signal:controller.signal,headers:{"Content-Type":"application/json","x-photobridge-portal":"photographer",...(opt.headers||{})}});',
+  '      let j={};try{j=await r.json()}catch(err){if(controller.signal.aborted)throw err}',
+  '      if(!r.ok){const e=new Error(j?.error||("HTTP "+r.status));e.status=r.status;e.data=j;throw e}return j;',
+  '    }finally{clearTimeout(timer)}',
+  '  }'
+ ].join('\n');
+ pb2035Chooser=pb2035Chooser.slice(0,start)+helper+pb2035Chooser.slice(end);
+ const anchor="if(sel){const id=sel.dataset.select;sel.disabled=true;";
+ pb2035Chooser=once(pb2035Chooser,anchor,"if(sel){if(pb2035Selecting)return;pb2035Selecting=true;const id=sel.dataset.select;sel.disabled=true;",'R2035 single lab selection');
+ pb2035Chooser=once(pb2035Chooser,"sessionStorage.setItem(SESSION_KEY,id);cleanup();const u=new URL(location.href);","sessionStorage.setItem(SESSION_KEY,id);try{sessionStorage.setItem('pb2035ConfirmedLab',JSON.stringify({id,at:Date.now()}));sessionStorage.setItem('photobridge:r100f37:lab-enter-pending',String(Date.now()))}catch{}const u=new URL(location.href);",'R2035 retain chooser until confirmed navigation');
+ pb2035Chooser=once(pb2035Chooser,"sel.disabled=false;toast(err.status===403?","pb2035Selecting=false;sel.disabled=false;toast(err.name==='AbortError'?'پاسخ لابراتوار طول کشید؛ دوباره تلاش کنید.':err.status===403?",'R2035 recover from selection timeout');
+ const runAnchor="    if(!isPrintRoute()){cleanup();return}\n    if(running)";
+ pb2035Chooser=once(pb2035Chooser,runAnchor,[
+  '    if(!isPrintRoute()){cleanup();return}',
+  '    if(pb2035Selecting)return;',
+  '    // A successful POST already selected the lab. Do not reopen the chooser',
+  '    // on the next document merely because an old prefetched list is stale.',
+  '    if(!force&&new URLSearchParams(location.search).get("pbEntryDone")==="lab"){',
+  '      try{const confirmed=JSON.parse(sessionStorage.getItem("pb2035ConfirmedLab")||"null");if(confirmed&&confirmed.id===sessionStorage.getItem(SESSION_KEY)&&Date.now()-confirmed.at>=0&&Date.now()-confirmed.at<30000){cleanup();return}}catch{}',
+  '    }',
+  '    if(running)'
+ ].join('\n'),'R2035 avoid redundant chooser round trip after confirmed select');
+ // An in-flight background refresh must not repaint the chooser during selection.
+ pb2035Chooser=pb2035Chooser.replaceAll('epoch!==runEpoch||!isPrintRoute()','epoch!==runEpoch||!isPrintRoute()||pb2035Selecting');
+ write(pb2035ChooserFile,pb2035Chooser);
+}
+for(const p of [pb2035EntryFile,pb2035ChooserFile])execFileSync(process.execPath,['--check',p],{stdio:'inherit'});
+
+// Install the gate before any deferred legacy renderer or React first paint.
+// Desktop only; the approved mobile animated splash is untouched.
+const pb2035Gate=read('scripts/r2035-photographer-entry.js');
+const pb2035Style=read('scripts/r2035-photographer-entry.css');
+new Function(pb2035Gate);
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ if(p==='dist/web/index.html'&&!h.includes('id="pb2035EntryGate"')){
+  h=once(h,'<head>','<head><style id="pb2035EntryStyle">'+pb2035Style+'</style><script id="pb2035EntryGate">'+pb2035Gate+'</script>','R2035 prepaint entry gate');
+ }
+ h=h.replace(/(photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
+ write(p,h);
+}

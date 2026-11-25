@@ -480,3 +480,26 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('financeEdge=r2032')?url:url+'&financeEdge=r2032');
  write(p,h);
 }
+
+
+// R2033: never mount the redundant customer finance heading, including
+// the loading frame and payments. Lab headings and handlers are unchanged.
+let pb2033UI=read(file);
+if(!pb2033UI.includes('/* PB2033 customer finance heading and statement validation */')){
+ const start=pb2033UI.indexOf('function ub({role:t,'),end=pb2033UI.indexOf('}function hb(',start);
+ if(start<0||end<start)throw Error('[R2033] finance component missing');
+ let part=pb2033UI.slice(start,end+1);
+ const heading='e.jsxs("div",{className:"sectionTopline financeTopline"';
+ part=once(part,heading,'t==="lab"&&'+heading,'R2033 omit photographer finance heading at render');
+ const submit='onClick:()=>b(),children:D?"در حال محاسبه…":"نمایش حساب"';
+ const validated='onClick:()=>{if(t==="customer"){if(!_e||!je){alert("لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.");return}if(_e>je){alert("تاریخ شروع نباید بعد از تاریخ پایان باشد.");return}}b()},children:D?"در حال محاسبه…":"نمایش حساب"';
+ part=once(part,submit,validated,'R2033 validate explicit photographer statement action');
+ pb2033UI=pb2033UI.slice(0,start)+part+pb2033UI.slice(end+1)+'\n/* PB2033 customer finance heading and statement validation */\n';
+ write(file,pb2033UI);
+}
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('financeSettings=r2033')?url:url+'&financeSettings=r2033');
+ write(p,h);
+}

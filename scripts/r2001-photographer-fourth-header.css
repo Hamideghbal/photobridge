@@ -830,3 +830,17 @@ html body #root .photographerPrintWorkspace .liveCustomerOrders .pb2022OrderSkel
  .pb2022OrderSkeleton .pb2022SkeletonAction{display:none}
 }
 @media(prefers-reduced-motion:reduce){.pb2022OrderSkeleton:after{animation:none;display:none}}
+
+/* R2023: one continuous split capsule per mode; independent click targets, one internal divider. */
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):has(+button.pb1978VideoGuideButton){
+  margin:0!important;margin-inline-end:0!important;border-inline-end:0!important;
+  border-radius:0 10px 10px 0!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton{
+  border-radius:10px 0 0 10px!important;border-inline-start:1px solid #cdd9ec!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton):is(.active,.selected,[data-pb1989-active="true"],[aria-selected="true"],[aria-pressed="true"])+button.pb1978VideoGuideButton{
+  border-inline-start-color:rgba(255,255,255,.4)!important;
+ }
+}

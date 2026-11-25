@@ -1003,14 +1003,14 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
  border-radius:0!important;box-shadow:0 5px 12px -9px #52607866!important;
  z-index:700!important;overflow:visible!important;transform:none!important;
 }
-html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(>.financeWorkspace){
  position:fixed!important;inset:0!important;top:0!important;bottom:0!important;
  width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;
  max-height:none!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
  overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;
  transform:none!important;scroll-padding-top:52px!important;
 }
-html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace))>.financeWorkspace{
+html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(>.financeWorkspace)>.financeWorkspace{
  flex:0 0 auto!important;
 }
 @media(min-width:821px){
@@ -1148,7 +1148,7 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
 /* R2032: the root finance scrollport begins BELOW the measured third row.
    The embedded viewport is already below that row, so its local origin is 0. */
 @media(min-width:821px){
- html.pb1126Desktop:not(.pb1126Embedded):not(.pb1635SettingsOpen) body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+ html.pb1126Desktop:not(.pb1126Embedded):not(.pb1635SettingsOpen) body #root#root main.photographerMain>.photographerRolePageScrollArea:has(>.financeWorkspace){
   position:fixed!important;inset:var(--pb2032-finance-edge,156px) 0 0!important;
   top:var(--pb2032-finance-edge,156px)!important;bottom:0!important;
   height:auto!important;min-height:0!important;max-height:none!important;
@@ -1156,7 +1156,7 @@ html body #root#root main.photographerMain .photographerRolePageScrollArea .fina
   box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;
   transform:none!important;scroll-padding-top:52px!important;
  }
- html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(.financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace)){
+ html.pb1126Embedded body #root#root main.photographerMain>.photographerRolePageScrollArea:has(>.financeWorkspace){
   inset:0!important;top:0!important;bottom:0!important;padding:0!important;
  }
  html:is(.pb1126Desktop,.pb1126Embedded) body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace :is(.pb2000CustomerInvoiceToolbar,.customerStatementWorkspace>.statementToolbar){
@@ -1216,5 +1216,14 @@ html body #root#root main.photographerMain .financeWorkspace>.sectionTopline.fin
  }
  html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button.pb1978VideoGuideButton .pb569GuideLabel{
   font:700 8px/1.1 Vazirmatn,Tahoma,sans-serif!important;
+ }
+}
+
+/* R2034: the measured finance edge applies before data arrives, to all
+   three customer finance tabs. Payments have no fourth toolbar. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1635SettingsOpen),.pb1126Embedded) body #root#root main.photographerMain .photographerRolePageScrollArea>.financeWorkspace[data-pb2034-finance-tab="payments"]{
+  margin-top:0!important;padding-top:8px!important;
+  box-sizing:border-box!important;
  }
 }

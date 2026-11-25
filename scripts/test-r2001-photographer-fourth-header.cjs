@@ -669,8 +669,43 @@ test('R2035 desktop entry and lab selection are bounded without changing mobile 
   AbortController,fn=>{trigger=fn;return 1},()=>cleared++);
  const request=hung('/api/customer/labs/x/select',{method:'POST'});trigger();
  await assert.rejects(request,{name:'AbortError'});assert.equal(cleared,2);
- assert(gate.includes("Date.now()-loaderStart>=12000"));
- assert(gate.includes("if(++stable>=2){release();return}"));
+ assert(gate.includes("function releaseEntry()"));
+ assert(!gate.includes("function ready()"));
+ assert(!gate.includes("function showGate()"));
  assert(gate.includes("if(!matchMedia('(min-width:821px)').matches"));
  assert(html.includes('stableEntry=r2035'));
+});
+
+test('R2037 direct desktop and same-document login never depend on a feature event or cloned header to reveal native UI',()=>{
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const gate=html.match(/<script id="pb2035EntryGate">([\s\S]*?)<\/script>/)?.[1];
+ const css=html.match(/<style id="pb2035EntryStyle">([\s\S]*?)<\/style>/)?.[1];
+ assert(gate&&css);
+ assert.match(css,/#pb2035EntryOverlay\{display:none!important;pointer-events:none!important\}/);
+ assert(!css.includes('opacity:0'));
+ for(const [mobile,path,query,chooser] of [
+  [false,'/photographer/orders/flow','?workspace=print',false],
+  [false,'/photographer/login','',false],
+  [false,'/photographer/orders/flow','?pbLabChooser=1',true],
+  [true,'/photographer/orders/flow','?workspace=print',false]
+ ]){
+  const flags=new Set(['pb2035EntryPending','pbR100F37LabEnterBoot']);
+  let overlay=true,native=false,removed=0;
+  const handlers={},timers=[],location={pathname:path,search:query};
+  const document={readyState:'complete',body:{},documentElement:{classList:{contains:k=>flags.has(k),remove:(...keys)=>keys.forEach(k=>flags.delete(k))}},
+   getElementById:id=>overlay&&id==='pb2035EntryOverlay'?{remove(){overlay=false}}:null,
+   querySelector:sel=>sel.startsWith('#pbR99LabChooser')?(chooser?{}:null):native?{}:null};
+  vm.runInNewContext(gate,{document,location,URLSearchParams,matchMedia:()=>({matches:!mobile}),
+   sessionStorage:{removeItem(){removed++}},MutationObserver:class{observe(){}},
+   requestAnimationFrame:fn=>fn(),setTimeout:fn=>timers.push(fn),addEventListener:(name,fn)=>handlers[name]=fn});
+  if(mobile){assert(overlay);assert(flags.has('pb2035EntryPending'));continue}
+  assert.equal(overlay,false,'stale gate must disappear before any network request');
+  assert(!flags.has('pb2035EntryPending'));
+  assert(flags.has('pbR100F37LabEnterBoot'),'do not release unresolved lab boot');
+  if(path.endsWith('/login')){location.pathname='/photographer/orders/flow';location.search='?workspace=print'}
+  native=true;for(const fn of timers)fn();handlers['photobridge-auth-session-changed']();
+  assert.equal(overlay,false);assert(!flags.has('pb2035EntryPending'));
+  assert.equal(flags.has('pbR100F37LabEnterBoot'),chooser);
+  assert.equal(removed>0,!chooser);
+ }
 });

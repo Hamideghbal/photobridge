@@ -43,7 +43,7 @@
  html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .liveOrderExtras:has(>.prepayPaidConfirmation):not(:has(>.customerFixNotice,>.prepayOrderCard,>.customerCourierCard)){display:none!important}
  /* In the existing JSX, the optional second unclassified action is the PDF copy.
     Invoice, Delete and Details keep their original handlers. */
- html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .customerOrderQuickActions>button:nth-child(2):not(.detail):not(.danger){display:none!important}
+ html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .customerOrderQuickActions>button.pb2012OrderPdf{display:none!important}
  html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .customerOrderHead .pb1324OrderFileSummary[hidden]{display:block!important;grid-column:1/-1!important;min-width:0!important;max-width:100%!important;font:500 9px/1.5 Vazirmatn,Tahoma,sans-serif!important;color:#7c8798!important;white-space:nowrap!important;letter-spacing:-.15px!important}
  html body #root main.photographerMain.photographerPrintWorkspace .ordersWorkspace.liveCustomerOrders .customerOrderCard.liveOrderCard:not(.albumCustomerOrderCard) .liveTimeline .pb1323ShortStageLabel{text-align:center!important}
 

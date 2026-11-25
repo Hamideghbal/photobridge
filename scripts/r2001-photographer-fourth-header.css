@@ -379,3 +379,72 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
  html body #pb1126DesktopHeader .pb1126Secondary .pb1127PrintUtilities{direction:rtl!important;gap:0!important}
  html body #pb1126DesktopHeader .pb1126Secondary .pb1127PrintUtilities>button.pb2005UtilityGuide{margin-inline-end:6px!important}
 }
+
+/* R2011: mobile photographer finance has one vertical scroll owner. Keep the
+   actual React finance navigation in the sticky third row, not a cloned menu. */
+@media(max-width:820px){
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea:has(>.financeWorkspace),
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea:has(.financeWorkspace .customerStatementWorkspace){
+  overflow-y:auto!important;overflow-x:hidden!important;
+  min-height:0!important;max-height:none!important;
+  touch-action:auto!important;pointer-events:auto!important;
+  overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;
+  scroll-padding-top:54px!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .photographerRolePageScrollArea .financeWorkspace.accountingWorkspace{
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:visible!important;display:block!important;touch-action:auto!important;
+  min-width:0!important;max-width:100%!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace>.financeNavDock{
+  position:sticky!important;top:0!important;inset-block-start:0!important;
+  display:block!important;width:100%!important;min-width:0!important;
+  z-index:600!important;background:#fff!important;overflow:visible!important;
+  margin:0 0 8px!important;padding:3px 0!important;
+  box-sizing:border-box!important;flex-shrink:0!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace>.financeNavDock .financeSectionTabs{
+  position:static!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  width:100%!important;margin:0!important;gap:5px!important;
+  background:#f2f4f7!important;overflow:visible!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace>.financeNavDock .financeSectionTabs>button{
+  min-height:36px!important;white-space:nowrap!important;pointer-events:auto!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .customerStatementWorkspace,
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .customerStatementWorkspace>.statementPaper{
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:visible!important;touch-action:auto!important;min-width:0!important;max-width:100%!important;
+ }
+ /* Only the three navigation buttons stay pinned. The date/ledger controls
+    and the statement paper scroll together, never underneath a second sticky bar. */
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .customerStatementWorkspace>.statementToolbar,
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .pb2000CustomerInvoiceToolbar{
+  position:relative!important;top:auto!important;inset-block-start:auto!important;
+  z-index:2!important;
+ }
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .statementTableWrap,
+ html body.pbF37UnifiedActive #root .photographerMain.photographerPrintWorkspace .financeWorkspace .pb1177LedgerInvoice{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  height:auto!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;
+  touch-action:pan-x pan-y!important;overscroll-behavior-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+ }
+ /* Compact real text under the play symbol, with the existing click target. */
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide{
+  flex:0 0 30px!important;width:30px!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;
+  gap:1px!important;padding:2px 0!important;line-height:1!important;
+ }
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide>span{
+  display:block!important;font-size:10px!important;line-height:11px!important;color:inherit!important;
+ }
+ html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide>.pb2011GuideCaption{
+  display:block!important;font:800 7.5px/10px Vazirmatn,Tahoma,sans-serif!important;
+  color:inherit!important;-webkit-text-fill-color:inherit!important;white-space:nowrap!important;
+ }
+ @media(max-width:380px){
+  html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button:not(.pb2006MobileGuide){font-size:10px!important}
+  html body.pbF37UnifiedActive #pbF37Tabs.pb2006PrintTabs .pb2006MobileSplit>button.pb2006MobileGuide{flex-basis:27px!important;width:27px!important}
+ }
+}

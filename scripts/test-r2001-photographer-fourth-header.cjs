@@ -206,3 +206,21 @@ test('R2008 generated Print context patch emits real line breaks and valid execu
  assert.doesNotThrow(()=>new vm.Script(output));
  assert(ui.includes('\n/* PB2007 canonical print route */\n'));
 });
+
+test('R2011 mobile photographer finance retains sticky native tabs and a single vertical scrollport',()=>{
+ const marker=css.indexOf('/* R2011: mobile photographer finance');
+ assert(marker>=0);const patch=css.slice(marker);
+ assert(patch.includes('@media(max-width:820px)'));
+ assert(patch.includes('.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea:has(>.financeWorkspace)'));
+ assert(patch.includes('overflow-y:auto!important;overflow-x:hidden!important'));
+ assert.match(patch,/\.financeWorkspace>\.financeNavDock\{\s*position:sticky!important;top:0!important/);
+ assert(patch.includes('height:auto!important;min-height:0!important;max-height:none!important'));
+ assert(patch.includes('touch-action:pan-x pan-y!important;overscroll-behavior-y:auto!important'));
+ assert(patch.includes('position:relative!important;top:auto!important;inset-block-start:auto!important'));
+ assert(patch.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
+ const header=fs.readFileSync('dist/web/photobridge-v904r100f41-header-date-name-fit.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(header));
+ assert(header.includes('<span aria-hidden="true">▶</span><small class="pb2011GuideCaption" aria-hidden="true">راهنما</small>'));
+ assert(patch.includes('flex-direction:column!important'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('mobileFinance=r2011'));
+});

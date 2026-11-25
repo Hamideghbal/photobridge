@@ -844,3 +844,18 @@ html body #root .photographerPrintWorkspace .liveCustomerOrders .pb2022OrderSkel
   border-inline-start-color:rgba(255,255,255,.4)!important;
  }
 }
+
+/* R2023: photographer album, finance and archive use the same bottom product
+   footer as print. Keep the footer in flow so long lists never sit under it. */
+ html body #root main.photographerMain:not(.photographerAlbumCreateWorkspaceMode):not(.simplePrintPilotWorkspaceMode):not(.photographerUploadWorkspaceMode)>.photographerRolePageScrollArea:has(>:is(.photographerAlbumListFlush,.financeWorkspace,.photographerArchiveWorkspace)){
+  display:flex!important;flex-direction:column!important;justify-content:flex-start!important;
+  align-items:stretch!important;flex:1 1 auto!important;min-height:0!important;
+ }
+ html body #root main.photographerMain:not(.photographerAlbumCreateWorkspaceMode):not(.simplePrintPilotWorkspaceMode):not(.photographerUploadWorkspaceMode)>.photographerRolePageScrollArea:has(>:is(.photographerAlbumListFlush,.financeWorkspace,.photographerArchiveWorkspace))>:is(.financeWorkspace,.photographerArchiveWorkspace){
+  flex:0 0 auto!important;min-width:0!important;
+ }
+ html body #root main.photographerMain:not(.photographerAlbumCreateWorkspaceMode):not(.simplePrintPilotWorkspaceMode):not(.photographerUploadWorkspaceMode)>.photographerRolePageScrollArea:has(>:is(.photographerAlbumListFlush,.financeWorkspace,.photographerArchiveWorkspace))>.productFooter{
+  position:static!important;inset:auto!important;flex:0 0 auto!important;
+  margin-top:auto!important;margin-block-start:auto!important;margin-bottom:0!important;
+  padding-top:14px!important;align-self:stretch!important;text-align:center!important;
+ }

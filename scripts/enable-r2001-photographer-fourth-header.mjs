@@ -297,3 +297,26 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('compactGuides=r2021')?url:url+'&compactGuides=r2021');
  write(p,h);
 }
+
+
+// R2022: render placeholders from the actual queue load state, not a timer.
+const pb2022File='dist/web/assets/index-UIRefine-v655-r84.js';
+let pb2022UI=read(pb2022File);
+if(!pb2022UI.includes('/* PB2022 queue skeleton */')){
+ const start=pb2022UI.indexOf('function Zg('),end=pb2022UI.indexOf('function wv(',start);
+ if(start<0||end<start)throw Error('R2022 photographer queue component missing');
+ let queue=pb2022UI.slice(start,end);
+ if(!queue.includes("PB1856setLoad('ready')")||!queue.includes("PB1856setLoad('error')"))throw Error('R2022 actual queue load state missing');
+ const anchor='className:"customerOrderGrid liveOrderGrid",children:Ce.length?';
+ const skeleton="className:\"customerOrderGrid liveOrderGrid\",\"aria-busy\":PB1856load==='loading'&&!Ce.length,children:PB1856load==='loading'&&!Ce.length?Array.from({length:3},(_,index)=>e.jsxs('div',{className:'card pb2022OrderSkeleton','aria-hidden':true,children:[...Array.from({length:2},(_,group)=>e.jsxs('div',{className:'pb2022SkeletonGroup',children:[e.jsx('span',{className:'pb2022SkeletonLine'}),e.jsx('span',{className:'pb2022SkeletonLine'})]},group)),e.jsx('div',{className:'pb2022SkeletonStages',children:Array.from({length:l==='album'?5:4},(_,stage)=>e.jsx('span',{className:'pb2022SkeletonDot'},stage))}),e.jsx('span',{className:'pb2022SkeletonAction'})]},'queue-loading-'+index)):Ce.length?";
+ queue=once(queue,anchor,skeleton,'R2022 live queue skeleton');
+ pb2022UI=pb2022UI.slice(0,start)+queue+pb2022UI.slice(end)+'\n/* PB2022 queue skeleton */\n';
+ write(pb2022File,pb2022UI);
+}
+execFileSync(process.execPath,['--check',pb2022File],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('queueSkeleton=r2022')?url:url+'&queueSkeleton=r2022');
+ h=h.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('queueSkeleton=r2022')?url:url+'&queueSkeleton=r2022');
+ write(p,h);
+}

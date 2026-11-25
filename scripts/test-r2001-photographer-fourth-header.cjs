@@ -398,3 +398,30 @@ test('R2020 desktop lab right, primary group centered, selected guide follows it
   assert(/<link\b[^>]*href=["']\/photobridge-r2001-photographer-fourth-header\.css\?[^"']*centerHeader=r2020[^"']*["']/i.test(html));
  }
 });
+
+
+test('R2022 queue skeleton is tied to first-load or retry, never fake order IDs',()=>{
+ const start=ui.indexOf('function Zg('),end=ui.indexOf('function wv(',start);
+ const queue=ui.slice(start,end);
+ const a=queue.indexOf("PB1856load==='loading'&&!Ce.length?Array.from({length:3}");
+ const b=queue.indexOf(':Ce.length?',a);
+ assert(a>=0&&b>a);
+ const expression=queue.slice(a,b);
+ const mock={jsx:(tag,props,key)=>({tag,props,key}),jsxs:(tag,props,key)=>({tag,props,key})};
+ const render=new Function('PB1856load','Ce','l','e','return '+expression+':null');
+ for(const l of ['print','album']){
+  const loading=render('loading',[],l,mock);
+  assert.equal(loading.length,3);
+  for(const card of loading){
+   assert.equal(card.props.className,'card pb2022OrderSkeleton');
+   assert.equal(card.props['aria-hidden'],true);
+   assert(!card.props['data-order-id']);
+   assert.equal(card.props.children[2].props.children.length,l==='album'?5:4);
+  }
+  assert.equal(render('ready',[],l,mock),null);
+  assert.equal(render('error',[],l,mock),null);
+  assert.equal(render('loading',[{id:'existing'}],l,mock),null);
+ }
+ assert(css.includes('@keyframes pb2022QueueShimmer'));
+ assert(css.includes('@media(prefers-reduced-motion:reduce)'));
+});

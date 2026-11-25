@@ -293,5 +293,6 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
  h=h.replace(/photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*/g,url=>url.includes('centerOrder=r2019')?url:url+'&centerOrder=r2019');
+ h=h.replace(/centerOrder=r2019/g,'centerOrder=r2019&centerHeader=r2020');
  write(p,h);
 }

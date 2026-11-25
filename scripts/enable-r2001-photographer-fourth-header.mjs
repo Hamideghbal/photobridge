@@ -417,6 +417,18 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
 }
 
 
+// R2030: the embedded finance scrollport starts at the iframe edge (the
+// parent already reserves all three headers). Do not reapply an inner legacy
+// Print header inset. Other Print/Album/archive routes keep their behavior.
+let pb2030Inset=read(pb2016InsetFile);
+if(!pb2030Inset.includes('/* PB2030 embedded finance inset */')){
+ const anchor='const top=getComputedStyle(area).position===\'fixed\'?window.pb1318PrintInset():0;';
+ const replacement='const top=area.querySelector(".financeWorkspace .pb2000CustomerInvoiceToolbar,.financeWorkspace .customerStatementWorkspace")?0:getComputedStyle(area).position===\'fixed\'?window.pb1318PrintInset():0; /* PB2030 embedded finance inset */';
+ pb2030Inset=once(pb2030Inset,anchor,replacement,'R2030 embedded finance scroll origin');
+ write(pb2016InsetFile,pb2030Inset);
+}
+execFileSync(process.execPath,['--check',pb2016InsetFile],{stdio:'inherit'});
+
 // R2030: a real shared invoice column header inside the same horizontal
 // scroll container as its records. The existing row renderer, document types,
 // action handlers, filtering, totals and pagination stay unchanged.
@@ -435,6 +447,6 @@ if(!pb2030UI.includes('/* PB2030 photographer invoice columns */')){
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
- h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('fixedFinance=r2030')?url:url+'&fixedFinance=r2030');
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('fixedFinance=r2030')?url:url+'&fixedFinance=r2030');
  write(p,h);
 }

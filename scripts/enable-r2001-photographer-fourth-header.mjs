@@ -591,7 +591,7 @@ if(!pb2035Nav.includes('/* PB2035 same-document login */')){
  const render=pb2035Nav.indexOf(' function render(){');
  if(render<pos)throw Error('[R2035] expected bootstrap before renderer');
  pb2035Nav=pb2035Nav.slice(0,pos)+pb2035Nav.slice(pos).replace(gate,gate.replace('(login|signup|register|invite)','(signup|register|invite)'));
- const native="const native=nativeHeader(currentDocument()||document)||nativeHeader(document);if(!native)return;";
+ const native="const current=currentDocument();const native=selected?(current&&nativeHeader(current)):nativeHeader(document);if(!native)return;";
  pb2035Nav=once(pb2035Nav,native,native+"document.documentElement.classList.add('pb1126Desktop'); /* PB2035 same-document login */",'R2035 reassert canonical header ownership');
  write(pb2035NavFile,pb2035Nav);
 }

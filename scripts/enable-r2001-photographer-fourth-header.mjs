@@ -137,6 +137,19 @@ if(!ui.includes('/* PB2007 canonical print route */')){
  else if(!ui.includes('D=!H&&["orders","upload","album","archive","finance"].includes(Se)'))throw Error('[R2007] native print gate missing');
  ui+=String.fromCharCode(10)+'/* PB2007 canonical print route */'+String.fromCharCode(10);write(file,ui);
 }
+// R2012: preserve the existing authenticated customer invoice preview.
+// When the order response omits invoice_id, the mobile button may resolve
+// only a real invoice linked to this exact order, never an unrelated document.
+if(!ui.includes('/* PB2012 mobile order invoice action */')){
+ const invoice='De.invoice_id&&e.jsx("button",{onClick:()=>Ze(De),children:"فاکتور"})';
+ const pdf='De.invoice_id&&De.invoice_pdf_ready&&e.jsx("button",{onClick:()=>Ke(De),children:"PDF"})';
+ ui=once(ui,invoice,'e.jsx("button",{className:"pb2012OrderInvoice"+(De.invoice_id?"":" pb2012InvoiceLookup"),onClick:()=>Ze(De),children:"فاکتور"})','R2012 explicit order invoice action');
+ ui=once(ui,pdf,'De.invoice_id&&De.invoice_pdf_ready&&e.jsx("button",{className:"pb2012OrderPdf",onClick:()=>Ke(De),children:"PDF"})','R2012 explicit PDF action');
+ const lookup='const ot=((await Me("/api/customer/invoices")).invoices||[]).find(Ee=>Ee.id===De.invoice_id);';
+ const resolved='const pb2012Invoices=(await Me("/api/customer/invoices")).invoices||[],ot=(De.invoice_id&&pb2012Invoices.find(Ee=>String(Ee.id)===String(De.invoice_id)))||pb2012Invoices.find(Ee=>De.id&&String(Ee.order_id)===String(De.id)&&(!Ee.document_type||Ee.document_type==="invoice"));';
+ ui=once(ui,lookup,resolved,'R2012 authenticated order invoice lookup');
+ ui+=String.fromCharCode(10)+'/* PB2012 mobile order invoice action */'+String.fromCharCode(10);write(file,ui);
+}
 execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 const cssName='photobridge-r2001-photographer-fourth-header.css';
 fs.copyFileSync('scripts/r2001-photographer-fourth-header.css','dist/web/'+cssName);
@@ -159,5 +172,6 @@ html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|r1099-photographer-tabs)\.js\?[^"'<>\s]*)/g,url=>url.includes('mobileHeader=r2006')?url:url+'&mobileHeader=r2006');
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|v904r99-lab-chooser|r1099-photographer-tabs)\.js\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('canonicalPrint=r2007')?url:url+'&canonicalPrint=r2007');
 html=html.replace(/(photobridge-v904r100f41-header-date-name-fit\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileFinance=r2011')?url:url+'&mobileFinance=r2011');
+html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileOrders=r2012')?url:url+'&mobileOrders=r2012');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

@@ -186,7 +186,7 @@ test('R2007 canonical print entry and archive in mobile menu; desktop guides use
 test('R2008 generated Print context patch emits real line breaks and valid executable JS',()=>{
  const writer=fs.readFileSync('scripts/enable-r2001-photographer-fourth-header.mjs','utf8');
  const start=writer.indexOf("if(!ui.includes('/* PB2007 canonical print route */'))");
- const end=writer.indexOf('execFileSync',start);
+ const end=writer.indexOf('\n}',start)+2; // Isolate this patch, not subsequent release blocks.
  assert(start>=0&&end>start);
  const snippet=writer.slice(start,end);
  const gate=new Function('return '+snippet.match(/const gate=(.*);/)[1])();
@@ -223,4 +223,27 @@ test('R2011 mobile photographer finance retains sticky native tabs and a single 
  assert(header.includes('<span aria-hidden="true">▶</span><small class="pb2011GuideCaption" aria-hidden="true">راهنما</small>'));
  assert(patch.includes('flex-direction:column!important'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('mobileFinance=r2011'));
+});
+
+test('R2012 mobile order board removes legacy spacing and keeps invoice adjacent to Details',()=>{
+ const patch=css.slice(css.indexOf('/* R2012: mobile photographer order board'));
+ assert(patch.includes('@media(max-width:820px)'));
+ assert(patch.includes('margin-top:0!important;margin-block-start:0!important;padding-top:0!important'));
+ assert(patch.includes('.customerOrderHead>.orderStatus'));
+ assert(patch.includes('button.pb2012OrderInvoice'));
+ assert(patch.includes('button.pb2012OrderPdf{display:none!important}'));
+ assert(patch.includes('button.detail{order:-2!important}'));
+ assert(patch.includes('button.pb2012InvoiceLookup{display:none!important}'));
+ assert(ui.includes('/* PB2012 mobile order invoice action */'));
+ assert(ui.includes('className:"pb2012OrderInvoice"+(De.invoice_id?"":" pb2012InvoiceLookup")'));
+ assert(ui.includes('onClick:()=>Ze(De),children:"فاکتور"'));
+ const start=ui.indexOf('const pb2012Invoices='),end=ui.indexOf(';',start);
+ assert(start>=0&&end>start);
+ const find=new Function('Me','De','return (async()=>{'+ui.slice(start,end+1)+'return ot})()');
+ const invoices=[{id:'a',order_id:'other'},{id:'correction',order_id:'target',document_type:'correction'},{id:'b',order_id:'target',document_type:'invoice'}];
+ return Promise.all([
+  find(async()=>({invoices}),{id:'target'}).then(v=>assert.equal(v.id,'b')),
+  find(async()=>({invoices}),{id:'missing'}).then(v=>assert.equal(v,undefined)),
+  find(async()=>({invoices}),{id:'target',invoice_id:'b'}).then(v=>assert.equal(v.id,'b'))
+ ]);
 });

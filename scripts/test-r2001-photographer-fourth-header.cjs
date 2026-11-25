@@ -348,6 +348,6 @@ test('R2017 print secondary controls retain their identity when active and disab
  assert(nav.includes('pb2017SyncPrintControls(row,visible)'));
  const patch=css.slice(css.indexOf('/* R2017: desktop has one working Send action'));
  assert.match(patch,/button\.simplePrintPilotHeaderSubmitMobile\{\s*display:none!important/);
- assert.match(patch,/\.simplePrintPilotQuoteSend\{\s*display:flex!important/);
+ assert(!patch.includes('.simplePrintPilotQuoteSend'),'existing quote send action is untouched');
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('stableSecondary=r2017'));
 });

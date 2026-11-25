@@ -407,3 +407,11 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('invoiceFeedback=r2026')?url:url+'&invoiceFeedback=r2026');
  write(p,h);
 }
+
+
+// R2029: bump the delivered stylesheet before the final CSS bundling step.
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('financePolish=r2029')?url:url+'&financePolish=r2029');
+ write(p,h);
+}

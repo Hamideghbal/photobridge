@@ -158,5 +158,6 @@ html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes
 html=html.replace(/(photobridge-workflow-guides-v572\.js\?[^"'<>\s]*)/g,url=>url.includes('utilityGuides=r2005')?url:url+'&utilityGuides=r2005');
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|r1099-photographer-tabs)\.js\?[^"'<>\s]*)/g,url=>url.includes('mobileHeader=r2006')?url:url+'&mobileHeader=r2006');
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|v904r99-lab-chooser|r1099-photographer-tabs)\.js\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('canonicalPrint=r2007')?url:url+'&canonicalPrint=r2007');
+html=html.replace(/(photobridge-v904r100f41-header-date-name-fit\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileFinance=r2011')?url:url+'&mobileFinance=r2011');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

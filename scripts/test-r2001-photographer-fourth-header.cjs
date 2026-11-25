@@ -322,3 +322,32 @@ test('R2016 reserves third row before order cards load and avoids competing view
  assert(css.includes('.simplePrintPilotPrimaryAdd,.simplePrintPilotHeaderSubmitMobile,.simplePrintPilotHeaderCancelMobile'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('stableViewport=r2016'));
 });
+
+
+test('R2017 print secondary controls retain their identity when active and disabled state change',()=>{
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(nav));
+ const start=nav.indexOf(' function pb2017SyncPrintControls('),end=nav.indexOf(' function cleanClone(original){',start);
+ assert(start>=0&&end>start);
+ const fn=new Function('printControlKey',nav.slice(start,end)+'\nreturn pb2017SyncPrintControls;')(b=>b.key);
+ const button=(key,active=false)=>{
+  const set=new Set([key]),attrs=new Map();if(active)set.add('active');
+  return {key,dataset:{pb2017PrintKey:key},disabled:false,classList:{contains:k=>set.has(k),toggle:(k,v)=>v?set.add(k):set.delete(k)},getAttribute:k=>attrs.get(k)??null,hasAttribute:k=>attrs.has(k),setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k)};
+ };
+ const keys=['photographerPrintPhotoTab','photographerPrintAlbumTab','finance','archive'];
+ const copies=keys.map(k=>button(k));const row={querySelectorAll:()=>copies};
+ for(const selected of keys){
+  const originals=keys.map(k=>button(k,k===selected));originals[3].disabled=selected==='finance';originals.find(b=>b.key===selected).setAttribute('aria-pressed','true');
+  fn(row,originals);
+  for(const copy of copies)assert.equal(copy.classList.contains('active'),copy.key===selected);
+  assert.equal(copies[3].disabled,selected==='finance');
+ }
+ assert(nav.includes('return [key,label];'));
+ assert(nav.includes("row.dataset.pb2017Ready==='1'"));
+ assert(nav.includes("transitioning&&!keep"));
+ assert(nav.includes('pb2017SyncPrintControls(row,visible)'));
+ const patch=css.slice(css.indexOf('/* R2017: desktop has one working Send action'));
+ assert.match(patch,/button\.simplePrintPilotHeaderSubmitMobile\{\s*display:none!important/);
+ assert(!patch.includes('.simplePrintPilotQuoteSend'),'existing quote send action is untouched');
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('stableSecondary=r2017'));
+});

@@ -307,3 +307,18 @@ test('R2015 native third row survives both order routes, delayed action mount, r
  assert(css.includes('#photographer-album-status-desktop-slot .albumHeaderStatuses'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('orderThird=r2015'));
 });
+
+
+test('R2016 reserves third row before order cards load and avoids competing viewport writers',()=>{
+ const src=fs.readFileSync('dist/web/photobridge-r1461-print-navigation.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(src));
+ const inset=fs.readFileSync('dist/web/photobridge-r1318-print-insets.js','utf8');
+ assert(inset.includes('/* PB2016 stable print viewport */'));
+ assert(inset.includes('if(area&&!/^\\/photographer\\/'));
+ const legacy=fs.readFileSync('dist/web/photobridge-v904r100f41-header-date-name-fit.js','utf8');
+ assert(legacy.includes('function clearPrint(){/* PB2016 desktop owner */'));
+ assert(css.includes('--pb2016ContentEdge:calc(var(--pb2016ChromeEdge,114px) + 44px)'));
+ assert(css.includes('overflow-anchor:none!important'));
+ assert(css.includes('.simplePrintPilotPrimaryAdd,.simplePrintPilotHeaderSubmitMobile,.simplePrintPilotHeaderCancelMobile'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('stableViewport=r2016'));
+});

@@ -70,7 +70,11 @@ test('store invitation goes directly to Store, not Gallery, without intermediate
 test('desktop and explicit user destinations are preserved',async()=>{
   const desktop=await simulate('lab',{mobile:false});
   assert.deepEqual(desktop.spa,[]);
-  assert.deepEqual(desktop.hard,['/photographer/gallery']);
+  // R2035 transfers desktop landing ownership to the authenticated tab resolver.
+  // This suite also runs earlier in the build, before that late installer.
+  if(entry.includes('/* PB2035 desktop landing owner */')){
+    assert.deepEqual(desktop.hard,[]);assert.equal(desktop.requests.length,0);
+  }else assert.deepEqual(desktop.hard,['/photographer/gallery']);
   assert.equal(desktop.pending,false);
   for(const [pathname,search] of [
     ['/photographer/gallery',''],

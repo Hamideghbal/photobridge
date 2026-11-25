@@ -1,20 +1,5 @@
-
-/* R2035: a single desktop entry cover, never on the login form or mobile. */
+/* R2037: retire R2035's extra full-screen cover even if stale markup survives.
+   Do not alter native headers, scroll geometry, mobile, or Windows binaries. */
 @media(min-width:821px){
- html.pb2035EntryPending body:not(:has(#root .unifiedLoginPage,#root .passwordResetCard)) #pb2035EntryOverlay{
-  position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  background:#f5f7fb;color:#344054;font:700 13px/1.8 Vazirmatn,Tahoma,sans-serif;direction:rtl;
- }
- /* Before DOMContentLoaded installs the overlay, suppress premature page paint.
-    Opacity rather than visibility preserves measurable layout and auth UI. */
- html.pb2035EntryPending body:not(:has(#pb2035EntryOverlay,#root .unifiedLoginPage,#root .passwordResetCard)) :is(#root,#pb1126ChromeHost,#pbR99LabChooser,.pb1126ContentPanel){opacity:0!important;pointer-events:none!important}
- #pb2035EntryOverlay{display:none}
- html.pb2035EntryPending body:has(#root .unifiedLoginPage,#root .passwordResetCard) #pb2035EntryOverlay{display:none!important}
- #pb2035EntryOverlay button,.pb1126Loading[data-pb2035-error] button{
-  border:1px solid #cbd9ef;border-radius:9px;background:#fff;color:#315efb;font:700 13px/1.6 Vazirmatn,Tahoma,sans-serif;padding:8px 16px;cursor:pointer;
- }
- .pb2035Spinner{width:26px;height:26px;border:3px solid #dce6f9;border-top-color:#315efb;border-radius:50%;animation:pb2035Spin .75s linear infinite}
- @keyframes pb2035Spin{to{transform:rotate(360deg)}}
- @media(prefers-reduced-motion:reduce){.pb2035Spinner{animation:none}}
- .pb1126Loading[data-pb2035-error]{align-content:center;gap:12px;text-align:center}
+ #pb2035EntryOverlay{display:none!important;pointer-events:none!important}
 }

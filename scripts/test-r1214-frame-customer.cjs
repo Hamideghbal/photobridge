@@ -385,3 +385,26 @@ test('R2019 real RTL photo and album order buttons center in third row with nati
   }
  }finally{await browser.close()}
 });
+
+
+test('R2023 photographer footer stays below short and long album, finance and archive content',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const css=fs.readFileSync('scripts/r2001-photographer-fourth-header.css','utf8');
+  for(const cls of ['photographerAlbumListFlush','financeWorkspace accountingWorkspace','photographerArchiveWorkspace']){
+   for(const height of [80,900]){
+    await page.setContent('<html><body><div id="root"><main class="photographerMain" style="height:600px;display:flex;flex-direction:column"><div class="photographerRolePageScrollArea" style="overflow:auto"><section class="'+cls+'" style="height:'+height+'px;flex-shrink:0">content</section><footer class="productFooter">Powered by PhotoBridge</footer></div></main></div></body></html>');
+    await page.addStyleTag({content:css});
+    const result=await page.locator('.photographerRolePageScrollArea').evaluate(el=>{
+     const area=el.getBoundingClientRect(),f=el.querySelector('.productFooter').getBoundingClientRect(),c=el.querySelector('section').getBoundingClientRect();
+     return {bottom:area.bottom,footer:f.bottom,top:f.top,content:c.bottom,position:getComputedStyle(el.querySelector('.productFooter')).position};
+    });
+    assert.equal(result.position,'static');
+    assert(result.top>=result.content-1,'footer cannot cover the content');
+    if(height===80)assert(Math.abs(result.bottom-result.footer)<=2,'short content footer sits at bottom');
+    else assert(result.footer>result.bottom,'long content footer remains in scroll flow');
+   }
+  }
+ }finally{await browser.close()}
+});

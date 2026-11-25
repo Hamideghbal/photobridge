@@ -9,7 +9,7 @@ test('R1977 connected photographer opens native Print orders, not upload-only ch
  const source=read('dist/web/photobridge-r1099-photographer-tabs.js');
  const chrome=read('dist/web/photobridge-r1126-desktop-navigation.js');
  assert(source.includes("next.connectedLab===true"));
- assert(source.includes("location.replace('/photographer/orders')"));
+ assert(source.includes("location.replace('/photographer/orders?workspace=print')"),'first login must retain native Orders board and explicit Print workspace');
  assert(!source.includes("location.replace('/photographer/orders/flow"),'initial landing must not replace order board');
  assert(source.includes("pb1976PrintLanding"),'one-time landing guard remains in place');
  assert(chrome.includes("location.pathname)?'print'")||chrome.includes("location.pathname)?'print':"),'orders are a native Print tab');

@@ -626,3 +626,18 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   top:calc(var(--pb2016ContentEdge) + 8px)!important;max-height:calc(100dvh - var(--pb2016ContentEdge) - 16px)!important;
  }
 }
+
+/* R2017: desktop has one working Send action in the quote; remove the
+   duplicate mobile submit from the desktop third row only. */
+@media(min-width:821px){
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotHeaderActions>button.simplePrintPilotHeaderSubmitMobile{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2016PhotoIntake.pb2016PhotoIntake .simplePrintPilotQuote .simplePrintPilotQuoteSend{
+  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary.pb1316Ready,
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader>.pb1126Secondary.pb1316Ready :is(.pb1127PrintModes,.pb1127PrintUtilities){
+  animation:none!important;transition:none!important;
+ }
+}

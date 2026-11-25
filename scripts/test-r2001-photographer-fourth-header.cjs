@@ -488,3 +488,11 @@ test('R2026 customer invoice range validates dates, preserves applied values on 
  assert(css.includes('font-size:15px!important;font-weight:850!important'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('invoiceFeedback=r2026'));
 });
+
+
+test('R2028 date clear feedback targets the two specific customer date buttons',()=>{
+ for(const [key,placeholder] of [['From','از تاریخ'],['To','تا تاریخ']]){
+  const anchor='className:"dateClearBtn","aria-label":"پاک کردن '+placeholder+'",onClick:()=>{_setPbInv'+key+'("");_setPbInvApplied'+key+'("");Ie(1);_setPb2026Notice(null);_setPb2026Mode("all")';
+  assert.equal(finance.split(anchor).length-1,1,'unique '+key+' date clear handler');
+ }
+});

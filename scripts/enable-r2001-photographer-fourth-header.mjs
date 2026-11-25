@@ -173,5 +173,6 @@ html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-
 html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-name-fit|v904r99-lab-chooser|r1099-photographer-tabs)\.js\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('canonicalPrint=r2007')?url:url+'&canonicalPrint=r2007');
 html=html.replace(/(photobridge-v904r100f41-header-date-name-fit\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileFinance=r2011')?url:url+'&mobileFinance=r2011');
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileOrders=r2012')?url:url+'&mobileOrders=r2012');
+html=html.replace(/(photobridge-(?:v904r100f41-header-date-name-fit\.js|r1322-mobile-print-cards\.css|r2001-photographer-fourth-header\.css)\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('orderBoard=r2013')?url:url+'&orderBoard=r2013');
 write('dist/web/index.html',html);
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

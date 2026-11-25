@@ -44,5 +44,6 @@
  html.pb2036PhotoComposer body #root main.photographerMain.photographerPrintWorkspace :is(.simplePrintPilot,.simplePrintPilotMain,.simplePrintPilotGroups){
   transform:none!important;animation:none!important;transition:none!important;
  }
- html.pb2036PhotoComposer body:has(.pb1793AddonDialog) #pbF37PrintComposerActions.pb2036PhotoActions>.pbF37Send{visibility:hidden!important}
+ html.pb2036PhotoComposer body:has(.pb1793AddonDialog) #pbF37PrintComposerActions.pb2036PhotoActions,
+ html.pb2036PhotoComposer body:has(.pb1793AddonDialog) #pbF37PrintComposerActions.pb2036PhotoActions>button{visibility:hidden!important;pointer-events:none!important}
 }

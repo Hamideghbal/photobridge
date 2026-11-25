@@ -387,5 +387,14 @@ test('R2020 desktop lab right, primary group centered, selected guide follows it
  assert(patch.includes('+button.pb1978VideoGuideButton'));
  assert(patch.includes('background:#2563eb!important'));
  assert.match(patch,/\.pb1632FinanceTabs:not\(\[hidden\]\)\{\s*justify-content:center!important/);
- assert(fs.readFileSync('dist/web/index.html','utf8').includes('centerHeader=r2020'));
+ const html=fs.readFileSync('dist/web/index.html','utf8');
+ const bundle=html.match(/<link\b[^>]*href=["']\/assets\/(photobridge-boot-[a-f0-9]{16}\.css)["'][^>]*>/i);
+ if(bundle){
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  assert.equal(manifest.boot,bundle[1]);
+  assert(manifest.sources.some(u=>u.startsWith('/photobridge-r2001-photographer-fourth-header.css?')&&u.includes('centerHeader=r2020')));
+  assert(fs.readFileSync('dist/web/assets/'+bundle[1],'utf8').includes(patch.trim()));
+ }else{
+  assert(/<link\b[^>]*href=["']\/photobridge-r2001-photographer-fourth-header\.css\?[^"']*centerHeader=r2020[^"']*["']/i.test(html));
+ }
 });

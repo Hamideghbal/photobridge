@@ -1,0 +1,10 @@
+/* PB2036 photo-only ownership */
+function pb2036MobilePhoto(w){
+ if(!w||window!==window.top||!matchMedia('(max-width:820px)').matches)return false;
+ const ua=String(navigator.userAgent||'');
+ if(/Windows/i.test(ua))return false;
+ if(!/Android|iPhone|iPad|iPod/i.test(ua)&&!(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)&&!matchMedia('(pointer:coarse)').matches)return false;
+ if(document.documentElement.classList.contains('pb1126Embedded')||new URLSearchParams(location.search).get('pbDesktopContent')==='1')return false;
+ if(!/^\/photographer\/(?:orders|upload)(?:\/|$)/.test(location.pathname))return false;
+ return w.classList.contains('simplePrintPilotWorkspaceMode')||!!w.querySelector('.simplePrintPilot');
+}

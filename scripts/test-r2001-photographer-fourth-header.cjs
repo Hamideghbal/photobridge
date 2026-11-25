@@ -463,7 +463,7 @@ test('R2024 chooser to new lab releases second header with four real controls, e
 
 
 test('R2026 customer invoice range validates dates, preserves applied values on error and reports results',()=>{
- const a=finance.indexOf('const pb2026Notify='),b=finance.indexOf(';const Ve=r.filter(',a);
+ const a=finance.indexOf('const pb2026Notify='),b=finance.indexOf(';const Ve=pb1822FinanceNewestFirst(r.filter(',a);
  assert(a>=0&&b>a);
  function run(role,from,to){
   const calls=[],notice=[];

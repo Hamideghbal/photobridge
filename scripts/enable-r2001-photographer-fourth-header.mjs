@@ -379,8 +379,9 @@ if(!pb2026UI.includes('/* PB2026 customer invoice filter feedback */')){
  const patch=(a,b,label)=>{part=once(part,a,b,'R2026 '+label)};
  const state='[_pbAccountingMark,_setPbAccountingMark]=x.useState(null)';
  patch(state,state+',[_pb2026Mode,_setPb2026Mode]=x.useState("all"),[_pb2026Notice,_setPb2026Notice]=x.useState(null)','customer filter state');
- const applied='const Ve=r.filter(';
- const helper='const pb2026Notify=(kind,message="")=>_setPb2026Notice(old=>({kind,message,serial:(old?.serial||0)+1})),pb2026ApplyRange=()=>{if(t!=="lab"){if(!_pbInvFrom||!_pbInvTo){pb2026Notify("error","لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.");return}if(_pbInvFrom>_pbInvTo){pb2026Notify("error","تاریخ شروع نباید بعد از تاریخ پایان باشد.");return}_setPb2026Mode("range");pb2026Notify("range")}_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)};const Ve=r.filter(';
+ // R1822 already wraps the invoice filter before this stage. Keep sorting before pagination.
+ const applied='const Ve=pb1822FinanceNewestFirst(r.filter(';
+ const helper='const pb2026Notify=(kind,message="")=>_setPb2026Notice(old=>({kind,message,serial:(old?.serial||0)+1})),pb2026ApplyRange=()=>{if(t!=="lab"){if(!_pbInvFrom||!_pbInvTo){pb2026Notify("error","لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.");return}if(_pbInvFrom>_pbInvTo){pb2026Notify("error","تاریخ شروع نباید بعد از تاریخ پایان باشد.");return}_setPb2026Mode("range");pb2026Notify("range")}_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)};const Ve=pb1822FinanceNewestFirst(r.filter(';
  patch(applied,helper,'validate requested date range');
  const today='_pbInvAppliedFrom===$s(new Date())&&_pbInvAppliedTo===$s(new Date())';
  patch('className:"pb1176Today "+('+today+'?"active":"")','className:"pb1176Today "+(('+today+'&&(t==="lab"||_pb2026Mode!=="range"))?"active":""),"aria-pressed":'+today+'&&(t==="lab"||_pb2026Mode!=="range")','today selection');

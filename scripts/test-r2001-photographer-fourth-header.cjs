@@ -374,6 +374,6 @@ test('R2018 all four print destinations are required and share route-driven sele
  assert(nav.includes('pb2018MountPrintGuides?.()'));
  const patch=css.slice(css.indexOf('/* R2018: four matching desktop tabs'));
  assert(patch.includes('.finance,.archive'));assert(patch.includes('left:50%!important'));assert(patch.includes('translateX(-50%)'));
- assert(patch.includes('background:#315efb!important'));assert(patch.includes('.pb1127PrintRow[hidden]'));
+ assert(patch.includes('background:var(--pb1989-blue,#3b82f6)!important'));assert(patch.includes('background:#fff!important;color:#1b2e48!important'));assert(patch.includes('.pb569GuideArrow'));assert(patch.includes('.pb569GuideLabel'));assert(patch.includes('.pb1127PrintRow[hidden]'));
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('fourTabs=r2018'));
 });

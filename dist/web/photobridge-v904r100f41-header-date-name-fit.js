@@ -154,10 +154,10 @@
   }
   function fixPrint(){
     const w=$('.photographerMain.photographerPrintWorkspace');if(!w)return;
-    const sc=w.querySelector(':scope>.photographerRolePageScrollArea'),comp=orderComposer(),top=comp?241:181;
+    const sc=w.querySelector(':scope>.photographerRolePageScrollArea'),comp=orderComposer(),board=!comp&&sc?.querySelector('.ordersWorkspace.liveCustomerOrders'),top=comp?241:board?Math.ceil($('#pbF37Tabs')?.getBoundingClientRect().bottom||181):181;
     document.body.classList.add('pbF37PrintMode');document.body.classList.toggle('pbF37PrintComposer',comp);
     if(comp){$('#pb762-add')?.remove();$('#pb765-add')?.remove();}
-    if(sc){const map={position:'fixed',top:`${top}px`,left:'0px',right:'0px',bottom:'78px',height:'auto','min-height':'0px',margin:'0px','padding-top':'10px','box-sizing':'border-box','overflow-y':'auto','overflow-x':'hidden',transition:'none',animation:'none',transform:'none',opacity:'1',visibility:'visible'};for(const [k,v] of Object.entries(map))if(sc.style.getPropertyValue(k)!==v||sc.style.getPropertyPriority(k)!=='important')sc.style.setProperty(k,v,'important')}
+    if(sc){const map={position:'fixed',top:`${top}px`,left:'0px',right:'0px',bottom:'78px',height:'auto','min-height':'0px',margin:'0px','padding-top':board?'3px':'10px','box-sizing':'border-box','overflow-y':'auto','overflow-x':'hidden',transition:'none',animation:'none',transform:'none',opacity:'1',visibility:'visible'};for(const [k,v] of Object.entries(map))if(sc.style.getPropertyValue(k)!==v||sc.style.getPropertyPriority(k)!=='important')sc.style.setProperty(k,v,'important')}
     // Legacy top context rail is mirrored into the F37 title/tabs and must never sit below the header.
     const rail=w.querySelector(':scope>.photographerLabContextRail');if(rail){rail.style.setProperty('display','none','important');rail.style.setProperty('visibility','hidden','important');rail.style.setProperty('pointer-events','none','important')}
     ensureComposerActions();

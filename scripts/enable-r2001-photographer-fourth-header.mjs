@@ -389,7 +389,11 @@ if(!pb2026UI.includes('/* PB2026 customer invoice filter feedback */')){
  patch('className:"invoiceRangeAll",onClick:','className:"invoiceRangeAll"+(t!=="lab"&&!_pbInvAppliedFrom&&!_pbInvAppliedTo?" active":""),"aria-pressed":t!=="lab"&&!_pbInvAppliedFrom&&!_pbInvAppliedTo,onClick:','all selected state');
  patch('if(t!=="lab")c("");_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1)','if(t!=="lab")c("");_setPbInvFrom(day);_setPbInvTo(day);_setPbInvAppliedFrom(day);_setPbInvAppliedTo(day);Ie(1);if(t!=="lab"){_setPb2026Mode("today");pb2026Notify("today")}','today notice');
  patch('t!=="lab"&&c(""),_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1)','t!=="lab"&&c(""),_setPbInvFrom(""),_setPbInvTo(""),_setPbInvAppliedFrom(""),_setPbInvAppliedTo(""),Ie(1),t!=="lab"&&(_setPb2026Mode("all"),pb2026Notify("all"))','all notice');
- for(const key of ['From','To'])patch('_setPbInvApplied'+key+'("");Ie(1)','_setPbInvApplied'+key+'("");Ie(1);_setPb2026Notice(null);_setPb2026Mode("all")','clear '+key+' feedback');
+ // R2028: scope to the R2003 date-clear button, not a shared setter tail.
+ for(const [key,placeholder] of [['From','از تاریخ'],['To','تا تاریخ']]){
+  const handler='className:"dateClearBtn","aria-label":"پاک کردن '+placeholder+'",onClick:()=>{_setPbInv'+key+'("");_setPbInvApplied'+key+'("");Ie(1)';
+  patch(handler,handler+';_setPb2026Notice(null);_setPb2026Mode("all")','clear '+key+' feedback');
+ }
  const feedback='t==="customer"&&_pb2026Notice&&e.jsx("div",{className:"pb2026InvoiceFeedback",role:_pb2026Notice.kind==="error"?"alert":"status","aria-live":"polite","data-kind":_pb2026Notice.kind,children:_pb2026Notice.kind==="error"?_pb2026Notice.message:m?"در حال دریافت فاکتورها…":_pb2026Notice.kind==="range"?(Ve.length?V(Ve.length)+" سند مالی در بازه انتخابی یافت شد.":"در بازه انتخابی فاکتور یا سند مالی یافت نشد."):_pb2026Notice.kind==="today"?(Ve.length?V(Ve.length)+" سند مالی امروز یافت شد.":"امروز فاکتور یا سند مالی یافت نشد."):(Ve.length?V(Ve.length)+" سند مالی نمایش داده شد.":"فاکتور یا سند مالی یافت نشد.")},_pb2026Notice.serial)';
  patch('Ve.length?e.jsxs(e.Fragment,{children:[','Ve.length?e.jsxs(e.Fragment,{children:['+feedback+',','notice above results');
  const empty='e.jsx(zn,{text:"هنوز فاکتور یا سند مالی صادر نشده است."})';

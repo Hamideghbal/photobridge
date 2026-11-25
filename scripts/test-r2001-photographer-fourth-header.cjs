@@ -186,7 +186,7 @@ test('R2007 canonical print entry and archive in mobile menu; desktop guides use
 test('R2008 generated Print context patch emits real line breaks and valid executable JS',()=>{
  const writer=fs.readFileSync('scripts/enable-r2001-photographer-fourth-header.mjs','utf8');
  const start=writer.indexOf("if(!ui.includes('/* PB2007 canonical print route */'))");
- const end=writer.indexOf('execFileSync',start);
+ const end=writer.indexOf('\n}',start)+2; // Isolate this patch, not subsequent release blocks.
  assert(start>=0&&end>start);
  const snippet=writer.slice(start,end);
  const gate=new Function('return '+snippet.match(/const gate=(.*);/)[1])();

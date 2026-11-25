@@ -103,10 +103,10 @@
  });
  addEventListener('popstate',schedule);
  const boot=()=>{
-  showGate();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
+  showGate();new MutationObserver(()=>{if(pending||authShown||watchedLoader||auth()||html.classList.contains('pbR100F37LabEnterBoot')||document.querySelector('.pb1126ContentPanel[data-panel="print"]:not([hidden]) .pb1126Loading:not([hidden])'))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
   schedule();
   // Only read geometry while waiting for first paint or a visible Print loader.
-  setInterval(()=>{if(pending||document.querySelector('.pb1126ContentPanel[data-panel="print"]:not([hidden]) .pb1126Loading:not([hidden])')||watchedLoader)schedule()},150);
+  setInterval(()=>{if(pending||watchedLoader)schedule()},150);
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

@@ -624,8 +624,11 @@ const pb2035Style=read('scripts/r2035-photographer-entry.css');
 new Function(pb2035Gate);
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
- if(p==='dist/web/index.html'&&!h.includes('id="pb2035EntryGate"')){
-  h=once(h,'<head>','<head><style id="pb2035EntryStyle">'+pb2035Style+'</style><script id="pb2035EntryGate">'+pb2035Gate+'</script>','R2035 prepaint entry gate');
+ if(p==='dist/web/index.html'){
+  // R2037: always replace a previously installed gate rather than retaining
+  // the blocking R2035 script in a reused build directory.
+  h=h.replace(/<style id="pb2035EntryStyle">[\s\S]*?<\/style>/g,'').replace(/<script id="pb2035EntryGate">[\s\S]*?<\/script>/g,'');
+  h=once(h,'<head>','<head><style id="pb2035EntryStyle">'+pb2035Style+'</style><script id="pb2035EntryGate">'+pb2035Gate+'</script>','R2037 desktop entry recovery');
  }
  h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*|photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
  write(p,h);

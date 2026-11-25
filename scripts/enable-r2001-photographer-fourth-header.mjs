@@ -403,3 +403,11 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('invoiceFeedback=r2026')?url:url+'&invoiceFeedback=r2026');
  write(p,h);
 }
+
+
+// R2028: refresh CSS only, no changes to finance, settings or navigation handlers.
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableSettingsHeader=r2028')?url:url+'&stableSettingsHeader=r2028');
+ write(p,h);
+}

@@ -432,3 +432,28 @@ test('R2025 selected photographer status is visibly blue with readable count',as
   }
  }finally{await browser.close()}
 });
+
+
+test('R2028 opening inline settings preserves all header positions and enlarges customer tariff values',async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:800}});
+  const manifest=JSON.parse(fs.readFileSync('dist/web/assets/photobridge-boot-manifest.json','utf8'));
+  const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
+  for(const width of [1024,1440,1920]){
+   await page.setViewportSize({width,height:800});
+   await page.setContent('<html dir="rtl" class="pb1126Desktop"><body class="pbAuthenticatedPhotographerPortal"><div id="pb1126ChromeHost"><header id="pb1126DesktopHeader" class="pb1458PrintToolbar"><div class="pb1126Secondary pb1127PrintRow"><div class="pb1127PrintModes pb1989ModelTwo"><button class="photographerPrintPhotoTab">چاپ عکس</button><button class="photographerPrintAlbumTab">صحافی آلبوم</button><button class="finance">مالی</button><button class="archive">آرشیو</button></div><div class="pb1459LabContext">لابراتوار نمونه</div><nav class="pb1635SettingsNav"><button data-settings="prices">تعرفه‌های لابراتوار</button><button data-settings="location">موقعیت عکاسی</button><button data-settings="invites">دعوت همکار</button></nav></div></header></div><div id="root"><main><section class="settingsWorkspace photographerSettings"><div class="settingsBody"><section class="photographerPricingSettings"><div class="photographerTariffDetailedRows"><div><b>۲۰×۳۰</b><div class="photographerTariffValues"><span class="photographerTariffValue"><em>لاستر</em><b>۱۲۵٬۰۰۰</b></span></div></div></div></section></div></section></main></div></body></html>');
+   await page.addStyleTag({content:css});
+   const positions=()=>page.locator('.pb1127PrintRow').evaluate(row=>['.pb1459LabContext','.pb1127PrintModes','.pb1635SettingsNav'].map(q=>{const r=row.querySelector(q).getBoundingClientRect();return [r.x,r.width,r.y,r.height]}));
+   const before=await positions();
+   assert(Math.abs(before[1][0]+before[1][1]/2-width/2)<=2,'primary controls centered');
+   for(const key of ['prices','location','invites']){
+    await page.evaluate(key=>{document.documentElement.classList.add('pb1635SettingsOpen');document.querySelectorAll('.pb1635SettingsNav>button').forEach(b=>b.classList.toggle('active',b.dataset.settings===key))},key);
+    const after=await positions();
+    for(let i=0;i<3;i++)for(let j=0;j<4;j++)assert(Math.abs(after[i][j]-before[i][j])<=1,'settings must not shift header geometry');
+   }
+   assert.equal(await page.locator('.photographerTariffValue>b').evaluate(e=>getComputedStyle(e).fontSize),'14px');
+   assert.equal(await page.locator('.photographerTariffValue>em').evaluate(e=>getComputedStyle(e).fontSize),'11px');
+  }
+ }finally{await browser.close()}
+});

@@ -579,6 +579,17 @@ if(!pb2035Chooser.includes('/* PB2035 bounded lab selection */')){
 }
 for(const p of [pb2035EntryFile,pb2035ChooserFile])execFileSync(process.execPath,['--check',p],{stdio:'inherit'});
 
+// Album binding is OPTIONAL per lab. Read the actual React lab capability,
+// not a guessed number of visible buttons or a timer. Otherwise labs with
+// album_enabled=false can never satisfy R2018/R2024's all-four gate.
+let pb2035Bundle=read(file);
+if(!pb2035Bundle.includes('/* PB2035 optional album readiness */')){
+ const anchor='className:"workspaceNav photographerHeaderNav primaryRoleActions roleHeaderPrimary "+(D?"photographerPrintModeNav":"photographerHomeModeNav"),children:';
+ pb2035Bundle=once(pb2035Bundle,anchor,anchor.replace(',children:',',"data-pb2035-album-enabled":D?(p.lab?(p.lab.album_enabled?"1":"0"):"pending"):void 0,children:'),'R2035 actual lab capability');
+ write(file,pb2035Bundle+'\n/* PB2035 optional album readiness */\n');
+}
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+
 // A document opened directly on /photographer/login can complete login in
 // the same React document. Keep its desktop observer installed, but render
 // nothing on the auth screen; reassert desktop ownership on the real route.
@@ -593,6 +604,15 @@ if(!pb2035Nav.includes('/* PB2035 same-document login */')){
  pb2035Nav=pb2035Nav.slice(0,pos)+pb2035Nav.slice(pos).replace(gate,gate.replace('(login|signup|register|invite)','(signup|register|invite)'));
  const native="const current=currentDocument();const native=selected?(current&&nativeHeader(current)):nativeHeader(document);if(!native)return;";
  pb2035Nav=once(pb2035Nav,native,native+"document.documentElement.classList.add('pb1126Desktop'); /* PB2035 same-document login */",'R2035 reassert canonical header ownership');
+ const allFour='return pb2018Keys.every(k=>keys.has(k));';
+ const available=[
+  'const native=visible.map(el=>el.closest?.("#photographerRoleHeaderV710")).find(Boolean);',
+  '  const capability=native?.querySelector(".photographerPrintModeNav")?.getAttribute("data-pb2035-album-enabled");',
+  '  const required=capability==="0"?pb2018Keys.filter(k=>k!=="class:photographerPrintAlbumTab"):pb2018Keys;',
+  '  return required.every(k=>keys.has(k));'
+ ].join('\n  ');
+ pb2035Nav=once(pb2035Nav,allFour,available,'R2035 optional album cannot block header');
+
  write(pb2035NavFile,pb2035Nav);
 }
 execFileSync(process.execPath,['--check',pb2035NavFile],{stdio:'inherit'});
@@ -607,6 +627,6 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  if(p==='dist/web/index.html'&&!h.includes('id="pb2035EntryGate"')){
   h=once(h,'<head>','<head><style id="pb2035EntryStyle">'+pb2035Style+'</style><script id="pb2035EntryGate">'+pb2035Gate+'</script>','R2035 prepaint entry gate');
  }
- h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*|photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
+ h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*|photobridge-r100f5-entry-routing\.js\?[^"'<> \t\r\n]*|photobridge-v904r99-lab-chooser\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableEntry=r2035')?url:url+'&stableEntry=r2035');
  write(p,h);
 }

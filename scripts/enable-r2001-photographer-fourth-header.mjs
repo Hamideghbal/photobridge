@@ -423,7 +423,7 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
 let pb2030Inset=read(pb2016InsetFile);
 if(!pb2030Inset.includes('/* PB2030 embedded finance inset */')){
  const anchor='const top=getComputedStyle(area).position===\'fixed\'?window.pb1318PrintInset():0;';
- const replacement='const top=area.querySelector(".financeWorkspace .pb2000CustomerInvoiceToolbar,.financeWorkspace .customerStatementWorkspace")?0:getComputedStyle(area).position===\'fixed\'?window.pb1318PrintInset():0; /* PB2030 embedded finance inset */';
+ const replacement='const top=area.querySelector(".financeWorkspace")?0:getComputedStyle(area).position===\'fixed\'?window.pb1318PrintInset():0; /* PB2030 embedded finance inset */';
  pb2030Inset=once(pb2030Inset,anchor,replacement,'R2030 embedded finance scroll origin');
  write(pb2016InsetFile,pb2030Inset);
 }
@@ -501,5 +501,26 @@ execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('financeSettings=r2033')?url:url+'&financeSettings=r2033');
+ write(p,h);
+}
+
+
+// R2034: tag only the customer workspace at its root. This tag is present
+// during loading, when the individual invoice/statement/payment children
+// have not yet been mounted.
+let pb2034UI=read(file);
+if(!pb2034UI.includes('/* PB2034 customer finance tab identity */')){
+ const start=pb2034UI.indexOf('function ub({role:t,'),end=pb2034UI.indexOf('}function hb(',start);
+ if(start<0||end<start)throw Error('[R2034] finance component missing');
+ let part=pb2034UI.slice(start,end+1);
+ const anchor='className:"financeWorkspace accountingWorkspace financeWorkspaceCompact",children:';
+ part=once(part,anchor,'className:"financeWorkspace accountingWorkspace financeWorkspaceCompact","data-pb2034-finance-tab":t==="customer"?w:void 0,children:','R2034 customer finance tab identity');
+ pb2034UI=pb2034UI.slice(0,start)+part+pb2034UI.slice(end+1)+'\n/* PB2034 customer finance tab identity */\n';
+ write(file,pb2034UI);
+}
+execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('allFinanceEdges=r2034')?url:url+'&allFinanceEdges=r2034');
  write(p,h);
 }

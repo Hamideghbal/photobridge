@@ -287,3 +287,11 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-(?:r1126-desktop-navigation\.js|workflow-guides-v572\.js|r2001-photographer-fourth-header\.css)\?[^"'<> \t\r\n]*)/g,url=>url.includes('fourTabs=r2018')?url:url+'&fourTabs=r2018');
  write(p,h);
 }
+
+
+// R2019: invalidate the served stylesheet when its action positioning changes.
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*/g,url=>url.includes('centerOrder=r2019')?url:url+'&centerOrder=r2019');
+ write(p,h);
+}

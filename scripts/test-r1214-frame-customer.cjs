@@ -324,7 +324,7 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
   const css=fs.readFileSync(path.join('dist/web/assets',manifest.boot),'utf8');
   const classes=['photographerPrintPhotoTab','photographerPrintAlbumTab','finance','archive'];
   const labels=['چاپ عکس','صحافی آلبوم','مالی','آرشیو'];
-  const tabs=classes.map((cls,i)=>'<button class="'+cls+'">'+labels[i]+'</button><button class="pb1978VideoGuideButton '+(i>1?'pb2005UtilityGuide':'')+'">راهنما</button>').join('');
+  const tabs=classes.map((cls,i)=>'<button class="'+cls+'">'+labels[i]+'</button><button class="pb1978VideoGuideButton '+(i>1?'pb2005UtilityGuide':'')+'"><span class="pb569GuideArrow">▶</span><em class="pb569GuideLabel">راهنما</em></button>').join('');
   for(const album of [false,true]){
    const order=album?'<div id="photographer-album-new-order-slot"><button>سفارش جدید آلبوم</button></div>':'<div class="photographerLabContextActions"><button class="photographerContextAction primary">چاپ عکس جدید</button></div>';
    await page.setContent('<html class="pb1126Desktop"><body class="pbAuthenticatedPhotographerPortal"><div id="pb1126ChromeHost"><header id="pb1126DesktopHeader" class="pb1458PrintToolbar"><div class="pb1126Secondary pb1127PrintRow"><div class="pb1127PrintModes pb1989ModelTwo">'+tabs+'</div></div></header></div><div id="root"><main class="photographerMain photographerPrintWorkspace pb2015OrderBoard pb2016OrderList pb2016ManagedViewport" style="--pb2016ChromeEdge:114px"><div class="photographerLabContextRail"><div class="photographerLabContextMain">'+order+'</div></div></main></div></body></html>');
@@ -334,10 +334,16 @@ test('R2018 all four desktop tabs use identical visual treatment and the two new
    assert.equal(await buttons.count(),4);
    const original=await buttons.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return [s.height,s.backgroundColor,s.color,s.fontSize,s.borderRadius]}));
    original.forEach(v=>assert.deepEqual(v,original[0]));
+   const guides=page.locator('.pb1127PrintModes>button.pb1978VideoGuideButton');
+   assert.equal(await guides.count(),4);
+   assert.equal(await guides.locator('.pb569GuideArrow').count(),4);
+   assert.equal(await guides.locator('.pb569GuideLabel').count(),4);
+   const looks=await guides.evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),a=getComputedStyle(n.querySelector('.pb569GuideArrow'));return [s.height,s.backgroundColor,s.color,s.borderRadius,a.width,a.height,a.backgroundColor]}));
+   looks.forEach(v=>assert.deepEqual(v,looks[0]));
    for(let i=0;i<4;i++){
     await buttons.evaluateAll((nodes,n)=>nodes.forEach((el,index)=>el.classList.toggle('active',n===index)),i);
     const color=await buttons.nth(i).evaluate(n=>{const s=getComputedStyle(n);return [s.backgroundColor,s.color]});
-    assert.deepEqual(color,['rgb(49, 94, 251)','rgb(255, 255, 255)']);
+    assert.deepEqual(color,['rgb(59, 130, 246)','rgb(255, 255, 255)']);
    }
    const action=page.locator(album?'#photographer-album-new-order-slot':'.photographerLabContextActions');
    const box=await action.boundingBox();assert(box&&Math.abs(box.x+box.width/2-720)<=2,'new order is centered in the viewport');

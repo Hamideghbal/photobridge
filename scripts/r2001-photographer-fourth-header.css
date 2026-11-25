@@ -675,7 +675,12 @@ html body :is(.photographerPrintModeUtilityCluster,#pb1126DesktopHeader .pb1127P
   display:flex!important;justify-content:center!important;align-items:center!important;width:max-content!important;max-width:34%!important;height:34px!important;z-index:422!important;
  }
  html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard #photographer-album-new-order-slot{
-  justify-content:center!important;max-width:100%!important;
+  position:fixed!important;inset:auto!important;top:calc(var(--pb2016ChromeEdge,var(--pb2014OrderTop,114px)) + 5px)!important;
+  left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+  display:flex!important;justify-content:center!important;align-items:center!important;width:max-content!important;max-width:34%!important;z-index:423!important;
+ }
+ html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard .photographerLabContextActions #photographer-album-new-order-slot{
+  position:static!important;inset:auto!important;transform:none!important;max-width:100%!important;
  }
  html:is(.pb1126Desktop:not(.pb1126PanelOpen),.pb1126Embedded) body:not(.pbR100F14ChoosingLab) #root main.photographerMain.photographerPrintWorkspace.pb2015OrderBoard.pb2015OrderBoard :is(.photographerContextStatusesDesktop,#photographer-album-status-desktop-slot .albumHeaderStatuses){
   max-width:calc(33% - 18px)!important;overflow-x:auto!important;

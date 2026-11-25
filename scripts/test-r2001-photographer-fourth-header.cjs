@@ -554,3 +554,24 @@ test('R2030 finance filters are pinned to the scrollport and share the same date
  const html=fs.readFileSync('dist/web/index.html','utf8');
  assert(html.includes('fixedFinance=r2030'));
 });
+
+
+test('R2032 measures the actual finance third row and clears its inset on leaving finance',()=>{
+ const src=fs.readFileSync('dist/web/photobridge-r1318-print-insets.js','utf8');
+ assert.doesNotThrow(()=>new vm.Script(src));
+ const a=src.indexOf('const pb2032BaseInset='),b=src.indexOf("const resize=",a);
+ assert(a>=0&&b>a);
+ const props=new Map(),style={getPropertyValue:k=>props.get(k)||'',setProperty:(k,v)=>props.set(k,v),removeProperty:k=>props.delete(k)};
+ const win={pb1319DesktopPrintInset:()=>114},third={bottom:155,shown:true};
+ const chrome={querySelector:()=>third};
+ const measure=new Function('window','edge','visible','watch','document',src.slice(a,b)+'return pb2032Measure;')(win,els=>Math.max(0,...els.filter(e=>e.shown).map(e=>e.bottom)),e=>e.shown,()=>{},{documentElement:{style}});
+ measure(chrome);assert.equal(props.get('--pb2032-finance-edge'),'155px');
+ third.bottom=166;measure(chrome);assert.equal(win.pb1319DesktopPrintInset(chrome),166);assert.equal(props.get('--pb2032-finance-edge'),'166px');
+ third.shown=false;measure(chrome);assert.equal(win.pb1319DesktopPrintInset(chrome),114);assert(!props.has('--pb2032-finance-edge'));
+ const patch=css.slice(css.indexOf('/* R2032: the root finance scrollport'));
+ assert.match(patch,/top:var\(--pb2032-finance-edge,156px\)!important/);
+ assert.match(patch,/\.pb2015OrderBoard\.pb2015OrderBoard>.photographerRolePageScrollArea\{\s*padding-top:8px!important/);
+ assert.match(patch,/\.archiveLayout>\.persianCalendarCard\{\s*align-self:start!important;max-height:none!important;overflow:visible!important/);
+ assert.match(patch,/\.archiveLayout>\.archiveDayCard\{[\s\S]*?overflow-y:auto!important/);
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeEdge=r2032'));
+});

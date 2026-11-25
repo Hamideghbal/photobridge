@@ -252,3 +252,38 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-(?:r1126-desktop-navigation\.js|r2001-photographer-fourth-header\.css)\?[^"'<> \t\r\n]*)/g,url=>url.includes('stableSecondary=r2017')?url:url+'&stableSecondary=r2017');
  write(p,h);
 }
+
+// R2018: initial entry is atomic; the four primary destinations have one identity.
+const pb2018NavFile='dist/web/photobridge-r1126-desktop-navigation.js';
+let pb2018Nav=read(pb2018NavFile);
+if(!pb2018Nav.includes('/* PB2018 four stable Print tabs */')){
+ const patch=(a,b,label)=>{pb2018Nav=once(pb2018Nav,a,b,'R2018 '+label)};
+ patch(' function cleanClone(original){'," /* PB2018 four stable Print tabs */\n const pb2018Keys=['class:photographerPrintPhotoTab','class:photographerPrintAlbumTab','class:finance','class:archive'];\n const pb2018Main=button=>pb2018Keys.includes(printControlKey(button));\n function pb2018RouteKey(doc){\n  let path='';try{path=doc?.defaultView?.location.pathname||location.pathname}catch{}\n  if(/^\\/photographer\\/finance(?:\\/|$)/.test(path))return 'class:finance';\n  if(/^\\/photographer\\/archive(?:\\/|$)/.test(path))return 'class:archive';\n  if(/^\\/photographer\\/album(?:\\/|$)/.test(path))return 'class:photographerPrintAlbumTab';\n  if(/^\\/photographer\\/(?:orders|upload)(?:\\/|$)/.test(path))return 'class:photographerPrintPhotoTab';\n  return '';\n }\n function pb2018Select(row,key){\n  if(!key)return;\n  for(const b of row.querySelectorAll('[data-pb2017-print-key]')){\n   if(!pb2018Keys.includes(b.dataset.pb2017PrintKey))continue;\n   const selected=b.dataset.pb2017PrintKey===key;\n   for(const name of ['active','selected'])if(b.classList.contains(name)!==selected)b.classList.toggle(name,selected);\n   for(const name of ['aria-pressed','aria-selected'])if(b.getAttribute(name)!==String(selected))b.setAttribute(name,String(selected));\n   if(b.dataset.pb1989Active!==String(selected))b.dataset.pb1989Active=String(selected);\n  }\n }\n function pb2018Complete(visible){\n  const keys=new Set(visible.map(printControlKey));\n  return pb2018Keys.every(k=>keys.has(k));\n }\n"+' function cleanClone(original){','four tab helpers');
+
+ // Finance adds a third row, but that fact must not invalidate the second row.
+ patch("String(pb1631Finance)+'|'+pb1459LabSignature+'|'","(active==='print'?'print':String(pb1631Finance))+'|'+(active==='print'?'':pb1459LabSignature)+'|'",'route-independent second row signature');
+ patch("JSON.stringify(visible.map(printControlSignature).sort((a,b)=>a[0].localeCompare(b[0])))","JSON.stringify(visible.filter(pb2018Main).map(printControlSignature).sort((a,b)=>a[0].localeCompare(b[0])))",'only stable primary identities in signature');
+ patch("if(pb2017Retain&&!choosing&&(!visible.some(el=>el.classList.contains('photographerPrintPhotoTab'))||!visible.some(el=>el.classList.contains('photographerPrintAlbumTab'))))return;","if(pb2017Retain&&!choosing&&!pb2018Complete(visible))return;",'retain all four during remount');
+ patch("const waiting=active==='print'&&!choosing&&!pb2017Retain&&(!nativeModes||!clonedModes||(loading&&!loading.hidden)||document.documentElement.classList.contains('pb1315PanelChanging'));","const waiting=active==='print'&&!choosing&&!pb2017Retain&&(!pb2018Complete(visible)||!nativeModes||!clonedModes||(loading&&!loading.hidden)||doc?.documentElement?.classList.contains('pbR100F37LabEnterBoot')||document.documentElement.classList.contains('pb1315PanelChanging'));",'initial row waits for all four and lab boot');
+ // Preserve R1989 click logic and tests, but apply it to finance/archive too.
+ patch("if(modes&&(copy.classList.contains('photographerPrintPhotoTab')||copy.classList.contains('photographerPrintAlbumTab')))","if(modes&&pb2018Main(copy))",'same selection on every primary tab');
+ patch("modes.querySelectorAll('button.photographerPrintPhotoTab,button.photographerPrintAlbumTab')","modes.querySelectorAll('button.photographerPrintPhotoTab,button.photographerPrintAlbumTab,button.finance:not(.pb2005UtilityGuide),button.archive:not(.pb2005UtilityGuide)')",'four immediate active states');
+ patch("if(active==='print'&&!choosing){pb2017SyncPrintControls(row,visible);","if(active==='print'&&!choosing){pb2017SyncPrintControls(row,visible);pb2018Select(row,pb2018RouteKey(doc));",'route is authoritative for selected tab');
+ patch("if(active==='print'&&!choosing){pb2017SyncPrintControls(row,visible);pb2018Select(row,pb2018RouteKey(doc));","if(active==='print'&&!choosing){pb2017SyncPrintControls(row,visible);pb2018Select(row,pb2018RouteKey(doc));if(pb1459LabSource&&row.dataset.pb2017LabSignature!==pb1459LabSignature){const context=pb1459LabContext(pb1459LabSource),old=row.querySelector('.pb1459LabContext');if(old)old.replaceWith(context);else row.append(context);}",'update lab context without replacing tabs');
+ // On first entry, mount guide siblings in the same JS turn as the row.
+ patch("if(row.hidden!==(choosing||waiting))row.hidden=choosing||waiting;","if(row.hidden!==(choosing||waiting))row.hidden=choosing||waiting;\n  if(active==='print'&&!choosing&&!waiting)window.pb2018MountPrintGuides?.();",'atomic guide mounting');
+ write(pb2018NavFile,pb2018Nav);
+}
+execFileSync(process.execPath,['--check',pb2018NavFile],{stdio:'inherit'});
+const pb2018GuideFile='dist/web/photobridge-workflow-guides-v572.js';
+let pb2018Guide=read(pb2018GuideFile);
+if(!pb2018Guide.includes('/* PB2018 synchronous guide mount */')){
+ pb2018Guide=once(pb2018Guide,'  function queueSync(){','  /* PB2018 synchronous guide mount */\n  window.pb2018MountPrintGuides=()=>{mountHeaderButtons();mountUtilityGuides()};\n  function queueSync(){','R2018 atomic guide hook');
+ write(pb2018GuideFile,pb2018Guide);
+}
+execFileSync(process.execPath,['--check',pb2018GuideFile],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-(?:r1126-desktop-navigation\.js|workflow-guides-v572\.js|r2001-photographer-fourth-header\.css)\?[^"'<> \t\r\n]*)/g,url=>url.includes('fourTabs=r2018')?url:url+'&fourTabs=r2018');
+ write(p,h);
+}

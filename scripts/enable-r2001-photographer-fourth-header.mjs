@@ -450,3 +450,33 @@ for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*|index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('fixedFinance=r2030')?url:url+'&fixedFinance=r2030');
  write(p,h);
 }
+
+
+// R2032: measure the actual bottom of the visible finance third row, not
+// the nominal two-row chrome height. The same measurement serves the native
+// root scrollport and the embedded Print iframe without double-counting.
+let pb2032Inset=read(pb2016InsetFile);
+if(!pb2032Inset.includes('/* PB2032 actual finance header edge */')){
+ const anchor="const resize=typeof ResizeObserver==='function'?new ResizeObserver(schedule):null;";
+ const helper=[
+  '/* PB2032 actual finance header edge */',
+  'const pb2032BaseInset=window.pb1319DesktopPrintInset;',
+  'const pb2032Third=chrome=>chrome.querySelector(".pb1632FinanceTabs:not([hidden])");',
+  'window.pb1319DesktopPrintInset=chrome=>Math.max(pb2032BaseInset(chrome),edge([pb2032Third(chrome)].filter(Boolean)));',
+  'function pb2032Measure(chrome){',
+  ' const third=chrome&&pb2032Third(chrome);',
+  ' if(third&&visible(third)){watch(third);watch(chrome);const value=window.pb1319DesktopPrintInset(chrome)+"px";if(document.documentElement.style.getPropertyValue("--pb2032-finance-edge")!==value)document.documentElement.style.setProperty("--pb2032-finance-edge",value);}',
+  ' else if(document.documentElement.style.getPropertyValue("--pb2032-finance-edge"))document.documentElement.style.removeProperty("--pb2032-finance-edge");',
+  '}'
+ ].join('\n');
+ pb2032Inset=once(pb2032Inset,anchor,helper+'\n '+anchor,'R2032 finance edge helper');
+ const panelLine='if(chrome&&panel&&!panel.hidden){';
+ pb2032Inset=once(pb2032Inset,panelLine,'pb2032Measure(chrome);\n  '+panelLine,'R2032 measure before scroll positioning');
+ write(pb2016InsetFile,pb2032Inset);
+}
+execFileSync(process.execPath,['--check',pb2016InsetFile],{stdio:'inherit'});
+for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
+ let h=read(p);
+ h=h.replace(/(photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*|photobridge-r1318-print-insets\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('financeEdge=r2032')?url:url+'&financeEdge=r2032');
+ write(p,h);
+}

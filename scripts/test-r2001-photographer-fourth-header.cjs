@@ -460,3 +460,31 @@ test('R2024 chooser to new lab releases second header with four real controls, e
  assert(nav.includes("pb1315Sync(panels.get('print'),false)"));
  assert(nav.includes("!pb2024PrintReady(doc)||!pb2018Complete(visible)"));
 });
+
+
+test('R2026 customer invoice range validates dates, preserves applied values on error and reports results',()=>{
+ const a=finance.indexOf('const pb2026Notify='),b=finance.indexOf(';const Ve=r.filter(',a);
+ assert(a>=0&&b>a);
+ function run(role,from,to){
+  const calls=[],notice=[];
+  const apply=new Function('t','_pbInvFrom','_pbInvTo','_setPbInvAppliedFrom','_setPbInvAppliedTo','Ie','_setPb2026Mode','_setPb2026Notice',finance.slice(a,b)+';return pb2026ApplyRange;')(role,from,to,v=>calls.push(['from',v]),v=>calls.push(['to',v]),v=>calls.push(['page',v]),v=>calls.push(['mode',v]),fn=>notice.push(fn(notice.at(-1))));
+  apply();apply();
+  return {calls,notice};
+ }
+ for(const [from,to] of [['',''],['2026-11-25',''],['','2026-11-25'],['2026-11-26','2026-11-25']]){
+  const r=run('customer',from,to);
+  assert.equal(r.calls.length,0);
+  assert.equal(r.notice[0].kind,'error');assert.equal(r.notice[1].serial,2);
+ }
+ const valid=run('customer','2026-11-01','2026-11-25');
+ assert.deepEqual(valid.calls.slice(0,4),[['mode','range'],['from','2026-11-01'],['to','2026-11-25'],['page',1]]);
+ assert.equal(valid.notice[0].kind,'range');
+ const lab=run('lab','','');
+ assert.deepEqual(lab.calls.slice(0,3),[['from',''],['to',''],['page',1]]);assert.equal(lab.notice.length,0);
+ assert(finance.includes('className:"invoiceRangeAll"+(t!=="lab"&&!_pbInvAppliedFrom&&!_pbInvAppliedTo?" active":"")'));
+ assert(finance.includes('در بازه انتخابی فاکتور یا سند مالی یافت نشد.'));
+ assert(finance.includes('در حال دریافت فاکتورها…'));
+ assert(css.includes('/* R2026: tidy status pills'));
+ assert(css.includes('font-size:15px!important;font-weight:850!important'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('invoiceFeedback=r2026'));
+});

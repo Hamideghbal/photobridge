@@ -353,7 +353,7 @@ test('R2017 print secondary controls retain their identity when active and disab
 });
 
 
-test('R2018 all four print destinations are required and share route-driven selection',()=>{
+test('R2018 all primary print destinations share route-driven selection',()=>{
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  assert.doesNotThrow(()=>new vm.Script(nav));
  const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
@@ -427,7 +427,7 @@ test('R2022 queue skeleton is tied to first-load or retry, never fake order IDs'
 });
 
 
-test('R2024 chooser to new lab releases second header with four real controls, even if old boot is still set',()=>{
+test('R2024 chooser to new lab releases second header with real controls, even if old boot is still set',()=>{
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  assert.doesNotThrow(()=>new vm.Script(nav));
  const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
@@ -436,9 +436,9 @@ test('R2024 chooser to new lab releases second header with four real controls, e
  const cls=(...initial)=>{const set=new Set(initial);return {contains:k=>set.has(k),toggle:(k,on)=>on?set.add(k):set.delete(k),remove:k=>set.delete(k)}};
  const keys=['class:photographerPrintPhotoTab','class:photographerPrintAlbumTab','class:finance','class:archive'];
  const controls=keys.map(key=>({key,hidden:false,getAttribute:()=>null,classList:cls()}));
- const makeDoc=({search='',boot=false,chooser=false,ready=true,path='/photographer/orders/flow',count=4}={})=>{
+ const makeDoc=({search='',boot=false,chooser=false,ready=true,path='/photographer/orders/flow',count=4,noAlbum=false}={})=>{
   const doc={body:{classList:chooser?cls('pbR100F14ChoosingLab'):cls()},documentElement:{classList:boot?cls('pbR100F37LabEnterBoot'):cls()},defaultView:{location:{pathname:path,search},getComputedStyle:()=>({display:'block'})}};
-  doc.querySelector=q=>q==='#pbR99LabChooser'?(chooser?{hidden:false}:null):q==='#photographerRoleHeaderV710'?(ready?{querySelectorAll:()=>controls.slice(0,count)}:null):q.includes('photographerRolePageScrollArea')?(ready?{children:[]}:null):q==='.photographerPrintModeNav'?(ready?{}:null):null;
+  doc.querySelector=q=>q==='#pbR99LabChooser'?(chooser?{hidden:false}:null):q==='#photographerRoleHeaderV710'?(ready?{querySelectorAll:()=>controls.filter(c=>!noAlbum||!c.key.includes('Album')).slice(0,count)}:null):q.includes('photographerRolePageScrollArea')?(ready?{children:[]}:null):q==='.photographerPrintModeNav'?(ready?{}:null):null;
   return doc;
  };
  const parent={documentElement:{classList:cls('pb1315PanelChanging')}},row={hidden:true,dataset:{}},loader={hidden:false};
@@ -453,6 +453,7 @@ test('R2024 chooser to new lab releases second header with four real controls, e
  doc=makeDoc({boot:true});assert(h.pb2024PrintReady(doc));h.pb1315Sync(panel,false);
  assert(loader.hidden);assert(!parent.documentElement.classList.contains('pb1315PanelChanging'));assert.equal(scheduled,0);
  h.pb1315Sync(panel);assert.equal(scheduled,1);
+ doc=makeDoc({boot:true,noAlbum:true});loader.hidden=false;assert(h.pb2024PrintReady(doc));h.pb1315Sync(panel,false);assert(loader.hidden);assert(!parent.documentElement.classList.contains('pb1315PanelChanging'));
  for(const path of ['/photographer/album','/photographer/finance','/photographer/archive'])assert(h.pb2024PrintReady(makeDoc({path})));
  assert(!h.pb2024PrintReady(makeDoc({path:'/photographer/gallery'})));
  assert(!h.pb2024PrintReady(makeDoc({search:'?pbLabChooser=1',boot:true})));
@@ -626,7 +627,7 @@ test('R2034 all finance tabs reserve the same header edge even before child cont
 });
 
 
-test('R2035 lab without binding is ready with three actual controls; enabled and unknown binding still require four',()=>{
+test('R2038 core print destinations are mandatory; album availability never blocks the second header',()=>{
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
  assert(a>=0&&b>a);
@@ -637,11 +638,28 @@ test('R2035 lab without binding is ready with three actual controls; enabled and
  assert(h(make('0',printOnly)),'print-only laboratory must not wait for an unavailable service');
  assert(!h(make('0',printOnly.slice(0,2))),'finance/archive are still mandatory');
  for(const cap of ['1','pending',null]){
-  assert(!h(make(cap,printOnly)));
+  assert(h(make(cap,printOnly)), 'optional metadata cannot block real core controls');
   assert(h(make(cap,keys)));
  }
  assert(ui.includes('"data-pb2035-album-enabled":D?(p.lab?(p.lab.album_enabled?"1":"0"):"pending"):void 0'));
  assert(nav.includes('/* PB2035 same-document login */'));
+ assert(nav.includes('/* PB2038 optional binding header */'));
+ const native=nav.match(/const nativeModes=active==='print'[^;]*;/)?.[0];
+ const cloned=nav.match(/const clonedModes=[^;]*;/)?.[0];
+ assert(native&&cloned);
+ const ready=new Function('active','choosing','visible','row','pb2018Complete',native+'\n'+cloned+'\nreturn nativeModes&&clonedModes;');
+ const row=list=>({querySelectorAll:selector=>{assert.equal(selector,'.pb1127PrintModes>button[data-pb2017-print-key]');return list}});
+ for(const cap of ['0','1','pending',null]){
+  const three=make(cap,printOnly),four=make(cap,keys);
+  assert(ready('print',false,three,row(three),h));
+  assert(ready('print',false,four,row(four),h));
+  assert(!ready('print',false,three,row(three.slice(0,2)),h));
+  assert(!ready('print',false,three.slice(0,2),row(three),h));
+  assert(!ready('print',true,three,row(three),h));
+  assert(!ready('store',false,three,row(three),h));
+ }
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('optionalBinding=r2038'));
+
 });
 test('R2035 desktop entry and lab selection are bounded without changing mobile launch',async()=>{
  const entry=fs.readFileSync('dist/web/photobridge-r100f5-entry-routing.js','utf8');

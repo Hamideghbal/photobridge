@@ -932,3 +932,46 @@ html body #root .photographerPrintWorkspace .liveCustomerOrders .pb2022OrderSkel
  }
  @keyframes pb2026InvoiceNotice{from{opacity:.55}to{opacity:1}}
  @media(prefers-reduced-motion:reduce){.pb2026InvoiceFeedback{animation:none!important}}
+
+/* R2029: one visible desktop finance header; atomic readable button states. */
+/* Keep the React source controls mounted for the desktop third-row proxy.
+   Embedded documents may be narrow, so do not use a viewport breakpoint here.
+   Standalone mobile retains the R2011 native finance navigation. */
+html.pb1126Embedded body #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace>.financeNavDock,
+html.pb1126Desktop.pb1632FinanceThird body:has(#pb1126DesktopHeader>.pb1632FinanceTabs:not([hidden])) #root#root main.photographerMain .photographerRolePageScrollArea .financeWorkspace>.financeNavDock{
+ display:none!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today){
+ animation:none!important;transition:box-shadow .12s ease-out!important;
+ transform:none!important;opacity:1!important;
+ -webkit-text-fill-color:currentColor!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today):not(.active){
+ background:#fff!important;border-color:#cbd9ef!important;color:#344054!important;-webkit-text-fill-color:currentColor!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today).active{
+ background:#315efb!important;border-color:#315efb!important;color:#fff!important;-webkit-text-fill-color:currentColor!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today) :is(span,b,strong,em,small){
+ color:inherit!important;-webkit-text-fill-color:currentColor!important;animation:none!important;transition:none!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today):active{
+ box-shadow:inset 0 0 0 2px rgba(100,130,190,.24)!important;
+}
+html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today):focus-visible{
+ outline:2px solid #7796eb!important;outline-offset:2px!important;
+}
+@media(min-width:821px){
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton){
+  font-size:11px!important;animation:none!important;transition:box-shadow .12s ease-out!important;
+  -webkit-text-fill-color:currentColor!important;
+ }
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton) :is(span,b,strong,em,small,label){
+  font-size:inherit!important;color:inherit!important;-webkit-text-fill-color:currentColor!important;
+  animation:none!important;transition:none!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html body #root#root .photographerRolePageScrollArea .financeWorkspace .pb2000CustomerInvoiceToolbar .invoiceRangeToolbar>button:is(.invoiceRangeApply,.invoiceRangeAll,.pb1176Today),
+ html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader#pb1126DesktopHeader .pb1126Secondary.pb1127PrintRow .pb1127PrintModes.pb1989ModelTwo>button:is(.photographerPrintPhotoTab,.photographerPrintAlbumTab,.finance,.archive):not(.pb1978VideoGuideButton){transition:none!important}
+}

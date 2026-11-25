@@ -575,3 +575,33 @@ test('R2032 measures the actual finance third row and clears its inset on leavin
  assert.match(patch,/\.archiveLayout>\.archiveDayCard\{[\s\S]*?overflow-y:auto!important/);
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeEdge=r2032'));
 });
+
+
+test('R2033 customer finance heading is never rendered and statement date validation preserves lab behavior',()=>{
+ assert(finance.includes('t==="lab"&&e.jsxs("div",{className:"sectionTopline financeTopline"'));
+ const start=finance.indexOf('onClick:()=>{if(t==="customer"){if(!_e||!je)');
+ const end=finance.indexOf(',children:D?"در حال محاسبه…":"نمایش حساب"',start);
+ assert(start>=0&&end>start);
+ const run=(role,from,to)=>{
+  let calls=0;const messages=[];
+  const click=new Function('t','_e','je','alert','b','return '+finance.slice(start+'onClick:'.length,end))(role,from,to,m=>messages.push(m),()=>calls++);
+  click();return {calls,messages};
+ };
+ for(const [from,to] of [['',''],['2026-11-01',''],['','2026-11-26'],['2026-11-26','2026-11-01']]){
+  const result=run('customer',from,to);assert.equal(result.calls,0);assert.equal(result.messages.length,1);
+ }
+ assert.deepEqual(run('customer','2026-11-01','2026-11-26'),{calls:1,messages:[]});
+ assert.deepEqual(run('customer','2026-11-26','2026-11-26'),{calls:1,messages:[]});
+ assert.deepEqual(run('lab','',''),{calls:1,messages:[]});
+ const startGrid=css.indexOf('/* R2020:'),endGrid=css.indexOf('/* R2021:',startGrid);
+ const grid=css.slice(startGrid,endGrid);
+ assert(!grid.includes(':not(.pb1635SettingsOpen)'),'settings retains same three-column grid');
+ assert.match(grid,/\.pb1459LabContext\{\s*grid-column:1!important/);
+ assert.match(grid,/\.pb1127PrintModes\{\s*grid-column:2!important/);
+ assert.match(grid,/\.pb1635SettingsNav,\.pb1127PrintUtilities\)\{\s*grid-column:3!important/);
+ const patch=css.slice(css.indexOf('/* R2033: finance title'));
+ assert.match(patch,/\.financeWorkspace>\.sectionTopline\.financeTopline\{\s*display:none!important/);
+ assert.match(patch,/\.pb569GuideArrow\{\s*flex:0 0 10px!important/);
+ assert.match(patch,/\.pb569GuideLabel\{\s*font:700 8px/);
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeSettings=r2033'));
+});

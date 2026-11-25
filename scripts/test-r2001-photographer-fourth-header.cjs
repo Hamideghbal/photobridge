@@ -605,3 +605,22 @@ test('R2033 customer finance heading is never rendered and statement date valida
  assert.match(patch,/\.pb569GuideLabel\{\s*font:700 8px/);
  assert(fs.readFileSync('dist/web/index.html','utf8').includes('financeSettings=r2033'));
 });
+
+
+test('R2034 all finance tabs reserve the same header edge even before child content mounts',()=>{
+ const patch=css.slice(css.indexOf('/* R2032: the root finance scrollport'),css.indexOf('/* R2033: finance title'));
+ assert.match(patch,/html\.pb1126Desktop:not\(\.pb1126Embedded\):not\(\.pb1635SettingsOpen\)[^{]+\.photographerRolePageScrollArea:has\(>\.financeWorkspace\)\{\s*position:fixed!important;inset:var\(--pb2032-finance-edge,156px\)/);
+ assert.match(patch,/html\.pb1126Embedded[^{]+\.photographerRolePageScrollArea:has\(>\.financeWorkspace\)\{\s*inset:0!important/);
+ const old=css.slice(css.indexOf('/* R2030: pinned fourth finance header'),css.indexOf('/* R2032: the root finance scrollport'));
+ assert.match(old,/html\.pb1126Embedded[^{]+\.photographerRolePageScrollArea:has\(>\.financeWorkspace\)\{\s*position:fixed!important;inset:0!important/);
+ const inset=fs.readFileSync('dist/web/photobridge-r1318-print-insets.js','utf8');
+ assert(inset.includes('area.querySelector(".financeWorkspace")?0:'));
+ const marker='"data-pb2034-finance-tab":t==="customer"?w:void 0';
+ assert(finance.includes(marker));
+ const get=new Function('t','w','return ({'+marker+'})["data-pb2034-finance-tab"]');
+ for(const tab of ['payments','statement','invoices'])assert.equal(get('customer',tab),tab);
+ assert.equal(get('lab','payments'),undefined);
+ const gap=css.slice(css.indexOf('/* R2034: the measured finance edge'));
+ assert.match(gap,/\.financeWorkspace\[data-pb2034-finance-tab="payments"\]\{\s*margin-top:0!important;padding-top:8px!important/);
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('allFinanceEdges=r2034'));
+});

@@ -174,5 +174,22 @@ html=html.replace(/(photobridge-(?:workflow-guides-v572|v904r100f41-header-date-
 html=html.replace(/(photobridge-v904r100f41-header-date-name-fit\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileFinance=r2011')?url:url+'&mobileFinance=r2011');
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<> \t\r\n]*)/g,url=>url.includes('mobileOrders=r2012')?url:url+'&mobileOrders=r2012');
 html=html.replace(/(photobridge-(?:v904r100f41-header-date-name-fit\.js|r1322-mobile-print-cards\.css|r2001-photographer-fourth-header\.css)\?[^"'<>\s]*|index-UIRefine-v655-r84\.js\?[^"'<>\s]*)/g,url=>url.includes('orderBoard=r2013')?url:url+'&orderBoard=r2013');
+const pb2014ShellBoot="/* PB2014 desktop shell boundary */\n(function(){\n if(!matchMedia('(min-width:821px)').matches)return;\n const isRoot=window.self===window.top;\n let printFrame=false;\n try{printFrame=!isRoot&&!!window.frameElement?.closest('.pb1126ContentPanel[data-panel=\"print\"]')}catch{}\n const isPrint=p=>/^\\/photographer\\/(?:orders|upload|album|archive|finance)(?:\\/|$)/.test(p);\n const normalize=value=>{\n  if(value==null)return value;\n  let u;try{u=new URL(value,location.href)}catch{return value}\n  if(u.origin!==location.origin||!/^\\/photographer(?:\\/|$)/.test(u.pathname))return value;\n  if(isRoot){\n   for(const key of ['pbDesktopContent','pbDesktopFrameStore','pbUtilityWindow','pbCrmDesktopTab'])u.searchParams.delete(key);\n  }else if(printFrame&&isPrint(u.pathname)){\n   u.searchParams.set('pbDesktopContent','1');u.searchParams.set('workspace','print');\n  }\n  if(isPrint(u.pathname)&&u.searchParams.get('pbLabChooser')!=='1'){\n   if(u.pathname==='/photographer/orders'||u.pathname==='/photographer/orders/')u.pathname='/photographer/orders/flow';\n   u.searchParams.set('workspace','print');\n  }\n  return u.pathname+u.search+u.hash;\n };\n if(!isRoot&&!printFrame)return;\n const initial=normalize(location.href);\n if(initial!==location.pathname+location.search+location.hash)history.replaceState(history.state,'',initial);\n for(const name of ['pushState','replaceState']){\n  const original=history[name];\n  history[name]=function(state,title,url){return original.call(this,state,title,normalize(url))};\n }\n})();";
+if(!html.includes('id="pb2014ShellBoot"'))html=html.replace('<head>','<head><script id="pb2014ShellBoot">'+pb2014ShellBoot+'</script>');
+html=html.replace(/(photobridge-(?:r1126-desktop-navigation|r1461-print-navigation|v904r99-lab-chooser|r1099-photographer-tabs)\.js\?[^"'<>\s]*|photobridge-r2001-photographer-fourth-header\.css\?[^"'<>\s]*)/g,url=>url.includes('desktopShell=r2014')?url:url+'&desktopShell=r2014');
 write('dist/web/index.html',html);
+
+// R2014: a frame query is not evidence of being inside a frame.
+const pb2014NavFile='dist/web/photobridge-r1126-desktop-navigation.js';
+let pb2014Nav=read(pb2014NavFile);
+if(!pb2014Nav.includes('/* PB2014 actual desktop frame */')){
+ const old="if(query.get('pbDesktopContent')==='1'||embeddedHost)";
+ if(pb2014Nav.includes(old))pb2014Nav=once(pb2014Nav,old,"if(window.self!==window.top&&(query.get('pbDesktopContent')==='1'||embeddedHost)) /* PB2014 actual desktop frame */",'R2014 real frame identity');
+ else throw Error('[R2014] expected desktop embedded guard');
+ // Never read a different workspace's native header during an active iframe transition.
+ pb2014Nav=once(pb2014Nav,"const native=nativeHeader(currentDocument()||document)||nativeHeader(document);if(!native)return;","const current=currentDocument();const native=selected?(current&&nativeHeader(current)):nativeHeader(document);if(!native)return;",'R2014 active header isolation');
+ write(pb2014NavFile,pb2014Nav);
+}
+execFileSync(process.execPath,['--check',pb2014NavFile],{stdio:'inherit'});
+
 console.log('[R2001] photographer fourth headers and invoice/statement modes ready');

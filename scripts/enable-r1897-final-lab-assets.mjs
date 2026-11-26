@@ -72,7 +72,8 @@ for (const root of ['dist/web', 'dist/web/lab-desktop-ui']) {
   html = html.replace(oldUrl, newUrl);
   fs.writeFileSync(htmlFile, html);
 
-  const changed = [...refreshCompression(uiFile), ...refreshCompression(htmlFile)]
+  const extraFiles=root.endsWith('/lab-desktop-ui')&&ui.includes('/* PB2052 finance picker parity */')?[root+'/photobridge-r1176-lab-finance.js']:[];
+  const changed = [...refreshCompression(uiFile), ...refreshCompression(htmlFile), ...extraFiles.flatMap(refreshCompression)]
     .map(file => file.slice(root.length + 1));
   if (root.endsWith('/lab-desktop-ui')) {
     const manifestFile = root + '/manifest.json';
@@ -81,7 +82,7 @@ for (const root of ['dist/web', 'dist/web/lab-desktop-ui']) {
       const row = manifest.files.find(record => record.name === name);
       if (row) row.sha256 = sha(fs.readFileSync(root + '/' + name));
     }
-    for (const name of [asset, 'index.html']) {
+    for (const name of [asset, 'index.html', ...extraFiles.map(file=>file.slice(root.length+1))]) {
       if (!manifest.files.some(row => row.name === name))
         throw Error('R1897 missing native manifest hash ' + name);
     }

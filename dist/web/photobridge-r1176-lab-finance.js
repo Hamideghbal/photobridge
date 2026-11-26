@@ -7,7 +7,8 @@ const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.class
 const labeled=(root,label,input)=>{const l=node('label','pb1176Field');l.append(node('span',null,label),input);root.append(l);return input};
 // R2056: installed Lab only. Build no customer option nodes until opened.
 function pb2056ManualCustomerPicker(customers){
- const root=node('div','pb2056ManualPicker'),trigger=node('button','pb2056ManualTrigger','انتخاب عکاسی موجود / مشتری جدید');
+ const root=node('div','pb2056ManualPicker'),trigger=node('button','pb2056ManualTrigger'),caption=node('span','pb2057ManualCaption','انتخاب عکاسی موجود / مشتری جدید'),arrow=node('span','pb2057ManualArrow');
+ arrow.setAttribute('aria-hidden','true');trigger.append(caption,arrow);
  trigger.type='button';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-haspopup','true');
  const panel=node('div','pb2056ManualPanel');panel.hidden=true;
  const search=node('input');search.type='search';search.placeholder='جستجوی عکاسی…';search.setAttribute('aria-label','جستجوی عکاسی');search.autocomplete='off';
@@ -16,12 +17,14 @@ function pb2056ManualCustomerPicker(customers){
  const empty={id:'',label:'انتخاب عکاسی موجود / مشتری جدید',key:''};
  const options=[empty,...customers.map(c=>{const label=String(c.name||'مشتری')+' · '+String(c.mobile||'');return {id:String(c.id),label,key:label.toLocaleLowerCase()}})];
  let value='',matches=[],limit=120;
- const control={element:root,get value(){return value},onchange:null};
- function close(){panel.hidden=true;trigger.setAttribute('aria-expanded','false')}
- function select(option){value=option.id;trigger.textContent=option.label;trigger.title=option.label;close();trigger.focus();control.onchange?.()}
+ const control={element:root,get value(){return value},onchange:null,close};
+ function place(){if(panel.hidden)return;const rect=trigger.getBoundingClientRect(),view=window.visualViewport,top=view?.offsetTop||0,height=view?.height||window.innerHeight,bottom=top+height,below=bottom-rect.bottom-12,above=rect.top-top-12;const up=below<270&&above>below;panel.classList.toggle('pb2057Above',up);list.style.maxHeight=Math.max(40,Math.min(200,Math.floor((up?above:below)-49)))+'px'}
+ function outside(event){if(!root.contains(event.target))close()}
+ function close(){panel.hidden=true;trigger.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true)}
+ function select(option){value=option.id;caption.textContent=option.label;trigger.title=option.label;close();trigger.focus();control.onchange?.()}
  function append(){const end=Math.min(limit,matches.length),start=list.children.length,frag=document.createDocumentFragment();for(let i=start;i<end;i++){const option=matches[i],button=node('button','pb2056ManualOption',option.label);button.type='button';button.title=option.label;button.setAttribute('aria-pressed',String(option.id===value));button.onclick=()=>select(option);frag.append(button)}list.append(frag)}
  function render(){const query=search.value.trim().toLocaleLowerCase();matches=query?options.filter(o=>o.key.includes(query)):options;limit=120;list.replaceChildren();list.scrollTop=0;append();if(!matches.length)list.append(node('div','pb2056ManualEmpty','عکاسی یافت نشد.'))}
- function open(){panel.hidden=false;trigger.setAttribute('aria-expanded','true');search.value='';render();search.focus()}
+ function open(){panel.hidden=false;trigger.setAttribute('aria-expanded','true');search.value='';render();place();document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);try{search.focus({preventScroll:true})}catch{search.focus()}}
  trigger.onclick=()=>panel.hidden?open():close();
  search.oninput=render;
  list.addEventListener('scroll',()=>{if(list.scrollTop+list.clientHeight>=list.scrollHeight-48&&limit<matches.length){limit+=120;append()}});
@@ -93,7 +96,7 @@ function manual({api,customers=[],refresh}){
   try{const out=await api('/api/lab/invoices/manual',{method:'POST',body:JSON.stringify(payload)});dialog.close();await refresh();alert('فاکتور شماره '+String(out.invoice?.number||'')+' ثبت و در حسابداری منظور شد.');}
   catch(e){alert('ثبت فاکتور انجام نشد: '+String(e?.data?.error||e?.message||'خطا'));}finally{submit.disabled=false;submit.textContent='ثبت فاکتور و سند حسابداری'}
  };
- dialog.append(box);document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());
+ dialog.append(box);document.body.append(dialog);dialog.addEventListener('close',()=>{if(typeof select.close==='function')select.close();dialog.remove()});
  dialog.addEventListener('click',ev=>{if(ev.target===dialog)dialog.close()});
  dialog.showModal();
 }

@@ -120,3 +120,18 @@ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions select
 .pb2056ManualPicker .pb2056ManualOption{display:block;width:100%;min-width:0;box-sizing:border-box;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 8px;background:#fff;border:0;border-radius:5px;color:#344054;font:500 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
 .pb2056ManualOption:hover,.pb2056ManualOption:focus,.pb2056ManualOption[aria-pressed=true]{background:#eaf1ff;color:#2859b4}
 .pb2056ManualEmpty{padding:8px;color:#667085}
+
+/* PB2057: the native dialog is a top-layer element; its menu must remain inside
+   the dialog, but outside the grid's normal flow. Never portal it to body. */
+.pb1176Backdrop .pb1176CustomerGrid>.pb1176Field{align-self:start;min-width:0}
+.pb1176Backdrop .pb2056ManualPicker{position:relative!important;display:block!important;height:33px!important;min-height:33px!important;max-height:33px!important;overflow:visible!important;box-sizing:border-box!important}
+.pb1176Backdrop .pb2056ManualPicker .pb2056ManualTrigger{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:6px!important;width:100%!important;min-width:0!important;height:33px!important;min-height:33px!important;max-height:33px!important;margin:0!important;padding:0 8px!important;box-sizing:border-box!important;border:1px solid #d3def2!important;border-radius:8px!important;background:#fff!important;color:#344054!important;font:500 11px/1.4 Vazirmatn,Tahoma,sans-serif!important;text-align:right!important}
+.pb1176Backdrop .pb2056ManualTrigger::before{content:none!important;display:none!important}
+.pb1176Backdrop .pb2057ManualCaption{display:block;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.pb1176Backdrop .pb2057ManualArrow{display:grid;place-items:center;flex:0 0 24px;width:24px;height:100%;color:#344054}
+.pb1176Backdrop .pb2057ManualArrow::after{content:'';display:block;width:7px;height:7px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.pb1176Backdrop .pb2056ManualTrigger[aria-expanded=true] .pb2057ManualArrow::after{transform:rotate(225deg)}
+.pb1176Backdrop .pb2056ManualPanel{position:absolute!important;inset-inline:0!important;top:calc(100% + 4px)!important;bottom:auto!important;z-index:1000!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;box-sizing:border-box!important;box-shadow:0 8px 25px rgba(27,45,75,.16);overflow:hidden!important}
+.pb1176Backdrop .pb2056ManualPanel.pb2057Above{top:auto!important;bottom:calc(100% + 4px)!important}
+.pb1176Backdrop .pb2056ManualPanel[hidden]{display:none!important}
+.pb1176Backdrop .pb2056ManualPanel>input:focus{outline:none!important;border-color:#7296ee!important;box-shadow:0 0 0 2px #315efb18!important}

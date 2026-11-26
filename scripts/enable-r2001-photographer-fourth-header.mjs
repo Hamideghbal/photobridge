@@ -688,5 +688,7 @@ execFileSync(process.execPath,['--check',pb2035NavFile],{stdio:'inherit'});
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
  h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('nativePrint=r2040')?url:url+'&nativePrint=r2040');
+ if(p==='dist/web/index.html')h=h.replace(/index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*/g,url=>url.includes('addonQuantities=r2040')?url:url+'&addonQuantities=r2040');
+
  write(p,h);
 }

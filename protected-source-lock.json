@@ -46,12 +46,12 @@
     "finance-refresh.cjs": "7cfca33f8310ed5e1edec17edb2a31095861cbb3325b11a614e490a4bf04260a",
     "local-business-host.cjs": "c94577bf485863d00a76db27748cc22e41b3ab8c3b6c7038158c1a0ef791e53b",
     "local-business.cjs": "1190262544efbdee5b8841e5b018756ff5d8433c8f067ebf9a398d2bd2b625a0",
-    "desktop-overlay.js": "0bad00f2479799271e867ff6f587439a1d2f582e15335fcb2d4e90b00f70f650",
+    "desktop-overlay.js": "e3cc5385da1b9c853e0b6e5b610aad128bf054a43fd0346c431ad2634f8284cf",
     "live-order-patch.cjs": "36ec70e79081825e5729d2ad5c417f1b1242e9e39ef13557b1ba7a72002b871e",
     "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639",
     "test/native-regression-preload.cjs": "c33f84fec815d46f96b1eb5c73f58daa23cac3560f38d062f3a14b22facf03c0",
     "runtime-compat.cjs": "1abc2b067328463c60dda352b9cfe3f57e5f66551830dcee1e53c5971bc68683",
-    "finance-dashboard-160.cjs": "3156c7bc4c8cf377ad88d74c2de6729e61242cbb278909d3f92150c9cf31b3bf",
+    "finance-dashboard-160.cjs": "a2883e49cfe64faba2315741c71bbfb4410b543f3018b44c824e3e62d5a5fd3f",
     "native-queue-presentation.cjs": "14df2c0660da02e88137e58c40dccb5c9d1cc2f00eccafce9c1ff65a09c4a5cd",
     "prepare-offline-data.cjs": "811a0962a2b51f919e2818436ffbc67ce58646131b81403853ae98a21ed69be8",
     "test/dashboard-160.test.cjs": "d8cd389b594fb84f573c3a6017a71c72daa98b186aecb02b76f281b69d261912",
@@ -59,8 +59,9 @@
     "native-storage.js": "ca555b5824e2adad1108c811c1f719fe50e18b98a39fb7a33e34a44363b213fa",
     "test/finance-161.test.cjs": "ebc99035810f011e85f7249aedde9d2857afab423c1162a848c1f193dd64e4e0",
     "receipt-view-162.cjs": "e5da5c9909689aa7aa8aac53d6e8ac1d0db7156a3dafa07f6af6ecdf192e14d8",
-    "inline-backup-162.cjs": "8ec1489b961a8554c4b36e7185fb2bf5190b60ebb477ff7f0c6b1ee2628cf620",
-    "test/finance-162.test.cjs": "7f686bdabdc4138c788676ae73bc6ae661a650c731125a4eabac0612107ddd6a"
+    "inline-backup-162.cjs": "7f93fed9672dc49f60fce6689225e1ee262c8d5f04960c67c5fba58de1e8b411",
+    "test/finance-162.test.cjs": "7f686bdabdc4138c788676ae73bc6ae661a650c731125a4eabac0612107ddd6a",
+    "native-queue.css": "788217b55077f3aa724415f4f6d2b42db3c6bec5f78645dd2dd6c53895982d55"
   },
   "packagedFiles": [
     "main.cjs",
@@ -96,7 +97,8 @@
     "compat-smoke.cjs",
     "native-storage.js",
     "receipt-view-162.cjs",
-    "inline-backup-162.cjs"
+    "inline-backup-162.cjs",
+    "native-queue.css"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

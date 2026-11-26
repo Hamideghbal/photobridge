@@ -125,3 +125,6 @@ html body #root#root .labRoleWorkspace .financeWorkspace button[data-pb162-invoi
 html body #root#root .labRoleWorkspace .financeWorkspace button[data-pb162-invoice-all][aria-pressed="false"]{background:#fff!important;color:#425675!important;border-color:#d5deef!important;}
 html body #root#root .labRoleWorkspace :is(#pb1573NativeBackup,#pb1576NativeBackup,#pbLabBackupSettingsButton){display:none!important;}
 html body #root .labRoleWorkspace .pb162BackupFrame{box-sizing:border-box;width:100%;max-width:100%;border:0!important;}
+
+/* The invoice date controls can be promoted to the measured toolbar. */
+html body #root#root .labRoleWorkspace button[data-pb162-invoice-all][aria-pressed="true"]{background:#315efb!important;color:#fff!important;border-color:#315efb!important;}

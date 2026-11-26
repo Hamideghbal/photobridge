@@ -7,6 +7,11 @@ const guard=read('scripts/r2036-mobile-photo-guard.js.txt');
 const actions=read('scripts/r2036-mobile-photo-actions.js.txt');
 const root='dist/web/';
 const changed=[];
+// R2044: render the actual mobile controls in the source React component.
+const nativeBundle=root+'assets/index-UIRefine-v655-r84.js';
+const patchNative=new Function(read('scripts/r2044-native-photo-patch.js.txt')+'\nreturn pb2044PatchNativePhoto')();
+write(nativeBundle,patchNative(read(nativeBundle)));
+execFileSync(process.execPath,['--check',nativeBundle],{stdio:'inherit'});
 function patch(name,fn){
  const p=root+name;let s=read(p);
  if(!s.includes('/* PB2036 photo-only ownership */')){
@@ -57,7 +62,7 @@ patch('photobridge-v904r100f41-header-date-name-fit.js',s=>{
  s=once(s,'    void loadMe();render();','    void loadMe();render();pb2040WatchLifecycle();','R2040 stable body lifecycle observer');
 
  const anchor='    const comp=orderComposer();r.hidden=!comp;if(comp){';
- s=once(s,anchor,'    const photoWorkspace=pb2042PhotoWorkspace()||$(".photographerMain.photographerPrintWorkspace");\n    if(pb2036MobilePhoto(photoWorkspace)){pb2036SyncPhoto(r,photoWorkspace);pb2036WatchPhoto(r,photoWorkspace);return;}\n    pb2036StopPhoto();\n'+anchor,'replace photo composer send row');
+ s=once(s,anchor,'    const photoWorkspace=pb2042PhotoWorkspace()||$(".photographerMain.photographerPrintWorkspace");\n    if(pb2036MobilePhoto(photoWorkspace)){if(document.querySelector(".pb2044NativePhotoActions")){pb2036StopPhoto();if(!r.hidden)r.hidden=true;pb2043Scroll(photoWorkspace);return;}pb2036SyncPhoto(r,photoWorkspace);pb2036WatchPhoto(r,photoWorkspace);return;}\n    pb2036StopPhoto();\n'+anchor,'replace photo composer send row');
  s=once(s,"    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');", "    pb2036StopPhoto();\n    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');",'clean on exit');
  return s;
 });
@@ -71,6 +76,8 @@ for(const name of changed){
  if(hits.length!==1)throw Error('[R2036] web asset URL '+name+' count '+hits.length);
  html=html.replace(pattern,url=>{if(!url.includes('mobilePhoto=r2036'))url+='&mobilePhoto=r2036';if(!url.includes('mobileLifecycle=r2040'))url+='&mobileLifecycle=r2040';if(!url.includes('mobileReentry=r2042'))url+='&mobileReentry=r2042';return url.includes('mobileOwner=r2043')?url:url+'&mobileOwner=r2043'});
 }
+html=html.replace(/(index-UIRefine-v655-r84\\.js\\?[^"'<>\\s]*)/g,url=>url.includes('nativePhoto=r2044')?url:url+'&nativePhoto=r2044');
+html=html.replace(/mobileOwner=r2043/g,'mobileOwner=r2043&nativePhoto=r2044');
 write(htmlPath,html);
 for(const name of changed)execFileSync(process.execPath,['--check',root+name],{stdio:'inherit'});
 console.log('[R2036] mobile photo composer: one scroll owner, real Send and no-print product actions; desktop snapshots untouched');

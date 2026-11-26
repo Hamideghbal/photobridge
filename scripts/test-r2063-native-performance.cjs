@@ -51,3 +51,11 @@ test('final compiled native assets, original guards, hashes and encoded bytes',(
  assert.equal(html.split('&nativePerf=r2063').length,4);
  for(const name of [asset,intake,manual,'index.html']){const bytes=fs.readFileSync(root+name);assert.equal(manifest.files.find(row=>row.name===name)?.sha256,crypto.createHash('sha256').update(bytes).digest('hex'));for(const [ext,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(root+name+ext))assert(decode(fs.readFileSync(root+name+ext)).equals(bytes));}
 });
+
+test('R1501 copy/move metadata and original duplicate payload are not rewritten',()=>{
+ const source=fs.readFileSync('dist/web/photobridge-r1137-lab-local-intake.js','utf8');
+ const patch=patchIntake(source);
+ assert(patch.includes('pb2063ByHash.get(hash)'));
+ assert(patch.includes('sourceFile:file,sourceAction'));
+ assert(patch.includes('sourceActions:[sourceAction]'));
+});

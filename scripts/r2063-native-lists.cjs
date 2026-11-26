@@ -13,7 +13,12 @@ function patchIntake(source){
  if(begin<0||end<0)throw Error("R2063 append files");
  let section=source.slice(begin,end);
  section=once(section,"const additions=[];","const additions=[],pb2063ByHash=pb2063FirstIndex(group.items,'hash');");
- section=once(section,"const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);if(item){additions.push({existing:item});}else additions.push({file,hash,size,paper,copies:1});","const item=pb2063ByHash.get(hash);if(item){additions.push({existing:item});}else{const entry={file,hash,size,paper,copies:1};additions.push(entry);pb2063ByHash.set(hash,entry);}");
+ // Preserve the final R1501 payload (sourceFile/sourceAction and any later
+ // metadata). Replace only the lookup and update the index after the old push.
+ section=once(section,"const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);","const item=pb2063ByHash.get(hash);");
+ const newItem=/else additions\.push\(\{file,hash,size,paper,copies:1[^}]*\}\);/g;
+ if([...section.matchAll(newItem)].length!==1)throw Error("R2063 new item payload changed");
+ section=section.replace(newItem,match=>"else{"+match.slice(5)+"pb2063ByHash.set(hash,additions[additions.length-1]);}");
  const hashStage="pb1569Hashes=await pb1569MapLimit(pb1569Files,3,pb1569Digest)";
  if(section.includes(hashStage)){
   section=once(section,hashStage,"pb1569Hashes=await pb1569MapLimit(pb1569Files,3,async file=>{const hash=await pb1569Digest(file);error.textContent='در حال بررسی عکس‌ها: '+(++pb2063Hashed)+' / '+pb1569Files.length;return hash})");

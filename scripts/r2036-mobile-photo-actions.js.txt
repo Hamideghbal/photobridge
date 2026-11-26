@@ -51,7 +51,7 @@
     if(!product){
       product=document.createElement('button');product.type='button';product.className='pb2036Standalone';
       product.textContent='سفارش شاسی و قاب بدون چاپ';
-      product.addEventListener('click',()=>{const source=pb2036ProductSource(pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace'));if(source&&!source.disabled)source.click()});
+      product.addEventListener('click',()=>{const source=pb2036ProductSource(pb2042PhotoWorkspace());if(source&&!source.disabled)source.click()});
       row.append(product);
     }
     const sources=[pb2040PhotoAction(w,0),pb2040PhotoAction(w,1),pb2036ProductSource(w)];

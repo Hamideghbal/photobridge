@@ -47,3 +47,13 @@ test('PB165 expenses are independent, ledger waits for invoice, warm navigation 
  for(let i=0;i<10&&!pending.some(p=>p.url.includes('pbNativeInvoiceView=live'));i++)await Promise.resolve();assert(!pending.some(p=>p.url.endsWith('/ledger')));settle('pbNativeInvoiceView=live',{invoices:[]});
  for(let i=0;i<10&&!pending.some(p=>p.url.endsWith('/ledger'));i++)await Promise.resolve();settle('/ledger',{transactions:[]});settle('pbNativeOverview=customers',{summary:{},customers:[]});await ledger;
 });
+
+test('PB166 keeps statement date presets together and gives the calendar its own seven-column width',()=>{
+ const code=read('finance-dashboard-160.cjs'),css=read('native-queue.css');
+ assert(code.includes('statement&&button("month","نمایش ماه آخر",isMonth,onMonth)'));
+ assert(code.includes("filter.slice(0,tail)+','+buttons.slice(0,-1)"));
+ assert(css.includes('PB166: independent full-size calendar'));
+ assert(css.includes('width:292px!important;min-width:292px!important;max-width:none!important'));
+ assert(css.includes('grid-template-columns:repeat(7,minmax(0,1fr))!important'));
+ assert(css.includes('flex-flow:row nowrap!important'));assert(css.includes('margin-inline-start:auto!important'));
+});

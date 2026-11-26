@@ -5,6 +5,19 @@ function patchFinanceDashboard(source){
  // A newer server can supply a shared toolbar. Keep invoice/receipt Today,
  // but never render Today in the statement (account ledger).
  if(!source.includes('!statement&&button("today","امروز",isToday,onToday)'))source=source.replace('button("today","امروز",isToday,onToday)','!statement&&button("today","امروز",isToday,onToday)');
+ // PB166: migrate an already verified R2065 shared toolbar without changing
+ // invoice/receipt presets or any statement API call.
+ const oldMonth='t==="lab"&&e.jsx("button",{type:"button",className:"pb2060Month",disabled:!z||D,onClick:()=>{const range=pb2060Month();pb2060StatementRange(range.from,range.to)},children:"نمایش ماه آخر"}),';
+ if(source.includes(oldMonth)&&source.includes('function pb2060Common(')){
+  const changes=[
+   ['onApply,onToday,onAll,busy=false','onApply,onToday,onAll,onMonth,busy=false'],
+   ['isCustom=!isAll&&!isToday;','monthStart=statement?$s(new Date(Date.now()-29*864e5)):"",isMonth=statement&&appliedFrom===monthStart&&appliedTo===today,isCustom=!isAll&&(!isToday||statement)&&!isMonth;'],
+   ['button("all","نمایش همه",isAll,onAll)]','button("all","نمایش همه",isAll,onAll),statement&&button("month","نمایش ماه آخر",isMonth,onMonth)]'],
+   ['onToday:()=>pb2060StatementRange(day,day),onAll:()=>pb2060StatementRange("","")','onAll:()=>pb2060StatementRange("",""),onMonth:()=>{const range=pb2060Month();pb2060StatementRange(range.from,range.to)}'],
+   [oldMonth,'']
+  ];
+  for(const [from,to] of changes){if(source.split(from).length!==2)throw Error('finance166_shared_month:'+from.slice(0,60));source=source.replace(from,()=>to)}
+ }
  if(source.includes('/* PB160 dashboard first */'))return source;
  const start=source.indexOf('function ub({role:t'),end=source.indexOf('}function hb(',start);
  if(start<0||end<start)return source;
@@ -58,7 +71,10 @@ function patchFinanceDashboard(source){
  if(filters<0||actions<filters)throw Error('finance161_statement_filters');
  let filter=part.slice(filters,actions);
  const buttons='t==="lab"&&e.jsx("button",{type:"button",className:"pb2047StatementRange "+(pb161StatementMode==="all"?"primary active":""),"aria-pressed":pb161StatementMode==="all",disabled:D||!z,onClick:()=>pb161ShowStatement("all"),children:"نمایش کامل حساب معین"}),t==="lab"&&e.jsx("button",{type:"button",className:"pb2047StatementRange "+(pb161StatementMode==="month"?"primary active":""),"aria-pressed":pb161StatementMode==="month",disabled:D||!z,onClick:()=>pb161ShowStatement("month"),children:"نمایش ماه آخر"}),';
- filter=filter.replace('children:[','children:['+(filter.includes('pb2060Toolbar()')?'':buttons));
+ if(!filter.includes('pb2060Toolbar()')){
+  const tail=filter.lastIndexOf(']})');if(tail<0)throw Error('finance166_filter_end');
+  filter=filter.slice(0,tail)+','+buttons.slice(0,-1)+filter.slice(tail);
+ }
  filter=filter.replaceAll('Pe(Je),Re(1)','Pe(Je),pb161SetStatementMode("custom"),Re(1)').replaceAll('d(Je),Re(1)','d(Je),pb161SetStatementMode("custom"),Re(1)').replaceAll('Pe(""),Re(1)','Pe(""),pb161SetStatementMode("custom"),Re(1)').replaceAll('d(""),Re(1)','d(""),pb161SetStatementMode("custom"),Re(1)');
  part=part.slice(0,filters)+filter+part.slice(actions);
  // The applied dates, not the typed dates, determine the active invoice button.

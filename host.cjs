@@ -233,7 +233,10 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
           return;
         }
         const pagedOrders=['GET','HEAD'].includes(req.method)&&url.pathname==='/api/lab/orders'&&url.searchParams.get('paged')==='1';
-        if(req.method==='GET'&&(pagedOrders||url.pathname==='/api/lab/invoices'||url.pathname.startsWith('/api/lab/finance/')))sync.foregroundReadUntil=Date.now()+5000;
+        if(sync&&req.method==='GET'&&((pagedOrders&&url.searchParams.get('pbNativeOpen')==='1')||url.pathname==='/api/lab/invoices'||url.pathname.startsWith('/api/lab/finance/'))){
+          sync.foregroundReadUntil=Date.now()+900;
+          res.once('finish',()=>{sync.foregroundReadUntil=Math.max(sync.foregroundReadUntil||0,Date.now()+250);});
+        }
         // A failed background request must not stall the next order's media or
         // the reads needed to start its notification-triggered download.
         const foregroundDownload=['GET','HEAD'].includes(req.method)&&(

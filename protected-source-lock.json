@@ -5,7 +5,7 @@
   "verifyCommand": "node verify-release-lock.cjs && node run-release-regressions.cjs && node prepare-access-runtime.cjs && node prepare-assets.cjs && node verify-native-ui.cjs",
   "sourceFiles": {
     "main.cjs": "68a77cc0c86412264d2ec81b873b0aba7b104bf5d550f02c50ac67834b702969",
-    "host.cjs": "6157d19225b31722b146db76fdf1d59fb3d21ca0261cbecb072932a0480da4f6",
+    "host.cjs": "10bfa73ad3b7d4ba614272600888eeb8c6560aabf5e1e691ed053beed21fa536",
     "sync.cjs": "ed94119c76c1ad342da9c474aa7c1f51174b2f1d9ea9222f8eff5f66482819ff",
     "update-install-gate.cjs": "5a9f98495c12a50a96e4c6a0a7f5838fe8ac6ad255673300b359f85c5ea44bec",
     "app-update.cjs": "a474d936ebcb97ba7bf52655d0015bdf87a3ccd46ba4629934811370ebe5f63d",
@@ -44,17 +44,18 @@
     "startup-update-schedule.cjs": "3a98b49b7489dc318ac429f4c8ca68d60e45b488c80c8139b85c25f8b127c408",
     "test/fast-startup-159.test.cjs": "21cb2a070639a11034aa24c6dc743451ad4d65c079a1bdd72b814d50d342c318",
     "finance-refresh.cjs": "7cfca33f8310ed5e1edec17edb2a31095861cbb3325b11a614e490a4bf04260a",
-    "local-business-host.cjs": "be45b4f5621f9db0538001d0aeb03c04049e2a2a981ca9d477ffc802506e1caf",
+    "local-business-host.cjs": "930b4616a2a51d779a0469ec0ef7759ba26042cac2e652fe8e5b02a6e70abea4",
     "local-business.cjs": "97a3429ad7decd0dbeb0190eb6b4d734ac151942bf399bb844b1b466a2b169f2",
     "desktop-overlay.js": "ca631b0402f8767bab9900c49509c20df42eb609f8edcc1ef4960047c5428490",
     "live-order-patch.cjs": "36ec70e79081825e5729d2ad5c417f1b1242e9e39ef13557b1ba7a72002b871e",
     "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639",
     "test/native-regression-preload.cjs": "c33f84fec815d46f96b1eb5c73f58daa23cac3560f38d062f3a14b22facf03c0",
     "runtime-compat.cjs": "1abc2b067328463c60dda352b9cfe3f57e5f66551830dcee1e53c5971bc68683",
-    "finance-dashboard-160.cjs": "cfb1a5371bcd7ee8bec6c157059f28099fdef54455ec937f3eb4048c66a76754",
+    "finance-dashboard-160.cjs": "de7043d0c2e3dd0a6fa5292057c3fa1f007412b177df379929a5466d974df081",
     "native-queue-presentation.cjs": "14df2c0660da02e88137e58c40dccb5c9d1cc2f00eccafce9c1ff65a09c4a5cd",
     "prepare-offline-data.cjs": "811a0962a2b51f919e2818436ffbc67ce58646131b81403853ae98a21ed69be8",
-    "test/dashboard-160.test.cjs": "b75489a978aab9a6de9d1f2f99695eff758b2b8dbdb46a27650d750b3c98b7c8"
+    "test/dashboard-160.test.cjs": "596429b76d83fe8bf4ae612b299f01263dc904c1c1d90ab80c73edd2db077a32",
+    "compat-smoke.cjs": "274e99b2fca360df786ff1e81701cba830004877adf494aa49ff6735d1c089ad"
   },
   "packagedFiles": [
     "main.cjs",
@@ -86,7 +87,8 @@
     "runtime-compat.cjs",
     "finance-dashboard-160.cjs",
     "native-queue-presentation.cjs",
-    "prepare-offline-data.cjs"
+    "prepare-offline-data.cjs",
+    "compat-smoke.cjs"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

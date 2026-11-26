@@ -7,12 +7,12 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  // business migration or SQLite write before reaching the server.
  if(req.method==='GET'&&['/api/lab/dashboard','/api/lab/profile-image','/api/lab/hours','/api/lab/album-settings','/api/lab/sms-settings','/api/lab/snappbox/settings','/api/lab/site'].includes(url.pathname))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
- if(req.method==='GET'&&url.pathname==='/api/lab/finance/summary'&&url.searchParams.get('pbNativeOverview')==='dashboard'){
+ if(req.method==='GET'&&url.pathname==='/api/lab/finance/summary'&&['dashboard','customers'].includes(url.searchParams.get('pbNativeOverview'))){
   const snapshot=store.get('localBusiness:v1:'+lab);
   // This is the first-paint path: no refreshFinance or other network reads.
   if(snapshot?.snapshotAt&&store.cached(url.pathname)){
    const result=new LocalBusiness(store).summary(snapshot,url.searchParams);
-   json(res,200,{summary:result.summary,localSnapshotAt:result.localSnapshotAt});return true;
+   json(res,200,url.searchParams.get('pbNativeOverview')==='customers'?result:{summary:result.summary,localSnapshotAt:result.localSnapshotAt});return true;
   }
   if(!offline)return false; // Cold workstation: use the existing authenticated ranged summary.
  }

@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const read=p=>fs.readFileSync(p,'utf8');
-const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047UniqueUploadBase,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server}')();
+const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047UniqueUploadBase,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server,pb2048StatementFilters}')();
 test('R2047 removes arbitrary user suffix before the file extension',()=>{
  const f=api.pb2047CleanUploadName;
  for(const [input,output] of [['IMG_201=2.jpg','IMG_201.jpg'],['عکس = قاب = 3.JPG','عکس.JPG'],['A=S:Frame.png','A.png'],['A=foo.bar.jpeg','A.jpeg'],['A=.tif','A.tif'],['A=any','A'],['=4.jpg','photo.jpg'],['a.b.jpg','a.b.jpg'],['folder=1/IMG=2.jpg','IMG.jpg']])assert.equal(f(input),output,input);
@@ -33,6 +33,26 @@ test('R2047 finance range reports missing photographer, invalid dates and empty 
  assert.equal(api.pb2047InRange(rows,'a','2026-11-01','2026-11-25',date),false);
  assert.equal(api.pb2047InRange(rows,'c','2026-11-01','2026-11-26',date),false);
 });
+test('R2048 handles actual R1431 hidden Lab submit and R2033 customer validation',async()=>{
+ const label='children:D?"در حال محاسبه…":"نمایش حساب"})';
+ const click='onClick:()=>{if(t==="customer"){if(!_e||!je){alert("لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.");return}if(_e>je){alert("تاریخ شروع نباید بعد از تاریخ پایان باشد.");return}}b()},';
+ const variants=[
+  't!=="lab"&&e.jsx("button",{className:"primary",disabled:D,'+click+label,
+  't!=="lab"&&e.jsx("button",{className:"primary",disabled:D,onClick:()=>b(),'+label,
+  'e.jsx("button",{className:"primary",disabled:D||t==="lab"&&!z,onClick:()=>b(),'+label
+ ];
+ for(const variant of variants){
+  const transformed=api.pb2048StatementFilters(variant);
+  assert(transformed.includes(variant.startsWith('t!==')?variant:'t!=="lab"&&'+variant));
+  const make=new Function('t','D','z','_e','je','$s','b','alert','e','pb2047RangeError','return ['+transformed+'].filter(Boolean)');
+  const date=x=>String(x||''),e={jsx:(type,props)=>props};let calls=0;const messages=[];
+  const render=(role,customer,from,to,rows=[])=>make(role,false,customer,from,to,date,async()=>{calls++;return {rows}},m=>messages.push(m),e,api.pb2047RangeError);
+  let buttons=render('lab','','2026-11-01','2026-11-26');assert.equal(buttons.length,1);assert.equal(buttons[0].disabled,false);assert.equal(buttons[0].children,'نمایش بازه');await buttons[0].onClick();assert.equal(calls,0);assert.match(messages.pop(),/عکاسی/);
+  buttons=render('lab','studio','2026-11-01','2026-11-26');await buttons[0].onClick();assert.equal(calls,1);assert.match(messages.pop(),/گردش مالی/);
+  buttons=render('lab','studio','2026-11-01','2026-11-26',[{}]);await buttons[0].onClick();assert.equal(calls,2);assert.equal(messages.length,0);
+  buttons=render('customer','','2026-11-01','2026-11-26');assert.equal(buttons.length,1);assert.equal(buttons[0].children,'نمایش حساب');await buttons[0].onClick();assert.equal(calls,3);
+ }
+});
 test('R2047 final server and Lab web/Windows payloads contain matching fixes and integrity metadata',()=>{
  const s=read('dist/api/server.js');
  assert(s.includes('/* PB2047 server */'));
@@ -45,7 +65,7 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
   assert(ui.includes('/* PB2047 Lab UI */'));
   assert(ui.includes('if(nt==="print")return pb2047PrintMarked(le,o==="album")'));
   assert(ui.includes('return Cn(le,"printing");'));
-  assert(ui.includes('className:t==="lab"?"primary pb2047StatementRange":"primary"'));
+  assert(ui.includes('t==="lab"&&e.jsx("button",{type:"button",className:"primary pb2047StatementRange"'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.'));
   assert(html.includes('labPrintFinance=r2047'));assert(html.includes('pb2047LabFinanceStyle'));

@@ -727,3 +727,28 @@ test('R2037 direct desktop and same-document login never depend on a feature eve
   assert.equal(removed>0,!chooser);
  }
 });
+
+
+test('R2040 native Print-only lab recovers second header from hidden source controls and stale chooser flag',()=>{
+ const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
+ const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
+ assert(a>=0&&b>a);
+ const h=new Function('printControlKey','location',nav.slice(a,b)+'\nreturn {pb2040SourceVisible,pb2024ChoosingLab,pb2024PrintReady,pb2018Complete};')(v=>v.key,{pathname:'/photographer/orders/flow'});
+ const controls=['class:photographerPrintPhotoTab','class:finance','class:archive'].map((key,i)=>({key,hidden:i>0,getAttribute:k=>k==='aria-hidden'&&i>0?'true':null,classList:{contains:()=>false}}));
+ const album={key:'class:photographerPrintAlbumTab',hidden:true,getAttribute:()=>null,classList:{contains:()=>false}};
+ const flags=new Set(['pbR100F14ChoosingLab']);
+ let realChooser=false,explicit=false,ready=true;
+ const doc={body:{classList:{contains:k=>flags.has(k)}},documentElement:{classList:{contains:k=>flags.has(k)}},defaultView:{location:{pathname:'/photographer/orders/flow',get search(){return explicit?'?pbLabChooser=1':''}},getComputedStyle:()=>({display:'block'})}};
+ doc.querySelector=q=>q==='#pbR99LabChooser'?(realChooser?{hidden:false}:null):q==='#photographerRoleHeaderV710'?(ready?{querySelectorAll:()=>controls}:null):q.includes('photographerRolePageScrollArea')||q==='.photographerPrintModeNav'?(ready?{}:null):null;
+ assert(h.pb2018Complete(controls.filter(h.pb2040SourceVisible)));
+ assert(!h.pb2040SourceVisible(album),'never reveal an unavailable optional album button');
+ assert(!h.pb2024ChoosingLab(doc),'a stale class must not hide a mounted native destination');
+ assert(h.pb2024PrintReady(doc));
+ realChooser=true;assert(h.pb2024ChoosingLab(doc));assert(!h.pb2024PrintReady(doc));
+ realChooser=false;explicit=true;assert(h.pb2024ChoosingLab(doc));
+ explicit=false;ready=false;assert(!h.pb2024PrintReady(doc));
+ assert(nav.includes("active==='print'?pb2040SourceVisible(el)"));
+ assert(nav.includes("copy.hidden=false;copy.removeAttribute('aria-hidden')"));
+ assert(nav.includes('pb2040Core(key)||(!button.hidden'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('nativePrint=r2040'));
+});

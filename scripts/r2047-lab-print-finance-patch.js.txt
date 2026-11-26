@@ -23,14 +23,14 @@ function pb2047PrintMarked(order,album){
 function pb2047Downloaded(order){
  return !!order?.downloaded_at||['downloaded','printing','reviewing','ready_print','printed','ready','completed'].includes(String(order?.status||''));
 }
-function pb2047RangeError(customer,from,to,date){
- if(!customer)return 'لطفاً ابتدا نام عکاسی را انتخاب کنید.';
+function pb2047RangeError(customer,from,to,date,requireCustomer=true){
+ if(requireCustomer&&!customer)return 'لطفاً ابتدا نام عکاسی را انتخاب کنید.';
  if(!from||!to)return 'لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.';
  if(!date(from)||!date(to)||date(from)>date(to))return 'تاریخ شروع نباید بعد از تاریخ پایان باشد.';
  return '';
 }
 function pb2047InRange(rows,customer,from,to,date){
- return rows.some(row=>String(row.customer_id)===String(customer)&&date(row.issued_at)>=date(from)&&date(row.issued_at)<=date(to));
+ return rows.some(row=>(!customer||String(row.customer_id)===String(customer))&&date(row.issued_at)>=date(from)&&date(row.issued_at)<=date(to));
 }
 function pb2047One(s,a,b,label){
  const count=s.split(a).length-1;
@@ -83,9 +83,9 @@ function pb2048StatementFilters(filters){
 // Keep R1960 albumSizes immediately before R1897's final labStage token.
 // The finance keys must be inserted BEFORE albumSizes, not appended after it.
 function pb2049FinanceAssetUrl(url){
- const clean=url.replace(/&(?:labPrintFinance|labStatement|labFinanceCache)=r\d+/g,'');
+ const clean=url.replace(/&(?:labPrintFinance|labStatement|labFinanceCache|labFinanceRange)=r\d+/g,'');
  const anchor='&albumSizes=r1960';
- return pb2047One(clean,anchor,'&labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049'+anchor,'R2049 album cache anchor');
+ return pb2047One(clean,anchor,'&labFinanceRange=r2056&labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049'+anchor,'R2049 album cache anchor');
 }
 function pb2047Ui(s){
  if(s.includes('/* PB2047 Lab UI */'))return s;
@@ -108,11 +108,13 @@ function pb2047Ui(s){
  s=pb2047One(s,'aa=async(le,nt)=>{if(E||pb1578Pending)return;','aa=async(le,nt)=>{if(E||pb1578Pending)return;if(o==="album"&&!pb1798NoPrintOrder(le)&&nt==="print"){if(!pb2047Downloaded(le)||pb2047PrintMarked(le,true))return;if(pb1603StageInvoicePending(le,nt)){P("ابتدا قیمت‌گذاری را تکمیل و فاکتور را صادر کنید.");on(le,"none");return;}return Cn(le,"printing");}','explicit album print click');
  s=pb2047One(s,'{key:"download_print",label:"دانلود / چاپ"},{key:"binding",label:"صحافی"}','{key:"download_print",label:"دانلود"},{key:"print",label:"چاپ"},{key:"binding",label:"صحافی"}','separate album buttons');
  // Lab invoice action: "all" is still the default list; the explicit date
- // range is per selected photographer. No financial mutations.
+ // range accepts all photographers or a selected photographer. No financial mutations.
  s=pb2047Region(s,'function ub({role:t,','}function hb(',part=>{
   const action='()=>{_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)}';
-  const labAction='()=>{if(t==="lab"){const error=pb2047RangeError(pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s);if(error){alert(error);return;}}_setPbInvAppliedFrom(_pbInvFrom);_setPbInvAppliedTo(_pbInvTo);Ie(1);if(t==="lab"&&!pb2047InRange(r,pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s))alert("در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.");}';
+  const labAction='()=>{if(t==="lab"){const error=pb2047RangeError(pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s,false);if(error){alert(error);return;}}_setPbInvAppliedFrom(_pbInvFrom);_setPbInvAppliedTo(_pbInvTo);Ie(1);if(t==="lab"&&!pb2047InRange(r,pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s)){if(pb1427InvoiceCustomer)alert("در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.");else alert("در بازه انتخاب‌شده فاکتوری وجود ندارد.");}}';
   part=pb2047One(part,action,labAction,'invoice date apply feedback');
+  // Do not select a photographer implicitly when Lab balances load.
+  part=pb2047One(part,'!z&&((Je=Et.customers)!=null&&Je.length)&&q(String(Et.customers[0].id));','/* PB2056 explicit statement customer */','statement explicit selection');
   const buttonStart=part.indexOf('className:"statementFilters"'),buttonEnd=part.indexOf('className:"statementActions"',buttonStart);
   if(buttonStart<0||buttonEnd<=buttonStart)throw Error('[R2047] statement filters missing');
   let filters=part.slice(buttonStart,buttonEnd);

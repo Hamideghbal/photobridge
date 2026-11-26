@@ -109,3 +109,14 @@ html body #root .labRoleWorkspace .financeWorkspace .pb1176PaymentActions select
  .pb1176ManualRow input:nth-child(4){grid-column:2}
  .pb1176ManualRow .pb1176Remove{grid-column:3;grid-row:1/span 2;height:100%}
 }
+
+/* R2056 native manual invoice searchable customer picker */
+.pb2056ManualPicker{position:relative;width:100%;min-width:0;font:500 12px Vazirmatn,Tahoma,sans-serif}
+.pb2056ManualPicker .pb2056ManualTrigger{display:block;width:100%;min-width:0;height:36px;box-sizing:border-box;border:1px solid #d3def2;border-radius:8px;background:#fff;color:#344054;padding:5px 10px;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.pb2056ManualTrigger::before{content:'▾';float:left;margin-inline-start:6px}
+.pb2056ManualPanel{position:relative;box-sizing:border-box;max-width:100%;padding:5px;margin-top:4px;border:1px solid #d3def2;border-radius:8px;background:#fff}
+.pb2056ManualPanel[hidden]{display:none!important}
+.pb2056ManualList{max-height:200px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin-top:4px}
+.pb2056ManualPicker .pb2056ManualOption{display:block;width:100%;min-width:0;box-sizing:border-box;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 8px;background:#fff;border:0;border-radius:5px;color:#344054;font:500 12px Vazirmatn,Tahoma,sans-serif;cursor:pointer}
+.pb2056ManualOption:hover,.pb2056ManualOption:focus,.pb2056ManualOption[aria-pressed=true]{background:#eaf1ff;color:#2859b4}
+.pb2056ManualEmpty{padding:8px;color:#667085}

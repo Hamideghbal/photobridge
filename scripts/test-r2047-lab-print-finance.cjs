@@ -28,10 +28,15 @@ test('R2047 finance range reports missing photographer, invalid dates and empty 
  assert.match(api.pb2047RangeError('a','','2026-11-26',date),/تاریخ/);
  assert(api.pb2047RangeError('a','2026-11-26','2026-11-01',date));
  assert.equal(api.pb2047RangeError('a','2026-11-01','2026-11-26',date),'');
+ assert.equal(api.pb2047RangeError('','2026-11-01','2026-11-26',date,false),'');
+ assert.match(api.pb2047RangeError('','','2026-11-26',date,false),/تاریخ/);
+ assert(api.pb2047RangeError('','2026-11-26','2026-11-01',date,false));
  const rows=[{customer_id:'a',issued_at:'2026-11-26T22:00:00Z'},{customer_id:'b',issued_at:'2026-11-20'}];
  assert(api.pb2047InRange(rows,'a','2026-11-01','2026-11-26',date));
  assert.equal(api.pb2047InRange(rows,'a','2026-11-01','2026-11-25',date),false);
  assert.equal(api.pb2047InRange(rows,'c','2026-11-01','2026-11-26',date),false);
+ assert(api.pb2047InRange(rows,'','2026-11-20','2026-11-26',date));
+ assert.equal(api.pb2047InRange(rows,'','2026-11-01','2026-11-19',date),false);
 });
 test('R2048 handles actual R1431 hidden Lab submit and R2033 customer validation',async()=>{
  const label='children:D?"در حال محاسبه…":"نمایش حساب"})';
@@ -116,6 +121,9 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
   assert(ui.includes('return Cn(le,"printing");'));
   assert(ui.includes('t==="lab"&&e.jsx("button",{type:"button",className:"primary pb2047StatementRange"'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.'));
+  assert(ui.includes('pb2047RangeError(pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s,false)'));
+  assert(ui.includes('pb2047RangeError(z,_e,je,$s)'));
+  assert(html.includes('labFinanceRange=r2056'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.'));
   assert(html.includes('labPrintFinance=r2047'));assert.match(html,/labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049&albumSizes=r1960&labStage=r1956/);assert(html.includes('pb2047LabFinanceStyle'));
   assert.equal(api.pb2047Ui(ui),ui);
@@ -129,6 +137,9 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
    assert(ui.includes('/* PB2051 progressive native finance */')&&ui.includes('pb2051PickerFrame'));
    assert(ui.includes('pb2051SetInvoicesReady(true)')&&ui.includes('pb2051LoadReceipts()'));
    assert(html.includes('financeFirstLoad=r2051')&&html.includes('pb2051FinanceStyle'));
+   assert(ui.includes('pb2050CustomerPicker,{value:pb1420PaymentCustomer,customers:E'));
+   assert(ui.includes('pb2050CustomerPicker,{statement:true,prompt:true,value:id'));
+   assert(html.includes('pb2056FinancePickerStyle'));
   }else assert(!ui.includes('/* PB2050 native finance responsiveness */'));
 
   for(const name of [asset,'index.html']){

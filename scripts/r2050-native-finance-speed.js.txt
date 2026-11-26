@@ -20,9 +20,9 @@ function pb2050Notice(message){
  box.append(icon,text,close);document.body.append(box);
  setTimeout(()=>box.remove(),8000);
 }
-function pb2050CustomerPicker({value,customers,onChange,statement=false}){
+function pb2050CustomerPicker({value,customers,onChange,statement=false,prompt=false}){
  const options=x.useMemo(()=>[{value:'',label:statement?'انتخاب عکاسی':'همهٔ عکاسی‌ها'},...customers.map(row=>({value:String(row.id),label:row.name||row.mobile||'عکاسی'}))],[customers,statement]);
- return e.jsx('div',{className:(statement?'pb1421CustomerSelect':'pb1427InvoiceCustomerSelect')+' pb2051PickerFrame',children:e.jsx(wn,{value,options,searchable:true,searchPlaceholder:'جستجوی عکاسی…',ariaLabel:'انتخاب عکاسی',className:'pb2050CustomerPicker',menuClassName:'pb891FinanceSelectMenu pb2050CustomerMenu',onChange})});
+ return e.jsx('div',{className:(statement?'pb1421CustomerSelect':'pb1427InvoiceCustomerSelect')+' pb2051PickerFrame'+(prompt?' pb2056PromptPicker':''),children:e.jsx(wn,{value,options,searchable:true,searchPlaceholder:'جستجوی عکاسی…',ariaLabel:'انتخاب عکاسی',className:'pb2050CustomerPicker',menuClassName:'pb891FinanceSelectMenu pb2050CustomerMenu',onChange})});
 }
 function pb2050Patch(s){
  if(s.includes('/* PB2050 native finance responsiveness */'))return s;
@@ -64,12 +64,19 @@ function pb2050Patch(s){
  if(fin.includes(old))fin=once(fin,old,'e.jsx(pb2050CustomerPicker,{value:pb1427InvoiceCustomer,customers:E,onChange:Je=>{pb1427SetInvoiceCustomer(Je);Ie(1)}})','invoice photographer picker');
  const statementOld='e.jsxs("select",{className:"pb1421CustomerSelect",value:z,"aria-label":"انتخاب عکاسی",onChange:Je=>{q(Je.target.value);A(null);Re(1)},children:[e.jsx("option",{value:"",children:"انتخاب عکاسی"}),...E.map(Je=>e.jsx("option",{value:String(Je.id),children:String(Je.name||"عکاسی")},Je.id))]})';
  if(fin.includes(statementOld))fin=once(fin,statementOld,'e.jsx(pb2050CustomerPicker,{statement:true,value:z,customers:E,onChange:Je=>{q(Je);A(null);Re(1)}})','statement photographer picker');
+ const receiptOld="e.jsx(\"select\",{value:pb1420PaymentCustomer,onChange:Je=>{pb1420SetPaymentCustomer(Je.target.value);q(Je.target.value)},children:[e.jsx(\"option\",{value:\"\",children:\"همهٔ عکاسی‌ها\"}),...E.map(Je=>e.jsx(\"option\",{value:String(Je.id),children:String(Je.name||\"عکاسی\")},Je.id))]})";
+ fin=once(fin,receiptOld,'e.jsx(pb2050CustomerPicker,{value:pb1420PaymentCustomer,customers:E,onChange:Je=>{pb1420SetPaymentCustomer(Je);q(Je)}})','receipt photographer picker');
  const error='if(error){alert(error);return;}';
  if(fin.split(error).length!==3)throw Error('[R2050] expected both R2047 range validations');
  fin=fin.replaceAll(error,'if(error){pb2050Notice(error);return;}');
- for(const message of ['در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.','در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.']){
+ for(const message of ['در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.','در بازه انتخاب‌شده فاکتوری وجود ندارد.','در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.']){
   fin=once(fin,'alert("'+message+'")','pb2050Notice("'+message+'")','nonblocking finance feedback');
  }
  s=s.slice(0,a)+fin+s.slice(b+1);
+ const promptStart=s.indexOf('function PB1437CustomerPrompt('),promptEnd=s.indexOf('/* PB1438 photographer controls */',promptStart);
+ if(promptStart<0||promptEnd<=promptStart)throw Error('[R2056] customer prompt region');
+ const promptOld="e.jsx('select',{'aria-label':'انتخاب عکاسی برای ثبت',value:id,onChange:event=>setId(event.target.value),children:[e.jsx('option',{value:'',children:'انتخاب عکاسی'}),...(customers||[]).map(customer=>e.jsx('option',{value:String(customer.id),children:customer.name||customer.mobile||'عکاسی'},customer.id))]})";
+ const prompt=once(s.slice(promptStart,promptEnd),promptOld,"e.jsx(pb2050CustomerPicker,{statement:true,prompt:true,value:id,customers:customers||[],onChange:setId})",'payment and discount photographer prompt');
+ s=s.slice(0,promptStart)+prompt+s.slice(promptEnd);
  return s+'\n'+[pb2050Formatter,pb2050CalendarMonth,pb2050Notice,pb2050CustomerPicker].map(fn=>fn.toString()).join('\n')+'\n/* PB2050 native finance responsiveness */\n';
 }

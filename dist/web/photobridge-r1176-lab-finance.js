@@ -5,6 +5,30 @@ const money=n=>Number(n||0).toLocaleString('fa-IR');
 const digits=v=>String(v||'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[^\d]/g,'');
 const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el};
 const labeled=(root,label,input)=>{const l=node('label','pb1176Field');l.append(node('span',null,label),input);root.append(l);return input};
+// R2056: installed Lab only. Build no customer option nodes until opened.
+function pb2056ManualCustomerPicker(customers){
+ const root=node('div','pb2056ManualPicker'),trigger=node('button','pb2056ManualTrigger','انتخاب عکاسی موجود / مشتری جدید');
+ trigger.type='button';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-haspopup','true');
+ const panel=node('div','pb2056ManualPanel');panel.hidden=true;
+ const search=node('input');search.type='search';search.placeholder='جستجوی عکاسی…';search.setAttribute('aria-label','جستجوی عکاسی');search.autocomplete='off';
+ const list=node('div','pb2056ManualList');list.setAttribute('aria-label','فهرست عکاسی‌ها');
+ panel.append(search,list);root.append(trigger,panel);
+ const empty={id:'',label:'انتخاب عکاسی موجود / مشتری جدید',key:''};
+ const options=[empty,...customers.map(c=>{const label=String(c.name||'مشتری')+' · '+String(c.mobile||'');return {id:String(c.id),label,key:label.toLocaleLowerCase()}})];
+ let value='',matches=[],limit=120;
+ const control={element:root,get value(){return value},onchange:null};
+ function close(){panel.hidden=true;trigger.setAttribute('aria-expanded','false')}
+ function select(option){value=option.id;trigger.textContent=option.label;trigger.title=option.label;close();trigger.focus();control.onchange?.()}
+ function append(){const end=Math.min(limit,matches.length),start=list.children.length,frag=document.createDocumentFragment();for(let i=start;i<end;i++){const option=matches[i],button=node('button','pb2056ManualOption',option.label);button.type='button';button.title=option.label;button.setAttribute('aria-pressed',String(option.id===value));button.onclick=()=>select(option);frag.append(button)}list.append(frag)}
+ function render(){const query=search.value.trim().toLocaleLowerCase();matches=query?options.filter(o=>o.key.includes(query)):options;limit=120;list.replaceChildren();list.scrollTop=0;append();if(!matches.length)list.append(node('div','pb2056ManualEmpty','عکاسی یافت نشد.'))}
+ function open(){panel.hidden=false;trigger.setAttribute('aria-expanded','true');search.value='';render();search.focus()}
+ trigger.onclick=()=>panel.hidden?open():close();
+ search.oninput=render;
+ list.addEventListener('scroll',()=>{if(list.scrollTop+list.clientHeight>=list.scrollHeight-48&&limit<matches.length){limit+=120;append()}});
+ root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close()});
+ root.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden){event.preventDefault();event.stopPropagation();close();trigger.focus()}else if(event.key==='ArrowDown'&&event.target===search){const first=list.querySelector('button');if(first){event.preventDefault();first.focus()}}});
+ return control;
+}
 function manual({api,customers=[],refresh}){
  if(document.querySelector('.pb1176Backdrop'))return;
  const dialog=node('dialog','pb1176Backdrop');dialog.dir='rtl';dialog.setAttribute('aria-label','ثبت فاکتور دستی');
@@ -16,9 +40,13 @@ function manual({api,customers=[],refresh}){
  const help=node('p','pb1176Help','می‌توانید برای چاپ عکس با سایزها و قیمت‌های مختلف، یا برای هر کالا و خدمت دیگری ردیف ثبت کنید. این فاکتور در حساب مشتری ثبت می‌شود.');
  box.append(help);
  const grid=node('div','pb1176CustomerGrid');
- const select=node('select');select.append(new Option('انتخاب عکاسی موجود / مشتری جدید',''));
- for(const customer of customers){select.append(new Option(String(customer.name||'مشتری')+' · '+String(customer.mobile||''),String(customer.id)));}
- labeled(grid,'طرف حساب',select);
+ let select;
+ if(window.pbNativeStorage){select=pb2056ManualCustomerPicker(customers);labeled(grid,'طرف حساب',select.element);}
+ else{
+  select=node('select');select.append(new Option('انتخاب عکاسی موجود / مشتری جدید',''));
+  for(const customer of customers){select.append(new Option(String(customer.name||'مشتری')+' · '+String(customer.mobile||''),String(customer.id)));}
+  labeled(grid,'طرف حساب',select);
+ }
  const name=labeled(grid,'نام مشتری جدید',node('input'));name.placeholder='در صورت انتخاب‌نکردن عکاسی';
  const mobile=labeled(grid,'شماره موبایل (اختیاری)',node('input'));mobile.inputMode='tel';mobile.placeholder='۰۹۱۲…';
  select.onchange=()=>{name.disabled=!!select.value;mobile.disabled=!!select.value};

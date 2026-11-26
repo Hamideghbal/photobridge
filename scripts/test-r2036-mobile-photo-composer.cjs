@@ -10,17 +10,22 @@ function classes(...initial){
  const items=new Set(initial);
  return {contains:n=>items.has(n),add:n=>items.add(n),remove:n=>items.delete(n)};
 }
-function context({ua='Android',width=true,coarse=true,path='/photographer/upload',search='',embedded=false,frame=false,composer=true,platform='',touch=0}={}){
+function context({ua='Android',width=true,coarse=true,path='/photographer/upload',search='',embedded=false,frame=false,composer=true,platform='',touch=0,live=false,chooser=false}={}){
  const window={};window.top=frame?{}:window;
  const document={documentElement:{classList:classes(...(embedded?['pb1126Embedded']:[]))}};
- const w={classList:classes(...(composer?['simplePrintPilotWorkspaceMode']:[])),querySelector:()=>null};
- const args={window,document,navigator:{userAgent:ua,platform,maxTouchPoints:touch},matchMedia:q=>({matches:q.includes('pointer')?coarse:width}),location:{pathname:path,search},URLSearchParams};
+ const w={classList:classes(...(composer?['simplePrintPilotWorkspaceMode']:[])),querySelector:q=>q==='.simplePrintPilot'&&live?{}:null};
+ document.querySelector=q=>q==='#pbR99LabChooser'?(chooser?{hidden:false,getBoundingClientRect:()=>({height:100})}:null):w;
+ const args={window,document,navigator:{userAgent:ua,platform,maxTouchPoints:touch},matchMedia:q=>({matches:q.includes('pointer')?coarse:width}),location:{pathname:path,search},URLSearchParams,getComputedStyle:()=>({display:'block'})};
  return {args,w,document};
 }
 test('R2036 photo composer ownership excludes Windows, desktop, album, finance, list, embedded and lab',()=>{
  const run=opts=>{const {args,w}=context(opts);return vm.runInNewContext(guard+'\npb2036MobilePhoto',args)(w)};
  assert.equal(run({}),true);assert.equal(run({ua:'iPhone'}),true);
  assert.equal(run({ua:'Macintosh',platform:'MacIntel',touch:5,coarse:false}),true);
+ assert.equal(run({live:true,search:'?pbLabChooser=1',embedded:true}),true,'live mobile composer wins over stale chooser and desktop flags');
+ assert.equal(run({live:true,chooser:true}),false,'real visible chooser wins');
+ assert.equal(run({live:true,frame:true}),false,'embedded desktop iframe cannot own mobile layout');
+ assert.equal(run({live:true,path:'/photographer/gallery'}),false,'old photo DOM cannot own Gallery');
  assert.equal(run({search:'?pbDesktopContent=1'}),true,'stale query on a real top-level handset is not a desktop frame');
  for(const opts of [{ua:'Windows NT 10.0'},{width:false},{ua:'Macintosh',coarse:false},{frame:true},{embedded:true},{search:'?pbLabChooser=1'},{path:'/photographer/album/new'},{path:'/photographer/finance/invoices'},{path:'/lab/orders'},{composer:false}])assert.equal(run(opts),false,JSON.stringify(opts));
 });
@@ -47,6 +52,9 @@ test('R2036 mobile row preserves native disabled state, keeps one product button
  api.watch(row,w);assert.equal(api.repair(w,row),false);
  const replacement={...w};assert(api.repair(replacement,row),'new workspace must be rebound');
  row.hidden=true;assert(api.repair(w,row),'old header reset must be reconciled');
+ api.sync(row,w);document.documentElement.classList.remove('pb2036PhotoComposer');assert(api.repair(w,row),'root class removed after navigation');
+ api.sync(row,w);send.textContent='ارسال فایل برای چاپ';assert(api.repair(w,row),'legacy send label reset');
+ api.sync(row,w);assert.equal(api.repair(w,row),false);
  api.sync(row,replacement);api.watch(row,replacement);assert.equal(api.repair(replacement,row),false);
 
  api.stop();assert.equal(product,null);assert.equal(document.documentElement.classList.contains('pb2036PhotoComposer'),false);
@@ -67,6 +75,10 @@ test('R2036 delivered web runtime keeps one mobile geometry owner and existing s
  assert(header.includes("r.querySelector('.pbF37Send').addEventListener('click',()=>{const s=printAction(1);if(s&&!s.disabled)s.click()})"));
  assert(header.includes("pb2036SyncPhoto(r,photoWorkspace);pb2036WatchPhoto(r,photoWorkspace);return;"));
  assert(header.includes('pb2040WatchLifecycle();'));
+ assert(header.includes('if(pb2042PhotoWorkspace())return "print";'));
+ assert(header.includes('pb2042LifecycleObserver.observe(document.documentElement'));
+ assert(legacy.includes('if(pb2036MobilePhoto(w)){ensureModeActions(w);return;}'));
+ assert(html.includes('mobileReentry=r2042'));
  assert(header.includes('if(pb2036MobilePhoto(current))return pb2040PhotoAction(current,index)'));
  for(const name of ['photobridge-v815-print-finance-tabs.js','photobridge-v816-print-finance-unify.js','photobridge-v817-print-header-stability.js','photobridge-v818-print-finance-composer-fix.js','photobridge-ui-fixes-v749.js']){
   const script=read(root+name);assert.doesNotThrow(()=>new vm.Script(script));assert(script.includes('if(pb2036MobilePhoto(document.querySelector(".photographerMain.photographerPrintWorkspace")))return;'));assert(html.includes(name+'?')&&html.split(name+'?')[1].split('"')[0].includes('mobileLifecycle=r2040'),name+' lifecycle cache');

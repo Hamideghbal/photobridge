@@ -23,3 +23,12 @@ test('PB164 statement retains month and all; Today is absent from statement only
  assert(code.includes('نمایش ماه آخر'));assert(code.includes('نمایش کامل حساب معین'));
  const css=read('native-queue.css');assert(css.includes('flex-flow:row wrap!important'));assert(css.includes('position:static!important'));assert(css.includes('data-pb2060-range="today"]){display:none!important'));
 });
+
+test('PB165 index and pagination preserve original first match and full list',()=>{
+ const {pb2063FirstIndex,pb2063TablePage}=require('../native-performance-165.cjs');
+ const rows=Array.from({length:10001},(_,i)=>({id:i,name:'studio '+i,hash:String(i%10)}));
+ assert.equal(pb2063FirstIndex(rows,'hash').get('1'),rows[1]);
+ assert.equal(pb2063TablePage(rows,'studio 10000',1).rows[0],rows[10000]);
+ assert.deepEqual(Array.from({length:201},(_,i)=>pb2063TablePage(rows,'',i+1).rows).flat(),rows);
+ assert(read('finance-dashboard-160.cjs').includes('pb165ExtraTimes'));
+});

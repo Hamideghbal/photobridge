@@ -151,3 +151,24 @@ html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar 
  position:static!important;inset:auto!important;transform:none!important;translate:none!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;white-space:nowrap!important;margin:0!important;
 }
 html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(button[data-pb163-statement-today],button[data-pb2060-range="today"]){display:none!important;}
+
+/* PB165 bounded picker and photographer pagination */
+.pb2051PickerFrame{min-width:140px;width:220px;max-width:100%;flex:0 1 220px;overflow:visible!important}
+.pb2050CustomerPicker,.pb2050CustomerPicker .pbSelectSearchShell{width:100%;min-width:0;box-sizing:border-box}
+.pb2050CustomerPicker .pbSelectSearchShell{display:flex;align-items:center;gap:4px;background:white;border:1px solid #d3def2;border-radius:8px;padding:0 8px;min-height:34px}
+.pb2050CustomerPicker .pbSelectSearchInput{flex:1 1 0;width:0;min-width:0;border:0;background:transparent}
+.pb2050CustomerPicker .pbSelectSearchArrow{flex:0 0 24px;border:0;background:transparent}
+.pb2050CustomerMenu{overflow-y:auto!important;overscroll-behavior:contain}
+.pb165PageControls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px}
+.pb165PageControls input{min-width:140px;max-width:100%;padding:6px 10px;border:1px solid #d3def2;border-radius:8px}
+.pb2056ManualPicker{position:relative;width:100%;min-width:0}
+.pb2056ManualTrigger{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:36px;background:white;border:1px solid #d3def2;border-radius:8px;padding:6px 10px;text-align:right}
+.pb2057ManualCaption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pb2057ManualArrow:after{content:'⌄'}
+.pb2056ManualPanel:not([hidden]){display:block;position:absolute;top:calc(100% + 4px);right:0;left:0;z-index:2147483646;background:#fff;border:1px solid #d3def2;border-radius:8px;padding:6px;box-shadow:0 6px 22px #24385722}
+.pb2056ManualPanel.pb2057Above{top:auto;bottom:calc(100% + 4px)}
+.pb2056ManualPanel[hidden]{display:none!important}
+.pb2056ManualPanel input{width:100%;box-sizing:border-box}
+.pb2056ManualList{max-height:200px;overflow-y:auto;overscroll-behavior:contain}
+.pb2056ManualOption{display:block;width:100%;padding:8px;text-align:right;background:white;border:0;border-bottom:1px solid #e5edf6}
+.pb2056ManualOption:hover,.pb2056ManualOption[aria-pressed="true"]{background:#e8efff;color:#2346a3}

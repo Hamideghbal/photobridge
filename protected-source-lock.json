@@ -5,7 +5,7 @@
   "verifyCommand": "node verify-release-lock.cjs && node run-release-regressions.cjs && node prepare-access-runtime.cjs && node prepare-assets.cjs && node verify-native-ui.cjs",
   "sourceFiles": {
     "main.cjs": "0919327fbd67342224dca67558ae3e3efa8847d0d65fb03f02c6c4261bdda1c1",
-    "host.cjs": "03f5dc3144fbff47863926e5dca5bd8f0e62f55a46fbe1a66ac26443a028ed7b",
+    "host.cjs": "22df911fc1aa9eb4af1bf24a13efda7ea721af0ce714736e9f6b56dc1d29e5ca",
     "sync.cjs": "1d8cfc0e81222b591f385fd3149fa1ceebdfa3ab959604c240b9c5b0f9f45fcb",
     "update-install-gate.cjs": "5a9f98495c12a50a96e4c6a0a7f5838fe8ac6ad255673300b359f85c5ea44bec",
     "app-update.cjs": "a474d936ebcb97ba7bf52655d0015bdf87a3ccd46ba4629934811370ebe5f63d",
@@ -14,7 +14,7 @@
     "approved-thermal-invoice.cjs": "e98c7be7f0295aa4ca2f095e5a0ed9ba2a0aa8bdb22ffe2e5b3d54b067e8a6a6",
     "model-dialog-patch.cjs": "5518816faff92538916d9db6f4e22b99d8f45dae7b326e8683c4ff6bac94ad75",
     "storage-bundle.cjs": "ef527fa614848680889e059cc088a1455dea3c49a972171e7d76d8c4eeb4e8b4",
-    "native-renderer-bundle.cjs": "c79cdbd44575a5c632c0712528c201db41609a3f10a13b14f8bc699154c18029",
+    "native-renderer-bundle.cjs": "ddabb85ef8b99fdb9f3d1392e8ccf4af419faaf1b8be82c71b0e13a64e013305",
     "update-trust.cjs": "10893db3a29a2993fc9957dd126a057c928e5edee2fb998598ddfef17c5e6501",
     "verify-native-ui.cjs": "3562c14fc5f5f950b84cad8609edae740c05d7a370890e7a88a8499601e14e73",
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
@@ -51,18 +51,19 @@
     "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639",
     "test/native-regression-preload.cjs": "c33f84fec815d46f96b1eb5c73f58daa23cac3560f38d062f3a14b22facf03c0",
     "runtime-compat.cjs": "1abc2b067328463c60dda352b9cfe3f57e5f66551830dcee1e53c5971bc68683",
-    "finance-dashboard-160.cjs": "3de4847f59e8cfb6c370375c8a1f130ce6adea51b53d56d650d5ac170247d3ab",
+    "finance-dashboard-160.cjs": "0e2324fcee908a71d76acdcf3d713a3bdf4f411d57fdb9a22c50edfe3c93fc7d",
     "native-queue-presentation.cjs": "14df2c0660da02e88137e58c40dccb5c9d1cc2f00eccafce9c1ff65a09c4a5cd",
     "prepare-offline-data.cjs": "811a0962a2b51f919e2818436ffbc67ce58646131b81403853ae98a21ed69be8",
     "test/dashboard-160.test.cjs": "d8cd389b594fb84f573c3a6017a71c72daa98b186aecb02b76f281b69d261912",
     "compat-smoke.cjs": "fe17e8ee7f460c5fc6120025aa6ef1beda2dcad251d47e46d3e3cacbb4956089",
     "native-storage.js": "ca555b5824e2adad1108c811c1f719fe50e18b98a39fb7a33e34a44363b213fa",
-    "test/finance-161.test.cjs": "75a084f8df13c5c7ab56cc2cb3e46621a78f10f9de2a68af716ac62dda364364",
+    "test/finance-161.test.cjs": "0df3b5b93b4e0d633b394a68c500a3125248d54392d7cb45035f8a349e242ca6",
     "receipt-view-162.cjs": "e5da5c9909689aa7aa8aac53d6e8ac1d0db7156a3dafa07f6af6ecdf192e14d8",
     "inline-backup-162.cjs": "7f93fed9672dc49f60fce6689225e1ee262c8d5f04960c67c5fba58de1e8b411",
     "test/finance-162.test.cjs": "7f686bdabdc4138c788676ae73bc6ae661a650c731125a4eabac0612107ddd6a",
-    "native-queue.css": "f8a686c15f6e42684f6d997d3ce2e767689324d4b55a25370db979753a42ec58",
-    "connection-status-164.cjs": "5d301da6730444c3c3e4b62f49f0108cec8fdf5b2557a022462618bedac3b2ae"
+    "native-queue.css": "68f59bee105d0481fbac7046b55f5423ca0acc5537236ad6b11c7a655db11a47",
+    "connection-status-164.cjs": "5d301da6730444c3c3e4b62f49f0108cec8fdf5b2557a022462618bedac3b2ae",
+    "native-performance-165.cjs": "92e31159e5e125128fb58df773b954309d411492b3de816cfce41390286c8151"
   },
   "packagedFiles": [
     "main.cjs",
@@ -100,7 +101,8 @@
     "receipt-view-162.cjs",
     "inline-backup-162.cjs",
     "native-queue.css",
-    "connection-status-164.cjs"
+    "connection-status-164.cjs",
+    "native-performance-165.cjs"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

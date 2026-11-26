@@ -1509,7 +1509,7 @@ runR1314(process.execPath,['--test','scripts/test-r1965-manager-mobile-only.cjs'
 await deployStep('./enable-r1967-lab-archive-mobile.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1967-lab-archive-mobile.cjs'],{stdio:'inherit'});
 // R1969: complimentary manual subscription extension for frame/chassis stores only.
-// Apply after R1824 camera renewal and before final asset compression.
+// R2067: this writer is after PB_PERF_FIX, so refresh its own compressed admin JS before tests.
 await deployStep('./enable-r1969-frame-admin-renewal.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1969-frame-admin-renewal.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1970-thermal-model-dialogs.mjs');

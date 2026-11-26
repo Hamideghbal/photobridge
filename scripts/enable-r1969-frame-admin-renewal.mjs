@@ -1,5 +1,6 @@
 /* R1969: free frame/chassis subscriptions, without payment or activation side effects. */
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import {execFileSync} from 'node:child_process';
 const read=p=>fs.readFileSync(p,'utf8'),write=(p,s)=>fs.writeFileSync(p,s);
 function once(src,anchor,replacement,label){
@@ -18,7 +19,7 @@ execFileSync(process.execPath,['--check','dist/api/server.js'],{stdio:'inherit'}
 let ui=read('dist/web/photobridge-v904r19-admin-stores.js');
 if(!ui.includes('data-pb1969-frame-renew')){
  const btn='\${["frame","chassis","frame_chassis"].includes(String(s.business_category||""))?'
-  +JSON.stringify('<button class="primary" data-pb1969-frame-renew>تمدید رایگان</button>')+':""}';
+  +JSON.stringify('<button type="button" class="primary" data-pb1969-frame-renew>تمدید دستی رایگان</button>')+':""}';
  ui=once(ui,'<button data-store-domain>',btn+'<button data-store-domain>','frame-only admin button');
  ui=once(ui,"if(e.target.closest('[data-edit]'))return edit(shop);",
   "if(e.target.closest('[data-pb1969-frame-renew]'))return pb1969RenewFrameShop(shop,e.target.closest('[data-pb1969-frame-renew]'));if(e.target.closest('[data-edit]'))return edit(shop);",
@@ -32,9 +33,22 @@ let html=read('dist/web/index.html');
 const asset=/photobridge-v904r19-admin-stores\.js\?v=[a-zA-Z0-9_-]+/g;
 const matches=[...html.matchAll(asset)];
 if(matches.length!==1)throw Error('[R1969] admin-store script src count '+matches.length);
-html=html.replace(asset,'photobridge-v904r19-admin-stores.js?v=r1969');
+html=html.replace(asset,'photobridge-v904r19-admin-stores.js?v=r2067');
 write('dist/web/index.html',html);
-if(!server.includes('frame_store_only')||!ui.includes('pb1969RenewFrameShop')||!html.includes('admin-stores.js?v=r1969')){
+if(!server.includes('frame_store_only')||!ui.includes('pb1969RenewFrameShop')||!html.includes('admin-stores.js?v=r2067')){
  throw Error('[R1969] frame renewal release incomplete');
 }
-console.log('[R1969] platform admin complimentary frame/chassis renewal installed; camera and lab untouched.');
+// R2067: PB_PERF_FIX runs BEFORE this late writer. The HTTP server prefers
+// existing Brotli/gzip siblings, even when the query string changes.
+// Refresh the real admin JS and reject any stale encoded representation.
+const adminAsset='dist/web/photobridge-v904r19-admin-stores.js';
+const bytes=fs.readFileSync(adminAsset);
+for(const [suffix,encode,decode] of [
+ ['.br',b=>zlib.brotliCompressSync(b,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:5}}),zlib.brotliDecompressSync],
+ ['.gz',b=>zlib.gzipSync(b,{level:6}),zlib.gunzipSync]
+]){
+ const file=adminAsset+suffix;
+ fs.writeFileSync(file,encode(bytes));
+ if(!decode(fs.readFileSync(file)).equals(bytes))throw Error('[R2067] stale compressed admin store asset '+file);
+}
+console.log('[R2067] verified frame/chassis manual renewal and matching br/gzip payloads; camera and lab untouched.');

@@ -3,6 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const zlib=require('node:zlib');
 const read=p=>fs.readFileSync(p,'utf8');
 const uuid='11111111-1111-4111-8111-111111111111';
 
@@ -81,7 +82,7 @@ test('R1969: frame/chassis button appears only in correct admin store rows',()=>
  assert(ui.includes('تمدید رایگان ثبت شد'));
  assert(ui.includes('data-pb1824-renew'),'existing camera renewal must remain intact');
  const html=read('dist/web/index.html');
- assert(html.includes('photobridge-v904r19-admin-stores.js?v=r1969'));
+ assert(html.includes('photobridge-v904r19-admin-stores.js?v=r2067'));
 });
 test('R1969: build patches after R1824 and before final compression; no migration',()=>{
  const s=read('scripts/liara-fast-build.mjs');
@@ -93,4 +94,30 @@ test('R1969: build patches after R1824 and before final compression; no migratio
  assert(!patch.includes('migrations/'));
  assert(!patch.includes('lab-desktop'));
  assert.match(read('DEPLOY_REVISION.txt').trim(),/^\d{4}-\d{2}-\d{2}-r\d+-[a-z0-9-]+$/);
+});
+
+test('R2067: every actual compressed admin response contains the frame renewal control and matches plain JS',()=>{
+ const file='dist/web/photobridge-v904r19-admin-stores.js',bytes=fs.readFileSync(file);
+ for(const [ext,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]]){
+  assert(fs.existsSync(file+ext),'missing '+ext+' admin payload');
+  const decoded=decode(fs.readFileSync(file+ext));assert(decoded.equals(bytes),'stale '+ext+' admin payload');
+  assert(decoded.toString('utf8').includes('تمدید دستی رایگان'));
+  assert(decoded.toString('utf8').includes('data-pb1824-renew'));
+ }
+ const html=read('dist/web/index.html');
+ assert.equal((html.match(/photobridge-v904r19-admin-stores\.js\?v=r2067/g)||[]).length,1);
+ const build=read('scripts/liara-fast-build.mjs');
+ assert(build.indexOf("'scripts/photobridge-perf-fix.mjs'")<build.indexOf("deployStep('./enable-r1969-frame-admin-renewal.mjs')"));
+});
+test('R2067: manual action normalizes Persian months, confirms, sends correct endpoint and refreshes',async()=>{
+ const source=read('scripts/r1969-frame-admin-renewal-ui.txt'),calls=[],alerts=[],button={disabled:false,textContent:''};
+ const run=new Function('prompt','confirm','alert','api','dt','load',source+'\nreturn pb1969RenewFrameShop;')(
+ ()=> '۳',()=>true,m=>alerts.push(m),async(url,opts)=>{calls.push([url,JSON.parse(opts.body)]);return {ok:true,activeUntil:'2027-02-27'}},x=>x,async()=>calls.push('reload'));
+ await run({id:uuid,name:'قاب',business_category:'frame',active_until:'2026-11-27'},button);
+ assert.deepEqual(calls,[['/api/admin/equipment-rental/shops/'+uuid+'/grant-frame-renewal',{months:3}],'reload']);
+ assert.equal(button.disabled,false);assert(alerts[0].includes('2027-02-27'));
+ await run({id:uuid,business_category:'frame',active_until:null},button);
+ assert.equal(calls.length,2);
+ await run({id:uuid,business_category:'equipment_rental_sale',active_until:'2026-11-27'},button);
+ assert.equal(calls.length,2);
 });

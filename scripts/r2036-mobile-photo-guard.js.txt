@@ -13,6 +13,8 @@ function pb2036MobilePhoto(w){
  return live||w.classList.contains('simplePrintPilotWorkspaceMode');
 }
 function pb2042PhotoWorkspace(){
- const w=document.querySelector('.photographerMain.photographerPrintWorkspace')||document.querySelector('.photographerMain');
- return pb2036MobilePhoto(w)?w:null;
+ const w=document.querySelector?.('.photographerMain.photographerPrintWorkspace');
+ if(pb2036MobilePhoto(w))return w;
+ const current=document.querySelector?.('.photographerMain');
+ return pb2036MobilePhoto(current)?current:null;
 }

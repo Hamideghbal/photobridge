@@ -7,6 +7,28 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  // business migration or SQLite write before reaching the server.
  if(req.method==='GET'&&['/api/lab/dashboard','/api/lab/profile-image','/api/lab/hours','/api/lab/album-settings','/api/lab/sms-settings','/api/lab/snappbox/settings','/api/lab/site'].includes(url.pathname))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
+ // Receipt list reads are independent of invoice, expense, summary and journal refresh.
+ if(req.method==='GET'&&url.pathname==='/api/lab/finance/payments'&&['snapshot','live'].includes(url.searchParams.get('pbNativeReceiptView'))){
+  const snapshot=store.get('localBusiness:v1:'+lab),saved=store.cached(url.pathname);
+  if(snapshot&&saved&&store.get('documentPolicy:'+lab)===1&&localActive(store)){
+   const account=financeAccount?.(),scope=financeScope?.();
+   if(!offline&&url.searchParams.get('pbNativeReceiptView')==='live'){
+    const cache=require('./read-cache.cjs'),ticket=cache.beginRead(store,url.pathname);
+    try{const response=await request(url.pathname,{signal:AbortSignal.timeout(3500)});
+     if(response.ok){const bytes=Buffer.from(await response.arrayBuffer());
+      if(bytes.length<12e6&&Array.isArray(JSON.parse(bytes.toString()).payments)){
+       same();if(financeAccount?.()===account&&financeScope?.()===scope)cache.commitRead(store,ticket,response.status,'application/json',bytes.toString('base64'));
+      }
+     }
+    }catch{same();}
+   }
+   same();if(financeAccount?.()!==account){json(res,401,{error:'account_changed'});return true;}
+   const latest=store.get('localBusiness:v1:'+lab),cached=store.cached(url.pathname);
+   let rows;try{rows=JSON.parse(Buffer.from(cached.body,'base64').toString()).payments;}catch{}
+   if(latest&&Array.isArray(rows)){json(res,200,{payments:require('./receipt-view-162.cjs').receiptRows(latest,rows)});return true;}
+  }
+  if(!offline&&!snapshot)return false;
+ }
  // Isolated list-view fast path. It never changes write authorization or document rules.
  if(req.method==='GET'&&url.pathname==='/api/lab/invoices'&&['snapshot','live'].includes(url.searchParams.get('pbNativeInvoiceView'))){
   const snapshot=store.get('localBusiness:v1:'+lab),saved=store.cached(url.pathname);

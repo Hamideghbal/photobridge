@@ -24,7 +24,8 @@ function compile(file, version) {
   const modern = fastWorkerEnabled(source, version);
   const bridge = !modern && /^1\.0\.\d+$/.test(version) && Number(version.split('.')[2]) >= 120 && canBridge(source);
   const base = patchStorageBundle(source);
-  const served = Number(version.split('.')[2])>=160?require('./finance-dashboard-160.cjs').patchFinanceDashboard(base):base;
+  let served = Number(version.split('.')[2])>=160?require('./finance-dashboard-160.cjs').patchFinanceDashboard(base):base;
+  if(Number(version.split('.')[2])>=162)served=require('./inline-backup-162.cjs').patchInlineBackup(served,true);
   const optimized = bridge ? reuseDownloadedDetails(served) : { source: served };
   const body = 'window.__PB_LAB104_NATIVE__=' + JSON.stringify(modern) + ';\n' +
     'window.__PB_NATIVE_SOURCE_PROOF__=' + JSON.stringify(sourceMarker(source, version)) + ';\n' +

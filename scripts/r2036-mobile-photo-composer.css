@@ -138,5 +138,5 @@
  html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain .simplePrintPilot :is(.simplePrintPilotDesktopGrid,.simplePrintPilotMain,.simplePrintPilotGroups,.simplePrintPilotEmpty,.simplePrintPilotEmpty *){
   transform:none!important;transition:none!important;animation:none!important;will-change:auto!important;overflow-anchor:none!important;
  }
- html body:has(>.pb2044NativePhotoActions):has(.pb1793AddonDialog,.simplePrintPreviewOverlay,.modalOverlay)>.pb2044NativePhotoActions button{visibility:hidden!important;pointer-events:none!important}
+ html body:has(>.pb2044NativePhotoActions):has(.pb1793AddonDialog,.simplePrintPreviewOverlay,.modalOverlay,.globalModalLayer,.uploadChoiceOverlay)>.pb2044NativePhotoActions>*{visibility:hidden!important;pointer-events:none!important}
 }

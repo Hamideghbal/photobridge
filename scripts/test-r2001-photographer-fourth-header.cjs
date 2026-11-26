@@ -733,7 +733,7 @@ test('R2040 native Print-only lab recovers second header from hidden source cont
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  const a=nav.indexOf(' const pb2018Keys='),b=nav.indexOf(' function cleanClone(original){',a);
  assert(a>=0&&b>a);
- const h=new Function('printControlKey','location',nav.slice(a,b)+'\nreturn {pb2040SourceVisible,pb2024ChoosingLab,pb2024PrintReady,pb2018Complete};')(v=>v.key,{pathname:'/photographer/orders/flow'});
+ const h=new Function('printControlKey','location',nav.slice(a,b)+'\nreturn {pb2040SourceVisible,pb2041RecoverCore,pb2024ChoosingLab,pb2024PrintReady,pb2018Complete};')(v=>v.key,{pathname:'/photographer/orders/flow'});
  const controls=['class:photographerPrintPhotoTab','class:finance','class:archive'].map((key,i)=>({key,hidden:i>0,getAttribute:k=>k==='aria-hidden'&&i>0?'true':null,classList:{contains:()=>false}}));
  const album={key:'class:photographerPrintAlbumTab',hidden:true,getAttribute:()=>null,classList:{contains:()=>false}};
  const flags=new Set(['pbR100F14ChoosingLab']);
@@ -747,8 +747,12 @@ test('R2040 native Print-only lab recovers second header from hidden source cont
  realChooser=true;assert(h.pb2024ChoosingLab(doc));assert(!h.pb2024PrintReady(doc));
  realChooser=false;explicit=true;assert(h.pb2024ChoosingLab(doc));
  explicit=false;ready=false;assert(!h.pb2024PrintReady(doc));
- assert(nav.includes("active==='print'?pb2040SourceVisible(el)"));
+ const visible=[controls[0]];h.pb2041RecoverCore(visible,{querySelectorAll:()=>[...controls,album]});
+ assert.equal(visible.length,3);assert(h.pb2018Complete(visible));
+ h.pb2041RecoverCore(visible,{querySelectorAll:()=>[...controls,album]});assert.equal(visible.length,3);
+ assert(!visible.includes(album));
+ assert(nav.includes("if(active==='print'&&!choosing)pb2041RecoverCore(visible,native);"));
  assert(nav.includes("copy.hidden=false;copy.removeAttribute('aria-hidden')"));
- assert(nav.includes('pb2040Core(key)||(!button.hidden'));
- assert(fs.readFileSync('dist/web/index.html','utf8').includes('nativePrint=r2040'));
+ assert(nav.includes('button.isConnected&&!button.disabled&&pb2040SourceVisible(button)'));
+ assert(fs.readFileSync('dist/web/index.html','utf8').includes('nativePrint=r2040'));assert(fs.readFileSync('dist/web/index.html','utf8').includes('headerCompat=r2041'));
 });

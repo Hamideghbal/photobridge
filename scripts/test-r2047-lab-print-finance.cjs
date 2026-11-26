@@ -1,10 +1,15 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const read=p=>fs.readFileSync(p,'utf8');
-const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server}')();
+const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047UniqueUploadBase,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server}')();
 test('R2047 removes arbitrary user suffix before the file extension',()=>{
  const f=api.pb2047CleanUploadName;
  for(const [input,output] of [['IMG_201=2.jpg','IMG_201.jpg'],['عکس = قاب = 3.JPG','عکس.JPG'],['A=S:Frame.png','A.png'],['A=foo.bar.jpeg','A.jpeg'],['A=.tif','A.tif'],['A=any','A'],['=4.jpg','photo.jpg'],['a.b.jpg','a.b.jpg'],['folder=1/IMG=2.jpg','IMG.jpg']])assert.equal(f(input),output,input);
+});
+test('R2047 sequential normalized name collision keeps both files distinct',async()=>{
+ const id='01234567-89ab-4cde-8f01-23456789abcd',fn=api.pb2047UniqueUploadBase;
+ assert.equal(await fn({query:async()=>({rowCount:0})},'order',id,'IMG.jpg'),'IMG.jpg');
+ assert.equal(await fn({query:async()=>({rowCount:1})},'order',id,'IMG.jpg'),'IMG-0123456789ab.jpg');
 });
 test('R2047 automatic verified download and invoice cannot complete print or binding',()=>{
  for(const invoice_id of [undefined,'invoice-1']){

@@ -1515,7 +1515,9 @@ runR1314(process.execPath,['--test','scripts/test-r1969-frame-admin-renewal.cjs'
 await deployStep('./enable-r1970-thermal-model-dialogs.mjs');
 await deployStep('./enable-r2047-lab-print-finance.mjs');
 await deployStep('./enable-r2057-finance-floating-picker.mjs');
+await deployStep('./enable-r2059-inline-backup.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2059-inline-backup.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r2047-lab-print-finance.cjs','scripts/test-r2057-finance-floating-picker.cjs'],{stdio:'inherit'});
 // R2044: verify the actual React mobile composer and compressed web payload after the final asset refresh.

@@ -4,7 +4,7 @@
   "baseline": "9dc2a89ca1a1742bd6997a197283f91e93f82ee3",
   "verifyCommand": "node verify-release-lock.cjs && node run-release-regressions.cjs && node prepare-access-runtime.cjs && node prepare-assets.cjs && node verify-native-ui.cjs",
   "sourceFiles": {
-    "main.cjs": "1bcfe02b891e3b4ffa0b566efd4af6aaf53e17a187e54af96a99d5af023ac4bd",
+    "main.cjs": "c16075f845625a9478446200f8e85d4825498d5136a0697c302f0b518db095c7",
     "host.cjs": "ce551d0d9ddd5f280e73b669acc1b0d203cfa5179610aa0498f73df23a3f00bc",
     "sync.cjs": "f371d173902ab6a5b224157a4578566aac6ec95a4d373c9746d947eb2a980c0d",
     "update-install-gate.cjs": "5a9f98495c12a50a96e4c6a0a7f5838fe8ac6ad255673300b359f85c5ea44bec",
@@ -20,7 +20,7 @@
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
     "assets/photobridge-vazirmatn.woff2": "4e3fa217d38fdafc1fea4414ceb58ca5e662cf0ab5fa735a8c8c20e8b42cad92",
     "verify-release-lock.cjs": "d1ceca41d6273635a5307db59cd42c3750b74ecf3cb34694673c665b29f13821",
-    "run-release-regressions.cjs": "9731becda9b13716ecb3bd38c77a3dbb5e666001bcb9c45aa46df8f1185c048c",
+    "run-release-regressions.cjs": "3f7b158ac43ea42d5477ab9eedef3f8db03312b3100c01492f25ae697fa8abd0",
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
     "build-windows-oneclick.ps1": "12bd1b0e23f966a31127b291bab91aad62e61aa74ae10318696fe4c4d4c02907",
@@ -39,7 +39,10 @@
     "test/isolated-sync.test.cjs": "2ac28583efbe3a9e5b8c1f24ecbc706d6ab94afcdfc40c6078e51abf757802fe",
     "test/thermal-printer.test.cjs": "12c4d327f7f953c6676a7dfcd111843d09ec672556061ae4d320eed6f3c6df1d",
     "test/manual-invoice-ui.test.cjs": "dc893e72bfd4bd4b053c8c7abb3730922db6c1004508b669fdd5830b57f0d757",
-    ".gitattributes": "5c6e5659b563bb384baa74a3ae02087da42e53cc6e884702e26cf9dd596b8010"
+    ".gitattributes": "5c6e5659b563bb384baa74a3ae02087da42e53cc6e884702e26cf9dd596b8010",
+    "ui-update.cjs": "634d1a2a37bcdee1396c21fedf76e1b1512f06d8bb4912dfb5829c7f4f1a0c92",
+    "startup-update-schedule.cjs": "3a98b49b7489dc318ac429f4c8ca68d60e45b488c80c8139b85c25f8b127c408",
+    "test/fast-startup-159.test.cjs": "21cb2a070639a11034aa24c6dc743451ad4d65c079a1bdd72b814d50d342c318"
   },
   "packagedFiles": [
     "main.cjs",
@@ -60,7 +63,9 @@
     "verify-release-lock.cjs",
     "run-release-regressions.cjs",
     "create-update-release.cjs",
-    "verify-installer.cjs"
+    "verify-installer.cjs",
+    "ui-update.cjs",
+    "startup-update-schedule.cjs"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

@@ -1,0 +1,5 @@
+# PhotoBridge Lab 1.0.159 — fast startup candidate
+
+Base: complete native source 1.0.158 (ad38bd5f5f61f340c50c78871fab576597931a47). Only automatic appearance update scheduling and non-blocking UI verification/storage changed. Existing startup already uses local verified UI. Delay automatic check 2.5s after ready and visible; focus bursts coalesce, manual checks bypass delay. Preserve full per-file hashes, manifest validation, retry, atomic activation, known-good and actively rendered roots. Do not change native installer update signature, trust key, install gate, photo transfer, accounting, or database.
+
+Mandatory build adds startup/appearance update regressions and the existing update-install-gate test. Source lock records intentional main, UI updater and regression changes, and verifies both new runtime files in packed app. Run the normal one-click Windows builder and verify actual Windows startup, online/offline, manual update and upgrade from 1.0.158 before signing. Candidate only; no live update manifest or EXE published.

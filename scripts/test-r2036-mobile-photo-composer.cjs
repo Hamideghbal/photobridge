@@ -21,7 +21,8 @@ test('R2036 photo composer ownership excludes Windows, desktop, album, finance, 
  const run=opts=>{const {args,w}=context(opts);return vm.runInNewContext(guard+'\npb2036MobilePhoto',args)(w)};
  assert.equal(run({}),true);assert.equal(run({ua:'iPhone'}),true);
  assert.equal(run({ua:'Macintosh',platform:'MacIntel',touch:5,coarse:false}),true);
- for(const opts of [{ua:'Windows NT 10.0'},{width:false},{ua:'Macintosh',coarse:false},{frame:true},{embedded:true},{search:'?pbDesktopContent=1'},{path:'/photographer/album/new'},{path:'/photographer/finance/invoices'},{path:'/lab/orders'},{composer:false}])assert.equal(run(opts),false,JSON.stringify(opts));
+ assert.equal(run({search:'?pbDesktopContent=1'}),true,'stale query on a real top-level handset is not a desktop frame');
+ for(const opts of [{ua:'Windows NT 10.0'},{width:false},{ua:'Macintosh',coarse:false},{frame:true},{embedded:true},{search:'?pbLabChooser=1'},{path:'/photographer/album/new'},{path:'/photographer/finance/invoices'},{path:'/lab/orders'},{composer:false}])assert.equal(run(opts),false,JSON.stringify(opts));
 });
 test('R2036 mobile row preserves native disabled state, keeps one product button and delegates to the live native handler',()=>{
  const {args,w,document}=context();
@@ -29,11 +30,11 @@ test('R2036 mobile row preserves native disabled state, keeps one product button
  const choose=button(),send=button(),nativeChoose=button(),nativeSend=button();
  let product=null,added=0,calls=0,nextCalls=0;
  let nativeProduct={disabled:false,click:()=>calls++};
- w.querySelector=q=>q==='.pb1793StandaloneLaunch'?nativeProduct:null;
+ w.querySelector=q=>q==='.pb1793StandaloneLaunch'?nativeProduct:q.includes('simplePrintPilotPrimaryAdd')?nativeChoose:q.includes('simplePrintPilotQuoteSubmit')?nativeSend:null;
  const row={hidden:true,isConnected:true,classList:classes(),querySelector:q=>q==='.pbF37Choose'?choose:q==='.pbF37Send'?send:product,append:b=>{product=b;added++;b.remove=()=>{product=null}}};
  document.createElement=()=>{const b=button();b.addEventListener=(k,fn)=>{b.click=fn};return b};
- const api=vm.runInNewContext(guard+'\n'+actions+'\n({sync:pb2036SyncPhoto,stop:pb2036StopPhoto})',{
-  ...args,$:q=>q==='#pbF37PrintComposerActions'?row:w,
+ const api=vm.runInNewContext(guard+'\n'+actions+'\n({sync:pb2036SyncPhoto,stop:pb2036StopPhoto,watch:pb2036WatchPhoto,repair:pb2040NeedsPhotoRepair})',{
+  ...args,$:q=>q==='#pbF37PrintComposerActions'?row:w,MutationObserver:class{observe(){}disconnect(){}},
   printAction:i=>i===0?nativeChoose:nativeSend
  });
  api.sync(row,w);assert.equal(row.hidden,false);assert.equal(send.textContent,'ارسال');assert.equal(choose.textContent,'انتخاب سایز و عکس');assert.equal(product.textContent,'سفارش شاسی و قاب بدون چاپ');assert.equal(added,1);
@@ -42,6 +43,12 @@ test('R2036 mobile row preserves native disabled state, keeps one product button
  nativeProduct={disabled:false,click:()=>nextCalls++};product.click();assert.equal(nextCalls,1);
  nativeSend.disabled=true;nativeProduct.disabled=true;api.sync(row,w);assert.equal(send.disabled,true);assert.equal(product.disabled,true);product.click();assert.equal(nextCalls,1);
  nativeSend.disabled=false;api.sync(row,w);assert.equal(send.disabled,false);
+ document.body={classList:classes('pbF37PrintComposer')};
+ api.watch(row,w);assert.equal(api.repair(w,row),false);
+ const replacement={...w};assert(api.repair(replacement,row),'new workspace must be rebound');
+ row.hidden=true;assert(api.repair(w,row),'old header reset must be reconciled');
+ api.sync(row,replacement);api.watch(row,replacement);assert.equal(api.repair(replacement,row),false);
+
  api.stop();assert.equal(product,null);assert.equal(document.documentElement.classList.contains('pb2036PhotoComposer'),false);
 });
 test('R2036 delivered web runtime keeps one mobile geometry owner and existing send action',()=>{
@@ -59,6 +66,11 @@ test('R2036 delivered web runtime keeps one mobile geometry owner and existing s
  assert(legacy.includes("add.textContent='+'"),'keep overview plus');
  assert(header.includes("r.querySelector('.pbF37Send').addEventListener('click',()=>{const s=printAction(1);if(s&&!s.disabled)s.click()})"));
  assert(header.includes("pb2036SyncPhoto(r,photoWorkspace);pb2036WatchPhoto(r,photoWorkspace);return;"));
+ assert(header.includes('pb2040WatchLifecycle();'));
+ assert(header.includes('if(pb2036MobilePhoto(current))return pb2040PhotoAction(current,index)'));
+ for(const name of ['photobridge-v815-print-finance-tabs.js','photobridge-v816-print-finance-unify.js','photobridge-v817-print-header-stability.js','photobridge-v818-print-finance-composer-fix.js','photobridge-ui-fixes-v749.js']){
+  const script=read(root+name);assert.doesNotThrow(()=>new vm.Script(script));assert(script.includes('if(pb2036MobilePhoto(document.querySelector(".photographerMain.photographerPrintWorkspace")))return;'));assert(new RegExp(name.replaceAll('.','\\\\.')+'\\?[^"\\s]*mobileLifecycle=r2040').test(html),name+' lifecycle cache');
+ }
  assert(read(root+names[2]).includes('&&!pb2036MobilePhoto(main))cleanupPrintLeak()'));
  const css=read(root+'photobridge-r2036-mobile-photo-composer.css');
  assert(css.includes('@media(max-width:820px)'));

@@ -67,6 +67,21 @@ test('R2049 keeps finance cache invalidation and R1960/R1897 final URL contract 
   assert(final.startsWith(raw.split('&')[0]));
  }
 });
+test('R2050 caches Persian month calculation and reuses identical formatters',()=>{
+ let months=0;
+ const helper=new Function('wg',read('scripts/r2050-native-finance-speed.js.txt')+'\nreturn {pb2050Formatter,pb2050CalendarMonth}')((year,month)=>{months++;return [year,month]});
+ const options={timeZone:"Asia/Tehran",year:"numeric",month:"numeric",day:"numeric"},locale="en-US-u-ca-persian",d=new Date("2026-11-26T08:00:00Z");
+ assert.equal(helper.pb2050Formatter(locale,options),helper.pb2050Formatter(locale,options));
+ assert.deepEqual(helper.pb2050Formatter(locale,options).formatToParts(d),new Intl.DateTimeFormat(locale,options).formatToParts(d));
+ assert.equal(helper.pb2050CalendarMonth(1405,9),helper.pb2050CalendarMonth(1405,9));assert.equal(months,1);
+ helper.pb2050CalendarMonth(1405,10);assert.equal(months,2);
+});
+test('R2050 native finance feedback is nonblocking and replaces previous notice',()=>{
+ const nodes=[];const make=()=>({children:[],append(...children){this.children.push(...children)},setAttribute(){},addEventListener(name,fn){this[name]=fn},remove(){this.removed=true}});
+ const doc={createElement:make,getElementById:id=>nodes.findLast(node=>node.id===id&&!node.removed),body:{append:node=>nodes.push(node)}};
+ const notice=new Function('document','setTimeout',read('scripts/r2050-native-finance-speed.js.txt')+'\nreturn pb2050Notice')(doc,()=>{});
+ notice('انتخاب عکاسی');notice('انتخاب تاریخ');assert(nodes[0].removed);assert.equal(nodes[1].children[1].children[1].textContent,'انتخاب تاریخ');nodes[1].children[2].click();assert(nodes[1].removed);
+});
 test('R2047 final server and Lab web/Windows payloads contain matching fixes and integrity metadata',()=>{
  const s=read('dist/api/server.js');
  assert(s.includes('/* PB2047 server */'));
@@ -84,6 +99,15 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.'));
   assert(html.includes('labPrintFinance=r2047'));assert.match(html,/labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049&albumSizes=r1960&labStage=r1956/);assert(html.includes('pb2047LabFinanceStyle'));
   assert.equal(api.pb2047Ui(ui),ui);
+  if(root.endsWith('/lab-desktop-ui')){
+   assert(ui.includes('/* PB2050 native finance responsiveness */'));
+   assert(ui.includes('const f=c?pb2050CalendarMonth(g.year,g.month):[]'));
+   assert(ui.includes('m(false);a(nl(k))'));
+   assert(ui.includes('const Ve=x.useMemo(()=>pb1822FinanceNewestFirst(r.filter('));
+   assert(ui.includes('if(error){pb2050Notice(error);return;}'));
+   assert(html.includes('nativeFinance=r2050')&&html.includes('pb2050NativeFinanceStyle'));
+  }else assert(!ui.includes('/* PB2050 native finance responsiveness */'));
+
   for(const name of [asset,'index.html']){
    const file=root+'/'+name,bytes=fs.readFileSync(file);
    for(const [suffix,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(file+suffix))assert(decode(fs.readFileSync(file+suffix)).equals(bytes),'stale compressed '+file);

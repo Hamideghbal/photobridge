@@ -45,3 +45,16 @@ test('native main still starts from local UI and retains manual update/install g
  assert(s.includes('acceptRoot:validateNativeUi,retryFailedBuild,onProgress'));
  assert(s.includes('getActiveRoot:()=>activeUiRoot'));
 });
+
+test('PB164 connection display is not gated by bulk sync and never claims an unverified connection',()=>{
+ const {connectionStatus,connectionLabel}=require('../connection-status-164.cjs');
+ assert.equal(connectionStatus({network:true,online:false}),null);
+ assert.equal(connectionStatus({network:true,online:true}),true);
+ assert.equal(connectionStatus({network:false,online:true}),false);
+ assert.equal(connectionStatus({network:true,online:false,error:'server_unavailable'}),false);
+ assert.equal(connectionStatus({network:true,online:false,startupProbeFailed:true}),false);
+ assert.equal(connectionStatus({network:true,online:true,startupProbeFailed:true}),true);
+ assert.equal(connectionStatus({network:true,online:true,signedIn:false}),null);
+ assert.equal(connectionStatus({network:true,online:true,transportOffline:true}),false);
+ assert.equal(connectionLabel(null),'در حال بررسی اتصال');
+});

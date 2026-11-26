@@ -150,7 +150,4 @@ html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar 
 html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(.statementFilters,.statementActions,.pb2060Common)>button {
  position:static!important;inset:auto!important;transform:none!important;translate:none!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;white-space:nowrap!important;margin:0!important;
 }
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb163-statement-today],
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"] {display:inline-flex!important;align-items:center!important;justify-content:center!important;}
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb163-statement-today][aria-pressed="true"],
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"][aria-pressed="true"] {background:#315efb!important;color:#fff!important;border-color:#315efb!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(button[data-pb163-statement-today],button[data-pb2060-range="today"]){display:none!important;}

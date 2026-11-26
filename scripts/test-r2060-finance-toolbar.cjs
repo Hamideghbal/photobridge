@@ -6,11 +6,11 @@ test('R2065 statement has no Today; month/all/custom remain; invoice and receipt
  const source=fs.readFileSync('scripts/r2060-finance-toolbar.cjs','utf8'),module={exports:{}};
  const e={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},x={useMemo:fn=>fn()};let picked=[];
  new Function('module','e','x','$s','wn','Hs',source+'\nmodule.exports.common=pb2060Common;')(module,e,x,()=> '2026-11-26',()=>{},()=>{});
- const make=(view,customer)=>module.exports.common({view,customers:[],customer,applied:{from:'2026-11-26',to:'2026-11-26'},onToday:()=>picked.push('today'),onAll:()=>picked.push('all'),onApply:()=>picked.push('range')});
+ const make=(view,customer)=>module.exports.common({view,customers:[],customer,applied:{from:'2026-11-26',to:'2026-11-26'},onToday:()=>picked.push('today'),onAll:()=>picked.push('all'),onMonth:()=>picked.push('month'),onApply:()=>picked.push('range')});
  const buttons=(view,customer)=>make(view,customer).props.children.filter(node=>node?.type==='button');
- assert.deepEqual(buttons('statement','studio').map(node=>node.props['data-pb2060-range']),['range','all']);
- buttons('statement','studio').find(node=>node.props['data-pb2060-range']==='all').props.onClick();assert.deepEqual(picked,['all']);
+ assert.deepEqual(buttons('statement','studio').map(node=>node.props['data-pb2060-range']),['range','all','month']);
+ buttons('statement','studio').find(node=>node.props['data-pb2060-range']==='all').props.onClick();buttons('statement','studio').find(node=>node.props['data-pb2060-range']==='month').props.onClick();assert.deepEqual(picked,['all','month']);
  for(const view of ['invoices','payments']){const today=buttons(view,'studio').find(node=>node.props['data-pb2060-range']==='today');assert(today);today.props.onClick();}
- assert.deepEqual(picked,['all','today','today']);assert(source.includes('pb2060StatementRange(range.from,range.to)'));assert(source.includes('نمایش ماه آخر'));
- for(const root of ['dist/web','dist/web/lab-desktop-ui']){const html=fs.readFileSync(root+'/index.html','utf8');assert(html.includes('statementLayout=r2065'));assert(html.includes('PB2065:'));assert(html.includes('flex-flow:row wrap!important'));assert(html.includes('position:static!important'));}
+ assert.deepEqual(picked,['all','month','today','today']);assert(source.includes('pb2060StatementRange(range.from,range.to)'));assert(source.includes('نمایش ماه آخر'));
+ for(const root of ['dist/web','dist/web/lab-desktop-ui']){const html=fs.readFileSync(root+'/index.html','utf8');assert(html.includes('statementLayout=r2066'));assert(html.includes('PB2066:'));assert(html.includes('flex-flow:row nowrap!important'));assert(html.includes('min-width:292px!important'));assert(html.includes('grid-template-columns:repeat(7,minmax(0,1fr))!important'));assert(html.includes('position:static!important'));}
 });

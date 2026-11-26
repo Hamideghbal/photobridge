@@ -1,11 +1,11 @@
 'use strict';
 function pb2060Within(row,range,date){const from=range.from?date(range.from):"",to=range.to?date(range.to):"";if(!from&&!to)return true;const day=date(row.paid_at||row.issued_at||row.created_at);return !!day&&(!from||day>=from)&&(!to||day<=to)}
-function pb2060Common({view,customers,customer,onCustomer,from,to,onFrom,onTo,applied,onApply,onToday,onAll,busy=false}){
- const statement=view==="statement",today=$s(new Date()),appliedFrom=$s(applied.from),appliedTo=$s(applied.to),isToday=appliedFrom===today&&appliedTo===today,isAll=!appliedFrom&&!appliedTo,isCustom=!isAll&&!isToday;
+function pb2060Common({view,customers,customer,onCustomer,from,to,onFrom,onTo,applied,onApply,onToday,onAll,onMonth,busy=false}){
+ const statement=view==="statement",today=$s(new Date()),appliedFrom=$s(applied.from),appliedTo=$s(applied.to),isToday=appliedFrom===today&&appliedTo===today,isAll=!appliedFrom&&!appliedTo,monthStart=statement?$s(new Date(Date.now()-29*864e5)):"",isMonth=statement&&appliedFrom===monthStart&&appliedTo===today,isCustom=!isAll&&!isToday&&!isMonth;
  const options=x.useMemo(()=>[{value:"",label:statement?"انتخاب عکاسی":"همهٔ عکاسی‌ها"},...(customers||[]).map(row=>({value:String(row.id),label:row.name||row.mobile||"عکاسی"}))],[customers,statement]);
  const pick=typeof pb2050CustomerPicker==="function"?e.jsx(pb2050CustomerPicker,{value:customer,customers,onChange:onCustomer,statement}):e.jsx("div",{className:"pb1427InvoiceCustomerSelect pb2051PickerFrame",children:e.jsx(wn,{value:customer,options,searchable:true,searchPlaceholder:"جستجوی عکاسی…",ariaLabel:"انتخاب عکاسی",className:"pb2050CustomerPicker",menuClassName:"pb891FinanceSelectMenu pb2050CustomerMenu",onChange:onCustomer})});
  const button=(kind,label,active,action)=>e.jsx("button",{type:"button",className:"pb2060RangeButton "+(active?"active":""),"data-pb2060-range":kind,"aria-pressed":active,disabled:busy||statement&&!customer,onClick:action,children:label});
- return e.jsxs("div",{className:"pb2060Common",dir:"rtl",children:[pick,e.jsx("div",{className:"pb2060Date",children:e.jsx(Hs,{compact:true,value:from,onChange:onFrom,placeholder:"از تاریخ"})}),e.jsx("div",{className:"pb2060Date",children:e.jsx(Hs,{compact:true,value:to,onChange:onTo,placeholder:"تا تاریخ"})}),button("range","نمایش بازه",isCustom,onApply),!statement&&button("today","امروز",isToday,onToday),button("all","نمایش همه",isAll,onAll)]});
+ return e.jsxs("div",{className:"pb2060Common",dir:"rtl",children:[pick,e.jsx("div",{className:"pb2060Date",children:e.jsx(Hs,{compact:true,value:from,onChange:onFrom,placeholder:"از تاریخ"})}),e.jsx("div",{className:"pb2060Date",children:e.jsx(Hs,{compact:true,value:to,onChange:onTo,placeholder:"تا تاریخ"})}),button("range","نمایش بازه",isCustom,onApply),!statement&&button("today","امروز",isToday,onToday),button("all","نمایش همه",isAll,onAll),statement&&button("month","نمایش ماه آخر",isMonth,onMonth)]});
 }
 function patch2060(source){
  if(source.includes("/* PB2060 shared finance toolbar */"))return source;
@@ -38,7 +38,7 @@ function patch2060(source){
  const pb2060Day=()=>$s(new Date()),pb2060Month=()=>({from:$s(new Date(Date.now()-29*864e5)),to:pb2060Day()});
  const pb2060Toolbar=()=>{const day=pb2060Day();if(w==="invoices")return e.jsx(pb2060Common,{view:w,customers:E,customer:pb1427InvoiceCustomer,onCustomer:id=>{pb1427SetInvoiceCustomer(id);Ie(1)},from:_pbInvFrom,to:_pbInvTo,onFrom:_setPbInvFrom,onTo:_setPbInvTo,applied:{from:_pbInvAppliedFrom,to:_pbInvAppliedTo},onApply:()=>{if(pb2060Valid(_pbInvFrom,_pbInvTo))pb2060InvoiceRange(_pbInvFrom,_pbInvTo)},onToday:()=>pb2060InvoiceRange(day,day),onAll:()=>pb2060InvoiceRange("","")});
  if(w==="payments")return e.jsx(pb2060Common,{view:w,customers:E,customer:pb1420PaymentCustomer,onCustomer:id=>{pb1420SetPaymentCustomer(id);q(id)},from:pb2060PayFrom,to:pb2060PayTo,onFrom:pb2060SetPayFrom,onTo:pb2060SetPayTo,applied:pb2060PayApplied,onApply:()=>{if(pb2060Valid(pb2060PayFrom,pb2060PayTo))pb2060ReceiptRange(pb2060PayFrom,pb2060PayTo)},onToday:()=>pb2060ReceiptRange(day,day),onAll:()=>pb2060ReceiptRange("","")});
- return e.jsx(pb2060Common,{view:w,customers:E,customer:z,onCustomer:id=>{q(id);A(null);Re(1)},from:_e,to:je,onFrom:Pe,onTo:d,applied:pb2060StmtApplied,busy:D,onApply:()=>{if(pb2060Valid(_e,je))pb2060StatementRange(_e,je)},onToday:()=>pb2060StatementRange(day,day),onAll:()=>pb2060StatementRange("","")})};
+ return e.jsx(pb2060Common,{view:w,customers:E,customer:z,onCustomer:id=>{q(id);A(null);Re(1)},from:_e,to:je,onFrom:Pe,onTo:d,applied:pb2060StmtApplied,busy:D,onApply:()=>{if(pb2060Valid(_e,je))pb2060StatementRange(_e,je)},onAll:()=>pb2060StatementRange("",""),onMonth:()=>{const range=pb2060Month();pb2060StatementRange(range.from,range.to)}})};
  `;
  once(endHook,logic+endHook);
  // Keep all legacy anchors for already-installed 160–162 runtime patchers and existing regression checks.
@@ -78,7 +78,7 @@ function patch2060(source){
   once(receiptPanel,',t==="lab"&&w==="payments"&&'+metric+receiptPanel);
  }
  const stmtActions='className:"statementActions",children:[';
- once(stmtActions,stmtActions+'t==="lab"&&e.jsx("button",{type:"button",className:"pb2060Month",disabled:!z||D,onClick:()=>{const range=pb2060Month();pb2060StatementRange(range.from,range.to)},children:"نمایش ماه آخر"}),');
+ // Month is now adjacent to All in the shared filter group; original actions stay at the end.
  return source.slice(0,start)+p+source.slice(end+1)+"\n"+pb2060Within.toString()+"\n"+pb2060Common.toString()+"\n/* PB2060 shared finance toolbar */\n";
 }
 module.exports={patch2060,pb2060Within};

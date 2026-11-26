@@ -14,7 +14,9 @@ test('R2044 delivered React photo component owns all three direct actions and ca
  assert(part.includes('!pb2044Phone&&!De&&dt'));
  assert(part.includes('document.body):De&&ra.createPortal(dt,De)'));
  assert(part.includes('window===window.top'));
- assert(part.includes('!/Windows/i.test'));
+ assert(part.includes('/Windows/i.test'));
+ assert(part.includes('#pb1106PrintPanel.pb1106ContentPanel'));
+ assert(part.includes('x.useLayoutEffect(()=>{if(!s||!pb2044Phone||Le)return;'));
  const patch=new Function(read('scripts/r2044-native-photo-patch.js.txt')+'\nreturn pb2044PatchNativePhoto')();
  assert.equal(patch(ui),ui,'idempotent');
 });
@@ -24,6 +26,10 @@ test('R2044 final served HTML and precompressed assets deliver the native toolba
  assert.match(html,/photobridge-v904r100f41-header-date-name-fit\.js\?[^"']*nativePhoto=r2044/);
  assert.match(html,/index-UIRefine-v655-r84\.js\?[^"']*stablePhoto=r2045/);
  assert.match(html,/photobridge-v783-polish\.js\?[^"']*stablePhoto=r2045/);
+ assert.match(html,/index-UIRefine-v655-r84\.js\?[^"']*embeddedPhoto=r2046/);
+ assert.match(html,/photobridge-r1310-layout\.js\?[^"']*embeddedPhoto=r2046/);
+ const measured=read(root+'photobridge-r1310-layout.js');
+ assert.match(measured,/pending=false;\s*if\(pb2042PhotoWorkspace\(\)\)return;/);
  const cssUrl=html.match(/href="([^"]*photobridge-boot-[^"]+\.css)(?:\?[^"]*)?"/);
  const css=cssUrl?root+cssUrl[1].replace(/^\//,''):root+'photobridge-r2036-mobile-photo-composer.css';
  const style=read(css);
@@ -40,14 +46,16 @@ test('R2044 final served HTML and precompressed assets deliver the native toolba
 test('R2045 uses the same responsive rule after tab re-entry even if touch or user-agent reporting changes',()=>{
  const ui=read(bundle),a=ui.indexOf('const pb2044IsPhone='),b=ui.indexOf(';const [pb2044Phone',a);
  assert(a>=0&&b>a);
- const detect=(width,ua,frame=false)=>{
-  const window={matchMedia:()=>({matches:width})};window.top=frame?{}:window;
+ const detect=(width,ua,frame=false,mobilePrintFrame=false,parentWidth=true)=>{
+  const window={matchMedia:()=>({matches:width})};window.top=frame?{}:window;if(frame){window.frameElement={closest:q=>mobilePrintFrame&&q==='#pb1106PrintPanel.pb1106ContentPanel'?{}:null};window.parent={matchMedia:()=>({matches:parentWidth})}}
   return vm.runInNewContext(ui.slice(a,b)+';pb2044IsPhone()',{window,navigator:{userAgent:ua}});
  };
  for(const ua of ['Android','iPhone','Linux desktop-mode'])assert.equal(detect(true,ua),true);
  assert.equal(detect(false,'Android'),false);
  assert.equal(detect(true,'Windows NT 10.0'),false);
  assert.equal(detect(true,'Android',true),false);
+ assert.equal(detect(true,'Android',true,true),true,'mobile Print iframe is supported');
+ assert.equal(detect(true,'Android',true,true,false),false,'desktop host is excluded');
  const header=read(root+'photobridge-v904r100f41-header-date-name-fit.js');
  assert.match(header,/function ensureComposerActions\(\)\{\s*if\(document\.querySelector\("body > \.pb2044NativePhotoActions"\)\).*?return;\}/);
  assert.match(header,/function clearPrint\(\)\{\/\* PB2016 desktop owner \*\/[\s\S]*?if\(pb2042PhotoWorkspace\(\)\)return;\s*pb2036StopPhoto\(\)/);

@@ -148,4 +148,12 @@
  html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain .simplePrintPilot :is(.simplePrintPilotEmpty,.simplePrintPilotEmpty *, .simplePrintPilotDesktopGrid,.simplePrintPilotMain){
   translate:none!important;scale:none!important;rotate:none!important;view-transition-name:none!important;
  }
+ /* R2046: the persistent mobile dock is outside its Print iframe. Do not
+    reserve its height twice. Keep the circle immediately above the dock. */
+ html[data-pb1106-embedded] body>.pb2044NativePhotoActions .pb2044NativeSend,
+ html[data-pb1106-embedded].pb2036PhotoComposer body #pb2043PhotoSend{bottom:14px!important}
+ html[data-pb1106-embedded] body>.pb2044NativePhotoActions .pb2044NativeCancel{bottom:20px!important}
+ html[data-pb1106-embedded] body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain:has(.simplePrintPilot)>.photographerRolePageScrollArea{bottom:0!important;inset:241px 0 0!important}
+ /* The chooser belongs to the iframe too; it must cover any old mounted composer. */
+ body.pbR100F14ChoosingLab:has(#pbR99LabChooser)>.pb2044NativePhotoActions>*{visibility:hidden!important;pointer-events:none!important}
 }

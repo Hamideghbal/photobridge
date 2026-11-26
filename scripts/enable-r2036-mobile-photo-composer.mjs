@@ -76,7 +76,7 @@ for(const name of changed){
  if(hits.length!==1)throw Error('[R2036] web asset URL '+name+' count '+hits.length);
  html=html.replace(pattern,url=>{if(!url.includes('mobilePhoto=r2036'))url+='&mobilePhoto=r2036';if(!url.includes('mobileLifecycle=r2040'))url+='&mobileLifecycle=r2040';if(!url.includes('mobileReentry=r2042'))url+='&mobileReentry=r2042';return url.includes('mobileOwner=r2043')?url:url+'&mobileOwner=r2043'});
 }
-html=html.replace(/(index-UIRefine-v655-r84\\.js\\?[^"'<>\\s]*)/g,url=>url.includes('nativePhoto=r2044')?url:url+'&nativePhoto=r2044');
+html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('nativePhoto=r2044')?url:url+'&nativePhoto=r2044');
 html=html.replace(/mobileOwner=r2043/g,'mobileOwner=r2043&nativePhoto=r2044');
 write(htmlPath,html);
 for(const name of changed)execFileSync(process.execPath,['--check',root+name],{stdio:'inherit'});

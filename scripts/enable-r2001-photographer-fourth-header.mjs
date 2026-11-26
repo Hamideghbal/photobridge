@@ -670,24 +670,40 @@ if(!pb2040Nav.includes('/* PB2040 native print sources */')){
   ' /* PB2040 native print sources */',
   ' function pb2040Core(key){return ["class:photographerPrintPhotoTab","class:finance","class:archive"].includes(key);}',
   ' function pb2040SourceVisible(el){return !el.classList.contains("photographerPrintModeBack")&&(pb2040Core(printControlKey(el))||(!el.hidden&&el.getAttribute("aria-hidden")!=="true"));}',
+  ' function pb2041RecoverCore(visible,native){for(const el of native?.querySelectorAll(".photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button")||[]){if(pb2040Core(printControlKey(el))&&!visible.some(current=>printControlKey(current)===printControlKey(el)))visible.push(el);}return visible;}',
   ' function pb2040NativeReady(doc){return !!doc?.querySelector("#photographerRoleHeaderV710")&&!!doc?.querySelector("main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea")&&!!doc?.querySelector(".photographerPrintModeNav");}',
   ''
  ].join('\n');
  pb2040Nav=once(pb2040Nav,' function pb2024ChoosingLab(doc){',helper+' function pb2024ChoosingLab(doc){','R2040 native source helper');
  pb2040Nav=once(pb2040Nav,"  return doc.body.classList.contains('pbR100F14ChoosingLab')||(doc.documentElement.classList.contains('pbR100F14LabChooserBoot')&&!doc.querySelector('.photographerPrintModeNav'));","  if(pb2040NativeReady(doc)&&pb2018RouteKey(doc))return false;\n  return doc.body.classList.contains('pbR100F14ChoosingLab')||(doc.documentElement.classList.contains('pbR100F14LabChooserBoot')&&!doc.querySelector('.photographerPrintModeNav'));",'R2040 stale chooser cannot hide real destination');
- pb2040Nav=once(pb2040Nav,"const visible=sources.filter(el=>"+filter+");","const visible=sources.filter(el=>active==='print'?pb2040SourceVisible(el):"+filter+");",'R2040 desktop core controls are real even when native copy hidden');
+ // R2041: previous installers may rewrite the original visible filter.
+ // Recover the real mandatory controls after that filter, before the existing
+ // R2018 retention decision. This anchor is produced by R2018 above.
+ const retention="if(pb2017Retain&&!choosing&&!pb2018Complete(visible))return;";
+ pb2040Nav=once(pb2040Nav,retention,"if(active==='print'&&!choosing)pb2041RecoverCore(visible,native);\n  "+retention,'R2041 recover mandatory controls before retention');
  pb2040Nav=once(pb2040Nav,"].filter(el=>"+filter+");\n  return pb2018Complete(sources);", "].filter(pb2040SourceVisible);\n  return pb2018Complete(sources);",'R2040 frame readiness uses same controls');
  // React buttons remain the only action authority. Do not clone a disabled
  // button into an enabled one; hidden is a presentation flag, not a permission.
- const click="&&button.isConnected&&!button.disabled&&!button.hidden&&button.getAttribute('aria-hidden')!=='true'";
- pb2040Nav=once(pb2040Nav,click,"&&button.isConnected&&!button.disabled&&(pb2040Core(key)||(!button.hidden&&button.getAttribute('aria-hidden')!=='true'))",'R2040 dispatch real native core');
- pb2040Nav=once(pb2040Nav,"const copy=cleanClone(original);copy.style.removeProperty('display');","const copy=cleanClone(original);copy.style.removeProperty('display');if(active==='print'&&pb2040Core(printControlKey(original))){copy.hidden=false;copy.removeAttribute('aria-hidden');copy.style.removeProperty('visibility');copy.style.removeProperty('pointer-events');copy.style.removeProperty('opacity');}",'R2040 reveal only desktop core clones');
+ // R1307 defines this function; replace its bounded body independently of
+ // the original callback formatting and preserve disabled/live-node checks.
+ const dispatchStart=' function livePrintControl(key){',dispatchEnd=' function printControlSignature(button){';
+ const start=pb2040Nav.indexOf(dispatchStart),end=pb2040Nav.indexOf(dispatchEnd,start+dispatchStart.length);
+ if(start<0||end<=start||pb2040Nav.indexOf(dispatchStart,start+dispatchStart.length)>=0)throw Error('[R2041] live Print dispatch boundary missing');
+ pb2040Nav=pb2040Nav.slice(0,start)+[
+  dispatchStart,
+  '  const doc=currentDocument(),header=doc&&nativeHeader(doc);',
+  '  return [...(header?.querySelectorAll(".photographerPrintModeNav>button,.photographerPrintModeUtilityCluster button")||[])].find(button=>printControlKey(button)===key&&button.isConnected&&!button.disabled&&pb2040SourceVisible(button));',
+  ' }',
+  ''
+ ].join('\n')+pb2040Nav.slice(end);
+ const identity="const printKey=active==='print'?printControlKey(original):null;if(printKey)copy.dataset.pb2017PrintKey=printKey;";
+ pb2040Nav=once(pb2040Nav,identity,identity+"if(printKey&&pb2040Core(printKey)){copy.hidden=false;copy.removeAttribute('aria-hidden');copy.style.removeProperty('visibility');copy.style.removeProperty('pointer-events');copy.style.removeProperty('opacity');}",'R2041 reveal only desktop core clones at R2017 identity');
  write(pb2035NavFile,pb2040Nav);
 }
 execFileSync(process.execPath,['--check',pb2035NavFile],{stdio:'inherit'});
 for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
  let h=read(p);
- h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('nativePrint=r2040')?url:url+'&nativePrint=r2040');
+ h=h.replace(/(photobridge-r1126-desktop-navigation\.js\?[^"'<> \t\r\n]*)/g,url=>{if(!url.includes('nativePrint=r2040'))url+='&nativePrint=r2040';return url.includes('headerCompat=r2041')?url:url+'&headerCompat=r2041'});
  if(p==='dist/web/index.html')h=h.replace(/index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*/g,url=>url.includes('addonQuantities=r2040')?url:url+'&addonQuantities=r2040');
 
  write(p,h);

@@ -21,7 +21,7 @@ patch('photobridge-ui-fixes-v765.js',s=>{
  // v765 was recreating the hidden plus and writing scroll geometry each
  // time F41 removed it. Keep overview plus, album and desktop logic intact.
  s=once(s,'function ensureModeActions(w){','function ensureModeActions(w){\n    if(pb2036MobilePhoto(w)){if(!w.classList.contains("pb765Composing"))w.classList.add("pb765Composing");document.getElementById("pb765-add")?.remove();return null;}', 'disable legacy composer action writer');
- s=once(s,'raf=0;const w=workspace();','raf=0;const w=pb2042PhotoWorkspace()||workspace();\\n    if(pb2036MobilePhoto(w)){ensureModeActions(w);return;}','R2042 stop all legacy list/composer reconciliation while photo intake is active');
+ s=once(s,'raf=0;const w=workspace();','raf=0;const w=pb2042PhotoWorkspace()||workspace();\n    if(pb2036MobilePhoto(w)){ensureModeActions(w);return;}','R2042 stop all legacy list/composer reconciliation while photo intake is active');
  s=once(s,'function syncGeometry(w){','function syncGeometry(w){\n    if(pb2036MobilePhoto(w))return;', 'one geometry owner');
  s=once(s,'function resetScrollGeometry(w){','function resetScrollGeometry(w){\n    if(pb2036MobilePhoto(w))return;', 'no reset in active composer');
  return s;
@@ -45,9 +45,9 @@ patch('photobridge-ui-fixes-v749.js',s=>once(s,'function syncPrintLayout(){','fu
 patch('photobridge-v904r100f41-header-date-name-fit.js',s=>{
  s=once(s,'  function ensureComposerActions(){',actions+'\n  function ensureComposerActions(){','install native action proxies');
  s=once(s,'function printAction(index){const w=', 'function printAction(index){const current=pb2042PhotoWorkspace()||$(".photographerMain.photographerPrintWorkspace");if(pb2036MobilePhoto(current))return pb2040PhotoAction(current,index);const w=', 'R2040 real photo actions after lab switch');
- s=once(s,'const crm=crmPane();if(crm)return crm;','const crm=crmPane();if(crm)return crm;\\n    if(pb2042PhotoWorkspace())return "print";','R2042 real composer before stale chooser or pending mode');
+ s=once(s,'const crm=crmPane();if(crm)return crm;','const crm=crmPane();if(crm)return crm;\n    if(pb2042PhotoWorkspace())return "print";','R2042 real composer before stale chooser or pending mode');
  s=once(s,"function printComposer(){const w=$('.photographerMain.photographerPrintWorkspace');","function printComposer(){const w=pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace');",'R2042 mounted composer fallback');
- s=once(s,"const w=$('.photographerMain.photographerPrintWorkspace');if(!w)return;","const w=pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace');if(!w)return;\\n    if(pb2036MobilePhoto(w)&&!w.classList.contains('photographerPrintWorkspace'))w.classList.add('photographerPrintWorkspace');",'R2042 recover actual print scope after route cleanup');
+ s=once(s,"const w=$('.photographerMain.photographerPrintWorkspace');if(!w)return;","const w=pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace');if(!w)return;\n    if(pb2036MobilePhoto(w)&&!w.classList.contains('photographerPrintWorkspace'))w.classList.add('photographerPrintWorkspace');",'R2042 recover actual print scope after route cleanup');
  s=once(s,"let r=$('#pbF37PrintComposerActions');if(!r){","let r=$('#pbF37PrintComposerActions');if(pb2042PhotoWorkspace()&&r&&(!r.querySelector('.pbF37Choose')||!r.querySelector('.pbF37Send'))){r.remove();r=null;}if(!r){",'R2042 recover incomplete legacy row');
  s=once(s,'    void loadMe();render();','    void loadMe();render();pb2040WatchLifecycle();','R2040 stable body lifecycle observer');
 

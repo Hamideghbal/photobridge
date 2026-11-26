@@ -35,6 +35,8 @@
  html.pb2036PhotoComposer body :is(#pb765-add,#pb762-add,#pb783FinanceShortcut,#pb761-mode-actions){display:none!important}
  html.pb2036PhotoComposer body #root#root main.photographerMain.photographerPrintWorkspace>.photographerRolePageScrollArea{
   position:fixed!important;top:241px!important;bottom:78px!important;left:0!important;right:0!important;
+  inset:241px 0 78px 0!important;width:100%!important;margin:0!important;box-sizing:border-box!important;
+  padding-top:10px!important;will-change:auto!important;opacity:1!important;visibility:visible!important;
   height:auto!important;min-height:0!important;max-height:none!important;
   overflow-y:auto!important;overflow-x:hidden!important;
   overscroll-behavior-y:contain!important;overflow-anchor:none!important;
@@ -42,7 +44,15 @@
   padding-bottom:82px!important;
  }
  html.pb2036PhotoComposer body #root main.photographerMain.photographerPrintWorkspace :is(.simplePrintPilot,.simplePrintPilotMain,.simplePrintPilotGroups){
-  transform:none!important;animation:none!important;transition:none!important;
+  transform:none!important;animation:none!important;transition:none!important;will-change:auto!important;
+ }
+ /* R2042: prevent an old workspace-level enter animation from moving the
+    empty-state panel or changing the fixed viewport containing block. */
+ html.pb2036PhotoComposer body #root main.photographerMain.photographerPrintWorkspace{
+  transform:none!important;animation:none!important;transition:none!important;will-change:auto!important;
+ }
+ html.pb2036PhotoComposer body #root main.photographerMain.photographerPrintWorkspace :is(.simplePrintPilotEmpty,.simplePrintPilotEmptyState,.simplePrintEmpty,.simplePrintPilotGroups:empty){
+  transform:none!important;animation:none!important;transition:none!important;will-change:auto!important;overflow-anchor:none!important;
  }
  html.pb2036PhotoComposer body:has(.pb1793AddonDialog) #pbF37PrintComposerActions.pb2036PhotoActions,
  html.pb2036PhotoComposer body:has(.pb1793AddonDialog) #pbF37PrintComposerActions.pb2036PhotoActions>button{visibility:hidden!important;pointer-events:none!important}

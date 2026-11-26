@@ -139,4 +139,13 @@
   transform:none!important;transition:none!important;animation:none!important;will-change:auto!important;overflow-anchor:none!important;
  }
  html body:has(>.pb2044NativePhotoActions):has(.pb1793AddonDialog,.simplePrintPreviewOverlay,.modalOverlay,.globalModalLayer,.uploadChoiceOverlay)>.pb2044NativePhotoActions>*{visibility:hidden!important;pointer-events:none!important}
+ /* R2045: lock the actual live photo form, not the mutable route classes.
+    Older list/entry styles must not change its viewport or animate empty state. */
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain:has(.simplePrintPilot)>.photographerRolePageScrollArea{
+  inset:241px 0 78px 0!important;scroll-padding-top:0!important;scroll-behavior:auto!important;
+  overflow-anchor:none!important;
+ }
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain .simplePrintPilot :is(.simplePrintPilotEmpty,.simplePrintPilotEmpty *, .simplePrintPilotDesktopGrid,.simplePrintPilotMain){
+  translate:none!important;scale:none!important;rotate:none!important;view-transition-name:none!important;
+ }
 }

@@ -42,6 +42,9 @@ patch('photobridge-v807-mobile-scroll-store-fix.js',s=>once(s,
  "    const root=document.documentElement,x=print();\n",
  "    const root=document.documentElement,x=print();\n    if(pb2042PhotoWorkspace()){for(const cls of ['pb807PrintNormal','pb807PrintFinance'])if(root.classList.contains(cls))root.classList.remove(cls);if(!root.classList.contains('pb807PrintComposer'))root.classList.add('pb807PrintComposer');return;}\n",
  'stop competing hidden-state writes'));
+// R2045: v783 and v807 otherwise compete for the same legacy shortcut on
+// every root mutation. Do not let either create/remove it during photo intake.
+patch('photobridge-v783-polish.js',s=>once(s,'function syncFinanceShortcut(){','function syncFinanceShortcut(){\n    if(pb2042PhotoWorkspace())return;','R2045 no legacy shortcut churn'));
 // R2040: three old finance/guide observers were repeatedly rewriting the
 // hidden native row. Do not let them trigger each other on the photo composer.
 for(const name of ['photobridge-v815-print-finance-tabs.js','photobridge-v816-print-finance-unify.js','photobridge-v817-print-header-stability.js','photobridge-v818-print-finance-composer-fix.js']){
@@ -60,10 +63,11 @@ patch('photobridge-v904r100f41-header-date-name-fit.js',s=>{
  s=once(s,"const w=$('.photographerMain.photographerPrintWorkspace');if(!w)return;","const w=pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace');if(!w)return;\n    if(pb2036MobilePhoto(w)){document.body.classList.add('pbF37PrintMode','pbF37PrintComposer');$('#pb762-add')?.remove();$('#pb765-add')?.remove();const rail=w.querySelector(':scope>.photographerLabContextRail');if(rail){for(const [k,v] of Object.entries({display:'none',visibility:'hidden','pointer-events':'none'}))if(rail.style.getPropertyValue(k)!==v||rail.style.getPropertyPriority(k)!=='important')rail.style.setProperty(k,v,'important');}ensureComposerActions();return;}",'R2042 recover actual print scope after route cleanup');
  s=once(s,"let r=$('#pbF37PrintComposerActions');if(!r){","let r=$('#pbF37PrintComposerActions');if(pb2042PhotoWorkspace()&&r&&(!r.querySelector('.pbF37Choose')||!r.querySelector('.pbF37Send'))){r.remove();r=null;}if(!r){",'R2042 recover incomplete legacy row');
  s=once(s,'    void loadMe();render();','    void loadMe();render();pb2040WatchLifecycle();','R2040 stable body lifecycle observer');
+ s=once(s,'  function ensureComposerActions(){\n','  function ensureComposerActions(){\n    if(document.querySelector("body > .pb2044NativePhotoActions")){const old=$("#pbF37PrintComposerActions");if(old&&!old.hidden)old.hidden=true;pb2043Scroll(pb2042PhotoWorkspace());return;}\n','R2045 native toolbar forbids legacy row creation');
 
  const anchor='    const comp=orderComposer();r.hidden=!comp;if(comp){';
  s=once(s,anchor,'    const photoWorkspace=pb2042PhotoWorkspace()||$(".photographerMain.photographerPrintWorkspace");\n    if(pb2036MobilePhoto(photoWorkspace)){if(document.querySelector(".pb2044NativePhotoActions")){pb2036StopPhoto();if(!r.hidden)r.hidden=true;pb2043Scroll(photoWorkspace);return;}pb2036SyncPhoto(r,photoWorkspace);pb2036WatchPhoto(r,photoWorkspace);return;}\n    pb2036StopPhoto();\n'+anchor,'replace photo composer send row');
- s=once(s,"    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');", "    pb2036StopPhoto();\n    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');",'clean on exit');
+ s=once(s,"    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');", "    if(pb2042PhotoWorkspace())return;\n    pb2036StopPhoto();\n    document.body.classList.remove('pbF37PrintMode','pbF37PrintComposer');",'clean on exit only after live composer unmount');
  return s;
 });
 const cssName='photobridge-r2036-mobile-photo-composer.css';
@@ -78,6 +82,7 @@ for(const name of changed){
 }
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('nativePhoto=r2044')?url:url+'&nativePhoto=r2044');
 html=html.replace(/mobileOwner=r2043/g,'mobileOwner=r2043&nativePhoto=r2044');
+html=html.replace(/nativePhoto=r2044/g,'nativePhoto=r2044&stablePhoto=r2045');
 write(htmlPath,html);
 for(const name of changed)execFileSync(process.execPath,['--check',root+name],{stdio:'inherit'});
 console.log('[R2036] mobile photo composer: one scroll owner, real Send and no-print product actions; desktop snapshots untouched');

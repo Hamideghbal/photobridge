@@ -10,11 +10,11 @@ function classes(...initial){
  const items=new Set(initial);
  return {contains:n=>items.has(n),add:n=>items.add(n),remove:n=>items.delete(n)};
 }
-function context({ua='Android',width=true,coarse=true,path='/photographer/upload',search='',embedded=false,frame=false,composer=true,platform='',touch=0,live=false,chooser=false,chooserVisibility='visible'}={}){
+function context({ua='Android',width=true,coarse=true,path='/photographer/upload',search='',embedded=false,frame=false,composer=true,platform='',touch=0,live=false,chooser=false,chooserVisibility='visible',native=false}={}){
  const window={};window.top=frame?{}:window;
  const document={documentElement:{classList:classes(...(embedded?['pb1126Embedded']:[]))}};
  const w={classList:classes(...(composer?['simplePrintPilotWorkspaceMode']:[])),querySelector:q=>q==='.simplePrintPilot'&&live?{}:null};
- document.querySelector=q=>q==='#pbR99LabChooser'?(chooser?{hidden:false,getBoundingClientRect:()=>({height:100})}:null):w;
+ document.querySelector=q=>q==='body > .pb2044NativePhotoActions'?(native?{}:null):q==='#pbR99LabChooser'?(chooser?{hidden:false,getBoundingClientRect:()=>({height:100})}:null):w;
  const args={window,document,navigator:{userAgent:ua,platform,maxTouchPoints:touch},matchMedia:q=>({matches:q.includes('pointer')?coarse:width}),location:{pathname:path,search},URLSearchParams,getComputedStyle:()=>({display:'block',visibility:chooserVisibility,opacity:'1'})};
  return {args,w,document};
 }
@@ -29,6 +29,8 @@ test('R2036 photo composer ownership excludes Windows, desktop, album, finance, 
  assert.equal(run({path:'/photographer',live:false,composer:true}),false,'stale workspace without intake');
  assert.equal(run({live:true,frame:true}),false,'embedded desktop iframe cannot own mobile layout');
  assert.equal(run({live:true,path:'/photographer/gallery'}),false,'old photo DOM cannot own Gallery');
+ assert.equal(run({live:true,native:true,path:'/photographer/gallery',chooser:true,coarse:false,ua:'Linux'}),true,'live native toolbar owns geometry until React unmounts it');
+ assert.equal(run({live:false,native:true,path:'/photographer/gallery'}),false,'no stale ownership when live composer is gone');
  assert.equal(run({search:'?pbDesktopContent=1'}),true,'stale query on a real top-level handset is not a desktop frame');
  for(const opts of [{ua:'Windows NT 10.0'},{width:false},{ua:'Macintosh',coarse:false},{frame:true},{embedded:true},{search:'?pbLabChooser=1'},{path:'/photographer/album/new'},{path:'/photographer/finance/invoices'},{path:'/lab/orders'},{composer:false}])assert.equal(run(opts),false,JSON.stringify(opts));
 });

@@ -1,24 +1,29 @@
   // R2036: reuse the real React actions, including the existing product dialog.
-  let pb2036PhotoObserver=null,pb2036PhotoWorkspace=null,pb2036PhotoRow=null;
+  let pb2036PhotoObserver=null,pb2036PhotoWorkspace=null,pb2036PhotoRow=null,pb2042LifecycleObserver=null;
+  const pb2042BoundRows=new WeakSet();
   function pb2036ProductSource(w){return w?.querySelector('.pb1793StandaloneLaunch')||null}
   // Actual photo sources are scoped to the current workspace, regardless of
   // stale album active classes retained during a laboratory switch.
   function pb2040PhotoAction(w,index){
     return index===0?w?.querySelector('.simplePrintPilotMobileInlineActions .simplePrintPilotPrimaryAdd,.simplePrintPilot .simplePrintPilotPrimaryAdd,.simplePrintPilotMobileHeaderHost .simplePrintPilotPrimaryAdd'):
-      w?.querySelector('.simplePrintPilot .simplePrintPilotQuoteSubmit,.simplePrintPilotMobileInlineActions .simplePrintPilotHeaderSubmit,.simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmit,.simplePrintPilot .simplePrintPilotHeaderSubmit');
+      w?.querySelector('.simplePrintPilot .simplePrintPilotQuoteSubmit,.simplePrintPilotMobileInlineActions .simplePrintPilotHeaderSubmit,.simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmit,.simplePrintPilot .simplePrintPilotHeaderSubmit,.simplePrintPilotHeaderActions .simplePrintPilotHeaderSubmitMobile');
   }
   function pb2040NeedsPhotoRepair(w,row){
-    return !row||!row.isConnected||row.hidden||!row.classList.contains('pb2036PhotoActions')||!row.querySelector('.pb2036Standalone')||!document.documentElement.classList.contains('pb2036PhotoComposer')||pb2036PhotoWorkspace!==w||pb2036PhotoRow!==row||!document.body.classList.contains('pbF37PrintComposer');
+    return !row||!row.isConnected||row.hidden||!row.classList.contains('pb2036PhotoActions')||!row.querySelector('.pb2036Standalone')||!document.documentElement.classList.contains('pb2036PhotoComposer')||pb2036PhotoWorkspace!==w||pb2036PhotoRow!==row||!document.body.classList.contains('pbF37PrintComposer')||row.querySelector('.pbF37Choose')?.textContent!=='انتخاب سایز و عکس'||row.querySelector('.pbF37Send')?.textContent!=='ارسال';
   }
   function pb2040WatchLifecycle(){
-    if(!mobile()||!document.body)return;
-    // Observe the stable document body, not a detached React workspace.
-    // Schedule only a genuine entry, exit or missing control; no idle writes.
-    const observer=new MutationObserver(()=>{
-      const w=$('.photographerMain.photographerPrintWorkspace'),row=$('#pbF37PrintComposerActions');
-      if(pb2036MobilePhoto(w)?pb2040NeedsPhotoRepair(w,row):!!pb2036PhotoWorkspace)schedule();
-    });
-    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden']});
+    if(!document.documentElement||pb2042LifecycleObserver)return;
+    // The HTML class also belongs to the layout. Observe it even when React
+    // replaces the workspace or an old tab cleanup clears the class.
+    const reconcile=()=>{
+      const w=pb2042PhotoWorkspace(),row=$('#pbF37PrintComposerActions');
+      if(w?pb2040NeedsPhotoRepair(w,row):!!pb2036PhotoWorkspace)schedule();
+    };
+    pb2042LifecycleObserver=new MutationObserver(reconcile);
+    pb2042LifecycleObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden']});
+    addEventListener('pageshow',reconcile,{passive:true});
+    addEventListener('popstate',reconcile,{passive:true});
+    reconcile();
   }
 
   function pb2036SyncPhoto(row,w){
@@ -27,11 +32,26 @@
     if(row.hidden)row.hidden=false;
     if(!row.classList.contains('pb2036PhotoActions'))row.classList.add('pb2036PhotoActions');
     const choose=row.querySelector('.pbF37Choose'),send=row.querySelector('.pbF37Send');
+    // A row left by an older header can still have its old click listeners.
+    // Intercept only our two photo controls and always delegate exactly once
+    // to the current React workspace. Album clicks keep their original path.
+    if(row.addEventListener&&!pb2042BoundRows.has(row)){
+      pb2042BoundRows.add(row);
+      row.addEventListener('click',event=>{
+        const current=pb2042PhotoWorkspace();
+        if(!current||!row.classList.contains('pb2036PhotoActions'))return;
+        const button=event.target?.closest?.('.pbF37Choose,.pbF37Send');
+        if(!button||!row.contains(button))return;
+        event.preventDefault();event.stopImmediatePropagation();
+        const source=pb2040PhotoAction(current,button.classList.contains('pbF37Choose')?0:1);
+        if(!button.disabled&&source&&!source.disabled)source.click();
+      },true);
+    }
     let product=row.querySelector('.pb2036Standalone');
     if(!product){
       product=document.createElement('button');product.type='button';product.className='pb2036Standalone';
       product.textContent='سفارش شاسی و قاب بدون چاپ';
-      product.addEventListener('click',()=>{const source=pb2036ProductSource($('.photographerMain.photographerPrintWorkspace'));if(source&&!source.disabled)source.click()});
+      product.addEventListener('click',()=>{const source=pb2036ProductSource(pb2042PhotoWorkspace()||$('.photographerMain.photographerPrintWorkspace'));if(source&&!source.disabled)source.click()});
       row.append(product);
     }
     const sources=[pb2040PhotoAction(w,0),pb2040PhotoAction(w,1),pb2036ProductSource(w)];
@@ -46,7 +66,7 @@
   function pb2036WatchPhoto(row,w){
     if(pb2036PhotoWorkspace===w&&pb2036PhotoRow===row&&pb2036PhotoObserver)return;
     pb2036PhotoObserver?.disconnect();pb2036PhotoWorkspace=w;pb2036PhotoRow=row;
-    pb2036PhotoObserver=new MutationObserver(()=>pb2036SyncPhoto(row,w));
+    pb2036PhotoObserver=new MutationObserver(()=>{if(pb2042PhotoWorkspace()===w&&row.isConnected)pb2036SyncPhoto(row,w);else schedule()});
     pb2036PhotoObserver.observe(w,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
   }
   function pb2036StopPhoto(){

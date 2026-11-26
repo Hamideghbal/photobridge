@@ -5,6 +5,16 @@ function pb2047CleanUploadName(value){
  const stem=ext?leaf.slice(0,-ext.length):leaf;
  return (stem.split('=')[0].trim()||'photo')+ext;
 }
+// If two distinct source filenames collapse to the same cleaned name,
+// distinguish a later sequential upload before appending server-owned markers.
+// Existing files and idempotent replays are never renamed.
+async function pb2047UniqueUploadBase(db,orderId,id,clean){
+ const ext=clean.match(/\.[A-Za-z0-9]{1,12}$/)?.[0]||'';
+ const base=ext?clean.slice(0,-ext.length):clean;
+ const q=await db.query("SELECT original_name FROM order_files WHERE order_id=$1 AND id<>$2 AND (lower(original_name)=lower($3) OR lower(rtrim(split_part(original_name,'=',1)))=lower($4)) LIMIT 1",[orderId,id,clean,base]);
+ if(!q.rowCount)return clean;
+ return base.slice(0,Math.max(1,120-ext.length))+'-'+String(id).replace(/[^A-Za-z0-9]/g,'').slice(0,12)+ext;
+}
 function pb2047PrintMarked(order,album){
  if(!order)return false;
  if(album)return ['printing','binding','ready','completed'].includes(String(order.album_stage||''))||!!order.printed_at||['ready','completed','printed'].includes(String(order.status||''));
@@ -37,11 +47,11 @@ function pb2047Server(s){
  const clean='safeFileName(pb2047CleanUploadName(String(b.name || \'file\')))';
  // Only photo order uploads. Keep album original names, other storage routes
  // and existing stored filenames intact.
- s=pb2047One(s,"orderPrintCopyName(safeFileName(String(b.name || 'file')), albumMode ? 1 : printCopies)","orderPrintCopyName(albumMode?safeFileName(String(b.name || 'file')):"+clean+", albumMode ? 1 : printCopies)",'customer upload before generated copies');
- s=pb2047One(s,"let name = safeFileName(String(b.name || 'file'));","let name = albumMode?safeFileName(String(b.name || 'file')):"+clean+";",'delegated upload before generated copies');
+ s=pb2047One(s,"orderPrintCopyName(safeFileName(String(b.name || 'file')), albumMode ? 1 : printCopies)","orderPrintCopyName(albumMode?safeFileName(String(b.name || 'file')):"+ "await pb2047UniqueUploadBase(pool,orderId,id,"+clean+")"+", albumMode ? 1 : printCopies)",'customer upload before generated copies');
+ s=pb2047One(s,"let name = safeFileName(String(b.name || 'file'));","let name = albumMode?safeFileName(String(b.name || 'file')):"+ "await pb2047UniqueUploadBase(pool,order.id,id,"+clean+")"+";",'delegated upload before generated copies');
  // Direct-customer QR/public uploads must also normalize before safeFileName.
  s=pb2047Region(s,'const publicWalkinPresign','const publicWalkinLocal',part=>{
-  return pb2047One(part,"name = safeFileName(String(b.name || 'file'))","name = "+clean,'public photo upload before safe filename');
+  return pb2047One(part,"name = safeFileName(String(b.name || 'file'))","name = await pb2047UniqueUploadBase(pool,order.id,id,"+clean+")",'public photo upload before safe filename');
  });
  // The delegated route previously re-sanitized its own '=' separator.
  const oldCopies="if (!albumMode && printCopies > 1) {const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';name=safeFileName(stem.slice(0,110)+' = '+printCopies+ext);}";
@@ -51,7 +61,7 @@ function pb2047Server(s){
   part=pb2047One(part,"status=CASE WHEN status IN ('ready','completed') THEN status ELSE 'printing' END,","status=CASE WHEN status IN ('printing','reviewing','ready_print','printed','ready','completed') THEN status ELSE 'downloaded' END,",'album download only');
   return part.replaceAll('دانلود آلبوم روی هارد کامل شد؛ ورود به مرحله چاپ','دانلود آلبوم روی هارد کامل شد').replaceAll('دانلود آلبوم کامل شد؛ ورود به مرحله چاپ','دانلود آلبوم کامل شد');
  });
- return s+'\n'+pb2047CleanUploadName.toString()+'\n/* PB2047 server */\n';
+ return s+'\n'+pb2047CleanUploadName.toString()+'\n'+pb2047UniqueUploadBase.toString()+'\n/* PB2047 server */\n';
 }
 function pb2047Ui(s){
  if(s.includes('/* PB2047 Lab UI */'))return s;

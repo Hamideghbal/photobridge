@@ -1440,6 +1440,9 @@ runR1314(process.execPath,['--test','scripts/test-r1978-print-video-guides.cjs']
 // R1995: isolate gallery, store and Print/Lab routes in the actual desktop renderer.
 runR1314(process.execPath,['--test','scripts/test-r1995-photographer-tab-routing.cjs'],{stdio:'inherit'});
 
+// R2052 — camera inventory ordering and guarded removal before Windows snapshot.
+await deployStep('./enable-r2052-camera-inventory.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2052-camera-inventory.mjs'],{stdio:'inherit'});
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 

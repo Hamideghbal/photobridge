@@ -1443,6 +1443,9 @@ runR1314(process.execPath,['--test','scripts/test-r1995-photographer-tab-routing
 // R2052 — camera inventory ordering and guarded removal before Windows snapshot.
 await deployStep('./enable-r2052-camera-inventory.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2052-camera-inventory.mjs'],{stdio:'inherit'});
+// R2054 — security alert for authenticated store login, independent of the lab.
+await deployStep('./enable-r2054-store-login-security.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2054-store-login-security.mjs'],{stdio:'inherit'});
 // Refresh hash-pinned Store bytes after every final HTML writer.
 runR1314(process.execPath,['scripts/prepare-store-desktop-ui.mjs'],{stdio:'inherit'});
 

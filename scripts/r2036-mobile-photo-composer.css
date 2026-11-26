@@ -93,3 +93,50 @@
  html[data-pb2043-mobile].pb2036PhotoComposer body #pb2043PhotoSend:disabled{background:#8e9bb2!important;border-color:#8e9bb2!important;opacity:.75!important}
  html[data-pb2043-mobile].pb2036PhotoComposer body:has(.pb1793AddonDialog) #pb2043PhotoSend{visibility:hidden!important;pointer-events:none!important}
 }
+
+/* R2044 actual React portal. The marker belongs to the live component itself,
+   not to history, the lab chooser or any observer-maintained class. */
+.pb2044NativePhotoActions{display:none}
+@media(max-width:820px){
+ html body>.pb2044NativePhotoActions[data-pb-photo-revision="R2044"]{display:contents!important;transform:none!important;animation:none!important;transition:none!important}
+ html body>.pb2044NativePhotoActions .pb2044NativePhotoHeader{
+  position:fixed!important;top:185px!important;left:9px!important;right:9px!important;
+  height:50px!important;box-sizing:border-box!important;padding:4px 0!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important;
+  align-items:center!important;background:#f5faff!important;z-index:2147481485!important;
+  animation:none!important;transition:none!important;transform:none!important;
+ }
+ html body>.pb2044NativePhotoActions button{
+  height:42px!important;min-width:0!important;border:1px solid #d7deea!important;border-radius:10px!important;
+  padding:4px 6px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  background:#fff!important;color:#344054!important;font:850 11.6px/1.4 Vazirmatn,Tahoma,sans-serif!important;
+  white-space:normal!important;text-align:center!important;box-sizing:border-box!important;
+  animation:none!important;transition:none!important;transform:none!important;touch-action:manipulation!important;
+ }
+ html body>.pb2044NativePhotoActions .pb2044NativeSend{
+  position:fixed!important;top:auto!important;right:auto!important;
+  bottom:calc(90px + env(safe-area-inset-bottom,0px))!important;left:14px!important;
+  width:56px!important;min-width:56px!important;height:56px!important;min-height:56px!important;
+  margin:0!important;padding:0!important;border-radius:50%!important;
+  z-index:2147481486!important;background:#315efb!important;color:white!important;
+  border-color:rgba(255,255,255,.9)!important;box-shadow:0 5px 16px rgba(26,59,142,.25)!important;
+  font-size:14px!important;
+ }
+ html body>.pb2044NativePhotoActions button:disabled{opacity:.65!important}
+ html body>.pb2044NativePhotoActions .pb2044NativeSend:disabled{background:#8e9bb2!important}
+ html body>.pb2044NativePhotoActions .pb2044NativeCancel{position:fixed!important;bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;left:82px!important;z-index:2147481486!important}
+ html body:has(>.pb2044NativePhotoActions) :is(#pbF37PrintComposerActions,#pb2043PhotoSend,#pb765-add,#pb762-add,#pb761-mode-actions,#pb737-mobile-print-dock,#pb783FinanceShortcut,#simple-print-pilot-mobile-header-slot){display:none!important;visibility:hidden!important;pointer-events:none!important}
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain:has(.simplePrintPilot)>.photographerRolePageScrollArea{
+  position:fixed!important;inset:241px 0 78px 0!important;width:100%!important;
+  height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;
+  box-sizing:border-box!important;padding:10px 0 82px!important;overflow-y:auto!important;overflow-x:hidden!important;
+  overflow-anchor:none!important;overscroll-behavior-y:contain!important;scroll-behavior:auto!important;
+  opacity:1!important;visibility:visible!important;transform:none!important;transition:none!important;animation:none!important;will-change:auto!important;
+ }
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain:has(.simplePrintPilot),
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain .simplePrintPilot,
+ html body:has(>.pb2044NativePhotoActions) #root#root main.photographerMain .simplePrintPilot :is(.simplePrintPilotDesktopGrid,.simplePrintPilotMain,.simplePrintPilotGroups,.simplePrintPilotEmpty,.simplePrintPilotEmpty *){
+  transform:none!important;transition:none!important;animation:none!important;will-change:auto!important;overflow-anchor:none!important;
+ }
+ html body:has(>.pb2044NativePhotoActions):has(.pb1793AddonDialog,.simplePrintPreviewOverlay,.modalOverlay)>.pb2044NativePhotoActions button{visibility:hidden!important;pointer-events:none!important}
+}

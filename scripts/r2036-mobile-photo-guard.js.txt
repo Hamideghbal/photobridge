@@ -8,7 +8,11 @@ function pb2043MobileDevice(){
  return /Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||matchMedia('(pointer:coarse)').matches;
 }
 function pb2036MobilePhoto(w){
- if(!w||!pb2043MobileDevice())return false;
+ if(!w)return false;
+ // R2045: the mounted React toolbar is definitive even during a route or
+ // chooser transition. It is only rendered by the top-level mobile composer.
+ if(w.querySelector('.simplePrintPilot')&&document.querySelector?.('body > .pb2044NativePhotoActions'))return true;
+ if(!pb2043MobileDevice())return false;
  const path=location.pathname.replace(/\/+$/,'');
  if(!/^\/photographer(?:\/|$)/.test(path)||/^\/photographer\/(?:album|album-design|finance|archive|gallery|ai|store|wallet|settings|labs|customers|calendar|login|signup|invite|register)(?:\/|$)/.test(path))return false;
  const live=!!w.querySelector('.simplePrintPilot');

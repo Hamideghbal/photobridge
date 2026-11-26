@@ -1,1 +1,1 @@
-2026-11-26-r2044-native-mobile-photo
+2026-11-26-r2045-stable-mobile-photo

@@ -44,6 +44,8 @@
     const reconcile=()=>{
       const device=pb2043MobileDevice();
       if(document.documentElement.hasAttribute('data-pb2043-mobile')!==device)document.documentElement.toggleAttribute('data-pb2043-mobile',device);
+      // Native React owns its controls; never recreate the compatibility row.
+      if(document.querySelector('.pb2044NativePhotoActions')){if(pb2036PhotoWorkspace||document.documentElement.classList.contains('pb2036PhotoComposer'))pb2036StopPhoto();return;}
       const w=pb2042PhotoWorkspace(),row=$('#pbF37PrintComposerActions');
       if(w){
         if(row?.isConnected&&row.querySelector('.pbF37Choose')&&row.querySelector('.pbF37Send')){

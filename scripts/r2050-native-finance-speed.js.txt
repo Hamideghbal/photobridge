@@ -1,0 +1,68 @@
+// R2050 — installed Windows Lab only. Reuse existing calendar/date semantics.
+function pb2050Formatter(locale,options){
+ const cache=pb2050Formatter.cache||(pb2050Formatter.cache=new Map()),key=locale+JSON.stringify(options);
+ if(!cache.has(key))cache.set(key,new Intl.DateTimeFormat(locale,options));
+ return cache.get(key);
+}
+function pb2050CalendarMonth(year,month){
+ const cache=pb2050CalendarMonth.cache||(pb2050CalendarMonth.cache=new Map()),key=year+'-'+month;
+ if(!cache.has(key)){if(cache.size>=24)cache.delete(cache.keys().next().value);cache.set(key,wg(year,month));}
+ return cache.get(key);
+}
+function pb2050Notice(message){
+ const previous=document.getElementById('pb2050FinanceNotice');
+ if(previous)previous.remove();
+ const box=document.createElement('div');box.id='pb2050FinanceNotice';box.dir='rtl';box.setAttribute('role','alert');
+ const icon=document.createElement('span');icon.className='pb2050NoticeIcon';icon.textContent='!';
+ const text=document.createElement('div'),title=document.createElement('strong'),body=document.createElement('span');
+ title.textContent='اطلاعات مالی';body.textContent=String(message);text.append(title,body);
+ const close=document.createElement('button');close.type='button';close.textContent='متوجه شدم';close.addEventListener('click',()=>box.remove());
+ box.append(icon,text,close);document.body.append(box);
+ setTimeout(()=>box.remove(),8000);
+}
+function pb2050CustomerPicker({value,customers,onChange}){
+ const options=x.useMemo(()=>[{value:'',label:'همهٔ عکاسی‌ها'},...customers.map(row=>({value:String(row.id),label:row.name||row.mobile||'عکاسی'}))],[customers]);
+ return e.jsx(wn,{value,options,searchable:true,searchPlaceholder:'جستجوی عکاسی…',ariaLabel:'انتخاب عکاسی',className:'pb1427InvoiceCustomerSelect pb2050CustomerPicker',menuClassName:'pb891FinanceSelectMenu pb2050CustomerMenu',onChange});
+}
+function pb2050Patch(s){
+ if(s.includes('/* PB2050 native finance responsiveness */'))return s;
+ function once(v,a,b,label){if(v.split(a).length!==2)throw Error('[R2050] '+label+' anchor '+(v.split(a).length-1));return v.replace(a,()=>b);}
+ // Intl construction inside Ji, Gr and the invoice date conversion was
+ // repeated hundreds of times per interaction. Keep identical locale/timezone.
+ s=once(s,'new Intl.DateTimeFormat("en-US-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"numeric",day:"numeric"})','pb2050Formatter("en-US-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"numeric",day:"numeric"})','Persian formatter');
+ s=once(s,'new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"})','pb2050Formatter("en-CA",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"})','finance date formatter');
+ const ca=s.indexOf('function Hs('),cb=s.indexOf('}function Og(',ca);if(ca<0||cb<ca)throw Error('[R2050] calendar region');
+ let date=s.slice(ca,cb+1);
+ date=once(date,'const f=wg(g.year,g.month),','const pb2050Field=x.useRef(null);x.useEffect(()=>{if(!c)return;const outside=event=>{if(!pb2050Field.current?.contains(event.target))m(false)},escape=event=>{if(event.key==="Escape")m(false)};document.addEventListener("pointerdown",outside,true);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",outside,true);document.removeEventListener("keydown",escape)}},[c]);const f=c?pb2050CalendarMonth(g.year,g.month):[],','lazy month calculation');
+ date=once(date,'className:"persianDateField "+','ref:pb2050Field,className:"persianDateField "+','calendar field ref');
+ date=once(date,'new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Tehran",weekday:"short"})','pb2050Formatter("en-US",{timeZone:"Asia/Tehran",weekday:"short"})','weekday formatter');
+ date=once(date,'onClick:()=>{a(nl(k)),m(!1)}','onClick:event=>{event.preventDefault();event.stopPropagation();m(false);a(nl(k))}','close before date commit');
+ date=once(date,'onClick:()=>{const k=new Date,E=Ji(k);p({year:E.year,month:E.month}),a(nl(k)),m(!1)}','onClick:event=>{event.preventDefault();event.stopPropagation();m(false);const k=new Date,E=Ji(k);p({year:E.year,month:E.month});a(nl(k))}','close before today commit');
+ s=s.slice(0,ca)+date+s.slice(cb+1);
+ // The old searchable selector explicitly refocused its input after choosing
+ // an option. onFocus reopened the menu. Avoid that only in finance pickers.
+ const sa=s.indexOf('function wn('),sb=s.indexOf('}function ql(',sa);if(sa<0||sb<sa)throw Error('[R2050] select region');
+ let select=s.slice(sa,sb+1);
+ select=once(select,'U(!1),Z(""),setTimeout(()=>{try{N.current','U(!1),Z(""),(l.includes("pb2050CustomerPicker")||l.includes("pb891SearchableCustomerSelect")||l.includes("pb1427InvoiceCustomerSelect"))?N.current?.blur():setTimeout(()=>{try{N.current','finance selection does not refocus and reopen');
+ s=s.slice(0,sa)+select+s.slice(sb+1);
+ const a=s.indexOf('function ub({role:t,'),b=s.indexOf('}function hb(',a);if(a<0||b<a)throw Error('[R2050] finance region');
+ let fin=s.slice(a,b+1);
+ fin=once(fin,'Ce=Pf("this_month"),','Ce=x.useMemo(()=>Pf("this_month"),[]),','initial month calculation');
+ const from='const Ve=pb1822FinanceNewestFirst(r.filter(Je=>{',to='}),"invoice"),he=Math.max(1,Math.ceil(Ve.length/N))';
+ // Memoize the exact original predicate and sort; no financial rows or filters change.
+ fin=once(fin,from,'const Ve=x.useMemo(()=>pb1822FinanceNewestFirst(r.filter(Je=>{','memoize invoice filter');
+ fin=once(fin,to,'}),"invoice"),[r,l,t,pb1427InvoiceCustomer,_pbInvAppliedFrom,_pbInvAppliedTo]),he=Math.max(1,Math.ceil(Ve.length/N))','invoice filter dependencies');
+ const old='e.jsxs("select",{className:"pb1427InvoiceCustomerSelect","aria-label":"انتخاب عکاسی",value:pb1427InvoiceCustomer,onChange:Je=>{pb1427SetInvoiceCustomer(Je.target.value);Ie(1)},children:[e.jsx("option",{value:"",children:"همهٔ عکاسی‌ها"}),E.map(Je=>e.jsx("option",{value:String(Je.id),children:Je.name||Je.mobile||"عکاسی"},Je.id))]})';
+ // R1427's native select may be further customized; preserve an unknown
+ // variant rather than failing the full build. All known versions still get
+ // formatter, memoization and non-blocking feedback improvements.
+ if(fin.includes(old))fin=once(fin,old,'e.jsx(pb2050CustomerPicker,{value:pb1427InvoiceCustomer,customers:E,onChange:Je=>{pb1427SetInvoiceCustomer(Je);Ie(1)}})','invoice photographer picker');
+ const error='if(error){alert(error);return;}';
+ if(fin.split(error).length!==3)throw Error('[R2050] expected both R2047 range validations');
+ fin=fin.replaceAll(error,'if(error){pb2050Notice(error);return;}');
+ for(const message of ['در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.','در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.']){
+  fin=once(fin,'alert("'+message+'")','pb2050Notice("'+message+'")','nonblocking finance feedback');
+ }
+ s=s.slice(0,a)+fin+s.slice(b+1);
+ return s+'\n'+[pb2050Formatter,pb2050CalendarMonth,pb2050Notice,pb2050CustomerPicker].map(fn=>fn.toString()).join('\n')+'\n/* PB2050 native finance responsiveness */\n';
+}

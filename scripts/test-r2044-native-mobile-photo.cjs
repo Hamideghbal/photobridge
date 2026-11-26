@@ -34,3 +34,20 @@ test('R2044 final served HTML and precompressed assets deliver the native toolba
      if(fs.existsSync(file+suffix))assert(decode(fs.readFileSync(file+suffix)).equals(original),'stale compressed '+file+suffix);
  }
 });
+
+test('R2044 actual portal expression survives tab unmount and remount with fresh React handlers',()=>{
+ const ui=read(bundle),a=ui.indexOf('pb2044Phone?ra.createPortal('),tail=':De&&ra.createPortal(dt,De)',b=ui.indexOf(tail,a);
+ assert(a>=0&&b>a);const expression=ui.slice(a,b+tail.length);
+ const render=new Function('e','ra','document','pb2044Phone','De','dt','W','c','ie','ot','M','pb1793SetStandalone','qe','ce','return ('+expression+')');
+ const node=(type,props)=>({type,props}),body={},slot={},desktopHeader={};
+ const e={jsx:node,jsxs:node},ra={createPortal:(tree,target)=>({tree,target})};
+ const calls=[];
+ const mount=(lab,phone=true,sending=false,count=1)=>render(e,ra,{body},phone,slot,desktopHeader,sending,false,false,count,()=>calls.push(lab+':choose'),()=>calls.push(lab+':product'),()=>calls.push(lab+':send'),()=>calls.push(lab+':cancel'));
+ function buttons(portal){const [header,send,cancel]=portal.tree.props.children;return [...header.props.children,send,cancel].filter(Boolean)}
+ const first=mount('first');assert.equal(first.target,body);assert.equal(buttons(first).length,3);buttons(first).forEach(b=>b.props.onClick());
+ const second=mount('second');assert.equal(second.target,body);assert.equal(buttons(second).length,3);buttons(second).forEach(b=>b.props.onClick());
+ assert.equal(calls.join('|'),'first:choose|first:product|first:send|second:choose|second:product|second:send');
+ assert.equal(buttons(mount('empty',true,false,0))[2].props.disabled,true);
+ const busy=buttons(mount('busy',true,true));assert.equal(busy.length,4);assert(busy[2].props.disabled);busy[3].props.onClick();assert.equal(calls.at(-1),'busy:cancel');
+ const desktop=mount('desktop',false);assert.equal(desktop.target,slot);assert.equal(desktop.tree,desktopHeader);
+});

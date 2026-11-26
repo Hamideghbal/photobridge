@@ -21,14 +21,16 @@ function patchFinanceDashboard(source){
  replace(ke,state+ke);
  const loader=part.indexOf('pb1472Load=async()=>')>=0?part.indexOf('pb1472Load=async()=>'):part.indexOf('ce=async()=>');
  let labStart=part.indexOf('if(t==="lab"){',loader);
- const legacy='const Ot=await Me(ke);if(o(Ot.invoices||[]),t==="lab"){';
+ const legacyPlain='const Ot=await Me(ke);if(o(Ot.invoices||[]),t==="lab"){';
+ const legacyQuiet='const Ot=await Me(ke);pb1526Loaded.current=true;if(o((Ot.invoices||[]).slice().sort((a,b)=>(Date.parse(b.issued_at)||0)-(Date.parse(a.issued_at)||0)||String(b.id).localeCompare(String(a.id)))),t==="lab"){';
+ const legacy=part.includes(legacyQuiet)?legacyQuiet:legacyPlain;
  const legacyAt=part.indexOf(legacy,loader);
  if(legacyAt>=0&&(labStart<0||legacyAt<labStart)){labStart=legacyAt;part=part.slice(0,labStart)+'if(t==="lab"){'+part.slice(labStart+legacy.length)}
  const elseAt=part.indexOf('}else{',labStart);
  if(loader<0||labStart<0||elseAt<labStart||elseAt-labStart>10000)throw Error('finance160_loader');
  if(!part.slice(labStart,elseAt).includes('/api/lab/finance/summary'))throw Error('finance160_summary_anchor');
- part=part.slice(0,labStart)+'if(t==="lab"){await pb160Selected(w,true);'+part.slice(elseAt);
- if(legacyAt>=0)part=part.replace('}else{const[At,Et]=await Promise.all([Me("/api/customer/finance/summary")','}else{const Ot=await Me(ke);o(Ot.invoices||[]);const[At,Et]=await Promise.all([Me("/api/customer/finance/summary")');
+ part=part.slice(0,labStart)+'if(t==="lab"){await pb160Selected(w,true);'+(legacy===legacyQuiet?'pb1526Loaded.current=true;':'')+part.slice(elseAt);
+ if(legacyAt>=0)part=part.replace('}else{const[At,Et]=await Promise.all([Me("/api/customer/finance/summary")','}else{const Ot=await Me(ke);'+(legacy===legacyQuiet?'pb1526Loaded.current=true;o((Ot.invoices||[]).slice().sort((a,b)=>(Date.parse(b.issued_at)||0)-(Date.parse(a.issued_at)||0)||String(b.id).localeCompare(String(a.id))));':'o(Ot.invoices||[]);')+'const[At,Et]=await Promise.all([Me("/api/customer/finance/summary")');
  part=part.replace('if(t!=="lab"||!pb1569FinanceReady||pb1569LoadedFinanceView.current===w)return;','if(t==="lab"||!pb1569FinanceReady||pb1569LoadedFinanceView.current===w)return;');
  const calc=part.indexOf('const Ve=');if(calc<0)throw Error('finance160_calculation_anchor');
  part=part.slice(0,calc)+hooks+part.slice(calc);

@@ -82,6 +82,26 @@ test('R2050 native finance feedback is nonblocking and replaces previous notice'
  const notice=new Function('document','setTimeout',read('scripts/r2050-native-finance-speed.js.txt')+'\nreturn pb2050Notice')(doc,()=>{});
  notice('انتخاب عکاسی');notice('انتخاب تاریخ');assert(nodes[0].removed);assert.equal(nodes[1].children[1].children[1].textContent,'انتخاب تاریخ');nodes[1].children[2].click();assert(nodes[1].removed);
 });
+test('R2051 photographer picker has one neutral frame and independent searchable content',()=>{
+ const jsx=(type,props)=>({type,...props}),picker=new Function('x','e','wn',read('scripts/r2050-native-finance-speed.js.txt')+'\nreturn pb2050CustomerPicker')({useMemo:fn=>fn()},{jsx},'Select');
+ for(const statement of [false,true]){
+  const tree=picker({statement,value:'s',customers:[{id:'s',name:'استودیو'}],onChange:()=>{}});
+  assert(tree.className.includes('pb2051PickerFrame'));assert.equal(tree.children.className,'pb2050CustomerPicker');
+  assert.equal(tree.children.options[1].label,'استودیو');assert.equal(tree.children.searchable,true);
+ }
+});
+test('R2051 confirmed invoice rows are committed before dependent requests, and receipt warm reads coalesce',async()=>{
+ const patch=new Function(read('scripts/r2051-finance-first-load.js.txt')+'\nreturn pb2051Patch')();
+ const fixture='function ub({role:t,quickPinned:a}){const[r,o]=x.useState([]);const loader=async()=>{if(t==="lab"){const extraPath=w==="payments"?"/api/lab/finance/payments":null;const Ot=await Me(ke);const Et=await Me("summary");C(Et.customers||[]);S(extra?.payments||[]);}else{}};const pb1569FinanceLoader=x.useRef(null);x.useEffect(()=>{pb1569LoadedFinanceView.current=w;\n   const endpoint=w==="payments"?"/api/lab/finance/payments":null;},[w]);const pb1420Payments=pb1822FinanceNewestFirst(h,"receipt");return (m?e.jsx("div",{className:"card loadingBox",children:"در حال دریافت اطلاعات مالی…"}):e.jsx("div",{children:pb1420Payments.length?1:0}));w==="statement"&&e.jsxs("div",{className:"customerStatementWorkspace",children:[]})}function hb(){}';
+ const patched=patch(fixture);assert.equal(patch(patched),patched);new Function(patched);
+ const begin=patched.indexOf('const extraPath=w==="expenses"'),end=patched.indexOf('}else{',begin),loader=patched.slice(begin,end);
+ const calls=[],release={};const Me=path=>{calls.push(path);return new Promise(resolve=>{release[path]=resolve})};
+ const receiptStart=patched.indexOf('const pb2051LoadReceipts='),receiptEnd=patched.indexOf('const pb1569FinanceLoader=',receiptStart);
+ const run=new Function('Me','o','f','C','q','S','pb2051SetInvoicesReady','pb2051SetReceiptsState','pb2051ReceiptsLoaded','pb2051ReceiptsFlight','return (()=>{'+patched.slice(receiptStart,receiptEnd)+';return {load:async(w)=>{const At=new URLSearchParams(),ke="invoice",z="studio",I=()=>{},k=()=>{};'+loader+'},receipts:pb2051LoadReceipts}})()')(Me,()=>calls.push('invoice-render'),()=>calls.push('summary-render'),()=>{},()=>{},()=>calls.push('receipt-render'),()=>calls.push('invoice-ready'),state=>calls.push(state),{current:false},{current:null});
+ const pending=run.load('invoices');assert.deepEqual(calls,['invoice']);release.invoice({invoices:[]});await Promise.resolve();assert.deepEqual(calls.slice(0,3),['invoice','invoice-render','invoice-ready']);
+ const p=run.receipts(),p2=run.receipts();assert.equal(p,p2);assert.equal(calls.filter(x=>x==='/api/lab/finance/payments').length,1);
+ release['/api/lab/finance/payments']({payments:[]});await p;assert(calls.includes('receipt-render'));assert(!calls.includes('summary-render'));release['/api/lab/finance/summary?']({customers:[]});await pending;assert(calls.includes('summary-render'));
+});
 test('R2047 final server and Lab web/Windows payloads contain matching fixes and integrity metadata',()=>{
  const s=read('dist/api/server.js');
  assert(s.includes('/* PB2047 server */'));
@@ -106,6 +126,9 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
    assert(ui.includes('const Ve=x.useMemo(()=>pb1822FinanceNewestFirst(r.filter('));
    assert(ui.includes('if(error){pb2050Notice(error);return;}'));
    assert(html.includes('nativeFinance=r2050')&&html.includes('pb2050NativeFinanceStyle'));
+   assert(ui.includes('/* PB2051 progressive native finance */')&&ui.includes('pb2051PickerFrame'));
+   assert(ui.includes('pb2051SetInvoicesReady(true)')&&ui.includes('pb2051LoadReceipts()'));
+   assert(html.includes('financeFirstLoad=r2051')&&html.includes('pb2051FinanceStyle'));
   }else assert(!ui.includes('/* PB2050 native finance responsiveness */'));
 
   for(const name of [asset,'index.html']){

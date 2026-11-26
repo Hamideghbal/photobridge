@@ -1,28 +1,62 @@
   // R2036: reuse the real React actions, including the existing product dialog.
   let pb2036PhotoObserver=null,pb2036PhotoWorkspace=null,pb2036PhotoRow=null,pb2042LifecycleObserver=null;
   const pb2042BoundRows=new WeakSet();
-  function pb2036ProductSource(w){return w?.querySelector('.pb1793StandaloneLaunch')||null}
+  // React may move the mobile header outside the workspace through its portal.
+  function pb2043HeaderSlot(){return document.querySelector('#simple-print-pilot-mobile-header-slot')}
+  function pb2036ProductSource(w){return w?.querySelector('.pb1793StandaloneLaunch')||pb2043HeaderSlot()?.querySelector('.pb1793StandaloneLaunch')||null}
+  function pb2043Scroll(w){
+    const sc=w?.querySelector(':scope>.photographerRolePageScrollArea');
+    if(!sc?.style)return;
+    const geometry={position:'fixed',top:'241px',bottom:'78px',left:'0px',right:'0px',width:'100%',height:'auto','min-height':'0px','max-height':'none',margin:'0px','box-sizing':'border-box','padding-top':'10px','padding-bottom':'82px','overflow-y':'auto','overflow-x':'hidden','overflow-anchor':'none','scroll-behavior':'auto',transform:'none',animation:'none',transition:'none',opacity:'1',visibility:'visible'};
+    for(const [key,value] of Object.entries(geometry))if(sc.style.getPropertyValue(key)!==value||sc.style.getPropertyPriority(key)!=='important')sc.style.setProperty(key,value,'important');
+  }
+  // A fixed child of a fixed/transformed header is not a reliable viewport
+  // floating button. Keep the actual circle at document.body, independently
+  // of old header replacements, and delegate to the current native handler.
+  function pb2043FloatSend(source){
+    if(!document.body?.append)return;
+    let button=document.getElementById('pb2043PhotoSend');
+    if(!button){
+      button=document.createElement('button');button.type='button';button.id='pb2043PhotoSend';
+      button.textContent='ارسال';button.setAttribute('aria-label','ارسال فایل برای چاپ');
+      button.addEventListener('click',()=>{
+        const current=pb2042PhotoWorkspace(),native=current&&pb2040PhotoAction(current,1);
+        if(!button.disabled&&native&&!native.disabled)native.click();
+      });
+      document.body.append(button);
+    }
+    const disabled=!source||!!source.disabled;if(button.disabled!==disabled)button.disabled=disabled;
+  }
   // Actual photo sources are scoped to the current workspace, regardless of
   // stale album active classes retained during a laboratory switch.
   function pb2040PhotoAction(w,index){
-    return index===0?w?.querySelector('.simplePrintPilotMobileInlineActions .simplePrintPilotPrimaryAdd,.simplePrintPilot .simplePrintPilotPrimaryAdd,.simplePrintPilotMobileHeaderHost .simplePrintPilotPrimaryAdd'):
-      w?.querySelector('.simplePrintPilot .simplePrintPilotQuoteSubmit,.simplePrintPilotMobileInlineActions .simplePrintPilotHeaderSubmit,.simplePrintPilotMobileHeaderHost .simplePrintPilotHeaderSubmit,.simplePrintPilot .simplePrintPilotHeaderSubmit,.simplePrintPilotHeaderActions .simplePrintPilotHeaderSubmitMobile');
+    if(!w)return null;
+    const local=index===0?'.simplePrintPilotPrimaryAdd':'.simplePrintPilotQuoteSubmit,.simplePrintPilotHeaderSubmit,.simplePrintPilotHeaderSubmitMobile';
+    return w.querySelector(local)||pb2043HeaderSlot()?.querySelector(local)||null;
   }
   function pb2040NeedsPhotoRepair(w,row){
-    return !row||!row.isConnected||row.hidden||!row.classList.contains('pb2036PhotoActions')||!row.querySelector('.pb2036Standalone')||!document.documentElement.classList.contains('pb2036PhotoComposer')||pb2036PhotoWorkspace!==w||pb2036PhotoRow!==row||!document.body.classList.contains('pbF37PrintComposer')||row.querySelector('.pbF37Choose')?.textContent!=='انتخاب سایز و عکس'||row.querySelector('.pbF37Send')?.textContent!=='ارسال';
+    return (!!document.body?.append&&!document.getElementById('pb2043PhotoSend'))||!row||!row.isConnected||row.hidden||!row.classList.contains('pb2036PhotoActions')||!row.querySelector('.pb2036Standalone')||!document.documentElement.classList.contains('pb2036PhotoComposer')||pb2036PhotoWorkspace!==w||pb2036PhotoRow!==row||!document.body.classList.contains('pbF37PrintComposer')||row.querySelector('.pbF37Choose')?.textContent!=='انتخاب سایز و عکس'||row.querySelector('.pbF37Send')?.textContent!=='ارسال';
   }
   function pb2040WatchLifecycle(){
     if(!document.documentElement||pb2042LifecycleObserver)return;
     // The HTML class also belongs to the layout. Observe it even when React
     // replaces the workspace or an old tab cleanup clears the class.
     const reconcile=()=>{
+      const device=pb2043MobileDevice();
+      if(document.documentElement.hasAttribute('data-pb2043-mobile')!==device)document.documentElement.toggleAttribute('data-pb2043-mobile',device);
       const w=pb2042PhotoWorkspace(),row=$('#pbF37PrintComposerActions');
-      if(w?pb2040NeedsPhotoRepair(w,row):!!pb2036PhotoWorkspace)schedule();
+      if(w){
+        if(row?.isConnected&&row.querySelector('.pbF37Choose')&&row.querySelector('.pbF37Send')){
+          if(pb2040NeedsPhotoRepair(w,row)){pb2036SyncPhoto(row,w);pb2036WatchPhoto(row,w);}
+        }
+        if(!row?.isConnected||!row.querySelector('.pbF37Choose')||!row.querySelector('.pbF37Send')||!document.body.classList.contains('pbF37PrintComposer'))schedule();
+      }else if(pb2036PhotoWorkspace||document.getElementById('pb2043PhotoSend')){pb2036StopPhoto();schedule();}
     };
     pb2042LifecycleObserver=new MutationObserver(reconcile);
     pb2042LifecycleObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden']});
     addEventListener('pageshow',reconcile,{passive:true});
     addEventListener('popstate',reconcile,{passive:true});
+    addEventListener('resize',reconcile,{passive:true});
     reconcile();
   }
 
@@ -55,6 +89,8 @@
       row.append(product);
     }
     const sources=[pb2040PhotoAction(w,0),pb2040PhotoAction(w,1),pb2036ProductSource(w)];
+    pb2043FloatSend(sources[1]);
+    pb2043Scroll(w);
     for(const [index,button] of [choose,send,product].entries()){
       const disabled=!sources[index]||!!sources[index].disabled;
       if(button&&button.disabled!==disabled)button.disabled=disabled;
@@ -68,8 +104,11 @@
     pb2036PhotoObserver?.disconnect();pb2036PhotoWorkspace=w;pb2036PhotoRow=row;
     pb2036PhotoObserver=new MutationObserver(()=>{if(pb2042PhotoWorkspace()===w&&row.isConnected)pb2036SyncPhoto(row,w);else schedule()});
     pb2036PhotoObserver.observe(w,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
+    const sc=w.querySelector(':scope>.photographerRolePageScrollArea');if(sc?.style)pb2036PhotoObserver.observe(sc,{attributes:true,attributeFilter:['style']});
+    const slot=pb2043HeaderSlot();if(slot?.nodeType===1&&!w.contains?.(slot))pb2036PhotoObserver.observe(slot,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
   }
   function pb2036StopPhoto(){
+    document.getElementById?.('pb2043PhotoSend')?.remove();
     if(!pb2036PhotoWorkspace&&!document.documentElement.classList.contains('pb2036PhotoComposer'))return;
     pb2036PhotoObserver?.disconnect();pb2036PhotoObserver=null;pb2036PhotoWorkspace=null;pb2036PhotoRow=null;
     document.documentElement.classList.remove('pb2036PhotoComposer');

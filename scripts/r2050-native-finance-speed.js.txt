@@ -20,9 +20,9 @@ function pb2050Notice(message){
  box.append(icon,text,close);document.body.append(box);
  setTimeout(()=>box.remove(),8000);
 }
-function pb2050CustomerPicker({value,customers,onChange,statement=false}){
- const options=x.useMemo(()=>[{value:'',label:statement?'انتخاب عکاسی':'همهٔ عکاسی‌ها'},...customers.map(row=>({value:String(row.id),label:row.name||row.mobile||'عکاسی'}))],[customers,statement]);
- return e.jsx('div',{className:(statement?'pb1421CustomerSelect':'pb1427InvoiceCustomerSelect')+' pb2051PickerFrame',children:e.jsx(wn,{value,options,searchable:true,searchPlaceholder:'جستجوی عکاسی…',ariaLabel:'انتخاب عکاسی',className:'pb2050CustomerPicker',menuClassName:'pb891FinanceSelectMenu pb2050CustomerMenu',onChange})});
+function pb2050CustomerPicker({value,customers,onChange,statement=false,modal=false,showBalance=false,emptyLabel,portalTarget}){
+ const options=x.useMemo(()=>[{value:'',label:emptyLabel||(statement?'انتخاب عکاسی':'همهٔ عکاسی‌ها')},...customers.map(row=>({value:String(row.id),label:(row.name||row.mobile||'عکاسی')+(showBalance?' · مانده '+V(Math.round(Number(row.balance||0))):'')}))],[customers,statement,showBalance,emptyLabel]);
+ return e.jsx('div',{className:(statement?'pb1421CustomerSelect':'pb1427InvoiceCustomerSelect')+' pb2051PickerFrame'+(modal?' pb2052ModalPicker':''),children:e.jsx(wn,{value,options,searchable:true,searchPlaceholder:'جستجوی عکاسی…',ariaLabel:'انتخاب عکاسی',className:'pb2050CustomerPicker',menuClassName:'pb891FinanceSelectMenu pb2050CustomerMenu',onChange,portalTarget})});
 }
 function pb2050Patch(s){
  if(s.includes('/* PB2050 native finance responsiveness */'))return s;

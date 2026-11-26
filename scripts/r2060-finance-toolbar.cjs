@@ -43,12 +43,22 @@ function patch2060(source){
  once(endHook,logic+endHook);
  // Keep all legacy anchors for already-installed 160–162 runtime patchers and existing regression checks.
  // Disable rendering old controls on Lab, except original action buttons and their modal.
- const inv='className:t==="lab"?"pb1423InvoiceToolbar":"pb1423OtherInvoiceToolbar",children:[';
- once(inv,inv+'t==="lab"&&pb2060Toolbar(),');
+ // Locate the actual invoice list row instead of relying on the outer wrapper spelling.
+ const invoiceStart=p.indexOf('w==="invoices"&&e.jsxs("div",{className:"invoiceTableCard card"'),invoiceEnd=p.indexOf('Ve.length?',invoiceStart);
+ if(invoiceStart<0||invoiceEnd<invoiceStart)throw Error("R2061 invoice panel boundary");
+ let invoice=p.slice(invoiceStart,invoiceEnd);
+ const listPattern=/className\s*:\s*["']invoiceListToolbar["']\s*,\s*children\s*:\s*\[/g;
+ const matches=[...invoice.matchAll(listPattern)];
+ if(matches.length!==1)throw Error("R2061 invoice list toolbar count "+matches.length);
+ const invoiceList=matches[0];
+ const hasWrapper=invoice.slice(0,invoiceList.index).includes('pb1423InvoiceToolbar');
+ const listPrefix=hasWrapper?invoiceList[0]:'className:t==="lab"?"invoiceListToolbar pb1423InvoiceToolbar":"invoiceListToolbar",children:[';
+ invoice=invoice.slice(0,invoiceList.index)+listPrefix+'t==="lab"&&pb2060Toolbar(),'+invoice.slice(invoiceList.index+invoiceList[0].length);
+ p=p.slice(0,invoiceStart)+invoice+p.slice(invoiceEnd);
  // Preserve literal legacy anchors (including the runtime-selected All button),
  // but do not mount the duplicate date pickers or calculate their calendars.
  const oldRange='t==="lab"&&e.jsxs("div",{className:"invoiceRangeToolbar"';
- once(oldRange,'false&&'+oldRange);
+ if(p.includes(oldRange))once(oldRange,'false&&'+oldRange);
  const pay='className:"pb1176PaymentActions",children:[';
  once(pay,pay+'pb2060Toolbar(),');
  const stmt='className:"statementFilters",children:[';

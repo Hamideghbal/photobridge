@@ -1,1 +1,1 @@
-2026-11-26-r2060-shared-lab-finance-toolbar
+2026-11-26-r2061-finance-toolbar-build-compat

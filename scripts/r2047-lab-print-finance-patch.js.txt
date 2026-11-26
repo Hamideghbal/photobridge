@@ -1,0 +1,85 @@
+// Pure functions shared by the final server and both Lab UI payloads.
+function pb2047CleanUploadName(value){
+ const leaf=String(value||'file').replace(/\\/g,'/').split('/').pop()||'file';
+ const ext=leaf.match(/\.[A-Za-z0-9]{1,12}$/)?.[0]||'';
+ const stem=ext?leaf.slice(0,-ext.length):leaf;
+ return (stem.split('=')[0].trim()||'photo')+ext;
+}
+function pb2047PrintMarked(order,album){
+ if(!order)return false;
+ if(album)return ['printing','binding','ready','completed'].includes(String(order.album_stage||''))||!!order.printed_at||['ready','completed','printed'].includes(String(order.status||''));
+ return !!order.printed_at||['printing','reviewing','ready_print','printed','ready','completed'].includes(String(order.status||''));
+}
+function pb2047Downloaded(order){
+ return !!order?.downloaded_at||['downloaded','printing','reviewing','ready_print','printed','ready','completed'].includes(String(order?.status||''));
+}
+function pb2047RangeError(customer,from,to,date){
+ if(!customer)return 'لطفاً ابتدا نام عکاسی را انتخاب کنید.';
+ if(!from||!to)return 'لطفاً تاریخ شروع و پایان بازه را انتخاب کنید.';
+ if(!date(from)||!date(to)||date(from)>date(to))return 'تاریخ شروع نباید بعد از تاریخ پایان باشد.';
+ return '';
+}
+function pb2047InRange(rows,customer,from,to,date){
+ return rows.some(row=>String(row.customer_id)===String(customer)&&date(row.issued_at)>=date(from)&&date(row.issued_at)<=date(to));
+}
+function pb2047One(s,a,b,label){
+ const count=s.split(a).length-1;
+ if(count!==1)throw Error('[R2047] '+label+' anchor '+count);
+ return s.replace(a,()=>b);
+}
+function pb2047Region(s,a,b,edit){
+ const i=s.indexOf(a),j=s.indexOf(b,i+a.length);
+ if(i<0||j<=i)throw Error('[R2047] region '+a);
+ return s.slice(0,i)+edit(s.slice(i,j))+s.slice(j);
+}
+function pb2047Server(s){
+ if(s.includes('/* PB2047 server */'))return s;
+ const clean='safeFileName(pb2047CleanUploadName(String(b.name || \'file\')))';
+ // Only photo order uploads. Keep album original names, other storage routes
+ // and existing stored filenames intact.
+ s=pb2047One(s,"orderPrintCopyName(safeFileName(String(b.name || 'file')), albumMode ? 1 : printCopies)","orderPrintCopyName(albumMode?safeFileName(String(b.name || 'file')):"+clean+", albumMode ? 1 : printCopies)",'customer upload before generated copies');
+ s=pb2047One(s,"let name = safeFileName(String(b.name || 'file'));","let name = albumMode?safeFileName(String(b.name || 'file')):"+clean+";",'delegated upload before generated copies');
+ // The delegated route previously re-sanitized its own '=' separator.
+ const oldCopies="if (!albumMode && printCopies > 1) {const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';name=safeFileName(stem.slice(0,110)+' = '+printCopies+ext);}";
+ s=pb2047One(s,oldCopies,"if (!albumMode && printCopies > 1) name=orderPrintCopyName(name,printCopies);",'delegated authoritative copy suffix');
+ s=pb2047Region(s,'const labAlbumDownloadComplete','const labPaymentReceipt',part=>{
+  part=pb2047One(part,"album_stage=CASE WHEN album_stage IN ('binding','ready','completed') THEN album_stage ELSE 'printing' END,","album_stage=CASE WHEN album_stage IN ('printing','binding','ready','completed') THEN album_stage ELSE 'files_received' END,",'album download retains production stage');
+  part=pb2047One(part,"status=CASE WHEN status IN ('ready','completed') THEN status ELSE 'printing' END,","status=CASE WHEN status IN ('printing','reviewing','ready_print','printed','ready','completed') THEN status ELSE 'downloaded' END,",'album download only');
+  return part.replaceAll('دانلود آلبوم روی هارد کامل شد؛ ورود به مرحله چاپ','دانلود آلبوم روی هارد کامل شد').replaceAll('دانلود آلبوم کامل شد؛ ورود به مرحله چاپ','دانلود آلبوم کامل شد');
+ });
+ return s+'\n'+pb2047CleanUploadName.toString()+'\n/* PB2047 server */\n';
+}
+function pb2047Ui(s){
+ if(s.includes('/* PB2047 Lab UI */'))return s;
+ // Filename preview uses the same rule, while original persisted names and
+ // download receipt fingerprints remain unchanged.
+ s=pb2047One(s,'const raw=String(name||\'file\'),match=raw.match(','const raw=pb2047CleanUploadName(name),match=raw.match(','photo preview cleanup');
+ // Remove R1894's invoice-based print and binding completion before any other predicate.
+ s=pb2047One(s,'rn=(le,nt)=>{','rn=(le,nt)=>{if(!pb1798NoPrintOrder(le)){if(nt==="download"||nt==="download_print")return pb2047Downloaded(le);if(nt==="print")return pb2047PrintMarked(le,o==="album");if(o==="album"&&nt==="binding")return ["binding","ready","completed"].includes(String(le.album_stage||""))||["ready","completed"].includes(String(le.status||""));}', 'separate download and print completion');
+ s=pb2047One(s,'en=(le,nt)=>','en=(le,nt)=>!pb1798NoPrintOrder(le)&&o==="album"&&nt==="print"?dn(le,["printing","printed"]):!pb1798NoPrintOrder(le)&&(nt==="download"||nt==="download_print")?le.downloaded_at||dn(le,["downloaded"]):','independent album dates');
+ s=pb2047One(s,'la=(le,nt)=>','la=(le,nt)=>!pb1798NoPrintOrder(le)&&o==="album"&&nt==="print"?pb2047Downloaded(le)&&!pb2047PrintMarked(le,true):!pb1798NoPrintOrder(le)&&o==="album"&&nt==="binding"?pb2047PrintMarked(le,true)&&!rn(le,"binding"):','manual album print enabled only after download');
+ // This prefix follows the existing busy, product-only and invoice checks.
+ // The ordinary print branch still uses the existing explicit It(...,"printing").
+ s=pb2047One(s,'aa=async(le,nt)=>{if(E||pb1578Pending)return;','aa=async(le,nt)=>{if(E||pb1578Pending)return;if(o==="album"&&!pb1798NoPrintOrder(le)&&nt==="print"){if(!pb2047Downloaded(le)||pb2047PrintMarked(le,true))return;if(pb1603StageInvoicePending(le,nt)){P("ابتدا قیمت‌گذاری را تکمیل و فاکتور را صادر کنید.");on(le,"none");return;}return Cn(le,"printing");}','explicit album print click');
+ s=pb2047One(s,'{key:"download_print",label:"دانلود / چاپ"},{key:"binding",label:"صحافی"}','{key:"download_print",label:"دانلود"},{key:"print",label:"چاپ"},{key:"binding",label:"صحافی"}','separate album buttons');
+ // Lab invoice action: "all" is still the default list; the explicit date
+ // range is per selected photographer. No financial mutations.
+ s=pb2047Region(s,'function ub({role:t,','}function hb(',part=>{
+  const action='()=>{_setPbInvAppliedFrom(_pbInvFrom),_setPbInvAppliedTo(_pbInvTo),Ie(1)}';
+  const labAction='()=>{if(t==="lab"){const error=pb2047RangeError(pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s);if(error){alert(error);return;}}_setPbInvAppliedFrom(_pbInvFrom);_setPbInvAppliedTo(_pbInvTo);Ie(1);if(t==="lab"&&!pb2047InRange(r,pb1427InvoiceCustomer,_pbInvFrom,_pbInvTo,$s))alert("در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.");}';
+  part=pb2047One(part,action,labAction,'invoice date apply feedback');
+  const buttonStart=part.indexOf('className:"statementFilters"'),buttonEnd=part.indexOf('className:"statementActions"',buttonStart);
+  if(buttonStart<0||buttonEnd<=buttonStart)throw Error('[R2047] statement filters missing');
+  let filters=part.slice(buttonStart,buttonEnd);
+  // Website has R2001 validation; native still uses original callback.
+  const old='className:"primary",disabled:D||t==="lab"&&!z,';
+  filters=pb2047One(filters,old,'className:t==="lab"?"primary pb2047StatementRange":"primary",disabled:D,','statement apply not disabled without photographer');
+  const click=filters.indexOf('onClick:',filters.indexOf('pb2047StatementRange'));
+  const label=filters.indexOf('children:D?"در حال محاسبه…":"نمایش حساب"',click);
+  if(click<0||label<click)throw Error('[R2047] statement submit anchor');
+  const prev=filters.slice(click,label);
+  filters=filters.slice(0,click)+'onClick:t==="lab"?async()=>{const error=pb2047RangeError(z,_e,je,$s);if(error){alert(error);return;}const result=await b();if(result&&!(result.rows||[]).length)alert("در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.");}:('+prev.slice('onClick:'.length,-1)+'),children:D?"در حال محاسبه…":t==="lab"?"نمایش بازه":"نمایش حساب"'+filters.slice(label+'children:D?"در حال محاسبه…":"نمایش حساب"'.length);
+  return part.slice(0,buttonStart)+filters+part.slice(buttonEnd);
+ });
+ return s+'\n'+[pb2047CleanUploadName,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange].map(f=>f.toString()).join('\n')+'\n/* PB2047 Lab UI */\n';
+}

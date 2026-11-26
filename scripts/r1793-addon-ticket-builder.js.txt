@@ -1,4 +1,9 @@
-const pb1793Add=async({row,chassis,frame,color,quantity})=>{
+const pb1793Add=async(input)=>{
+ const lines=Array.isArray(input)?input:[input];
+ if(!lines.length||lines.some(line=>!line?.row||!Number.isSafeInteger(line.quantity)||line.quantity<1||line.quantity>99||!line.chassis&&!line.frame))throw Error("تعداد یا مدل محصول معتبر نیست.");
+ const items=[];
+ try{
+ for(const {row,chassis,frame,color,quantity} of lines){
  const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=800;
  const ctx=canvas.getContext("2d");if(!ctx)throw Error("ساخت برگه سفارش در این مرورگر ممکن نیست.");
  ctx.fillStyle="#fff";ctx.fillRect(0,0,1200,800);
@@ -24,11 +29,19 @@ const pb1793Add=async({row,chassis,frame,color,quantity})=>{
   frameModelId:frame?.id||null,frameModelName:frame?.name||null,frameModelLatinName:frame?.latinName||null,
   frameColorId:color?.id||null,frameColorName:color?.name||null,
   withoutPrint:true,isAddonOnly:true,printCopies:quantity,progress:0};
+ items.push({row,item});
+ }
+ }catch(err){for(const {item} of items)URL.revokeObjectURL(item.previewUrl);throw err}
+ // Commit every ticket together only after every JPEG has been created.
  k(groups=>{
-  const existing=groups.find(g=>String(g.sizeId)===String(row.id));
-  if(existing)return groups.map(g=>g.id===existing.id?{...g,open:true,files:[...g.files,item]}:g);
-  return [...groups,{id:crypto.randomUUID(),sizeId:String(row.id),label:eg(row),customSize:null,
-   paperType:js(row)[0]||Kr(t)[0]||"luster",chassis:false,frame:false,files:[item],open:true}];
+  let next=groups;
+  for(const {row,item} of items){
+   const existing=next.find(g=>String(g.sizeId)===String(row.id));
+   if(existing)next=next.map(g=>g.id===existing.id?{...g,open:true,files:[...g.files,item]}:g);
+   else next=[...next,{id:crypto.randomUUID(),sizeId:String(row.id),label:eg(row),customSize:null,
+    paperType:js(row)[0]||Kr(t)[0]||"luster",chassis:false,frame:false,files:[item],open:true}];
+  }
+  return next;
  });
  pb1793SetStandalone(false);Ze("");
 };

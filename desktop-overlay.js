@@ -153,6 +153,13 @@ html body .pb1137Intake .pb1139GroupPhotos{grid-template-columns:repeat(auto-fil
   if(window.requestIdleCallback)window.requestIdleCallback(warm,{timeout:1500});
   else setTimeout(warm,200);
  }
+ // Warm the inactive first page, never the full order history.
+ function keepOrderViewsWarm(){
+  if(document.hidden||!document.hasFocus()||!document.querySelector('.labRoleWorkspace'))return;
+  const active=/^\/lab\/(?:orders|print)(?:\/|$)/.test(location.pathname)?'print':/^\/lab\/albums?(?:[-/]|$)/.test(location.pathname)?'album':null;
+  for(const view of ['print','album'])if(view!==active)warmView(view);
+ }
+ setInterval(keepOrderViewsWarm,18000);
  function warmTarget(event){
   for(const [view,selector] of Object.entries(warmTargets)){
    const button=event.target?.closest?.(selector);

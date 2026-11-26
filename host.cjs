@@ -17,6 +17,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
   let orderGeneration=0,financeGeneration=0,stageAccess=null;
   const pageScope=()=>JSON.stringify([store.get('labId'),store.get('deviceId'),store.get('auth'),getReadEpoch()]);
   const financeScope=()=>JSON.stringify([pageScope(),financeGeneration]);
+  function invalidateViews(){orderGeneration++;financeGeneration++;warmOrders.clear();stageProofs.clear();}
   function readPage(key,route,priority){
     // A visible page must be able to leave immediately while a poll or warm-up is in flight.
     const flightKey=JSON.stringify([key,priority]);
@@ -115,13 +116,13 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       if(url.pathname===require('./native-font.cjs').fontPath&&req.method==='GET'){res.writeHead(200,{'Content-Type':'font/woff2','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'assets','photobridge-vazirmatn.woff2')));}
       if(url.pathname==='/desktop/backups'&&req.method==='GET'){if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'login_required'});res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});return res.end(fs.readFileSync(path.join(__dirname,'backup.html')));}
       if(url.pathname==='/desktop/warm-view'&&req.method==='GET'){
-        if(!store.get('auth')||!store.get('labId'))return json(res,401,{error:'lab_auth_required'});
+        if(!store.get('auth')||!store.get('labId')||store.get('sessionExpired'))return json(res,401,{error:'lab_auth_required'});
         const view=url.searchParams.get('view');
         if(!['print','album','finance'].includes(view))return json(res,400,{error:'invalid_view'});
-        if(!connectionOffline()&&Date.now()>=(sync?.nativeDownloadPriorityUntil||0)){
+        if(foreground()&&!connectionOffline()&&!sync?.updateHolds&&Date.now()>=(sync?.nativeDownloadPriorityUntil||0)){
           if(view!=='finance')void warmOrderPage(view).catch(()=>{});
           else if(store.get('localBusinessActive:'+store.get('labId'))&&store.get('documentPolicy:'+store.get('labId'))===1){
-            void require('./finance-refresh.cjs').refreshFinance(store,upstreamRequest,{scope:financeScope(),getAccount:pageScope,warm:true}).catch(()=>{});
+            void require('./finance-refresh.cjs').refreshFinance(store,upstreamRequest,{scope:financeScope(),getAccount:pageScope,getScope:financeScope,warm:true}).catch(()=>{});
           }
         }
         res.writeHead(204,{'Cache-Control':'no-store'});return res.end();
@@ -306,6 +307,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
               result=warmed?.result||await readPage(pageKey,upstreamUrl,openPage?'foreground':'poll');
               upstreamMs=performance.now()-requestedAt;
               if(scope!==pageScope())return json(res,401,{error:'account_changed'});
+              if(generation!==orderGeneration){const freshGeneration=orderGeneration;pageKey=JSON.stringify([scope,freshGeneration,cacheUrl]);result=await readPage(pageKey,upstreamUrl,'foreground');if(scope!==pageScope())return json(res,401,{error:'account_changed'});if(freshGeneration!==orderGeneration)return json(res,409,{error:'order_view_changed'});servedWarm=false;}
             }else{
               const controller=new AbortController();
               const abort=()=>controller.abort();
@@ -443,6 +445,7 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
       return json(res,404,{error:'not_found'});
     }catch(e){if(res.headersSent){res.destroy(e);return;}return json(res,e.status||500,{error:e.message||'desktop_error',message:e.message})}finally{releaseUpdateWrite();}
   });
+  server.invalidateViews=invalidateViews;
   return server;
 }
 async function readBody(req){if(['GET','HEAD'].includes(req.method))return{bytes:Buffer.alloc(0),contentType:''};const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>50e6)throw Object.assign(Error('request_too_large'),{status:413});chunks.push(c)}return{bytes:Buffer.concat(chunks),contentType:String(req.headers['content-type']||'')}}

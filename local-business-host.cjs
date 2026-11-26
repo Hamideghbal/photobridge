@@ -14,7 +14,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
   if(!snapshot)return false;
   if(url.searchParams.get('pbNativeOverview')==='initial'&&snapshot.snapshotAt&&store.cached(url.pathname)){
    const {refreshFinance}=require('./finance-refresh.cjs');
-   void refreshFinance(store,request,{focus:'overview',scope:financeScope?.(),getAccount:financeAccount}).catch(()=>{});
+   void refreshFinance(store,request,{focus:'overview',scope:financeScope?.(),getAccount:financeAccount,getScope:financeScope}).catch(()=>{});
    const result=new LocalBusiness(store).summary(snapshot,url.searchParams);
    json(res,200,result);
    return true;
@@ -60,7 +60,7 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
    const {refreshFinance,routes}=require('./finance-refresh.cjs');
    if(routes.some(([route])=>route===p)){
     const overview=p==='/api/lab/finance/summary'?url.searchParams.get('pbNativeOverview'):null;
-    const options={force:p==='/api/lab/invoices',focus:overview?'overview':p,scope:financeScope?.(),getAccount:financeAccount};
+    const options={force:p==='/api/lab/invoices',focus:overview?'overview':p,scope:financeScope?.(),getAccount:financeAccount,getScope:financeScope};
     const snapshot=overview==='initial'&&store.cached(p)&&engine.state().snapshotAt;
     if(snapshot)void refreshFinance(store,request,options).catch(()=>{});
     else await refreshFinance(store,request,options);

@@ -8,8 +8,10 @@ function accountGate(store,lab,account,getAccount){
   if(store.get('labId')!==lab||!store.get('auth')||getAccount?.()!==account)
     throw Object.assign(Error('account_changed'),{status:401,code:'account_changed'});
 }
-async function refreshFinance(store,request,{force=false,focus=null,scope,getAccount,warm=false}={}){
+async function refreshFinance(store,request,{force=false,focus=null,scope,getAccount,getScope,warm=false}={}){
   const lab=store.get('labId'),account=getAccount?.(),now=Date.now();
+  function currentGate(){accountGate(store,lab,account,getAccount);if(getScope&&getScope()!==scope)throw Object.assign(Error('finance_view_changed'),{status:409,code:'finance_view_changed'});}
+  currentGate();
   let state=states.get(store);
   if(!state||state.lab!==lab||state.scope!==scope||(!state.flight&&now>=state.warmUntil&&(force||now-state.finishedAt>=1000))){
     state={lab,scope,finishedAt:0,warmUntil:0,warm,result:null,jobs:new Map(),committed:new Set(),flight:null};
@@ -24,17 +26,17 @@ async function refreshFinance(store,request,{force=false,focus=null,scope,getAcc
         if(bytes.length>=12e6)return{url,ok:false};
         const data=JSON.parse(bytes.toString());
         if(key==='summary'?!data.summary||typeof data.summary!=='object':!Array.isArray(data[key]))return{url,ok:false};
-        accountGate(store,lab,account,getAccount);
+        currentGate();
         return{url,key,ticket,ok:true,status:response.status,body:bytes.toString('base64')};
       }catch(error){
-        if(error?.code==='account_changed')throw error;
+        if(error?.code==='account_changed'||error?.code==='finance_view_changed')throw error;
         return{url,ok:false};
       }
     };
     for(const[url,key]of routes)current.jobs.set(url,load(url,key));
     current.commit=result=>{
       if(!result?.ok||current.committed.has(result.url))return result;
-      accountGate(store,lab,account,getAccount);
+      currentGate();
       current.committed.add(result.url);
       const accepted=commitRead(store,result.ticket,result.status,'application/json',result.body);
       if(accepted&&result.key==='invoices')new LocalBusiness(store).refreshInvoiceSnapshot();
@@ -43,8 +45,17 @@ async function refreshFinance(store,request,{force=false,focus=null,scope,getAcc
     // Every request is started in parallel. Only the selected finance section
     // needs to settle before its own response; the remaining sections finish
     // independently and are reconciled when all have settled.
-    current.flight=Promise.all([...current.jobs.values()]).then(results=>{
-      accountGate(store,lab,account,getAccount);
+    // Reconcile accounting inputs without waiting for the journal.
+    current.overview=Promise.all(routes.slice(0,-1).map(([url])=>current.jobs.get(url))).then(results=>{
+      currentGate();
+      for(const item of results)current.commit(item);
+      if(results.every(item=>item.ok))new LocalBusiness(store).absorbRemote({financeOnly:true});
+      return {complete:results.every(item=>item.ok),invoicesFresh:results[0].ok,updatedAt:new Date().toISOString()};
+    });
+    void current.overview.catch(()=>{});
+    current.flight=Promise.all([...current.jobs.values()]).then(async results=>{
+      await current.overview;
+      currentGate();
       for(const item of results)current.commit(item);
       const engine=new LocalBusiness(store);
       engine.refreshInvoiceSnapshot();
@@ -61,21 +72,15 @@ async function refreshFinance(store,request,{force=false,focus=null,scope,getAcc
     // Keep account-change rejections observed until the entire flight ends.
     void current.flight.catch(()=>{});
   }
-  if(focus==='overview'){
-    // Dashboard totals need reconciled financial inputs, but no journal rows.
-    const current=state;
-    current.overview??=Promise.all(routes.slice(0,-1).map(([url])=>current.jobs.get(url))).then(results=>{
-      accountGate(store,lab,account,getAccount);
-      for(const item of results)current.commit(item);
-      if(results.every(item=>item.ok)&&!current.result?.complete)new LocalBusiness(store).absorbRemote({financeOnly:true});
-      return current.result;
-    });
-    return current.overview;
+  if(warm)state.warm=true;
+  if(focus==='overview'||focus==='/api/lab/finance/summary'||focus==='/api/lab/finance/payments'||focus==='/api/lab/finance/expenses'){
+    const result=await state.overview;currentGate();return state.result||result;
   }
+  if(focus==='/api/lab/finance/ledger'){const result=await (state.flight||state.result);currentGate();return result;}
   if(focus&&state.jobs.has(focus)){
-    const selected=state.commit(await state.jobs.get(focus));
+    const selected=state.commit(await state.jobs.get(focus));currentGate();
     return state.result||{complete:false,invoicesFresh:focus==='/api/lab/invoices'&&selected.ok,updatedAt:new Date().toISOString()};
   }
-  return state.flight||state.result;
+  const result=await (state.flight||state.result);currentGate();return result;
 }
 module.exports={refreshFinance,routes};

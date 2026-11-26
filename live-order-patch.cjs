@@ -67,6 +67,13 @@ function upgradeFinanceLive(source){
  source=require('./download-transition-patch.cjs').patchDownloadTransition(source);
  source=require('./document-ui-patch.cjs').patchDocumentUI(source);
  source=patchNativeFinanceOverview(source);
+ // R2051+ native receipt transport can start independently of invoices.
+ if(source.includes('/* PB2051 progressive native finance */')){
+  const from='const Ot=await Me(ke);o(Ot.invoices||[]);pb2051SetInvoicesReady(true);';
+  const to='const receipts=pb2051LoadReceipts();const Ot=await Me(ke);o(Ot.invoices||[]);pb2051SetInvoicesReady(true);';
+  const after='const receipts=pb2051LoadReceipts();const extra=extraPath?';
+  if(source.split(from).length===2&&source.split(after).length===2)source=source.replace(from,to).replace(after,'const extra=extraPath?');
+ }
  const compact='const V=t=>{if(typeof t==="string"&&/^(?:OFF-|PB-)/.test(t))return t.replace(/^OFF-[A-F0-9]{32}-(?:INV|ORD|EXP|PAY|COR)-0*([1-9]\\d*|0)$/,"OFF-$1").replace(/^PB-[A-F0-9]{8}-(?:INV|ORD|EXP|PAY|COR|ADJ)-0*([1-9]\\d*|0)$/,"L-$1");return Number(t||0).toLocaleString("fa-IR")}';
  for(const before of ['const V=t=>Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:PB-|OFF-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")','const V=t=>typeof t==="string"&&/^(?:OFF-|PB-)/.test(t)?t:Number(t||0).toLocaleString("fa-IR")'])source=source.replaceAll(before,compact);
  if(!source.includes('/* PB1526 quiet finance */')){

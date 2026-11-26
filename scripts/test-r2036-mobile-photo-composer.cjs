@@ -69,7 +69,7 @@ test('R2036 delivered web runtime keeps one mobile geometry owner and existing s
  assert(header.includes('pb2040WatchLifecycle();'));
  assert(header.includes('if(pb2036MobilePhoto(current))return pb2040PhotoAction(current,index)'));
  for(const name of ['photobridge-v815-print-finance-tabs.js','photobridge-v816-print-finance-unify.js','photobridge-v817-print-header-stability.js','photobridge-v818-print-finance-composer-fix.js','photobridge-ui-fixes-v749.js']){
-  const script=read(root+name);assert.doesNotThrow(()=>new vm.Script(script));assert(script.includes('if(pb2036MobilePhoto(document.querySelector(".photographerMain.photographerPrintWorkspace")))return;'));assert(new RegExp(name.replaceAll('.','\\\\.')+'\\?[^"\\s]*mobileLifecycle=r2040').test(html),name+' lifecycle cache');
+  const script=read(root+name);assert.doesNotThrow(()=>new vm.Script(script));assert(script.includes('if(pb2036MobilePhoto(document.querySelector(".photographerMain.photographerPrintWorkspace")))return;'));assert(html.includes(name+'?')&&html.split(name+'?')[1].split('"')[0].includes('mobileLifecycle=r2040'),name+' lifecycle cache');
  }
  assert(read(root+names[2]).includes('&&!pb2036MobilePhoto(main))cleanupPrintLeak()'));
  const css=read(root+'photobridge-r2036-mobile-photo-composer.css');

@@ -1,0 +1,68 @@
+// R2052 — native Lab financial customer selector parity.
+function pb2052ManualPicker({customers,select,dialog}){
+ const [value,setValue]=x.useState(select.value||"");
+ return e.jsx(pb2050CustomerPicker,{modal:true,statement:true,emptyLabel:"انتخاب عکاسی موجود / مشتری جدید",customers,value,portalTarget:dialog,onChange:id=>{
+  const row=customers.find(item=>String(item.id)===String(id));
+  select.replaceChildren(new Option("انتخاب عکاسی موجود / مشتری جدید",""));
+  if(row)select.append(new Option(row.name||"عکاسی",String(row.id)));
+  select.value=row?String(row.id):"";
+  setValue(select.value);select.dispatchEvent(new Event("change",{bubbles:true}));
+ }});
+}
+function pb2052MountManualPicker(host,select,customers,dialog){
+ const root=Tx.createRoot(host);
+ root.render(e.jsx(pb2052ManualPicker,{customers,select,dialog}));
+ dialog.addEventListener("close",()=>root.unmount(),{once:true});
+}
+function pb2052InvoiceChoice({rows,customerId,value,onChange}){
+ const options=x.useMemo(()=>[{value:"",label:"پرداخت علی‌الحساب / بدون اتصال به فاکتور"},...rows.filter(row=>!customerId||String(row.customer_id)===String(customerId)).map(row=>({value:String(row.id),label:"#"+V(row.number)+" · "+row.customer_name+" · مانده "+V(Math.round(Number(row.balance||0)))}))],[rows,customerId]);
+ return e.jsx("div",{className:"pb2051PickerFrame pb2052ModalPicker",children:e.jsx(wn,{value,options,onChange,searchable:true,searchPlaceholder:"جستجوی فاکتور…",ariaLabel:"فاکتور (اختیاری)",className:"pb2050CustomerPicker",menuClassName:"pb891FinanceSelectMenu pb2050CustomerMenu"})});
+}
+function pb2052Patch(s){
+ if(s.includes("/* PB2052 finance picker parity */"))return s;
+ const once=(v,a,b,label)=>{if(v.split(a).length!==2)throw Error("[R2052] "+label+" anchor "+(v.split(a).length-1));return v.replace(a,()=>b)};
+ const sa=s.indexOf("function wn("),sb=s.indexOf("}function ql(",sa);
+ if(sa<0||sb<sa)throw Error("[R2052] selector missing");
+ let sel=s.slice(sa,sb+1);
+ sel=once(sel,'searchPlaceholder:f="جستجو…"}','searchPlaceholder:f="جستجو…",portalTarget:pb2052Portal}','optional dialog portal');
+ sel=once(sel,'}),document.body)]})','}),pb2052Portal||document.body)]})','dialog portal target');
+ sel=once(sel,'ee({position:"fixed",top:ie,left:re,width:ne,maxHeight:te,zIndex:2147483646})','ee({position:pb2052Portal?"absolute":"fixed",top:pb2052Portal?ie-pb2052Portal.getBoundingClientRect().top:ie,left:pb2052Portal?re-pb2052Portal.getBoundingClientRect().left:re,width:ne,maxHeight:te,zIndex:2147483646})','top layer position');
+ sel=once(sel,'n.key==="Escape"?(U(!1),Z(""),n.currentTarget.blur())','n.key==="Escape"?(O&&l.includes("pb2050CustomerPicker")&&(n.preventDefault(),n.stopPropagation()),U(!1),Z(""),n.currentTarget.blur())','escape menu only');
+ s=s.slice(0,sa)+sel+s.slice(sb+1);
+ const a=s.indexOf('function ub({role:t,'),b=s.indexOf('}function hb(',a);if(a<0||b<a)throw Error("[R2052] finance region");
+ let fin=s.slice(a,b+1);
+ const payStart=fin.indexOf('className:"pb1176PaymentActions"'),payEnd=fin.indexOf('w==="payments"&&e.jsx("div",{className:"card financeListCard',payStart);
+ if(payStart<0||payEnd<=payStart)throw Error("[R2052] receipt toolbar missing");
+ let pay=fin.slice(payStart,payEnd);
+ const raw='e.jsx("select",{value:pb1420PaymentCustomer,onChange:Je=>{pb1420SetPaymentCustomer(Je.target.value);q(Je.target.value)},children:[e.jsx("option",{value:"",children:"همهٔ عکاسی‌ها"}),...E.map(Je=>e.jsx("option",{value:String(Je.id),children:String(Je.name||"عکاسی")},Je.id))]})';
+ pay=once(pay,raw,'e.jsx(pb2050CustomerPicker,{value:pb1420PaymentCustomer,customers:E,onChange:Je=>{pb1420SetPaymentCustomer(Je);q(Je)}})','receipts photographer picker');
+ fin=fin.slice(0,payStart)+pay+fin.slice(payEnd);
+ const receiptStart=fin.indexOf('title:"ثبت دریافت از عکاسی"'),receiptEnd=fin.indexOf('ae&&e.jsxs(On,',receiptStart);
+ if(receiptStart<0||receiptEnd<receiptStart)throw Error("[R2052] receipt form");
+ let receipt=fin.slice(receiptStart,receiptEnd);
+ const customerStart=receipt.indexOf('e.jsx(wn,{searchable:!0,searchPlaceholder:"جستجوی نام عکاسی…",className:"pb891SearchableCustomerSelect"'),customerEnd=receipt.indexOf('onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})',customerStart);
+ if(customerStart<0||customerEnd<=customerStart)throw Error("[R2052] receipt customer chooser");
+ const customer=receipt.slice(customerStart,customerEnd+'onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})'.length);
+ receipt=once(receipt,customer,'e.jsx(pb2050CustomerPicker,{statement:true,modal:true,showBalance:true,value:He.customerId,customers:E,onChange:Je=>ft(old=>({...old,customerId:Je,invoiceId:"",amount:""}))})','receipt modal customer');
+ const invStart=receipt.indexOf('e.jsx(wn,{searchable:!0,searchPlaceholder:"جستجوی فاکتور…",className:"pb891SearchableInvoiceSelect"'),invEnd=receipt.indexOf('onChange:Je=>{const Ot=Te.find(',invStart);
+ if(invStart<0||invEnd<=invStart)throw Error("[R2052] receipt invoice chooser");
+ receipt=receipt.slice(0,invStart)+'e.jsx(pb2052InvoiceChoice,{rows:Te,customerId:He.customerId,value:He.invoiceId,'+receipt.slice(invEnd);
+ fin=fin.slice(0,receiptStart)+receipt+fin.slice(receiptEnd);
+ const filter='Te=r.filter(Je=>Je.document_type!=="discount"&&Number(Je.balance??Number(Je.total||0)-Number(Je.paid_total||0))>0)';
+ fin=once(fin,filter,'Te=x.useMemo(()=>r.filter(Je=>Je.document_type!=="discount"&&Number(Je.balance??Number(Je.total||0)-Number(Je.paid_total||0))>0),[r])','outstanding invoices memo');
+ fin=once(fin,'window.pb1176Finance?.manual({api:Me,customers:E,refresh:ce})','window.pb1176Finance?.manual({api:Me,customers:E,refresh:ce,mountCustomerPicker:pb2052MountManualPicker,notify:pb2050Notice})','manual invoice bridge');
+ s=s.slice(0,a)+fin+s.slice(b+1);
+ const oldPrompt="e.jsx('select',{'aria-label':'انتخاب عکاسی برای ثبت',value:id,onChange:event=>setId(event.target.value),children:[e.jsx('option',{value:'',children:'انتخاب عکاسی'}),...(customers||[]).map(customer=>e.jsx('option',{value:String(customer.id),children:customer.name||customer.mobile||'عکاسی'},customer.id))]})";
+ s=once(s,oldPrompt,"e.jsx(pb2050CustomerPicker,{statement:true,modal:true,value:id,customers:customers||[],onChange:setId})","receipt/discount prompt");
+ return s+"\n"+[pb2052ManualPicker,pb2052MountManualPicker,pb2052InvoiceChoice].map(fn=>fn.toString()).join("\n")+"\n/* PB2052 finance picker parity */\n";
+}
+function pb2052ManualPatch(s){
+ if(s.includes("/* PB2052 manual finance picker */"))return s;
+ const once=(a,b,label)=>{if(s.split(a).length!==2)throw Error("[R2052 manual] "+label);s=s.replace(a,()=>b)};
+ once('function manual({api,customers=[],refresh}){','function manual({api,customers=[],refresh,mountCustomerPicker,notify}){','signature');
+ once("for(const customer of customers){select.append(new Option(String(customer.name||'مشتری')+' · '+String(customer.mobile||''),String(customer.id)));}","if(!mountCustomerPicker)for(const customer of customers){select.append(new Option(String(customer.name||'مشتری')+' · '+String(customer.mobile||''),String(customer.id)));}",'no eager native options');
+ once("labeled(grid,'طرف حساب',select);","const pb2052Host=node('div','pb2052ManualPickerHost');if(mountCustomerPicker){select.hidden=true;labeled(grid,'طرف حساب',pb2052Host);pb2052Host.append(select);}else labeled(grid,'طرف حساب',select);",'manual picker host');
+ once("dialog.showModal();","dialog.showModal();if(mountCustomerPicker){try{const reactHost=node('div');pb2052Host.append(reactHost);mountCustomerPicker(reactHost,select,customers,dialog)}catch(error){select.hidden=false;for(const customer of customers)select.append(new Option(String(customer.name||'مشتری')+' · '+String(customer.mobile||''),String(customer.id)));console.warn('[R2052] picker fallback',error)}}",'mount after top layer open');
+ once("dialog.close();await refresh();alert('فاکتور شماره '+String(out.invoice?.number||'')+' ثبت و در حسابداری منظور شد.');","dialog.close();const message='فاکتور شماره '+String(out.invoice?.number||'')+' ثبت و در حسابداری منظور شد.';if(notify){notify(message);Promise.resolve().then(()=>refresh()).catch(()=>notify('فاکتور ثبت شد؛ به‌روزرسانی فهرست انجام نشد. دوباره بخش مالی را باز کنید.'));}else{await refresh();alert(message);}",'separate confirmed submit from refresh');
+ return s+"\n/* PB2052 manual finance picker */\n";
+}

@@ -20,10 +20,10 @@
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
     "assets/photobridge-vazirmatn.woff2": "4e3fa217d38fdafc1fea4414ceb58ca5e662cf0ab5fa735a8c8c20e8b42cad92",
     "verify-release-lock.cjs": "d1ceca41d6273635a5307db59cd42c3750b74ecf3cb34694673c665b29f13821",
-    "run-release-regressions.cjs": "a5421b39c295037498eec8bb0d871288164c68ecf503391b02f2f1d4faac23b2",
+    "run-release-regressions.cjs": "b6804aaa5d3f1a098e7c9454c4dbd9311ea2faa5bd9db592d4ef6f314db519a3",
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
-    "build-windows-oneclick.ps1": "12bd1b0e23f966a31127b291bab91aad62e61aa74ae10318696fe4c4d4c02907",
+    "build-windows-oneclick.ps1": "9f53fe4255b420421c1f4797f81636da00595149574d08526d014385ed927cbc",
     "test/release-critical.test.cjs": "7fd0cf0ac306f474112e1561a1c12fabacdb79951e2d27b9b58822ef8ab7f9ee",
     "test/release-lock.test.cjs": "c037bd01bb5a25152da8d6dd15808813412a6278d39c89727aa97f4b01b03353",
     "test/approved-thermal-layout.test.cjs": "7db138372649106a16a7c354f0560644cdc3203f4db99c3a657297440b63042e",
@@ -31,7 +31,7 @@
     "test/updater.test.cjs": "115ca670889e920cdb0500067f067c79324199c7f640bcb2f3d418675d2c592e",
     "test/unified-updates.test.cjs": "d4af9d05850579c0e1fc764ef573f129d78dce9ff2844ef43229057429745d50",
     ".github/workflows/native-release-contract.yml": "774a8fdc8497f860df2ec6935ba9470d0f414141c0c02e124b3b3793c243128a",
-    "test/update-install-gate.test.cjs": "5fadbe990e126487b35ff6cb02aff96e3534b38aef5176532a8701051a65d8dd",
+    "test/update-install-gate.test.cjs": "7c239c1eaeced643b3baae392480f26058814b8b8567d3d876fc0f6439324117",
     "qa/update-install-gate-browser.cjs": "514e01722c1cc49de2b545293023fb3d6daee11f3b3ac29556a258efb14b8060",
     "test/native-progress.test.cjs": "c242e68b0087089269317b84584ea7848458f2eef9dec6efe8970950df0f136f",
     "test/live-sync.test.cjs": "e7ba3a410d07fcfe7954458c530f68ec5a4c23e91d5350b5c6ce24219a3bcad0",
@@ -48,7 +48,9 @@
     "local-business.cjs": "97a3429ad7decd0dbeb0190eb6b4d734ac151942bf399bb844b1b466a2b169f2",
     "desktop-overlay.js": "29065f9df08e157081b3153ebae0a6bae4da5c52dfd90e320c8afe8ad6f51d81",
     "live-order-patch.cjs": "36ec70e79081825e5729d2ad5c417f1b1242e9e39ef13557b1ba7a72002b871e",
-    "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639"
+    "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639",
+    "test/native-regression-preload.cjs": "c33f84fec815d46f96b1eb5c73f58daa23cac3560f38d062f3a14b22facf03c0",
+    "runtime-compat.cjs": "1abc2b067328463c60dda352b9cfe3f57e5f66551830dcee1e53c5971bc68683"
   },
   "packagedFiles": [
     "main.cjs",
@@ -76,7 +78,8 @@
     "local-business-host.cjs",
     "local-business.cjs",
     "desktop-overlay.js",
-    "live-order-patch.cjs"
+    "live-order-patch.cjs",
+    "runtime-compat.cjs"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

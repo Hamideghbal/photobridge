@@ -115,6 +115,9 @@ try {
   $npm16=Join-Path (Split-Path -Parent $node16) 'node_modules\npm\bin\npm-cli.js'
   Invoke-Checked $node16 @($npm16,'ci','--no-audit','--no-fund')
  } finally {$env:PATH=$path22}
+ # The installed better-sqlite3 binding is ABI 93 (Node 16 / Electron 22).
+ # Run DB integration tests with the exact Node executable used for npm ci.
+ $env:PB_LAB_SQLITE_TEST_NODE=$node16
  $npm22=Join-Path (Split-Path -Parent $node) 'node_modules\npm\bin\npm-cli.js'
  $certificate=Join-Path $keyFolder 'windows-signing.pfx'
  if ((Test-Path -LiteralPath $certificate -PathType Leaf) -and !$env:CSC_LINK -and !$env:WIN_CSC_LINK) {

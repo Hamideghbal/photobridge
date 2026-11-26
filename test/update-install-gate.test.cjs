@@ -36,7 +36,7 @@ test('actual HTTP host holds an in-flight print even if its client disconnects, 
  try{await entered;controller.abort();await firstResult;assert.equal(f.sync.foregroundWrites,1);const {gate}=gateFixture(f.sync);release=gate.hold();assert.equal(await gate.canInstall({waitMs:0}),false);
  const next=await fetch(origin+'/desktop/thermal/print',{method:'POST',headers,body:'{}'});assert.equal(next.status,503);assert.equal((await next.json()).error,'update_in_progress');assert.equal(calls,1);
  finishPrint({ok:true});for(let n=0;n<20&&f.sync.foregroundWrites;n++)await new Promise(r=>setTimeout(r,5));assert.equal(f.sync.foregroundWrites,0);assert.equal(await gate.canInstall({waitMs:0}),true);
- }finally{finishPrint?.({ok:true});release?.();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));f.store.db.close()}
+ }finally{finishPrint?.({ok:true});release?.();server.closeAllConnections?.();await new Promise(resolve=>server.close(resolve));f.store.db.close()}
 });
 test('holding during a read-only access check cannot let queued writes start after the install guard passes',async()=>{
  let finishAccess,reached;const started=new Promise(r=>reached=r),calls=[],f=storeFixture(async(url,options)=>{calls.push([url,options?.method||'GET']);if(url==='/api/lab/write-access'){reached();return new Promise(r=>finishAccess=r)}return Response.json({});});

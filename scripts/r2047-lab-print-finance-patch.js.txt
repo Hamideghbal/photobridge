@@ -58,6 +58,13 @@ function pb2047Ui(s){
  // Filename preview uses the same rule, while original persisted names and
  // download receipt fingerprints remain unchanged.
  s=pb2047One(s,'const raw=String(name||\'file\'),match=raw.match(','const raw=pb2047CleanUploadName(name),match=raw.match(','photo preview cleanup');
+ // Album detail selector and stage cards must agree: downloaded is not printing.
+ s=pb2047One(s,'Pn=le=>{','Pn=le=>{if(!pb2047PrintMarked(le,true))return 0;', 'album rank does not infer print from receipt');
+ s=pb2047One(s,'{value:"download_print",label:"دانلود / چاپ"},{value:"binding",label:"صحافی"}','{value:"download_print",label:"دانلود"},{value:"printing",label:"چاپ"},{value:"binding",label:"صحافی"}','album detail stages');
+ s=pb2047One(s,'const nt=Pn(y.order);if(le==="download_print")','const nt=Pn(y.order);if(le==="printing"){if(!pb2047Downloaded(y.order)){alert("ابتدا دانلود را کامل کنید.");return;}if(pb2047PrintMarked(y.order,true))return;return Cn(y.order,"printing");}if(le==="download_print")','manual detail print selection');
+ s=pb2047One(s,'value:["files_received","printing"].includes(mr(y.order))?"download_print":mr(y.order)','value:pb2047PrintMarked(y.order,true)?(["binding","ready","completed"].includes(mr(y.order))?mr(y.order):"printing"):"download_print"','detail stage selection');
+ s=s.replace('"دانلود مجدد":"دانلود / چاپ"','"دانلود مجدد":"دانلود"');
+ s=s.replace('مسیر آلبوم مستقل است: دانلود / چاپ، صحافی','مسیر آلبوم مستقل است: دانلود، چاپ، صحافی');
  // Remove R1894's invoice-based print and binding completion before any other predicate.
  s=pb2047One(s,'rn=(le,nt)=>{','rn=(le,nt)=>{if(!pb1798NoPrintOrder(le)){if(nt==="download"||nt==="download_print")return pb2047Downloaded(le);if(nt==="print")return pb2047PrintMarked(le,o==="album");if(o==="album"&&nt==="binding")return ["binding","ready","completed"].includes(String(le.album_stage||""))||["ready","completed"].includes(String(le.status||""));}', 'separate download and print completion');
  s=pb2047One(s,'en=(le,nt)=>','en=(le,nt)=>!pb1798NoPrintOrder(le)&&o==="album"&&nt==="print"?dn(le,["printing","printed"]):!pb1798NoPrintOrder(le)&&(nt==="download"||nt==="download_print")?le.downloaded_at||dn(le,["downloaded"]):','independent album dates');

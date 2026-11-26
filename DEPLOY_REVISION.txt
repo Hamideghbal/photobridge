@@ -1,1 +1,1 @@
-2026-11-26-r2041-build-header-compat
+2026-11-26-r2042-mobile-photo-reentry

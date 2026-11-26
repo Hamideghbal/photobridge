@@ -23,7 +23,8 @@ function compile(file, version) {
   const source = fs.readFileSync(file, 'utf8');
   const modern = fastWorkerEnabled(source, version);
   const bridge = !modern && /^1\.0\.\d+$/.test(version) && Number(version.split('.')[2]) >= 120 && canBridge(source);
-  const served = patchStorageBundle(source);
+  const base = patchStorageBundle(source);
+  const served = Number(version.split('.')[2])>=160?require('./finance-dashboard-160.cjs').patchFinanceDashboard(base):base;
   const optimized = bridge ? reuseDownloadedDetails(served) : { source: served };
   const body = 'window.__PB_LAB104_NATIVE__=' + JSON.stringify(modern) + ';\n' +
     'window.__PB_NATIVE_SOURCE_PROOF__=' + JSON.stringify(sourceMarker(source, version)) + ';\n' +

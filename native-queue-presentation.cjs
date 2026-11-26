@@ -26,7 +26,7 @@ function patchNativeQueuePresentation(source) {
  const pbNativeSearchText=value=>pbNativeQueueSearch(value).toLowerCase().replace(/ي/g,"ی").replace(/ك/g,"ک");
  const pbNativeSearchInput=typeof r1944Query==="undefined"?pbNativeRequestQuery:pbNativeQueueSearch(r1944Query);
  const pbNativePageKey=JSON.stringify([t?.id,o,T,r1944Page,pbNativeRequestQuery]);
- const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey;
+ const pbNativePageLoading=pbNativeSearchInput!==pbNativeRequestQuery||pbNativePageResult?.key!==pbNativePageKey||!pbNativePageResult?.ok;
  const pbNativeVisiblePage=x.useRef(pbNativePageKey);
  pbNativeVisiblePage.current=pbNativePageKey;
  const pbNativeDetailRequest=x.useRef(0);
@@ -51,7 +51,7 @@ function patchNativeQueuePresentation(source) {
    ]})
   ]
  },index))`;
- const failurePanel=`e.jsxs("div",{className:"pbNativeQueueError",role:"status",children:[e.jsx("span",{children:"دریافت سفارش‌ها انجام نشد."}),e.jsx("button",{type:"button",onClick:()=>{pbNativeSetPageResult(null);void ye().catch(()=>{});},children:"تلاش دوباره"})]})`;
+ // Transient read failures stay in the normal loading presentation; the existing refresh loop retries.
  const patched=withFailure
   .replace(marker,marker+state)
   .replace('String(r1944DebouncedQuery||"").trim()','pbNativeRequestQuery')
@@ -68,7 +68,8 @@ function patchNativeQueuePresentation(source) {
   .replace('data:Mt}),I(Mt),S(xt.order)', 'data:Mt});if(pbDetailRequest===pbNativeDetailRequest.current&&location.pathname===pbDetailPath){I(Mt);S(xt.order)}')
   .replace('onClick:()=>{S(null),I(null),Dn(ur(T,"",l),!0)}','onClick:()=>{++pbNativeDetailRequest.current;S(null);I(null);Dn(ur(T,"",l),!0)}')
   .replace(afterSuccess,'pbNativeSetPageResult(previous=>previous?.key===pbNativePageKey&&previous.ok?previous:{key:pbNativePageKey,ok:true});'+afterSuccess)
-  .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:!pbNativePageResult?.ok?${failurePanel}:Be.length?Nt.map(`);
+  .replace('children:r1944Error?r1944Error:','children:pbNativePageLoading?"در حال دریافت سفارش‌ها…":')
+  .replace(cards,`"aria-busy":pbNativePageLoading,"aria-label":"سفارش‌ها",children:pbNativePageLoading?${skeleton}:Be.length?Nt.map(`);
  return source.slice(0,start)+patched+source.slice(cardAt+cards.length);
 }
 

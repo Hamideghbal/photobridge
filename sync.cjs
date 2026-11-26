@@ -75,7 +75,7 @@ class Sync{
    }catch(e){this.online=false;this.lastError=e.status===401||e.status===403?'login_required':this.isOnline()===false?'internet_offline':'server_unavailable'}
   }
   if(this.updateHolds||this.paused)return {ok:false,error:'update_in_progress',sent,pulled:!!pulled};
-  if(this.foreground()&&pulled===PULL.length)await require('./prepare-offline-data.cjs').prepareOfflineData(this.store,this.request);
+  if(this.foreground()&&pulled===PULL.length)await require('./prepare-offline-data.cjs').prepareOfflineData(this.store,this.request,{canContinue:()=>this.foreground()&&!this.updateHolds&&!this.paused&&this.isOnline()!==false&&Date.now()>=Math.max(this.foregroundReadUntil||0,this.nativeDownloadPriorityUntil||0)});
   if(pulled===PULL.length&&this.store.get('localBusinessActive:'+this.store.get('labId')))new (require('./local-business.cjs').LocalBusiness)(this.store).absorbRemote();
   const state=this.store.status(),ok=this.online&&!this.lastError&&!state.pending&&!state.conflicts.length&&!state.localOrders?.length&&!(this.store.get('localBusinessActive:'+this.store.get('labId'))&&this.store.get('localBusiness:v1:'+this.store.get('labId'))?new (require('./local-business.cjs').LocalBusiness)(this.store).status().pending:0);this.report={ok,pulled:!!pulled,pulledCount:pulled,failedPulls:PULL.length-pulled,sent,pending:state.pending+(state.localOrders?.length||0),conflicts:state.conflicts.length,error:this.lastError,startedAt,finishedAt:new Date().toISOString()};this.store.set('lastSyncReport',this.report);return this.report;
  }

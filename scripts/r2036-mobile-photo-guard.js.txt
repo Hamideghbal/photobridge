@@ -1,8 +1,13 @@
 /* PB2036 photo-only ownership */
 // R2043: actual mounted photo intake owns the mobile layout, not route aliases,
 // legacy print-workspace classes, or a chooser left mounted but hidden.
+// R2046: the real mobile dock opens Print in its own same-origin iframe.
+// It is NOT the desktop navigation frame and must use the same mobile UI.
+function pb2046MobilePrintFrame(){
+ try{return window!==window.top&&!!window.frameElement?.closest('#pb1106PrintPanel.pb1106ContentPanel')&&window.parent.matchMedia('(max-width:820px)').matches}catch{return false}
+}
 function pb2043MobileDevice(){
- if(window!==window.top||!matchMedia('(max-width:820px)').matches)return false;
+ if((window!==window.top&&!pb2046MobilePrintFrame())||!matchMedia('(max-width:820px)').matches)return false;
  const ua=String(navigator.userAgent||'');
  if(/Windows/i.test(ua))return false;
  return /Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||matchMedia('(pointer:coarse)').matches;
@@ -10,7 +15,7 @@ function pb2043MobileDevice(){
 function pb2036MobilePhoto(w){
  if(!w)return false;
  // R2045: the mounted React toolbar is definitive even during a route or
- // chooser transition. It is only rendered by the top-level mobile composer.
+ // chooser transition. It is rendered by either the top-level mobile composer or its mobile dock frame.
  if(w.querySelector('.simplePrintPilot')&&document.querySelector?.('body > .pb2044NativePhotoActions'))return true;
  if(!pb2043MobileDevice())return false;
  const path=location.pathname.replace(/\/+$/,'');

@@ -7,7 +7,9 @@
  function sync(){
   frame=0;
   const enabled=document.documentElement.classList.contains('pb1482LabPhoneMode');
-  const main=enabled&&document.querySelector('.labRoleWorkspace main.appWorkspacePage');
+  // On photographer routes (including the mobile print frame) there is no Lab workspace.
+  if(!enabled)return;
+  const main=document.querySelector('.labRoleWorkspace main.appWorkspacePage');
   const scroll=main?.querySelector(':scope>.labRolePageScrollArea'),dock=document.querySelector('body>.pb1482LabPhoneDock');
   if(!scroll||!dock)return;
   const clear=main.querySelector('.stageQueueWorkspace .queueOrderSearch .headerSearchClear');

@@ -7,7 +7,7 @@
   function pb2043Scroll(w){
     const sc=w?.querySelector(':scope>.photographerRolePageScrollArea');
     if(!sc?.style)return;
-    const geometry={position:'fixed',top:'241px',bottom:'78px',left:'0px',right:'0px',height:'auto','min-height':'0px',margin:'0px','box-sizing':'border-box','padding-top':'10px','overflow-y':'auto','overflow-x':'hidden',transform:'none',animation:'none',transition:'none',opacity:'1',visibility:'visible'};
+    const geometry={position:'fixed',top:'241px',bottom:pb2046MobilePrintFrame()?'0px':'78px',left:'0px',right:'0px',height:'auto','min-height':'0px',margin:'0px','box-sizing':'border-box','padding-top':'10px','overflow-y':'auto','overflow-x':'hidden',transform:'none',animation:'none',transition:'none',opacity:'1',visibility:'visible'};
     for(const [key,value] of Object.entries(geometry))if(sc.style.getPropertyValue(key)!==value||sc.style.getPropertyPriority(key)!=='important')sc.style.setProperty(key,value,'important');
   }
   // A fixed child of a fixed/transformed header is not a reliable viewport

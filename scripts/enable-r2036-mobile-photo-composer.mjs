@@ -45,6 +45,13 @@ patch('photobridge-v807-mobile-scroll-store-fix.js',s=>once(s,
 // R2045: v783 and v807 otherwise compete for the same legacy shortcut on
 // every root mutation. Do not let either create/remove it during photo intake.
 patch('photobridge-v783-polish.js',s=>once(s,'function syncFinanceShortcut(){','function syncFinanceShortcut(){\n    if(pb2042PhotoWorkspace())return;','R2045 no legacy shortcut churn'));
+// R2046: real dock-frame browser tracing caught R1310 repeatedly writing
+// the 181px list inset over the 241px composer inset. Do not measure hidden
+// legacy header rows while the native photo toolbar owns this viewport.
+patch('photobridge-r1310-layout.js',s=>{
+ s=once(s,'function geometry(w){','function geometry(w){\n  if(pb2036MobilePhoto(w))return {top:241,bottom:pb2046MobilePrintFrame()?0:78};','R2046 native composer geometry');
+ return once(s,'  pending=false;\n  const active=','  pending=false;\n  if(pb2042PhotoWorkspace())return;\n  const active=','R2046 stop measured layout writer on live composer');
+});
 // R2040: three old finance/guide observers were repeatedly rewriting the
 // hidden native row. Do not let them trigger each other on the photo composer.
 for(const name of ['photobridge-v815-print-finance-tabs.js','photobridge-v816-print-finance-unify.js','photobridge-v817-print-header-stability.js','photobridge-v818-print-finance-composer-fix.js']){
@@ -83,6 +90,8 @@ for(const name of changed){
 html=html.replace(/(index-UIRefine-v655-r84\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('nativePhoto=r2044')?url:url+'&nativePhoto=r2044');
 html=html.replace(/mobileOwner=r2043/g,'mobileOwner=r2043&nativePhoto=r2044');
 html=html.replace(/nativePhoto=r2044/g,'nativePhoto=r2044&stablePhoto=r2045');
+html=html.replace(/stablePhoto=r2045/g,'stablePhoto=r2045&embeddedPhoto=r2046');
+html=html.replace(/(photobridge-r1483-lab-mobile\.js\?[^"'<> \t\r\n]*)/g,url=>url.includes('photoFrame=r2046')?url:url+'&photoFrame=r2046');
 write(htmlPath,html);
 for(const name of changed)execFileSync(process.execPath,['--check',root+name],{stdio:'inherit'});
 console.log('[R2036] mobile photo composer: one scroll owner, real Send and no-print product actions; desktop snapshots untouched');

@@ -1,20 +1,33 @@
 /* PB2036 photo-only ownership */
-// R2042: use the live mounted composer instead of stale chooser/desktop flags.
-function pb2036MobilePhoto(w){
- if(!w||window!==window.top||!matchMedia('(max-width:820px)').matches)return false;
+// R2043: actual mounted photo intake owns the mobile layout, not route aliases,
+// legacy print-workspace classes, or a chooser left mounted but hidden.
+function pb2043MobileDevice(){
+ if(window!==window.top||!matchMedia('(max-width:820px)').matches)return false;
  const ua=String(navigator.userAgent||'');
  if(/Windows/i.test(ua))return false;
- if(!/Android|iPhone|iPad|iPod/i.test(ua)&&!(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)&&!matchMedia('(pointer:coarse)').matches)return false;
- if(!/^\/photographer\/(?:orders|upload)(?:\/|$)/.test(location.pathname))return false;
+ return /Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||matchMedia('(pointer:coarse)').matches;
+}
+function pb2036MobilePhoto(w){
+ if(!w||!pb2043MobileDevice())return false;
+ const path=location.pathname.replace(/\/+$/,'');
+ if(!/^\/photographer(?:\/|$)/.test(path)||/^\/photographer\/(?:album|album-design|finance|archive|gallery|ai|store|wallet|settings|labs|customers|calendar|login|signup|invite|register)(?:\/|$)/.test(path))return false;
  const live=!!w.querySelector('.simplePrintPilot');
+ const photoClass=w.classList.contains('simplePrintPilotWorkspaceMode');
+ const canonical=/^\/photographer\/(?:orders|upload)(?:\/|$)/.test(path)||new URLSearchParams(location.search).get('workspace')==='print';
+ // A true composer can also be mounted on /photographer during SPA entry.
+ if(!live&&!canonical)return false;
  const chooser=document.querySelector?.('#pbR99LabChooser');
- if(chooser&&!chooser.hidden&&chooser.getBoundingClientRect?.().height>0&&getComputedStyle(chooser).display!=='none')return false;
+ if(chooser&&!chooser.hidden&&chooser.getBoundingClientRect?.().height>0){
+   const cs=getComputedStyle(chooser);
+   if(cs.display!=='none'&&cs.visibility!=='hidden'&&cs.opacity!=='0')return false;
+ }
  if(!live&&(document.documentElement.classList.contains('pb1126Embedded')||new URLSearchParams(location.search).get('pbLabChooser')==='1'))return false;
- return live||w.classList.contains('simplePrintPilotWorkspaceMode');
+ return live||photoClass;
 }
 function pb2042PhotoWorkspace(){
+ // Read current mounted main on every call; no cached reference across tabs.
+ const current=document.querySelector?.('#root main.photographerMain:has(.simplePrintPilot)')||document.querySelector?.('.photographerMain');
+ if(pb2036MobilePhoto(current))return current;
  const w=document.querySelector?.('.photographerMain.photographerPrintWorkspace');
- if(pb2036MobilePhoto(w))return w;
- const current=document.querySelector?.('.photographerMain');
- return pb2036MobilePhoto(current)?current:null;
+ return pb2036MobilePhoto(w)?w:null;
 }

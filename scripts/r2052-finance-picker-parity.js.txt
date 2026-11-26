@@ -40,10 +40,19 @@ function pb2052Patch(s){
  const receiptStart=fin.indexOf('title:"ثبت دریافت از عکاسی"'),receiptEnd=fin.indexOf('ae&&e.jsxs(On,',receiptStart);
  if(receiptStart<0||receiptEnd<receiptStart)throw Error("[R2052] receipt form");
  let receipt=fin.slice(receiptStart,receiptEnd);
- const customerStart=receipt.indexOf('e.jsx(wn,{searchable:!0,searchPlaceholder:"جستجوی نام عکاسی…",className:"pb891SearchableCustomerSelect"'),customerEnd=receipt.indexOf('onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})',customerStart);
- if(customerStart<0||customerEnd<=customerStart)throw Error("[R2052] receipt customer chooser");
- const customer=receipt.slice(customerStart,customerEnd+'onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})'.length);
- receipt=once(receipt,customer,'e.jsx(pb2050CustomerPicker,{statement:true,modal:true,showBalance:true,value:He.customerId,customers:E,onChange:Je=>ft(old=>({...old,customerId:Je,invoiceId:"",amount:""}))})','receipt modal customer');
+ const picker='e.jsx(pb2050CustomerPicker,{statement:true,modal:true,showBalance:true,value:He.customerId,customers:E,onChange:Je=>ft(old=>({...old,customerId:Je,invoiceId:"",amount:""}))})';
+ const customerStart=receipt.indexOf('e.jsx(wn,{searchable:!0,searchPlaceholder:"جستجوی نام عکاسی…",className:"pb891SearchableCustomerSelect"');
+ if(customerStart>=0){
+  const customerEnd=receipt.indexOf('onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})',customerStart);
+  if(customerEnd<=customerStart)throw Error("[R2052] receipt customer chooser");
+  const customer=receipt.slice(customerStart,customerEnd+'onChange:Je=>ft({...He,customerId:Je,invoiceId:"",amount:""})})'.length);
+  receipt=once(receipt,customer,picker,'receipt modal customer');
+ }else{
+  // R1201 removed the original raw/duplicate chooser. Restore the approved
+  // picker as an editable confirmation of the actual payment target.
+  const invoiceLabel='e.jsxs("label",{children:["فاکتور (اختیاری)"';
+  receipt=once(receipt,invoiceLabel,'e.jsxs("label",{children:["عکاسی",'+picker+']}),'+invoiceLabel,'R1201 receipt customer field');
+ }
  const invStart=receipt.indexOf('e.jsx(wn,{searchable:!0,searchPlaceholder:"جستجوی فاکتور…",className:"pb891SearchableInvoiceSelect"'),invEnd=receipt.indexOf('onChange:Je=>{const Ot=Te.find(',invStart);
  if(invStart<0||invEnd<=invStart)throw Error("[R2052] receipt invoice chooser");
  receipt=receipt.slice(0,invStart)+'e.jsx(pb2052InvoiceChoice,{rows:Te,customerId:He.customerId,value:He.invoiceId,'+receipt.slice(invEnd);

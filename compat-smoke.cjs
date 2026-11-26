@@ -12,7 +12,7 @@ async function run(){
    const entry=compile(path.join(root,'assets','index-UIRefine-v655-r84.js'),app.getVersion());
    assert(entry.includes(directDownloadMarker),'The bundled UI does not support the native direct download path');
    if(Number(app.getVersion().split('.')[2])>=143)assert(entry.includes('className:"pbNativeQueueSkeleton'),'The bundled UI does not support the native order loading cards');
-   if(Number(app.getVersion().split('.')[2])>=160){assert(entry.includes('/* PB160 dashboard first */')&&entry.includes('pb160Photographers'),'The verified bundled UI lacks the dashboard-first finance patch');}
+   if(Number(app.getVersion().split('.')[2])>=160){assert(entry.includes('/* PB160 dashboard first */')&&entry.includes('pb161ShowStatement')&&!entry.includes('pb160Photographers'),'The verified bundled UI lacks the latest dashboard/statement patch');}
    if(Number(app.getVersion().split('.')[2])>=145){
     const intake=require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8'));
     assert(intake.includes('pbNativeIntakePhotoPicker'),'The bundled UI does not support automatic intake photo insertion');

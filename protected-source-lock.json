@@ -20,7 +20,7 @@
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
     "assets/photobridge-vazirmatn.woff2": "4e3fa217d38fdafc1fea4414ceb58ca5e662cf0ab5fa735a8c8c20e8b42cad92",
     "verify-release-lock.cjs": "d1ceca41d6273635a5307db59cd42c3750b74ecf3cb34694673c665b29f13821",
-    "run-release-regressions.cjs": "63baf26dbd84f700dbd89ade954ed85ed7be0b3f1a14f9165c06168ab69d03aa",
+    "run-release-regressions.cjs": "893a0d4f8ca53634c2860dcf7f6b1116974bc54313adef4a2c0a876108ca3351",
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
     "build-windows-oneclick.ps1": "9f53fe4255b420421c1f4797f81636da00595149574d08526d014385ed927cbc",
@@ -44,18 +44,20 @@
     "startup-update-schedule.cjs": "3a98b49b7489dc318ac429f4c8ca68d60e45b488c80c8139b85c25f8b127c408",
     "test/fast-startup-159.test.cjs": "21cb2a070639a11034aa24c6dc743451ad4d65c079a1bdd72b814d50d342c318",
     "finance-refresh.cjs": "7cfca33f8310ed5e1edec17edb2a31095861cbb3325b11a614e490a4bf04260a",
-    "local-business-host.cjs": "930b4616a2a51d779a0469ec0ef7759ba26042cac2e652fe8e5b02a6e70abea4",
-    "local-business.cjs": "97a3429ad7decd0dbeb0190eb6b4d734ac151942bf399bb844b1b466a2b169f2",
+    "local-business-host.cjs": "029aa518b340c49c5b673ffca187ed657c830383fb1e491a460cc79632cb2e90",
+    "local-business.cjs": "1190262544efbdee5b8841e5b018756ff5d8433c8f067ebf9a398d2bd2b625a0",
     "desktop-overlay.js": "ca631b0402f8767bab9900c49509c20df42eb609f8edcc1ef4960047c5428490",
     "live-order-patch.cjs": "36ec70e79081825e5729d2ad5c417f1b1242e9e39ef13557b1ba7a72002b871e",
     "test/fast-views-159.test.cjs": "8cb4dd24ea8ee70994a596a7bcc31b6a70eb097f193d8fa39ed86dd5f4996639",
     "test/native-regression-preload.cjs": "c33f84fec815d46f96b1eb5c73f58daa23cac3560f38d062f3a14b22facf03c0",
     "runtime-compat.cjs": "1abc2b067328463c60dda352b9cfe3f57e5f66551830dcee1e53c5971bc68683",
-    "finance-dashboard-160.cjs": "de7043d0c2e3dd0a6fa5292057c3fa1f007412b177df379929a5466d974df081",
+    "finance-dashboard-160.cjs": "112fb50cae4c9ab60d9c2011c1c225a0f9eb909893c0e97bcaa9bf260a0a6944",
     "native-queue-presentation.cjs": "14df2c0660da02e88137e58c40dccb5c9d1cc2f00eccafce9c1ff65a09c4a5cd",
     "prepare-offline-data.cjs": "811a0962a2b51f919e2818436ffbc67ce58646131b81403853ae98a21ed69be8",
-    "test/dashboard-160.test.cjs": "596429b76d83fe8bf4ae612b299f01263dc904c1c1d90ab80c73edd2db077a32",
-    "compat-smoke.cjs": "274e99b2fca360df786ff1e81701cba830004877adf494aa49ff6735d1c089ad"
+    "test/dashboard-160.test.cjs": "d8cd389b594fb84f573c3a6017a71c72daa98b186aecb02b76f281b69d261912",
+    "compat-smoke.cjs": "9890c31ddb599e4f9425df3df4371b49e8715875c4dcea23ebdc7c547d7bb9f4",
+    "native-storage.js": "63d75089f39709f8e9025a95ddab97b2fbab1759c945887923ae3bba0db33dac",
+    "test/finance-161.test.cjs": "ebc99035810f011e85f7249aedde9d2857afab423c1162a848c1f193dd64e4e0"
   },
   "packagedFiles": [
     "main.cjs",
@@ -88,7 +90,8 @@
     "finance-dashboard-160.cjs",
     "native-queue-presentation.cjs",
     "prepare-offline-data.cjs",
-    "compat-smoke.cjs"
+    "compat-smoke.cjs",
+    "native-storage.js"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

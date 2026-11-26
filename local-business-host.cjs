@@ -7,6 +7,31 @@ async function localBusinessHost({req,res,url,bytes,store,nativeStorage,offline,
  // business migration or SQLite write before reaching the server.
  if(req.method==='GET'&&['/api/lab/dashboard','/api/lab/profile-image','/api/lab/hours','/api/lab/album-settings','/api/lab/sms-settings','/api/lab/snappbox/settings','/api/lab/site'].includes(url.pathname))return false;
  const lab=store.get('labId'),same=()=>{if(store.get('labId')!==lab||!store.get('auth'))throw Object.assign(Error('حساب تغییر کرده است؛ دوباره تلاش کنید.'),{code:'account_changed',status:401});};
+ // Isolated list-view fast path. It never changes write authorization or document rules.
+ if(req.method==='GET'&&url.pathname==='/api/lab/invoices'&&['snapshot','live'].includes(url.searchParams.get('pbNativeInvoiceView'))){
+  const snapshot=store.get('localBusiness:v1:'+lab),saved=store.cached(url.pathname);
+  if(snapshot&&saved&&store.get('documentPolicy:'+lab)===1&&localActive(store)){
+   const engine=new LocalBusiness(store);
+   if(!offline&&url.searchParams.get('pbNativeInvoiceView')==='live'){
+    const scope=financeScope?.(),account=financeAccount?.(),ticket=require('./read-cache.cjs').beginRead(store,url.pathname);
+    try{
+     const response=await request(url.pathname,{signal:AbortSignal.timeout(3500)});
+     if(response.ok){
+      const bytes=Buffer.from(await response.arrayBuffer());
+      if(bytes.length<12e6&&Array.isArray(JSON.parse(bytes.toString()).invoices)){
+       same();
+       if(financeScope?.()===scope&&financeAccount?.()===account)require('./read-cache.cjs').commitRead(store,ticket,response.status,'application/json',bytes.toString('base64'));
+      }
+     }
+    }catch{same();}
+    same();if(financeAccount?.()!==account){json(res,401,{error:'account_changed'});return true;}
+   }
+   const result=engine.read(url.pathname);
+   json(res,200,result);return true;
+  }
+  // A new workstation uses the established online initialization path.
+  if(!offline&&!snapshot)return false;
+ }
  if(req.method==='GET'&&url.pathname==='/api/lab/finance/summary'&&['dashboard','customers'].includes(url.searchParams.get('pbNativeOverview'))){
   const snapshot=store.get('localBusiness:v1:'+lab);
   // This is the first-paint path: no refreshFinance or other network reads.

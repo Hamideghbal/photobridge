@@ -39,6 +39,10 @@ function pb2047Server(s){
  // and existing stored filenames intact.
  s=pb2047One(s,"orderPrintCopyName(safeFileName(String(b.name || 'file')), albumMode ? 1 : printCopies)","orderPrintCopyName(albumMode?safeFileName(String(b.name || 'file')):"+clean+", albumMode ? 1 : printCopies)",'customer upload before generated copies');
  s=pb2047One(s,"let name = safeFileName(String(b.name || 'file'));","let name = albumMode?safeFileName(String(b.name || 'file')):"+clean+";",'delegated upload before generated copies');
+ // Direct-customer QR/public uploads must also normalize before safeFileName.
+ s=pb2047Region(s,'const publicWalkinPresign','const publicWalkinLocal',part=>{
+  return pb2047One(part,"name = safeFileName(String(b.name || 'file'))","name = "+clean,'public photo upload before safe filename');
+ });
  // The delegated route previously re-sanitized its own '=' separator.
  const oldCopies="if (!albumMode && printCopies > 1) {const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';name=safeFileName(stem.slice(0,110)+' = '+printCopies+ext);}";
  s=pb2047One(s,oldCopies,"if (!albumMode && printCopies > 1) name=orderPrintCopyName(name,printCopies);",'delegated authoritative copy suffix');

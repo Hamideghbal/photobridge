@@ -16,18 +16,18 @@ function pb2056ManualCustomerPicker(customers){
  panel.append(search,list);root.append(trigger,panel);
  const empty={id:'',label:'انتخاب عکاسی موجود / مشتری جدید',key:''};
  const options=[empty,...customers.map(c=>{const label=String(c.name||'مشتری')+' · '+String(c.mobile||'');return {id:String(c.id),label,key:label.toLocaleLowerCase()}})];
- let value='',matches=[],limit=120;
+ let value='',matches=[],limit=32;
  const control={element:root,get value(){return value},onchange:null,close};
  function place(){if(panel.hidden)return;const rect=trigger.getBoundingClientRect(),view=window.visualViewport,top=view?.offsetTop||0,height=view?.height||window.innerHeight,bottom=top+height,below=bottom-rect.bottom-12,above=rect.top-top-12;const up=below<270&&above>below;panel.classList.toggle('pb2057Above',up);list.style.maxHeight=Math.max(40,Math.min(200,Math.floor((up?above:below)-49)))+'px'}
  function outside(event){if(!root.contains(event.target))close()}
  function close(){panel.hidden=true;trigger.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true)}
  function select(option){value=option.id;caption.textContent=option.label;trigger.title=option.label;close();trigger.focus();control.onchange?.()}
  function append(){const end=Math.min(limit,matches.length),start=list.children.length,frag=document.createDocumentFragment();for(let i=start;i<end;i++){const option=matches[i],button=node('button','pb2056ManualOption',option.label);button.type='button';button.title=option.label;button.setAttribute('aria-pressed',String(option.id===value));button.onclick=()=>select(option);frag.append(button)}list.append(frag)}
- function render(){const query=search.value.trim().toLocaleLowerCase();matches=query?options.filter(o=>o.key.includes(query)):options;limit=120;list.replaceChildren();list.scrollTop=0;append();if(!matches.length)list.append(node('div','pb2056ManualEmpty','عکاسی یافت نشد.'))}
+ function render(){const query=search.value.trim().toLocaleLowerCase();matches=query?options.filter(o=>o.key.includes(query)):options;limit=32;list.replaceChildren();list.scrollTop=0;append();if(!matches.length)list.append(node('div','pb2056ManualEmpty','عکاسی یافت نشد.'))}
  function open(){panel.hidden=false;trigger.setAttribute('aria-expanded','true');search.value='';render();place();document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);try{search.focus({preventScroll:true})}catch{search.focus()}}
  trigger.onclick=()=>panel.hidden?open():close();
  search.oninput=render;
- list.addEventListener('scroll',()=>{if(list.scrollTop+list.clientHeight>=list.scrollHeight-48&&limit<matches.length){limit+=120;append()}});
+ list.addEventListener('scroll',()=>{if(list.scrollTop+list.clientHeight>=list.scrollHeight-48&&limit<matches.length){limit+=32;append()}});
  root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close()});
  root.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden){event.preventDefault();event.stopPropagation();close();trigger.focus()}else if(event.key==='ArrowDown'&&event.target===search){const first=list.querySelector('button');if(first){event.preventDefault();first.focus()}}});
  return control;

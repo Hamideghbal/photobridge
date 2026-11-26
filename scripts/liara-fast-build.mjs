@@ -1509,6 +1509,8 @@ runR1314(process.execPath,['--test','scripts/test-r1969-frame-admin-renewal.cjs'
 await deployStep('./enable-r1970-thermal-model-dialogs.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs'],{stdio:'inherit'});
+// R2044: verify the actual React mobile composer and compressed web payload after the final asset refresh.
+runR1314(process.execPath,['--test','scripts/test-r2044-native-mobile-photo.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1970-model-dialogs.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1960-album-cover-priced-sizes.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1961-photographer-cover-size-map.cjs'],{stdio:'inherit'});

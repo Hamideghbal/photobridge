@@ -4,7 +4,12 @@ function pb2036MobilePhoto(w){
  const ua=String(navigator.userAgent||'');
  if(/Windows/i.test(ua))return false;
  if(!/Android|iPhone|iPad|iPod/i.test(ua)&&!(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)&&!matchMedia('(pointer:coarse)').matches)return false;
- if(document.documentElement.classList.contains('pb1126Embedded')||new URLSearchParams(location.search).get('pbDesktopContent')==='1')return false;
+ if(document.documentElement.classList.contains('pb1126Embedded'))return false;
+ // A stale desktop query string on a real top-level handset is not an iframe.
+ const q=new URLSearchParams(location.search);
+ if(q.get('pbLabChooser')==='1')return false;
+ const chooser=document.querySelector?.('#pbR99LabChooser');
+ if(chooser&&!chooser.hidden&&chooser.getBoundingClientRect?.().height>0&&getComputedStyle(chooser).display!=='none')return false;
  if(!/^\/photographer\/(?:orders|upload)(?:\/|$)/.test(location.pathname))return false;
  return w.classList.contains('simplePrintPilotWorkspaceMode')||!!w.querySelector('.simplePrintPilot');
 }

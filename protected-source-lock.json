@@ -4,7 +4,7 @@
   "baseline": "9dc2a89ca1a1742bd6997a197283f91e93f82ee3",
   "verifyCommand": "node verify-release-lock.cjs && node run-release-regressions.cjs && node prepare-access-runtime.cjs && node prepare-assets.cjs && node verify-native-ui.cjs",
   "sourceFiles": {
-    "main.cjs": "c16075f845625a9478446200f8e85d4825498d5136a0697c302f0b518db095c7",
+    "main.cjs": "982b4b9d1fc6752d7432e059896829dda4329d9ed7be69344c4438355027ef6d",
     "host.cjs": "ce551d0d9ddd5f280e73b669acc1b0d203cfa5179610aa0498f73df23a3f00bc",
     "sync.cjs": "f371d173902ab6a5b224157a4578566aac6ec95a4d373c9746d947eb2a980c0d",
     "update-install-gate.cjs": "5a9f98495c12a50a96e4c6a0a7f5838fe8ac6ad255673300b359f85c5ea44bec",

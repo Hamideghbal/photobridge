@@ -1,0 +1,35 @@
+// Native Lab only, after R2050. Preserve invoice reconciliation before related reads.
+function pb2051Patch(s){
+ if(s.includes('/* PB2051 progressive native finance */'))return s;
+ const a=s.indexOf('function ub({role:t,'),b=s.indexOf('}function hb(',a);
+ if(a<0||b<=a)throw Error('[R2051] finance component missing');
+ let fin=s.slice(a,b+1);
+ const once=(from,to,label)=>{
+  if(fin.split(from).length!==2)throw Error('[R2051] '+label+' anchor '+(fin.split(from).length-1));
+  fin=fin.replace(from,()=>to);
+ };
+ once('[r,o]=x.useState([])','[r,o]=x.useState([]),[pb2051InvoicesReady,pb2051SetInvoicesReady]=x.useState(false),[pb2051ReceiptsState,pb2051SetReceiptsState]=x.useState("loading"),pb2051ReceiptsLoaded=x.useRef(false),pb2051ReceiptsFlight=x.useRef(null)','progress state');
+ // Commit each response independently, preserving the event-driven refresh.
+ const start=fin.indexOf('const extraPath=w==="payments"?'),end=fin.indexOf('}else{',start);
+ if(start<0||end<start)throw Error('[R2051] focused load region');
+ const old=fin.slice(start,end);
+ if(!old.includes('const Ot=await Me(ke);')||!old.includes('C(Et.customers||[])')||!old.includes('S(extra?.payments||[])'))throw Error('[R2051] unexpected loader');
+ const replacement='const extraPath=w==="expenses"?"/api/lab/finance/expenses":w==="ledger"?"/api/lab/finance/ledger":null;const Ot=await Me(ke);o(Ot.invoices||[]);pb2051SetInvoicesReady(true);const summary=Me("/api/lab/finance/summary?"+At.toString()).then(Et=>{f(Et.summary||null);C(Et.customers||[]);if(!z&&Et.customers?.length)q(current=>current||String(Et.customers[0].id));});const receipts=pb2051LoadReceipts();const extra=extraPath?Me(extraPath).then(data=>{if(w==="expenses")I(data?.expenses||[]);if(w==="ledger")k(data?.transactions||[])}):Promise.resolve();await Promise.all([summary,receipts,extra]);';
+ fin=fin.slice(0,start)+replacement+fin.slice(end);
+ const helper='const pb2051LoadReceipts=()=>{if(pb2051ReceiptsFlight.current)return pb2051ReceiptsFlight.current;if(!pb2051ReceiptsLoaded.current)pb2051SetReceiptsState("loading");const pending=Me("/api/lab/finance/payments").then(data=>{S(data.payments||[]);pb2051ReceiptsLoaded.current=true;pb2051SetReceiptsState("ready")},()=>{if(!pb2051ReceiptsLoaded.current)pb2051SetReceiptsState("error")});pb2051ReceiptsFlight.current=pending;pending.finally(()=>{if(pb2051ReceiptsFlight.current===pending)pb2051ReceiptsFlight.current=null});return pending;};';
+ once('const pb1569FinanceLoader=x.useRef(null);',helper+'const pb1569FinanceLoader=x.useRef(null);','receipt coalescing');
+ once('pb1569LoadedFinanceView.current=w;\n   const endpoint=w==="payments"?','pb1569LoadedFinanceView.current=w;\n   if(w==="payments"){if(!pb2051ReceiptsLoaded.current)pb2051LoadReceipts();return;}\n   const endpoint=w==="payments"?','receipt tab warm path');
+ // First show confirmed invoices; do not wait for summary or receipts.
+ once('m?e.jsx("div",{className:"card loadingBox",children:"در حال دریافت اطلاعات مالی…"})','(m&&!(t==="lab"&&pb2051InvoicesReady&&["invoices","payments","statement"].includes(w)))?e.jsx("div",{className:"card loadingBox",children:"در حال دریافت اطلاعات مالی…"})','progressive initial render');
+ // Never mistake unfinished receipts for an empty list.
+ once('children:pb1420Payments.length?','children:t==="lab"&&pb2051ReceiptsState!=="ready"?e.jsxs("div",{className:"pb2051FinanceProgress",role:"status",children:[pb2051ReceiptsState==="error"?"دریافت اطلاعات انجام نشد.":"در حال دریافت‌ها…",pb2051ReceiptsState==="error"&&e.jsx("button",{type:"button",className:"primary",onClick:()=>pb2051LoadReceipts(),children:"تلاش مجدد"})]}):pb1420Payments.length?','receipt waiting state');
+ const payStart=fin.indexOf('const pb1420Payments=pb1822FinanceNewestFirst('),payEnd=fin.indexOf(';',payStart);
+ if(payStart<0||payEnd<=payStart)throw Error('[R2051] receipt computation');
+ const pay=fin.slice(payStart+'const pb1420Payments='.length,payEnd);
+ fin=fin.slice(0,payStart)+'const pb1420Payments=x.useMemo(()=>'+pay+',[h,r,t,pb1420PaymentCustomer])'+fin.slice(payEnd);
+ const statement=fin.indexOf('w==="statement"&&e.jsxs("div",{className:"customerStatementWorkspace"');
+ if(statement<0)throw Error('[R2051] statement view');
+ const paper=fin.indexOf(',_&&e.jsxs(e.Fragment,{children:[',statement);
+ if(paper>=0)fin=fin.slice(0,paper)+',t==="lab"&&D&&!_&&e.jsx("div",{className:"pb2051FinanceProgress",role:"status",children:"در حال دریافت حساب معین…"})'+fin.slice(paper);
+ return s.slice(0,a)+fin+s.slice(b+1)+'\n/* PB2051 progressive native finance */\n';
+}

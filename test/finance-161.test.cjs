@@ -32,3 +32,18 @@ test('PB165 index and pagination preserve original first match and full list',()
  assert.deepEqual(Array.from({length:201},(_,i)=>pb2063TablePage(rows,'',i+1).rows).flat(),rows);
  assert(read('finance-dashboard-160.cjs').includes('pb165ExtraTimes'));
 });
+
+test('PB165 expenses are independent, ledger waits for invoice, warm navigation does not re-request, old account response is rejected',async()=>{
+ const code=read('finance-dashboard-160.cjs'),mod={exports:{}};new Function('module',code+'\nmodule.exports.state=state;')(mod);
+ const state=mod.exports.state;let scope='lab-a',calls=[],pending=[],published=[];
+ const env={URLSearchParams:class{set(){}toString(){return ''}},x:{useRef:current=>({current}),useState:current=>[current,()=>{}]},z:'',Le:'',Ke:'',Sr:()=>scope,oh:()=>'lab',yg:()=>null,Me:url=>{calls.push(url);return new Promise(resolve=>pending.push({url,resolve}))},f:()=>{},C:()=>{},o:()=>{},S:()=>{},I:data=>published.push(data),k:()=>{},$s:()=>'',Pe:()=>{},d:()=>{},A:()=>{},Re:()=>{}};
+ const fn=new Function(...Object.keys(env),'let placeholder=null'+state+';return {load:pb160Load,selected:pb160Selected};')(...Object.values(env));
+ const settle=(match,data)=>{const i=pending.findIndex(p=>p.url.includes(match));assert(i>=0,match);pending.splice(i,1)[0].resolve(data)};
+ const expense=fn.selected('expenses',true,true);
+ assert(calls[0].endsWith('/expenses'));settle('/expenses',{expenses:[1]});settle('pbNativeOverview=customers',{summary:{},customers:[]});await expense;await Promise.resolve();
+ const count=calls.length;await fn.selected('expenses',true,true);assert.equal(calls.length,count);
+ const stale=fn.load('expenses',true);scope='lab-b';settle('/expenses',{expenses:[2]});await stale;assert.deepEqual(published,[[1]]);
+ const ledger=fn.selected('ledger',true,true);assert(calls.at(-1).includes('pbNativeInvoiceView=snapshot'));settle('pbNativeInvoiceView=snapshot',{invoices:[]});
+ for(let i=0;i<10&&!pending.some(p=>p.url.includes('pbNativeInvoiceView=live'));i++)await Promise.resolve();assert(!pending.some(p=>p.url.endsWith('/ledger')));settle('pbNativeInvoiceView=live',{invoices:[]});
+ for(let i=0;i<10&&!pending.some(p=>p.url.endsWith('/ledger'));i++)await Promise.resolve();settle('/ledger',{transactions:[]});settle('pbNativeOverview=customers',{summary:{},customers:[]});await ledger;
+});

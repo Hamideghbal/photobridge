@@ -14,6 +14,15 @@ async function run(){
    if(Number(app.getVersion().split('.')[2])>=143)assert(entry.includes('className:"pbNativeQueueSkeleton'),'The bundled UI does not support the native order loading cards');
    if(Number(app.getVersion().split('.')[2])>=160){assert(entry.includes('/* PB160 dashboard first */')&&entry.includes('pb161ShowStatement')&&!entry.includes('pb160Photographers'),'The verified bundled UI lacks the latest dashboard/statement patch');}
    if(Number(app.getVersion().split('.')[2])>=162){assert(entry.includes('pbNativeReceiptView=')&&entry.includes('data-pb162-invoice-all')&&entry.includes('/* PB162 inline backup */'),'The verified bundled UI lacks receipt/backup changes');}
+   if(Number(app.getVersion().split('.')[2])>=165){
+    assert(entry.includes('/* PB165 native performance */')&&entry.includes('pb2063Options=x.useMemo')&&entry.includes('pb165ExtraTimes'),'Missing native performance renderer');
+    const perf=require('./native-performance-165.cjs');
+    const intake=perf.patchNativeIntake(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8')));
+    const manual=perf.patchManual(fs.readFileSync(path.join(root,'photobridge-r1176-lab-finance.js'),'utf8'));
+    assert(intake.includes('pb2063ByHash.get(hash)')&&intake.includes('pb2063FilesById.get(item.fileId)'),'Missing native intake index');
+    assert(manual.includes("let value='',matches=[],limit=32"),'Missing bounded manual customer picker');
+    new Function(intake);new Function(manual);
+   }
    if(Number(app.getVersion().split('.')[2])>=145){
     const intake=require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8'));
     assert(intake.includes('pbNativeIntakePhotoPicker'),'The bundled UI does not support automatic intake photo insertion');

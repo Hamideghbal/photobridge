@@ -63,6 +63,23 @@ function pb2047Server(s){
  });
  return s+'\n'+pb2047CleanUploadName.toString()+'\n'+pb2047UniqueUploadBase.toString()+'\n/* PB2047 server */\n';
 }
+// R1431 deliberately hid the statement submit for Lab; R2033 later
+// changed only its customer callback. Preserve the complete original
+// customer button expression and restore a separate Lab-only control.
+function pb2048StatementFilters(filters){
+ const label='children:D?"در حال محاسبه…":"نمایش حساب"})';
+ if(filters.split(label).length!==2)throw Error('[R2048] statement submit label not unique');
+ const end=filters.indexOf(label)+label.length;
+ const start=filters.lastIndexOf('e.jsx("button",{',end-label.length);
+ if(start<0)throw Error('[R2048] statement submit button missing');
+ const original=filters.slice(start,end);
+ if(!original.includes('onClick:')||!original.includes('disabled:D'))throw Error('[R2048] unexpected statement submit props');
+ const condition='t!=="lab"&&';
+ const alreadyCustomerOnly=filters.slice(start-condition.length,start)===condition;
+ const legacy=alreadyCustomerOnly?start-condition.length:start;
+ const newLab='t==="lab"&&e.jsx("button",{type:"button",className:"primary pb2047StatementRange",disabled:D,onClick:async()=>{const error=pb2047RangeError(z,_e,je,$s);if(error){alert(error);return;}const result=await b();if(result&&!(result.rows||[]).length)alert("در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.");},children:D?"در حال محاسبه…":"نمایش بازه"})';
+ return filters.slice(0,legacy)+condition+original+','+newLab+filters.slice(end);
+}
 function pb2047Ui(s){
  if(s.includes('/* PB2047 Lab UI */'))return s;
  // Filename preview uses the same rule, while original persisted names and
@@ -92,14 +109,7 @@ function pb2047Ui(s){
   const buttonStart=part.indexOf('className:"statementFilters"'),buttonEnd=part.indexOf('className:"statementActions"',buttonStart);
   if(buttonStart<0||buttonEnd<=buttonStart)throw Error('[R2047] statement filters missing');
   let filters=part.slice(buttonStart,buttonEnd);
-  // Website has R2001 validation; native still uses original callback.
-  const old='className:"primary",disabled:D||t==="lab"&&!z,';
-  filters=pb2047One(filters,old,'className:t==="lab"?"primary pb2047StatementRange":"primary",disabled:D,','statement apply not disabled without photographer');
-  const click=filters.indexOf('onClick:',filters.indexOf('pb2047StatementRange'));
-  const label=filters.indexOf('children:D?"در حال محاسبه…":"نمایش حساب"',click);
-  if(click<0||label<click)throw Error('[R2047] statement submit anchor');
-  const prev=filters.slice(click,label);
-  filters=filters.slice(0,click)+'onClick:t==="lab"?async()=>{const error=pb2047RangeError(z,_e,je,$s);if(error){alert(error);return;}const result=await b();if(result&&!(result.rows||[]).length)alert("در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.");}:('+prev.slice('onClick:'.length,-1)+'),children:D?"در حال محاسبه…":t==="lab"?"نمایش بازه":"نمایش حساب"'+filters.slice(label+'children:D?"در حال محاسبه…":"نمایش حساب"'.length);
+  filters=pb2048StatementFilters(filters);
   return part.slice(0,buttonStart)+filters+part.slice(buttonEnd);
  });
  return s+'\n'+[pb2047CleanUploadName,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange].map(f=>f.toString()).join('\n')+'\n/* PB2047 Lab UI */\n';

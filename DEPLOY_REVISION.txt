@@ -1,1 +1,1 @@
-2026-11-26-r2061-finance-toolbar-build-compat
+2026-11-26-r2062-finance-toolbar-regression-test-fix

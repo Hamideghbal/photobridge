@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const read=p=>fs.readFileSync(p,'utf8');
-const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047UniqueUploadBase,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server,pb2048StatementFilters}')();
+const api=new Function(read('scripts/r2047-lab-print-finance-patch.js.txt')+'\nreturn {pb2047CleanUploadName,pb2047UniqueUploadBase,pb2047PrintMarked,pb2047Downloaded,pb2047RangeError,pb2047InRange,pb2047Ui,pb2047Server,pb2048StatementFilters,pb2049FinanceAssetUrl}')();
 test('R2047 removes arbitrary user suffix before the file extension',()=>{
  const f=api.pb2047CleanUploadName;
  for(const [input,output] of [['IMG_201=2.jpg','IMG_201.jpg'],['عکس = قاب = 3.JPG','عکس.JPG'],['A=S:Frame.png','A.png'],['A=foo.bar.jpeg','A.jpeg'],['A=.tif','A.tif'],['A=any','A'],['=4.jpg','photo.jpg'],['a.b.jpg','a.b.jpg'],['folder=1/IMG=2.jpg','IMG.jpg']])assert.equal(f(input),output,input);
@@ -53,6 +53,20 @@ test('R2048 handles actual R1431 hidden Lab submit and R2033 customer validation
   buttons=render('customer','','2026-11-01','2026-11-26');assert.equal(buttons.length,1);assert.equal(buttons[0].children,'نمایش حساب');await buttons[0].onClick();assert.equal(calls,3);
  }
 });
+test('R2049 keeps finance cache invalidation and R1960/R1897 final URL contract together',()=>{
+ for(const raw of [
+  '/assets/index-UIRefine-v655-r84.js?v=r1159&nativePhoto=r2044&albumSizes=r1960',
+  '/lab-desktop-ui/assets/index-UIRefine-v655-r84.js?v=r1159&albumSizes=r1960&labPrintFinance=r2047&labStatement=r2048&labStage=r1956',
+  '/assets/index-UIRefine-v655-r84.js?v=r1159&labStage=r1894&albumSizes=r1960&labFinanceCache=r2049'
+ ]){
+  const patched=api.pb2049FinanceAssetUrl(raw);
+  assert.equal(api.pb2049FinanceAssetUrl(patched),patched);
+  const final=patched.replace(/&labStage=r\d+/g,'')+'&labStage=r1956';
+  assert.match(final,/albumSizes=r1960&labStage=r1956$/);
+  for(const tag of ['labPrintFinance=r2047','labStatement=r2048','labFinanceCache=r2049','albumSizes=r1960','labStage=r1956'])assert.equal(final.split(tag).length,2);
+  assert(final.startsWith(raw.split('&')[0]));
+ }
+});
 test('R2047 final server and Lab web/Windows payloads contain matching fixes and integrity metadata',()=>{
  const s=read('dist/api/server.js');
  assert(s.includes('/* PB2047 server */'));
@@ -68,7 +82,7 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
   assert(ui.includes('t==="lab"&&e.jsx("button",{type:"button",className:"primary pb2047StatementRange"'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی فاکتوری وجود ندارد.'));
   assert(ui.includes('در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.'));
-  assert(html.includes('labPrintFinance=r2047'));assert(html.includes('pb2047LabFinanceStyle'));
+  assert(html.includes('labPrintFinance=r2047'));assert.match(html,/labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049&albumSizes=r1960&labStage=r1956/);assert(html.includes('pb2047LabFinanceStyle'));
   assert.equal(api.pb2047Ui(ui),ui);
   for(const name of [asset,'index.html']){
    const file=root+'/'+name,bytes=fs.readFileSync(file);

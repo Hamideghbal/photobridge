@@ -102,6 +102,22 @@ test('R2051 confirmed invoice rows are committed before dependent requests, and 
  const p=run.receipts(),p2=run.receipts();assert.equal(p,p2);assert.equal(calls.filter(x=>x==='/api/lab/finance/payments').length,1);
  release['/api/lab/finance/payments']({payments:[]});await p;assert(calls.includes('receipt-render'));assert(!calls.includes('summary-render'));release['/api/lab/finance/summary?']({customers:[]});await pending;assert(calls.includes('summary-render'));
 });
+test('R2052 manual picker preserves existing customer id and clears for a new customer',()=>{
+ const jsx=(type,props)=>({type,...props}),customers=[{id:'one',name:'استودیو'},{id:'two',name:'همکار'}],events=[];
+ const select={value:'',replaceChildren(...children){this.options=children},append(option){this.options.push(option)},dispatchEvent(event){events.push(event.type)}},dialog={};
+ const picker=new Function('x','e','pb2050CustomerPicker','Option','Event',read('scripts/r2052-finance-picker-parity.js.txt')+'\nreturn pb2052ManualPicker')({useState:v=>[v,()=>{}]},{jsx},'picker',class {constructor(label,value){this.label=label;this.value=value}},class {constructor(type){this.type=type}});
+ const tree=picker({customers,select,dialog});assert.equal(tree.portalTarget,dialog);assert.equal(tree.modal,true);
+ tree.onChange('two');assert.equal(select.value,'two');assert.equal(select.options.length,2);
+ tree.onChange('');assert.equal(select.value,'');assert.equal(select.options.length,1);
+ tree.onChange('invalid');assert.equal(select.value,'');assert.deepEqual(events,['change','change','change']);
+});
+test('R2052 invoice selection keeps optional credit payment and filters by exact customer',()=>{
+ const jsx=(type,props)=>({type,...props}),picker=new Function('x','e','wn','V',read('scripts/r2052-finance-picker-parity.js.txt')+'\nreturn pb2052InvoiceChoice')({useMemo:fn=>fn()},{jsx},'Select',String);
+ const rows=[{id:'i1',customer_id:'a',number:12,customer_name:'A',balance:120},{id:'i2',customer_id:'b',number:13,customer_name:'B',balance:130}];
+ const tree=picker({rows,customerId:'a',value:'i1',onChange:()=>{}});
+ assert.deepEqual(tree.children.options.map(row=>row.value),['','i1']);
+ assert.equal(picker({rows,customerId:'',value:'',onChange:()=>{}}).children.options.length,3);
+});
 test('R2047 final server and Lab web/Windows payloads contain matching fixes and integrity metadata',()=>{
  const s=read('dist/api/server.js');
  assert(s.includes('/* PB2047 server */'));
@@ -129,9 +145,15 @@ test('R2047 final server and Lab web/Windows payloads contain matching fixes and
    assert(ui.includes('/* PB2051 progressive native finance */')&&ui.includes('pb2051PickerFrame'));
    assert(ui.includes('pb2051SetInvoicesReady(true)')&&ui.includes('pb2051LoadReceipts()'));
    assert(html.includes('financeFirstLoad=r2051')&&html.includes('pb2051FinanceStyle'));
+   assert(ui.includes('/* PB2052 finance picker parity */')&&ui.includes('mountCustomerPicker:pb2052MountManualPicker'));
+   assert(ui.includes('e.jsx(pb2050CustomerPicker,{value:pb1420PaymentCustomer,customers:E'));
+   assert(ui.includes('e.jsx(pb2050CustomerPicker,{statement:true,modal:true,showBalance:true'));
+   assert(ui.includes('e.jsx(pb2050CustomerPicker,{statement:true,modal:true,value:id'));
+   assert(html.includes('financePicker=r2052')&&html.includes('pb2052FinancePickerStyle'));
+   const manual=read(root+'/photobridge-r1176-lab-finance.js');assert(manual.includes('/* PB2052 manual finance picker */'));assert(manual.includes('if(!mountCustomerPicker)for(const customer of customers)'));assert(manual.includes('notify(message);Promise.resolve().then(()=>refresh())'));
   }else assert(!ui.includes('/* PB2050 native finance responsiveness */'));
 
-  for(const name of [asset,'index.html']){
+  for(const name of [asset,'index.html',...(root.endsWith('/lab-desktop-ui')?['photobridge-r1176-lab-finance.js']:[])]){
    const file=root+'/'+name,bytes=fs.readFileSync(file);
    for(const [suffix,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(file+suffix))assert(decode(fs.readFileSync(file+suffix)).equals(bytes),'stale compressed '+file);
    if(root.endsWith('lab-desktop-ui')){const m=JSON.parse(read(root+'/manifest.json'));assert.equal(m.files.find(x=>x.name===name)?.sha256,crypto.createHash('sha256').update(bytes).digest('hex'))}

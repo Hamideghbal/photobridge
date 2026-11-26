@@ -80,6 +80,13 @@ function pb2048StatementFilters(filters){
  const newLab='t==="lab"&&e.jsx("button",{type:"button",className:"primary pb2047StatementRange",disabled:D,onClick:async()=>{const error=pb2047RangeError(z,_e,je,$s);if(error){alert(error);return;}const result=await b();if(result&&!(result.rows||[]).length)alert("در بازه انتخاب‌شده برای این عکاسی گردش مالی وجود ندارد.");},children:D?"در حال محاسبه…":"نمایش بازه"})';
  return filters.slice(0,legacy)+condition+original+','+newLab+filters.slice(end);
 }
+// Keep R1960 albumSizes immediately before R1897's final labStage token.
+// The finance keys must be inserted BEFORE albumSizes, not appended after it.
+function pb2049FinanceAssetUrl(url){
+ const clean=url.replace(/&(?:labPrintFinance|labStatement|labFinanceCache)=r\d+/g,'');
+ const anchor='&albumSizes=r1960';
+ return pb2047One(clean,anchor,'&labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049'+anchor,'R2049 album cache anchor');
+}
 function pb2047Ui(s){
  if(s.includes('/* PB2047 Lab UI */'))return s;
  // Filename preview uses the same rule, while original persisted names and

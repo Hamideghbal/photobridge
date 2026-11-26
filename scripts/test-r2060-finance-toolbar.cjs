@@ -2,16 +2,15 @@
 test('receipt date range includes endpoints, discounts and all records',()=>{const date=d=>d?String(d).slice(0,10):"";const rows=[{paid_at:'2026-11-25'},{issued_at:'2026-11-26'},{paid_at:'2026-11-27'}];assert.equal(rows.filter(r=>pb2060Within(r,{from:'2026-11-25',to:'2026-11-26'},date)).length,2);assert.equal(rows.filter(r=>pb2060Within(r,{from:'',to:''},date)).length,3);assert.equal(rows.filter(r=>pb2060Within(r,{from:'2026-11-26',to:'2026-11-26'},date)).length,1)});
 test('final web and native assets contain shared controls, scoped receipt filter, preserved original actions and valid hashes',()=>{for(const root of ['dist/web','dist/web/lab-desktop-ui']){const file=root+'/assets/index-UIRefine-v655-r84.js',bytes=fs.readFileSync(file),s=bytes.toString(),html=fs.readFileSync(root+'/index.html','utf8');assert(s.includes('/* PB2060 shared finance toolbar */'));assert.equal(patch2060(s),s);assert(s.includes('pb2060Receipts.map('));assert(s.includes('pb2060Receipts.length'));assert(s.includes('pb2060StatementRequest.current'));assert(s.includes('نمایش ماه آخر'));assert(s.includes('نمایش با جزئیات'));assert(s.includes('نمایش خلاصه'));assert(s.includes('ثبت پرداخت'));assert(s.includes('ثبت تخفیف'));assert(html.includes('sharedFinance=r2061'));assert(html.includes('pb2060FinanceToolbarStyle'));assert(s.includes('data-pb2060-range'),'R2060 range attribute must be present in the compiled JavaScript component');for(const [ext,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(file+ext))assert(decode(fs.readFileSync(file+ext)).equals(bytes));if(root.endsWith('/lab-desktop-ui')){const manifest=JSON.parse(fs.readFileSync(root+'/manifest.json'));for(const name of ['assets/index-UIRefine-v655-r84.js','index.html'])assert.equal(manifest.files.find(row=>row.name===name)?.sha256,crypto.createHash('sha256').update(fs.readFileSync(root+'/'+name)).digest('hex'))}else assert(s.includes('src:"/lab-data-backup.html?embedded=1"'))}});
 
-test('R2064 statement today uses the chosen photographer and explicit one-day range; all/month remain intact',()=>{
+test('R2065 statement has no Today; month/all/custom remain; invoice and receipt keep Today',()=>{
  const source=fs.readFileSync('scripts/r2060-finance-toolbar.cjs','utf8'),module={exports:{}};
- let picked=[];
- const e={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},x={useMemo:fn=>fn()};
+ const e={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},x={useMemo:fn=>fn()};let picked=[];
  new Function('module','e','x','$s','wn','Hs',source+'\nmodule.exports.common=pb2060Common;')(module,e,x,()=> '2026-11-26',()=>{},()=>{});
- const common=module.exports.common;
- const make=customer=>common({view:'statement',customers:[],customer,applied:{from:'2026-11-26',to:'2026-11-26'},onToday:()=>picked.push('today'),onAll:()=>picked.push('all')});
- const buttons=make('studio').props.children.filter(node=>node.type==='button');
- const today=buttons.find(node=>node.props['data-pb2060-range']==='today');assert(today);assert.equal(today.props.disabled,false);assert.equal(today.props['aria-pressed'],true);today.props.onClick();buttons.find(node=>node.props['data-pb2060-range']==='all').props.onClick();assert.deepEqual(picked,['today','all']);
- assert.equal(make('').props.children.find(node=>node.props?.['data-pb2060-range']==='today').props.disabled,true);
- assert(source.includes('onToday:()=>pb2060StatementRange(day,day)'));assert(source.includes('pb2060StatementRange(range.from,range.to)'));
- for(const root of ['dist/web','dist/web/lab-desktop-ui']){const html=fs.readFileSync(root+'/index.html','utf8');assert(html.includes('statementLayout=r2064'));assert(html.includes('PB2064:'));assert(html.includes('flex-flow:row wrap!important'));assert(html.includes('position:static!important'));assert(html.includes('data-pb2060-range="today"'));}
+ const make=(view,customer)=>module.exports.common({view,customers:[],customer,applied:{from:'2026-11-26',to:'2026-11-26'},onToday:()=>picked.push('today'),onAll:()=>picked.push('all'),onApply:()=>picked.push('range')});
+ const buttons=(view,customer)=>make(view,customer).props.children.filter(node=>node?.type==='button');
+ assert.deepEqual(buttons('statement','studio').map(node=>node.props['data-pb2060-range']),['range','all']);
+ buttons('statement','studio').find(node=>node.props['data-pb2060-range']==='all').props.onClick();assert.deepEqual(picked,['all']);
+ for(const view of ['invoices','payments']){const today=buttons(view,'studio').find(node=>node.props['data-pb2060-range']==='today');assert(today);today.props.onClick();}
+ assert.deepEqual(picked,['all','today','today']);assert(source.includes('pb2060StatementRange(range.from,range.to)'));assert(source.includes('نمایش ماه آخر'));
+ for(const root of ['dist/web','dist/web/lab-desktop-ui']){const html=fs.readFileSync(root+'/index.html','utf8');assert(html.includes('statementLayout=r2065'));assert(html.includes('PB2065:'));assert(html.includes('flex-flow:row wrap!important'));assert(html.includes('position:static!important'));}
 });

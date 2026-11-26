@@ -1,7 +1,7 @@
 import fs from 'node:fs';import {execFileSync} from 'node:child_process';import {createRequire} from 'node:module';const require=createRequire(import.meta.url);
 const {patch2060}=require('./r2060-finance-toolbar.cjs');
 const {patchInlineBackup}=require('./r2059-inline-backup.cjs');
-const extraCss=`/* PB2064: keep statement dates and actions in normal layout; never overlap. */
+const extraCss=`/* PB2065: keep statement dates and actions in normal layout; never overlap. */
 html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar {
  display:flex!important;flex-flow:row wrap!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
  height:auto!important;min-height:42px!important;max-height:none!important;overflow:visible!important;box-sizing:border-box!important;
@@ -21,10 +21,7 @@ html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar 
 html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(.statementFilters,.statementActions,.pb2060Common)>button {
  position:static!important;inset:auto!important;transform:none!important;translate:none!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;white-space:nowrap!important;margin:0!important;
 }
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb2064-statement-today],
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"] {display:inline-flex!important;align-items:center!important;justify-content:center!important;}
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb2064-statement-today][aria-pressed="true"],
-html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"][aria-pressed="true"] {background:#315efb!important;color:#fff!important;border-color:#315efb!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(button[data-pb163-statement-today],button[data-pb2060-range="today"]){display:none!important;}
 
 html body #root#root#root .labRoleWorkspace .financeWorkspace .invoiceTableCard:has(.pb2060Common) .invoiceRangeToolbar{display:none!important}
 html body #root#root#root .labRoleWorkspace .financeWorkspace .invoiceListToolbar:has(>.pb2060Common)>:not(.pb2060Common,.pb1176ManualOpen){display:none!important}
@@ -42,7 +39,7 @@ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
  let html=fs.readFileSync(page,'utf8');
  if(!html.includes('&sharedFinance=r2061')){const key='&labPrintFinance=r2047';if(html.split(key).length!==2)throw Error('R2061 finance cache marker');html=html.replace(key,'&sharedFinance=r2061'+key);}
  if(!html.includes('id="pb2060FinanceToolbarStyle"'))html=html.replace('</head>','<style id="pb2060FinanceToolbarStyle">'+css+extraCss+'</style></head>');
- if(!html.includes('&statementLayout=r2064'))html=html.replace('&sharedFinance=r2061','&statementLayout=r2064&sharedFinance=r2061');
+ if(!html.includes('&statementLayout=r2065'))html=html.replace('&sharedFinance=r2061','&statementLayout=r2065&sharedFinance=r2061');
  fs.writeFileSync(page,html);
  execFileSync(process.execPath,['--check',asset],{stdio:'inherit'});
 }

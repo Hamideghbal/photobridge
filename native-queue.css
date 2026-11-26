@@ -128,3 +128,29 @@ html body #root .labRoleWorkspace .pb162BackupFrame{box-sizing:border-box;width:
 
 /* The invoice date controls can be promoted to the measured toolbar. */
 html body #root#root .labRoleWorkspace button[data-pb162-invoice-all][aria-pressed="true"]{background:#315efb!important;color:#fff!important;border-color:#315efb!important;}
+
+
+/* PB163: keep statement dates and actions in normal layout; never overlap. */
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar {
+ display:flex!important;flex-flow:row wrap!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+ height:auto!important;min-height:42px!important;max-height:none!important;overflow:visible!important;box-sizing:border-box!important;
+}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar > .statementFilters,
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar > .statementActions {
+ display:flex!important;position:relative!important;inset:auto!important;transform:none!important;translate:none!important;
+ flex:0 1 auto!important;flex-wrap:wrap!important;align-items:center!important;gap:6px!important;min-width:0!important;max-width:100%!important;
+ height:auto!important;max-height:none!important;margin:0!important;overflow:visible!important;
+}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar > .statementActions {margin-inline-start:auto!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common {flex:0 1 auto!important;flex-wrap:wrap!important;gap:6px!important;min-width:0!important;max-width:100%!important;overflow:visible!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(.statementDateLabel,.statementDateControl,.pb2060Date) {
+ position:relative!important;inset:auto!important;transform:none!important;translate:none!important;flex:0 0 116px!important;width:116px!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;overflow:visible!important;
+}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .persianDateField {width:100%!important;min-width:0!important;overflow:visible!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar :is(.statementFilters,.statementActions,.pb2060Common)>button {
+ position:static!important;inset:auto!important;transform:none!important;translate:none!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;white-space:nowrap!important;margin:0!important;
+}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb163-statement-today],
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"] {display:inline-flex!important;align-items:center!important;justify-content:center!important;}
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar button[data-pb163-statement-today][aria-pressed="true"],
+html body #root#root#root .labRoleWorkspace .financeWorkspace .statementToolbar .pb2060Common>button[data-pb2060-range="today"][aria-pressed="true"] {background:#315efb!important;color:#fff!important;border-color:#315efb!important;}

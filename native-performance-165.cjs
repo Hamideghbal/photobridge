@@ -15,7 +15,12 @@ function patchIntake(source){
  section=once(section,"const additions=[];","const additions=[],pb2063ByHash=pb2063FirstIndex(group.items,'hash');");
  // Preserve the final R1501 payload (sourceFile/sourceAction and any later
  // metadata). Replace only the lookup and update the index after the old push.
- section=once(section,"const item=group.items.find(x=>x.hash===hash)||additions.find(x=>x.hash===hash);","const item=pb2063ByHash.get(hash);");
+ // Accept verified legacy and newer source shapes, including a predicate
+ // which excludes existing-item references and formatting differences.
+ const lookup=/(?:const|let)\s+item\s*=\s*group\.items\.find\([^;]+?\)\s*\|\|\s*additions\.find\([^;]+?\)\s*;(?=[\s\S]*?additions\.push)/g;
+ const hits=[...section.matchAll(lookup)];
+ if(hits.length!==1||!hits[0][0].includes('hash')||!/\.find\([^;]*?\.hash\s*===\s*hash/.test(hits[0][0]))throw Error("R2063 intake hash lookup: "+section.slice(0,1400));
+ section=section.replace(lookup,"const item=pb2063ByHash.get(hash);");
  const newItem=/else additions\.push\(\{file,hash,size,paper,copies:1[^}]*\}\);/g;
  if([...section.matchAll(newItem)].length!==1)throw Error("R2063 new item payload changed");
  section=section.replace(newItem,match=>"else{"+match.slice(5)+"pb2063ByHash.set(hash,additions[additions.length-1]);}");
@@ -112,8 +117,24 @@ function patchRenderer(s){
  }if(f.includes('Ce=Pf("this_month"),'))f=once(f,'Ce=Pf("this_month"),','Ce=x.useMemo(()=>Pf("this_month"),[]),','month memo');s=s.slice(0,a)+f+s.slice(b+1);}
  return s+'\n/* PB165 native performance */\n';
 }
+
+function patchWalkin167(source){
+ if(source.includes('/* PB167 stable walk-in launcher */'))return source;
+ const a=source.indexOf('function mount(){'),b=source.indexOf('\nlet primaryState=',a);
+ if(a<0||b<a)throw Error('PB167 intake mount missing');
+ let mount=source.slice(a,b);
+ // Keep the original authorization, modal, submission and click handlers.
+ const target=/const\s+target\s*=[^;\n]+;/g;
+ if([...mount.matchAll(target)].length!==1||!mount.includes('pb1137LocalIntakeButton'))throw Error('PB167 intake mount target incompatible');
+ const route="const pb167Route=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname)||(location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace'));if(!pb167Route){old?.remove();return;}";
+ const targets="const pb167Visible=n=>n&&n.isConnected&&n.getClientRects().length>0;const target=[document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'),document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader'),document.querySelector('.labRoleWorkspace .labSingleHeader'),host.querySelector('.ordersWorkspace'),host.querySelector('.stageQueueWorkspace')].find(pb167Visible);";
+ const style="if(!document.getElementById('pb167IntakeStyle')){const style=document.createElement('style');style.id='pb167IntakeStyle';style.textContent='html body #root .labRoleWorkspace #pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important;position:relative!important;z-index:2!important}html body #root .labRoleWorkspace .pb1148SecondaryHeader>#pb1137LocalIntakeButton{order:-1!important;margin-inline-end:auto!important}';document.head.append(style);}";
+ mount=mount.replace(target,style+route+targets);
+ return source.slice(0,a)+'/* PB167 stable walk-in launcher */\n'+mount+source.slice(b);
+}
+
 function patchNativeIntake(s){
- s=patchIntake(s);
+ s=patchWalkin167(patchIntake(s));
  const old="for(const file of files){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');";
  if(s.includes(old)){const next="const pb165Files=[...files],pb165Hashes=new Array(pb165Files.length);let pb165Next=0,pb165Done=0;await Promise.all(Array.from({length:Math.min(3,pb165Files.length)},async()=>{for(;;){const i=pb165Next++;if(i>=pb165Files.length)return;pb165Hashes[i]=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await pb165Files[i].arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');error.textContent='در حال بررسی عکس‌ها: '+(++pb165Done)+' / '+pb165Files.length}}));for(let pb165I=0;pb165I<pb165Files.length;pb165I++){const file=pb165Files[pb165I],hash=pb165Hashes[pb165I];";s=once(s,old,next,'bounded hashing');}
  return s;

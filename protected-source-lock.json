@@ -20,7 +20,7 @@
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
     "assets/photobridge-vazirmatn.woff2": "4e3fa217d38fdafc1fea4414ceb58ca5e662cf0ab5fa735a8c8c20e8b42cad92",
     "verify-release-lock.cjs": "d1ceca41d6273635a5307db59cd42c3750b74ecf3cb34694673c665b29f13821",
-    "run-release-regressions.cjs": "edf711c53b1c98f11fabde5b79b4824d49b46a5f112830b439123b0469b6cc9e",
+    "run-release-regressions.cjs": "f65b3b6ab5e004bc57b0db4b5850769306352ec982154146e73bb25200d5c010",
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
     "build-windows-oneclick.ps1": "9f53fe4255b420421c1f4797f81636da00595149574d08526d014385ed927cbc",
@@ -63,7 +63,8 @@
     "test/finance-162.test.cjs": "7f686bdabdc4138c788676ae73bc6ae661a650c731125a4eabac0612107ddd6a",
     "native-queue.css": "d4929b69c249fcf2dce2c900f7d9651936589331731d533c77da5f60a4d1c982",
     "connection-status-164.cjs": "5d301da6730444c3c3e4b62f49f0108cec8fdf5b2557a022462618bedac3b2ae",
-    "native-performance-165.cjs": "92e31159e5e125128fb58df773b954309d411492b3de816cfce41390286c8151"
+    "native-performance-165.cjs": "0709259df35755afbbd799ce747d54dcf81f466fe4f90e38d7126fa0101d1b16",
+    "test/intake-167.test.cjs": "3da8bed912b36e542fd90906a75f9bdfa5e8c84defccee3c3d3b9183c131342b"
   },
   "packagedFiles": [
     "main.cjs",

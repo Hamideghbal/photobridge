@@ -10,20 +10,27 @@
      /\/(?:signup|register|invite|reset|password|recovery)(?:\/|$)/i.test(location.pathname);
  };
  const query=new URLSearchParams(location.search);
+ const currentPortal=()=>portalFromPath()||(/^\/equipment-rental\/book(?:\/|$)/.test(location.pathname)?'photographer':null);
+ if(!currentPortal()&&normalize(location.pathname)!=='/')return;
  if(query.has('logged_out')){try{localStorage.removeItem(KEY)}catch{};return}
  if(sensitive())return;
  // This flag prevents a second prompt on the full document navigation caused
  // by selecting a role; it is immediately removed and never authorizes access.
- const handoff=query.get('pb2087AccountEntry')==='1';
- if(handoff){
+ const TICKET='pb2092-account-handoff';
+ let handoff=false;
+ try{const saved=JSON.parse(sessionStorage.getItem(TICKET)||'null');sessionStorage.removeItem(TICKET);handoff=query.get('pb2087AccountEntry')==='1'&&saved?.path===normalize(location.pathname)&&saved.until>=Date.now()&&saved.until<=Date.now()+15000;}catch{}
+ if(query.has('pb2087AccountEntry')){
    query.delete('pb2087AccountEntry');
    try{history.replaceState(history.state,'',location.pathname+(query.toString()?'?'+query:'')+(location.hash||''))}catch{}
  }
- const currentPortal=()=>portalFromPath()||(/^\/equipment-rental\/book(?:\/|$)/.test(location.pathname)?'photographer':null);
  const portals=['photographer','lab','rental'];
  const labels={photographer:'عکاسی',lab:'لابراتوار',rental:'فروشگاه'};
  const descriptions={photographer:'ورود به پنل عکاسی',lab:'ورود به پنل مدیریت لابراتوار',rental:'ورود به پنل فروشگاه'};
- let checking=false,chooser=null,wasHidden=Boolean(document.hidden),needsResume=false;
+ let checking=false,chooser=null,wasHidden=Boolean(document.hidden),needsResume=false,authorized=handoff,blurred=false,watchTimer=0;
+ const issueTicket=path=>{try{sessionStorage.setItem(TICKET,JSON.stringify({path:normalize(path),until:Date.now()+15000}));return true}catch{return false}};
+ const move=path=>{if(!issueTicket(path))return false;location.replace(path+(path.includes('?')?'&':'?')+'pb2087AccountEntry=1');return true};
+ // Explicitly authorized same-role landing redirects only; never bypass a pending chooser.
+ window.pb2092AccountNavigate=path=>{if(!authorized||checking||needsResume||chooser)return false;const target=String(path).split('?')[0];const role=currentPortal();if(!role||!target.startsWith(routes[role]+'/'))return false;return move(path)};
  const pending=()=>document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
  const ready=()=>{
    resuming=false;checking=false;
@@ -44,11 +51,11 @@
  function remember(portal){try{localStorage.setItem(KEY,portal)}catch{}}
  function navigate(portal){
    remember(portal);
+   authorized=true;
    const current=currentPortal();
-   // Preserve an already open workspace when choosing its current account.
    if(current===portal&&(!/\/login\/?$/.test(location.pathname)))return false;
-   location.replace(routes[portal]+'?pb2087AccountEntry=1');
-   return true;
+   if(move(routes[portal]))return true;
+   authorized=false;throw Error('account_handoff_unavailable');
  }
  function choose(accounts,uncertain=false,message=''){
    return new Promise(resolve=>{
@@ -96,7 +103,7 @@
  const dismiss=()=>{if(chooser){chooser.remove();chooser=null}};
  async function check(cold){
    if(checking||chooser||sensitive()||document.hidden)return;
-   checking=true;resuming=true;pending();
+   checking=true;resuming=true;authorized=false;pending();
    let moving=false,message='';
    try{
      for(;;){
@@ -105,7 +112,8 @@
        const accounts=results.filter(x=>x&&!x.uncertain),uncertain=results.some(x=>x?.uncertain);
        if(!accounts.length&&!uncertain&&!message){
          try{localStorage.removeItem(KEY)}catch{}
-         if(normalize(location.pathname)==='/'){moving=true;location.replace('/photographer?pb2087AccountEntry=1')}
+         authorized=true;
+         if(normalize(location.pathname)==='/'){moving=move('/photographer');if(!moving)location.replace('/photographer')}
          return;
        }
        // R2090: never enter a role based on last preference, response timing,
@@ -115,39 +123,54 @@
        if(selected==='retry'){dismiss();message='';continue}
        const valid=await validSession(selected);
        if(valid&&!valid.uncertain){
-         moving=navigate(selected);
-         if(!moving)dismiss();
-         return;
+         try{moving=navigate(selected);if(!moving)dismiss();return}catch{dismiss();message='ورود انجام نشد؛ دسترسی ذخیره موقت مرورگر را بررسی و دوباره انتخاب کنید.';continue}
        }
        // No timeout or failed session probe is permission to enter a role.
        dismiss();message='اعتبار این حساب تأیید نشد. دوباره بررسی کنید.';
      }
-   }finally{if(!moving){dismiss();ready()}}
+   }finally{if(!moving){dismiss();if(needsResume&&!authorized){checking=false;resuming=false;pending();scheduleResume()}else ready()}}
  }
- // Mobile OS launches can restore the last workspace rather than start_url.
- // On a fresh top-level workspace navigation, prompt; preserve ordinary
- // same-origin navigation between workspaces after a deliberate selection.
- const internalReferrer=()=>{try{return Boolean(document.referrer)&&new URL(document.referrer).origin===location.origin}catch{return false}};
- const reloaded=()=>{try{return performance.getEntriesByType('navigation')[0]?.type==='reload'}catch{return false}};
- const initial=entryPaths.has(normalize(location.pathname))||Boolean(currentPortal()&&(!internalReferrer()||reloaded()));
- if(!handoff&&initial){if(document.hidden)needsResume=true;else void check(true)}
+ // R2092: every new top-level account document is gated, regardless of referrer.
+ // The only exemption is a consumed, path-bound, expiring handoff from a real selection.
+ if(!handoff){pending();if(document.hidden)needsResume=true;else void check(true)}
  const safeResume=()=>{
-   if(!currentPortal()||sensitive())return false;
-   const active=document.activeElement;
-   if(active?.matches?.('input,textarea,select,[contenteditable="true"]'))return false;
-   if(document.querySelector('dialog[open],.modalOverlay,.globalModalLayer,.simplePrintPilot,.uploadChoiceOverlay,.pbR85ScanBack,.pbR100F73ReturnBack,[aria-busy="true"]'))return false;
+   if(!currentPortal()&&normalize(location.pathname)!=='/'||sensitive())return false;
+   if(document.querySelector('dialog[open],.modalOverlay,.globalModalLayer,.simplePrintPilot,.uploadChoiceOverlay,.pbR85ScanBack,.pbR100F73ReturnBack,.pb2091ArchivePicker,.pb1452ArchiveDialog'))return false;
    return true;
  };
+ function scheduleResume(){
+   if(!needsResume||watchTimer||document.hidden)return;
+   watchTimer=setTimeout(()=>{watchTimer=0;resume()},250);
+ }
  function resume(){
-   if(!needsResume||checking||chooser||document.hidden||!safeResume())return;
+   if(!needsResume||checking||chooser||document.hidden)return;
+   if(!safeResume()){scheduleResume();return}
    needsResume=false;void check(false);
+ }
+ function foreground(){
+   if(document.hidden)return;
+   if(wasHidden||blurred){wasHidden=false;blurred=false;needsResume=true}
+   resume();
  }
  document.addEventListener('visibilitychange',()=>{
    if(document.hidden){wasHidden=true;return}
-   if(wasHidden){wasHidden=false;needsResume=true}
-   resume();
+   foreground();
  });
- window.addEventListener('pageshow',event=>{if(event.persisted){needsResume=true;resume()}});
- // Defer the prompt until an active scan/form/modal is finished.
- document.addEventListener('focusout',()=>{if(needsResume)setTimeout(resume,0)});
- document.addEventListener('click',()=>{if(needsResume)setTimeout(resume,0)},true);
+ window.addEventListener('blur',()=>{blurred=true});
+ window.addEventListener('focus',foreground);
+ window.addEventListener('pagehide',()=>{wasHidden=true});
+ window.addEventListener('pageshow',event=>{if(event.persisted)needsResume=true;foreground()});
+ document.addEventListener('freeze',()=>{wasHidden=true});
+ document.addEventListener('resume',foreground);
+ document.addEventListener('focusout',scheduleResume);
+ document.addEventListener('click',scheduleResume,true);
+ // Explicit, trusted same-role document navigation remains usable, with a one-use ticket.
+ document.addEventListener('click',event=>{
+   if(!event.isTrusted||event.defaultPrevented||!authorized||checking||needsResume||chooser||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button!==0)return;
+   const anchor=event.target?.closest?.('a[href]');if(!anchor||anchor.target&&anchor.target!=='_self'||anchor.hasAttribute('download'))return;
+   try{
+    const url=new URL(anchor.href,location.href),role=currentPortal();if(url.origin!==location.origin||!role||!url.pathname.startsWith(routes[role]+'/')||url.pathname===location.pathname)return;
+    if(!issueTicket(url.pathname))return;
+    url.searchParams.set('pb2087AccountEntry','1');anchor.href=url.href;
+   }catch{}
+ },true);

@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook,replaceBookingSubmit,patchChooserStartup} from './enable-r2100-photographer-booking-calendar.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook,replaceBookingSubmit,patchChooserStartup,patchVisibleCalendar} from './enable-r2100-photographer-booking-calendar.mjs';
 const html=fs.readFileSync('dist/api/equipment-rental-book.html','utf8'),s=patchBook(html);
 function extract(name,next){const a=s.indexOf('function '+name+'('),b=s.indexOf('\n'+next,a);assert.ok(a>=0&&b>a,name);return s.slice(a,b)}
 const days=new Function(extract('pb2100Adjacent','function pb2100Toggle')+'\n'+extract('pb2100Toggle','function pb2100Today')+';return pb2100Toggle')();
@@ -88,4 +88,26 @@ test('R2104 chooser startup accepts the actual R1837 build output without reintr
  assert.equal(patchChooserStartup(before+old+after),before+real+after);
  assert.equal(patchChooserStartup(before+real+after),before+real+after);
  assert.throws(()=>patchChooserStartup('unrecognized startup'),/unrecognized chooser startup contract/);
+});
+
+test('R2105 actual visible R63 calendar uses adjacent day clicks on both platforms',()=>{
+ const live=fs.readFileSync('dist/web/photobridge-r63-photographer-store.js','utf8');
+ assert.match(live,/PB2105 live day selection/);
+ assert.match(html,/liveCalendar=r2105/);
+ assert.equal(patchVisibleCalendar(live),live);
+ const a=live.indexOf('  function pb2105Adjacent'),b=live.indexOf('  function pb2105PaintWarning',a);
+ assert.ok(a>=0&&b>a);
+ const range=new Function(live.slice(a,b)+';return pb2105Range')();
+ const one=range('','','2026-11-28');
+ assert.deepEqual(one,{start:'2026-11-28',end:'',warning:''});
+ const gap=range(one.start,one.end,'2026-11-30');
+ assert.match(gap.warning,/فاصله/);assert.equal(gap.end,'');
+ const two=range(one.start,one.end,'2026-11-29');
+ const three=range(two.start,two.end,'2026-11-30');
+ assert.deepEqual(three,{start:'2026-11-28',end:'2026-11-30',warning:''});
+ assert.match(range(three.start,three.end,'2026-11-29').warning,/فاصله/);
+ assert.deepEqual(range(three.start,three.end,'2026-11-30'),two);
+ assert.deepEqual(range(one.start,one.end,'2026-11-28'),{start:'',end:'',warning:''});
+ assert.match(live,/pb2105Warning=next.warning;rs=next.start;re=next.end;render\(\);pb2105PaintWarning\(\)/);
+ assert.match(live,/if\(!pb2105Camera\(\)\)/);
 });

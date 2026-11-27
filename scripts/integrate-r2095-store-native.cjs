@@ -9,7 +9,7 @@ function patchMain(s){
  const anchor=" sync=new Sync({store,request,isOnline:()=>net.isOnline(),notify:b=>{";
  s=once(s,anchor,[
  " /* R2095 Store native window and updates */",
- " const cameraAccount=()=>{const auth=store.get('auth'),shopId=store.get('shopId'),shop=store.overview()?.shop,userId=auth?.user?.id||auth?.userId||auth?.id;if(!auth||!shopId||!userId||!shop||String(shop.id)!==String(shopId)||!['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(shop.business_category||'equipment_rental_sale')))return null;return String(shopId)+':'+String(userId)+':'+base};",
+ " const cameraAccount=()=>{const auth=store.get('auth'),shopId=store.get('shopId'),userId=auth?.user?.id||auth?.userId||auth?.id;if(!auth||!shopId||!userId)return null;let shop;try{shop=store.overview()?.shop}catch{return null}if(!shop||String(shop.id)!==String(shopId)||!['equipment_rental','equipment_sale','equipment_rental_sale'].includes(String(shop.business_category||'equipment_rental_sale')))return null;return String(shopId)+':'+String(userId)+':'+base};",
  " let programUpdates=null,legacyUpdater=null,storeAlerts=null,alertWindow=null;",
  " const refreshLegacy=()=>{if(!legacyUpdater)return;const frame=store.get('auth')&&!cameraAccount()&&['frame','chassis','frame_chassis'].includes(String(store.overview()?.shop?.business_category||''));legacyUpdater.autoInstallOnAppQuit=Boolean(frame);if(frame)void legacyUpdater.checkForUpdates().catch(()=>{})};",
  anchor+"if(cameraAccount())return;"
@@ -24,7 +24,7 @@ function patchMain(s){
  const init=[
  " const {AlertWindow}=require('./alert-window.cjs'),{StoreAlerts}=require('./store-alerts.cjs');",
  " alertWindow=new AlertWindow({BrowserWindow,ipcMain,store,getAccount:cameraAccount,getWorkArea:()=>screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea,open:async items=>{const account=cameraAccount();await show();if(!account||cameraAccount()!==account)return;const targets=[...new Set(items.map(x=>x.target))];if(targets.length===1&&['bookings','sales','photographers'].includes(targets[0]))await win.webContents.executeJavaScript('window.selectRentalTab?.('+JSON.stringify(targets[0])+',{reloadExtra:false})').catch(()=>{})}});",
- " storeAlerts=new StoreAlerts({store,request,getAccount:cameraAccount,present:(...args)=>alertWindow.present(...args),dismiss:()=>alertWindow.dismiss()});",
+ " storeAlerts=new StoreAlerts({store,request,getAccount:cameraAccount,present:(...args)=>alertWindow.present(...args),dismiss:reason=>{if(reason==='empty'&&alertWindow.settingsOnly&&cameraAccount())return;alertWindow.dismiss()}});",
  " storeAlerts.start();app.on('before-quit',()=>{storeAlerts.stop();alertWindow.destroy()});",
  " const canInstall=async()=>{if(!cameraAccount()||sync.flight||uiChecking||printInFlight.size||store.rows().some(r=>['pending','conflict'].includes(r.state)))return false;try{return await win.webContents.executeJavaScript("+JSON.stringify("!Array.from(document.querySelectorAll('dialog[open],[role=\"dialog\"],form[data-busy=\"1\"],[id*=\"Modal\"],[id*=\"modal\"]')).some(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden')&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||'')")+")}catch{return false}};",
  " let installPaused=false;",

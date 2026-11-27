@@ -7,7 +7,7 @@ const html=fs.readFileSync('dist/web/index.html','utf8');
 const source=html.match(/<script id="pb1493MobileSessionResume">([\s\S]*?)<\/script>/)?.[1];
 assert.ok(source?.includes('PB2087'));
 function fixture({path='/photographer',search='',roles=['photographer','lab','rental'],standalone=true,mobile=true,embedded=false}={}){
- const requests=[],redirects=[],classes=new Set(),events={},windowEvents={},storage=new Map();
+ const requests=[],redirects=[],classes=new Set(),events={},windowEvents={},storage=new Map(),selectionTimers=[];
  const roleData={
   photographer:{user:{labRole:'customer',name:'آتلیه آبی'}},
   lab:{user:{labRole:'lab_admin'},lab:{id:'l1',name:'لابراتوار آبی'}},
@@ -28,12 +28,12 @@ function fixture({path='/photographer',search='',roles=['photographer','lab','re
   location:{pathname:path,search,hash:'',origin:'https://photobridge.ir',href:'https://photobridge.ir'+path+search,replace:u=>redirects.push(u)},
   history:{state:null,replaceState(){}},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
   fetch:async(url,init)=>{const portal=init?.headers?.['x-photobridge-portal'];requests.push(portal);return{ok:roles.includes(portal),json:async()=>roleData[portal]}},
-  URL,URLSearchParams,Headers,Request,AbortController,setTimeout,clearTimeout,Date,Event:class{constructor(type){this.type=type}},
+  URL,URLSearchParams,Headers,Request,AbortController,setTimeout:(fn,ms)=>ms<=1200?(selectionTimers.push(fn),0):setTimeout(fn,ms),clearTimeout,Date,Event:class{constructor(type){this.type=type}},
   addEventListener:(k,fn)=>windowEvents[k]=fn,dispatchEvent:()=>{}};
  ctx.window=ctx;ctx.top=embedded?{}:ctx;
  vm.runInNewContext(source,ctx);
  const buttons=()=>body.children[0]?.children[0]?.children.filter(n=>n.tag==='button')||[];
- return {requests,redirects,classes,buttons,events,doc,windowEvents,roles,storage};
+ return {requests,redirects,classes,buttons,events,doc,windowEvents,roles,storage,finishSelection:()=>selectionTimers.splice(0).forEach(fn=>fn())};
 }
 async function settle(){for(let i=0;i<12;i++)await new Promise(r=>setImmediate(r))}
 test('R2087: three live sessions show three named options, never auto-select',async()=>{
@@ -42,6 +42,9 @@ test('R2087: three live sessions show three named options, never auto-select',as
  assert.deepEqual(f.buttons().map(b=>b.dataset.portal),['photographer','lab','rental']);
  assert.equal(f.buttons()[1].children[1].children[1].textContent,'لابراتوار آبی');
  f.buttons()[1].handlers.click();await settle();
+ assert.equal(f.buttons().length,3);assert.deepEqual(f.redirects,[]);
+ assert.equal(f.buttons()[1].attrs['aria-pressed'],'true');
+ f.finishSelection();await settle();
  assert.deepEqual(f.redirects,['/lab?pb2087AccountEntry=1']);
  assert.equal(f.requests.filter(p=>p==='lab').length,2);
 });
@@ -55,17 +58,25 @@ test('R2087: expired roles, deep links, handoff and browser/desktop/iframe do no
  }
 });
 test('R2087: choosing current role preserves the open workspace',async()=>{
- const f=fixture();await settle();f.buttons()[0].handlers.click();await settle();
+ const f=fixture();await settle();f.buttons()[0].handlers.click();f.finishSelection();await settle();
  assert.deepEqual(f.redirects,[]);assert.equal(f.buttons().length,0);assert.equal(f.classes.has('pb2087AccountPending'),false);
 });
 test('R2087: restored document can select an account without cold entry',async()=>{
  const f=fixture({path:'/lab/finance'});await settle();assert.equal(f.buttons().length,0);
  f.windowEvents.pageshow({persisted:true});await settle();assert.equal(f.buttons().length,3);
- f.buttons()[1].handlers.click();await settle();assert.deepEqual(f.redirects,[]);
+ f.buttons()[1].handlers.click();f.finishSelection();await settle();assert.deepEqual(f.redirects,[]);
 });
 test('R2087: final web documents and entry routing contain the new picker',()=>{
  for(const path of ['dist/web/index.html','dist/api/equipment-rental-portal.html','dist/api/equipment-rental-book.html']){
   const s=fs.readFileSync(path,'utf8');assert.ok(s.includes('pb2087AccountPickerStyle'));assert.ok(s.includes('PB2087'));
  }
  assert.ok(fs.readFileSync('dist/web/photobridge-r100f5-entry-routing.js','utf8').includes('PB2087 wait for account selection'));
+});
+
+test('R2088: physical left arrow, larger RTL cards and distinct account icons',()=>{
+ assert.ok(html.includes('grid-template-columns:52px minmax(0,1fr) 24px;direction:rtl'));
+ assert.ok(html.includes('min-height:98px'));
+ assert.ok(html.includes('border-left:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg)'));
+ for(const role of ['photographer','lab','rental'])assert.ok(html.includes('.pb2087AccountIcon[data-icon="'+role+'"]'));
+ assert.ok(source.includes('1200-(Date.now()-shownAt)'));
 });

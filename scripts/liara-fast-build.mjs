@@ -1578,3 +1578,6 @@ runR1314(process.execPath,['--test','scripts/test-r2079-store-admin-access.cjs']
 await deployStep('./enable-r2082-equipment-reader.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2082-equipment-reader.cjs'],{stdio:'inherit'});
 
+
+// R2086: assert the final mobile-only chooser viewport after all asset writers.
+runR1314(process.execPath,['--test','scripts/test-r2086-mobile-print-chooser-viewport.cjs'],{stdio:'inherit'});

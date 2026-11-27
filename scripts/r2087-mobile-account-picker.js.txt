@@ -60,25 +60,33 @@
        const title=document.createElement('h1');title.id='pb2087AccountTitle';title.textContent='انتخاب حساب کاربری';
        const intro=document.createElement('p');intro.textContent='می‌خواهید وارد کدام حساب شوید؟';
        panel.append(logo,title,intro);
+       const accountButtons=[];
+       let shownAt=0,selected=false;
        for(const account of accounts){
          const button=document.createElement('button');button.type='button';button.className='pb2087AccountOption';button.dataset.portal=account.portal;
          const symbol=document.createElement('span');symbol.className='pb2087AccountIcon';symbol.setAttribute('aria-hidden','true');
-         symbol.textContent={photographer:'▣',lab:'▤',rental:'▦'}[account.portal];
+         symbol.dataset.icon=account.portal; // R2088: role-specific camera, printer and storefront icons.
          const copy=document.createElement('span');copy.className='pb2087AccountCopy';
          const role=document.createElement('strong');role.textContent=labels[account.portal];
          const sub=document.createElement('small');sub.textContent=account.name||descriptions[account.portal];
          copy.append(role,sub);
-         const arrow=document.createElement('span');arrow.className='pb2087AccountArrow';arrow.setAttribute('aria-hidden','true');arrow.textContent='‹';
+         const arrow=document.createElement('span');arrow.className='pb2087AccountArrow';arrow.setAttribute('aria-hidden','true');arrow.dir='ltr'; // R2088: CSS draws a fixed left chevron, immune to RTL mirroring.
          button.append(symbol,copy,arrow);
          button.addEventListener('click',()=>{
-           if(chooser!==dialog)return;
-           chooser=null;dialog.remove();resolve(account.portal);
+           if(chooser!==dialog||selected)return;
+           selected=true;button.setAttribute('aria-pressed','true');
+           for(const option of accountButtons)option.disabled=true;
+           const finish=()=>{if(chooser!==dialog)return;chooser=null;dialog.remove();resolve(account.portal)};
+           // R2088: allow the account screen to remain legible for at least 1.2s.
+           const remaining=Math.max(0,1200-(Date.now()-shownAt));
+           if(remaining)setTimeout(finish,remaining);else finish();
          });
-         panel.append(button);
+         accountButtons.push(button);panel.append(button);
        }
        dialog.append(panel);dialog.addEventListener('cancel',event=>event.preventDefault());
        document.body.append(dialog);
        try{dialog.showModal()}catch{dialog.setAttribute('open','')}
+       shownAt=Date.now();
        panel.querySelector('button')?.focus({preventScroll:true});
      };
      if(document.body)render();else document.addEventListener('DOMContentLoaded',render,{once:true});

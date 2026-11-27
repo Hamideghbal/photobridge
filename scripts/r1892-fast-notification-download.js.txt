@@ -1,33 +1,40 @@
 /* PB1892: follow a desktop order notice with bounded readiness probes.
- * The initial wake still occurs synchronously in R1586. An order can be
- * announced before its full manifest is visible in /api/lab/orders; without
- * these probes that race waits for the 45-second periodic scan.
- * All probes call the original serialized, authorization-checked worker. */
+ * PB2074: independently wake from live order reads and keep a short native-only
+ * fallback while auto-download is enabled. The serialized worker owns all
+ * authorization, eligibility, verified file transfer and acknowledgement. */
 (function pb1892InstallFastDownloadWake(){
  if(typeof window==='undefined'||!window.pbNativeStorage||
     typeof pb1586WakeDownloads!=='function'||typeof pb1586NoticeWake!=='function')return;
  const followUps=[800,2400,5600,11000];
- const timers=new Set();
- let lastArm=0,epoch=0;
+ const timers=new Set(),notices=new Set(),orders=new Set();
+ let lastArm=0,epoch=0,lastFallback=0;
  function clear(){
   epoch++;
   for(const timer of timers)clearTimeout(timer);
-  timers.clear();
-  lastArm=0;
+  timers.clear();notices.clear();orders.clear();
+  lastArm=0;lastFallback=0;
+  if(typeof pb1568Work!=='undefined')pb1568Work.autoDownloadEnabled=false;
  }
- function arm(){
-  if(typeof navigator!=='undefined'&&navigator.onLine===false)return;
+ function online(){return typeof navigator==='undefined'||navigator.onLine!==false}
+ function remember(set,key){
+  if(set.has(key))return false;
+  set.add(key);
+  while(set.size>1000)set.delete(set.values().next().value);
+  return true;
+ }
+ function arm(fresh=false){
+  if(!online())return;
   const now=Date.now();
-  // A burst of repeated SSE/notification events uses one readiness window.
-  if(lastArm&&now-lastArm<4500)return;
+  // Independent new orders must wake even inside the SSE coalescing window.
+  // Duplicate notices share the bounded readiness probes.
+  if(lastArm&&now-lastArm<4500){if(fresh===true)pb1586WakeDownloads();return}
   lastArm=now;
-  // Immediate even if the SSE bridge registers only one change handler.
   pb1586WakeDownloads();
   const token=epoch;
   for(const delay of followUps){
    const timer=setTimeout(()=>{
     timers.delete(timer);
-    if(token!==epoch||!window.pbNativeStorage)return;
+    if(token!==epoch||!window.pbNativeStorage||!online())return;
     pb1586WakeDownloads();
    },delay);
    timers.add(timer);
@@ -36,13 +43,36 @@
  const baseNotice=pb1586NoticeWake;
  pb1586NoticeWake=function(url,data){
   baseNotice(url,data);
-  if(!/^\/api\/lab\/notifications(?:\?|$)/.test(String(url||'')))return;
-  if((data?.notifications||[]).some(n=>n?.id&&!n.read_at))arm();
+  const path=String(url||'');
+  if(/^\/api\/lab\/notifications(?:\?|$)/.test(path)){
+   let fresh=false;
+   for(const n of data?.notifications||[])if(n?.id&&!n.read_at&&remember(notices,String(n.id)))fresh=true;
+   if(fresh)arm(true);
+   return;
+  }
+  // The existing live queue refresh is an independent source of fresh orders.
+  // Never feed the worker's own scan back into itself.
+  if(!/^\/api\/lab\/orders(?:\?|$)/.test(path)||!path.includes('pbNativeLiveStatus=')||path.includes('pb2074AutoScan=')||!online())return;
+  let fresh=false;
+  for(const row of data?.orders||[]){
+   if(!row?.id||row.downloaded_at||row.deleted_at||!['sent','received'].includes(String(row.status||''))||Number(row.file_count||0)<1)continue;
+   if(row.settlement_mode==='prepaid'&&row.payment_status!=='paid')continue;
+   if(remember(orders,String(row.id)))fresh=true;
+  }
+  if(fresh)arm(true);
  };
- // The desktop SSE bridge may wake before the notifications HTTP read.
- // Follow the same event with limited readiness probes.
- window.pbDesktopEvents?.onChange?.(arm);
- addEventListener('online',arm);
+ window.pbDesktopEvents?.onChange?.(()=>arm());
+ addEventListener('online',()=>arm(true));
  addEventListener('photobridge-auth-session-changed',clear);
+ // A missed/replaced native notification must not leave a ready order idle for
+ // the old 45s safety poll. No overlapping workers, no extra polling when auto
+ // download is disabled, and no polling while explicitly offline.
+ setInterval(()=>{
+  if(!online()||typeof pb1568Work==='undefined'||!pb1568Work.autoDownloadEnabled||pb1568Work.running)return;
+  const now=Date.now();
+  if(now-Math.max(Number(pb1568Work.checkedAt||0),lastFallback)<5000)return;
+  lastFallback=now;
+  pb1586WakeDownloads();
+ },5000);
  window.pb1892DownloadWakeState=()=>({pending:timers.size,lastNoticeAt:lastArm});
 })();

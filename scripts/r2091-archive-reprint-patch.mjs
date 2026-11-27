@@ -23,7 +23,7 @@ export function patchServer(s){
   const anchor="            if (b.localRecovery === true) {";
   const selected=[
    "            let selectedRows;",
-   "            try{selectedRows=await selectArchivePrintFiles(fq.rows,b.selection,{mode:sourceOrder.mode,invoiceRequired,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,sourceOrder.source==='walkin'||sourceOrder.customer_kind==='customer'?'walkin':'colleague')});}",
+   "            try{selectedRows=await selectArchivePrintFiles(fq.rows,b.selection,{mode:sourceOrder.mode,invoiceRequired,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,sourceOrder.source==='walkin'||Boolean(sourceOrder.walkin_customer_name||sourceOrder.walkin_customer_mobile)?'walkin':'colleague')});}",
    "            catch(error){if(error.status)return sendJson(res,error.status,{error:error.message});throw error;}"
   ].join('\n');
   const idx=part.indexOf(anchor);if(idx<0)throw Error('R2091 recover local boundary');
@@ -40,9 +40,9 @@ export function patchServer(s){
   const validate=[
    "            let selectedSource=null;",
    "            if(b.sourceFileId){",
-   "                const source=await pool.query(\`SELECT f.*,o.mode source_mode,o.source source_kind,o.customer_kind FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND f.order_id=$2 AND f.lab_id=$3 AND o.lab_id=$3\`,[String(b.sourceFileId),oq.rows[0].recovered_from_order_id,labId]);",
+   "                const source=await pool.query(\`SELECT f.*,o.mode source_mode,o.source source_kind,o.walkin_customer_name,o.walkin_customer_mobile FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND f.order_id=$2 AND f.lab_id=$3 AND o.lab_id=$3\`,[String(b.sourceFileId),oq.rows[0].recovered_from_order_id,labId]);",
    "                if(!source.rowCount)return sendJson(res,400,{error:'archive_selection_invalid'});",
-   "                try{const src=source.rows[0];const result=await selectArchivePrintFiles([src],[{...b,id:src.id}],{mode:src.source_mode,invoiceRequired:oq.rows[0].invoice_required!==false,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,src.source_kind==='walkin'||src.customer_kind==='customer'?'walkin':'colleague')});selectedSource=result[0];}",
+   "                try{const src=source.rows[0];const result=await selectArchivePrintFiles([src],[{...b,id:src.id}],{mode:src.source_mode,invoiceRequired:oq.rows[0].invoice_required!==false,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,src.source_kind==='walkin'||Boolean(src.walkin_customer_name||src.walkin_customer_mobile)?'walkin':'colleague')});selectedSource=result[0];}",
    "                catch(error){if(error.status)return sendJson(res,error.status,{error:error.message});throw error;}",
    "            }"
   ].join('\n');

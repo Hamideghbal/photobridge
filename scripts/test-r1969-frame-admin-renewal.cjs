@@ -121,3 +121,28 @@ test('R2067: manual action normalizes Persian months, confirms, sends correct en
  await run({id:uuid,business_category:'equipment_rental_sale',active_until:'2026-11-27'},button);
  assert.equal(calls.length,2);
 });
+
+test('R2076: frame renewal is next to expiry and in Edit, not dependent on the operations column',()=>{
+ const ui=read('dist/web/photobridge-v904r19-admin-stores.js'),html=read('dist/web/index.html');
+ const row=ui.slice(ui.indexOf('function render(){'),ui.indexOf('async function load(){'));
+ const edit=ui.slice(ui.indexOf('function edit(s){'),ui.indexOf('async function pb1969RenewFrameShop('));
+ assert(row.indexOf('data-pb1969-frame-renew')>0&&row.indexOf('data-pb1969-frame-renew')<row.indexOf('data-edit'));
+ assert(edit.includes('data-pb2076-frame-renew-edit')&&edit.includes('pb1969RenewFrameShop(current,renewal)'));
+ assert(edit.includes('["frame","chassis","frame_chassis"].includes(String(s.business_category||""))'));
+ assert(edit.includes('data-pb2076-expiry'));
+ assert(html.includes('admin-stores.js?v=r2067&frameRenew=r2076'));
+});
+test('R2076: standard 20x25 comes from the shared catalog, without assigning or replacing tariffs',()=>{
+ const sql=read('migrations/2076_standard_print_size_20x25.sql');
+ const server=read('dist/api/server.js');
+ assert.match(sql,/VALUES \('20x25','۲۰×۲۵',20,25,true,NULL,now\(\)\)/);
+ assert.match(sql,/ON CONFLICT \(id\) DO NOTHING/);
+ assert.match(sql,/INSERT INTO lab_hidden_print_sizes\(lab_id,size_id\)/);
+ assert.match(sql,/p\.owner_lab_id IS NOT NULL AND p\.active=true/);
+ assert(!/\b(?:UPDATE|DELETE FROM|INSERT INTO)\s+(?:lab_prices|walkin_prices|orders|order_files)\b/i.test(sql));
+ const dashboard=server.slice(server.indexOf("url.pathname === '/api/lab/dashboard'"),server.indexOf("url.pathname === '/api/lab/dashboard'")+18000);
+ const walkin=server.slice(server.indexOf("url.pathname === '/api/lab/walkin'"),server.indexOf("url.pathname === '/api/lab/walkin'")+6000);
+ assert(dashboard.includes('FROM print_sizes s LEFT JOIN lab_prices p')&&dashboard.includes('s.owner_lab_id IS NULL OR s.owner_lab_id=$1'));
+ assert(walkin.includes('FROM print_sizes s LEFT JOIN walkin_prices w')&&walkin.includes('s.owner_lab_id IS NULL OR s.owner_lab_id=$1'));
+ assert(read('Dockerfile').includes('node scripts/migrate.mjs'));
+});

@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook,replaceBookingSubmit} from './enable-r2100-photographer-booking-calendar.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook,replaceBookingSubmit,patchChooserStartup} from './enable-r2100-photographer-booking-calendar.mjs';
 const html=fs.readFileSync('dist/api/equipment-rental-book.html','utf8'),s=patchBook(html);
 function extract(name,next){const a=s.indexOf('function '+name+'('),b=s.indexOf('\n'+next,a);assert.ok(a>=0&&b>a,name);return s.slice(a,b)}
 const days=new Function(extract('pb2100Adjacent','function pb2100Toggle')+'\n'+extract('pb2100Toggle','function pb2100Today')+';return pb2100Toggle')();
@@ -62,7 +62,7 @@ test('R2103 only requested camera panel loads and duplicate visible requests coa
  await Promise.resolve();assert.deepEqual(calls,['bookings']);
  fn('salesPanel');await Promise.resolve();assert.deepEqual(calls,['bookings','sales']);
  assert.match(s,/if\(pbProductionStore\(target\)\)void Promise\.allSettled/);
- assert.match(s,/renderShops\(\);renderStoreChooserR96\(\);const pb2103Me=await pb2103Identity/);
+ assert.match(s,/void loadPhotographerIdentity\(\)\.catch\(\(\)=>null\);\s*const d=await api\('\/api\/customer\/equipment-rental\/shops'\);/);
 });
 
 test('R2103 actual calendar click warns for a gap, then selects and removes adjacent days',()=>{
@@ -79,4 +79,13 @@ test('R2103 actual calendar click warns for a gap, then selects and removes adja
  get(2).onclick();assert.equal($('#pb2103CalendarWarning').hidden,true);
  get(2).onclick();$('#pb2100CalendarDone').onclick();
  assert.deepEqual(selected,['2026-11-01']);
+});
+
+test('R2104 chooser startup accepts the actual R1837 build output without reintroducing the blocking identity wait',()=>{
+ const old="const [_,d]=await Promise.all([loadPhotographerIdentity(),api('/api/customer/equipment-rental/shops')]);";
+ const real="void loadPhotographerIdentity().catch(()=>null);\n    const d=await api('/api/customer/equipment-rental/shops');";
+ const before="async function boot(){\n",after="\nrenderShops();renderStoreChooserR96();}";
+ assert.equal(patchChooserStartup(before+old+after),before+real+after);
+ assert.equal(patchChooserStartup(before+real+after),before+real+after);
+ assert.throws(()=>patchChooserStartup('unrecognized startup'),/unrecognized chooser startup contract/);
 });

@@ -23,7 +23,7 @@ export function patchServer(s){
   const anchor="            if (b.localRecovery === true) {";
   const selected=[
    "            let selectedRows;",
-   "            try{selectedRows=await selectArchivePrintFiles(fq.rows,b.selection,{mode:sourceOrder.mode,invoiceRequired,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,sourceOrder.source==='walkin'||Boolean(sourceOrder.walkin_customer_name||sourceOrder.walkin_customer_mobile)?'walkin':'colleague')});}",
+   "            try{selectedRows=await selectArchivePrintFiles(fq.rows,b.selection,{mode:sourceOrder.mode,invoiceRequired,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,invoiceRequired?size:'',sourceOrder.source==='walkin'||Boolean(sourceOrder.walkin_customer_name||sourceOrder.walkin_customer_mobile)?'walkin':'colleague')});}",
    "            catch(error){if(error.status)return sendJson(res,error.status,{error:error.message});throw error;}"
   ].join('\n');
   const idx=part.indexOf(anchor);if(idx<0)throw Error('R2091 recover local boundary');
@@ -40,9 +40,10 @@ export function patchServer(s){
   const validate=[
    "            let selectedSource=null;",
    "            if(b.sourceFileId){",
+   "                if(!/^[0-9a-f-]{36}$/i.test(String(b.sourceFileId)))return sendJson(res,400,{error:'archive_selection_invalid'});",
    "                const source=await pool.query(\`SELECT f.*,o.mode source_mode,o.source source_kind,o.walkin_customer_name,o.walkin_customer_mobile FROM order_files f JOIN orders o ON o.id=f.order_id WHERE f.id=$1 AND f.order_id=$2 AND f.lab_id=$3 AND o.lab_id=$3\`,[String(b.sourceFileId),oq.rows[0].recovered_from_order_id,labId]);",
    "                if(!source.rowCount)return sendJson(res,400,{error:'archive_selection_invalid'});",
-   "                try{const src=source.rows[0];const result=await selectArchivePrintFiles([src],[{...b,id:src.id}],{mode:src.source_mode,invoiceRequired:oq.rows[0].invoice_required!==false,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,size,src.source_kind==='walkin'||Boolean(src.walkin_customer_name||src.walkin_customer_mobile)?'walkin':'colleague')});selectedSource=result[0];}",
+   "                try{const src=source.rows[0];const result=await selectArchivePrintFiles([src],[{...b,id:src.id}],{mode:src.source_mode,invoiceRequired:oq.rows[0].invoice_required!==false,canUseSize:size=>labCanUsePrintSize(pool,labId,size),snapshotAddons:(item,size)=>pb1779Snapshot(labId,item,oq.rows[0].invoice_required!==false?size:'',src.source_kind==='walkin'||Boolean(src.walkin_customer_name||src.walkin_customer_mobile)?'walkin':'colleague')});selectedSource=result[0];}",
    "                catch(error){if(error.status)return sendJson(res,error.status,{error:error.message});throw error;}",
    "            }"
   ].join('\n');
@@ -91,5 +92,8 @@ export function patchUi(s,helper){
  s=section(s,'async function pb1451RecoverOrder(','function pb1451RecoveryMessage(',part=>once(part,'{invoiceRequired,note:note || null}','{invoiceRequired,note:note || null,...(detail.pb2091Selection?{selection:detail.pb2091Selection}:{})}'));
  // R2080 sends verified download only; propagate the actual invoice outcome.
  s=once(s,"const verified={phase:'verified',stage:'download',downloadVerified:true,networkError:false,queued:false,done:result.verifiedFiles,total:result.verifiedFiles};","const invoiceIssued=Boolean(result.invoice?.id||order.invoice_id),invoiceRequired=order.invoice_required!==false;const verified={phase:'verified',stage:invoiceRequired&&invoiceIssued?'invoice':'download',downloadVerified:true,invoiceRequired,invoiceIssued,invoiceVerified:invoiceIssued,invoiceId:result.invoice?.id||order.invoice_id||null,networkError:false,queued:false,done:result.verifiedFiles,total:result.verifiedFiles};");
+ // Propagate billing policy to every progress update for a known reprint;
+ // never carry an old invoice success flag into a different order.
+ s=once(s,'function pb1581Report(order,value){', "function pb1581Report(order,value){\\n if(order?.recovered_from_order_id){const invoiceRequired=order.invoice_required!==false;const old=pb1581Transfers.get(order.lab_id+':'+order.id)?.value;const invoiceIssued=invoiceRequired&&Boolean(value.invoiceIssued||order.invoice_id||old?.invoiceIssued);value={...value,invoiceRequired,invoiceIssued,invoiceVerified:invoiceIssued,invoiceId:invoiceRequired?(value.invoiceId||order.invoice_id||old?.invoiceId||null):null};}");
  return s+'\n'+helper+'\n'+marker+'\n';
 }

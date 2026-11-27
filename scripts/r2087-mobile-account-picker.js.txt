@@ -100,7 +100,13 @@
        try{dialog.showModal()}catch{dialog.setAttribute('open','')}
        panel.querySelector('button')?.focus({preventScroll:true});
      };
-     if(document.body)render();else document.addEventListener('DOMContentLoaded',render,{once:true});
+     if(document.body)render();else{
+       let observer=null,rendered=false;
+       const bodyReady=()=>{if(rendered||!document.body)return;rendered=true;observer?.disconnect();render()};
+       if(typeof MutationObserver==='function'){observer=new MutationObserver(bodyReady);observer.observe(document.documentElement,{childList:true,subtree:true})}
+       document.addEventListener('DOMContentLoaded',bodyReady,{once:true});
+       bodyReady();
+     }
    });
  }
  const dismiss=()=>{if(chooser){chooser.remove();chooser=null}};

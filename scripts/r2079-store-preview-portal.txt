@@ -1,0 +1,19 @@
+<script id="pb2079StorePreview">
+(()=>{const scope=new URLSearchParams(location.search).get('pbAdminShop');if(scope===null)return;
+ const valid=/^[0-9a-f-]{36}$/i.test(scope);
+ const back=()=>location.replace('/admin?pbtab=stores');
+ if(!valid){back();return;}
+ const nativeFetch=window.fetch.bind(window);
+ const allowed=url=>url.origin===location.origin&&(url.pathname.startsWith('/api/rental/')||url.pathname==='/api/auth/me'||url.pathname==='/api/auth/logout');
+ window.fetch=(input,init)=>{let url;try{url=new URL(typeof input==='string'||input instanceof URL?input:input.url,location.href)}catch{return nativeFetch(input,init);}
+  if(!allowed(url))return nativeFetch(input,init);
+  if(url.pathname==='/api/auth/logout'){back();return Promise.resolve(new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json'}}));}
+  const headers=new Headers(init?.headers??(input instanceof Request?input.headers:undefined));headers.set('x-photobridge-portal','rental');headers.set('x-photobridge-admin-store',scope);headers.delete('x-photobridge-rental-role');
+  return nativeFetch(input,{...init,headers,credentials:'same-origin',cache:'no-store'}).then(r=>{if(url.pathname==='/api/auth/me'&&!r.ok)back();return r;});
+ };
+ // Keep direct printed commitment links scoped as well; no credentials appear in URLs.
+ const open=window.open.bind(window);window.open=(url,...args)=>{if(typeof url==='string'&&url){const u=new URL(url,location.href);if(u.origin===location.origin&&(/^\/api\/rental\/bookings\/[0-9a-f-]{36}\/commitment$/i.test(u.pathname)||u.pathname==='/rental/storefront-preview')){u.searchParams.set('pbAdminShop',scope);url=u.pathname+u.search;}}return open(url,...args)};
+ window.pb2079StorePreview={shopId:scope,back};
+ document.addEventListener('DOMContentLoaded',()=>{const bar=document.createElement('div');bar.id='pb2079StorePreviewBar';bar.setAttribute('role','status');bar.style.cssText='position:fixed;bottom:12px;left:12px;z-index:2147483647;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #a5b9db;border-radius:10px;box-shadow:0 4px 15px #0002;padding:8px 12px;font:700 12px Vazirmatn,Tahoma;color:#24416b';const title=document.createElement('span');title.textContent='ورود ادمین به فروشگاه';const button=document.createElement('button');button.type='button';button.textContent='بازگشت به پنل ادمین';button.style.cssText='background:#eef4ff;color:#24416b;border:1px solid #cdd9ec;border-radius:7px;padding:5px 8px;font:inherit;cursor:pointer';button.onclick=back;bar.append(title,button);document.body.append(bar);});
+})();
+</script>

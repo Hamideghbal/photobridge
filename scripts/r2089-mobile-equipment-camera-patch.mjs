@@ -21,6 +21,12 @@ export function patchPortal(s,helper,css){
  // Keep typed manual identifiers across the legacy list rebuild on successful scans.
  change("const render=()=>{closeSourcePicker(false);host.innerHTML=","const render=()=>{closeSourcePicker(false);const draft=mobileScan?new Map([...host.querySelectorAll('[data-slot-input]')].map(el=>[el.dataset.slotInput,el.value])):null;const scroll=host.scrollTop;host.innerHTML=");
  change("host.querySelectorAll('[data-slot-source-open]').forEach","if(draft){for(const input of host.querySelectorAll('[data-slot-input]')){const slot=slots[Number(input.dataset.slotInput)];if(slot&&!slot.scanned&&draft.has(input.dataset.slotInput))input.value=draft.get(input.dataset.slotInput)}host.scrollTop=scroll;}host.querySelectorAll('[data-slot-source-open]').forEach");
+ // R2093: one direct supply confirmation instead of the source dropdown on mobile.
+ change("const externalControls=s.isSupplied?","const mobileSupplyCheck=mobileScan&&mode==='pickup'&&!s.isSupplied&&!s.scanned&&Array.isArray(s.supplyOptions)&&sourceFor(s)?`<label class=\"pbR86SupplyToggle\"><input type=\"checkbox\" data-mobile-supply=\"${i}\"><span>تحویل از تأمین بیرونی</span></label>`:'';const externalControls=s.isSupplied?");
+ change("${mode==='pickup'&&Array.isArray(s.supplyOptions)?","${!mobileScan&&mode==='pickup'&&Array.isArray(s.supplyOptions)?");
+ change("${s.isSupplied?externalControls:s.scanned?'':externalControls}","${mobileSupplyCheck}${s.isSupplied?externalControls:s.scanned?'':externalControls}");
+ change("host.querySelectorAll('[data-supplied-toggle]').forEach","host.querySelectorAll('[data-mobile-supply]').forEach(input=>input.onchange=()=>{if(!input.checked)return;const i=Number(input.dataset.mobileSupply),slot=slots[i];if(!slot||cameraPending||reader?.busy()||!chooseSource(i,true)){input.checked=false;return}slot.mobileSelectedSupply=true;slot.scanned=true;slot.autoSupplied=true;render()});host.querySelectorAll('[data-supplied-toggle]').forEach");
+ change("if(!slot)return;slot.scanned=input.checked;","if(!slot)return;if(mobileScan&&(cameraPending||reader?.busy())){input.checked=slot.scanned;return}if(mobileScan&&!input.checked&&slot.mobileSelectedSupply&&!slot.requiresExternal&&!slot.lockedSupplied){slot.mobileSelectedSupply=false;chooseSource(Number(input.dataset.suppliedToggle),false);return}slot.scanned=input.checked;");
  s=s.slice(0,start)+p+s.slice(end);
  once('photobridge-r100f73-staff-desktop-return.js?v=r2082','photobridge-r100f73-staff-desktop-return.js?v=r2082&mobileCamera=r2092');
  return s;

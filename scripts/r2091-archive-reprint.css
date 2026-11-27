@@ -14,3 +14,21 @@ dialog.pb2091ArchivePicker::backdrop,dialog.pb2091ArchiveResult::backdrop{backgr
 .pb2091Fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pb2091Fields label{display:grid;gap:3px;min-width:0;font-size:11px}.pb2091Fields select,.pb2091Fields input{width:100%;min-width:0;box-sizing:border-box;min-height:32px;border:1px solid #cfdae7;border-radius:7px;padding:3px 5px;background:white;font:inherit;color:#19334d}
 .pb2091ArchivePicker footer{justify-content:flex-end}.pb2091ResultSteps{display:grid;gap:6px;margin:12px 0}.pb2091ResultSteps div{padding:8px 10px;border-radius:8px;background:#f2f5f8}.pb2091ResultSteps .complete{color:#167743;background:#eefbf3}.pb2091ResultSteps .pending{color:#95641b}.pb2091ArchiveResult h3{margin:0 0 8px}
 @media(max-width:600px){dialog.pb2091ArchivePicker{width:100%;max-width:100%;height:96dvh;max-height:96dvh;border-radius:14px;padding:10px}.pb2091PhotoGrid{grid-template-columns:1fr}.pb2091Toolbar{gap:4px}.pb2091Toolbar b{font-size:12px}.pb2091PhotoTop{grid-template-columns:22px 64px minmax(0,1fr)}.pb2091ArchivePicker .pb2091Thumb{width:64px;height:60px}}
+
+/* R2093: same photo-first card arrangement as photographer print upload. */
+.pb2091ArchivePicker .pb2091PhotoGrid{grid-template-columns:repeat(auto-fill,minmax(min(174px,100%),1fr));gap:8px;align-items:start}
+.pb2091ArchivePicker .pb2091PhotoCard{padding:6px;border-radius:9px}
+.pb2091ArchivePicker .pb2091PhotoTop{position:relative;display:grid;grid-template-columns:minmax(0,1fr);gap:4px;margin-bottom:5px}
+.pb2091ArchivePicker .pb2091Thumb{width:100%;height:116px;border-radius:7px;background:#edf2f7}
+.pb2091ArchivePicker .pb2091PhotoTop input{position:absolute;inset-inline-start:5px;top:5px;margin:0;z-index:1;outline:2px solid #fff;border-radius:3px}
+.pb2091ArchivePicker .pb2091PhotoTop b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.pb2091ArchivePicker .pb2091Fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.pb2091ArchivePicker .pb2091Fields select,.pb2091ArchivePicker .pb2091Fields input,.pb2091ArchivePicker .pb2093ExtraFields select{min-height:27px;height:27px;padding:2px 4px;font:inherit;font-size:11px}
+.pb2093Qty{grid-column:1/-1;display:grid;grid-template-columns:30px minmax(0,1fr) 30px;gap:3px;direction:ltr}
+.pb2091ArchivePicker .pb2093Qty button{min-height:26px;height:26px;padding:0;font-size:14px}
+.pb2093Qty input{text-align:center;appearance:textfield}.pb2093Qty input::-webkit-inner-spin-button{appearance:none}
+.pb2093Extras{margin-top:4px;font-size:11px;color:#536b82}
+.pb2093Extras summary{padding:3px 0;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb2093ExtraFields{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding-top:4px}
+.pb2093ExtraFields label{display:grid;gap:2px;min-width:0}.pb2093ExtraFields select{width:100%;min-width:0;border:1px solid #cfdae7;border-radius:6px;background:white}
+@media(max-width:600px){.pb2091ArchivePicker .pb2091PhotoGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pb2091ArchivePicker .pb2091Thumb{height:100px}}

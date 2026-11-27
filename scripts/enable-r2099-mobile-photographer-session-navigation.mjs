@@ -53,7 +53,7 @@ export function run(){
    // Shared auth endpoints default to the generic cookie unless the photographer portal is explicit.
    s=once(s,"headers:{...(opt.body?{'content-type':'application/json'}:{}),...(opt.headers||{})}","headers:{/* PB2099 scoped store identity */'x-photobridge-portal':'photographer',...(opt.body?{'content-type':'application/json'}:{}),...(opt.headers||{})}");
   }
-  s=s.replace(/(photobridge-r1106-mobile-store-panel\.js|photobridge-v904r99-lab-chooser\.js)([^"'<> \r\n]*)/g,(_,a,q)=>a+q+(q.includes('?')?'&':'?')+'mobileRoute=r2099');
+  s=s.replace(/(photobridge-r1106-mobile-store-panel\.js|photobridge-v904r99-lab-chooser\.js)([^"'<> \r\n]*)/g,(_,a,q)=>a+q+(q.includes('?')?'&':'?')+'mobileRoute=r2099&storePerf=r2103');
   if(!s.includes('id="pb2099MobilePanelIsolation"'))s=s.replace('</head>','<style id="pb2099MobilePanelIsolation">@media(max-width:820px){html[data-pb2099-panel="store"] body>#pbR99LabChooser,html[data-pb2099-panel="store"] body>#pbR100F18RouteCover{display:none!important;visibility:hidden!important;pointer-events:none!important}html[data-pb2099-panel] body .pb1106ContentPanel[hidden]{display:none!important}html[data-pb2099-panel] body .pb1106ContentPanel:not([hidden]){display:block!important}}</style></head>');
   write(p,s);
  }
@@ -61,7 +61,7 @@ export function run(){
  // R1721's separate Store document must carry the explicitly selected photographer role.
  if(!s.includes('/* PB2099 store landing handoff */'))s=once(s,'moving=true;location.replace(destination);',"moving=true;/* PB2099 store landing handoff */if(!window.pb2092AccountNavigate?.(destination))location.replace(destination);");
  new Function(s);write(entry,s);
- const html='dist/web/index.html';write(html,fs.readFileSync(html,'utf8').replace(/(photobridge-r100f5-entry-routing\.js\?[^"'<> \r\n]+)/g,u=>u.includes('mobileRoute=r2099')?u:u+'&mobileRoute=r2099'));
+ const html='dist/web/index.html';write(html,fs.readFileSync(html,'utf8').replace(/(photobridge-r100f5-entry-routing\.js\?[^"'<> \r\n]+)/g,u=>u.includes('mobileRoute=r2099')?u:u+'&mobileRoute=r2099&storePerf=r2103'));
  console.log('[R2099] mobile photographer panel ownership, bounded frame failures, verified role handoff');
 }
 if(process.argv[1]?.endsWith('enable-r2099-mobile-photographer-session-navigation.mjs'))run();

@@ -27,8 +27,10 @@ export function patchPortal(s,helper,css){
  change("${s.isSupplied?externalControls:s.scanned?'':externalControls}","${mobileSupplyCheck}${s.isSupplied?externalControls:s.scanned?'':externalControls}");
  change("host.querySelectorAll('[data-supplied-toggle]').forEach","host.querySelectorAll('[data-mobile-supply]').forEach(input=>input.onchange=()=>{if(!input.checked)return;const i=Number(input.dataset.mobileSupply),slot=slots[i];if(!slot||cameraPending||reader?.busy()||!chooseSource(i,true)){input.checked=false;return}slot.mobileSelectedSupply=true;slot.scanned=true;slot.autoSupplied=true;render()});host.querySelectorAll('[data-supplied-toggle]').forEach");
  change("if(!slot)return;slot.scanned=input.checked;","if(!slot)return;if(mobileScan&&(cameraPending||reader?.busy())){input.checked=slot.scanned;return}if(mobileScan&&!input.checked&&slot.mobileSelectedSupply&&!slot.requiresExternal&&!slot.lockedSupplied){slot.mobileSelectedSupply=false;chooseSource(Number(input.dataset.suppliedToggle),false);return}slot.scanned=input.checked;");
+ // R2094: the external allocation rule remains enforced; omit only explanatory prose on mobile.
+ change("${s.requiresExternal?'<small class=\"pbR1072SupplyPriority\">","${!mobileScan&&s.requiresExternal?'<small class=\"pbR1072SupplyPriority\">");
  s=s.slice(0,start)+p+s.slice(end);
- once('photobridge-r100f73-staff-desktop-return.js?v=r2082','photobridge-r100f73-staff-desktop-return.js?v=r2082&mobileCamera=r2092');
+ once('photobridge-r100f73-staff-desktop-return.js?v=r2082','photobridge-r100f73-staff-desktop-return.js?v=r2082&mobileCamera=r2094');
  return s;
 }
 export function patchReturn(s){

@@ -6,11 +6,16 @@ import { deduplicateOnnxRuntime } from './deduplicate-onnx-runtime.mjs';
 // Emit the exact stage name before execution so truncated Liara logs still
 // identify the last attempted patch. Re-throw on failures; never hide exit codes.
 let completedDeploySteps = 0;
-async function deployStep(specifier) {
+async function deployStep(specifier, runExport = false) {
   const started = Date.now();
   console.log(`[PhotoBridge Docker build] START ${specifier}`);
   try {
-    await import(specifier);
+    const stage = await import(specifier);
+    // Some patch modules expose run() for direct execution and safe test imports.
+    if (runExport) {
+      if (typeof stage.run !== 'function') throw new Error(`Missing run() export: ${specifier}`);
+      await stage.run();
+    }
   } catch (error) {
     console.error(`[PhotoBridge Docker build] FAIL ${specifier} after ${Date.now() - started}ms`);
     console.error(error?.stack || error);
@@ -1597,9 +1602,9 @@ runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.
 // R2100 supersedes the earlier mobile-only home return with a confirmed booking receipt on both platforms.
 
 // R2099 final mobile-only photographer navigation after account picker and older panel writers.
-await deployStep('./enable-r2099-mobile-photographer-session-navigation.mjs');
+await deployStep('./enable-r2099-mobile-photographer-session-navigation.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2099-mobile-photographer-session-navigation.mjs'],{stdio:'inherit'});
 
 // R2100: shared photographer booking calendar and receipt after the final mobile navigation writer.
-await deployStep('./enable-r2100-photographer-booking-calendar.mjs');
+await deployStep('./enable-r2100-photographer-booking-calendar.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2100-photographer-booking-calendar.mjs'],{stdio:'inherit'});

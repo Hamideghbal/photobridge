@@ -67,8 +67,11 @@ function shell(portal,mobileScripts){
    assert.equal(await calendarFrame.locator('.calDay').count(),42);
    assert(await frameElement.isHidden(),'Customers iframe is hidden while Calendar tab is selected');
    assert.equal(await calendarMain.getAttribute('aria-current'),'page');
+   assert.equal(await button.getAttribute('aria-current'),null,'Calendar alone is selected');
    await button.click();
    assert(await frameElement.isVisible(),'Customers iframe is restored when its tab is reopened');
+   assert.equal(await button.getAttribute('aria-current'),'page','Customers header follows the visible cached iframe');
+   assert.equal(await calendarMain.getAttribute('aria-current'),null);
   }else{
    await frame.locator('nav button[data-view="calendar"]').click();
    await frame.locator('.calDay').first().waitFor();

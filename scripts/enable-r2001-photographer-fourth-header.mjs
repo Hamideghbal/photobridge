@@ -603,7 +603,8 @@ if(!pb2035Nav.includes('/* PB2035 same-document login */')){
  if(render<pos)throw Error('[R2035] expected bootstrap before renderer');
  pb2035Nav=pb2035Nav.slice(0,pos)+pb2035Nav.slice(pos).replace(gate,gate.replace('(login|signup|register|invite)','(signup|register|invite)'));
  const native="const current=currentDocument();const native=selected?(current&&nativeHeader(current)):nativeHeader(document);if(!native)return;";
- pb2035Nav=once(pb2035Nav,native,native+"document.documentElement.classList.add('pb1126Desktop'); /* PB2035 same-document login */",'R2035 reassert canonical header ownership');
+ const crmNative="const current=currentDocument();const native=selected&&!['crm','calendar'].includes(selected)?(current&&nativeHeader(current)):nativeHeader(document);if(!native)return;";
+ pb2035Nav=once(pb2035Nav,native,crmNative+"document.documentElement.classList.add('pb1126Desktop'); /* PB2035 same-document login */",'R2035 reassert canonical header ownership; CRM and calendar use parent identity');
  const allFour='return pb2018Keys.every(k=>keys.has(k));';
  const available=[
   'const native=visible.map(el=>el.closest?.("#photographerRoleHeaderV710")).find(Boolean);',

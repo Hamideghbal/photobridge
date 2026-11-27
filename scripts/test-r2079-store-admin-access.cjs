@@ -68,6 +68,34 @@ test('R2079 final release preserves ordinary login, prevents wrong-cookie logout
  assert(p.indexOf('id="pb2079StorePreview"')<1000);
  assert(p.includes("headers.set('x-photobridge-admin-store',scope)"));
  assert(p.includes('if(window.pb2079StorePreview){window.pb2079StorePreview.back();return;}'));
- assert(html.includes('storeAdmin=r2079')&&html.includes('frameRenew=r2076'));
+ assert(html.includes('storeAdmin=r2081')&&html.includes('frameRenew=r2076'));
  for(const file of ['dist/web/photobridge-v904r19-admin-stores.js','dist/web/index.html'])for(const [ext,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(file+ext))assert(decode(fs.readFileSync(file+ext)).equals(fs.readFileSync(file)),file+ext);
+});
+
+test('R2081: preview scope gate works with shifted CRM middleware, before every API handler',async()=>{
+ const source=read('scripts/enable-r2079-store-admin-access.mjs');
+ const from=source.indexOf('function serverPatch('),to=source.indexOf('function uiPatch(',from);
+ assert(from>=0&&to>from);
+ const once=(s,a,b,label)=>{assert.equal(s.split(a).length,2,label);return s.replace(a,()=>b)};
+ const patch=new Function('once','read',source.slice(from,to)+'return serverPatch;')(once,p=>read(p));
+ const fixture="async function auth(req) {\n return legacyAuth(req);\n}\nasync function api(req, res, url) {\n    /* New middleware before ordinary authentication */\n    const a = await auth(req);\n    if(await handleChangedCRM())return;\n    if (activeToken && !bearerToken(req)) setSessionCookie(res,activeToken);\n    if (req.method === 'POST' && url.pathname === '/api/admin/equipment-rental/shops') { return 200; }\n}";
+ const patched=patch(fixture);
+ assert(patched.indexOf('const pb2079Scope=pb2079PreviewScope(req);',patched.indexOf('async function api('))<patched.indexOf('New middleware'));
+ assert(patched.includes('if (activeToken && !bearerToken(req) && !a.adminStorePreview)'));
+ const server=read('dist/api/server.js'),entry=server.indexOf('async function api(req, res, url) {');
+ assert(entry>=0);
+ const gate=server.slice(entry,entry+1200);
+ assert.match(gate,/if\(pb2079Scope!==null\)\{\s*const a=await auth\(req\);\s*if\(!a\?\.adminStorePreview\)/);
+ assert.match(gate,/admin_store_preview_operation_unavailable/);
+ // Execute the generated gate in isolation, not just a string check.
+ const i=gate.indexOf('{')+1,j=gate.indexOf('    }',gate.indexOf('admin_store_preview_operation_unavailable'))+5;
+ const guard=gate.slice(i,j);
+ const run=new Function('req','res','url','auth','pb2079PreviewScope','sendJson','return (async()=>{'+guard+';return {status:204};})()');
+ async function invoke(path,scope,actor){let n=0;const result=await run({},null,{pathname:path},async()=>{n++;return actor},()=>scope,(_r,status,payload)=>({status,payload}));return {status:result.status,authCalls:n}}
+ assert.deepEqual(await invoke('/api/rental/overview',null,null),{status:204,authCalls:0});
+ assert.deepEqual(await invoke('/api/rental/overview',store,null),{status:403,authCalls:1});
+ assert.deepEqual(await invoke('/api/admin/maintenance','!invalid',null),{status:403,authCalls:1});
+ assert.deepEqual(await invoke('/api/auth/logout',store,{adminStorePreview:true}),{status:200,authCalls:1});
+ assert.deepEqual(await invoke('/api/rental/notifications',store,{adminStorePreview:true}),{status:403,authCalls:1});
+ assert.deepEqual(await invoke('/api/rental/overview',store,{adminStorePreview:true}),{status:204,authCalls:1});
 });

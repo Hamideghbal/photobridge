@@ -12,20 +12,20 @@ function serverPatch(s){
  if(s.includes('function pb2079PreviewScope('))return s;
  const auth='async function auth(req) {';
  s=once(s,auth,read('scripts/r2079-store-preview-auth.txt')+'\n'+auth+'\n    const pb2079Scope=pb2079PreviewScope(req);if(pb2079Scope!==null)return pb2079PreviewAuth(req,pb2079Scope);','preview auth before legacy Sofia fallback');
- const apiAnchor='    const a = await auth(req);\n    // Independent owner-scoped CRM endpoints;';
- // Anchor directly after the API authentication, before ANY handler runs.
- const apiActual='    const a = await auth(req);\n    // Independent owner-scoped CRM endpoints; legacy lab/photographer flows unchanged.';
+ // R2081: attach the fail-closed guard to the API entry itself, not a CRM
+ // comment that preceding build writers can move or replace. The ordinary
+ // request path performs no extra authentication or DB query.
+ const apiEntry='async function api(req, res, url) {';
  const gate=[
- '    const a = await auth(req);',
  '    const pb2079Scope=pb2079PreviewScope(req);',
  '    if(pb2079Scope!==null){',
+ '        const a=await auth(req);',
  '        if(!a?.adminStorePreview)return sendJson(res,403,{error:"admin_store_preview_forbidden"});',
  '        if(url.pathname==="/api/auth/logout")return sendJson(res,200,{ok:true});',
  '        if(/^\\/api\\/rental\\/(?:push(?:\\/|$)|notifications(?:\\/|$)|desktop(?:\\/|$)|alert-agent(?:\\/|$))/.test(url.pathname)||/\\/zibal\\/request$/.test(url.pathname))return sendJson(res,403,{error:"admin_store_preview_operation_unavailable"});',
- '    }',
- '    // Independent owner-scoped CRM endpoints; legacy lab/photographer flows unchanged.'
+ '    }'
  ].join('\n');
- s=once(s,apiActual,gate,'preview scope fail closed / no global session or user actions');
+ s=once(s,apiEntry,apiEntry+'\n'+gate,'preview gate at API entry before any handler');
  s=once(s,'if (activeToken && !bearerToken(req))','if (activeToken && !bearerToken(req) && !a.adminStorePreview)','do not replace rental cookie from admin');
  const create="    if (req.method === 'POST' && url.pathname === '/api/admin/equipment-rental/shops') {";
  s=once(s,create,read('scripts/r2079-store-admin-route.txt')+create,'admin actions before create');
@@ -50,6 +50,6 @@ let p=read(portal);if(!p.includes('id="pb2079StorePreview"')){const head=p.searc
 let html=read(htmlFile);
 const re=/photobridge-v904r19-admin-stores\.js\?[^"'<>\s]+/g;
 if([...html.matchAll(re)].length!==1)throw Error('[R2079] admin asset URL');
-html=html.replace(re,u=>u.replace(/&storeAdmin=r\d+/g,'')+'&storeAdmin=r2079');write(htmlFile,html);
+html=html.replace(re,u=>u.replace(/&storeAdmin=r\d+/g,'')+'&storeAdmin=r2081');write(htmlFile,html);
 for(const file of [server,ui])execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 console.log('[R2079] explicit admin store preview, scoped transport, verified manager transfer');

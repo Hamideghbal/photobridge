@@ -81,6 +81,19 @@
   function pbR1879FitChooserToDock(){
     const chooser=document.getElementById(ROOT_ID);
     if(!chooser||window.innerWidth>820||!document.body.classList.contains('pbR100F14ChoosingLab'))return;
+    // R2086: the persistent mobile Print frame already ends at the parent dock.
+    // Its hidden local dock must never reserve another 72/78px (or leave a
+    // stale measured height after a tab round trip). Keep the header offset
+    // owned by F37 and stretch the chooser to the frame's actual bottom.
+    if(document.documentElement.hasAttribute('data-pb1106-embedded')||
+       new URLSearchParams(location.search).get('pbEmbeddedStore')==='1'){
+      for(const [key,value] of Object.entries({height:'auto','max-height':'none','min-height':'0',bottom:'0px'})){
+        if(chooser.style.getPropertyValue(key)!==value||chooser.style.getPropertyPriority(key)!=='important')
+          chooser.style.setProperty(key,value,'important');
+      }
+      if(chooser.style.getPropertyValue('overflow')==='hidden')chooser.style.removeProperty('overflow');
+      return;
+    }
     const buttons=[...document.querySelectorAll('#root .photographerBottomAppNav:not(.labBottomAppNav) button:not([hidden])')];
     const tops=buttons.map(button=>{
       const r=button.getBoundingClientRect();

@@ -32,8 +32,10 @@ function fixture({path='/photographer',search='',roles=['photographer','lab','re
   addEventListener:(k,fn)=>windowEvents[k]=fn,dispatchEvent:()=>{}};
  ctx.window=ctx;ctx.top=embedded?{}:ctx;
  vm.runInNewContext(source,ctx);
- const buttons=()=>body.children[0]?.children[0]?.children.filter(n=>n.tag==='button')||[];
- return {requests,redirects,classes,buttons,events,doc,windowEvents,roles,storage,session,ctx,finishSelection:()=>selectionTimers.splice(0).forEach(fn=>fn())};
+ const allButtons=()=>body.children[0]?.children[0]?.children.filter(n=>n.tag==='button')||[];
+ const buttons=()=>allButtons().filter(n=>!n.className?.includes('pb2093LoginAction'));
+ const loginAction=()=>allButtons().find(n=>n.className?.includes('pb2093LoginAction'));
+ return {requests,redirects,classes,buttons,loginAction,events,doc,windowEvents,roles,storage,session,ctx,finishSelection:()=>selectionTimers.splice(0).forEach(fn=>fn())};
 }
 async function settle(){for(let i=0;i<12;i++)await new Promise(r=>setImmediate(r))}
 test('R2087: three live sessions show three named options, never auto-select',async()=>{
@@ -51,7 +53,7 @@ test('R2090: even one valid role waits for explicit selection',async()=>{
  f.buttons()[0].handlers.click();await settle();assert.deepEqual(f.redirects,['/rental?pb2087AccountEntry=1']);
 });
 test('R2092: expired sessions, verified one-use handoff, sensitive links and desktop/iframe do not prompt',async()=>{
- for(const options of [{roles:[]},{search:'?pb2087AccountEntry=1',ticket:{path:'/photographer',until:Date.now()+10000}},{search:'?token=x'},{standalone:false},{mobile:false},{embedded:true}]){
+ for(const options of [{search:'?pb2087AccountEntry=1',ticket:{path:'/photographer',until:Date.now()+10000}},{search:'?token=x'},{standalone:false},{mobile:false},{embedded:true}]){
   const f=fixture(options);await settle();assert.equal(f.buttons().length,0);assert.deepEqual(f.redirects,[]);
  }
 });
@@ -124,4 +126,23 @@ test('R2092: first-head picker and explicit manifest launch survive final assets
  }
  assert.equal(JSON.parse(fs.readFileSync('dist/web/photobridge.webmanifest','utf8')).start_url,'/photographer?pb2092Launch=1');
  assert.ok(fs.readFileSync('dist/web/photobridge-r100f5-entry-routing.js','utf8').includes('PB2092 authorized landing'));
+});
+
+test('R2093: new login lets missing role enter normal login without logging out other sessions',async()=>{
+ const f=fixture({roles:['photographer','lab']});await settle();
+ assert.ok(f.loginAction());assert.equal(f.buttons().length,2);
+ f.loginAction().handlers.click();await settle();
+ assert.deepEqual(f.buttons().map(b=>b.dataset.portal),['photographer','lab','rental']);
+ f.buttons()[2].handlers.click();await settle();
+ assert.deepEqual(f.redirects,['/rental?pb2087AccountEntry=1']);
+ assert.ok(f.requests.every(p=>['photographer','lab','rental'].includes(p)));
+ const ticket=JSON.parse(f.session.get('pb2092-account-handoff'));
+ const g=fixture({path:'/rental',search:'?pb2087AccountEntry=1',roles:['photographer','lab'],ticket});await settle();
+ assert.equal(g.buttons().length,0);assert.equal(g.loginAction(),undefined);
+});
+test('R2093: no active sessions still offer all login roles; back preserves current list',async()=>{
+ const f=fixture({roles:[]});await settle();
+ assert.equal(f.buttons().length,0);assert.ok(f.loginAction());assert.deepEqual(f.redirects,[]);
+ f.loginAction().handlers.click();await settle();assert.equal(f.buttons().length,3);
+ f.loginAction().handlers.click();await settle();assert.equal(f.buttons().length,0);assert.ok(f.loginAction());
 });

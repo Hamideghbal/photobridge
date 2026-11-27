@@ -1,0 +1,79 @@
+/* PB2089: single lightweight camera loop, shared by mobile pickup and return. */
+(()=>{'use strict';
+ const mobile=()=>!window.__PB_DESKTOP_APP__&&matchMedia('(max-width:850px)').matches;
+ let qrPromise=null;
+ function loadQR(){
+  if(typeof window.jsQR==='function')return Promise.resolve(true);
+  if(qrPromise)return qrPromise;
+  qrPromise=new Promise(resolve=>{
+   let script=document.getElementById('pbR87JsQr'),timer;
+   const finish=()=>{clearTimeout(timer);resolve(typeof window.jsQR==='function')};
+   if(!script){script=document.createElement('script');script.id='pbR87JsQr';script.src='/vendor-jsqr-1.4.0.js';script.addEventListener('load',finish,{once:true});script.addEventListener('error',finish,{once:true});document.head.append(script)}
+   else{script.addEventListener('load',finish,{once:true});script.addEventListener('error',finish,{once:true})}
+   timer=setTimeout(finish,4500);
+  }).then(ok=>{if(!ok)qrPromise=null;return ok});return qrPromise;
+ }
+ function crop(vw,vh,displayAspect){
+  const w=Math.min(vw,vh*displayAspect),h=Math.min(vh,vw/displayAspect);
+  return {x:(vw-w)/2,y:(vh-h)/2,w,h};
+ }
+ function mount({wrap,onCode,onError=()=>{},state,video,canvas}){
+  let epoch=0,stream=null,timer=0,frameId=0,lastRaw='',lastSeen=0,misses=0,busy=false,detector=null,qrReady=false,active=false;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const say=t=>{if(state&&state.textContent!==t)state.textContent=t};
+  const stop=()=>{
+   active=false;epoch++;clearTimeout(timer);if(frameId&&video.cancelVideoFrameCallback)video.cancelVideoFrameCallback(frameId);frameId=0;
+   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
+  };
+  function decode(rect,maxSize,invert){
+   if(!qrReady||!ctx)return '';
+   const scale=Math.min(1,maxSize/Math.max(rect.w,rect.h)),w=Math.max(1,Math.round(rect.w*scale)),h=Math.max(1,Math.round(rect.h*scale));
+   if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;
+   ctx.drawImage(video,rect.x,rect.y,rect.w,rect.h,0,0,w,h);
+   return window.jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:invert?'attemptBoth':'dontInvert'})?.data||'';
+  }
+  const start=async()=>{
+   stop();const run=epoch;active=true;lastRaw='';lastSeen=0;misses=0;detector=null;qrReady=false;
+   say('در حال آماده‌سازی دوربین…');onError('');
+   try{
+    if(!navigator.mediaDevices?.getUserMedia)throw Error('camera');
+    const incoming=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24,max:30}}});
+    if(!active||run!==epoch){incoming.getTracks().forEach(t=>t.stop());return}
+    stream=incoming;video.srcObject=stream;await video.play();
+    if(!active||run!==epoch)return;
+    const track=stream.getVideoTracks()[0],caps=track?.getCapabilities?.()||{};
+    if(caps.focusMode?.includes('continuous'))void track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
+    // Native decode first; QR fallback is loaded in parallel, not on the critical path.
+    void loadQR().then(ok=>{if(run===epoch)qrReady=ok});
+    try{if('BarcodeDetector' in window){const supported=await window.BarcodeDetector.getSupportedFormats?.();const formats=['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf','data_matrix'].filter(f=>!supported||supported.includes(f));if(formats.length)detector=new window.BarcodeDetector({formats})}}catch{}
+    if(!active||run!==epoch)return;
+    say('کد را داخل کادر نگه دارید.');
+    const schedule=()=>{if(!active||run!==epoch)return;timer=setTimeout(()=>{if(!active||run!==epoch)return;if(video.requestVideoFrameCallback){frameId=video.requestVideoFrameCallback(()=>{frameId=0;void tick()})}else void tick()},detector?85:150)};
+    async function tick(){
+     if(!active||run!==epoch)return;
+     if(document.hidden||video.readyState<2||!video.videoWidth||busy){schedule();return}
+     busy=true;
+     try{
+      let raw='';
+      if(detector){try{const found=await detector.detect(video);raw=String(found?.[0]?.rawValue||'')}catch{detector=null}}
+      if(!active||run!==epoch)return;
+      if(!raw&&qrReady&&(!detector||misses%3===0)){
+       const vw=video.videoWidth,vh=video.videoHeight,rect=crop(vw,vh,wrap.clientWidth/Math.max(1,wrap.clientHeight)||1.8);
+       // Start with the visible center region; periodically search the full frame at higher resolution.
+       raw=decode(rect,640,false);
+       if(!raw&&misses%5===0)raw=decode({x:0,y:0,w:vw,h:vh},960,misses%10===0);
+      }
+      if(!active||run!==epoch)return;
+      const now=Date.now();if(raw){misses=0;
+       if(raw!==lastRaw||now-lastSeen>1000){lastRaw=raw;lastSeen=now;await onCode(raw);if(!active||run!==epoch)return}
+       lastSeen=now;
+      }else{misses++;if(now-lastSeen>1000)lastRaw='';if(misses===24&&!detector&&!qrReady)say('موتور QR در حال بارگذاری است؛ ورود دستی هم فعال است.')}
+     }catch{}finally{busy=false;schedule()}
+    }
+    schedule();
+   }catch(e){if(run!==epoch)return;stop();say('دوربین فعال نشد.');onError('مجوز دوربین را بررسی کنید؛ ورود دستی و بارکدخوان فیزیکی همچنان فعال‌اند.')}
+  };
+  return {start,stop};
+ }
+ window.pb2089Camera={mobile,mount,crop};
+})();

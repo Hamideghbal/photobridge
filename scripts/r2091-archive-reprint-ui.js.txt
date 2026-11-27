@@ -32,21 +32,15 @@ function pb2091ChooseArchivePhotos(detail,invoiceRequired){
    if(closed||img.dataset.loaded)return;img.dataset.loaded='1';
    let src='';
    try{
-    // Local archive first, including older archived originals removed from cloud.
     if(ai()){
-     rootTask??=Promise.resolve().then(async()=>{const root=await qs();return root&&await Vs(root)?root:null}).catch(()=>null);
-     const root=await rootTask;
-     if(root){
-      const meta=pb1450Meta(file,yc(detail.order.id)?.localFiles||{}),target=await pb1450Target(root,detail,file,new Map());
-      let local=null;try{local=await (await target.dir.getFileHandle(Ya(meta.original_name,'file'),{create:false})).getFile()}catch{}
-      if(!pb1445ValidLocal(local,meta))local=await Eg(root,detail,meta).catch(()=>null);
-      if(pb1445ValidLocal(local,meta)){
-       // Small raster previews keep the archive list light on Windows and phones.
-       if(typeof createImageBitmap==='function'){
-        try{const bitmap=await createImageBitmap(local,{resizeWidth:180,resizeQuality:'low'}),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close();const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',.75));if(blob)src=URL.createObjectURL(blob)}catch{}
-       }
-       if(!src)src=URL.createObjectURL(local);
+     rootTask??=pb2093ArchiveContext(detail);
+     const hit=await pb2093FindArchiveFile(detail,file,await rootTask);
+     const local=hit?.file;
+     if(local){
+      if(typeof createImageBitmap==='function'){
+       try{const bitmap=await createImageBitmap(local,{resizeWidth:200,resizeQuality:'low'}),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close();const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',.75));if(blob)src=URL.createObjectURL(blob)}catch{}
       }
+      if(!src)src=URL.createObjectURL(local);
      }
     }
    }catch{}
@@ -57,7 +51,7 @@ function pb2091ChooseArchivePhotos(detail,invoiceRequired){
   };
   function schedule(file,img,fallback){loading=loading.then(()=>thumb(file,img,fallback)).catch(()=>{})}
   function option(select,value,label){const n=make('option',label);n.value=value;select.append(n)}
-  function field(label,el){const n=make('label');n.append(make('span',label),el);return n}
+  function field(label,el,compact=false){const n=make('label',null,compact?'pb2093CompactField':'');el.setAttribute('aria-label',label);el.title=label;if(!compact)n.append(make('span',label));n.append(el);return n}
   function build(){
    if(closed)return;grid.textContent='';status.textContent=files.length?'عکس‌های لازم را انتخاب کنید و مشخصات چاپ را تغییر دهید.':'فایلی در این آرشیو موجود نیست.';
    const sizes=catalog.sizes||[],models=catalog.models||[];
@@ -68,7 +62,7 @@ function pb2091ChooseArchivePhotos(detail,invoiceRequired){
     const name=make('b',file.original_name||'عکس '+V(index+1)),img=make('img');img.hidden=true;img.alt=file.original_name||'عکس';img.loading='lazy';
     const fallback=make('span','در حال دریافت پیش‌نمایش…'),preview=button('','pb2091Thumb',()=>{if(!img.src)schedule(file,img,fallback);else void pb1451OpenArchiveFile(detail,file).catch(()=>pb1452ArchiveNotice('نسخه کامل عکس در دسترس نیست.'))});
     preview.setAttribute('aria-label','پیش‌نمایش '+name.textContent);preview.append(img,fallback);
-    top.append(check,preview,name);
+    check.setAttribute('aria-label','انتخاب '+name.textContent);top.append(preview,check,name);
     const fields=make('div',null,'pb2091Fields'),size=make('select'),type=make('select'),copies=make('input'),crop=make('select'),chassis=make('select'),frame=make('select'),color=make('select');
     if(!sizes.some(v=>String(v.id)===draft.printSizeId))option(size,draft.printSizeId,file.size_label||'سایز قبلی');
     sizes.forEach(v=>option(size,String(v.id),v.label));size.value=draft.printSizeId;
@@ -90,17 +84,22 @@ function pb2091ChooseArchivePhotos(detail,invoiceRequired){
      color.disabled=!frame.value||(!values.length&&!previous);draft.frameColorId=color.value||null;
     }
     colors();
-    fields.append(field('سایز چاپ',size),field('نوع کاغذ',type),field('تعداد',copies),field('برش',crop),field('شاسی',chassis),field('قاب',frame),field('رنگ قاب',color));
+    const extras=make('details',null,'pb2093Extras'),summary=make('summary','تنظیمات بیشتر'),extraFields=make('div',null,'pb2093ExtraFields'),qty=make('div',null,'pb2093Qty');
+    const step=n=>{copies.value=String(Math.max(1,Math.min(9999,(Number(copies.value)||1)+n)));update()};
+    qty.append(button('−','',()=>step(-1)),copies,button('+','',()=>step(1)));copies.setAttribute('aria-label','تعداد چاپ');
+    fields.append(field('سایز چاپ',size,true),field('نوع کاغذ',type,true),qty);
+    extraFields.append(field('برش',crop),field('شاسی',chassis),field('قاب',frame),field('رنگ قاب',color));extras.append(summary,extraFields);
+    const summarize=()=>{summary.textContent=['تنظیمات',draft.chassis?'شاسی':'',draft.frame?'قاب':'',draft.cropHandling!=='none'?'برش':''].filter(Boolean).join(' · ')};summarize();
     function update(){
      draft.printSizeId=size.value;draft.printType=type.value;draft.printCopies=Number(copies.value);draft.cropHandling=crop.value;
      draft.chassis=Boolean(chassis.value);draft.chassisModelId=chassis.value||null;draft.frame=Boolean(frame.value);draft.frameModelId=frame.value||null;draft.frameColorId=color.value||null;
-     if(check.checked)selected.set(id,{...draft});sync();
+     summarize();if(check.checked)selected.set(id,{...draft});sync();
     }
     function select(value){check.checked=value;card.classList.toggle('selected',value);if(value){selected.set(id,{...draft})}else selected.delete(id);sync()}
     check.onchange=()=>select(check.checked);
     for(const el of [size,type,crop,chassis,color])el.onchange=update;
     copies.oninput=update;frame.onchange=()=>{colors(true);update()};
-    name.onclick=()=>select(!check.checked);card.append(top,fields);grid.append(card);
+    name.onclick=()=>select(!check.checked);card.append(top,fields,extras);grid.append(card);
     const row={card,file,img,fallback,select};controls.push(row);
     if(observer)observer.observe(card);else if(index<12)schedule(file,img,fallback);
    });

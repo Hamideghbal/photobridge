@@ -1,0 +1,33 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),zlib=require('node:zlib');
+const root='dist/web/',bundle=root+'assets/index-UIRefine-v655-r84.js',header=root+'photobridge-r1147-lab-admin-header.js',read=p=>fs.readFileSync(p,'utf8');
+test('R2077 Persian dimensions are display-only, not identifiers or filenames',()=>{
+ const ui=read(bundle),a=ui.indexOf('function pb2077SizeText('),b=ui.indexOf('function wn(',a);assert(a>=0&&b>a);
+ const location={pathname:'/photographer/upload'},$c=v=>String(v).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[Number(d)]).replace(/[٠-٩]/g,d=>'۰۱۲۳۴۵۶۷۸۹'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]);
+ const format=new Function('location','$c',ui.slice(a,b)+'return pb2077SizeText;')(location,$c);
+ for(const [from,to] of [['20x25','۲۰×۲۵'],['13 X 18 · صحافی ۵۰ تومان','۱۳×۱۸ · صحافی ۵۰ تومان'],['۲٠×۳۰','۲۰×۳۰'],['10.5 x 15.2','۱۰٫۵×۱۵٫۲'],['سایز دلخواه','سایز دلخواه'],['Canon R5','Canon R5']])assert.equal(format(from),to);
+ location.pathname='/lab/settings';assert.equal(format('20x25'),'20x25');
+ location.pathname='/admin';assert.equal(format('20x25'),'20x25');
+ const picker=ui.slice(b,ui.indexOf('function ql(',b));assert(picker.includes('children:pb2077SizeText(n.label)'));assert(picker.includes('pb2077SizeText(I==null?void 0:I.label)'));assert(picker.includes('pb2077SizeText(P)'));assert(picker.includes('String(n.value)===String(t)'));
+ assert(ui.includes('label:pb2077SizeText(eg(ue)),sub:'));assert(ui.includes('value:String(p.id),children:pb2077SizeText(String(p.label||p.id))'));
+});
+test('R2077 preview uses original React controls rather than the duplicate header owner',()=>{
+ const source=read(header),a=source.indexOf('function pb2077NativeSettings('),b=source.indexOf('function secondary(h){',a);assert(a>=0&&b>a);
+ const classes=new Set(['pb1148SecondarySource']),removed=[];
+ const sourceNode={querySelector:()=>({}),classList:{remove:x=>classes.delete(x)}};
+ const lab={querySelector:s=>s.includes('labSettingsNavigation')?sourceNode:{remove:()=>removed.push(s)},classList:{remove:x=>removed.push(x)}};
+ const parent={querySelector:s=>({remove:()=>removed.push(s)}),classList:{remove:x=>removed.push(x)}};
+ const h={closest:()=>lab,parentElement:parent};const location={pathname:'/lab/settings/prices'};
+ let preview=true;const document={body:{classList:{contains:()=>preview}},querySelector:()=>null};
+ const native=new Function('document','location',source.slice(a,b)+'return pb2077NativeSettings;')(document,location);
+ assert.equal(native(h),true);assert(!classes.has('pb1148SecondarySource'));assert(removed.some(x=>x.includes('pb1148SecondaryHeader')));
+ location.pathname='/lab/settings/general';assert.equal(native(h),true);
+ location.pathname='/lab/orders/flow';assert.equal(native(h),false);
+ location.pathname='/lab/settings/prices';preview=false;assert.equal(native(h),false);
+ assert(source.includes('if(pb2077NativeSettings(h))return;'));
+ const html=read(root+'index.html');assert(html.includes('photoSizes=r2077')&&html.includes('adminNativeSettings=r2077'));
+ assert(html.includes('id="pb2077NativeSettings"')&&html.includes('.labSettingsNavigation .labSettingsSectionTabs{display:flex!important'));
+ assert(html.includes('top:var(--pb2077-header-bottom,120px)!important'));
+ assert(!read(root+'lab-desktop-ui/photobridge-r1147-lab-admin-header.js').includes('PB2077 admin native settings owner'));
+ for(const file of [bundle,header,root+'index.html'])for(const [ext,decode] of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(file+ext))assert(decode(fs.readFileSync(file+ext)).equals(fs.readFileSync(file)),file+ext);
+});

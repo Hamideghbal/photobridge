@@ -26,6 +26,11 @@ for(const desktop of [false,true])test((desktop?'standalone':'embedded')+' deskt
  });
  await p.addScriptTag({path:'dist/web/photobridge-r1318-print-insets.js'});
  const legacy=[];
+ // These isolated geometry writers close over the R2036 guard and, in F41,
+ // the R2040 action lifecycle. Load the exact snippets installed by the build,
+ // verifying they are actually present in each generated runtime asset.
+ const guard=fs.readFileSync('scripts/r2036-mobile-photo-guard.js.txt','utf8');
+ const actions=fs.readFileSync('scripts/r2036-mobile-photo-actions.js.txt','utf8');
  for(const name of ['photobridge-ui-fixes-v765.js',...['37-store-header-core','38-header-route-isolation','39-print-actions-cleanup','40-mobile-polish','41-header-date-name-fit'].map(n=>'photobridge-v904r100f'+n+'.js')]){
   const source=fs.readFileSync('dist/web/'+name,'utf8');
   for(const fn of ['syncGeometry','resetScrollGeometry','fixPrint','clearPrint']){
@@ -33,14 +38,25 @@ for(const desktop of [false,true])test((desktop?'standalone':'embedded')+' deskt
    if(desktop&&!['resetScrollGeometry','clearPrint'].includes(fn))continue;
    const start=source.indexOf('  function '+fn+'(');if(start<0)continue;
    const closing=source.indexOf('\n  }',start)+4,next=source.indexOf('\n  function ',start+3);const end=next>start&&next<closing?next:closing;assert(end>start,name+' '+fn);
-   legacy.push({name,fn,source:source.slice(start,end)});
+   const body=source.slice(start,end);
+   let dependencies='';
+   if(source.includes('/* PB2036 photo-only ownership */')){
+    assert(source.includes(guard),name+' includes the real mobile ownership guard');
+    dependencies+=guard+'\n';
+   }
+   if(source.includes('function pb2036StopPhoto(){')){
+    assert(source.includes(actions),name+' includes the real mobile action lifecycle');
+    dependencies+=actions+'\n';
+   }
+   if(/\b(?:pb2036MobilePhoto|pb2042PhotoWorkspace|pb2036StopPhoto)\(/.test(body))assert(dependencies,name+' '+fn+' has its original closure dependencies');
+   legacy.push({name,fn,source:body,dependencies});
   }
  }
  assert(legacy.some(x=>x.name.includes('41-header')&&x.fn==='clearPrint'),'execute the F41 writer loaded by index.html');
  const result=await p.evaluate(async legacy=>{
  const area=document.querySelector('.photographerRolePageScrollArea');await new Promise(requestAnimationFrame);area.scrollTop=200;
  const $=(selector,root=document)=>root.querySelector(selector),no=()=>false;
- const fns=legacy.map(({source})=>new Function('$','printComposer','orderComposer','ensureComposerActions','printCreate','albumCreate','return ('+source+')')($,no,no,()=>{},no,no));const tops=[];
+ const fns=legacy.map(({source,dependencies})=>new Function('$','printComposer','orderComposer','ensureComposerActions','printCreate','albumCreate',dependencies+'\nreturn ('+source+')')($,no,no,()=>{},no,no));const tops=[];
  for(let i=0;i<60;i++){
   fns.forEach(fn=>{fn(area.parentElement);tops.push(area.getBoundingClientRect().top)});
   document.body.classList.toggle('test-refresh');await new Promise(requestAnimationFrame);tops.push(area.getBoundingClientRect().top);

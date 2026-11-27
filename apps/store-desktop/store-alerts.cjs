@@ -14,10 +14,10 @@ class StoreAlerts {
    if(ids.length){const r=await this.request('/api/rental/notifications/desktop/read',{method:'POST',body:JSON.stringify({ids})});if(!same())return;if(r.ok&&(await r.json()).ok===true&&same()){const sent=new Set(ids);this.store.set(out,(this.store.get(out)||[]).filter(id=>!sent.has(id)))}}
    if(!same())return;
    const r=await this.request('/api/rental/notifications/desktop?limit=200');if(!same())return;
-   if(r.status===401||r.status===403){this.dismiss();return}
+   if(r.status===401||r.status===403){this.store.set(key,[]);this.dismiss();return}
    if(r.ok){const d=await r.json();if(!same())return;if(String(d.shopId)!==String(account.split(':')[0])){this.dismiss();return}const local=new Set(this.store.get(out)||[]),pending=(d.notifications||[]).filter(n=>typeof n.id==='string'&&!local.has(n.id)).map(n=>({id:n.id,title:String(n.title||'اعلان فروشگاه'),message:String(n.message||''),target:n.target}));this.store.set(key,pending)}
   }catch{/* Persist unread alerts across a temporary offline interval. */}
-  if(!same())return;const pending=this.store.get(key)||[];if(!pending.length){this.dismiss();return}await this.present({items:pending},null,ids=>this.acknowledge(account,ids),account)
+  if(!same())return;const pending=this.store.get(key)||[];if(!pending.length){this.dismiss('empty');return}await this.present({items:pending},null,ids=>this.acknowledge(account,ids),account)
  }
 }
 module.exports={StoreAlerts};

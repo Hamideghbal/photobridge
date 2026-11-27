@@ -18,3 +18,13 @@ test('both Store portals have isolated reader mode, cleanup, explicit return and
  for(const f of ['dist/web/'+name,root+name]){const s=fs.readFileSync(f,'utf8');assert.match(s,/returnMatch\(slots,raw\)/);assert.match(s,/match\.slot\.checked=true/);assert.match(s,/missingConfirmed/);assert.match(s,/window\.confirm\(prompt\)/);}
  const m=JSON.parse(fs.readFileSync(root+'manifest.json','utf8'));for(const n of [name,portal])assert.equal(m.files.find(x=>x.name===n).sha256,crypto.createHash('sha256').update(fs.readFileSync(root+n)).digest('hex'));
 });
+test('physical input uses only the dedicated field and does not submit the order during test mode',()=>{
+ assert.match(helper,/input\.addEventListener\('keydown'/);
+ assert.match(helper,/\['Enter','Tab'\]\.includes\(e\.key\)/);
+ assert.match(helper,/if\(testing\)\{testing=false/);
+ assert.match(helper,/هیچ تجهیزی ثبت نشد/);
+ assert.match(helper,/if\(work\.pending\)return;testing=!testing/);
+ assert.match(helper,/navigator\.serial\.requestPort\(\)/);
+ const s=fs.readFileSync('dist/api/equipment-rental-portal.html','utf8');
+ assert.match(s,/await add\(raw,null,true\)/);assert.match(s,/if\(!hardware\)window\.storeNotice/);
+});

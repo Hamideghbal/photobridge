@@ -8,6 +8,9 @@ export function patchPortal(s,helper,css){
  if(start<0||end<start)throw Error('R2082 pickup bounds');
  let p=s.slice(start,end);
  p=once(p,"let stream=null,closed=false,last='',detector=null,detectBusy=false,allDoneBeeped=false;","let stream=null,closed=false,last='',detector=null,detectBusy=false,allDoneBeeped=false,reader=null,cameraEpoch=0;");
+ p=once(p,"const add=async(raw,preferredIndex=null)=>","const add=async(raw,preferredIndex=null,hardware=false)=>");
+ p=once(p,"code=String(a.system_code||'');if(codes.has(code))return;","code=String(a.system_code||'');if(codes.has(code)){state.textContent='این واحد قبلاً ثبت شده است.';beep('bad');return;}");
+ p=once(p,"window.storeNotice?.(state.textContent,'اسکن نامعتبر')","if(!hardware)window.storeNotice?.(state.textContent,'اسکن نامعتبر')");
  p=once(p,"done.disabled=mode==='pickup'&&n!==total;","done.disabled=(mode==='pickup'&&n!==total)||Boolean(reader?.busy());");
  p=once(p,"const finish=x=>{if(closed)return;closeSourcePicker(false);closed=true;","const stopCamera=()=>{cameraEpoch++;try{stream?.getTracks().forEach(t=>t.stop())}catch{}stream=null;v.srcObject=null;};\n  const finish=x=>{if(closed)return;closeSourcePicker(false);closed=true;reader?.close();stopCamera();");
  p=once(p,"done.onclick=()=>{if(done.disabled)return;","done.onclick=()=>{if(done.disabled||reader?.busy())return;");
@@ -18,7 +21,7 @@ export function patchPortal(s,helper,css){
  p=once(p,"const loop=async()=>{if(closed)return;","const loop=async()=>{if(closed||token!==cameraEpoch)return;");
  p=once(p,"if(raw&&raw!==last){","if(!closed&&token===cameraEpoch&&raw&&raw!==last){");
  p=once(p,"}catch(e){state.textContent='دسترسی دوربین فعال نشد.';","}catch(e){if(closed||token!==cameraEpoch)return;state.textContent='دسترسی دوربین فعال نشد.';");
- p=once(p,"همچنان قابل استفاده است.'}\n });}","همچنان قابل استفاده است.'}};\n  reader=window.pb2082QrReader.mount({before:cameraWrap,kind:'pickup',camera:true,onMode:showMode,onCode:async raw=>{const count=codes.size;await add(raw);return codes.size>count||state.textContent;},onPending:pending=>{done.disabled=Boolean(pending)||(mode==='pickup'&&slots.some(s=>!s.scanned));}});\n  showMode(reader.mode());\n });}");
+ p=once(p,"همچنان قابل استفاده است.'}\n });}","همچنان قابل استفاده است.'}};\n  reader=window.pb2082QrReader.mount({before:cameraWrap,kind:'pickup',camera:true,onMode:showMode,onCode:async raw=>{const count=codes.size;await add(raw,null,true);return codes.size>count||state.textContent;},onPending:pending=>{done.disabled=Boolean(pending)||(mode==='pickup'&&slots.some(s=>!s.scanned));}});\n  showMode(reader.mode());\n });}");
  s=s.slice(0,start)+p+s.slice(end);
  // A versioned URL prevents the old return module from serving from cache.
  const re=/photobridge-r100f73-staff-desktop-return\.js\?[^"'<>\s]+/g;

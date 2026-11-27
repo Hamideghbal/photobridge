@@ -34,7 +34,7 @@
   const q=s=>panel.querySelector(s),selector=q('[data-mode]'),input=q('[data-scan]'),feedback=q('[data-feedback]'),test=q('[data-test]'),connect=q('[data-connect]'),disconnect=q('[data-disconnect]'),baud=q('[data-baud]');
   let closed=false,testing=false,serialEpoch=0,activePort=null,activeReader=null;
   const status=(message,bad=false)=>{if(closed)return;feedback.textContent=message;feedback.dataset.error=bad?'1':'0'};
-  const work=queue(async raw=>{if(closed)return false;if(testing){testing=false;test.textContent='آزمایش دستگاه';status('✓ کدخوان پاسخ داد؛ آزمایش موفق بود. هیچ تجهیزی ثبت نشد.');return true}status('کد دریافت شد؛ در حال تطبیق با سفارش…');const result=await onCode(raw);if(!closed)status(result===true?'✓ تجهیز ثبت شد. آماده اسکن بعدی.':typeof result==='string'?result:'کد تکراری یا نامعتبر؛ جزئیات سفارش را بررسی کنید.',result!==true);return result},onPending,status);
+  const work=queue(async raw=>{if(closed)return false;if(testing){testing=false;test.textContent='آزمایش دستگاه';status('✓ کدخوان پاسخ داد؛ آزمایش موفق بود. هیچ تجهیزی ثبت نشد.');return true}status('کد دریافت شد؛ در حال تطبیق با سفارش…');const result=await onCode(raw);if(!closed)status(result===true?'✓ تجهیز ثبت شد. آماده اسکن بعدی.':typeof result==='string'?result:'کد تکراری یا نامعتبر؛ جزئیات سفارش را بررسی کنید.',result!==true);return result},n=>{test.disabled=Boolean(n);selector.disabled=Boolean(n);onPending(n)},status);
   function scan(raw){if(!closed&&['keyboard','serial'].includes(mode))return work.push(raw)}
   input.addEventListener('keydown',e=>{if(e.isComposing||!['Enter','Tab'].includes(e.key)||!input.value.trim())return;e.preventDefault();e.stopPropagation();const raw=input.value;input.value='';void scan(raw)});
   async function release(){
@@ -73,7 +73,7 @@
    else status('');
   }
   selector.addEventListener('change',()=>{if(!options.includes(selector.value)||work.pending){selector.value=mode;return}testing=false;test.textContent='آزمایش دستگاه';input.value='';if(mode==='serial')void release();mode=selector.value;try{localStorage.setItem(key,mode)}catch{}display(true);onMode(mode)});
-  test.onclick=()=>{testing=!testing;test.textContent=testing?'لغو آزمایش':'آزمایش دستگاه';status(testing?'یک QR آزمایشی بخوانید؛ این کد در سفارش ثبت نمی‌شود.':'آزمایش لغو شد.');if(mode==='keyboard')input.focus({preventScroll:true})};
+  test.onclick=()=>{if(work.pending)return;testing=!testing;test.textContent=testing?'لغو آزمایش':'آزمایش دستگاه';status(testing?'یک QR آزمایشی بخوانید؛ این کد در سفارش ثبت نمی‌شود.':'آزمایش لغو شد.');if(mode==='keyboard')input.focus({preventScroll:true})};
   connect.onclick=()=>void openPort();disconnect.onclick=()=>{void release();status('دستگاه قطع شد.')};
   display(mode==='keyboard');
   return {mode:()=>mode,busy:()=>work.pending>0,close(){if(closed)return;closed=true;work.close();void release();panel.remove()}};

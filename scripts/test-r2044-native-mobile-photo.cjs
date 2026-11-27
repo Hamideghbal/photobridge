@@ -70,12 +70,12 @@ test('R2044 actual portal expression survives tab unmount and remount with fresh
  const calls=[];
  const mount=(lab,phone=true,sending=false,count=1,snapshot=null,error=false)=>render(e,ra,{body},phone,slot,desktopHeader,sending,false,false,count,()=>calls.push(lab+':choose'),()=>calls.push(lab+':product'),()=>calls.push(lab+':send'),()=>calls.push(lab+':cancel'),snapshot,false,error,error);
  function buttons(portal){const [header,send,cancel]=portal.tree.props.children;return [...header.props.children,send,cancel].filter(Boolean)}
- const first=mount('first');assert.equal(first.target,body);assert.equal(buttons(first).length,3);buttons(first).forEach(b=>b.props.onClick());
- const second=mount('second');assert.equal(second.target,body);assert.equal(buttons(second).length,3);buttons(second).forEach(b=>b.props.onClick());
- assert.equal(calls.join('|'),'first:choose|first:product|first:send|second:choose|second:product|second:send');
- assert.equal(buttons(mount('empty',true,false,0))[2].props.disabled,true);
+ const first=mount('first');assert.equal(first.target,body);assert.equal(buttons(first).length,4);assert.equal(buttons(first)[3].props.children,'حذف ارسال');buttons(first).forEach(b=>b.props.onClick());
+ const second=mount('second');assert.equal(second.target,body);assert.equal(buttons(second).length,4);assert.equal(buttons(second)[3].props.children,'حذف ارسال');buttons(second).forEach(b=>b.props.onClick());
+ assert.equal(calls.join('|'),'first:choose|first:product|first:send|first:cancel|second:choose|second:product|second:send|second:cancel');
+ const empty=buttons(mount('empty',true,false,0));assert.equal(empty.length,3);assert.equal(empty[2].props.disabled,true);
  assert.equal(buttons(mount('retry',true,false,0,null,true))[2].props.disabled,false);
  assert.equal(buttons(mount('locked',true,false,1,{orderId:1}))[0].props.disabled,true);
- const busy=buttons(mount('busy',true,true));assert.equal(busy.length,4);assert(busy[2].props.disabled);busy[3].props.onClick();assert.equal(calls.at(-1),'busy:cancel');
+ const busy=buttons(mount('busy',true,true));assert.equal(busy.length,4);assert.equal(busy[3].props.children,'لغو ارسال');assert(busy[2].props.disabled);busy[3].props.onClick();assert.equal(calls.at(-1),'busy:cancel');
  const desktop=mount('desktop',false);assert.equal(desktop.target,slot);assert.equal(desktop.tree,desktopHeader);
 });

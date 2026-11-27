@@ -26,6 +26,7 @@ test('R2100 committed response exits form to the specific receipt independent of
  }
 });
 test('R2100 final UI has one date selector, hidden API dates and a scoped booking receipt',()=>{
+ assert.ok(html.includes('id="pb2100PhotographerCalendarStyle"'),'actual built HTML must contain calendar, not just test-patched copy');
  assert.equal(patchBook(s),s);assert.match(s,/id="pb2100Calendar"/);
  assert.match(s,/id="start" type="hidden"/);assert.match(s,/id="end" type="hidden"/);
  assert.match(s,/data-pb2100-booking-id="\$\{esc\(b.id\)\}"/);
@@ -62,4 +63,20 @@ test('R2103 only requested camera panel loads and duplicate visible requests coa
  fn('salesPanel');await Promise.resolve();assert.deepEqual(calls,['bookings','sales']);
  assert.match(s,/if\(pbProductionStore\(target\)\)void Promise\.allSettled/);
  assert.match(s,/renderShops\(\);renderStoreChooserR96\(\);const pb2103Me=await pb2103Identity/);
+});
+
+test('R2103 actual calendar click warns for a gap, then selects and removes adjacent days',()=>{
+ const nodes=new Map();
+ function node(){return {children:[],hidden:true,append(n){this.children.push(n)},replaceChildren(){this.children=[]},setAttribute(){},showModal(){this.open=true},close(){this.open=false}}}
+ const $=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)};
+ let selected;
+ const calendar=extract('pb2100OpenCalendar','function pb2100ShowReceipt');
+ const open=new Function('$','document','pb2100Today','pb2100Days','jalaliPartsFromIso','jalaliMonths','fa','toGregorian','jalaliMonthLength','dateFa','pb2100SetDays',extract('pb2100Adjacent','function pb2100Toggle')+'\n'+extract('pb2100Toggle','function pb2100Today')+'\n'+calendar+';return pb2100OpenCalendar')($,{createElement:node},()=> '2026-11-01',()=>[],()=>({year:2026,month:11}),Array(12).fill('ماه'),String,(y,m,d)=>({gy:y,gm:m,gd:d}),()=>30,String,d=>selected=d);
+ open();
+ const get=d=>$('#pb2100CalendarGrid').children.find(x=>x.textContent===String(d));
+ get(1).onclick();assert.equal(get(3).disabled,false);get(3).onclick();
+ assert.equal($('#pb2103CalendarWarning').hidden,false);
+ get(2).onclick();assert.equal($('#pb2103CalendarWarning').hidden,true);
+ get(2).onclick();$('#pb2100CalendarDone').onclick();
+ assert.deepEqual(selected,['2026-11-01']);
 });

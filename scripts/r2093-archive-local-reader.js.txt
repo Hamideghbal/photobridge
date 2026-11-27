@@ -20,15 +20,16 @@ async function pb2093Index(detail,ctx){
  ctx.index=(async()=>{
   const result=[],number=Number(detail.order.number),queue=ctx.roots.map(root=>({dir:root,depth:0,owned:pb2093Identity(root.name)===number,path:String(root.displayPath||root.rootId||root.name||'')}));
   if(!Number.isSafeInteger(number)||number<=0)return result;
+  if(!ctx.roots.length)ctx.issues.push('root_unavailable');
   let visited=0;
   for(let i=0;i<queue.length;i++){
    const {dir,depth,owned,path}=queue[i];
    if(++visited>6000){ctx.issues.push('search_limit');break}
-   if(depth>7)continue;
+   if(depth>7){ctx.issues.push('search_depth');continue}
    try{for await(const [name,h] of dir.entries()){
     const id=h.kind==='directory'?pb2093Identity(name):null;
     if(h.kind==='directory'){
-     if(id!==null&&id!==number)continue;
+     if(id!==null&&id!==number&&(!owned||/(?:order|invoice)[- _]*\d/i.test(name)))continue;
      queue.push({dir:h,depth:depth+1,owned:owned||id===number,path:path+'/'+name});
     }else if(owned&&h.kind==='file'&&/\.(jpe?g|png|tiff?|webp|bmp|heic|heif|psd|psb|avif|gif)$/i.test(name))result.push({name,handle:h,path:path+'/'+name});
    }}catch(e){ctx.issues.push('directory')}
@@ -39,10 +40,10 @@ async function pb2093Index(detail,ctx){
 async function pb2093FindArchiveFile(detail,file,ctx){
  const raw=ctx.state.localFiles?.[String(file.id)],receipt=raw&&raw.serverName===file.original_name&&Number(raw.serverBytes)===Number(file.bytes)?raw:null;
  const sizes=new Set([file.bytes,file.print_bytes,receipt?.bytes].map(Number).filter(n=>Number.isSafeInteger(n)&&n>0)),names=pb2093Names(file,receipt,detail.order);
- if(!sizes.size)return null;
+ if(!sizes.size){ctx.issues.push('unknown_size');return null}
  const canonical=size=>receipt?.transportName&&Number(receipt.bytes)===size?receipt.transportName:file.print_name&&Number(file.print_bytes)===size&&Number(file.bytes)!==size?file.print_name:file.original_name;
  const read=async(handle,key)=>{if(!handle||ctx.claimed.has(key))return null;try{const stat=await pb1450FileInfo(handle);if(!sizes.has(Number(stat.size)))return null;const data=await handle.getFile();if(!sizes.has(data.size)||data.size!==Number(stat.size))return null;return{file:data,meta:{...file,original_name:canonical(data.size),bytes:data.size},key}}catch{return null}};
- const descriptor=(detail.order.localFiles||[]).find(f=>String(f.fileId||'')===String(file.id));
+ const descriptor=(Array.isArray(detail.order.localFiles)?detail.order.localFiles:[]).find(f=>String(f.fileId||'')===String(file.id));
  if(window.pbNativeStorage&&descriptor?.rootId&&descriptor.parts?.length){
   const h=pb1550Decode({...descriptor,native:true,kind:'file',name:descriptor.parts.at(-1)});
   const hit=await read(h,descriptor.rootId+'/'+descriptor.parts.join('/'));if(hit)return hit;

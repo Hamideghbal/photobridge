@@ -1,1 +1,1 @@
-2026-11-27-r2078-print-action-guide-divider
+2026-11-27-r2079-admin-store-access-manager-transfer

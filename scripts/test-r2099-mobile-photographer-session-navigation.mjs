@@ -32,3 +32,14 @@ test('R2099 final documents isolate panel failures and carry selected role acros
  for(const s of [html,index]){assert.ok(s.includes('PB2099 internal photographer route'));assert.ok(s.includes('pb2099MobilePanelIsolation'));assert.ok(s.includes('mobileRoute=r2099'))}
  assert.ok(read('dist/web/photobridge-r100f5-entry-routing.js').includes('PB2099 store landing handoff'));
 });
+
+test('R2103 photographer entry avoids short lifecycle re-prompt without disabling real session verification',()=>{
+ for(const s of [index,html]){
+  assert.match(s,/saved\.until<=Date\.now\(\)\+60000/);
+  assert.match(s,/currentPortal\(\)==='photographer'&&authorized&&!needsResume&&Date\.now\(\)-pb2103SelectedAt<12000/);
+  assert.match(s,/if\(selected==='photographer'&&valid\?\.uncertain\)valid=await validSession\(selected\)/);
+  assert.match(s,/storePerf=r2103/);
+ }
+ assert.match(panel,/new MutationObserver\(pb2103QueueSync\)/);
+ assert.match(panel,/requestAnimationFrame\(\(\)=>\{pb2103SyncQueued=false;sync\(\)\}\)/);
+});

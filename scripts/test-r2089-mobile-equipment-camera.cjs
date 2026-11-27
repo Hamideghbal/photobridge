@@ -28,7 +28,7 @@ test('R2089: visible crop preserves sensor geometry and mobile scope excludes de
 });
 test('R2089: both handover paths use mobile camera, compact preview and explicit checklist, Windows unchanged',()=>{
  const p=fs.readFileSync('dist/api/equipment-rental-portal.html','utf8'),r=fs.readFileSync('dist/web/photobridge-r100f73-staff-desktop-return.js','utf8');
- assert.ok(p.includes('id="pb2089MobileScanRuntime"'));assert.ok(p.includes('height:clamp(100px,19dvh,148px)'));
+ assert.ok(p.includes('id="pb2089MobileScanRuntime"'));assert.ok(p.includes('height:clamp(92px,17dvh,128px)'));
  assert.ok(p.includes('await mobileCamera.start()'));assert.ok(p.includes('cameraPending'));assert.ok(p.includes('mobileCamera?.stop()'));
  assert.ok(p.includes('mobileCamera=r2089'));assert.ok(r.includes('camera:mobileScan'));assert.ok(r.includes('returnMatch(slots,raw)'));
  assert.ok(r.includes('camera?.stop()'));assert.ok(r.includes('window.confirm(prompt)'));assert.ok(r.includes('missingConfirmed'));

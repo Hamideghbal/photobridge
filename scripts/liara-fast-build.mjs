@@ -1594,9 +1594,12 @@ await deployStep('./enable-r2089-mobile-equipment-camera.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.cjs'],{stdio:'inherit'});
 
 // R2098: mobile photographer successful booking returns to the selected store homepage.
-await deployStep('./enable-r2098-mobile-booking-return.mjs');
-runR1314(process.execPath,['--test','scripts/test-r2098-mobile-booking-return.mjs'],{stdio:'inherit'});
+// R2100 supersedes the earlier mobile-only home return with a confirmed booking receipt on both platforms.
 
 // R2099 final mobile-only photographer navigation after account picker and older panel writers.
 await deployStep('./enable-r2099-mobile-photographer-session-navigation.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2099-mobile-photographer-session-navigation.mjs'],{stdio:'inherit'});
+
+// R2100: shared photographer booking calendar and receipt after the final mobile navigation writer.
+await deployStep('./enable-r2100-photographer-booking-calendar.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2100-photographer-booking-calendar.mjs'],{stdio:'inherit'});

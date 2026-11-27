@@ -1592,3 +1592,7 @@ runR1314(process.execPath,['--test','scripts/test-r2087-mobile-account-picker.cj
 // R2089: mobile Store scanner, after final web/account writers; keep Windows snapshot frozen.
 await deployStep('./enable-r2089-mobile-equipment-camera.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.cjs'],{stdio:'inherit'});
+
+// R2095: isolated Store Windows notification feed and signed installer publishing.
+runR1314(process.execPath,['scripts/enable-r2095-store-native.mjs'],{stdio:'inherit'});
+runR1314(process.execPath,['--test','scripts/test-r2095-store-native.cjs'],{stdio:'inherit'});

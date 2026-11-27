@@ -18,7 +18,7 @@
   return {x:(vw-w)/2,y:(vh-h)/2,w,h};
  }
  function mount({wrap,onCode,onError=()=>{},state,video,canvas}){
-  let epoch=0,stream=null,timer=0,frameId=0,lastRaw='',lastSeen=0,misses=0,busy=false,detector=null,qrReady=false,active=false;
+  let epoch=0,stream=null,timer=0,frameId=0,lastRaw='',lastSeen=0,misses=0,detector=null,qrReady=false,active=false;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
   const say=t=>{if(state&&state.textContent!==t)state.textContent=t};
   const stop=()=>{
@@ -35,43 +35,47 @@
   const start=async()=>{
    stop();const run=epoch;active=true;lastRaw='';lastSeen=0;misses=0;detector=null;qrReady=false;
    say('در حال آماده‌سازی دوربین…');onError('');
+   // R2094: load the local QR decoder while permission/camera initialization is in progress.
+   void loadQR().then(ok=>{if(active&&run===epoch)qrReady=ok});
    try{
     if(!navigator.mediaDevices?.getUserMedia)throw Error('camera');
-    const incoming=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24,max:30}}});
+    const incoming=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}}});
     if(!active||run!==epoch){incoming.getTracks().forEach(t=>t.stop());return}
     stream=incoming;video.srcObject=stream;await video.play();
     if(!active||run!==epoch)return;
-    const track=stream.getVideoTracks()[0],caps=track?.getCapabilities?.()||{};
-    if(caps.focusMode?.includes('continuous'))void track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
-    // Native decode first; QR fallback is loaded in parallel, not on the critical path.
-    void loadQR().then(ok=>{if(run===epoch)qrReady=ok});
+    // Apply continuous autofocus/exposure only when the camera exposes support.
+    try{const track=stream.getVideoTracks()[0],caps=track?.getCapabilities?.()||{};const advanced=[];
+     if(caps.focusMode?.includes('continuous'))advanced.push({focusMode:'continuous'});
+     if(caps.exposureMode?.includes('continuous'))advanced.push({exposureMode:'continuous'});
+     if(advanced.length)void track.applyConstraints({advanced}).catch(()=>{});
+    }catch{}
     try{if('BarcodeDetector' in window){const supported=await window.BarcodeDetector.getSupportedFormats?.();const formats=['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf','data_matrix'].filter(f=>!supported||supported.includes(f));if(formats.length)detector=new window.BarcodeDetector({formats})}}catch{}
     if(!active||run!==epoch)return;
     say('کد را داخل کادر نگه دارید.');
-    const schedule=()=>{if(!active||run!==epoch)return;timer=setTimeout(()=>{if(!active||run!==epoch)return;if(video.requestVideoFrameCallback){frameId=video.requestVideoFrameCallback(()=>{frameId=0;void tick()})}else void tick()},detector?85:150)};
+    const schedule=()=>{if(!active||run!==epoch)return;timer=setTimeout(()=>{if(!active||run!==epoch)return;if(video.requestVideoFrameCallback){frameId=video.requestVideoFrameCallback(()=>{frameId=0;void tick()})}else void tick()},detector?45:85)};
     async function tick(){
      if(!active||run!==epoch)return;
-     if(document.hidden||video.readyState<2||!video.videoWidth||busy){schedule();return}
-     busy=true;
+     if(document.hidden||video.readyState<2||!video.videoWidth||!video.videoHeight){schedule();return}
      try{
       let raw='';
-      if(detector){try{const found=await detector.detect(video);raw=String(found?.[0]?.rawValue||'')}catch{detector=null}}
+      if(detector){try{const found=await detector.detect(video);raw=String((found?.find(x=>x.format==='qr_code'&&/^PB\|/i.test(x.rawValue||''))||found?.find(x=>x.format==='qr_code')||found?.[0])?.rawValue||'')}catch{detector=null}}
       if(!active||run!==epoch)return;
-      if(!raw&&qrReady&&(!detector||misses%3===0)){
-       const vw=video.videoWidth,vh=video.videoHeight,rect=crop(vw,vh,wrap.clientWidth/Math.max(1,wrap.clientHeight)||1.8);
-       // Start with the visible center region; periodically search the full frame at higher resolution.
-       raw=decode(rect,640,false);
-       if(!raw&&misses%5===0)raw=decode({x:0,y:0,w:vw,h:vh},960,misses%10===0);
+      if(!raw&&qrReady){
+       const vw=video.videoWidth,vh=video.videoHeight,rect=crop(vw,vh,wrap.clientWidth/Math.max(1,wrap.clientHeight)||1);
+       // A square ROI matches the preview. Alternate sampling sizes to help with monitor moiré,
+       // small codes and inverted contrast, without two expensive full-frame scans every tick.
+       const phase=misses%4;
+       raw=phase===3?decode({x:0,y:0,w:vw,h:vh},1100,true):decode(rect,phase===1?900:560,phase===2);
       }
       if(!active||run!==epoch)return;
       const now=Date.now();if(raw){misses=0;
-       if(raw!==lastRaw||now-lastSeen>1000){lastRaw=raw;lastSeen=now;await onCode(raw);if(!active||run!==epoch)return}
-       lastSeen=now;
+       if(raw!==lastRaw){lastRaw=raw;lastSeen=now;await onCode(raw);if(!active||run!==epoch)return}
+       lastSeen=Date.now();
       }else{misses++;if(now-lastSeen>1000)lastRaw='';if(misses===24&&!detector&&!qrReady)say('موتور QR در حال بارگذاری است؛ ورود دستی هم فعال است.')}
-     }catch{}finally{busy=false;schedule()}
+     }catch{}finally{schedule()}
     }
     schedule();
-   }catch(e){if(run!==epoch)return;stop();say('دوربین فعال نشد.');onError('مجوز دوربین را بررسی کنید؛ ورود دستی و بارکدخوان فیزیکی همچنان فعال‌اند.')}
+   }catch(e){if(run!==epoch)return;stop();say('دوربین فعال نشد.');onError('مجوز دوربین را بررسی کنید؛ ورود دستی کد همچنان فعال است.')}
   };
   return {start,stop};
  }

@@ -27,6 +27,18 @@ if(!ui.includes('data-pb1969-frame-renew')){
  ui=once(ui,'async function managerAccess(s){',read('scripts/r1969-frame-admin-renewal-ui.txt')+'\nasync function managerAccess(s){','frame admin action');
  write('dist/web/photobridge-v904r19-admin-stores.js',ui);
 }
+// R2076: the renewal action is visible next to expiry and in the Edit dialog.
+if(!ui.includes('data-pb2076-frame-renew-edit')){
+ const editStart=ui.indexOf('function edit(s){'),editEnd=ui.indexOf('async function pb1969RenewFrameShop(',editStart);
+ if(editStart<0||editEnd<=editStart)throw Error('[R2076] shop edit dialog missing');
+ let edit=ui.slice(editStart,editEnd);
+ edit=once(edit,"<form id=\"pb904r19StoreForm\"","${[\"frame\",\"chassis\",\"frame_chassis\"].includes(String(s.business_category||\"\"))?`<div class=\"pb904r19StoreActions\" style=\"display:flex;align-items:center;gap:8px;margin:0 0 12px\"><span data-pb2076-expiry>اعتبار فعالیت: ${s.active_until===null?\"نامحدود\":s.active_until?esc(dt(s.active_until)):\"نامشخص\"}</span><button type=\"button\" class=\"primary\" data-pb2076-frame-renew-edit>تمدید دستی رایگان</button></div>`:\"\"}<form id=\"pb904r19StoreForm\"",'R2076 edit renewal button');
+ edit=once(edit,"m.classList.add('open');m.querySelector('#pb904r19StoreSave').onclick","m.classList.add('open');const renewal=m.querySelector('[data-pb2076-frame-renew-edit]');if(renewal)renewal.onclick=async()=>{const current=S.shops.find(x=>String(x.id)===String(s.id))||s;await pb1969RenewFrameShop(current,renewal);const latest=S.shops.find(x=>String(x.id)===String(s.id));const expiry=m.querySelector('[data-pb2076-expiry]');if(expiry&&latest?.active_until)expiry.textContent='اعتبار فعالیت: '+dt(latest.active_until)};m.querySelector('#pb904r19StoreSave').onclick",'R2076 edit renewal handler');
+ ui=ui.slice(0,editStart)+edit+ui.slice(editEnd);
+ ui=once(ui,"${[\"frame\",\"chassis\",\"frame_chassis\"].includes(String(s.business_category||\"\"))?\"<button type=\\\"button\\\" class=\\\"primary\\\" data-pb1969-frame-renew>تمدید دستی رایگان</button>\":\"\"}<button data-store-domain>",'<button data-store-domain>','R2076 relocate original row action');
+ ui=once(ui,"</small></td><td><b>${fa(s.item_count||0)} کالا","</small><div class=\"pb904r19StoreActions\" style=\"margin-top:5px\">${[\"frame\",\"chassis\",\"frame_chassis\"].includes(String(s.business_category||\"\"))?\"<button type=\\\"button\\\" class=\\\"primary\\\" data-pb1969-frame-renew>تمدید دستی رایگان</button>\":\"\"}</div></td><td><b>${fa(s.item_count||0)} کالا",'R2076 renewal beside expiry');
+ write('dist/web/photobridge-v904r19-admin-stores.js',ui);
+}
 execFileSync(process.execPath,['--check','dist/web/photobridge-v904r19-admin-stores.js'],{stdio:'inherit'});
 
 let html=read('dist/web/index.html');
@@ -34,6 +46,7 @@ const asset=/photobridge-v904r19-admin-stores\.js\?v=[a-zA-Z0-9_-]+/g;
 const matches=[...html.matchAll(asset)];
 if(matches.length!==1)throw Error('[R1969] admin-store script src count '+matches.length);
 html=html.replace(asset,'photobridge-v904r19-admin-stores.js?v=r2067');
+html=html.replace(/(photobridge-v904r19-admin-stores\.js\?v=r2067)(?:&frameRenew=r\d+)?/g,'$1&frameRenew=r2076');
 write('dist/web/index.html',html);
 if(!server.includes('frame_store_only')||!ui.includes('pb1969RenewFrameShop')||!html.includes('admin-stores.js?v=r2067')){
  throw Error('[R1969] frame renewal release incomplete');

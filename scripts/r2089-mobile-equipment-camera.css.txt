@@ -5,11 +5,11 @@ html body .pb2089MobilePickup>.pbR85ScanCard,html body .pb2089MobileReturn>.pbR1
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2082Reader{flex:none!important;margin:0!important;padding:2px 4px!important;gap:2px!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2082Reader select{min-height:30px!important;padding:2px 7px!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2082Reader label{gap:2px!important;min-width:0!important}
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap{position:relative!important;width:min(100%,360px)!important;height:clamp(92px,17dvh,128px)!important;max-height:none!important;min-height:0!important;aspect-ratio:auto!important;flex:0 0 auto!important;margin:0 auto!important;border-radius:10px!important;overflow:hidden!important;background:#111!important}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap{position:relative!important;width:min(100%,230px)!important;width:min(100%,230px,34dvh)!important;height:auto!important;max-height:none!important;min-height:0!important;aspect-ratio:1/1!important;flex:0 0 auto!important;margin:0 auto!important;border-radius:10px!important;overflow:hidden!important;background:#111!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap[hidden]{display:none!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap canvas{display:none!important}
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85Guide{position:absolute!important;inset:6px 16% 26px!important;border:2px solid #fff!important;border-radius:9px!important;box-shadow:0 0 0 9999px #0003!important;pointer-events:none}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85Guide{position:absolute!important;inset:12%!important;border:2px solid #fff!important;border-radius:9px!important;box-shadow:0 0 0 9999px #0003!important;pointer-events:none}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR88ScanLine{display:none!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85ScanState{position:absolute!important;bottom:3px!important;left:4px!important;right:4px!important;padding:2px 5px!important;font:700 10px/1.3 Vazirmatn,Tahoma,sans-serif!important;background:#111c!important;color:#fff!important;border-radius:6px!important;text-align:center!important;pointer-events:none}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) :is(.pbR85ScanHead,.pbR100F73ReturnHead,.pbR86ScanProgress,.pbR100F73ReturnSummary){flex:none!important;margin:0!important}
@@ -29,10 +29,11 @@ html body .pb2089MobileReturn .pbR100F73ReturnWarning{max-height:72px!important;
 
 /* R2092: mobile Afish = compact equipment rows, camera and one manual input. */
 @media(max-width:850px){
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualCode{border:0!important;background:transparent!important;margin:0!important;padding:0!important;display:grid!important;gap:1px!important}
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow{display:grid!important;grid-template-columns:minmax(0,1fr) 52px;gap:4px;align-items:center}
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow :is(input,button){min-height:32px!important;height:32px!important;padding:3px 7px!important;margin:0!important;font-size:12px!important;line-height:1.25!important}
-html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow button{background:#315efb!important;color:#fff!important;border-color:#315efb!important}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualCode{border:0!important;background:transparent!important;margin:8px 0 4px!important;padding:0!important;display:grid!important;gap:3px!important}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow{display:grid!important;grid-template-columns:minmax(0,1fr) 80px;gap:8px;align-items:center}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow :is(input,button){min-height:36px!important;height:36px!important;min-width:0!important;padding:4px 8px!important;margin:0!important;font-size:12px!important;line-height:1.25!important;box-sizing:border-box!important}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow button{background:#315efb!important;color:#fff!important;border-color:#315efb!important;min-height:42px!important;height:42px!important;font-size:14px!important;font-weight:800!important}
+html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualRow input{width:100%!important;min-width:0!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pb2092ManualCode [data-feedback]:empty{display:none!important}
 html body :is(.pb2089MobilePickup,.pb2089MobileReturn) .pbR85CameraWrap{margin:0 auto!important}
 html body .pb2089MobilePickup .pbR86OrderAssets,html body .pb2089MobileReturn .pbR100F73ReturnRows{gap:3px!important}
@@ -46,7 +47,7 @@ html body .pb2089MobilePickup .pbR1058SupplyChoice{padding:0!important;margin:0!
 html body .pb2089MobilePickup .pbR1068SourceTrigger{min-height:28px!important;padding:3px 6px!important;font-size:10px!important}
 html body .pb2089MobilePickup .pbR86SupplyToggle{font-size:10px!important;gap:4px!important}
 html body .pb2089MobilePickup .pbR86InlineCode :is(input,button){min-height:29px!important;padding:3px 5px!important;font-size:10px!important}
-html body .pb2089MobilePickup .pbR1072SupplyPriority{font-size:9px!important;line-height:1.25!important;margin:0!important}
+html body .pb2089MobilePickup .pbR1072SupplyPriority{display:none!important}
 html body .pb2089MobileReturn .pbR100F73ReturnError:empty{display:none!important}
 }
 </style>

@@ -48,10 +48,12 @@ if(!entry.includes('/* PB2087 wait for account selection */')){
  entry=entry.replace(anchor,ready+'\n'+anchor);
 }
 // Recheck after asynchronous entry-context fetch: a foreground gate can open mid-request.
+// R1720/R1721/R1836 already replaced the original hard-coded Gallery redirect.
+// Guard the final routing decision, preserving its existing SPA/Store destinations.
 if(!entry.includes('/* PB2092 authorized landing */')){
- const target="done=true;location.replace('/photographer/gallery');";
- if(entry.split(target).length!==2)throw Error('R2092 entry redirect anchor');
- entry=entry.replace(target,"/* PB2092 authorized landing */ if(document.documentElement.classList.contains('pb2087AccountPending'))return;if(typeof window.pb2092AccountNavigate==='function'){if(window.pb2092AccountNavigate('/photographer/gallery'))done=true;return}done=true;location.replace('/photographer/gallery');");
+ const target=/\bdone\s*=\s*true\s*;(?=\s*if\s*\(window\s*===\s*window\.top)/g;
+ if([...entry.matchAll(target)].length!==1)throw Error('R2092 final entry decision anchor');
+ entry=entry.replace(target,match=>"/* PB2092 authorized landing */ if(document.documentElement.classList.contains('pb2087AccountPending'))return;\n      "+match);
 }
 new Function(entry);write(entryFile,entry);
 const manifestFile='dist/web/photobridge.webmanifest',manifest=JSON.parse(read(manifestFile));

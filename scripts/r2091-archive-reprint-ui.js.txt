@@ -1,0 +1,126 @@
+// R2091: archive photo selection, editable print specification and truthful result.
+// All draft changes are local to this dialog. File reads use the original metadata.
+function pb2091ChooseArchivePhotos(detail,invoiceRequired){
+ return new Promise(resolve=>{
+  const dialog=document.createElement('dialog');dialog.className='pb2091ArchivePicker';dialog.dir='rtl';
+  dialog.setAttribute('aria-label','انتخاب عکس‌های چاپ مجدد');
+  const make=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n};
+  const button=(text,cls,click)=>{const n=make('button',text,cls);n.type='button';n.onclick=click;return n};
+  const files=detail.files||[],selected=new Map(),controls=[],urls=new Set();
+  let closed=false,observer=null,loading=Promise.resolve(),rootTask=null,catalog=null;
+  const finish=value=>{if(closed)return;closed=true;observer?.disconnect();for(const url of urls)URL.revokeObjectURL(url);urls.clear();dialog.close();dialog.remove();resolve(value)};
+  const head=make('header'),heading=make('div');heading.append(make('h3','انتخاب عکس‌های چاپ مجدد'),make('small','سفارش #'+V(detail.order.number)+(invoiceRequired?' · با فاکتور جدید':' · بدون فاکتور')));
+  head.append(heading,button('×','pb2091Close',()=>finish(null)));
+  const tools=make('div',null,'pb2091Toolbar'),count=make('b','۰ عکس انتخاب شده'),status=make('small','در حال دریافت سایزهای چاپ…','pb2091Status');
+  const grid=make('div',null,'pb2091PhotoGrid'),foot=make('footer'),confirm=button('ثبت چاپ مجدد','primary',()=>{
+   if(!selected.size||!catalog)return;
+   const rows=files.filter(f=>selected.has(String(f.id))).map(f=>selected.get(String(f.id)));
+   if(rows.some(v=>!v.printSizeId||!Number.isInteger(v.printCopies)||v.printCopies<1||v.printCopies>9999||v.printType==='none'&&!v.chassis&&!v.frame)){
+    status.textContent='سایز، تعداد و نوع چاپ عکس‌های انتخاب‌شده را بررسی کنید.';return;
+   }
+   if(!rows.every(v=>!v.frame||!v.frameModelId||!catalog.models.find(m=>m.id===v.frameModelId)?.colors?.length||v.frameColorId)){
+    status.textContent='رنگ قاب عکس‌های انتخاب‌شده را مشخص کنید.';return;
+   }
+   finish(rows);
+  });
+  const sync=()=>{count.textContent=V(selected.size)+' از '+V(files.length)+' عکس انتخاب شده';confirm.disabled=!catalog||!selected.size};
+  tools.append(button('انتخاب همه','',()=>{controls.forEach(v=>v.select(true));sync()}),button('لغو انتخاب','',()=>{controls.forEach(v=>v.select(false));sync()}),count);
+  foot.append(button('انصراف','',()=>finish(null)),confirm);
+  dialog.append(head,tools,status,grid,foot);dialog.addEventListener('cancel',event=>{event.preventDefault();finish(null)});
+  document.body.append(dialog);dialog.showModal();sync();
+  const thumb=async(file,img,fallback)=>{
+   if(closed||img.dataset.loaded)return;img.dataset.loaded='1';
+   let src='';
+   try{
+    // Local archive first, including older archived originals removed from cloud.
+    if(ai()){
+     rootTask??=Promise.resolve().then(async()=>{const root=await qs();return root&&await Vs(root)?root:null}).catch(()=>null);
+     const root=await rootTask;
+     if(root){
+      const meta=pb1450Meta(file,yc(detail.order.id)?.localFiles||{}),target=await pb1450Target(root,detail,file,new Map());
+      let local=null;try{local=await (await target.dir.getFileHandle(Ya(meta.original_name,'file'),{create:false})).getFile()}catch{}
+      if(!pb1445ValidLocal(local,meta))local=await Eg(root,detail,meta).catch(()=>null);
+      if(pb1445ValidLocal(local,meta)){
+       // Small raster previews keep the archive list light on Windows and phones.
+       if(typeof createImageBitmap==='function'){
+        try{const bitmap=await createImageBitmap(local,{resizeWidth:180,resizeQuality:'low'}),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close();const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',.75));if(blob)src=URL.createObjectURL(blob)}catch{}
+       }
+       if(!src)src=URL.createObjectURL(local);
+      }
+     }
+    }
+   }catch{}
+   try{if(!src)src=await pb1183PreviewFile(file.id)}catch{}
+   if(closed){if(src?.startsWith('blob:'))URL.revokeObjectURL(src);return}
+   if(src){if(src.startsWith('blob:'))urls.add(src);img.onerror=()=>{img.hidden=true;fallback.hidden=false};img.src=src;img.hidden=false;fallback.hidden=true}
+   else fallback.textContent='پیش‌نمایش موجود نیست';
+  };
+  function schedule(file,img,fallback){loading=loading.then(()=>thumb(file,img,fallback)).catch(()=>{})}
+  function option(select,value,label){const n=make('option',label);n.value=value;select.append(n)}
+  function field(label,el){const n=make('label');n.append(make('span',label),el);return n}
+  function build(){
+   if(closed)return;grid.textContent='';status.textContent=files.length?'عکس‌های لازم را انتخاب کنید و مشخصات چاپ را تغییر دهید.':'فایلی در این آرشیو موجود نیست.';
+   const sizes=catalog.sizes||[],models=catalog.models||[];
+   if(typeof IntersectionObserver==='function')observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);const row=controls.find(v=>v.card===entry.target);if(row)schedule(row.file,row.img,row.fallback)}},{root:grid,rootMargin:'90px'});
+   files.forEach((file,index)=>{
+    const id=String(file.id),old=file.addon_selection||{},draft={id,printSizeId:String(file.print_size_id||''),printType:String(file.print_type||'luster'),printCopies:Number(file.print_copies||1),cropHandling:String(file.crop_handling||'none'),chassis:Boolean(file.chassis),frame:Boolean(file.frame),chassisModelId:old.chassis?.id||'chassis',frameModelId:old.frame?.id||'frame',frameColorId:old.frame?.colorId||null};
+    const card=make('article',null,'pb2091PhotoCard'),top=make('div',null,'pb2091PhotoTop'),check=make('input');check.type='checkbox';
+    const name=make('b',file.original_name||'عکس '+V(index+1)),img=make('img');img.hidden=true;img.alt=file.original_name||'عکس';img.loading='lazy';
+    const fallback=make('span','در حال دریافت پیش‌نمایش…'),preview=button('','pb2091Thumb',()=>{if(!img.src)schedule(file,img,fallback);else void pb1451OpenArchiveFile(detail,file).catch(()=>pb1452ArchiveNotice('نسخه کامل عکس در دسترس نیست.'))});
+    preview.setAttribute('aria-label','پیش‌نمایش '+name.textContent);preview.append(img,fallback);
+    top.append(check,preview,name);
+    const fields=make('div',null,'pb2091Fields'),size=make('select'),type=make('select'),copies=make('input'),crop=make('select'),chassis=make('select'),frame=make('select'),color=make('select');
+    if(!sizes.some(v=>String(v.id)===draft.printSizeId))option(size,draft.printSizeId,file.size_label||'سایز قبلی');
+    sizes.forEach(v=>option(size,String(v.id),v.label));size.value=draft.printSizeId;
+    for(const [v,label] of [['luster','لاستر'],['silk','سیلک'],['metallic','متالیک'],['none','بدون چاپ عکس']])option(type,v,label);type.value=draft.printType;
+    copies.type='number';copies.min='1';copies.max='9999';copies.step='1';copies.value=String(draft.printCopies);copies.inputMode='numeric';
+    for(const [v,label] of [['none','بدون برش'],['customer','برش قبلی'],['lab','تنظیم برش در لابراتوار']])option(crop,v,label);crop.value=draft.cropHandling;
+    function modelOptions(el,kind,oldModel,current){
+     option(el,'','بدون '+(kind==='chassis'?'شاسی':'قاب'));
+     if(current&&!models.some(m=>m.id===current&&m.kind===kind))option(el,current,oldModel?.name||'مدل قبلی');
+     models.filter(m=>m.kind===kind).forEach(m=>option(el,m.id,m.name));el.value=current;
+    }
+    modelOptions(chassis,'chassis',old.chassis,draft.chassis?draft.chassisModelId:'');
+    modelOptions(frame,'frame',old.frame,draft.frame?draft.frameModelId:'');
+    function colors(reset=false){
+     const values=models.find(m=>m.kind==='frame'&&m.id===frame.value)?.colors||[],previous=reset?'':draft.frameColorId||'';
+     color.textContent='';option(color,'',values.length?'انتخاب رنگ':'بدون رنگ');
+     if(previous&&!values.some(v=>v.id===previous)&&!reset)option(color,previous,old.frame?.colorName||'رنگ قبلی');
+     values.forEach(v=>option(color,v.id,v.name));color.value=previous|| (values.length===1?values[0].id:'');
+     color.disabled=!frame.value||(!values.length&&!previous);draft.frameColorId=color.value||null;
+    }
+    colors();
+    fields.append(field('سایز چاپ',size),field('نوع کاغذ',type),field('تعداد',copies),field('برش',crop),field('شاسی',chassis),field('قاب',frame),field('رنگ قاب',color));
+    function update(){
+     draft.printSizeId=size.value;draft.printType=type.value;draft.printCopies=Number(copies.value);draft.cropHandling=crop.value;
+     draft.chassis=Boolean(chassis.value);draft.chassisModelId=chassis.value||null;draft.frame=Boolean(frame.value);draft.frameModelId=frame.value||null;draft.frameColorId=color.value||null;
+     if(check.checked)selected.set(id,{...draft});sync();
+    }
+    function select(value){check.checked=value;card.classList.toggle('selected',value);if(value){selected.set(id,{...draft})}else selected.delete(id);sync()}
+    check.onchange=()=>select(check.checked);
+    for(const el of [size,type,crop,chassis,color])el.onchange=update;
+    copies.oninput=update;frame.onchange=()=>{colors(true);update()};
+    name.onclick=()=>select(!check.checked);card.append(top,fields);grid.append(card);
+    const row={card,file,img,fallback,select};controls.push(row);
+    if(observer)observer.observe(card);else if(index<12)schedule(file,img,fallback);
+   });
+   sync();
+  }
+  Me('/api/lab/orders/'+detail.order.id+'/reprint-options'+(window.pbNativeStorage?'/download':'')).then(result=>{
+   if(closed)return;if(!Array.isArray(result?.sizes)||!Array.isArray(result?.models))throw Error('archive_catalog_unavailable');catalog=result;build();
+  }).catch(()=>{if(!closed){status.textContent='فهرست سایزها و مدل‌ها دریافت نشد. اتصال را بررسی و دوباره پنجره را باز کنید.';sync()}});
+ });
+}
+function pb2091ArchiveResult(result){
+ const order=result.order,receipt=result.receipt||pb2080Receipts.get(String(order.id)),verified=Boolean(result.localPrepared||receipt?.order?.downloaded_at),required=order.invoice_required!==false,issued=Boolean(receipt?.invoice?.id||order.invoice_id||receipt?.order?.invoice_id);
+ return new Promise(resolve=>{
+  const dialog=document.createElement('dialog');dialog.dir='rtl';dialog.className='pb1452ArchiveDialog pb2091ArchiveResult';
+  const title=document.createElement('h3');title.textContent='چاپ مجدد · سفارش #'+V(order.number);
+  const text=document.createElement('p');text.textContent=pb1451RecoveryMessage(result);
+  const steps=document.createElement('div');steps.className='pb2091ResultSteps';
+  const step=(label,done)=>{const node=document.createElement('div');node.textContent=(done?'✓ ':'○ ')+label;node.className=done?'complete':'pending';steps.append(node)};
+  step('ساخت سفارش جدید',true);step('تأیید کامل فایل‌ها',verified);if(required)step('صدور فاکتور',issued);
+  const footer=document.createElement('footer'),close=document.createElement('button');close.type='button';close.className='primary';close.textContent='ماندن در آرشیو';
+  const finish=()=>{dialog.close();dialog.remove();resolve(true)};close.onclick=finish;dialog.addEventListener('cancel',e=>{e.preventDefault();finish()});footer.append(close);dialog.append(title,text,steps,footer);document.body.append(dialog);dialog.showModal();
+ });
+}

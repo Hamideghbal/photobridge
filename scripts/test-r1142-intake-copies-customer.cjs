@@ -31,7 +31,18 @@ for(const scenario of ['invitation','no-sms','replay','invalid-debt','existing-d
 });
 test('delegated file copies validate and use existing print-copy invoice rules',()=>{
  const start=source.indexOf("if (req.method === 'POST' && delegatedFiles)"),end=source.indexOf('const delegatedLocalFile =',start),code=source.slice(start,end);
- const validation=code.slice(code.indexOf('const printCopies ='),code.indexOf('const relativePath ='));
+ // Test only the original copy-count validation and filename transformation.
+ // Later asynchronous add-on/catalog checks have been inserted before the
+ // relativePath declaration. They have their own tests and must not be
+ // evaluated as part of this synchronous unit fixture.
+ const copyStart=code.indexOf('const printCopies =');
+ const copyEnd=code.indexOf('const relativePath =',copyStart);
+ assert(copyStart>=0&&copyEnd>copyStart,'copy validation boundaries missing');
+ const section=code.slice(copyStart,copyEnd);
+ const rename=/if\s*\(\s*!albumMode\s*&&\s*printCopies\s*>\s*1\s*\)\s*\{[^{}]*\}/g;
+ const matches=[...section.matchAll(rename)];
+ assert.equal(matches.length,1,'copy filename rule must be present exactly once');
+ const validation=section.slice(0,matches[0].index+matches[0][0].length);
  for(const copies of [1,3,0,100,1.5]){let response;const name=Function('b','albumMode','safeFileName','sendJson','res',validation+'return {name,printCopies};')({name:'photo.jpg',printCopies:copies},false,x=>x,(_,status,body)=>response={status,body},{});if(copies===1||copies===3){assert.equal(name.printCopies,copies);assert.equal(name.name,copies===1?'photo.jpg':'photo = 3.jpg');}else assert.equal(response.status,400);}
  assert.match(code,/crop_handling,print_copies,original_state/);assert.match(code,/albumMode \? 1 : printCopies/);
  assert(source.includes('current.quantity += Number(f.print_copies || 1)'));

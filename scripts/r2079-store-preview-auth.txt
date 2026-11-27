@@ -1,0 +1,21 @@
+// R2079: scope the existing admin cookie to rental requests from an explicit store preview.
+// No bearer token, role-cookie replacement or login-as-owner is issued.
+function pb2079PreviewScope(req){
+ const pathname=String(req.url||'').split('?')[0];
+ const allowed=pathname.startsWith('/api/rental/')||pathname==='/api/auth/me'||pathname==='/api/auth/logout'||pathname==='/rental/storefront-preview';
+ const raw=req.headers['x-photobridge-admin-store'];
+ if(raw!==undefined)return allowed&&requestPortal(req)==='rental'?String(raw):'!invalid';
+ // Direct, read-only document links (e.g. commitment print) cannot send headers.
+ if(req.method==='GET'&&( /^\/api\/rental\/bookings\/[0-9a-f-]{36}\/commitment$/i.test(pathname)||pathname==='/rental/storefront-preview')){
+  return new URL(String(req.url||''),'http://localhost').searchParams.get('pbAdminShop');
+ }
+ return null;
+}
+async function pb2079PreviewAuth(req,scope){
+ if(!/^[0-9a-f-]{36}$/i.test(scope))return null;
+ const token=cookie(req,sessionCookieName('admin'));if(!token)return null;
+ const q=await pool.query("SELECT u.id,u.name,u.mobile,s.id shop_id FROM sessions se JOIN users u ON u.id=se.user_id JOIN equipment_rental_shops s ON s.id=$2 AND s.deleted_at IS NULL AND COALESCE(s.suspended,false)=false WHERE se.token_hash=$1 AND se.expires_at>now() AND u.active=true AND u.platform_role='platform_admin'",[tokenHash(token),scope]);
+ const row=q.rows[0];if(!row)return null;
+ // Preserve actor attribution without carrying platform_admin privileges into the rental portal.
+ return {userId:row.id,name:row.name,mobile:row.mobile||undefined,platformRole:'user',rentalShopId:row.shop_id,rentalRole:'shop_admin',rentalAdminOwnerBypass:true,adminStorePreview:true,mustChangePassword:false};
+}

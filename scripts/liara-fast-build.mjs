@@ -1596,3 +1596,7 @@ runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.
 // R2098: mobile photographer successful booking returns to the selected store homepage.
 await deployStep('./enable-r2098-mobile-booking-return.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2098-mobile-booking-return.mjs'],{stdio:'inherit'});
+
+// R2099 final mobile-only photographer navigation after account picker and older panel writers.
+await deployStep('./enable-r2099-mobile-photographer-session-navigation.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2099-mobile-photographer-session-navigation.mjs'],{stdio:'inherit'});

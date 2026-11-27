@@ -59,3 +59,17 @@ test('R2083: late product/album eligibility variants do not break archive invoic
   assert.equal(check({invoice_required:false}),200);
  }
 });
+
+test('R2084: final web and Windows archive functions compile, each browser recovery uses exactly one receipt and its revision',()=>{
+ const vm=require('node:vm');
+ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+  const s=fs.readFileSync(root+'/assets/index-UIRefine-v655-r84.js','utf8');
+  const i=s.indexOf('async function pb1451RestoreLocal('),j=s.indexOf('function pb1451RecoveryMessage(',i);
+  assert(i>=0&&j>i,root);
+  const part=s.slice(i,j),browser=part.slice(part.indexOf('async function pb1451RecoverOrder('));
+  new vm.Script(part);
+  assert.equal([...browser.matchAll(/const receipt=await pb1451AcknowledgeDownload\(prepared\);/g)].length,1,root);
+  assert.match(browser,/result\.order\.id,\{status:'downloaded',expectedRevision:receipt\.order\.document_revision/);
+  assert.match(browser,/return \{\.\.\.result,receipt,order:confirmed\.order/);
+ }
+});

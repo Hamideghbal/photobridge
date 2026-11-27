@@ -71,7 +71,16 @@ export function patchUi(s,native){
   const start="async function pb1451RecoverOrder(detail,invoiceRequired,note,progress) {";
   part=one(part,start,start+"\n  const notify=progress;let lastProgress=0;progress=value=>{const now=Date.now();if(value?.done===value?.total||now-lastProgress>=100){lastProgress=now;notify?.(value)}};");
   const browserReturn='return {...result,order:confirmed.order,localPrepared:true,';
-  if(part.includes(browserReturn))part=one(part,browserReturn,"const receipt=pb2080Receipts.get(String(result.order.id));if(receipt?.invoice?.id&&!receipt.invoice.pdf_ready&&typeof pb1547CompletePdf==='function')void pb1547CompletePdf(receipt.invoice,result.order.id,ai()).catch(()=>{});\n      return {...result,receipt,order:confirmed.order,localPrepared:true,");
+  if(part.includes(browserReturn)){
+   // R1566 web already declares receipt. R1565 native has a bare await.
+   // Normalize either path to a single declaration and use its revision.
+   const existing=/const\s+receipt\s*=\s*await pb1451AcknowledgeDownload\(prepared\);/g;
+   const count=[...part.matchAll(existing)].length;
+   if(count===0)part=one(part,'await pb1451AcknowledgeDownload(prepared);','const receipt=await pb1451AcknowledgeDownload(prepared);');
+   else if(count!==1)throw Error('R2084 browser receipt declaration count '+count);
+   if(!part.includes('expectedRevision:receipt.order.document_revision'))part=one(part,"result.order.id,{status:'downloaded',","result.order.id,{status:'downloaded',expectedRevision:receipt.order.document_revision,");
+   part=one(part,browserReturn,"if(receipt.invoice?.id&&!receipt.invoice.pdf_ready&&typeof pb1547CompletePdf==='function')void pb1547CompletePdf(receipt.invoice,result.order.id,ai()).catch(()=>{});\n      return {...result,receipt,order:confirmed.order,localPrepared:true,");
+  }
   return part;
  });
  const start=s.indexOf('function pb1451RecoveryMessage('),end=s.indexOf('function pb1451RecoveryError(',start);

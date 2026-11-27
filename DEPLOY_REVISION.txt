@@ -1,1 +1,1 @@
-2026-11-27-r2083-archive-invoice-build-fix-equipment-qr-reader
+2026-11-27-r2084-archive-receipt-declaration-fix-equipment-reader

@@ -42,3 +42,13 @@ test('R2102 booking replacement survives multiline legacy navigation without con
  assert.throws(()=>replaceBookingSubmit(before+source+source+after,replacement),/declaration count/);
  assert.throws(()=>replaceBookingSubmit(source.replace('closeRentalRequestV809','unknownClose'),replacement),/boundary or contract/);
 });
+
+test('R2103 invalid day stays clickable, warns without changing selection, and confirmation is single-step',()=>{
+ assert.match(s,/id="pb2103CalendarWarning"/);
+ assert.match(s,/b\.disabled=iso<today/);
+ assert.match(s,/نمی‌توانید در یک آفیش چند روز با فاصله از هم انتخاب کنید/);
+ assert.match(s,/warning\.hidden=false;return/);
+ assert.match(s,/done\.disabled=!chosen\.length/);
+ assert.match(s,/rentalDateConfirmedKeyV811=days\.length\?rentalDateKeyV811/);
+ assert.doesNotMatch(s,/pb2100Summary\(\);\$\('#quote'\)\.innerHTML='';b\.dispatchEvent/);
+});

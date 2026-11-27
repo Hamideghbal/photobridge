@@ -6,6 +6,10 @@ export function patchInvoicePolicy(s){
  if(s.includes(marker))return s;
  if(s.includes('export async function invoiceAfterVerifiedDownload')){
   s=one(s,' if(order.invoice_required===false&&!r1682DirectCustomerOrder(order))return {};',' if(order.invoice_required===false&&(order.recovered_from_order_id||!r1682DirectCustomerOrder(order)))return {};');
+ }else if(s.includes('export async function labOrderStageInvoiceGuard')){
+  s=one(s,'if(order.invoice_required===false&&!direct)return null;','if(order.invoice_required===false&&(order.recovered_from_order_id||!direct))return null;');
+ }else if(s.includes('export async function handleLabAutomation')){
+  s=one(s,'if(order.invoice_required===false&&!isDirectCustomerInvoiceOrder(order))','if(order.invoice_required===false&&(order.recovered_from_order_id||!isDirectCustomerInvoiceOrder(order)))');
  }else{
   s=one(s,'if(!order||(order.invoice_required===false&&!direct)||','if(!order||(order.invoice_required===false&&(order.recovered_from_order_id||!direct))||');
  }
@@ -21,6 +25,13 @@ export function patchServer(s){
   const target="return { title: 'چاپ مجدد از آرشیو', message: "+String.fromCharCode(96)+"برای سفارش"+String.fromCharCode(36)+"{notificationOrderNo(data)} یک چاپ مجدد از آرشیو ساخته شد."+String.fromCharCode(96)+" };";
   const copy="return { title: data?.invoiceRequired===false?'چاپ مجدد بدون فاکتور':'چاپ مجدد از آرشیو', message: 'سفارش'+notificationOrderNo(data)+(data?.localRecovery?' به چرخه چاپ برگشت.':' از آرشیو بازیابی شد؛ دریافت فایل‌ها هنوز باید تأیید شود.') };";
   return one(part,target,copy);
+ });
+ // Do not create any invoice for an explicitly invoice-free recovered order, including direct customers.
+ s=section(s,'async function createOrGetInvoice(','async function finalizePaidSubscriptionRenewal',part=>{
+  const anchor='const order = oq.rows[0];';
+  const idx=part.indexOf(anchor);
+  if(idx<0)throw Error('R2080 invoice order row missing');
+  return part.slice(0,idx)+part.slice(idx).replace(anchor,anchor+"\n    if(order.recovered_from_order_id&&order.invoice_required===false)throw Object.assign(Error('invoice_not_required'),{status:409,code:'invoice_not_required'});");
  });
  // Pass the explicit flag only from existing committed Lab status routes.
  s=section(s,"if (labOrder && req.method === 'PATCH')","const labAlbumStage",part=>{
@@ -39,6 +50,8 @@ export function patchUi(s,native){
  if(s.includes(marker))return s;
  const button='e.jsx("button",{className:"primary compactArchiveDownload",disabled:p===m.order.id,onClick:()=>X(m),children:p===m.order.id?"در حال دریافت…":"دریافت مجدد فایل‌ها"})';
  s=one(s,button,'null');
+ // Direct-customer orders normally require invoices; explicitly free archive reprints do not.
+ s=one(s,'function pb1603InvoicePending(order){return ','function pb1603InvoicePending(order){if(order?.recovered_from_order_id&&order.invoice_required===false)return false;return ');
  s=section(s,'async function pb1451RestoreLocal(','async function pb1451RecoverOrder(',part=>{
   // The native branch used to skip acknowledgement after local recovery.
   // Always use the verified receipt and its current document revision.
@@ -48,12 +61,17 @@ export function patchUi(s,native){
   part=one(part,'return {...finalized,order:downloaded.order,','return {...finalized,receipt,order:downloaded.order,');
   // Avoid scanning the whole manifest once for every file.
   part=one(part,'for(const entry of mapped){\n      const meta=prepared.files.find(f=>String(f.id)===entry.id);','const manifestById=new Map(prepared.files.map(f=>[String(f.id),f]));\n    for(const entry of mapped){\n      const meta=manifestById.get(entry.id);');
+  // PDF follow-up is not part of the blocking file/receipt step; no new invoice is created.
+  part=one(part,'return {...finalized,receipt,order:downloaded.order,',"if(receipt.invoice?.id&&!receipt.invoice.pdf_ready&&typeof pb1547CompletePdf==='function')void pb1547CompletePdf(receipt.invoice,draft.id,ai()).catch(()=>{});\n    return {...finalized,receipt,order:downloaded.order,");
   return part;
  });
  // Avoid a full React render for every fast local-file progress callback.
  s=section(s,'async function pb1451RecoverOrder(','function pb1451RecoveryMessage(',part=>{
   const start="async function pb1451RecoverOrder(detail,invoiceRequired,note,progress) {";
-  return one(part,start,start+"\n  const notify=progress;let lastProgress=0;progress=value=>{const now=Date.now();if(value?.done===value?.total||now-lastProgress>=100){lastProgress=now;notify?.(value)}};");
+  part=one(part,start,start+"\n  const notify=progress;let lastProgress=0;progress=value=>{const now=Date.now();if(value?.done===value?.total||now-lastProgress>=100){lastProgress=now;notify?.(value)}};");
+  const browserReturn='return {...result,order:confirmed.order,localPrepared:true,';
+  if(part.includes(browserReturn))part=one(part,browserReturn,"const receipt=pb2080Receipts.get(String(result.order.id));if(receipt?.invoice?.id&&!receipt.invoice.pdf_ready&&typeof pb1547CompletePdf==='function')void pb1547CompletePdf(receipt.invoice,result.order.id,ai()).catch(()=>{});\n      return {...result,receipt,order:confirmed.order,localPrepared:true,");
+  return part;
  });
  const start=s.indexOf('function pb1451RecoveryMessage('),end=s.indexOf('function pb1451RecoveryError(',start);
  if(start<0||end<0)throw Error('R2080 recovery message');
@@ -86,7 +104,7 @@ pb1451AcknowledgeDownload=async function(detail){
  if(!order.recovered_from_order_id)return result;
  pb2080Receipts.set(String(order.id),result);
  while(pb2080Receipts.size>50)pb2080Receipts.delete(pb2080Receipts.keys().next().value);
- const verified={phase:'verified',stage:'download',downloadVerified:true,networkError:false,queued:false};
+ const verified={phase:'verified',stage:'download',downloadVerified:true,networkError:false,queued:false,done:result.verifiedFiles,total:result.verifiedFiles};
  if(typeof pb1581Report==='function'){
   if(order.invoice_required===false||result.invoice?.id||order.invoice_id)pb1581Report(order,verified);
   else pb1581Report(order,{...verified,phase:'failed',stage:'invoice',error:result.invoiceError||'invoice_issuance_failed',reason:result.invoiceError==='invoice_pricing_required'?'دانلود کامل است؛ قیمت سفارش باید تکمیل شود.':'دانلود کامل است؛ صدور فاکتور تأیید نشد.'});

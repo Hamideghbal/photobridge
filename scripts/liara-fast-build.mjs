@@ -1567,3 +1567,7 @@ runR1314(process.execPath,['--test','scripts/test-r1990-r1307-model2-build-compa
 // R2068: server-side verified download escalation, after other server writers.
 await deployStep('./enable-r2068-lab-download-overdue.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2068-lab-download-overdue.mjs'],{stdio:'inherit'});
+
+// R2079: keep admin store preview and transfer isolated after every auth/portal writer.
+await deployStep('./enable-r2079-store-admin-access.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2079-store-admin-access.cjs'],{stdio:'inherit'});

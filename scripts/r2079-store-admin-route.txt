@@ -1,0 +1,43 @@
+    // R2079: select an explicit store without changing the primary admin identity or memberships.
+    const pb2079StoreAdminRoute=url.pathname.match(/^\/api\/admin\/equipment-rental\/shops\/([0-9a-f-]{36})\/(preview|transfer-manager)$/i);
+    if(req.method==='POST'&&pb2079StoreAdminRoute){
+        if(!requireRole(a,'platform_admin'))return sendJson(res,403,{error:'forbidden'});
+        const shopId=pb2079StoreAdminRoute[1];
+        if(pb2079StoreAdminRoute[2]==='preview'){
+            const q=await pool.query('SELECT id,name,suspended FROM equipment_rental_shops WHERE id=$1 AND deleted_at IS NULL',[shopId]);
+            const shop=q.rows[0];
+            if(!shop)return sendJson(res,404,{error:'rental_shop_not_found'});
+            if(shop.suspended)return sendJson(res,409,{error:'rental_shop_suspended_requires_resume'});
+            await audit(a.userId,undefined,'platform_admin.preview_store','equipment_rental_shop',shop.id,{targetName:shop.name}).catch(()=>{});
+            return sendJson(res,200,{ok:true,url:'/rental?pbAdminShop='+encodeURIComponent(shop.id),shopId:shop.id});
+        }
+        const b=await bodyJson(req,10000),mobile=normalizeMobile(String(b.mobile||''));
+        if(!/^09\d{9}$/.test(mobile))return sendJson(res,400,{error:'manager_mobile_invalid'});
+        if(b.confirm!==true)return sendJson(res,400,{error:'confirmation_required'});
+        const c=await pool.connect();
+        const fail=(code,status=409)=>{throw Object.assign(new Error(code),{status});};
+        try{
+            await c.query('BEGIN');
+            // Serialize transfers by the target user's row before locking the shop.
+            const uq=await c.query("SELECT id,name,mobile_verified_at,platform_role FROM users WHERE active=true AND account_deleted_at IS NULL AND right(regexp_replace(coalesce(mobile,''),'[^0-9]','','g'),10)=right($1,10) ORDER BY id LIMIT 2 FOR UPDATE",[mobile]);
+            if(uq.rows.length!==1)fail(uq.rows.length?'manager_account_ambiguous':'manager_account_not_found');
+            const user=uq.rows[0];
+            if(user.platform_role==='platform_admin')fail('manager_platform_admin_reserved');
+            if(!user.mobile_verified_at)fail('manager_mobile_not_verified');
+            const sq=await c.query('SELECT id,name,manager_mobile,deleted_at FROM equipment_rental_shops WHERE id=$1 FOR UPDATE',[shopId]);
+            const shop=sq.rows[0];
+            if(!shop||shop.deleted_at)fail('rental_shop_not_found',404);
+            const conflict=await c.query("SELECT m.shop_id,m.role FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.active=true AND m.role IN ('shop_admin','handover_staff') AND m.shop_id<>$2 AND s.deleted_at IS NULL FOR UPDATE OF m",[user.id,shop.id]);
+            if(conflict.rows.length)fail('manager_access_conflict');
+            const other=await c.query("SELECT id FROM equipment_rental_shops WHERE deleted_at IS NULL AND id<>$1 AND right(regexp_replace(coalesce(manager_mobile,''),'[^0-9]','','g'),10)=right($2,10) LIMIT 1",[shop.id,mobile]);
+            if(other.rows.length)fail('manager_mobile_in_other_store');
+            const old=await c.query("SELECT user_id FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND role='shop_admin' AND active=true FOR UPDATE",[shop.id]);
+            await c.query("UPDATE equipment_rental_shop_memberships SET active=false,updated_at=now() WHERE shop_id=$1 AND active=true AND ((role='shop_admin' AND user_id<>$2) OR (role='handover_staff' AND user_id=$2))",[shop.id,user.id]);
+            await c.query("INSERT INTO equipment_rental_shop_memberships(shop_id,user_id,role,active,updated_at) VALUES($1,$2,'shop_admin',true,now()) ON CONFLICT(shop_id,user_id,role) DO UPDATE SET active=true,updated_at=now()",[shop.id,user.id]);
+            const updated=await c.query("UPDATE equipment_rental_shops SET manager_mobile=$2,manager_name=$3,updated_at=now() WHERE id=$1 AND deleted_at IS NULL RETURNING id,manager_mobile,manager_name",[shop.id,mobile,String(user.name||'').trim()||null]);
+            if(!updated.rows[0])fail('manager_transfer_write_failed',500);
+            await c.query('COMMIT');
+            await audit(a.userId,undefined,'platform_admin.transfer_store_manager','equipment_rental_shop',shop.id,{oldManagerIds:old.rows.map(row=>row.user_id),newManagerId:user.id}).catch(()=>{});
+            return sendJson(res,200,{ok:true,shop:updated.rows[0]});
+        }catch(e){await c.query('ROLLBACK').catch(()=>{});if(e.status)return sendJson(res,e.status,{error:e.message});if(e.code==='23505')return sendJson(res,409,{error:'manager_access_conflict'});throw e}finally{c.release()}
+    }

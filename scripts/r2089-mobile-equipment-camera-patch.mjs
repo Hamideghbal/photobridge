@@ -7,7 +7,7 @@ export function patchPortal(s,helper,css){
  if(start<0||end<start)throw Error('R2089 pickup boundary');
  let p=s.slice(start,end);
  const change=(a,b)=>{if(p.split(a).length!==2)throw Error('R2089 pickup anchor '+a.slice(0,100));p=p.replace(a,()=>b)};
- change("document.body.append(back);","document.body.append(back);const mobileScan=window.pb2089Camera.mobile();if(mobileScan)back.classList.add('pb2089MobilePickup');");
+ change("document.body.append(back);","document.body.append(back);const mobileScan=window.pb2089Camera.mobile();if(mobileScan){back.classList.add('pb2089MobilePickup');const hint=back.querySelector('.pbR85ScanHead p');if(hint)hint.textContent=mode==='pickup'?'کد تجهیزات را اسکن یا دستی ثبت کنید.':'تجهیزات دریافتی را اسکن کنید.';}");
  change("reader=null,cameraEpoch=0;","reader=null,cameraEpoch=0,mobileCamera=null,cameraPending=false;");
  change("const stopCamera=()=>{cameraEpoch++;","const stopCamera=()=>{mobileCamera?.stop();cameraEpoch++;");
  change("done.disabled=(mode==='pickup'&&n!==total)||Boolean(reader?.busy());","done.disabled=(mode==='pickup'&&n!==total)||Boolean(reader?.busy())||cameraPending;");
@@ -24,7 +24,7 @@ export function patchPortal(s,helper,css){
 export function patchReturn(s){
  if(s.includes('/* PB2089 mobile return camera */'))return s;
  const once=(a,b)=>{if(s.split(a).length!==2)throw Error('R2089 return anchor '+a.slice(0,100));s=s.replace(a,()=>b)};
- once("document.body.appendChild(dialog);","document.body.appendChild(dialog);\n      /* PB2089 mobile return camera */\n      const mobileScan=Boolean(window.pb2089Camera?.mobile());if(mobileScan)dialog.classList.add('pb2089MobileReturn');");
+ once("document.body.appendChild(dialog);","document.body.appendChild(dialog);\n      /* PB2089 mobile return camera */\n      const mobileScan=Boolean(window.pb2089Camera?.mobile());if(mobileScan){dialog.classList.add('pb2089MobileReturn');const hint=dialog.querySelector('.pbR100F73ReturnHead p');if(hint)hint.textContent='فقط تجهیزات دریافت‌شده را تأیید کنید.';}");
  once("armedSignature='',reader=null;","armedSignature='',reader=null,camera=null,cameraWrap=null;");
  once("closed=true;reader?.close();dialog.remove();","closed=true;reader?.close();camera?.stop();dialog.remove();");
  const start=s.indexOf("if(!closed&&window.pb2082QrReader)reader=window.pb2082QrReader.mount("),end=s.indexOf("\n        }catch(ex)",start);

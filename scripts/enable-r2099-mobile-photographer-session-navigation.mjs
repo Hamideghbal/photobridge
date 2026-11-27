@@ -16,6 +16,9 @@ export function patchPanel(s){
  s=once(s,"window.addEventListener('photobridge-auth-session-changed',e=>{if(e.detail?.labRole==='customer'){authenticated=true;sync();return;}if(authenticated)close();else{selected=null;document.body.classList.remove('pb1106PanelOpen');mark();}authenticated=false;for(const p of panels.values())p.remove();panels.clear();dockState.clear();dockObserver?.disconnect();dock=null;});","window.addEventListener('photobridge-auth-session-changed',async e=>{const epoch=++authEpoch;if(e.detail?.labRole==='customer'){authenticated=true;sync();return;}if(!authenticated&&!selected)return;const valid=await genuinePhotographer();if(epoch!==authEpoch||valid!==false)return;close();authenticated=false;for(const p of panels.values())p.remove();panels.clear();dockState.clear();dockObserver?.disconnect();dock=null;});\nwindow.addEventListener('pb2087-account-ready',sync);");
  // Hidden frames cannot force parent navigation. Keep a visible invalid frame retryable on re-entry.
  s=once(s,"if(choose)showChooser(panel,kind);document.body.classList.add('pb1106PanelOpen');mark();","if(choose)showChooser(panel,kind);const frame=panel.querySelector('iframe');if(frame&&panel.querySelector('.pb1106ContentLoading')?.hidden){try{if(!validFrame(kind,new URL(frame.contentWindow.location.href)))frame.src=frame.dataset.pb2099Entry}catch{frame.src=frame.dataset.pb2099Entry}}document.body.classList.add('pb1106PanelOpen');mark();");
+ // R2103: batch observer work, and don't repeatedly write the same dock height.
+ s=once(s,"if(height>0)document.documentElement.style.setProperty('--pb1106-dock-height',height+'px')","if(height>0&&document.documentElement.style.getPropertyValue('--pb1106-dock-height')!==height+'px')document.documentElement.style.setProperty('--pb1106-dock-height',height+'px')");
+ s=once(s,"function init(){sync();new MutationObserver(sync).observe(document.body,{childList:true,subtree:true})}","let pb2103SyncQueued=false;function pb2103QueueSync(){if(pb2103SyncQueued)return;pb2103SyncQueued=true;requestAnimationFrame(()=>{pb2103SyncQueued=false;sync()})}function init(){sync();new MutationObserver(pb2103QueueSync).observe(document.body,{childList:true,subtree:true})}");
  new Function(s);return s;
 }
 export function patchChooser(s){
@@ -28,6 +31,16 @@ export function patchPicker(s){
  s=once(s,"const target=String(path).split('?')[0];const role=currentPortal();if(!role||!target.startsWith(routes[role]+'/'))return false;return move(path)","const target=String(path).split('?')[0];const role=currentPortal();/* PB2099 internal photographer route */if(!role||!(target===routes[role]||target.startsWith(routes[role]+'/')||(role==='photographer'&&target==='/equipment-rental/book')))return false;return move(path)");
  s=once(s,"!url.pathname.startsWith(routes[role]+'/')||url.pathname===location.pathname","!(url.pathname===routes[role]||url.pathname.startsWith(routes[role]+'/')||(role==='photographer'&&url.pathname==='/equipment-rental/book'))||url.pathname===location.pathname");
  s=once(s,"window.addEventListener('blur',()=>{blurred=true});","window.addEventListener('blur',()=>{if(currentPortal()!=='photographer'||document.hidden)blurred=true});");
+ // R2103: a slow, explicitly authorized document transition must not reopen the chooser.
+ // A handoff is still one-use and path-bound; it never authorizes an API request.
+ s=once(s,"saved.until<=Date.now()+15000","saved.until<=Date.now()+60000");
+ s=once(s,"until:Date.now()+15000,login","until:Date.now()+60000,login");
+ s=once(s,"authorized=handoff,blurred=false,watchTimer=0;","authorized=handoff,blurred=false,watchTimer=0;let pb2103SelectedAt=handoff?Date.now():0,pb2103HiddenAt=0;");
+ s=once(s,"authorized=true;needsResume=false;wasHidden=false;blurred=false;","authorized=true;needsResume=false;wasHidden=false;blurred=false;pb2103SelectedAt=Date.now();pb2103HiddenAt=0; if(portal==='photographer'&&query.has('pb2092Launch')){query.delete('pb2092Launch');try{history.replaceState(history.state,'',location.pathname+(query.toString()?'?'+query:'')+(location.hash||''))}catch{}}");
+ s=once(s,"if(!wasHidden&&!blurred&&!needsResume)return;","if(!wasHidden&&!blurred&&!needsResume)return; if(currentPortal()==='photographer'&&authorized&&!needsResume&&Date.now()-pb2103SelectedAt<12000&&(!pb2103HiddenAt||Date.now()-pb2103HiddenAt<1500)){wasHidden=false;blurred=false;pb2103HiddenAt=0;return}");
+ s=once(s,"if(document.hidden){wasHidden=true;return}","if(document.hidden){wasHidden=true;pb2103HiddenAt=Date.now();return}");
+ // Preserve true server rejection and offer a retry only for transport uncertainty.
+ s=once(s,"const valid=await validSession(selected);","let valid=await validSession(selected);if(selected==='photographer'&&valid?.uncertain)valid=await validSession(selected);");
  return s;
 }
 function write(p,s){fs.writeFileSync(p,s);const b=Buffer.from(s);for(const [x,enc] of [['.br',zlib.brotliCompressSync],['.gz',zlib.gzipSync]])if(fs.existsSync(p+x))fs.writeFileSync(p+x,enc(b))}

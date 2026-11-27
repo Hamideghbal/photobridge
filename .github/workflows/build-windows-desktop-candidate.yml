@@ -50,6 +50,10 @@ jobs:
           Copy-Item "$env:RUNNER_TEMP/lab-overlay.js" apps/lab-desktop/desktop-overlay.js -Force
       - name: Enable offline frame manual orders in native candidate
         run: node scripts/enable-r1263-desktop-frame-orders.mjs
+      - name: Integrate Store notifications and full program updates
+        run: node scripts/integrate-r2095-store-native.cjs apps/store-desktop
+      - name: Test Store native controllers
+        run: node --test scripts/test-r2095-store-native.cjs
       - name: Verify saved source archive checksum
         shell: pwsh
         run: |
@@ -68,7 +72,7 @@ jobs:
       - name: Publish unsigned test setup
         uses: actions/upload-artifact@v4
         with:
-          name: photobridge-store-r1089-windows-test-installer
+          name: photobridge-store-r2095-windows-test-installer
           path: apps/store-desktop/release/*Setup*.exe
           if-no-files-found: error
           retention-days: 14

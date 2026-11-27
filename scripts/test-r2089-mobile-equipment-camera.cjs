@@ -30,11 +30,26 @@ test('R2089: both handover paths use mobile camera, compact preview and explicit
  const p=fs.readFileSync('dist/api/equipment-rental-portal.html','utf8'),r=fs.readFileSync('dist/web/photobridge-r100f73-staff-desktop-return.js','utf8');
  assert.ok(p.includes('id="pb2089MobileScanRuntime"'));assert.ok(p.includes('height:clamp(92px,17dvh,128px)'));
  assert.ok(p.includes('await mobileCamera.start()'));assert.ok(p.includes('cameraPending'));assert.ok(p.includes('mobileCamera?.stop()'));
- assert.ok(p.includes('mobileCamera=r2089'));assert.ok(r.includes('camera:mobileScan'));assert.ok(r.includes('returnMatch(slots,raw)'));
+ assert.ok(p.includes('mobileCamera=r2092'));assert.ok(p.includes('pb2092ManualCode'));assert.ok(p.includes('.pbR86OrderAsset:not(.pbR91Supplied) .pbR86InlineCode'));assert.ok(p.includes('progress.textContent=mobileScan'));assert.ok(r.includes('summary.textContent=mobileScan'));assert.ok(r.includes('camera:mobileScan'));assert.ok(r.includes('returnMatch(slots,raw)'));
  assert.ok(r.includes('camera?.stop()'));assert.ok(r.includes('window.confirm(prompt)'));assert.ok(r.includes('missingConfirmed'));
  const root='dist/web/desktop-ui/',manifest=JSON.parse(fs.readFileSync(root+'manifest.json','utf8'));
  for(const name of ['equipment-rental-portal.html','photobridge-r100f73-staff-desktop-return.js']){
   const bytes=fs.readFileSync(root+name);assert.ok(!bytes.toString().includes('PB2089'));
   assert.equal(manifest.files.find(x=>x.name===name).sha256,crypto.createHash('sha256').update(bytes).digest('hex'));
  }
+});
+
+test('R2092: phone scanner ignores desktop mode preference and submits one manual input without changing camera mode',async()=>{
+ const source=fs.readFileSync('scripts/r2082-equipment-reader.js.txt','utf8'),events={},calls=[],pending=[];
+ const input={value:'PB-100'},submit={disabled:false},feedback={textContent:'',dataset:{}};
+ const panel={className:'',innerHTML:'',setAttribute(){},querySelector:s=>s==='[data-scan]'?input:s==='button'?submit:feedback,addEventListener:(k,fn)=>events[k]=fn,remove(){}};
+ const ctx={window:{pb2089Camera:{mobile:()=>true}},document:{createElement:tag=>{assert.equal(tag,'form');return panel}},localStorage:{getItem(){throw Error('mobile must not read desktop preference')}},navigator:{}};
+ vm.runInNewContext(source,ctx);
+ let attached=false;
+ const reader=ctx.window.pb2082QrReader.mount({before:{after:p=>{assert.equal(p,panel);attached=true}},kind:'pickup',camera:true,onCode:async raw=>{calls.push(raw);return raw==='PB-100'||'کد اشتباه است';},onPending:n=>pending.push(n)});
+ assert.equal(reader.mode(),'camera');assert.equal(attached,true);
+ assert(!panel.innerHTML.includes('data-mode'));assert(!panel.innerHTML.includes('data-test'));
+ events.submit({preventDefault(){}});await settle();assert.deepEqual(calls,['PB-100']);assert.equal(input.value,'');assert.deepEqual(pending,[1,0]);
+ input.value='WRONG';events.submit({preventDefault(){}});await settle();assert.equal(input.value,'WRONG');assert.equal(feedback.textContent,'کد اشتباه است');
+ reader.close();events.submit({preventDefault(){}});await settle();assert.equal(calls.length,2);
 });

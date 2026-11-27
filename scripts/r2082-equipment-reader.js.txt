@@ -24,6 +24,18 @@
   }};
  }
  function mount({before,kind,camera=false,onMode=()=>{},onCode,onPending=()=>{}}){
+  // R2092: phone handover needs no device selector, testing or COM setup.
+  // Keep the same queue and callback contract as the desktop reader.
+  if(camera&&window.pb2089Camera?.mobile()){
+   const panel=document.createElement('form');panel.className='pb2082Reader pb2092ManualCode';panel.setAttribute('aria-label','ورود دستی کد تجهیز');
+   panel.innerHTML='<div class="pb2092ManualRow"><input data-scan dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="512" placeholder="کد یا سریال" aria-label="کد یا سریال تجهیز"><button type="submit">ثبت</button></div><div data-feedback role="status" aria-live="polite"></div>';
+   before.after(panel);
+   const input=panel.querySelector('[data-scan]'),submit=panel.querySelector('button'),feedback=panel.querySelector('[data-feedback]');let closed=false;
+   const status=(message,bad=false)=>{if(closed)return;feedback.textContent=message;feedback.dataset.error=bad?'1':'0'};
+   const work=queue(async raw=>{const result=await onCode(raw);status(result===true?'':typeof result==='string'?result:'کد معتبر نیست.',result!==true);return result},n=>{submit.disabled=Boolean(n);onPending(n)},status);
+   panel.addEventListener('submit',event=>{event.preventDefault();const raw=input.value.trim();if(!raw||work.pending||closed)return;void work.push(raw).then(result=>{if(result===true&&input.value.trim()===raw)input.value=''});});
+   return {mode:()=>'camera',busy:()=>work.pending>0,close(){if(closed)return;closed=true;work.close();panel.remove()}};
+  }
   const key='pb2082-reader-mode:'+kind,options=camera?['camera','keyboard','serial','manual']:['manual','keyboard','serial'];
   const serialAvailable=typeof navigator.serial?.requestPort==='function';
   let mode=camera&&matchMedia('(max-width:700px)').matches?'camera':'manual';

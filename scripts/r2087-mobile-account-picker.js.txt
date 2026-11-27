@@ -60,7 +60,7 @@
    if(move(routes[portal]))return true;
    authorized=false;throw Error('account_handoff_unavailable');
  }
- function choose(accounts,uncertain=false,message=''){
+ function choose(accounts,uncertain=false,message='',newLogin=false){
    return new Promise(resolve=>{
      const render=()=>{
        if(chooser||!document.body){resolve(null);return}
@@ -68,8 +68,8 @@
        chooser=dialog;dialog.id='pb2087AccountPicker';dialog.dir='rtl';dialog.setAttribute('aria-labelledby','pb2087AccountTitle');
        const panel=document.createElement('section');panel.className='pb2087AccountPanel';
        const logo=document.createElement('div');logo.className='pb2087AccountBrand';logo.textContent='PhotoBridge';
-       const title=document.createElement('h1');title.id='pb2087AccountTitle';title.textContent='انتخاب حساب کاربری';
-       const intro=document.createElement('p');intro.textContent='می‌خواهید وارد کدام حساب شوید؟';
+       const title=document.createElement('h1');title.id='pb2087AccountTitle';title.textContent=newLogin?'ورود به حساب کاربری جدید':'انتخاب حساب کاربری';
+       const intro=document.createElement('p');intro.textContent=newLogin?'نوع حساب موردنظر را انتخاب کنید. حساب‌های فعال دیگر خارج نمی‌شوند.':'می‌خواهید وارد کدام حساب شوید؟';
        panel.append(logo,title,intro);
        if(message||uncertain){const notice=document.createElement('p');notice.className='pb2090AccountNotice';notice.textContent=message||'بررسی بعضی حساب‌ها کامل نشد. می‌توانید دوباره بررسی کنید.';panel.append(notice);}
        const accountButtons=[];
@@ -90,11 +90,13 @@
            for(const option of accountButtons)option.disabled=true;
            // R2090: explicit click is the only path to account entry. Keep the
            // dialog in place during the final server verification.
-           resolve(account.portal);
+           resolve(newLogin?'login:'+account.portal:account.portal);
          });
          accountButtons.push(button);panel.append(button);
        }
-       if(uncertain||message){const retry=document.createElement('button');retry.type='button';retry.className='pb2090AccountRetry';retry.textContent='بررسی دوباره حساب‌ها';retry.addEventListener('click',()=>{if(selected)return;selected=true;resolve('retry')});panel.append(retry);}
+       const action=document.createElement('button');action.type='button';action.className='pb2090AccountRetry pb2093LoginAction';action.textContent=newLogin?'بازگشت به حساب‌های فعال':'+ ورود به حساب کاربری جدید';
+       action.addEventListener('click',()=>{if(selected)return;selected=true;resolve(newLogin?'back':'new-login')});panel.append(action);
+       if(!newLogin&&(uncertain||message)){const retry=document.createElement('button');retry.type='button';retry.className='pb2090AccountRetry';retry.textContent='بررسی دوباره حساب‌ها';retry.addEventListener('click',()=>{if(selected)return;selected=true;resolve('retry')});panel.append(retry);}
        dialog.append(panel);dialog.addEventListener('cancel',event=>event.preventDefault());
        document.body.append(dialog);
        try{dialog.showModal()}catch{dialog.setAttribute('open','')}
@@ -119,15 +121,29 @@
        const results=await Promise.all(portals.map(validSession));
        if(sensitive()||document.hidden){needsResume=true;return}
        const accounts=results.filter(x=>x&&!x.uncertain),uncertain=results.some(x=>x?.uncertain);
-       if(!accounts.length&&!uncertain&&!message){
-         try{localStorage.removeItem(KEY)}catch{}
-         authorized=true;
-         if(normalize(location.pathname)==='/'){moving=move('/photographer');if(!moving)location.replace('/photographer')}
-         return;
-       }
+       if(!accounts.length&&!uncertain&&!message){try{localStorage.removeItem(KEY)}catch{}}
        // R2090: never enter a role based on last preference, response timing,
        // or the number of verified sessions. Even one verified role is offered.
-       const selected=await choose(accounts,uncertain,message);
+       let selected=await choose(accounts,uncertain,message);
+       if(selected==='new-login'){
+         dismiss();
+         selected=await choose(portals.map(portal=>({portal,name:accounts.some(a=>a.portal===portal)?'حساب فعال · ورود به همین حساب':descriptions[portal]})),false,'',true);
+         if(selected==='back'){dismiss();continue}
+         if(selected?.startsWith('login:')){
+           const portal=selected.slice(6);
+           if(!portals.includes(portal)){dismiss();continue}
+           const verified=await validSession(portal);
+           if(verified?.uncertain){dismiss();message='وضعیت حساب مشخص نشد؛ دوباره بررسی کنید.';continue}
+           if(verified){
+             try{moving=navigate(portal);if(!moving)dismiss();return}catch{dismiss();message='ورود انجام نشد؛ دوباره انتخاب کنید.';continue}
+           }
+           // Open the ordinary role-specific sign-in page using the one-use navigation ticket.
+           // This never creates a session or clears any other role's cookies.
+           needsResume=false;wasHidden=false;blurred=false;
+           if(move(routes[portal])){moving=true;return}
+           dismiss();message='ورود انجام نشد؛ دسترسی ذخیره موقت مرورگر را بررسی کنید.';continue;
+         }
+       }
        if(!selected)return;
        if(selected==='retry'){dismiss();message='';continue}
        const valid=await validSession(selected);

@@ -1558,3 +1558,7 @@ runR1314(process.execPath,['--test','scripts/test-r1988-original-model3.cjs'],{s
 runR1314(process.execPath,['--test','scripts/test-r1989-model2-segmented.cjs'],{stdio:'inherit'});
 // R1990: ensure R1307's live proxy has not stripped model-two click-state logic.
 runR1314(process.execPath,['--test','scripts/test-r1990-r1307-model2-build-compat.cjs'],{stdio:'inherit'});
+
+// R2068: server-side verified download escalation, after other server writers.
+await deployStep('./enable-r2068-lab-download-overdue.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2068-lab-download-overdue.mjs'],{stdio:'inherit'});

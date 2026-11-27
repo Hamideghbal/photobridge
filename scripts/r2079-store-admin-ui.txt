@@ -1,0 +1,18 @@
+
+async function pb2079OpenStore(s){
+ try{const out=await api('/api/admin/equipment-rental/shops/'+encodeURIComponent(s.id)+'/preview',{method:'POST',body:'{}'});
+  if(out?.ok!==true||String(out.shopId)!==String(s.id)||out.url!=='/rental?pbAdminShop='+encodeURIComponent(s.id))throw Error('preview_scope_mismatch');
+  location.assign(out.url);
+ }catch(e){alert(e?.data?.error==='rental_shop_suspended_requires_resume'?'فروشگاه معلق است؛ ابتدا رفع تعلیق کنید.':'ورود به پنل فروشگاه انجام نشد: '+(e?.data?.error||e?.message||'خطای نامشخص'))}
+}
+async function pb2079TransferManager(s,button){
+ const raw=prompt('شماره موبایل حساب جدید و تأییدشده مدیر فروشگاه «'+String(s.name||'')+'» را وارد کنید.','');if(raw===null)return;
+ const mobile=String(raw).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g,'').replace(/^0098/,'0').replace(/^98(?=9\d{9}$)/,'0').replace(/^9\d{9}$/,'0$&');
+ if(!/^09\d{9}$/.test(mobile))return alert('شماره موبایل معتبر وارد کنید.');
+ if(!confirm('مدیریت فقط فروشگاه «'+String(s.name||'')+'» به حساب '+mobile+' منتقل شود؟ دسترسی مدیر قبلی این فروشگاه قطع می‌شود. اطلاعات، حساب ادمین و سایر فروشگاه‌ها بدون تغییر می‌مانند.'))return;
+ if(button)button.disabled=true;
+ try{const out=await api('/api/admin/equipment-rental/shops/'+encodeURIComponent(s.id)+'/transfer-manager',{method:'POST',body:JSON.stringify({mobile,confirm:true})});
+  if(out?.ok!==true||String(out.shop?.id)!==String(s.id)||out.shop?.manager_mobile!==mobile)throw Error('manager_transfer_unverified');
+  alert('مدیر جدید ثبت شد. مدیر جدید با شماره و رمز حساب تأییدشده خود وارد شود.');await load();
+ }catch(e){const errors={manager_account_not_found:'ابتدا برای این شماره یک حساب ثبت و شماره آن را تأیید کنید؛ اطلاعات مدیر قبلی تغییر نکرد.',manager_mobile_not_verified:'شماره حساب جدید هنوز تأیید نشده است.',manager_account_ambiguous:'چند حساب با این شماره وجود دارد؛ انتقال انجام نشد.',manager_platform_admin_reserved:'شماره ادمین اصلی برای انتقال مدیریت قابل استفاده نیست؛ از ورود مستقیم ادمین استفاده کنید.',manager_access_conflict:'این حساب در فروشگاه دیگری مدیر یا پرسنل فعال است.',manager_mobile_in_other_store:'این شماره به فروشگاه دیگری اختصاص دارد.',rental_shop_not_found:'فروشگاه پیدا نشد.'};alert(errors[e?.data?.error]||e?.data?.message||e?.data?.error||e?.message||'انتقال انجام نشد.')}finally{if(button)button.disabled=false}
+}

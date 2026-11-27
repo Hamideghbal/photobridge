@@ -15,6 +15,15 @@ export function replaceBookingSubmit(s,replacement){
  }
  throw Error('R2100 submission function boundary or contract missing');
 }
+export function patchChooserStartup(s){
+ const legacy="const [_,d]=await Promise.all([loadPhotographerIdentity(),api('/api/customer/equipment-rental/shops')]);";
+ const independent="void loadPhotographerIdentity().catch(()=>null);";
+ const request="const d=await api('/api/customer/equipment-rental/shops');";
+ if(s.split(legacy).length===2)return s.replace(legacy,()=>independent+'\n    '+request);
+ // Do not reintroduce a wait on identity or replace the R1837 prefetch/chooser renderer.
+ if(s.split(independent).length===2&&s.split(request).length===2)return s;
+ throw Error('R2104 unrecognized chooser startup contract');
+}
 export function patchBook(s){
  if(s.includes('id="pb2100PhotographerCalendarStyle"'))return s;
  const once=(a,b)=>{if(s.split(a).length!==2)throw Error('R2100 anchor '+a.slice(0,110));s=s.replace(a,()=>b)};
@@ -28,9 +37,8 @@ export function patchBook(s){
  once("function showMobilePanel(id){","function showMobilePanel(id){\\n pb2103LoadVisibleStore(id);".replace('\\n','\n'));
  once("void Promise.allSettled([itemTask,loadBookings(),loadFinance(),loadSales()])","if(pbProductionStore(target))void Promise.allSettled([itemTask,loadBookings(),loadFinance(),loadSales()]);else void itemTask");
  once("const token=++shopLoadToken;storeSelectorOpen=false;","const token=++shopLoadToken;pb2103PanelLoads.clear();if(!pbProductionStore(target)){items=[];saleItems=[];saleOrders=[];saleCart=[];shopperWallet=null;saleShopConfig={walletCheckoutEnabled:false};financeData=null;renderItems();renderBookings();renderSales();for(const key of ['finDebit','finCredit','finBalance','financeInvoiceCountV813','financeStatementMetaV812']){const el=$('#'+key);if(el)el.textContent='…'}for(const key of ['invoices','ledger','financePaymentsV811']){const el=$('#'+key);if(el)el.textContent='در حال دریافت اطلاعات…'}}storeSelectorOpen=false;");
- once("const [_,d]=await Promise.all([loadPhotographerIdentity(),api('/api/customer/equipment-rental/shops')]);","const pb2103Identity=loadPhotographerIdentity().catch(e=>e);const d=await api('/api/customer/equipment-rental/shops');");
- // Wait for identity only after the authenticated shops response has painted the chooser.
- once("renderShops();renderStoreChooserR96();\\n    if(/^[0-9a-f-]{36}$/i.test(directShop)".replace('\\n','\n'),"renderShops();renderStoreChooserR96();const pb2103Me=await pb2103Identity;if(pb2103Me?.status===401)throw pb2103Me;\\n    if(/^[0-9a-f-]{36}$/i.test(directShop)".replace('\\n','\n'));
+ // R2104: R1837 already makes the list independent of header identity in the real Docker pipeline.
+ s=patchChooserStartup(s);
  once("async function loadFinance(){if(!shopId)return;try{financeData=await api('/api/customer/equipment-rental/finance?shopId='+encodeURIComponent(shopId));renderFinance()}catch(e){financeData={summary:{},invoices:[],entries:[]};renderFinance()}}","async function loadFinance(){if(!shopId)return;const id=String(shopId),token=shopLoadToken;try{const data=await api('/api/customer/equipment-rental/finance?shopId='+encodeURIComponent(id));if(token!==shopLoadToken||id!==String(shopId))return;financeData=data;renderFinance()}catch(e){if(token!==shopLoadToken||id!==String(shopId))return;financeData={summary:{},invoices:[],entries:[]};renderFinance()}}");
  s=replaceBookingSubmit(s,"// R2103: camera store panels load only when visible, while retaining explicit refreshes.\nfunction pb2103LoadVisibleStore(id){\n if(!shopId||pbProductionStore(selectedShopRecord()))return;\n const loaders={bookingsPanel:loadBookings,financePanel:loadFinance,salesPanel:loadSales},loader=loaders[id];\n if(!loader)return;\n const key=shopLoadToken+':'+id,now=Date.now(),prior=pb2103PanelLoads.get(key);\n if(prior&&(prior.pending||now-prior.at<20000))return;\n const state={pending:true,at:now};pb2103PanelLoads.set(key,state);\n void Promise.resolve().then(loader).finally(()=>{state.pending=false;state.at=Date.now()}).catch(()=>{pb2103PanelLoads.delete(key)});\n}\nconst pb2103PanelLoads=new Map();\n"+RUNTIME+'\nasync function submitRentalBooking(retryProfile=true){return pb2100SubmitRentalBooking(retryProfile)}');
  s=s.replaceAll('تاریخ شروع و پایان را از تقویم شمسی انتخاب کن.','روزهای پیوسته آفیش را از تقویم انتخاب کنید.');

@@ -13,7 +13,7 @@ class AlertWindow {
   ipcMain.handle('store-alert-open',(event,ids)=>{if(!valid(event))throw Error('invalid_sender');return this.accept(ids,true)});
  }
  settingsKey(){return 'nativeAlertSettings:'+(this.getAccount()||'default');}
- state(){return {items:this.items,settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
+ state(){return {items:this.account===this.getAccount()?this.items:[],settings:initializeSettings(this.store,this.getAccount()||'default'),settingsOnly:this.settingsOnly};}
  ensure(){
   if(this.window&&!this.window.isDestroyed())return this.window;
   const win=this.window=new this.BrowserWindow({width:420,height:300,minWidth:380,minHeight:240,useContentSize:true,resizable:false,maximizable:false,title:'اعلان‌ها · PhotoBridge Store',show:false,alwaysOnTop:true,autoHideMenuBar:true,backgroundColor:'#f5f7fb',webPreferences:{preload:path.join(__dirname,'alert-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:false}});
@@ -41,10 +41,10 @@ class AlertWindow {
  async accept(ids,open){
   if(this.account&&this.account!==this.getAccount()){this.dismiss();return false;}
   const account=this.account;
-  if(open)await this.open(this.items.filter(n=>ids?.includes(n.id)));
+  if(open)await this.open(this.items.filter(n=>Array.isArray(ids)&&ids.includes(n.id)));
   if(account!==this.account||account!==this.getAccount())return false;
   const shown=new Set(Array.isArray(ids)?ids:[]),accepted=this.items.filter(x=>shown.has(x.id)).map(x=>x.id);
-  await this.ack?.(accepted);this.items=this.items.filter(x=>!shown.has(x.id));
+  await this.ack?.(accepted);if(account!==this.account||account!==this.getAccount())return false;this.items=this.items.filter(x=>!shown.has(x.id));
   if(this.window&&!this.window.isDestroyed()){this.window.flashFrame(false);if(!this.items.length)this.window.hide();this.window.webContents.send('store-alert-change')}
   return true;
  }

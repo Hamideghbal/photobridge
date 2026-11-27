@@ -50,5 +50,16 @@ test('R2103 invalid day stays clickable, warns without changing selection, and c
  assert.match(s,/warning\.hidden=false;return/);
  assert.match(s,/done\.disabled=!chosen\.length/);
  assert.match(s,/rentalDateConfirmedKeyV811=days\.length\?rentalDateKeyV811/);
- assert.doesNotMatch(s,/pb2100Summary\(\);\$\('#quote'\)\.innerHTML='';b\.dispatchEvent/);
+ assert.match(s,/b\.dispatchEvent\(new Event\('input'\)\)/);
+});
+
+test('R2103 only requested camera panel loads and duplicate visible requests coalesce',async()=>{
+ const a=s.indexOf('function pb2103LoadVisibleStore('),b=s.indexOf('\nconst pb2103PanelLoads=new Map();',a);
+ const src=s.slice(a,b);
+ const calls=[],fn=new Function('loadBookings','loadFinance','loadSales','pbProductionStore','selectedShopRecord','let shopId="s",shopLoadToken=1;const pb2103PanelLoads=new Map();'+src+';return pb2103LoadVisibleStore')(()=>calls.push('bookings'),()=>calls.push('finance'),()=>calls.push('sales'),()=>false,()=>({}));
+ fn('equipmentPanel');fn('bookingsPanel');fn('bookingsPanel');
+ await Promise.resolve();assert.deepEqual(calls,['bookings']);
+ fn('salesPanel');await Promise.resolve();assert.deepEqual(calls,['bookings','sales']);
+ assert.match(s,/if\(pbProductionStore\(target\)\)void Promise\.allSettled/);
+ assert.match(s,/renderShops\(\);renderStoreChooserR96\(\);const pb2103Me=await pb2103Identity/);
 });

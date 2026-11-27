@@ -1608,3 +1608,5 @@ runR1314(process.execPath,['--test','scripts/test-r2099-mobile-photographer-sess
 // R2100: shared photographer booking calendar and receipt after the final mobile navigation writer.
 await deployStep('./enable-r2100-photographer-booking-calendar.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2100-photographer-booking-calendar.mjs'],{stdio:'inherit'});
+await deployStep('./enable-r2106-workspace-responsiveness.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2106-workspace-responsiveness.mjs'],{stdio:'inherit'});

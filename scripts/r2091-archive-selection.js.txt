@@ -1,0 +1,28 @@
+// R2091: validate the new order's selected source files and print settings.
+// The original archive and historical invoice are never updated.
+const err=code=>Object.assign(Error(code),{status:400});
+export async function selectArchivePrintFiles(rows,selection,{mode='print',canUseSize,snapshotAddons,invoiceRequired=true}={}){
+ if(selection===undefined)return rows;
+ if(mode==='album'||!Array.isArray(selection)||!selection.length||selection.length>rows.length)throw err('archive_selection_invalid');
+ const originals=new Map(rows.map(f=>[String(f.id),f])),seen=new Set(),sizes=new Map(),result=[];
+ for(const item of selection){
+  if(!item||typeof item!=='object'||Array.isArray(item))throw err('archive_selection_invalid');
+  const id=String(item.id||''),source=originals.get(id);
+  if(!source||seen.has(id))throw err('archive_selection_invalid');
+  seen.add(id);
+  const size=String(item.printSizeId||''),type=String(item.printType||''),copies=Number(item.printCopies),crop=String(item.cropHandling||'none');
+  if(!size||size.length>110)throw err('invalid_print_size');
+  if(size!==String(source.print_size_id)){
+   if(!sizes.has(size))sizes.set(size,await canUseSize(size));
+   if(!sizes.get(size))throw err('invalid_print_size');
+  }
+  if(!['luster','silk','metallic','none'].includes(type)||type==='none'&&!item.chassis&&!item.frame)throw err('print_selection_required');
+  if(!Number.isSafeInteger(copies)||copies<1||copies>9999||!['none','customer','lab'].includes(crop)||typeof item.chassis!=='boolean'||typeof item.frame!=='boolean')throw err('archive_selection_invalid');
+  const old=source.addon_selection||{},same=size===String(source.print_size_id)&&item.chassis===Boolean(source.chassis)&&item.frame===Boolean(source.frame)&&(!item.chassis||String(item.chassisModelId||'chassis')===String(old.chassis?.id||'chassis'))&&(!item.frame||String(item.frameModelId||'frame')===String(old.frame?.id||'frame')&&String(item.frameColorId||'')===String(old.frame?.colorId||''));
+  // A free, unchanged historical model may remain available for reprints.
+  // A newly billed model is resolved from today's lab tariff, never client prices.
+  const addons=same&&!invoiceRequired?old:await snapshotAddons(item,size);
+  result.push({...source,print_size_id:size,print_type:type,print_copies:copies,chassis:item.chassis,frame:item.frame,crop_handling:crop,addon_selection:addons});
+ }
+ return result;
+}

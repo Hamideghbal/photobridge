@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook} from './enable-r2100-photographer-booking-calendar.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {patchBook,replaceBookingSubmit} from './enable-r2100-photographer-booking-calendar.mjs';
 const html=fs.readFileSync('dist/api/equipment-rental-book.html','utf8'),s=patchBook(html);
 function extract(name,next){const a=s.indexOf('function '+name+'('),b=s.indexOf('\n'+next,a);assert.ok(a>=0&&b>a,name);return s.slice(a,b)}
 const days=new Function(extract('pb2100Adjacent','function pb2100Toggle')+'\n'+extract('pb2100Toggle','function pb2100Today')+';return pb2100Toggle')();
@@ -32,4 +32,13 @@ test('R2100 final UI has one date selector, hidden API dates and a scoped bookin
  assert.match(s,/out\.bookingCode/);assert.match(s,/void loadBookings\(\)\.then\(mark\)/);
  assert.match(s,/openStoreSection\('bookingsPanel'\)/);
  assert.match(s,/String\(shopId\)!==String\(body.shopId\)/);
+});
+
+test('R2102 booking replacement survives multiline legacy navigation without consuming next handler',()=>{
+ const before="const before=1;\n",after="\nconst after=2;\n";
+ const source="async function submitRentalBooking(retryProfile=true){\nconst body=validRequestBody();\ntry{await api('/api/customer/equipment-rental/bookings',{method:'POST',body:JSON.stringify(body)});\ncloseRentalRequestV809();openStoreSection('bookingsPanel');}catch(e){msg(e.message)}\n}";
+ const replacement="async function submitRentalBooking(retryProfile=true){return pb2100SubmitRentalBooking(retryProfile)}";
+ assert.equal(replaceBookingSubmit(before+source+after,replacement),before+replacement+after);
+ assert.throws(()=>replaceBookingSubmit(before+source+source+after,replacement),/declaration count/);
+ assert.throws(()=>replaceBookingSubmit(source.replace('closeRentalRequestV809','unknownClose'),replacement),/boundary or contract/);
 });

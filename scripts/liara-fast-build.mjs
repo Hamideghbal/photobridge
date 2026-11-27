@@ -1585,3 +1585,7 @@ runR1314(process.execPath,['--test','scripts/test-r2086-mobile-print-chooser-vie
 // R2087: verified mobile account picker after final auth and web writers.
 await deployStep('./enable-r2087-mobile-account-picker.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2087-mobile-account-picker.cjs'],{stdio:'inherit'});
+
+// R2089: mobile Store scanner, after final web/account writers; keep Windows snapshot frozen.
+await deployStep('./enable-r2089-mobile-equipment-camera.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.cjs'],{stdio:'inherit'});

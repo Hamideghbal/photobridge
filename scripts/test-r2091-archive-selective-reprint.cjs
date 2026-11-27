@@ -26,3 +26,20 @@ test('R2091: original local path lookup remains before edited registration; clou
   assert.match(fs.readFileSync(root+'/index.html','utf8'),/archiveSelection=r2091&archiveReprint=r2085/);
  }
 });
+
+test('R2091: result notification checks only server-confirmed invoice and omits invoice-free step',async()=>{
+ const ui=fs.readFileSync('scripts/r2091-archive-reprint-ui.js.txt','utf8');
+ const functionSource=ui.slice(ui.indexOf('function pb2091ArchiveResult('));
+ async function render(order,receipt,localPrepared){
+  let dialog;
+  function node(tag){return {tag,children:[],append(...children){this.children.push(...children)},addEventListener(){},showModal(){},close(){},remove(){}};}
+  const ctx={document:{createElement:node,body:{append(n){dialog=n}}},V:String,pb2080Receipts:new Map(),pb1451RecoveryMessage:()=> 'نتیجه'};
+  vm.runInNewContext(functionSource,ctx);
+  const done=ctx.pb2091ArchiveResult({order:{id:'new',number:12,...order},receipt,localPrepared});
+  const steps=dialog.children.find(n=>n.className==='pb2091ResultSteps').children.map(n=>n.textContent);
+  dialog.children.at(-1).children[0].onclick();await done;return steps;
+ }
+ assert.deepEqual(await render({invoice_required:false},null,true),['✓ ساخت سفارش جدید','✓ تأیید کامل فایل‌ها']);
+ assert.deepEqual(await render({invoice_required:true},{invoice:{id:'issued'}},true),['✓ ساخت سفارش جدید','✓ تأیید کامل فایل‌ها','✓ صدور فاکتور']);
+ assert.deepEqual(await render({invoice_required:true},null,false),['✓ ساخت سفارش جدید','○ تأیید کامل فایل‌ها','○ صدور فاکتور']);
+});

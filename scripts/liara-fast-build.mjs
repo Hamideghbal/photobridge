@@ -1521,7 +1521,10 @@ await deployStep('./enable-r2075-admin-settings-header.mjs');
 await deployStep('./enable-r2077-persian-sizes-admin-native-settings.mjs');
 await deployStep('./enable-r2080-archive-reprint.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2080-archive-reprint.cjs'],{stdio:'inherit'});
+// R2091: archive selection and invoice result before native asset refresh.
+await deployStep('./enable-r2091-archive-selective-reprint.mjs');
 await deployStep('./enable-r1897-final-lab-assets.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2091-archive-selective-reprint.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r2060-finance-toolbar.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs','scripts/test-r2070-desktop-print-entry-guides.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r2075-admin-settings-header.cjs'],{stdio:'inherit'});

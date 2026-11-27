@@ -80,9 +80,21 @@ test('backend validates, persists, renames and invoices all copies',()=>{
  // Column count grew when frame/chassis model selection was persisted.
  const inserts=[...api.matchAll(/INSERT INTO order_files\s*\(([^)]+)\)\s*VALUES\s*\(([^;]+?)\)/g)];
  assert(inserts.some(([,columns,values])=>/\bprint_copies\b/.test(columns)&&/\boriginal_state\b/.test(columns)&&/['"]pending['"]/.test(values)), 'file insertion must persist print copy count and initial pending state');
- assert.ok(api.includes('const name = orderPrintCopyName(safeFileName'));
+ // Find the actual photographer presign handler, not the obsolete pre-R2047
+ // exact filename expression. Its filename must still use the copy helper,
+ // preserving album originals and the new collision-safe photo normalization.
+ const uploadStart=api.indexOf("if (req.method === 'POST' && url.pathname === '/api/customer/uploads/presign')");
+ const uploadEnd=api.indexOf('const localUpload = url.pathname.match(',uploadStart);
+ assert(uploadStart>=0&&uploadEnd>uploadStart,'customer presign handler exists');
+ const upload=api.slice(uploadStart,uploadEnd);
+ const nameExpression=upload.match(/const name = (orderPrintCopyName\([^;\n]+\));/);
+ assert(nameExpression,'customer presign uses authoritative copy filename');
+ assert.match(nameExpression[1],/albumMode \? 1 : printCopies\)$/);
+ if(api.includes('/* PB2047 server */')){
+  assert.match(nameExpression[1],/albumMode\?safeFileName\(String\(b\.name \|\| 'file'\)\):await pb2047UniqueUploadBase\(pool,orderId,id,safeFileName\(pb2047CleanUploadName\(String\(b\.name \|\| 'file'\)\)\)\)/);
+ }
  // R1666 sanitizes each directory segment before appending the quantity filename.
- const pathExpression=api.slice(api.indexOf('const name = orderPrintCopyName(safeFileName')).match(/const relativePath = ([^;]+);/);
+ const pathExpression=upload.slice(nameExpression.index+nameExpression[0].length).match(/const relativePath = ([^;]+);/);
  assert.ok(pathExpression,'upload relative-path expression exists');
  const sanitizer=getFunc(api,'function safeFileName(name)','function orderPrintCopyName(');
  const relativePath=vm.runInNewContext(sanitizer+';((b,name)=>'+pathExpression[1]+')');

@@ -23,7 +23,7 @@
  const portals=['photographer','lab','rental'];
  const labels={photographer:'عکاسی',lab:'لابراتوار',rental:'فروشگاه'};
  const descriptions={photographer:'ورود به پنل عکاسی',lab:'ورود به پنل مدیریت لابراتوار',rental:'ورود به پنل فروشگاه'};
- let checking=false,chooser=null,wasHidden=false,needsResume=false;
+ let checking=false,chooser=null,wasHidden=Boolean(document.hidden),needsResume=false;
  const pending=()=>document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
  const ready=()=>{
    resuming=false;checking=false;
@@ -130,7 +130,7 @@
  const internalReferrer=()=>{try{return Boolean(document.referrer)&&new URL(document.referrer).origin===location.origin}catch{return false}};
  const reloaded=()=>{try{return performance.getEntriesByType('navigation')[0]?.type==='reload'}catch{return false}};
  const initial=entryPaths.has(normalize(location.pathname))||Boolean(currentPortal()&&(!internalReferrer()||reloaded()));
- if(!handoff&&initial)void check(true);
+ if(!handoff&&initial){if(document.hidden)needsResume=true;else void check(true)}
  const safeResume=()=>{
    if(!currentPortal()||sensitive())return false;
    const active=document.activeElement;

@@ -26,6 +26,7 @@ export function patchChooser(s){
 export function patchPicker(s){
  if(s.includes('/* PB2099 internal photographer route */'))return s;
  s=once(s,"const target=String(path).split('?')[0];const role=currentPortal();if(!role||!target.startsWith(routes[role]+'/'))return false;return move(path)","const target=String(path).split('?')[0];const role=currentPortal();/* PB2099 internal photographer route */if(!role||!(target===routes[role]||target.startsWith(routes[role]+'/')||(role==='photographer'&&target==='/equipment-rental/book')))return false;return move(path)");
+ s=once(s,"!url.pathname.startsWith(routes[role]+'/')||url.pathname===location.pathname","!(url.pathname===routes[role]||url.pathname.startsWith(routes[role]+'/')||(role==='photographer'&&url.pathname==='/equipment-rental/book'))||url.pathname===location.pathname");
  s=once(s,"window.addEventListener('blur',()=>{blurred=true});","window.addEventListener('blur',()=>{if(currentPortal()!=='photographer'||document.hidden)blurred=true});");
  return s;
 }
@@ -35,6 +36,10 @@ export function run(){
  for(const [p,f] of [[panel,patchPanel],[chooser,patchChooser]]){const s=f(fs.readFileSync(p,'utf8'));new Function(s);write(p,s)}
  for(const p of ['dist/web/index.html','dist/api/equipment-rental-book.html']){
   let s=fs.readFileSync(p,'utf8');s=s.replace(/(<script id="pb1493MobileSessionResume">)([\s\S]*?)(<\/script>)/,(_,a,body,b)=>{const next=patchPicker(body);new Function(next);return a+next+b});
+  if(p.endsWith('book.html')&&!s.includes('/* PB2099 scoped store identity */')){
+   // Shared auth endpoints default to the generic cookie unless the photographer portal is explicit.
+   s=once(s,"headers:{...(opt.body?{'content-type':'application/json'}:{}),...(opt.headers||{})}","headers:{/* PB2099 scoped store identity */'x-photobridge-portal':'photographer',...(opt.body?{'content-type':'application/json'}:{}),...(opt.headers||{})}");
+  }
   s=s.replace(/(photobridge-r1106-mobile-store-panel\.js|photobridge-v904r99-lab-chooser\.js)([^"'<> \r\n]*)/g,(_,a,q)=>a+q+(q.includes('?')?'&':'?')+'mobileRoute=r2099');
   if(!s.includes('id="pb2099MobilePanelIsolation"'))s=s.replace('</head>','<style id="pb2099MobilePanelIsolation">@media(max-width:820px){html[data-pb2099-panel="store"] body>#pbR99LabChooser,html[data-pb2099-panel="store"] body>#pbR100F18RouteCover{display:none!important;visibility:hidden!important;pointer-events:none!important}html[data-pb2099-panel] body .pb1106ContentPanel[hidden]{display:none!important}html[data-pb2099-panel] body .pb1106ContentPanel:not([hidden]){display:block!important}}</style></head>');
   write(p,s);

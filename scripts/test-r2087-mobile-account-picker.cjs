@@ -139,6 +139,7 @@ test('R2093: new login lets missing role enter normal login without logging out 
  const ticket=JSON.parse(f.session.get('pb2092-account-handoff'));
  const g=fixture({path:'/rental',search:'?pb2087AccountEntry=1',roles:['photographer','lab'],ticket});await settle();
  assert.equal(g.buttons().length,0);assert.equal(g.loginAction(),undefined);
+ assert.equal(ticket.login,true);g.doc.querySelector=()=>({});g.windowEvents.pageshow({persisted:false});g.windowEvents.blur();g.windowEvents.focus();await settle();assert.equal(g.loginAction(),undefined,'do not interrupt sign-in form');
 });
 test('R2093: no active sessions still offer all login roles; back preserves current list',async()=>{
  const f=fixture({roles:[]});await settle();

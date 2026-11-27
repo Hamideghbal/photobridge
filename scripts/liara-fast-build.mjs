@@ -1519,6 +1519,8 @@ await deployStep('./enable-r2060-finance-toolbar.mjs');
 await deployStep('./enable-r2070-desktop-print-entry-guides.mjs');
 await deployStep('./enable-r2075-admin-settings-header.mjs');
 await deployStep('./enable-r2077-persian-sizes-admin-native-settings.mjs');
+await deployStep('./enable-r2080-archive-reprint.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2080-archive-reprint.cjs'],{stdio:'inherit'});
 await deployStep('./enable-r1897-final-lab-assets.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2060-finance-toolbar.cjs'],{stdio:'inherit'});
 runR1314(process.execPath,['--test','scripts/test-r1897-final-lab-assets.cjs','scripts/test-r2070-desktop-print-entry-guides.cjs'],{stdio:'inherit'});

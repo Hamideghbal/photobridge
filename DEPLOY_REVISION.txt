@@ -1,1 +1,1 @@
-2026-11-27-r2081-store-preview-build-guard-archive-reprint
+2026-11-27-r2083-archive-invoice-build-fix-equipment-qr-reader

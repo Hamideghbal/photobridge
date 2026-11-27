@@ -9,7 +9,8 @@ export function patchInvoicePolicy(s){
  }else if(s.includes('export async function labOrderStageInvoiceGuard')){
   s=one(s,'if(order.invoice_required===false&&!direct)return null;','if(order.invoice_required===false&&(order.recovered_from_order_id||!direct))return null;');
  }else if(s.includes('export async function handleLabAutomation')){
-  s=one(s,'if(order.invoice_required===false&&!isDirectCustomerInvoiceOrder(order))','if(order.invoice_required===false&&(order.recovered_from_order_id||!isDirectCustomerInvoiceOrder(order)))');
+  // R2083: R1799/R1802 wrap eligibility in the product/album policy. Guard the locked order before that branch, preserving all existing rules.
+  s=one(s,"order=oq.rows[0];if(!order)throw Object.assign(Error('not_found'),{status:404});","order=oq.rows[0];if(!order)throw Object.assign(Error('not_found'),{status:404});\n    if(order.recovered_from_order_id&&order.invoice_required===false)throw Object.assign(Error('early_invoice_not_allowed'),{status:409});");
  }else{
   s=one(s,'if(!order||(order.invoice_required===false&&!direct)||','if(!order||(order.invoice_required===false&&(order.recovered_from_order_id||!direct))||');
  }

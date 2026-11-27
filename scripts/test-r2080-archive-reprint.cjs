@@ -23,7 +23,9 @@ test('R2080: all direct-customer stage/automation policies preserve explicit fre
  const db={query:()=>assert.fail('free reprint must not require an invoice')};
  for(const stage of ['printing','ready','completed'])assert.equal(await labOrderStageInvoiceGuard(db,'lab',{invoice_required:false,recovered_from_order_id:'old',customer_kind:'customer'},stage),null);
  const auto=fs.readFileSync('dist/api/lab-auto-processing.js','utf8');
- assert.match(auto,/if\(order\.invoice_required===false&&\(order\.recovered_from_order_id\|\|!isDirectCustomerInvoiceOrder\(order\)\)\)/);
+ assert.match(auto,/if\(order\.recovered_from_order_id&&order\.invoice_required===false\)throw Object.assign\(Error\('early_invoice_not_allowed'\)/);
+ assert(auto.indexOf('if(order.recovered_from_order_id&&order.invoice_required===false)')<auto.indexOf('const product=await isNoPrintOrder(c,labId,id);'));
+ assert.match(auto,/if\(product\?!productInvoiceRequired\(order\):order\.invoice_required===false&&!isDirectCustomerInvoiceOrder\(order\)\)/);
 });
 test('R2080: archive copy, invoice success, pricing error and invoice failure messages stay distinct',async()=>{
  const {patchUi}=await import('./r2080-archive-reprint.mjs');
@@ -39,4 +41,21 @@ test('R2080: archive copy, invoice success, pricing error and invoice failure me
  assert.match(message({invoice_required:true},{invoiceError:'invoice_pricing_required'}),/تعرفه ناقص/);
  assert.match(message({invoice_required:true},{invoiceError:'invoice_issuance_failed'}),/صدور فاکتور تأیید نشد/);
  assert.match(message({invoice_required:false},null,false),/هنوز روی هارد تأیید نشده/);
+});
+
+test('R2083: late product/album eligibility variants do not break archive invoice guard',async()=>{
+ const {patchInvoicePolicy}=await import('./r2080-archive-reprint.mjs');
+ const row="order=oq.rows[0];if(!order)throw Object.assign(Error('not_found'),{status:404});";
+ const conditions=["if(order.invoice_required===false&&!isDirectCustomerInvoiceOrder(order))","if(product?!productInvoiceRequired(order):order.invoice_required===false&&!isDirectCustomerInvoiceOrder(order))"];
+ for(const condition of conditions){
+  const fixture="export async function handleLabAutomation(){"+row+"\n"+condition+"throw Error('existing_policy');}";
+  const patched=patchInvoicePolicy(fixture);
+  assert(patched.includes(condition),'ordinary product/print invoice rules unchanged');
+  assert(patched.indexOf("if(order.recovered_from_order_id&&order.invoice_required===false)")<patched.indexOf(condition));
+  assert.equal(patchInvoicePolicy(patched),patched);
+  const check=new Function('order','try{'+patched.slice(patched.indexOf("if(order.recovered_from_order_id"),patched.indexOf(condition))+'return 200}catch(e){return e.status}');
+  assert.equal(check({recovered_from_order_id:'old',invoice_required:false}),409);
+  assert.equal(check({recovered_from_order_id:'old',invoice_required:true}),200);
+  assert.equal(check({invoice_required:false}),200);
+ }
 });

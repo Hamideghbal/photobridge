@@ -11,7 +11,7 @@ test('R2070 desktop entry and independent tutorial delivery',()=>{
   const urls=[...html.matchAll(re)];assert.equal(urls.length,1,asset);
   const params=new URL(urls[0][0],'https://photobridge.ir/').searchParams;
   assert.deepEqual(params.getAll('desktopEntry'),['r2071'],asset);
-  assert.deepEqual(params.getAll('desktopEntryStyle'),['r2075'],asset);
+  assert.deepEqual(params.getAll('desktopEntryStyle'),['r2078'],asset);
   if(asset.startsWith('index-'))assert.match(urls[0][0],/&labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049&albumSizes=r1960&labStage=r1956$/,'desktop guide must not break the Lab cache chain');
  }
  const composer=ui.slice(ui.indexOf('function ej('),ui.indexOf('function vh(',ui.indexOf('function ej(')));
@@ -22,6 +22,10 @@ test('R2070 desktop entry and independent tutorial delivery',()=>{
  assert(guide.includes('.pb2071SecondaryPair{background:#fff!important;border-color:#cdd9ec!important;color:#24416b!important}'));
  assert(!guide.includes('.pb2071PrimaryPair{background:#3b82f6'));
  assert(ui.includes('pb2071EntryPair')&&ui.includes('pb2071GuidePlay')&&ui.includes('pb2071GuideLabel')&&ui.includes('children:"راهنما"'));
- assert(guide.includes('top:6px!important;bottom:6px!important;width:1px!important')&&guide.includes('flex-direction:column!important')&&guide.includes('display:contents!important'));
+ assert.equal((ui.match(/className:"pb2070DesktopOnly pb2078EntryDivider"/g)||[]).length,2,'both action pairs own a real separator');
+ assert(guide.includes('flex:0 0 1px!important;width:1px!important;min-width:1px!important;max-width:1px!important;height:24px!important;min-height:24px!important;max-height:24px!important;align-self:center!important'));
+ assert(guide.includes('background:#e1e6ee!important;opacity:1!important;visibility:visible!important;pointer-events:none!important'));
+ assert(guide.includes('pb2070EntryGuide::before{content:none!important;display:none!important}'),'no duplicate pseudo divider');
+ assert(guide.includes('@media(max-width:820px){.pb2070DesktopOnly{display:none!important}')&&guide.includes('flex-direction:column!important')&&guide.includes('display:contents!important'));
  for(const p of ['dist/web/assets/index-UIRefine-v655-r84.js','dist/web/photobridge-workflow-guides-v572.js','dist/web/index.html'])for(const [ext,decode]of [['.br',zlib.brotliDecompressSync],['.gz',zlib.gunzipSync]])if(fs.existsSync(p+ext))assert(decode(fs.readFileSync(p+ext)).equals(fs.readFileSync(p)),p+ext);
 });

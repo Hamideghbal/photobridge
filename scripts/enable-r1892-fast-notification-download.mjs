@@ -24,7 +24,9 @@ const pattern=/(index-UIRefine-v655-r84\.js\?[^"'\s]*)/g;
 let count=0;
 html=html.replace(pattern,match=>{
  count++;
- return match.includes('nativeWake=r1892')?match:match+'&nativeWake=r1892';
+ const clean=match.replace(/&nativeWakeFast=r\d+/g,'');
+ const legacy=clean.includes('nativeWake=r1892')?clean:clean+'&nativeWake=r1892';
+ return legacy.replace('&nativeWake=r1892','&nativeWakeFast=r2074&nativeWake=r1892');
 });
 if(count!==1)throw Error('R1892 native bundle expected one cache-busted entry, got '+count);
 fs.writeFileSync(index,html);

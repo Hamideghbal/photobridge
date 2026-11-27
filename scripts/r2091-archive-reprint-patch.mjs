@@ -98,5 +98,22 @@ export function patchUi(s,helper){
  // Late, actually issued invoice updates must not be lost after a pricing retry.
  const oldInvoice="if(invoice?.id&&orderId&&labId)pb1581Report({id:orderId,lab_id:labId},{phase:'verified',stage:'download',downloadVerified:true,networkError:false,queued:false});";
  if(s.includes(oldInvoice))s=once(s,oldInvoice,"if(invoice?.id&&orderId&&labId){const previous=pb1581Transfers.get(labId+':'+orderId)?.value;if(previous?.invoiceRequired===true)pb1581Report({id:orderId,lab_id:labId},{phase:'verified',stage:'invoice',downloadVerified:true,invoiceRequired:true,invoiceIssued:true,invoiceVerified:true,invoiceId:invoice.id,networkError:false,queued:false});else pb1581Report({id:orderId,lab_id:labId},{phase:'verified',stage:'download',downloadVerified:true,networkError:false,queued:false});}");
+ // R2093: the same read-only resolver powers thumbnails and actual recovery.
+ s=section(s,'async function pb1451ReadArchive(','async function pb1451RestoreLocal(',()=> 'async function pb1451ReadArchive(detail,progress){return pb2093ReadArchive(detail,progress);}\n');
+ s=section(s,'async function pb1451RestoreLocal(','async function pb1451RecoverOrder(',part=>{
+  part=once(part,'await jc(target.dir,meta.original_name,entry.file);','const name=pb1769DownloadName(meta,meta.original_name,prepared.order);\n      await pb1445WriteDownload(target.dir,name,new Response(entry.file),null,entry.file.size,pb1769OrderFirst(prepared.order));');
+  part=once(part,'name:meta.original_name,bytes:entry.file.size','name,bytes:entry.file.size,transportName:meta.original_name,transportBytes:entry.file.size');
+  return part;
+ });
+ s=section(s,'async function pb1451OpenArchiveFile(','// R1772:',()=>String.raw`async function pb1451OpenArchiveFile(detail,meta){
+  if(ai()){
+   const hit=await pb2093FindArchiveFile(detail,meta,await pb2093ArchiveContext(detail));
+   if(hit){const url=URL.createObjectURL(hit.file);window.open(url,'_blank','noopener,noreferrer');setTimeout(()=>URL.revokeObjectURL(url),120000);return;}
+  }
+  const url=await pb1183PreviewFile(meta.id);
+  window.open(url,'_blank','noopener,noreferrer');setTimeout(()=>URL.revokeObjectURL(url),120000);
+ }
+`);
+ s=s.replace(/(if\(code==='archive_sources_incomplete'\))(?=return|[ \t]*return)/, "$1if(error.archiveIssues?.length)return pb1452ArchiveNotice('بازیابی کامل نشد؛ مسیر یا دسترسی بخشی از آرشیو قابل بررسی نبود. اتصال هارد و مسیر ذخیره سفارش را بررسی کنید. فایل‌های تأییدنشده: '+(error.missing||[]).join('، '));else ");
  return s+'\n'+helper+'\n'+marker+'\n';
 }

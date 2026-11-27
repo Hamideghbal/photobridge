@@ -1,0 +1,16 @@
+/* R2091: responsive selection editor; scoped to the new archive dialogs. */
+dialog.pb2091ArchivePicker{width:min(1040px,96vw);max-width:96vw;height:min(760px,92dvh);max-height:92dvh;border:1px solid #d9e4ef;border-radius:18px;padding:15px;background:#fff;color:#19334d;box-sizing:border-box;overflow:hidden;font:inherit}
+dialog.pb2091ArchivePicker[open]{display:flex;flex-direction:column;gap:10px}
+dialog.pb2091ArchivePicker::backdrop,dialog.pb2091ArchiveResult::backdrop{background:#122b4b88}
+.pb2091ArchivePicker header,.pb2091ArchivePicker footer,.pb2091Toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
+.pb2091ArchivePicker h3{margin:0 0 4px;font-size:18px}.pb2091ArchivePicker header small,.pb2091Status{font-size:12px;color:#5a7188}
+.pb2091ArchivePicker button{min-height:34px;border:1px solid #d9e4ef;border-radius:8px;padding:6px 12px;background:#f8fbff;color:#19334d;font:inherit;cursor:pointer}
+.pb2091ArchivePicker button.primary{background:#315efb;color:white;border-color:#315efb}.pb2091ArchivePicker button:disabled{opacity:.5;cursor:default}
+.pb2091Toolbar{justify-content:flex-start}.pb2091Toolbar b{margin-inline-start:auto}
+.pb2091PhotoGrid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px;align-content:start;overscroll-behavior:contain}
+.pb2091PhotoCard{min-width:0;border:1px solid #dce4ee;border-radius:12px;padding:9px;background:#f9fbfd}.pb2091PhotoCard.selected{border-color:#315efb;background:#edf4ff}
+.pb2091PhotoTop{display:grid;grid-template-columns:22px 72px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:8px}.pb2091PhotoTop b{font-size:12px;overflow-wrap:anywhere;cursor:pointer}.pb2091PhotoTop input{width:19px;height:19px;accent-color:#315efb}
+.pb2091ArchivePicker .pb2091Thumb{display:grid;place-items:center;width:72px;height:66px;padding:0;overflow:hidden;background:#edf2f7;font-size:9px;line-height:1.3}.pb2091Thumb img{width:100%;height:100%;object-fit:contain}.pb2091Thumb img[hidden],.pb2091Thumb span[hidden]{display:none!important}
+.pb2091Fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pb2091Fields label{display:grid;gap:3px;min-width:0;font-size:11px}.pb2091Fields select,.pb2091Fields input{width:100%;min-width:0;box-sizing:border-box;min-height:32px;border:1px solid #cfdae7;border-radius:7px;padding:3px 5px;background:white;font:inherit;color:#19334d}
+.pb2091ArchivePicker footer{justify-content:flex-end}.pb2091ResultSteps{display:grid;gap:6px;margin:12px 0}.pb2091ResultSteps div{padding:8px 10px;border-radius:8px;background:#f2f5f8}.pb2091ResultSteps .complete{color:#167743;background:#eefbf3}.pb2091ResultSteps .pending{color:#95641b}.pb2091ArchiveResult h3{margin:0 0 8px}
+@media(max-width:600px){dialog.pb2091ArchivePicker{width:100%;max-width:100%;height:96dvh;max-height:96dvh;border-radius:14px;padding:10px}.pb2091PhotoGrid{grid-template-columns:1fr}.pb2091Toolbar{gap:4px}.pb2091Toolbar b{font-size:12px}.pb2091PhotoTop{grid-template-columns:22px 64px minmax(0,1fr)}.pb2091ArchivePicker .pb2091Thumb{width:64px;height:60px}}

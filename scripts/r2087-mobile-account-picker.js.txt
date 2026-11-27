@@ -18,7 +18,7 @@
  // by selecting a role; it is immediately removed and never authorizes access.
  const TICKET='pb2092-account-handoff';
  let handoff=false;
- try{const saved=JSON.parse(sessionStorage.getItem(TICKET)||'null');sessionStorage.removeItem(TICKET);handoff=query.get('pb2087AccountEntry')==='1'&&saved?.path===normalize(location.pathname)&&saved.until>=Date.now()&&saved.until<=Date.now()+15000;}catch{}
+ try{const saved=JSON.parse(sessionStorage.getItem(TICKET)||'null');sessionStorage.removeItem(TICKET);handoff=!query.has('pb2092Launch')&&query.get('pb2087AccountEntry')==='1'&&saved?.path===normalize(location.pathname)&&saved.until>=Date.now()&&saved.until<=Date.now()+15000;}catch{}
  if(query.has('pb2087AccountEntry')){
    query.delete('pb2087AccountEntry');
    try{history.replaceState(history.state,'',location.pathname+(query.toString()?'?'+query:'')+(location.hash||''))}catch{}
@@ -27,14 +27,17 @@
  const labels={photographer:'عکاسی',lab:'لابراتوار',rental:'فروشگاه'};
  const descriptions={photographer:'ورود به پنل عکاسی',lab:'ورود به پنل مدیریت لابراتوار',rental:'ورود به پنل فروشگاه'};
  let checking=false,chooser=null,wasHidden=Boolean(document.hidden),needsResume=false,authorized=handoff,blurred=false,watchTimer=0;
- const issueTicket=path=>{try{sessionStorage.setItem(TICKET,JSON.stringify({path:normalize(path),until:Date.now()+15000}));return true}catch{return false}};
+ const issueTicket=path=>{try{sessionStorage.setItem(TICKET,JSON.stringify({path:normalize(path.split('?')[0]),until:Date.now()+15000}));return true}catch{return false}};
  const move=path=>{if(!issueTicket(path))return false;location.replace(path+(path.includes('?')?'&':'?')+'pb2087AccountEntry=1');return true};
  // Explicitly authorized same-role landing redirects only; never bypass a pending chooser.
  window.pb2092AccountNavigate=path=>{if(!authorized||checking||needsResume||chooser)return false;const target=String(path).split('?')[0];const role=currentPortal();if(!role||!target.startsWith(routes[role]+'/'))return false;return move(path)};
+ const waiters=new Set();
  const pending=()=>document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
+ window.pb2092WaitAccount=()=>document.documentElement.classList.contains('pb2087AccountPending')?new Promise(resolve=>waiters.add(resolve)):Promise.resolve();
  const ready=()=>{
    resuming=false;checking=false;
    document.documentElement.classList.remove('pb1493SessionResumePending','pb2087AccountPending');
+   for(const resolve of waiters)resolve();waiters.clear();
    window.dispatchEvent(new Event('pb2087-account-ready'));
  };
  const validSession=async portal=>{
@@ -51,7 +54,7 @@
  function remember(portal){try{localStorage.setItem(KEY,portal)}catch{}}
  function navigate(portal){
    remember(portal);
-   authorized=true;
+   authorized=true;needsResume=false;wasHidden=false;blurred=false;
    const current=currentPortal();
    if(current===portal&&(!/\/login\/?$/.test(location.pathname)))return false;
    if(move(routes[portal]))return true;
@@ -149,7 +152,7 @@
  }
  function foreground(){
    if(document.hidden)return;
-   if(wasHidden||blurred){wasHidden=false;blurred=false;needsResume=true}
+   if(wasHidden||blurred){wasHidden=false;blurred=false;if(!chooser&&!checking)needsResume=true}
    resume();
  }
  document.addEventListener('visibilitychange',()=>{

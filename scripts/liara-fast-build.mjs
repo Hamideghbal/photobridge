@@ -1581,3 +1581,7 @@ runR1314(process.execPath,['--test','scripts/test-r2082-equipment-reader.cjs'],{
 
 // R2086: assert the final mobile-only chooser viewport after all asset writers.
 runR1314(process.execPath,['--test','scripts/test-r2086-mobile-print-chooser-viewport.cjs'],{stdio:'inherit'});
+
+// R2087: verified mobile account picker after final auth and web writers.
+await deployStep('./enable-r2087-mobile-account-picker.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2087-mobile-account-picker.cjs'],{stdio:'inherit'});

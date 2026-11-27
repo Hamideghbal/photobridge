@@ -8,6 +8,7 @@ test('R2077 Persian dimensions are display-only, not identifiers or filenames',(
  for(const [from,to] of [['20x25','۲۰×۲۵'],['13 X 18 · صحافی ۵۰ تومان','۱۳×۱۸ · صحافی ۵۰ تومان'],['۲٠×۳۰','۲۰×۳۰'],['10.5 x 15.2','۱۰٫۵×۱۵٫۲'],['سایز دلخواه','سایز دلخواه'],['Canon R5','Canon R5']])assert.equal(format(from),to);
  location.pathname='/lab/settings';assert.equal(format('20x25'),'20x25');
  location.pathname='/admin';assert.equal(format('20x25'),'20x25');
+ const tariff=read(root+'photobridge-r1178-photographer-prices.js');assert(tariff.includes('pb2077TariffSize(String(row.label'));assert(read(root+'index.html').includes('photobridge-r1178-photographer-prices.js?v=r1178&photoSizes=r2077'));
  const picker=ui.slice(b,ui.indexOf('function ql(',b));assert(picker.includes('children:pb2077SizeText(n.label)'));assert(picker.includes('pb2077SizeText(I==null?void 0:I.label)'));assert(picker.includes('pb2077SizeText(P)'));assert(picker.includes('String(n.value)===String(t)'));
  assert(ui.includes('label:pb2077SizeText(eg(ue)),sub:'));assert(ui.includes('value:String(p.id),children:pb2077SizeText(String(p.label||p.id))'));
 });

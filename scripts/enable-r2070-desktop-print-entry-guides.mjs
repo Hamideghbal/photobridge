@@ -49,6 +49,12 @@ const ui=bundlePatch(read(bundle)),js=guidePatch(read(guide));new Function(js);w
 const htmlFile='dist/web/index.html';let html=read(htmlFile);
 for(const asset of ['index-UIRefine-v655-r84.js','photobridge-workflow-guides-v572.js']){
  const re=new RegExp(asset.replaceAll('.','[.]')+'\\?[^"\\x27<>\\s]+','g');const matches=[...html.matchAll(re)];if(matches.length!==1)throw Error('[R2070] asset URL '+asset+' '+matches.length);
- html=html.replace(re,url=>url.includes('desktopEntry=r2071')?url:asset.startsWith('index-')&&url.includes('&albumSizes=')?url.replace('&albumSizes=','&desktopEntry=r2071&albumSizes='):url+'&desktopEntry=r2071');
+ // R2073: preserve the existing contiguous finance/album cache contract.
+ // Remove an earlier misplaced key as well, so reruns remain idempotent.
+ html=html.replace(re,url=>{
+  const clean=url.replace(/&desktopEntry=r\d+/g,'');
+  const anchor=asset.startsWith('index-')?['&labFinanceRange=','&labPrintFinance=','&albumSizes='].find(key=>clean.includes(key)):null;
+  return anchor?clean.replace(anchor,'&desktopEntry=r2071'+anchor):clean+'&desktopEntry=r2071';
+ });
 }write(htmlFile,html);
 console.log('[R2070] desktop order board and two independent video slots');

@@ -272,7 +272,22 @@ test('R2014 desktop frame query cannot hide the top-level account header and nat
  assert.equal(frame.url.searchParams.get('workspace'),'print');
  const nav=fs.readFileSync('dist/web/photobridge-r1126-desktop-navigation.js','utf8');
  assert(nav.includes("if(window.self!==window.top&&(query.get('pbDesktopContent')==='1'||embeddedHost))"));
- assert(nav.includes('const native=selected?(current&&nativeHeader(current)):nativeHeader(document)'));
+ // R2035 supersedes R2014's selector: CRM/calendar keep the parent identity;
+ // embedded workspace routes must never fall back to a stale parent header.
+ const nativeSelection=nav.match(/const native=([^;]+);if\(!native\)return;/)?.[1];
+ assert(nativeSelection,'native header selection is present');
+ const parentDoc={header:{id:'parent'}},childDoc={header:{id:'child'}};
+ const select=(selected,current)=>vm.runInNewContext(nativeSelection,{
+  selected,current,document:parentDoc,nativeHeader:doc=>doc.header
+ });
+ for(const tab of ['print','store','gallery']){
+  assert.equal(select(tab,childDoc),childDoc.header);
+  assert.equal(select(tab,null),null,'no stale parent fallback for '+tab);
+ }
+ for(const tab of ['crm','calendar',null]){
+  assert.equal(select(tab,childDoc),parentDoc.header);
+  assert.equal(select(tab,null),parentDoc.header);
+ }
  assert(css.includes('--pb2014OrderContentTop'));
  assert(css.includes('.photographerLabContextActions>button.photographerContextAction.primary'));
 });

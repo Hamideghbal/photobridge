@@ -53,3 +53,16 @@ test('R2092: phone scanner ignores desktop mode preference and submits one manua
  input.value='WRONG';events.submit({preventDefault(){}});await settle();assert.equal(input.value,'WRONG');assert.equal(feedback.textContent,'کد اشتباه است');
  reader.close();events.submit({preventDefault(){}});await settle();assert.equal(calls.length,2);
 });
+
+test('R2093: mobile pickup replaces source selector with one explicit external supply check while retaining inventory validation',()=>{
+ const p=fs.readFileSync('dist/api/equipment-rental-portal.html','utf8');
+ assert.ok(p.includes("!mobileScan&&mode==='pickup'&&Array.isArray(s.supplyOptions)"));
+ assert.ok(p.includes('data-mobile-supply'));
+ assert.ok(p.includes('sourceFor(s)?'));
+ assert.ok(p.includes('!chooseSource(i,true)'));
+ assert.ok(p.includes('slot.mobileSelectedSupply=true;slot.scanned=true;slot.autoSupplied=true'));
+ assert.ok(p.includes('!slot.requiresExternal&&!slot.lockedSupplied'));
+ assert.ok(p.includes('data-supplied-toggle'));
+ const desktop=fs.readFileSync('dist/web/desktop-ui/equipment-rental-portal.html','utf8');
+ assert.ok(!desktop.includes('data-mobile-supply'));
+});

@@ -1592,3 +1592,7 @@ runR1314(process.execPath,['--test','scripts/test-r2087-mobile-account-picker.cj
 // R2089: mobile Store scanner, after final web/account writers; keep Windows snapshot frozen.
 await deployStep('./enable-r2089-mobile-equipment-camera.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2089-mobile-equipment-camera.cjs'],{stdio:'inherit'});
+
+// R2098: mobile photographer successful booking returns to the selected store homepage.
+await deployStep('./enable-r2098-mobile-booking-return.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2098-mobile-booking-return.mjs'],{stdio:'inherit'});

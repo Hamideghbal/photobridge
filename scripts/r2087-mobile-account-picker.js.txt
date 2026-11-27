@@ -1,0 +1,130 @@
+/* PB2087: choose among independently verified role sessions; no auth credentials are stored. */
+ const entryPaths=new Set([
+   '/','/photographer','/photographer/login','/lab','/lab/login','/rental','/rental/login'
+ ]);
+ const normalize=p=>p.replace(/\/+$/,'')||'/';
+ const sensitive=()=>{
+   const q=new URLSearchParams(location.search);
+   return ['logged_out','token','invite','maintenance_preview','reset','code','redirect','walletPayment','pbAdminShop','pbStorePreview','pbDesktopContent','pbEmbeddedStore','impersonation'].some(k=>q.has(k))||
+     /(?:impersonation|token|reset)=/i.test(location.hash||'')||
+     /\/(?:signup|register|invite|reset|password|recovery)(?:\/|$)/i.test(location.pathname);
+ };
+ const query=new URLSearchParams(location.search);
+ if(query.has('logged_out')){try{localStorage.removeItem(KEY)}catch{};return}
+ if(sensitive())return;
+ // This flag prevents a second prompt on the full document navigation caused
+ // by selecting a role; it is immediately removed and never authorizes access.
+ const handoff=query.get('pb2087AccountEntry')==='1';
+ if(handoff){
+   query.delete('pb2087AccountEntry');
+   try{history.replaceState(history.state,'',location.pathname+(query.toString()?'?'+query:'')+(location.hash||''))}catch{}
+ }
+ const currentPortal=()=>portalFromPath()||(/^\/equipment-rental\/book(?:\/|$)/.test(location.pathname)?'photographer':null);
+ const portals=['photographer','lab','rental'];
+ const labels={photographer:'عکاسی',lab:'لابراتوار',rental:'فروشگاه'};
+ const descriptions={photographer:'ورود به پنل عکاسی',lab:'ورود به پنل مدیریت لابراتوار',rental:'ورود به پنل فروشگاه'};
+ let checking=false,chooser=null,hiddenAt=0;
+ const ready=()=>{
+   resuming=false;checking=false;
+   document.documentElement.classList.remove('pb1493SessionResumePending','pb2087AccountPending');
+   window.dispatchEvent(new Event('pb2087-account-ready'));
+ };
+ const validSession=async portal=>{
+   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),4500);
+   try{
+     const r=await originalFetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':portal},signal:abort.signal});
+     if(!r.ok)return null;
+     const data=await r.json().catch(()=>null);
+     if(!roleForIdentity(portal,data)||data?.user?.mustChangePassword||data?.user?.forcePasswordChange)return null;
+     const name=portal==='lab'?data.lab?.name:portal==='rental'?data.rentalShop?.name:(data.user?.photographerName||data.user?.studioName||data.user?.name);
+     return {portal,name:typeof name==='string'?name.trim().slice(0,100):''};
+   }catch{return null}finally{clearTimeout(timer)}
+ };
+ function remember(portal){try{localStorage.setItem(KEY,portal)}catch{}}
+ function navigate(portal){
+   remember(portal);
+   const current=currentPortal();
+   // Preserve an already open workspace when choosing its current account.
+   if(current===portal&&(!/\/login\/?$/.test(location.pathname)))return false;
+   location.replace(routes[portal]+'?pb2087AccountEntry=1');
+   return true;
+ }
+ function choose(accounts){
+   return new Promise(resolve=>{
+     const render=()=>{
+       if(chooser||!document.body){resolve(null);return}
+       const dialog=document.createElement('dialog');
+       chooser=dialog;dialog.id='pb2087AccountPicker';dialog.dir='rtl';dialog.setAttribute('aria-labelledby','pb2087AccountTitle');
+       const panel=document.createElement('section');panel.className='pb2087AccountPanel';
+       const logo=document.createElement('div');logo.className='pb2087AccountBrand';logo.textContent='PhotoBridge';
+       const title=document.createElement('h1');title.id='pb2087AccountTitle';title.textContent='انتخاب حساب کاربری';
+       const intro=document.createElement('p');intro.textContent='می‌خواهید وارد کدام حساب شوید؟';
+       panel.append(logo,title,intro);
+       for(const account of accounts){
+         const button=document.createElement('button');button.type='button';button.className='pb2087AccountOption';button.dataset.portal=account.portal;
+         const symbol=document.createElement('span');symbol.className='pb2087AccountIcon';symbol.setAttribute('aria-hidden','true');
+         symbol.textContent={photographer:'▣',lab:'▤',rental:'▦'}[account.portal];
+         const copy=document.createElement('span');copy.className='pb2087AccountCopy';
+         const role=document.createElement('strong');role.textContent=labels[account.portal];
+         const sub=document.createElement('small');sub.textContent=account.name||descriptions[account.portal];
+         copy.append(role,sub);
+         const arrow=document.createElement('span');arrow.className='pb2087AccountArrow';arrow.setAttribute('aria-hidden','true');arrow.textContent='‹';
+         button.append(symbol,copy,arrow);
+         button.addEventListener('click',()=>{
+           if(chooser!==dialog)return;
+           chooser=null;dialog.remove();resolve(account.portal);
+         });
+         panel.append(button);
+       }
+       dialog.append(panel);dialog.addEventListener('cancel',event=>event.preventDefault());
+       document.body.append(dialog);
+       try{dialog.showModal()}catch{dialog.setAttribute('open','')}
+       panel.querySelector('button')?.focus({preventScroll:true});
+     };
+     if(document.body)render();else document.addEventListener('DOMContentLoaded',render,{once:true});
+   });
+ }
+ async function check(cold){
+   if(checking||chooser||sensitive()||document.hidden)return;
+   checking=true;resuming=true;
+   if(cold)document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
+   let moving=false;
+   try{
+     const accounts=(await Promise.all(portals.map(validSession))).filter(Boolean);
+     if(sensitive()||document.hidden)return;
+     if(!accounts.length){
+       if(cold){try{localStorage.removeItem(KEY)}catch{};if(normalize(location.pathname)==='/'){moving=true;location.replace('/photographer?pb2087AccountEntry=1')}}
+       return;
+     }
+     if(accounts.length===1){
+       if(cold)moving=navigate(accounts[0].portal);
+       return;
+     }
+     const selected=await choose(accounts);
+     if(!selected)return;
+     // A session can expire while the chooser is open. Revalidate the selected
+     // role with the same role-specific server endpoint before entering it.
+     const valid=await validSession(selected);
+     if(valid){moving=navigate(selected);return}
+     if(cold){moving=true;location.replace(routes[selected]+'?pb2087AccountEntry=1')}
+   }finally{if(!moving)ready()}
+ }
+ // Cold launch from the installed app entry point. A deep link or an ordinary
+ // in-app full-document navigation is not treated as a new app launch.
+ if(!handoff&&entryPaths.has(normalize(location.pathname)))void check(true);
+ // A backgrounded PWA may be brought forward without a document reload.
+ // Recheck after a meaningful background interval, but never interrupt an
+ // active form, file picker, upload, modal, payment or administrative preview.
+ const safeResume=()=>{
+   if(!currentPortal()||sensitive())return false;
+   const active=document.activeElement;
+   if(active?.matches?.('input,textarea,select,[contenteditable="true"]'))return false;
+   if(document.querySelector('dialog[open],.modalOverlay,.globalModalLayer,.simplePrintPilot,.uploadChoiceOverlay,[aria-busy="true"]'))return false;
+   return true;
+ };
+ document.addEventListener('visibilitychange',()=>{
+   if(document.hidden){hiddenAt=Date.now();return}
+   const elapsed=hiddenAt?Date.now()-hiddenAt:0;hiddenAt=0;
+   if(elapsed>=15000&&safeResume())void check(false);
+ });
+ window.addEventListener('pageshow',event=>{if(event.persisted&&safeResume())void check(false)});

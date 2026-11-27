@@ -1,0 +1,82 @@
+/* PB2082: physical QR reader, local-only mode preference and optional Web Serial. */
+(()=>{'use strict';
+ const norm=x=>String(x??'').trim().toUpperCase();
+ function returnMatch(slots,raw){
+  const text=String(raw??'').trim();if(!text||text.length>512)return {error:'invalid'};
+  const qr=/^PB\|/i.test(text),parts=text.split('|'),value=qr?parts[1]:text;
+  if(!value)return {error:'invalid'};
+  const k=norm(value),own=slots.filter(s=>!s.isExternal&&s.code);
+  let found=own.filter(s=>norm(s.code)===k);
+  if(!found.length&&/^PB-/i.test(k))found=own.filter(s=>norm(s.code)===k.slice(3));
+  if(!found.length&&!qr)found=own.filter(s=>s.serial&&norm(s.serial)===k);
+  if(found.length!==1)return {error:found.length?'ambiguous':'not_order'};
+  return found[0].checked?{error:'duplicate'}:{slot:found[0]};
+ }
+ function queue(onCode,onPending,onStatus){
+  let pending=0,tail=Promise.resolve(),closed=false;
+  return {get pending(){return pending},close(){closed=true},push(raw){
+   raw=String(raw??'').trim();if(closed||!raw||raw.length>512)return Promise.resolve(false);
+   if(pending>=32){onStatus('صف اسکن پر است؛ پس از بررسی کدها دوباره اسکن کنید.',true);return Promise.resolve(false)}
+   pending++;onPending(pending);
+   const next=tail.then(async()=>{if(closed)return false;try{return await onCode(raw)}catch{if(!closed)onStatus('بررسی کد انجام نشد؛ دوباره اسکن کنید.',true);return false}});
+   tail=next.finally(()=>{pending--;if(!closed)onPending(pending)});
+   return tail.then(()=>next);
+  }};
+ }
+ function mount({before,kind,camera=false,onMode=()=>{},onCode,onPending=()=>{}}){
+  const key='pb2082-reader-mode:'+kind,options=camera?['camera','keyboard','serial','manual']:['manual','keyboard','serial'];
+  const serialAvailable=typeof navigator.serial?.requestPort==='function';
+  let mode=camera&&matchMedia('(max-width:700px)').matches?'camera':'manual';
+  try{const saved=localStorage.getItem(key);if(options.includes(saved)&&(saved!=='serial'||serialAvailable))mode=saved}catch{}
+  const panel=document.createElement('section');panel.className='pb2082Reader';panel.setAttribute('aria-label','روش اسکن تجهیزات');
+  panel.innerHTML='<div class="pb2082ReaderRow"><label>روش ثبت کد <select data-mode><option value="manual">ورود دستی / چک‌لیست</option>'+(camera?'<option value="camera">دوربین</option>':'')+'<option value="keyboard">کیوآر کدخوان USB / بلوتوث</option><option value="serial" '+(serialAvailable?'':'disabled')+'>دستگاه سریال (COM)</option></select></label><button type="button" data-test>آزمایش دستگاه</button></div><div data-keyboard hidden><label>ورودی دستگاه کیوآر کدخوان<input data-scan dir="ltr" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="512" placeholder="QR را با دستگاه بخوانید"></label></div><div data-serial hidden class="pb2082ReaderRow"><label>سرعت اتصال <select data-baud><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option>115200</option></select></label><button type="button" data-connect>انتخاب دستگاه</button><button type="button" data-disconnect hidden>قطع اتصال</button></div><div data-feedback role="status" aria-live="polite"></div>';
+  before.before(panel);
+  const q=s=>panel.querySelector(s),selector=q('[data-mode]'),input=q('[data-scan]'),feedback=q('[data-feedback]'),test=q('[data-test]'),connect=q('[data-connect]'),disconnect=q('[data-disconnect]'),baud=q('[data-baud]');
+  let closed=false,testing=false,serialEpoch=0,activePort=null,activeReader=null;
+  const status=(message,bad=false)=>{if(closed)return;feedback.textContent=message;feedback.dataset.error=bad?'1':'0'};
+  const work=queue(async raw=>{if(closed)return false;if(testing){testing=false;test.textContent='آزمایش دستگاه';status('✓ کدخوان پاسخ داد؛ آزمایش موفق بود. هیچ تجهیزی ثبت نشد.');return true}status('کد دریافت شد؛ در حال تطبیق با سفارش…');const result=await onCode(raw);if(!closed)status(result===true?'✓ تجهیز ثبت شد. آماده اسکن بعدی.':typeof result==='string'?result:'کد تکراری یا نامعتبر؛ جزئیات سفارش را بررسی کنید.',result!==true);return result},onPending,status);
+  function scan(raw){if(!closed&&['keyboard','serial'].includes(mode))return work.push(raw)}
+  input.addEventListener('keydown',e=>{if(e.isComposing||!['Enter','Tab'].includes(e.key)||!input.value.trim())return;e.preventDefault();e.stopPropagation();const raw=input.value;input.value='';void scan(raw)});
+  async function release(){
+   const reader=activeReader,port=activePort;activeReader=null;activePort=null;serialEpoch++;
+   if(reader){try{await reader.cancel()}catch{}try{reader.releaseLock()}catch{}}
+   if(port){try{await port.close()}catch{}}
+   if(!closed){connect.disabled=false;disconnect.hidden=true;baud.disabled=false}
+  }
+  async function openPort(){
+   if(closed||mode!=='serial'||activePort)return;
+   const epoch=++serialEpoch;connect.disabled=true;
+   let port,reader;
+   try{
+    port=await navigator.serial.requestPort();
+    if(closed||epoch!==serialEpoch||mode!=='serial')return;
+    await port.open({baudRate:Number(baud.value)});
+    if(closed||epoch!==serialEpoch||mode!=='serial'){await port.close().catch(()=>{});return}
+    activePort=port;reader=port.readable.getReader();activeReader=reader;disconnect.hidden=false;baud.disabled=true;
+    const info=port.getInfo?.()||{},name=info.usbVendorId!=null?'USB '+info.usbVendorId.toString(16).toUpperCase()+':'+(info.usbProductId||0).toString(16).toUpperCase():'درگاه سریال انتخاب‌شده';
+    status('✓ '+name+' متصل است. دستگاه باید پس از کد Enter ارسال کند.');
+    const decoder=new TextDecoder();let buffer='',discard=false;
+    while(!closed&&epoch===serialEpoch&&mode==='serial'){
+     const result=await reader.read();if(result.done)break;
+     for(const char of decoder.decode(result.value,{stream:true})){
+      if(char==='\r'||char==='\n'||char==='\t'){if(!discard&&buffer.trim())void scan(buffer);buffer='';discard=false}
+      else if(!discard){buffer+=char;if(buffer.length>512){buffer='';discard=true;status('کد طولانی یا تنظیمات دستگاه نامعتبر است.',true)}}
+     }
+    }
+   }catch(e){if(!closed&&epoch===serialEpoch)status(e?.name==='NotFoundError'?'دستگاهی انتخاب نشد.':'اتصال سریال برقرار نشد؛ تنظیمات دستگاه را بررسی کنید یا حالت USB / بلوتوث را انتخاب کنید.',true)}
+   finally{if(epoch===serialEpoch){await release();if(!closed&&mode==='serial'&&reader)status('اتصال دستگاه قطع شد؛ دوباره انتخاب کنید.',true)}else{if(reader)try{reader.releaseLock()}catch{}if(port&&port!==activePort)try{await port.close()}catch{}}}
+  }
+  function display(focus=false){
+   selector.value=mode;q('[data-keyboard]').hidden=mode!=='keyboard';q('[data-serial]').hidden=mode!=='serial';test.hidden=!['keyboard','serial'].includes(mode);
+   if(mode==='keyboard'){status('کدخوان را در ویندوز یا دستگاه متصل کنید؛ ورودی را انتخاب کرده و QR را بخوانید. پایان کد: Enter یا Tab.');if(focus)input.focus({preventScroll:true})}
+   else if(mode==='serial')status('دستگاه COM را با دکمه انتخاب دستگاه متصل کنید.');
+   else status('');
+  }
+  selector.addEventListener('change',()=>{if(!options.includes(selector.value)||work.pending){selector.value=mode;return}testing=false;test.textContent='آزمایش دستگاه';input.value='';if(mode==='serial')void release();mode=selector.value;try{localStorage.setItem(key,mode)}catch{}display(true);onMode(mode)});
+  test.onclick=()=>{testing=!testing;test.textContent=testing?'لغو آزمایش':'آزمایش دستگاه';status(testing?'یک QR آزمایشی بخوانید؛ این کد در سفارش ثبت نمی‌شود.':'آزمایش لغو شد.');if(mode==='keyboard')input.focus({preventScroll:true})};
+  connect.onclick=()=>void openPort();disconnect.onclick=()=>{void release();status('دستگاه قطع شد.')};
+  display(mode==='keyboard');
+  return {mode:()=>mode,busy:()=>work.pending>0,close(){if(closed)return;closed=true;work.close();void release();panel.remove()}};
+ }
+ window.pb2082QrReader={mount,returnMatch,queue};
+})();

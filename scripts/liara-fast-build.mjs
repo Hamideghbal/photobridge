@@ -1573,3 +1573,8 @@ runR1314(process.execPath,['--test','scripts/test-r2068-lab-download-overdue.mjs
 // R2079: keep admin store preview and transfer isolated after every auth/portal writer.
 await deployStep('./enable-r2079-store-admin-access.mjs');
 runR1314(process.execPath,['--test','scripts/test-r2079-store-admin-access.cjs'],{stdio:'inherit'});
+
+// R2082: only camera-equipment handover and return reader, after Store portal writers.
+await deployStep('./enable-r2082-equipment-reader.mjs');
+runR1314(process.execPath,['--test','scripts/test-r2082-equipment-reader.cjs'],{stdio:'inherit'});
+

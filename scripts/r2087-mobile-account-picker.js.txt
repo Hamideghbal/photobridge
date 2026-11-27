@@ -182,4 +182,4 @@
     if(!issueTicket(url.pathname))return;
     url.searchParams.set('pb2087AccountEntry','1');anchor.href=url.href;
    }catch{}
- },true);
+ });

@@ -29,21 +29,35 @@ for(const scenario of ['invitation','no-sms','replay','invalid-debt','existing-d
  if(scenario==='replay'){assert.equal(response[0].body.replay,true);assert.equal(ledger.length,0);assert.equal(sms.length,0);return;}
  assert.equal(response[0].status,201);assert.equal(ledger.length,1);assert.equal(ledger[0].referenceId,customer);assert.equal(ledger[0].lines[0].debit,50000);assert.equal(ledger[0].lines[1].credit,50000);assert.equal(ledger[0].lines[0].customerId,customer);assert.equal(sms.length,scenario==='invitation'?1:0);assert(queries.includes('COMMIT'));
 });
-test('delegated file copies validate and use existing print-copy invoice rules',()=>{
+test('delegated file copies validate and use existing print-copy invoice rules',async()=>{
  const start=source.indexOf("if (req.method === 'POST' && delegatedFiles)"),end=source.indexOf('const delegatedLocalFile =',start),code=source.slice(start,end);
- // Test only the original copy-count validation and filename transformation.
- // Later asynchronous add-on/catalog checks have been inserted before the
- // relativePath declaration. They have their own tests and must not be
- // evaluated as part of this synchronous unit fixture.
- const copyStart=code.indexOf('const printCopies =');
- const copyEnd=code.indexOf('const relativePath =',copyStart);
- assert(copyStart>=0&&copyEnd>copyStart,'copy validation boundaries missing');
- const section=code.slice(copyStart,copyEnd);
- const rename=/if\s*\(\s*!albumMode\s*&&\s*printCopies\s*>\s*1\s*\)\s*\{[^{}]*\}/g;
- const matches=[...section.matchAll(rename)];
- assert.equal(matches.length,1,'copy filename rule must be present exactly once');
- const validation=section.slice(0,matches[0].index+matches[0][0].length);
- for(const copies of [1,3,0,100,1.5]){let response;const name=Function('b','albumMode','safeFileName','sendJson','res',validation+'return {name,printCopies};')({name:'photo.jpg',printCopies:copies},false,x=>x,(_,status,body)=>response={status,body},{});if(copies===1||copies===3){assert.equal(name.printCopies,copies);assert.equal(name.name,copies===1?'photo.jpg':'photo = 3.jpg');}else assert.equal(response.status,400);}
- assert.match(code,/crop_handling,print_copies,original_state/);assert.match(code,/albumMode \? 1 : printCopies/);
+ assert(start>=0&&end>start,'delegated file handler not found');
+ // Exercise the real asynchronous handler through the INSERT instead of
+ // evaluating an obsolete synchronous slice between formatting anchors.
+ for(const copies of [1,3,0,100,1.5]){
+  const responses=[],inserts=[],id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const pool={query:async(sql,args)=>{
+   if(sql.includes('FROM lab_delegated_order_intakes'))return {rowCount:1,rows:[{id:'order',mode:'print',customer_id:'customer'}]};
+   if(sql.includes('INSERT INTO order_files')){inserts.push({sql,args});return {rowCount:1,rows:[]};}
+   if(sql.includes('SELECT id,object_key,original_state FROM order_files'))return {rowCount:0,rows:[]};
+   if(sql.includes('SELECT ui_preferences FROM labs'))return {rowCount:1,rows:[{ui_preferences:{}}]};
+   throw Error('Unexpected SQL in delegated file fixture: '+sql.slice(0,220));
+  }};
+  const params={req:{method:'POST'},res:{},delegatedFiles:['','order'],bodyJson:async()=>({clientFileId:id,name:'photo.jpg',printCopies:copies,localOnly:true,printSizeId:'size',printType:'luster',bytes:100}),requireLocalIntakePrimary:async()=>true,uploadAvailable:true,pool,labId:'lab',safeFileName:x=>x,labCanUsePrintSize:async()=>true,MAX_UPLOAD_BYTES:100000,storageConfigured:false,sendJson:(_,status,body)=>{responses.push({status,body});return true;}};
+  try{await Function(...Object.keys(params),'return (async()=>{'+code+'})()')(...Object.values(params));}
+  catch(error){throw Error('Delegated handler fixture: '+error.message+'; validation excerpt: '+code.slice(code.indexOf('const printCopies'),code.indexOf('const relativePath')+200),{cause:error});}
+  if(copies===1||copies===3){
+   assert.equal(responses[0]?.status,201,JSON.stringify(responses));
+   assert.equal(inserts.length,1);
+   const insert=inserts[0],columns=insert.sql.match(/INSERT INTO order_files\s*\(([^)]+)\)/i)?.[1].split(',').map(s=>s.trim());
+   assert(columns?.includes('print_copies')&&columns.includes('original_name'));
+   assert.equal(insert.args[columns.indexOf('print_copies')],copies);
+   assert.equal(insert.args[columns.indexOf('original_name')],copies===1?'photo.jpg':'photo = 3.jpg');
+  }else{
+   assert.equal(responses[0]?.status,400);
+   assert.equal(responses[0]?.body?.error,'invalid_print_copies');
+   assert.equal(inserts.length,0);
+  }
+ }
  assert(source.includes('current.quantity += Number(f.print_copies || 1)'));
 });

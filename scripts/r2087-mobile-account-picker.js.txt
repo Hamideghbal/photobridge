@@ -23,7 +23,8 @@
  const portals=['photographer','lab','rental'];
  const labels={photographer:'عکاسی',lab:'لابراتوار',rental:'فروشگاه'};
  const descriptions={photographer:'ورود به پنل عکاسی',lab:'ورود به پنل مدیریت لابراتوار',rental:'ورود به پنل فروشگاه'};
- let checking=false,chooser=null,hiddenAt=0;
+ let checking=false,chooser=null,wasHidden=false,needsResume=false;
+ const pending=()=>document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
  const ready=()=>{
    resuming=false;checking=false;
    document.documentElement.classList.remove('pb1493SessionResumePending','pb2087AccountPending');
@@ -33,12 +34,12 @@
    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),4500);
    try{
      const r=await originalFetch('/api/auth/me',{credentials:'include',cache:'no-store',headers:{'x-photobridge-portal':portal},signal:abort.signal});
-     if(!r.ok)return null;
-     const data=await r.json().catch(()=>null);
+     if(!r.ok)return [401,403].includes(r.status)?null:{uncertain:true,portal};
+     const data=await r.json();
      if(!roleForIdentity(portal,data)||data?.user?.mustChangePassword||data?.user?.forcePasswordChange)return null;
      const name=portal==='lab'?data.lab?.name:portal==='rental'?data.rentalShop?.name:(data.user?.photographerName||data.user?.studioName||data.user?.name);
      return {portal,name:typeof name==='string'?name.trim().slice(0,100):''};
-   }catch{return null}finally{clearTimeout(timer)}
+   }catch{return {uncertain:true,portal}}finally{clearTimeout(timer)}
  };
  function remember(portal){try{localStorage.setItem(KEY,portal)}catch{}}
  function navigate(portal){
@@ -49,7 +50,7 @@
    location.replace(routes[portal]+'?pb2087AccountEntry=1');
    return true;
  }
- function choose(accounts){
+ function choose(accounts,uncertain=false,message=''){
    return new Promise(resolve=>{
      const render=()=>{
        if(chooser||!document.body){resolve(null);return}
@@ -60,8 +61,9 @@
        const title=document.createElement('h1');title.id='pb2087AccountTitle';title.textContent='انتخاب حساب کاربری';
        const intro=document.createElement('p');intro.textContent='می‌خواهید وارد کدام حساب شوید؟';
        panel.append(logo,title,intro);
+       if(message||uncertain){const notice=document.createElement('p');notice.className='pb2090AccountNotice';notice.textContent=message||'بررسی بعضی حساب‌ها کامل نشد. می‌توانید دوباره بررسی کنید.';panel.append(notice);}
        const accountButtons=[];
-       let shownAt=0,selected=false;
+       let selected=false;
        for(const account of accounts){
          const button=document.createElement('button');button.type='button';button.className='pb2087AccountOption';button.dataset.portal=account.portal;
          const symbol=document.createElement('span');symbol.className='pb2087AccountIcon';symbol.setAttribute('aria-hidden','true');
@@ -76,63 +78,76 @@
            if(chooser!==dialog||selected)return;
            selected=true;button.setAttribute('aria-pressed','true');
            for(const option of accountButtons)option.disabled=true;
-           const finish=()=>{if(chooser!==dialog)return;chooser=null;dialog.remove();resolve(account.portal)};
-           // R2088: allow the account screen to remain legible for at least 1.2s.
-           const remaining=Math.max(0,1200-(Date.now()-shownAt));
-           if(remaining)setTimeout(finish,remaining);else finish();
+           // R2090: explicit click is the only path to account entry. Keep the
+           // dialog in place during the final server verification.
+           resolve(account.portal);
          });
          accountButtons.push(button);panel.append(button);
        }
+       if(uncertain||message){const retry=document.createElement('button');retry.type='button';retry.className='pb2090AccountRetry';retry.textContent='بررسی دوباره حساب‌ها';retry.addEventListener('click',()=>{if(selected)return;selected=true;resolve('retry')});panel.append(retry);}
        dialog.append(panel);dialog.addEventListener('cancel',event=>event.preventDefault());
        document.body.append(dialog);
        try{dialog.showModal()}catch{dialog.setAttribute('open','')}
-       shownAt=Date.now();
        panel.querySelector('button')?.focus({preventScroll:true});
      };
      if(document.body)render();else document.addEventListener('DOMContentLoaded',render,{once:true});
    });
  }
+ const dismiss=()=>{if(chooser){chooser.remove();chooser=null}};
  async function check(cold){
    if(checking||chooser||sensitive()||document.hidden)return;
-   checking=true;resuming=true;
-   if(cold)document.documentElement.classList.add('pb1493SessionResumePending','pb2087AccountPending');
-   let moving=false;
+   checking=true;resuming=true;pending();
+   let moving=false,message='';
    try{
-     const accounts=(await Promise.all(portals.map(validSession))).filter(Boolean);
-     if(sensitive()||document.hidden)return;
-     if(!accounts.length){
-       if(cold){try{localStorage.removeItem(KEY)}catch{};if(normalize(location.pathname)==='/'){moving=true;location.replace('/photographer?pb2087AccountEntry=1')}}
-       return;
+     for(;;){
+       const results=await Promise.all(portals.map(validSession));
+       if(sensitive()||document.hidden){needsResume=true;return}
+       const accounts=results.filter(x=>x&&!x.uncertain),uncertain=results.some(x=>x?.uncertain);
+       if(!accounts.length&&!uncertain&&!message){
+         try{localStorage.removeItem(KEY)}catch{}
+         if(normalize(location.pathname)==='/'){moving=true;location.replace('/photographer?pb2087AccountEntry=1')}
+         return;
+       }
+       // R2090: never enter a role based on last preference, response timing,
+       // or the number of verified sessions. Even one verified role is offered.
+       const selected=await choose(accounts,uncertain,message);
+       if(!selected)return;
+       if(selected==='retry'){dismiss();message='';continue}
+       const valid=await validSession(selected);
+       if(valid&&!valid.uncertain){
+         moving=navigate(selected);
+         if(!moving)dismiss();
+         return;
+       }
+       // No timeout or failed session probe is permission to enter a role.
+       dismiss();message='اعتبار این حساب تأیید نشد. دوباره بررسی کنید.';
      }
-     if(accounts.length===1){
-       if(cold)moving=navigate(accounts[0].portal);
-       return;
-     }
-     const selected=await choose(accounts);
-     if(!selected)return;
-     // A session can expire while the chooser is open. Revalidate the selected
-     // role with the same role-specific server endpoint before entering it.
-     const valid=await validSession(selected);
-     if(valid){moving=navigate(selected);return}
-     if(cold){moving=true;location.replace(routes[selected]+'?pb2087AccountEntry=1')}
-   }finally{if(!moving)ready()}
+   }finally{if(!moving){dismiss();ready()}}
  }
- // Cold launch from the installed app entry point. A deep link or an ordinary
- // in-app full-document navigation is not treated as a new app launch.
- if(!handoff&&entryPaths.has(normalize(location.pathname)))void check(true);
- // A backgrounded PWA may be brought forward without a document reload.
- // Recheck after a meaningful background interval, but never interrupt an
- // active form, file picker, upload, modal, payment or administrative preview.
+ // Mobile OS launches can restore the last workspace rather than start_url.
+ // On a fresh top-level workspace navigation, prompt; preserve ordinary
+ // same-origin navigation between workspaces after a deliberate selection.
+ const internalReferrer=()=>{try{return Boolean(document.referrer)&&new URL(document.referrer).origin===location.origin}catch{return false}};
+ const reloaded=()=>{try{return performance.getEntriesByType('navigation')[0]?.type==='reload'}catch{return false}};
+ const initial=entryPaths.has(normalize(location.pathname))||Boolean(currentPortal()&&(!internalReferrer()||reloaded()));
+ if(!handoff&&initial)void check(true);
  const safeResume=()=>{
    if(!currentPortal()||sensitive())return false;
    const active=document.activeElement;
    if(active?.matches?.('input,textarea,select,[contenteditable="true"]'))return false;
-   if(document.querySelector('dialog[open],.modalOverlay,.globalModalLayer,.simplePrintPilot,.uploadChoiceOverlay,[aria-busy="true"]'))return false;
+   if(document.querySelector('dialog[open],.modalOverlay,.globalModalLayer,.simplePrintPilot,.uploadChoiceOverlay,.pbR85ScanBack,.pbR100F73ReturnBack,[aria-busy="true"]'))return false;
    return true;
  };
+ function resume(){
+   if(!needsResume||checking||chooser||document.hidden||!safeResume())return;
+   needsResume=false;void check(false);
+ }
  document.addEventListener('visibilitychange',()=>{
-   if(document.hidden){hiddenAt=Date.now();return}
-   const elapsed=hiddenAt?Date.now()-hiddenAt:0;hiddenAt=0;
-   if(elapsed>=15000&&safeResume())void check(false);
+   if(document.hidden){wasHidden=true;return}
+   if(wasHidden){wasHidden=false;needsResume=true}
+   resume();
  });
- window.addEventListener('pageshow',event=>{if(event.persisted&&safeResume())void check(false)});
+ window.addEventListener('pageshow',event=>{if(event.persisted){needsResume=true;resume()}});
+ // Defer the prompt until an active scan/form/modal is finished.
+ document.addEventListener('focusout',()=>{if(needsResume)setTimeout(resume,0)});
+ document.addEventListener('click',()=>{if(needsResume)setTimeout(resume,0)},true);

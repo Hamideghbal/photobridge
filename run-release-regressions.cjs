@@ -1,7 +1,7 @@
 'use strict';
 const {spawnSync}=require('node:child_process'),path=require('node:path');
 require('./verify-release-lock.cjs').verifySource();
-const files=['release-critical.test.cjs','release-lock.test.cjs','approved-thermal-layout.test.cjs','model-dialog-patch.test.cjs','updater.test.cjs','unified-updates.test.cjs','update-install-gate.test.cjs','fast-startup-159.test.cjs','fast-views-159.test.cjs','dashboard-160.test.cjs','finance-161.test.cjs','finance-162.test.cjs','intake-167.test.cjs'].map(file=>'test/'+file);
+const files=['release-critical.test.cjs','release-lock.test.cjs','approved-thermal-layout.test.cjs','model-dialog-patch.test.cjs','updater.test.cjs','unified-updates.test.cjs','update-install-gate.test.cjs','fast-startup-159.test.cjs','fast-views-159.test.cjs','dashboard-160.test.cjs','finance-161.test.cjs','finance-162.test.cjs','intake-168.test.cjs'].map(file=>'test/'+file);
 const databaseFiles=new Set(['test/update-install-gate.test.cjs','test/fast-views-159.test.cjs']);
 const sqliteNode=process.env.PB_LAB_SQLITE_TEST_NODE||process.execPath;
 function checked(exe,args){

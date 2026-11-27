@@ -118,25 +118,27 @@ function patchRenderer(s){
  return s+'\n/* PB165 native performance */\n';
 }
 
-function patchWalkin167(source){
- if(source.includes('/* PB167 stable walk-in launcher */'))return source;
+function patchWalkin168(source){
+ if(source.includes('/* PB168 native walk-in mount */'))return source;
  const a=source.indexOf('function mount(){'),b=source.indexOf('\nlet primaryState=',a);
- if(a<0||b<a)throw Error('PB167 intake mount missing');
- let mount=source.slice(a,b);
- // Keep the original authorization, modal, submission and click handlers.
- const target=/const\s+target\s*=[^;\n]+;/g;
- if([...mount.matchAll(target)].length!==1||!mount.includes('pb1137LocalIntakeButton'))throw Error('PB167 intake mount target incompatible');
- const route="const pb167Route=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(location.pathname)||(location.pathname==='/lab'&&!!document.querySelector('.labRoleWorkspace .stageQueueWorkspace'));if(!pb167Route){old?.remove();return;}";
- const targets="const pb167Visible=n=>n&&n.isConnected&&n.getClientRects().length>0;const target=[document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader.pb1174QueueNav'),document.querySelector('.labRoleWorkspace .pb1148SecondaryHeader'),document.querySelector('.labRoleWorkspace .labSingleHeader'),host.querySelector('.ordersWorkspace'),host.querySelector('.stageQueueWorkspace')].find(pb167Visible);";
- const style="if(!document.getElementById('pb167IntakeStyle')){const style=document.createElement('style');style.id='pb167IntakeStyle';style.textContent='html body #root .labRoleWorkspace #pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important;position:relative!important;z-index:2!important}html body #root .labRoleWorkspace .pb1148SecondaryHeader>#pb1137LocalIntakeButton{order:-1!important;margin-inline-end:auto!important}';document.head.append(style);}";
- mount=mount.replace(target,style+route+targets);
- return source.slice(0,a)+'/* PB167 stable walk-in launcher */\n'+mount+source.slice(b);
+ if(a<0||b<a||!source.slice(a,b).includes('pb1137LocalIntakeButton')||!source.includes('async function open('))throw Error('PB168 unsupported native intake mount');
+ // Visibility is independent of device authorization; original open() and
+ // submission/replay still enforce the registered primary device.
+ const body="function mount(){\n const old=document.getElementById('pb1137LocalIntakeButton');\n const root=document.querySelector('.labRoleWorkspace'),host=root?.querySelector('main')||document.querySelector('main.labMain')||root;\n const path=location.pathname;\n const queue=/^\\/lab\\/(?:orders(?:\\/|$)|album(?:s|[-/]|$)|print(?:\\/|$))/.test(path)||(path==='/lab'&&!!root?.querySelector('.stageQueueWorkspace,.mainQueueFilters'));\n if(!root||!host||!queue){old?.remove();return;}\n const visible=n=>n&&n.isConnected&&!n.hidden&&n.getClientRects().length>0&&getComputedStyle(n).visibility!=='hidden';\n const target=[...root.querySelectorAll('.pb1148SecondaryHeader.pb1174QueueNav'),...root.querySelectorAll('.labSingleHeader'),...host.querySelectorAll('.ordersWorkspace,.stageQueueWorkspace'),host].find(visible);\n if(!target){old?.remove();return;}\n const album=/^\\/lab\\/album(?:s|[-/]|$)/.test(path)||(path==='/lab'&&!!root.querySelector('.albumTopNav.active,.albumTopNav[aria-selected=\"true\"]'));\n const title=album?'ثبت سفارش آلبوم حضوری':'ثبت سفارش عکس حضوری';\n let button=old;\n if(!button){button=node('button',title,'pb1137Launch');button.id='pb1137LocalIntakeButton';button.type='button';}\n button.classList.remove('pb1174QueueLaunch');\n button.dataset.pb168Intake=album?'album':'print';\n if(!button.disabled&&button.textContent!==title)button.textContent=title;\n button.onclick=()=>{if(!storage()){window.alert('ارتباط با بخش ذخیره‌سازی آماده نیست. دوباره تلاش کنید.');return;}return open(album?'album':'print');};\n if(button.parentElement!==target)target.prepend(button);\n if(!document.getElementById('pb168IntakeStyle')){\n  const style=document.createElement('style');style.id='pb168IntakeStyle';\n  style.textContent='html body #root#root#root .labRoleWorkspace #pb1137LocalIntakeButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;flex:0 0 auto!important;min-width:150px!important;white-space:nowrap!important;z-index:5!important}html body #root#root#root .labRoleWorkspace .labSingleHeader>#pb1137LocalIntakeButton{position:relative!important;inset:auto!important;translate:none!important;margin-inline-start:auto!important}';\n  document.head.append(style);\n }\n const provider=storage();\n if(primaryState===null&&provider?.deviceId?.()&&Date.now()-(mount.lastProbe||0)>30000){mount.lastProbe=Date.now();checkPrimary();}\n}\n";
+ source=source.slice(0,a)+'/* PB168 native walk-in mount */\n'+body+source.slice(b);
+ const boot=source.indexOf('function boot(){',a);
+ if(boot<0)throw Error('PB168 intake boot missing');
+ return source.slice(0,boot)+source.slice(boot).replace('function boot(){','function boot(){window.addEventListener("hashchange",schedule);window.addEventListener("resize",schedule);window.addEventListener("pageshow",schedule);');
 }
 
 function patchNativeIntake(s){
- s=patchWalkin167(patchIntake(s));
+ // Optional acceleration cannot disable the entire verified intake form.
+ if(!s.includes('PB168 original intake performance fallback')){
+  try{s=patchIntake(s);}catch(error){console.warn('[PB168] Retained verified intake implementation: '+error.message);s+='\n/* PB168 original intake performance fallback */\n';}
+ }
+ s=patchWalkin168(s);
  const old="for(const file of files){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');";
- if(s.includes(old)){const next="const pb165Files=[...files],pb165Hashes=new Array(pb165Files.length);let pb165Next=0,pb165Done=0;await Promise.all(Array.from({length:Math.min(3,pb165Files.length)},async()=>{for(;;){const i=pb165Next++;if(i>=pb165Files.length)return;pb165Hashes[i]=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await pb165Files[i].arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');error.textContent='در حال بررسی عکس‌ها: '+(++pb165Done)+' / '+pb165Files.length}}));for(let pb165I=0;pb165I<pb165Files.length;pb165I++){const file=pb165Files[pb165I],hash=pb165Hashes[pb165I];";s=once(s,old,next,'bounded hashing');}
+ if(!s.includes('PB168 original intake performance fallback')&&s.includes(old)){const next="const pb165Files=[...files],pb165Hashes=new Array(pb165Files.length);let pb165Next=0,pb165Done=0;await Promise.all(Array.from({length:Math.min(3,pb165Files.length)},async()=>{for(;;){const i=pb165Next++;if(i>=pb165Files.length)return;pb165Hashes[i]=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await pb165Files[i].arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('');error.textContent='در حال بررسی عکس‌ها: '+(++pb165Done)+' / '+pb165Files.length}}));for(let pb165I=0;pb165I<pb165Files.length;pb165I++){const file=pb165Files[pb165I],hash=pb165Hashes[pb165I];";s=once(s,old,next,'bounded hashing');}
  return s;
 }
 function patchManual(s){

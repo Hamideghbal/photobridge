@@ -27,7 +27,15 @@ try {
   Stop-Transcript | Out-Null
   try {
    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $buildRoot 'build-windows-oneclick.ps1')
-   exit $LASTEXITCODE
+   $childExit=$LASTEXITCODE
+   $actualRelease=Join-Path $buildRoot 'release'
+   $actualLogs=Join-Path $buildRoot 'debug-logs'
+   $pointer=Join-Path $PSScriptRoot 'RELEASE-OUTPUT-LOCATION.txt'
+   @('Build exit code: '+$childExit,'Release directory: '+$actualRelease,'Diagnostic logs: '+$actualLogs) | Set-Content -LiteralPath $pointer -Encoding UTF8
+   Write-Host ('Release directory: '+$actualRelease)
+   Write-Host ('Diagnostic logs: '+$actualLogs)
+   if ($childExit -eq 0) {try {Start-Process explorer.exe -ArgumentList ('"'+$actualRelease+'"')} catch {}}
+   exit $childExit
   } finally {Start-Transcript -Path $log -Append | Out-Null}
  }
  $tools=Set-BuildScratch $buildRoot
@@ -147,8 +155,12 @@ try {
  }
  Invoke-Checked $node @('create-update-release.cjs')
  Invoke-Checked $node @('release-kit.cjs','verify-json')
- $exitCode=0
  $release=Join-Path $PSScriptRoot 'release'
+ $manifest=Join-Path $release ('PhotoBridge-Lab-Update-'+$version+'.json')
+ $installer=Join-Path $release ('PhotoBridge-Lab-Setup-'+$version+'-x64.exe')
+ if (!(Test-Path -LiteralPath $manifest -PathType Leaf) -or !(Test-Path -LiteralPath $installer -PathType Leaf)) {throw 'Signed release pair missing; do not publish.'}
+ @('Installer: '+$installer,'Signed update JSON: '+$manifest,'Diagnostic logs: '+$logs) | Set-Content -LiteralPath (Join-Path $PSScriptRoot 'RELEASE-OUTPUT-LOCATION.txt') -Encoding UTF8
+ $exitCode=0
  Write-Host ('Installer: '+(Join-Path $release ('PhotoBridge-Lab-Setup-'+$version+'-x64.exe')))
  Write-Host ('Update JSON: '+(Join-Path $release ('PhotoBridge-Lab-Update-'+$version+'.json')))
 } catch {

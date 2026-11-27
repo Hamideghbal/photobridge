@@ -10,6 +10,6 @@ function validatePagedLabQueue(source){
   const missing=markers.filter(value=>!source.includes(value));
   if(missing.length)throw Error('native_paged_lab_ui_stale: '+missing.join(', '));
 }
-function validateNativeUi(root){require('./navigation-contract.cjs').validateNavigation(root);const file=path.join(root,'assets/index-UIRefine-v655-r84.js');if(!fs.existsSync(file))throw Error('native_storage_ui_bundle_missing');const source=fs.readFileSync(file,'utf8');validatePagedLabQueue(source);patchStorageBundle(source);}
+function validateNativeUi(root){require('./navigation-contract.cjs').validateNavigation(root);const file=path.join(root,'assets/index-UIRefine-v655-r84.js');if(!fs.existsSync(file))throw Error('native_storage_ui_bundle_missing');const source=fs.readFileSync(file,'utf8');validatePagedLabQueue(source);patchStorageBundle(source);require('./native-intake-168.cjs').compileRoot(root);}
 if(require.main===module){try{validateNativeUi(process.argv[2]||path.join(__dirname,'runtime'));console.log('Native storage bridge: verified against bundled website')}catch(e){console.error('STOP: native storage bridge cannot attach to this UI:',e.message);process.exitCode=1}}
 module.exports={validateNativeUi,validatePagedLabQueue};

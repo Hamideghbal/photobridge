@@ -6,13 +6,13 @@ function patchOfflineIntake(source){
  ["{sendInvoiceSms:customers.sendInvoiceSms===true});","{sendInvoiceSms:customers.sendInvoiceSms===true,desktopProforma:{customer:billCustomer.textContent,rows:billRows.textContent,total:billTotals.textContent,estimatedTotal:albumMode?albumForm.estimate().total:null,estimateComplete:albumMode&&!albumForm.estimate().missing},desktopLocalFiles:targets.map(({item,target})=>({rootId:target.dir.rootId,parts:[...target.dir.parts,item.localName||item.file.name],bytes:item.file.size}))});"],
  ["   window.pb1466IntakeMove.report(form,targets,moveResult);","   if(!result.desktopPending)window.pb1466IntakeMove.report(form,targets,moveResult);else form.append(node('p',result.localCommitted?'سفارش روی دستگاه ثبت شد و قابل استفاده است. عکس‌ها روی هارد ذخیره شدند؛ همگام‌سازی جداگانه انجام می‌شود و جلوی کار را نمی‌گیرد.':'عکس‌ها روی هارد ذخیره شدند و مبدأ حذف نشده است. شمارهٔ سفارش و فاکتور قطعی پس از تأیید سرور مشخص می‌شود.'));"],
  ];
- for(const [from,to] of changes){if(!source.includes(from))throw Error('offline_intake_ui_incompatible');source=source.replace(from,to);}
+ for(const [from,to] of changes){if(source.includes(to))continue;if(!source.includes(from))throw Error('offline_intake_ui_incompatible: '+from.slice(0,100));source=source.replace(from,to);}
  // Opening may use this account's verified native disk. Submit and replay
  // still call the live device endpoint without the opening flag.
  source=source.replace('const live=labOutboxLiveDevice();',
   "const live=api('/api/lab/intake-live/download/device?purpose=open');");
  const completion="form.append(done);close.disabled=false;form.dataset.busy='';submitting=false;";
- source=source.replace(completion,completion+"if(window.pbManualInvoiceFlow?.open){closeModal();void window.pbManualInvoiceFlow.open({orderId:order.orderId,labId:bootstrap.lab?.id});}");
+ if(!source.includes('window.pbManualInvoiceFlow?.open'))source=source.replace(completion,completion+"if(window.pbManualInvoiceFlow?.open){closeModal();void window.pbManualInvoiceFlow.open({orderId:order.orderId,labId:bootstrap.lab?.id});}");
  source=source.replace('ثبت سفارش و ذخیره پیش‌فاکتور','ثبت سفارش و صدور فاکتور');
  source=source.replace('عکس‌ها در مسیر سفارش روی هارد ثبت شدند. وضعیت سفارش دانلودشده است؛ پیش‌فاکتور تا زمان «آماده تحویل» قطعی نمی‌شود.','عکس‌ها در مسیر سفارش روی هارد ثبت شدند. فاکتور پس از تکمیل قیمت‌گذاری همین سفارش صادر می‌شود.');
  return restoreSinglePhotoPicker(source);

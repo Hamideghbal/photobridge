@@ -430,6 +430,11 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         const file=path.resolve(root,name),resolvedRoot=path.resolve(root);
         if(!file.startsWith(resolvedRoot+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())continue;
         const type=MIME[path.extname(file)]||'application/octet-stream';
+        if(name==='photobridge-r1137-lab-local-intake.js'){
+          const body=require('./native-intake-168.cjs').compileIntake(fs.readFileSync(file,'utf8'));
+          res.writeHead(200,{'Content-Type':MIME['.js'],'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version});
+          return res.end(body);
+        }
         res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-PhotoBridge-Native-Version':require('./package.json').version,'X-PhotoBridge-Native-Pid':String(process.pid)});
         if(name==='index.html'){
           let html=require('./native-font.cjs').injectNativeFont(fs.readFileSync(file,'utf8'));html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'<script src="/native-storage.js"></script>');html=html.replace(/<\/head>/i,'<link rel="stylesheet" href="/native-queue.css"></head>');html=require('./native-first-paint.cjs').injectFirstPaint(html);const end=html.toLowerCase().lastIndexOf('</body>');
@@ -440,7 +445,6 @@ function createHost({store,sync,request:upstreamRequest,roots,token,onLogin,onLo
         if(name==='photobridge-r1372-third-header.js')return res.end(require('./navigation-header-patch.cjs').patchThirdNavigation(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1147-lab-admin-header.js')return res.end(require('./navigation-header-patch.cjs').patchNavigationHeader(fs.readFileSync(file,'utf8')));
         if(name==='photobridge-r1631-order-exit.js')return res.end(require('./native-queue-presentation.cjs').patchNativeOrderExit(fs.readFileSync(file,'utf8')));
-        if(name==='photobridge-r1137-lab-local-intake.js')return res.end(require('./native-performance-165.cjs').patchNativeIntake(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(file,'utf8'))));
         if(name==='photobridge-r1176-lab-finance.js')return res.end(require('./native-performance-165.cjs').patchManual(fs.readFileSync(file,'utf8')));
         if(name==='assets/index-UIRefine-v655-r84.js'){
           return res.end(require('./native-renderer-bundle.cjs').compile(file,require('./package.json').version));

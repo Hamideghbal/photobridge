@@ -17,20 +17,44 @@ async function run(){
    if(Number(app.getVersion().split('.')[2])>=165){
     assert(entry.includes('/* PB165 native performance */')&&entry.includes('pb2063Options=x.useMemo')&&entry.includes('pb165ExtraTimes'),'Missing native performance renderer');
     const perf=require('./native-performance-165.cjs');
-    const intake=perf.patchNativeIntake(require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8')));
+    const intake=require('./native-intake-168.cjs').compileRoot(root);
     const manual=perf.patchManual(fs.readFileSync(path.join(root,'photobridge-r1176-lab-finance.js'),'utf8'));
-    assert(intake.includes('pb2063ByHash.get(hash)')&&intake.includes('pb2063FilesById.get(item.fileId)'),'Missing native intake index');
+    assert(intake.includes('PB168 native walk-in mount')&&((intake.includes('pb2063ByHash.get(hash)')&&intake.includes('pb2063FilesById.get(item.fileId)'))||intake.includes('PB168 original intake performance fallback')),'Missing usable native intake');
     assert(manual.includes("let value='',matches=[],limit=32"),'Missing bounded manual customer picker');
     new Function(intake);new Function(manual);
    }
    if(Number(app.getVersion().split('.')[2])>=145){
-    const intake=require('./offline-ui.cjs').patchOfflineIntake(fs.readFileSync(path.join(root,'photobridge-r1137-lab-local-intake.js'),'utf8'));
+    const intake=require('./native-intake-168.cjs').compileRoot(root);
     assert(intake.includes('pbNativeIntakePhotoPicker'),'The bundled UI does not support automatic intake photo insertion');
    }
   }
   server=require('./host.cjs').createHost({store:db,sync:{status:()=>db.status(),run:async()=>{}},request:async()=>Response.json({error:'login_required'},{status:401}),roots:()=>[root],token:'smoke',isOnline:()=>false});await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(43761,'127.0.0.1',resolve);});
   win=new BrowserWindow({show:false,webPreferences:{preload:path.join(__dirname,'main-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});await win.loadURL('http://127.0.0.1:'+server.address().port+'/start?token=smoke');
   const state=await win.webContents.executeJavaScript("new Promise(resolve=>{const started=Date.now();const check=()=>{if(document.querySelector('input[type=password]'))return resolve({login:true,bridge:!!window.pbNativeStorage});if(Date.now()-started>10000)return resolve({login:false,text:document.body.innerText.slice(0,200)});setTimeout(check,100)};check()})");assert.equal(state.login,true,JSON.stringify(state));assert.equal(state.bridge,true);
+  const served=await win.webContents.executeJavaScript("fetch('/photobridge-r1137-lab-local-intake.js',{cache:'no-store'}).then(async r=>({ok:r.ok,body:await r.text()}))");
+  assert(served.ok,'Native intake HTTP request failed');assert(served.body.includes('PB168 native walk-in mount'),'Native host did not serve 168 launcher');new Function(served.body);
+  const begin=served.body.indexOf('function mount(){'),end=served.body.indexOf('\nlet primaryState=',begin);
+  assert(begin>=0&&end>begin,'Native launcher missing');
+  const probe=new BrowserWindow({show:false,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}});
+  try{
+   await probe.loadURL('data:text/html,%3Cdiv%20id%3D%22root%22%3E%3C/div%3E');
+   const run="("+function(mount){
+    document.body.innerHTML='<div id="root"><div class="labRoleWorkspace"><header class="labSingleHeader">header</header><nav class="pb1148SecondaryHeader pb1174QueueNav">tabs</nav><main><div class="mainQueueFilters">filters</div></main></div></div>';
+    const route={pathname:'/lab/orders'},calls=[];
+    const node=(tag,text,cls)=>{const el=document.createElement(tag);el.textContent=text;el.className=cls;return el;};
+    const work=new Function('document','location','window','storage','node','open','primaryState','checkPrimary',mount+'\nreturn mount;')(document,route,window,()=>({deviceId:()=>null}),node,m=>calls.push(m),false,()=>{});
+    const check=(mode)=>{const b=document.getElementById('pb1137LocalIntakeButton');if(!b||b.dataset.pb168Intake!==mode||!b.getClientRects().length||getComputedStyle(b).visibility==='hidden')throw Error('missing visible '+mode);return b;};
+    work();const print=check('print');print.click();
+    const previous=document.querySelector('nav'),next=previous.cloneNode(false);next.textContent='tabs';previous.replaceWith(next);
+    route.pathname='/lab/album';work();const album=check('album');album.click();
+    if(album.parentElement!==next)throw Error('not in second header');route.pathname='/lab/finance';work();
+    return {calls,removed:!document.getElementById('pb1137LocalIntakeButton')};
+   }.toString()+")("+JSON.stringify(served.body.slice(begin,end))+")";
+   const outcome=await probe.webContents.executeJavaScript(run);
+   assert.deepEqual(outcome,{calls:['print','album'],removed:true});
+  }finally{probe.destroy();}
+  console.log('PB168_WALKIN_HOST_BROWSER_PASS');
+
   if(Number(app.getVersion().split('.')[2])>=129)assert(orderWorkerReady,'Original fast-order worker did not register');
   const alert=new (require('./alert-window.cjs').AlertWindow)({BrowserWindow,ipcMain,store:db,getAccount:()=> 'smoke',open:async()=>{}});
   await alert.present({items:[{id:'test-order',title:'سفارش آزمایشی',message:'اعلان سفارش'}]},null,()=>{},'smoke');

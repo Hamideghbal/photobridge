@@ -5,7 +5,7 @@
   "verifyCommand": "node verify-release-lock.cjs && node run-release-regressions.cjs && node prepare-access-runtime.cjs && node prepare-assets.cjs && node verify-native-ui.cjs",
   "sourceFiles": {
     "main.cjs": "0919327fbd67342224dca67558ae3e3efa8847d0d65fb03f02c6c4261bdda1c1",
-    "host.cjs": "22df911fc1aa9eb4af1bf24a13efda7ea721af0ce714736e9f6b56dc1d29e5ca",
+    "host.cjs": "4cd27b79f5cc9a2c541aa71f26fe6e775851b9969112f8dc94447c15e987acba",
     "sync.cjs": "1d8cfc0e81222b591f385fd3149fa1ceebdfa3ab959604c240b9c5b0f9f45fcb",
     "update-install-gate.cjs": "5a9f98495c12a50a96e4c6a0a7f5838fe8ac6ad255673300b359f85c5ea44bec",
     "app-update.cjs": "a474d936ebcb97ba7bf52655d0015bdf87a3ccd46ba4629934811370ebe5f63d",
@@ -16,14 +16,14 @@
     "storage-bundle.cjs": "ef527fa614848680889e059cc088a1455dea3c49a972171e7d76d8c4eeb4e8b4",
     "native-renderer-bundle.cjs": "ddabb85ef8b99fdb9f3d1392e8ccf4af419faaf1b8be82c71b0e13a64e013305",
     "update-trust.cjs": "10893db3a29a2993fc9957dd126a057c928e5edee2fb998598ddfef17c5e6501",
-    "verify-native-ui.cjs": "3562c14fc5f5f950b84cad8609edae740c05d7a370890e7a88a8499601e14e73",
+    "verify-native-ui.cjs": "2bd6d11fdb9a5f3f3d674476b31f4a186b15ed74be96d5ec4431253c58548c61",
     "navigation-contract.cjs": "6c12b084ef1f20773619d136dab9ca5b5bcf4808a67184c3e1bb2dcbbd228351",
     "assets/photobridge-vazirmatn.woff2": "4e3fa217d38fdafc1fea4414ceb58ca5e662cf0ab5fa735a8c8c20e8b42cad92",
     "verify-release-lock.cjs": "d1ceca41d6273635a5307db59cd42c3750b74ecf3cb34694673c665b29f13821",
-    "run-release-regressions.cjs": "f65b3b6ab5e004bc57b0db4b5850769306352ec982154146e73bb25200d5c010",
+    "run-release-regressions.cjs": "e8e6230072070bccfd0d3228e0baf450c920c5022f3b6654bd455f2db5d618c2",
     "create-update-release.cjs": "4746617430e3b286b3fffe57a74f14df624f8d74ca1edb130c335b131995a93d",
     "verify-installer.cjs": "5616e9be4dd631b76dd8a51673e01897c7f5caafb6e23d06e919197b61ca4d61",
-    "build-windows-oneclick.ps1": "9f53fe4255b420421c1f4797f81636da00595149574d08526d014385ed927cbc",
+    "build-windows-oneclick.ps1": "9bf7baf6979ef3e01517b82636b6087c029c8d14d0084bb61795df043f73e313",
     "test/release-critical.test.cjs": "7fd0cf0ac306f474112e1561a1c12fabacdb79951e2d27b9b58822ef8ab7f9ee",
     "test/release-lock.test.cjs": "c037bd01bb5a25152da8d6dd15808813412a6278d39c89727aa97f4b01b03353",
     "test/approved-thermal-layout.test.cjs": "7db138372649106a16a7c354f0560644cdc3203f4db99c3a657297440b63042e",
@@ -55,7 +55,7 @@
     "native-queue-presentation.cjs": "14df2c0660da02e88137e58c40dccb5c9d1cc2f00eccafce9c1ff65a09c4a5cd",
     "prepare-offline-data.cjs": "811a0962a2b51f919e2818436ffbc67ce58646131b81403853ae98a21ed69be8",
     "test/dashboard-160.test.cjs": "d8cd389b594fb84f573c3a6017a71c72daa98b186aecb02b76f281b69d261912",
-    "compat-smoke.cjs": "ae70d4d1d678e83ef388518013c579f6dbaf729497c4b77e9fead384e8cdf9ef",
+    "compat-smoke.cjs": "7041841d84f199c4cf1eb72121c79a27b6067ca5c41a796d6c53b08109f47198",
     "native-storage.js": "ca555b5824e2adad1108c811c1f719fe50e18b98a39fb7a33e34a44363b213fa",
     "test/finance-161.test.cjs": "8ea5c6e9a114e337af541663ceda39aba359ae7b370d6de4e67fd7d13be9437b",
     "receipt-view-162.cjs": "e5da5c9909689aa7aa8aac53d6e8ac1d0db7156a3dafa07f6af6ecdf192e14d8",
@@ -63,8 +63,11 @@
     "test/finance-162.test.cjs": "7f686bdabdc4138c788676ae73bc6ae661a650c731125a4eabac0612107ddd6a",
     "native-queue.css": "d4929b69c249fcf2dce2c900f7d9651936589331731d533c77da5f60a4d1c982",
     "connection-status-164.cjs": "5d301da6730444c3c3e4b62f49f0108cec8fdf5b2557a022462618bedac3b2ae",
-    "native-performance-165.cjs": "0709259df35755afbbd799ce747d54dcf81f466fe4f90e38d7126fa0101d1b16",
-    "test/intake-167.test.cjs": "3da8bed912b36e542fd90906a75f9bdfa5e8c84defccee3c3d3b9183c131342b"
+    "native-performance-165.cjs": "09f15900849a24addf000618fa8272377c6a91a298c9ddab3f0b562a5747c17e",
+    "test/intake-167.test.cjs": "9d817bba28bdeee121e3b91ec0d67a74e99e529b152e7903dd57829577b8b33e",
+    "offline-ui.cjs": "995c7c03d4370c5947cdb015337a7e280e1baeb004f767f78001427febcd54b7",
+    "native-intake-168.cjs": "45fdc75790fdabc6bcdb4fd3ee805781299f6a24c5f3aee2bd8e33ee49fa586d",
+    "test/intake-168.test.cjs": "04f4a85e4673ad33334504017e4fe7c6947abd35c875e5a146314576e9c5e47a"
   },
   "packagedFiles": [
     "main.cjs",
@@ -103,7 +106,9 @@
     "inline-backup-162.cjs",
     "native-queue.css",
     "connection-status-164.cjs",
-    "native-performance-165.cjs"
+    "native-performance-165.cjs",
+    "offline-ui.cjs",
+    "native-intake-168.cjs"
   ],
   "distCommands": {
     "dist": "npm run verify && electron-builder --win nsis --x64 --publish never && node verify-installer.cjs",

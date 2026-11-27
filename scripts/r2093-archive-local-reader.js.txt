@@ -1,0 +1,86 @@
+// R2093: read historical photos without creating folders or guessing by size alone.
+function pb2093Fold(v){return String(v||'').normalize('NFC').toLowerCase().replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c))}
+function pb2093Identity(name){const n=pb2093Fold(name),m=n.match(/(?:^|[- _])(?:order|invoice)[- _]*0*(\d+)(?:$|[- _])/);return m?Number(m[1]):/^\d+$/.test(n)?Number(n):null}
+function pb2093Names(file,receipt,order){
+ const bases=[file.original_name,file.print_name,file.source_original_name,receipt?.name,receipt?.transportName].filter(Boolean),names=new Set();
+ for(const base of bases){names.add(pb2093Fold(base));names.add(pb2093Fold(Ya(base,'file')));try{names.add(pb2093Fold(pb1769DownloadName(file,base,order)))}catch{}}
+ return names;
+}
+function pb2093Stem(name){return pb2093Fold(name).replace(/(?:\s*=\s*(?:\d{1,4}|[a-z][a-z0-9 ._:-]*))+(?=\.[^.]+$)/i,'')}
+async function pb2093ArchiveContext(detail){
+ const state=yc(detail.order.id)||{},ctx={state,roots:[],saved:null,issues:[],index:null,claimed:new Set()};
+ try{ctx.saved=await pb1550Db(detail)}catch(e){ctx.issues.push('manifest')}
+ for(const get of [async()=>ctx.saved?.root&&pb1550Decode(ctx.saved.root),async()=>await qs()]){
+  try{const root=await get();if(root&&await Vs(root)){if(!ctx.roots.some(r=>r===root||r.rootId&&r.rootId===root.rootId&&JSON.stringify(r.parts)===JSON.stringify(root.parts)))ctx.roots.push(root)}else if(root)ctx.issues.push('permission')}catch(e){ctx.issues.push('root')}
+ }
+ return ctx;
+}
+async function pb2093Index(detail,ctx){
+ if(ctx.index)return ctx.index;
+ ctx.index=(async()=>{
+  const result=[],number=Number(detail.order.number),queue=ctx.roots.map(root=>({dir:root,depth:0,owned:pb2093Identity(root.name)===number,path:String(root.displayPath||root.rootId||root.name||'')}));
+  if(!Number.isSafeInteger(number)||number<=0)return result;
+  let visited=0;
+  for(let i=0;i<queue.length;i++){
+   const {dir,depth,owned,path}=queue[i];
+   if(++visited>6000){ctx.issues.push('search_limit');break}
+   if(depth>7)continue;
+   try{for await(const [name,h] of dir.entries()){
+    const id=h.kind==='directory'?pb2093Identity(name):null;
+    if(h.kind==='directory'){
+     if(id!==null&&id!==number)continue;
+     queue.push({dir:h,depth:depth+1,owned:owned||id===number,path:path+'/'+name});
+    }else if(owned&&h.kind==='file'&&/\.(jpe?g|png|tiff?|webp|bmp|heic|heif|psd|psb|avif|gif)$/i.test(name))result.push({name,handle:h,path:path+'/'+name});
+   }}catch(e){ctx.issues.push('directory')}
+  }
+  return result;
+ })();return ctx.index;
+}
+async function pb2093FindArchiveFile(detail,file,ctx){
+ const raw=ctx.state.localFiles?.[String(file.id)],receipt=raw&&raw.serverName===file.original_name&&Number(raw.serverBytes)===Number(file.bytes)?raw:null;
+ const sizes=new Set([file.bytes,file.print_bytes,receipt?.bytes].map(Number).filter(n=>Number.isSafeInteger(n)&&n>0)),names=pb2093Names(file,receipt,detail.order);
+ if(!sizes.size)return null;
+ const canonical=size=>receipt?.transportName&&Number(receipt.bytes)===size?receipt.transportName:file.print_name&&Number(file.print_bytes)===size&&Number(file.bytes)!==size?file.print_name:file.original_name;
+ const read=async(handle,key)=>{if(!handle||ctx.claimed.has(key))return null;try{const stat=await pb1450FileInfo(handle);if(!sizes.has(Number(stat.size)))return null;const data=await handle.getFile();if(!sizes.has(data.size)||data.size!==Number(stat.size))return null;return{file:data,meta:{...file,original_name:canonical(data.size),bytes:data.size},key}}catch{return null}};
+ const descriptor=(detail.order.localFiles||[]).find(f=>String(f.fileId||'')===String(file.id));
+ if(window.pbNativeStorage&&descriptor?.rootId&&descriptor.parts?.length){
+  const h=pb1550Decode({...descriptor,native:true,kind:'file',name:descriptor.parts.at(-1)});
+  const hit=await read(h,descriptor.rootId+'/'+descriptor.parts.join('/'));if(hit)return hit;
+ }
+ const saved=ctx.saved?.targets?.[String(file.id)]?.dir;
+ if(saved){
+  try{const dir=pb1550Decode(saved);for await(const [name,h] of dir.entries()){if(h.kind==='file'&&names.has(pb2093Fold(name))){const hit=await read(h,(saved.rootId||'pinned')+'/'+(saved.parts||[]).join('/')+'/'+name);if(hit)return hit}}}catch{ctx.issues.push('pinned_folder')}
+ }
+ if(window.pbNativeStorage){
+  try{const response=await fetch('/desktop/local-files/'+encodeURIComponent(detail.order.id)+'/'+encodeURIComponent(file.id),{cache:'no-store'});if(response.ok&&!/text\/html|application\/json/i.test(response.headers.get('content-type')||'')){const blob=await response.blob();if(sizes.has(blob.size))return{file:new File([blob],canonical(blob.size),{type:blob.type}),meta:{...file,original_name:canonical(blob.size),bytes:blob.size},key:'native:'+file.id}}}catch{}
+ }
+ const index=await pb2093Index(detail,ctx);
+ for(const exact of [true,false]){
+  const hits=[];
+  for(const entry of index){
+   const n=pb2093Fold(entry.name),match=exact?names.has(n):[...names].some(base=>pb2093Stem(n)===pb2093Stem(base));
+   if(!match)continue;
+   const hit=await read(entry.handle,entry.path);if(hit)hits.push(hit);
+   if(hits.length>1)break;
+  }
+  if(hits.length===1)return hits[0];
+  if(hits.length>1){ctx.issues.push('ambiguous');return null}
+ }
+ return null;
+}
+async function pb2093ReadArchive(detail,progress){
+ if(!ai())return null;
+ const ctx=await pb2093ArchiveContext(detail),files=[],missing=[];let localCount=0,serverCount=0;
+ for(const original of detail.files||[]){
+  progress?.({done:files.length,total:detail.files.length,current:'بررسی هارد · '+original.original_name});
+  const local=await pb2093FindArchiveFile(detail,original,ctx);
+  if(local){ctx.claimed.add(local.key);files.push({meta:local.meta,file:local.file});localCount++;continue}
+  progress?.({done:files.length,total:detail.files.length,current:'دریافت از سرور · '+original.original_name});
+  try{const response=await Ky(original.id),blob=await response.blob(),expected=Number(response.pbDownloadBytes||original.bytes||0),name=response.pbDownloadName||original.original_name;
+   if(!blob.size||expected>0&&blob.size!==expected)throw Error('download_size_mismatch');
+   files.push({meta:{...original,original_name:name,bytes:blob.size},file:new File([blob],name,{type:blob.type||original.content_type||'application/octet-stream'})});serverCount++;
+  }catch(error){if(!['file_not_found','local_file_only','file_storage_unavailable'].includes(pb1450Code(error)))throw error;missing.push(original.original_name)}
+ }
+ if(missing.length)throw Object.assign(Error('archive_sources_incomplete'),{missing,localCount,serverCount,archiveIssues:[...new Set(ctx.issues)]});
+ files.localCount=localCount;files.serverCount=serverCount;return files;
+}

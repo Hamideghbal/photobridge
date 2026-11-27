@@ -13,7 +13,7 @@ export function patchServer(s){
  const a=s.indexOf("if (req.method === 'POST' && url.pathname === '/api/admin/store-desktop-release/upload/complete')"),b=s.indexOf("if (req.method === 'GET' && url.pathname === '/api/admin/lab-desktop-release')",a);
  if(a<0||b<=a)throw Error('R2095 release upload bounds');
  part=s.slice(a,b);
- part=once(part,'        const old = await storeDesktopReleaseSetting().catch(() => null);',"        let autoUpdate=null;\n        if(b.updateManifest){try{autoUpdate=await validateStoreUpdate(b.updateManifest,{version:item.version,name:item.name,bytes:actual,objectKey:item.key},key=>s3.send(new GetObjectCommand({Bucket:S3_BUCKET,Key:key})));}catch{return sendJson(res,400,{error:'invalid_store_update_manifest_or_installer'});}}\n        const old = await storeDesktopReleaseSetting().catch(() => null);");
+ part=once(part,'        const old = await storeDesktopReleaseSetting().catch(() => null);',"        let autoUpdate=null;\n        if(b.updateManifest){try{autoUpdate=await validateStoreUpdate(b.updateManifest,{version:item.version,name:item.name,bytes:actual,objectKey:item.key},key=>s3Download.send(new GetObjectCommand({Bucket:S3_BUCKET,Key:key})));}catch{return sendJson(res,400,{error:'invalid_store_update_manifest_or_installer'});}}\n        const old = await storeDesktopReleaseSetting().catch(() => null);");
  part=once(part,'{ version: item.version, name: item.name, objectKey: item.key,','{ autoUpdate, version: item.version, name: item.name, objectKey: item.key,');s=s.slice(0,a)+part+s.slice(b);
  const route="    if(req.method==='GET'&&url.pathname==='/api/rental/notifications'){";
  const insert=[
@@ -22,7 +22,7 @@ export function patchServer(s){
  "      const shop=await equipmentRentalCurrentShop(a);if(!isCameraStore(shop)||a?.adminStorePreview||a?.rentalRole!=='shop_admin')return sendJson(res,403,{error:'forbidden'});",
  "      const q=await pool.query(\"SELECT 1 FROM equipment_rental_shop_memberships WHERE shop_id=$1 AND user_id=$2 AND role='shop_admin' AND active=true LIMIT 1\",[shop.id,a.userId]);if(!q.rowCount)return sendJson(res,403,{error:'forbidden'});",
  "      const release=await storeDesktopReleaseSetting();if(url.pathname.endsWith('/update'))return sendJson(res,200,{update:release?.autoUpdate||null});",
- "      if(!storageConfigured||!await sendStoreUpdateFile(res,release,key=>s3.send(new GetObjectCommand({Bucket:S3_BUCKET,Key:key}))))return sendJson(res,503,{error:'desktop_release_unavailable'});return;",
+ "      if(!storageConfigured||!await sendStoreUpdateFile(res,release,key=>s3Download.send(new GetObjectCommand({Bucket:S3_BUCKET,Key:key}))))return sendJson(res,503,{error:'desktop_release_unavailable'});return;",
  "    }"
  ].join('\n');
  s=once(s,route,insert+'\n'+route);

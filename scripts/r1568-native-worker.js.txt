@@ -1,7 +1,7 @@
 /* R1568: installed Windows-only order automation.
    Runs in the signed native UI context; old hosts without thermal support stay inert.
    Work checkpoints persist per lab and order, and no local print is retried blindly. */
-const pb1568Work={running:false,deviceReady:false,lastError:'',labId:null,checkedAt:0};
+const pb1568Work={running:false,deviceReady:false,lastError:'',labId:null,checkedAt:0,autoDownloadEnabled:false};
 const pb1568StoreKey=(lab,id)=>'pb1568-work:'+lab+':'+id;
 function pb1568State(lab,id){try{return JSON.parse(localStorage.getItem(pb1568StoreKey(lab,id))||'null')}catch{return null}}
 function pb1568Save(lab,id,data){localStorage.setItem(pb1568StoreKey(lab,id),JSON.stringify({...data,updatedAt:new Date().toISOString()}));}
@@ -33,7 +33,7 @@ async function pb1568ProcessOrder(lab,order,settings){
  }
  try{
    if(task.phase==='pending_download'){
-     const detail=await Me('/api/lab/orders/'+encodeURIComponent(id));
+     const detail=await Me('/api/lab/orders/'+encodeURIComponent(id)+'?pbNativeLiveStatus='+Date.now());
      if(detail.files?.some(file=>file.local_only))throw Error('local_only_order_manual_review');
      // PB1943: validate the configured native root, not a possibly deleted
      // per-order child. pb1450Download owns the explicit repair flight and
@@ -70,7 +70,12 @@ async function pb1568ProcessOrder(lab,order,settings){
  }catch(error){
    const current=pb1568State(lab,id)||task||{};
    const attempts=Math.min(8,(current.attempts||0)+1),message=pb1568Problem(error);
-   pb1568Save(lab,id,{...current,attempts,error:message,retryAt:Date.now()+Math.min(600000,30000*2**Math.min(attempts,4))});
+   // PB2074: a submitted order may be visible just before the manifest is complete.
+   // Retry this specific readiness race promptly, but preserve normal backoff for
+   // integrity errors, authorization failures, pricing, PDF and printer errors.
+   const readinessRace=current.phase==='pending_download'&&message==='download_manifest_incomplete'&&attempts<=3;
+   const retryDelay=readinessRace?[2000,5000,10000][attempts-1]:Math.min(600000,30000*2**Math.min(attempts,4));
+   pb1568Save(lab,id,{...current,attempts,error:message,retryAt:Date.now()+retryDelay});
    pb1568Work.lastError=message;
    console.warn('[PhotoBridge auto processing]',id,message);
  }
@@ -85,8 +90,10 @@ async function pb1568AutoTick(){
    const me=await Me('/api/auth/me'),lab=me?.lab?.id;if(!lab)return;
    pb1568Work.labId=lab;
    const settings=(await Me('/api/lab/automation')).settings;
+   pb1568Work.autoDownloadEnabled=settings?.autoDownloadEnabled===true;
    if(!settings?.autoDownloadEnabled&&!settings?.autoPrintInvoice)return;
-   const rows=(await Me('/api/lab/orders')).orders||[];
+   // PB2074: use the same online cache bypass as the native queue (R1936).
+   const rows=(await Me('/api/lab/orders?pbNativeLiveStatus='+Date.now()+'&pb2074AutoScan=1')).orders||[];
    const downloadGate='pb1568:downloadEnabledAt:'+lab,printGate='pb1568:printEnabledAt:'+lab;
    if(!settings.autoDownloadEnabled)localStorage.removeItem(downloadGate);
    if(!settings.autoPrintInvoice)localStorage.removeItem(printGate);

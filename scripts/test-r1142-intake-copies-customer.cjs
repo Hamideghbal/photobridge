@@ -31,6 +31,20 @@ for(const scenario of ['invitation','no-sms','replay','invalid-debt','existing-d
 });
 test('delegated file copies validate and use existing print-copy invoice rules',async()=>{
  const start=source.indexOf("if (req.method === 'POST' && delegatedFiles)"),end=source.indexOf('const delegatedLocalFile =',start),code=source.slice(start,end);
+ // Load the real generated server's named functions, not test substitutes.
+ const helper=(name)=>{
+  const m=new RegExp('^(?:async )?function '+name+'\\([^\\n]*','m').exec(source);
+  assert(m,'missing server helper '+name);
+  const start=m.index,rest=source.slice(start),next=rest.slice(1).search(/\n(?:async )?function |\n\/\* PB2047 server \*\//);
+  const body=next<0?rest:rest.slice(0,next+1);
+  return Function(body+'\nreturn '+name)();
+ };
+ const naming=code.includes('pb2047UniqueUploadBase(')?{
+  pb2047CleanUploadName:helper('pb2047CleanUploadName'),
+  pb2047UniqueUploadBase:helper('pb2047UniqueUploadBase'),
+  orderPrintCopyName:helper('orderPrintCopyName')
+ }:{};
+
  assert(start>=0&&end>start,'delegated file handler not found');
  // Exercise the real asynchronous handler through the INSERT instead of
  // evaluating an obsolete synchronous slice between formatting anchors.
@@ -40,10 +54,11 @@ test('delegated file copies validate and use existing print-copy invoice rules',
    if(sql.includes('FROM lab_delegated_order_intakes'))return {rowCount:1,rows:[{id:'order',mode:'print',customer_id:'customer'}]};
    if(sql.includes('INSERT INTO order_files')){inserts.push({sql,args});return {rowCount:1,rows:[]};}
    if(sql.includes('SELECT id,object_key,original_state FROM order_files'))return {rowCount:0,rows:[]};
+   if(sql.includes('SELECT original_name FROM order_files WHERE order_id='))return {rowCount:0,rows:[]};
    if(sql.includes('SELECT ui_preferences FROM labs'))return {rowCount:1,rows:[{ui_preferences:{}}]};
    throw Error('Unexpected SQL in delegated file fixture: '+sql.slice(0,220));
   }};
-  const params={req:{method:'POST'},res:{},delegatedFiles:['','order'],bodyJson:async()=>({clientFileId:id,name:'photo.jpg',printCopies:copies,localOnly:true,printSizeId:'size',printType:'luster',bytes:100}),requireLocalIntakePrimary:async()=>true,uploadAvailable:true,pool,labId:'lab',safeFileName:x=>x,labCanUsePrintSize:async()=>true,MAX_UPLOAD_BYTES:100000,storageConfigured:false,sendJson:(_,status,body)=>{responses.push({status,body});return true;}};
+  const params={...naming,req:{method:'POST'},res:{},delegatedFiles:['','order'],bodyJson:async()=>({clientFileId:id,name:'photo.jpg',printCopies:copies,localOnly:true,printSizeId:'size',printType:'luster',bytes:100}),requireLocalIntakePrimary:async()=>true,uploadAvailable:true,pool,labId:'lab',safeFileName:x=>x,labCanUsePrintSize:async()=>true,MAX_UPLOAD_BYTES:100000,storageConfigured:false,sendJson:(_,status,body)=>{responses.push({status,body});return true;}};
   try{await Function(...Object.keys(params),'return (async()=>{'+code+'})()')(...Object.values(params));}
   catch(error){throw Error('Delegated handler fixture: '+error.message+'; validation excerpt: '+code.slice(code.indexOf('const printCopies'),code.indexOf('const relativePath')+200),{cause:error});}
   if(copies===1||copies===3){

@@ -24,9 +24,10 @@
             const user=uq.rows[0];
             if(user.platform_role==='platform_admin')fail('manager_platform_admin_reserved');
             if(!user.mobile_verified_at)fail('manager_mobile_not_verified');
-            const sq=await c.query('SELECT id,name,manager_mobile,deleted_at FROM equipment_rental_shops WHERE id=$1 FOR UPDATE',[shopId]);
+            const sq=await c.query('SELECT id,name,manager_mobile,deleted_at,private_admin_only FROM equipment_rental_shops WHERE id=$1 FOR UPDATE',[shopId]);
             const shop=sq.rows[0];
             if(!shop||shop.deleted_at)fail('rental_shop_not_found',404);
+            if(shop.private_admin_only)fail('private_admin_store');
             const conflict=await c.query("SELECT m.shop_id,m.role FROM equipment_rental_shop_memberships m JOIN equipment_rental_shops s ON s.id=m.shop_id WHERE m.user_id=$1 AND m.active=true AND m.role IN ('shop_admin','handover_staff') AND m.shop_id<>$2 AND s.deleted_at IS NULL FOR UPDATE OF m",[user.id,shop.id]);
             if(conflict.rows.length)fail('manager_access_conflict');
             const other=await c.query("SELECT id FROM equipment_rental_shops WHERE deleted_at IS NULL AND id<>$1 AND right(regexp_replace(coalesce(manager_mobile,''),'[^0-9]','','g'),10)=right($2,10) LIMIT 1",[shop.id,mobile]);

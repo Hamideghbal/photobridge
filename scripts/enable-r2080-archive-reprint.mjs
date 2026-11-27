@@ -9,4 +9,9 @@ for(const file of files){
  fs.writeFileSync(file,next);
  execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
 }
+for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+ const path=root+'/index.html',html=fs.readFileSync(path,'utf8'),rx=/index-UIRefine-v655-r84\.js\?[^"'\s>]*/g;
+ if((html.match(rx)||[]).length!==1)throw Error('R2080 module URL anchor '+root);
+ fs.writeFileSync(path,html.replace(rx,url=>url.replace(/&archiveReprint=r\d+/g,'')+'&archiveReprint=r2080'));
+}
 console.log('[R2080] archive reprint receipt, invoice outcome and quiet customer workflow');

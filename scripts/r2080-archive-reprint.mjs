@@ -16,6 +16,12 @@ export function patchServer(s){
  s=one(s,"publishCustomerEvent(labId, String(newOrder.customer_id), 'archive_order_recovered', recoveryEvent);","if(invoiceRequired)publishCustomerEvent(labId, String(newOrder.customer_id), 'archive_order_recovered', recoveryEvent);");
  s=one(s,"publishCustomerEvent(labId, String(ready.customer_id), 'archive_order_recovered', recoveryEvent);","if(order.invoice_required!==false)publishCustomerEvent(labId, String(ready.customer_id), 'archive_order_recovered', recoveryEvent);");
  s=one(s,'async function notifyLabCustomerForStatus(labId, customerId, status, order, invoice) {','async function notifyLabCustomerForStatus(labId, customerId, status, order, invoice) {\n    if(order?.recovered_from_order_id&&order.invoice_required===false)return;');
+ // Lab notification remains independent of the customer notice.
+ s=section(s,'function labEventNotificationCopy(','function customerEventNotificationCopy(',part=>{
+  const target="return { title: 'چاپ مجدد از آرشیو', message: "+String.fromCharCode(96)+"برای سفارش"+String.fromCharCode(36)+"{notificationOrderNo(data)} یک چاپ مجدد از آرشیو ساخته شد."+String.fromCharCode(96)+" };";
+  const copy="return { title: data?.invoiceRequired===false?'چاپ مجدد بدون فاکتور':'چاپ مجدد از آرشیو', message: 'سفارش'+notificationOrderNo(data)+(data?.localRecovery?' به چرخه چاپ برگشت.':' از آرشیو بازیابی شد؛ دریافت فایل‌ها هنوز باید تأیید شود.') };";
+  return one(part,target,copy);
+ });
  // Pass the explicit flag only from existing committed Lab status routes.
  s=section(s,"if (labOrder && req.method === 'PATCH')","const labAlbumStage",part=>{
   return one(part,"publishCustomerEvent(labId, order.customer_id, 'order_status', { orderId: order.id,","if(!(order.recovered_from_order_id&&order.invoice_required===false))publishCustomerEvent(labId, order.customer_id, 'order_status', { orderId: order.id,");
@@ -43,6 +49,11 @@ export function patchUi(s,native){
   // Avoid scanning the whole manifest once for every file.
   part=one(part,'for(const entry of mapped){\n      const meta=prepared.files.find(f=>String(f.id)===entry.id);','const manifestById=new Map(prepared.files.map(f=>[String(f.id),f]));\n    for(const entry of mapped){\n      const meta=manifestById.get(entry.id);');
   return part;
+ });
+ // Avoid a full React render for every fast local-file progress callback.
+ s=section(s,'async function pb1451RecoverOrder(','function pb1451RecoveryMessage(',part=>{
+  const start="async function pb1451RecoverOrder(detail,invoiceRequired,note,progress) {";
+  return one(part,start,start+"\n  const notify=progress;let lastProgress=0;progress=value=>{const now=Date.now();if(value?.done===value?.total||now-lastProgress>=100){lastProgress=now;notify?.(value)}};");
  });
  const start=s.indexOf('function pb1451RecoveryMessage('),end=s.indexOf('function pb1451RecoveryError(',start);
  if(start<0||end<0)throw Error('R2080 recovery message');

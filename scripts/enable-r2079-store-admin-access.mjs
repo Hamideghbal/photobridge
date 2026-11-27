@@ -46,7 +46,7 @@ function uiPatch(s){
 }
 const server='dist/api/server.js',ui='dist/web/photobridge-v904r19-admin-stores.js',portal='dist/api/equipment-rental-portal.html',htmlFile='dist/web/index.html';
 write(server,serverPatch(read(server)));write(ui,uiPatch(read(ui)));
-let p=read(portal);if(!p.includes('id="pb2079StorePreview"')){p=once(p,'<head>','<head>'+read('scripts/r2079-store-preview-portal.txt'),'preview transport before all portal scripts');write(portal,p);}
+let p=read(portal);if(!p.includes('id="pb2079StorePreview"')){const head=p.search(/<head(?:\s[^>]*)?>/i);if(head<0||head>1000)throw Error('[R2079] real portal head missing');const at=p.indexOf('>',head)+1;p=p.slice(0,at)+read('scripts/r2079-store-preview-portal.txt')+p.slice(at);p=once(p,'async function rentalLogout(){','async function rentalLogout(){if(window.pb2079StorePreview){window.pb2079StorePreview.back();return;}','preview exit without ordinary logout');write(portal,p);}
 let html=read(htmlFile);
 const re=/photobridge-v904r19-admin-stores\.js\?[^"'<>\s]+/g;
 if([...html.matchAll(re)].length!==1)throw Error('[R2079] admin asset URL');

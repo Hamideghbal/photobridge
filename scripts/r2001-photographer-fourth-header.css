@@ -1227,3 +1227,7 @@ html body #root#root main.photographerMain .financeWorkspace>.sectionTopline.fin
   box-sizing:border-box!important;
  }
 }
+
+/* R2068: immediate readable status selection; never interpolate text contrast. */
+html body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace .photographerLabContextRail :is(.photographerContextStatusesDesktop,.photographerContextStatusesMobile,.albumHeaderStatuses)>button,
+html body:not(.pbR100F14ChoosingLab) #root#root main.photographerMain.photographerPrintWorkspace .photographerLabContextRail :is(.photographerContextStatusesDesktop,.photographerContextStatusesMobile,.albumHeaderStatuses)>button>b{transition:none!important;animation:none!important}

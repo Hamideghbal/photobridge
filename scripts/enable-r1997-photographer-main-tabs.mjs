@@ -148,7 +148,7 @@ if(!css.includes('/* PB1997 resilient Store secondary grid */')){
   ' }',
   ' html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader:is(.pb1126FrameStore,.pb1126CameraStore)>.pb1126Secondary>.pb1126FrameStoreCart{',
   '  position:static!important;grid-column:1!important;grid-row:1!important;min-width:0!important;max-width:100%!important;',
-  '  justify-content:flex-start!important;overflow:hidden!important;direction:rtl!important',
+  '  justify-self:start!important;width:max-content!important;justify-content:flex-end!important;overflow:hidden!important;direction:rtl!important',
   ' }',
   ' html.pb1126Desktop body #pb1126ChromeHost #pb1126DesktopHeader:is(.pb1126FrameStore,.pb1126CameraStore)>.pb1126Secondary .pb1126FrameStoreControl{',
   '  white-space:nowrap!important;flex:none!important',

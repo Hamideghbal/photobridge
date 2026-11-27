@@ -73,3 +73,19 @@ test('R2084: final web and Windows archive functions compile, each browser recov
   assert.match(browser,/return \{\.\.\.result,receipt,order:confirmed\.order/);
  }
 });
+
+test('R2085: archive cache key preserves the existing finance/album/stage chain and is idempotent',async()=>{
+ const {archiveCacheUrl}=await import('./r2080-archive-reprint.mjs');
+ const tail='&labPrintFinance=r2047&labStatement=r2048&labFinanceCache=r2049&albumSizes=r1960';
+ for(const url of ['index-UIRefine-v655-r84.js?v=r1159'+tail,'index-UIRefine-v655-r84.js?v=r1159&labStage=r1894'+tail+'&archiveReprint=r2080','index-UIRefine-v655-r84.js?v=r1159&archiveReprint=r2080'+tail+'&labStage=r1956']){
+  const next=archiveCacheUrl(url),final=next.replace(/&labStage=r\d+/g,'')+'&labStage=r1956';
+  assert.equal(archiveCacheUrl(next),next);
+  assert.deepEqual(new URL(final,'https://photobridge.ir/').searchParams.getAll('archiveReprint'),['r2085']);
+  assert(final.endsWith(tail+'&labStage=r1956'));
+ }
+ for(const root of ['dist/web','dist/web/lab-desktop-ui']){
+  const html=fs.readFileSync(root+'/index.html','utf8'),url=html.match(/index-UIRefine-v655-r84\.js\?[^"'\s>]+/)[0];
+  assert.deepEqual(new URL(url,'https://photobridge.ir/').searchParams.getAll('archiveReprint'),['r2085']);
+  assert(url.includes(tail),root);
+ }
+});

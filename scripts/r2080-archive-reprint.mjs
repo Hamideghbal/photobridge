@@ -122,3 +122,11 @@ pb1451AcknowledgeDownload=async function(detail){
  return result;
 };
 addEventListener('photobridge-auth-session-changed',()=>pb2080Receipts.clear());`;
+
+// R2085: insert archive version before the existing contiguous finance/album
+// contract. R1897 owns the final labStage key and recompresses both payloads.
+export function archiveCacheUrl(url){
+ const clean=url.replace(/&archiveReprint=r\d+/g,'');
+ const anchor=['&labPrintFinance=','&labStatement=','&labFinanceCache=','&albumSizes=','&labStage='].find(key=>clean.includes(key));
+ return anchor?clean.replace(anchor,'&archiveReprint=r2085'+anchor):clean+'&archiveReprint=r2085';
+}

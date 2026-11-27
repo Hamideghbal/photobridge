@@ -1,1 +1,1 @@
-2026-11-27-r2084-archive-receipt-declaration-fix-equipment-reader
+2026-11-27-r2085-archive-cache-chain-equipment-reader

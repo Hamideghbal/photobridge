@@ -15,6 +15,7 @@ function patchSizes(ui){
  pick=once(pick,'(I==null?void 0:I.label)||f||r','pb2077SizeText(I==null?void 0:I.label)||f||r','selected searchable label');
  pick=once(pick,'children:(I==null?void 0:I.label)||r','children:pb2077SizeText(I==null?void 0:I.label)||r','selected label');
  pick=once(pick,'children:n.label','children:pb2077SizeText(n.label)','listbox label');
+ pick=once(pick,'String((n==null?void 0:n.label)||"").toLocaleLowerCase("fa-IR").includes(P)','(String((n==null?void 0:n.label)||"").toLocaleLowerCase("fa-IR").includes(P)||String(pb2077SizeText(String((n==null?void 0:n.label)||""))).toLocaleLowerCase("fa-IR").includes(pb2077SizeText(P)))','Persian and Latin dimension search');
  ui=ui.slice(0,a)+pick+ui.slice(b);
  const c=ui.indexOf('function ej('),d=ui.indexOf('function vh(',c);if(c<0||d<=c)throw Error('[R2077] print composer bounds');
  let print=ui.slice(c,d);

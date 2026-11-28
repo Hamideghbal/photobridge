@@ -1613,4 +1613,7 @@ runR1314(process.execPath,['--test','scripts/test-r2106-workspace-responsiveness
 // R2107: final scoped mobile login/logout and session performance.
 await deployStep('./enable-r2107-mobile-role-logout-performance.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2107-mobile-role-logout-performance.mjs'],{stdio:'inherit'});
+// R2108: verified Photographer mobile login/logout and lightweight account probes.
+await deployStep('./enable-r2108-photographer-mobile-session.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2108-photographer-mobile-session.mjs'],{stdio:'inherit'});
 

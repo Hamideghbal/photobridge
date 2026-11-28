@@ -41,7 +41,7 @@ test('R2107 photographer authentication remains fresh without repeated session w
   const calls=[];
   const row={id:'u',name:'P',platform_role:'platform_admin',lab_id:'l',lab_role:role,photographer_enabled:enabled,lab_service_only:true,pb2107_session_expiry:new Date(Date.now()+remaining*1000)};
   const pool={query:async(sql)=>{calls.push(sql);return {rowCount:1,rows:[row]}}};
-  const fn=new Function('requestSessionToken','requestPortal','isAdminImpersonationRequest','testAccountVisibleSql','tokenHash','pool','DAYS',source+';return auth')(()=> 'token',()=> 'photographer',()=>impersonation,()=> 'true',x=>x,pool,DAYS);
+  const fn=new Function('pb2079PreviewScope','requestSessionToken','requestPortal','isAdminImpersonationRequest','testAccountVisibleSql','tokenHash','pool','DAYS',source+';return auth')(()=>null,()=> 'token',()=> 'photographer',()=>impersonation,()=> 'true',x=>x,pool,DAYS);
   const user=await fn({headers:{}});assert.equal(Boolean(user),enabled);assert.equal(calls.filter(sql=>sql.includes('UPDATE sessions SET expires_at')).length,writes);assert.match(calls[0],/s\.expires_at>now\(\)/);
  }
  assert.equal(patchServer(server),server);

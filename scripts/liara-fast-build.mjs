@@ -1626,3 +1626,7 @@ runR1314(process.execPath,['--test','scripts/test-r2110-mobile-equipment-logout.
 // R2111: preserve mobile account handoff and render confirmed Store logout immediately.
 await deployStep('./enable-r2111-mobile-account-transition.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2111-mobile-account-transition.mjs'],{stdio:'inherit'});
+
+// R2112: clean top-level mobile Photographer logout after all account and panel writers.
+await deployStep('./enable-r2112-mobile-photographer-logout.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2112-mobile-photographer-logout.mjs'],{stdio:'inherit'});

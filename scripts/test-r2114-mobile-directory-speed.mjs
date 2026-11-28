@@ -30,6 +30,8 @@ test('mobile frame prefetch is consumed once and only the matching frame can unc
  assert.match(panel,/panel\.querySelector\('iframe'\)!==frame/);
  assert.match(panel,/validFrame\(kind,new URL/);
  assert.match(book,/delete f\.__pb2114Directory/);
+ const early=book.match(/<script id="pb1837ChooserPrefetch">([\s\S]*?)<\/script>/)[1];
+ assert.equal((early.match(/\bfetch\(/g)||[]).length,1,'no duplicate legacy prefetch');
  assert.match(index,/delete frame\.__pb2114Directory/);
  assert.match(labs,/PB2114 lab directory ready/);
 });

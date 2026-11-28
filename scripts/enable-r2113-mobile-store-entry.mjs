@@ -7,7 +7,14 @@ export function patchPicker(s){
  s=once(s,"portal==='photographer'?'/api/auth/me?pb2108Probe=1':'/api/auth/me'","portal==='photographer'?'/api/auth/me?pb2108Probe=1':portal==='rental'?'/api/auth/me?pb2113Probe=1':'/api/auth/me'/* PB2113 rental account probe */");
  s=once(s,"if(selected==='photographer'&&valid?.uncertain)valid=await validSession(selected,8000);","if((selected==='photographer'||selected==='rental')&&valid?.uncertain)valid=await validSession(selected,8000);");
  s=once(s,"const verified=await validSession(portal);","let verified=await validSession(portal);if(portal==='rental'&&verified?.uncertain)verified=await validSession(portal,8000);");
- return once(s,"if(currentPortal()==='photographer'&&authorized&&!needsResume&&Date.now()-pb2103SelectedAt<12000","if(['photographer','rental'].includes(currentPortal())&&authorized&&!needsResume&&Date.now()-pb2103SelectedAt<12000");
+
+ // R2099 adds the short handoff guard only to index/book; the rental portal
+ // does not contain it. R2106 already preserves authorized workspaces in all
+ // three documents. Require that common guard, and widen R2099 only if present.
+ if(!s.includes('PB2106 preserve selected workspace')||!s.includes('if(authorized&&!checking&&!chooser&&currentPortal())'))throw Error('R2113 R2106 workspace guard missing');
+ const legacy="if(currentPortal()==='photographer'&&authorized&&!needsResume&&Date.now()-pb2103SelectedAt<12000";
+ if(s.includes(legacy))s=once(s,legacy,"if(['photographer','rental'].includes(currentPortal())&&authorized&&!needsResume&&Date.now()-pb2103SelectedAt<12000");
+ return s;
 }
 export function patchServer(s){
  if(s.includes('/* PB2113 scoped rental identity probe */'))return s;

@@ -13,16 +13,21 @@ test('Store retry stays within original selection and never bypasses rejection',
  assert.deepEqual(calls,[['rental',undefined],['rental',8000]]);
  calls.length=0;assert.equal(await run('rental',async(p)=>{calls.push(p);return null}),null);assert.deepEqual(calls,['rental']);
 });
-test('Store handoff tolerates transient foreground events only',()=>{
- const a=picker.indexOf("if(['photographer','rental'].includes(currentPortal())"),b=picker.indexOf('// Do not interrupt',a);
- assert.ok(a>=0&&b>a);
- const run=new Function('currentPortal','authorized','needsResume','pb2103SelectedAt','pb2103HiddenAt','let wasHidden=true,blurred=true;'+picker.slice(a,b)+'return "resume"');
- const now=Date.now();
- assert.equal(run(()=> 'rental',true,false,now,0),undefined);
- assert.equal(run(()=> 'rental',true,false,now-20000,0),'resume');
- assert.equal(run(()=> 'rental',true,false,now,now-3000),'resume');
- assert.equal(run(()=> 'rental',false,false,now,0),'resume');
- assert.equal(run(()=> 'lab',true,false,now,0),'resume');
+test('all three final pickers preserve the authorized workspace; R2099 guard is optional on rental',()=>{
+ for(const path of ['dist/web/index.html','dist/api/equipment-rental-book.html','dist/api/equipment-rental-portal.html']){
+  const script=read(path).match(/<script id="pb1493MobileSessionResume">([\s\S]*?)<\/script>/)[1];
+  assert.match(script,/PB2113 rental account probe/);
+  assert.match(script,/PB2106 preserve selected workspace/);
+  const a=script.indexOf('if(authorized&&!checking&&!chooser&&currentPortal())'),b=script.indexOf('if(document.hidden)return;',a);
+  assert.ok(a>=0&&b>a);
+  const run=new Function('currentPortal','authorized','checking','chooser','let wasHidden=true,blurred=true,needsResume=true;'+script.slice(a,b)+'return "resume"');
+  assert.equal(run(()=> 'rental',true,false,null),undefined);
+  assert.equal(run(()=> 'rental',false,false,null),'resume');
+  assert.equal(run(()=> 'rental',true,true,null),'resume');
+  assert.equal(run(()=> 'rental',true,false,{}),'resume');
+  if(path.endsWith('portal.html'))assert.doesNotMatch(script,/pb2103SelectedAt/);
+  else assert.match(script,/if\(\['photographer','rental'\]\.includes\(currentPortal\(\)\)/);
+ }
 });
 test('lean Store probe remains scoped to an authenticated rental shop',async()=>{
  const a=server.indexOf('/* PB2113 scoped rental identity probe */'),b=server.indexOf("if (requestPortal(req) === 'rental' || requestPortal(req) === 'lab')",a);

@@ -81,7 +81,7 @@ export function patchBook(s){
  if(s.includes('PB2114 chooser first paint'))return s;
  const tag=/(<script id="pb1837ChooserPrefetch">)([\s\S]*?)(<\/script>)/g;
  if([...s.matchAll(tag)].length!==1)throw Error('R2114 Store prefetch script');
- s=s.replace(tag,(_,a,b,c)=>a+`
+ s=s.replace(tag,(_,a,_old,c)=>a+`
 /* PB2114 reuse parent frame request, otherwise fetch early as before */
 (()=>{
  const q=new URLSearchParams(location.search);

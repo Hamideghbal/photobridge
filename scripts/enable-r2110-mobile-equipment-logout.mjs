@@ -4,7 +4,8 @@ import {execFileSync} from 'node:child_process';
 function once(s,a,b){if(s.split(a).length!==2)throw Error('R2110 anchor '+a.slice(0,100));return s.replace(a,()=>b)}
 export function patchPush(s){
  if(s.includes('PB2110 bounded rental push logout'))return s;
- return once(s,"if(role()==='customer'&&matchMedia('(max-width:820px)').matches&&!token()){","/* PB2110 bounded rental push logout */ if(!token()&&!window.pbNativeStorage&&!window.pb2079StorePreview&&((role()==='customer'&&matchMedia('(max-width:820px)').matches)||(role()==='rental'&&matchMedia('(max-width:850px)').matches))){");
+ s=once(s,"if(role()==='customer'&&matchMedia('(max-width:820px)').matches&&!token()){","/* PB2110 bounded rental push logout */ if(!window.pbNativeStorage&&!window.pb2079StorePreview&&((role()==='customer'&&!token()&&matchMedia('(max-width:820px)').matches)||(role()==='rental'&&matchMedia('(max-width:850px)').matches))){");
+ return once(s,'Promise.race([unsubscribeCurrentAccount(controller.signal),','Promise.race([(role()===\'rental\'&&token()?Promise.resolve(false):unsubscribeCurrentAccount(controller.signal)),');
 }
 export function patchPortal(s){
  if(s.includes('PB2110 mobile rental direct logout'))return s;

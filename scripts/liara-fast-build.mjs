@@ -1619,4 +1619,7 @@ runR1314(process.execPath,['--test','scripts/test-r2108-photographer-mobile-sess
 // R2109: final mobile Photographer interaction latency fixes.
 await deployStep('./enable-r2109-photographer-mobile-latency.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2109-photographer-mobile-latency.mjs'],{stdio:'inherit'});
+// R2110: mobile equipment Store role-scoped confirmed logout.
+await deployStep('./enable-r2110-mobile-equipment-logout.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2110-mobile-equipment-logout.mjs'],{stdio:'inherit'});
 

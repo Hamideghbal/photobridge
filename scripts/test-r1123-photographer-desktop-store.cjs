@@ -25,7 +25,7 @@ function route(mobile,id){
   $:q=>q==='#storeSectionNavV673'?nav:q==='.storePhotographerWorkspace>.shell'?{scrollTo:()=>{}}:q==='#rentalHero'?{classList:{toggle:()=>{}}}:panels.find(p=>q==='#'+p.id),
   $$:q=>q==='.rentalPanel'?panels:q.includes('#pbR1123StoreDesktopNav')?[...navButtons,...headButtons]:[],
   selectedShopRecord:()=>({rental_enabled:true,sale_enabled:true}),updateMobilePanelTitle:()=>{},
-  persistStoreLocationR1835:()=>{},syncStoreHeaderActionsV809:()=>{},closeSaleCart:()=>{}
+  pb2103LoadVisibleStore:()=>{},persistStoreLocationR1835:()=>{},syncStoreHeaderActionsV809:()=>{},closeSaleCart:()=>{}
  };
  vm.runInNewContext(source,context);context.openStoreSection(id);
  return {active:panels.filter(p=>p.active).map(p=>p.id),header:headButtons.filter(b=>b.active).map(b=>b.dataset.storePanel),nav:nav.dataset.pb706Active};

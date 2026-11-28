@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 function once(s,a,b){if(s.split(a).length!==2)throw Error('R2109 anchor '+a.slice(0,100));return s.replace(a,()=>b)}
-function installNavRead(w){
+export function installNavRead(w){
  if(w.pb2109NavRead)return;
  let epoch=0;const cache=new Map();
  const reset=()=>{epoch++;cache.clear()};
@@ -20,7 +20,7 @@ function installNavRead(w){
   cache.set(key,entry);return entry.promise.then(r=>r.clone());
  };
 }
-function relevantNav(records,selector){
+export function relevantNav(records,selector){
  for(const r of records){
   if(r.target?.nodeType===1&&(r.target.matches?.(selector)||r.target.closest?.(selector)))return true;
   if(r.type==='childList')for(const node of [...r.addedNodes,...r.removedNodes])if(node.nodeType===1&&(node.matches?.(selector)||node.querySelector?.(selector)))return true;
@@ -54,7 +54,7 @@ export function patchPush(s){
  s=once(s,"const reg=await navigator.serviceWorker?.getRegistration?.('/');\n      const sub=await reg?.pushManager?.getSubscription?.();","const reg=await navigator.serviceWorker?.getRegistration?.('/');\n      if(signal?.aborted)return false;\n      try{reg?.active?.postMessage?.({type:'PB_PUSH_LOGOUT'})}catch{}\n      const sub=await reg?.pushManager?.getSubscription?.();\n      if(signal?.aborted)return false;");
  s=once(s,"headers:headers(),body:JSON.stringify({endpoint:sub.endpoint})})","headers:headers(),body:JSON.stringify({endpoint:sub.endpoint}),signal})");
  s=once(s,"try{await sub.unsubscribe()}catch{}","if(signal?.aborted)return false;\n        try{await sub.unsubscribe()}catch{}");
- s=once(s,"if(path==='/api/auth/logout'&&method==='POST')await unsubscribeCurrentAccount();","/* PB2109 bounded Photographer push cleanup */\n      if(path==='/api/auth/logout'&&method==='POST'){\n        if(role()==='customer'&&matchMedia('(max-width:820px)').matches&&!token()){\n          const controller=new AbortController();let timer;\n          try{await Promise.race([unsubscribeCurrentAccount(controller.signal),new Promise(resolve=>{timer=setTimeout(()=>{controller.abort();resolve(false)},1500)})])}finally{clearTimeout(timer)}\n        }else await unsubscribeCurrentAccount();\n      }");
+ s=once(s,"if(path==='/api/auth/logout'&&method==='POST')await unsubscribeCurrentAccount();","/* PB2109 bounded Photographer push cleanup */\n      if(path==='/api/auth/logout'&&method==='POST'){\n        if(role()==='customer'&&matchMedia('(max-width:820px)').matches&&!token()){\n          const controller=new AbortController();let timer;\n          try{await Promise.race([unsubscribeCurrentAccount(controller.signal),new Promise(resolve=>{timer=setTimeout(()=>{controller.abort();resolve(false)},1500)})])}finally{clearTimeout(timer);try{localStorage.removeItem(LAST_SYNC);localStorage.removeItem('photobridge:push:enabled')}catch{};void setAppBadge(0);document.querySelectorAll('.pbPushToastV728').forEach(x=>x.remove());hidePrompt()}\n        }else await unsubscribeCurrentAccount();\n      }");
  return s;
 }
 const files={

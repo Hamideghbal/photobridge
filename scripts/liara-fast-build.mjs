@@ -1630,3 +1630,7 @@ runR1314(process.execPath,['--test','scripts/test-r2111-mobile-account-transitio
 // R2112: clean top-level mobile Photographer logout after all account and panel writers.
 await deployStep('./enable-r2112-mobile-photographer-logout.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2112-mobile-photographer-logout.mjs'],{stdio:'inherit'});
+
+// R2113: verified one-click Store selection and mobile login after all portal writers.
+await deployStep('./enable-r2113-mobile-store-entry.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2113-mobile-store-entry.mjs'],{stdio:'inherit'});

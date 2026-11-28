@@ -19,6 +19,10 @@ export function patchPicker(source) {
 }
 
 export function patchRental(source) {
+  // The old script ID created a truthy window.pb2079StorePreview through DOM named access.
+  if (!source.includes('id="pb2079StorePreviewScript"')) {
+    source = replaceOnce(source, 'id="pb2079StorePreview"', 'id="pb2079StorePreviewScript"');
+  }
   if (source.includes('/* PB2111 confirmed logout landing */')) return source;
   source = replaceOnce(source, "setBookingPhotographerMode('existing');let me=null;", `setBookingPhotographerMode('existing');
   /* PB2111 confirmed logout landing */

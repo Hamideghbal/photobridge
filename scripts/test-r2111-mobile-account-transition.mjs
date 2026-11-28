@@ -71,6 +71,12 @@ test('a declined gated landing remains retryable and does not navigate without a
   assert.deepEqual(moves, ['/photographer/gallery']);
 });
 
+test('the admin preview global cannot resolve to a script element on normal Store pages', () => {
+  assert.match(portal, /<script id="pb2079StorePreviewScript">/);
+  assert.doesNotMatch(portal, /(?:id|name)="pb2079StorePreview"/);
+  assert.match(portal, /window\.pb2079StorePreview=\{shopId:scope,back\}/);
+});
+
 test('the confirmed Store logout opens the sign-in screen without requesting session data', () => {
   const marker = portal.indexOf('/* PB2111 confirmed logout landing */');
   const start = portal.lastIndexOf("(async()=>{setBookingPhotographerMode('existing');", marker);

@@ -1634,3 +1634,7 @@ runR1314(process.execPath,['--test','scripts/test-r2112-mobile-photographer-logo
 // R2113: verified one-click Store selection and mobile login after all portal writers.
 await deployStep('./enable-r2113-mobile-store-entry.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2113-mobile-store-entry.mjs'],{stdio:'inherit'});
+
+// R2114: final mobile directory speed while retaining R2112/R2113.
+await deployStep('./enable-r2114-mobile-directory-speed.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2114-mobile-directory-speed.mjs'],{stdio:'inherit'});

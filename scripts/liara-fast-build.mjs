@@ -1623,3 +1623,6 @@ runR1314(process.execPath,['--test','scripts/test-r2109-photographer-mobile-late
 await deployStep('./enable-r2110-mobile-equipment-logout.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2110-mobile-equipment-logout.mjs'],{stdio:'inherit'});
 
+// R2111: preserve mobile account handoff and render confirmed Store logout immediately.
+await deployStep('./enable-r2111-mobile-account-transition.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2111-mobile-account-transition.mjs'],{stdio:'inherit'});

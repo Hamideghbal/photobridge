@@ -3,13 +3,19 @@ test('installed launch uses one user-approved cream cover, matching its icon, an
  const browser=await chromium.launch({executablePath:process.env.PB_BROWSER_EXECUTABLE||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:390,height:844}});
-  await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{get:()=>true}));
+  await page.addInitScript(()=>{
+   Object.defineProperty(navigator,'standalone',{get:()=>true});
+   // Enter the workspace after the installed app's account picker hands off.
+   if(window===window.top&&location.search.includes('pb2087AccountEntry')){
+    sessionStorage.setItem('pb2092-account-handoff',JSON.stringify({path:'/photographer/gallery',until:Date.now()+10000}));
+   }
+  });
   await page.route('https://photobridge.test/**',route=>{
    const u=new URL(route.request().url());if(u.pathname.endsWith('.js'))return route.fulfill({contentType:'application/javascript',body:''});
    const file=u.pathname.startsWith('/photographer')?'dist/web/index.html':path.join('dist/web',u.pathname);
    return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});
   });
-  await page.goto('https://photobridge.test/photographer/gallery');
+  await page.goto('https://photobridge.test/photographer/gallery?pb2087AccountEntry=1');
   assert.equal(await page.locator('#pbAppSplashV780').count(),0);
   const cover=page.locator('#pbR1361MobileSplash');assert.equal(await cover.count(),1);assert.equal(await cover.isVisible(),true);
   assert.equal(await cover.getAttribute('data-launch'),'r1838-user');

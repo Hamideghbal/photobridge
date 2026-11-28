@@ -85,7 +85,13 @@ function shell(portal,mobileScripts){
   if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isVisible());
   await button.click();assert(await frameElement.isVisible());
   if(hasPrintPanel)assert(await page.locator('#pb1106PrintPanel').isHidden());
-  assert.equal(page.frames().length,hasPrintPanel||(portal==='photographer'&&width>820)?3:2);
+  if(portal==='photographer'&&width>820){
+   // Desktop keeps the Customers and Calendar documents while Gallery is mounted.
+   assert.equal(await frameElement.count(),1);
+   assert.equal(await page.locator('.pb1126ContentPanel[data-panel="calendar"] iframe').count(),1);
+   assert(await page.locator('.pb1126ContentPanel[data-panel="calendar"]').isHidden());
+   assert(page.frames().every(f=>!f.parentFrame()||f.parentFrame()===page.mainFrame()));
+  }else assert.equal(page.frames().length,hasPrintPanel?3:2);
   // A portal navigation from inside CRM must leave the frame, never nest another portal shell.
   await (await frameElement.elementHandle()).contentFrame().then(child=>child.evaluate(path=>{location.href=path},root));
   await page.waitForURL(url=>url.pathname===root&&!url.searchParams.has('pbCrmTab')&&!url.searchParams.has('pbDesktopPanel'));

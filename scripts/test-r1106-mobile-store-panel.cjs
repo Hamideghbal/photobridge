@@ -66,8 +66,13 @@ test('disabling the underlying AI route while Store is open keeps Store and its 
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,serviceWorkers:'block'}),state={tabs:{ai:true,album:true,instagram:true}};await serve(page,state);await page.goto('https://panel.test/photographer/ai/retouch');
  await page.waitForFunction(()=>document.querySelector('.photographerBottomAppNavGrid')?.style.getPropertyValue('--pb1099-tabs')==='6');
  await page.locator('.photographerBottomAppNav').getByRole('button',{name:'فروشگاه',exact:true}).click();await page.waitForSelector('#pb1106StorePanel',{state:'visible'});
- state.tabs={ai:false,album:false,instagram:false};await page.evaluate(()=>dispatchEvent(new Event('focus')));
- await page.waitForFunction(()=>document.querySelector('.photographerBottomAppNavGrid')?.style.getPropertyValue('--pb1099-tabs')==='3');assert(await page.locator('#pb1106StorePanel').isVisible());assert(new URL(page.url()).searchParams.has('pbStorePanel'));await page.close();
+ state.tabs={ai:false,album:false,instagram:false};
+ // Each foreground check can reuse the previous feature settings for five seconds.
+ await page.waitForFunction(()=>{
+   dispatchEvent(new Event('focus'));
+   return document.querySelector('.photographerBottomAppNavGrid')?.style.getPropertyValue('--pb1099-tabs')==='3';
+ },null,{polling:1000});
+ assert(await page.locator('#pb1106StorePanel').isVisible());assert(new URL(page.url()).searchParams.has('pbStorePanel'));await page.close();
  }finally{await browser.close()}
 });
 

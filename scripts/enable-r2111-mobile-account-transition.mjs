@@ -10,6 +10,7 @@ export function patchPicker(source) {
   if (source.includes('/* PB2111 selected account probe */')) return source;
   source = replaceOnce(source, 'const validSession=async portal=>{', 'const validSession=async (portal, deadline=4500)=>{');
   source = replaceOnce(source, 'timer=setTimeout(()=>abort.abort(),4500);', 'timer=setTimeout(()=>abort.abort(),deadline);');
+  source = replaceOnce(source, 'portals.map(validSession)', 'portals.map(portal=>validSession(portal))');
   const selection = source.includes('let valid=await validSession(selected);')
     ? "let valid=await validSession(selected);if(selected==='photographer'&&valid?.uncertain)valid=await validSession(selected);"
     : "const valid=await validSession(selected);";

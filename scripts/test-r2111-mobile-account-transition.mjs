@@ -7,6 +7,17 @@ const index = read('dist/web/index.html');
 const portal = read('dist/api/equipment-rental-portal.html');
 const picker = index.match(/<script id="pb1493MobileSessionResume">([\s\S]*?)<\/script>/)[1];
 
+test('initial probes use the default timeout for each role', async () => {
+  const start = picker.indexOf('const results=await Promise.all(');
+  const end = picker.indexOf(';', start);
+  assert.ok(start >= 0 && end > start);
+  const run = new Function('portals', 'validSession', `return (async()=>{${picker.slice(start, end)};return results})()`);
+  const calls = [];
+  const roles = ['photographer', 'lab', 'rental'];
+  await run(roles, async (portal, timeout) => calls.push([portal, timeout]));
+  assert.deepEqual(calls, roles.map(portal => [portal, undefined]));
+});
+
 test('a transient photographer probe retries within the same selection', async () => {
   const start = picker.indexOf('let valid=await validSession(selected);');
   const end = picker.indexOf('if(valid&&!valid.uncertain)', start);

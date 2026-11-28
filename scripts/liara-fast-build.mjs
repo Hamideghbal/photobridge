@@ -1616,4 +1616,7 @@ runR1314(process.execPath,['--test','scripts/test-r2107-mobile-role-logout-perfo
 // R2108: verified Photographer mobile login/logout and lightweight account probes.
 await deployStep('./enable-r2108-photographer-mobile-session.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2108-photographer-mobile-session.mjs'],{stdio:'inherit'});
+// R2109: final mobile Photographer interaction latency fixes.
+await deployStep('./enable-r2109-photographer-mobile-latency.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2109-photographer-mobile-latency.mjs'],{stdio:'inherit'});
 

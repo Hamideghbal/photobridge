@@ -1610,3 +1610,7 @@ await deployStep('./enable-r2100-photographer-booking-calendar.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2100-photographer-booking-calendar.mjs'],{stdio:'inherit'});
 await deployStep('./enable-r2106-workspace-responsiveness.mjs', true);
 runR1314(process.execPath,['--test','scripts/test-r2106-workspace-responsiveness.mjs'],{stdio:'inherit'});
+// R2107: final scoped mobile login/logout and session performance.
+await deployStep('./enable-r2107-mobile-role-logout-performance.mjs', true);
+runR1314(process.execPath,['--test','scripts/test-r2107-mobile-role-logout-performance.mjs'],{stdio:'inherit'});
+
